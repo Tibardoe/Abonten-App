@@ -151,6 +151,8 @@ export function usePostEngagement(
     notInterested,
     counts,
     setCounts,
+    /** Local only — for a reaction the server set another way (a Story reply). */
+    setReaction,
     toggleLike: () => {
       const next = !liked;
       return run(
@@ -180,10 +182,22 @@ export function usePostEngagement(
       return run(
         () => {
           setSaved(next);
-          return () => setSaved(!next);
+          setCounts((c) => ({
+            ...c,
+            saves: Math.max(0, c.saves + (next ? 1 : -1)),
+          }));
+          return () => {
+            setSaved(!next);
+            setCounts((c) => ({
+              ...c,
+              saves: Math.max(0, c.saves + (next ? -1 : 1)),
+            }));
+          };
         },
         () => api.content.save(post.id, next),
-        () => {
+        (data) => {
+          const d = data as { counts?: ContentCounts } | undefined;
+          if (d?.counts) setCounts(d.counts);
           qc.invalidateQueries({ queryKey: [...CONTENT_KEY, "saved"] });
           toast.success(next ? "Saved" : "Removed from saved");
         },
@@ -362,6 +376,47 @@ export function useOwnContent(kind: ContentKind) {
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam }) =>
       unwrap(await api.content.mine({ kind, cursor: pageParam })),
+    getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
+  });
+}
+
+/** Your own Spotlights in one state — the profile's Published / Drafts. */
+export function useOwnSpotlights(
+  status: "published" | "draft",
+  enabled: boolean,
+) {
+  const { session } = useSession();
+  return useInfiniteQuery({
+    queryKey: [
+      ...CONTENT_KEY,
+      "own",
+      session?.user.id ?? null,
+      "spotlight",
+      status,
+    ],
+    enabled: enabled && !!session,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam }) =>
+      unwrap(
+        await api.content.mine({
+          kind: "spotlight",
+          status,
+          cursor: pageParam,
+        }),
+      ),
+    getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
+  });
+}
+
+/** Spotlights you saved. Private: only ever requested for yourself. */
+export function useSavedSpotlights(enabled: boolean) {
+  const { session } = useSession();
+  return useInfiniteQuery({
+    queryKey: [...CONTENT_KEY, "saved", session?.user.id ?? null],
+    enabled: enabled && !!session,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam }) =>
+      unwrap(await api.content.saved(pageParam)),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
   });
 }

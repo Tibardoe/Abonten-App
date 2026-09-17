@@ -8,7 +8,7 @@ import type { OutboxMessage } from "@/features/messaging/useMessageOutbox";
 import { VOICE_SUPPORTED } from "@/features/messaging/voiceSupport";
 import { hapticLight, hapticMedium } from "@/lib/haptics";
 import type { MessageRow } from "@abonten/api-client";
-import { AppText, Icon } from "@abonten/ui-native";
+import { AppText, Icon, useReducedMotion } from "@abonten/ui-native";
 import {
   type ThemeColors,
   useThemeColors,
@@ -18,6 +18,8 @@ import { Suspense, lazy, memo, useCallback, useEffect } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  Easing,
+  FadeInDown,
   interpolateColor,
   runOnJS,
   useAnimatedStyle,
@@ -31,6 +33,7 @@ import { ChatImage } from "./ChatImage";
 import { FileAttachmentCard } from "./FileAttachmentCard";
 import { MessageReactions } from "./MessageReactions";
 import { ReplyQuote } from "./ReplyQuote";
+import { StoryReplyContext } from "./StoryReplyContext";
 import type VoiceMessageBubbleComponent from "./VoiceMessageBubble";
 import type { Rect } from "./contextMenu/menuPlacement";
 import { useAnchorMeasure } from "./contextMenu/useAnchorMeasure";
@@ -66,6 +69,12 @@ type Props = {
   /** Its lifted clone is showing in the action overlay — hide the original
    *  so there's no ghost behind the lift-out (iMessage does the same). */
   hiddenForMenu?: boolean;
+  /**
+   * Arrived while the thread was open (your send, or a new incoming
+   * message): rises in from the composer's edge instead of popping in.
+   * Never set for history, pagination, or the server confirming a send.
+   */
+  animateIn?: boolean;
   onPressImage: (uri: string) => void;
   /** Long-press → contextual action overlay. `rect` is the bubble's window frame. */
   onLongPress: (message: MessageRow, rect: Rect) => void;
@@ -188,6 +197,7 @@ export const MessageBubble = memo(function MessageBubble({
   seen,
   highlighted,
   hiddenForMenu,
+  animateIn,
   onPressImage,
   onLongPress,
   onReply,
@@ -196,6 +206,7 @@ export const MessageBubble = memo(function MessageBubble({
   onRetry,
 }: Props) {
   const c = useThemeColors();
+  const reduceMotion = useReducedMotion();
   const deleted = !!message.deleted_at;
   const isAudio =
     message.message_type === "audio" || pending?.messageType === "audio";
@@ -536,6 +547,13 @@ export const MessageBubble = memo(function MessageBubble({
   return (
     <Animated.View
       style={highlightStyle}
+      // The list is inverted (each cell is flipped), so "down" here reads
+      // as rising up out of the composer.
+      entering={
+        animateIn && !reduceMotion
+          ? FadeInDown.duration(220).easing(Easing.out(Easing.cubic))
+          : undefined
+      }
       className={`px-3 ${isGroupStart ? "mt-3" : "mt-[2px]"} ${
         isMine ? "items-end" : "items-start"
       }`}
@@ -559,6 +577,10 @@ export const MessageBubble = memo(function MessageBubble({
           <Icon name="arrow-undo" size={15} tone="primary" />
         </View>
       </Animated.View>
+
+      {!deleted ? (
+        <StoryReplyContext systemData={message.system_data} isMine={isMine} />
+      ) : null}
 
       {interactive ? (
         <GestureDetector gesture={gesture}>

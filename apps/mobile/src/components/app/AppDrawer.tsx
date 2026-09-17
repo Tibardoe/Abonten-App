@@ -407,13 +407,6 @@ export function AppDrawer() {
                 onPress={() => go("/(app)/weekly")}
               />
             ) : null}
-            {content.spotlight ? (
-              <Row
-                icon="play-circle-outline"
-                label="Spotlight"
-                onPress={() => go("/(app)/spotlight")}
-              />
-            ) : null}
             {session ? (
               <>
                 <Pressable
@@ -505,7 +498,7 @@ export function AppDrawer() {
                 <Row
                   icon="receipt-outline"
                   label={t("myEvents")}
-                  onPress={() => goTab("/(app)/tickets")}
+                  onPress={() => go("/(app)/tickets")}
                 />
                 <Row
                   icon="card-outline"

@@ -175,3 +175,17 @@ export function contentCtaLabel(post: {
   }
   return { label: "", target: null };
 }
+
+/**
+ * The CTA for a mobile Spotlight or Story overlay, where the publisher's
+ * avatar and name already open their profile or place. Only an attached
+ * event or place is a destination worth a button; the publisher fallbacks
+ * ("View profile", "View place" for a place's own post) would duplicate the
+ * tappable identity, so they return no label.
+ */
+export function contentDestinationCta(
+  post: Parameters<typeof contentCtaLabel>[0],
+): ReturnType<typeof contentCtaLabel> {
+  if (!post.event && !post.place) return { label: "", target: null };
+  return contentCtaLabel(post);
+}

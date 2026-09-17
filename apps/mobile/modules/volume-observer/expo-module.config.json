@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["VolumeObserverModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.volumeobserver.VolumeObserverModule"]
+  }
+}

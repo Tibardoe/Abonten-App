@@ -153,6 +153,8 @@ export function usePostEngagement(post: ContentPostDocument) {
     notInterested,
     counts,
     setCounts,
+    /** Local only — a reaction the server set another way (a Story reply). */
+    setReaction,
     toggleLike,
     toggleSave,
     react,

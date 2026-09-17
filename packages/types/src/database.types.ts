@@ -14871,6 +14871,15 @@ export type Database = {
         };
         Returns: string;
       };
+      send_story_reply: {
+        Args: {
+          p_client_generated_id?: string;
+          p_content: string;
+          p_post_id: string;
+          p_reply_kind?: string;
+        };
+        Returns: Json;
+      };
       set_admin_user_status: {
         Args: { p_actor_id: string; p_status: string; p_target_user: string };
         Returns: undefined;

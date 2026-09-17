@@ -1,7 +1,6 @@
 import { ImageViewer } from "@/components/ImageViewer";
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { FollowButton } from "@/components/content/FollowButton";
-import { PublisherSpotlightStrip } from "@/components/content/PublisherSpotlightStrip";
 import { HighlightsRow } from "@/components/profile/HighlightsRow";
 import {
   VerifiedPill,
@@ -118,11 +117,8 @@ export function ProfileHeader({
         avatarVersion={profile.avatar_version}
       />
 
-      <PublisherSpotlightStrip
-        publisherKind="organizer"
-        publisherId={profile.user_id}
-        className="-mx-4"
-      />
+      {/* A profile's Spotlights live in their own tab below (a grid with
+          Published / Saved / Drafts on your own profile), not a strip here. */}
 
       <ImageViewer
         uri={fullPhoto}

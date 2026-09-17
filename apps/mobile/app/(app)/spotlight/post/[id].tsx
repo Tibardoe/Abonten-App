@@ -3,14 +3,17 @@ import {
   useContentPost,
   useInsights,
   useInvalidateContent,
+  useOwnCampaigns,
 } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { api } from "@/lib/api";
+import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import {
   AppText,
   Button,
   Chip,
+  Icon,
   KeyboardAwareScrollView,
   ScreenError,
   Spinner,
@@ -19,11 +22,21 @@ import {
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Switch, TextInput, View } from "react-native";
+import { Alert, Pressable, Switch, TextInput, View } from "react-native";
 
 const RANGES = [7, 28, 90] as const;
 
-// One of your own posts: insights, edits, promotion, delete.
+function formatWatchTime(ms: number): string {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${s % 60}s`;
+  return `${Math.floor(m / 60)}h ${m % 60}m`;
+}
+
+// One of your own posts: insights, promotion, edits, delete. Reached from
+// the Insights button on your own Spotlight, your profile's grid, and
+// Spotlight & Stories in the menu.
 export default function ManagePostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -33,6 +46,8 @@ export default function ManagePostScreen() {
   const query = useContentPost(id);
   const [days, setDays] = useState<(typeof RANGES)[number]>(28);
   const insights = useInsights(id, days);
+  // Your own promotions only (the list is the signed-in advertiser's).
+  const campaigns = useOwnCampaigns();
 
   const res = query.data;
   const post =
@@ -55,7 +70,7 @@ export default function ManagePostScreen() {
   const header = (
     <AppHeader
       variant="detail"
-      title="Your post"
+      title="Insights"
       backFallback="/(app)/spotlight/manage"
     />
   );
@@ -151,18 +166,37 @@ export default function ManagePostScreen() {
     post.status === "published" &&
     post.moderationState === "visible";
   const t = insights.data?.totals;
-  const tiles: [string, number | undefined][] = [
-    ["Impressions", t?.impressions],
+  const views = t?.meaningfulViews ?? 0;
+  const tiles: [string, string | number | undefined][] = [
     ["Views", t?.meaningfulViews],
-    ["Completions", t?.completions],
     ["People reached", t?.uniqueViewers],
+    ["Impressions", t?.impressions],
+    ["Watch time", t ? formatWatchTime(t.watchedMsTotal) : undefined],
+    [
+      "Avg. watch",
+      t
+        ? formatWatchTime(
+            t.viewStarts > 0 ? t.watchedMsTotal / t.viewStarts : 0,
+          )
+        : undefined,
+    ],
+    [
+      "Completion rate",
+      t
+        ? `${views > 0 ? Math.round((t.completions / views) * 100) : 0}%`
+        : undefined,
+    ],
     ["Likes", t?.likes],
     ["Comments", t?.comments],
     ["Shares", t?.shares],
     ["Saves", t?.saves],
+    ["Profile visits", t?.profileClicks],
     ["Event taps", t?.eventClicks],
     ["Place taps", t?.placeClicks],
   ];
+  const campaign = (campaigns.data ?? [])
+    .filter((c) => c.postId === post.id)
+    .sort((a, b) => b.startsAt.localeCompare(a.startsAt))[0];
 
   return (
     <View className="flex-1 bg-background">
@@ -215,6 +249,46 @@ export default function ManagePostScreen() {
           </View>
         </View>
 
+        {campaign ? (
+          <Pressable
+            onPress={() =>
+              router.push(`/(app)/spotlight/campaign/${campaign.id}`)
+            }
+            accessibilityRole="button"
+            accessibilityLabel={`Promotion: ${CAMPAIGN_STATUS_LABEL[campaign.status]}. Open`}
+            className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
+          >
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-accent">
+              <Icon name="megaphone-outline" size={20} tone="primary" />
+            </View>
+            <View className="flex-1">
+              <AppText variant="bodyStrong">Promotion</AppText>
+              <AppText variant="meta">
+                {CAMPAIGN_STATUS_LABEL[campaign.status]}
+              </AppText>
+            </View>
+            <Icon name="chevron-forward" size={16} tone="muted" />
+          </Pressable>
+        ) : promotable ? (
+          <Pressable
+            onPress={() => router.push(`/(app)/spotlight/promote/${post.id}`)}
+            accessibilityRole="button"
+            accessibilityLabel="Promote this Spotlight"
+            className="flex-row items-center gap-3 rounded-xl bg-primary p-4 active:opacity-90"
+          >
+            <Icon name="megaphone-outline" size={22} tone="inverse" />
+            <View className="flex-1">
+              <AppText className="text-[15px] font-bold text-primary-foreground">
+                Promote this Spotlight
+              </AppText>
+              <AppText className="text-[13px] text-primary-foreground/85">
+                Show it to more people nearby
+              </AppText>
+            </View>
+            <Icon name="chevron-forward" size={18} tone="inverse" />
+          </Pressable>
+        ) : null}
+
         <View className="gap-2">
           <View className="flex-row items-center justify-between">
             <AppText variant="sectionHeading">Insights</AppText>
@@ -239,7 +313,11 @@ export default function ManagePostScreen() {
                   {label}
                 </AppText>
                 <AppText variant="cardTitle">
-                  {insights.isLoading ? "…" : (value ?? 0).toLocaleString()}
+                  {insights.isLoading
+                    ? "…"
+                    : typeof value === "string"
+                      ? value
+                      : (value ?? 0).toLocaleString()}
                 </AppText>
               </View>
             ))}
@@ -280,14 +358,6 @@ export default function ManagePostScreen() {
           />
         </View>
 
-        {promotable ? (
-          <Button
-            title="Promote this Spotlight"
-            variant="secondary"
-            leftIcon="megaphone-outline"
-            onPress={() => router.push(`/(app)/spotlight/promote/${post.id}`)}
-          />
-        ) : null}
         <Button title="Delete" variant="destructive" onPress={remove} />
       </KeyboardAwareScrollView>
     </View>

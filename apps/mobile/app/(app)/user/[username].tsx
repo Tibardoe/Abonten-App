@@ -4,13 +4,18 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
 import { CreateActionSheet } from "@/components/profile/CreateActionSheet";
+import { ListingKindMenu } from "@/components/profile/ListingKindMenu";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileReviewRow } from "@/components/profile/ProfileRows";
-import {
-  ProfileTabBar,
-  type ProfileTabKey,
-} from "@/components/profile/ProfileTabBar";
+import { ProfileTabBar, type Rect } from "@/components/profile/ProfileTabBar";
+import { SpotlightTileRow } from "@/components/profile/SpotlightGrid";
 import { ProfileSkeleton } from "@/components/skeletons";
+import {
+  useOwnSpotlights,
+  usePublisherSpotlights,
+  useSavedSpotlights,
+} from "@/features/content/useContent";
+import { useContentProgram } from "@/features/content/useContentProgram";
 import {
   useProfileEvents,
   useProfileFavoriteEvents,
@@ -20,6 +25,21 @@ import {
   useProfileReviews,
 } from "@/features/profile/useProfileTabs";
 import { usePublicProfile } from "@/features/profile/usePublicProfile";
+import {
+  type ListingKind,
+  type ProfileTab,
+  type SpotlightSegment,
+  type SpotlightTile,
+  chunkRows,
+  profileTabs,
+  spotlightSegments,
+  tileFromDocument,
+  tileFromOwnPost,
+} from "@abonten/core/content/profileContent";
+import type {
+  ContentOwnPost,
+  ContentPostDocument,
+} from "@abonten/types/contentType";
 import {
   EmptyState,
   Refresher,
@@ -41,16 +61,28 @@ import Animated, {
 type FavSub = "events" | "places";
 type ReviewSub = "event" | "place";
 
+const SEGMENT_LABEL: Record<SpotlightSegment, string> = {
+  published: "Published",
+  saved: "Saved",
+  drafts: "Drafts",
+};
+
+type GridRow = { id: string; tiles: SpotlightTile[] };
+
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
   const router = useRouter();
   const { session } = useSession();
+  const { program } = useContentProgram();
 
   const profileQuery = usePublicProfile(username);
   const profile = profileQuery.data;
   const isOwn = !!session && session.user.id === profile?.user_id;
 
-  const [tab, setTab] = useState<ProfileTabKey>("events");
+  const [tab, setTab] = useState<ProfileTab>("listings");
+  const [listingKind, setListingKind] = useState<ListingKind>("events");
+  const [listingMenu, setListingMenu] = useState<Rect | null>(null);
+  const [segment, setSegment] = useState<SpotlightSegment>("published");
   const [favSub, setFavSub] = useState<FavSub>("events");
   const [reviewSub, setReviewSub] = useState<ReviewSub>("event");
   const [createOpen, setCreateOpen] = useState(false);
@@ -63,26 +95,38 @@ export default function UserProfileScreen() {
   // the new tab, which is the right behaviour here.
   const reduceMotion = useReducedMotion();
   const contentOpacity = useSharedValue(1);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: tab/favSub/reviewSub are the triggers, not read in the body
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the tab state values are the triggers, not read in the body
   useEffect(() => {
     if (reduceMotion) return;
     contentOpacity.value = withSequence(
       withTiming(0.45, { duration: 90 }),
       withTiming(1, { duration: 130 }),
     );
-  }, [tab, favSub, reviewSub, reduceMotion, contentOpacity]);
+  }, [
+    tab,
+    listingKind,
+    segment,
+    favSub,
+    reviewSub,
+    reduceMotion,
+    contentOpacity,
+  ]);
   const contentStyle = useAnimatedStyle(() => ({
     flex: 1,
     opacity: contentOpacity.value,
   }));
 
-  const tabs = useMemo<ProfileTabKey[]>(
-    () =>
-      isOwn
-        ? ["events", "places", "favorites", "reviews"]
-        : ["events", "places", "reviews"],
-    [isOwn],
+  const tabs = useMemo(
+    () => profileTabs({ isOwn, spotlightOn: program.spotlight }),
+    [isOwn, program.spotlight],
   );
+  const segments = spotlightSegments(isOwn);
+  // The programme can switch off (or the profile turn out to be someone
+  // else's) after a tab was chosen: fall back to a tab that still exists.
+  const currentTab: ProfileTab = tabs.includes(tab) ? tab : "listings";
+  const currentSegment: SpotlightSegment = segments.includes(segment)
+    ? segment
+    : "published";
 
   // Standard detail header: back (left) + centred @username. On your own
   // profile the "+" create button sits on the LEFT (next to back) and the
@@ -119,23 +163,52 @@ export default function UserProfileScreen() {
     />
   );
 
+  const onSpotlights = currentTab === "spotlights";
   const events = useProfileEvents(profile?.user_id);
   const places = useProfilePlaces(profile?.user_id);
   const favEvents = useProfileFavoriteEvents(
-    tab === "favorites" && favSub === "events",
+    currentTab === "favorites" && favSub === "events",
   );
   const favPlaces = useProfileFavoritePlaces(
-    tab === "favorites" && favSub === "places",
+    currentTab === "favorites" && favSub === "places",
   );
   const reviews = useProfileReviews(profile?.user_id);
   const placeReviews = useProfilePlaceReviews(profile?.user_id);
+  // Saved and drafts are requested only for your own profile, and only
+  // while that segment is open.
+  const publicSpotlights = usePublisherSpotlights(
+    "organizer",
+    profile?.user_id,
+    onSpotlights && !isOwn && program.spotlight,
+  );
+  const ownPublished = useOwnSpotlights(
+    "published",
+    onSpotlights && isOwn && currentSegment === "published",
+  );
+  const ownDrafts = useOwnSpotlights(
+    "draft",
+    onSpotlights && isOwn && currentSegment === "drafts",
+  );
+  const saved = useSavedSpotlights(
+    onSpotlights && isOwn && currentSegment === "saved",
+  );
+
+  const spotlightQuery = !isOwn
+    ? publicSpotlights
+    : currentSegment === "saved"
+      ? saved
+      : currentSegment === "drafts"
+        ? ownDrafts
+        : ownPublished;
 
   const active =
-    tab === "events"
-      ? events
-      : tab === "places"
-        ? places
-        : tab === "reviews"
+    currentTab === "listings"
+      ? listingKind === "events"
+        ? events
+        : places
+      : currentTab === "spotlights"
+        ? spotlightQuery
+        : currentTab === "reviews"
           ? reviewSub === "event"
             ? reviews
             : placeReviews
@@ -143,13 +216,30 @@ export default function UserProfileScreen() {
             ? favEvents
             : favPlaces;
 
-  const pages = (active.data?.pages ?? []) as { rows: { id: string }[] }[];
-  const rows = pages.flatMap((p) => p.rows);
+  const rows = useMemo<{ id: string }[]>(() => {
+    if (currentTab === "spotlights") {
+      const pages = (spotlightQuery.data?.pages ?? []) as {
+        posts: (ContentOwnPost | ContentPostDocument)[];
+      }[];
+      const tiles = pages
+        .flatMap((p) => p.posts)
+        .map((post) =>
+          "cover" in post ? tileFromOwnPost(post) : tileFromDocument(post),
+        );
+      return chunkRows(tiles, 3).map(
+        (row): GridRow => ({ id: row[0].id, tiles: row }),
+      );
+    }
+    const pages = (active.data?.pages ?? []) as { rows: { id: string }[] }[];
+    return pages.flatMap((p) => p.rows);
+  }, [currentTab, spotlightQuery.data, active.data]);
 
   const onEndReached = useCallback(() => {
     if (active.hasNextPage && !active.isFetchingNextPage)
       active.fetchNextPage();
   }, [active]);
+
+  const closeListingMenu = useCallback(() => setListingMenu(null), []);
 
   // A tab is still "loading" until its query has produced data at least
   // once — `isPending` (no data yet), not `isLoading` (which is false while
@@ -177,19 +267,40 @@ export default function UserProfileScreen() {
     );
   }
 
-  const isReviewsRow = tab === "reviews";
+  const isReviewsRow = currentTab === "reviews";
   const isPlaceRow =
-    tab === "places" || (tab === "favorites" && favSub === "places");
+    (currentTab === "listings" && listingKind === "places") ||
+    (currentTab === "favorites" && favSub === "places");
 
   const header = (
     <View>
       <ProfileHeader profile={profile} isOwn={isOwn} />
 
       <View className="pt-3">
-        <ProfileTabBar tabs={tabs} value={tab} onChange={setTab} />
+        <ProfileTabBar
+          tabs={tabs}
+          value={currentTab}
+          onChange={setTab}
+          listingKind={listingKind}
+          listingMenuOpen={!!listingMenu}
+          onOpenListingMenu={setListingMenu}
+        />
       </View>
 
-      {tab === "favorites" ? (
+      {currentTab === "spotlights" && segments.length > 1 ? (
+        <View className="px-4 pb-2 pt-3">
+          <SegmentedTabs
+            options={segments.map((key) => ({
+              key,
+              label: SEGMENT_LABEL[key],
+            }))}
+            value={currentSegment}
+            onChange={setSegment}
+          />
+        </View>
+      ) : null}
+
+      {currentTab === "favorites" ? (
         <View className="px-4 pb-2 pt-3">
           <SegmentedTabs
             options={[
@@ -202,7 +313,7 @@ export default function UserProfileScreen() {
         </View>
       ) : null}
 
-      {tab === "reviews" ? (
+      {currentTab === "reviews" ? (
         <View className="px-4 pb-2 pt-3">
           <SegmentedTabs
             options={[
@@ -215,7 +326,7 @@ export default function UserProfileScreen() {
         </View>
       ) : null}
 
-      {tab === "favorites" && !session ? (
+      {currentTab === "favorites" && !session ? (
         <EmptyState
           icon="heart-outline"
           title="Sign in to see favourites"
@@ -225,29 +336,14 @@ export default function UserProfileScreen() {
     </View>
   );
 
-  const emptyTitle =
-    tab === "events"
-      ? "No events yet"
-      : tab === "places"
-        ? "No places yet"
-        : tab === "favorites"
-          ? `No favourite ${favSub} yet`
-          : reviewSub === "event"
-            ? "No reviews yet"
-            : "No place reviews yet";
-
-  // An empty tab should say what fills it, not just that it is empty. The
-  // wording is second-person for your own profile and third for someone
-  // else's — "you haven't saved any" vs "they haven't saved any".
-  const emptyDescription = isOwn
-    ? tab === "events"
-      ? "Events you publish will be listed here."
-      : tab === "places"
-        ? "Places you publish will be listed here."
-        : tab === "favorites"
-          ? `Tap the heart on any ${favSub === "events" ? "event" : "place"} to save it here.`
-          : "Reviews you leave will be listed here."
-    : "Nothing here yet.";
+  const empty = emptyCopy({
+    tab: currentTab,
+    listingKind,
+    segment: currentSegment,
+    favSub,
+    reviewSub,
+    isOwn,
+  });
 
   return (
     <View className="flex-1 bg-background">
@@ -264,8 +360,12 @@ export default function UserProfileScreen() {
           // reparenting crash on Android. The list is short — turning clipping
           // off here is cheap insurance.
           removeClippedSubviews={false}
-          contentContainerClassName="gap-3 pb-16"
+          contentContainerClassName={
+            currentTab === "spotlights" ? "gap-0.5 pb-16" : "gap-3 pb-16"
+          }
           renderItem={({ item }) => {
+            if (currentTab === "spotlights")
+              return <SpotlightTileRow tiles={(item as GridRow).tiles} />;
             if (isReviewsRow)
               return (
                 <View className="px-4">
@@ -293,7 +393,8 @@ export default function UserProfileScreen() {
           ListEmptyComponent={
             showTabLoader ? (
               <Spinner className="mt-6" />
-            ) : tab === "favorites" && !session ? null : active.isError ? (
+            ) : currentTab === "favorites" &&
+              !session ? null : active.isError ? (
               <EmptyState
                 icon="cloud-offline-outline"
                 title="Couldn't load this tab"
@@ -303,15 +404,32 @@ export default function UserProfileScreen() {
               />
             ) : (
               <EmptyState
-                icon="albums-outline"
-                title={emptyTitle}
-                description={emptyDescription}
+                icon={empty.icon}
+                title={empty.title}
+                description={empty.description}
+                actionLabel={empty.actionLabel}
+                onAction={
+                  empty.actionLabel
+                    ? () => router.push("/(app)/spotlight/new?kind=spotlight")
+                    : undefined
+                }
               />
             )
           }
           ListFooterComponent={active.isFetchingNextPage ? <Spinner /> : null}
         />
       </Animated.View>
+
+      <ListingKindMenu
+        anchor={listingMenu}
+        value={listingKind}
+        onClose={closeListingMenu}
+        onSelect={(kind) => {
+          setListingKind(kind);
+          setTab("listings");
+          setListingMenu(null);
+        }}
+      />
 
       <CreateActionSheet
         open={createOpen}
@@ -327,4 +445,68 @@ export default function UserProfileScreen() {
       />
     </View>
   );
+}
+
+// An empty tab should say what fills it, not just that it is empty — second
+// person on your own profile, third on someone else's.
+function emptyCopy(o: {
+  tab: ProfileTab;
+  listingKind: ListingKind;
+  segment: SpotlightSegment;
+  favSub: FavSub;
+  reviewSub: ReviewSub;
+  isOwn: boolean;
+}): {
+  icon: "albums-outline" | "play-circle-outline" | "bookmark-outline";
+  title: string;
+  description: string;
+  actionLabel?: string;
+} {
+  if (o.tab === "spotlights") {
+    if (o.segment === "saved") {
+      return {
+        icon: "bookmark-outline",
+        title: "No saved Spotlights",
+        description:
+          "Tap Save on a Spotlight to keep it here. Only you see this.",
+      };
+    }
+    if (o.segment === "drafts") {
+      return {
+        icon: "play-circle-outline",
+        title: "No drafts",
+        description: "Spotlights you start but don't publish wait here.",
+      };
+    }
+    return o.isOwn
+      ? {
+          icon: "play-circle-outline",
+          title: "No Spotlights yet",
+          description: "Short videos you publish show up here.",
+          actionLabel: "Create a Spotlight",
+        }
+      : {
+          icon: "play-circle-outline",
+          title: "No Spotlights yet",
+          description: "Nothing published here yet.",
+        };
+  }
+  const title =
+    o.tab === "listings"
+      ? o.listingKind === "events"
+        ? "No events yet"
+        : "No places yet"
+      : o.tab === "favorites"
+        ? `No favourite ${o.favSub} yet`
+        : o.reviewSub === "event"
+          ? "No reviews yet"
+          : "No place reviews yet";
+  const description = o.isOwn
+    ? o.tab === "listings"
+      ? `${o.listingKind === "events" ? "Events" : "Places"} you publish will be listed here.`
+      : o.tab === "favorites"
+        ? `Tap the heart on any ${o.favSub === "events" ? "event" : "place"} to save it here.`
+        : "Reviews you leave will be listed here."
+    : "Nothing here yet.";
+  return { icon: "albums-outline", title, description };
 }

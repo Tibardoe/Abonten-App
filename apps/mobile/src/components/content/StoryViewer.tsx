@@ -3,6 +3,7 @@ import {
   contentShareUrl,
   publisherLabel,
   shareContent,
+  useRequireSignIn,
 } from "@/features/content/contentLinks";
 import {
   useInvalidateContent,
@@ -17,9 +18,11 @@ import {
   flushContentViews,
   usePlaySession,
 } from "@/features/content/useContentTelemetry";
+import { useStoryReply } from "@/features/content/useStoryReply";
 import { copyText } from "@/features/messaging/clipboardSupport";
 import { api } from "@/lib/api";
-import { hapticLight } from "@/lib/haptics";
+import { hapticLight, hapticSuccess } from "@/lib/haptics";
+import { useKeyboardLift } from "@/lib/useKeyboardLift";
 import { CONTENT_REACTIONS } from "@abonten/core/content/reactions";
 import {
   formatStoryAge,
@@ -29,8 +32,15 @@ import { IMAGE_DWELL_MS } from "@abonten/core/content/viewTracking";
 import type {
   ContentPostDocument,
   ContentPublisherKind,
+  ContentReactionEmoji,
 } from "@abonten/types/contentType";
-import { AppText, Avatar, Icon, useToast } from "@abonten/ui-native";
+import {
+  AppText,
+  Avatar,
+  Icon,
+  useReducedMotion,
+  useToast,
+} from "@abonten/ui-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -39,19 +49,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
+  Keyboard,
   Pressable,
   StyleSheet,
+  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   Easing,
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  ZoomIn,
   cancelAnimation,
   runOnJS,
   useAnimatedStyle,
@@ -72,27 +83,33 @@ type Slide = { story: ContentPostDocument; mediaIndex: number };
 
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 900;
+const MAX_REPLY_LENGTH = 1000;
 
 /**
- * Full-screen Stories player (same gestures as the highlight viewer): tap
- * the left third for back, the rest for next, hold to pause, drag down to
- * close, swipe sideways for the next or previous publisher. Opening
- * comments or a report closes the viewer first (a sheet cannot sit on top
- * of this Modal on iOS); the parent opens it once the viewer has gone.
+ * Full-screen Stories player: tap the left third for back, the rest for
+ * next, hold to pause, drag down to close, swipe sideways for the next or
+ * previous publisher.
+ *
+ * It renders inside a normal screen (the `story/play` route, or a shared
+ * `story/[id]` link) rather than a <Modal>, so the reply bar can ride the
+ * keyboard in the app's own window and a report sheet can open on top of a
+ * Story without closing it first.
+ *
+ * Replies and reactions are private messages to the publisher (they land in
+ * Messages with the Story attached), sent from the bar along the bottom
+ * without leaving the Story.
  */
 export function StoryViewer({
   queue,
   startIndex = 0,
   startStoryId,
   onClose,
-  onOpenComments,
   onReport,
 }: {
   queue: StoryQueueEntry[];
   startIndex?: number;
   startStoryId?: string | null;
   onClose: () => void;
-  onOpenComments?: (story: ContentPostDocument) => void;
   onReport?: (story: ContentPostDocument) => void;
 }) {
   const qc = useQueryClient();
@@ -104,6 +121,7 @@ export function StoryViewer({
   const close = useCallback(() => {
     if (closedRef.current) return;
     closedRef.current = true;
+    Keyboard.dismiss();
     onClose();
     // The last Story reports its view as it unmounts, so send the batch on
     // the next tick, then refresh the tray so its ring turns seen.
@@ -123,49 +141,42 @@ export function StoryViewer({
   }, [entryIndex]);
 
   return (
-    <Modal
-      visible
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      onRequestClose={close}
-    >
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={{ flex: 1, backgroundColor: "#000" }}>
-          {sequence.isLoading ? (
-            <View className="flex-1 items-center justify-center">
-              <ActivityIndicator color="#fff" />
-            </View>
-          ) : sequence.isError || !sequence.data ? (
-            <View className="flex-1 items-center justify-center gap-3 px-8">
-              <AppText className="text-center text-white">
-                Couldn't load these Stories.
-              </AppText>
-              <Pressable onPress={nextEntry}>
-                <AppText className="font-semibold text-white underline">
-                  Continue
-                </AppText>
-              </Pressable>
-            </View>
-          ) : (
-            <SequencePlayer
-              key={`${entry.publisherKind}:${entry.publisherId}`}
-              stories={sequence.data.stories}
-              startStoryId={entryIndex === startIndex ? startStoryId : null}
-              onFinished={nextEntry}
-              onBeforeFirst={prevEntry}
-              onNextPublisher={nextEntry}
-              onPrevPublisher={prevEntry}
-              onClose={close}
-              onOpenComments={onOpenComments}
-              onReport={onReport}
-              publisherKind={entry.publisherKind}
-              publisherId={entry.publisherId}
-            />
-          )}
+    <View style={{ flex: 1, backgroundColor: "#000" }}>
+      {!entry || sequence.isLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color="#fff" />
         </View>
-      </GestureHandlerRootView>
-    </Modal>
+      ) : sequence.isError || !sequence.data ? (
+        <View className="flex-1 items-center justify-center gap-3 px-8">
+          <AppText className="text-center text-white">
+            Couldn't load these Stories.
+          </AppText>
+          <Pressable
+            onPress={nextEntry}
+            hitSlop={10}
+            accessibilityRole="button"
+          >
+            <AppText className="font-semibold text-white underline">
+              Continue
+            </AppText>
+          </Pressable>
+        </View>
+      ) : (
+        <SequencePlayer
+          key={`${entry.publisherKind}:${entry.publisherId}`}
+          stories={sequence.data.stories}
+          startStoryId={entryIndex === startIndex ? startStoryId : null}
+          onFinished={nextEntry}
+          onBeforeFirst={prevEntry}
+          onNextPublisher={nextEntry}
+          onPrevPublisher={prevEntry}
+          onClose={close}
+          onReport={onReport}
+          publisherKind={entry.publisherKind}
+          publisherId={entry.publisherId}
+        />
+      )}
+    </View>
   );
 }
 
@@ -177,7 +188,6 @@ function SequencePlayer({
   onNextPublisher,
   onPrevPublisher,
   onClose,
-  onOpenComments,
   onReport,
   publisherKind,
   publisherId,
@@ -189,7 +199,6 @@ function SequencePlayer({
   onNextPublisher: () => void;
   onPrevPublisher: () => void;
   onClose: () => void;
-  onOpenComments?: (story: ContentPostDocument) => void;
   onReport?: (story: ContentPostDocument) => void;
   publisherKind: ContentPublisherKind;
   publisherId: string;
@@ -237,7 +246,6 @@ function SequencePlayer({
         setIndex(Math.max(0, first));
       }}
       onClose={onClose}
-      onOpenComments={onOpenComments}
       onReport={onReport}
       publisherKind={publisherKind}
       publisherId={publisherId}
@@ -255,7 +263,6 @@ function StorySlide({
   onPrevPublisher,
   onRemoved,
   onClose,
-  onOpenComments,
   onReport,
   publisherKind,
   publisherId,
@@ -269,7 +276,6 @@ function StorySlide({
   onPrevPublisher: () => void;
   onRemoved: () => void;
   onClose: () => void;
-  onOpenComments?: (story: ContentPostDocument) => void;
   onReport?: (story: ContentPostDocument) => void;
   publisherKind: ContentPublisherKind;
   publisherId: string;
@@ -283,14 +289,30 @@ function StorySlide({
   const toast = useToast();
   const { session } = useSession();
   const { program } = useContentProgram();
+  const requireSignIn = useRequireSignIn();
   const invalidate = useInvalidateContent();
+  const reduceMotion = useReducedMotion();
   const engagement = usePostEngagement(story, () => !!session);
+  const replies = useStoryReply(story.id);
+  const keyboard = useKeyboardLift();
   const isAuthor = story.viewer.isAuthor;
 
   const [loaded, setLoaded] = useState(false);
   const [holding, setHolding] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const paused = holding || menuOpen || !loaded;
+  const [replyFocused, setReplyFocused] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [burst, setBurst] = useState<{ emoji: string; key: number } | null>(
+    null,
+  );
+  const [sent, setSent] = useState<{
+    conversationId: string;
+    label: string;
+  } | null>(null);
+  const input = useRef<TextInput>(null);
+  // The video has actually advanced since this slide loaded it.
+  const startedRef = useRef(false);
+  const paused = holding || menuOpen || !loaded || replyFocused;
 
   const progress = useSharedValue(0);
   const dragY = useSharedValue(0);
@@ -332,6 +354,7 @@ function StorySlide({
         ? media.playbackUrl
         : media.mediaUrl;
     let cancelled = false;
+    startedRef.current = false;
     const subs: { remove: () => void }[] = [];
     runPlayer((p) => {
       subs.push(
@@ -348,6 +371,12 @@ function StorySlide({
           }
         }),
         p.addListener("playToEnd", () => {
+          // The fresh player reports "ended" for its empty source the moment
+          // the real one starts loading (measured: currentTime 0, duration
+          // 0). When the video is the first slide shown, that skipped it —
+          // and closed a Story opened from Messages at once. Only an ending
+          // after the video has actually played counts.
+          if (!startedRef.current) return;
           play.onEnded();
           onNext();
         }),
@@ -356,6 +385,7 @@ function StorySlide({
           else play.onPaused();
         }),
         p.addListener("timeUpdate", ({ currentTime }) => {
+          if (currentTime > 0.1) startedRef.current = true;
           const dur = p.duration || media.durationSeconds || 0;
           if (dur > 0) progress.value = Math.min(1, currentTime / dur);
         }),
@@ -364,7 +394,13 @@ function StorySlide({
     (async () => {
       try {
         await player.replaceAsync({ uri: preferred });
-        if (!cancelled) runPlayer((p) => p.play());
+        if (cancelled) return;
+        runPlayer((p) => {
+          // A cached source can already be ready, with no status change
+          // left to announce it.
+          if (p.status === "readyToPlay") setLoaded(true);
+          p.play();
+        });
       } catch {
         if (!cancelled) onNext();
       }
@@ -378,7 +414,9 @@ function StorySlide({
       }
       runPlayer((p) => p.pause());
     };
-  }, [media?.id]);
+    // `player` too: if the hook hands back a new player (it can be released
+    // and recreated), loading the old one played sound into no view.
+  }, [media?.id, player]);
 
   useEffect(() => {
     if (!isVideo) return;
@@ -386,7 +424,7 @@ function StorySlide({
     else if (!paused) runPlayer((p) => p.play());
   }, [paused, loaded, isVideo, runPlayer]);
 
-  // Image: a fixed dwell that freezes while held.
+  // Image: a fixed dwell that freezes while held or while replying.
   // biome-ignore lint/correctness/useExhaustiveDependencies: progress is a stable shared value
   useEffect(() => {
     if (isVideo || !loaded) return;
@@ -407,18 +445,41 @@ function StorySlide({
     return () => cancelAnimation(progress);
   }, [isVideo, loaded, paused, onNext, play]);
 
+  // Keyboard hidden by the system (back button, swipe) = done replying.
+  useEffect(() => {
+    const sub = Keyboard.addListener("keyboardDidHide", () => {
+      input.current?.blur();
+    });
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (!sent) return;
+    const t = setTimeout(() => setSent(null), 3200);
+    return () => clearTimeout(t);
+  }, [sent]);
+  useEffect(() => {
+    if (!burst) return;
+    const t = setTimeout(() => setBurst(null), 900);
+    return () => clearTimeout(t);
+  }, [burst]);
+
+  const gesturesOn = !replyFocused;
   const tap = Gesture.Tap()
+    .enabled(gesturesOn)
     .maxDuration(250)
     .onEnd((e) => {
       if (e.x < width / 3) runOnJS(onPrev)();
       else runOnJS(onNext)();
     });
   const longPress = Gesture.LongPress()
+    .enabled(gesturesOn)
     .minDuration(200)
     .maxDistance(10_000)
     .onStart(() => runOnJS(setHolding)(true))
     .onFinalize(() => runOnJS(setHolding)(false));
   const pan = Gesture.Pan()
+    .enabled(gesturesOn)
     .minDistance(14)
     .onUpdate((e) => {
       if (
@@ -454,6 +515,15 @@ function StorySlide({
   const barStyle = useAnimatedStyle(() => ({
     width: `${Math.min(100, Math.max(0, progress.value * 100))}%`,
   }));
+  // The footer sits on the safe area; when the keyboard opens it rides the
+  // keyboard's top edge instead, frame by frame.
+  const footerLift = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY: -Math.max(0, keyboard.height.value - insets.bottom + 4),
+      },
+    ],
+  }));
 
   const deleteStory = () => {
     setMenuOpen(false);
@@ -486,18 +556,67 @@ function StorySlide({
     onClose();
   };
 
-  const canReact = !isAuthor && !!session && program.storiesReactions;
-  const canComment = program.storiesComments && story.allowComments;
+  const repliesPossible =
+    !isAuthor && story.publisher.kind !== "abonten" && program.stories;
+  const canReact = repliesPossible && program.storiesReactions;
+  const canReply =
+    repliesPossible && program.storiesComments && story.allowComments;
+  const name = publisherLabel(story.publisher);
   const backdrop = isVideo
     ? (media?.posterUrl ?? media?.thumbnailUrl ?? undefined)
     : media?.mediaUrl;
+
+  const sendReply = async () => {
+    const text = draft.trim();
+    if (!text || replies.sending) return;
+    if (!requireSignIn()) return;
+    const outcome = await replies.reply(text);
+    if (!outcome.ok) {
+      toast.error(outcome.message);
+      return;
+    }
+    hapticSuccess();
+    setDraft("");
+    input.current?.blur();
+    Keyboard.dismiss();
+    setSent({ conversationId: outcome.conversationId, label: "Reply sent" });
+  };
+
+  const sendReaction = async (emoji: ContentReactionEmoji) => {
+    if (!requireSignIn()) return;
+    hapticLight();
+    if (engagement.reaction === emoji) {
+      // Same emoji again takes the reaction back; nothing is messaged.
+      engagement.react(emoji);
+      return;
+    }
+    const previous = engagement.reaction;
+    engagement.setReaction(emoji);
+    setBurst({ emoji, key: Date.now() });
+    const outcome = await replies.react(emoji);
+    if (!outcome.ok) {
+      engagement.setReaction(previous);
+      toast.error(outcome.message);
+      return;
+    }
+    setSent({ conversationId: outcome.conversationId, label: "Reaction sent" });
+  };
+
+  const openConversation = (conversationId: string) => {
+    onClose();
+    setTimeout(
+      () => router.push(`/(app)/messages/${conversationId}` as never),
+      0,
+    );
+  };
 
   const menuItems: {
     icon:
       | "link-outline"
       | "volume-mute-outline"
       | "flag-outline"
-      | "trash-outline";
+      | "trash-outline"
+      | "stats-chart-outline";
     label: string;
     onPress: () => void;
     destructive?: boolean;
@@ -515,7 +634,7 @@ function StorySlide({
   if (!isAuthor && session) {
     menuItems.push({
       icon: "volume-mute-outline",
-      label: `Mute ${publisherLabel(story.publisher)}`,
+      label: `Mute ${name}`,
       onPress: muteStories,
     });
     if (onReport) {
@@ -531,6 +650,15 @@ function StorySlide({
     }
   }
   if (isAuthor) {
+    menuItems.push({
+      icon: "stats-chart-outline",
+      label: "Insights",
+      onPress: () => {
+        setMenuOpen(false);
+        onClose();
+        setTimeout(() => router.push(`/(app)/spotlight/post/${story.id}`), 0);
+      },
+    });
     menuItems.push({
       icon: "trash-outline",
       label: "Delete Story",
@@ -587,6 +715,45 @@ function StorySlide({
         </Animated.View>
       </GestureDetector>
 
+      {/* While replying: dim the Story; a tap on it just ends replying. */}
+      {replyFocused ? (
+        <Animated.View
+          entering={reduceMotion ? undefined : FadeIn.duration(160)}
+          exiting={reduceMotion ? undefined : FadeOut.duration(140)}
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: "rgba(0,0,0,0.4)" },
+          ]}
+        >
+          <Pressable
+            style={{ flex: 1 }}
+            accessibilityRole="button"
+            accessibilityLabel="Stop replying"
+            onPress={() => {
+              input.current?.blur();
+              Keyboard.dismiss();
+            }}
+          />
+        </Animated.View>
+      ) : null}
+
+      {burst ? (
+        <Animated.View
+          key={burst.key}
+          pointerEvents="none"
+          entering={reduceMotion ? undefined : ZoomIn.springify().damping(12)}
+          exiting={reduceMotion ? undefined : FadeOut.duration(220)}
+          style={[
+            StyleSheet.absoluteFill,
+            { alignItems: "center", justifyContent: "center" },
+          ]}
+        >
+          <AppText style={{ fontSize: 96, lineHeight: 112 }}>
+            {burst.emoji}
+          </AppText>
+        </Animated.View>
+      ) : null}
+
       {/* Header */}
       <Animated.View
         style={[
@@ -617,7 +784,9 @@ function StorySlide({
         </View>
         <View className="mt-3 flex-row items-center gap-2 px-3">
           <Pressable
-            className="flex-1 flex-row items-center gap-2"
+            className="shrink flex-row items-center gap-2"
+            accessibilityRole="link"
+            accessibilityLabel={`${name}, open profile`}
             onPress={() => {
               const route =
                 story.publisher.kind === "place"
@@ -627,27 +796,25 @@ function StorySlide({
                     : null;
               if (!route) return;
               onClose();
-              router.push(route as never);
+              setTimeout(() => router.push(route as never), 0);
             }}
           >
             <Avatar
               publicId={story.publisher.avatarPublicId}
               version={story.publisher.avatarVersion}
-              size={32}
+              size={34}
             />
             <AppText
               numberOfLines={1}
               className="shrink text-[14px] font-semibold text-white"
             >
-              {publisherLabel(story.publisher)}
+              {name}
             </AppText>
             <AppText className="text-[12px] text-white/75">
               {formatStoryAge(story.publishedAt)}
             </AppText>
           </Pressable>
-          {!isAuthor &&
-          !story.viewer.following &&
-          story.publisher.kind !== "abonten" ? (
+          {!isAuthor && story.publisher.kind !== "abonten" ? (
             <FollowButton
               kind={story.publisher.kind === "place" ? "place" : "organizer"}
               targetId={story.publisher.id}
@@ -655,13 +822,16 @@ function StorySlide({
               label={story.publisher.name}
               known={story.viewer.following}
               onMedia
+              inline
             />
           ) : null}
+          <View className="flex-1" />
           <Pressable
             onPress={() => setMenuOpen((v) => !v)}
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel="Story options"
+            className="h-9 w-9 items-center justify-center"
           >
             <Icon name="ellipsis-vertical" size={20} color="#fff" />
           </Pressable>
@@ -669,80 +839,217 @@ function StorySlide({
             onPress={onClose}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel="Close Stories"
+            className="h-9 w-9 items-center justify-center"
           >
             <Icon name="close" size={26} color="#fff" />
           </Pressable>
         </View>
       </Animated.View>
 
-      {/* Footer */}
+      {/* Footer: caption, CTA, then the reply bar riding the keyboard */}
       <Animated.View
         style={[
           {
             position: "absolute",
-            left: 12,
-            right: 12,
-            bottom: insets.bottom + 16,
+            left: 0,
+            right: 0,
+            bottom: insets.bottom + 10,
           },
           chromeStyle,
+          footerLift,
         ]}
         pointerEvents={holding ? "none" : "box-none"}
-        className="gap-2"
+        className="gap-2.5 px-3"
       >
-        {story.caption ? (
+        {sent ? (
+          <Animated.View
+            entering={reduceMotion ? undefined : FadeInDown.duration(200)}
+            exiting={reduceMotion ? undefined : FadeOut.duration(160)}
+            className="flex-row items-center gap-2 self-center rounded-full bg-white px-3.5 py-2"
+            accessibilityLiveRegion="polite"
+          >
+            <Icon name="checkmark-circle" size={16} color="#0F9D8F" />
+            <AppText className="text-[13px] font-semibold text-black">
+              {sent.label}
+            </AppText>
+            <Pressable
+              onPress={() => openConversation(sent.conversationId)}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="View the conversation"
+            >
+              <AppText className="text-[13px] font-bold text-[#0F9D8F]">
+                View chat
+              </AppText>
+            </Pressable>
+          </Animated.View>
+        ) : null}
+
+        {!replyFocused && story.caption ? (
           <AppText className="text-[14px] text-white">{story.caption}</AppText>
         ) : null}
-        {story.event || story.place ? (
+        {!replyFocused && (story.event || story.place) ? (
           // Same live-state button as a Spotlight: a cancelled, ended or
           // sold-out event says so instead of offering a stale link.
           <ContentCta post={story} onNavigate={onClose} />
         ) : null}
-        <View className="flex-row items-center gap-2">
-          {isAuthor ? (
-            <View className="flex-1 flex-row items-center gap-1">
-              <Icon name="eye-outline" size={16} color="#fff" />
-              <AppText className="text-[13px] text-white">
-                {engagement.counts.views.toLocaleString()} viewed
-              </AppText>
-            </View>
-          ) : canReact ? (
-            <View className="flex-1 flex-row items-center">
-              {CONTENT_REACTIONS.map((emoji) => (
-                <Pressable
-                  key={emoji}
-                  onPress={() => {
-                    hapticLight();
-                    engagement.react(emoji);
+
+        {replyFocused && canReact ? (
+          <Animated.View
+            entering={reduceMotion ? undefined : FadeInDown.duration(180)}
+            className="flex-row justify-between px-1"
+          >
+            {CONTENT_REACTIONS.map((emoji) => (
+              <Pressable
+                key={emoji}
+                onPress={() => sendReaction(emoji)}
+                accessibilityRole="button"
+                accessibilityLabel={`React ${emoji}`}
+                accessibilityState={{ selected: engagement.reaction === emoji }}
+                hitSlop={4}
+                className={[
+                  "h-12 w-12 items-center justify-center rounded-full",
+                  engagement.reaction === emoji ? "bg-white/25" : "",
+                ].join(" ")}
+              >
+                <AppText className="text-[28px] leading-[34px]">
+                  {emoji}
+                </AppText>
+              </Pressable>
+            ))}
+          </Animated.View>
+        ) : null}
+
+        {isAuthor ? (
+          <Pressable
+            onPress={() => {
+              onClose();
+              setTimeout(
+                () => router.push(`/(app)/spotlight/post/${story.id}`),
+                0,
+              );
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={`${engagement.counts.views.toLocaleString()} viewed. Open insights`}
+            className="flex-row items-center gap-1.5 self-start rounded-full bg-black/35 px-3 py-2"
+          >
+            <Icon name="eye-outline" size={16} color="#fff" />
+            <AppText className="text-[13px] font-semibold text-white">
+              {engagement.counts.views.toLocaleString()} viewed
+            </AppText>
+            <Icon name="chevron-forward" size={14} color="#fff" />
+          </Pressable>
+        ) : repliesPossible ? (
+          <View className="flex-row items-end gap-2">
+            {canReply ? (
+              <View
+                className={[
+                  "min-h-[46px] flex-1 flex-row items-end rounded-3xl border px-4",
+                  replyFocused
+                    ? "border-white bg-black/55"
+                    : "border-white/60 bg-black/25",
+                ].join(" ")}
+              >
+                <TextInput
+                  ref={input}
+                  value={draft}
+                  onChangeText={setDraft}
+                  onFocus={() => {
+                    if (!session) {
+                      input.current?.blur();
+                      requireSignIn();
+                      return;
+                    }
+                    setReplyFocused(true);
                   }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`React ${emoji}`}
-                  accessibilityState={{
-                    selected: engagement.reaction === emoji,
+                  onBlur={() => setReplyFocused(false)}
+                  maxLength={MAX_REPLY_LENGTH}
+                  multiline
+                  placeholder={`Reply to ${name}…`}
+                  placeholderTextColor="rgba(255,255,255,0.75)"
+                  accessibilityLabel={`Reply privately to ${name}`}
+                  accessibilityHint="Sends a message with this Story attached"
+                  selectionColor="#fff"
+                  style={{
+                    flex: 1,
+                    color: "#fff",
+                    fontSize: 15,
+                    maxHeight: 110,
+                    paddingTop: 12,
+                    paddingBottom: 12,
                   }}
-                  className={[
-                    "rounded-full px-1.5 py-1",
-                    engagement.reaction === emoji ? "bg-white/25" : "",
-                  ].join(" ")}
-                >
-                  <AppText className="text-[22px]">{emoji}</AppText>
-                </Pressable>
-              ))}
-            </View>
-          ) : (
-            <View className="flex-1" />
-          )}
-          {canComment && onOpenComments ? (
-            <Pressable
-              onPress={() => onOpenComments(story)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Comments"
-            >
-              <Icon name="chatbubble-outline" size={24} color="#fff" />
-            </Pressable>
-          ) : null}
-          {program.storiesSharing ? (
+                />
+              </View>
+            ) : (
+              <View className="min-h-[46px] flex-1 justify-center rounded-3xl border border-white/30 px-4">
+                <AppText className="text-[14px] text-white/70">
+                  Replies are off for this Story
+                </AppText>
+              </View>
+            )}
+
+            {replyFocused && draft.trim() ? (
+              <Pressable
+                onPress={sendReply}
+                disabled={replies.sending}
+                accessibilityRole="button"
+                accessibilityLabel="Send reply"
+                accessibilityState={{ busy: replies.sending }}
+                className="h-[46px] w-[46px] items-center justify-center rounded-full bg-white"
+              >
+                {replies.sending ? (
+                  <ActivityIndicator color="#000" />
+                ) : (
+                  <Icon name="arrow-up" size={22} color="#000" />
+                )}
+              </Pressable>
+            ) : (
+              <>
+                {canReact ? (
+                  <Pressable
+                    onPress={() => sendReaction("❤️")}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      engagement.reaction === "❤️"
+                        ? "Remove your heart"
+                        : "Send a heart"
+                    }
+                    accessibilityState={{
+                      selected: engagement.reaction === "❤️",
+                    }}
+                    className="h-[46px] w-[42px] items-center justify-center"
+                  >
+                    <Icon
+                      name={
+                        engagement.reaction === "❤️" ? "heart" : "heart-outline"
+                      }
+                      size={28}
+                      color={engagement.reaction === "❤️" ? "#ff3b5c" : "#fff"}
+                    />
+                  </Pressable>
+                ) : null}
+                {program.storiesSharing && !replyFocused ? (
+                  <Pressable
+                    onPress={async () => {
+                      setHolding(true);
+                      const outcome = await shareContent(story);
+                      setHolding(false);
+                      if (outcome.kind === "shared")
+                        engagement.recordShare("native");
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share"
+                    className="h-[46px] w-[42px] items-center justify-center"
+                  >
+                    <Icon name="paper-plane-outline" size={26} color="#fff" />
+                  </Pressable>
+                ) : null}
+              </>
+            )}
+          </View>
+        ) : program.storiesSharing ? (
+          <View className="flex-row justify-end">
             <Pressable
               onPress={async () => {
                 setHolding(true);
@@ -750,14 +1057,14 @@ function StorySlide({
                 setHolding(false);
                 if (outcome.kind === "shared") engagement.recordShare("native");
               }}
-              hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Share"
+              className="h-[46px] w-[46px] items-center justify-center"
             >
-              <Icon name="paper-plane-outline" size={24} color="#fff" />
+              <Icon name="paper-plane-outline" size={26} color="#fff" />
             </Pressable>
-          ) : null}
-        </View>
+          </View>
+        ) : null}
       </Animated.View>
 
       {menuOpen ? (
@@ -765,20 +1072,26 @@ function StorySlide({
           <Pressable
             style={StyleSheet.absoluteFill}
             onPress={() => setMenuOpen(false)}
+            accessibilityLabel="Close menu"
           />
-          <View
+          <Animated.View
+            entering={reduceMotion ? undefined : FadeIn.duration(120)}
             style={{ position: "absolute", right: 12, top: insets.top + 60 }}
-            className="overflow-hidden rounded-xl border border-border bg-popover"
+            className="min-w-[200px] overflow-hidden rounded-2xl border border-border bg-popover"
           >
-            {menuItems.map((item) => (
+            {menuItems.map((item, i) => (
               <Pressable
                 key={item.label}
                 onPress={item.onPress}
-                className="min-h-[44px] flex-row items-center gap-2 px-4 py-3 active:opacity-70"
+                accessibilityRole="button"
+                className={[
+                  "min-h-[48px] flex-row items-center gap-3 px-4 py-3 active:bg-muted",
+                  i > 0 ? "border-t border-border" : "",
+                ].join(" ")}
               >
                 <Icon
                   name={item.icon}
-                  size={18}
+                  size={19}
                   tone={item.destructive ? "destructive" : "foreground"}
                 />
                 <AppText
@@ -790,7 +1103,7 @@ function StorySlide({
                 </AppText>
               </Pressable>
             ))}
-          </View>
+          </Animated.View>
         </>
       ) : null}
     </View>

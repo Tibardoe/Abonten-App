@@ -477,7 +477,11 @@ export async function listPublisherPostsCore(
 export async function listOwnContentPostsCore(
   supabase: ServiceRoleClient,
   userId: string,
-  input: { kind?: ContentKind; cursor?: string | null },
+  input: {
+    kind?: ContentKind;
+    status?: "published" | "draft";
+    cursor?: string | null;
+  },
 ): Promise<
   Envelope<{
     posts: ContentOwnPost[];
@@ -497,6 +501,7 @@ export async function listOwnContentPostsCore(
     .order("id", { ascending: false })
     .limit(PAGE + 1);
   if (input.kind) query = query.eq("kind", input.kind);
+  if (input.status) query = query.eq("status", input.status);
   if (cursor) {
     query = query.or(
       `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,

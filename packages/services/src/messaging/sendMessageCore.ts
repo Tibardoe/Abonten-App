@@ -57,22 +57,47 @@ export async function sendMessageCore(
     return { status: 500, message: "Something went wrong. Please try again." };
   }
 
-  const message = await readMessage(supabase, messageId as string);
+  return deliverSentMessage(supabase, userId, {
+    conversationId: input.conversationId,
+    messageId: messageId as string,
+    fallback: input,
+  });
+}
+
+/**
+ * Read a just-sent message back and fan out the notification. Shared by
+ * sendMessageCore and the Story-reply send (storyReplyCore), whose RPC sends
+ * through send_message too.
+ */
+export async function deliverSentMessage(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  args: {
+    conversationId: string;
+    messageId: string;
+    fallback: SendMessageInput;
+    /** Overrides the notification body (default: the message preview). */
+    notificationBody?: string;
+  },
+): Promise<SendResult> {
+  const { messageId, fallback: input } = args;
+  const message = await readMessage(supabase, messageId);
   if (!message) {
     // The send succeeded; only the read-back failed. Return a minimal row.
     return {
       status: 200,
       data: {
-        message: minimalRow(messageId as string, input, userId),
+        message: minimalRow(messageId, input, userId),
       },
     };
   }
 
   // Best-effort notification fan-out — never blocks or fails the send.
   notifyOtherParticipants(supabase, {
-    conversationId: input.conversationId,
+    conversationId: args.conversationId,
     senderId: userId,
     message,
+    body: args.notificationBody,
   }).catch((e) => logger.error(`sendMessageCore: notify failed: ${e}`));
 
   return { status: 200, data: { message } };
@@ -146,7 +171,12 @@ function minimalRow(
 
 async function notifyOtherParticipants(
   supabase: SupabaseClient<Database>,
-  args: { conversationId: string; senderId: string; message: MessageRow },
+  args: {
+    conversationId: string;
+    senderId: string;
+    message: MessageRow;
+    body?: string;
+  },
 ): Promise<void> {
   const { conversationId, senderId, message } = args;
 
@@ -179,7 +209,7 @@ async function notifyOtherParticipants(
 
   const senderName =
     sender?.full_name || sender?.username || conv?.title || "New message";
-  const preview = messagePreview(message);
+  const preview = args.body ?? messagePreview(message);
 
   let service: SupabaseClient<Database>;
   try {

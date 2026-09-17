@@ -3,7 +3,10 @@ import {
   MAX_CAPTION_LENGTH,
   MAX_COMMENT_LENGTH,
 } from "@abonten/core/content/limits";
-import { CONTENT_REACTIONS } from "@abonten/core/content/reactions";
+import {
+  CONTENT_REACTIONS,
+  isContentReaction,
+} from "@abonten/core/content/reactions";
 import { z } from "zod";
 
 // Spotlight + Stories inputs, shared by the web Server Actions, the
@@ -484,7 +487,26 @@ export const cursorRequestSchema = z.object({ cursor: optionalString });
 
 export const ownContentRequestSchema = z.object({
   kind: contentKindSchema.optional(),
+  /** Narrow to published posts or drafts (the profile Spotlights tab). */
+  status: z.enum(["published", "draft"]).optional(),
   cursor: optionalString,
 });
 
 export const checkoutIdSchema = z.object({ checkoutId: uuid });
+
+/** A private reply or reaction to a Story; it lands in Messages. */
+export const storyReplySchema = z
+  .object({
+    postId: uuid,
+    kind: z.enum(["text", "reaction"]).default("text"),
+    content: z
+      .string()
+      .trim()
+      .min(1, "Write a reply first.")
+      .max(1000, "Keep your reply under 1,000 characters."),
+    clientGeneratedId: uuid.nullish(),
+  })
+  .refine((v) => v.kind === "text" || isContentReaction(v.content), {
+    message: "Choose one of the Story reactions.",
+    path: ["content"],
+  });

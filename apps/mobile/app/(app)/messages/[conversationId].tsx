@@ -318,6 +318,7 @@ export default function ConversationScreen() {
     return () => clearTimeout(t);
   }, [highlightId]);
 
+  const openedAt = useRef(Date.now());
   const renderEntry = useCallback(
     ({ item }: { item: ChatEntry }) => {
       if (item.kind === "day") return <DaySeparator label={item.label} />;
@@ -328,6 +329,14 @@ export default function ConversationScreen() {
         item.isMine &&
         !item.pending &&
         new Date(item.message.created_at).getTime() <= otherReadAt;
+      // Only what arrives while the thread is open animates in: your own
+      // send while it is still the optimistic row, and other people's new
+      // messages. The confirmed copy replacing your optimistic row (a new
+      // key) must not animate a second time.
+      const createdAt = new Date(item.message.created_at).getTime();
+      const animateIn =
+        createdAt > openedAt.current &&
+        (item.isMine ? item.pending?.status === "sending" : !item.pending);
       return (
         <MessageBubble
           message={item.message}
@@ -339,6 +348,7 @@ export default function ConversationScreen() {
           // While its lifted clone is on screen in the action overlay, hide
           // the real bubble so there's no "ghost" behind the lift-out.
           hiddenForMenu={menuTarget?.message.id === item.message.id}
+          animateIn={animateIn}
           onPressImage={setViewerUri}
           onLongPress={openMessageMenu}
           onReply={setReplyingTo}

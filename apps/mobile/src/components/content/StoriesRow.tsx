@@ -1,41 +1,34 @@
 import { useSession } from "@/auth/SessionProvider";
-import { ReportSheet } from "@/components/ReportSheet";
 import { publisherLabel } from "@/features/content/contentLinks";
 import { useStoryTray } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
+import { hapticSelection } from "@/lib/haptics";
 import { YOUR_STORY_LABEL } from "@abonten/core/content/copy";
-import type {
-  ContentPostDocument,
-  StoryTrayEntry,
-} from "@abonten/types/contentType";
-import {
-  AppText,
-  Avatar,
-  Icon,
-  runAfterModalDismissal,
-} from "@abonten/ui-native";
+import type { StoryTrayEntry } from "@abonten/types/contentType";
+import { AppText, Avatar, Icon, Skeleton } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { memo } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import { ContentCommentsSheet } from "./ContentCommentsSheet";
-import { type StoryQueueEntry, StoryViewer } from "./StoryViewer";
+
+// Ring geometry. The avatar is the photo; the ring is a coloured band
+// around it with a thin gap of the page colour between, so an unseen ring
+// reads clearly without eating into the face.
+const AVATAR = 62;
+const RING = 2.5;
+const GAP = 2.5;
+const BUBBLE = AVATAR + 2 * (RING + GAP);
+const ITEM_WIDTH = 76;
 
 // The Stories row at the top of Messages: "Your Story" first when you can
 // post, then the organizers and places you follow with unseen Stories
-// first. Renders nothing while Stories is off for this person.
+// first. Renders nothing while Stories is off for this person. Opening a
+// bubble pushes the Stories player (story/play) with the whole row queued,
+// so the viewer moves on to the next publisher by itself.
 export function StoriesRow() {
   const router = useRouter();
   const { session } = useSession();
   const { program } = useContentProgram();
   const tray = useStoryTray(program.stories);
-  const [open, setOpen] = useState<{
-    queue: StoryQueueEntry[];
-    start: number;
-  } | null>(null);
-  const [commentsFor, setCommentsFor] = useState<ContentPostDocument | null>(
-    null,
-  );
-  const [reportFor, setReportFor] = useState<ContentPostDocument | null>(null);
 
   if (!program.stories || !session) return null;
 
@@ -46,114 +39,83 @@ export function StoriesRow() {
 
   if (tray.isLoading) {
     return (
-      <View className="flex-row gap-3 px-4 py-3">
+      <View
+        className="flex-row gap-2 border-b border-border px-3 pb-3 pt-2"
+        accessibilityLabel="Loading Stories"
+      >
         {Array.from({ length: 5 }, (_, i) => (
           <View
             key={`s-${i.toString()}`}
-            className="h-14 w-14 rounded-full bg-muted"
-          />
+            className="items-center gap-1.5"
+            style={{ width: ITEM_WIDTH }}
+          >
+            <Skeleton width={BUBBLE} height={BUBBLE} radius={BUBBLE / 2} />
+            <Skeleton width={48} height={10} radius={4} />
+          </View>
         ))}
       </View>
     );
   }
   if (!self && others.length === 0 && !canPublish) return null;
 
-  const queue = others.map((e) => ({
-    publisherKind: e.publisher.kind,
-    publisherId: e.publisher.id,
-  }));
+  const openQueue = (list: StoryTrayEntry[], start: number) => {
+    hapticSelection();
+    const queue = list
+      .map((e) => `${e.publisher.kind}:${e.publisher.id}`)
+      .join(",");
+    router.push(
+      `/(app)/story/play?queue=${encodeURIComponent(queue)}&start=${start}` as never,
+    );
+  };
+  const compose = () => router.push("/(app)/spotlight/new?kind=story");
 
   return (
-    <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="gap-3 px-4 py-3"
-        accessibilityLabel="Stories"
-      >
-        {self ? (
-          <Bubble
-            entry={self}
-            label={YOUR_STORY_LABEL}
-            onPress={() =>
-              setOpen({
-                queue: [
-                  {
-                    publisherKind: self.publisher.kind,
-                    publisherId: self.publisher.id,
-                  },
-                ],
-                start: 0,
-              })
-            }
-            onAdd={
-              canPublish
-                ? () => router.push("/(app)/spotlight/new?kind=story")
-                : undefined
-            }
-          />
-        ) : canPublish ? (
-          <Pressable
-            onPress={() => router.push("/(app)/spotlight/new?kind=story")}
-            accessibilityRole="button"
-            accessibilityLabel="Add to your Story"
-            className="w-16 items-center gap-1"
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="grow-0 border-b border-border"
+      contentContainerClassName="gap-2 px-3 pb-3 pt-2"
+      accessibilityLabel="Stories"
+    >
+      {self ? (
+        <Bubble
+          entry={self}
+          label={YOUR_STORY_LABEL}
+          onPress={() => openQueue([self], 0)}
+          onAdd={canPublish ? compose : undefined}
+        />
+      ) : canPublish ? (
+        <Pressable
+          onPress={compose}
+          accessibilityRole="button"
+          accessibilityLabel="Add to your Story"
+          className="items-center gap-1.5 active:opacity-70"
+          style={{ width: ITEM_WIDTH }}
+        >
+          <View
+            className="items-center justify-center rounded-full border-2 border-dashed border-border bg-muted"
+            style={{ width: BUBBLE, height: BUBBLE }}
           >
-            <View className="h-14 w-14 items-center justify-center rounded-full border-2 border-dashed border-border bg-muted">
-              <Icon name="add" size={24} tone="muted" />
-            </View>
-            <AppText variant="caption" numberOfLines={1}>
-              {YOUR_STORY_LABEL}
-            </AppText>
-          </Pressable>
-        ) : null}
-        {others.map((entry, i) => (
-          <Bubble
-            key={`${entry.publisher.kind}:${entry.publisher.id}`}
-            entry={entry}
-            label={publisherLabel(entry.publisher)}
-            onPress={() => setOpen({ queue, start: i })}
-          />
-        ))}
-      </ScrollView>
-
-      {open ? (
-        <StoryViewer
-          queue={open.queue}
-          startIndex={open.start}
-          onClose={() => setOpen(null)}
-          onOpenComments={(story) => {
-            setOpen(null);
-            runAfterModalDismissal(() => setCommentsFor(story));
-          }}
-          onReport={(story) => {
-            setOpen(null);
-            runAfterModalDismissal(() => setReportFor(story));
-          }}
-        />
+            <Icon name="add" size={28} tone="muted" />
+          </View>
+          <AppText variant="caption" numberOfLines={1}>
+            {YOUR_STORY_LABEL}
+          </AppText>
+        </Pressable>
       ) : null}
-      {commentsFor ? (
-        <ContentCommentsSheet
-          postId={commentsFor.id}
-          open
-          onClose={() => setCommentsFor(null)}
-          commentsAllowed
+      {others.map((entry, i) => (
+        <Bubble
+          key={`${entry.publisher.kind}:${entry.publisher.id}`}
+          entry={entry}
+          label={publisherLabel(entry.publisher)}
+          onPress={() => openQueue(others, i)}
         />
-      ) : null}
-      {reportFor ? (
-        <ReportSheet
-          open
-          onClose={() => setReportFor(null)}
-          targetType="story"
-          targetId={reportFor.id}
-          label={reportFor.caption?.slice(0, 80) || "Story"}
-        />
-      ) : null}
-    </>
+      ))}
+    </ScrollView>
   );
 }
 
-function Bubble({
+const Bubble = memo(function Bubble({
   entry,
   label,
   onPress,
@@ -165,44 +127,56 @@ function Bubble({
   onAdd?: () => void;
 }) {
   return (
-    <View className="w-16 items-center gap-1">
+    <View className="items-center gap-1.5" style={{ width: ITEM_WIDTH }}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${label} Stories${entry.hasUnseen ? ", new" : ""}`}
+        accessibilityLabel={`${label} Stories${entry.hasUnseen ? ", new" : ", seen"}`}
         className={[
-          "rounded-full p-[2px]",
+          "items-center justify-center rounded-full active:opacity-80",
           entry.hasUnseen ? "bg-primary" : "bg-border",
         ].join(" ")}
+        style={{ width: BUBBLE, height: BUBBLE, borderRadius: BUBBLE / 2 }}
       >
-        <View className="rounded-full bg-background p-[2px]">
+        {/* Seen rings are thinner; the avatar stays the same size. */}
+        <View
+          className="items-center justify-center bg-background"
+          style={{
+            width: BUBBLE - 2 * (entry.hasUnseen ? RING : RING - 1),
+            height: BUBBLE - 2 * (entry.hasUnseen ? RING : RING - 1),
+            borderRadius: BUBBLE / 2,
+          }}
+        >
           <Avatar
             publicId={entry.publisher.avatarPublicId}
             version={entry.publisher.avatarVersion}
-            size={48}
+            size={AVATAR}
           />
         </View>
       </Pressable>
       {onAdd ? (
         <Pressable
           onPress={onAdd}
-          hitSlop={6}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Add to your Story"
-          style={{ position: "absolute", right: 2, top: 38 }}
-          className="h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary"
+          style={{ position: "absolute", right: 4, top: BUBBLE - 22 }}
+          className="h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary"
         >
-          <Icon name="add" size={12} tone="inverse" />
+          <Icon name="add" size={14} tone="inverse" />
         </Pressable>
       ) : null}
       <AppText
         variant="caption"
         numberOfLines={1}
         tone={entry.hasUnseen ? undefined : "muted"}
-        className={entry.hasUnseen ? "font-semibold" : undefined}
+        className={[
+          "text-center text-[12px]",
+          entry.hasUnseen ? "font-semibold" : "",
+        ].join(" ")}
       >
         {label}
       </AppText>
     </View>
   );
-}
+});

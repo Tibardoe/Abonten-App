@@ -5,6 +5,7 @@ import { useCoarseLocation } from "@/features/content/useCoarseLocation";
 import { flattenFeed, useContentFeed } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { flushContentViews } from "@/features/content/useContentTelemetry";
+import { useVolumeKeys } from "@/features/content/useVolumeKeys";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
 import { FEED_SURFACES, FEED_SURFACE_LABEL } from "@abonten/core/content/copy";
 import type {
@@ -13,6 +14,7 @@ import type {
   ContentProgram,
 } from "@abonten/types/contentType";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { Image } from "expo-image";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -23,7 +25,9 @@ import {
   ScrollView,
   View,
   type ViewToken,
+  useWindowDimensions,
 } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
@@ -34,12 +38,17 @@ function surfaceAvailable(s: ContentFeedSurface, p: ContentProgram) {
   return true;
 }
 
-// Spotlight: a full-screen vertical feed. One video player for the whole
+// Spotlight: the vertical feed, a bottom tab. One video player for the whole
 // screen, handed to whichever page is on screen; everything else is a
-// poster. Playback stops when the screen loses focus or the app backgrounds.
+// poster. Playback stops when the tab loses focus or the app backgrounds.
+//
+// Page changes: the player is told to load the new page's video, and only
+// once that load has finished does the page show the player (`loadedPostId`)
+// — until then it shows its own poster. See SpotlightCard for why.
 export default function SpotlightFeedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const window = useWindowDimensions();
   const isFocused = useIsFocused();
   const { session } = useSession();
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -89,6 +98,8 @@ export default function SpotlightFeedScreen() {
 
   const [height, setHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [loadedPostId, setLoadedPostId] = useState<string | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [muted, setMuted] = useState(true);
   const [held, setHeld] = useState(false);
   const active = items[activeIndex];
@@ -120,6 +131,8 @@ export default function SpotlightFeedScreen() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the source
   useEffect(() => {
     const seq = ++loadSeq.current;
+    const postId = active?.post.id ?? null;
+    setLoadedPostId(null);
     try {
       player.pause();
     } catch {}
@@ -128,6 +141,7 @@ export default function SpotlightFeedScreen() {
       try {
         await player.replaceAsync({ uri: activeUri });
         if (seq !== loadSeq.current) return;
+        setLoadedPostId(postId);
         if (isFocused && !held) player.play();
       } catch {
         if (
@@ -138,11 +152,27 @@ export default function SpotlightFeedScreen() {
           return;
         try {
           await player.replaceAsync({ uri: fallbackUri });
-          if (seq === loadSeq.current && isFocused && !held) player.play();
+          if (seq !== loadSeq.current) return;
+          setLoadedPostId(postId);
+          if (isFocused && !held) player.play();
         } catch {}
       }
     })();
   }, [activeUri, player]);
+
+  // Warm the next posters so a swipe lands on a picture, not black.
+  useEffect(() => {
+    const next = items
+      .slice(activeIndex + 1, activeIndex + 3)
+      .map((i) => {
+        const m = i.post.media[0];
+        return m?.type === "video"
+          ? (m.posterUrl ?? m.thumbnailUrl)
+          : m?.mediaUrl;
+      })
+      .filter((u): u is string => !!u);
+    if (next.length) void Image.prefetch(next, "memory-disk");
+  }, [activeIndex, items]);
 
   useEffect(() => {
     if (!activeUri) return;
@@ -174,16 +204,29 @@ export default function SpotlightFeedScreen() {
     }
   }, [activeIndex, items.length, feed]);
 
+  const onCommentsOpenChange = useCallback(
+    (open: boolean) => setCommentsOpen(open),
+    [],
+  );
+
   const onHide = useCallback(
     (postId: string) => setHidden((prev) => new Set(prev).add(postId)),
     [],
   );
   const toggleMute = useCallback(() => setMuted((m) => !m), []);
+  useVolumeKeys(isFocused, muted, setMuted);
 
   const selectSurface = (s: ContentFeedSurface) => {
     setSurface(s);
     setActiveIndex(0);
   };
+
+  // The header row (tabs + create) and what the cards must keep clear of.
+  const headerTop = insets.top + 4;
+  const topInset = headerTop + 44;
+  // The scene ends at the tab bar; the keyboard rises from the screen edge.
+  const bottomObstruction =
+    height > 0 ? Math.max(0, window.height - height) : 0;
 
   // The tab row scrolls sideways on narrow phones: keep the selected tab in
   // view (centred where possible) and fade an edge while tabs are hidden
@@ -260,7 +303,10 @@ export default function SpotlightFeedScreen() {
   return (
     <View
       className="flex-1 bg-black"
-      onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+      onLayout={(e) => {
+        // Never re-page the feed under an open comments panel.
+        if (!commentsOpen) setHeight(e.nativeEvent.layout.height);
+      }}
     >
       <MediaStatusBar />
       {needsLocation && location === null ? (
@@ -276,6 +322,7 @@ export default function SpotlightFeedScreen() {
             <SpotlightCard
               item={item}
               active={index === activeIndex && isFocused}
+              videoReady={loadedPostId === item.post.id}
               height={height}
               player={player}
               muted={muted}
@@ -283,8 +330,17 @@ export default function SpotlightFeedScreen() {
               surface={surface}
               onHide={onHide}
               holdPlayback={setHeld}
+              topInset={topInset}
+              bottomInset={16}
+              bottomObstruction={bottomObstruction}
+              onCommentsOpenChange={onCommentsOpenChange}
             />
           )}
+          extraData={loadedPostId}
+          scrollEnabled={!commentsOpen}
+          // The comments composer lives inside a page: without this the
+          // first tap on Send only closes the keyboard.
+          keyboardShouldPersistTaps="handled"
           pagingEnabled
           showsVerticalScrollIndicator={false}
           decelerationRate="fast"
@@ -324,86 +380,79 @@ export default function SpotlightFeedScreen() {
         </View>
       ) : null}
 
-      {/* Header: back, tabs, create */}
-      <View
-        style={{ position: "absolute", top: insets.top + 4, left: 0, right: 0 }}
-        className="flex-row items-center gap-1 pl-2 pr-3"
-      >
-        <Pressable
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/(app)/(tabs)")
-          }
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          className="h-10 w-10 items-center justify-center"
+      {/* Header: feed tabs, create. Hidden while comments are open. */}
+      {commentsOpen ? null : (
+        <Animated.View
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(120)}
+          style={{ position: "absolute", top: headerTop, left: 0, right: 0 }}
+          className="flex-row items-center gap-1 pl-1 pr-3"
         >
-          <Icon name="arrow-back" size={24} color="#fff" />
-        </Pressable>
-        <View className="flex-1">
-          <ScrollView
-            ref={tabsRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-1.5 px-2"
-            scrollEventThrottle={32}
-            onLayout={(e) => {
-              tabsWidth.current = e.nativeEvent.layout.width;
-              updateTabsFade();
-            }}
-            onContentSizeChange={(w) => {
-              tabsContentWidth.current = w;
-              updateTabsFade();
-            }}
-            onScroll={(e) => {
-              tabsScrollX.current = e.nativeEvent.contentOffset.x;
-              updateTabsFade();
-            }}
-          >
-            {surfaces.map((s) => (
-              <Pressable
-                key={s}
-                onPress={() => selectSurface(s)}
-                onLayout={(e) => {
-                  tabFrames.current[s] = {
-                    x: e.nativeEvent.layout.x,
-                    width: e.nativeEvent.layout.width,
-                  };
-                }}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: surface === s }}
-                className={[
-                  "rounded-full px-3 py-1.5",
-                  surface === s ? "bg-white" : "bg-black/40",
-                ].join(" ")}
-              >
-                <AppText
-                  numberOfLines={1}
+          <View className="flex-1">
+            <ScrollView
+              ref={tabsRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="gap-1.5 px-2"
+              scrollEventThrottle={32}
+              onLayout={(e) => {
+                tabsWidth.current = e.nativeEvent.layout.width;
+                updateTabsFade();
+              }}
+              onContentSizeChange={(w) => {
+                tabsContentWidth.current = w;
+                updateTabsFade();
+              }}
+              onScroll={(e) => {
+                tabsScrollX.current = e.nativeEvent.contentOffset.x;
+                updateTabsFade();
+              }}
+            >
+              {surfaces.map((s) => (
+                <Pressable
+                  key={s}
+                  onPress={() => selectSurface(s)}
+                  onLayout={(e) => {
+                    tabFrames.current[s] = {
+                      x: e.nativeEvent.layout.x,
+                      width: e.nativeEvent.layout.width,
+                    };
+                  }}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: surface === s }}
                   className={[
-                    "text-[13px] font-semibold",
-                    surface === s ? "text-black" : "text-white",
+                    "rounded-full px-3 py-1.5",
+                    surface === s ? "bg-white" : "bg-black/40",
                   ].join(" ")}
                 >
-                  {FEED_SURFACE_LABEL[s]}
-                </AppText>
-              </Pressable>
-            ))}
-          </ScrollView>
-          {tabsFade.start ? <TabsEdgeFade side="start" /> : null}
-          {tabsFade.end ? <TabsEdgeFade side="end" /> : null}
-        </View>
-        {program.canPublish && program.spotlightPosting ? (
-          <Pressable
-            onPress={() => router.push("/(app)/spotlight/new?kind=spotlight")}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Create a Spotlight"
-            className="h-10 w-10 items-center justify-center"
-          >
-            <Icon name="add-circle-outline" size={26} color="#fff" />
-          </Pressable>
-        ) : null}
-      </View>
+                  <AppText
+                    numberOfLines={1}
+                    className={[
+                      "text-[13px] font-semibold",
+                      surface === s ? "text-black" : "text-white",
+                    ].join(" ")}
+                  >
+                    {FEED_SURFACE_LABEL[s]}
+                  </AppText>
+                </Pressable>
+              ))}
+            </ScrollView>
+            {tabsFade.start ? <TabsEdgeFade side="start" /> : null}
+            {tabsFade.end ? <TabsEdgeFade side="end" /> : null}
+          </View>
+          {program.canPublish && program.spotlightPosting ? (
+            <Pressable
+              onPress={() => router.push("/(app)/spotlight/new?kind=spotlight")}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Create a Spotlight"
+              className="h-10 w-10 items-center justify-center"
+            >
+              <Icon name="add-circle-outline" size={26} color="#fff" />
+            </Pressable>
+          ) : null}
+        </Animated.View>
+      )}
     </View>
   );
 }

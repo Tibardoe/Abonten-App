@@ -1,33 +1,23 @@
 import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
 import { MediaStatusBar } from "@/components/app/MediaStatusBar";
-import { ContentCommentsSheet } from "@/components/content/ContentCommentsSheet";
 import { StoryViewer } from "@/components/content/StoryViewer";
 import { publisherRoute } from "@/features/content/contentLinks";
 import { useContentPost } from "@/features/content/useContent";
 import { STORY_EXPIRED_MESSAGE } from "@abonten/core/content/copy";
 import type { ContentPostDocument } from "@abonten/types/contentType";
-import {
-  AppText,
-  Avatar,
-  Button,
-  Spinner,
-  runAfterModalDismissal,
-} from "@abonten/ui-native";
+import { AppText, Avatar, Button, Spinner } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
-// A shared Story link. A live Story opens in the viewer at that Story; an
-// ended one says so and offers the publisher instead.
+// A shared Story link (also a Story reply's preview in Messages). A live
+// Story opens in the viewer at that Story; an ended one says so and offers
+// the publisher instead.
 export default function StoryLinkScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const q = useContentPost(id);
-  const [viewerOpen, setViewerOpen] = useState(true);
-  const [commentsFor, setCommentsFor] = useState<ContentPostDocument | null>(
-    null,
-  );
   const [reportFor, setReportFor] = useState<ContentPostDocument | null>(null);
 
   const res = q.data;
@@ -59,47 +49,21 @@ export default function StoryLinkScreen() {
     return (
       <View className="flex-1 bg-black">
         <MediaStatusBar />
-        {viewerOpen ? (
-          <StoryViewer
-            queue={[
-              {
-                publisherKind: post.publisher.kind,
-                publisherId: post.publisher.id,
-              },
-            ]}
-            startStoryId={post.id}
-            onClose={() => {
-              setViewerOpen(false);
-              runAfterModalDismissal(leave);
-            }}
-            onOpenComments={(story) => {
-              setViewerOpen(false);
-              runAfterModalDismissal(() => setCommentsFor(story));
-            }}
-            onReport={(story) => {
-              setViewerOpen(false);
-              runAfterModalDismissal(() => setReportFor(story));
-            }}
-          />
-        ) : null}
-        {commentsFor ? (
-          <ContentCommentsSheet
-            postId={commentsFor.id}
-            open
-            onClose={() => {
-              setCommentsFor(null);
-              setViewerOpen(true);
-            }}
-            commentsAllowed
-          />
-        ) : null}
+        <StoryViewer
+          queue={[
+            {
+              publisherKind: post.publisher.kind,
+              publisherId: post.publisher.id,
+            },
+          ]}
+          startStoryId={post.id}
+          onClose={leave}
+          onReport={setReportFor}
+        />
         {reportFor ? (
           <ReportSheet
             open
-            onClose={() => {
-              setReportFor(null);
-              leave();
-            }}
+            onClose={() => setReportFor(null)}
             targetType="story"
             targetId={reportFor.id}
             label={reportFor.caption?.slice(0, 80) || "Story"}

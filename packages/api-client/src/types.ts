@@ -1991,6 +1991,10 @@ export type FollowStatusResult = ApiEnvelope<
 export type StoryTrayResult = ApiEnvelope<
   import("@abonten/types/contentType").StoryTray
 >;
+export type StoryReplyResult = ApiEnvelope<{
+  conversationId: string;
+  message: MessageRow;
+}>;
 export type StorySequenceResult = ApiEnvelope<
   import("@abonten/types/contentType").StorySequence
 >;

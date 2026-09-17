@@ -1,4 +1,5 @@
 import {
+  publisherLabel,
   publisherRoute,
   shareContent,
   useRequireSignIn,
@@ -15,17 +16,37 @@ import type {
   ContentFeedItem,
   ContentViewSurface,
 } from "@abonten/types/contentType";
-import { AppText, Avatar, Icon } from "@abonten/ui-native";
+import {
+  AppText,
+  Avatar,
+  Icon,
+  type IoniconName,
+  useReducedMotion,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { type VideoPlayer, VideoView } from "expo-video";
-import { memo, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import {
+  Keyboard,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import Animated, {
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ContentCommentsSheet } from "./ContentCommentsSheet";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { ContentCta } from "./ContentCta";
 import { ContentOptionsSheet } from "./ContentOptionsSheet";
 import { FollowButton } from "./FollowButton";
+import { SpotlightCommentsPanel } from "./SpotlightCommentsPanel";
 
 function compact(n: number): string {
   if (n < 1000) return String(n);
@@ -33,14 +54,32 @@ function compact(n: number): string {
   return `${(n / 1_000_000).toFixed(1)}M`;
 }
 
+// Comments shrink the video to this share of the card.
+const COMPACT_VIDEO_RATIO = 0.34;
+const OPEN_MS = 280;
+const CLOSE_MS = 220;
+
 /**
  * One full-height Spotlight page. The feed owns a single video player and
  * hands it only to the active card; every other card shows its poster, so
  * scrolling never holds more than one decoder.
+ *
+ * The poster stays ON TOP of the video until the video has drawn a frame of
+ * THIS post (`videoReady` from the feed = the shared player has finished
+ * loading this post's source; then the first rendered frame). Mounting the
+ * VideoView earlier showed the previous post's last frame for a moment on
+ * every swipe — the "flash" between Spotlights.
+ *
+ * Layout, bottom up: the full-width event/place CTA; above it the creator
+ * (avatar and name open the profile, Follow sits beside the name) and the
+ * caption on the left, with the action rail (like, comment, share, save,
+ * insights on your own post, more) on the right. The two columns never
+ * overlap because they are laid out side by side, not stacked absolutely.
  */
 export const SpotlightCard = memo(function SpotlightCard({
   item,
   active,
+  videoReady,
   height,
   player,
   muted,
@@ -48,9 +87,15 @@ export const SpotlightCard = memo(function SpotlightCard({
   surface,
   onHide,
   holdPlayback,
+  bottomInset,
+  bottomObstruction = 0,
+  topInset,
+  onCommentsOpenChange,
 }: {
   item: ContentFeedItem;
   active: boolean;
+  /** The shared player holds this post's video and may be shown. */
+  videoReady: boolean;
   height: number;
   player: VideoPlayer;
   muted: boolean;
@@ -59,15 +104,25 @@ export const SpotlightCard = memo(function SpotlightCard({
   onHide?: (postId: string) => void;
   /** Pause while something on top (a sheet) is open. */
   holdPlayback?: (held: boolean) => void;
+  /** Space to keep clear under the controls (safe area / breathing room). */
+  bottomInset: number;
+  /** Height of a bar under the card (the tab bar) the keyboard slides over. */
+  bottomObstruction?: number;
+  /** Space the screen's own header takes at the top. */
+  topInset: number;
+  onCommentsOpenChange?: (open: boolean) => void;
 }) {
   const { post, sponsored } = item;
   const campaignId = sponsored?.campaignId ?? null;
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
   const requireSignIn = useRequireSignIn();
   const engagement = usePostEngagement(post, requireSignIn);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsMounted, setCommentsMounted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const lastTime = useRef(0);
@@ -87,21 +142,31 @@ export const SpotlightCard = memo(function SpotlightCard({
       isVideo && media?.durationSeconds ? media.durationSeconds * 1000 : null,
   });
 
-  const held = optionsOpen || commentsOpen;
+  // Comments keep the video playing (it stays on screen); the options sheet
+  // covers it, so that pauses.
+  const held = optionsOpen;
   useEffect(() => {
     if (active) holdPlayback?.(held);
   }, [active, held, holdPlayback]);
 
-  // The poster stays only until the video draws its first frame: a poster
-  // left underneath shows through the letterbox of a video whose shape
-  // differs from it.
+  // ── Poster → video hand-off ───────────────────────────────────────
+  const showVideo = active && isVideo && videoReady;
   const [firstFrame, setFirstFrame] = useState(false);
+  const posterOpacity = useSharedValue(1);
   useEffect(() => {
-    if (!active) {
-      setPaused(false);
+    if (!showVideo) {
       setFirstFrame(false);
+      posterOpacity.value = 1;
     }
+  }, [showVideo, posterOpacity]);
+  useEffect(() => {
+    if (!active) setPaused(false);
   }, [active]);
+  useEffect(() => {
+    if (firstFrame) {
+      posterOpacity.value = reduceMotion ? 0 : withTiming(0, { duration: 140 });
+    }
+  }, [firstFrame, posterOpacity, reduceMotion]);
 
   // Images count as watched while their page is on screen.
   useEffect(() => {
@@ -140,7 +205,29 @@ export const SpotlightCard = memo(function SpotlightCard({
     };
   }, [active, isVideo, player, play]);
 
+  // Backstop for the poster: if a platform never reports the first frame
+  // for a re-attached surface, reveal the video once it is actually
+  // advancing (the source is already this post's, so no stale frame).
+  useEffect(() => {
+    if (!showVideo || firstFrame) return;
+    let sub: { remove: () => void } | null = null;
+    try {
+      sub = player.addListener("timeUpdate", ({ currentTime }) => {
+        if (currentTime > 0.15) setFirstFrame(true);
+      });
+    } catch {}
+    return () => {
+      try {
+        sub?.remove();
+      } catch {}
+    };
+  }, [showVideo, firstFrame, player]);
+
   const togglePause = () => {
+    if (commentsOpen) {
+      closeComments();
+      return;
+    }
     if (!isVideo || !active) return;
     hapticLight();
     try {
@@ -149,6 +236,71 @@ export const SpotlightCard = memo(function SpotlightCard({
     } catch {}
     setPaused((v) => !v);
   };
+
+  // ── Comments: shrink the video, raise the panel ───────────────────
+  const progress = useSharedValue(0);
+  const topGap = insets.top + 8;
+  const compactHeight = Math.max(180, height * COMPACT_VIDEO_RATIO);
+  const panelHeight = Math.max(260, height - (topGap + compactHeight) - 8);
+
+  const finishClose = useCallback(() => setCommentsMounted(false), []);
+  const openComments = () => {
+    hapticLight();
+    setCommentsMounted(true);
+    setCommentsOpen(true);
+    onCommentsOpenChange?.(true);
+    progress.value = reduceMotion
+      ? 1
+      : withTiming(1, {
+          duration: OPEN_MS,
+          easing: Easing.out(Easing.cubic),
+        });
+  };
+  const closeComments = useCallback(() => {
+    Keyboard.dismiss();
+    setCommentsOpen(false);
+    onCommentsOpenChange?.(false);
+    if (reduceMotion) {
+      progress.value = 0;
+      finishClose();
+      return;
+    }
+    progress.value = withTiming(
+      0,
+      { duration: CLOSE_MS, easing: Easing.in(Easing.cubic) },
+      (done) => {
+        if (done) runOnJS(finishClose)();
+      },
+    );
+  }, [finishClose, onCommentsOpenChange, progress, reduceMotion]);
+
+  // Swiped away (or the screen lost focus) with comments open: reset.
+  useEffect(() => {
+    if (!active && commentsMounted) {
+      progress.value = 0;
+      setCommentsOpen(false);
+      setCommentsMounted(false);
+      onCommentsOpenChange?.(false);
+    }
+  }, [active, commentsMounted, onCommentsOpenChange, progress]);
+
+  const mediaStyle = useAnimatedStyle(() => {
+    const scale = compactHeight / height;
+    const ty = topGap + compactHeight / 2 - height / 2;
+    return {
+      transform: [
+        { translateY: progress.value * ty },
+        { scale: 1 + progress.value * (scale - 1) },
+      ],
+      borderRadius: progress.value * 18,
+    };
+  });
+  const chromeStyle = useAnimatedStyle(() => ({
+    opacity: 1 - Math.min(1, progress.value * 1.6),
+  }));
+  const posterStyle = useAnimatedStyle(() => ({
+    opacity: posterOpacity.value,
+  }));
 
   if (engagement.notInterested) {
     return (
@@ -159,7 +311,11 @@ export const SpotlightCard = memo(function SpotlightCard({
         <AppText className="text-center text-white">
           Thanks. You'll see fewer posts like this.
         </AppText>
-        <Pressable onPress={() => engagement.markNotInterested(false)}>
+        <Pressable
+          onPress={() => engagement.markNotInterested(false)}
+          hitSlop={10}
+          accessibilityRole="button"
+        >
           <AppText className="font-semibold text-white underline">Undo</AppText>
         </Pressable>
       </View>
@@ -173,33 +329,65 @@ export const SpotlightCard = memo(function SpotlightCard({
       : post.publisher.kind === "organizer"
         ? ("organizer" as const)
         : null;
+  const name = publisherLabel(post.publisher);
+  const openProfile = () => {
+    if (!profileHref) return;
+    trackContentClick(post.id, "profile", campaignId);
+    router.push(profileHref as never);
+  };
+  const share = async () => {
+    const outcome = await shareContent(post);
+    if (outcome.kind === "shared") engagement.recordShare("native");
+  };
 
   return (
-    <View style={{ height }} className="bg-black">
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPress={togglePause}
-        onLongPress={() => setOptionsOpen(true)}
-        accessibilityLabel={isVideo ? "Play or pause" : "Spotlight photo"}
+    <View style={{ height }} className="overflow-hidden bg-black">
+      <Animated.View
+        style={[StyleSheet.absoluteFill, { overflow: "hidden" }, mediaStyle]}
       >
-        {poster && !(active && isVideo && firstFrame) ? (
-          <Image
-            source={{ uri: poster }}
-            style={StyleSheet.absoluteFill}
-            contentFit="contain"
-            transition={120}
-          />
-        ) : null}
-        {active && isVideo ? (
-          <VideoView
-            player={player}
-            style={StyleSheet.absoluteFill}
-            contentFit="contain"
-            nativeControls={false}
-            onFirstFrameRender={() => setFirstFrame(true)}
-          />
-        ) : null}
-      </Pressable>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={togglePause}
+          onLongPress={() => !commentsOpen && setOptionsOpen(true)}
+          accessibilityLabel={
+            commentsOpen
+              ? "Close comments"
+              : isVideo
+                ? paused
+                  ? "Play"
+                  : "Pause"
+                : "Spotlight photo"
+          }
+        >
+          {showVideo ? (
+            <VideoView
+              player={player}
+              style={StyleSheet.absoluteFill}
+              contentFit="contain"
+              nativeControls={false}
+              // Android: a SurfaceView is composited outside the view tree,
+              // so it ignores the shrink transform and draws over the
+              // comments panel. A TextureView moves with its parent.
+              surfaceType="textureView"
+              onFirstFrameRender={() => setFirstFrame(true)}
+            />
+          ) : null}
+          {poster ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[StyleSheet.absoluteFill, posterStyle]}
+            >
+              <Image
+                source={{ uri: poster }}
+                style={StyleSheet.absoluteFill}
+                contentFit="contain"
+                cachePolicy="memory-disk"
+                recyclingKey={post.id}
+              />
+            </Animated.View>
+          ) : null}
+        </Pressable>
+      </Animated.View>
 
       {active && isVideo && paused ? (
         <View
@@ -213,175 +401,211 @@ export const SpotlightCard = memo(function SpotlightCard({
         </View>
       ) : null}
 
-      {/* Top right: sound + more; sponsored disclosure on the left */}
-      <View
-        style={{
-          position: "absolute",
-          top: insets.top + 56,
-          left: 12,
-          right: 12,
-        }}
-        className="flex-row items-center justify-between"
-        pointerEvents="box-none"
+      <Animated.View
+        pointerEvents={commentsOpen ? "none" : "box-none"}
+        style={[StyleSheet.absoluteFill, chromeStyle]}
       >
-        {sponsored ? (
-          <View className="rounded bg-white/90 px-1.5 py-0.5">
-            <AppText className="text-[11px] font-bold uppercase text-black">
-              {SPONSORED_LABEL}
-            </AppText>
-          </View>
-        ) : (
-          <View />
-        )}
-        <View className="flex-row items-center gap-2">
+        {/* Legibility scrims behind the header and the details. */}
+        <Scrim edge="top" height={topInset + 64} width={width} />
+        <Scrim edge="bottom" height={height * 0.42} width={width} />
+
+        {/* Sponsored disclosure (left) and sound (right), under the header */}
+        <View
+          style={{
+            position: "absolute",
+            top: topInset + 8,
+            left: 12,
+            right: 12,
+          }}
+          className="flex-row items-center justify-between"
+          pointerEvents="box-none"
+        >
+          {sponsored ? (
+            <View className="rounded bg-white/90 px-1.5 py-0.5">
+              <AppText className="text-[11px] font-bold uppercase text-black">
+                {SPONSORED_LABEL}
+              </AppText>
+            </View>
+          ) : (
+            <View />
+          )}
           {isVideo ? (
             <Pressable
               onPress={onToggleMute}
               hitSlop={10}
               accessibilityRole="button"
               accessibilityLabel={muted ? "Turn sound on" : "Turn sound off"}
-              className="h-9 w-9 items-center justify-center rounded-full bg-black/40"
+              className="h-10 w-10 items-center justify-center rounded-full bg-black/35"
             >
               <Icon
                 name={muted ? "volume-mute" : "volume-high"}
-                size={18}
+                size={19}
                 color="#fff"
               />
             </Pressable>
           ) : null}
-          <Pressable
-            onPress={() => setOptionsOpen(true)}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="More options"
-            className="h-9 w-9 items-center justify-center rounded-full bg-black/40"
-          >
-            <Icon name="ellipsis-horizontal" size={18} color="#fff" />
-          </Pressable>
         </View>
-      </View>
 
-      {/* Action rail */}
-      <View
-        style={{ position: "absolute", right: 8, bottom: insets.bottom + 150 }}
-        className="items-center gap-5"
-      >
-        <RailButton
-          icon={engagement.liked ? "heart" : "heart-outline"}
-          color={engagement.liked ? "#ef4444" : "#fff"}
-          label={engagement.liked ? "Unlike" : "Like"}
-          count={engagement.counts.likes}
-          onPress={() => {
-            hapticLight();
-            engagement.toggleLike();
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: bottomInset,
           }}
-        />
-        {post.allowComments ? (
-          <RailButton
-            icon="chatbubble-outline"
-            label="Comments"
-            count={engagement.counts.comments}
-            onPress={() => setCommentsOpen(true)}
-          />
-        ) : null}
-        <RailButton
-          icon="paper-plane-outline"
-          label="Share"
-          count={engagement.counts.shares}
-          onPress={async () => {
-            const outcome = await shareContent(post);
-            if (outcome.kind === "shared") engagement.recordShare("native");
-          }}
-        />
-        <RailButton
-          icon={engagement.saved ? "bookmark" : "bookmark-outline"}
-          label={engagement.saved ? "Remove from saved" : "Save"}
-          onPress={engagement.toggleSave}
-        />
-      </View>
-
-      {/* Details */}
-      <View
-        style={{
-          position: "absolute",
-          left: 12,
-          right: 64,
-          bottom: insets.bottom + 16,
-        }}
-        className="gap-2"
-      >
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            disabled={!profileHref}
-            onPress={() => {
-              if (!profileHref) return;
-              trackContentClick(post.id, "profile", campaignId);
-              router.push(profileHref as never);
-            }}
-            className="flex-1 flex-row items-center gap-2"
-          >
-            <Avatar
-              publicId={post.publisher.avatarPublicId}
-              version={post.publisher.avatarVersion}
-              size={36}
-            />
-            <View className="flex-1">
-              <View className="flex-row items-center gap-1">
-                <AppText
-                  numberOfLines={1}
-                  className="text-[14px] font-semibold text-white"
+          pointerEvents="box-none"
+        >
+          <View className="flex-row items-end" pointerEvents="box-none">
+            {/* Creator + caption */}
+            <View className="flex-1 gap-2 pb-1 pl-3 pr-2">
+              <View className="flex-row items-center gap-2.5">
+                <Pressable
+                  disabled={!profileHref}
+                  onPress={openProfile}
+                  hitSlop={6}
+                  accessibilityRole={profileHref ? "link" : undefined}
+                  accessibilityLabel={`${name}, open profile`}
+                  className="rounded-full border-[1.5px] border-white"
                 >
-                  {post.publisher.kind === "organizer" &&
-                  post.publisher.username
-                    ? post.publisher.username
-                    : post.publisher.name}
-                </AppText>
-                {post.publisher.verified ? (
-                  <Icon name="checkmark-circle" size={14} color="#fff" />
-                ) : null}
+                  <Avatar
+                    publicId={post.publisher.avatarPublicId}
+                    version={post.publisher.avatarVersion}
+                    size={38}
+                  />
+                </Pressable>
+                <View className="flex-1 gap-0.5">
+                  <View className="flex-row items-center gap-2">
+                    <Pressable
+                      disabled={!profileHref}
+                      onPress={openProfile}
+                      hitSlop={{ top: 8, bottom: 8 }}
+                      accessibilityRole={profileHref ? "link" : undefined}
+                      accessibilityLabel={`${name}, open profile`}
+                      className="shrink flex-row items-center gap-1"
+                    >
+                      <AppText
+                        numberOfLines={1}
+                        className="shrink text-[15px] font-bold text-white"
+                        style={textShadow}
+                      >
+                        {name}
+                      </AppText>
+                      {post.publisher.verified ? (
+                        <Icon name="checkmark-circle" size={14} color="#fff" />
+                      ) : null}
+                    </Pressable>
+                    {followTarget && !post.viewer.isAuthor ? (
+                      <FollowButton
+                        kind={followTarget}
+                        targetId={post.publisher.id}
+                        ownerId={post.publisher.ownerId ?? post.authorId}
+                        label={post.publisher.name}
+                        known={post.viewer.following}
+                        onMedia
+                        inline
+                      />
+                    ) : null}
+                  </View>
+                  <AppText
+                    className="text-[12px] text-white/75"
+                    style={textShadow}
+                  >
+                    {formatStoryAge(post.publishedAt)}
+                  </AppText>
+                </View>
               </View>
-              <AppText className="text-[12px] text-white/75">
-                {formatStoryAge(post.publishedAt)}
-              </AppText>
+              {post.caption ? (
+                <Pressable
+                  onPress={() => setExpanded((v) => !v)}
+                  accessibilityRole="button"
+                  accessibilityHint={
+                    expanded
+                      ? "Shows less of the caption"
+                      : "Shows the full caption"
+                  }
+                >
+                  <AppText
+                    numberOfLines={expanded ? 8 : 2}
+                    className="text-[14px] leading-5 text-white"
+                    style={textShadow}
+                  >
+                    {post.caption}
+                  </AppText>
+                </Pressable>
+              ) : null}
             </View>
-          </Pressable>
-          {followTarget && !post.viewer.isAuthor ? (
-            <FollowButton
-              kind={followTarget}
-              targetId={post.publisher.id}
-              ownerId={post.publisher.ownerId ?? post.authorId}
-              label={post.publisher.name}
-              known={post.viewer.following}
-              onMedia
-            />
-          ) : null}
-        </View>
-        {post.caption ? (
-          <Pressable onPress={() => setExpanded((v) => !v)}>
-            <AppText
-              numberOfLines={expanded ? undefined : 2}
-              className="text-[14px] text-white"
-            >
-              {post.caption}
-            </AppText>
-          </Pressable>
-        ) : null}
-        <ContentCta post={post} campaignId={campaignId} />
-      </View>
 
-      <ContentOptionsSheet
-        post={post}
-        open={optionsOpen}
-        onClose={() => setOptionsOpen(false)}
-        onNotInterested={() => engagement.markNotInterested(true)}
-        onDeleted={() => onHide?.(post.id)}
-      />
-      {commentsOpen ? (
-        <ContentCommentsSheet
+            {/* Action rail */}
+            <View className="w-[68px] items-center gap-3.5 pb-1">
+              <RailButton
+                icon={engagement.liked ? "heart" : "heart-outline"}
+                color={engagement.liked ? "#ff3b5c" : "#fff"}
+                label={engagement.liked ? "Unlike" : "Like"}
+                count={engagement.counts.likes}
+                selected={engagement.liked}
+                onPress={() => {
+                  hapticLight();
+                  engagement.toggleLike();
+                }}
+              />
+              {post.allowComments ? (
+                <RailButton
+                  icon="chatbubble-ellipses-outline"
+                  label="Comments"
+                  count={engagement.counts.comments}
+                  onPress={openComments}
+                />
+              ) : null}
+              <RailButton
+                icon="paper-plane-outline"
+                label="Share"
+                count={engagement.counts.shares}
+                onPress={share}
+              />
+              <RailButton
+                icon={engagement.saved ? "bookmark" : "bookmark-outline"}
+                color={engagement.saved ? "#ffc53d" : "#fff"}
+                label={engagement.saved ? "Remove from saved" : "Save"}
+                count={engagement.counts.saves}
+                selected={engagement.saved}
+                onPress={() => {
+                  hapticLight();
+                  engagement.toggleSave();
+                }}
+              />
+              {post.viewer.isAuthor ? (
+                <RailButton
+                  icon="stats-chart"
+                  label="Insights"
+                  caption="Insights"
+                  onPress={() =>
+                    router.push(`/(app)/spotlight/post/${post.id}`)
+                  }
+                />
+              ) : null}
+              <RailButton
+                icon="ellipsis-horizontal"
+                label="More options"
+                onPress={() => setOptionsOpen(true)}
+              />
+            </View>
+          </View>
+
+          <View className="px-3 pt-3" pointerEvents="box-none">
+            <ContentCta post={post} campaignId={campaignId} />
+          </View>
+        </View>
+      </Animated.View>
+
+      {commentsMounted ? (
+        <SpotlightCommentsPanel
           postId={post.id}
-          open
-          onClose={() => setCommentsOpen(false)}
+          progress={progress}
+          panelHeight={panelHeight}
+          bottomObstruction={bottomObstruction}
           commentsAllowed={post.allowComments}
+          commentCount={engagement.counts.comments}
+          onClose={closeComments}
           onCountChange={(delta) =>
             engagement.setCounts((c) => ({
               ...c,
@@ -390,43 +614,110 @@ export const SpotlightCard = memo(function SpotlightCard({
           }
         />
       ) : null}
+
+      <ContentOptionsSheet
+        post={post}
+        open={optionsOpen}
+        onClose={() => setOptionsOpen(false)}
+        saved={engagement.saved}
+        onToggleSave={engagement.toggleSave}
+        onShare={share}
+        onNotInterested={() => engagement.markNotInterested(true)}
+        onDeleted={() => onHide?.(post.id)}
+      />
     </View>
   );
 });
+
+const textShadow = {
+  textShadowColor: "rgba(0,0,0,0.45)",
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 3,
+};
+
+function Scrim({
+  edge,
+  height,
+  width,
+}: {
+  edge: "top" | "bottom";
+  height: number;
+  width: number;
+}) {
+  const id = `spotlight-scrim-${edge}`;
+  return (
+    <Svg
+      pointerEvents="none"
+      width={width}
+      height={height}
+      style={{ position: "absolute", left: 0, [edge]: 0 }}
+    >
+      <Defs>
+        <LinearGradient
+          id={id}
+          x1="0"
+          y1={edge === "top" ? "0" : "1"}
+          x2="0"
+          y2={edge === "top" ? "1" : "0"}
+        >
+          <Stop offset="0" stopColor="#000" stopOpacity="0.55" />
+          <Stop offset="1" stopColor="#000" stopOpacity="0" />
+        </LinearGradient>
+      </Defs>
+      <Rect x="0" y="0" width={width} height={height} fill={`url(#${id})`} />
+    </Svg>
+  );
+}
 
 function RailButton({
   icon,
   label,
   count,
+  caption,
   color = "#fff",
+  selected,
   onPress,
 }: {
-  icon:
-    | "heart"
-    | "heart-outline"
-    | "chatbubble-outline"
-    | "paper-plane-outline"
-    | "bookmark"
-    | "bookmark-outline";
+  icon: IoniconName;
   label: string;
   count?: number;
+  /** A word under the icon instead of a count. */
+  caption?: string;
   color?: string;
+  selected?: boolean;
   onPress: () => void;
 }) {
+  const text = caption ?? (count !== undefined ? compact(count) : null);
   return (
     <Pressable
       onPress={onPress}
-      hitSlop={8}
+      hitSlop={4}
       accessibilityRole="button"
-      accessibilityLabel={label}
-      className="items-center"
+      accessibilityLabel={
+        count !== undefined ? `${label}, ${count.toLocaleString()}` : label
+      }
+      accessibilityState={selected === undefined ? undefined : { selected }}
+      className="min-h-[48px] w-[56px] items-center justify-center active:opacity-60"
     >
-      <Icon name={icon} size={30} color={color} />
-      {count !== undefined ? (
-        <AppText className="text-[12px] font-semibold text-white">
-          {compact(count)}
+      <View style={iconShadow}>
+        <Icon name={icon} size={29} color={color} />
+      </View>
+      {text !== null ? (
+        <AppText
+          numberOfLines={1}
+          className="mt-0.5 text-[12px] font-semibold text-white"
+          style={textShadow}
+        >
+          {text}
         </AppText>
       ) : null}
     </Pressable>
   );
 }
+
+const iconShadow = {
+  shadowColor: "#000",
+  shadowOpacity: 0.35,
+  shadowRadius: 3,
+  shadowOffset: { width: 0, height: 1 },
+};

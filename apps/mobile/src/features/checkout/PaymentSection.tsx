@@ -124,7 +124,7 @@ export function PaymentSection({
         amountLabel: ps
           ? formatMoney(currency, payAmount)
           : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0)} credit`,
-        successHref: "/(app)/(tabs)/tickets",
+        successHref: "/(app)/tickets",
         successCtaLabel: "View my tickets",
         ...(ps === null
           ? {
