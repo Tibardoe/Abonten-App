@@ -289,15 +289,20 @@ export function Sheet({
   // spacer shrinks the scroll view instead of growing the sheet.
   const [restingHeight, setRestingHeight] = useState<number | null>(null);
 
-  // Height of the interior spacer: the keyboard's overlap, taken from
-  // whichever source currently has it. The UI-thread value leads the
-  // animation; the JS one is a floor for the case where a platform reports
-  // the inset late or not at all inside a Modal. Both describe the SAME
-  // quantity — this is not a second keyboard system, just the better of two
-  // readings of one.
+  // Height of the interior spacer: the keyboard's overlap with the window.
+  // The UI-thread value leads, so the content settles WITH the keyboard.
+  //
+  // The JS height is a floor on Android ONLY, and the asymmetry is the point:
+  // Android's `keyboardDidShow` lands after the keyboard has finished, so it
+  // can only ever back-fill a value the UI thread under-reported — it cannot
+  // run ahead. iOS's `keyboardWillShow` reports the FINAL height before the
+  // animation starts, so flooring with it there would snap the content to its
+  // end position on frame one and leave the keyboard sliding up behind it.
+  // Same quantity, different arrival times; only Android's is safe as a floor.
+  const floorKb = Platform.OS === "android" ? kb : 0;
   const keyboardInsetStyle = useAnimatedStyle(() => {
     if (!open) return { height: 0 };
-    return { height: Math.max(liveKeyboard.height.value, kb) };
+    return { height: Math.max(liveKeyboard.height.value, floorKb) };
   });
 
   // Scroll the focused field into whatever room is left above the keyboard,
