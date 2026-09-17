@@ -23,6 +23,7 @@ import Animated, {
   Easing,
   cancelAnimation,
   runOnJS,
+  useAnimatedKeyboard,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -235,6 +236,26 @@ export function Sheet({
   // a stale height from a previous session can't affect the next open.
   const kb = open ? kbHeight : 0;
 
+  // The lift itself is animated, so the sheet and the keyboard move as one
+  // instead of the panel snapping up once the keyboard has finished. Where
+  // the platform reports the keyboard frame by frame to this window the
+  // live value leads; the JS height (which on Android only arrives after the
+  // keyboard is fully open) eases in behind it so it never jumps either.
+  const liveKeyboard = useAnimatedKeyboard();
+  const settledKb = useSharedValue(0);
+  useEffect(() => {
+    settledKb.value = reduceMotion
+      ? kb
+      : withTiming(kb, {
+          duration: kb > 0 ? 220 : 180,
+          easing: kb > 0 ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+        });
+  }, [kb, settledKb, reduceMotion]);
+  const liftStyle = useAnimatedStyle(() => {
+    const live = open ? liveKeyboard.height.value : 0;
+    return { marginBottom: Math.max(live, settledKb.value) };
+  });
+
   // When the keyboard opens over the sheet, bring the focused field into
   // view. In every sheet form the text inputs sit at/near the bottom of the
   // content, and RN's ScrollView does NOT auto-scroll to a focused TextInput
@@ -305,9 +326,10 @@ export function Sheet({
           }}
           className="rounded-t-2xl border-t border-border bg-popover"
           style={[
-            { maxHeight, marginBottom: kb },
+            { maxHeight },
             minHeight != null ? { minHeight } : null,
             shadow.sheet,
+            liftStyle,
             panelStyle,
           ]}
         >
