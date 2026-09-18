@@ -15,12 +15,13 @@ import type {
 } from "@abonten/types/contentType";
 import { useToast } from "@abonten/ui-native";
 import {
+  type InfiniteData,
   useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CONTENT_KEY } from "./useContentProgram";
 import { getContentViewerKey } from "./useContentTelemetry";
 
@@ -39,6 +40,37 @@ function unwrap<T>(res: Envelope<T>): T {
 
 // ── Feed ────────────────────────────────────────────────────────────
 
+/**
+ * Only the Nearby feed is defined by a position. The rough position sent
+ * with the other surfaces (sponsored placement) is not part of their
+ * identity: keying on it split one feed into a cache entry per kilometre,
+ * so a feed restored after a restart was unreachable whenever the last
+ * known fix had moved or expired.
+ */
+export function contentFeedKey(
+  userId: string | null,
+  surface: ContentFeedSurface,
+  coords: { lat: number; lng: number } | null,
+) {
+  return [
+    ...CONTENT_KEY,
+    "feed",
+    userId,
+    surface,
+    surface === "nearby" && coords
+      ? `${coords.lat.toFixed(2)},${coords.lng.toFixed(2)}`
+      : null,
+  ] as const;
+}
+
+/**
+ * The Spotlight feed. It is NEVER refetched behind the viewer's back: the
+ * feed is ranked, so a background refetch (on mount, focus or reconnect)
+ * re-orders the pages under whoever is watching — the video they are on
+ * jumps to another position. It changes only when the person asks
+ * (tab re-press, pull down: `useRefreshContentFeed`), when the list is
+ * empty or failed, or when a restored cache is old on open.
+ */
 export function useContentFeed(
   surface: ContentFeedSurface,
   coords: { lat: number; lng: number } | null,
@@ -46,13 +78,7 @@ export function useContentFeed(
 ) {
   const { session } = useSession();
   return useInfiniteQuery({
-    queryKey: [
-      ...CONTENT_KEY,
-      "feed",
-      session?.user.id ?? null,
-      surface,
-      coords ? `${coords.lat.toFixed(2)},${coords.lng.toFixed(2)}` : null,
-    ],
+    queryKey: contentFeedKey(session?.user.id ?? null, surface, coords),
     enabled,
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam }): Promise<ContentFeedPage> =>
@@ -66,8 +92,49 @@ export function useContentFeed(
         }),
       ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
-    staleTime: 60_000,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
+}
+
+/**
+ * Replaces the feed with a fresh first page. Later pages are dropped first,
+ * so only ONE request is made (a plain refetch of an infinite query
+ * re-requests every page already loaded, in sequence). A refresh already in
+ * flight is joined rather than restarted, so a double tap is one request.
+ * Rejects when it fails; the existing pages stay on screen.
+ */
+export function useRefreshContentFeed() {
+  const qc = useQueryClient();
+  return useCallback(
+    async (key: readonly unknown[]) => {
+      const state = qc.getQueryState(key);
+      if (state?.fetchStatus === "fetching") {
+        await qc.refetchQueries(
+          { queryKey: key, exact: true },
+          { cancelRefetch: false, throwOnError: true },
+        );
+        return;
+      }
+      qc.setQueryData<InfiniteData<ContentFeedPage, string | null>>(
+        key,
+        (old) =>
+          old && old.pages.length > 1
+            ? {
+                pages: old.pages.slice(0, 1),
+                pageParams: old.pageParams.slice(0, 1),
+              }
+            : old,
+      );
+      await qc.refetchQueries(
+        { queryKey: key, exact: true },
+        { throwOnError: true },
+      );
+    },
+    [qc],
+  );
 }
 
 export function flattenFeed(
