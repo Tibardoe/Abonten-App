@@ -161,6 +161,85 @@ describe("bumpConversationInPages", () => {
   });
 });
 
+describe("bumpConversationInPages ordering (server: last_message_at desc, id desc)", () => {
+  const at = (hh: string) => `2026-09-07T${hh}:00:00.000Z`;
+  const ids = (c: ConversationListCache | undefined) =>
+    c?.pages.flatMap((p) => p.data.map((r) => r.conversation_id));
+
+  it("drops a row back to its place when a deletion moves its time backwards", async () => {
+    const { bumpConversationInPages } = await import("./messagingInboxCache");
+    // "a" is first only because of the message that is about to be deleted.
+    const before = cache(
+      row("a", { last_message_at: at("12") }),
+      row("b", { last_message_at: at("11") }),
+      row("c", { last_message_at: at("09") }),
+    );
+    const after = bumpConversationInPages(before, "a", {
+      last_message_at: at("10"),
+      last_message_preview: "the one before",
+      last_message_sender_id: "other",
+    });
+    expect(ids(after)).toEqual(["b", "a", "c"]);
+    expect(after?.pages[0].data[1].last_message_preview).toBe("the one before");
+  });
+
+  it("orders equal times by id, descending, like the server", async () => {
+    const { bumpConversationInPages } = await import("./messagingInboxCache");
+    const before = cache(
+      row("m", { last_message_at: at("12") }),
+      row("z", { last_message_at: at("11") }),
+      row("b", { last_message_at: at("11") }),
+    );
+    const after = bumpConversationInPages(before, "m", {
+      last_message_at: at("11"),
+      last_message_preview: "rolled back",
+      last_message_sender_id: "other",
+    });
+    expect(ids(after)).toEqual(["z", "m", "b"]);
+  });
+
+  it("puts a row that now sorts past everything loaded at the end of what is loaded, across pages", async () => {
+    const { bumpConversationInPages } = await import("./messagingInboxCache");
+    const before: ConversationListCache = {
+      pages: [
+        {
+          data: [
+            row("a", { last_message_at: at("12") }),
+            row("b", { last_message_at: at("11") }),
+          ],
+        },
+        { data: [row("c", { last_message_at: at("10") })] },
+      ],
+      pageParams: [null, "cursor"],
+    };
+    const after = bumpConversationInPages(before, "a", {
+      last_message_at: at("08"),
+      last_message_preview: "old",
+      last_message_sender_id: "other",
+    });
+    expect(after?.pages[0].data.map((r) => r.conversation_id)).toEqual(["b"]);
+    expect(after?.pages[1].data.map((r) => r.conversation_id)).toEqual([
+      "c",
+      "a",
+    ]);
+  });
+
+  it("keeps the cache reference when a row in the middle changes nothing", async () => {
+    const { bumpConversationInPages } = await import("./messagingInboxCache");
+    const before = cache(
+      row("a", { last_message_at: at("12") }),
+      row("b", { last_message_at: at("11"), unread_count: 0 }),
+    );
+    const b = before.pages[0].data[1];
+    const after = bumpConversationInPages(before, "b", {
+      last_message_at: b.last_message_at,
+      last_message_preview: b.last_message_preview,
+      last_message_sender_id: b.last_message_sender_id,
+    });
+    expect(after).toBe(before);
+  });
+});
+
 describe("conversationPreviewFor", () => {
   it("mirrors the server's preview rule", async () => {
     const { conversationPreviewFor } = await import("./messagingInboxCache");

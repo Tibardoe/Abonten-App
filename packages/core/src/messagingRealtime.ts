@@ -77,7 +77,50 @@ export type InboxConversationBroadcast = {
   last_message_preview: string | null;
   last_message_sender_id: string | null;
   status: string | null;
+  /** True when last_message_at moved forward, i.e. a new message. False for
+   *  a deletion or restore that rolled the conversation back
+   *  (20260918140000). Absent on events from before that migration. */
+  advanced?: boolean;
 };
+
+/**
+ * What a client does with one `conversation_update`:
+ *   * unreadDelta — 1 only for a NEW message from someone else in a
+ *     conversation that is not open on screen (the open thread is marked
+ *     read immediately). A rollback is never a new message, even though its
+ *     sender is someone else.
+ *   * reconcile — refetch the inbox after patching it. A rollback can lower
+ *     unread counts the client cannot work out on its own.
+ * Events without `advanced` (sent before the flag existed) are treated as
+ * new messages, which is what they almost always were.
+ */
+export function inboxUpdateEffect(
+  update: Pick<
+    InboxConversationBroadcast,
+    "id" | "last_message_sender_id" | "advanced"
+  >,
+  myUserId: string,
+  activeConversationId: string | null | undefined,
+): { unreadDelta: 0 | 1; reconcile: boolean } {
+  const advanced = update.advanced !== false;
+  const inbound =
+    advanced &&
+    !!update.last_message_sender_id &&
+    update.last_message_sender_id !== myUserId &&
+    update.id !== activeConversationId;
+  return { unreadDelta: inbound ? 1 : 0, reconcile: !advanced };
+}
+
+/**
+ * Whether a private channel has to be opened again. realtime-js rejoins on
+ * its own after a transport failure, but a join the server REFUSES -- the
+ * socket's token expired while the app was in the background, for one --
+ * leaves the channel errored or closed for good. Clients check this when the
+ * app comes back to the foreground and when the session token is refreshed.
+ */
+export function channelNeedsRejoin(state: string | null | undefined): boolean {
+  return state !== "joined" && state !== "joining";
+}
 
 /** The subset of a supabase-js client openPrivateChannel needs. Structural,
  *  so this package keeps no dependency on supabase-js. */

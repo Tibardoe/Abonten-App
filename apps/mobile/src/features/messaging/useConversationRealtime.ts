@@ -11,6 +11,7 @@ import {
   TYPING_THROTTLE_MS,
   TYPING_TTL_MS,
   type TypingBroadcast,
+  channelNeedsRejoin,
   conversationChannelName,
   openPrivateChannel,
 } from "@abonten/core/messagingRealtime";
@@ -45,7 +46,10 @@ type Options = {
 // SUBSCRIBED after the first refetches the thread to close the gap.
 //
 // This hook is the ONLY owner of the `conversation:<id>` topic in the app
-// (openPrivateChannel's contract).
+// (openPrivateChannel's contract). Like useInboxRealtime, it opens the
+// channel again when the app returns to the foreground or the session token
+// is refreshed while the channel is not joined — a join the server refused
+// (stale token) is not retried by realtime-js.
 export function useConversationRealtime(
   conversationId: string | undefined,
   { onIncomingMessage }: Options = {},
@@ -60,6 +64,8 @@ export function useConversationRealtime(
   // never stored). It means "in this chat", not "online in the app", and the
   // UI says exactly that.
   const [presentUserIds, setPresentUserIds] = useState<string[]>([]);
+  // Bumped to tear the channel down and open a fresh one.
+  const [generation, setGeneration] = useState(0);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
@@ -230,7 +236,7 @@ export function useConversationRealtime(
           const isUp = status === "SUBSCRIBED";
           setConnected(isUp);
           if (!isUp) return;
-          if (wasConnected.current) refetchThread();
+          if (wasConnected.current || generation > 0) refetchThread();
           wasConnected.current = true;
           if (AppState.currentState === "active") void trackPresence(true);
         });
@@ -239,18 +245,30 @@ export function useConversationRealtime(
     // Foreground the app after a spell in the background: the socket may
     // have missed events while suspended. Re-push the (possibly refreshed)
     // token and reconcile — the same close-the-gap step as a rejoin.
+    const rejoinIfDown = () => {
+      const ch = channelRef.current;
+      if (!cancelled && ch && channelNeedsRejoin(ch.state)) {
+        setGeneration((g) => g + 1);
+      }
+    };
     const appStateSub = AppState.addEventListener("change", (next) => {
       void trackPresence(next === "active");
       if (next === "active") {
         void pushAuth().then(() => {
-          if (!cancelled) refetchThread();
+          if (cancelled) return;
+          refetchThread();
+          rejoinIfDown();
         });
       }
+    });
+    const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "TOKEN_REFRESHED") rejoinIfDown();
     });
 
     return () => {
       cancelled = true;
       appStateSub.remove();
+      authSub.subscription.unsubscribe();
       for (const t of timers.values()) clearTimeout(t);
       timers.clear();
       setTypingUserIds([]);
@@ -261,7 +279,7 @@ export function useConversationRealtime(
       channelRef.current = null;
       if (ch) void supabase.removeChannel(ch);
     };
-  }, [conversationId, myId, qc, dropTyping, markTyping]);
+  }, [conversationId, myId, qc, dropTyping, markTyping, generation]);
 
   // Throttled "I'm typing" broadcast. `isTyping: false` (sent, blurred) is
   // always sent immediately so the other side clears without waiting for TTL.

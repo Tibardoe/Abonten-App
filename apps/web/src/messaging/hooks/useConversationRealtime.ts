@@ -12,6 +12,7 @@ import {
   TYPING_THROTTLE_MS,
   TYPING_TTL_MS,
   type TypingBroadcast,
+  channelNeedsRejoin,
   conversationChannelName,
   openPrivateChannel,
 } from "@abonten/core/messagingRealtime";
@@ -31,7 +32,9 @@ type Options = { onIncomingMessage?: () => void };
 // event carries ids only and triggers a refetch through RLS. The inbox row is
 // not patched here — MessagingWorkspace's `inbox:<me>` channel already gets
 // the conversation's last-message bump. This hook is the only owner of the
-// `conversation:<id>` topic on web.
+// `conversation:<id>` topic on web. When the tab becomes visible again or the
+// session token is refreshed, a channel that is not joined is opened again
+// (a join the server refused is not retried by realtime-js).
 export function useConversationRealtime(
   conversationId: string | undefined,
   { onIncomingMessage }: Options = {},
@@ -41,6 +44,8 @@ export function useConversationRealtime(
   const myId = user?.id;
 
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
+  // Bumped to tear the channel down and open a fresh one.
+  const [generation, setGeneration] = useState(0);
   const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
@@ -160,14 +165,30 @@ export function useConversationRealtime(
         )
         .subscribe((status) => {
           if (cancelled || status !== "SUBSCRIBED") return;
-          // A rejoin after a dropped socket may have missed events.
-          if (wasConnected.current) refetchThread();
+          // A rejoin (or a fresh generation) may have missed events.
+          if (wasConnected.current || generation > 0) refetchThread();
           wasConnected.current = true;
         });
     })();
 
+    const rejoinIfDown = () => {
+      const ch = broadcastChannelRef.current;
+      if (!cancelled && ch && channelNeedsRejoin(ch.state)) {
+        setGeneration((g) => g + 1);
+      }
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") rejoinIfDown();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "TOKEN_REFRESHED") rejoinIfDown();
+    });
+
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      authSub.subscription.unsubscribe();
       for (const t of timers.values()) clearTimeout(t);
       timers.clear();
       setTypingUserIds([]);
@@ -176,7 +197,7 @@ export function useConversationRealtime(
       broadcastChannelRef.current = null;
       if (bc) void supabase.removeChannel(bc);
     };
-  }, [conversationId, myId, qc, dropTyping, markTyping]);
+  }, [conversationId, myId, qc, dropTyping, markTyping, generation]);
 
   const sendTyping = useCallback(
     (isTyping: boolean) => {

@@ -1,5 +1,5 @@
 import type { Occurrence } from "@abonten/types/occurrenceType";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistance } from "date-fns";
 
 export function formatDateWithSuffix(date: string | Date): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -85,11 +85,17 @@ export function formatSingleDateTime(date: Date | string): {
   return { date: formattedDate, time: timeStr };
 }
 
-export function getRelativeTime(date: string | Date) {
-  return formatDistanceToNow(new Date(date), { addSuffix: true }).replace(
-    "about ",
-    "",
-  );
+/**
+ * "5 minutes ago" for a moment that has already happened. Every caller passes
+ * a past timestamp (created, edited, last message, activity), so a time a
+ * little in the future can only be clock skew: the server stamped it and the
+ * device's clock is behind. Without the clamp that read "in less than a
+ * minute" on a message that had just arrived.
+ */
+export function getRelativeTime(date: string | Date, now: Date = new Date()) {
+  const at = new Date(date);
+  const past = at.getTime() > now.getTime() ? now : at;
+  return formatDistance(past, now, { addSuffix: true }).replace("about ", "");
 }
 
 export function formatSpecificDateWithTimeRange(item: {

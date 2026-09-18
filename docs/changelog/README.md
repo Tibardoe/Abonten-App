@@ -16,6 +16,14 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-18 — Inbox ordering, unread counting, time labels, realtime rejoin
+
+- **Fix — inbox ordering after a deletion.** A last-message update that moved a conversation's time backwards (the latest message deleted) was re-seated at the top of the cached inbox. `bumpConversationInPages` (`@abonten/core/messagingInboxCache`) now places the row where the server's order (`last_message_at desc nulls last, id desc`) puts it.
+- **Fix — a deletion counted as a new unread message.** The inbox raised the badge for every update whose sender was someone else. `20260918140000` adds `advanced` to `conversation_update` (true only when `last_message_at` moved forward); the shared `inboxUpdateEffect` counts only advanced updates and refetches the inbox for a rollback.
+- **Fix — "in less than a minute".** `getRelativeTime` clamps a time slightly in the future (device clock behind the server) to now; every caller passes a past moment.
+- **Fix — realtime channels that stayed down.** realtime-js rejoins after a network drop but not after the server refuses a join (a token that expired in the background). Web and mobile now reopen a channel that is not joined when the app or tab comes back to the foreground and when the session token is refreshed (`channelNeedsRejoin`).
+- Tests: inbox ordering (4), time label (2), inbox update rule and rejoin check (4), realtime rollback delivery (1). PROJECT.md §35.9.
+
 ## 2026-09-18 — Audit deferred items completed
 
 - **Changed — messaging realtime is Broadcast from the database.** `20260918120100` (production): triggers on `message`, `message_reaction`, `conversation`, `conversation_participant` send `message_insert`, `message_update`, `reaction`, `participant_update` to the private `conversation:<id>` channel and `conversation_update` / `_added` / `_removed` / `_state` to a new private `inbox:<uid>` channel (policy `messaging_realtime_inbox_read`). Events carry ids, never message bodies. Web and mobile use one private channel per open thread plus the inbox channel; `@abonten/core/messagingRealtime` holds the event names, payload types and `openPrivateChannel`. Replaces `postgres_changes`, whose per-subscriber RLS evaluation was the scaling ceiling. The tables leave the realtime publication in a follow-up once all clients have updated.
