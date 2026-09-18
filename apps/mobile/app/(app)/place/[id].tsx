@@ -34,6 +34,7 @@ import { PlaceCheckInSheet } from "@/features/rewards/PlaceCheckInSheet";
 import { useCheckIn } from "@/features/rewards/usePlaceVisits";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { openDirections as openMapsDirections } from "@/lib/directions";
+import { isNotFoundError } from "@/lib/queryErrors";
 import { placeShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -181,6 +182,7 @@ export default function PlaceDetailScreen() {
     data: place,
     isLoading,
     isError,
+    error,
     isRefetching,
     refetch,
   } = usePlaceDetail(id);
@@ -295,7 +297,10 @@ export default function PlaceDetailScreen() {
       .slice(0, 6);
   }, [nearby.data, place?.id, place?.category_id]);
 
-  if (isLoading) {
+  // Cached data (restored from the last session too) keeps rendering when a
+  // refresh fails or the device is offline; only "never loaded" or "no
+  // longer exists" replaces it.
+  if (isLoading && !place) {
     return (
       <View className="flex-1 bg-background">
         {header}
@@ -303,7 +308,7 @@ export default function PlaceDetailScreen() {
       </View>
     );
   }
-  if (isError || !place) {
+  if (!place || (isError && isNotFoundError(error))) {
     return (
       <View className="flex-1 bg-background">
         {header}

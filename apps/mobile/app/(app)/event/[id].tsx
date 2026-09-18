@@ -29,6 +29,7 @@ import {
   useReferralCode,
 } from "@/features/rewards/useReferralCode";
 import { openDirections as openMapsDirections } from "@/lib/directions";
+import { isNotFoundError } from "@/lib/queryErrors";
 import { eventShareUrl } from "@/lib/share";
 import { useNowTick } from "@/lib/useNowTick";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -171,7 +172,7 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const similarCardWidth = useCarouselCardWidth();
-  const { data, isLoading, isError, isRefetching, refetch } =
+  const { data, isLoading, isError, error, isRefetching, refetch } =
     useEventDetail(id);
   const { session } = useSession();
   const messageOrganizer = useOpenConversation();
@@ -245,7 +246,10 @@ export default function EventDetailScreen() {
     />
   );
 
-  if (isLoading) {
+  // Cached data (restored from the last session too) keeps rendering when a
+  // refresh fails or the device is offline; only "never loaded" or "no
+  // longer exists" replaces it.
+  if (isLoading && !data) {
     return (
       <View className="flex-1 bg-background">
         {header}
@@ -253,7 +257,7 @@ export default function EventDetailScreen() {
       </View>
     );
   }
-  if (isError || !data) {
+  if (!data || (isError && isNotFoundError(error))) {
     return (
       <View className="flex-1 bg-background">
         {header}

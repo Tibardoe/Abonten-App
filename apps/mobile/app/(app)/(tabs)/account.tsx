@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import { AppearanceToggle } from "@/components/app/AppearanceToggle";
+import { useContentProgram } from "@/features/content/useContentProgram";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
@@ -54,6 +55,8 @@ export default function Account() {
   const openSupport = useOpenConversation();
   // Rewards rolls out by audience; the row appears once it's on for them.
   const rewards = useRewardsProgram({ enabled: !!session });
+  // Fails closed (hidden) until known; restored from the offline cache.
+  const content = useContentProgram();
 
   async function onSignOut() {
     await unregisterPushToken();
@@ -141,6 +144,29 @@ export default function Account() {
             label={t("myEvents")}
             onPress={() => router.push("/(app)/tickets")}
           />
+          {/* Spotlight & Stories: your creator hub when you can post, and
+              the Spotlights you saved (your profile's Saved segment). The
+              feed itself is the Spotlight tab, so it is not repeated here. */}
+          {content.program.canPublish &&
+          (content.program.spotlightPosting ||
+            content.program.storiesPosting) ? (
+            <NavRow
+              icon="play-circle-outline"
+              label="Your Spotlights & Stories"
+              onPress={() => router.push("/(app)/spotlight/manage")}
+            />
+          ) : null}
+          {content.program.spotlight && profile?.username ? (
+            <NavRow
+              icon="bookmark-outline"
+              label="Saved Spotlights"
+              onPress={() =>
+                router.push(
+                  `/(app)/user/${profile.username}?tab=spotlights&segment=saved`,
+                )
+              }
+            />
+          ) : null}
           <NavRow
             icon="swap-horizontal-outline"
             label="Transactions"
