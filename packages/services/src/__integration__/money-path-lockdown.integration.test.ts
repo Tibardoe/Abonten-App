@@ -99,6 +99,30 @@ describe("money path: clients can't write it", () => {
     );
   });
 
+  it("refuses the refundable-amount lookup to signed-in callers; the server still gets it", async () => {
+    // SECURITY DEFINER and answers for any transaction id, so it is service
+    // role only (migration refundable_amount_service_only_and_content_select_merge).
+    const someTransaction = crypto.randomUUID();
+    const asBuyer = await buyer.client.rpc(
+      "get_transaction_refundable_amount",
+      {
+        p_transaction_id: someTransaction,
+      },
+    );
+    expect(asBuyer.error?.code).toBe("42501");
+    const asOrganizer = await organizer.client.rpc(
+      "get_transaction_refundable_amount",
+      { p_transaction_id: someTransaction },
+    );
+    expect(asOrganizer.error?.code).toBe("42501");
+
+    const asServer = await service.rpc("get_transaction_refundable_amount", {
+      p_transaction_id: someTransaction,
+    });
+    expect(asServer.error).toBeNull();
+    expect(Number(asServer.data)).toBe(0);
+  });
+
   it("refuses direct inserts into every money-path table", async () => {
     const id = crypto.randomUUID();
     const attempts = await Promise.all([

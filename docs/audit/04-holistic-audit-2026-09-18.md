@@ -4,7 +4,7 @@ purpose: Record what an adversarial, whole-stack engineering audit of Abonten Hu
 audience: Founder, engineering, future auditors
 scope: apps/web, apps/mobile, apps/admin, packages/*, supabase/, production project sderrexhawjbmsugndcq
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -57,7 +57,7 @@ Severity uses the brief's scale. "Status" is what happened in this session.
 | F4 | LOW · MAINTAINABILITY | Database | Two identical CHECK constraints on each of `ticket_type.price`, `ticket_type.quantity`, `promo_code.discount_percentage` | A later migration re-added checks that already existed under other names | `pg_constraint` | Double evaluation; reads as two rules | **Fixed** — same migration drops one of each pair |
 | F5 | LOW · DOCUMENTATION | PROJECT.md | §7.2, §7.6 #4–#5, §16 13b, §17 stated `ticket_code` was not unique and ranges were unchecked | Never updated after `20260904131325_phase2_ticketing_constraints.sql` | `pg_indexes` shows `ticket_ticket_code_key`; `pg_constraint` shows the checks | Future work planned against a false picture of the schema | **Fixed** |
 | F6 | LOW · MAINTAINABILITY | Mobile / ui-native | `useKeyboardReveal.ts` still described `<Sheet>` as rendering inside an RN `<Modal>`; `useAnimatedKeyboard` was called with `is*TranslucentAndroid` flags that react-native-edge-to-edge ignores and warns about at runtime | Comment and options left over from the 2026-09-17 sheet rebuild | Metro log `WARN isStatusBarTranslucentAndroid … ignored` | Misleading guidance; a warning on every app start | **Fixed** |
-| F7 | LOW · SECURITY (information) | Database | `get_transaction_refundable_amount(uuid)` is `SECURITY DEFINER` and executable by `authenticated`; a `REVOKE` from `authenticated` exists (`20260904130247`) but `PUBLIC` still holds EXECUTE, so the revoke has no effect | Postgres grants EXECUTE to PUBLIC by default; revoking from one role does not remove PUBLIC's grant | Security advisor lists it; `issueRefundCore` calls it with the buyer's session client, so it must stay callable by the owner | A signed-in user who guesses another transaction's UUID learns its refundable amount (a number, no identity); UUIDs are not enumerable | **Deferred** — the correct fix is an ownership check inside the function; no data beyond one amount is exposed, and the function is needed by the customer's own refund flow. Listed for the next SQL pass |
+| F7 | LOW · SECURITY (information) — fixed in 1.2 | Database | `get_transaction_refundable_amount(uuid)` is `SECURITY DEFINER` and executable by `authenticated`; a `REVOKE` from `authenticated` exists (`20260904130247`) but `PUBLIC` still holds EXECUTE, so the revoke has no effect | Postgres grants EXECUTE to PUBLIC by default; revoking from one role does not remove PUBLIC's grant | Security advisor lists it; `issueRefundCore` calls it with the buyer's session client, so it must stay callable by the owner | A signed-in user who guesses another transaction's UUID learns its refundable amount (a number, no identity); UUIDs are not enumerable | **Deferred** — the correct fix is an ownership check inside the function; no data beyond one amount is exposed, and the function is needed by the customer's own refund flow. Listed for the next SQL pass |
 | F8 | TECHNICAL DEBT | Mobile dependencies | `expo-doctor`: nine Expo packages one patch behind SDK 57's expected versions | Patch releases since the last `expo install` | `npx expo-doctor` | None today; bumps change native code and belong with a native build | **Deferred** — run `npx expo install --fix` when the next EAS build is cut (one is already owed for the volume module) |
 | F9 | SCALABILITY RISK | Messaging realtime | Each open thread subscribes to `postgres_changes` on `message` / `message_reaction` / `conversation_participant` filtered by conversation; the inbox subscribes on `conversation` | Correct and RLS-authorised today; `postgres_changes` evaluates RLS per subscriber per change on the realtime server, which is the documented scaling ceiling | `useConversationRealtime.ts`, `useInboxRealtime.ts` | Not a problem below thousands of concurrently open threads | **Deferred** with a named replacement: broadcast from a trigger on private channels (`realtime.messages` policies already exist) |
 | F10 | LOW · PERFORMANCE | Database RLS | `content_comment`, `content_media`, `content_post` have two permissive SELECT policies for `authenticated` | Author-select and public-select were written as separate policies | Performance advisor `multiple_permissive_policies` | Both policies evaluated per row; negligible at current volume | **Deferred** — merging is an RLS policy change and, per repository rules, needs a deliberate decision |
@@ -134,9 +134,20 @@ Severity uses the brief's scale. "Status" is what happened in this session.
 Only genuine ones:
 
 - **iOS has never run this code.** Every keyboard change is universal, but `KeyboardInsetView` on iOS relies on `useAnimatedKeyboard` reporting the keyboard's frame including the home-indicator area, which is what `BottomBar` assumes when it collapses its inset. First TestFlight build should open a chat and a form.
-- **F7** (refundable-amount RPC readable for any transaction UUID) — low, bounded, listed.
-- **F9** (realtime `postgres_changes` per thread) — a scaling ceiling, not a defect; the replacement is named.
-- **Founder-side items unchanged from the previous audit**: Postgres minor upgrade and leaked-password protection in the Supabase dashboard; Expo patch bumps with the next native build.
+- **Realtime cut-over has one step left.** The four messaging tables stay in the `supabase_realtime` publication until the web deploy is live and the mobile update has shipped, so older clients keep receiving `postgres_changes`. A follow-up migration then removes them and resets their replica identity.
+- **Postgres upgrade is the founder's to schedule.** It is now eligible (15 → 17.6.1.166, estimated up to an hour of downtime, no downgrade). Until it runs, the advisor's "outstanding security patches" warning stands.
+
+### Deferred items completed (version 1.2, same day)
+
+| Item | Outcome |
+|---|---|
+| F7 refundable-amount RPC | **Fixed** — service-role only (`20260918120000`); `issueRefundCore` uses the service client; regression test |
+| F9 realtime `postgres_changes` | **Replaced** — triggers broadcast on private `conversation:<id>` and new `inbox:<uid>` channels (`20260918120100`); both apps migrated; delivery proven on the local Realtime server; publication removal pending client rollout (above) |
+| F10 permissive policy pairs | **Fixed** — one SELECT policy per content table; advisor clear; test extended to signed-out readers and media |
+| F13 lifted-copy mis-registration | **Fixed** — `useAnchorMeasure` measures after the keyboard has finished hiding |
+| Postgres upgrade | **Unblocked** — unused `pgjwt` dropped (`20260918120200`); upgrade itself left to the founder (major version, downtime) |
+| Leaked-password protection | **Not applicable** — Pro-plan feature (org is Free) and there are no end-user passwords |
+| Expo patch versions | **Applied** — `expo install --fix`; `expo-doctor` 19/21 (the two remaining are intentional) |
 
 ## 7. Health assessment
 

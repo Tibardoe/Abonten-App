@@ -16,6 +16,16 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-18 — Audit deferred items completed
+
+- **Changed — messaging realtime is Broadcast from the database.** `20260918120100` (production): triggers on `message`, `message_reaction`, `conversation`, `conversation_participant` send `message_insert`, `message_update`, `reaction`, `participant_update` to the private `conversation:<id>` channel and `conversation_update` / `_added` / `_removed` / `_state` to a new private `inbox:<uid>` channel (policy `messaging_realtime_inbox_read`). Events carry ids, never message bodies. Web and mobile use one private channel per open thread plus the inbox channel; `@abonten/core/messagingRealtime` holds the event names, payload types and `openPrivateChannel`. Replaces `postgres_changes`, whose per-subscriber RLS evaluation was the scaling ceiling. The tables leave the realtime publication in a follow-up once all clients have updated.
+- **Security — `get_transaction_refundable_amount` service-role only** (`20260918120000`); `issueRefundCore` calls it with the service client.
+- **Performance — one SELECT policy per content table** (`content_post_select`, `content_media_select`, `content_comment_select`), same rule as the old pairs.
+- **Mobile — anchored menus measure after the keyboard has finished hiding**, so the lifted copy of a message sits exactly over it.
+- **Database — unused `pgjwt` dropped** (`20260918120200`); it was the only blocker for the Postgres upgrade, which is now eligible and left for the founder to schedule. Leaked-password protection recorded as not applicable (Pro plan; no end-user passwords).
+- **Mobile — Expo SDK 57 patch versions** applied.
+- Tests: realtime delivery suite (3 new), refundable-amount lockdown, content drafts extended, `openPrivateChannel` unit tests. Report `audit/04-holistic-audit-2026-09-18.md` 1.2; PROJECT.md §35.8.
+
 ## 2026-09-18 — Verification pass on the audit: one regression found and fixed, redelivery proven
 
 - **Regression fixed — the message action overlay froze the keyboard value.** `ContextualActionOverlay` was still an RN `Modal`. It dismisses the keyboard as it opens, and when the Modal's window appeared while the keyboard was still sliding away, the platform handed the rest of that inset animation to the Modal, so the chat screen's UI-thread keyboard value (`useKeyboardLift`) froze part-way: after closing the overlay the composer sat 122 dp above an empty bottom edge (measured on the emulator, reproduced on a clean bundle). The overlay now renders through `@gorhom/portal` like `<Sheet>`, with a `BackHandler` for hardware back; the emoji-picker hand-off no longer waits for a native dismissal. After the change the resting layout after long-press → close is pixel-identical to the untouched thread. Rule recorded in `useKeyboardLift.ts`: nothing that can be on screen while the keyboard moves may be an RN `Modal`.

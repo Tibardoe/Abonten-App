@@ -2,6 +2,7 @@ import { AppDrawer } from "@/components/app/AppDrawer";
 import { MenuSheetProvider } from "@/components/app/menuSheet";
 import { ExploreFiltersProvider } from "@/features/discovery/ExploreFiltersProvider";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
+import { useInboxRealtime } from "@/features/messaging/useInboxRealtime";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { HighlightUploadProvider } from "@/features/profile/HighlightUploadProvider";
 import { useRemindersSync } from "@/features/reminders/useRemindersSync";
@@ -25,6 +26,11 @@ function StackHost() {
   useRemindersSync();
   // Apply a friend's invite held on this device once someone is signed in.
   useInviteBinding();
+  // The one owner of the signed-in user's `inbox:<id>` channel. Mounted here,
+  // not in the tabs layout, so it is live on every screen -- including a
+  // thread opened straight from a notification, where the tabs may never
+  // mount -- because the thread relies on it for the inbox row bump.
+  useInboxRealtime();
   const c = useThemeColors();
   const { scheme } = useTheme();
 

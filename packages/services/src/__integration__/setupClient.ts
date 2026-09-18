@@ -37,12 +37,39 @@ export type TestUser = {
 
 let userCounter = 0;
 
+// Every test user shares this throwaway password (local stack only).
+const TEST_USER_PASSWORD = "test-password-not-real-12345";
+
+/**
+ * A client with a real, in-memory auth SESSION for `user` -- the way both
+ * apps hold one. Needed for Realtime private channels: supabase-js refreshes
+ * the socket's token from the session before each channel join, so the
+ * header-only `user.client` authorises only its FIRST private channel and
+ * every later join on the same socket goes out as `anon` and is refused.
+ * Callers must `realtime.disconnect()` it when done.
+ */
+export async function createSessionClient(
+  user: Pick<TestUser, "email">,
+): Promise<SupabaseClient<Database>> {
+  const client = createClient<Database>(
+    requiredEnv("SUPABASE_TEST_URL"),
+    requiredEnv("SUPABASE_TEST_ANON_KEY"),
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+  const { error } = await client.auth.signInWithPassword({
+    email: user.email,
+    password: TEST_USER_PASSWORD,
+  });
+  if (error) throw new Error(`Failed to open a session: ${error.message}`);
+  return client;
+}
+
 export async function createTestUser(
   service: SupabaseClient<Database>,
 ): Promise<TestUser> {
   userCounter += 1;
   const email = `integration-test-${Date.now()}-${userCounter}@example.test`;
-  const password = "test-password-not-real-12345";
+  const password = TEST_USER_PASSWORD;
 
   const { data: created, error: createError } =
     await service.auth.admin.createUser({

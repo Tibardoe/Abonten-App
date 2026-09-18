@@ -251,6 +251,23 @@ describe("access boundary", () => {
       .select("id")
       .eq("id", id);
     expect(own.data ?? []).toHaveLength(1);
+
+    // One merged SELECT policy per table (20260918120000): signed-out readers
+    // are held to the public condition only, and media follow the same rule
+    // (owner sees theirs in every state; others only through a public post).
+    const signedOut = await anon.from("content_post").select("id").eq("id", id);
+    expect(signedOut.data ?? []).toHaveLength(0);
+    for (const [who, client, expected] of [
+      ["author", organizer.client, 1],
+      ["other user", viewer.client, 0],
+      ["signed out", anon, 0],
+    ] as const) {
+      const media = await client
+        .from("content_media")
+        .select("id")
+        .eq("id", mediaId);
+      expect(media.data ?? [], who).toHaveLength(expected);
+    }
   });
 });
 

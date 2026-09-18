@@ -1,9 +1,39 @@
 import { describe, expect, it } from "vitest";
 import {
   conversationChannelName,
+  openPrivateChannel,
   presenceRecency,
   userInboxChannelName,
 } from "./messagingRealtime";
+
+type FakeChannel = { topic: string; config: unknown };
+
+// A stand-in for supabase-js's channel registry: channel() hands back the
+// existing channel for a registered topic, and removal only completes after
+// an async round trip -- the two behaviours openPrivateChannel exists for.
+function fakeClient() {
+  const channels: FakeChannel[] = [];
+  const removed: FakeChannel[] = [];
+  return {
+    channels,
+    removed,
+    getChannels: () => [...channels],
+    removeChannel: async (c: FakeChannel) => {
+      await new Promise((r) => setTimeout(r, 5));
+      removed.push(c);
+      channels.splice(channels.indexOf(c), 1);
+      return "ok";
+    },
+    channel: (topic: string, opts: { config: unknown }) => {
+      const full = `realtime:${topic}`;
+      const existing = channels.find((c) => c.topic === full);
+      if (existing) return existing;
+      const created = { topic: full, config: opts.config };
+      channels.push(created);
+      return created;
+    },
+  };
+}
 
 describe("messagingRealtime contract", () => {
   it("builds stable channel names", () => {
@@ -20,5 +50,35 @@ describe("messagingRealtime contract", () => {
     // boundaries
     expect(presenceRecency(now - 60_000, now)).toBe("online");
     expect(presenceRecency(now - 15 * 60_000, now)).toBe("recently_active");
+  });
+
+  it("openPrivateChannel removes a stale channel before creating a fresh private one", async () => {
+    const client = fakeClient();
+    const stale = client.channel("conversation:c1", { config: {} });
+    const other = client.channel("conversation:c2", { config: {} });
+
+    const fresh = await openPrivateChannel(
+      client,
+      "conversation:c1",
+      () => false,
+    );
+
+    expect(fresh).not.toBe(stale);
+    expect(fresh?.config).toEqual({
+      private: true,
+      broadcast: { self: false },
+    });
+    expect(client.removed).toEqual([stale]);
+    expect(client.channels).toContain(other);
+  });
+
+  it("openPrivateChannel creates nothing once the caller was cancelled", async () => {
+    const client = fakeClient();
+    client.channel("inbox:u1", { config: {} });
+    let cancelled = false;
+    const pending = openPrivateChannel(client, "inbox:u1", () => cancelled);
+    cancelled = true;
+    expect(await pending).toBeNull();
+    expect(client.channels).toHaveLength(0);
   });
 });
