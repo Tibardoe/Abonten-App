@@ -1,3 +1,4 @@
+import { ACTIVE_PROMOTIONS_KEY } from "@/features/promotions/useActivePromotions";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -39,5 +40,6 @@ export function useInvalidateEventPromotion() {
     });
     qc.invalidateQueries({ queryKey: ["discovery"] });
     qc.invalidateQueries({ queryKey: ["explore"] });
+    qc.invalidateQueries({ queryKey: ACTIVE_PROMOTIONS_KEY });
   };
 }
