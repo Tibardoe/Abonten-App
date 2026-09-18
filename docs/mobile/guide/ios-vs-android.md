@@ -27,7 +27,7 @@ User documentation therefore describes **Android only** and says an iPhone versi
 
 | Area | Android | iOS (unverified) | Source |
 |---|---|---|---|
-| Keyboard avoidance | default | `KeyboardAvoidingView behavior="padding"` | messages thread, sign-in, email, verify, emoji picker |
+| Keyboard avoidance | `KeyboardInsetView` (Reanimated `useAnimatedKeyboard`, UI-thread inset from the physical bottom edge — the window is edge-to-edge and the IME does not resize it) | full-screen forms: `automaticallyAdjustKeyboardInsets` on the scroll view; chat thread: the same `KeyboardInsetView` | `@abonten/ui-native` `KeyboardInsetView.tsx`, `KeyboardAwareScrollView.tsx`, `BottomBar.tsx`, `Sheet.tsx`, `useKeyboardLift.ts`; React Native's `KeyboardAvoidingView` is no longer used anywhere in the app |
 | Maps provider | Google (`PROVIDER_GOOGLE`) with `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | Apple Maps default | `NativeMap.tsx`, `SocialMap.tsx`, `MapPickerSheet.tsx` |
 | Push channel | Android notification channel created | APNs via Expo (needs Apple push credentials — unchecked) | `usePushRegistration.ts` |
 | Reminders | `channelId` set | — | `eventReminders.ts` |

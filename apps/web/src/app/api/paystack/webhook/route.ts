@@ -4,6 +4,10 @@ import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import { finalizePaystackPayment } from "@abonten/services/payments/finalizePaystackPayment";
+import {
+  WEBHOOK_ACK_OK,
+  paystackWebhookAckStatus,
+} from "@abonten/services/payments/webhookAck";
 import type { Database, Json } from "@abonten/types/database.types";
 import type {
   PaystackDisputeWebhookData,
@@ -119,10 +123,16 @@ export async function POST(req: Request) {
         .maybeSingle();
 
       if (updateError) {
+        // A database error is transient from Paystack's point of view: ask
+        // for a redelivery rather than dropping a refund confirmation. The
+        // status-guarded update above makes the redelivery idempotent.
         logger.error(
           `Paystack webhook: failed updating transaction for ${event.event} (${updateError.message})`,
         );
-      } else if (!updated) {
+        return NextResponse.json({ error: "Server error" }, { status: 503 });
+      }
+
+      if (!updated) {
         logger.info(
           `Paystack webhook: ${event.event} for reference ${reference} — no matching refund_pending transaction`,
         );
@@ -228,10 +238,16 @@ export async function POST(req: Request) {
         .maybeSingle();
 
       if (payoutErr) {
+        // Same rule as the refund branch: a transient database error must
+        // not swallow a transfer outcome. The `transfer_status = 'pending'`
+        // guard makes the redelivery a no-op once it has landed.
         logger.error(
           `Paystack webhook: failed updating payout for ${event.event} (${payoutErr.message})`,
         );
-      } else if (!payout) {
+        return NextResponse.json({ error: "Server error" }, { status: 503 });
+      }
+
+      if (!payout) {
         logger.info(
           `Paystack webhook: ${event.event} for transfer ${transferCode} — no pending payout matched (already settled or manual)`,
         );
@@ -321,13 +337,19 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (attemptError) {
+      // A database error looking the attempt up is transient from
+      // Paystack's point of view -- ask for a redelivery rather than
+      // swallowing a paid charge.
       logger.error(
         `Paystack webhook: failed looking up payment_attempt: ${attemptError.message}`,
       );
-      return NextResponse.json({ received: true }, { status: 200 });
+      return NextResponse.json({ error: "Server error" }, { status: 503 });
     }
 
     if (!attempt) {
+      // Nothing in this system started this charge (a Paystack dashboard
+      // test, or a reference from another integration) -- a redelivery
+      // could not change that.
       logger.warn(
         `Paystack webhook: no payment_attempt found for reference (event id ${event.data.id})`,
       );
@@ -343,12 +365,17 @@ export async function POST(req: Request) {
       `Paystack webhook: finalized attempt ${attempt.id} -> ${result.status}`,
     );
 
-    // Always ack with 200 once the signature is valid and we've attempted
-    // finalization — finalizePaystackPayment's own CAS lock is what makes
-    // Paystack's retry-on-non-2xx behavior safe to rely on for anything
-    // that failed transiently, without needing this handler to reflect
-    // internal finalization failures as HTTP errors.
-    return NextResponse.json({ received: true }, { status: 200 });
+    // 200 is a promise to Paystack that this delivery needs no retry, so it
+    // is only made for a settled outcome. Anything a later attempt could
+    // still change answers 503 and Paystack redelivers; finalize's own lock
+    // makes every redelivery idempotent. See webhookAck.ts for the table.
+    const ack = paystackWebhookAckStatus(result);
+    return NextResponse.json(
+      ack === WEBHOOK_ACK_OK
+        ? { received: true }
+        : { received: false, retry: true, outcome: result.status },
+      { status: ack },
+    );
   } catch (error) {
     logger.error("Paystack webhook error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

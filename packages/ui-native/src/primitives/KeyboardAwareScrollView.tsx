@@ -8,7 +8,6 @@ import {
   useRef,
 } from "react";
 import {
-  KeyboardAvoidingView,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Platform,
@@ -19,6 +18,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardInsetView } from "./KeyboardInsetView";
 import { useKeyboardHeight } from "./useKeyboard";
 import {
   KeyboardAwareContext,
@@ -29,21 +29,21 @@ import {
 // The one scroll container every full-screen form in the app should use so a
 // focused input is never left behind the keyboard.
 //
-// How it works, per platform, using only React Native built-ins (no native
-// dependency / EAS rebuild):
+// How it works, per platform:
 //   • iOS  — `automaticallyAdjustKeyboardInsets` makes the scroll view inset
-//            its content by the keyboard height. No KeyboardAvoidingView
-//            (which would double-count against it).
+//            its content by the keyboard height, animated by UIKit itself.
+//            Nothing wraps it (a second inset would double-count).
 //   • Android — the app runs edge-to-edge
 //            (android/gradle.properties edgeToEdgeEnabled=true), and an
 //            edge-to-edge window is NOT resized by the IME the way
 //            windowSoftInputMode=adjustResize used to be. Nothing moved on
 //            its own: on an Android 15 device the keyboard simply covered
 //            the bottom of the screen, leaving submit buttons unreachable.
-//            So the scroll view is wrapped in a KeyboardAvoidingView with
-//            behavior="padding", which shrinks its viewport by the measured
-//            keyboard height, and the `paddingBottom` below keeps headroom
-//            for the last field.
+//            So the scroll view sits in a <KeyboardInsetView>, which shrinks
+//            its viewport by the keyboard's height frame by frame on the UI
+//            thread (React Native's KeyboardAvoidingView did the same one
+//            beat late, after `keyboardDidShow`, so the form jumped), and the
+//            `paddingBottom` below keeps headroom for the last field.
 //
 // Revealing the FOCUSED field is delegated to the shared engine in
 // useKeyboardReveal.ts — the same one <Sheet> uses, so there is exactly one
@@ -52,9 +52,9 @@ import {
 // `keyboardShouldPersistTaps="handled"` keeps taps on buttons/other fields
 // working with the keyboard up; `keyboardDismissMode` lets a drag dismiss it.
 //
-// NOTE: bottom sheets are a separate case — neither `adjustResize` nor
-// `automaticallyAdjustKeyboardInsets` applies inside a RN <Modal>, so
-// <Sheet> insets its own content (and shares the reveal engine above).
+// NOTE: bottom sheets are a separate case — <Sheet> lifts its own panel by
+// the keyboard's height (and shares the reveal engine above), so it is never
+// wrapped in this.
 
 export type {
   KeyboardAwareContextValue,
@@ -133,11 +133,7 @@ export const KeyboardAwareScrollView = forwardRef<
   // double-count the keyboard.
   if (Platform.OS === "ios") return scroller;
 
-  return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-      {scroller}
-    </KeyboardAvoidingView>
-  );
+  return <KeyboardInsetView>{scroller}</KeyboardInsetView>;
 });
 
 /**

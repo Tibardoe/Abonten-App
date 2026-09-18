@@ -19,7 +19,6 @@ import Animated, {
   Easing,
   cancelAnimation,
   runOnJS,
-  useAnimatedKeyboard,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -32,6 +31,7 @@ import { shadow } from "../theme/tokens";
 import { Icon } from "./Icon";
 import { SectionTitle } from "./Typography";
 import { useKeyboardHeight } from "./useKeyboard";
+import { useKeyboardLift } from "./useKeyboardLift";
 import { KeyboardAwareContext, useKeyboardReveal } from "./useKeyboardReveal";
 
 // The app's bottom sheet. It renders through a PORTAL into the app's own view
@@ -136,14 +136,9 @@ export function Sheet({
   // Stays mounted while the exit animation runs.
   const [mounted, setMounted] = useState(open);
 
-  // The keyboard, read on the UI thread. The translucent flags match the app's
-  // edge-to-edge window, where the IME does NOT resize the window, so the
-  // overlap has to be measured from the physical bottom edge — the same edge
-  // this panel is anchored to.
-  const keyboard = useAnimatedKeyboard({
-    isStatusBarTranslucentAndroid: true,
-    isNavigationBarTranslucentAndroid: true,
-  });
+  // The keyboard, read on the UI thread (the app-wide signal — see
+  // useKeyboardLift.ts for why it is this and not a JS listener).
+  const keyboard = useKeyboardLift();
 
   // JS-side height, for the parts that are plain layout rather than animation.
   const kbHeight = useKeyboardHeight();
