@@ -135,21 +135,38 @@ export type LastMessageBump = {
 };
 
 /**
- * Apply a `conversation` row's last_message_* bump straight from the realtime
- * payload and re-seat the row at the top of the list.
+ * Where the server puts a row: `list_conversations` orders by
+ * `last_message_at desc nulls last, id desc`. True when `a` comes before `b`.
+ * (Postgres compares uuids byte by byte, which for the lowercase hex form is
+ * the same as comparing the strings.)
+ */
+function sortsBefore(
+  a: ConversationListItem,
+  b: ConversationListItem,
+): boolean {
+  const ta = a.last_message_at ? Date.parse(a.last_message_at) : Number.NaN;
+  const tb = b.last_message_at ? Date.parse(b.last_message_at) : Number.NaN;
+  const aNull = Number.isNaN(ta);
+  const bNull = Number.isNaN(tb);
+  if (aNull !== bNull) return bNull; // nulls last
+  if (!aNull && ta !== tb) return ta > tb;
+  return a.conversation_id > b.conversation_id;
+}
+
+/**
+ * Apply a last-message bump (a new message, an edit of the latest one, or a
+ * deletion that rolled the conversation back to its previous message) to the
+ * cached inbox pages, and put the row where the server's ordering would.
  *
- * The inbox is ordered newest-activity-first, so a conversation that just
- * received a message belongs at the front of page 0 — which is precisely what
- * a refetch would have produced. Doing it here means sending or receiving a
- * message reorders the inbox without a network round-trip.
+ * A new message moves the row to the top, as before. A deletion that moved
+ * `last_message_at` BACKWARDS used to be re-seated at the top as well, so a
+ * conversation whose newest message had just been deleted stayed first until
+ * the next refetch; now it drops to its place among the loaded rows. If the
+ * new position lies past every loaded row it goes at the end of what is
+ * loaded -- the next page fetch or refetch then places it exactly.
  *
- * `unreadDelta` is applied only for inbound messages the caller isn't
- * currently reading; the caller decides that, since only it knows which
- * thread is on screen.
- *
- * Returns the same reference when the row isn't in this cached view — a
- * conversation the user has never scrolled to must NOT be synthesised into
- * the list, because its position depends on rows this view hasn't loaded.
+ * Returns the same cache reference when this view does not hold the row, or
+ * when nothing about it -- fields or position -- changes.
  */
 export function bumpConversationInPages(
   cache: ConversationListCache | undefined,
@@ -172,23 +189,47 @@ export function bumpConversationInPages(
     unread_count: Math.max(0, found.unread_count + unreadDelta),
   };
 
-  const alreadyFirst =
-    cache.pages[0].data[0]?.conversation_id === conversationId;
-  const unchanged =
-    alreadyFirst &&
-    updated.last_message_at === found.last_message_at &&
-    updated.last_message_preview === found.last_message_preview &&
-    updated.unread_count === found.unread_count;
-  if (unchanged) return cache;
-
-  // Drop it from wherever it was, then re-seat at the front of page 0.
+  // Drop it from wherever it was...
   const stripped = cache.pages.map((page) => {
     const data = page.data.filter((r) => r.conversation_id !== conversationId);
     return data.length === page.data.length ? page : { ...page, data };
   });
-  const pages = stripped.map((page, i) =>
-    i === 0 ? { ...page, data: [updated, ...page.data] } : page,
+
+  // ...then find the first loaded row it sorts before.
+  let target: { page: number; index: number } | null = null;
+  for (let p = 0; p < stripped.length && !target; p++) {
+    const idx = stripped[p].data.findIndex((r) => sortsBefore(updated, r));
+    if (idx >= 0) target = { page: p, index: idx };
+  }
+  if (!target) {
+    const last = stripped.length - 1;
+    target = { page: last, index: stripped[last].data.length };
+  }
+
+  // Same place and same fields: leave the cache untouched so no view
+  // re-renders.
+  const originalPage = cache.pages.findIndex((page) =>
+    page.data.some((r) => r.conversation_id === conversationId),
   );
+  const originalIndex = cache.pages[originalPage].data.findIndex(
+    (r) => r.conversation_id === conversationId,
+  );
+  const samePlace =
+    target.page === originalPage && target.index === originalIndex;
+  const sameFields =
+    updated.last_message_at === found.last_message_at &&
+    updated.last_message_preview === found.last_message_preview &&
+    updated.last_message_sender_id === found.last_message_sender_id &&
+    updated.unread_count === found.unread_count;
+  if (samePlace && sameFields) return cache;
+
+  const { page: tp, index: ti } = target;
+  const pages = stripped.map((page, i) => {
+    if (i !== tp) return page;
+    const data = [...page.data];
+    data.splice(ti, 0, updated);
+    return { ...page, data };
+  });
   return { ...cache, pages };
 }
 

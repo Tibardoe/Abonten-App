@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  channelNeedsRejoin,
   conversationChannelName,
+  inboxUpdateEffect,
   openPrivateChannel,
   presenceRecency,
   userInboxChannelName,
@@ -80,5 +82,52 @@ describe("messagingRealtime contract", () => {
     cancelled = true;
     expect(await pending).toBeNull();
     expect(client.channels).toHaveLength(0);
+  });
+
+  it("counts only a new message from someone else in a thread that is not open", () => {
+    const base = { id: "c1", last_message_sender_id: "them" };
+    expect(inboxUpdateEffect({ ...base, advanced: true }, "me", null)).toEqual({
+      unreadDelta: 1,
+      reconcile: false,
+    });
+    // Own message, and a message in the open thread: no unread.
+    expect(
+      inboxUpdateEffect(
+        { ...base, last_message_sender_id: "me", advanced: true },
+        "me",
+        null,
+      ).unreadDelta,
+    ).toBe(0);
+    expect(
+      inboxUpdateEffect({ ...base, advanced: true }, "me", "c1").unreadDelta,
+    ).toBe(0);
+  });
+
+  it("never counts a rollback as unread, and asks for a refetch", () => {
+    expect(
+      inboxUpdateEffect(
+        { id: "c1", last_message_sender_id: "them", advanced: false },
+        "me",
+        null,
+      ),
+    ).toEqual({ unreadDelta: 0, reconcile: true });
+  });
+
+  it("treats an event without the flag as a new message (older payloads)", () => {
+    expect(
+      inboxUpdateEffect(
+        { id: "c1", last_message_sender_id: "them" },
+        "me",
+        null,
+      ),
+    ).toEqual({ unreadDelta: 1, reconcile: false });
+  });
+
+  it("rejoins only a channel that is neither joined nor joining", () => {
+    expect(channelNeedsRejoin("joined")).toBe(false);
+    expect(channelNeedsRejoin("joining")).toBe(false);
+    for (const s of ["errored", "closed", "leaving", null, undefined]) {
+      expect(channelNeedsRejoin(s)).toBe(true);
+    }
   });
 });

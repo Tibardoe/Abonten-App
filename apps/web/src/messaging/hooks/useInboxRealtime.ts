@@ -5,12 +5,14 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   type InboxConversationBroadcast,
   MESSAGING_INBOX_EVENTS,
+  channelNeedsRejoin,
+  inboxUpdateEffect,
   openPrivateChannel,
   userInboxChannelName,
 } from "@abonten/core/messagingRealtime";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { adjustUnreadBadge, bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
 
@@ -30,12 +32,19 @@ import { messagingKeys } from "./keys";
 // `activeId` is the conversation open in the thread pane; a message arriving
 // there is marked read immediately, so it must not raise the badge. It is read
 // through a ref so switching threads does not tear the channel down.
+//
+// Staying connected: realtime-js rejoins after a network drop by itself, but a
+// join the server refuses (a stale token after the tab slept) is final. When
+// the tab becomes visible again or the session token is refreshed, a channel
+// that is not joined is opened again with the current token.
 export function useInboxRealtime(activeId?: string) {
   const qc = useQueryClient();
   const { data: user } = useCurrentUser();
   const myId = user?.id;
   const activeRef = useRef(activeId);
   activeRef.current = activeId;
+  // Bumped to tear the channel down and open a fresh one.
+  const [generation, setGeneration] = useState(0);
 
   useEffect(() => {
     if (!myId) return;
@@ -48,16 +57,23 @@ export function useInboxRealtime(activeId?: string) {
       qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
     };
 
+    const rejoinIfDown = () => {
+      if (!cancelled && channel && channelNeedsRejoin(channel.state)) {
+        setGeneration((g) => g + 1);
+      }
+    };
+
     const onConversationUpdate = ({ payload }: { payload: unknown }) => {
       const row = payload as InboxConversationBroadcast | undefined;
       if (!row?.id) return invalidate();
 
-      const inbound =
-        !!row.last_message_sender_id &&
-        row.last_message_sender_id !== myId &&
-        row.id !== activeRef.current;
-      const delta = inbound ? 1 : 0;
-
+      // Shared rule: a rollback (deleted latest message) is never unread and
+      // asks for a refetch; see @abonten/core/messagingRealtime.
+      const { unreadDelta, reconcile } = inboxUpdateEffect(
+        row,
+        myId,
+        activeRef.current,
+      );
       const patched = bumpConversationRow(
         qc,
         row.id,
@@ -66,11 +82,11 @@ export function useInboxRealtime(activeId?: string) {
           last_message_preview: row.last_message_preview ?? null,
           last_message_sender_id: row.last_message_sender_id ?? null,
         },
-        delta,
+        unreadDelta,
       );
 
-      if (!patched) return invalidate();
-      if (delta) adjustUnreadBadge(qc, delta);
+      if (!patched || reconcile) return invalidate();
+      if (unreadDelta) adjustUnreadBadge(qc, unreadDelta);
     };
 
     (async () => {
@@ -107,15 +123,25 @@ export function useInboxRealtime(activeId?: string) {
         )
         .subscribe((status) => {
           if (cancelled || status !== "SUBSCRIBED") return;
-          // A rejoin after a dropped socket may have missed events.
-          if (joinedBefore) invalidate();
+          // A rejoin (or a fresh generation) may have missed events.
+          if (joinedBefore || generation > 0) invalidate();
           joinedBefore = true;
         });
     })();
 
+    const onVisible = () => {
+      if (document.visibilityState === "visible") rejoinIfDown();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "TOKEN_REFRESHED") rejoinIfDown();
+    });
+
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      authSub.subscription.unsubscribe();
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [myId, qc]);
+  }, [myId, qc, generation]);
 }

@@ -246,8 +246,44 @@ describe("messaging realtime: database-sent broadcasts", () => {
     expect(bump).toMatchObject({
       id: conversationId,
       last_message_sender_id: member.id,
+      // A new message moves last_message_at forward (20260918140000).
+      advanced: true,
     });
     expect(typeof bump.last_message_preview).toBe("string");
+  }, 90_000);
+
+  it("marks a rollback (latest message deleted) as not advanced, so clients never count it as unread", async () => {
+    const first = await sendMessageCore(member.client, member.id, {
+      conversationId,
+      content: "first",
+      messageType: "text",
+    });
+    expect(first.status).toBe(200);
+    const second = await sendMessageCore(member.client, member.id, {
+      conversationId,
+      content: "second",
+      messageType: "text",
+    });
+    const secondId = second.data?.message.id as string;
+
+    const inbox = await join(organizer, userInboxChannelName(organizer.id));
+    const gotRollback = nextBroadcast(
+      inbox,
+      MESSAGING_INBOX_EVENTS.conversationUpdate,
+    );
+    expect(await subscribeStatus(inbox)).toBe("SUBSCRIBED");
+
+    // delete_message rolls the conversation back to "first".
+    const { error } = await member.client.rpc("delete_message", {
+      p_message_id: secondId,
+    });
+    expect(error).toBeNull();
+
+    expect(await gotRollback).toMatchObject({
+      id: conversationId,
+      last_message_preview: "first",
+      advanced: false,
+    });
   }, 90_000);
 
   it("a reaction arrives in the {eventType, new, old} shape the shared reducer reads", async () => {

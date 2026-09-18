@@ -4,7 +4,7 @@ purpose: Record what an adversarial, whole-stack engineering audit of Abonten Hu
 audience: Founder, engineering, future auditors
 scope: apps/web, apps/mobile, apps/admin, packages/*, supabase/, production project sderrexhawjbmsugndcq
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-09-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -148,6 +148,9 @@ Only genuine ones:
 | Postgres upgrade | **Unblocked** — unused `pgjwt` dropped (`20260918120200`); upgrade itself left to the founder (major version, downtime) |
 | Leaked-password protection | **Not applicable** — Pro-plan feature (org is Free) and there are no end-user passwords |
 | Expo patch versions | **Applied** — `expo install --fix`; `expo-doctor` 19/21 (the two remaining are intentional) |
+| Inbox order after a deleted latest message (found in 1.2 testing) | **Fixed** (1.3) — rows placed by the server's order; `advanced` flag stops rollbacks counting as unread (`20260918140000`) |
+| Future-tense time labels under clock skew (found in 1.2 testing) | **Fixed** (1.3) — `getRelativeTime` clamps to now |
+| Realtime channel left down after a refused join (found in 1.3 testing) | **Fixed** (1.3) — reopen on foreground / token refresh; stale-token refusal itself not reproduced on demand |
 
 ## 7. Health assessment
 
