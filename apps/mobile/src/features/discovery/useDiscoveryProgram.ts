@@ -24,6 +24,12 @@ export function useDiscoveryProgram() {
     queryKey: [...DISCOVERY_PROGRAM_KEY, session?.user.id ?? null],
     queryFn: async (): Promise<DiscoveryProgram> => {
       const res = await api.discovery.program();
+      // A server hiccup must not replace a known answer (possibly
+      // restored from disk) with "switched off": throw so React Query
+      // keeps the last good value. A definite answer still applies.
+      if (res.status >= 500 || res.status === 429) {
+        throw new Error(res.message ?? "Programme check failed");
+      }
       return res.status === 200 && res.data
         ? res.data
         : DISABLED_DISCOVERY_PROGRAM;

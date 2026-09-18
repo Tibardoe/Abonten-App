@@ -15,6 +15,11 @@ import { euclidFonts } from "@/lib/fonts";
 import { setNativeRootBackground } from "@/lib/nativeBackground";
 import { startNetworkSync } from "@/lib/network";
 import { queryClient } from "@/lib/queryClient";
+import {
+  QueryPersistence,
+  applyPersistedQueryDefaults,
+  useIsRestoringCache,
+} from "@/lib/queryPersistence";
 import { Sentry, initSentry, navigationIntegration } from "@/lib/sentry";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
 import { ToastProvider } from "@abonten/ui-native";
@@ -51,6 +56,11 @@ export { ErrorBoundary } from "@/components/RootErrorBoundary";
 // BrandedSplash (same asset + a spinner) takes over if init runs longer.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ duration: 300, fade: true });
+
+// Allowlisted queries (queryPersistPolicy.ts) must outlive the default
+// in-memory gcTime, or a screen visited earlier would drop out of the cache
+// before it was ever written to disk.
+applyPersistedQueryDefaults();
 
 // Mirrors the web app's public-route allowlist + `/auth/signin?next=` bounce:
 // discovery / detail / search render for signed-out visitors, and only the
@@ -100,7 +110,11 @@ function useProtectedRoute() {
 function RootNavigator() {
   const initializing = useProtectedRoute();
   const { ready: themeReady, colors } = useTheme();
-  const booting = initializing || !themeReady;
+  // Held until the previous session's cached data is back in memory, so
+  // the first screen renders what was there last time — even offline —
+  // instead of a spinner followed by the same content.
+  const restoringCache = useIsRestoringCache();
+  const booting = initializing || !themeReady || restoringCache;
 
   useEffect(() => {
     if (!booting) SplashScreen.hideAsync().catch(() => {});
@@ -177,12 +191,13 @@ function RootLayout() {
           <ThemeProvider>
             <I18nProvider>
               <SessionProvider>
-                {/* ToastProvider wraps the navigator so a toast raised on one
+                <QueryPersistence>
+                  {/* ToastProvider wraps the navigator so a toast raised on one
                     screen survives the navigation the same action triggers
                     (publish -> replace to the new event, and the "Event
                     published" confirmation still lands). */}
-                <ToastProvider>
-                  {/* Every <Sheet> renders through this portal, into the
+                  <ToastProvider>
+                    {/* Every <Sheet> renders through this portal, into the
                         app's own view hierarchy instead of an RN <Modal> —
                         that is what lets the platform's keyboard insets, safe
                         areas and the root gesture handler reach a sheet at
@@ -191,11 +206,12 @@ function RootLayout() {
                         at the HOST's position in the tree, so anything above
                         the host is out of context for a sheet; and ABOVE the
                         navigator so a sheet covers the tab bar. */}
-                  <PortalProvider>
-                    <StatusBar style="auto" />
-                    <RootNavigator />
-                  </PortalProvider>
-                </ToastProvider>
+                    <PortalProvider>
+                      <StatusBar style="auto" />
+                      <RootNavigator />
+                    </PortalProvider>
+                  </ToastProvider>
+                </QueryPersistence>
               </SessionProvider>
             </I18nProvider>
           </ThemeProvider>
