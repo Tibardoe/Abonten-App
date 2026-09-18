@@ -120,5 +120,5 @@ export {
 export { useModalHandoff, runAfterModalDismissal } from "./useModalHandoff";
 export { BottomBar, type BottomBarProps } from "./BottomBar";
 export { KeyboardInsetView } from "./KeyboardInsetView";
-export { useKeyboardHeight, useKeyboardVisible } from "./useKeyboard";
+export { useKeyboardHeight } from "./useKeyboard";
 export { useKeyboardLift } from "./useKeyboardLift";
