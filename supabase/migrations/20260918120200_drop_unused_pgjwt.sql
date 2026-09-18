@@ -1,0 +1,17 @@
+-- Drop the unused pgjwt extension (2026-09-18 audit, deferred item: Postgres
+-- upgrade).
+--
+-- The security advisor reports outstanding Postgres patches for this project
+-- (supabase-postgres-15.8.1.044). The Management API offers exactly one
+-- upgrade path, to Postgres 17, and refuses it with a single validation
+-- error: `unsupported_extension: pgjwt`. pgjwt is not supported on Postgres
+-- 17.
+--
+-- Nothing uses it. Checked in production on 2026-09-18: no object depends on
+-- the extension (pg_depend, excluding its own members), no function in the
+-- application schemas calls its sign / verify / url_encode / url_decode /
+-- algorithm_sign functions, no cron job references it, and the repository
+-- never calls it. Auth tokens are minted by Supabase Auth, not by SQL.
+-- If it is ever needed again: `create extension pgjwt with schema extensions`
+-- (Postgres 15 only).
+drop extension if exists pgjwt;

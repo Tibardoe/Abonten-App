@@ -99,7 +99,10 @@ export function ContextualActionOverlay({
   useEffect(() => {
     if (visible) {
       // A keyboard open behind the overlay would fight the anchored cluster
-      // for space (spec §26 / §29) — drop it; the composer keeps its draft.
+      // for space (spec §26 / §29). The anchor measurement (useAnchorMeasure)
+      // already put it away and waited for it to finish; this is the
+      // backstop for a caller that measured some other way. The composer
+      // keeps its draft either way.
       Keyboard.dismiss();
       progress.value = 0;
       // A springy "pop" — the item lifts out with a touch of overshoot, the

@@ -2,34 +2,36 @@
 
 import { supabase } from "@/config/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
-import { reactionRealtimePatches } from "@abonten/core/messagingReactions";
+import {
+  type ReactionRealtimePayload,
+  reactionRealtimePatches,
+} from "@abonten/core/messagingReactions";
 import {
   MESSAGING_BROADCAST_EVENTS,
+  type MessageInsertBroadcast,
   TYPING_THROTTLE_MS,
   TYPING_TTL_MS,
   type TypingBroadcast,
   conversationChannelName,
+  openPrivateChannel,
 } from "@abonten/core/messagingRealtime";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { applyReactionToCache } from "./cache";
-import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
 
 type Options = { onIncomingMessage?: () => void };
 
-// Realtime for one open thread. Two channels, mirroring the mobile client,
-// because the transports have different authorization models (see
-// 20260907091000_messaging_realtime.sql):
-//   * conversation:<id> — PRIVATE. Broadcast "typing" only. Gated by the
-//     realtime.messages RLS policies (broadcast/presence, participant-only).
-//   * msgchanges:<id> — non-private. postgres_changes on public.message /
-//     public.conversation_participant, filtered to this conversation;
-//     authorized by those tables' own participant-only RLS.
-// Postgres stays the source of truth: an inbound row triggers an invalidate
-// (the realtime payload has no joined attachments / reply preview).
+// Realtime for one open thread: ONE private channel, `conversation:<id>`,
+// authorised by the participant-only RLS on realtime.messages (see
+// @abonten/core/messagingRealtime). It carries the client-sent "typing"
+// broadcast and the change events database triggers send when a write
+// commits (20260918120100). Postgres stays the source of truth: a message
+// event carries ids only and triggers a refetch through RLS. The inbox row is
+// not patched here — MessagingWorkspace's `inbox:<me>` channel already gets
+// the conversation's last-message bump. This hook is the only owner of the
+// `conversation:<id>` topic on web.
 export function useConversationRealtime(
   conversationId: string | undefined,
   { onIncomingMessage }: Options = {},
@@ -75,33 +77,10 @@ export function useConversationRealtime(
     let cancelled = false;
     const timers = typingTimers.current;
 
-    // The INSERT payload carries the whole message, so the conversation's
-    // inbox row can be bumped from it directly rather than refetching every
-    // cached inbox view. The thread is on screen here, so it is marked read
-    // immediately and the unread count never moves. Invalidation stays as
-    // the fallback for a conversation not present in any cached list.
-    const bump = (row?: {
-      content?: string | null;
-      message_type?: string | null;
-      created_at?: string | null;
-      sender_id?: string | null;
-    }) => {
+    const refetchThread = () =>
       qc.invalidateQueries({
         queryKey: messagingKeys.messages(conversationId),
       });
-      if (row?.created_at) {
-        const patched = bumpConversationRow(qc, conversationId, {
-          last_message_at: row.created_at,
-          last_message_preview: conversationPreviewFor(row),
-          last_message_sender_id: row.sender_id ?? null,
-        });
-        if (patched) return;
-      }
-      qc.invalidateQueries({ queryKey: messagingKeys.lists() });
-      qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
-    };
-
-    let changesChannel: RealtimeChannel | null = null;
 
     (async () => {
       const { data } = await supabase.auth.getSession();
@@ -109,27 +88,34 @@ export function useConversationRealtime(
       if (token) await supabase.realtime.setAuth(token);
       if (cancelled) return;
 
-      changesChannel = supabase.channel(`msgchanges:${conversationId}`);
-      changesChannel
+      const channel = await openPrivateChannel(
+        supabase,
+        conversationChannelName(conversationId),
+        () => cancelled,
+      );
+      if (!channel) return;
+      broadcastChannelRef.current = channel;
+
+      channel
         .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "message",
-            filter: `conversation_id=eq.${conversationId}`,
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.typing },
+          ({ payload }) => {
+            const p = payload as TypingBroadcast | undefined;
+            if (!p?.userId || p.userId === myId) return;
+            if (p.isTyping) markTyping(p.userId);
+            else dropTyping(p.userId);
           },
-          (payload) => {
-            const row = payload.new as {
-              sender_id: string | null;
-              message_type: string;
-              content?: string | null;
-              created_at?: string | null;
-            };
-            bump(row);
-            if (row.sender_id) dropTyping(row.sender_id);
+        )
+        .on(
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.messageInsert },
+          ({ payload }) => {
+            const row = payload as MessageInsertBroadcast | undefined;
+            refetchThread();
+            if (row?.sender_id) dropTyping(row.sender_id);
             if (
-              row.sender_id &&
+              row?.sender_id &&
               row.sender_id !== myId &&
               row.message_type !== "system"
             ) {
@@ -138,28 +124,13 @@ export function useConversationRealtime(
           },
         )
         .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "message",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          () => {
-            qc.invalidateQueries({
-              queryKey: messagingKeys.messages(conversationId),
-            });
-            qc.invalidateQueries({ queryKey: messagingKeys.lists() });
-          },
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.messageUpdate },
+          refetchThread,
         )
         .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "conversation_participant",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.participantUpdate },
           () => {
             qc.invalidateQueries({
               queryKey: messagingKeys.detail(conversationId),
@@ -167,22 +138,15 @@ export function useConversationRealtime(
           },
         )
         .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "message_reaction",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          (payload) => {
-            // A reaction changed. The payload carries the exact row (the table
-            // is REPLICA IDENTITY FULL), so patch the affected message in
-            // place rather than invalidating — invalidating refetched EVERY
-            // loaded page of the thread on every reaction tap, including the
-            // echo of this device's own optimistic toggle. The reducer is
-            // shared + unit-tested in @abonten/core/messagingReactions: it
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.reaction },
+          ({ payload }) => {
+            // Patch the affected message in place; the shared reducer
             // suppresses our own echo and ignores malformed payloads.
-            for (const p of reactionRealtimePatches(payload, myId)) {
+            for (const p of reactionRealtimePatches(
+              payload as ReactionRealtimePayload,
+              myId,
+            )) {
               applyReactionToCache(
                 qc,
                 conversationId,
@@ -195,29 +159,11 @@ export function useConversationRealtime(
           },
         )
         .subscribe((status) => {
-          if (cancelled) return;
-          if (status === "SUBSCRIBED") {
-            if (wasConnected.current) bump();
-            wasConnected.current = true;
-          }
+          if (cancelled || status !== "SUBSCRIBED") return;
+          // A rejoin after a dropped socket may have missed events.
+          if (wasConnected.current) refetchThread();
+          wasConnected.current = true;
         });
-
-      const broadcastChannel = supabase.channel(
-        conversationChannelName(conversationId),
-        { config: { private: true, broadcast: { self: false } } },
-      );
-      broadcastChannel.on(
-        "broadcast",
-        { event: MESSAGING_BROADCAST_EVENTS.typing },
-        ({ payload }) => {
-          const p = payload as TypingBroadcast | undefined;
-          if (!p?.userId || p.userId === myId) return;
-          if (p.isTyping) markTyping(p.userId);
-          else dropTyping(p.userId);
-        },
-      );
-      broadcastChannel.subscribe();
-      broadcastChannelRef.current = broadcastChannel;
     })();
 
     return () => {
@@ -228,8 +174,7 @@ export function useConversationRealtime(
       wasConnected.current = false;
       const bc = broadcastChannelRef.current;
       broadcastChannelRef.current = null;
-      if (bc) supabase.removeChannel(bc);
-      if (changesChannel) supabase.removeChannel(changesChannel);
+      if (bc) void supabase.removeChannel(bc);
     };
   }, [conversationId, myId, qc, dropTyping, markTyping]);
 

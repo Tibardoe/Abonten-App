@@ -1,23 +1,25 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
-import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
-import { reactionRealtimePatches } from "@abonten/core/messagingReactions";
+import {
+  type ReactionRealtimePayload,
+  reactionRealtimePatches,
+} from "@abonten/core/messagingReactions";
 import {
   type ConversationPresenceState,
   MESSAGING_BROADCAST_EVENTS,
+  type MessageInsertBroadcast,
   TYPING_THROTTLE_MS,
   TYPING_TTL_MS,
   type TypingBroadcast,
   conversationChannelName,
+  openPrivateChannel,
 } from "@abonten/core/messagingRealtime";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { applyReactionToCache } from "./cache";
-import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
-import { uniqueRealtimeTopic } from "./realtimeTopic";
 
 type Options = {
   // Fired when a message from someone else lands (drives "mark read while
@@ -25,25 +27,25 @@ type Options = {
   onIncomingMessage?: () => void;
 };
 
-// The realtime layer for one open thread. Two channels, because the two
-// transports have different authorization models (see
-// 20260907091000_messaging_realtime.sql):
+// The realtime layer for one open thread: ONE private channel,
+// `conversation:<id>`, authorised by the participant-only RLS on
+// realtime.messages (see @abonten/core/messagingRealtime).
 //
-//   * `conversation:<id>` — PRIVATE. Broadcast ("typing") + presence only.
-//     Gated by the realtime.messages RLS policies, which name
-//     `extension in ('broadcast','presence')` — a non-participant's
-//     subscribe is refused outright, so a subscription can't be used to
-//     watch a thread.
-//   * `msgchanges:<id>` — non-private. postgres_changes on public.message /
-//     public.conversation_participant, filtered to this conversation.
-//     Authorized by those tables' own participant-only RLS (a private
-//     channel would additionally require a 'postgres_changes' policy on
-//     realtime.messages, which by design doesn't exist).
+//   * typing   — broadcast by clients, ephemeral.
+//   * presence — who has THIS thread open right now, ephemeral.
+//   * message_insert / message_update / reaction / participant_update —
+//     broadcast by database triggers when a write commits
+//     (20260918120100_messaging_realtime_broadcast_from_database).
 //
-// Postgres is the source of truth: an inbound row triggers an invalidate
-// (not a hand-merge) because the realtime payload has no joined attachments
-// or reply preview. supabase-js reconnects the socket and re-subscribes on
-// its own; we refetch on each fresh SUBSCRIBED to close the gap.
+// Postgres is the source of truth: a message event carries ids only and
+// triggers a refetch through RLS. The inbox row is NOT patched here — the
+// `inbox:<me>` channel (useInboxRealtime, mounted by the app stack host) already
+// receives the conversation's last-message bump for every thread, open or
+// not. supabase-js reconnects the socket and rejoins on its own; each fresh
+// SUBSCRIBED after the first refetches the thread to close the gap.
+//
+// This hook is the ONLY owner of the `conversation:<id>` topic in the app
+// (openPrivateChannel's contract).
 export function useConversationRealtime(
   conversationId: string | undefined,
   { onIncomingMessage }: Options = {},
@@ -54,13 +56,12 @@ export function useConversationRealtime(
 
   const [connected, setConnected] = useState(false);
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
-  // Who else has THIS thread open right now (Realtime Presence on the private
-  // channel — ephemeral, never stored). It means "in this chat", not "online
-  // in the app", and the UI says exactly that.
+  // Who else has THIS thread open right now (Realtime Presence — ephemeral,
+  // never stored). It means "in this chat", not "online in the app", and the
+  // UI says exactly that.
   const [presentUserIds, setPresentUserIds] = useState<string[]>([]);
 
-  const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
-  const changesChannelRef = useRef<RealtimeChannel | null>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   );
@@ -96,217 +97,14 @@ export function useConversationRealtime(
     let cancelled = false;
     const timers = typingTimers.current;
 
-    // The INSERT payload carries the whole message, so the conversation's
-    // inbox row can be bumped from it directly rather than refetching every
-    // cached inbox view. The thread is on screen here, so it is marked read
-    // immediately and the unread count never moves. Invalidation stays as
-    // the fallback for a conversation not present in any cached list.
-    const bump = (row?: {
-      content?: string | null;
-      message_type?: string | null;
-      created_at?: string | null;
-      sender_id?: string | null;
-    }) => {
+    const refetchThread = () =>
       qc.invalidateQueries({
         queryKey: messagingKeys.messages(conversationId),
       });
-      if (row?.created_at) {
-        const patched = bumpConversationRow(qc, conversationId, {
-          last_message_at: row.created_at,
-          last_message_preview: conversationPreviewFor(row),
-          last_message_sender_id: row.sender_id ?? null,
-        });
-        if (patched) return;
-      }
-      qc.invalidateQueries({ queryKey: messagingKeys.lists() });
-      qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
-    };
-
-    // Tear down any channel left over from a previous mount of THIS
-    // conversation before opening a new one — a fast back/forward
-    // (unmount + remount) could otherwise run cleanup before the async
-    // subscribe below had assigned the ref, leaking the old socket and
-    // ending up with two `msgchanges:<id>` subscriptions delivering every
-    // INSERT twice.
-    const changesTopic = `msgchanges:${conversationId}`;
-    const broadcastTopic = conversationChannelName(conversationId);
-    for (const ch of supabase.getChannels()) {
-      const t = ch.topic.replace(/^realtime:/, "");
-      // The changes channel carries a per-subscription "#n" suffix (see
-      // below), so match on its base as well as the exact broadcast name.
-      const isStaleChanges =
-        t === changesTopic || t.startsWith(`${changesTopic}#`);
-      if (isStaleChanges || t === broadcastTopic) {
-        void supabase.removeChannel(ch);
-      }
-    }
-
-    // --- durable changes (non-private) --------------------------------
-    // supabase.channel() / .on() are synchronous; only setAuth + subscribe
-    // are async. Build + ref both channels up front so cleanup always has
-    // something concrete to remove.
-    //
-    // The topic gets a per-subscription suffix because removeChannel() above
-    // is async — it awaits an unsubscribe round trip before the old channel
-    // leaves the client's list, so channel(changesTopic) could still hand back
-    // the previous, already-subscribed one and the .on() calls below would
-    // throw. Only postgres_changes channels may be renamed like this; the
-    // private broadcast topic keeps its shared name (see realtimeTopic.ts).
-    const changesChannel = supabase.channel(uniqueRealtimeTopic(changesTopic));
-    changesChannelRef.current = changesChannel;
-
-    const pushAuthAndRefresh = async () => {
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (token) await supabase.realtime.setAuth(token);
-    };
-
-    (async () => {
-      // The RN client has a persisted session, but push the current access
-      // token into the socket explicitly so a token refreshed mid-session is
-      // used for the private channel's RLS check.
-      await pushAuthAndRefresh();
-      if (cancelled) return;
-
-      changesChannel
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "message",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          (payload) => {
-            const row = payload.new as {
-              sender_id: string | null;
-              message_type: string;
-              content?: string | null;
-              created_at?: string | null;
-            };
-            bump(row);
-            if (row.sender_id) dropTyping(row.sender_id);
-            if (
-              row.sender_id &&
-              row.sender_id !== myId &&
-              row.message_type !== "system"
-            ) {
-              onIncomingRef.current?.();
-            }
-          },
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "message",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          () => {
-            qc.invalidateQueries({
-              queryKey: messagingKeys.messages(conversationId),
-            });
-            qc.invalidateQueries({ queryKey: messagingKeys.lists() });
-          },
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "conversation_participant",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          () => {
-            // The other participant's last_read_at moved — refresh the
-            // context so our outgoing "Seen" marker updates.
-            qc.invalidateQueries({
-              queryKey: messagingKeys.detail(conversationId),
-            });
-          },
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "message_reaction",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          (payload) => {
-            // A reaction changed. The payload carries the exact row (the table
-            // is REPLICA IDENTITY FULL), so patch the affected message in
-            // place rather than invalidating — invalidating refetched EVERY
-            // loaded page of the thread on every reaction tap, including the
-            // echo of this device's own optimistic toggle. The reducer is
-            // shared + unit-tested in @abonten/core/messagingReactions: it
-            // suppresses our own echo and ignores malformed payloads.
-            for (const p of reactionRealtimePatches(payload, myId)) {
-              applyReactionToCache(
-                qc,
-                conversationId,
-                p.messageId,
-                p.emoji,
-                p.added,
-                false,
-              );
-            }
-          },
-        )
-        .subscribe((status) => {
-          if (cancelled) return;
-          const isUp = status === "SUBSCRIBED";
-          setConnected(isUp);
-          if (isUp) {
-            if (wasConnected.current) bump();
-            wasConnected.current = true;
-          }
-        });
-
-      // --- typing / presence (private) ---------------------------------
-      const broadcastChannel = supabase.channel(broadcastTopic, {
-        config: { private: true, broadcast: { self: false } },
-      });
-      broadcastChannelRef.current = broadcastChannel;
-      const readPresence = () => {
-        const state =
-          broadcastChannel.presenceState<ConversationPresenceState>();
-        const ids = new Set<string>();
-        for (const entries of Object.values(state)) {
-          for (const p of entries) {
-            if (p.userId && p.userId !== myId && p.activeInConversation) {
-              ids.add(p.userId);
-            }
-          }
-        }
-        const next = [...ids].sort();
-        setPresentUserIds((prev) =>
-          prev.length === next.length && prev.every((v, i) => v === next[i])
-            ? prev
-            : next,
-        );
-      };
-      broadcastChannel.on("presence", { event: "sync" }, readPresence);
-      broadcastChannel.on(
-        "broadcast",
-        { event: MESSAGING_BROADCAST_EVENTS.typing },
-        ({ payload }) => {
-          const p = payload as TypingBroadcast | undefined;
-          if (!p?.userId || p.userId === myId) return;
-          if (p.isTyping) markTyping(p.userId);
-          else dropTyping(p.userId);
-        },
-      );
-      broadcastChannel.subscribe((status) => {
-        if (cancelled || status !== "SUBSCRIBED") return;
-        if (AppState.currentState === "active") void trackPresence(true);
-      });
-    })();
 
     // Only claim to be "in this chat" while the app is actually in front.
     const trackPresence = async (active: boolean) => {
-      const ch = broadcastChannelRef.current;
+      const ch = channelRef.current;
       if (!ch || !myId) return;
       try {
         if (active) {
@@ -323,15 +121,129 @@ export function useConversationRealtime(
       }
     };
 
+    // The socket authorises a private join with the JWT it holds; push the
+    // current one so a token refreshed mid-session is what RLS sees.
+    const pushAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token) await supabase.realtime.setAuth(token);
+    };
+
+    (async () => {
+      await pushAuth();
+      if (cancelled) return;
+      const channel = await openPrivateChannel(
+        supabase,
+        conversationChannelName(conversationId),
+        () => cancelled,
+      );
+      if (!channel) return;
+      channelRef.current = channel;
+
+      const readPresence = () => {
+        const state = channel.presenceState<ConversationPresenceState>();
+        const ids = new Set<string>();
+        for (const entries of Object.values(state)) {
+          for (const p of entries) {
+            if (p.userId && p.userId !== myId && p.activeInConversation) {
+              ids.add(p.userId);
+            }
+          }
+        }
+        const next = [...ids].sort();
+        setPresentUserIds((prev) =>
+          prev.length === next.length && prev.every((v, i) => v === next[i])
+            ? prev
+            : next,
+        );
+      };
+
+      channel
+        .on("presence", { event: "sync" }, readPresence)
+        .on(
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.typing },
+          ({ payload }) => {
+            const p = payload as TypingBroadcast | undefined;
+            if (!p?.userId || p.userId === myId) return;
+            if (p.isTyping) markTyping(p.userId);
+            else dropTyping(p.userId);
+          },
+        )
+        .on(
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.messageInsert },
+          ({ payload }) => {
+            const row = payload as MessageInsertBroadcast | undefined;
+            refetchThread();
+            if (row?.sender_id) dropTyping(row.sender_id);
+            if (
+              row?.sender_id &&
+              row.sender_id !== myId &&
+              row.message_type !== "system"
+            ) {
+              onIncomingRef.current?.();
+            }
+          },
+        )
+        .on(
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.messageUpdate },
+          refetchThread,
+        )
+        .on(
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.participantUpdate },
+          () => {
+            // The other participant's last_read_at moved (or they left) —
+            // refresh the context so our outgoing "Seen" marker updates.
+            qc.invalidateQueries({
+              queryKey: messagingKeys.detail(conversationId),
+            });
+          },
+        )
+        .on(
+          "broadcast",
+          { event: MESSAGING_BROADCAST_EVENTS.reaction },
+          ({ payload }) => {
+            // Patch the affected message in place rather than refetching
+            // every loaded page of the thread. The reducer is shared +
+            // unit-tested in @abonten/core/messagingReactions: it suppresses
+            // our own echo and ignores malformed payloads.
+            for (const p of reactionRealtimePatches(
+              payload as ReactionRealtimePayload,
+              myId,
+            )) {
+              applyReactionToCache(
+                qc,
+                conversationId,
+                p.messageId,
+                p.emoji,
+                p.added,
+                false,
+              );
+            }
+          },
+        )
+        .subscribe((status) => {
+          if (cancelled) return;
+          const isUp = status === "SUBSCRIBED";
+          setConnected(isUp);
+          if (!isUp) return;
+          if (wasConnected.current) refetchThread();
+          wasConnected.current = true;
+          if (AppState.currentState === "active") void trackPresence(true);
+        });
+    })();
+
     // Foreground the app after a spell in the background: the socket may
-    // have dropped rows while suspended. Re-push the (possibly refreshed)
-    // token and force a reconcile — the same close-the-gap step the
-    // `wasConnected` reconnect path does.
+    // have missed events while suspended. Re-push the (possibly refreshed)
+    // token and reconcile — the same close-the-gap step as a rejoin.
     const appStateSub = AppState.addEventListener("change", (next) => {
       void trackPresence(next === "active");
       if (next === "active") {
-        void pushAuthAndRefresh().then(() => {
-          if (!cancelled) bump();
+        void pushAuth().then(() => {
+          if (!cancelled) refetchThread();
         });
       }
     });
@@ -345,12 +257,9 @@ export function useConversationRealtime(
       setPresentUserIds([]);
       setConnected(false);
       wasConnected.current = false;
-      const bc = broadcastChannelRef.current;
-      const cc = changesChannelRef.current;
-      broadcastChannelRef.current = null;
-      changesChannelRef.current = null;
-      if (bc) void supabase.removeChannel(bc);
-      if (cc) void supabase.removeChannel(cc);
+      const ch = channelRef.current;
+      channelRef.current = null;
+      if (ch) void supabase.removeChannel(ch);
     };
   }, [conversationId, myId, qc, dropTyping, markTyping]);
 
@@ -358,7 +267,7 @@ export function useConversationRealtime(
   // always sent immediately so the other side clears without waiting for TTL.
   const sendTyping = useCallback(
     (isTyping: boolean) => {
-      const ch = broadcastChannelRef.current;
+      const ch = channelRef.current;
       if (!ch || !myId) return;
       const now = Date.now();
       if (isTyping && now - lastTypingSentAt.current < TYPING_THROTTLE_MS)

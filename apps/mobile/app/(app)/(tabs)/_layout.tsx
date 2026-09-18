@@ -75,8 +75,6 @@ function MessagesTabIcon({
 export default function TabsLayout() {
   const c = useThemeColors();
   const t = useTranslations("navigation");
-  // Keep the badge live while the user is anywhere in the tab bar.
-  useInboxRealtime();
   const { data: unread = 0 } = useUnreadMessageCount();
   const { program } = useContentProgram();
 

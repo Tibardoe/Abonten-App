@@ -122,7 +122,7 @@ export async function issueRefundCore(
   ) {
     // A retry after the credit step failed: finish it (idempotent).
     if (hasCredit && Number(transaction.credit_refunded_amount ?? 0) === 0) {
-      const { data: refundableAgain } = await supabase.rpc(
+      const { data: refundableAgain } = await getSupabaseServiceClient().rpc(
         "get_transaction_refundable_amount",
         { p_transaction_id: transaction.id },
       );
@@ -183,11 +183,13 @@ export async function issueRefundCore(
   }
 
   // Ticket-revenue-only amount to send back — the service fee stays with
-  // Abonten.
-  const { data: refundableAmount, error: refundableError } = await supabase.rpc(
-    "get_transaction_refundable_amount",
-    { p_transaction_id: transaction.id },
-  );
+  // Abonten. Service role: the function is EXECUTE-revoked from clients
+  // (migration refundable_amount_service_only) because it answers for any
+  // transaction id; this caller has already authorised the refund above.
+  const { data: refundableAmount, error: refundableError } =
+    await getSupabaseServiceClient().rpc("get_transaction_refundable_amount", {
+      p_transaction_id: transaction.id,
+    });
 
   if (refundableError) {
     logger.error(
