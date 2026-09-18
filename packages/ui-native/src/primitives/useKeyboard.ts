@@ -22,9 +22,9 @@ import {
 // floating / undocked keyboard case too (it reports a frame below the
 // window, hence the clamp to zero).
 //
-// Extracted from Sheet.tsx so the chat composer, sticky bottom CTAs and the
-// bottom sheet all read the same signal instead of each re-implementing the
-// listeners.
+// This is the JS-side reading, for decisions (which way does Back go, how far
+// must a focused field scroll). Anything that MOVES with the keyboard reads
+// the UI-thread value from useKeyboardLift instead — see that file.
 
 function overlapFor(e: KeyboardEvent): number {
   const end = e.endCoordinates;
@@ -64,8 +64,4 @@ export function useKeyboardHeight(): number {
   }, []);
 
   return height;
-}
-
-export function useKeyboardVisible(): boolean {
-  return useKeyboardHeight() > 0;
 }

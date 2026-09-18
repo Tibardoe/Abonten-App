@@ -22,9 +22,17 @@ import { useAnimatedKeyboard } from "react-native-reanimated";
 // options are ignored in that configuration (Reanimated warns at runtime if
 // they are passed), so none are.
 //
-// Inside an RN <Modal> (a separate native window) this reports a constant
-// zero — measured on device — which is the reason sheets render through a
-// portal instead (see Sheet.tsx).
+// THE ONE RULE THAT KEEPS THIS SIGNAL TRUE: nothing that can be on screen
+// while the keyboard is moving may be an RN <Modal>. A Modal is a separate
+// native window, and the platform delivers the keyboard's inset animation to
+// whichever window is on top. Inside a Modal this reads a constant zero;
+// worse, if a Modal opens while the keyboard is closing underneath, the
+// activity's window stops receiving frames part-way and this value freezes
+// at whatever height it had reached (measured on device: the chat composer
+// left floating 122 dp above an empty bottom edge after a message
+// long-press, when that overlay was still a Modal). Sheets, the message
+// action overlay and every other keyboard-adjacent surface therefore render
+// through @gorhom/portal into the app's own window instead.
 export function useKeyboardLift() {
   return useAnimatedKeyboard();
 }

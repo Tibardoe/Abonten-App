@@ -140,9 +140,9 @@ export function Sheet({
   // useKeyboardLift.ts for why it is this and not a JS listener).
   const keyboard = useKeyboardLift();
 
-  // JS-side height, for the parts that are plain layout rather than animation.
+  // JS-side height, for the decisions that are not animation: which way Back
+  // goes, and the reveal engine's scroll maths.
   const kbHeight = useKeyboardHeight();
-  const keyboardUp = mounted && kbHeight > 0;
 
   useEffect(() => {
     // A sheet closed while its field was focused would otherwise leave the
@@ -245,6 +245,15 @@ export function Sheet({
       ],
     };
   });
+
+  // The footer's home-indicator inset gives way as the keyboard rises — read
+  // from the same UI-thread value as the lift, so the footer never snaps
+  // between two paddings a beat after the panel has moved (the same formula
+  // BottomBar uses). With the keyboard up the panel sits on the keys and the
+  // inset would only be a dead band.
+  const footerInset = useAnimatedStyle(() => ({
+    paddingBottom: 16 + Math.max(4, insets.bottom - keyboard.height.value),
+  }));
 
   // The scrim fades with the presentation and thins as the panel is dragged
   // away, so the gesture reads as letting go of this screen rather than a
@@ -404,16 +413,12 @@ export function Sheet({
           </KeyboardAwareContext.Provider>
 
           {footer ? (
-            <View
+            <Animated.View
               className="border-t border-border px-4 pt-4"
-              style={{
-                // With the keyboard up the panel has been lifted onto it, so
-                // the home-indicator inset would only add a dead band.
-                paddingBottom: 16 + (keyboardUp ? 4 : insets.bottom),
-              }}
+              style={footerInset}
             >
               {footer}
-            </View>
+            </Animated.View>
           ) : null}
         </Animated.View>
       </View>

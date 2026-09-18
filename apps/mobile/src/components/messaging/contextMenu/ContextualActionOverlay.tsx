@@ -1,14 +1,10 @@
-import {
-  AppText,
-  Icon,
-  type IoniconName,
-  runAfterModalDismissal,
-} from "@abonten/ui-native";
+import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
+import { Portal } from "@gorhom/portal";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import {
+  BackHandler,
   Keyboard,
-  Modal,
   Pressable,
   type StyleProp,
   StyleSheet,
@@ -33,6 +29,17 @@ import { type Rect, computeMenuLeft, computePlacement } from "./menuPlacement";
 // the rest of the conversation stays visible under a light scrim, and one
 // coherent cluster — reaction bar closest to the item, then a compact action
 // card — springs in on whichever side has room.
+//
+// It renders through a PORTAL into the app's own window, not an RN <Modal>,
+// for the same reason <Sheet> does. This overlay dismisses the keyboard as it
+// opens; a Modal is a separate native window, and when it appeared while the
+// keyboard was still sliding away the platform handed the rest of that inset
+// animation to the Modal's window. The chat screen's UI-thread keyboard value
+// (useKeyboardLift) then froze part-way, and after the overlay closed the
+// composer sat 122 dp above an empty bottom edge — measured on device. In the
+// app's own window the closing animation completes where it started.
+// `anchor` is in window coordinates (measureInWindow) and the portal host
+// fills the window, so the lifted clone lands exactly over the pressed item.
 
 export type ContextAction = {
   key: string;
@@ -109,11 +116,11 @@ export function ContextualActionOverlay({
     const fn = afterClose.current;
     afterClose.current = null;
     onDismiss();
-    // `after` typically opens another modal (the emoji picker). This
-    // overlay is itself a Modal that unmounts on dismiss, so the follow-up
-    // must wait for the native dismissal to finish or the two presentations
-    // race on iOS (see useModalHandoff.ts).
-    if (fn) runAfterModalDismissal(fn);
+    // `after` typically opens a sheet (the emoji picker). Neither this
+    // overlay nor the sheet is a native Modal any more, so there is no
+    // presentation to wait out — the follow-up runs as soon as the close
+    // animation has finished (which is what brought us here).
+    fn?.();
   }, [onDismiss]);
 
   const close = useCallback<DismissFn>(
@@ -129,6 +136,17 @@ export function ContextualActionOverlay({
     },
     [progress, finishClose],
   );
+
+  // Android hardware / gesture back closes the overlay (an RN <Modal> used to
+  // give us this through `onRequestClose`).
+  useEffect(() => {
+    if (!visible) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      close();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, close]);
 
   const hasAccessory = !!renderAccessory;
   const menuHeight = actions.length * ACTION_ROW_H + MENU_V_PAD * 2;
@@ -225,14 +243,8 @@ export function ContextualActionOverlay({
   };
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="none"
-      onRequestClose={() => close()}
-      statusBarTranslucent
-    >
-      <View style={{ flex: 1 }} accessibilityViewIsModal>
+    <Portal>
+      <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
         {/* Light scrim — the conversation stays legible underneath (spec §2) */}
         <Animated.View
           style={[
@@ -341,6 +353,6 @@ export function ContextualActionOverlay({
           })}
         </Animated.View>
       </View>
-    </Modal>
+    </Portal>
   );
 }

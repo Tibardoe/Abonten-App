@@ -4,7 +4,7 @@ purpose: Record what an adversarial, whole-stack engineering audit of Abonten Hu
 audience: Founder, engineering, future auditors
 scope: apps/web, apps/mobile, apps/admin, packages/*, supabase/, production project sderrexhawjbmsugndcq
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -62,6 +62,10 @@ Severity uses the brief's scale. "Status" is what happened in this session.
 | F9 | SCALABILITY RISK | Messaging realtime | Each open thread subscribes to `postgres_changes` on `message` / `message_reaction` / `conversation_participant` filtered by conversation; the inbox subscribes on `conversation` | Correct and RLS-authorised today; `postgres_changes` evaluates RLS per subscriber per change on the realtime server, which is the documented scaling ceiling | `useConversationRealtime.ts`, `useInboxRealtime.ts` | Not a problem below thousands of concurrently open threads | **Deferred** with a named replacement: broadcast from a trigger on private channels (`realtime.messages` policies already exist) |
 | F10 | LOW · PERFORMANCE | Database RLS | `content_comment`, `content_media`, `content_post` have two permissive SELECT policies for `authenticated` | Author-select and public-select were written as separate policies | Performance advisor `multiple_permissive_policies` | Both policies evaluated per row; negligible at current volume | **Deferred** — merging is an RLS policy change and, per repository rules, needs a deliberate decision |
 
+| F11 | MEDIUM · UX DEFECT (regression from F2, found in the verification pass) | Mobile keyboard | After a message long-press with the keyboard up, the chat composer stayed 122 dp above an empty bottom edge once the overlay closed | `ContextualActionOverlay` was still an RN `Modal`. It dismisses the keyboard as it opens; a Modal is a separate native window, and when it appeared mid-way through the keyboard's closing animation the platform delivered the rest of that animation to the Modal's window, so the activity's UI-thread keyboard value (`useKeyboardLift`) froze part-way. Before F2 the thread used a JS listener and did not show it | Reproduced on a clean bundle: composer top at y=2385 vs 2898 at rest; instrumented `keyboardDidHide` logged the native value still at 336 px | Composer floating over an empty band after any long-press made with the keyboard open | **Fixed** — the overlay renders through `@gorhom/portal` with a `BackHandler`; the emoji-picker hand-off no longer waits for a native dismissal. After: overlay → close ends pixel-identical to the untouched thread. The rule is written into `useKeyboardLift.ts`. A JS-event fallback inside the hook was tried first and rejected: the native value keeps publishing the frozen height after `keyboardDidHide`, so any fallback would be fighting the source instead of removing the cause |
+| F12 | LOW · UX DEFECT | Mobile sheets | `<Sheet>`'s footer padding switched between the safe-area inset and 4 px on a JS `keyboardDidShow` event | Left over from the sheet rebuild; the same residual snap F2 removed from `BottomBar` | `Sheet.tsx` `keyboardUp` flag | A small footer jump a beat after the panel had moved | **Fixed** — footer inset derives from the UI-thread keyboard value with BottomBar's formula |
+| F13 | LOW · UX (pre-existing, now visible) | Messaging overlay | When the long-press also dismisses the keyboard, the lifted copy stays at the position the bubble had at press time while the thread slides down under it | The overlay measures its anchor once (`measureInWindow`) before the keyboard leaves | Emulator screenshot; at rest (keyboard down) the copy sits exactly over the bubble | Cosmetic mis-registration for the duration of the menu | **Deferred** — correct fix is to re-measure the anchor after the keyboard settles; a UX change, not a regression of this audit |
+
 ### What was examined and found sound (no change)
 
 - **Money path concurrency**: `create_ticket_checkout` and `issue_tickets_for_checkout` are single transactions; inventory is a compare-and-set with a `quantity >= 0` CHECK behind it; `expire_stale_ticket_checkouts` never expires a session whose payment attempt is in flight; `claim_transaction_refund` gates Paystack; `request_organizer_payout` takes a per-organizer advisory lock and computes the available balance inside it. Live counts: 0 attempts stuck in `processing`, 0 `fulfillment_failed`, 0 `refund_pending`, 0 duplicate ticket codes.
@@ -110,6 +114,18 @@ Severity uses the brief's scale. "Status" is what happened in this session.
 | Production build, web + admin | `npm run build` | 2/2 successful; web 218 static pages generated; no new warnings |
 | Supabase advisors after the migration | `get_advisors` performance | unindexed FKs 36 → 17; security list unchanged (no new items) |
 | Android emulator, production API, founder's account | Pixel_10_Pro_XL, dev client + Metro on 8097 via `adb reverse` | Sign-in form: card and Send button above the keys during and after the rise. Chat: composer directly on the keyboard with no gap, newest bubble in view, dismissal returns to the identical resting layout; three-line draft grows the field and the thread stays anchored; send resets the field. Emoji picker sheet: lifts with the keyboard, rejection state, back dismisses keyboard then sheet. Edit-message sheet (footer + input): Save button clear of the keys. Test message deleted afterwards |
+
+### Verification pass (same day, after merge `cd6cfc92`)
+
+| Check | Result |
+|---|---|
+| Keyboard static sweep | `KeyboardAvoidingView`: no usages. `Keyboard.addListener`: only `useKeyboardHeight` (JS decisions — Back handling, reveal maths) and StoryViewer's "keyboard hidden → stop replying" blur. Every value that moves layout reads `useKeyboardLift`. `menuPlacement`'s `keyboardHeight` input is passed 0 by its only caller (the overlay dismisses the keyboard first). `useKeyboardVisible` removed (no consumers) |
+| Indexes in production | all 14 present; no index duplicates another's column list; migration recorded as `20260918093600 audit_fk_indexes_and_constraint_dedupe` |
+| Webhook redelivery below HTTP | new `webhook-redelivery.integration.test.ts`, 4 tests passed on the replayed stack (concurrent duplicate delivery; fulfilment failure → 503 → redelivery → one ticket set / transaction / earning / fee; verify outage → 503 → redelivery; direct second `issue_tickets_for_checkout` returns the existing tickets flagged `already_issued`) |
+| Full integration suite | 57 files passed (56 + the new suite) |
+| Typecheck / unit / lint | 11/11 · services 121 · core 463 · Biome clean on every touched file |
+| Parity / docs / build | 216 routes · docs OK · web + admin 2/2 |
+| Emulator, clean bundle, production API | normal open/close, four rapid focus/dismiss cycles, long-press with keyboard up → close, emoji sheet via the overlay → Back ×2, Edit sheet with keyboard → Back ×2, hardware Back on the overlay: each ends pixel-identical to the untouched thread (bottom content edge y=2898). Send with the keyboard open, scroll with it open, leave with Back while it is open and return: correct. All test messages deleted afterwards |
 
 **Not verified**: iOS (no Mac; `eas simulator` not available to this org); a real Paystack redelivery in response to a 503 (the mapping is unit-tested; the retry schedule is Paystack's); frame-by-frame smoothness on hardware (the emulator's keyboard animation completes faster than `screencap` can sample — the design is UI-thread by construction, and the settled layouts are correct at both ends).
 
