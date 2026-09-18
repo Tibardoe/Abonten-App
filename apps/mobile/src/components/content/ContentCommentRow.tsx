@@ -1,108 +1,126 @@
+import {
+  useComments,
+  useDeleteComment,
+  useSendComment,
+  useToggleCommentLike,
+} from "@/features/content/commentThread";
 import { useRequireSignIn } from "@/features/content/contentLinks";
-import { useComments } from "@/features/content/useContent";
-import { api } from "@/lib/api";
+import { hapticLight } from "@/lib/haptics";
+import type { CachedComment } from "@abonten/core/content/commentCache";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
-import type { ContentComment } from "@abonten/types/contentType";
-import { AppText, Avatar, Icon, useToast } from "@abonten/ui-native";
-import { useState } from "react";
+import { AppText, Avatar, Icon } from "@abonten/ui-native";
+import { memo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
 // One comment (and, on demand, its one level of replies) under a Spotlight.
-// Likes are optimistic and roll back on failure; the author of the post and
-// the comment's own author may delete it, everyone else may report it.
-export function CommentRow({
+//
+// Layout: avatar | name · age, body, actions | like column. The like column
+// is a fixed 44pt touch target sitting inside the sheet's 16pt gutter, with
+// the count under the heart, so the heart lines up down the list and never
+// runs to the screen edge. Text actions (Reply, Delete / Report) get 8pt of
+// slop on a 32pt-high row, so they are reachable without crowding the body.
+//
+// State is the shared comment cache (commentThread.ts): a like here updates
+// every copy of this comment and survives rapid taps; your own comment shows
+// as "Posting…" until confirmed, or "Couldn't post" with Retry / Remove.
+export const CommentRow = memo(function CommentRow({
   comment,
   postId,
   onReply,
-  onDeleted,
   onReport,
   isReply = false,
 }: {
-  comment: ContentComment;
+  comment: CachedComment;
   postId: string;
-  onReply?: (c: ContentComment) => void;
-  onDeleted: () => void;
-  onReport: (c: ContentComment) => void;
+  onReply?: (c: CachedComment) => void;
+  onReport: (c: CachedComment) => void;
   isReply?: boolean;
 }) {
-  const toast = useToast();
   const requireSignIn = useRequireSignIn();
-  const [liked, setLiked] = useState(comment.likedByMe);
-  const [likeCount, setLikeCount] = useState(comment.likeCount);
+  const toggleLike = useToggleCommentLike(requireSignIn);
+  const deleteComment = useDeleteComment(postId);
+  const { retry, discard } = useSendComment(postId);
   const [showReplies, setShowReplies] = useState(false);
   const replies = useComments(postId, comment.id, showReplies);
+  const replyRows: CachedComment[] =
+    replies.data?.pages.flatMap((p) => p.comments) ?? [];
 
-  const toggleLike = async () => {
-    if (!requireSignIn()) return;
-    const next = !liked;
-    setLiked(next);
-    setLikeCount((n) => Math.max(0, n + (next ? 1 : -1)));
-    try {
-      const res = await api.content.likeComment(comment.id, next);
-      if (res.status !== 200 || !res.data) throw new Error(res.message);
-      setLikeCount(res.data.likeCount);
-    } catch {
-      setLiked(!next);
-      setLikeCount((n) => Math.max(0, n + (next ? -1 : 1)));
-      toast.error("Couldn't update that like.");
-    }
-  };
-
-  const remove = async () => {
-    try {
-      const res = await api.content.deleteComment(comment.id);
-      if (res.status !== 200) {
-        toast.error(res.message ?? "Couldn't delete this comment.");
-        return;
-      }
-      onDeleted();
-    } catch {
-      toast.error("Couldn't delete this comment.");
-    }
-  };
+  const sending = comment.localState === "sending";
+  const failed = comment.localState === "failed";
+  const name = comment.author.username ?? comment.author.fullName ?? "Someone";
 
   return (
-    <View className={isReply ? "ml-10" : undefined}>
-      <View className="flex-row gap-3">
+    <View className={isReply ? "ml-11" : undefined}>
+      <View className="flex-row gap-3" style={{ opacity: sending ? 0.6 : 1 }}>
         <Avatar
           publicId={comment.author.avatarPublicId}
           version={comment.author.avatarVersion}
-          size={32}
+          size={isReply ? 28 : 32}
         />
-        <View className="flex-1 gap-1">
-          <AppText variant="small">
-            <AppText variant="small" className="font-semibold">
-              {comment.author.username ?? comment.author.fullName ?? "Someone"}
-            </AppText>{" "}
-            {comment.body}
-          </AppText>
-          <View className="flex-row items-center gap-4">
-            <AppText variant="caption" tone="muted">
-              {formatStoryAge(comment.createdAt)}
+        <View className="flex-1 gap-1 pt-0.5">
+          <View className="flex-row items-center gap-1.5">
+            <AppText
+              variant="small"
+              numberOfLines={1}
+              className="shrink font-semibold"
+            >
+              {name}
             </AppText>
-            {onReply ? (
-              <Pressable onPress={() => onReply(comment)} hitSlop={8}>
-                <AppText variant="caption" className="font-semibold">
-                  Reply
-                </AppText>
-              </Pressable>
-            ) : null}
-            {comment.isMine || comment.canModerate ? (
-              <Pressable onPress={remove} hitSlop={8}>
-                <AppText variant="caption" tone="error">
-                  Delete
-                </AppText>
-              </Pressable>
-            ) : (
-              <Pressable onPress={() => onReport(comment)} hitSlop={8}>
-                <AppText variant="caption" tone="muted">
-                  Report
-                </AppText>
-              </Pressable>
-            )}
+            <AppText variant="caption" tone="muted">
+              {sending ? "Posting…" : formatStoryAge(comment.createdAt)}
+            </AppText>
           </View>
+          <AppText variant="small">{comment.body}</AppText>
+
+          {failed ? (
+            <View className="min-h-[32px] flex-row items-center gap-4">
+              <AppText variant="caption" tone="error">
+                Couldn't post
+              </AppText>
+              <TextAction
+                label="Retry"
+                tone="brand"
+                onPress={() => void retry(comment)}
+              />
+              <TextAction
+                label="Remove"
+                tone="muted"
+                onPress={() => discard(comment)}
+              />
+            </View>
+          ) : sending ? null : (
+            <View className="min-h-[32px] flex-row items-center gap-5">
+              {onReply ? (
+                <TextAction
+                  label="Reply"
+                  tone="foreground"
+                  onPress={() => onReply(comment)}
+                />
+              ) : null}
+              {comment.isMine || comment.canModerate ? (
+                <TextAction
+                  label="Delete"
+                  tone="error"
+                  onPress={() => void deleteComment(comment)}
+                />
+              ) : (
+                <TextAction
+                  label="Report"
+                  tone="muted"
+                  onPress={() => onReport(comment)}
+                />
+              )}
+            </View>
+          )}
+
           {!isReply && comment.replyCount > 0 ? (
-            <Pressable onPress={() => setShowReplies((v) => !v)} hitSlop={6}>
+            <Pressable
+              onPress={() => setShowReplies((v) => !v)}
+              hitSlop={8}
+              accessibilityRole="button"
+              className="min-h-[28px] flex-row items-center gap-2"
+            >
+              <View className="h-px w-6 bg-border" />
               <AppText variant="caption" tone="muted" className="font-semibold">
                 {showReplies
                   ? "Hide replies"
@@ -111,41 +129,92 @@ export function CommentRow({
             </Pressable>
           ) : null}
         </View>
-        <Pressable
-          onPress={toggleLike}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={liked ? "Unlike comment" : "Like comment"}
-          className="items-center"
-        >
-          <Icon
-            name={liked ? "heart" : "heart-outline"}
-            size={16}
-            color={liked ? "#ef4444" : undefined}
-          />
-          {likeCount > 0 ? (
-            <AppText variant="caption" tone="muted">
-              {likeCount}
+
+        {sending || failed ? (
+          <View className="w-11" />
+        ) : (
+          <Pressable
+            onPress={() => {
+              hapticLight();
+              toggleLike(comment);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={
+              comment.likedByMe
+                ? `Unlike comment, ${comment.likeCount} likes`
+                : `Like comment, ${comment.likeCount} likes`
+            }
+            accessibilityState={{ selected: comment.likedByMe }}
+            className="min-h-[44px] w-11 items-center pt-0.5 active:opacity-60"
+          >
+            <Icon
+              name={comment.likedByMe ? "heart" : "heart-outline"}
+              size={18}
+              color={comment.likedByMe ? "#ef4444" : undefined}
+              tone={comment.likedByMe ? undefined : "muted"}
+            />
+            <AppText
+              variant="caption"
+              tone="muted"
+              className="mt-0.5 min-h-[16px]"
+            >
+              {comment.likeCount > 0 ? comment.likeCount : ""}
             </AppText>
-          ) : null}
-        </Pressable>
+          </Pressable>
+        )}
       </View>
+
       {showReplies ? (
-        <View className="mt-3 gap-3">
-          {(replies.data?.pages.flatMap((p) => p.comments) ?? []).map((r) => (
+        <View className="mt-3 gap-4">
+          {replyRows.map((r) => (
             <CommentRow
-              key={r.id}
+              key={r.clientId ?? r.id}
               comment={r}
               postId={postId}
               onReply={onReply}
-              onDeleted={onDeleted}
               onReport={onReport}
               isReply
             />
           ))}
           {replies.isLoading ? <ActivityIndicator /> : null}
+          {replies.hasNextPage ? (
+            <TextAction
+              label={replies.isFetchingNextPage ? "Loading…" : "More replies"}
+              tone="muted"
+              onPress={() => {
+                if (!replies.isFetchingNextPage) replies.fetchNextPage();
+              }}
+            />
+          ) : null}
         </View>
       ) : null}
     </View>
+  );
+});
+
+function TextAction({
+  label,
+  tone,
+  onPress,
+}: {
+  label: string;
+  tone: "brand" | "muted" | "error" | "foreground";
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      className="min-h-[32px] justify-center active:opacity-60"
+    >
+      <AppText
+        variant="caption"
+        tone={tone === "foreground" ? undefined : tone}
+        className="font-semibold"
+      >
+        {label}
+      </AppText>
+    </Pressable>
   );
 }

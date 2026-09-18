@@ -546,12 +546,6 @@ export const SpotlightCard = memo(function SpotlightCard({
           commentsAllowed={post.allowComments}
           commentCount={engagement.counts.comments}
           onClose={closeComments}
-          onCountChange={(delta) =>
-            engagement.setCounts((c) => ({
-              ...c,
-              comments: Math.max(0, c.comments + delta),
-            }))
-          }
         />
       ) : null}
 

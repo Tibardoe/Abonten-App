@@ -132,6 +132,35 @@ export function usePushRegistration() {
     );
     return () => sub.remove();
   }, [router]);
+
+  // A push that arrives while the app is open is also a signal that cached
+  // data changed: the notification list gains a row, and a comment on a
+  // post means that post's comment lists and counts are behind. An open
+  // comment sheet is already live over realtime; this covers everything
+  // else (a closed sheet reopens on fresh data, the post shows the new
+  // count) without polling.
+  useEffect(() => {
+    const sub = Notifications.addNotificationReceivedListener((n) => {
+      const data = n.request.content.data as
+        | (NotificationData & { postId?: string })
+        | undefined;
+      void queryClient.invalidateQueries({
+        queryKey: ["mobile", "notifications"],
+      });
+      const postId = typeof data?.postId === "string" ? data.postId : null;
+      if (postId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["mobile", "content", "comments", postId],
+          refetchType: "none",
+        });
+        void queryClient.invalidateQueries({
+          queryKey: ["mobile", "content", "post"],
+          predicate: (q) => q.queryKey[4] === postId,
+        });
+      }
+    });
+    return () => sub.remove();
+  }, []);
 }
 
 /** Best-effort: drop this device's token before signing out. */

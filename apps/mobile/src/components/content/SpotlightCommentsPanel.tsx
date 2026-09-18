@@ -1,13 +1,15 @@
 import { ReportSheet } from "@/components/ReportSheet";
+import {
+  useComments,
+  usePostCommentsRealtime,
+  useSendComment,
+} from "@/features/content/commentThread";
 import { useRequireSignIn } from "@/features/content/contentLinks";
-import { useComments } from "@/features/content/useContent";
-import { CONTENT_KEY } from "@/features/content/useContentProgram";
-import { api } from "@/lib/api";
 import { hapticLight } from "@/lib/haptics";
-
+import { useIsOnline } from "@/lib/network";
+import type { CachedComment } from "@abonten/core/content/commentCache";
 import { countLabel } from "@abonten/core/content/copy";
 import { MAX_COMMENT_LENGTH } from "@abonten/core/content/limits";
-import type { ContentComment } from "@abonten/types/contentType";
 import {
   AppText,
   Icon,
@@ -16,8 +18,7 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -32,9 +33,7 @@ import Animated, {
   type SharedValue,
   runOnJS,
   useAnimatedStyle,
-  useSharedValue,
   withSpring,
-  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CommentRow } from "./ContentCommentRow";
@@ -50,6 +49,15 @@ import { CommentRow } from "./ContentCommentRow";
  *
  * Close: the X, a drag down on the handle, a tap on the video above, or
  * Android back (which first just drops the keyboard).
+ *
+ * The drag moves the SAME `progress` value the card's video transform reads,
+ * on the UI thread: pulling the panel down grows the video back towards full
+ * screen under your finger, and letting go either springs both back or
+ * hands the remaining distance to the card's close animation, which starts
+ * from wherever the drag left off — one continuous motion, no jump.
+ *
+ * The list is the post's shared comment cache (commentThread.ts), kept live
+ * by the post's realtime topic while this panel is mounted.
  */
 export function SpotlightCommentsPanel({
   postId,
@@ -59,7 +67,6 @@ export function SpotlightCommentsPanel({
   commentsAllowed,
   commentCount,
   onClose,
-  onCountChange,
 }: {
   postId: string;
   /** 0 closed → 1 open, owned by the card. */
@@ -70,24 +77,24 @@ export function SpotlightCommentsPanel({
   commentsAllowed: boolean;
   commentCount: number;
   onClose: () => void;
-  onCountChange: (delta: number) => void;
 }) {
   const toast = useToast();
-  const qc = useQueryClient();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
+  const online = useIsOnline();
   const requireSignIn = useRequireSignIn();
   const keyboard = useKeyboardLift();
   const [body, setBody] = useState("");
-  const [replyTo, setReplyTo] = useState<ContentComment | null>(null);
-  const [sending, setSending] = useState(false);
-  const [report, setReport] = useState<ContentComment | null>(null);
+  const [replyTo, setReplyTo] = useState<CachedComment | null>(null);
+  const [report, setReport] = useState<CachedComment | null>(null);
   const input = useRef<TextInput>(null);
-  const list = useRef<FlatList<ContentComment>>(null);
-  const dragY = useSharedValue(0);
+  const list = useRef<FlatList<CachedComment>>(null);
 
   const top = useComments(postId, null, true);
-  const comments = top.data?.pages.flatMap((p) => p.comments) ?? [];
+  const comments: CachedComment[] =
+    top.data?.pages.flatMap((p) => p.comments) ?? [];
+  const { send: sendComment } = useSendComment(postId);
+  usePostCommentsRealtime(postId, true);
 
   useEffect(() => {
     if (replyTo) input.current?.focus();
@@ -106,63 +113,60 @@ export function SpotlightCommentsPanel({
     return () => sub.remove();
   }, [onClose]);
 
-  const send = async () => {
+  // The comment is on screen immediately (a "sending" row); the composer
+  // clears at once. A failure leaves the row with Retry, so nothing typed is
+  // lost. Offline, nothing is sent and the text stays in the composer.
+  const send = () => {
     const text = body.trim();
-    if (!text || sending) return;
+    if (!text) return;
     if (!requireSignIn()) return;
-    setSending(true);
-    try {
-      const res = await api.content.comment(
-        postId,
-        text,
-        replyTo?.parentId ?? replyTo?.id ?? null,
-      );
-      if (res.status !== 200) {
-        toast.error(res.message ?? "Couldn't post your comment.");
-        return;
-      }
-      hapticLight();
-      setBody("");
-      const wasReply = !!replyTo;
-      setReplyTo(null);
-      onCountChange(1);
-      await qc.invalidateQueries({
-        queryKey: [...CONTENT_KEY, "comments", postId],
-      });
-      // New top-level comments are listed first; bring yours into view.
-      if (!wasReply)
-        list.current?.scrollToOffset({ offset: 0, animated: true });
-    } catch {
-      toast.error("Couldn't post your comment. Check your connection.");
-    } finally {
-      setSending(false);
+    if (!online) {
+      toast.info("You're offline. Your comment is still here to send later.");
+      return;
     }
+    hapticLight();
+    const parentId = replyTo?.parentId ?? replyTo?.id ?? null;
+    setBody("");
+    setReplyTo(null);
+    // New top-level comments are listed first; bring yours into view.
+    if (!parentId) list.current?.scrollToOffset({ offset: 0, animated: true });
+    void sendComment(text, parentId);
   };
 
-  const close = () => {
+  const onReport = useCallback((target: CachedComment) => {
+    Keyboard.dismiss();
+    setReport(target);
+  }, []);
+
+  const close = useCallback(() => {
     Keyboard.dismiss();
     onClose();
-  };
+  }, [onClose]);
 
+  // Distance the panel travels between open and closed.
+  const travel = panelHeight + 24;
   const drag = Gesture.Pan()
+    .activeOffsetY(6)
+    .onStart(() => {
+      runOnJS(Keyboard.dismiss)();
+    })
     .onChange((e) => {
-      dragY.value = Math.max(0, dragY.value + e.changeY);
+      progress.value = Math.min(
+        1,
+        Math.max(0, progress.value - e.changeY / travel),
+      );
     })
     .onEnd((e) => {
-      if (dragY.value > panelHeight * 0.25 || e.velocityY > 800) {
-        dragY.value = withTiming(panelHeight, { duration: 160 }, () => {
-          dragY.value = 0;
-          runOnJS(close)();
-        });
+      if (progress.value < 0.75 || e.velocityY > 800) {
+        // The card animates the rest of the way from here.
+        runOnJS(close)();
       } else {
-        dragY.value = withSpring(0, { damping: 22, stiffness: 260 });
+        progress.value = withSpring(1, { damping: 22, stiffness: 260 });
       }
     });
 
   const panelStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: (1 - progress.value) * (panelHeight + 24) + dragY.value },
-    ],
+    transform: [{ translateY: (1 - progress.value) * travel }],
     // The keyboard rises from the screen's bottom edge; only the part of it
     // above the tab bar eats into the panel.
     paddingBottom: Math.max(0, keyboard.height.value - bottomObstruction),
@@ -217,10 +221,15 @@ export function SpotlightCommentsPanel({
           ref={list}
           style={{ flex: 1 }}
           data={comments}
-          keyExtractor={(item) => item.id}
+          // A sending row keeps its client id as key when the server row
+          // replaces it, so the row updates in place instead of remounting.
+          keyExtractor={(item) => item.clientId ?? item.id}
           contentContainerStyle={{
-            gap: 16,
-            paddingHorizontal: 16,
+            gap: 18,
+            paddingLeft: 16,
+            // The like column is its own 44pt target; 4pt more than the
+            // left gutter keeps the heart visually inset from the edge.
+            paddingRight: 8,
             paddingTop: 4,
             paddingBottom: 16,
           }}
@@ -228,29 +237,28 @@ export function SpotlightCommentsPanel({
           keyboardDismissMode="on-drag"
           onEndReachedThreshold={0.4}
           onEndReached={() => {
-            if (top.hasNextPage && !top.isFetchingNextPage) top.fetchNextPage();
+            if (top.hasNextPage && !top.isFetchingNextPage && !top.isError)
+              top.fetchNextPage();
           }}
           renderItem={({ item }) => (
             <CommentRow
               comment={item}
               postId={postId}
               onReply={commentsAllowed ? setReplyTo : undefined}
-              onDeleted={() => {
-                onCountChange(-1);
-                qc.invalidateQueries({
-                  queryKey: [...CONTENT_KEY, "comments", postId],
-                });
-              }}
-              onReport={(target) => {
-                Keyboard.dismiss();
-                setReport(target);
-              }}
+              onReport={onReport}
             />
           )}
           ListEmptyComponent={
-            top.isLoading ? (
+            top.isLoading && online ? (
               <View className="items-center py-10">
                 <Spinner />
+              </View>
+            ) : !online && !top.data ? (
+              <View className="items-center gap-2 py-10">
+                <Icon name="cloud-offline-outline" size={28} tone="muted" />
+                <AppText variant="muted" className="text-center">
+                  You're offline. Comments will load when you're back online.
+                </AppText>
               </View>
             ) : top.isError ? (
               <View className="items-center gap-2 py-10">
@@ -319,24 +327,20 @@ export function SpotlightCommentsPanel({
               />
               <Pressable
                 onPress={send}
-                disabled={!body.trim() || sending}
+                disabled={!body.trim()}
                 accessibilityRole="button"
                 accessibilityLabel="Post comment"
-                accessibilityState={{ disabled: !body.trim() || sending }}
+                accessibilityState={{ disabled: !body.trim() }}
                 className={[
                   "h-11 w-11 items-center justify-center rounded-full",
-                  body.trim() && !sending ? "bg-primary" : "bg-muted",
+                  body.trim() ? "bg-primary" : "bg-muted",
                 ].join(" ")}
               >
-                {sending ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Icon
-                    name="arrow-up"
-                    size={20}
-                    tone={body.trim() ? "inverse" : "muted"}
-                  />
-                )}
+                <Icon
+                  name="arrow-up"
+                  size={20}
+                  tone={body.trim() ? "inverse" : "muted"}
+                />
               </Pressable>
             </View>
           </View>
