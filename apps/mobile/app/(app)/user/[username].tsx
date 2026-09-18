@@ -25,6 +25,7 @@ import {
   useProfileReviews,
 } from "@/features/profile/useProfileTabs";
 import { usePublicProfile } from "@/features/profile/usePublicProfile";
+import { useIsOnline } from "@/lib/network";
 import {
   type ListingKind,
   type ProfileTab,
@@ -70,19 +71,31 @@ const SEGMENT_LABEL: Record<SpotlightSegment, string> = {
 type GridRow = { id: string; tiles: SpotlightTile[] };
 
 export default function UserProfileScreen() {
-  const { username } = useLocalSearchParams<{ username: string }>();
+  const params = useLocalSearchParams<{
+    username: string;
+    tab?: string;
+    segment?: string;
+  }>();
+  const { username } = params;
   const router = useRouter();
   const { session } = useSession();
   const { program } = useContentProgram();
 
+  const online = useIsOnline();
   const profileQuery = usePublicProfile(username);
   const profile = profileQuery.data;
   const isOwn = !!session && session.user.id === profile?.user_id;
 
-  const [tab, setTab] = useState<ProfileTab>("listings");
+  // A link can open a tab directly (Account › Saved Spotlights opens
+  // ?tab=spotlights&segment=saved); unknown values fall back below.
+  const [tab, setTab] = useState<ProfileTab>(
+    (params.tab as ProfileTab | undefined) ?? "listings",
+  );
   const [listingKind, setListingKind] = useState<ListingKind>("events");
   const [listingMenu, setListingMenu] = useState<Rect | null>(null);
-  const [segment, setSegment] = useState<SpotlightSegment>("published");
+  const [segment, setSegment] = useState<SpotlightSegment>(
+    (params.segment as SpotlightSegment | undefined) ?? "published",
+  );
   const [favSub, setFavSub] = useState<FavSub>("events");
   const [reviewSub, setReviewSub] = useState<ReviewSub>("event");
   const [createOpen, setCreateOpen] = useState(false);
@@ -247,7 +260,10 @@ export default function UserProfileScreen() {
   // tab shows a spinner rather than flashing its empty state.
   const showTabLoader = active.isPending && !active.isError;
 
-  if (profileQuery.isLoading) {
+  // A cached profile (this session or restored from the last one) always
+  // renders, even when a background refresh fails or the device is
+  // offline; the error screen is only for a profile never loaded here.
+  if (!profile && profileQuery.isLoading) {
     return (
       <View className="flex-1 bg-background">
         {navHeader}
@@ -255,12 +271,16 @@ export default function UserProfileScreen() {
       </View>
     );
   }
-  if (profileQuery.isError || !profile) {
+  if (!profile) {
     return (
       <View className="flex-1 bg-background">
         {navHeader}
         <ScreenError
-          message="This profile could not be loaded."
+          message={
+            online
+              ? "This profile could not be loaded."
+              : "You're offline. This profile will load when you reconnect."
+          }
           onRetry={() => profileQuery.refetch()}
         />
       </View>
@@ -389,7 +409,13 @@ export default function UserProfileScreen() {
           }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
-          refreshControl={<Refresher onRefresh={() => active.refetch()} />}
+          refreshControl={
+            <Refresher
+              onRefresh={() =>
+                Promise.all([active.refetch(), profileQuery.refetch()])
+              }
+            />
+          }
           ListEmptyComponent={
             showTabLoader ? (
               <Spinner className="mt-6" />

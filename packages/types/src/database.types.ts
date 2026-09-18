@@ -5526,6 +5526,27 @@ export type Database = {
           },
         ];
       };
+      follow_count: {
+        Row: {
+          follower_count: number;
+          target_id: string;
+          target_kind: string;
+          updated_at: string;
+        };
+        Insert: {
+          follower_count?: number;
+          target_id: string;
+          target_kind: string;
+          updated_at?: string;
+        };
+        Update: {
+          follower_count?: number;
+          target_id?: string;
+          target_kind?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       health_check_result: {
         Row: {
           check_key: string;
@@ -10227,6 +10248,39 @@ export type Database = {
           },
         ];
       };
+      search_concept: {
+        Row: {
+          applies_to: string[];
+          created_at: string;
+          enabled: boolean;
+          expands_to: string[];
+          id: number;
+          note: string | null;
+          term: string;
+          updated_at: string;
+        };
+        Insert: {
+          applies_to?: string[];
+          created_at?: string;
+          enabled?: boolean;
+          expands_to: string[];
+          id?: never;
+          note?: string | null;
+          term: string;
+          updated_at?: string;
+        };
+        Update: {
+          applies_to?: string[];
+          created_at?: string;
+          enabled?: boolean;
+          expands_to?: string[];
+          id?: never;
+          note?: string | null;
+          term?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       search_query_log: {
         Row: {
           clicked_at: string | null;
@@ -14326,6 +14380,10 @@ export type Database = {
         Returns: number;
       };
       get_unread_conversation_count: { Args: never; Returns: number };
+      get_public_profile: {
+        Args: { p_username: string };
+        Returns: Json;
+      };
       get_user_rating: {
         Args: { p_reviewed_id: string };
         Returns: {
@@ -14923,6 +14981,10 @@ export type Database = {
         Returns: {
           added: boolean;
         }[];
+      };
+      viewer_follows: {
+        Args: { p_kind: string; p_target_id: string };
+        Returns: boolean;
       };
       verification_transition: {
         Args: {

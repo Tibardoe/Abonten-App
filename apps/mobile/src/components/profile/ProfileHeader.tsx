@@ -19,11 +19,33 @@ import { Pressable, View } from "react-native";
 // itself is the screen's centred nav title (set from the profile screen),
 // so it isn't repeated here. Tapping the avatar opens it full-screen.
 
-function Stat({ value, label }: { value: string | number; label: string }) {
+function compactCount(n: number): string {
+  if (n < 1000) return String(n);
+  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
+  return `${(n / 1_000_000).toFixed(1)}M`;
+}
+
+function Stat({
+  value,
+  label,
+  accessibilityLabel,
+}: {
+  value: string | number;
+  label: string;
+  accessibilityLabel?: string;
+}) {
   return (
-    <View className="items-center">
-      <AppText variant="bodyStrong">{value}</AppText>
-      <AppText variant="caption">{label}</AppText>
+    <View
+      className="min-w-0 flex-1 items-center"
+      accessible
+      accessibilityLabel={accessibilityLabel ?? `${value} ${label}`}
+    >
+      <AppText variant="bodyStrong" numberOfLines={1}>
+        {value}
+      </AppText>
+      <AppText variant="caption" numberOfLines={1}>
+        {label}
+      </AppText>
     </View>
   );
 }
@@ -70,9 +92,21 @@ export function ProfileHeader({
               <VerifiedPill subjectType="organizer" />
             ) : null}
           </View>
-          <View className="flex-row justify-between">
-            <Stat value={profile.total_posts} label="Posts" />
-            <Stat value={profile.total_favorites} label="Favorites" />
+          {/* Followers is the number people look for first on a profile —
+              yours included — so it sits next to Posts. */}
+          <View className="flex-row justify-between gap-1">
+            <Stat value={compactCount(profile.total_posts)} label="Posts" />
+            <Stat
+              value={compactCount(profile.follower_count)}
+              label={profile.follower_count === 1 ? "Follower" : "Followers"}
+              accessibilityLabel={`${profile.follower_count.toLocaleString()} ${
+                profile.follower_count === 1 ? "follower" : "followers"
+              }`}
+            />
+            <Stat
+              value={compactCount(profile.total_favorites)}
+              label="Favorites"
+            />
             <Stat
               value={profile.average_rating || "—"}
               label={`Rating${profile.total_ratings ? ` (${profile.total_ratings})` : ""}`}
@@ -96,7 +130,7 @@ export function ProfileHeader({
             targetId={profile.user_id}
             ownerId={profile.user_id}
             label={`@${profile.username}`}
-            showCount
+            known={profile.viewer_follows}
           />
           {profile.total_posts > 0 ? (
             <SubscribeBell
