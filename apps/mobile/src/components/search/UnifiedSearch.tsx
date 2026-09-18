@@ -1,19 +1,42 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
+import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
+import { SpotlightTileRow } from "@/components/profile/SpotlightGrid";
+import { useContentProgram } from "@/features/content/useContentProgram";
+import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
 import { useRecentSearches } from "@/features/search/recentSearches";
 import {
   logSearchOpen,
+  useSpotlightSearch,
   useUnifiedResults,
   useUnifiedSuggestions,
 } from "@/features/search/useUnifiedSearch";
+import { useIsOnline } from "@/lib/network";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import {
+  chunkRows,
+  tileFromDocument,
+} from "@abonten/core/content/profileContent";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
   isSearchableQuery,
   parseSearchQuery,
 } from "@abonten/core/search/parseSearchQuery";
+import {
+  type SearchFilterKey,
+  type SearchFilters,
+  activeSearchFilters,
+  canBrowseWithoutQuery,
+  clearSearchFilter,
+  clearSearchFiltersFor,
+  describeSearchFilters,
+  searchFiltersFromParams,
+  searchFiltersToParams,
+  searchFiltersToRequest,
+} from "@abonten/core/search/searchFilters";
+import type { ContentPostDocument } from "@abonten/types/contentType";
 import type {
   SearchMode,
   SearchOrganizerHit,
@@ -33,8 +56,8 @@ import {
 } from "@abonten/ui-native";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Keyboard,
@@ -45,25 +68,49 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { OrganizerRow } from "./OrganizerRow";
+import { SearchFilterSheet } from "./SearchFilterSheet";
 
-// The unified Search tab (Discovery): one box for events, places and
-// organizers, "@handle" for organizers only. Idle shows recent searches and
-// categories; typing shows grouped suggestions; submitting shows ranked
-// results with All / Events / Places / Organizers tabs. The legacy
-// events-only screen is still used while the programme is off.
+// The unified Search tab (Discovery): one box for events, places,
+// organizers and Spotlights, "@handle" for organizers only. Idle shows
+// recent searches and categories; typing shows grouped suggestions;
+// submitting shows ranked results with All / Events / Places / Organizers /
+// Spotlights tabs. The legacy events-only screen is still used while the
+// programme is off.
+//
+// Filters (the button beside the box) are search's own
+// (@abonten/core/search/searchFilters + SearchFilterSheet), not Explore's:
+// each tab is narrowed only by the filters that apply to it, the typed query
+// is never changed by filtering, and the state is mirrored into the route
+// params so a filtered search can be linked to and survives re-renders.
 
 const BROWSE_CATEGORIES = eventCategoriesAndTypes
   .map((c) => c.category)
   .slice(0, 8);
 const ALL_CATEGORY_NAMES = eventCategoriesAndTypes.map((c) => c.category);
 
+/** Server modes plus Spotlights, which come from the content search. */
+type Tab = SearchMode | "spotlights";
+
+/** Every route param the filters use (cleared before the current set). */
+const SEARCH_PARAM_KEYS = [
+  "when",
+  "km",
+  "price",
+  "cat",
+  "pcat",
+  "pcatName",
+  "open",
+  "rating",
+] as const;
+
 type Row =
   | {
       kind: "section";
       key: string;
       label: string;
-      action?: { label: string; mode: SearchMode };
+      action?: { label: string; mode: Tab };
     }
+  | { kind: "spotlights"; key: string; posts: ContentPostDocument[] }
   | {
       kind: "event";
       key: string;
@@ -179,14 +226,37 @@ export function UnifiedSearch() {
   const c = useThemeColors();
   const inputRef = useRef<TextInput>(null);
   const { program } = useDiscoveryProgram();
+  const { program: content } = useContentProgram();
+  const online = useIsOnline();
+  const { location } = useExploreLocation();
+  const params = useLocalSearchParams<Record<string, string>>();
 
-  const [raw, setRaw] = useState("");
-  const [submitted, setSubmitted] = useState<string | null>(null);
-  const [mode, setMode] = useState<SearchMode>("all");
+  // A link (or a remount) can carry the search: ?q=…&when=weekend&km=10…
+  const [raw, setRaw] = useState(() => params.q ?? "");
+  const [submitted, setSubmitted] = useState<string | null>(
+    () => params.q || null,
+  );
+  const [mode, setMode] = useState<Tab>("all");
   const [scope, setScope] = useState<{ id: string; username: string } | null>(
     null,
   );
+  const [filters, setFilters] = useState<SearchFilters>(() =>
+    searchFiltersFromParams(params),
+  );
+  const [filterOpen, setFilterOpen] = useState(false);
   const { recents, add, remove, clear } = useRecentSearches();
+
+  // Mirror the applied search into the route, so it is linkable and the
+  // tab keeps it; params only change on submit / apply, never per keystroke.
+  useEffect(() => {
+    const cleared: Record<string, string | undefined> = { q: undefined };
+    for (const k of SEARCH_PARAM_KEYS) cleared[k] = undefined;
+    router.setParams({
+      ...cleared,
+      ...(submitted ? { q: submitted } : {}),
+      ...searchFiltersToParams(filters),
+    } as never);
+  }, [submitted, filters, router]);
 
   const types = useMemo(
     () => [
@@ -202,16 +272,66 @@ export function UnifiedSearch() {
   const typing = isSearchableQuery(parsed);
   const organizerQuery = parsed.kind === "organizer";
   const trimmed = raw.trim();
+  const spotlightTab = mode === "spotlights";
+  const effectiveMode: SearchMode = scope
+    ? "events"
+    : spotlightTab
+      ? "all"
+      : mode;
+  const hasQuery = submitted != null && submitted === trimmed;
+  // With no text, a category filter is enough to browse its tab.
   const showResults =
-    (submitted != null && submitted === trimmed) || scope != null;
-  const effectiveMode: SearchMode = scope ? "events" : mode;
+    hasQuery ||
+    scope != null ||
+    (trimmed === "" && canBrowseWithoutQuery(filters, effectiveMode));
+
+  // Distance needs a real position; ranking uses any known one.
+  const lat = location?.lat;
+  const lng = location?.lng;
+  const origin = useMemo(
+    () => (lat != null && lng != null ? { lat, lng } : null),
+    [lat, lng],
+  );
+  const hasRealLocation = !!location && !location.isFallback;
+  const filterRequest = useMemo(
+    () =>
+      searchFiltersToRequest(
+        hasRealLocation ? filters : { ...filters, radiusKm: null },
+        effectiveMode,
+        new Date(),
+        origin,
+      ),
+    [filters, effectiveMode, hasRealLocation, origin],
+  );
+  const filterChips = useMemo(
+    () =>
+      describeSearchFilters(
+        filters,
+        effectiveMode,
+        hasRealLocation ? location?.label : null,
+      ).filter((c) => c.key !== "radiusKm" || hasRealLocation),
+    [filters, effectiveMode, hasRealLocation, location?.label],
+  );
+  const activeFilterCount = activeSearchFilters(
+    filters,
+    showResults ? effectiveMode : "all",
+  ).filter((k) => k !== "radiusKm" || hasRealLocation).length;
 
   const results = useUnifiedResults({
     q: scope ? "" : (submitted ?? ""),
     mode: effectiveMode,
     organizerId: scope?.id,
-    enabled: showResults,
+    filters: filterRequest,
+    enabled: showResults && !spotlightTab,
   });
+  const spotlight = useSpotlightSearch(
+    submitted ?? "",
+    content.spotlight &&
+      hasQuery &&
+      !scope &&
+      (mode === "all" || spotlightTab) &&
+      parseSearchQuery(submitted ?? "").kind !== "organizer",
+  );
 
   const firstPage = results.data?.pages[0];
   const searchId = firstPage?.searchId ?? null;
@@ -261,7 +381,7 @@ export function UnifiedSearch() {
   };
 
   const tabs = useMemo(() => {
-    const all: { key: SearchMode; label: string }[] = [
+    const all: { key: Tab; label: string }[] = [
       { key: "all", label: "All" },
       { key: "events", label: "Events" },
       ...(program.placeSearch
@@ -270,13 +390,31 @@ export function UnifiedSearch() {
       ...(program.organizerSearch
         ? [{ key: "organizers" as const, label: "Organizers" }]
         : []),
+      ...(content.spotlight && hasQuery
+        ? [{ key: "spotlights" as const, label: "Spotlights" }]
+        : []),
     ];
     return parseSearchQuery(submitted ?? "").kind === "organizer"
       ? all.filter((t) => t.key === "organizers")
       : all;
-  }, [program.placeSearch, program.organizerSearch, submitted]);
+  }, [
+    program.placeSearch,
+    program.organizerSearch,
+    content.spotlight,
+    hasQuery,
+    submitted,
+  ]);
+
+  const spotlightPosts = spotlight.data ?? [];
 
   const rows: Row[] = useMemo(() => {
+    if (spotlightTab) {
+      return chunkRows(spotlightPosts, 3).map((posts, i) => ({
+        kind: "spotlights" as const,
+        key: `sp-${i}`,
+        posts,
+      }));
+    }
     const pages = results.data?.pages ?? [];
     if (pages.length === 0) return [];
     if (effectiveMode === "all") {
@@ -321,6 +459,22 @@ export function UnifiedSearch() {
           out.push({ kind: "organizer", key: `o-${hit.id}`, hit, rank: i }),
         );
       }
+      if (spotlightPosts.length) {
+        out.push({
+          kind: "section",
+          key: "s-spotlights",
+          label: "Spotlights",
+          action:
+            spotlightPosts.length > 3
+              ? { label: "See all", mode: "spotlights" }
+              : undefined,
+        });
+        out.push({
+          kind: "spotlights",
+          key: "sp-top",
+          posts: spotlightPosts.slice(0, 3),
+        });
+      }
       return out;
     }
     if (effectiveMode === "events") {
@@ -351,7 +505,7 @@ export function UnifiedSearch() {
         hit,
         rank: i,
       }));
-  }, [results.data, effectiveMode]);
+  }, [results.data, effectiveMode, spotlightTab, spotlightPosts]);
 
   const onEndReached = useCallback(() => {
     if (results.hasNextPage && !results.isFetchingNextPage)
@@ -370,6 +524,12 @@ export function UnifiedSearch() {
 
   const renderRow = ({ item }: { item: Row }) => {
     switch (item.kind) {
+      case "spotlights":
+        return (
+          <View className="-mx-4">
+            <SpotlightTileRow tiles={item.posts.map(tileFromDocument)} />
+          </View>
+        );
       case "section":
         return (
           <SectionHeader
@@ -420,19 +580,45 @@ export function UnifiedSearch() {
     }
   };
 
-  const empty = results.isLoading ? (
+  const active = spotlightTab ? spotlight : results;
+  const filtered = !spotlightTab && filterChips.length > 0;
+  const empty = active.isLoading ? (
     <View className="gap-4 px-1 pt-2">
       {["a", "b", "c"].map((k) => (
         <EventCardSkeleton key={k} />
       ))}
     </View>
-  ) : results.isError ? (
+  ) : active.isError ? (
     <EmptyState
       icon="cloud-offline-outline"
-      title="Search didn't load"
-      description="Check your connection and try again."
-      actionLabel="Try again"
-      onAction={() => results.refetch()}
+      title={online ? "Search didn't load" : "You're offline"}
+      description={
+        online
+          ? "Check your connection and try again."
+          : "Search needs a connection. Try again when you're back online."
+      }
+      actionLabel={online ? "Try again" : undefined}
+      onAction={online ? () => active.refetch() : undefined}
+    />
+  ) : spotlightTab ? (
+    <EmptyState
+      icon="play-circle-outline"
+      title={`No Spotlights for “${submitted ?? ""}”`}
+      description="Try another word or a #hashtag."
+    />
+  ) : filtered ? (
+    <EmptyState
+      icon="options-outline"
+      title="Nothing matches these filters"
+      description={
+        hasQuery
+          ? `No results for “${submitted}” with the filters you chose.`
+          : "Try a different category or fewer filters."
+      }
+      actionLabel="Clear filters"
+      onAction={() =>
+        setFilters((f) => clearSearchFiltersFor(f, effectiveMode))
+      }
     />
   ) : (
     <View className="gap-4">
@@ -462,39 +648,74 @@ export function UnifiedSearch() {
         style={{ paddingTop: insets.top + 8 }}
         className="border-b border-border bg-background px-4 pb-3"
       >
-        <View className="h-11 flex-row items-center gap-2 rounded-xl border border-input bg-card px-3">
-          <Icon
-            name={organizerQuery ? "at-outline" : "search-outline"}
-            size={18}
-            tone="muted"
-          />
-          <TextInput
-            ref={inputRef}
-            accessibilityLabel="Search events, places and organizers"
-            placeholder="Events, places, organizers or @handle"
-            placeholderTextColor={c["muted-foreground"]}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-            value={raw}
-            onChangeText={(text) => {
-              setRaw(text);
-              if (submitted != null) setSubmitted(null);
-              if (scope) setScope(null);
-            }}
-            onSubmitEditing={() => runSearch(raw)}
-            className="flex-1 text-[15px] text-foreground"
-            style={family.body ? { fontFamily: family.body } : undefined}
-          />
-          {raw.length > 0 ? (
+        <View className="flex-row items-center gap-2">
+          <View className="h-11 flex-1 flex-row items-center gap-2 rounded-xl border border-input bg-card px-3">
+            <Icon
+              name={organizerQuery ? "at-outline" : "search-outline"}
+              size={18}
+              tone="muted"
+            />
+            <TextInput
+              ref={inputRef}
+              accessibilityLabel="Search events, places and organizers"
+              placeholder="Events, places, organizers or @handle"
+              placeholderTextColor={c["muted-foreground"]}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+              value={raw}
+              onChangeText={(text) => {
+                setRaw(text);
+                if (submitted != null) setSubmitted(null);
+                if (scope) setScope(null);
+              }}
+              onSubmitEditing={() => runSearch(raw)}
+              className="flex-1 text-[15px] text-foreground"
+              style={family.body ? { fontFamily: family.body } : undefined}
+            />
+            {raw.length > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+                hitSlop={10}
+                onPress={clearInput}
+                className="h-7 w-7 items-center justify-center rounded-full active:opacity-60"
+              >
+                <Icon name="close-circle" size={18} tone="muted" />
+              </Pressable>
+            ) : null}
+          </View>
+          {/* Search's own filters. Hidden for "@handle" searches and the
+            Spotlights tab, which have nothing to filter. */}
+          {!organizerQuery && !spotlightTab && !scope ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Clear search"
-              hitSlop={10}
-              onPress={clearInput}
-              className="h-7 w-7 items-center justify-center rounded-full active:opacity-60"
+              accessibilityLabel={
+                activeFilterCount > 0
+                  ? `Filters, ${activeFilterCount} active`
+                  : "Filters"
+              }
+              onPress={() => {
+                Keyboard.dismiss();
+                setFilterOpen(true);
+              }}
+              className={[
+                "h-11 min-w-[44px] flex-row items-center justify-center gap-1 rounded-xl border px-3 active:opacity-70",
+                activeFilterCount > 0 ? "border-primary" : "border-border",
+              ].join(" ")}
             >
-              <Icon name="close-circle" size={18} tone="muted" />
+              <Icon
+                name="options-outline"
+                size={18}
+                tone={activeFilterCount > 0 ? "primary" : "foreground"}
+              />
+              {activeFilterCount > 0 ? (
+                <View className="min-w-[18px] items-center rounded-full bg-primary px-1">
+                  <AppText className="text-[12px] font-semibold text-primary-foreground">
+                    {activeFilterCount}
+                  </AppText>
+                </View>
+              ) : null}
             </Pressable>
           ) : null}
         </View>
@@ -505,6 +726,19 @@ export function UnifiedSearch() {
             value={mode}
             onChange={setMode}
           />
+        ) : null}
+        {showResults && !spotlightTab && !scope && filterChips.length > 0 ? (
+          <View className="-mx-4 mt-3">
+            <ActiveFilterChips
+              chips={filterChips}
+              onRemove={(key) =>
+                setFilters((f) => clearSearchFilter(f, key as SearchFilterKey))
+              }
+              onClearAll={() =>
+                setFilters((f) => clearSearchFiltersFor(f, effectiveMode))
+              }
+            />
+          </View>
         ) : null}
         {scope ? (
           <View className="mt-3 flex-row items-center gap-2">
@@ -526,6 +760,12 @@ export function UnifiedSearch() {
           data={rows}
           keyExtractor={(r) => r.key}
           renderItem={renderRow}
+          // While a changed filter loads, the previous list stays, dimmed.
+          style={
+            !spotlightTab && results.isPlaceholderData
+              ? { opacity: 0.55 }
+              : undefined
+          }
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="gap-4 px-4 pb-16 pt-3"
@@ -708,6 +948,21 @@ export function UnifiedSearch() {
           ) : null}
         </ScrollView>
       )}
+
+      <SearchFilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        mode={showResults ? effectiveMode : "all"}
+        filters={filters}
+        onApply={(next) => {
+          setFilters(next);
+          // Applying filters with text in the box runs that search; the
+          // query itself is never changed by filtering.
+          if (trimmed && submitted !== trimmed) runSearch(trimmed);
+        }}
+        locationLabel={hasRealLocation ? (location?.label ?? null) : null}
+        hasLocation={hasRealLocation}
+      />
     </View>
   );
 }

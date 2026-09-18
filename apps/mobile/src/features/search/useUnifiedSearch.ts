@@ -3,8 +3,10 @@ import {
   isSearchableQuery,
   parseSearchQuery,
 } from "@abonten/core/search/parseSearchQuery";
+import type { ContentPostDocument } from "@abonten/types/contentType";
 import type {
   SearchMode,
+  SearchRequest,
   SearchResults,
   SearchSuggestionsResponse,
 } from "@abonten/types/searchType";
@@ -68,13 +70,23 @@ export function useUnifiedSuggestions(
   };
 }
 
+/**
+ * Ranked results for a submitted search. `filters` are the request fields
+ * from @abonten/core/search/searchFilters (already narrowed to this tab and
+ * rounded so they stay stable); they are part of the key, so changing a
+ * filter is a new query and going back to a previous combination is served
+ * from cache. Each page carries the same filters, so paging never mixes
+ * filtered and unfiltered rows.
+ */
 export function useUnifiedResults(input: {
   q: string;
   mode: SearchMode;
   organizerId?: string | null;
+  filters?: Partial<SearchRequest>;
   enabled: boolean;
 }) {
   const q = parseSearchQuery(input.q).normalized;
+  const filters = input.filters ?? {};
   return useInfiniteQuery({
     queryKey: [
       "mobile",
@@ -83,11 +95,16 @@ export function useUnifiedResults(input: {
       q,
       input.mode,
       input.organizerId ?? null,
+      filters,
     ],
     enabled: input.enabled,
     initialPageParam: null as string | null,
+    // A filter change keeps the previous list on screen (dimmed by the
+    // caller) instead of flashing skeletons while the new one loads.
+    placeholderData: keepPreviousData,
     queryFn: async ({ pageParam }): Promise<SearchResults> => {
       const res = await api.search.query({
+        ...filters,
         q,
         mode: input.mode,
         organizerId: input.organizerId ?? undefined,
@@ -107,6 +124,27 @@ export function useUnifiedResults(input: {
       return group.hasNextPage ? group.nextCursor : null;
     },
     staleTime: 60_000,
+  });
+}
+
+/**
+ * Spotlights matching a submitted search (captions, hashtags and the search
+ * vocabulary; /api/mobile/content/search). Only while Spotlight is on for
+ * this person.
+ */
+export function useSpotlightSearch(q: string, enabled: boolean) {
+  const normalized = parseSearchQuery(q).normalized;
+  return useQuery({
+    queryKey: ["mobile", "search", "spotlight", normalized],
+    enabled: enabled && normalized.length >= 2,
+    staleTime: 60_000,
+    queryFn: async (): Promise<ContentPostDocument[]> => {
+      const res = await api.content.search(normalized);
+      if (res.status !== 200) throw new Error(res.message ?? "Search failed");
+      return (res.data?.posts ?? []).filter(
+        (p): p is ContentPostDocument => !!p,
+      );
+    },
   });
 }
 
