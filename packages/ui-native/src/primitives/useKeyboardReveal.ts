@@ -21,11 +21,10 @@ import {
 // It is deliberately ONE implementation shared by the two scroll containers
 // that need it, so the app never grows a second keyboard system:
 //   • <KeyboardAwareScrollView> — full-screen forms.
-//   • <Sheet>                   — bottom sheets. Those render into an RN
-//     <Modal>, i.e. a separate native window, where neither Android's
-//     `adjustResize` nor iOS's `automaticallyAdjustKeyboardInsets` reaches
-//     the content, so the sheet insets its own content and then asks this
-//     engine to scroll the focused field into what is left.
+//   • <Sheet>                   — bottom sheets. A sheet lifts its whole
+//     panel by the keyboard's height only as far as the status bar allows
+//     (Sheet.tsx), then asks this engine to scroll the focused field into
+//     whatever the lift could not uncover.
 //
 // Why reveal is done here rather than left to the platform: RN's own iOS
 // nudge (RCTScrollView `_keyboardWillChangeFrame`) only runs on a keyboard

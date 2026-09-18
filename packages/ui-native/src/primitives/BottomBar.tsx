@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { type StyleProp, View, type ViewStyle } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useKeyboardVisible } from "./useKeyboard";
+import { useKeyboardLift } from "./useKeyboardLift";
 
 // The sticky footer container every fixed bottom control in the app should
 // sit in — a chat composer, a "Proceed to checkout" bar, an event/place
@@ -10,10 +11,15 @@ import { useKeyboardVisible } from "./useKeyboard";
 //   • keyboard closed → pad the bottom by the device safe-area inset (the
 //     iPhone home-indicator strip / Android gesture bar), never a bare
 //     `p-4`, so the control never sits on the home-indicator line.
-//   • keyboard open   → the OS (`adjustResize` on Android) or the screen's
-//     KeyboardAvoidingView has already lifted this bar clear of the
-//     keyboard, so the inset collapses to a hairline — adding it again here
-//     would leave a fat dead gap above the keyboard (double safe-area pad).
+//   • keyboard open   → the screen's <KeyboardInsetView> has lifted this bar
+//     clear of the keyboard, so the inset collapses to a hairline — adding
+//     it again here would leave a fat dead gap above the keyboard (double
+//     safe-area pad).
+//
+// The collapse is continuous: it reads the keyboard's UI-thread height
+// (useKeyboardLift) and gives the inset back over the first few pixels of
+// the keyboard's travel, so the bar never visibly snaps between two paddings
+// the moment the keyboard lands.
 //
 // Everything else (background, border, horizontal / top padding) is the
 // caller's via `className`, so this stays a drop-in wrapper.
@@ -41,14 +47,16 @@ export function BottomBar({
   keyboardInset = 6,
 }: BottomBarProps) {
   const insets = useSafeAreaInsets();
-  const keyboardVisible = useKeyboardVisible();
-  const paddingBottom = keyboardVisible
-    ? keyboardInset
-    : Math.max(insets.bottom, minInset);
+  const keyboard = useKeyboardLift();
+  const resting = Math.max(insets.bottom, minInset);
+
+  const padding = useAnimatedStyle(() => ({
+    paddingBottom: Math.max(keyboardInset, resting - keyboard.height.value),
+  }));
 
   return (
-    <View className={className} style={[{ paddingBottom }, style]}>
+    <Animated.View className={className} style={[padding, style]}>
       {children}
-    </View>
+    </Animated.View>
   );
 }

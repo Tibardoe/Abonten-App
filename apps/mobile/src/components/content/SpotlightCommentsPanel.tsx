@@ -4,11 +4,17 @@ import { useComments } from "@/features/content/useContent";
 import { CONTENT_KEY } from "@/features/content/useContentProgram";
 import { api } from "@/lib/api";
 import { hapticLight } from "@/lib/haptics";
-import { useKeyboardLift } from "@/lib/useKeyboardLift";
+
 import { countLabel } from "@abonten/core/content/copy";
 import { MAX_COMMENT_LENGTH } from "@abonten/core/content/limits";
 import type { ContentComment } from "@abonten/types/contentType";
-import { AppText, Icon, Spinner, useToast } from "@abonten/ui-native";
+import {
+  AppText,
+  Icon,
+  Spinner,
+  useKeyboardLift,
+  useToast,
+} from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";

@@ -22,7 +22,7 @@ import { useStoryReply } from "@/features/content/useStoryReply";
 import { copyText } from "@/features/messaging/clipboardSupport";
 import { api } from "@/lib/api";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
-import { useKeyboardLift } from "@/lib/useKeyboardLift";
+
 import { CONTENT_REACTIONS } from "@abonten/core/content/reactions";
 import {
   formatStoryAge,
@@ -38,6 +38,7 @@ import {
   AppText,
   Avatar,
   Icon,
+  useKeyboardLift,
   useReducedMotion,
   useToast,
 } from "@abonten/ui-native";

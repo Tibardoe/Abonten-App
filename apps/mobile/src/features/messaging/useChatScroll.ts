@@ -17,7 +17,9 @@ import type {
 //   • a message arrived    → if they were already at the bottom, keep them
 //     pinned there; if they had scrolled up to read history, DON'T yank
 //     them down — raise the unseen counter for the "N new messages" pill.
-//   • keyboard opened      → if at the bottom, stay at the bottom.
+//   • keyboard opened      → nothing to do here: the screen's
+//     KeyboardInsetView shrinks the list's viewport from the bottom, and an
+//     inverted list at offset 0 stays on the newest message by itself.
 //
 // `atBottomRef` is the source of truth for those branches (state lags a
 // frame behind a fast scroll); `atBottom` state drives the pill's
@@ -82,11 +84,6 @@ export function useChatScroll<T>() {
     }
   }, [scrollToBottom]);
 
-  /** Keyboard just opened — hold the bottom position if we were there. */
-  const onKeyboardShow = useCallback(() => {
-    if (atBottomRef.current) scrollToBottom(false);
-  }, [scrollToBottom]);
-
   return {
     listRef,
     atBottom,
@@ -97,6 +94,5 @@ export function useChatScroll<T>() {
     scrollToBottom,
     followOwnMessage,
     noteIncoming,
-    onKeyboardShow,
   };
 }

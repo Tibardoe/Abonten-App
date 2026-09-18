@@ -53,17 +53,17 @@ import {
   Icon,
   Input,
   type IoniconName,
+  KeyboardInsetView,
   Refresher,
   Sheet,
   SheetOption,
   Spinner,
-  useKeyboardVisible,
   useToast,
 } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, FlatList, KeyboardAvoidingView, View } from "react-native";
+import { Alert, FlatList, View } from "react-native";
 
 function canEdit(m: MessageRow, myId: string | undefined): boolean {
   if (!myId || m.sender_id !== myId) return false;
@@ -78,7 +78,6 @@ export default function ConversationScreen() {
   const { session } = useSession();
   const myId = session?.user.id;
   const c = useThemeColors();
-  const kbVisible = useKeyboardVisible();
   const chat = useChatScroll<ChatEntry>();
 
   const detailQ = useConversationDetail(valid ? conversationId : undefined);
@@ -190,13 +189,6 @@ export default function ConversationScreen() {
     valid ? conversationId : undefined,
     { onIncomingMessage },
   );
-
-  // Keyboard opened — if the reader was already at the latest message, keep
-  // them pinned there rather than leaving the newest bubble under the
-  // keyboard.
-  useEffect(() => {
-    if (kbVisible) chat.onKeyboardShow();
-  }, [kbVisible, chat]);
 
   // Mark read when the thread is focused and whenever a fresh page settles.
   useFocusEffect(
@@ -428,27 +420,16 @@ export default function ConversationScreen() {
         present={!!otherUserId && presentUserIds.includes(otherUserId)}
       />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        // "padding" on Android too, not just iOS. The app runs
-        // edge-to-edge (android/gradle.properties edgeToEdgeEnabled=true),
-        // and an edge-to-edge window is NOT resized by the IME the way
-        // windowSoftInputMode=adjustResize used to do — so leaving this
-        // undefined made the whole thing a no-op and the composer stayed
-        // pinned to the bottom of the screen, completely behind the
-        // keyboard. Measured on an Android 15 device: composer at
-        // y=2266..2373 on a 2400px screen with the keyboard covering
-        // everything below ~1524, so you could not see what you typed.
-        //
-        // KAV measures its own frame against the keyboard's screen Y on
-        // every frame change (will-change-frame on iOS, did-show on
-        // Android), which is what keeps this right under edge-to-edge and
-        // the gesture bar. The "blank band above the keyboard after a long
-        // paste was sent" was the composer's TextInput keeping its grown
-        // height, fixed in Composer.tsx, not KAV.
-        behavior="padding"
-        keyboardVerticalOffset={0}
-      >
+      {/* The thread + composer shrink from the bottom by the keyboard's
+          height, frame by frame on the UI thread (KeyboardInsetView reads
+          the same signal the bottom sheets do). The list is inverted, so
+          its offset 0 is the newest message: when the viewport shrinks the
+          newest bubble stays put above the composer with no scroll call,
+          and a reader who had scrolled up keeps the line they were on.
+          React Native's KeyboardAvoidingView used to do this a beat late on
+          Android (it only hears `keyboardDidShow`), which is the "keyboard
+          appears, then everything jumps" the thread had. */}
+      <KeyboardInsetView>
         {notFound ? (
           <View className="flex-1 items-center justify-center gap-3 px-8">
             <Icon name="lock-closed-outline" size={26} tone="muted" />
@@ -571,7 +552,7 @@ export default function ConversationScreen() {
                 : undefined
           }
         />
-      </KeyboardAvoidingView>
+      </KeyboardInsetView>
 
       {/* Per-message contextual action overlay (spec §1–7) */}
       <MessageActionOverlay
