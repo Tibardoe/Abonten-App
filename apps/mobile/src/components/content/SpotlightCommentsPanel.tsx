@@ -145,10 +145,13 @@ export function SpotlightCommentsPanel({
 
   // Distance the panel travels between open and closed.
   const travel = panelHeight + 24;
+  // A plain JS function for the worklet to call back into: a worklet can't
+  // capture the Keyboard module object itself.
+  const dismissKeyboard = useCallback(() => Keyboard.dismiss(), []);
   const drag = Gesture.Pan()
     .activeOffsetY(6)
     .onStart(() => {
-      runOnJS(Keyboard.dismiss)();
+      runOnJS(dismissKeyboard)();
     })
     .onChange((e) => {
       progress.value = Math.min(
@@ -224,15 +227,14 @@ export function SpotlightCommentsPanel({
           // A sending row keeps its client id as key when the server row
           // replaces it, so the row updates in place instead of remounting.
           keyExtractor={(item) => item.clientId ?? item.id}
-          contentContainerStyle={{
-            gap: 18,
-            paddingLeft: 16,
-            // The like column is its own 44pt target; 4pt more than the
-            // left gutter keeps the heart visually inset from the edge.
-            paddingRight: 8,
-            paddingTop: 4,
-            paddingBottom: 16,
-          }}
+          // Gutters live on each row, not on the content container: the
+          // container's padding (inline style or class) was not applied to
+          // this list on device — measured with uiautomator, rows started
+          // at x=0 — which is what put avatars and the like hearts against
+          // the screen edges. The like column is its own 44pt target, so
+          // the right gutter is smaller and the heart sits ~20pt in.
+          contentContainerClassName="pb-4 pt-1"
+          ItemSeparatorComponent={CommentGap}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           onEndReachedThreshold={0.4}
@@ -241,12 +243,14 @@ export function SpotlightCommentsPanel({
               top.fetchNextPage();
           }}
           renderItem={({ item }) => (
-            <CommentRow
-              comment={item}
-              postId={postId}
-              onReply={commentsAllowed ? setReplyTo : undefined}
-              onReport={onReport}
-            />
+            <View className="pl-4 pr-2">
+              <CommentRow
+                comment={item}
+                postId={postId}
+                onReply={commentsAllowed ? setReplyTo : undefined}
+                onReport={onReport}
+              />
+            </View>
           )}
           ListEmptyComponent={
             top.isLoading && online ? (
@@ -358,4 +362,8 @@ export function SpotlightCommentsPanel({
       ) : null}
     </>
   );
+}
+
+function CommentGap() {
+  return <View className="h-[18px]" />;
 }

@@ -14,7 +14,7 @@ import {
 import type { ContentMediaItem } from "@abonten/types/contentType";
 import { AppText, Icon, useReducedMotion } from "@abonten/ui-native";
 import { Image } from "expo-image";
-import { VideoView, useVideoPlayer } from "expo-video";
+import { type BufferOptions, VideoView, useVideoPlayer } from "expo-video";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
@@ -61,15 +61,47 @@ export const SpotlightVideo = memo(function SpotlightVideo({
   const reduceMotion = useReducedMotion();
   const posterOpacity = useSharedValue(1);
   const [frameShown, setFrameShown] = useState(false);
-  const hasPlayer = mode !== "idle";
+  const wantPlayer = mode !== "idle";
 
-  // No player → the poster is all there is; show it at full strength.
+  // Player lifetime, with an ORDERED teardown. Unmounting a VideoView while
+  // its player's decoder is still writing frames into the view's texture
+  // crashed the app on Android (a native abort on the MediaCodec thread:
+  // the TextureView's surface was destroyed under a frame in flight) when
+  // scrolling fast. So a page leaving the window first unloads its video
+  // ("retiring": pause, then replace the source with nothing, which stops
+  // the decoder), and only then unmounts the view and releases the player.
+  // If the page comes back while retiring, it gets a fresh player after.
+  const [layer, setLayer] = useState<"none" | "live" | "retiring">(
+    wantPlayer ? "live" : "none",
+  );
+  const [layerKey, setLayerKey] = useState(0);
+  const revive = useRef(false);
   useEffect(() => {
-    if (!hasPlayer) {
+    if (wantPlayer) {
+      if (layer === "none") setLayer("live");
+      else if (layer === "retiring") revive.current = true;
+    } else {
+      revive.current = false;
+      if (layer === "live") setLayer("retiring");
+    }
+  }, [wantPlayer, layer]);
+  const onRetired = useCallback(() => {
+    if (revive.current) {
+      revive.current = false;
+      setLayerKey((k) => k + 1);
+      setLayer("live");
+    } else {
+      setLayer("none");
+    }
+  }, []);
+
+  // No live player → the poster is all there is; show it at full strength.
+  useEffect(() => {
+    if (layer !== "live") {
       setFrameShown(false);
       posterOpacity.value = 1;
     }
-  }, [hasPlayer, posterOpacity]);
+  }, [layer, posterOpacity]);
 
   const onFrame = useCallback(
     (shown: boolean) => {
@@ -89,11 +121,14 @@ export const SpotlightVideo = memo(function SpotlightVideo({
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {hasPlayer ? (
+      {layer !== "none" ? (
         <PlayerLayer
+          key={layerKey}
           media={media}
-          active={mode === "active"}
-          shouldPlay={shouldPlay}
+          active={mode === "active" && layer === "live"}
+          shouldPlay={shouldPlay && layer === "live"}
+          retiring={layer === "retiring"}
+          onRetired={onRetired}
           onFrame={onFrame}
           frameShown={frameShown}
           onPlayingChange={onPlayingChange}
@@ -120,10 +155,24 @@ export const SpotlightVideo = memo(function SpotlightVideo({
 
 type LoadState = "loading" | "ready" | "error";
 
+const MB = 1024 * 1024;
+const ACTIVE_BUFFER: BufferOptions = {
+  preferredForwardBufferDuration: 12,
+  minBufferForPlayback: 1,
+  maxBufferBytes: 12 * MB,
+};
+const PRELOAD_BUFFER: BufferOptions = {
+  preferredForwardBufferDuration: 3,
+  minBufferForPlayback: 1,
+  maxBufferBytes: 3 * MB,
+};
+
 function PlayerLayer({
   media,
   active,
   shouldPlay,
+  retiring,
+  onRetired,
   onFrame,
   frameShown,
   onPlayingChange,
@@ -132,6 +181,9 @@ function PlayerLayer({
   media: ContentMediaItem;
   active: boolean;
   shouldPlay: boolean;
+  /** Unload the video; call onRetired once the decoder has stopped. */
+  retiring: boolean;
+  onRetired: () => void;
   onFrame: (shown: boolean) => void;
   frameShown: boolean;
   onPlayingChange?: (playing: boolean) => void;
@@ -153,7 +205,20 @@ function PlayerLayer({
     p.audioMixingMode = p.muted ? "mixWithOthers" : "auto";
     p.timeUpdateEventInterval = 0.25;
     p.keepScreenOnWhilePlaying = true;
+    p.bufferOptions = active ? ACTIVE_BUFFER : PRELOAD_BUFFER;
   });
+
+  // Buffer caps. ExoPlayer's defaults size a video buffer for long-form
+  // playback (tens of MB, held in the Java heap); with a player per page
+  // that exhausted the heap during long scrolling sessions (measured: an
+  // OutOfMemoryError after ~30 fast swipes on a debug build). A neighbour
+  // only needs enough to start instantly; the active page enough to ride
+  // out a slow network for a few seconds of a short clip.
+  useEffect(() => {
+    try {
+      player.bufferOptions = active ? ACTIVE_BUFFER : PRELOAD_BUFFER;
+    } catch {}
+  }, [active, player]);
 
   const [load, setLoad] = useState<LoadState>("loading");
   const [buffering, setBuffering] = useState(false);
@@ -214,6 +279,29 @@ function PlayerLayer({
     });
     return () => sub.remove();
   }, [player, frameShown, shouldPlay]);
+
+  // Retirement: stop, then unload, so nothing renders into the view's
+  // surface when it is torn down. Unload failing (already released) is
+  // retirement too.
+  const onRetiredRef = useRef(onRetired);
+  onRetiredRef.current = onRetired;
+  useEffect(() => {
+    if (!retiring) return;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      onRetiredRef.current();
+    };
+    try {
+      player.pause();
+    } catch {}
+    releasePlayback(player);
+    player.replaceAsync(null).then(finish, finish);
+    // Never let a stuck unload keep a page (and its decoder) around.
+    const t = setTimeout(finish, 1500);
+    return () => clearTimeout(t);
+  }, [retiring, player]);
 
   // Play / pause. The only place this player starts, and it takes audio
   // ownership in the same synchronous call.
