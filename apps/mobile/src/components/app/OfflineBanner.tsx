@@ -4,10 +4,9 @@ import { useTheme } from "@abonten/ui-native/theme";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import Animated, {
-  useAnimatedStyle,
+  FadeInUp,
+  FadeOutUp,
   useReducedMotion,
-  useSharedValue,
-  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -63,18 +62,7 @@ export function OfflineBanner() {
   const insets = useSafeAreaInsets();
   const { colors: c, scheme } = useTheme();
   const reduceMotion = useReducedMotion();
-  const shown = useSharedValue(0);
-
   const visible = phase !== "hidden";
-  useEffect(() => {
-    const to = visible ? 1 : 0;
-    shown.value = reduceMotion ? to : withTiming(to, { duration: 180 });
-  }, [visible, reduceMotion, shown]);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: shown.value,
-    transform: [{ translateY: (1 - shown.value) * -8 }],
-  }));
 
   const tone: { bg: string; fg: string; icon: IoniconName; label: string } =
     phase === "reconnected"
@@ -98,8 +86,17 @@ export function OfflineBanner() {
             label: "You're offline — showing saved data",
           };
 
+  // Mounted only while there is something to say, with enter / exit
+  // animations. It used to stay mounted at opacity 0 and animate a shared
+  // value to 1 — on device the pill never became visible (in the tree,
+  // offline, but drawn at opacity 0), so nobody was ever told they were
+  // offline.
+  if (!visible) return null;
+
   return (
     <Animated.View
+      entering={reduceMotion ? undefined : FadeInUp.duration(180)}
+      exiting={reduceMotion ? undefined : FadeOutUp.duration(160)}
       pointerEvents="none"
       accessibilityLiveRegion="polite"
       style={[
@@ -109,9 +106,14 @@ export function OfflineBanner() {
           left: 0,
           right: 0,
           zIndex: 50,
+          // Android draws elevated views above non-elevated siblings
+          // whatever their order, and the navigator's screens are
+          // elevated — without this the pill rendered underneath them and
+          // was never seen (measured on device: offline, the pill was in
+          // the React tree but not on screen).
+          elevation: 50,
           alignItems: "center",
         },
-        style,
       ]}
     >
       <View

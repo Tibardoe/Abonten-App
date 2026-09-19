@@ -20,7 +20,15 @@ export function useRewardsProgram(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: PROGRAM_KEY,
     enabled: options?.enabled ?? true,
-    queryFn: async () => (await api.rewards.program()).data ?? null,
+    queryFn: async () => {
+      const res = await api.rewards.program();
+      // A transient failure keeps the last answer (possibly restored from
+      // the offline cache) instead of caching "no programme".
+      if (res.status === 401 || res.status === 429 || res.status >= 500) {
+        throw new Error(res.message ?? "Rewards check failed");
+      }
+      return res.data ?? null;
+    },
     staleTime: 5 * 60_000,
   });
 }

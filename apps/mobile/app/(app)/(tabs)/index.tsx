@@ -30,6 +30,7 @@ import { useExplorePlaceSliders } from "@/features/discovery/useExplorePlaceSlid
 import { useFilteredEvents } from "@/features/discovery/useFilteredEvents";
 import { useFilteredPlaces } from "@/features/discovery/useFilteredPlaces";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
+import { useIsOnline } from "@/lib/network";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -57,6 +58,7 @@ type Tab = "events" | "places";
 // places" list with filter-aware empty states.
 export default function Explore() {
   const router = useRouter();
+  const online = useIsOnline();
   const { location, resolving } = useExploreLocation();
   const coords = location ? { lat: location.lat, lng: location.lng } : null;
 
@@ -327,22 +329,37 @@ export default function Explore() {
     </View>
   );
 
+  // Offline with nothing cached for this view: say so, instead of claiming
+  // there are no events here (a paused offline query is not an error and
+  // has no data, which read as "No events in Accra").
+  const offlineEmpty =
+    !online && (activeQuery.isError || activeQuery.fetchStatus === "paused");
   const emptyState = (
     <EmptyState
-      icon={tab === "events" ? "calendar-outline" : "location-outline"}
+      icon={
+        offlineEmpty
+          ? "cloud-offline-outline"
+          : tab === "events"
+            ? "calendar-outline"
+            : "location-outline"
+      }
       title={
-        activeQuery.isError
-          ? `Couldn't load ${tab}`
-          : activeCount > 0
-            ? `No ${tab} match your filters`
-            : `No ${tab} in ${location?.label ?? "this area"}`
+        offlineEmpty
+          ? "You're offline"
+          : activeQuery.isError
+            ? `Couldn't load ${tab}`
+            : activeCount > 0
+              ? `No ${tab} match your filters`
+              : `No ${tab} in ${location?.label ?? "this area"}`
       }
       description={
-        activeQuery.isError
-          ? "Pull down to try again."
-          : activeCount > 0
-            ? "Try widening or clearing your filters."
-            : "Check back soon, or change your location."
+        offlineEmpty
+          ? `${tab === "events" ? "Events" : "Places"} will load when you're back online.`
+          : activeQuery.isError
+            ? "Pull down to try again."
+            : activeCount > 0
+              ? "Try widening or clearing your filters."
+              : "Check back soon, or change your location."
       }
       actionLabel={activeCount > 0 ? "Clear filters" : undefined}
       onAction={activeCount > 0 ? clearAllChips : undefined}

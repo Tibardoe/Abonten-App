@@ -29,6 +29,10 @@ export function useContentProgram() {
         : DISABLED_CONTENT_PROGRAM;
     },
     staleTime: 5 * 60 * 1000,
+    // Signing in changes the key (the answer is per person). Keep showing
+    // the previous answer until the new one arrives, so the tab bar and
+    // entry points don't disappear and reappear around a sign-in.
+    placeholderData: (previous) => previous,
   });
   return {
     ...query,

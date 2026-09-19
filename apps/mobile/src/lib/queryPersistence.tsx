@@ -17,7 +17,6 @@ import {
   persistQueryClientSave,
 } from "@tanstack/react-query-persist-client";
 import * as Application from "expo-application";
-import { Directory, File, Paths } from "expo-file-system";
 import * as Updates from "expo-updates";
 import {
   type ReactNode,
@@ -27,6 +26,7 @@ import {
   useState,
 } from "react";
 import { AppState } from "react-native";
+import { deleteQueryCacheFiles, queryCacheFile } from "./queryCacheFiles";
 import { queryClient } from "./queryClient";
 
 // Offline-first cache: what the app had already loaded is on screen straight
@@ -47,7 +47,8 @@ import { queryClient } from "./queryClient";
 //      network. Offline, they stay on screen; nothing claims to be fresh.
 //   4. Cache changes to allowlisted queries are written back, throttled,
 //      and flushed when the app goes to the background.
-//   5. Sign-out (or a different account) deletes the previous file.
+//   5. Sign-out deletes the account's file (SessionProvider); a different
+//      account signing in deletes the previous one's.
 
 /**
  * Bump when the shape of any persisted query's data changes, so an old file
@@ -64,8 +65,6 @@ const MAX_FILE_BYTES = 3 * 1024 * 1024;
 /** Never hold the splash longer than this for a slow disk. */
 const RESTORE_TIMEOUT_MS = 2000;
 
-const FILE_PREFIX = "rq-cache-";
-
 // The update id changes with every OTA update: a JS bundle that may read
 // data differently never sees a cache written by an older one.
 const BUSTER = [
@@ -74,30 +73,8 @@ const BUSTER = [
   Updates.updateId ?? "embedded",
 ].join(":");
 
-function cacheDir(): Directory {
-  return new Directory(Paths.cache);
-}
-
-function fileFor(userKey: string): File {
-  return new File(Paths.cache, `${FILE_PREFIX}${userKey}.json`);
-}
-
-/** Deletes every cache file except the current account's. */
-function sweepOtherFiles(keep: string) {
-  try {
-    for (const entry of cacheDir().list()) {
-      if (!(entry instanceof File)) continue;
-      if (!entry.name.startsWith(FILE_PREFIX)) continue;
-      if (entry.name === `${FILE_PREFIX}${keep}.json`) continue;
-      entry.delete();
-    }
-  } catch {
-    // A leftover file is harmless beyond disk space; never block start-up.
-  }
-}
-
 function createFilePersister(userKey: string): Persister {
-  const file = fileFor(userKey);
+  const file = queryCacheFile(userKey);
   return {
     persistClient: (client: PersistedClient) => {
       const queries = selectPersistedQueries(
@@ -206,7 +183,11 @@ export function QueryPersistence({ children }: { children: ReactNode }) {
     let cancelled = false;
     let unsubscribe: (() => void) | null = null;
     const persister = createFilePersister(userKey);
-    sweepOtherFiles(userKey);
+    // Another ACCOUNT's cache goes as soon as a different person is signed
+    // in. With nobody signed in, nothing is deleted here: that state can be
+    // a token that could not be refreshed offline, and sign-out deletes
+    // caches itself (SessionProvider).
+    if (userKey !== "anon") deleteQueryCacheFiles(userKey);
 
     const restore = persistQueryClientRestore({
       queryClient: client,
