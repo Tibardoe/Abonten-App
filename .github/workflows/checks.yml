@@ -72,6 +72,8 @@ jobs:
 
       - run: npm run check:mobile-a11y
 
+      - run: npm run check:deep-link-decoder
+
   # Documentation validation (docs/** and the public legal/help content):
   # required files, metadata, internal links, code references, placeholder
   # and social links, secret patterns, public/internal separation. No
