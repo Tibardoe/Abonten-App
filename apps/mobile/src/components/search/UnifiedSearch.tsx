@@ -720,12 +720,34 @@ export function UnifiedSearch() {
           ) : null}
         </View>
         {showResults && tabs.length > 1 && !scope ? (
-          <SegmentedTabs
-            className="mt-3"
-            options={tabs}
-            value={mode}
-            onChange={setMode}
-          />
+          tabs.length <= 4 ? (
+            <SegmentedTabs
+              className="mt-3"
+              options={tabs}
+              value={mode}
+              onChange={setMode}
+            />
+          ) : (
+            // Five result types don't fit a segmented control on a phone
+            // without truncating labels ("Organi…"); a scrolling row of
+            // chips keeps every label whole.
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="-mx-4 mt-3"
+              contentContainerClassName="gap-2 px-4"
+              accessibilityRole="tablist"
+            >
+              {tabs.map((t) => (
+                <Chip
+                  key={t.key}
+                  label={t.label}
+                  selected={mode === t.key}
+                  onPress={() => setMode(t.key)}
+                />
+              ))}
+            </ScrollView>
+          )
         ) : null}
         {showResults && !spotlightTab && !scope && filterChips.length > 0 ? (
           <View className="-mx-4 mt-3">

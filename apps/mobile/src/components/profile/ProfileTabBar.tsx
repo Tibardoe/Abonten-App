@@ -4,11 +4,12 @@ import type {
 } from "@abonten/core/content/profileContent";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type LayoutChangeEvent, Pressable, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
+  useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 
@@ -84,16 +85,18 @@ export function ProfileTabBar({
     };
   }, [activeIndex, slotWidth, reduceMotion]);
 
-  const chevronStyle = useAnimatedStyle(() => {
+  // The angle animates as a number and becomes "Ndeg" inside the worklet.
+  // Interpolating withTiming(...) straight into the string produced
+  // "[object Object]deg", which Reanimated's native side could not parse
+  // ("stod: no conversion") — a hard crash on opening any profile.
+  const chevronDeg = useSharedValue(listingMenuOpen ? 180 : 0);
+  useEffect(() => {
     const deg = listingMenuOpen ? 180 : 0;
-    return {
-      transform: [
-        {
-          rotate: `${reduceMotion ? deg : withTiming(deg, { duration: 180 })}deg`,
-        },
-      ],
-    };
-  }, [listingMenuOpen, reduceMotion]);
+    chevronDeg.value = reduceMotion ? deg : withTiming(deg, { duration: 180 });
+  }, [listingMenuOpen, reduceMotion, chevronDeg]);
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${chevronDeg.value}deg` }],
+  }));
 
   const openMenu = () => {
     listingRef.current?.measureInWindow((x, y, width, height) => {
