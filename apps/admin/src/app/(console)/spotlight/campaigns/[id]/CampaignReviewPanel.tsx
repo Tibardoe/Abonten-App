@@ -2,7 +2,10 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card } from "@/components/ui";
-import { contentCampaignAction, refundContentCampaign } from "@/server/actions";
+import {
+  contentCampaignAction,
+  refundContentCampaign,
+} from "@/server/actions/content";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   campaignActionNeedsReason,

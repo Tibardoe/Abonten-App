@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { geocodeWeeklyArea, upsertWeeklyScope } from "@/server/actions";
+import { geocodeWeeklyArea, upsertWeeklyScope } from "@/server/actions/weekly";
 import type { WeeklyScope } from "@abonten/types/weeklyType";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

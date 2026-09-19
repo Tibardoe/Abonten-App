@@ -1,4 +1,4 @@
-import { signOut } from "@/server/actions";
+import { signOut } from "@/server/actions/session";
 
 export default function NoAccessPage() {
   return (

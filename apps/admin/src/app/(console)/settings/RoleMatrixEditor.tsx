@@ -1,6 +1,6 @@
 "use client";
 
-import { setRolePermission } from "@/server/actions";
+import { setRolePermission } from "@/server/actions/adminSettings";
 import type { RoleMatrix } from "@abonten/types/adminTypes";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

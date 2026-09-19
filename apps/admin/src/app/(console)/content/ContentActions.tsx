@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, cn } from "@/components/ui";
-import { applyModeration } from "@/server/actions";
+import { applyModeration } from "@/server/actions/moderation";
 import type {
   AdminPermissionKey,
   ModeratableTargetType,

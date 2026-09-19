@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { decideCreditAdjustment } from "@/server/actions";
+import { decideCreditAdjustment } from "@/server/actions/rewards";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

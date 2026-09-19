@@ -6,7 +6,7 @@ import {
   assignSupportConversation,
   replySupportConversation,
   setSupportConversationStatus,
-} from "@/server/actions";
+} from "@/server/actions/support";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

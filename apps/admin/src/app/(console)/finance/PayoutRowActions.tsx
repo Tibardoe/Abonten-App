@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { settlePayout } from "@/server/actions";
+import { settlePayout } from "@/server/actions/finance";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

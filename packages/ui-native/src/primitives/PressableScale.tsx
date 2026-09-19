@@ -49,6 +49,9 @@ export const PressableScale = forwardRef<View, PressableScaleProps>(
       onPressOut,
       disabled,
       style,
+      // A tappable view is a button to a screen reader unless the caller
+      // says otherwise (tab, link, checkbox…).
+      accessibilityRole = "button",
       ...rest
     },
     ref,
@@ -72,6 +75,7 @@ export const PressableScale = forwardRef<View, PressableScaleProps>(
     return (
       <AnimatedPressable
         ref={ref as never}
+        accessibilityRole={accessibilityRole}
         disabled={disabled}
         onPressIn={(e) => {
           if (!disabled) {

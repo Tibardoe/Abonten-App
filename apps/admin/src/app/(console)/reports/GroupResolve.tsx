@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, cn } from "@/components/ui";
-import { resolveReportGroup } from "@/server/actions";
+import { resolveReportGroup } from "@/server/actions/reports";
 import type {
   AdminPermissionKey,
   ReportTargetType,

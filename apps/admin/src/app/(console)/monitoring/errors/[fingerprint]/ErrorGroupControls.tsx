@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { setErrorGroupStatus } from "@/server/actions";
+import { setErrorGroupStatus } from "@/server/actions/observability";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

@@ -2,7 +2,7 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { requireAdmin } from "@/lib/adminGuard";
-import { signOut } from "@/server/actions";
+import { signOut } from "@/server/actions/session";
 import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";

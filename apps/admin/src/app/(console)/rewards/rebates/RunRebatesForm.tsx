@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { runMonthlyRebates } from "@/server/actions";
+import { runMonthlyRebates } from "@/server/actions/rewards";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

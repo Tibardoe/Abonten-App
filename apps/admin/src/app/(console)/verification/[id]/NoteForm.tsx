@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, cn } from "@/components/ui";
-import { addVerificationNote } from "@/server/actions";
+import { addVerificationNote } from "@/server/actions/verification";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

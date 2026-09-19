@@ -2,14 +2,16 @@
 
 import { Button, Card, cn } from "@/components/ui";
 import {
-  addAdminNote,
   applyModeration,
-  assignReport,
   clearReviewResponse,
+} from "@/server/actions/moderation";
+import {
+  addAdminNote,
+  assignReport,
   requestReportInfo,
   resolveReport,
   updateReportStatus,
-} from "@/server/actions";
+} from "@/server/actions/reports";
 import type {
   AdminPermissionKey,
   ReportModeratableTargetType,

@@ -6,7 +6,7 @@ import {
   createWeeklyEdition,
   getWeeklyPreviewLink,
   transitionWeeklyEdition,
-} from "@/server/actions";
+} from "@/server/actions/weekly";
 import {
   addDays,
   defaultScheduleFor,

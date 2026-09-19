@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { upsertFieldOpsCampaign } from "@/server/actions";
+import { upsertFieldOpsCampaign } from "@/server/actions/fieldOps";
 import type { FieldOpsCampaign, FieldOpsRegion } from "@abonten/types/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

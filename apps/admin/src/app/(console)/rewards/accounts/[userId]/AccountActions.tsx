@@ -7,7 +7,7 @@ import {
   requestCreditAdjustment,
   setCreditAccountStatus,
   setReferralCodeDisabled,
-} from "@/server/actions";
+} from "@/server/actions/rewards";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

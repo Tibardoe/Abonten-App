@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
-import { upsertIncident } from "@/server/actions";
+import { upsertIncident } from "@/server/actions/observability";
 import type { Incident } from "@abonten/types/adminTypes";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

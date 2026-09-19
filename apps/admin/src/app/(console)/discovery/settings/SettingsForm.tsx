@@ -2,7 +2,7 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
-import { updateDiscoverySettings } from "@/server/actions";
+import { updateDiscoverySettings } from "@/server/actions/discovery";
 import type {
   DiscoveryAudience,
   DiscoverySettings,

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { resendNotification } from "@/server/actions";
+import { resendNotification } from "@/server/actions/notifications";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

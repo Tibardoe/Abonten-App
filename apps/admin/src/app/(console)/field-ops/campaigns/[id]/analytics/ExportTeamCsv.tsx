@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { exportFieldOpsCampaignStats } from "@/server/actions";
+import { exportFieldOpsCampaignStats } from "@/server/actions/fieldOps";
 import { useState, useTransition } from "react";
 
 /**

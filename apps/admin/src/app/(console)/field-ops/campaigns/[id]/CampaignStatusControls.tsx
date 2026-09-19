@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
-import { setFieldOpsCampaignStatus } from "@/server/actions";
+import { setFieldOpsCampaignStatus } from "@/server/actions/fieldOps";
 import {
   CAMPAIGN_ACTION_LABEL,
   availableCampaignActions,
