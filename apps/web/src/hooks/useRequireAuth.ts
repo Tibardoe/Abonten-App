@@ -2,7 +2,7 @@
 
 import { supabase } from "@/config/supabase/client";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 /**
  * Returns an async guard for protected actions (buy ticket, favorite, ...):
@@ -14,13 +14,15 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 export function useRequireAuth() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   return async () => {
     const { data } = await supabase.auth.getUser();
 
     if (!data.user) {
-      const query = searchParams.toString();
+      // Read at click time, not with useSearchParams(): that hook makes
+      // every statically rendered page holding a guarded button (EventCard's
+      // favourite, on /weekly and others) bail out of prerendering.
+      const query = window.location.search.replace(/^\?/, "");
       router.push(getSignInUrl(query ? `${pathname}?${query}` : pathname));
       return false;
     }
