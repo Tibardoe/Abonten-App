@@ -33,6 +33,20 @@ Covers: authz and RLS (`authz`, `sec001-*`, `money-path-lockdown`, `promo-subscr
 
 The setup script copies migrations to a temp dir and neutralises a few documented statements that cannot replay by timestamp alone; production is never touched. A from-scratch replay is fingerprint-compared to production after schema work.
 
+## Browser suite (Playwright, web)
+
+`apps/web/e2e/` runs against a production server (`next start`), so what is tested is what is deployed: the CSP and security headers, `/robots.txt` and `/sitemap.xml`, the sign-in redirect for private sections, the 404 page for unknown URLs and missing listings, the mobile API's 401 without a bearer token, the webhook's 401 without a signature, canonical URLs and titles, Open Graph and JSON-LD on a live event and place page (taken from the sitemap), and an axe-core accessibility scan of the public surface that fails on serious or critical violations. It also asserts route protection directly (`route-protection.spec.ts`: every private prefix redirects to sign-in, public paths do not, and `/api/geocode` answers 401 JSON) and that the Content-Security-Policy actually reports (`csp-reporting.spec.ts`: the configured `report-uri` is intercepted, a script from a disallowed origin is injected, and the browser's real `csp-report` is inspected; it skips where no Sentry DSN is configured, and also asserts the policy refuses nothing of the app's own).
+
+Locally: `npm run build -w @abonten/web`, then `npx playwright test` in `apps/web` (first time: `npx playwright install chromium`; the app's `.env.local` must be present). In CI it is the `build-and-e2e-web` job.
+
+## Database grants
+
+`packages/services/src/__integration__/function-grants.integration.test.ts` asserts both directions of every grant the application depends on: the RPCs called with the caller's own session must stay callable, and the service-role-only ones must stay refused. A grant is invisible to TypeScript and to review — the only thing that fails is a live call returning `42501` — and a migration that revoked three checkout sweeps broke production for about fifty minutes before an unrelated test happened to catch it. Add a row whenever an RPC starts being called with a session client, or is locked to the service role.
+
+## Mobile accessibility
+
+`npm run check:mobile-a11y` fails if any `<Pressable>` with an `onPress` carries no `accessibilityRole`, so a pressable view always announces itself as a control to TalkBack and VoiceOver. It runs in CI. It is a static guard only: how a screen actually reads on a device is not covered (see below).
+
 ## Other checks
 
 - `npm run check:api-parity` — every `/api/mobile/**` route has a typed client method.
@@ -41,7 +55,9 @@ The setup script copies migrations to a temp dir and neutralises a few documente
 
 ## Not covered (be honest in release notes)
 
-- No web UI tests (Playwright is used ad hoc through the MCP for manual runs, not in CI).
+- No signed-in web journeys in the browser suite yet (checkout, organizer management): the suite covers the public surface and the boundaries; signed-in flows are covered by the integration suite at the service layer.
+- No admin UI tests.
+- No device screen-reader testing. Roles and labels are enforced statically and by axe on web, but whether a screen *reads* sensibly through VoiceOver or TalkBack — focus order, grouping, gesture navigation — has not been checked on hardware.
 - No mobile UI tests; device QA is manual on an Android emulator/device (the owner's checklist lives in memory notes and PROJECT.md).
 - No live Paystack tests in CI; the live money path was exercised manually (2026-09 audit).
 - Regression tests for the self-authorizing SECURITY DEFINER functions are partial (SEC-001).

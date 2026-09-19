@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 // generic on purpose: link previews must not leak a post that is hidden,
 // removed or not yet available to everyone.
 export const metadata: Metadata = {
-  title: "Spotlight | Abonten Hub",
+  title: "Spotlight",
   description: "Watch this Spotlight on Abonten Hub.",
   robots: { index: false },
 };

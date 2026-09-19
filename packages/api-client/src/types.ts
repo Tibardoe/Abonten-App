@@ -665,7 +665,7 @@ export type OrganizerFinanceResult =
 //
 // One aggregate call feeds every widget below the overview cards, mirroring
 // the web Dashboard's five getOrganizer* section actions. The underlying
-// get_organizer_* RPCs have no generated types and PostgREST can serialise
+// get_organizer_* RPCs are read back from a jsonb document and PostgREST can serialise
 // their bigint/numeric columns as strings, so the mobile screen coerces
 // every numeric field with Number() on read.
 
@@ -915,7 +915,7 @@ export type DeletePlaceDraftResult = {
 
 // ---- event insights (per-event analytics, read-only) ----------------
 //
-// The underlying get_event_*_analytics RPCs have no generated types; the
+// The underlying get_event_*_analytics RPCs are typed in @abonten/types/eventAnalytics; the
 // PostgREST layer can serialise their bigint/numeric columns as strings, so
 // the mobile screen coerces every numeric field with Number() on read (same
 // convention as OrganizerOverviewRow above).
@@ -1214,7 +1214,7 @@ export type DeletePromoCodeResult =
 
 // A place as the owner's "My places" list shows it — the place row plus
 // its joined category. Untyped like every other joined Supabase row in
-// this repo (no generated types); read the fields the list needs.
+// this repo; read the fields the list needs.
 export type OrganizerPlaceRow = {
   id: string;
   name: string;
@@ -1404,7 +1404,7 @@ export type CancelPlaceBookingResult = {
 
 // One `place_review` row as the owner Reviews tab reads it — the approved
 // review plus the reviewer's handle/avatar and its photos. Untyped like
-// every other joined Supabase row in this repo (no generated types); read
+// every other joined Supabase row in this repo; read
 // the fields the list needs.
 export type OwnerPlaceReviewRow = {
   id: string;

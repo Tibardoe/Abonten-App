@@ -1,5 +1,12 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
+import type {
+  EventDateAnalyticsRow,
+  EventOverviewAnalytics,
+  EventPromoAnalyticsRow,
+  EventReturningAttendeeStats,
+  EventTicketTypeAnalyticsRow,
+} from "@abonten/types/eventAnalytics";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth query bodies for a single event's Insights surface (the
@@ -18,9 +25,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // every call here works identically on mobile. `userId` is still threaded
 // through for the direct `event` ownership pre-check, whose RLS
 // `event_organizer_select` also keys on `auth.uid()`.
-
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
 
 type DateBound = string | null | undefined;
 
@@ -45,27 +49,32 @@ type Failed = { status: 500; message: string };
 export type EventOverviewAnalyticsResult =
   | Unauthorized
   | Failed
-  | { status: 200; data: Row | null };
+  | { status: 200; data: EventOverviewAnalytics | null };
 
 export type EventFinanceSummaryResult =
   | Unauthorized
   | Failed
   | { status: 200; data: EventFinanceSummary | null };
 
-export type EventListAnalyticsResult =
+export type EventTicketTypeAnalyticsResult =
   | Unauthorized
   | Failed
-  | { status: 200; data: Row[] };
+  | { status: 200; data: EventTicketTypeAnalyticsRow[] };
+
+export type EventPromoAnalyticsResult =
+  | Unauthorized
+  | Failed
+  | { status: 200; data: EventPromoAnalyticsRow[] };
 
 export type EventDateAnalyticsResult =
   | Unauthorized
   | Failed
-  | { status: 200; data: Row[]; hasOccurrences: boolean };
+  | { status: 200; data: EventDateAnalyticsRow[]; hasOccurrences: boolean };
 
 export type EventReturningAttendeeResult =
   | Unauthorized
   | Failed
-  | { status: 200; data: Row };
+  | { status: 200; data: EventReturningAttendeeStats };
 
 export type EventInsightsResult =
   | Unauthorized
@@ -73,12 +82,12 @@ export type EventInsightsResult =
   | {
       status: 200;
       data: {
-        overview: Row | null;
+        overview: EventOverviewAnalytics | null;
         finance: EventFinanceSummary | null;
-        ticketTypes: Row[];
-        promos: Row[];
-        dates: { rows: Row[]; hasOccurrences: boolean };
-        returning: Row;
+        ticketTypes: EventTicketTypeAnalyticsRow[];
+        promos: EventPromoAnalyticsRow[];
+        dates: { rows: EventDateAnalyticsRow[]; hasOccurrences: boolean };
+        returning: EventReturningAttendeeStats;
       };
     };
 
@@ -119,7 +128,7 @@ async function runOverview(
     logger.error("Supabase error:", error.message);
     return FAILED;
   }
-  const rows = (data ?? []) as Row[];
+  const rows = data ?? [];
   return { status: 200, data: rows[0] ?? null };
 }
 
@@ -128,7 +137,7 @@ async function runTicketTypes(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
-): Promise<EventListAnalyticsResult> {
+): Promise<EventTicketTypeAnalyticsResult> {
   const { data, error } = await supabase.rpc(
     "get_event_ticket_type_analytics",
     {
@@ -141,7 +150,7 @@ async function runTicketTypes(
     logger.error("Supabase error:", error.message);
     return FAILED;
   }
-  return { status: 200, data: (data ?? []) as Row[] };
+  return { status: 200, data: data ?? [] };
 }
 
 async function runPromos(
@@ -149,7 +158,7 @@ async function runPromos(
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
-): Promise<EventListAnalyticsResult> {
+): Promise<EventPromoAnalyticsResult> {
   const { data, error } = await supabase.rpc("get_event_promo_analytics", {
     p_event_id: eventId,
     p_start_date: startDate ?? undefined,
@@ -159,7 +168,7 @@ async function runPromos(
     logger.error("Supabase error:", error.message);
     return FAILED;
   }
-  return { status: 200, data: (data ?? []) as Row[] };
+  return { status: 200, data: data ?? [] };
 }
 
 async function runDates(
@@ -191,7 +200,7 @@ async function runDates(
     logger.error("Supabase error:", error.message);
     return FAILED;
   }
-  return { status: 200, data: (data ?? []) as Row[], hasOccurrences: true };
+  return { status: 200, data: data ?? [], hasOccurrences: true };
 }
 
 async function runReturning(
@@ -212,7 +221,7 @@ async function runReturning(
     logger.error("Supabase error:", error.message);
     return FAILED;
   }
-  const rows = (data ?? []) as Row[];
+  const rows = data ?? [];
   return {
     status: 200,
     data: rows[0] ?? { returning_count: 0, first_time_count: 0 },
@@ -367,7 +376,7 @@ export async function fetchEventTicketTypeAnalytics(
   eventId: string,
   startDate?: DateBound,
   endDate?: DateBound,
-): Promise<EventListAnalyticsResult> {
+): Promise<EventTicketTypeAnalyticsResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
   return runTicketTypes(supabase, eventId, startDate, endDate);
 }
@@ -378,7 +387,7 @@ export async function fetchEventPromoAnalytics(
   eventId: string,
   startDate?: DateBound,
   endDate?: DateBound,
-): Promise<EventListAnalyticsResult> {
+): Promise<EventPromoAnalyticsResult> {
   if (!(await ownsEvent(supabase, userId, eventId))) return NOT_AUTHORIZED;
   return runPromos(supabase, eventId, startDate, endDate);
 }

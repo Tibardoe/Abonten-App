@@ -34,12 +34,12 @@ export function HighlightUploadStatus() {
           </AppText>
         </View>
         <View className="flex-row gap-3">
-          <Pressable onPress={retry} hitSlop={6}>
+          <Pressable accessibilityRole="button" onPress={retry} hitSlop={6}>
             <AppText variant="small" tone="brand" className="font-semibold">
               Retry
             </AppText>
           </Pressable>
-          <Pressable onPress={dismiss} hitSlop={6}>
+          <Pressable accessibilityRole="button" onPress={dismiss} hitSlop={6}>
             <AppText variant="muted" className="font-semibold">
               Dismiss
             </AppText>

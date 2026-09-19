@@ -1,7 +1,10 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { addWeeklySection, reorderWeeklySections } from "@/server/actions";
+import {
+  addWeeklySection,
+  reorderWeeklySections,
+} from "@/server/actions/weekly";
 import {
   WEEKLY_SECTION_KINDS,
   weeklySectionKind,

@@ -47,8 +47,7 @@ export default function EventTicketTypeBreakdown({
         </p>
       ) : (
         <div className="flex flex-col gap-2">
-          {/* biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) */}
-          {rows.map((row: any) => (
+          {rows.map((row) => (
             <div
               key={row.ticket_type_id}
               className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2"

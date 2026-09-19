@@ -5,7 +5,7 @@ import {
   addFieldOpsTeamMember,
   setFieldOpsTeamMemberRole,
   setFieldOpsTeamMemberStatus,
-} from "@/server/actions";
+} from "@/server/actions/fieldOps";
 import type {
   FieldOpsMemberRole,
   FieldOpsMemberStatus,

@@ -114,6 +114,7 @@ export default function CancelEventScreen() {
       </View>
 
       <Pressable
+        accessibilityRole="button"
         onPress={() => setConfirmed((v) => !v)}
         className="flex-row items-center gap-3"
       >
@@ -132,6 +133,7 @@ export default function CancelEventScreen() {
       </Pressable>
 
       <Pressable
+        accessibilityRole="button"
         onPress={onCancel}
         disabled={!confirmed || cancel.isPending || !!impactError}
         className={`items-center rounded-xl px-4 py-3 ${
@@ -154,6 +156,7 @@ export default function CancelEventScreen() {
       </Pressable>
 
       <Pressable
+        accessibilityRole="button"
         onPress={() => router.back()}
         className="items-center rounded-xl border border-border px-4 py-3 active:opacity-90"
       >

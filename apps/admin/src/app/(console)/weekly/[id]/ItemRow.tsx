@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
-import { removeWeeklyItem, updateWeeklyItem } from "@/server/actions";
+import { removeWeeklyItem, updateWeeklyItem } from "@/server/actions/weekly";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { WEEKLY_VALIDITY_LABEL } from "@abonten/core/weekly/copy";
 import { sectionAccepts } from "@abonten/core/weekly/sectionKinds";

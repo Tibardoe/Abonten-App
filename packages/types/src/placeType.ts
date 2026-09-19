@@ -1,7 +1,7 @@
-// Types for the Places feature (Phase 1). Manual interfaces, same style as
-// src/types/postsType.ts — no generated Supabase types exist in this repo
-// (see PROJECT.md). Field names/shapes here must match
-// supabase/migrations/20260820090000_add_places_feature.sql exactly.
+// Domain types for the Places feature: the flattened shapes the discovery
+// RPCs (get_nearby_places / get_filtered_places) return and the forms
+// submit. Raw table rows come from database.types.ts; the joined owner-facing
+// rows live in placeRows.ts.
 
 import type { CheckoutSessionStatus } from "./ticketType";
 

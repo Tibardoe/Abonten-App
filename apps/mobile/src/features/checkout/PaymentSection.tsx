@@ -162,6 +162,7 @@ export function PaymentSection({
         {creditSwitch}
         {errorBox}
         <Pressable
+          accessibilityRole="button"
           disabled={createAttempt.isPending}
           onPress={onPay}
           className={`items-center rounded-xl px-4 py-3 ${
@@ -190,6 +191,7 @@ export function PaymentSection({
             : "Add a mobile money wallet or card to pay."}
         </AppText>
         <Pressable
+          accessibilityRole="button"
           onPress={() => router.push("/(app)/wallet")}
           className="items-center rounded-lg bg-primary px-4 py-2.5"
         >
@@ -211,6 +213,7 @@ export function PaymentSection({
         const selected = m.id === chosenId;
         return (
           <Pressable
+            accessibilityRole="button"
             key={m.id}
             onPress={() => setSelectedId(m.id)}
             className={`flex-row items-center justify-between rounded-xl border p-3 ${
@@ -232,6 +235,7 @@ export function PaymentSection({
       {errorBox}
 
       <Pressable
+        accessibilityRole="button"
         disabled={!chosenId || createAttempt.isPending}
         onPress={onPay}
         className={`items-center rounded-xl px-4 py-3 ${

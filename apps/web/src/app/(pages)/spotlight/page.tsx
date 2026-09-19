@@ -10,7 +10,7 @@ import { Suspense } from "react";
 // Following, Nearby, the viewer's likes), so it renders on the client after
 // the programme check. Nothing is cached per visitor on the server.
 export const metadata: Metadata = {
-  title: "Spotlight | Abonten Hub",
+  title: "Spotlight",
   description: "Short videos from the events and places around you.",
 };
 

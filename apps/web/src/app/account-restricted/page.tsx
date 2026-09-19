@@ -8,7 +8,7 @@ import SignOutButton from "./SignOutButton";
 // sessions. Deliberately top-level (not under (pages)) so it renders
 // without the app header/nav that would only bounce them back here.
 export const metadata = {
-  title: "Account restricted — Abonten",
+  title: "Account restricted",
 };
 
 export default function AccountRestrictedPage() {

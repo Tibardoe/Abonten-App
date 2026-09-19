@@ -25,9 +25,10 @@ import { placeJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
-import { parseWKBHex } from "@abonten/core/parseWKBHex";
+import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FiGlobe, FiMapPin, FiPhone } from "react-icons/fi";
 import { IoIosStar } from "react-icons/io";
@@ -59,6 +60,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const response = await getPlaceBySlug(slug);
 
+  // The segment layout has already answered with a 404 for a missing slug.
   if (response.status !== 200 || !response.data) {
     return { title: "Place not found" };
   }
@@ -67,9 +69,7 @@ export async function generateMetadata({
   const categoryName = place.place_category?.name as string | undefined;
   const addressText = (place.address as PlaceAddress)?.full_address;
   const location = [categoryName, addressText].filter(Boolean).join(" · ");
-  const title = categoryName
-    ? `${place.name} - ${categoryName} | Abonten Hub`
-    : `${place.name} | Abonten Hub`;
+  const title = categoryName ? `${place.name} - ${categoryName}` : place.name;
   const description = place.description
     ? place.description.slice(0, 155)
     : location || undefined;
@@ -108,9 +108,7 @@ export default async function page({
 
   const placeResponse = await getPlaceBySlug(slug);
 
-  if (placeResponse.status !== 200 || !placeResponse.data) {
-    return <p className="p-8 text-center">Place not found</p>;
-  }
+  if (placeResponse.status !== 200 || !placeResponse.data) notFound();
 
   const place = placeResponse.data;
 
@@ -125,9 +123,8 @@ export default async function page({
   // Similar Places genuinely depends on this place's own category+location,
   // so it stays sequential -- same reasoning getSimilarEvents' sequential
   // fetch gets on the event details page.
-  const { eventLat: placeLat, eventLng: placeLng } = parseWKBHex(
-    place.location,
-  );
+  const locationWkb = asWkbHex(place.location);
+  const { eventLat: placeLat, eventLng: placeLng } = parseWKBHex(locationWkb);
   const nearbyPlacesResponse = await getNearByPlaces(
     placeLat,
     placeLng,
@@ -276,7 +273,7 @@ export default async function page({
                 placeId={place.id}
                 placeName={place.name}
                 ownerId={place.owner_id}
-                location={place.location}
+                location={locationWkb}
                 phone={place.phone}
                 whatsapp={place.whatsapp}
                 services={services}
@@ -411,7 +408,7 @@ export default async function page({
               <p className="text-muted-foreground mb-4 text-sm md:text-base">
                 {fullAddress}
               </p>
-              <LocationMapPreview location={place.location} />
+              <LocationMapPreview location={locationWkb} />
             </div>
 
             {/* Contact */}

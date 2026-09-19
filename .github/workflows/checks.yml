@@ -70,6 +70,8 @@ jobs:
 
       - run: npm run check:api-parity
 
+      - run: npm run check:mobile-a11y
+
   # Documentation validation (docs/** and the public legal/help content):
   # required files, metadata, internal links, code references, placeholder
   # and social links, secret patterns, public/internal separation. No
@@ -86,9 +88,13 @@ jobs:
 
       - run: npm run check:docs
 
-  build-web:
+  # Builds the web app and runs the Playwright suite (apps/web/e2e) against
+  # `next start`: pages, headers, redirects, 404s, SEO tags and an axe
+  # accessibility scan of the public surface. One job rather than a build
+  # job plus a test job so the build is done once.
+  build-and-e2e-web:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -120,7 +126,21 @@ jobs:
 
       - run: npm ci
 
+      - run: npx playwright install --with-deps chromium
+
       - run: npm run build -w @abonten/web
+
+      - run: npx playwright test
+        working-directory: apps/web
+        env:
+          CI: "true"
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/test-results
+          retention-days: 7
 
   build-admin:
     runs-on: ubuntu-latest

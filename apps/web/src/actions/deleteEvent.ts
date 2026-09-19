@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
-import { v2 as cloudinary } from "cloudinary";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 
 export async function deleteEvent(eventId: string) {
   const supabase = await createClient();
@@ -54,7 +54,7 @@ export async function deleteEvent(eventId: string) {
 
   try {
     if (flyerPublicId) {
-      await cloudinary.uploader.destroy(flyerPublicId);
+      await destroyAsset(flyerPublicId, {});
     }
   } catch (cloudError) {
     logger.error("Cloudinary deletion failed:", cloudError);

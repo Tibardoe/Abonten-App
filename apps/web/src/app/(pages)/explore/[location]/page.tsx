@@ -5,7 +5,25 @@ import ExploreTabs from "@/places/organisms/ExploreTabs";
 import PlacesTabContent from "@/places/organisms/PlacesTabContent";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import WeeklyTeaser from "@/weekly/organisms/WeeklyTeaser";
+import { undoSlug } from "@abonten/core/geerateSlug";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+// One canonical URL per location: the filter, tab and coordinate query
+// parameters change what is shown but not what the page is about.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ location: string }>;
+}): Promise<Metadata> {
+  const { location } = await params;
+  const label = undoSlug(decodeURIComponent(location));
+  return {
+    title: `Events and places in ${label}`,
+    description: `Discover upcoming events, restaurants, nightlife and places to visit in ${label} on Abonten Hub.`,
+    alternates: { canonical: `/explore/${location}` },
+  };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

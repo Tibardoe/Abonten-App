@@ -1,10 +1,10 @@
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import type { OrganizerActivityRow } from "@abonten/types/eventAnalytics";
 import { TbCalendarPlus, TbTicket, TbTicketOff } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
 import InlineErrorRetry from "./InlineErrorRetry";
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
+type Row = OrganizerActivityRow;
 
 const ACTIVITY_ICON: Record<string, typeof TbTicket> = {
   ticket_sold: TbTicket,

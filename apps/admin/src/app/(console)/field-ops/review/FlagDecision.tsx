@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { decideFieldOpsFlag } from "@/server/actions";
+import { decideFieldOpsFlag } from "@/server/actions/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

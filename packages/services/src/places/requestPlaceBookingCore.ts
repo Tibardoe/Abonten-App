@@ -218,8 +218,7 @@ export async function cancelPlaceBookingCore(
     };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST's embedded-resource shape isn't worth a dedicated type for this one notification lookup; no generated Supabase types exist in this repo (see PROJECT.md)
-  const place = (booking as any).place;
+  const place = booking.place;
 
   if (place?.owner_id) {
     await notifyOwner(place.owner_id, {

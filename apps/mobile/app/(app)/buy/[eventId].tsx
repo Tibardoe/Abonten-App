@@ -431,7 +431,11 @@ export default function BuyTicketsScreen() {
                     {applied.discountPercentage}% off
                   </AppText>
                 </View>
-                <Pressable onPress={removePromo} hitSlop={8}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={removePromo}
+                  hitSlop={8}
+                >
                   <AppText
                     variant="small"
                     tone="brand"
@@ -479,6 +483,7 @@ export default function BuyTicketsScreen() {
             </View>
           ) : (
             <Pressable
+              accessibilityRole="button"
               onPress={() => setPromoOpen(true)}
               className="flex-row items-center gap-2 py-1 active:opacity-60"
             >

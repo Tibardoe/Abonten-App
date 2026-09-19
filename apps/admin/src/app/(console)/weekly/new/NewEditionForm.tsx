@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { createWeeklyEdition } from "@/server/actions";
+import { createWeeklyEdition } from "@/server/actions/weekly";
 import { WEEKLY_DEFAULT_TITLE } from "@abonten/core/weekly/copy";
 import { formatWeekRange, weekStartFor } from "@abonten/core/weekly/week";
 import type {

@@ -233,6 +233,7 @@ export function PlacePhotoManager({
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row">
                     <Pressable
+                      accessibilityRole="button"
                       onPress={() => move(index, -1)}
                       disabled={index === 0 || busy}
                       className="p-1 active:opacity-60 disabled:opacity-30"
@@ -240,6 +241,7 @@ export function PlacePhotoManager({
                       <Icon name="arrow-back" size={18} tone="muted" />
                     </Pressable>
                     <Pressable
+                      accessibilityRole="button"
                       onPress={() => move(index, 1)}
                       disabled={index === order.length - 1 || busy}
                       className="p-1 active:opacity-60 disabled:opacity-30"
@@ -248,6 +250,7 @@ export function PlacePhotoManager({
                     </Pressable>
                   </View>
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() => confirmRemove(photo)}
                     disabled={busy}
                     className="p-1 active:opacity-60 disabled:opacity-30"
@@ -258,6 +261,7 @@ export function PlacePhotoManager({
 
                 {!isCover ? (
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() => onSetCover(photo)}
                     disabled={busy}
                     className="active:opacity-60 disabled:opacity-40"

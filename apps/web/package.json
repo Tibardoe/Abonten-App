@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint:next": "eslint .",
-    "lint": "biome check ./src --fix"
+    "lint": "biome check ./src --fix",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@abonten/core": "*",
@@ -60,13 +61,14 @@
     "tailwind-merge": "^3.0.2",
     "tailwind-scrollbar-hide": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
-    "twilio": "^5.7.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@abonten/config": "*",
     "@abonten/ui-tokens": "*",
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.63.0",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",

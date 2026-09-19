@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { normalizeEventRow } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import type { UserPostType } from "@abonten/types/postsType";
 import { getEventAttendanceCounts } from "./getAttendace";
@@ -38,7 +39,7 @@ export async function getPlaceUpcomingEvents(placeId: string) {
     events.map((event) => event.id),
   );
 
-  const eventsWithDerivedFields = events.map((event) => {
+  const eventsWithDerivedFields: UserPostType[] = events.map((event) => {
     const ticketTypes = (event.ticket_type ?? []) as {
       price: number | null;
       currency: string | null;
@@ -54,12 +55,19 @@ export async function getPlaceUpcomingEvents(placeId: string) {
     }, undefined);
 
     return {
-      ...event,
-      min_price: cheapest?.price ?? null,
-      currency: cheapest?.currency ?? null,
+      ...normalizeEventRow(event),
+      // A tier with no price or currency is unpriced data, not a free tier:
+      // it is left out rather than shown as GHS 0.
+      ticket_type: ticketTypes.flatMap((t) =>
+        t.price != null && t.currency
+          ? [{ price: t.price, currency: t.currency }]
+          : [],
+      ),
+      min_price: cheapest?.price ?? undefined,
+      currency: cheapest?.currency ?? "",
       attendanceCount: attendanceCounts[event.id] ?? 0,
     };
   });
 
-  return { status: 200, data: eventsWithDerivedFields as UserPostType[] };
+  return { status: 200, data: eventsWithDerivedFields };
 }

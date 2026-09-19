@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 // access, so nothing about the Story is rendered on the server or put in
 // link previews; an ended Story falls back to the publisher's page.
 export const metadata: Metadata = {
-  title: "Story | Abonten Hub",
+  title: "Story",
   description: "Watch this Story on Abonten Hub.",
   robots: { index: false },
 };

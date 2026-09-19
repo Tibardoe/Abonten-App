@@ -43,7 +43,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { code } = await params;
   const { data } = await resolve(code);
-  if (!data?.valid) return { title: "Join Abonten Hub" };
+  if (!data?.valid) return { title: "Join Abonten" };
 
   const title = `${data.referrerName ?? "A friend"} invited you to Abonten`;
   const description =

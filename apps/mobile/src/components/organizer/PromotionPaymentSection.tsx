@@ -189,6 +189,7 @@ export function PromotionPaymentSection({
 
   const payButton = (
     <Pressable
+      accessibilityRole="button"
       disabled={!canPay || creatingAttempt}
       onPress={onPay}
       className={`items-center rounded-xl px-4 py-3 ${
@@ -245,6 +246,7 @@ export function PromotionPaymentSection({
             Add a payment method to pay for a promotion.
           </AppText>
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.push("/(app)/wallet")}
             className="items-center rounded-lg bg-primary px-4 py-2.5"
           >
@@ -267,6 +269,7 @@ export function PromotionPaymentSection({
         const selected = m.id === chosenId;
         return (
           <Pressable
+            accessibilityRole="button"
             key={m.id}
             onPress={() => setSelectedId(m.id)}
             className={`flex-row items-center justify-between rounded-xl border p-3 ${

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
-import { reverseFieldOpsCommission } from "@/server/actions";
+import { reverseFieldOpsCommission } from "@/server/actions/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

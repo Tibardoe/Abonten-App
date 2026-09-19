@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { setUserStatus } from "@/server/actions";
+import { setUserStatus } from "@/server/actions/users";
 import type {
   AdminPermissionKey,
   UserAccountStatus,

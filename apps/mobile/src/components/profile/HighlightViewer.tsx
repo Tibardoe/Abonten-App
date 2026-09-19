@@ -565,7 +565,11 @@ export function HighlightViewer({
             </View>
 
             <View className="mt-3 flex-row items-center gap-2 px-3">
-              <Pressable onPress={close} hitSlop={10}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={close}
+                hitSlop={10}
+              >
                 <Icon name="arrow-back" size={24} color="#fff" />
               </Pressable>
               <Avatar
@@ -602,6 +606,7 @@ export function HighlightViewer({
           {menuOpen && (canManage || onReport) ? (
             <>
               <Pressable
+                accessibilityRole="button"
                 style={StyleSheet.absoluteFill}
                 onPress={() => setMenuOpen(false)}
               />
@@ -615,6 +620,7 @@ export function HighlightViewer({
               >
                 {canManage ? (
                   <Pressable
+                    accessibilityRole="button"
                     onPress={onDelete}
                     disabled={deleteSlide.isPending}
                     className="min-h-[44px] flex-row items-center gap-2 px-4 py-3 active:opacity-70"
@@ -630,6 +636,7 @@ export function HighlightViewer({
                   </Pressable>
                 ) : onReport && slide ? (
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() => {
                       setMenuOpen(false);
                       onReport(slide.id);

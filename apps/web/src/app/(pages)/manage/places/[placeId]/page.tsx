@@ -116,11 +116,9 @@ export default async function page({
     insightsResponse.status === 200 ? (insightsResponse.data ?? {}) : {};
   const promotionTiers =
     tiersResponse.status === 200 ? (tiersResponse.data ?? []) : [];
-  // postgrest-js infers place_promotion_tier's embed as an array here
-  // (this client has no generated Database types to tell it the join is
-  // many-to-one) even though it's actually a single row at runtime -- same
-  // untyped-client situation every other manual cast in this file's schema
-  // works around, see PROJECT.md's "no generated Supabase types" note.
+  // postgrest-js infers place_promotion_tier's embed as an array here even
+  // though the relationship is many-to-one and a single row comes back at
+  // runtime; narrowed once here.
   const activePromotion = activePromotionRaw as unknown as {
     ends_at: string;
     place_promotion_tier: { duration_label: string } | null;

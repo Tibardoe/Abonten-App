@@ -7,6 +7,10 @@
 // module is only ever called from Server Actions and the webhook route
 // handler, both server-only execution contexts.
 
+import {
+  HTTP_TIMEOUTS,
+  fetchWithTimeout,
+} from "@abonten/core/http/fetchWithTimeout";
 import type {
   PaystackBank,
   PaystackChargeResponse,
@@ -145,22 +149,26 @@ type InitializeTransactionInput = {
 export async function initializeTransaction(
   input: InitializeTransactionInput,
 ): Promise<PaystackInitializeResponse["data"]> {
-  const response = await fetch(`${PAYSTACK_BASE_URL}/transaction/initialize`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${getSecretKey()}`,
-      "Content-Type": "application/json",
+  const response = await fetchWithTimeout(
+    `${PAYSTACK_BASE_URL}/transaction/initialize`,
+    {
+      timeoutMs: HTTP_TIMEOUTS.paystackWrite,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getSecretKey()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: input.email,
+        amount: input.amountInPesewas,
+        currency: input.currency,
+        reference: input.reference,
+        callback_url: input.callbackUrl,
+        metadata: input.metadata ?? {},
+        ...(input.channels ? { channels: input.channels } : {}),
+      }),
     },
-    body: JSON.stringify({
-      email: input.email,
-      amount: input.amountInPesewas,
-      currency: input.currency,
-      reference: input.reference,
-      callback_url: input.callbackUrl,
-      metadata: input.metadata ?? {},
-      ...(input.channels ? { channels: input.channels } : {}),
-    }),
-  });
+  );
 
   const json = await response.json();
 
@@ -193,9 +201,10 @@ export async function initializeTransaction(
 export async function verifyTransaction(
   reference: string,
 ): Promise<PaystackVerifyResponse["data"]> {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${PAYSTACK_BASE_URL}/transaction/verify/${encodeURIComponent(reference)}`,
     {
+      timeoutMs: HTTP_TIMEOUTS.paystackRead,
       method: "GET",
       headers: {
         Authorization: `Bearer ${getSecretKey()}`,
@@ -239,9 +248,10 @@ type ChargeAuthorizationInput = {
 export async function chargeAuthorization(
   input: ChargeAuthorizationInput,
 ): Promise<PaystackChargeResponse["data"]> {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${PAYSTACK_BASE_URL}/transaction/charge_authorization`,
     {
+      timeoutMs: HTTP_TIMEOUTS.paystackWrite,
       method: "POST",
       headers: {
         Authorization: `Bearer ${getSecretKey()}`,
@@ -303,7 +313,8 @@ type InitiateMobileMoneyChargeInput = {
 export async function initiateMobileMoneyCharge(
   input: InitiateMobileMoneyChargeInput,
 ): Promise<PaystackChargeResponse["data"]> {
-  const response = await fetch(`${PAYSTACK_BASE_URL}/charge`, {
+  const response = await fetchWithTimeout(`${PAYSTACK_BASE_URL}/charge`, {
+    timeoutMs: HTTP_TIMEOUTS.paystackWrite,
     method: "POST",
     headers: {
       Authorization: `Bearer ${getSecretKey()}`,
@@ -352,14 +363,18 @@ export async function submitChargeOtp(
   otp: string,
   reference: string,
 ): Promise<PaystackChargeResponse["data"]> {
-  const response = await fetch(`${PAYSTACK_BASE_URL}/charge/submit_otp`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${getSecretKey()}`,
-      "Content-Type": "application/json",
+  const response = await fetchWithTimeout(
+    `${PAYSTACK_BASE_URL}/charge/submit_otp`,
+    {
+      timeoutMs: HTTP_TIMEOUTS.paystackWrite,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getSecretKey()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ otp, reference }),
     },
-    body: JSON.stringify({ otp, reference }),
-  });
+  );
 
   const json = await response.json();
 
@@ -387,9 +402,10 @@ export async function submitChargeOtp(
  * networks Paystack supports.
  */
 export async function listMobileMoneyProviders(): Promise<PaystackBank[]> {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${PAYSTACK_BASE_URL}/bank?country=ghana&currency=GHS&type=mobile_money`,
     {
+      timeoutMs: HTTP_TIMEOUTS.paystackRead,
       method: "GET",
       headers: {
         Authorization: `Bearer ${getSecretKey()}`,
@@ -430,7 +446,8 @@ export async function refundTransaction(
   reference: string,
   amountInPesewas?: number,
 ): Promise<void> {
-  const response = await fetch(`${PAYSTACK_BASE_URL}/refund`, {
+  const response = await fetchWithTimeout(`${PAYSTACK_BASE_URL}/refund`, {
+    timeoutMs: HTTP_TIMEOUTS.paystackWrite,
     method: "POST",
     headers: {
       Authorization: `Bearer ${getSecretKey()}`,

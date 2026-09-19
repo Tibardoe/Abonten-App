@@ -1,18 +1,11 @@
 import { logger } from "@abonten/core/logger";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database, Json } from "@abonten/types/database.types";
 import {
   type EventDraftPayload,
   eventDraftPayloadSchema,
 } from "@abonten/validation/eventDraftSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Post-auth bodies of saveEventDraft / getEventDrafts / getEventDraft /
 // deleteEventDraft, lifted so the mobile event-drafts routes run the same
@@ -157,7 +150,7 @@ export async function saveEventDraftCore(
       previousFlyerPublicId !== flyerPublicId
     ) {
       try {
-        await cloudinary.uploader.destroy(previousFlyerPublicId, {
+        await destroyAsset(previousFlyerPublicId, {
           resource_type: "image",
         });
       } catch (cloudError) {
@@ -353,10 +346,9 @@ export async function deleteEventDraftCore(
   // destroy leaves the row so the asset can be found and retried.
   if (eventDraft?.flyer_public_id) {
     try {
-      const result = await cloudinary.uploader.destroy(
-        eventDraft.flyer_public_id,
-        { resource_type: "image" },
-      );
+      const result = await destroyAsset(eventDraft.flyer_public_id, {
+        resource_type: "image",
+      });
       if (result.result !== "ok" && result.result !== "not found") {
         return {
           status: 500,

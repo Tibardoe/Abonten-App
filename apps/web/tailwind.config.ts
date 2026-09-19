@@ -23,6 +23,17 @@ export default {
   ],
   theme: {
     extend: {
+      // `text-primary` must read at AA contrast on light surfaces, where the
+      // brand mint fill does not (2.3:1). Text utilities resolve `primary` to
+      // the darkened --primary-text token; backgrounds, borders and rings
+      // keep the brand fill, and `text-primary-foreground` is unchanged.
+      textColor: {
+        primary: {
+          DEFAULT: "hsl(var(--primary-text))",
+          foreground: "hsl(var(--primary-foreground))",
+          fill: "hsl(var(--primary))",
+        },
+      },
       keyframes,
       animation,
       backgroundImage,
@@ -40,6 +51,10 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          // Explicit opt-in to the fill colour as text (badges over the
+          // brand tint, dark surfaces); plain `text-primary` resolves to the
+          // accessible text token via `textColor` below.
+          fill: "hsl(var(--primary))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

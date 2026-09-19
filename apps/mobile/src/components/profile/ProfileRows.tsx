@@ -27,6 +27,7 @@ export function ProfilePlaceRow({ place }: { place: ProfilePlace }) {
 
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={() => router.push(`/(app)/place/${place.id}`)}
       className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-90"
     >

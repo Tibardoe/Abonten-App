@@ -73,6 +73,7 @@ export function NotificationItem({
   const unread = !item.read_at;
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={onPress}
       className={`flex-row gap-3 rounded-xl border p-3 active:opacity-80 ${
         unread ? "border-primary/30 bg-primary/5" : "border-border bg-card"

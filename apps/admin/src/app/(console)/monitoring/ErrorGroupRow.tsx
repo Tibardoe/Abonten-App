@@ -2,7 +2,7 @@
 
 import { StatusBadge } from "@/components/metrics/StatusBadge";
 import { Button, Td, timeAgo } from "@/components/ui";
-import { setErrorGroupStatus } from "@/server/actions";
+import { setErrorGroupStatus } from "@/server/actions/observability";
 import type { ErrorGroup } from "@abonten/types/adminTypes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

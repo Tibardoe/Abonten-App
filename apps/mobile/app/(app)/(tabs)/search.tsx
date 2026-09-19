@@ -123,7 +123,11 @@ function SectionHeader({
     <View className="mt-3 mb-1 flex-row items-center justify-between px-1">
       <Overline>{label}</Overline>
       {action ? (
-        <Pressable onPress={action.onPress} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={action.onPress}
+          hitSlop={8}
+        >
           <AppText variant="small" tone="brand" className="font-medium">
             {action.label}
           </AppText>

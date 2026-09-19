@@ -4,7 +4,7 @@ import { Button, Card, cn } from "@/components/ui";
 import {
   geocodeFieldOpsQuery,
   upsertFieldOpsTerritory,
-} from "@/server/actions";
+} from "@/server/actions/fieldOps";
 import type {
   FieldOpsTerritory,
   FieldOpsTerritoryKind,

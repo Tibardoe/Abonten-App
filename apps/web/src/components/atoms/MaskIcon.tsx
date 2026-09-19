@@ -2,6 +2,9 @@ import { cn } from "@/components/lib/utils";
 
 type MaskIconProps = {
   src: string;
+  /** Accessible name. Pass "" for a decorative icon whose meaning is
+   *  carried by the surrounding link or button; it is then hidden from
+   *  assistive technology instead of announced as an unnamed image. */
   alt: string;
   className?: string;
 };
@@ -15,8 +18,9 @@ type MaskIconProps = {
 export default function MaskIcon({ src, alt, className }: MaskIconProps) {
   return (
     <span
-      role="img"
-      aria-label={alt}
+      role={alt ? "img" : undefined}
+      aria-label={alt || undefined}
+      aria-hidden={alt ? undefined : true}
       className={cn("inline-block bg-muted-foreground", className)}
       style={{
         maskImage: `url(${src})`,

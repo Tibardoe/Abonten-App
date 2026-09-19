@@ -13,6 +13,7 @@ import type {
   BookingStatus,
   OwnerPlaceBooking,
 } from "@abonten/types/placeBookingType";
+import type { PlaceReviewListItem } from "@abonten/types/reviewType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotificationCore } from "../notifications/createNotification";
 
@@ -163,8 +164,7 @@ export async function respondToPlaceBookingCore(
     return { status: 404, message: "Booking not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST's embedded-resource shape isn't worth a dedicated type for this one ownership check; no generated Supabase types exist in this repo (see PROJECT.md)
-  const place = (booking as any).place;
+  const place = booking.place;
 
   if (place?.owner_id !== userId) {
     return {
@@ -243,8 +243,7 @@ export async function respondToPlaceBookingCore(
 
 // ---- Reviews (owner Reviews tab) -----------------------------------
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) — matches getPlaceReviews.ts's own biome-ignore'd `any` return type for this joined row
-export type OwnerPlaceReviewsResult = PaginatedResult<any>;
+export type OwnerPlaceReviewsResult = PaginatedResult<PlaceReviewListItem>;
 
 /**
  * Owner-only, cursor-paginated list of a place's approved reviews — the
@@ -327,8 +326,10 @@ export async function fetchPlaceReviewsForOwner(
     };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: see the return-type biome-ignore above
-  const { page, hasNextPage } = splitPage<any>(data, pageSize);
+  const { page, hasNextPage } = splitPage<PlaceReviewListItem>(
+    data ?? [],
+    pageSize,
+  );
 
   const last = page[page.length - 1];
   const nextCursor =

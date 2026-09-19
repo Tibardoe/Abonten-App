@@ -97,9 +97,7 @@ export async function respondToPlaceReviewCore(
     return { status: 404, message: "Review not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST embedded-resource shape; no generated types for this join (see PROJECT.md)
-  const typedReview = review as any;
-  const place = typedReview.place;
+  const place = review.place;
 
   if (!place || place.owner_id !== userId) {
     return { status: 403, message: "Not authorized to respond to this review" };
@@ -122,7 +120,7 @@ export async function respondToPlaceReviewCore(
     };
   }
 
-  const isEdit = Boolean(typedReview.owner_response);
+  const isEdit = Boolean(review.owner_response);
   const respondedAt = new Date().toISOString();
 
   const { data: updated, error: updateError } = await supabase
@@ -147,13 +145,9 @@ export async function respondToPlaceReviewCore(
 
   // Notify the reviewer only on the FIRST reply — an edit shouldn't
   // re-ping them. Best-effort, never fails the write, skip self-replies.
-  if (
-    !isEdit &&
-    typedReview.reviewer_id &&
-    typedReview.reviewer_id !== userId
-  ) {
+  if (!isEdit && review.reviewer_id && review.reviewer_id !== userId) {
     await createNotificationCore(supabase, {
-      userId: typedReview.reviewer_id,
+      userId: review.reviewer_id,
       type: "review_reply",
       title: "The owner replied to your review",
       body: place.name
@@ -197,8 +191,7 @@ export async function deletePlaceReviewResponseCore(
     return { status: 404, message: "Review not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST embedded-resource shape (see PROJECT.md)
-  const place = (review as any).place;
+  const place = review.place;
 
   if (!place || place.owner_id !== userId) {
     return { status: 403, message: "Not authorized to modify this review" };
@@ -268,9 +261,7 @@ export async function respondToEventReviewCore(
     return { status: 404, message: "Review not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST embedded-resource shape (see PROJECT.md)
-  const typedReview = review as any;
-  const event = typedReview.event;
+  const event = review.event;
 
   if (!event || event.organizer_id !== userId) {
     return { status: 403, message: "Not authorized to respond to this review" };
@@ -290,7 +281,7 @@ export async function respondToEventReviewCore(
     };
   }
 
-  const isEdit = Boolean(typedReview.organizer_response);
+  const isEdit = Boolean(review.organizer_response);
   const respondedAt = new Date().toISOString();
 
   const { data: updated, error: updateError } = await supabase
@@ -313,13 +304,9 @@ export async function respondToEventReviewCore(
     return { status: 403, message: "Not authorized to respond to this review" };
   }
 
-  if (
-    !isEdit &&
-    typedReview.reviewer_id &&
-    typedReview.reviewer_id !== userId
-  ) {
+  if (!isEdit && review.reviewer_id && review.reviewer_id !== userId) {
     await createNotificationCore(supabase, {
-      userId: typedReview.reviewer_id,
+      userId: review.reviewer_id,
       type: "review_reply",
       title: "The organizer replied to your review",
       body: event.title
@@ -360,8 +347,7 @@ export async function deleteEventReviewResponseCore(
     return { status: 404, message: "Review not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST embedded-resource shape (see PROJECT.md)
-  const event = (review as any).event;
+  const event = review.event;
 
   if (!event || event.organizer_id !== userId) {
     return { status: 403, message: "Not authorized to modify this review" };

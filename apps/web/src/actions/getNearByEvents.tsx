@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { normalizeEventRow } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -40,7 +41,7 @@ export async function getNearByEvents(
   }
 
   const { page, hasNextPage } = splitPage<UserPostType>(
-    data as UserPostType[],
+    (data ?? []).map(normalizeEventRow),
     pageSize,
   );
 

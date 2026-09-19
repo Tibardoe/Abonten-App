@@ -51,6 +51,7 @@ export function PendingCheckoutsSection() {
         <SectionTitle>Continue checkout</SectionTitle>
         {sessions.length > 1 ? (
           <Pressable
+            accessibilityRole="button"
             onPress={onClearAll}
             hitSlop={8}
             disabled={clearAll.isPending}
@@ -121,7 +122,12 @@ function SessionCard({
             {session.eventDateAndTime.date} {session.eventDateAndTime.time}
           </AppText>
         </View>
-        <Pressable disabled={release.isPending} onPress={onRelease} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={release.isPending}
+          onPress={onRelease}
+          hitSlop={8}
+        >
           <AppText variant="small" tone="error" className="font-medium">
             {release.isPending ? "Releasing…" : "Release"}
           </AppText>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui";
 import {
   publishRewardRuleVersion,
   setRewardRuleActive,
-} from "@/server/actions";
+} from "@/server/actions/rewards";
 import type { RewardRuleSummary } from "@abonten/types/rewards";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

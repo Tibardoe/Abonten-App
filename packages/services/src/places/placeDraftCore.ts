@@ -1,18 +1,11 @@
 import { logger } from "@abonten/core/logger";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import {
   type PlaceDraftPayload,
   placeDraftPayloadSchema,
 } from "@abonten/validation/placeDraftSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Post-auth bodies of savePlaceDraft / getPlaceDrafts / getPlaceDraft /
 // deletePlaceDraft, lifted so the mobile place-drafts routes run the same
@@ -156,7 +149,7 @@ export async function savePlaceDraftCore(
       previousCoverPublicId !== coverPublicId
     ) {
       try {
-        await cloudinary.uploader.destroy(previousCoverPublicId, {
+        await destroyAsset(previousCoverPublicId, {
           resource_type: "image",
         });
       } catch (cloudError) {
@@ -350,10 +343,9 @@ export async function deletePlaceDraftCore(
   // destroy leaves the row so the asset can be found and retried.
   if (placeDraft?.cover_public_id) {
     try {
-      const result = await cloudinary.uploader.destroy(
-        placeDraft.cover_public_id,
-        { resource_type: "image" },
-      );
+      const result = await destroyAsset(placeDraft.cover_public_id, {
+        resource_type: "image",
+      });
       if (result.result !== "ok" && result.result !== "not found") {
         return {
           status: 500,

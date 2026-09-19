@@ -1,14 +1,7 @@
 import { logger } from "@abonten/core/logger";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Post-auth bodies of addPlacePhoto / removePlacePhoto / reorderPlacePhotos,
 // lifted so the mobile per-place gallery routes run the same logic. The
@@ -20,8 +13,7 @@ cloudinary.config({
 export type PlacePhotoCoreResult = {
   status: 200 | 403 | 404 | 500;
   message: string;
-  // biome-ignore lint/suspicious/noExplicitAny: raw inserted row, no generated Supabase types (see PROJECT.md)
-  data?: any;
+  data?: Database["public"]["Tables"]["place_photo"]["Row"];
 };
 
 export async function addPlacePhotoCore(
@@ -90,10 +82,7 @@ export async function removePlacePhotoCore(
     return { status: 404, message: "Photo not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: embedded-resource shape, no generated Supabase types (see PROJECT.md)
-  const typedPhoto = photo as any;
-
-  if (typedPhoto.place?.owner_id !== userId) {
+  if (photo.place?.owner_id !== userId) {
     return { status: 403, message: "Not authorized to remove this photo" };
   }
 
@@ -110,7 +99,7 @@ export async function removePlacePhotoCore(
   }
 
   try {
-    await cloudinary.uploader.destroy(typedPhoto.public_id);
+    await destroyAsset(photo.public_id, {});
   } catch (cloudError) {
     logger.error("Cloudinary deletion of place photo failed:", cloudError);
     // Not failing the whole removal if Cloudinary cleanup fails.
@@ -141,17 +130,15 @@ export async function setPlaceCoverFromPhotoCore(
     return { status: 404, message: "Photo not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: embedded-resource shape, no generated Supabase types (see PROJECT.md)
-  const typedPhoto = photo as any;
-  if (typedPhoto.place?.owner_id !== userId) {
+  if (photo.place?.owner_id !== userId) {
     return { status: 403, message: "Not authorized for this place" };
   }
 
   const { error: updateError } = await supabase
     .from("place")
     .update({
-      cover_public_id: typedPhoto.public_id,
-      cover_version: typedPhoto.version,
+      cover_public_id: photo.public_id,
+      cover_version: photo.version,
     })
     .eq("id", placeId)
     .eq("owner_id", userId);

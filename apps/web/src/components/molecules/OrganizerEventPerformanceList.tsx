@@ -1,12 +1,12 @@
 "use client";
 
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import type { OrganizerEventPerformanceRow } from "@abonten/types/eventAnalytics";
 import Link from "next/link";
 import AnalyticsRowsSkeleton from "./AnalyticsRowsSkeleton";
 import InlineErrorRetry from "./InlineErrorRetry";
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
+type Row = OrganizerEventPerformanceRow;
 
 const STATUS_LABEL: Record<string, string> = {
   upcoming: "Upcoming",

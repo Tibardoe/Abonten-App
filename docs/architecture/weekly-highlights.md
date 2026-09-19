@@ -83,7 +83,7 @@ Metadata: the public pages set the title, description, canonical URL (the dated 
 
 ## 6. Editing and publishing
 
-Services: `packages/services/src/admin/weekly/weeklyAdminCore.ts` (editions, sections, items, lifecycle, listing picker, preview link) and `weeklySettingsAdminCore.ts` (settings and areas). Admin transport: Server Actions in `apps/admin/src/server/actions.ts`; UI in `apps/admin/src/app/(console)/weekly/`.
+Services: `packages/services/src/admin/weekly/weeklyAdminCore.ts` (editions, sections, items, lifecycle, listing picker, preview link) and `weeklySettingsAdminCore.ts` (settings and areas). Admin transport: Server Actions in `apps/admin/src/server/actions/weekly.ts`; UI in `apps/admin/src/app/(console)/weekly/`.
 
 | Permission | Allows | Step-up | Seeded to |
 |---|---|---|---|

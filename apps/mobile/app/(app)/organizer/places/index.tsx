@@ -30,6 +30,7 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
 
   return (
     <Pressable
+      accessibilityRole="button"
       className="flex-row gap-3 rounded-xl border border-border bg-card p-3 active:opacity-90"
       onPress={() => router.push(`/(app)/organizer/places/${place.id}`)}
     >

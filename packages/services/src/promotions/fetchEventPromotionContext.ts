@@ -78,7 +78,7 @@ export async function fetchEventPromotionContext(
     return { status: 500, message: "Something went wrong!" };
   }
 
-  // postgrest infers the embed as an array here (no generated types); it's a
+  // postgrest-js infers the embed as an array here although the relationship is many-to-one; it's a
   // single row at runtime — same workaround the web page uses.
   const promo = activePromo as unknown as {
     ends_at: string;
@@ -88,15 +88,13 @@ export async function fetchEventPromotionContext(
   const derivedStatus = getEventStatus(
     event.starts_at,
     event.ends_at,
-    // biome-ignore lint/suspicious/noExplicitAny: untyped joined rows (see PROJECT.md)
-    (event.event_occurrence ?? []) as any,
+    event.event_occurrence ?? [],
   );
 
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: attendeeCount ?? 0,
-    // biome-ignore lint/suspicious/noExplicitAny: untyped joined rows (see PROJECT.md)
-    ticketTypes: (event.ticket_type ?? []) as any,
+    ticketTypes: event.ticket_type ?? [],
   });
 
   return {

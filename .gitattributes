@@ -1,35 +1,22 @@
-# Normalize line endings. Text files are stored with LF in the repo and
-# checked out with LF on every platform — this stops Git (with
-# core.autocrlf=true on Windows) from rewriting working-tree files to CRLF
-# and printing "LF will be replaced by CRLF" on every add.
-#
-# Existing files renormalize the next time they're touched; run
-# `git add --renormalize .` once if you want to convert the whole tree in a
-# single commit.
-
+# One line-ending policy for the whole repository. Biome writes LF, and with
+# only core.autocrlf on a Windows checkout every file Biome visited showed
+# as modified (CRLF in the tree, LF from the formatter) even when nothing
+# changed — a formatting pass over one folder once produced 138 spurious
+# modifications. apps/mobile already pinned itself to LF for the same
+# reason; this extends that to web, admin, packages, docs and SQL.
 * text=auto eol=lf
-
-# Windows-only scripts keep CRLF.
-*.bat   text eol=crlf
-*.cmd   text eol=crlf
-*.ps1   text eol=crlf
-
-# Binary — never normalize.
-*.png   binary
-*.jpg   binary
-*.jpeg  binary
-*.gif   binary
-*.ico   binary
-*.webp  binary
-*.pdf   binary
-*.zip   binary
-*.woff  binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.ttf binary
+*.otf binary
+*.woff binary
 *.woff2 binary
-*.ttf   binary
-*.otf   binary
-*.eot   binary
-*.mp4   binary
-*.mov   binary
-*.hbc   binary
+*.jar binary
 *.keystore binary
-*.jks   binary
+*.p8 binary
+*.p12 binary

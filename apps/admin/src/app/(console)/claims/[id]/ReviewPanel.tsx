@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { reviewClaim } from "@/server/actions";
+import { reviewClaim } from "@/server/actions/claims";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

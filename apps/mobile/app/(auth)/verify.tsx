@@ -285,6 +285,7 @@ export default function Verify() {
                 />
 
                 <Pressable
+                  accessibilityRole="button"
                   onPress={resend}
                   disabled={secondsLeft > 0 || resending || busy}
                   hitSlop={8}
@@ -299,7 +300,11 @@ export default function Verify() {
                   </AppText>
                 </Pressable>
 
-                <Pressable onPress={() => router.back()} disabled={busy}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.back()}
+                  disabled={busy}
+                >
                   <AppText
                     variant="small"
                     tone="brand"

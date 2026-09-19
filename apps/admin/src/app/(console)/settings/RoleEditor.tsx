@@ -5,7 +5,7 @@ import {
   grantAdminRole,
   revokeAdminRole,
   setAdminUserStatus,
-} from "@/server/actions";
+} from "@/server/actions/adminSettings";
 import { ADMIN_ROLE_KEYS } from "@abonten/core/adminPermissions";
 import type { AdminRoleKey } from "@abonten/types/adminTypes";
 import { useRouter } from "next/navigation";

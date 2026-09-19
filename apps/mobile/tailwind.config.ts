@@ -19,6 +19,16 @@ export default {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      // `text-primary` resolves to the darkened --primary-text token so brand
+      // text reads at AA contrast on light surfaces; fills keep the mint.
+      // Mirrors apps/web/tailwind.config.ts.
+      textColor: {
+        primary: {
+          DEFAULT: "hsl(var(--primary-text))",
+          foreground: "hsl(var(--primary-foreground))",
+          fill: "hsl(var(--primary))",
+        },
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -33,6 +43,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          fill: "hsl(var(--primary))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

@@ -103,6 +103,7 @@ function AttendeeRow({
         <View className="pt-1">
           {isCheckedIn ? (
             <Pressable
+              accessibilityRole="button"
               disabled={checkIn.isPending}
               onPress={() => toggle(false)}
               className="self-start active:opacity-70 disabled:opacity-50"
@@ -113,6 +114,7 @@ function AttendeeRow({
             </Pressable>
           ) : (
             <Pressable
+              accessibilityRole="button"
               disabled={checkIn.isPending}
               onPress={() => toggle(true)}
               className="self-start rounded-md bg-primary px-3 py-1.5 active:opacity-90 disabled:opacity-60"

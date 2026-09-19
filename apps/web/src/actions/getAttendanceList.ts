@@ -1,7 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchEventAttendanceListPage } from "@abonten/services/organizer/organizerReadQuery";
+import {
+  type AttendanceRow,
+  fetchEventAttendanceListPage,
+} from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 
 // Thin wrapper: auth, then delegate to the shared query body used by the
@@ -10,8 +13,7 @@ import type { PaginatedResult } from "@abonten/types/pagination";
 export default async function getAttendanceList(
   eventId: string,
   options?: { cursor?: string | null; pageSize?: number },
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-): Promise<PaginatedResult<any>> {
+): Promise<PaginatedResult<AttendanceRow>> {
   const supabase = await createClient();
 
   const {

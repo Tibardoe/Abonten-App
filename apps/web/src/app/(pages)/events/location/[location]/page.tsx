@@ -1,13 +1,30 @@
 import getActivePromotedEventIds from "@/actions/getActivePromotedEventIds";
 import { filterEventsByWindow } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
+import LocationUnavailable from "@/components/molecules/LocationUnavailable";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
+import { undoSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
+import type { Metadata } from "next";
 import AllEventsList from "./AllEventsList";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ location: string }>;
+}): Promise<Metadata> {
+  const { location } = await params;
+  const label = undoSlug(decodeURIComponent(location));
+  return {
+    title: `Events in ${label}`,
+    description: `Upcoming events in ${label}: what is happening today, this week and this month, with tickets on Abonten Hub.`,
+    alternates: { canonical: `/events/location/${location}` },
+  };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -36,6 +53,15 @@ export default async function page({
       : null;
 
   const { lat, lng } = coordsFromQuery ?? (await geocodeAddress(safeLocation));
+
+  // Google could not resolve the slug (unknown address, or the lookup timed
+  // out). Querying the discovery RPCs with null coordinates returns nothing
+  // and reads as an empty city; say what actually happened instead.
+  if (lat === null || lng === null) {
+    return (
+      <LocationUnavailable place={undoSlug(decodeURIComponent(safeLocation))} />
+    );
+  }
 
   // "Around You" (5km) is a genuinely different dataset from the 10km
   // location-wide set, so both are fetched — but only once each. Every
@@ -77,9 +103,14 @@ export default async function page({
 
   const featuredEvents = getFeaturedEvents(eventsWithPromotion, safeLocation);
 
+  // Bound before the closure: a hoisted function declaration is analysed
+  // without the null guard above, so the narrowed values are captured here.
+  const originLat: number = lat;
+  const originLng: number = lng;
+
   async function fetchAllEventsPage(cursor: string | null) {
     "use server";
-    return getNearByEvents(lat, lng, 10000, { cursor });
+    return getNearByEvents(originLat, originLng, 10000, { cursor });
   }
 
   const allEventsEmptyState = (

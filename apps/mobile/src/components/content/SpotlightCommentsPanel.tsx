@@ -267,7 +267,11 @@ export function SpotlightCommentsPanel({
             ) : top.isError ? (
               <View className="items-center gap-2 py-10">
                 <AppText variant="muted">Couldn't load comments.</AppText>
-                <Pressable onPress={() => top.refetch()} hitSlop={8}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => top.refetch()}
+                  hitSlop={8}
+                >
                   <AppText tone="brand" className="font-semibold">
                     Retry
                   </AppText>

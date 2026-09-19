@@ -2,7 +2,7 @@
 
 import { Button, Card, cn } from "@/components/ui";
 import { formatAccraDateTime } from "@/lib/format";
-import { updatePromotionPricing } from "@/server/actions";
+import { updatePromotionPricing } from "@/server/actions/content";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import type {

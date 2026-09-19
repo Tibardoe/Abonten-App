@@ -2,18 +2,14 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import {
+  cloudinary,
+  destroyAsset,
+} from "@abonten/services/media/cloudinaryClient";
 import { enqueueCloudinaryCleanup } from "@abonten/services/platform/cloudinaryCleanupCore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { prepareHighlightVideoDelivery } from "@abonten/services/uploads/highlightVideoDelivery";
 import type { HighlightUploadMetadataItem } from "@abonten/types/highlightUploadType";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Cloudinary's free-tier non-chunked upload ceiling is 100MB; these mirror
 // the client-side caps in HighlightModal.tsx and are re-checked here as
@@ -244,7 +240,7 @@ async function cleanupOrphanedAsset(
   resourceType: "image" | "video",
 ) {
   try {
-    await cloudinary.uploader.destroy(publicId, {
+    await destroyAsset(publicId, {
       resource_type: resourceType,
     });
   } catch (cloudError) {

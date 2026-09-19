@@ -3,10 +3,13 @@ import {
   getEventsInWindow,
 } from "@/actions/getEventsInWindow";
 import { getNearByEvents } from "@/actions/getNearByEvents";
+import LocationUnavailable from "@/components/molecules/LocationUnavailable";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { filterEventsByWindow } from "@abonten/core/eventDateWindow";
+import { undoSlug } from "@abonten/core/geerateSlug";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
+import type { Metadata } from "next";
 import ExploreEventsList from "./ExploreEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -23,6 +26,39 @@ const validFilters = [
 ] as const;
 
 type FilterType = (typeof validFilters)[number];
+
+const FILTER_TITLES: Record<FilterType, (place: string) => string> = {
+  "happening-today": (place) => `Events happening today in ${place}`,
+  "happening-this-week": (place) => `Events this week in ${place}`,
+  "happening-this-month": (place) => `Events this month in ${place}`,
+  "top-rated-organizers": (place) => `Top-rated organizers in ${place}`,
+  "around-you": (place) => `Events near you in ${place}`,
+  category: (place) => `Events by category in ${place}`,
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ location: string; type: string }>;
+}): Promise<Metadata> {
+  const { location, type } = await params;
+  const label = undoSlug(decodeURIComponent(location));
+  const filter = (validFilters as readonly string[]).includes(type)
+    ? (type as FilterType)
+    : null;
+  if (!filter) return { title: `Events in ${label}` };
+  return {
+    title: FILTER_TITLES[filter](label),
+    alternates: {
+      canonical: `/events/location/${location}/explore/${filter}`,
+    },
+    // "category" and "around-you" depend on query or device state.
+    robots:
+      filter === "category" || filter === "around-you"
+        ? { index: false, follow: true }
+        : undefined,
+  };
+}
 
 const windowFilters: readonly FilterType[] = [
   "happening-today",
@@ -45,6 +81,14 @@ export default async function page({
   const safeLocation = location ?? "";
 
   const { lat, lng } = await geocodeAddress(safeLocation);
+
+  // See events/location/[location]/page.tsx: no coordinates means the place
+  // could not be resolved, not that nothing is on there.
+  if (lat === null || lng === null) {
+    return (
+      <LocationUnavailable place={undoSlug(decodeURIComponent(safeLocation))} />
+    );
+  }
 
   const urlPath = type
     .split("-")

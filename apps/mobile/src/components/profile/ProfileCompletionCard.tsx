@@ -31,6 +31,7 @@ export function ProfileCompletionCard() {
       <View className="gap-2">
         {completion.items.map((item) => (
           <Pressable
+            accessibilityRole="button"
             key={item.key}
             onPress={() => router.push(HREF_MAP[item.href] ?? item.href)}
             className="flex-row items-center gap-2 active:opacity-70"

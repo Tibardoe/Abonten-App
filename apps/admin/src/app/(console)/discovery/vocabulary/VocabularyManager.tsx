@@ -16,7 +16,7 @@ import {
   deleteSearchConcept,
   previewSearchConcept,
   saveSearchConcept,
-} from "@/server/actions";
+} from "@/server/actions/discovery";
 import {
   SEARCH_CONCEPT_SCOPES,
   type SearchConcept,

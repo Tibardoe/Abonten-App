@@ -2,7 +2,7 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
-import { updateFieldOpsSettings } from "@/server/actions";
+import { updateFieldOpsSettings } from "@/server/actions/fieldOps";
 import type { FieldOpsProgramSettings } from "@abonten/types/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

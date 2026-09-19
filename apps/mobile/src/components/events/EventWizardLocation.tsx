@@ -84,6 +84,7 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
           <View className="overflow-hidden rounded-lg border border-border">
             {w.autocomplete.predictions.map((p) => (
               <Pressable
+                accessibilityRole="button"
                 key={p.placeId}
                 onPress={() => w.pickSuggestion(p.placeId)}
                 className="border-border border-b px-3 py-2 active:opacity-70"
@@ -98,6 +99,7 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
         ) : null}
         <View className="flex-row gap-4">
           <Pressable
+            accessibilityRole="button"
             onPress={() => setMapOpen(true)}
             className="min-h-[40px] flex-row items-center gap-2 py-1 active:opacity-70"
           >
@@ -107,6 +109,7 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
             </AppText>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             onPress={w.useCurrentLocation}
             className="min-h-[40px] flex-row items-center gap-2 py-1 active:opacity-70"
           >

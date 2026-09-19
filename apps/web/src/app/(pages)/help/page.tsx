@@ -15,7 +15,7 @@ import Link from "next/link";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Help centre — Abonten Hub",
+  title: "Help centre",
   description:
     "How to find events and places, buy and use tickets, run events, manage a place, and look after your Abonten account.",
 };

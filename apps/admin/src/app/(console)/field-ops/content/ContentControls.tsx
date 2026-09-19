@@ -1,7 +1,10 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
-import { decideFieldOpsContent, runFieldOpsStipends } from "@/server/actions";
+import {
+  decideFieldOpsContent,
+  runFieldOpsStipends,
+} from "@/server/actions/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

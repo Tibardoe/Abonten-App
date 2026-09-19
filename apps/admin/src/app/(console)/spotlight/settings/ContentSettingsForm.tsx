@@ -2,7 +2,7 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
-import { updateContentSettings } from "@/server/actions";
+import { updateContentSettings } from "@/server/actions/content";
 import type {
   ContentAudience,
   ContentSettings,

@@ -1,15 +1,8 @@
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Post-auth body of updatePlace, lifted so the mobile
 // PATCH /api/mobile/organizer/places/:id route runs the exact same edit.
@@ -116,7 +109,7 @@ export async function updatePlaceCore(
 
   if (previousCoverPublicId && previousCoverPublicId !== coverPublicId) {
     try {
-      await cloudinary.uploader.destroy(previousCoverPublicId);
+      await destroyAsset(previousCoverPublicId, {});
     } catch (cloudError) {
       logger.error(
         "Cloudinary deletion of old cover photo failed:",

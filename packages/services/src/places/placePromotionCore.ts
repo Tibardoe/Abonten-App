@@ -78,7 +78,7 @@ export async function fetchPlacePromotionContext(
     return { status: 500, message: "Something went wrong!" };
   }
 
-  // postgrest infers the embed as an array here (no generated types); it's a
+  // postgrest-js infers the embed as an array here although the relationship is many-to-one; it's a
   // single row at runtime — same workaround the web page uses.
   const promo = activePromo as unknown as {
     ends_at: string;

@@ -53,8 +53,7 @@ export default function EventDateBreakdown({
         />
       ) : (
         <div className="flex flex-col gap-2">
-          {/* biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) */}
-          {rows.map((row: any) => {
+          {rows.map((row) => {
             const label = row.starts_at
               ? formatFullDateTimeRange(row.starts_at, row.ends_at)
               : null;

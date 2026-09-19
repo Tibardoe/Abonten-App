@@ -11,11 +11,13 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { Database } from "@abonten/types/database.types";
+import type { OrganizerOverviewRow } from "@abonten/types/eventAnalytics";
 import type {
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
 } from "@abonten/types/organizerFinance";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { OrganizerPlaceRow } from "@abonten/types/placeRows";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -30,8 +32,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // `userId` is still threaded through for the direct `event` table read,
 // whose RLS `event_organizer_select` also keys on `auth.uid()`.
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type OverviewRow = any;
+type OverviewRow = OrganizerOverviewRow;
 
 export type OrganizerDashboardOverviewResult =
   | { status: 401 | 500; message: string }
@@ -146,8 +147,25 @@ export async function fetchOrganizerEventsPage(
   return { status: 200, data: page, nextCursor, hasNextPage };
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type AttendanceRow = any;
+// One attendee as the organizer's attendance list shows it: the
+// `attendance` row, the embedded profile / tier / ticket columns the query
+// selects, and the account contacts merged in from
+// get_event_attendee_contacts.
+export type AttendanceRow =
+  Database["public"]["Tables"]["attendance"]["Row"] & {
+    user_info: { username: string | null; full_name: string | null } | null;
+    ticket_type: {
+      type: string | null;
+      price: number | null;
+      currency: string | null;
+    } | null;
+    ticket: { status: string; used_at: string | null } | null;
+    auth?: {
+      user_id: string;
+      email: string | null;
+      phone: string | null;
+    } | null;
+  };
 
 // Cursor-paginated attendee list for one of the organizer's own events —
 // same body as getAttendanceList. `event_organizer_select` RLS also keys on
@@ -292,9 +310,6 @@ export async function fetchOrganizerLedgerPage(
 
   return { status: 200, data: page, nextCursor, hasNextPage };
 }
-
-// biome-ignore lint/suspicious/noExplicitAny: joined place_category shape, no generated Supabase types (see PROJECT.md)
-type OrganizerPlaceRow = any;
 
 // Cursor-paginated list of the places owned by `ownerId` — the authed
 // branch of getOrganizerPlaces (the public /user/:username/places branch

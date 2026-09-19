@@ -324,6 +324,7 @@ export default function EditEventScreen() {
                   </AppText>
                   {!w.locked ? (
                     <Pressable
+                      accessibilityRole="button"
                       onPress={() =>
                         w.setOccurrences((prev) =>
                           prev.filter((x) => x.id !== o.id),
@@ -370,6 +371,7 @@ export default function EditEventScreen() {
               <View className="overflow-hidden rounded-lg border border-border">
                 {w.autocomplete.predictions.map((p) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={p.placeId}
                     onPress={() => w.pickSuggestion(p.placeId)}
                     className="border-border border-b px-3 py-2 active:opacity-70"
@@ -384,6 +386,7 @@ export default function EditEventScreen() {
             ) : null}
             <View className="flex-row gap-4">
               <Pressable
+                accessibilityRole="button"
                 onPress={() => setMapOpen(true)}
                 className="flex-row items-center gap-2 py-1 active:opacity-70"
               >
@@ -393,6 +396,7 @@ export default function EditEventScreen() {
                 </AppText>
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 onPress={w.useCurrentLocation}
                 className="flex-row items-center gap-2 py-1 active:opacity-70"
               >
@@ -488,6 +492,7 @@ export default function EditEventScreen() {
                         Ticket type {i + 1}
                       </AppText>
                       <Pressable
+                        accessibilityRole="button"
                         onPress={() =>
                           w.setTiers((prev) =>
                             prev.filter((_, idx) => idx !== i),

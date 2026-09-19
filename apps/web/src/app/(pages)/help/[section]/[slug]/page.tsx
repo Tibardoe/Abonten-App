@@ -27,9 +27,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { section, slug } = await params;
   const doc = loadHelpPage(section, slug);
-  if (!doc) return { title: "Help centre — Abonten Hub" };
+  if (!doc) return { title: "Help centre" };
   return {
-    title: `${doc.title} — Abonten Help`,
+    title: `${doc.title} — Help centre`,
     description: doc.summary ?? undefined,
     alternates: { canonical: `/help/${section}/${slug}` },
   };

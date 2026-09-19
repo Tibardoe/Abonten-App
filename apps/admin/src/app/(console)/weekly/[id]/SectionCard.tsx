@@ -5,7 +5,7 @@ import {
   deleteWeeklySection,
   reorderWeeklyItems,
   updateWeeklySection,
-} from "@/server/actions";
+} from "@/server/actions/weekly";
 import {
   WEEKLY_SECTION_ICON_KEYS,
   weeklySectionIcon,

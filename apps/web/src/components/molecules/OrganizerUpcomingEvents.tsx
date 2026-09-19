@@ -1,10 +1,10 @@
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import type { OrganizerUpcomingEventRow } from "@abonten/types/eventAnalytics";
 import Link from "next/link";
 import AnalyticsRowsSkeleton from "./AnalyticsRowsSkeleton";
 import InlineErrorRetry from "./InlineErrorRetry";
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
+type Row = OrganizerUpcomingEventRow;
 
 export default function OrganizerUpcomingEvents({
   events,

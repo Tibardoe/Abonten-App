@@ -7,15 +7,15 @@ import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
 import { useToast } from "@/hooks/useToast";
+import type {
+  ManagedEvent,
+  ManagedEventTicketType,
+} from "@abonten/types/managedEventType";
 import type { Ticket } from "@abonten/types/ticketType";
 import { useState } from "react";
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) — same convention ManagePlaceDetailsSection.tsx uses
-type ManagedEventTicketType = any;
-
 type ManageEventDetailsSectionProps = {
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  event: any;
+  event: ManagedEvent;
   hasConfirmedParticipation: boolean;
   onSaved: () => void;
 };
@@ -56,8 +56,8 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
     singleTicket: null,
     singleTicketQuantity: null,
     multipleTickets: ticketTypes.map((t) => ({
-      category: t.type,
-      price: t.price,
+      category: t.type ?? "",
+      price: t.price ?? 0,
       quantity: t.quantity,
       availableFrom: t.available_from ? new Date(t.available_from) : undefined,
       availableUntil: t.available_until

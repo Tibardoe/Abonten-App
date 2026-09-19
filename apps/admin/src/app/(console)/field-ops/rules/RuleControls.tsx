@@ -4,7 +4,7 @@ import { Button } from "@/components/ui";
 import {
   publishFieldOpsRuleVersion,
   setFieldOpsRuleActive,
-} from "@/server/actions";
+} from "@/server/actions/fieldOps";
 import type {
   FieldOpsActivityKey,
   FieldOpsCommissionRule,

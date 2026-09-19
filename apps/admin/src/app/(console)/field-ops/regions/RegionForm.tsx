@@ -1,7 +1,10 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { geocodeFieldOpsQuery, upsertFieldOpsRegion } from "@/server/actions";
+import {
+  geocodeFieldOpsQuery,
+  upsertFieldOpsRegion,
+} from "@/server/actions/fieldOps";
 import type { FieldOpsRegion } from "@abonten/types/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

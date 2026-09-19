@@ -104,7 +104,7 @@ export default function Header() {
 
   return (
     <>
-      <nav className="w-full flex justify-center fixed bg-sidebar z-20">
+      <header className="w-full flex justify-center fixed bg-sidebar z-20">
         <div className="flex justify-between py-5 w-[95%] border-b border-sidebar-border items-center">
           <div className="mx-auto lg:mx-0 flex items-center w-full">
             <div className="flex items-center gap-3">
@@ -229,7 +229,7 @@ export default function Header() {
             </div>
           )}
         </div>
-      </nav>
+      </header>
     </>
   );
 }

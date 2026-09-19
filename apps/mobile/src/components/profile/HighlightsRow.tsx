@@ -103,6 +103,7 @@ export function HighlightsRow({
               : cover.media_url;
           return (
             <Pressable
+              accessibilityRole="button"
               key={cover.group_id}
               onPress={() => setOpenIndex(index)}
               onLongPress={

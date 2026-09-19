@@ -1,6 +1,7 @@
 import StatTile from "@/components/atoms/StatTile";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
+import type { EventOverviewAnalytics } from "@abonten/types/eventAnalytics";
 
 export default function EventOverviewCards({
   overview,
@@ -8,8 +9,7 @@ export default function EventOverviewCards({
   isError,
   onRetry,
 }: {
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  overview: any | null;
+  overview: EventOverviewAnalytics | null;
   isLoading: boolean;
   isError?: boolean;
   onRetry?: () => void;

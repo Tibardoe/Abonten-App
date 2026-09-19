@@ -321,6 +321,7 @@ export function ReportSheet({
                   {attachment.name}
                 </AppText>
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => setAttachment(null)}
                   hitSlop={8}
                   disabled={busy}

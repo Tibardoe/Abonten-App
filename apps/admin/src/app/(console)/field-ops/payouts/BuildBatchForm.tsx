@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { buildFieldOpsPayoutBatch } from "@/server/actions";
+import { buildFieldOpsPayoutBatch } from "@/server/actions/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 

@@ -10,6 +10,7 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { OwnedPlaceReviewListItem } from "@abonten/types/reviewType";
 
 // Reviews of places this user owns/manages — the place-side counterpart to
 // getUserReviews.ts (which shows reviews written ABOUT this user as an
@@ -21,8 +22,7 @@ import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 export async function getOwnedPlaceReviews(
   username: string,
   options?: { cursor?: string | null; pageSize?: number },
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- matches getUserReviews.ts's convention for a joined review row
-): Promise<PaginatedResult<any>> {
+): Promise<PaginatedResult<OwnedPlaceReviewListItem>> {
   const supabase = await createClient();
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
@@ -74,8 +74,10 @@ export async function getOwnedPlaceReviews(
     };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  const { page, hasNextPage } = splitPage<any>(data, pageSize);
+  const { page, hasNextPage } = splitPage<OwnedPlaceReviewListItem>(
+    data ?? [],
+    pageSize,
+  );
 
   const last = page[page.length - 1];
   const nextCursor =

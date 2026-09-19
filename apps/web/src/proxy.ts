@@ -1,4 +1,5 @@
 import { inviteCodeFromPath } from "@abonten/core/rewards/invite";
+import { buildWebCsp } from "@abonten/core/security/contentSecurityPolicy";
 import {
   DEVICE_COOKIE_NAME,
   INVITE_FLAG_COOKIE_NAME,
@@ -13,8 +14,18 @@ import { updateSession } from "./config/supabase/middleware";
 import { LOCALE_COOKIE_MAX_AGE, LOCALE_COOKIE_NAME } from "./i18n/config";
 import { getPreferredLocale } from "./i18n/negotiateLocale";
 
+// Built once per server process: every input is a build-time public value.
+// The policy itself is documented in @abonten/core/security.
+const CONTENT_SECURITY_POLICY = buildWebCsp({
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  development: process.env.NODE_ENV === "development",
+  vercelPreview: process.env.NEXT_PUBLIC_VERCEL_ENV === "preview",
+});
+
 export async function proxy(request: NextRequest) {
   const response = await updateSession(request);
+  response.headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
 
   // Get stored country from cookies
   const storedCountry = request.cookies.get("country")?.value;

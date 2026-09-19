@@ -3,7 +3,7 @@
 import { StepUpButton } from "@/components/StepUpButton";
 import { CapNotice } from "@/components/metrics/CapNotice";
 import { Button, Card, cn } from "@/components/ui";
-import { updateRewardsSettings } from "@/server/actions";
+import { updateRewardsSettings } from "@/server/actions/rewards";
 import type {
   AdminNotificationDeliveryStats,
   RewardsProgramSettings,

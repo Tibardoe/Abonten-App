@@ -3,14 +3,13 @@
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PaginatedResult } from "@abonten/types/pagination";
+import type { OrganizerPlaceRow as PlaceListRow } from "@abonten/types/placeRows";
 import Image from "next/image";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa";
 
 // getOrganizerPlaces.ts returns `any` (see its own biome-ignore comment) --
 // this is the shape it actually joins: the place row plus place_category(name, slug).
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type OrganizerPlaceRow = any;
 
 export default function OrganizerPlacesList({
   queryKey,
@@ -19,14 +18,12 @@ export default function OrganizerPlacesList({
   emptyState,
 }: {
   queryKey: unknown[];
-  initialPage: PaginatedResult<OrganizerPlaceRow>;
-  fetchPage: (
-    cursor: string | null,
-  ) => Promise<PaginatedResult<OrganizerPlaceRow>>;
+  initialPage: PaginatedResult<PlaceListRow>;
+  fetchPage: (cursor: string | null) => Promise<PaginatedResult<PlaceListRow>>;
   emptyState: React.ReactNode;
 }) {
   return (
-    <InfiniteList<OrganizerPlaceRow>
+    <InfiniteList<PlaceListRow>
       queryKey={queryKey}
       initialPage={initialPage}
       fetchPage={fetchPage}

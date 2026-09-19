@@ -2,7 +2,10 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
-import { decideVerification, revokeVerification } from "@/server/actions";
+import {
+  decideVerification,
+  revokeVerification,
+} from "@/server/actions/verification";
 import type {
   VerificationStatus,
   VerificationSubjectType,

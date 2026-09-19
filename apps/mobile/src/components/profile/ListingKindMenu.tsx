@@ -64,6 +64,7 @@ export function ListingKindMenu({
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <Pressable
+        accessibilityRole="button"
         style={StyleSheet.absoluteFill}
         onPress={onClose}
         accessibilityLabel="Close menu"

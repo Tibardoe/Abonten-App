@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
-import { updateWeeklyEdition } from "@/server/actions";
+import { updateWeeklyEdition } from "@/server/actions/weekly";
 import { useEffect, useState } from "react";
 import { fieldClass, useEditor } from "./EditorContext";
 

@@ -2,7 +2,7 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
-import { updateWeeklySettings } from "@/server/actions";
+import { updateWeeklySettings } from "@/server/actions/weekly";
 import type { WeeklyAudience, WeeklySettings } from "@abonten/types/weeklyType";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";

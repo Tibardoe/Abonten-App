@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { normalizeEventRow } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -63,8 +64,8 @@ export async function getEventsInWindow({
     p_radius_km: radius,
     p_window_start: start.toISOString(),
     p_window_end: end.toISOString(),
-    p_cursor_starts_at: cursor?.startsAt ?? null,
-    p_cursor_id: cursor?.id ?? null,
+    p_cursor_starts_at: cursor?.startsAt ?? undefined,
+    p_cursor_id: cursor?.id ?? undefined,
     p_page_size: pageSize,
   });
 
@@ -74,7 +75,7 @@ export async function getEventsInWindow({
   }
 
   const { page, hasNextPage } = splitPage<UserPostType>(
-    data as UserPostType[],
+    (data ?? []).map(normalizeEventRow),
     pageSize,
   );
 

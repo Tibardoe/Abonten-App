@@ -61,6 +61,7 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
             </AppText>
           </View>
           <Pressable
+            accessibilityRole="button"
             onPress={() =>
               w.setPromos((prev) => prev.filter((_, idx) => idx !== i))
             }

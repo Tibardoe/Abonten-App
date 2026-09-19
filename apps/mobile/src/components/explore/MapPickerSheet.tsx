@@ -85,7 +85,7 @@ export function MapPickerSheet({
       className="flex-row items-center gap-3 border-b border-border px-4 py-3"
       style={{ paddingTop: insets.top + 12 }}
     >
-      <Pressable onPress={onClose} hitSlop={10}>
+      <Pressable accessibilityRole="button" onPress={onClose} hitSlop={10}>
         <Icon name="close" size={24} tone="foreground" />
       </Pressable>
       <AppText variant="bodyStrong">Choose on map</AppText>

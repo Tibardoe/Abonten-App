@@ -20,7 +20,7 @@ import { isMyEventsTab } from "./myEventsTab";
 // shows in the browser tab here despite the on-page heading already saying
 // "My Tickets".
 export const metadata: Metadata = {
-  title: "My Tickets | Abonten Hub",
+  title: "My Tickets",
 };
 
 async function fetchActivePage(cursor: string | null) {

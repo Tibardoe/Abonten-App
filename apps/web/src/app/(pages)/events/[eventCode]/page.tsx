@@ -23,12 +23,15 @@ import {
   getFormattedEventDate,
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
+import { readEventAddress } from "@abonten/core/eventAddress";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { asWkbHex } from "@abonten/core/parseWKBHex";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { FiArrowUpRight } from "react-icons/fi";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
@@ -63,9 +66,10 @@ export async function generateMetadata({
     .eq("event_code", eventCode.toUpperCase())
     .single();
 
+  // The segment layout has already answered with a 404 for a missing code.
   if (!event) return { title: "Event not found" };
 
-  const title = `${event.title} | Abonten Hub`;
+  const title = event.title;
   const description = event.description
     ? String(event.description).slice(0, 155)
     : undefined;
@@ -139,7 +143,7 @@ export default async function page({
     .eq("event_code", eventCode.toUpperCase())
     .single();
 
-  if (!event) return <p className="p-8 text-center">No event found</p>;
+  if (!event) notFound();
 
   const event_dates =
     event.event_occurrence.length > 0
@@ -152,9 +156,12 @@ export default async function page({
         // fabricated id here would fail that check with "Invalid event
         // date". EventDateSelector falls back to the array index for its
         // list key instead of relying on this id.
-        [{ starts_at: event.starts_at, ends_at: event.ends_at }];
+        [{ starts_at: event.starts_at ?? "", ends_at: event.ends_at ?? "" }];
 
-  const safeLocation = event.address.full_address ?? "";
+  const address = readEventAddress(event.address);
+  const safeLocation = address.full_address;
+  const eventId = event.id;
+  const locationWkb = asWkbHex(event.location);
 
   // attendanceCount, minTicket, averageRating, and the geocode lookup only
   // depend on `event` (not on each other), so run them concurrently instead
@@ -200,13 +207,15 @@ export default async function page({
   // Similar events genuinely depend on the geocode result above, so this
   // stays sequential. Uses the same category-matching RPC as the dedicated
   // similar-events page instead of a separate nearby-events fetch + JS filter.
-  const similarEventsResponse = await getSimilarEvents(
-    event.event_category,
-    lng,
-    lat,
-  );
+  // No coordinates (an address Google does not know, or a lookup that timed
+  // out) simply means no "similar events near here" section — never a
+  // failed event page.
+  const similarEventsResponse =
+    lat === null || lng === null
+      ? null
+      : await getSimilarEvents(event.event_category, lng, lat);
   const similarEvents: UserPostType[] = (
-    (similarEventsResponse.similarEvents ?? []) as unknown as UserPostType[]
+    (similarEventsResponse?.similarEvents ?? []) as unknown as UserPostType[]
   ).filter((evt) => evt.id !== event.id);
 
   const postedAt = getRelativeTime(event.created_at);
@@ -226,7 +235,7 @@ export default async function page({
 
   async function fetchEventReviewsPage(cursor: string | null) {
     "use server";
-    return getEventReviews(event.id, { cursor });
+    return getEventReviews(eventId, { cursor });
   }
 
   // Mutually exclusive at creation time (postEvent.ts either creates one
@@ -235,7 +244,7 @@ export default async function page({
   // permanent definition rather than just checking the cheapest one.
   const isAbsolutelyFreeEvent =
     event.ticket_type.length > 0 &&
-    event.ticket_type.every((t: { price: number }) => t.price === 0);
+    event.ticket_type.every((t) => t.price === 0);
 
   return (
     <div className="bg-background">
@@ -300,7 +309,7 @@ export default async function page({
                       event.user_info.avatar_version,
                       { width: 56, height: 56 },
                     )}
-                    alt={event.user_info.username}
+                    alt={event.user_info.username ?? "Organizer"}
                     width={56}
                     height={56}
                     className="rounded-full border-2 border-border"
@@ -355,7 +364,7 @@ export default async function page({
             <div className="lg:hidden flex items-center gap-4">
               <OutlinedShareBtn
                 title={event.title}
-                address={event.address.full_address}
+                address={address.full_address}
                 eventCode={event.event_code}
                 eventId={event.id}
               />
@@ -375,12 +384,9 @@ export default async function page({
                   <CardTitle>Location</CardTitle>
                 </div>
                 <p className="text-muted-foreground mb-4 text-sm md:text-base">
-                  {event.address.full_address}
+                  {address.full_address}
                 </p>
-                <LocationMapPreview
-                  location={event.location}
-                  className="mb-4"
-                />
+                <LocationMapPreview location={locationWkb} className="mb-4" />
                 {event.place && (
                   <Link
                     href={`/places/${event.place.slug}`}
@@ -389,7 +395,7 @@ export default async function page({
                     📍 At: {event.place.name}
                   </Link>
                 )}
-                <GetDirectionBtn location={event.location} />
+                <GetDirectionBtn location={locationWkb} />
               </div>
 
               <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
@@ -421,7 +427,7 @@ export default async function page({
               <div className="flex-1">
                 <OutlinedShareBtn
                   title={event.title}
-                  address={event.address.full_address}
+                  address={address.full_address}
                   eventCode={event.event_code}
                   eventId={event.id}
                 />
@@ -500,7 +506,7 @@ export default async function page({
 
               <OutlinedShareBtn
                 title={event.title}
-                address={event.address.full_address}
+                address={address.full_address}
                 eventCode={event.event_code}
                 eventId={event.id}
               />

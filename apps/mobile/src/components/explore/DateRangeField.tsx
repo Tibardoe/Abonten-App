@@ -94,6 +94,7 @@ export function DateRangeField({
     <View className="gap-2">
       <View className="flex-row items-center justify-between">
         <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Previous month"
           hitSlop={8}
           onPress={() =>
@@ -106,6 +107,7 @@ export function DateRangeField({
           {MONTHS[view.getMonth()]} {view.getFullYear()}
         </AppText>
         <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Next month"
           hitSlop={8}
           onPress={() =>
@@ -150,6 +152,7 @@ export function DateRangeField({
 
           return (
             <Pressable
+              accessibilityRole="button"
               key={iso(d)}
               disabled={isPast}
               onPress={() => pick(d)}
@@ -187,6 +190,7 @@ export function DateRangeField({
 
       {(start || end) && (
         <Pressable
+          accessibilityRole="button"
           onPress={() => onChange({ start: null, end: null })}
           className="self-start pt-1"
         >

@@ -44,11 +44,11 @@ const nextConfig: NextConfig = {
 
   async headers() {
     return [
-      // Baseline browser hardening on every response. No Content-Security-
-      // Policy yet: the Paystack inline script and Google Maps need an
-      // allow-list that has to be tested first (docs/security). Clickjacking
-      // is closed with X-Frame-Options; nothing legitimately frames the site
-      // (the app opens pages in the system browser, not a WebView).
+      // Baseline browser hardening on every response. The Content-Security-
+      // Policy is set per request in src/proxy.ts (built by
+      // @abonten/core/security/contentSecurityPolicy). Clickjacking is closed
+      // twice over (X-Frame-Options here, frame-ancestors in the CSP);
+      // nothing legitimately frames the site.
       {
         source: "/:path*",
         headers: [

@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,4 +21,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // auth.uid(), so the anon key returns identical rows to the cookie-based
 // client regardless of RLS. Don't reuse this for anything that checks
 // supabase.auth.getUser() or needs the caller's identity.
-export const publicSupabase = createClient(supabaseUrl, supabaseAnonKey);
+export const publicSupabase = createClient<Database>(
+  supabaseUrl,
+  supabaseAnonKey,
+);
