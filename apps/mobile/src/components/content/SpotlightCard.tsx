@@ -4,13 +4,23 @@ import {
   shareContent,
   useRequireSignIn,
 } from "@/features/content/contentLinks";
+import {
+  toggleSpotlightMuted,
+  useSpotlightMuted,
+} from "@/features/content/playback/spotlightSound";
 import { usePostEngagement } from "@/features/content/useContent";
 import {
   trackContentClick,
   usePlaySession,
 } from "@/features/content/useContentTelemetry";
 import { hapticLight } from "@/lib/haptics";
+import { useAppActive } from "@/lib/useAppActive";
 import { SPONSORED_LABEL } from "@abonten/core/content/copy";
+import {
+  type FeedPlaybackMode,
+  feedPosterUrl,
+  feedShouldPlay,
+} from "@abonten/core/content/feedPlayback";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type {
   ContentFeedItem,
@@ -25,8 +35,7 @@ import {
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { type VideoPlayer, VideoView } from "expo-video";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import {
   Keyboard,
   Pressable,
@@ -47,6 +56,7 @@ import { ContentCta } from "./ContentCta";
 import { ContentOptionsSheet } from "./ContentOptionsSheet";
 import { FollowButton } from "./FollowButton";
 import { SpotlightCommentsPanel } from "./SpotlightCommentsPanel";
+import { SpotlightVideo } from "./SpotlightVideo";
 
 function compact(n: number): string {
   if (n < 1000) return String(n);
@@ -60,15 +70,12 @@ const OPEN_MS = 280;
 const CLOSE_MS = 220;
 
 /**
- * One full-height Spotlight page. The feed owns a single video player and
- * hands it only to the active card; every other card shows its poster, so
- * scrolling never holds more than one decoder.
- *
- * The poster stays ON TOP of the video until the video has drawn a frame of
- * THIS post (`videoReady` from the feed = the shared player has finished
- * loading this post's source; then the first rendered frame). Mounting the
- * VideoView earlier showed the previous post's last frame for a moment on
- * every swipe — the "flash" between Spotlights.
+ * One full-height Spotlight page. Its video (SpotlightVideo) owns its own
+ * player while the page is active or a direct neighbour (`mode`), and has
+ * none otherwise, so the feed never holds more than three decoders. The
+ * page plays only while `feedShouldPlay` says so: active, screen focused,
+ * app in front, not covered by a sheet, not paused by a tap. Sound is the
+ * app-wide Spotlight preference (spotlightSound.ts).
  *
  * Layout, bottom up: the full-width event/place CTA; above it the creator
  * (avatar and name open the profile, Follow sits beside the name) and the
@@ -78,32 +85,24 @@ const CLOSE_MS = 220;
  */
 export const SpotlightCard = memo(function SpotlightCard({
   item,
-  active,
-  videoReady,
+  mode,
+  screenFocused,
   height,
-  player,
-  muted,
-  onToggleMute,
   surface,
   onHide,
-  holdPlayback,
   bottomInset,
   bottomObstruction = 0,
   topInset,
   onCommentsOpenChange,
 }: {
   item: ContentFeedItem;
-  active: boolean;
-  /** The shared player holds this post's video and may be shown. */
-  videoReady: boolean;
+  /** This page's place in the feed's media lifecycle. */
+  mode: FeedPlaybackMode;
+  /** The screen showing the feed is the focused one. */
+  screenFocused: boolean;
   height: number;
-  player: VideoPlayer;
-  muted: boolean;
-  onToggleMute: () => void;
   surface: ContentViewSurface;
   onHide?: (postId: string) => void;
-  /** Pause while something on top (a sheet) is open. */
-  holdPlayback?: (held: boolean) => void;
   /** Space to keep clear under the controls (safe area / breathing room). */
   bottomInset: number;
   /** Height of a bar under the card (the tab bar) the keyboard slides over. */
@@ -125,13 +124,13 @@ export const SpotlightCard = memo(function SpotlightCard({
   const [commentsMounted, setCommentsMounted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const lastTime = useRef(0);
+  const muted = useSpotlightMuted();
+  const appActive = useAppActive();
+  const active = mode === "active" && screenFocused;
 
   const media = post.media[0];
   const isVideo = media?.type === "video";
-  const poster = isVideo
-    ? (media.posterUrl ?? media.thumbnailUrl)
-    : media?.mediaUrl;
+  const poster = feedPosterUrl(media);
 
   const play = usePlaySession({
     postId: post.id,
@@ -145,28 +144,18 @@ export const SpotlightCard = memo(function SpotlightCard({
   // Comments keep the video playing (it stays on screen); the options sheet
   // covers it, so that pauses.
   const held = optionsOpen;
-  useEffect(() => {
-    if (active) holdPlayback?.(held);
-  }, [active, held, holdPlayback]);
+  const shouldPlay = feedShouldPlay({
+    mode,
+    screenFocused,
+    appActive,
+    held,
+    userPaused: paused,
+  });
 
-  // ── Poster → video hand-off ───────────────────────────────────────
-  const showVideo = active && isVideo && videoReady;
-  const [firstFrame, setFirstFrame] = useState(false);
-  const posterOpacity = useSharedValue(1);
-  useEffect(() => {
-    if (!showVideo) {
-      setFirstFrame(false);
-      posterOpacity.value = 1;
-    }
-  }, [showVideo, posterOpacity]);
+  // A tap-to-pause belongs to one viewing: scrolling away forgets it.
   useEffect(() => {
     if (!active) setPaused(false);
   }, [active]);
-  useEffect(() => {
-    if (firstFrame) {
-      posterOpacity.value = reduceMotion ? 0 : withTiming(0, { duration: 140 });
-    }
-  }, [firstFrame, posterOpacity, reduceMotion]);
 
   // Images count as watched while their page is on screen.
   useEffect(() => {
@@ -176,52 +165,18 @@ export const SpotlightCard = memo(function SpotlightCard({
     return () => play.onPaused();
   }, [active, isVideo, held, play]);
 
-  useEffect(() => {
-    if (!active || !isVideo) return;
-    let subs: { remove: () => void }[] = [];
-    try {
-      subs = [
-        player.addListener("playingChange", ({ isPlaying }) => {
-          if (isPlaying) play.onPlaying();
-          else play.onPaused();
-        }),
-        player.addListener("timeUpdate", ({ currentTime }) => {
-          if (currentTime + 0.5 < lastTime.current) {
-            play.onEnded();
-            play.onLoop();
-          }
-          lastTime.current = currentTime;
-        }),
-      ];
-    } catch {
-      // player released
-    }
-    return () => {
-      for (const s of subs) {
-        try {
-          s.remove();
-        } catch {}
-      }
-    };
-  }, [active, isVideo, player, play]);
-
-  // Backstop for the poster: if a platform never reports the first frame
-  // for a re-attached surface, reveal the video once it is actually
-  // advancing (the source is already this post's, so no stale frame).
-  useEffect(() => {
-    if (!showVideo || firstFrame) return;
-    let sub: { remove: () => void } | null = null;
-    try {
-      sub = player.addListener("timeUpdate", ({ currentTime }) => {
-        if (currentTime > 0.15) setFirstFrame(true);
-      });
-    } catch {}
-    return () => {
-      try {
-        sub?.remove();
-      } catch {}
-    };
-  }, [showVideo, firstFrame, player]);
+  const onPlayingChange = useCallback(
+    (playing: boolean) => {
+      if (!active) return;
+      if (playing) play.onPlaying();
+      else play.onPaused();
+    },
+    [active, play],
+  );
+  const onLoop = useCallback(() => {
+    play.onEnded();
+    play.onLoop();
+  }, [play]);
 
   const togglePause = () => {
     if (commentsOpen) {
@@ -230,10 +185,6 @@ export const SpotlightCard = memo(function SpotlightCard({
     }
     if (!isVideo || !active) return;
     hapticLight();
-    try {
-      if (paused) player.play();
-      else player.pause();
-    } catch {}
     setPaused((v) => !v);
   };
 
@@ -298,9 +249,6 @@ export const SpotlightCard = memo(function SpotlightCard({
   const chromeStyle = useAnimatedStyle(() => ({
     opacity: 1 - Math.min(1, progress.value * 1.6),
   }));
-  const posterStyle = useAnimatedStyle(() => ({
-    opacity: posterOpacity.value,
-  }));
 
   if (engagement.notInterested) {
     return (
@@ -359,32 +307,24 @@ export const SpotlightCard = memo(function SpotlightCard({
                 : "Spotlight photo"
           }
         >
-          {showVideo ? (
-            <VideoView
-              player={player}
+          {isVideo && media ? (
+            <SpotlightVideo
+              media={media}
+              mode={mode}
+              shouldPlay={shouldPlay}
+              posterUri={poster}
+              recyclingKey={post.id}
+              onPlayingChange={onPlayingChange}
+              onLoop={onLoop}
+            />
+          ) : poster ? (
+            <Image
+              source={{ uri: poster }}
               style={StyleSheet.absoluteFill}
               contentFit="contain"
-              nativeControls={false}
-              // Android: a SurfaceView is composited outside the view tree,
-              // so it ignores the shrink transform and draws over the
-              // comments panel. A TextureView moves with its parent.
-              surfaceType="textureView"
-              onFirstFrameRender={() => setFirstFrame(true)}
+              cachePolicy="memory-disk"
+              recyclingKey={post.id}
             />
-          ) : null}
-          {poster ? (
-            <Animated.View
-              pointerEvents="none"
-              style={[StyleSheet.absoluteFill, posterStyle]}
-            >
-              <Image
-                source={{ uri: poster }}
-                style={StyleSheet.absoluteFill}
-                contentFit="contain"
-                cachePolicy="memory-disk"
-                recyclingKey={post.id}
-              />
-            </Animated.View>
           ) : null}
         </Pressable>
       </Animated.View>
@@ -431,7 +371,7 @@ export const SpotlightCard = memo(function SpotlightCard({
           )}
           {isVideo ? (
             <Pressable
-              onPress={onToggleMute}
+              onPress={toggleSpotlightMuted}
               hitSlop={10}
               accessibilityRole="button"
               accessibilityLabel={muted ? "Turn sound on" : "Turn sound off"}
@@ -606,12 +546,6 @@ export const SpotlightCard = memo(function SpotlightCard({
           commentsAllowed={post.allowComments}
           commentCount={engagement.counts.comments}
           onClose={closeComments}
-          onCountChange={(delta) =>
-            engagement.setCounts((c) => ({
-              ...c,
-              comments: Math.max(0, c.comments + delta),
-            }))
-          }
         />
       ) : null}
 

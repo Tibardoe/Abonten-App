@@ -22,6 +22,13 @@ export function useWeeklyProgram() {
     queryKey: [...WEEKLY_KEY, "program", session?.user.id ?? null],
     queryFn: async (): Promise<WeeklyProgram> => {
       const res = await api.weekly.program();
+      // A server hiccup, or a 401 while the token cannot be refreshed,
+      // must not replace a known answer (possibly restored from disk) with
+      // "switched off": throw so React Query keeps the last good value. A
+      // definite answer still applies.
+      if (res.status >= 500 || res.status === 429 || res.status === 401) {
+        throw new Error(res.message ?? "Programme check failed");
+      }
       return res.status === 200 && res.data
         ? res.data
         : DISABLED_WEEKLY_PROGRAM;

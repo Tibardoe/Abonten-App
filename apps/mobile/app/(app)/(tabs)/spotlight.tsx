@@ -1,26 +1,45 @@
 import { useSession } from "@/auth/SessionProvider";
 import { MediaStatusBar } from "@/components/app/MediaStatusBar";
 import { SpotlightCard } from "@/components/content/SpotlightCard";
+import {
+  setSpotlightMuted,
+  useSpotlightMuted,
+} from "@/features/content/playback/spotlightSound";
 import { useCoarseLocation } from "@/features/content/useCoarseLocation";
-import { flattenFeed, useContentFeed } from "@/features/content/useContent";
+import {
+  contentFeedKey,
+  flattenFeed,
+  useContentFeed,
+  useRefreshContentFeed,
+} from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { flushContentViews } from "@/features/content/useContentTelemetry";
 import { useVolumeKeys } from "@/features/content/useVolumeKeys";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
+import { useIsOnline } from "@/lib/network";
 import { FEED_SURFACES, FEED_SURFACE_LABEL } from "@abonten/core/content/copy";
+import {
+  feedPlaybackMode,
+  reconcileActiveIndex,
+} from "@abonten/core/content/feedPlayback";
 import type {
   ContentFeedItem,
   ContentFeedSurface,
   ContentProgram,
 } from "@abonten/types/contentType";
-import { AppText, Button, Icon } from "@abonten/ui-native";
+import { AppText, Button, Icon, Refresher, useToast } from "@abonten/ui-native";
 import { Image } from "expo-image";
-import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
-import { useVideoPlayer } from "expo-video";
+import {
+  useIsFocused,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  type ListRenderItem,
   Pressable,
   ScrollView,
   View,
@@ -38,18 +57,29 @@ function surfaceAvailable(s: ContentFeedSurface, p: ContentProgram) {
   return true;
 }
 
-// Spotlight: the vertical feed, a bottom tab. One video player for the whole
-// screen, handed to whichever page is on screen; everything else is a
-// poster. Playback stops when the tab loses focus or the app backgrounds.
+/** A cache restored from disk older than this is refreshed on open. */
+const RESTORED_FEED_MAX_AGE_MS = 10 * 60 * 1000;
+
+// Spotlight: the vertical feed, a bottom tab.
 //
-// Page changes: the player is told to load the new page's video, and only
-// once that load has finished does the page show the player (`loadedPostId`)
-// — until then it shows its own poster. See SpotlightCard for why.
+// Media: each page owns its own player while it is the active page or a
+// direct neighbour (SpotlightVideo + @abonten/core/content/feedPlayback);
+// this screen only decides WHICH page is active. The active page is tracked
+// by post id, not by index, so a refresh or a hidden post never hands
+// playback to the wrong video.
+//
+// Refresh: re-pressing the Spotlight tab scrolls back to the first video, or
+// — already there — loads a fresh feed; pulling down at the top does the
+// same. Nothing else re-orders the feed while someone is watching it (see
+// useContentFeed).
 export default function SpotlightFeedScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const window = useWindowDimensions();
   const isFocused = useIsFocused();
+  const online = useIsOnline();
+  const toast = useToast();
   const { session } = useSession();
   const params = useLocalSearchParams<{ tab?: string }>();
   const { program, ready } = useContentProgram();
@@ -83,87 +113,49 @@ export default function SpotlightFeedScreen() {
     : coarse.coords;
   const needsSignIn = surface === "following" && !session;
 
-  const feed = useContentFeed(
-    surface,
-    coords,
+  const feedEnabled =
     ready &&
-      program.spotlight &&
-      !needsSignIn &&
-      (needsLocation ? !!coords : coarse.done),
-  );
+    program.spotlight &&
+    !needsSignIn &&
+    (needsLocation ? !!coords : coarse.done);
+  const feed = useContentFeed(surface, coords, feedEnabled);
+  const feedKey = contentFeedKey(session?.user.id ?? null, surface, coords);
+  const refreshFeed = useRefreshContentFeed();
+
   const [hidden, setHidden] = useState<Set<string>>(new Set());
-  const items = flattenFeed(feed.data?.pages).filter(
-    (i) => !hidden.has(i.post.id),
+  const items = useMemo(
+    () => flattenFeed(feed.data?.pages).filter((i) => !hidden.has(i.post.id)),
+    [feed.data, hidden],
   );
+  const ids = useMemo(() => items.map((i) => i.post.id), [items]);
 
   const [height, setHeight] = useState(0);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [loadedPostId, setLoadedPostId] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const [held, setHeld] = useState(false);
-  const active = items[activeIndex];
+  const muted = useSpotlightMuted();
 
-  const player = useVideoPlayer(null, (p) => {
-    p.loop = true;
-    p.muted = true;
-    p.timeUpdateEventInterval = 0.5;
-  });
+  // ── Which page is active ──────────────────────────────────────────
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const lastIndex = useRef(0);
+  const activeIndex = reconcileActiveIndex(ids, activeId, lastIndex.current);
+  lastIndex.current = Math.max(0, activeIndex);
+  const listRef = useRef<FlatList<ContentFeedItem>>(null);
 
-  useEffect(() => {
-    try {
-      player.muted = muted;
-    } catch {}
-  }, [muted, player]);
+  // A page becomes active once it is (nearly) settled on screen. At 80%
+  // visibility a paged list is already committed to snapping onto it, so a
+  // half-swipe that springs back never starts and stops another video.
+  const onViewable = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken<ContentFeedItem>[] }) => {
+      const first = viewableItems.find((v) => v.isViewable);
+      if (first?.item) setActiveId(first.item.post.id);
+    },
+  ).current;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 80 }).current;
 
-  // Load the active page's video (or stop playback for a photo).
-  const activeMedia = active?.post.media[0];
-  const activeUri =
-    activeMedia?.type === "video"
-      ? activeMedia.playbackStatus === "ready" && activeMedia.playbackUrl
-        ? activeMedia.playbackUrl
-        : activeMedia.mediaUrl
-      : null;
-  const fallbackUri = activeMedia?.mediaUrl ?? null;
-  const loadSeq = useRef(0);
-  // Reload only when the source changes; focus and holds are applied by the
-  // effect below.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the source
-  useEffect(() => {
-    const seq = ++loadSeq.current;
-    const postId = active?.post.id ?? null;
-    setLoadedPostId(null);
-    try {
-      player.pause();
-    } catch {}
-    if (!activeUri) return;
-    (async () => {
-      try {
-        await player.replaceAsync({ uri: activeUri });
-        if (seq !== loadSeq.current) return;
-        setLoadedPostId(postId);
-        if (isFocused && !held) player.play();
-      } catch {
-        if (
-          seq !== loadSeq.current ||
-          !fallbackUri ||
-          fallbackUri === activeUri
-        )
-          return;
-        try {
-          await player.replaceAsync({ uri: fallbackUri });
-          if (seq !== loadSeq.current) return;
-          setLoadedPostId(postId);
-          if (isFocused && !held) player.play();
-        } catch {}
-      }
-    })();
-  }, [activeUri, player]);
-
-  // Warm the next posters so a swipe lands on a picture, not black.
+  // Warm the posters a little further ahead than the preloaded players, so
+  // even a fast fling lands on a picture.
   useEffect(() => {
     const next = items
-      .slice(activeIndex + 1, activeIndex + 3)
+      .slice(activeIndex + 2, activeIndex + 5)
       .map((i) => {
         const m = i.post.media[0];
         return m?.type === "video"
@@ -175,34 +167,97 @@ export default function SpotlightFeedScreen() {
   }, [activeIndex, items]);
 
   useEffect(() => {
-    if (!activeUri) return;
-    try {
-      if (isFocused && !held) player.play();
-      else player.pause();
-    } catch {}
-  }, [isFocused, held, activeUri, player]);
-
-  useEffect(() => {
     if (!isFocused) void flushContentViews();
   }, [isFocused]);
-
-  const onViewable = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken<ContentFeedItem>[] }) => {
-      const first = viewableItems.find((v) => v.isViewable);
-      if (first?.index != null) setActiveIndex(first.index);
-    },
-  ).current;
 
   useEffect(() => {
     if (
       items.length > 0 &&
       activeIndex >= items.length - 3 &&
       feed.hasNextPage &&
-      !feed.isFetchingNextPage
+      !feed.isFetchingNextPage &&
+      !feed.isFetchNextPageError
     ) {
       feed.fetchNextPage();
     }
   }, [activeIndex, items.length, feed]);
+
+  // ── Refresh ───────────────────────────────────────────────────────
+  const refreshing = useRef(false);
+  const refresh = useCallback(async () => {
+    if (!feedEnabled || refreshing.current) return;
+    refreshing.current = true;
+    try {
+      await refreshFeed(feedKey);
+      setActiveId(null);
+      lastIndex.current = 0;
+      listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    } catch {
+      toast.error(
+        online
+          ? "Couldn't refresh Spotlight. Try again."
+          : "You're offline. Showing what was already loaded.",
+      );
+    } finally {
+      refreshing.current = false;
+    }
+  }, [feedEnabled, refreshFeed, feedKey, toast, online]);
+
+  // Re-pressing the tab: back to the first video, or refresh when already
+  // there. `navigation.isFocused()` is read at press time, before the tab
+  // switch, so a press that merely opens Spotlight does nothing extra.
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+  const activeIndexRef = useRef(activeIndex);
+  activeIndexRef.current = activeIndex;
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("tabPress" as never, () => {
+      if (!navigation.isFocused()) return;
+      if (activeIndexRef.current > 0) {
+        listRef.current?.scrollToOffset({ offset: 0, animated: true });
+      } else {
+        void refreshRef.current();
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  // A cache restored from a previous session is shown at once, then
+  // replaced with a fresh feed if it is old — before anyone has scrolled.
+  const checkedRestore = useRef<string | null>(null);
+  useEffect(() => {
+    const token = JSON.stringify(feedKey);
+    if (!feedEnabled || !online || checkedRestore.current === token) return;
+    if (!feed.data) return;
+    checkedRestore.current = token;
+    if (
+      activeIndex <= 0 &&
+      Date.now() - feed.dataUpdatedAt > RESTORED_FEED_MAX_AGE_MS
+    ) {
+      void refresh();
+    }
+  }, [
+    feedEnabled,
+    online,
+    feed.data,
+    feed.dataUpdatedAt,
+    feedKey,
+    activeIndex,
+    refresh,
+  ]);
+
+  // Back online: load what failed while offline (the whole feed if nothing
+  // was shown, otherwise the next page) — on the reconnect itself, not on a
+  // timer. Only the transition triggers it, so a failure while online is
+  // left to the Retry button instead of retrying in a loop.
+  const wasOnline = useRef(online);
+  useEffect(() => {
+    const reconnected = online && !wasOnline.current;
+    wasOnline.current = online;
+    if (!reconnected || !feedEnabled) return;
+    if (feed.isError && items.length === 0) void feed.refetch();
+    else if (feed.isFetchNextPageError) void feed.fetchNextPage();
+  }, [online, feedEnabled, feed, items.length]);
 
   const onCommentsOpenChange = useCallback(
     (open: boolean) => setCommentsOpen(open),
@@ -213,12 +268,12 @@ export default function SpotlightFeedScreen() {
     (postId: string) => setHidden((prev) => new Set(prev).add(postId)),
     [],
   );
-  const toggleMute = useCallback(() => setMuted((m) => !m), []);
-  useVolumeKeys(isFocused, muted, setMuted);
+  useVolumeKeys(isFocused, muted, setSpotlightMuted);
 
   const selectSurface = (s: ContentFeedSurface) => {
     setSurface(s);
-    setActiveIndex(0);
+    setActiveId(null);
+    lastIndex.current = 0;
   };
 
   // The header row (tabs + create) and what the cards must keep clear of.
@@ -279,6 +334,14 @@ export default function SpotlightFeedScreen() {
       title: "Location is off",
       body: "Allow location access to see Spotlights near you.",
     };
+  } else if (items.length > 0) {
+    // Whatever is loaded (or restored from the last session) stays on
+    // screen; a failed refresh never replaces it with an error.
+  } else if (!online && !feed.isFetching) {
+    empty = {
+      title: "You're offline",
+      body: "Spotlight will load as soon as you're back online.",
+    };
   } else if (feed.isError) {
     empty = {
       title: "Couldn't load Spotlight",
@@ -286,7 +349,7 @@ export default function SpotlightFeedScreen() {
       label: "Retry",
       action: () => feed.refetch(),
     };
-  } else if (feed.isFetched && items.length === 0) {
+  } else if (feed.isFetched && !feed.isFetching) {
     empty = {
       title: "Nothing here yet",
       body:
@@ -298,7 +361,45 @@ export default function SpotlightFeedScreen() {
 
   const loading =
     !ready ||
-    (!empty && (feed.isLoading || (needsLocation ? locating : !coarse.done)));
+    (!empty &&
+      items.length === 0 &&
+      (feed.isLoading ||
+        feed.isFetching ||
+        (needsLocation ? locating : !coarse.done)));
+
+  // Only the pages around the active one get a player; while another
+  // screen is on top, only the active page keeps one (paused), so coming
+  // back is instant without holding three decoders in the background.
+  const renderItem = useCallback<ListRenderItem<ContentFeedItem>>(
+    ({ item, index }) => (
+      <SpotlightCard
+        item={item}
+        mode={feedPlaybackMode(
+          index,
+          activeIndex,
+          isFocused ? undefined : { ahead: 0, behind: 0 },
+        )}
+        screenFocused={isFocused}
+        height={height}
+        surface={surface}
+        onHide={onHide}
+        topInset={topInset}
+        bottomInset={16}
+        bottomObstruction={bottomObstruction}
+        onCommentsOpenChange={onCommentsOpenChange}
+      />
+    ),
+    [
+      activeIndex,
+      isFocused,
+      height,
+      surface,
+      onHide,
+      topInset,
+      bottomObstruction,
+      onCommentsOpenChange,
+    ],
+  );
 
   return (
     <View
@@ -315,28 +416,12 @@ export default function SpotlightFeedScreen() {
 
       {height > 0 && !empty && !loading ? (
         <FlatList
+          ref={listRef}
           key={surface}
           data={items}
           keyExtractor={(i) => i.post.id}
-          renderItem={({ item, index }) => (
-            <SpotlightCard
-              item={item}
-              active={index === activeIndex && isFocused}
-              videoReady={loadedPostId === item.post.id}
-              height={height}
-              player={player}
-              muted={muted}
-              onToggleMute={toggleMute}
-              surface={surface}
-              onHide={onHide}
-              holdPlayback={setHeld}
-              topInset={topInset}
-              bottomInset={16}
-              bottomObstruction={bottomObstruction}
-              onCommentsOpenChange={onCommentsOpenChange}
-            />
-          )}
-          extraData={loadedPostId}
+          renderItem={renderItem}
+          extraData={activeIndex}
           scrollEnabled={!commentsOpen}
           // The comments composer lives inside a page: without this the
           // first tap on Send only closes the keyboard.
@@ -344,18 +429,30 @@ export default function SpotlightFeedScreen() {
           pagingEnabled
           showsVerticalScrollIndicator={false}
           decelerationRate="fast"
-          snapToInterval={height}
           getItemLayout={(_, index) => ({
             length: height,
             offset: height * index,
             index,
           })}
           onViewableItemsChanged={onViewable}
-          viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
-          windowSize={3}
+          viewabilityConfig={viewabilityConfig}
+          // Two pages each side stay mounted so a preloaded neighbour is
+          // always a mounted view. Clipped-subview removal stays OFF: on
+          // Android it detaches off-screen views, which destroys a video's
+          // TextureView and left re-attached pages on a frozen frame.
+          windowSize={5}
           initialNumToRender={2}
           maxToRenderPerBatch={2}
-          removeClippedSubviews
+          removeClippedSubviews={false}
+          refreshControl={
+            <Refresher
+              onRefresh={refresh}
+              tintColor="#fff"
+              colors={["#0F9D8F"]}
+              progressViewOffset={topInset}
+              enabled={!commentsOpen}
+            />
+          }
           ListFooterComponent={
             feed.isFetchingNextPage ? (
               <View className="h-16 items-center justify-center">

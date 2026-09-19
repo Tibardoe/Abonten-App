@@ -2,6 +2,10 @@ import { getUserActivePromotions } from "@/actions/getUserActivePromotions";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import {
+  PROMOTION_KIND_LABEL,
+  promotionStatusLine,
+} from "@abonten/core/promotionSummary";
 import Link from "next/link";
 
 // Replaces the old Plan Details block (removed with the Membership/Plans
@@ -23,21 +27,24 @@ export default async function PromotionDetails() {
         {activePromotions.length > 0 ? (
           <div className="space-y-4">
             {activePromotions.map((promotion, index) => (
-              <div key={`${promotion.resourceType}-${promotion.resourceId}`}>
+              <div
+                key={`${promotion.resourceType}-${promotion.campaignId ?? promotion.resourceId}`}
+              >
                 {index > 0 && <hr className="mb-4" />}
                 <p className="text-sm text-muted-foreground">
-                  {promotion.resourceType === "event"
-                    ? "Featured Event"
-                    : "Featured Place"}
+                  {PROMOTION_KIND_LABEL[promotion.resourceType]}
                 </p>
                 <h2 className="font-medium text-lg md:text-xl">
                   {promotion.resourceName}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {promotion.tierLabel
-                    ? `${promotion.tierLabel} package`
-                    : "Active"}{" "}
-                  &middot; Expires {formatDateWithSuffix(promotion.endsAt)}
+                  {promotionStatusLine(promotion)} &middot;{" "}
+                  {promotion.state === "scheduled" ? "Starts" : "Ends"}{" "}
+                  {formatDateWithSuffix(
+                    promotion.state === "scheduled"
+                      ? promotion.startsAt
+                      : promotion.endsAt,
+                  )}
                 </p>
               </div>
             ))}

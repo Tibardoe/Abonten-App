@@ -1,26 +1,25 @@
 import { useSession } from "@/auth/SessionProvider";
+import { ACTIVE_PROMOTIONS_KEY } from "@/features/promotions/useActivePromotions";
 import { api } from "@/lib/api";
 import type {
-  ContentCounts,
   ContentFeedItem,
   ContentFeedPage,
   ContentFeedSurface,
   ContentKind,
-  ContentPostDocument,
   ContentPublisherKind,
-  ContentReactionEmoji,
-  ContentShareChannel,
   FollowStatus,
   FollowTargetKind,
 } from "@abonten/types/contentType";
 import { useToast } from "@abonten/ui-native";
 import {
+  type InfiniteData,
   useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
+import { patchProfileFollow } from "../profile/usePublicProfile";
 import { CONTENT_KEY } from "./useContentProgram";
 import { getContentViewerKey } from "./useContentTelemetry";
 
@@ -39,6 +38,37 @@ function unwrap<T>(res: Envelope<T>): T {
 
 // ── Feed ────────────────────────────────────────────────────────────
 
+/**
+ * Only the Nearby feed is defined by a position. The rough position sent
+ * with the other surfaces (sponsored placement) is not part of their
+ * identity: keying on it split one feed into a cache entry per kilometre,
+ * so a feed restored after a restart was unreachable whenever the last
+ * known fix had moved or expired.
+ */
+export function contentFeedKey(
+  userId: string | null,
+  surface: ContentFeedSurface,
+  coords: { lat: number; lng: number } | null,
+) {
+  return [
+    ...CONTENT_KEY,
+    "feed",
+    userId,
+    surface,
+    surface === "nearby" && coords
+      ? `${coords.lat.toFixed(2)},${coords.lng.toFixed(2)}`
+      : null,
+  ] as const;
+}
+
+/**
+ * The Spotlight feed. It is NEVER refetched behind the viewer's back: the
+ * feed is ranked, so a background refetch (on mount, focus or reconnect)
+ * re-orders the pages under whoever is watching — the video they are on
+ * jumps to another position. It changes only when the person asks
+ * (tab re-press, pull down: `useRefreshContentFeed`), when the list is
+ * empty or failed, or when a restored cache is old on open.
+ */
 export function useContentFeed(
   surface: ContentFeedSurface,
   coords: { lat: number; lng: number } | null,
@@ -46,13 +76,7 @@ export function useContentFeed(
 ) {
   const { session } = useSession();
   return useInfiniteQuery({
-    queryKey: [
-      ...CONTENT_KEY,
-      "feed",
-      session?.user.id ?? null,
-      surface,
-      coords ? `${coords.lat.toFixed(2)},${coords.lng.toFixed(2)}` : null,
-    ],
+    queryKey: contentFeedKey(session?.user.id ?? null, surface, coords),
     enabled,
     initialPageParam: null as string | null,
     queryFn: async ({ pageParam }): Promise<ContentFeedPage> =>
@@ -66,8 +90,49 @@ export function useContentFeed(
         }),
       ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
-    staleTime: 60_000,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
+}
+
+/**
+ * Replaces the feed with a fresh first page. Later pages are dropped first,
+ * so only ONE request is made (a plain refetch of an infinite query
+ * re-requests every page already loaded, in sequence). A refresh already in
+ * flight is joined rather than restarted, so a double tap is one request.
+ * Rejects when it fails; the existing pages stay on screen.
+ */
+export function useRefreshContentFeed() {
+  const qc = useQueryClient();
+  return useCallback(
+    async (key: readonly unknown[]) => {
+      const state = qc.getQueryState(key);
+      if (state?.fetchStatus === "fetching") {
+        await qc.refetchQueries(
+          { queryKey: key, exact: true },
+          { cancelRefetch: false, throwOnError: true },
+        );
+        return;
+      }
+      qc.setQueryData<InfiniteData<ContentFeedPage, string | null>>(
+        key,
+        (old) =>
+          old && old.pages.length > 1
+            ? {
+                pages: old.pages.slice(0, 1),
+                pageParams: old.pageParams.slice(0, 1),
+              }
+            : old,
+      );
+      await qc.refetchQueries(
+        { queryKey: key, exact: true },
+        { throwOnError: true },
+      );
+    },
+    [qc],
+  );
 }
 
 export function flattenFeed(
@@ -94,144 +159,9 @@ export function useContentPost(postId: string | undefined) {
   });
 }
 
-// ── Engagement (optimistic, per card) ───────────────────────────────
-
-export function usePostEngagement(
-  post: ContentPostDocument,
-  requireSignIn: () => boolean,
-) {
-  const toast = useToast();
-  const qc = useQueryClient();
-  const [liked, setLiked] = useState(post.viewer.liked);
-  const [saved, setSaved] = useState(post.viewer.saved);
-  const [reaction, setReaction] = useState<ContentReactionEmoji | null>(
-    post.viewer.reaction,
-  );
-  const [notInterested, setNotInterested] = useState(post.viewer.notInterested);
-  const [counts, setCounts] = useState<ContentCounts>(post.counts);
-  const pending = useRef(0);
-
-  useEffect(() => {
-    if (pending.current > 0) return;
-    setLiked(post.viewer.liked);
-    setSaved(post.viewer.saved);
-    setReaction(post.viewer.reaction);
-    setNotInterested(post.viewer.notInterested);
-    setCounts(post.counts);
-  }, [post]);
-
-  async function run<T>(
-    optimistic: () => () => void,
-    call: () => Promise<Envelope<T>>,
-    onData?: (data: T | undefined) => void,
-  ) {
-    if (!requireSignIn()) return;
-    const undo = optimistic();
-    pending.current += 1;
-    try {
-      const res = await call();
-      if (res.status !== 200) {
-        undo();
-        toast.error(res.message ?? "Something went wrong.");
-        return;
-      }
-      onData?.(res.data);
-    } catch {
-      undo();
-      toast.error("Something went wrong. Check your connection.");
-    } finally {
-      pending.current -= 1;
-    }
-  }
-
-  return {
-    liked,
-    saved,
-    reaction,
-    notInterested,
-    counts,
-    setCounts,
-    /** Local only — for a reaction the server set another way (a Story reply). */
-    setReaction,
-    toggleLike: () => {
-      const next = !liked;
-      return run(
-        () => {
-          setLiked(next);
-          setCounts((c) => ({
-            ...c,
-            likes: Math.max(0, c.likes + (next ? 1 : -1)),
-          }));
-          return () => {
-            setLiked(!next);
-            setCounts((c) => ({
-              ...c,
-              likes: Math.max(0, c.likes + (next ? -1 : 1)),
-            }));
-          };
-        },
-        () => api.content.like(post.id, next),
-        (data) => {
-          const d = data as { counts?: ContentCounts } | undefined;
-          if (d?.counts) setCounts(d.counts);
-        },
-      );
-    },
-    toggleSave: () => {
-      const next = !saved;
-      return run(
-        () => {
-          setSaved(next);
-          setCounts((c) => ({
-            ...c,
-            saves: Math.max(0, c.saves + (next ? 1 : -1)),
-          }));
-          return () => {
-            setSaved(!next);
-            setCounts((c) => ({
-              ...c,
-              saves: Math.max(0, c.saves + (next ? -1 : 1)),
-            }));
-          };
-        },
-        () => api.content.save(post.id, next),
-        (data) => {
-          const d = data as { counts?: ContentCounts } | undefined;
-          if (d?.counts) setCounts(d.counts);
-          qc.invalidateQueries({ queryKey: [...CONTENT_KEY, "saved"] });
-          toast.success(next ? "Saved" : "Removed from saved");
-        },
-      );
-    },
-    react: (emoji: ContentReactionEmoji) => {
-      const previous = reaction;
-      const next = previous === emoji ? null : emoji;
-      return run(
-        () => {
-          setReaction(next);
-          return () => setReaction(previous);
-        },
-        () => api.content.react(post.id, next),
-      );
-    },
-    markNotInterested: (value = true) =>
-      run(
-        () => {
-          setNotInterested(value);
-          return () => setNotInterested(!value);
-        },
-        () => api.content.notInterested(post.id, value),
-      ),
-    recordShare: async (channel: ContentShareChannel) => {
-      setCounts((c) => ({ ...c, shares: c.shares + 1 }));
-      try {
-        await api.content.share(post.id, channel);
-      } catch {
-        // A missed share count is harmless.
-      }
-    },
-  };
-}
+// ── Engagement ──────────────────────────────────────────────────────
+// Shared cache state; see usePostEngagement.ts.
+export { usePostEngagement } from "./usePostEngagement";
 
 // ── Follow ──────────────────────────────────────────────────────────
 
@@ -265,6 +195,19 @@ export function useFollow(
     staleTime: 60_000,
   });
 
+  const rollback = (
+    following: boolean,
+    context: { previous?: FollowStatus; delta: number } | undefined,
+  ) => {
+    qc.setQueryData(key, context?.previous);
+    if (kind === "organizer" && targetId && context) {
+      patchProfileFollow(qc, targetId, {
+        following: !following,
+        delta: -context.delta,
+      });
+    }
+  };
+
   const toggle = useMutation({
     mutationFn: (following: boolean) =>
       api.content.setFollow(kind, targetId as string, following),
@@ -274,26 +217,37 @@ export function useFollow(
         (known === undefined
           ? undefined
           : { following: known, followerCount: 0 });
+      const wasFollowing = previous?.following ?? !following;
+      const delta = following === wasFollowing ? 0 : following ? 1 : -1;
       if (previous) {
-        const delta = following === previous.following ? 0 : following ? 1 : -1;
         qc.setQueryData<FollowStatus>(key, {
           following,
           followerCount: Math.max(0, previous.followerCount + delta),
         });
       }
-      return { previous };
+      // The profile header shows the same number: move it with the button.
+      if (kind === "organizer" && targetId) {
+        patchProfileFollow(qc, targetId, { following, delta });
+      }
+      return { previous, delta };
     },
-    onSuccess: (res, _following, context) => {
+    onSuccess: (res, following, context) => {
       if (res.status !== 200 || !res.data) {
-        qc.setQueryData(key, context?.previous);
+        rollback(following, context);
         toast.error(res.message ?? "Couldn't update this follow.");
         return;
       }
       qc.setQueryData<FollowStatus>(key, res.data);
+      if (kind === "organizer" && targetId) {
+        patchProfileFollow(qc, targetId, {
+          following: res.data.following,
+          followerCount: res.data.followerCount,
+        });
+      }
       qc.invalidateQueries({ queryKey: [...CONTENT_KEY, "stories"] });
     },
-    onError: (_e, _following, context) => {
-      qc.setQueryData(key, context?.previous);
+    onError: (_e, following, context) => {
+      rollback(following, context);
       toast.error("Couldn't update this follow.");
     },
   });
@@ -342,29 +296,8 @@ export function useStorySequence(
 
 // ── Comments ────────────────────────────────────────────────────────
 
-export function useComments(
-  postId: string,
-  parentId: string | null,
-  enabled: boolean,
-) {
-  const { session } = useSession();
-  return useInfiniteQuery({
-    queryKey: [
-      ...CONTENT_KEY,
-      "comments",
-      postId,
-      parentId,
-      session?.user.id ?? null,
-    ],
-    enabled,
-    initialPageParam: null as string | null,
-    queryFn: async ({ pageParam }) =>
-      unwrap(
-        await api.content.comments(postId, { parentId, cursor: pageParam }),
-      ),
-    getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
-  });
-}
+// Comment lists, sending, likes and realtime live in commentThread.ts.
+export { useComments } from "./commentThread";
 
 // ── Creator ─────────────────────────────────────────────────────────
 
@@ -525,7 +458,19 @@ export function useInsights(postId: string | undefined, days: number) {
   });
 }
 
+/**
+ * After a post or campaign changes: everything content-related is stale —
+ * except the Spotlight feed, which only ever changes on the viewer's own
+ * refresh (a background re-rank would move the video they are watching;
+ * see useContentFeed). Promotions shown in Settings follow campaigns.
+ */
 export function useInvalidateContent() {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: CONTENT_KEY });
+  return () => {
+    void qc.invalidateQueries({
+      queryKey: CONTENT_KEY,
+      predicate: (q) => q.queryKey[2] !== "feed",
+    });
+    void qc.invalidateQueries({ queryKey: ACTIVE_PROMOTIONS_KEY });
+  };
 }

@@ -34,7 +34,13 @@ export function useProfile() {
     enabled: !!session,
     queryFn: async (): Promise<MyProfile | null> => {
       const res = await api.profile.get();
-      if (res.status !== 200 || !res.data) return null;
+      // A failed read (401 while a token refreshes, 5xx) must not replace
+      // the profile already shown — possibly restored from the offline
+      // cache — with "no profile": throw so the last good value stays.
+      if (res.status === 404) return null;
+      if (res.status !== 200 || !res.data) {
+        throw new Error(res.message ?? "Couldn't load your profile.");
+      }
       const d = res.data;
       return {
         user_id: String(d.user_id ?? session?.user.id ?? ""),

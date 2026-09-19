@@ -41,6 +41,7 @@ import {
 import { getPromotionPricingAdminCore } from "@abonten/services/admin/content/contentPromotionPricingAdminCore";
 import { getDashboardCore } from "@abonten/services/admin/dashboard/getDashboardCore";
 import { getDiscoveryOverviewCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
+import { getSearchVocabularyCore } from "@abonten/services/admin/discovery/searchVocabularyAdminCore";
 import { getCampaignAnalyticsCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
   type ListCampaignsFilters,
@@ -685,6 +686,14 @@ export async function loadDiscoveryOverview(days = 14) {
     days,
   });
   return { ctx, overview };
+}
+
+export async function loadSearchVocabulary(days = 30) {
+  const ctx = await requireAdmin();
+  const vocabulary = await getSearchVocabularyCore(getServiceClient(), ctx, {
+    days,
+  });
+  return { ctx, vocabulary };
 }
 
 // ── Abonten Weekly ──────────────────────────────────────────

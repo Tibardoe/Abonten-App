@@ -1,3 +1,4 @@
+import { markStaleTokenUsed, readStoredSession } from "@/auth/storedSession";
 import { createApiClient } from "@abonten/api-client";
 import { Platform } from "react-native";
 import { getInstallId } from "./installId";
@@ -48,7 +49,19 @@ export const api = createApiClient({
   },
   getAccessToken: async () => {
     const { data } = await supabase.auth.getSession();
-    return data.session?.access_token ?? null;
+    if (data.session) return data.session.access_token;
+    // No usable session, but one is still stored: the access token expired
+    // and the refresh could not reach the auth server (offline, flaky
+    // network). Sending nothing would ask as a signed-out person, and
+    // routes that also serve signed-out callers (feature switches, feeds)
+    // would answer 200 with the signed-out answer — cached for a signed-in
+    // person until it went stale. The stored token gets a 401 instead: the
+    // hooks keep their last good value, and SessionProvider refetches
+    // everything on the first working token.
+    const stored = await readStoredSession();
+    if (!stored) return null;
+    markStaleTokenUsed();
+    return stored.access_token;
   },
   // Sample ~10% of calls into app_request_metric (Admin › Monitoring ›
   // Request telemetry). Off in dev so local traffic doesn't skew it.

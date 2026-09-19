@@ -3,6 +3,7 @@ import Link from "next/link";
 
 const TABS = [
   { href: "/discovery", label: "Overview" },
+  { href: "/discovery/vocabulary", label: "Search vocabulary" },
   { href: "/discovery/settings", label: "Programme settings" },
 ];
 

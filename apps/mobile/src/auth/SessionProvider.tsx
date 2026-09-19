@@ -1,6 +1,8 @@
+import { readStoredSession, takeStaleTokenUsed } from "@/auth/storedSession";
+import { deleteQueryCacheFiles } from "@/lib/queryCacheFiles";
 import { queryClient } from "@/lib/queryClient";
 import { supabase } from "@/lib/supabase";
-import type { Session } from "@supabase/supabase-js";
+import { type Session, isAuthRetryableFetchError } from "@supabase/supabase-js";
 import {
   type ReactNode,
   createContext,
@@ -26,24 +28,61 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    let cancelled = false;
+    let runningOnStoredSession = false;
+    supabase.auth.getSession().then(async ({ data, error }) => {
+      let restored = data.session;
+      // Offline with an access token past its hour: the refresh cannot
+      // reach the server, so getSession() answers "no session" — but the
+      // session is still stored (a network failure never removes it) and
+      // will refresh the moment the connection is back
+      // (TOKEN_REFRESHED below). Treating that as signed out bounced an
+      // offline person to the sign-in screen and hid everything they had
+      // cached. Keep them signed in on the stored session instead; any
+      // request made with it fails like every other offline request.
+      if (!restored && error && isAuthRetryableFetchError(error)) {
+        restored = await readStoredSession();
+        if (restored) runningOnStoredSession = true;
+      }
+      if (cancelled) return;
+      setSession(restored);
       setInitializing(false);
     });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, next) => {
+      // An INITIAL_SESSION with nothing, while offline, is the same
+      // unrefreshable-token case handled above: keep what we have.
+      if (event === "INITIAL_SESSION" && !next) return;
       setSession(next);
+      // First working token after running on the stored (expired) one:
+      // whatever was fetched in between went out without a valid token
+      // (and got 401s or the signed-out answer). Fetch it again as the
+      // person, now that we can.
+      // The same applies when the app started online but a token expired
+      // while the connection was down (api.ts then sent the stored token).
+      if (next && (event === "TOKEN_REFRESHED" || event === "SIGNED_IN")) {
+        const staleUsed = takeStaleTokenUsed();
+        if (runningOnStoredSession || staleUsed) {
+          runningOnStoredSession = false;
+          void queryClient.invalidateQueries();
+        }
+      }
       // Session gone (signed out here, revoked on another device, token
       // refresh permanently failed, or the account was deleted) — drop every
       // cached query so the next signed-in user never sees the previous
       // one's data, and any in-flight fetch stops. useProtectedRoute then
-      // bounces protected screens to the auth stack.
+      // bounces protected screens to the auth stack. The account's offline
+      // cache file goes with it; public data (the "anon" cache) stays.
       if (event === "SIGNED_OUT" || (event === "USER_UPDATED" && !next)) {
         queryClient.clear();
+        deleteQueryCacheFiles("anon");
       }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const value = useMemo<SessionContextValue>(

@@ -22,6 +22,7 @@ complianceReviewRequired: no
 | [trust-and-verification.md](trust-and-verification.md) | Place and organizer verification: model, state machine, evidence storage, permissions |
 | [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md) | Unified search and ranking, `@handle`, opt-in alerts, recommendation digests, preference centre, switches |
 | [weekly-highlights.md](weekly-highlights.md) | Abonten Weekly: editions, sections and items, read-time validity, caching, editorial workflow, jobs, switches, rollout |
+| [mobile-offline-media-and-sync.md](mobile-offline-media-and-sync.md) | Mobile offline query cache, Spotlight player lifecycle, live comments and likes, search vocabulary and date parsing, search filters, follower counts |
 | [perf/discovery-2026-09.md](perf/discovery-2026-09.md) | Measured search and recommendation cost on a 100,000-event synthetic catalogue |
 | [data-model-overview.md](data-model-overview.md) | Table groups, key relationships, status columns, partitions, unused tables |
 | [integrations.md](integrations.md) | Each external service: what, where in code, config, failure behaviour |

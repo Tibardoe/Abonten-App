@@ -5,8 +5,14 @@ import {
   useInvalidateContent,
 } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
-import { useContentPublish } from "@/features/content/useContentPublish";
-import { useHighlightComposer } from "@/features/profile/useHighlightComposer";
+import {
+  type PublishState,
+  useContentPublish,
+} from "@/features/content/useContentPublish";
+import {
+  type EditableMedia,
+  useHighlightComposer,
+} from "@/features/profile/useHighlightComposer";
 import { CONTENT_RIGHTS_ACKNOWLEDGEMENT } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import type { ContentKind } from "@abonten/types/contentType";
@@ -16,11 +22,12 @@ import {
   Chip,
   Icon,
   KeyboardAwareScrollView,
+  ProgressBar,
   useToast,
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { VideoView, useVideoPlayer } from "expo-video";
+import { type VideoThumbnail, VideoView, useVideoPlayer } from "expo-video";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -70,6 +77,10 @@ export default function NewContentScreen() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [cropOpen, setCropOpen] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  // A still of each picked video (from the trim bar's first frame): the
+  // filmstrip and the publish card show it instead of a blank tile.
+  const [posters, setPosters] = useState<Record<string, VideoThumbnail>>({});
   const [placeId, setPublisherPlace] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
   const [eventId, setEventId] = useState<string | null>(null);
@@ -118,6 +129,7 @@ export default function NewContentScreen() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the active item
   useEffect(() => {
     setPreviewReady(false);
+    setPreviewFailed(false);
     if (!active || active.type !== "video") return;
     const seq = ++loadSeq.current;
     (async () => {
@@ -130,7 +142,7 @@ export default function NewContentScreen() {
         player.currentTime = active.startSeconds ?? 0;
         player.play();
       } catch {
-        if (seq === loadSeq.current) setPreviewReady(true);
+        if (seq === loadSeq.current) setPreviewFailed(true);
       }
     })();
     return () => {
@@ -140,11 +152,24 @@ export default function NewContentScreen() {
     };
   }, [active?.id, active?.uri]);
 
+  // Ready = a frame of THIS clip is on screen (onFirstFrameRender below),
+  // not merely "loaded": the player reports readyToPlay before the surface
+  // has drawn anything, which is what left a black box behind the spinner.
+  // A clip the device cannot decode says so instead of spinning forever.
   useEffect(() => {
-    const sub = player.addListener("statusChange", ({ status }) => {
-      if (status === "readyToPlay") setPreviewReady(true);
-    });
-    return () => sub.remove();
+    const subs = [
+      player.addListener("statusChange", ({ status }) => {
+        if (status === "error") setPreviewFailed(true);
+      }),
+      // Backstop for surfaces that never report a first frame: a clip that
+      // is actually advancing is on screen.
+      player.addListener("timeUpdate", ({ currentTime }) => {
+        if (currentTime > 0.1) setPreviewReady(true);
+      }),
+    ];
+    return () => {
+      for (const s of subs) s.remove();
+    };
   }, [player]);
 
   useEffect(() => {
@@ -311,10 +336,11 @@ export default function NewContentScreen() {
                   style={{ flex: 1 }}
                   contentFit="contain"
                   nativeControls={false}
+                  onFirstFrameRender={() => setPreviewReady(true)}
                 />
               )
             ) : null}
-            {!previewReady ? (
+            {!previewReady && active ? (
               <View
                 pointerEvents="none"
                 style={{
@@ -324,7 +350,35 @@ export default function NewContentScreen() {
                   justifyContent: "center",
                 }}
               >
-                <ActivityIndicator color="#fff" />
+                {/* The clip's own still (once we have one) under the
+                    status, so the wait shows the video, not a black box. */}
+                {active.type === "video" && posters[active.id] ? (
+                  <Image
+                    source={posters[active.id]}
+                    style={{ position: "absolute", inset: 0, opacity: 0.6 }}
+                    contentFit="contain"
+                  />
+                ) : null}
+                {previewFailed ? (
+                  <View className="items-center gap-2 px-8">
+                    <Icon name="alert-circle-outline" size={28} color="#fff" />
+                    <AppText className="text-center text-[14px] text-white">
+                      This video can't be previewed on this phone.
+                    </AppText>
+                    <AppText className="text-center text-[12px] text-white/70">
+                      You can still post it; we'll check it when it uploads.
+                    </AppText>
+                  </View>
+                ) : (
+                  <View className="items-center gap-3">
+                    <ActivityIndicator color="#fff" />
+                    <AppText className="text-[13px] text-white/80">
+                      {active.type === "video"
+                        ? "Preparing preview…"
+                        : "Loading photo…"}
+                    </AppText>
+                  </View>
+                )}
               </View>
             ) : null}
           </View>
@@ -338,6 +392,11 @@ export default function NewContentScreen() {
                   item={active}
                   maxSegmentSeconds={maxSeconds}
                   onTrimChange={(s, e) => composer.updateTrim(active.id, s, e)}
+                  onPoster={(thumb) =>
+                    setPosters((p) =>
+                      p[active.id] ? p : { ...p, [active.id]: thumb },
+                    )
+                  }
                 />
               ) : null}
               {tooLong ? (
@@ -371,6 +430,17 @@ export default function NewContentScreen() {
                       style={{ width: "100%", height: "100%" }}
                       contentFit="cover"
                     />
+                  ) : posters[m.id] ? (
+                    <View className="flex-1">
+                      <Image
+                        source={posters[m.id]}
+                        style={{ width: "100%", height: "100%" }}
+                        contentFit="cover"
+                      />
+                      <View className="absolute bottom-1 left-1">
+                        <Icon name="videocam" size={12} color="#fff" />
+                      </View>
+                    </View>
                   ) : (
                     <View className="flex-1 items-center justify-center bg-white/10">
                       <Icon name="videocam" size={18} color="#fff" />
@@ -416,12 +486,6 @@ export default function NewContentScreen() {
   }
 
   // ── Step 3: details ───────────────────────────────────────────────
-  const progressText =
-    publish.state.phase === "uploading"
-      ? `Uploading ${publish.state.index + 1} of ${publish.state.total} · ${Math.round(publish.state.fraction * 100)}%`
-      : publish.state.phase === "saving"
-        ? "Publishing…"
-        : null;
 
   return (
     <View className="flex-1 bg-background">
@@ -437,6 +501,11 @@ export default function NewContentScreen() {
         </AppText>
       </View>
       <KeyboardAwareScrollView contentContainerClassName="gap-5 p-4">
+        <PublishPreview
+          items={composer.items}
+          posters={posters}
+          state={publish.state}
+        />
         {program.publisherPlaces.length > 0 ? (
           <View className="gap-2">
             <AppText variant="label">Post as</AppText>
@@ -546,19 +615,6 @@ export default function NewContentScreen() {
           </AppText>
         </Pressable>
 
-        {publish.state.phase === "error" ? (
-          <View className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-            <AppText variant="small" tone="error">
-              {publish.state.message}
-            </AppText>
-          </View>
-        ) : null}
-        {progressText ? (
-          <AppText variant="meta" className="text-center">
-            {progressText}
-          </AppText>
-        ) : null}
-
         <View className="gap-2 pb-8">
           <Button
             title={publish.state.phase === "error" ? "Try again" : "Publish"}
@@ -575,6 +631,106 @@ export default function NewContentScreen() {
           />
         </View>
       </KeyboardAwareScrollView>
+    </View>
+  );
+}
+
+/**
+ * What is being posted and where it is in the pipeline, always with the
+ * media itself in view: the stage (uploading n of N with real bytes-sent
+ * progress, checking the file on the server, publishing), or the failure
+ * with what went wrong — never an unexplained spinner or a black box.
+ */
+function PublishPreview({
+  items,
+  posters,
+  state,
+}: {
+  items: EditableMedia[];
+  posters: Record<string, VideoThumbnail>;
+  state: PublishState;
+}) {
+  const first = items[0];
+  if (!first) return null;
+  const still =
+    first.type === "image" ? { uri: first.uri } : (posters[first.id] ?? null);
+
+  let label: string | null = null;
+  let value = 0;
+  let indeterminate = false;
+  if (state.phase === "uploading") {
+    label =
+      state.total > 1
+        ? `Uploading ${state.index + 1} of ${state.total}`
+        : "Uploading";
+    value = (state.index + state.fraction) / state.total;
+    // Bytes are all sent; the server is checking the file.
+    if (state.fraction >= 1) {
+      label = "Checking your file…";
+      indeterminate = true;
+    }
+  } else if (state.phase === "saving") {
+    label = "Publishing…";
+    indeterminate = true;
+  }
+
+  return (
+    <View className="flex-row gap-3 rounded-2xl border border-border bg-card p-3">
+      <View className="h-24 w-16 items-center justify-center overflow-hidden rounded-lg bg-muted">
+        {still ? (
+          <Image
+            source={still}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+          />
+        ) : (
+          <Icon
+            name={first.type === "video" ? "videocam-outline" : "image-outline"}
+            size={22}
+            tone="muted"
+          />
+        )}
+        {items.length > 1 ? (
+          <View className="absolute right-1 top-1 rounded-md bg-black/60 px-1">
+            <AppText className="text-[11px] font-semibold text-white">
+              {items.length}
+            </AppText>
+          </View>
+        ) : null}
+      </View>
+      <View className="flex-1 justify-center gap-2">
+        {state.phase === "error" ? (
+          <>
+            <AppText variant="bodyStrong" tone="error">
+              Not posted yet
+            </AppText>
+            <AppText variant="small">{state.message}</AppText>
+            <AppText variant="caption" tone="muted">
+              Anything already uploaded is kept — Try again picks up from there.
+            </AppText>
+          </>
+        ) : label ? (
+          <ProgressBar
+            label={label}
+            value={value}
+            showPercent={!indeterminate}
+            indeterminate={indeterminate}
+          />
+        ) : (
+          <>
+            <AppText variant="bodyStrong">
+              {items.length > 1
+                ? `${items.length} items ready`
+                : first.type === "video"
+                  ? "Video ready to post"
+                  : "Photo ready to post"}
+            </AppText>
+            <AppText variant="caption" tone="muted">
+              It uploads when you publish. Keep the app open until it's done.
+            </AppText>
+          </>
+        )}
+      </View>
     </View>
   );
 }

@@ -11,6 +11,7 @@ import type {
   SubscriptionStatusResult,
   SubscriptionTarget,
 } from "@abonten/types/discoveryType";
+import type { ActivePromotionSummary } from "@abonten/types/promotionSummaryType";
 import type {
   SearchClickInput,
   SearchRequest,
@@ -682,6 +683,13 @@ export function createApiClient(options: ApiClientOptions) {
         return request<{ status: 200 | 401 | 500; message: string }>(
           "/api/mobile/account/delete",
           { method: "POST", auth: true },
+        );
+      },
+      /** Live and queued promotions the caller owns (events, places, Spotlights). */
+      activePromotions() {
+        return request<ApiEnvelope<ActivePromotionSummary[]>>(
+          "/api/mobile/account/promotions",
+          { method: "GET", auth: true },
         );
       },
     },

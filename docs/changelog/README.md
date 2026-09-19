@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-17
+lastReviewed: 2026-09-19
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,20 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-19 — Search vocabulary tuning, token-refresh window, release measurements
+
+- **New — Admin › Discovery › Search vocabulary** (`admin/discovery.md` 1.2): unanswered searches, preview, and add / edit / switch off / remove terms, audited as `discovery.vocabulary.*`. Migration `20260919100000` (production): `admin_search_vocabulary_gaps`, `admin_search_concept_preview`, 34 more starter terms.
+- **Fix — mobile never asks anonymously while signed in**: with an expired token and an unreachable auth server the API client sends the stored token instead of none (`architecture/mobile-offline-media-and-sync.md` 1.1, §1).
+- **Measured** — release-build cold start, memory and frame times, with a Perfetto attribution, and real Cloudinary uploads (architecture doc §2 and §7; PROJECT.md §36.9).
+
+## 2026-09-19 — Mobile offline cache, Spotlight playback, live comments, search relevance, follower counts
+
+- **New — `docs/architecture/mobile-offline-media-and-sync.md`** (1.0): the persisted query cache (allowlist, exclusions, lifecycle, offline session), the Spotlight player lifecycle, comment/like cache transforms and the `content_post:<id>` realtime topic, the `search_concept` vocabulary and date parsing, mobile search filters, `follow_count` / `get_public_profile`, Settings promotions. Linked from `INDEX.md` (list + troubleshooting row) and `architecture/README.md`.
+- **Database** (production): `20260919090000` comment realtime broadcast, `20260919091000` search concepts / dates / relaxed tier, `20260919092000` follower counts + public profile RPC, `20260919093000` `follow_counts` security invoker.
+- **API**: `GET /api/mobile/account/promotions`.
+- **Fix — web build**: `useRequireAuth` no longer calls `useSearchParams()` during render (it made `/weekly` fail to prerender whenever the fallback listed events).
+- PROJECT.md §36.
 
 ## 2026-09-18 — Inbox ordering, unread counting, time labels, realtime rejoin
 
