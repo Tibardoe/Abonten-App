@@ -425,6 +425,40 @@ export const discoverySettingsSchema = z.object({
     .partial(),
 });
 
+// Search vocabulary (Admin › Discovery › Vocabulary). The service
+// normalises and re-checks with @abonten/core/search/searchVocabulary.
+const searchConceptFields = {
+  term: z.string().trim().min(1, "Enter the term people type").max(60),
+  expandsTo: z.array(z.string().trim().min(1).max(60)).min(1).max(30),
+  appliesTo: z
+    .array(z.enum(["event", "place", "spotlight"]))
+    .min(1, "Choose at least one of events, places or Spotlights"),
+};
+
+export const searchConceptPreviewSchema = z.object(searchConceptFields);
+
+export const searchConceptSaveSchema = z.object({
+  ...searchConceptFields,
+  id: z.number().int().positive().optional(),
+  expectedUpdatedAt: z.string().min(1).optional(),
+  enabled: z.boolean(),
+  note: z.string().trim().max(200).nullable().optional(),
+  reason: z
+    .string()
+    .trim()
+    .min(5, "Give a short reason for this change")
+    .max(500),
+});
+
+export const searchConceptDeleteSchema = z.object({
+  id: z.number().int().positive(),
+  reason: z
+    .string()
+    .trim()
+    .min(5, "Give a short reason for this change")
+    .max(500),
+});
+
 // Held rewards (risk review). The note is audited and stored on the reward.
 export const rewardReviewSchema = z.object({
   rewardEventId: z.string().uuid(),

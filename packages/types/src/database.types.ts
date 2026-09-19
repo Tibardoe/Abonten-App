@@ -12512,7 +12512,19 @@ export type Database = {
         Args: { p_from: string; p_to: string };
         Returns: Json;
       };
+      admin_search_concept_preview: {
+        Args: {
+          p_applies_to: string[];
+          p_expands_to: string[];
+          p_term: string;
+        };
+        Returns: Json;
+      };
       admin_search_insights: { Args: { p_days?: number }; Returns: Json };
+      admin_search_vocabulary_gaps: {
+        Args: { p_days?: number; p_limit?: number };
+        Returns: Json;
+      };
       admin_settle_payout: {
         Args: {
           p_failure_reason?: string;

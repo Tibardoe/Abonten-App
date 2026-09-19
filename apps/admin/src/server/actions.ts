@@ -18,6 +18,11 @@ import {
 import { updateContentSettingsCore } from "@abonten/services/admin/content/contentPlatformAdminCore";
 import { updatePromotionPricingAdminCore } from "@abonten/services/admin/content/contentPromotionPricingAdminCore";
 import { updateDiscoverySettingsCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
+import {
+  deleteSearchConceptCore,
+  previewSearchConceptCore,
+  saveSearchConceptCore,
+} from "@abonten/services/admin/discovery/searchVocabularyAdminCore";
 import { exportCampaignStatsCsvCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
   setCampaignStatusCore,
@@ -160,6 +165,9 @@ import {
   rewardRuleActivationSchema,
   rewardRuleVersionSchema,
   rewardsSettingsSchema,
+  searchConceptDeleteSchema,
+  searchConceptPreviewSchema,
+  searchConceptSaveSchema,
   sendPayoutSchema,
   setAdminUserStatusSchema,
   setRolePermissionSchema,
@@ -1230,6 +1238,59 @@ export async function updateDiscoverySettings(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "updateDiscoverySettings");
+  }
+}
+
+// Search vocabulary: a preview only reads (discovery.view); saving and
+// removing change what every search finds, so they sit behind
+// discovery.configure and its step-up like the programme settings.
+
+export async function previewSearchConcept(input: unknown) {
+  const parsed = searchConceptPreviewSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    return await previewSearchConceptCore(svc(), ctx, parsed.data);
+  } catch (e) {
+    return adminError(e, "previewSearchConcept");
+  }
+}
+
+export async function saveSearchConcept(input: unknown) {
+  const parsed = searchConceptSaveSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await saveSearchConceptCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/discovery/vocabulary");
+    return res;
+  } catch (e) {
+    return adminError(e, "saveSearchConcept");
+  }
+}
+
+export async function deleteSearchConcept(input: unknown) {
+  const parsed = searchConceptDeleteSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await deleteSearchConceptCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/discovery/vocabulary");
+    return res;
+  } catch (e) {
+    return adminError(e, "deleteSearchConcept");
   }
 }
 
