@@ -10,9 +10,9 @@ import {
   DASHBOARD_PERIOD_COMPARISON_LABELS,
   type DashboardPeriod,
 } from "@abonten/core/organizerDashboardDateRange";
+import type { OrganizerOverviewRow } from "@abonten/types/eventAnalytics";
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
+type Row = OrganizerOverviewRow;
 
 // The rule lives in @abonten/core/admin/computeTrend so the organizer
 // dashboard and the admin console can never disagree about what a

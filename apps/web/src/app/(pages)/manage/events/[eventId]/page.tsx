@@ -91,10 +91,9 @@ export default async function page({
 
   const promotionTiers =
     tiersResponse.status === 200 ? (tiersResponse.data ?? []) : [];
-  // postgrest-js infers event_promotion_tier's embed as an array here (this
-  // client has no generated Database types to tell it the join is
-  // many-to-one) even though it's actually a single row at runtime — same
-  // untyped-client situation manage/places/[placeId]/page.tsx works around.
+  // postgrest-js infers event_promotion_tier's embed as an array here even
+  // though the relationship is many-to-one and a single row comes back at
+  // runtime; narrowed once here (same as manage/places/[placeId]/page.tsx).
   const activePromotion = activePromotionRaw as unknown as {
     ends_at: string;
     event_promotion_tier: { duration_label: string } | null;

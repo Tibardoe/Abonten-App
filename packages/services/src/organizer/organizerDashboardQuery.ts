@@ -5,6 +5,14 @@ import {
   getDashboardPeriodRange,
 } from "@abonten/core/organizerDashboardDateRange";
 import type { Database } from "@abonten/types/database.types";
+import type {
+  OrganizerActivityRow,
+  OrganizerAttentionRow,
+  OrganizerEventPerformanceRow,
+  OrganizerOverviewRow,
+  OrganizerSalesTimelinePoint,
+  OrganizerUpcomingEventRow,
+} from "@abonten/types/eventAnalytics";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth query bodies for the organizer Dashboard's widget sections
@@ -19,18 +27,19 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // caller's own events via auth.uid(); a Bearer `authenticated` client
 // resolves auth.uid() identically to the cookie session.
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
-
 type Failed = { status: 500; message: string };
 
 const FAILED: Failed = { status: 500, message: "Something went wrong!" };
 
 export type SalesTimelineResult =
   | Failed
-  | { status: 200; data: Row[]; bucket: DashboardBucket };
+  | {
+      status: 200;
+      data: OrganizerSalesTimelinePoint[];
+      bucket: DashboardBucket;
+    };
 
-export type DashboardListResult = Failed | { status: 200; data: Row[] };
+export type DashboardListResult<T> = Failed | { status: 200; data: T[] };
 
 export async function fetchOrganizerSalesTimeline(
   supabase: SupabaseClient<Database>,
@@ -51,7 +60,7 @@ export async function fetchOrganizerSalesTimeline(
     return FAILED;
   }
 
-  return { status: 200, data: (data ?? []) as Row[], bucket };
+  return { status: 200, data: data ?? [], bucket };
 }
 
 export async function fetchOrganizerEventPerformance(
@@ -59,7 +68,7 @@ export async function fetchOrganizerEventPerformance(
   period: DashboardPeriod,
   sort: "revenue" | "tickets" = "revenue",
   limit = 10,
-): Promise<DashboardListResult> {
+): Promise<DashboardListResult<OrganizerEventPerformanceRow>> {
   const { start, end } = getDashboardPeriodRange(period);
 
   const { data, error } = await supabase.rpc(
@@ -77,13 +86,13 @@ export async function fetchOrganizerEventPerformance(
     return FAILED;
   }
 
-  return { status: 200, data: (data ?? []) as Row[] };
+  return { status: 200, data: data ?? [] };
 }
 
 export async function fetchOrganizerUpcomingEvents(
   supabase: SupabaseClient<Database>,
   limit = 5,
-): Promise<DashboardListResult> {
+): Promise<DashboardListResult<OrganizerUpcomingEventRow>> {
   const { data, error } = await supabase.rpc("get_organizer_upcoming_events", {
     p_limit: limit,
   });
@@ -93,13 +102,13 @@ export async function fetchOrganizerUpcomingEvents(
     return FAILED;
   }
 
-  return { status: 200, data: (data ?? []) as Row[] };
+  return { status: 200, data: data ?? [] };
 }
 
 export async function fetchOrganizerNeedsAttention(
   supabase: SupabaseClient<Database>,
   daysSoon = 7,
-): Promise<DashboardListResult> {
+): Promise<DashboardListResult<OrganizerAttentionRow>> {
   const { data, error } = await supabase.rpc("get_organizer_needs_attention", {
     p_days_soon: daysSoon,
   });
@@ -109,13 +118,13 @@ export async function fetchOrganizerNeedsAttention(
     return FAILED;
   }
 
-  return { status: 200, data: (data ?? []) as Row[] };
+  return { status: 200, data: data ?? [] };
 }
 
 export async function fetchOrganizerRecentActivity(
   supabase: SupabaseClient<Database>,
   limit = 8,
-): Promise<DashboardListResult> {
+): Promise<DashboardListResult<OrganizerActivityRow>> {
   const { data, error } = await supabase.rpc("get_organizer_recent_activity", {
     p_limit: limit,
   });
@@ -125,15 +134,15 @@ export async function fetchOrganizerRecentActivity(
     return FAILED;
   }
 
-  return { status: 200, data: (data ?? []) as Row[] };
+  return { status: 200, data: data ?? [] };
 }
 
 export type OrganizerDashboardWidgets = {
-  timeline: { rows: Row[]; bucket: DashboardBucket };
-  performance: Row[];
-  upcoming: Row[];
-  attention: Row[];
-  activity: Row[];
+  timeline: { rows: OrganizerSalesTimelinePoint[]; bucket: DashboardBucket };
+  performance: OrganizerEventPerformanceRow[];
+  upcoming: OrganizerUpcomingEventRow[];
+  attention: OrganizerAttentionRow[];
+  activity: OrganizerActivityRow[];
 };
 
 export type OrganizerDashboardWidgetsResult =
@@ -141,8 +150,8 @@ export type OrganizerDashboardWidgetsResult =
   | { status: 200; data: OrganizerDashboardWidgets };
 
 export type OrganizerDashboardOverview = {
-  current: Row[];
-  previous: Row[] | null;
+  current: OrganizerOverviewRow[];
+  previous: OrganizerOverviewRow[] | null;
 };
 
 export type OrganizerDashboardResult =
@@ -164,8 +173,11 @@ type DashboardDocument = {
   activity?: unknown;
 };
 
-function rows(value: unknown): Row[] {
-  return Array.isArray(value) ? (value as Row[]) : [];
+// get_organizer_dashboard returns one jsonb document built from the seven
+// typed RPCs above; each key is read back as that RPC's row type. This is
+// the one place the aggregate's `Json` is narrowed.
+function rows<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
 }
 
 /**
@@ -205,15 +217,20 @@ export async function fetchOrganizerDashboard(
     status: 200,
     data: {
       overview: {
-        current: rows(doc.overview_current),
+        current: rows<OrganizerOverviewRow>(doc.overview_current),
         previous:
-          doc.overview_previous == null ? null : rows(doc.overview_previous),
+          doc.overview_previous == null
+            ? null
+            : rows<OrganizerOverviewRow>(doc.overview_previous),
       },
-      timeline: { rows: rows(doc.timeline), bucket },
-      performance: rows(doc.performance),
-      upcoming: rows(doc.upcoming),
-      attention: rows(doc.attention),
-      activity: rows(doc.activity),
+      timeline: {
+        rows: rows<OrganizerSalesTimelinePoint>(doc.timeline),
+        bucket,
+      },
+      performance: rows<OrganizerEventPerformanceRow>(doc.performance),
+      upcoming: rows<OrganizerUpcomingEventRow>(doc.upcoming),
+      attention: rows<OrganizerAttentionRow>(doc.attention),
+      activity: rows<OrganizerActivityRow>(doc.activity),
     },
   };
 }

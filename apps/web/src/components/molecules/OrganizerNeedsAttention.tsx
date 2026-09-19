@@ -1,10 +1,10 @@
+import type { OrganizerAttentionRow } from "@abonten/types/eventAnalytics";
 import Link from "next/link";
 import { TbAlertTriangle, TbCircleCheck } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
 import InlineErrorRetry from "./InlineErrorRetry";
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
+type Row = OrganizerAttentionRow;
 
 // Simple, explainable, threshold-based rules only (see
 // get_organizer_needs_attention) — no speculative/AI-generated warnings.

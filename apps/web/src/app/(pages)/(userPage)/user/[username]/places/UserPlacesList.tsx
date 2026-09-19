@@ -5,6 +5,7 @@ import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButto
 import PlaceCardSkeleton from "@/places/molecules/PlaceCardSkeleton";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PaginatedResult } from "@abonten/types/pagination";
+import type { OrganizerPlaceRow } from "@abonten/types/placeRows";
 import Image from "next/image";
 import Link from "next/link";
 import { IoLocationOutline } from "react-icons/io5";
@@ -20,8 +21,7 @@ import { IoLocationOutline } from "react-icons/io5";
 // what this action actually returns -- the same workaround
 // OrganizerPlacesList.tsx already uses for the manage/places list fed by
 // this same action.
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type OwnedPlaceRow = any;
+type OwnedPlaceRow = OrganizerPlaceRow;
 
 export default function UserPlacesList({
   queryKey,

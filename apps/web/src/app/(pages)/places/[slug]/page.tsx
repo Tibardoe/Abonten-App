@@ -60,9 +60,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const response = await getPlaceBySlug(slug);
 
-  // See the event page: decided before the page streams so crawlers get
-  // a real 404 for a listing that does not exist.
-  if (response.status !== 200 || !response.data) notFound();
+  // The segment layout has already answered with a 404 for a missing slug.
+  if (response.status !== 200 || !response.data) {
+    return { title: "Place not found" };
+  }
 
   const place = response.data;
   const categoryName = place.place_category?.name as string | undefined;

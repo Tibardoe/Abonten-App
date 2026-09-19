@@ -11,11 +11,13 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { Database } from "@abonten/types/database.types";
+import type { OrganizerOverviewRow } from "@abonten/types/eventAnalytics";
 import type {
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
 } from "@abonten/types/organizerFinance";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { OrganizerPlaceRow } from "@abonten/types/placeRows";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -30,8 +32,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // `userId` is still threaded through for the direct `event` table read,
 // whose RLS `event_organizer_select` also keys on `auth.uid()`.
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type OverviewRow = any;
+type OverviewRow = OrganizerOverviewRow;
 
 export type OrganizerDashboardOverviewResult =
   | { status: 401 | 500; message: string }
@@ -309,9 +310,6 @@ export async function fetchOrganizerLedgerPage(
 
   return { status: 200, data: page, nextCursor, hasNextPage };
 }
-
-// biome-ignore lint/suspicious/noExplicitAny: joined place_category shape, no generated Supabase types (see PROJECT.md)
-type OrganizerPlaceRow = any;
 
 // Cursor-paginated list of the places owned by `ownerId` — the authed
 // branch of getOrganizerPlaces (the public /user/:username/places branch

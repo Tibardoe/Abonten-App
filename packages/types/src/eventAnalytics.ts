@@ -26,3 +26,18 @@ export type EventReturningAttendeeStats =
 
 export type OrganizerSalesTimelinePoint =
   Fn["get_organizer_sales_timeline"]["Returns"][number];
+
+export type OrganizerOverviewRow =
+  Fn["get_organizer_dashboard_overview"]["Returns"][number];
+
+export type OrganizerEventPerformanceRow =
+  Fn["get_organizer_event_performance"]["Returns"][number];
+
+export type OrganizerUpcomingEventRow =
+  Fn["get_organizer_upcoming_events"]["Returns"][number];
+
+export type OrganizerAttentionRow =
+  Fn["get_organizer_needs_attention"]["Returns"][number];
+
+export type OrganizerActivityRow =
+  Fn["get_organizer_recent_activity"]["Returns"][number];

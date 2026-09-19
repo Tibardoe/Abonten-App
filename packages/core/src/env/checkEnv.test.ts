@@ -29,7 +29,7 @@ describe("checkEnv", () => {
 describe("enforceEnv", () => {
   it("throws for a required gap only in strict mode, and never prints values", () => {
     const log = { warn: vi.fn(), error: vi.fn() };
-    const report = checkEnv({ SUPABASE_URL: "u" }, spec);
+    const report = checkEnv({ SUPABASE_URL: "https://real-value.test" }, spec);
     expect(() => enforceEnv(report, { app: "web", strict: true, log })).toThrow(
       /required configuration missing: SECRET/,
     );
@@ -37,7 +37,7 @@ describe("enforceEnv", () => {
     expect(log.error).toHaveBeenCalledTimes(1);
     expect(log.warn).toHaveBeenCalledWith(expect.stringContaining("RESEND"));
     for (const call of [...log.error.mock.calls, ...log.warn.mock.calls]) {
-      expect(call[0]).not.toContain("u");
+      expect(call[0]).not.toContain("real-value");
     }
   });
 });

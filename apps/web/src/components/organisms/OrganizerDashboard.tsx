@@ -21,12 +21,19 @@ import type {
   DashboardBucket,
   DashboardPeriod,
 } from "@abonten/core/organizerDashboardDateRange";
+import type {
+  OrganizerActivityRow,
+  OrganizerAttentionRow,
+  OrganizerEventPerformanceRow,
+  OrganizerOverviewRow,
+  OrganizerSalesTimelinePoint,
+  OrganizerUpcomingEventRow,
+} from "@abonten/types/eventAnalytics";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import OrganizerVerificationCard from "@/verification/molecules/OrganizerVerificationCard";
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
+type Row = OrganizerOverviewRow;
 
 // Every section below is its own useQuery — independent loading states, and
 // a stale mutation (purchase/cancel/registration) only needs to invalidate
@@ -94,7 +101,7 @@ export default function OrganizerDashboard() {
   const primaryCurrency = overview?.current?.[0]?.currency ?? "GHS";
 
   const timelineResult = timelineQuery.data;
-  const timelineData: Row[] =
+  const timelineData: OrganizerSalesTimelinePoint[] =
     timelineResult && timelineResult.status === 200 ? timelineResult.data : [];
   const timelineBucket: DashboardBucket =
     (timelineResult &&
@@ -103,23 +110,23 @@ export default function OrganizerDashboard() {
     "day";
 
   const performanceResult = performanceQuery.data;
-  const performanceEvents: Row[] =
+  const performanceEvents: OrganizerEventPerformanceRow[] =
     performanceResult && performanceResult.status === 200
       ? performanceResult.data
       : [];
 
   const upcomingResult = upcomingQuery.data;
-  const upcomingEvents: Row[] =
+  const upcomingEvents: OrganizerUpcomingEventRow[] =
     upcomingResult && upcomingResult.status === 200 ? upcomingResult.data : [];
 
   const attentionResult = attentionQuery.data;
-  const attentionItems: Row[] =
+  const attentionItems: OrganizerAttentionRow[] =
     attentionResult && attentionResult.status === 200
       ? attentionResult.data
       : [];
 
   const activityResult = activityQuery.data;
-  const activityItems: Row[] =
+  const activityItems: OrganizerActivityRow[] =
     activityResult && activityResult.status === 200 ? activityResult.data : [];
 
   const greeting = (() => {

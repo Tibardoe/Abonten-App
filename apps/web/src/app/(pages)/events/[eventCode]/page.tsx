@@ -66,11 +66,8 @@ export async function generateMetadata({
     .eq("event_code", eventCode.toUpperCase())
     .single();
 
-  // Decided here, before the page streams: the route has a loading
-  // boundary, so a notFound() thrown from the page body arrives after the
-  // 200 shell. Metadata resolves first for crawlers, which is where a real
-  // 404 status matters (a 200 for a missing listing is a soft 404).
-  if (!event) notFound();
+  // The segment layout has already answered with a 404 for a missing code.
+  if (!event) return { title: "Event not found" };
 
   const title = event.title;
   const description = event.description

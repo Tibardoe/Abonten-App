@@ -56,7 +56,7 @@ flowchart TB
 apps/web        Next 16 (App Router, Turbopack). src/app routes; src/actions (Server Actions); src/app/api (route handlers);
                 src/components (atoms/molecules/organisms/ui); feature folders (events, places, wallet, messaging, rewards, fieldOps…);
                 src/content (public legal + help Markdown); src/utils; src/config/supabase (client/server/middleware factories); src/proxy.ts
-apps/admin      Next 16 console. src/app/(console)/*; src/lib/adminGuard.ts; src/server/actions.ts; src/components/Sidebar.tsx
+apps/admin      Next 16 console. src/app/(console)/*; src/lib/adminGuard.ts; src/server/actions/ (one module per domain); src/components/Sidebar.tsx
 apps/mobile     Expo SDK 57 / Expo Router. app/ (routes), src/features, src/components, src/lib
 packages/services  business logic by domain (admin, checkout, events, fieldOps, messaging, notifications, organizer, payments, places,
                    platform, profile, promo-codes, promotions, reports, reviews, rewards, security, supabase, tickets, uploads) + __integration__ tests

@@ -100,23 +100,16 @@ test("an unknown URL is a real 404 with the site's navigation", async ({
   await expect(page.locator("header")).toBeVisible();
 });
 
-test("a missing event is a 404, not a blank page", async ({
+test("a missing event or place is a real 404, not a blank page", async ({
   page,
-  request,
 }) => {
-  // The route streams behind a loading boundary, so a browser can receive
-  // the not-found UI after a 200 shell; crawlers (which is where the status
-  // matters) get the metadata first and with it the 404.
-  const crawler = await request.get("/events/NOPE00", {
-    headers: {
-      "user-agent": "Googlebot/2.1 (+http://www.google.com/bot.html)",
-    },
-  });
-  expect(crawler.status()).toBe(404);
-  await page.goto("/events/NOPE00");
+  const event = await page.goto("/events/NOPE00");
+  expect(event?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     /couldn't find/i,
   );
+  const place = await page.goto("/places/no-such-place-9f2c");
+  expect(place?.status()).toBe(404);
 });
 
 test("a location explore page renders its tabs and canonical URL", async ({

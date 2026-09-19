@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { readEventAddress } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -17,13 +18,13 @@ import {
 } from "@abonten/services/reviews/ratingsQuery";
 import type { FavoritePlaces } from "@abonten/types/favoritePlaceTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { FavoritePlaceJoinRow } from "@abonten/types/placeRows";
 
 // Raw join shape from Supabase (favorite_place -> place -> place_category /
 // place_opening_hours). No generated Supabase types exist in this repo (see
 // PROJECT.md), same reason getOrganizerPlaces.ts/getPlaceBySlug.ts use `any`
 // for their raw joined rows.
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type RawFavoritePlaceRow = any;
+type RawFavoritePlaceRow = FavoritePlaceJoinRow;
 
 // Mirrors getUserFavoritePosts.ts's exact shape/cursor-pagination pattern,
 // for favorite_place + place instead of favorite + event.
@@ -96,14 +97,23 @@ export async function getUserFavoritePlaces(options?: {
 
   const { page, hasNextPage } = splitPage<RawFavoritePlaceRow>(data, pageSize);
 
-  const placeIds = page.map((favorite) => favorite.place.id);
+  // A favourite whose place RLS now hides (removed, unpublished) embeds as
+  // null: it is left out rather than shown as an empty card.
+  const visible = page.filter(
+    (
+      favorite,
+    ): favorite is typeof favorite & {
+      place: NonNullable<typeof favorite.place>;
+    } => favorite.place !== null,
+  );
+  const placeIds = visible.map((favorite) => favorite.place.id);
 
   const ratingsByPlaceId =
     placeIds.length > 0
       ? await getPlaceRatingAggregates(supabase, placeIds)
       : {};
 
-  const favoritesWithPlaceType: FavoritePlaces[] = page.map((favorite) => {
+  const favoritesWithPlaceType: FavoritePlaces[] = visible.map((favorite) => {
     const place = favorite.place;
     const openingHours: PlaceOpeningHourRow[] = place.place_opening_hours ?? [];
     const { isOpen } = computePlaceOpenStatus(
@@ -125,8 +135,8 @@ export async function getUserFavoritePlaces(options?: {
         category_id: place.category_id,
         category_name: place.place_category?.name ?? "Uncategorized",
         category_slug: place.place_category?.slug ?? "",
-        location: place.location,
-        address: place.address,
+        location: typeof place.location === "string" ? place.location : "",
+        address: readEventAddress(place.address),
         website_url: place.website_url,
         phone: place.phone,
         whatsapp: place.whatsapp,

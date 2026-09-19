@@ -1,7 +1,7 @@
 // Types for the in-app notification system (Places Phase 2, Milestone 1).
-// Manual interface, same style as src/types/placeType.ts — no generated
-// Supabase types exist in this repo (see PROJECT.md). Field names/shapes
-// here must match supabase/migrations/20260823090000_add_notifications.sql
+// Domain interface (the raw row is Database["public"]["Tables"]["notification"]
+// in database.types.ts). Field names/shapes here must match
+// supabase/migrations/20260823090000_add_notifications.sql
 // + 20260903091032_add_notification_metadata.sql exactly.
 
 // The structured target of a notification — preferred over parsing `link`.

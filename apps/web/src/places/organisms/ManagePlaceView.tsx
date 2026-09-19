@@ -11,12 +11,19 @@ import ManagePlacePromotionSection from "@/places/organisms/ManagePlacePromotion
 import ManagePlaceReviewsSection from "@/places/organisms/ManagePlaceReviewsSection";
 import ManagePlaceServicesSection from "@/places/organisms/ManagePlaceServicesSection";
 import PlaceVisitQrCard from "@/places/organisms/PlaceVisitQrCard";
+import { readEventAddress } from "@abonten/core/eventAddress";
+import {
+  readPlaceTemporaryStatus,
+  readSocialLinks,
+} from "@abonten/core/placeJson";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
   OwnerPlaceBooking,
 } from "@abonten/types/placeBookingType";
+import type { ManagedPlaceRow } from "@abonten/types/placeRows";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
+import type { PlaceReviewListItem } from "@abonten/types/reviewType";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { IoAddOutline } from "react-icons/io5";
@@ -25,10 +32,8 @@ import PlaceSetupChecklist from "@/places/molecules/PlaceSetupChecklist";
 import VerificationSection from "@/verification/organisms/VerificationSection";
 import { computePlaceSetup } from "@abonten/core/placeSetup";
 import type { SubjectVerificationView } from "@abonten/types/verificationType";
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- same convention every other Places component uses for a joined/raw row
-type ManagedPlace = any;
-// biome-ignore lint/suspicious/noExplicitAny: see above
-type PlaceReviewRow = any;
+type ManagedPlace = ManagedPlaceRow;
+type PlaceReviewRow = PlaceReviewListItem;
 
 type ManagePlaceViewProps = {
   place: ManagedPlace;
@@ -202,7 +207,14 @@ export default function ManagePlaceView({
 
       <div className="w-full md:w-[70%] md:mx-auto">
         {activeTab === "details" && (
-          <ManagePlaceDetailsSection place={place} onSaved={refresh} />
+          <ManagePlaceDetailsSection
+            place={{
+              ...place,
+              address: readEventAddress(place.address),
+              social_links: readSocialLinks(place.social_links),
+            }}
+            onSaved={refresh}
+          />
         )}
 
         {activeTab === "photos" && (
@@ -217,7 +229,7 @@ export default function ManagePlaceView({
           <ManagePlaceHoursSection
             placeId={place.id}
             openingHours={openingHours}
-            temporaryStatus={place.temporary_status}
+            temporaryStatus={readPlaceTemporaryStatus(place.temporary_status)}
             temporaryStatusNote={place.temporary_status_note}
             onChanged={refresh}
           />
