@@ -80,6 +80,7 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
             You're going
           </AppText>
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.push("/(app)/tickets")}
             className="rounded-lg bg-primary px-4 py-2.5"
           >
@@ -112,6 +113,7 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
                 !selectable && new Date(o.ends_at).getTime() > now;
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={o.id}
                   disabled={!selectable}
                   onPress={() => setPickedOccurrenceId(o.id)}

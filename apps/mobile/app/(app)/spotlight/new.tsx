@@ -243,7 +243,11 @@ export default function NewContentScreen() {
           style={{ paddingTop: insets.top + 6 }}
           className="flex-row items-center justify-between px-4"
         >
-          <Pressable onPress={() => router.back()} hitSlop={10}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            hitSlop={10}
+          >
             <Icon name="close" size={26} color="#fff" />
           </Pressable>
           <AppText className="text-[16px] font-semibold text-white">
@@ -287,7 +291,11 @@ export default function NewContentScreen() {
             style={{ paddingTop: insets.top + 6 }}
             className="flex-row items-center gap-3 px-4 pb-2"
           >
-            <Pressable onPress={() => router.back()} hitSlop={10}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.back()}
+              hitSlop={10}
+            >
               <Icon name="close" size={26} color="#fff" />
             </Pressable>
             <AppText className="flex-1 text-[15px] font-semibold text-white">
@@ -297,6 +305,7 @@ export default function NewContentScreen() {
             </AppText>
             {active?.type === "image" ? (
               <Pressable
+                accessibilityRole="button"
                 onPress={() => setCropOpen(true)}
                 hitSlop={10}
                 accessibilityLabel="Crop photo"
@@ -415,6 +424,7 @@ export default function NewContentScreen() {
             >
               {composer.items.map((m) => (
                 <Pressable
+                  accessibilityRole="button"
                   key={m.id}
                   onPress={() => composer.select(m.id)}
                   className={[
@@ -447,6 +457,7 @@ export default function NewContentScreen() {
                     </View>
                   )}
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() => composer.remove(m.id)}
                     hitSlop={6}
                     style={{ position: "absolute", right: 2, top: 2 }}
@@ -458,6 +469,7 @@ export default function NewContentScreen() {
               ))}
               {composer.items.length < maxItems ? (
                 <Pressable
+                  accessibilityRole="button"
                   onPress={pick}
                   className="h-20 w-16 items-center justify-center rounded-lg border-2 border-dashed border-white/30"
                 >
@@ -493,7 +505,11 @@ export default function NewContentScreen() {
         style={{ paddingTop: insets.top + 6 }}
         className="flex-row items-center gap-3 border-b border-border px-4 pb-3"
       >
-        <Pressable onPress={() => !busy && setStep(2)} hitSlop={10}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => !busy && setStep(2)}
+          hitSlop={10}
+        >
           <Icon name="chevron-back" size={24} tone="foreground" />
         </Pressable>
         <AppText variant="sectionHeading" className="flex-1">

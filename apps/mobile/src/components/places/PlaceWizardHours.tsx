@@ -31,6 +31,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
         <AppText variant="label">Opening hours</AppText>
         {firstOpen ? (
           <Pressable
+            accessibilityRole="button"
             onPress={copyToAll}
             hitSlop={8}
             className="active:opacity-60"

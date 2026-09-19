@@ -119,6 +119,7 @@ export default function CheckoutReviewScreen() {
           {data?.message ?? "This checkout could not be loaded."}
         </AppText>
         <Pressable
+          accessibilityRole="button"
           className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
           onPress={() => refetch()}
         >
@@ -154,6 +155,7 @@ export default function CheckoutReviewScreen() {
           sale. You can pick your tickets again.
         </AppText>
         <Pressable
+          accessibilityRole="button"
           className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
           onPress={() => router.back()}
         >
@@ -229,6 +231,7 @@ export default function CheckoutReviewScreen() {
         />
 
         <Pressable
+          accessibilityRole="button"
           disabled={cancel.isPending}
           onPress={onCancel}
           className="items-center rounded-xl border border-destructive/40 bg-destructive/10 py-3 active:opacity-80"

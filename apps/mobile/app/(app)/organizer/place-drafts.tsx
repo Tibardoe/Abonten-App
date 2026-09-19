@@ -45,6 +45,7 @@ function DraftRow({ draft }: { draft: PlaceDraftListItem }) {
   return (
     <View className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3">
       <Pressable
+        accessibilityRole="button"
         className="flex-1 flex-row items-center gap-3 active:opacity-80"
         onPress={() => router.push(`/(app)/place/new?draftId=${draft.id}`)}
       >

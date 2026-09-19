@@ -46,6 +46,7 @@ export default function PromoteEventScreen() {
             "Couldn't load promotion options."}
         </AppText>
         <Pressable
+          accessibilityRole="button"
           onPress={() => q.refetch()}
           className="rounded-lg bg-primary px-4 py-2"
         >
@@ -148,6 +149,7 @@ export default function PromoteEventScreen() {
               const active = selectedTierId === tier.id;
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={tier.id}
                   onPress={() => setSelectedTierId(tier.id)}
                   className={`flex-row items-center justify-between rounded-xl border p-4 ${
@@ -166,6 +168,7 @@ export default function PromoteEventScreen() {
           )}
 
           <Pressable
+            accessibilityRole="button"
             disabled={
               selectedTierId == null ||
               promote.isPending ||

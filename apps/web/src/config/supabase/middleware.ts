@@ -2,6 +2,26 @@ import type { Database } from "@abonten/types/database.types";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+// Sections that need a signed-in session. Kept alphabetical; add a prefix
+// here when a new private area is created (and give it a noindex layout).
+const PROTECTED_PREFIXES = [
+  "/admin",
+  "/checkout",
+  "/consent",
+  "/field",
+  "/finances",
+  "/for-you",
+  "/manage",
+  "/messages",
+  "/notifications",
+  "/plans",
+  "/rewards",
+  "/settings",
+  "/transactions",
+  "/user-account",
+  "/wallet",
+] as const;
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -43,48 +63,20 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  const isPublicRoute =
-    pathname === "/" ||
-    pathname.startsWith("/events") ||
-    pathname.startsWith("/places") ||
-    pathname.startsWith("/explore") ||
-    // "/user/" (trailing slash) so this only matches /user/[username]/...
-    // profile sub-routes -- not "/user-account" (Settings), which needs auth.
-    pathname.startsWith("/user/") ||
-    pathname.startsWith("/reviews") ||
-    pathname.startsWith("/search") ||
-    // Abonten Weekly editions and preview links. Visibility is decided by
-    // the programme switch in @abonten/services, not by signing in.
-    pathname.startsWith("/weekly") ||
-    // Shared Spotlight / Story links: the pages check the programme
-    // audience themselves, so signed-out visitors see them once it is "all".
-    pathname.startsWith("/spotlight") ||
-    pathname.startsWith("/stories/") ||
-    pathname.startsWith("/auth") ||
-    // Friend invite landing (Abonten Rewards) -- for people who aren't
-    // signed up yet.
-    pathname.startsWith("/invite/") ||
-    // The unsubscribe pages linked from Abonten Rewards and recommendation
-    // emails -- work without signing in (the link carries a signed token).
-    pathname.startsWith("/unsubscribe/") ||
-    // Push-click and email-link landing: marks the notification read when
-    // signed in, then redirects; the target page applies its own rules.
-    pathname === "/notifications/open" ||
-    // Public policies and the help centre. The mobile sign-in screen, the
-    // footers and every email link here for people who are not signed in,
-    // and the legal documents must be readable before someone agrees to them.
-    pathname === "/legal" ||
-    pathname.startsWith("/legal/") ||
-    pathname === "/help" ||
-    pathname.startsWith("/help/") ||
-    // The "your account is restricted" landing itself — must stay reachable
-    // for a signed-in-but-banned user so the redirect below can't loop.
-    pathname.startsWith("/account-restricted") ||
-    // Digital Asset Links / Apple App Site Association — must be publicly
-    // fetchable (by Google/Apple's verifiers and by curl) for Android App
-    // Links + iOS Universal Links to verify. Without this the middleware
-    // 302s the unauthenticated fetch to /auth/signin.
-    pathname.startsWith("/.well-known/");
+  // Route protection is an explicit list of PRIVATE sections. Everything
+  // else — discovery, listings, profiles, help, legal, share links and any
+  // URL that does not exist — is served without a session, so a mistyped
+  // link gets the site's 404 page instead of a bounce to sign-in, and a
+  // pre-login call to /api/geocode is not redirected to an HTML page. The
+  // list is the second gate, not the only one: every page and Server
+  // Action under these prefixes re-checks auth.getUser() itself, and the
+  // private layouts are marked noindex.
+  const isProtectedRoute = PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+  // Push-click and email-link landing: marks the notification read when
+  // signed in, then redirects; the target page applies its own rules.
+  const isPublicRoute = !isProtectedRoute || pathname === "/notifications/open";
 
   const {
     data: { user },

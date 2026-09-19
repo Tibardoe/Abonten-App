@@ -520,6 +520,7 @@ export default function EventInsightsScreen() {
               "Couldn't load this event's insights."}
           </AppText>
           <Pressable
+            accessibilityRole="button"
             className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
             onPress={() => q.refetch()}
           >

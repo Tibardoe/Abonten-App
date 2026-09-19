@@ -1071,6 +1071,7 @@ function StorySlide({
       {menuOpen ? (
         <>
           <Pressable
+            accessibilityRole="button"
             style={StyleSheet.absoluteFill}
             onPress={() => setMenuOpen(false)}
             accessibilityLabel="Close menu"

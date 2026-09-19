@@ -190,6 +190,7 @@ export default function WithdrawScreen() {
           const active = a.id === defaultAccountId;
           return (
             <Pressable
+              accessibilityRole="button"
               key={a.id}
               onPress={() => {
                 setAccountId(a.id);
@@ -225,6 +226,7 @@ export default function WithdrawScreen() {
             placeholderTextColor={c["muted-foreground"]}
           />
           <Pressable
+            accessibilityRole="button"
             onPress={() => {
               setAmount(String(available));
               setConfirming(false);

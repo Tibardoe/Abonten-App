@@ -156,6 +156,7 @@ export default function CreatePlaceScreen() {
           <View className="flex-row items-center justify-between">
             <StepDots step={w.step} total={STEPS.length} />
             <Pressable
+              accessibilityRole="button"
               onPress={onSaveDraft}
               disabled={w.isSavingDraft}
               hitSlop={8}

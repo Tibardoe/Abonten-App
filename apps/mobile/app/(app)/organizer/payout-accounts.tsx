@@ -208,6 +208,7 @@ export default function PayoutAccountsScreen() {
               <View className="flex-row gap-4">
                 {!a.is_default ? (
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() => setDefault.mutate(a.id)}
                     disabled={setDefault.isPending}
                   >
@@ -221,6 +222,7 @@ export default function PayoutAccountsScreen() {
                   </Pressable>
                 ) : null}
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => confirmRemove(a.id)}
                   disabled={remove.isPending}
                 >
@@ -300,6 +302,7 @@ export default function PayoutAccountsScreen() {
                     const selected = nw.code === networkCode;
                     return (
                       <Pressable
+                        accessibilityRole="button"
                         key={nw.code}
                         onPress={() => setNetworkCode(nw.code)}
                         className={`rounded-full border px-3 py-1.5 ${

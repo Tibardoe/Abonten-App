@@ -31,6 +31,7 @@ import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { FiArrowUpRight } from "react-icons/fi";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
@@ -65,7 +66,11 @@ export async function generateMetadata({
     .eq("event_code", eventCode.toUpperCase())
     .single();
 
-  if (!event) return { title: "Event not found" };
+  // Decided here, before the page streams: the route has a loading
+  // boundary, so a notFound() thrown from the page body arrives after the
+  // 200 shell. Metadata resolves first for crawlers, which is where a real
+  // 404 status matters (a 200 for a missing listing is a soft 404).
+  if (!event) notFound();
 
   const title = event.title;
   const description = event.description
@@ -141,7 +146,7 @@ export default async function page({
     .eq("event_code", eventCode.toUpperCase())
     .single();
 
-  if (!event) return <p className="p-8 text-center">No event found</p>;
+  if (!event) notFound();
 
   const event_dates =
     event.event_occurrence.length > 0

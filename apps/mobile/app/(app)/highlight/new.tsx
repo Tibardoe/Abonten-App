@@ -210,7 +210,11 @@ export default function NewHighlight() {
           style={{ paddingTop: insets.top + 6 }}
           className="flex-row items-center justify-between px-4"
         >
-          <Pressable onPress={() => router.back()} hitSlop={10}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            hitSlop={10}
+          >
             <Icon name="close" size={26} color="#fff" />
           </Pressable>
           <AppText className="text-[16px] font-semibold text-white">
@@ -242,7 +246,11 @@ export default function NewHighlight() {
           style={{ paddingTop: insets.top + 6 }}
           className="flex-row items-center gap-3 px-4 pb-2"
         >
-          <Pressable onPress={() => router.back()} hitSlop={10}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            hitSlop={10}
+          >
             <Icon name="close" size={26} color="#fff" />
           </Pressable>
           <AppText className="flex-1 text-[15px] font-semibold text-white">
@@ -252,6 +260,7 @@ export default function NewHighlight() {
           </AppText>
           {active?.type === "image" ? (
             <Pressable
+              accessibilityRole="button"
               onPress={() => setCropOpen(true)}
               hitSlop={10}
               accessibilityLabel="Crop photo"
@@ -260,6 +269,7 @@ export default function NewHighlight() {
             </Pressable>
           ) : null}
           <Pressable
+            accessibilityRole="button"
             onPress={post}
             disabled={!previewReady || upload.isUploading}
             hitSlop={10}
@@ -297,6 +307,7 @@ export default function NewHighlight() {
                     nativeControls={false}
                   />
                   <Pressable
+                    accessibilityRole="button"
                     onPress={togglePlay}
                     style={{
                       position: "absolute",
@@ -315,6 +326,7 @@ export default function NewHighlight() {
                     ) : null}
                   </Pressable>
                   <Pressable
+                    accessibilityRole="button"
                     onPress={toggleMute}
                     hitSlop={10}
                     style={{ position: "absolute", right: 14, top: 12 }}
@@ -383,6 +395,7 @@ export default function NewHighlight() {
                 const poster = m.type === "video" ? posters[m.id] : undefined;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={m.id}
                     onPress={() => composer.select(m.id)}
                     className={[
@@ -419,6 +432,7 @@ export default function NewHighlight() {
 
                     {/* delete */}
                     <Pressable
+                      accessibilityRole="button"
                       onPress={() => composer.remove(m.id)}
                       hitSlop={6}
                       style={{ position: "absolute", right: 2, top: 2 }}
@@ -439,6 +453,7 @@ export default function NewHighlight() {
                         className="flex-row justify-between bg-black/60"
                       >
                         <Pressable
+                          accessibilityRole="button"
                           onPress={() =>
                             i > 0 &&
                             composer.reorder(m.id, composer.items[i - 1].id)
@@ -449,6 +464,7 @@ export default function NewHighlight() {
                           <Icon name="chevron-back" size={14} color="#fff" />
                         </Pressable>
                         <Pressable
+                          accessibilityRole="button"
                           onPress={() =>
                             i < composer.items.length - 1 &&
                             composer.reorder(m.id, composer.items[i + 1].id)
@@ -466,6 +482,7 @@ export default function NewHighlight() {
 
               {/* add more */}
               <Pressable
+                accessibilityRole="button"
                 onPress={pick}
                 className="h-20 w-16 items-center justify-center rounded-lg border-2 border-dashed border-white/30"
               >

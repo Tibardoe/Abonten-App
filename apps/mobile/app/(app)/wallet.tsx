@@ -226,6 +226,7 @@ export default function WalletScreen() {
               <View className="flex-row gap-4">
                 {!m.is_default ? (
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() =>
                       setDefault.mutate(m.id, {
                         onSettled: (res) => {
@@ -253,6 +254,7 @@ export default function WalletScreen() {
                   </Pressable>
                 ) : null}
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => confirmRemove(m.id)}
                   disabled={removeMethod.isPending}
                 >
@@ -336,6 +338,7 @@ export default function WalletScreen() {
                 const selected = n.code === networkCode;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={n.code}
                     onPress={() => setNetworkCode(n.code)}
                     className={`rounded-full border px-3 py-1.5 ${

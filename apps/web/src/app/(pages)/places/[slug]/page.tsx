@@ -28,6 +28,7 @@ import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FiGlobe, FiMapPin, FiPhone } from "react-icons/fi";
 import { IoIosStar } from "react-icons/io";
@@ -59,9 +60,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const response = await getPlaceBySlug(slug);
 
-  if (response.status !== 200 || !response.data) {
-    return { title: "Place not found" };
-  }
+  // See the event page: decided before the page streams so crawlers get
+  // a real 404 for a listing that does not exist.
+  if (response.status !== 200 || !response.data) notFound();
 
   const place = response.data;
   const categoryName = place.place_category?.name as string | undefined;
@@ -106,9 +107,7 @@ export default async function page({
 
   const placeResponse = await getPlaceBySlug(slug);
 
-  if (placeResponse.status !== 200 || !placeResponse.data) {
-    return <p className="p-8 text-center">Place not found</p>;
-  }
+  if (placeResponse.status !== 200 || !placeResponse.data) notFound();
 
   const place = placeResponse.data;
 

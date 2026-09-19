@@ -294,6 +294,7 @@ export const SpotlightCard = memo(function SpotlightCard({
         style={[StyleSheet.absoluteFill, { overflow: "hidden" }, mediaStyle]}
       >
         <Pressable
+          accessibilityRole="button"
           style={StyleSheet.absoluteFill}
           onPress={togglePause}
           onLongPress={() => !commentsOpen && setOptionsOpen(true)}

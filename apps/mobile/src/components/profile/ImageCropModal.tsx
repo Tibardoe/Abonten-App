@@ -347,13 +347,19 @@ export function ImageCropModal({
             style={{ paddingTop: insets.top + 6 }}
             className="absolute left-0 right-0 top-0 flex-row items-center justify-between px-4"
           >
-            <Pressable onPress={onCancel} hitSlop={10} disabled={busy}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={onCancel}
+              hitSlop={10}
+              disabled={busy}
+            >
               <AppText className="text-[15px] font-semibold text-white">
                 Cancel
               </AppText>
             </Pressable>
             <View className="flex-row items-center gap-5">
               <Pressable
+                accessibilityRole="button"
                 onPress={rotate}
                 hitSlop={10}
                 disabled={busy}
@@ -362,6 +368,7 @@ export function ImageCropModal({
                 <Icon name="refresh-outline" size={22} color="#fff" />
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 onPress={() => flip(FlipType.Horizontal)}
                 hitSlop={10}
                 disabled={busy}
@@ -370,6 +377,7 @@ export function ImageCropModal({
                 <Icon name="swap-horizontal-outline" size={22} color="#fff" />
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 onPress={() => flip(FlipType.Vertical)}
                 hitSlop={10}
                 disabled={busy}
@@ -378,7 +386,12 @@ export function ImageCropModal({
                 <Icon name="swap-vertical-outline" size={22} color="#fff" />
               </Pressable>
             </View>
-            <Pressable onPress={done} hitSlop={10} disabled={busy}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={done}
+              hitSlop={10}
+              disabled={busy}
+            >
               <AppText className="text-[15px] font-bold text-mint">
                 Done
               </AppText>
@@ -392,6 +405,7 @@ export function ImageCropModal({
           >
             {(lockedAspect ? [] : ASPECTS).map((opt, i) => (
               <Pressable
+                accessibilityRole="button"
                 key={opt.label}
                 onPress={() => setAspectIdx(i)}
                 disabled={busy}

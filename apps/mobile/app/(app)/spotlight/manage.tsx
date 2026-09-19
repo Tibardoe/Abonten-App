@@ -164,6 +164,7 @@ function Posts({ kind }: { kind: ContentKind }) {
             : (item.cover?.thumbnailUrl ?? item.cover?.mediaUrl);
         return (
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.push(`/(app)/spotlight/post/${item.id}`)}
             className="flex-row items-center gap-3 border-b border-border px-4 py-3 active:opacity-70"
           >
@@ -238,6 +239,7 @@ function Campaigns() {
       }
       renderItem={({ item }) => (
         <Pressable
+          accessibilityRole="button"
           onPress={() => router.push(`/(app)/spotlight/campaign/${item.id}`)}
           className="flex-row items-center gap-3 border-b border-border px-4 py-3 active:opacity-70"
         >

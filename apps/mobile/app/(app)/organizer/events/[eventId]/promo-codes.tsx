@@ -301,6 +301,7 @@ export default function EventPromoCodesScreen() {
               "Couldn't load this event's promo codes."}
           </AppText>
           <Pressable
+            accessibilityRole="button"
             className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
             onPress={() => q.refetch()}
           >

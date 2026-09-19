@@ -129,6 +129,7 @@ export function ChangeLocationSheet({
             <View className="overflow-hidden rounded-lg border border-border">
               {auto.predictions.map((p, i) => (
                 <Pressable
+                  accessibilityRole="button"
                   key={p.placeId}
                   onPress={() => pickPrediction(p.placeId)}
                   className={`flex-row items-center gap-2 px-3 py-2.5 active:opacity-70 ${

@@ -37,6 +37,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
   return (
     <View className="gap-2 rounded-xl border border-border bg-card p-3">
       <Pressable
+        accessibilityRole="button"
         className="flex-row gap-3 active:opacity-90"
         onPress={() => router.push(`/(app)/organizer/events/${event.id}`)}
       >

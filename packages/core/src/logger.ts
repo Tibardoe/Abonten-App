@@ -1,13 +1,22 @@
-// Minimal logging wrapper. On the server, output goes to stdout/stderr, which
-// the host (Vercel / Docker) already captures — this module only standardises
-// level handling and silences debug/info noise in production. It is deliberately
-// not an observability platform; if one is ever adopted, change the sink here.
+// Minimal logging wrapper shared by every app and package.
+//
+// Sinks:
+// - On a server in production (Node, NODE_ENV=production) each call is ONE
+//   JSON line on stdout/stderr: `{"time","level","msg","data"?}`. Vercel and
+//   Docker capture the streams, and a JSON line is what log drains, alert
+//   rules and searches can filter by level, message and fields; a
+//   free-text `console.error("x", obj)` is not.
+// - Everywhere else (browser, React Native, development) the arguments go to
+//   the console as they are, so DevTools and Metro keep their inspectors.
 //
 // Levels: debug < info < warn < error.
 // - development (default): everything is printed.
 // - production (default): only warn and error are printed.
 // - override with LOG_LEVEL (server) or NEXT_PUBLIC_LOG_LEVEL (client/server),
 //   e.g. LOG_LEVEL=debug to see everything, LOG_LEVEL=error to see only errors.
+//
+// It is deliberately not an observability platform: errors that matter go to
+// Sentry and the self-hosted error pipeline through their own reporters.
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -48,8 +57,60 @@ function resolveMinLevel(): number {
 
 const minLevel = resolveMinLevel();
 
+// A Node server process: no `window` (browsers and React Native both define
+// one) and a real `process.versions.node`.
+const structured =
+  process.env.NODE_ENV === "production" &&
+  typeof window === "undefined" &&
+  typeof process !== "undefined" &&
+  typeof process.versions?.node === "string";
+
+function serializeValue(value: unknown): unknown {
+  if (value instanceof Error) {
+    return { name: value.name, message: value.message, stack: value.stack };
+  }
+  if (typeof value === "bigint") return value.toString();
+  if (typeof value === "function" || typeof value === "symbol") {
+    return String(value);
+  }
+  return value;
+}
+
+/** One JSON line: string arguments join into `msg`, the rest go in `data`. */
+export function formatStructured(level: LogLevel, args: unknown[]): string {
+  const text: string[] = [];
+  const data: unknown[] = [];
+  for (const arg of args) {
+    if (typeof arg === "string") text.push(arg);
+    else if (arg instanceof Error) {
+      text.push(arg.message);
+      data.push(serializeValue(arg));
+    } else data.push(serializeValue(arg));
+  }
+  const entry: Record<string, unknown> = {
+    time: new Date().toISOString(),
+    level,
+    msg: text.join(" "),
+  };
+  if (data.length === 1) entry.data = data[0];
+  else if (data.length > 1) entry.data = data;
+  try {
+    return JSON.stringify(entry);
+  } catch {
+    return JSON.stringify({ ...entry, data: "[unserializable]" });
+  }
+}
+
 function emit(level: LogLevel, args: unknown[]): void {
   if (LEVEL_ORDER[level] < minLevel) return;
+
+  if (structured) {
+    const line = formatStructured(level, args);
+    if (level === "error") console.error(line);
+    else if (level === "warn") console.warn(line);
+    else console.info(line);
+    return;
+  }
 
   if (level === "error") {
     console.error(`[${level}]`, ...args);

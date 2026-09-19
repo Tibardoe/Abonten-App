@@ -81,6 +81,7 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
                   Ticket type {i + 1}
                 </AppText>
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() =>
                     w.setTiers((prev) => prev.filter((_, idx) => idx !== i))
                   }

@@ -153,6 +153,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
                 {prettyDate(o.dateIso)} · {o.start}–{o.end}
               </AppText>
               <Pressable
+                accessibilityRole="button"
                 onPress={() =>
                   w.setOccurrences((prev) => prev.filter((x) => x.id !== o.id))
                 }

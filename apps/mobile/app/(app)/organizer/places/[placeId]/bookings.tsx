@@ -147,6 +147,7 @@ function BookingRow({
       {state === "pending" ? (
         <View className="flex-row gap-2 pt-1">
           <Pressable
+            accessibilityRole="button"
             disabled={respond.isPending}
             onPress={() => send("accept")}
             className="rounded-md bg-primary px-3 py-1.5 active:opacity-90 disabled:opacity-60"
@@ -156,6 +157,7 @@ function BookingRow({
             </AppText>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             disabled={respond.isPending}
             onPress={confirmDecline}
             className="rounded-md border border-border px-3 py-1.5 active:opacity-70 disabled:opacity-60"

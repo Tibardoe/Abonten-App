@@ -26,10 +26,13 @@ export const semanticHsl = {
     "popover-foreground": "220 25% 12%",
     primary: "171 65% 45%",
     "primary-foreground": "171 40% 12%",
+    // The mint as TEXT on light surfaces: darkened to 4.5:1 on white and on
+    // background (the fill colour itself is 2.3:1 as text).
+    "primary-text": "171 70% 27%",
     secondary: "220 16% 93%",
     "secondary-foreground": "220 25% 15%",
     muted: "220 14% 95%",
-    "muted-foreground": "220 10% 46%",
+    "muted-foreground": "220 10% 42%",
     accent: "171 45% 93%",
     "accent-foreground": "171 50% 20%",
     destructive: "0 72% 51%",
@@ -62,6 +65,7 @@ export const semanticHsl = {
     "popover-foreground": "220 15% 92%",
     primary: "171 60% 52%",
     "primary-foreground": "171 45% 10%",
+    "primary-text": "171 60% 52%",
     secondary: "222 14% 18%",
     "secondary-foreground": "220 15% 90%",
     muted: "222 14% 16%",

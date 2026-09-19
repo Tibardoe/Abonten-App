@@ -163,6 +163,7 @@ export default function ForYou() {
         ListFooterComponent={
           items.length > 0 ? (
             <Pressable
+              accessibilityRole="button"
               onPress={() => router.push("/(app)/settings/notifications")}
               className="items-center pt-2"
             >
