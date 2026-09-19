@@ -1,6 +1,6 @@
+import { readStoredSession, takeStaleTokenUsed } from "@/auth/storedSession";
 import { deleteQueryCacheFiles } from "@/lib/queryCacheFiles";
 import { queryClient } from "@/lib/queryClient";
-import { secureStorage } from "@/lib/secureStore";
 import { supabase } from "@/lib/supabase";
 import { type Session, isAuthRetryableFetchError } from "@supabase/supabase-js";
 import {
@@ -22,24 +22,6 @@ type SessionContextValue = {
 const SessionContext = createContext<SessionContextValue | undefined>(
   undefined,
 );
-
-/**
- * The session exactly as supabase-js stored it, without refreshing it — for
- * an offline start with an expired access token (see SessionProvider).
- */
-async function readStoredSession(): Promise<Session | null> {
-  try {
-    const key = (supabase.auth as unknown as { storageKey: string }).storageKey;
-    const raw = await secureStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<Session> | null;
-    return parsed?.user?.id && parsed.refresh_token
-      ? (parsed as Session)
-      : null;
-  } catch {
-    return null;
-  }
-}
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -76,13 +58,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // whatever was fetched in between went out without a valid token
       // (and got 401s or the signed-out answer). Fetch it again as the
       // person, now that we can.
-      if (
-        runningOnStoredSession &&
-        next &&
-        (event === "TOKEN_REFRESHED" || event === "SIGNED_IN")
-      ) {
-        runningOnStoredSession = false;
-        void queryClient.invalidateQueries();
+      // The same applies when the app started online but a token expired
+      // while the connection was down (api.ts then sent the stored token).
+      if (next && (event === "TOKEN_REFRESHED" || event === "SIGNED_IN")) {
+        const staleUsed = takeStaleTokenUsed();
+        if (runningOnStoredSession || staleUsed) {
+          runningOnStoredSession = false;
+          void queryClient.invalidateQueries();
+        }
       }
       // Session gone (signed out here, revoked on another device, token
       // refresh permanently failed, or the account was deleted) — drop every
