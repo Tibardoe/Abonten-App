@@ -3,7 +3,6 @@
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import { fetchOrganizerPlacesPage } from "@abonten/services/organizer/organizerReadQuery";
-import type { PaginatedResult } from "@abonten/types/pagination";
 
 export default async function getOrganizerPlaces(options?: {
   // Public profile lookup (e.g. /user/[username]/places): when set, returns
@@ -16,8 +15,7 @@ export default async function getOrganizerPlaces(options?: {
   username?: string;
   cursor?: string | null;
   pageSize?: number;
-  // biome-ignore lint/suspicious/noExplicitAny: the joined place_category shape doesn't match PlaceType's flat category_name/category_slug fields (that shape is specific to the get_nearby_places/get_filtered_places RPCs), and no generated Supabase types exist in this repo (see PROJECT.md)
-}): Promise<PaginatedResult<any>> {
+}): Promise<Awaited<ReturnType<typeof fetchOrganizerPlacesPage>>> {
   const supabase = await createClient();
 
   let ownerId: string;

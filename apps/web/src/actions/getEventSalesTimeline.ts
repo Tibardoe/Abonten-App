@@ -35,6 +35,5 @@ export default async function getEventSalesTimeline(eventId: string) {
     return { status: 500, message: "Something went wrong!" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  return { status: 200, data: (data ?? []) as any[] };
+  return { status: 200, data: data ?? [] };
 }

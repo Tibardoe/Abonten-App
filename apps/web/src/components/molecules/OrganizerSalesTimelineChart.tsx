@@ -2,6 +2,7 @@
 
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import type { DashboardBucket } from "@abonten/core/organizerDashboardDateRange";
+import type { OrganizerSalesTimelinePoint } from "@abonten/types/eventAnalytics";
 import {
   Bar,
   BarChart,
@@ -13,8 +14,7 @@ import {
 } from "recharts";
 import { Skeleton } from "../ui/skeleton";
 
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-type Row = any;
+type Row = OrganizerSalesTimelinePoint;
 
 function formatBucketLabel(bucketStart: string, bucket: DashboardBucket) {
   const date = new Date(bucketStart);
@@ -36,8 +36,7 @@ function TimelineTooltip({
   currency,
 }: {
   active?: boolean;
-  // biome-ignore lint/suspicious/noExplicitAny: recharts tooltip payload typing is not worth reproducing here
-  payload?: any[];
+  payload?: { payload: Row & { label: string } }[];
   currency: string;
 }) {
   if (!active || !payload || payload.length === 0) return null;

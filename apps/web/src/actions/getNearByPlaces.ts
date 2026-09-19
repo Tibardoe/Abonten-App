@@ -25,8 +25,8 @@ export async function getNearByPlaces(
     user_lat: lat,
     user_lng: lng,
     search_radius: radius,
-    p_cursor_distance: cursor?.distanceKm ?? null,
-    p_cursor_id: cursor?.id ?? null,
+    p_cursor_distance: cursor?.distanceKm ?? undefined,
+    p_cursor_id: cursor?.id ?? undefined,
     p_page_size: pageSize,
   });
 

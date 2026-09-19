@@ -21,7 +21,8 @@ const nextConfig: NextConfig = {
 
   // The admin console is internal — never index it, never let another site
   // frame it (clickjacking a finance or ban action), and keep the browser
-  // from guessing content types. No CSP yet (see docs/security).
+  // from guessing content types. The Content-Security-Policy is set per
+  // request in src/proxy.ts (@abonten/core/security/contentSecurityPolicy).
   async headers() {
     return [
       {

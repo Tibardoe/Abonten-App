@@ -1,5 +1,6 @@
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { readEventAddress } from "@abonten/core/eventAddress";
 
 // schema.org payloads for the two public listing pages. Only facts a
 // signed-out visitor can already see on the page go in here.
@@ -9,33 +10,42 @@ type EventForJsonLd = {
   description: string | null;
   event_code: string;
   status: string;
-  starts_at: string;
-  ends_at: string;
+  // Null for a multi-date event, whose sessions are the occurrences.
+  starts_at: string | null;
+  ends_at: string | null;
   flyer_public_id: string | null;
   flyer_version: string | null;
-  address: { full_address?: string } | null;
-  event_occurrence: { starts_at: string; ends_at: string }[];
+  address: unknown;
+  event_occurrence: { starts_at: string | null; ends_at: string | null }[];
   ticket_type: {
-    price: number;
-    currency: string;
+    price: number | null;
+    currency: string | null;
     quantity: number | null;
     available_from: string | null;
   }[];
-  user_info: { username: string } | null;
+  user_info: { username: string | null } | null;
   place: { name: string; slug: string } | null;
 };
 
 export function eventJsonLd(event: EventForJsonLd): Record<string, unknown> {
   const url = `${PUBLIC_SITE_ORIGIN}/events/${event.event_code}`;
-  const sessions =
+  const candidates =
     event.event_occurrence.length > 0
       ? event.event_occurrence
       : [{ starts_at: event.starts_at, ends_at: event.ends_at }];
-  const first = sessions.reduce((a, b) =>
-    new Date(a.starts_at) < new Date(b.starts_at) ? a : b,
+  const sessions = candidates.flatMap((s) =>
+    s.starts_at && s.ends_at
+      ? [{ starts_at: s.starts_at, ends_at: s.ends_at }]
+      : [],
   );
-  const last = sessions.reduce((a, b) =>
-    new Date(a.ends_at) > new Date(b.ends_at) ? a : b,
+  const fallback = { starts_at: "", ends_at: "" };
+  const first = sessions.reduce(
+    (a, b) => (new Date(a.starts_at) < new Date(b.starts_at) ? a : b),
+    sessions[0] ?? fallback,
+  );
+  const last = sessions.reduce(
+    (a, b) => (new Date(a.ends_at) > new Date(b.ends_at) ? a : b),
+    sessions[0] ?? fallback,
   );
   const image =
     event.flyer_public_id && event.flyer_version
@@ -44,10 +54,10 @@ export function eventJsonLd(event: EventForJsonLd): Record<string, unknown> {
           height: 630,
         })
       : undefined;
-  const address = event.address?.full_address;
+  const address = readEventAddress(event.address).full_address || undefined;
   const offers = event.ticket_type.map((t) => ({
     "@type": "Offer",
-    price: Number(t.price).toFixed(2),
+    price: Number(t.price ?? 0).toFixed(2),
     priceCurrency: t.currency || "GHS",
     url,
     availability:
@@ -93,7 +103,7 @@ type PlaceForJsonLd = {
   name: string;
   slug: string;
   description: string | null;
-  address: { full_address?: string } | Record<string, unknown> | null;
+  address: unknown;
   phone: string | null;
   website_url: string | null;
   cover_public_id: string | null;
@@ -114,8 +124,7 @@ export function placeJsonLd(place: PlaceForJsonLd): Record<string, unknown> {
           height: 630,
         })
       : undefined;
-  const address = (place.address as { full_address?: string } | null)
-    ?.full_address;
+  const address = readEventAddress(place.address).full_address || undefined;
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",

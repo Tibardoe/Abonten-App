@@ -5,11 +5,9 @@ import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSect
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
 import ManageEventPromotionSection from "@/events/organisms/ManageEventPromotionSection";
 import type { EventStatus } from "@abonten/core/eventStatus";
+import type { ManagedEvent } from "@abonten/types/managedEventType";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) — same convention every other manage-page view in this codebase uses for a joined/raw row (see ManagePlaceView.tsx)
-type ManagedEvent = any;
 
 type ManageEventViewProps = {
   event: ManagedEvent;

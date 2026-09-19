@@ -30,16 +30,18 @@ export async function getQueriedPlaces(
 
   const cursor = decodeCursor<PlacesCursor>(rawCursor);
 
+  // Every filter parameter is DEFAULT NULL in SQL (null = no filter), so
+  // omitting a key is the same call as sending null.
   const { data, error } = await supabase.rpc("get_filtered_places", {
-    p_search_text: searchText,
-    p_category_id: categoryId,
-    p_min_rating: minRating,
-    p_open_now: openNow,
-    p_user_lat: lat,
-    p_user_lng: lng,
-    p_max_distance_km: maxDistanceKm,
-    p_cursor_distance: cursor?.distanceKm ?? null,
-    p_cursor_id: cursor?.id ?? null,
+    p_search_text: searchText ?? undefined,
+    p_category_id: categoryId ?? undefined,
+    p_min_rating: minRating ?? undefined,
+    p_open_now: openNow ?? undefined,
+    p_user_lat: lat ?? undefined,
+    p_user_lng: lng ?? undefined,
+    p_max_distance_km: maxDistanceKm ?? undefined,
+    p_cursor_distance: cursor?.distanceKm ?? undefined,
+    p_cursor_id: cursor?.id ?? undefined,
     p_page_size: pageSize,
   });
 

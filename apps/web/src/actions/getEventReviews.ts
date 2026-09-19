@@ -10,15 +10,13 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { EventReviewListItem } from "@abonten/types/reviewType";
 
-// Public list of reviews for one event -- mirrors getPlaceReviews.ts exactly,
-// including the same joined-row `any` (no generated Supabase types exist in
-// this repo, see PROJECT.md).
+// Public list of reviews for one event -- mirrors getPlaceReviews.ts.
 export async function getEventReviews(
   eventId: string,
   options?: { cursor?: string | null; pageSize?: number },
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- matches getPlaceReviews.ts's convention for a joined review row
-): Promise<PaginatedResult<any>> {
+): Promise<PaginatedResult<EventReviewListItem>> {
   const supabase = publicSupabase;
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
@@ -52,8 +50,10 @@ export async function getEventReviews(
     };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: see the return-type biome-ignore above
-  const { page, hasNextPage } = splitPage<any>(data, pageSize);
+  const { page, hasNextPage } = splitPage<EventReviewListItem>(
+    data ?? [],
+    pageSize,
+  );
 
   const last = page[page.length - 1];
   const nextCursor =

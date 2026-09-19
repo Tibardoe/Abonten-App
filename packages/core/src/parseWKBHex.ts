@@ -14,3 +14,13 @@ export function parseWKBHex(hex: string) {
 
   return { eventLat: y, eventLng: x };
 }
+
+/**
+ * PostGIS geography columns arrive over PostGREST as a WKB hex string, but
+ * the generated types call them `unknown`. This is the one place that
+ * asserts the runtime shape before it reaches parseWKBHex.
+ */
+export function asWkbHex(value: unknown): string {
+  if (typeof value === "string" && value.length > 0) return value;
+  throw new Error("Expected a WKB hex string for a geography column");
+}

@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { normalizeEventRow } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -8,6 +9,7 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import type { Database } from "@abonten/types/database.types";
 import type {
   FilteredEventsCursor,
   PaginatedResult,
@@ -59,7 +61,14 @@ export async function getQueriedEvents(
   // NULL` short-circuit applies instead of its separate empty-array check.
   const normalizedType = type && type.length > 0 ? type : null;
 
-  const { data, error } = await supabase.rpc("get_filtered_events", {
+  // get_filtered_events declares its filter parameters without defaults
+  // and treats NULL as "no filter" (see 20260902130000_multi_type_event_filter.sql).
+  // The generated types cannot express a nullable argument, so the nulls
+  // are sent through one typed boundary here; the cursor parameters are
+  // DEFAULT NULL and may simply be omitted.
+  type FilteredEventsArgs =
+    Database["public"]["Functions"]["get_filtered_events"]["Args"];
+  const filters = {
     p_min_price: minPrice,
     p_max_price: maxPrice,
     p_min_rating: minRating,
@@ -68,12 +77,18 @@ export async function getQueriedEvents(
     p_max_distance_km: maxDistanceKm,
     p_start_date: startDate,
     p_end_date: endDate,
-    p_search_text: searchText ?? "",
-    p_event_category: category ?? "",
     p_event_type: normalizedType,
-    p_cursor_starts_at: cursor?.startsAt ?? null,
-    p_cursor_distance_km: cursor?.distanceKm ?? null,
-    p_cursor_id: cursor?.id ?? null,
+  } satisfies Partial<Record<keyof FilteredEventsArgs, unknown>>;
+  const { data, error } = await supabase.rpc("get_filtered_events", {
+    ...(filters as unknown as Pick<FilteredEventsArgs, keyof typeof filters>),
+    p_search_text: searchText ?? "",
+    // ?category may repeat in the URL; the RPC filters on one category.
+    p_event_category: Array.isArray(category)
+      ? (category[0] ?? "")
+      : (category ?? ""),
+    p_cursor_starts_at: cursor?.startsAt ?? undefined,
+    p_cursor_distance_km: cursor?.distanceKm ?? undefined,
+    p_cursor_id: cursor?.id ?? undefined,
     p_page_size: pageSize,
   });
 
@@ -83,7 +98,7 @@ export async function getQueriedEvents(
   }
 
   const { page, hasNextPage } = splitPage<UserPostType>(
-    data as UserPostType[],
+    (data ?? []).map(normalizeEventRow),
     pageSize,
   );
   const last = page[page.length - 1] as UserPostType | undefined;

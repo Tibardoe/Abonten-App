@@ -4,6 +4,7 @@ import Rating from "@/components/atoms/Rating";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { PaginatedResult } from "@abonten/types/pagination";
+import type { OwnedPlaceReviewListItem } from "@abonten/types/reviewType";
 import { ClockIcon, MapPinIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -18,10 +19,10 @@ export default function PlaceReviewsList({
   emptyState,
 }: {
   queryKey: unknown[];
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  initialPage: PaginatedResult<any>;
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  fetchPage: (cursor: string | null) => Promise<PaginatedResult<any>>;
+  initialPage: PaginatedResult<OwnedPlaceReviewListItem>;
+  fetchPage: (
+    cursor: string | null,
+  ) => Promise<PaginatedResult<OwnedPlaceReviewListItem>>;
   emptyState: React.ReactNode;
 }) {
   return (
@@ -31,8 +32,7 @@ export default function PlaceReviewsList({
       fetchPage={fetchPage}
       emptyState={emptyState}
       listClassName="flex flex-col gap-6"
-      // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-      renderItem={(review: any) => (
+      renderItem={(review) => (
         <li
           key={review.id}
           className="w-full bg-card text-card-foreground shadow-sm hover:shadow-md transition rounded-xl p-5 flex flex-col gap-3 border border-border"

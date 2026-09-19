@@ -376,7 +376,7 @@ export default async function page({
           : allRows.some((row) => row.status === "expired")
             ? "expired"
             : "cancelled";
-    eventCode = allRows[0].event.event_code;
+    eventCode = allRows[0]?.event?.event_code ?? "";
   }
 
   const basketResponse = await getUserPendingTicketCheckouts();

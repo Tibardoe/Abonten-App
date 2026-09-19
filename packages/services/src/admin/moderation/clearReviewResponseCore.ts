@@ -56,8 +56,11 @@ export async function clearReviewResponseCore(
     return { status: 404, message: "Review not found" };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: dynamic column name off a runtime targetType
-  const previous = (before as any)[cols.text] as string | null;
+  // The column name is chosen at runtime from targetType, so the row is
+  // read as a plain record here.
+  const previous = (before as unknown as Record<string, unknown>)[cols.text] as
+    | string
+    | null;
 
   if (!previous) {
     // Nothing to do — idempotent.

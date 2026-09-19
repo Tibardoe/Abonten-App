@@ -5,12 +5,21 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Post-auth body of getTicketCheckout — shared with
 // `/api/mobile/checkout/session/[sessionId]`. See getTicketCheckout.ts.
 
+export type TicketCheckoutRow =
+  Database["public"]["Tables"]["ticket_checkout"]["Row"] & {
+    event: {
+      title: string;
+      event_code: string;
+      starts_at: string | null;
+      ends_at: string | null;
+      event_occurrence: Database["public"]["Tables"]["event_occurrence"]["Row"][];
+    } | null;
+    ticket_type: { type: string | null; currency: string | null } | null;
+  };
+
 export type GetTicketCheckoutCoreResult =
-  // `data` rows come from an untyped `select("*, event(...), ticket_type(...)")`
-  // and are consumed as `any` by the web checkout page — kept that way so
-  // extracting this helper doesn't change the shape callers already rely on.
-  // biome-ignore lint/suspicious/noExplicitAny: preserve the pre-extraction row shape
-  { status: 200; data: any[] | null } | { status: 500; message: string };
+  | { status: 200; data: TicketCheckoutRow[] | null }
+  | { status: 500; message: string };
 
 export async function getTicketCheckoutCore(
   supabase: SupabaseClient<Database>,

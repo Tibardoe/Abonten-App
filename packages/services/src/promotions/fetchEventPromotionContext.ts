@@ -88,15 +88,13 @@ export async function fetchEventPromotionContext(
   const derivedStatus = getEventStatus(
     event.starts_at,
     event.ends_at,
-    // biome-ignore lint/suspicious/noExplicitAny: untyped joined rows (see PROJECT.md)
-    (event.event_occurrence ?? []) as any,
+    event.event_occurrence ?? [],
   );
 
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: attendeeCount ?? 0,
-    // biome-ignore lint/suspicious/noExplicitAny: untyped joined rows (see PROJECT.md)
-    ticketTypes: (event.ticket_type ?? []) as any,
+    ticketTypes: event.ticket_type ?? [],
   });
 
   return {

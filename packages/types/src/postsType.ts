@@ -112,13 +112,17 @@ export type UserPostType = {
   flyer_public_id?: string;
   flyer_version?: string;
   address: { full_address: string };
-  starts_at?: Date | undefined;
-  ends_at?: Date | undefined;
+  // ISO timestamps from PostgREST (a multi-date event has null here and
+  // carries its dates in event_occurrence). Date is accepted for callers
+  // that build listings from form state.
+  starts_at?: string | Date | null;
+  ends_at?: string | Date | null;
   event_code: string;
   occurrences?: Occurrence[];
   event_occurrence?: Occurrence[];
   title: string;
-  capacity?: number | undefined;
+  // Null when the organizer set no limit.
+  capacity?: number | null;
   min_price?: number | undefined;
   currency: string;
   flyerUrl?: string;

@@ -2,6 +2,7 @@
 
 import checkInTicket from "@/actions/checkInTicket";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import type { AttendanceRow as Attendee } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiCheck } from "react-icons/fi";
@@ -13,10 +14,8 @@ export default function AttendanceListView({
   emptyState,
 }: {
   queryKey: unknown[];
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  initialPage: PaginatedResult<any> | null;
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  fetchPage: (cursor: string | null) => Promise<PaginatedResult<any>>;
+  initialPage: PaginatedResult<Attendee> | null;
+  fetchPage: (cursor: string | null) => Promise<PaginatedResult<Attendee>>;
   emptyState: React.ReactNode;
 }) {
   return (
@@ -26,8 +25,7 @@ export default function AttendanceListView({
       fetchPage={fetchPage}
       emptyState={emptyState}
       listClassName="flex flex-col gap-2 mb-5"
-      // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-      renderItem={(attendee: any) => (
+      renderItem={(attendee) => (
         <AttendanceRow
           key={attendee.id}
           attendee={attendee}
@@ -42,15 +40,22 @@ function AttendanceRow({
   attendee,
   queryKey,
 }: {
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  attendee: any;
+  attendee: Attendee;
   queryKey: unknown[];
 }) {
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (checkedIn: boolean) =>
-      checkInTicket(attendee.ticket_id, checkedIn),
+    mutationFn: (checkedIn: boolean) => {
+      // A registration without an issued ticket has nothing to check in.
+      if (!attendee.ticket_id) {
+        return Promise.resolve({
+          status: 400,
+          message: "No ticket to check in",
+        });
+      }
+      return checkInTicket(attendee.ticket_id, checkedIn);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 

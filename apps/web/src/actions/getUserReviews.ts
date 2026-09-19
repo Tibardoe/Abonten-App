@@ -10,12 +10,12 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { OrganizerReviewListItem } from "@abonten/types/reviewType";
 
 export async function getUserReviews(
   username: string,
   options?: { cursor?: string | null; pageSize?: number },
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-): Promise<PaginatedResult<any>> {
+): Promise<PaginatedResult<OrganizerReviewListItem>> {
   const supabase = await createClient();
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
@@ -64,8 +64,10 @@ export async function getUserReviews(
     };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  const { page, hasNextPage } = splitPage<any>(data, pageSize);
+  const { page, hasNextPage } = splitPage<OrganizerReviewListItem>(
+    data ?? [],
+    pageSize,
+  );
 
   const last = page[page.length - 1];
   const nextCursor =

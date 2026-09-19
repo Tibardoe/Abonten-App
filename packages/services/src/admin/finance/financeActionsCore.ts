@@ -250,21 +250,27 @@ export async function sendPayoutAdminCore(
     };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST embedded shape, no generated types in this repo
-  const acct = (payout as any).payout_account as {
-    account_type: "mobile_money" | "bank";
-    account_holder_name: string;
-    provider: string | null;
-    account_number: string;
-  } | null;
+  const acct = payout.payout_account;
   if (!acct) {
     return { status: 400, message: "This payout has no payout account." };
+  }
+  // `payout_account.account_type` is free text in the schema; only the two
+  // kinds Paystack transfers support may reach the gateway.
+  const accountType =
+    acct.account_type === "bank" || acct.account_type === "mobile_money"
+      ? acct.account_type
+      : null;
+  if (!accountType) {
+    return {
+      status: 400,
+      message: `Unsupported payout account type: ${acct.account_type}`,
+    };
   }
 
   try {
     const dest = await resolvePaystackDestination({
       provider: acct.provider,
-      accountType: acct.account_type,
+      accountType,
     });
     const recipientCode = await createTransferRecipient({
       recipientType: dest.recipientType,

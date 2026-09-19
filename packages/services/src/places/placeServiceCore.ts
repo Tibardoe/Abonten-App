@@ -29,8 +29,7 @@ export type PlaceServiceCoreResult = {
   status: 200 | 403 | 404 | 500;
   message: string;
   // addPlaceServiceCore echoes the inserted row (web caller uses it).
-  // biome-ignore lint/suspicious/noExplicitAny: raw inserted row, no generated Supabase types (see PROJECT.md)
-  data?: any;
+  data?: Database["public"]["Tables"]["place_service"]["Row"];
 };
 
 export async function addPlaceServiceCore(
@@ -92,8 +91,7 @@ async function serviceOwnerId(
 
   if (error || !service) return { found: false, ownerId: null };
 
-  // biome-ignore lint/suspicious/noExplicitAny: embedded-resource shape, no generated Supabase types (see PROJECT.md)
-  const ownerId = (service as any).place?.owner_id ?? null;
+  const ownerId = service.place?.owner_id ?? null;
   return { found: true, ownerId };
 }
 

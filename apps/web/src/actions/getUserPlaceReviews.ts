@@ -10,15 +10,16 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { UserPlaceReviewListItem } from "@abonten/types/reviewType";
 
 // The reviewer's own place_review history -- the "Places" side of the
 // "Reviewed" tab on My Tickets, mirroring getUserEventReviews.ts exactly.
 // Distinct from getOwnedPlaceReviews.ts, which lists reviews OF places this
 // user owns, not reviews they themselves wrote.
-export async function getUserPlaceReviews(
-  options?: { cursor?: string | null; pageSize?: number },
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-): Promise<PaginatedResult<any>> {
+export async function getUserPlaceReviews(options?: {
+  cursor?: string | null;
+  pageSize?: number;
+}): Promise<PaginatedResult<UserPlaceReviewListItem>> {
   const supabase = await createClient();
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
@@ -65,8 +66,10 @@ export async function getUserPlaceReviews(
     };
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: see the return-type biome-ignore above
-  const { page, hasNextPage } = splitPage<any>(data, pageSize);
+  const { page, hasNextPage } = splitPage<UserPlaceReviewListItem>(
+    data ?? [],
+    pageSize,
+  );
 
   const last = page[page.length - 1];
   const nextCursor =

@@ -25,10 +25,12 @@ export async function getActivePlacePromotions(
 ) {
   const supabase = publicSupabase;
 
+  // Every optional parameter is DEFAULT NULL in SQL, so omitting a key is
+  // the same call as sending null.
   const { data, error } = await supabase.rpc("get_active_place_promotions", {
-    p_user_lat: lat ?? null,
-    p_user_lng: lng ?? null,
-    p_max_distance_km: maxDistanceKm ?? null,
+    p_user_lat: lat ?? undefined,
+    p_user_lng: lng ?? undefined,
+    p_max_distance_km: maxDistanceKm ?? undefined,
     p_limit: FEATURED_PLACES_LIMIT,
   });
 

@@ -2,6 +2,10 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PaginatedResult } from "@abonten/types/pagination";
+import type {
+  OrganizerReviewListItem,
+  OwnedPlaceReviewListItem,
+} from "@abonten/types/reviewType";
 import { useState } from "react";
 import PlaceReviewsList from "./PlaceReviewsList";
 import UserReviewsList from "./UserReviewsList";
@@ -28,20 +32,16 @@ export default function UserReviewsTabs({
   placeReviewsEmptyState,
 }: {
   eventReviewsQueryKey: unknown[];
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  eventReviewsInitialPage: PaginatedResult<any>;
+  eventReviewsInitialPage: PaginatedResult<OrganizerReviewListItem>;
   fetchEventReviewsPage: (
     cursor: string | null,
-    // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  ) => Promise<PaginatedResult<any>>;
+  ) => Promise<PaginatedResult<OrganizerReviewListItem>>;
   eventReviewsEmptyState: React.ReactNode;
   placeReviewsQueryKey: unknown[];
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  placeReviewsInitialPage: PaginatedResult<any>;
+  placeReviewsInitialPage: PaginatedResult<OwnedPlaceReviewListItem>;
   fetchPlaceReviewsPage: (
     cursor: string | null,
-    // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  ) => Promise<PaginatedResult<any>>;
+  ) => Promise<PaginatedResult<OwnedPlaceReviewListItem>>;
   placeReviewsEmptyState: React.ReactNode;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("event");

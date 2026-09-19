@@ -1,3 +1,4 @@
+import { buildAdminCsp } from "@abonten/core/security/contentSecurityPolicy";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -5,6 +6,13 @@ import { type NextRequest, NextResponse } from "next/server";
 // every request and bounces unauthenticated visitors to sign-in. This is
 // only the first gate — every page + server action also calls requireAdmin()
 // (email allowlist + resolveAdminContext) server-side.
+const CONTENT_SECURITY_POLICY = buildAdminCsp({
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  development: process.env.NODE_ENV === "development",
+  vercelPreview: process.env.NEXT_PUBLIC_VERCEL_ENV === "preview",
+});
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -45,6 +53,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(signin);
   }
 
+  response.headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
   return response;
 }
 
