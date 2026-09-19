@@ -2,21 +2,14 @@ import {
   ALLOWED_IMAGE_UPLOAD_FORMATS,
   ALLOWED_VIDEO_UPLOAD_FORMATS,
 } from "@abonten/core/uploadLimits";
+import { cloudinary } from "@abonten/services/media/cloudinaryClient";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
-import { v2 as cloudinary } from "cloudinary";
 
 // A signature costs nothing server-side to produce but authorizes one real
 // Cloudinary upload -- unbounded requests here is unbounded upload volume
 // against the account's storage/bandwidth quota. Generous relative to any
 // real multi-photo gallery upload.
 const MAX_SIGNATURES_PER_MINUTE = 60;
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Shared body of the direct browser/app -> Cloudinary upload authorizers
 // (getAvatarUploadSignature.ts, getHighlightUploadSignature.ts, the two

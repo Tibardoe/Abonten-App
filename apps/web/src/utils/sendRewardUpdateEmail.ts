@@ -1,11 +1,11 @@
 import RewardUpdateEmailTemplate from "@/components/organisms/RewardUpdateEmailTemplate";
+import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { logger } from "@abonten/core/logger";
 import type {
   EmailSendResult,
   RewardEmail,
 } from "@abonten/services/notifications/deliveryCore";
 import { rewardEmailUnsubscribeLinks } from "@abonten/services/notifications/rewardEmailPreferenceCore";
-import { Resend } from "resend";
 
 /**
  * Sends one Abonten Rewards email for the notification delivery queue
@@ -17,7 +17,7 @@ import { Resend } from "resend";
 export async function sendRewardUpdateEmail(
   email: RewardEmail,
 ): Promise<EmailSendResult> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!emailIsConfigured()) {
     logger.warn("RESEND_API_KEY is not set; skipping reward emails");
     return { ok: false, error: "email_not_configured", outcome: "skip" };
   }
@@ -33,7 +33,7 @@ export async function sendRewardUpdateEmail(
     // One-click unsubscribe (RFC 8058) for Gmail / Yahoo / Outlook's own
     // "Unsubscribe" button, plus the link in the email's footer.
     const unsubscribe = rewardEmailUnsubscribeLinks(email.userId, base);
-    const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
+    const { error } = await sendEmail({
       from: "Abonten Rewards <rewards@abontenhub.com>",
       to: [email.to],
       subject,

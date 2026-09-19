@@ -3,7 +3,10 @@ import {
   buildEagerTransformations,
   shouldOptimizeVideo,
 } from "@abonten/core/videoDelivery";
-import { v2 as cloudinary } from "cloudinary";
+import {
+  CLOUDINARY_API_TIMEOUT_MS,
+  cloudinary,
+} from "@abonten/services/media/cloudinaryClient";
 
 // Server-side step that gives a highlight video an optimised playback
 // rendition. Shared by the web `uploadHighlight` Server Action and the mobile
@@ -24,13 +27,6 @@ import { v2 as cloudinary } from "cloudinary";
 // request on. Cloudinary returns the eager URLs immediately and builds them
 // in the background, so the URL is stable and can be persisted right away;
 // the players fall back to the original while it is still building.
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 export type HighlightVideoSource = {
   publicId: string;
@@ -80,6 +76,7 @@ export async function prepareHighlightVideoDelivery(
 
   try {
     const result = await cloudinary.uploader.explicit(source.publicId, {
+      timeout: CLOUDINARY_API_TIMEOUT_MS,
       resource_type: "video",
       type: "upload",
       eager: buildEagerTransformations(source.trim ?? undefined),

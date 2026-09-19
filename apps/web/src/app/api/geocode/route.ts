@@ -1,3 +1,7 @@
+import {
+  HTTP_TIMEOUTS,
+  fetchWithTimeout,
+} from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import { NextResponse } from "next/server";
@@ -47,10 +51,11 @@ export async function GET(req: Request) {
       );
     }
 
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
         address,
       )}&key=${apiKey}`,
+      { timeoutMs: HTTP_TIMEOUTS.googleGeocode },
     );
 
     const data = await res.json();

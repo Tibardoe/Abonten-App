@@ -1,3 +1,7 @@
+import {
+  HTTP_TIMEOUTS,
+  fetchWithTimeout,
+} from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
 // Hubtel's dedicated OTP prepare/verify API — kept exactly as already
 // integrated (Hubtel generates and stores the code itself; this app never
@@ -53,7 +57,8 @@ export async function sendHubtelOtp(
     return { ok: false, message: "Something went wrong. Please try again." };
   }
 
-  const response = await fetch(HUBTEL_OTP_SEND_URL, {
+  const response = await fetchWithTimeout(HUBTEL_OTP_SEND_URL, {
+    timeoutMs: HTTP_TIMEOUTS.hubtelOtp,
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -94,7 +99,8 @@ export async function verifyHubtelOtp(
     return { ok: false, message: "Something went wrong. Please try again." };
   }
 
-  const response = await fetch(HUBTEL_OTP_VERIFY_URL, {
+  const response = await fetchWithTimeout(HUBTEL_OTP_VERIFY_URL, {
+    timeoutMs: HTTP_TIMEOUTS.hubtelOtp,
     method: "POST",
     headers: {
       "content-type": "application/json",

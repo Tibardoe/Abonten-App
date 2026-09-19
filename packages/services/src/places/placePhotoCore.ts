@@ -1,14 +1,7 @@
 import { logger } from "@abonten/core/logger";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Post-auth bodies of addPlacePhoto / removePlacePhoto / reorderPlacePhotos,
 // lifted so the mobile per-place gallery routes run the same logic. The
@@ -110,7 +103,7 @@ export async function removePlacePhotoCore(
   }
 
   try {
-    await cloudinary.uploader.destroy(typedPhoto.public_id);
+    await destroyAsset(typedPhoto.public_id, {});
   } catch (cloudError) {
     logger.error("Cloudinary deletion of place photo failed:", cloudError);
     // Not failing the whole removal if Cloudinary cleanup fails.

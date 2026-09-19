@@ -1,15 +1,12 @@
 import { logger } from "@abonten/core/logger";
+import {
+  CLOUDINARY_API_TIMEOUT_MS,
+  cloudinary,
+  destroyAsset,
+} from "@abonten/services/media/cloudinaryClient";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { v2 as cloudinary } from "cloudinary";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { contentMediaEnvironmentPrefix } from "../uploads/cloudinaryUploadSignature";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Cloudinary asset cleanup (migration 20260916131000). SQL decides what is
 // due and queues it in draft_asset_cleanup_queue; only the Cloudinary API
@@ -72,7 +69,7 @@ export async function drainCloudinaryCleanupQueueCore(
   const destroy =
     deps.destroy ??
     ((publicId: string, resourceType: ResourceType) =>
-      cloudinary.uploader.destroy(publicId, {
+      destroyAsset(publicId, {
         resource_type: resourceType,
         invalidate: true,
       }) as Promise<{ result?: string }>);
@@ -147,6 +144,7 @@ export async function sweepUnregisteredContentUploadsCore(
     deps.listResources ??
     (async ({ prefix, resourceType, nextCursor }) =>
       (await cloudinary.api.resources({
+        timeout: CLOUDINARY_API_TIMEOUT_MS,
         type: "upload",
         prefix,
         resource_type: resourceType,

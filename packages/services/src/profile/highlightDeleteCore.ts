@@ -1,14 +1,7 @@
 import { logger } from "@abonten/core/logger";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // Post-auth bodies of deleteHighlight.ts / deleteHighlightSlide.ts, lifted
 // so the mobile highlight-delete routes run the same Cloudinary-first
@@ -57,7 +50,7 @@ export async function deleteHighlightGroupCore(
       continue;
     }
     try {
-      const result = await cloudinary.uploader.destroy(row.public_id, {
+      const result = await destroyAsset(row.public_id, {
         resource_type: toCloudinaryResourceType(row.media_type),
       });
       if (result.result === "ok" || result.result === "not found") {
@@ -120,7 +113,7 @@ export async function deleteHighlightSlideCore(
 
   if (row.public_id) {
     try {
-      const result = await cloudinary.uploader.destroy(row.public_id, {
+      const result = await destroyAsset(row.public_id, {
         resource_type: toCloudinaryResourceType(row.media_type),
       });
       if (result.result !== "ok" && result.result !== "not found") {

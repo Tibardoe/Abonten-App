@@ -1,4 +1,5 @@
 import RecommendationDigestEmailTemplate from "@/components/organisms/RecommendationDigestEmailTemplate";
+import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { SUPPORT_EMAIL } from "@abonten/core/brand/contacts";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { logger } from "@abonten/core/logger";
@@ -8,7 +9,6 @@ import type {
   RecommendationEmailItem,
 } from "@abonten/services/notifications/deliveryCore";
 import { recommendationEmailUnsubscribeLinks } from "@abonten/services/notifications/recommendationEmailPreferenceCore";
-import { Resend } from "resend";
 
 // Accra wall-clock time, the same wording as the push ("Sat 20 Sep, 7:30pm").
 const WHEN = new Intl.DateTimeFormat("en-GB", {
@@ -46,7 +46,7 @@ function reason(item: RecommendationEmailItem): string {
 export async function sendRecommendationDigestEmail(
   email: RecommendationEmail,
 ): Promise<EmailSendResult> {
-  if (!process.env.RESEND_API_KEY) {
+  if (!emailIsConfigured()) {
     logger.warn("RESEND_API_KEY is not set; skipping recommendation emails");
     return { ok: false, error: "email_not_configured", outcome: "skip" };
   }
@@ -57,7 +57,7 @@ export async function sendRecommendationDigestEmail(
 
   try {
     const unsubscribe = recommendationEmailUnsubscribeLinks(email.userId, base);
-    const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
+    const { error } = await sendEmail({
       from: "Abonten Hub <picks@abontenhub.com>",
       to: [email.to],
       // Nobody reads the sending address; a reply reaches support.

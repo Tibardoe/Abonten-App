@@ -1,3 +1,7 @@
+import {
+  HTTP_TIMEOUTS,
+  fetchWithTimeout,
+} from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { recordPushTickets } from "./pushReceiptsCore";
@@ -69,7 +73,8 @@ async function sendExpoPushToUser(
   }));
 
   try {
-    const res = await fetch(EXPO_PUSH_ENDPOINT, {
+    const res = await fetchWithTimeout(EXPO_PUSH_ENDPOINT, {
+      timeoutMs: HTTP_TIMEOUTS.expoPush,
       method: "POST",
       headers: {
         Accept: "application/json",

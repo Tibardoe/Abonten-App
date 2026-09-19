@@ -5,6 +5,7 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import { cloudinary } from "@abonten/services/media/cloudinaryClient";
 import type {
   ContentCampaignStatus,
   ContentKind,
@@ -18,7 +19,6 @@ import type {
   CreateContentPostInput,
   UpdateContentPostInput,
 } from "@abonten/validation/contentSchemas";
-import { v2 as cloudinary } from "cloudinary";
 import { hasOpenPaymentAttempt } from "../payments/paymentAttempt";
 import { confirmPendingRenditionsCore } from "./contentMediaCore";
 import { resolveContentAccess } from "./contentProgram";

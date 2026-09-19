@@ -1,3 +1,7 @@
+import {
+  HTTP_TIMEOUTS,
+  fetchWithTimeout,
+} from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
 import { PaystackApiError } from "./paystackService";
 
@@ -28,7 +32,8 @@ function getSecretKey(): string {
 }
 
 async function paystackFetch<T>(path: string, init: RequestInit): Promise<T> {
-  const res = await fetch(`${PAYSTACK_BASE_URL}${path}`, {
+  const res = await fetchWithTimeout(`${PAYSTACK_BASE_URL}${path}`, {
+    timeoutMs: HTTP_TIMEOUTS.paystackWrite,
     ...init,
     headers: {
       Authorization: `Bearer ${getSecretKey()}`,

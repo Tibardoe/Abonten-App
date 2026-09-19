@@ -2,9 +2,9 @@
 
 import EventCancellationEmailTemplate from "@/components/organisms/EventCancellationEmailTemplate";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { logger } from "@abonten/core/logger";
 import type { CancelledAttendeeRefund } from "@abonten/services/events/cancelEventCore";
-import { Resend } from "resend";
 
 export type { CancelledAttendeeRefund };
 
@@ -28,7 +28,7 @@ export default async function eventCancellationNotification(
   eventTitle: string,
   attendees: CancelledAttendeeRefund[],
 ) {
-  if (!process.env.RESEND_API_KEY) {
+  if (!emailIsConfigured()) {
     logger.warn(
       "RESEND_API_KEY is not set; skipping event cancellation emails",
     );
@@ -40,7 +40,6 @@ export default async function eventCancellationNotification(
   }
 
   const supabase = getSupabaseServiceClient();
-  const resend = new Resend(process.env.RESEND_API_KEY);
 
   let sent = 0;
   let failed = 0;
@@ -67,7 +66,7 @@ export default async function eventCancellationNotification(
 
         const username = userInfo?.full_name ?? userInfo?.username ?? null;
 
-        const { error } = await resend.emails.send({
+        const { error } = await sendEmail({
           from: "Abonten Hub <tickets@abontenhub.com>",
           to: [adminUser.user.email],
           subject: `Event cancelled — ${eventTitle}`,

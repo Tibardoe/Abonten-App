@@ -2,14 +2,10 @@ import { unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { logger } from "@abonten/core/logger";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
+import {
+  CLOUDINARY_API_TIMEOUT_MS,
+  cloudinary,
+} from "@abonten/services/media/cloudinaryClient";
 
 export async function saveEventQrCodeToCloudinary(
   qrCodeBase64: string,
@@ -27,6 +23,7 @@ export async function saveEventQrCodeToCloudinary(
     await writeFile(tempFilePath, buffer);
 
     const result = await cloudinary.uploader.upload(tempFilePath, {
+      timeout: CLOUDINARY_API_TIMEOUT_MS,
       folder: "tickets_qr_codes",
       public_id: filename,
       resource_type: "image",

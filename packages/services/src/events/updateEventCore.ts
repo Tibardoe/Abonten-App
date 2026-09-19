@@ -1,9 +1,9 @@
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
+import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { v2 as cloudinary } from "cloudinary";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
 // Post-auth, post-flyer-upload body of updateEvent, lifted so the
@@ -221,7 +221,7 @@ export async function updateEventCore(
 
   if (previousFlyerPublicId) {
     try {
-      await cloudinary.uploader.destroy(previousFlyerPublicId);
+      await destroyAsset(previousFlyerPublicId, {});
     } catch (cloudError) {
       logger.error("Cloudinary deletion of old flyer failed:", cloudError);
       // Not failing the whole update if cleanup of the old flyer fails.

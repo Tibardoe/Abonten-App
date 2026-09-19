@@ -4,6 +4,7 @@ import TicketPurchaseEmailTemplate, {
   type EmailTicketLine,
 } from "@/components/organisms/TicketPurchaseEmailTemplate";
 import { createClient } from "@/config/supabase/server";
+import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
@@ -13,7 +14,6 @@ import {
 } from "@abonten/core/ticketPdfData";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import React from "react";
-import { Resend } from "resend";
 import getTicketsByIds from "./getTicketsByIds";
 
 /**
@@ -37,7 +37,7 @@ export default async function ticketPurchaseNotification(
   authOverride?: AuthOverride,
 ) {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    if (!emailIsConfigured()) {
       logger.warn("RESEND_API_KEY is not set; skipping ticket purchase email");
       return { status: 500, message: "Email service not configured" };
     }
@@ -126,9 +126,7 @@ export default async function ticketPurchaseNotification(
       ticketTypeName: ticket.ticket_type.type,
     }));
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await sendEmail({
       from: "Abonten Hub <tickets@abontenhub.com>",
       to: [email],
       subject: `Your Abonten Ticket Is Ready 🎟️ — ${firstTicket.event.title}`,

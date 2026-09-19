@@ -3,6 +3,10 @@ import {
   MAX_CONTENT_VIDEO_BYTES,
   MIN_VIDEO_SECONDS,
 } from "@abonten/core/content/limits";
+import {
+  HTTP_TIMEOUTS,
+  fetchWithTimeout,
+} from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
 import {
   ALLOWED_IMAGE_UPLOAD_FORMATS,
@@ -12,22 +16,19 @@ import {
   buildEagerTransformations,
   shouldOptimizeVideo,
 } from "@abonten/core/videoDelivery";
+import {
+  CLOUDINARY_API_TIMEOUT_MS,
+  cloudinary,
+  destroyAsset,
+} from "@abonten/services/media/cloudinaryClient";
 import type { ContentMediaItem } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { RegisterContentMediaInput } from "@abonten/validation/contentSchemas";
-import { v2 as cloudinary } from "cloudinary";
 import { enqueueCloudinaryCleanup } from "../platform/cloudinaryCleanupCore";
 import { checkRateLimit } from "../security/rateLimit";
 import { contentMediaEnvironmentPrefix } from "../uploads/cloudinaryUploadSignature";
 import { readContentSettings, resolveContentAccess } from "./contentProgram";
 import { type Envelope, FAIL, accountIsRestricted } from "./contentShared";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 // The media half of the content pipeline. The bytes go browser/app ->
 // Cloudinary with a signature bound to `content_media/<environment>/<user id>`; this
@@ -103,6 +104,7 @@ async function fetchResource(
 ): Promise<CloudinaryResource | null> {
   try {
     const res = (await cloudinary.api.resource(publicId, {
+      timeout: CLOUDINARY_API_TIMEOUT_MS,
       resource_type: resourceType,
       type: "upload",
       // Without this the Admin API omits a video's duration, and the length
@@ -130,6 +132,7 @@ async function requestRendition(
 }> {
   try {
     const result = await cloudinary.uploader.explicit(publicId, {
+      timeout: CLOUDINARY_API_TIMEOUT_MS,
       resource_type: "video",
       type: "upload",
       eager: buildEagerTransformations(trim ?? undefined),
@@ -177,7 +180,7 @@ async function discardUpload(
 ): Promise<void> {
   const type = resource.resource_type === "video" ? "video" : "image";
   try {
-    await cloudinary.uploader.destroy(resource.public_id, {
+    await destroyAsset(resource.public_id, {
       resource_type: type,
       invalidate: true,
     });
@@ -431,7 +434,7 @@ export async function deleteContentMediaCore(
     };
   }
   try {
-    await cloudinary.uploader.destroy(row.public_id, {
+    await destroyAsset(row.public_id, {
       resource_type: row.media_type as "image" | "video",
     });
   } catch (error) {
@@ -508,7 +511,10 @@ export async function confirmPendingRenditionsCore(
   for (const row of rows ?? []) {
     if (!row.playback_url) continue;
     try {
-      const res = await fetch(row.playback_url, { method: "HEAD" });
+      const res = await fetchWithTimeout(row.playback_url, {
+        method: "HEAD",
+        timeoutMs: HTTP_TIMEOUTS.cloudinary,
+      });
       if (res.ok) {
         await supabase
           .from("content_media")

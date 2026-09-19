@@ -5,14 +5,10 @@ import os from "node:os";
 import path from "node:path";
 import { logger } from "@abonten/core/logger";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
+import {
+  CLOUDINARY_API_TIMEOUT_MS,
+  cloudinary,
+} from "@abonten/services/media/cloudinaryClient";
 
 export async function saveEventFlyerToCloudinary(selectedFile: File) {
   if (!selectedFile) return { error: "No file selected" };
@@ -40,6 +36,7 @@ export async function saveEventFlyerToCloudinary(selectedFile: File) {
     await writeFile(tempFilePath, fileBuffer);
 
     const result = await cloudinary.uploader.upload(tempFilePath, {
+      timeout: CLOUDINARY_API_TIMEOUT_MS,
       folder: "event_flyers",
       resource_type: "image",
     });
