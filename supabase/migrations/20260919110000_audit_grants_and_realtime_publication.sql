@@ -8,11 +8,11 @@
 --    grant is noise in every future review and violates the rule that
 --    nothing is executable by a client role unless a client needs it.
 --
--- 2. The three `expire_stale_*_checkouts` sweeps are pg_cron jobs. They
---    were executable by `authenticated`, so any signed-in user could run the
---    sweep at will. The sweep only touches sessions already past their
---    expiry, so no data could be harmed, but a cron job's function should
---    be callable by the scheduler's role only.
+-- 2. The three `expire_stale_*_checkouts` sweeps: EXECUTE for `authenticated`
+--    was revoked here and RESTORED by 20260919120000 — the application runs
+--    the sweep on demand with the caller's session as a self-heal before
+--    reading a checkout. Kept in this file so the replay history stays
+--    honest; see the follow-up migration for the reasoning.
 --
 -- 3. Messaging realtime moved from `postgres_changes` to trigger-driven
 --    broadcasts on private channels on 2026-09-18

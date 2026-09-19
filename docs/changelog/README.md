@@ -16,6 +16,16 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-19 — Enterprise hardening pass (holistic audit 05)
+
+- **New — `docs/audit/05-holistic-audit-2026-09-19.md`**: what was inspected, what changed and how it was verified. PROJECT.md §37.
+- **Security** (`security/application-security.md` 1.x): Content-Security-Policy on web and admin (built in `@abonten/core/security/contentSecurityPolicy`, set in each `proxy.ts`, violations reported to Sentry); the web session proxy protects an explicit list of private sections (unknown URLs are now a real 404; `/api/geocode` reachable before sign-in); boot-time configuration check in both Next.js apps (`security/secrets-and-environment.md`: required vs recommended variables; `TWILIO_*` row removed with the package).
+- **Database** (production, `20260919110000_audit_grants_and_realtime_publication`): trigger functions are no longer executable by client roles (the checkout sweeps keep their `authenticated` grant — the app runs them on demand as a self-heal, `20260919120000`); the four messaging tables leave the `supabase_realtime` publication and drop REPLICA IDENTITY FULL (the trigger-broadcast cut-over of 2026-09-18 is complete).
+- **Testing** (`development/testing.md`, `development/ci.md`): Playwright browser suite for the web app (`apps/web/e2e`) run by the `build-and-e2e-web` job: headers, redirects, 404s, SEO tags, axe accessibility scan.
+- **Integrations**: every outbound call (Paystack, Hubtel, Expo push, Google Geocoding, Cloudinary, Resend) has a deadline; one Cloudinary client and one Resend sender.
+- **Data layer**: the public Supabase client is typed; the `any` casts that comment "no generated Supabase types exist" were removed across web and services (they had existed since 2026-08).
+- **Accessibility**: `text-primary` now resolves to an AA-contrast token on web and mobile; `muted-foreground` darkened; decorative mask icons hidden from assistive technology; mobile Pressables carry the button role.
+
 ## 2026-09-19 — Search vocabulary tuning, token-refresh window, release measurements
 
 - **New — Admin › Discovery › Search vocabulary** (`admin/discovery.md` 1.2): unanswered searches, preview, and add / edit / switch off / remove terms, audited as `discovery.vocabulary.*`. Migration `20260919100000` (production): `admin_search_vocabulary_gaps`, `admin_search_concept_preview`, 34 more starter terms.
