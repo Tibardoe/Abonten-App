@@ -3,6 +3,7 @@ import {
   getEventsInWindow,
 } from "@/actions/getEventsInWindow";
 import { getNearByEvents } from "@/actions/getNearByEvents";
+import LocationUnavailable from "@/components/molecules/LocationUnavailable";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { filterEventsByWindow } from "@abonten/core/eventDateWindow";
 import { undoSlug } from "@abonten/core/geerateSlug";
@@ -80,6 +81,14 @@ export default async function page({
   const safeLocation = location ?? "";
 
   const { lat, lng } = await geocodeAddress(safeLocation);
+
+  // See events/location/[location]/page.tsx: no coordinates means the place
+  // could not be resolved, not that nothing is on there.
+  if (lat === null || lng === null) {
+    return (
+      <LocationUnavailable place={undoSlug(decodeURIComponent(safeLocation))} />
+    );
+  }
 
   const urlPath = type
     .split("-")

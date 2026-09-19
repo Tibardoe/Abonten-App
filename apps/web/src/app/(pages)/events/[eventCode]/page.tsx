@@ -207,13 +207,15 @@ export default async function page({
   // Similar events genuinely depend on the geocode result above, so this
   // stays sequential. Uses the same category-matching RPC as the dedicated
   // similar-events page instead of a separate nearby-events fetch + JS filter.
-  const similarEventsResponse = await getSimilarEvents(
-    event.event_category,
-    lng,
-    lat,
-  );
+  // No coordinates (an address Google does not know, or a lookup that timed
+  // out) simply means no "similar events near here" section — never a
+  // failed event page.
+  const similarEventsResponse =
+    lat === null || lng === null
+      ? null
+      : await getSimilarEvents(event.event_category, lng, lat);
   const similarEvents: UserPostType[] = (
-    (similarEventsResponse.similarEvents ?? []) as unknown as UserPostType[]
+    (similarEventsResponse?.similarEvents ?? []) as unknown as UserPostType[]
   ).filter((evt) => evt.id !== event.id);
 
   const postedAt = getRelativeTime(event.created_at);

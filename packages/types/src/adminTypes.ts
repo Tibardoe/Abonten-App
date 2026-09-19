@@ -551,27 +551,34 @@ export type ErrorEventSample = {
   occurredAt: string;
 };
 
-export type HealthCheckKey =
-  | "db"
-  | "auth"
-  | "storage"
-  | "paystack"
-  | "resend"
-  | "hubtel"
-  | "push"
-  | "cloudinary"
+// Every health check this project runs. Exported as a value, not only a
+// union, because the Monitoring snapshot reads the latest result for each
+// key by name — one indexed lookup per key instead of sorting the whole
+// health_check_result table (see getHealthSnapshotCore).
+export const HEALTH_CHECK_KEYS = [
+  "db",
+  "auth",
+  "storage",
+  "paystack",
+  "resend",
+  "hubtel",
+  "push",
+  "cloudinary",
   // Abonten Rewards engine: outbox lag, settlement backlog, dead letters.
-  | "rewards"
+  "rewards",
   // Field Ops: eligibility-sweep lag and failures, overdue holding periods,
   // successful onboardings with no commission behind them.
-  | "fieldops"
+  "fieldops",
   // Abonten Weekly: scheduled editions running late, or no Ghana-wide
   // edition published by Monday 09:00 Accra while the programme is on.
-  | "weekly"
+  "weekly",
   // synthetic: written by the pg_cron job itself from the HTTP status it
   // gets back calling /api/observability/health, so a rejected/unreachable
   // endpoint is visible instead of the dashboard just looking empty.
-  | "self";
+  "self",
+] as const;
+
+export type HealthCheckKey = (typeof HEALTH_CHECK_KEYS)[number];
 
 export type HealthCheckSnapshot = {
   key: HealthCheckKey;

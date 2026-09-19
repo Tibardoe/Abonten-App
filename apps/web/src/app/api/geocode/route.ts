@@ -1,3 +1,4 @@
+import { createClient } from "@/config/supabase/server";
 import {
   HTTP_TIMEOUTS,
   fetchWithTimeout,
@@ -9,18 +10,32 @@ import { NextResponse } from "next/server";
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX_REQUESTS = 20;
 
+// Server-side proxy to Google's Geocoding API, used by the Field Ops lead
+// territory form ("find this area on the map"). Google bills per request,
+// so the route is signed-in only and rate limited per caller.
+//
+// It authenticates here rather than in the session proxy: an API route must
+// answer 401 JSON, not a 307 to an HTML sign-in page, and the proxy only
+// guards page sections (see PROTECTED_PREFIXES in
+// src/config/supabase/middleware.ts).
 export async function GET(req: Request) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+    }
 
     // DB-backed (limitation OBS-001): the previous in-memory counter reset
     // on every cold start and didn't share state across serverless
     // instances, making it close to a no-op under real traffic on this
-    // billed Google Geocoding proxy. This is unauthenticated by design
-    // (used before login), so IP is the only identity available.
+    // billed Google Geocoding proxy. Keyed by account, which is the real
+    // identity now that the route requires one.
     const allowed = await checkRateLimit(
-      `geocode:${ip}`,
+      `geocode:${user.id}`,
       RATE_LIMIT_MAX_REQUESTS,
       RATE_LIMIT_WINDOW_SECONDS,
     );

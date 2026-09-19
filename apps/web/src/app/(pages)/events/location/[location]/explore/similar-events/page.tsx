@@ -41,21 +41,21 @@ export default async function page({
   //   `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
   // );
 
-  const res = await geocodeAddress(safeLocation);
+  const { lat, lng } = await geocodeAddress(safeLocation);
 
-  const { lat, lng } = res;
+  // Without coordinates there is no "near here" to search; the list renders
+  // its empty state rather than calling the RPC with nulls.
+  const response =
+    lat === null || lng === null
+      ? null
+      : await getSimilarEvents(formattedCategory, lng, lat);
 
-  const response = await getSimilarEvents(formattedCategory, lng, lat);
-
-  let errorMessage: string | undefined = undefined;
-
-  if (response.status !== 200) {
-    errorMessage = response.message;
-    logger.error(errorMessage);
+  if (response && response.status !== 200) {
+    logger.error(response.message);
   }
 
   const events: UserPostType[] =
-    (response.similarEvents as unknown as UserPostType[] | undefined) ?? [];
+    (response?.similarEvents as unknown as UserPostType[] | undefined) ?? [];
 
   return (
     <div className="space-y-3">

@@ -4,7 +4,7 @@ purpose: Record what a whole-codebase audit of Abonten Hub found on 2026-09-19 a
 audience: Founder, engineering, future auditors
 scope: apps/web, apps/admin, apps/mobile, packages/*, supabase/, CI, production project sderrexhawjbmsugndcq
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-19
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -57,7 +57,7 @@ Severity uses the earlier reports' scale. Every row was fixed in this pass unles
 | F14 | LOW · OBSERVABILITY | Logging | `@abonten/core/logger` wrote free text; log drains and alert rules could not filter by level or field | Console wrapper | One JSON line per entry on a production server (`{time, level, msg, data}`, Errors serialised with stack); unchanged in browsers, React Native and development; unit-tested |
 | F15 | LOW · HYGIENE | Repository | Biome writes LF, the Windows checkout had CRLF: a formatting pass over one folder showed 138 spurious modifications | Only `apps/mobile` had a `.gitattributes` | Root `.gitattributes` pins LF repo-wide |
 | F16 | LOW · DEAD CODE | Web | `/api/user-profile` (no callers), `getUserCurrency` (no callers, wrong fallback), `/around-you` (stub), the `twilio` package (never imported), three suppression comments that suppressed nothing | Left behind | Removed |
-| F17 | INFO · DEPENDENCIES | Monorepo | `npm audit`: 20 advisories, all transitive under Expo/Metro build tooling (`image-size`, `uuid` via `xcode`, `decode-uri-component`); none in a runtime path | Upstream | Non-breaking fixes applied where `npm audit fix` allowed; the rest require an Expo SDK major and are documented (§6) |
+| F17 | INFO · DEPENDENCIES | Monorepo | `npm audit`: 20 advisories, all transitive. Two are genuinely build-time only (`metro` → `image-size`; `@expo/config-plugins` → `xcode` → `uuid`, used by prebuild). **One is not**: `expo-router` → `query-string@7` → `decode-uri-component@0.2.2` is in the mobile app's runtime URL parsing (`getStateFromPath`), so it runs on every deep link | Upstream pins | Non-breaking `npm audit fix` applied. The runtime one cannot be fixed from this repository: the advisory covers `<=0.4.2` and the first patched release, `0.5.0`, is ESM-only (`"type": "module"`, no CJS entry) while `query-string@7` does `require('decode-uri-component')` — an `overrides` pin would break the Metro bundle. Corrected in §6 |
 
 ### Examined and found sound (no change)
 
@@ -107,7 +107,7 @@ No table, column, policy or trigger changed. Both files replay in the integratio
 | `npm run build -w @abonten/web` | exit 0, 218 static pages, no warnings |
 | `npm run build -w @abonten/admin` | exit 0 |
 | `npx playwright test` (apps/web, against `next start`) | 17/17 — see §5.2 for what the suite found on the way |
-| `npm audit --omit=dev` after `npm audit fix` | only the Expo/Metro build-tooling advisories remain (§6) |
+| `npm audit --omit=dev` after `npm audit fix` | 16 moderate remain: two build-time, one mobile-runtime, none fixable from the repository (§6) |
 
 ### 5.2 What the browser suite found before it passed
 
@@ -121,7 +121,9 @@ No table, column, policy or trigger changed. Both files replay in the integratio
 ## 6. Remaining items — only what cannot be done from the repository
 
 - **Postgres upgrade** (15.8 → 17): eligible since 2026-09-18, about an hour of downtime, no downgrade; the founder schedules it in the Supabase dashboard.
-- **Expo SDK major** for the remaining `npm audit` advisories in build tooling (`@expo/config-plugins` → `xcode` → `uuid`; `metro` → `image-size`; `expo-router` → `query-string`): none is reachable at runtime; they clear with the next Expo SDK, which is a native build the founder cuts.
+- **Expo SDK upgrade** for the three remaining `npm audit` advisories, none of which can be resolved from this repository:
+  - `metro` → `image-size` and `@expo/config-plugins` → `xcode` → `uuid` are **build-time only** (the bundler and `expo prebuild`); they never reach a device.
+  - `expo-router` → `query-string@7` → `decode-uri-component@0.2.2` **is in the mobile runtime**: expo-router parses incoming URLs with it (`build/fork/getStateFromPath.js`), so it runs on every deep link and universal link. The advisory (GHSA-vcc3-ghjq-m6fr, moderate) is a denial of service — a crafted link with malformed percent-encoding makes the decoder burn CPU and the app freeze. There is no data exposure and no privilege gain; the victim force-quits and reopens. It is not fixable here: the advisory covers `<=0.4.2`, the first fixed release (`0.5.0`) is ESM-only while `query-string@7` requires it as CommonJS, and npm's own suggested "fix" is a downgrade of expo-router to a version predating SDK 57. It clears when Expo moves off `query-string@7`; the next SDK bump should be checked against it.
 - **Retention periods** (R4–R6 in `OPERATIONAL_DECISIONS_REQUIRED.md`): the purge jobs are specified but gated on decisions the register reserves for the founder and counsel; the repository's rule is not to build a gated specification.
 - **Leaked-password protection**: a Supabase Pro feature; there are no end-user passwords.
 - **The mobile store build**: every mobile change here (roles, tokens) reaches devices with the next EAS build, which is the founder's to submit.
@@ -136,3 +138,70 @@ No table, column, policy or trigger changed. Both files replay in the integratio
 | Accessibility | Public surface passes axe at the serious/critical level on web; mobile tappables announce as buttons |
 | Operations | Deployments verify their configuration at boot; logs are structured; the browser suite runs in CI |
 | Database | Grants match use; the realtime cut-over is complete; both migrations replay |
+
+## 8. Adversarial pre-merge pass (version 1.1, same day)
+
+Before the branch was offered for merge it was re-read as an attacker and as
+a reviewer looking for what the pass itself had broken. Six more defects came
+out of it — three introduced by this branch, one pre-existing bug the branch's
+own typing exposed, one measured scalability defect, and one incorrect claim
+in this report.
+
+| # | Severity | What | Evidence | Resolution |
+|---|---|---|---|---|
+| F18 | MEDIUM · SECURITY (introduced by F5) | Inverting route protection made `/api/geocode` — a proxy to a **billed** Google API — reachable without an account. It had been protected only as a side effect of the old deny-by-default model | A route-by-route diff of old versus new protection across all 88 pages and every API route: `/api/geocode` was the single route whose protection changed | The route authenticates itself (`auth.getUser()`, 401 JSON rather than a 307 to HTML, which is what an API route owes a caller) and rate-limits per account instead of per IP. Asserted in `e2e/route-protection.spec.ts`. The comment claiming it was "used before login" was wrong: its only caller is the Field Ops lead territory form, which is behind `/field` |
+| F19 | MEDIUM · RELIABILITY (introduced by F1) | Putting a deadline on Google Geocoding made a slow response **throw into the page render**. The location pages have no catch, so a transient Google slowdown would have taken `/explore/[location]`, `/events/location/[location]`, its `explore/[type]` children and the event detail page to the error boundary — where previously they simply waited | Read of `geocodeAddress` against its four call sites | `geocodeAddress` returns `{ lat: null, lng: null, error }` for a timeout or network failure, the same shape it already returned for an address Google cannot resolve, and logs it |
+| F20 | MEDIUM · CORRECTNESS (pre-existing, exposed by F19's honest return type) | Those pages then passed `null` coordinates straight into `get_nearby_events` / `get_events_in_window` / `get_similar_events`, which take `double precision` — so a failed geocode silently queried with nulls and rendered as "there is nothing on in this city" | The build's type check, once `geocodeAddress` stopped returning `any` | Each page guards: the two location pages render a new `LocationUnavailable` ("We couldn't find X", with the location picker still on screen so it is not a dead end); the similar-events page and the event detail page skip the nearby query instead of calling it with nulls |
+| F21 | MEDIUM · SCALABILITY | Admin › Monitoring read the health snapshot as `order by checked_at desc limit 300`, then kept the first row per check in JavaScript. The only index is `(check_key, checked_at DESC)`, so the sort had no usable index on the **largest table in the database** | `EXPLAIN (ANALYZE, BUFFERS)` on production: `Parallel Seq Scan` + top-N heapsort, **895 ms**, 2,207 buffers, over 127,462 rows / 29 MB. Retention is 30 days, so the steady state is roughly double | One indexed lookup per known check key (`HEALTH_CHECK_KEYS`, now exported as a value), issued together: **0.114 ms** and 4 buffers each on the same data. Semantics unchanged — still the latest result per check, however old; output order is now the canonical key order instead of shuffling with completion times |
+| F22 | LOW · ACCURACY OF THIS REPORT | §6 said every remaining `npm audit` advisory was build-tooling only. One is not | `npm ls decode-uri-component` → `expo-router@57 → query-string@7 → decode-uri-component@0.2.2`, referenced from `expo-router/build/fork/getStateFromPath.js`, which parses incoming deep links at runtime | F17 and §6 corrected with the exploitability and with why it cannot be fixed here |
+| F23 | LOW · TEST CORRECTNESS | Two of the new browser tests asserted the wrong thing: `/places` has no index page (404 is correct, not failure), and `/` is the landing group, which has no `<header>` | First run of the suite | Assertions corrected to the property actually under test |
+
+### 8.1 The grant incident, investigated
+
+The brief asked for this specifically.
+
+- **Why the grant was revoked.** The migration treated "this function is a pg_cron job" as "only the scheduler calls it". That was true of the job, and false of the application: fourteen call sites run the same sweep with the caller's own session as a self-heal, so that a reservation which has just expired is released the moment someone looks at the checkout rather than at the next five-minute tick.
+- **Why the migration did not prevent it.** Nothing in TypeScript, review or the build can see a grant. The only artefact that fails is a live call returning `42501`, and the one test that happened to make such a call (`money-path-lockdown`) is a money-path test, not a permissions test — it caught this by accident.
+- **Is the correction safe.** Yes. Each sweep is `SECURITY DEFINER`, takes no arguments, returns no caller-specific data, is idempotent, and only touches rows already past `expires_at`. A signed-in caller gains nothing the next cron run would not do anyway.
+- **Can deployment order reproduce it.** No. Both migrations are in the repository in order, the production history records them in order (`20260919202213` then `20260919211135`), and the integration stack replays both from scratch.
+- **Do other jobs have the same risk.** Checked exhaustively, not sampled: all 215 RPC names called anywhere in the codebase were cross-referenced against `has_function_privilege('authenticated', …)` on production. Seventeen are not executable by `authenticated`; every one was traced to its call site and each is reached only through a `ServiceRoleClient` (content, weekly, recommendations, referrals, place visits, admin finance). Two — `account_deletion_blockers` and `expire_stale_subscription_checkouts` — have no application call site at all. **No other latent grant bug exists.**
+- **Strengthened verification.** `function-grants.integration.test.ts` asserts both directions against a real authenticated session: thirteen session-callable functions must stay callable, seven service-role-only functions must stay refused. It was proved to work by re-running the incident on the local stack — revoking the grant made it fail with the exact diagnosis ("A migration revoked it; the app calls it with the caller's own session, so this is a production outage") — and pass again once restored. The refusal half calls each function as the service role first, so PostgREST's `PGRST202` can only mean "invisible to this role" and never "the test's arguments are wrong" — a trap the first draft of the test fell into.
+
+### 8.2 CSP reporting, verified rather than assumed
+
+Version 1.0 said a violation report reaching Sentry was unverified. It is now
+verified as far as it can be without involving Sentry: `e2e/csp-reporting.spec.ts`
+intercepts the configured `report-uri`, injects a script from a disallowed
+origin, and asserts the browser posts a real `csp-report` whose
+`violated-directive` is `script-src` and whose `blocked-uri` is the foreign
+origin. Run against a server started with a DSN, both tests pass; without a
+DSN the policy carries no `report-uri` and the test skips with that reason.
+The same file also asserts the policy refuses nothing of the app's own, which
+is the failure mode that would make the policy unshippable. What remains
+unverified is only Sentry's own acceptance and rendering of the report, which
+is external.
+
+### 8.3 Accessibility: automated versus device
+
+- **Automated, and now enforced:** axe-core over the public web surface (no
+  serious or critical violations); semantic landmarks, canonical titles and
+  `noindex` in the browser suite; and `scripts/check-mobile-a11y.mjs`, which
+  fails the build if any `<Pressable>` with an `onPress` carries no
+  accessibility role — the rule the 123-file codemod established, kept from
+  rotting. Proved by planting a violating component and watching it fail.
+- **Genuinely device-only:** how VoiceOver and TalkBack actually announce a
+  screen — focus order, grouping, whether a label reads sensibly in context,
+  gesture navigation. Roles being present is necessary and not sufficient.
+  This has not been done and is not claimed.
+
+### 8.4 What this pass did not find
+
+Stated so the absence is on the record rather than implied. No unbounded N+1
+was found: every awaited database call inside a loop iterates a bounded batch
+(a post's media, one post's campaigns, one report group, a claimed queue
+page). No TODO, FIXME, skipped or disabled test, or commented-out production
+logic remains in the source. No further `any` remains on the read path. The
+messaging tables' removal from the realtime publication is safe for current
+clients — both apps use trigger broadcasts and no store build of the mobile
+app exists — though an internal tester on a stale preview build would lose
+live message delivery until they update.

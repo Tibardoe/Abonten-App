@@ -22,7 +22,7 @@ Both workflows run on pushes to `main` and on pull requests.
 |---|---|---|---|
 | `typecheck` | `npm run typecheck` | none | TypeScript across all 11 workspaces |
 | `lint` | `npx biome check apps/web/src apps/admin/src apps/mobile/app apps/mobile/src packages` | none | Formatting and lint rules |
-| `unit-tests` | `npx vitest run` (core), `npm run test -w @abonten/services`, `npm run check:api-parity` | none | Pure logic; mobile API ↔ client parity |
+| `unit-tests` | `npx vitest run` (core), `npm run test -w @abonten/services`, `npm run check:api-parity`, `npm run check:mobile-a11y` | none | Pure logic; mobile API ↔ client parity; every pressable view announces a role |
 | `docs` | `npm run check:docs` | none | Documentation validation (required files, metadata, links, placeholders, social links, secret patterns, public/internal separation) |
 | `build-and-e2e-web` | `npm run build -w @abonten/web`, then `npx playwright test` in `apps/web` against `next start` | Supabase, Cloudinary, Paystack, Hubtel, Resend, Google, Sentry, observability, site URLs | The web app builds with real config and the browser suite passes (headers, redirects, 404s, SEO tags, axe accessibility scan); the Playwright report is uploaded on failure |
 | `build-admin` | `npm run build -w @abonten/admin` | Supabase, Sentry (admin DSN), `ADMIN_EMAIL_ALLOWLIST`, admin URL | The console builds |
