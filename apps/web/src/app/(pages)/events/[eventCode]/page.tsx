@@ -65,7 +65,7 @@ export async function generateMetadata({
 
   if (!event) return { title: "Event not found" };
 
-  const title = `${event.title} | Abonten Hub`;
+  const title = event.title;
   const description = event.description
     ? String(event.description).slice(0, 155)
     : undefined;

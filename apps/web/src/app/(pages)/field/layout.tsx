@@ -1,7 +1,14 @@
 import FieldOpsTabs from "@/fieldOps/atoms/FieldOpsTabs";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import { tagFieldOpsRequest } from "@/fieldOps/lib/tagFieldOpsRequest";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+// Internal field-team pages: never indexed.
+export const metadata: Metadata = {
+  title: "Field Ops",
+  robots: { index: false, follow: false },
+};
 
 // The Field Ops area for team leads and members. It doesn't exist for
 // anyone else: the programme must be on and the visitor must be on a team

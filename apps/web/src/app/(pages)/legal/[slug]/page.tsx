@@ -34,10 +34,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  if (!isLegalSlug(slug)) return { title: "Legal — Abonten Hub" };
+  if (!isLegalSlug(slug)) return { title: "Legal" };
   const doc = loadLegalDocument(slug);
   return {
-    title: `${doc.title} — Abonten Hub`,
+    title: doc.title,
     description: doc.summary ?? undefined,
     alternates: { canonical: `/legal/${slug}` },
   };

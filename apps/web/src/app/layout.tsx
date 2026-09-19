@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   // Absolute base for every relative Open Graph / canonical URL the pages
   // declare, so shared links carry a full https URL.
   metadataBase: new URL(PUBLIC_SITE_ORIGIN),
-  title: "Abonten Hub | Connecting people to experiences",
+  // Every page sets a short title; the template appends the brand once.
+  title: {
+    default: "Abonten Hub | Connecting people to experiences",
+    template: "%s | Abonten Hub",
+  },
   description:
     "Discover events and places around you in Ghana, buy tickets and find your next experience on Abonten Hub.",
   icons: {
@@ -58,7 +62,7 @@ export default async function RootLayout({
           <LocaleProvider defaultMessages={messages}>
             <ReactQueryProvider>
               <ToastProvider>
-                <main>{children}</main>
+                {children}
                 <ReferralTouchLogger />
                 <InviteBinder />
               </ToastProvider>

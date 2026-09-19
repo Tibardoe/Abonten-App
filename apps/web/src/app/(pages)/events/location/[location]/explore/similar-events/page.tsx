@@ -4,6 +4,13 @@ import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { resolveEventCategoryLabel } from "@abonten/core/eventCategoryLabels";
 import { logger } from "@abonten/core/logger";
 import type { UserPostType } from "@abonten/types/postsType";
+import type { Metadata } from "next";
+
+// Depends entirely on the ?category query: a title for the tab, no index.
+export const metadata: Metadata = {
+  title: "Similar events",
+  robots: { index: false, follow: true },
+};
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

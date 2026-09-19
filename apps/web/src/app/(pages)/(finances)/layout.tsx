@@ -1,6 +1,13 @@
 import PageHeader from "@/components/molecules/PageHeader";
 import FinancesDesktopSidebar from "@/finances/organisms/FinancesDesktopSidebar";
 import FinancesMobileTabs from "@/finances/organisms/FinancesMobileTabs";
+import type { Metadata } from "next";
+
+// Organizer money pages: never indexed.
+export const metadata: Metadata = {
+  title: "Finances",
+  robots: { index: false, follow: false },
+};
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -12,7 +19,7 @@ export default function FinancesLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <PageHeader title="Finances" />
 
       <FinancesMobileTabs />
@@ -24,6 +31,6 @@ export default function FinancesLayout({
 
         <div className="flex-1 min-w-0">{children}</div>
       </section>
-    </main>
+    </div>
   );
 }

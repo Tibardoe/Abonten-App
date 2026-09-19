@@ -10,7 +10,7 @@ import Link from "next/link";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Legal — Abonten Hub",
+  title: "Legal",
   description:
     "Abonten Hub's Terms and Conditions, Privacy Policy, Cookie Policy and security overview.",
 };

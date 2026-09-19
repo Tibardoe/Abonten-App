@@ -6,8 +6,24 @@ import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarouse
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
+import { undoSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
+import type { Metadata } from "next";
 import AllEventsList from "./AllEventsList";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ location: string }>;
+}): Promise<Metadata> {
+  const { location } = await params;
+  const label = undoSlug(decodeURIComponent(location));
+  return {
+    title: `Events in ${label}`,
+    description: `Upcoming events in ${label}: what is happening today, this week and this month, with tickets on Abonten Hub.`,
+    alternates: { canonical: `/events/location/${location}` },
+  };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
