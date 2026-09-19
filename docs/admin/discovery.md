@@ -1,11 +1,11 @@
 ---
 title: Admin — Discovery
-purpose: How to read the Discovery overview, change the programme settings safely, roll search and recommendation notices out in stages, and stop them in an emergency.
+purpose: How to read the Discovery overview, tune the search vocabulary from real searches, change the programme settings safely, roll search and recommendation notices out in stages, and stop them in an emergency.
 audience: Operations, analysts
-scope: Admin › Discovery (Overview and Programme settings), the discovery.view and discovery.configure permissions, the SEARCH_V2_KILL_SWITCH, RECOMMENDATIONS_KILL_SWITCH and RECOMMENDATION_EMAIL_KILL_SWITCH deploy flags
+scope: Admin › Discovery (Overview, Search vocabulary and Programme settings), the discovery.view and discovery.configure permissions, the SEARCH_V2_KILL_SWITCH, RECOMMENDATIONS_KILL_SWITCH and RECOMMENDATION_EMAIL_KILL_SWITCH deploy flags
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-15
+version: 1.2
+lastReviewed: 2026-09-19
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -59,6 +59,17 @@ The log holds no user, device or IP identifiers and is deleted after the retenti
 | Push delivery | Recommendation pushes waiting, sent, skipped, failed. Read from the shared delivery queue (recommendation rows only); if the read hits its row cap the page says the figures are incomplete. |
 
 Breakdown keys (why candidates were held back, digests skipped, subscription kinds and sources, search kinds, platforms) are shown as words from `@abonten/core/admin/statusLabels`, never as database values.
+
+## Tuning the search vocabulary
+
+Admin › Discovery › Search vocabulary. Search widens each word of a query with the related words in `search_concept` ("gob3" also finds beans and plantain), in both directions, and still requires every word of the query to be found by itself or one of its words. The vocabulary is data: a change applies to the next search, with no deploy.
+
+1. **Searches that need words** lists the submitted searches of the chosen period (7, 30 or 90 days) that found nothing, or found results nobody opened, most-unanswered first. "No related words" means the vocabulary knows none of its words yet. Search analytics carry no user or device identifiers.
+2. Press **Add term** (or **Edit term** when the query already is a term). Enter the words listings use for it, separated by commas or new lines (up to 30), and which result types it applies to.
+3. Press **Preview matches** before saving: it counts the upcoming events, places and Spotlights the term and its words match today and shows a few titles. A query can find nothing simply because nothing matching is listed yet; a term then adds nothing.
+4. Write a reason and save. Adding, editing and removing need `discovery.configure` and a fresh identity check, and are audited (`discovery.vocabulary.create` / `.update` / `.delete`, with the row before and after). If someone else saved the same term in the meantime, the save is refused; reload.
+
+Prefer switching a term off ("In use" unticked) over removing it: an off term is kept for later and changes nothing. Keep words specific: every word added to a term makes that term's searches broader. Never add a term to make one listing rank higher.
 
 ## Changing settings
 

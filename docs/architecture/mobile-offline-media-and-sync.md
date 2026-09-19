@@ -2,9 +2,9 @@
 title: Mobile offline cache, Spotlight playback, live comments, search relevance and follower counts
 purpose: How the mobile app keeps previously loaded data across restarts and offline, how Spotlight video players are created, owned and torn down, how comments and likes stay in step across screens and devices, how search widens a query with related terms and dates, and how follower counts are maintained.
 audience: Engineering, QA, security reviewers
-scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session), the Spotlight feed and SpotlightVideo, commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000 and 20260919092000; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
+scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the Spotlight feed and SpotlightVideo, commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-19
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -65,6 +65,22 @@ OTA update id, so a bundle never reads data shaped by an older one — bump
    goes, the public `anon` cache stays) and when a *different* account signs
    in. It never happens merely because there is no session at that moment.
 
+**Never ask anonymously while signed in.** When the access token has
+expired and the refresh cannot reach the auth server (offline, or a flaky
+network that still reaches the API), supabase-js reports no session. The API
+client (`apps/mobile/src/lib/api.ts`) then sends the *stored* token instead
+of none (`storedSession.ts`). Sending none asked as a signed-out person, and
+the routes that also serve signed-out callers (feature switches, feeds)
+answered 200 with the signed-out answer, which the app cached for the
+signed-in person: Spotlight disappeared from the tab bar until the answer went
+stale. With the stored token the server answers as that person (token still
+valid by its clock) or 401. Either way no signed-out answer is cached. The
+first working token (`TOKEN_REFRESHED`) then refetches every query.
+Reproduced on the emulator (auth port unreachable, device clock +2 h): the
+old client got `/profile` 401 and the signed-out programme answer, and the
+tab vanished. The new client got `/profile` 200 and kept Spotlight, and
+reconnecting refetched everything.
+
 Hooks whose answer gates UI (programmes, own profile, rewards) throw on a
 401/429/5xx instead of returning "off"/"none", so a transient failure keeps
 the last good answer rather than caching a wrong one. Programme hooks also
@@ -112,6 +128,26 @@ Muted players mix with other audio; unmuted ones take audio focus.
 350 ms of real buffering; on a load error a retry control ("You're offline"
 when offline), retried automatically once when the connection returns; a
 failed optimised rendition falls back to the original upload.
+
+**Measured on a release build** (Android emulator, host GPU, local stack,
+2026-09-19). Cold start to first frame 1.6–1.8 s (3.9 s on the first run
+after install). Memory over 4 × 40 swipes levels off at about 495 MB total
+(Java heap 38–58 MB with no upward trend): no leak. Frame times on this
+emulator are dominated by its GPU translation (the system Settings app
+itself: median 44 ms, 85% of frames over budget), so only relative numbers
+mean anything. Home scrolls like Settings (median 48 ms, 28% slow UI-thread
+frames against 21%). Spotlight is heavier (median 77–89 ms, 40–53% slow
+UI-thread frames). A Perfetto trace puts the difference on the render
+thread, not in app code: drawing about 57 ms per frame against 35 ms for
+Settings, plus about 11 ms per frame of layer sync (under 1 ms for
+Settings). That is the cost of TextureView video layers updating every frame. TextureView
+is kept because the comment sheet transforms the video, which a SurfaceView
+ignores. Deferring the neighbour's player creation until after the snap was
+tried and measured, changed nothing, and was not kept. App-side main-thread
+work is small: view mounting totals about 0.7 s over the trace. One exception
+is a single unmount of a page that had left the list window (49 views, 303 ms on this
+emulator). Worth re-measuring on a mid-range physical device before any
+change.
 
 **Feed data.** The feed is never refetched in the background (a re-rank
 moved the video being watched). It changes on a tab re-press (scroll to top,
@@ -171,6 +207,20 @@ weekend become an Africa/Accra date window with the other words kept ("jazz
 december"); a title that literally contains the month still matches.
 Spotlight search uses the same vocabulary for captions and hashtags.
 
+**Tuning from real searches** (migration `20260919100000`, Admin ›
+Discovery › Search vocabulary). `admin_search_vocabulary_gaps` groups the
+submitted searches of a period that found nothing, or found results nobody
+opened, and says whether the vocabulary already knows any of their words.
+`admin_search_concept_preview` counts what a term and its words would match
+today (upcoming events, places, Spotlights) before it is saved, using the
+same phrase expansion as search. Terms are added, edited, switched off or
+removed through `@abonten/services/admin/discovery/searchVocabularyAdminCore`
+(`discovery.configure` + step-up, a reason, optimistic concurrency on
+`updated_at`, audited as `discovery.vocabulary.*`). Input rules shared by the
+form and the service: `@abonten/core/search/searchVocabulary`. The same
+migration adds starter terms for the app's own event and place categories.
+Operator guide: [admin/discovery.md](../admin/discovery.md).
+
 **Filters** (`@abonten/core/search/searchFilters`, unit tested;
 `SearchFilterSheet`). Search's own model, not Explore's: when, distance
 (from the Explore location), price, event category, place category, open now,
@@ -203,6 +253,14 @@ soon, in review or paused — for the web Settings card and
 ## 7. Verification
 
 Unit: persistence policy, feed playback, comment cache, latest-intent toggle,
-post cache, search filters. Integration (local stack): search relevance,
-comment realtime delivery and join policy, follower counts under concurrency,
-active promotions. Device (Android emulator, local stack): see PROJECT.md §36.
+post cache, search filters, search vocabulary rules. Integration (local
+stack): search relevance, comment realtime delivery and join policy, follower
+counts under concurrency, active promotions, admin search vocabulary (gap
+report, preview, permission, add/edit/remove with concurrency and audit, and
+that search follows the change). Release build: see §2 measurements, plus
+two real uploads to Cloudinary (`content_media/development/`) through the
+upload screens. The 0.8 MB clip went straight through. The 9 MB clip failed
+once on a network error, showed "Not posted yet… Try again", and succeeded
+on retry. The optimised copy was built (9.1 MB → 0.93 MB), the status went
+from `pending` to `ready` on read, and the post played. Both assets were
+deleted afterwards. Device (Android emulator, local stack): see PROJECT.md §36.
