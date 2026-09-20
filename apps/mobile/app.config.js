@@ -10,23 +10,28 @@
 // Google SDK. Setting `ios.config.googleMapsApiKey` would also switch on
 // Expo's built-in Maps plugin, which adds `pod 'react-native-google-maps'` —
 // a pod react-native-maps 1.x no longer ships — and fails `pod install`.
-const base = require("./app.json").expo;
+// Expo reads app.json first and hands the result in as `config`. Take it
+// from there rather than re-reading the file: that is the documented
+// contract, it is what `expo-doctor` checks for, and it keeps anything Expo
+// merges in on the way through (an `expo` key from app.config defaults, EAS
+// injected values) instead of silently dropping it.
+module.exports = ({ config }) => {
+  const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-module.exports = {
-  ...base,
-  updates: {
-    ...base.updates,
-    url: "https://u.expo.dev/c0a45056-182f-47c5-b862-de14034a830a",
-  },
-  android: {
-    ...base.android,
-    config: {
-      ...base.android?.config,
-      ...(googleMapsApiKey
-        ? { googleMaps: { apiKey: googleMapsApiKey } }
-        : {}),
+  return {
+    ...config,
+    updates: {
+      ...config.updates,
+      url: "https://u.expo.dev/c0a45056-182f-47c5-b862-de14034a830a",
     },
-  },
+    android: {
+      ...config.android,
+      config: {
+        ...config.android?.config,
+        ...(googleMapsApiKey
+          ? { googleMaps: { apiKey: googleMapsApiKey } }
+          : {}),
+      },
+    },
+  };
 };
