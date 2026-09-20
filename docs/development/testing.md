@@ -45,6 +45,8 @@ Locally: `npm run build -w @abonten/web`, then `npx playwright test` in `apps/we
 
 ## Mobile accessibility
 
+`npm run check:deep-link-decoder` guards the one dependency the mobile app carries a replacement for. `expo-router` reaches `decode-uri-component@0.2.2` through `query-string@7`; that package carries GHSA-vcc3-ghjq-m6fr and cannot be upgraded (the first patched release is ESM-only while query-string uses `require()`), so Metro resolves it to `apps/mobile/vendor/decode-uri-component.js` instead. The check differentially tests the replacement against the original over 3,033 inputs, proves it stays linear on the payload that defeats the original, confirms the Metro alias is still wired, and fails if expo-router stops supplying its own `getStateFromPath` — the fact that keeps the vulnerable path unused. It runs in CI. See `docs/audit/06-expo-dependency-migration-2026-09-19.md`.
+
 `npm run check:mobile-a11y` fails if any `<Pressable>` with an `onPress` carries no `accessibilityRole`, so a pressable view always announces itself as a control to TalkBack and VoiceOver. It runs in CI. It is a static guard only: how a screen actually reads on a device is not covered (see below).
 
 ## Other checks

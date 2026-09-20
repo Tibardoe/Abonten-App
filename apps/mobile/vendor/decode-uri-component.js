@@ -5,9 +5,31 @@
 // `expo-router` depends on `query-string@7`, which depends on
 // `decode-uri-component@0.2.2`. That package carries GHSA-vcc3-ghjq-m6fr:
 // its fallback decoder, reached when `decodeURIComponent()` throws on
-// malformed percent-encoding, splits the token list recursively in half and
-// re-decodes both halves. That is O(2^n) in the number of `%XX` tokens, so a
-// crafted deep link is enough to wedge the JS thread.
+// malformed percent-encoding, bisects the token list and re-decodes both
+// halves, once per starting split. Measured against this file: a 450-token
+// input — a 1,352-character link — takes 6,115 ms in the original and 8.8 ms
+// here. Six seconds of blocked JS thread is an ANR.
+//
+// HOW EXPOSED IS IT, HONESTLY
+// ---------------------------
+// The vulnerable function is bundled, and the module that calls
+// `queryString.parse` is live rather than dead: react-navigation's core
+// barrel re-exports it, and `useLinking.native` and `useLinkBuilder` name it
+// as their default `getStateFromPath`.
+//
+// But in this app that default is never taken. `ExpoRoot` renders
+// `fork/NavigationContainer` with `linking={store.linking}`; that puts the
+// linking options on `LinkingContext`; and `getLinkingConfig()` always
+// defines `getStateFromPath`, which delegates to `fork/getStateFromPath` —
+// a fork that parses query parameters with `expo.parseQueryParams` and does
+// not import `query-string` at all. So `options?.getStateFromPath ??
+// core_1.getStateFromPath` always resolves to expo-router's own parser.
+// Sending the payload above to a real device, before and after this change,
+// showed no difference, which is consistent with that.
+//
+// This file therefore closes a latent risk, not an exploit in flight: real
+// code, a real cost, one upstream change away from running. It is free to
+// carry, because the replacement is behaviour-identical.
 //
 // It cannot be fixed by upgrading. The advisory covers every published
 // version up to 0.4.2; the first patched release, 0.5.0, is ESM-only
@@ -39,7 +61,7 @@
 //
 // `scripts/check-deep-link-decoder.mjs` holds this honest: it differentially
 // tests this file against the real `decode-uri-component` over a corpus of
-// 433 inputs and fails the build if the two ever disagree.
+// 3,033 inputs and fails the build if the two ever disagree.
 
 // The original's two matchers, character for character. `singleMatcher`
 // deliberately also matches runs of non-`%` text, and deliberately matches

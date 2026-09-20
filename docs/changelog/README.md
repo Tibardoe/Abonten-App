@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-19 — Expo SDK and mobile dependency migration (audit 06)
+
+- **Mobile dependency migration** (report `audit/06-expo-dependency-migration-2026-09-19.md`, PROJECT.md §38): the mobile app stays on Expo SDK 57 — it is already npm's `latest`, SDK 58 is a preview on React Native 0.88.0-rc.0, and `expo-router@58` still declares `query-string: ^7`, so no upgrade resolves the advisory. `decode-uri-component` is instead replaced at the Metro resolver with a linear, behaviour-identical drop-in, leaving the dependency graph and `npm audit` untouched; proved absent from the shipping bundle. New CI check `npm run check:deep-link-decoder` (3,033-input differential test plus the expo-router condition that keeps the vulnerable path unused). `app.config.js` now uses the config Expo passes in (`expo-doctor` 19/21 → 20/21), and the `disableHierarchicalLookup` rationale was corrected with a measurement (851 KB of duplicate modules). Corrects two claims in audit 05: the advisory's call site, and that it could not be fixed here.
+
 ## 2026-09-19 — Enterprise hardening pass (holistic audit 05)
 
 - **Pre-merge adversarial pass** (report 1.1 §8, PROJECT.md §37.11): `/api/geocode` re-secured after the route-protection change left a billed Google proxy open; a geocoding deadline no longer throws into a page render, and a failed lookup no longer queries the discovery RPCs with null coordinates (new `LocationUnavailable`); Admin › Monitoring's health snapshot went from a 895 ms sequential scan of the largest table to 0.1 ms indexed lookups per check. New guards: `function-grants.integration.test.ts` (both directions of every grant the app depends on), `route-protection.spec.ts`, `csp-reporting.spec.ts` (a real browser violation report), `npm run check:mobile-a11y` (in CI). Corrected: one `npm audit` advisory is mobile-runtime, not build tooling, and is not fixable from this repository.

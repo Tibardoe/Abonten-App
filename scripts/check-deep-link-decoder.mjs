@@ -283,12 +283,33 @@ if (existsSync(ROUTER_BUILD)) {
 
   if (decodingCalls.length > 0) {
     notes.push(
-      `query-string's decoding API is LIVE in ${decodingCalls.length} module(s) reachable from expo-router's entry points (${reachable.size} walked):\n${decodingCalls.map((c) => `      ${c}`).join("\n")}\n      react-navigation's core barrel re-exports that module, and \n      useLinking.native / useLinkBuilder default to it, so this is \n      reachable code -- the Metro alias is the mitigation, not \n      belt-and-braces. Do not remove it.`,
+      `query-string's decoding API is present in ${decodingCalls.length} live module(s) of the ${reachable.size} reachable from expo-router's entry points:\n${decodingCalls.map((c) => `      ${c}`).join("\n")}`,
     );
   } else {
     notes.push(
-      `expo-router reaches ${reachable.size} modules from its entry points and none call query-string's decoding API. If that is now true of every release the project builds against, the Metro alias could be retired -- but check useLinking/useLinkBuilder defaults first.`,
+      `none of the ${reachable.size} modules reachable from expo-router's entry points call query-string's decoding API`,
     );
+  }
+
+  // What actually keeps that module from running in this app: expo-router
+  // supplies its own getStateFromPath, so react-navigation never falls back
+  // to the copy that calls queryString.parse. If that stops being true the
+  // vulnerable path goes live, and the Metro alias becomes the only thing
+  // between a malformed deep link and a blocked JS thread.
+  const linkingConfig = join(ROUTER_BUILD, "getLinkingConfig.js");
+  if (existsSync(linkingConfig)) {
+    if (/getStateFromPath\s*:/.test(readFileSync(linkingConfig, "utf8"))) {
+      notes.push(
+        "expo-router still supplies its own getStateFromPath via getLinkingConfig, so react-navigation's vulnerable default is not used -- the alias covers the day that changes",
+      );
+    } else {
+      fail(
+        "expo-router's getLinkingConfig no longer defines getStateFromPath.\n" +
+          "    react-navigation will fall back to its own copy, which calls\n" +
+          "    queryString.parse, so the vulnerable path is now live. Confirm\n" +
+          "    the Metro alias is still wired before shipping.",
+      );
+    }
   }
 }
 
