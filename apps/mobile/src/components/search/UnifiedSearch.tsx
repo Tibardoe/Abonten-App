@@ -12,7 +12,7 @@ import {
   useUnifiedResults,
   useUnifiedSuggestions,
 } from "@/features/search/useUnifiedSearch";
-import { useIsOnline } from "@/lib/network";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   chunkRows,
@@ -227,7 +227,6 @@ export function UnifiedSearch() {
   const inputRef = useRef<TextInput>(null);
   const { program } = useDiscoveryProgram();
   const { program: content } = useContentProgram();
-  const online = useIsOnline();
   const { location } = useExploreLocation();
   const params = useLocalSearchParams<Record<string, string>>();
 
@@ -582,65 +581,72 @@ export function UnifiedSearch() {
 
   const active = spotlightTab ? spotlight : results;
   const filtered = !spotlightTab && filterChips.length > 0;
-  const empty = active.isLoading ? (
-    <View className="gap-4 px-1 pt-2">
-      {["a", "b", "c"].map((k) => (
-        <EventCardSkeleton key={k} />
-      ))}
-    </View>
-  ) : active.isError ? (
-    <EmptyState
-      icon="cloud-offline-outline"
-      title={online ? "Search didn't load" : "You're offline"}
-      description={
-        online
-          ? "Check your connection and try again."
-          : "Search needs a connection. Try again when you're back online."
-      }
-      actionLabel={online ? "Try again" : undefined}
-      onAction={online ? () => active.refetch() : undefined}
-    />
-  ) : spotlightTab ? (
-    <EmptyState
-      icon="play-circle-outline"
-      title={`No Spotlights for “${submitted ?? ""}”`}
-      description="Try another word or a #hashtag."
-    />
-  ) : filtered ? (
-    <EmptyState
-      icon="options-outline"
-      title="Nothing matches these filters"
-      description={
-        hasQuery
-          ? `No results for “${submitted}” with the filters you chose.`
-          : "Try a different category or fewer filters."
-      }
-      actionLabel="Clear filters"
-      onAction={() =>
-        setFilters((f) => clearSearchFiltersFor(f, effectiveMode))
-      }
-    />
-  ) : (
-    <View className="gap-4">
-      <EmptyState
-        icon="search-outline"
-        title={
-          organizerQuery ||
-          parseSearchQuery(submitted ?? "").kind === "organizer"
-            ? `No organizers match ${submitted}`
-            : `No results for “${submitted ?? ""}”`
-        }
-        description="Try a shorter or more general term, or check the spelling."
-        actionLabel="Explore what's on"
-        onAction={() => router.push("/(app)/(tabs)")}
-      />
-      <View className="flex-row flex-wrap justify-center gap-2 px-1">
-        {BROWSE_CATEGORIES.slice(0, 6).map((name) => (
-          <Chip key={name} label={name} onPress={() => runSearch(name)} />
+  // Search always needs the network — there is no cached answer for a query
+  // nobody has run. useQueryView still tells apart "still loading", "no
+  // connection" and "the request failed" (a paused retry is not an error).
+  const searchView = useQueryView<unknown>(active);
+  const empty =
+    searchView.kind === "loading" ? (
+      <View className="gap-4 px-1 pt-2">
+        {["a", "b", "c"].map((k) => (
+          <EventCardSkeleton key={k} />
         ))}
       </View>
-    </View>
-  );
+    ) : searchView.kind === "offline" ? (
+      <EmptyState
+        icon="cloud-offline-outline"
+        title="You're offline"
+        description="Search needs a connection. It will run when you're back online."
+      />
+    ) : searchView.kind === "error" ? (
+      <EmptyState
+        icon="alert-circle-outline"
+        title="Search didn't load"
+        description="Check your connection and try again."
+        actionLabel="Try again"
+        onAction={() => active.refetch()}
+      />
+    ) : spotlightTab ? (
+      <EmptyState
+        icon="play-circle-outline"
+        title={`No Spotlights for “${submitted ?? ""}”`}
+        description="Try another word or a #hashtag."
+      />
+    ) : filtered ? (
+      <EmptyState
+        icon="options-outline"
+        title="Nothing matches these filters"
+        description={
+          hasQuery
+            ? `No results for “${submitted}” with the filters you chose.`
+            : "Try a different category or fewer filters."
+        }
+        actionLabel="Clear filters"
+        onAction={() =>
+          setFilters((f) => clearSearchFiltersFor(f, effectiveMode))
+        }
+      />
+    ) : (
+      <View className="gap-4">
+        <EmptyState
+          icon="search-outline"
+          title={
+            organizerQuery ||
+            parseSearchQuery(submitted ?? "").kind === "organizer"
+              ? `No organizers match ${submitted}`
+              : `No results for “${submitted ?? ""}”`
+          }
+          description="Try a shorter or more general term, or check the spelling."
+          actionLabel="Explore what's on"
+          onAction={() => router.push("/(app)/(tabs)")}
+        />
+        <View className="flex-row flex-wrap justify-center gap-2 px-1">
+          {BROWSE_CATEGORIES.slice(0, 6).map((name) => (
+            <Chip key={name} label={name} onPress={() => runSearch(name)} />
+          ))}
+        </View>
+      </View>
+    );
 
   return (
     <View className="flex-1 bg-background">
