@@ -3606,6 +3606,15 @@ saying why. The free-RSVP flow is shared state (`useFreeRsvpFlow`), so the
 date chips and the sticky button are one action; the in-page duplicate is
 gone. Places show "Book" — or "Sign in to book", which returns to the place.
 
+**§40.10 Dark-mode text on media chips.** `AppText` put its tone class
+(`text-foreground`) and a caller's colour (`text-black`) in the same
+className; NativeWind resolves that by specificity, and in dark mode the
+variable-driven tone won, so the Spotlight feed tabs and the event CTA drew
+near-white text on white. A caller's colour class now replaces the tone
+(`hasTextColourClass` in `Typography.tsx`; sizes, alignment and prefixed
+variants like `dark:` are not colours). Light mode is unchanged — the caller's
+colour already won there. Found during this round's dark-mode pass.
+
 **§40.9 Verification.** Typecheck (monorepo), core 577 + services 121 unit
 tests (new: queryView, persist-policy envelopes, playbackControls, eventCta,
 prependOwnPost), scoped Biome, `check:api-parity`, `check:docs`. Android
@@ -3618,7 +3627,13 @@ Story playing offline from cache; scrubbing with the time label; the 2×
 hold pill; comment-sheet backdrop dismissal; the speed sheet (0.5× kept
 across posts); a real publish appearing at the top of the feed immediately;
 the loading sweep captured on a throttled cellular connection with the video
-cache cleared; sticky CTAs in light and dark. **Not verified**: iOS — the
+cache cleared; sticky CTAs in light and dark. A **release** build (Hermes,
+R8, non-debuggable) against the local stack: Spotlight playback, scrubbing
+(the UI-thread worklet in `@abonten/core`) and hold-for-2× behave as in debug.
+The emulator pass caught one regression in this round's own code before
+commit: a gesture-handler LongPress on the full video surface competed for
+touches on the CTA drawn above it ("View event" stopped responding); the
+surface is back on the RN press system, which respects z-order. **Not verified**: iOS — the
 swipe-back reveal in §40.1 is diagnosed from source (expo-router's
 `NativeStackView` passes the navigation theme's background to react-native-
 screens) and the fix is theme-level, but no iPhone or simulator is available

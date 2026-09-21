@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-19
+lastReviewed: 2026-09-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -20,6 +20,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - `docs/architecture/mobile-offline-media-and-sync.md` 1.2: new §8 screen-state contract (`resolveQueryView` / `useQueryView` / `QueryUnavailable`), §9 prefetching rules, §10 Spotlight timeline, scrubbing and speed, §11 publish-to-feed, §12 navigation theming, §13 sticky detail CTAs; §1 updated for the messages/Stories/detail-extras persist rules and the "an error is never written" guard.
 - PROJECT.md §40; CLAUDE.md §36 note corrected (messages are persisted now, capped and per account).
+- `AppText` (ui-native): a caller's text colour class now replaces the tone colour — fixes near-white-on-white text on light chips in dark mode (PROJECT.md §40.10).
 - Behaviour: mobile screens tell offline, empty, loading and failed apart; the inbox, recent threads and Story sequences survive a restart; Spotlight gained a timeline with scrubbing, playback speed and press-and-hold 2×, comment-sheet backdrop dismissal, and a published Spotlight appears in the feed at once; event and place detail have sticky Buy / Reserve / Book bars. No env var, table, policy, job or permission changed.
 
 ## 2026-09-19 — Expo SDK and mobile dependency migration (audit 06)
