@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-21 — Mobile navigation theme, offline state contract, Spotlight controls
+
+- `docs/architecture/mobile-offline-media-and-sync.md` 1.2: new §8 screen-state contract (`resolveQueryView` / `useQueryView` / `QueryUnavailable`), §9 prefetching rules, §10 Spotlight timeline, scrubbing and speed, §11 publish-to-feed, §12 navigation theming, §13 sticky detail CTAs; §1 updated for the messages/Stories/detail-extras persist rules and the "an error is never written" guard.
+- PROJECT.md §40; CLAUDE.md §36 note corrected (messages are persisted now, capped and per account).
+- Behaviour: mobile screens tell offline, empty, loading and failed apart; the inbox, recent threads and Story sequences survive a restart; Spotlight gained a timeline with scrubbing, playback speed and press-and-hold 2×, comment-sheet backdrop dismissal, and a published Spotlight appears in the feed at once; event and place detail have sticky Buy / Reserve / Book bars. No env var, table, policy, job or permission changed.
+
 ## 2026-09-19 — Expo SDK and mobile dependency migration (audit 06)
 
 - **Mobile dependency migration** (report `audit/06-expo-dependency-migration-2026-09-19.md`, PROJECT.md §38): the mobile app stays on Expo SDK 57 — it is already npm's `latest`, SDK 58 is a preview on React Native 0.88.0-rc.0, and `expo-router@58` still declares `query-string: ^7`, so no upgrade resolves the advisory. `decode-uri-component` is instead replaced at the Metro resolver with a linear, behaviour-identical drop-in, leaving the dependency graph and `npm audit` untouched; proved absent from the shipping bundle. New CI check `npm run check:deep-link-decoder` (3,033-input differential test plus the expo-router condition that keeps the vulnerable path unused). `app.config.js` now uses the config Expo passes in (`expo-doctor` 19/21 → 20/21), and the `disableHierarchicalLookup` rationale was corrected with a measurement (851 KB of duplicate modules). Corrects two claims in audit 05: the advisory's call site, and that it could not be fixed here.

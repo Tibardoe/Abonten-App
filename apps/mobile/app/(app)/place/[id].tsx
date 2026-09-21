@@ -7,6 +7,7 @@ import { ReportSheet } from "@/components/ReportSheet";
 import { PlacePromptHost } from "@/components/alerts/PlacePromptHost";
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { FollowButton } from "@/components/content/FollowButton";
 import { PublisherSpotlightStrip } from "@/components/content/PublisherSpotlightStrip";
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
@@ -33,9 +34,11 @@ import {
 import { PlaceCheckInSheet } from "@/features/rewards/PlaceCheckInSheet";
 import { useCheckIn } from "@/features/rewards/usePlaceVisits";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
+import { setPendingRedirect } from "@/lib/authRedirect";
 import { openDirections as openMapsDirections } from "@/lib/directions";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { placeShareUrl } from "@/lib/share";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
@@ -44,6 +47,7 @@ import type { PlaceType } from "@abonten/types/placeType";
 import {
   AppText,
   Avatar,
+  BottomBar,
   Button,
   Icon,
   type IoniconName,
@@ -55,7 +59,7 @@ import {
 } from "@abonten/ui-native";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -177,15 +181,11 @@ export default function PlaceDetailScreen() {
   // `visit`: opened from a place's check-in QR code (Rewards Phase 8).
   const { id, visit } = useLocalSearchParams<{ id: string; visit?: string }>();
   const router = useRouter();
+  const pathname = usePathname();
   const carouselCardWidth = useCarouselCardWidth();
-  const {
-    data: place,
-    isLoading,
-    isError,
-    error,
-    isRefetching,
-    refetch,
-  } = usePlaceDetail(id);
+  const detail = usePlaceDetail(id);
+  const { data: place, isError, error, isRefetching, refetch } = detail;
+  const detailView = useQueryView(detail);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
@@ -298,23 +298,26 @@ export default function PlaceDetailScreen() {
   }, [nearby.data, place?.id, place?.category_id]);
 
   // Cached data (restored from the last session too) keeps rendering when a
-  // refresh fails or the device is offline; only "never loaded" or "no
-  // longer exists" replaces it.
-  if (isLoading && !place) {
+  // refresh fails or the device is offline; only "no longer exists" or
+  // "not on this phone" replaces it (useQueryView).
+  if (isError && isNotFoundError(error)) {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <PlaceDetailSkeleton />
+        <ScreenError message="This place is no longer available." />
       </View>
     );
   }
-  if (!place || (isError && isNotFoundError(error))) {
+  if (!place || detailView.kind !== "content") {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError
-          message="This place could not be loaded."
+        <QueryUnavailable
+          view={detailView}
+          subject="this place"
           onRetry={() => refetch()}
+          loading={<PlaceDetailSkeleton />}
+          className="flex-1 justify-center"
         />
       </View>
     );
@@ -325,6 +328,14 @@ export default function PlaceDetailScreen() {
       ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
           width: 900,
           height: 500,
+        })
+      : null;
+  // PlaceCard's exact URL — usually on disk already; see the event screen.
+  const coverPlaceholder =
+    place.cover_public_id && place.cover_version
+      ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
+          width: 480,
+          height: 320,
         })
       : null;
   const openStatus = computePlaceOpenStatus(
@@ -346,10 +357,19 @@ export default function PlaceDetailScreen() {
     );
   };
   const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
-  // "Book" is offered on any place to a signed-in user who isn't the owner
-  // — same gating as web's RequestBookingButton. The service picker inside
-  // the sheet is optional and only appears when the place lists services.
-  const canBook = !!session && place.owner_id !== session.user.id;
+  // "Book" is offered on any place to anyone who isn't the owner — same
+  // gating as web's RequestBookingButton; signed out, it signs in first and
+  // comes back here. The service picker inside the sheet is optional and
+  // only appears when the place lists services.
+  const canBook = !session || place.owner_id !== session.user.id;
+  const onBook = () => {
+    if (!session) {
+      if (pathname) setPendingRedirect(pathname);
+      router.push("/(auth)/sign-in");
+      return;
+    }
+    setBookOpen(true);
+  };
   const isVisitor = !session || place.owner_id !== session.user.id;
   const visitsOn = !!program.data?.placeVisits;
 
@@ -366,6 +386,10 @@ export default function PlaceDetailScreen() {
           {cover ? (
             <Image
               source={{ uri: cover }}
+              placeholder={
+                coverPlaceholder ? { uri: coverPlaceholder } : undefined
+              }
+              placeholderContentFit="cover"
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
               transition={150}
@@ -430,15 +454,6 @@ export default function PlaceDetailScreen() {
         </View>
 
         <View className="gap-6 p-4">
-          {canBook ? (
-            <Button
-              title="Book"
-              leftIcon="calendar-outline"
-              fullWidth
-              onPress={() => setBookOpen(true)}
-            />
-          ) : null}
-
           {visit && isVisitor && !checkedIn ? (
             <View className="gap-3 rounded-xl border border-primary bg-card p-4">
               <View className="flex-row items-center gap-2">
@@ -963,6 +978,29 @@ export default function PlaceDetailScreen() {
           }
         />
       </ScrollView>
+
+      {/* Sticky primary action — see the event screen: in the column under
+          the ScrollView, padded clear of the home indicator by BottomBar. */}
+      {canBook ? (
+        <BottomBar>
+          <View className="flex-row items-center gap-3">
+            <View className="flex-1">
+              <AppText variant="caption" numberOfLines={1}>
+                {place.place_category?.name ?? "Place"}
+              </AppText>
+              <AppText variant="bodyStrong" numberOfLines={1}>
+                {openStatus.label}
+              </AppText>
+            </View>
+            <Button
+              title={session ? "Book" : "Sign in to book"}
+              leftIcon="calendar-outline"
+              onPress={onBook}
+              accessibilityHint="Request a booking with this place"
+            />
+          </View>
+        </BottomBar>
+      ) : null}
     </View>
   );
 }

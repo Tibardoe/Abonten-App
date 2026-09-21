@@ -3518,3 +3518,109 @@ Branch `chore/expo-sdk-57-dependency-migration`. Full report: `docs/audit/06-exp
 **38.10 Open elsewhere**: `vitest@3.2.7` carries GHSA-82fw-gwwq-j7x9 (fixed in 4.1.11). It is test tooling in `packages/core` / `packages/services`, unrelated to mobile; a major bump across 682 tests belongs on its own branch.
 
 **Gotchas**: `console.*` does not reach logcat in a release build — an instrumentation probe there proves nothing unless a control probe fires too. `adb shell input text` truncates at spaces; use `%s`. A release APK is not `run-as`-able, so app-private storage is unreadable. Supabase's `admin/generate_link` returns `email_otp`, which is how the emulator gets signed in — but it counts against the OTP rate limit, so send from the app first.
+
+## 40. Mobile navigation, cache and Spotlight round (2026-09-21)
+
+Branch `fix/mobile-nav-cache-spotlight-holistic`. Doc:
+[docs/architecture/mobile-offline-media-and-sync.md](docs/architecture/mobile-offline-media-and-sync.md)
+(1.2, §§8-13). No migration, no schema change; mobile + two shared packages only.
+
+**§40.1 The washed / white surface behind a screen.** React Navigation paints
+several surfaces natively from **its own theme**: on iOS the native stack's
+`UINavigationController` view (`nativeContainerStyle` in expo-router's
+`NativeStackView`), every screen's default content background, the tab
+container, headers. The app never gave it a theme, so it used `DefaultTheme`,
+whose background is `rgb(242, 242, 242)` in **both** app themes. An
+interrupted or reversed iOS swipe-back moves the top screen past its resting
+position and exposes that container beside the screen (dimmed by UIKit's
+transition shade) — white in dark mode, washed in light. No screen style
+could reach it; the two earlier fixes (native root via expo-system-ui, the
+themed RN root view) sit *below* it. `useNavigationTheme`
+(`apps/mobile/src/lib/navigationTheme.ts`) now builds a navigation theme from
+the app's tokens and the root wraps the navigator in expo-router's
+`ThemeProvider`, so every navigator — present and future — is painted from
+the same tokens. Colours go through `toRgb` (`@abonten/ui-native/theme`)
+because React Navigation runs theme colours through the `color` library,
+which cannot parse the tokens' `hsl(H S% L%)` form.
+
+**§40.2 One screen-state contract.** `resolveQueryView`
+(`@abonten/core/query/queryView`, unit-tested) + `useQueryView` +
+`QueryUnavailable` replace per-screen flag branching: content (kept through a
+failed refresh), a genuine empty answer, loading, offline (nothing saved on
+this phone — no Retry, the reconnect refetches) and error. This is what said
+"No conversations yet" for an inbox that was merely offline, and showed a
+bare Retry for an uncached event. Applied to Explore, explore-by-type, nearby
+places, event and place detail, Messages inbox and thread, Stories, a shared
+Spotlight, notifications, tickets, bookings, Your Spotlights and promotions.
+
+**§40.3 What is cached, and what a failure may overwrite.** Added to the
+persist allowlist: the inbox's unfiltered views (first page), the latest page
+of the 15 most recent threads plus their headers and the unread count, Story
+sequences, event ratings / first page of reviews, place reviews and a place's
+upcoming events, place categories. Messages were deliberately excluded
+before; they are now kept, capped, in the per-account file that already
+lives in the OS cache directory and is deleted on sign-out. Two guards: the
+persister never writes an error envelope (`isErrorEnvelopeData`), and query
+hooks whose screens depend on them throw on a *transient* envelope (401, 408,
+429, 5xx — `src/lib/envelope.ts`) so a failed refresh keeps the last good data
+and retries, while a definite answer (403/404/410) still arrives as data.
+
+**§40.4 The data is there before the tap.** Cards prefetch their detail on
+touch-down; `useWarmDetails` loads the first six cards of a list, online and
+on an unmetered connection only; the Story tray prefetches up to four unseen
+sequences; `useContentPost` seeds itself from any cached copy of that post
+(with its fetch time); detail heroes use the already-cached card image as the
+`placeholder`. Event and place detail fetches are now one parallel round trip
+each. Nothing with a cost or a truth requirement is prefetched.
+
+**§40.5 Spotlight controls.** A timeline along the foot of the video:
+progress animated on the UI thread from the player's clock, a loading light
+that sweeps while `expo-video` actually reports waiting (350 ms grace, no
+fake timer), and scrubbing — drag or tap to seek, thumb and `0:07 / 0:13`
+label, chrome faded, the video paused on the frame under the finger. The pan
+activates horizontally only and fails vertically, and locks the feed's
+paging while it owns the finger. Playback speed (0.5×–2×) in the options
+sheet, app-wide for the session; press-and-hold plays at 2× until release
+(`holdRate`), with a pill — a native LongPress run exclusively with the tap,
+so long-press no longer opens the options sheet (the "…" button does).
+Composer preview gained play/pause and mute. Rules in
+`@abonten/core/content/playbackControls` (unit-tested).
+
+**§40.6 Comments behave like a sheet.** Everything above the panel — the
+compact video and the black around it — is its backdrop; a tap anywhere
+there closes it and the video returns to full screen. Previously only a tap
+on the shrunken video worked, because the only hit target was inside the
+scaled media layer.
+
+**§40.7 Publishing shows up at once.** `showPublishedSpotlight` writes the
+document the create call returned into the cached For You feed — first,
+exactly once (`prependOwnPost`, unit-tested) — and the Spotlight screen
+opens on it when it is next focused. The feed is still never re-ranked behind
+a viewer. A failed publish leaves the cache untouched.
+
+**§40.8 Sticky ticket / booking CTAs.** Event and place detail end with a
+`BottomBar` holding a price/status summary and one button, resolved by
+`resolveEventCta` (`@abonten/core/eventCta`, unit-tested): buy, reserve,
+"View my ticket" (still reachable after sales close), or a disabled label
+saying why. The free-RSVP flow is shared state (`useFreeRsvpFlow`), so the
+date chips and the sticky button are one action; the in-page duplicate is
+gone. Places show "Book" — or "Sign in to book", which returns to the place.
+
+**§40.9 Verification.** Typecheck (monorepo), core 577 + services 121 unit
+tests (new: queryView, persist-policy envelopes, playbackControls, eventCta,
+prependOwnPost), scoped Biome, `check:api-parity`, `check:docs`. Android
+emulator (Pixel_10_Pro_XL, debug build) against **production** for discovery
+and against the **local Docker stack** signed in for the rest: cached Home
+and event detail on an offline cold start; an uncached place offline showing
+the offline state and loading itself on reconnect; Messages offline showing
+the cached conversation and thread (previously "No conversations yet"); a
+Story playing offline from cache; scrubbing with the time label; the 2×
+hold pill; comment-sheet backdrop dismissal; the speed sheet (0.5× kept
+across posts); a real publish appearing at the top of the feed immediately;
+the loading sweep captured on a throttled cellular connection with the video
+cache cleared; sticky CTAs in light and dark. **Not verified**: iOS — the
+swipe-back reveal in §40.1 is diagnosed from source (expo-router's
+`NativeStackView` passes the navigation theme's background to react-native-
+screens) and the fix is theme-level, but no iPhone or simulator is available
+here; Android's native stack does not paint that container and the app has
+predictive back disabled, so the symptom cannot be reproduced on it.

@@ -10,7 +10,7 @@ import {
   canTransitionCampaign,
 } from "./campaignStateMachine";
 import { contentCtaLabel } from "./copy";
-import { mergeSponsored } from "./feedMerge";
+import { mergeSponsored, prependOwnPost } from "./feedMerge";
 import { collectHashtags, normalizeHashtag } from "./hashtags";
 import { formatStoryAge, isStoryActive, storyRemainingMs } from "./storyExpiry";
 import { viewEventsFor } from "./viewTracking";
@@ -314,5 +314,30 @@ describe("cta", () => {
         event: { ...event, status: "canceled", available: false },
       }),
     ).toEqual({ label: "Event cancelled", target: null });
+  });
+});
+
+describe("prependOwnPost", () => {
+  const doc = (id: string) => ({ id }) as unknown as ContentPostDocument;
+  const item = (id: string) => ({ post: doc(id), sponsored: null });
+
+  it("puts the new post first, once", () => {
+    const feed = {
+      pages: [
+        { items: [item("a"), item("new")] },
+        { items: [item("new"), item("b")] },
+      ],
+      pageParams: [null, "c"],
+    };
+    const out = prependOwnPost(feed, doc("new"));
+    expect(out?.pages[0].items.map((i) => i.post.id)).toEqual(["new", "a"]);
+    expect(out?.pages[1].items.map((i) => i.post.id)).toEqual(["b"]);
+    expect(feed.pages[0].items).toHaveLength(2);
+  });
+
+  it("leaves a missing or empty feed alone", () => {
+    expect(prependOwnPost(undefined, doc("x"))).toBeUndefined();
+    const empty = { pages: [], pageParams: [] };
+    expect(prependOwnPost(empty, doc("x"))).toBe(empty);
   });
 });

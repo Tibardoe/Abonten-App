@@ -15,9 +15,18 @@ import type { ContentMediaItem } from "@abonten/types/contentType";
 import { AppText, Icon, useReducedMotion } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { type BufferOptions, VideoView, useVideoPlayer } from "expo-video";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import {
+  type MutableRefObject,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
+  Easing,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -38,12 +47,36 @@ import Animated, {
 // under a playing view — the two things behind the old frozen-frame /
 // audio-over-the-wrong-video failures.
 
+/**
+ * The active page's player, as its controls see it: the clock (UI-thread
+ * values the timeline animates from) and a seek. Only the ACTIVE page's
+ * player drives it, so a neighbour preloading in the background can never
+ * move the timeline or be seeked by it.
+ */
+export type SpotlightPlayback = {
+  /** Current position in seconds. */
+  time: SharedValue<number>;
+  /** Length in seconds; 0 until the player knows it. */
+  duration: SharedValue<number>;
+  /** Filled in while this page's player is active. */
+  seek: MutableRefObject<((seconds: number) => void) | null>;
+};
+
 type Props = {
   media: ContentMediaItem;
   mode: FeedPlaybackMode;
   shouldPlay: boolean;
   posterUri: string | null;
   recyclingKey: string;
+  /** Playback rate while active (the chosen speed, or the hold boost). */
+  rate?: number;
+  playback?: SpotlightPlayback;
+  /**
+   * The active video is waiting on data it should be playing — the first
+   * load or a buffer refill — for longer than a blink. Straight from the
+   * player's own status, never a timer standing in for it.
+   */
+  onWaitingChange?: (waiting: boolean) => void;
   onPlayingChange?: (playing: boolean) => void;
   /** The clip wrapped around to its start (telemetry: completion + replay). */
   onLoop?: () => void;
@@ -55,6 +88,9 @@ export const SpotlightVideo = memo(function SpotlightVideo({
   shouldPlay,
   posterUri,
   recyclingKey,
+  rate = 1,
+  playback,
+  onWaitingChange,
   onPlayingChange,
   onLoop,
 }: Props) {
@@ -131,6 +167,9 @@ export const SpotlightVideo = memo(function SpotlightVideo({
           onRetired={onRetired}
           onFrame={onFrame}
           frameShown={frameShown}
+          rate={rate}
+          playback={playback}
+          onWaitingChange={onWaitingChange}
           onPlayingChange={onPlayingChange}
           onLoop={onLoop}
         />
@@ -175,6 +214,9 @@ function PlayerLayer({
   onRetired,
   onFrame,
   frameShown,
+  rate,
+  playback,
+  onWaitingChange,
   onPlayingChange,
   onLoop,
 }: {
@@ -186,6 +228,9 @@ function PlayerLayer({
   onRetired: () => void;
   onFrame: (shown: boolean) => void;
   frameShown: boolean;
+  rate: number;
+  playback?: SpotlightPlayback;
+  onWaitingChange?: (waiting: boolean) => void;
   onPlayingChange?: (playing: boolean) => void;
   onLoop?: () => void;
 }) {
@@ -206,6 +251,8 @@ function PlayerLayer({
     p.timeUpdateEventInterval = 0.25;
     p.keepScreenOnWhilePlaying = true;
     p.bufferOptions = active ? ACTIVE_BUFFER : PRELOAD_BUFFER;
+    // Faster or slower playback keeps voices at their own pitch.
+    p.preservesPitch = true;
   });
 
   // Buffer caps. ExoPlayer's defaults size a video buffer for long-form
@@ -268,6 +315,54 @@ function PlayerLayer({
       releasePlayback(player);
     };
   }, [player, fallback, onFallback]);
+
+  // The timeline's clock and seek belong to the ACTIVE player only. Each
+  // timeUpdate (every 0.25 s) sets the target and the UI thread glides
+  // there linearly while playing, so the bar moves smoothly without a
+  // JS-side animation loop.
+  const playbackRef = useRef(playback);
+  playbackRef.current = playback;
+  useEffect(() => {
+    const pb = playbackRef.current;
+    if (!active || !pb) return;
+    pb.time.value = 0;
+    pb.duration.value = 0;
+    const sync = (currentTime: number) => {
+      const d = player.duration;
+      if (Number.isFinite(d) && d > 0) pb.duration.value = d;
+      const jump = Math.abs(currentTime - pb.time.value) > 0.6;
+      pb.time.value =
+        jump || !player.playing
+          ? currentTime
+          : withTiming(currentTime, {
+              duration: 250,
+              easing: Easing.linear,
+            });
+    };
+    const sub = player.addListener("timeUpdate", ({ currentTime }) =>
+      sync(currentTime),
+    );
+    const seek = (seconds: number) => {
+      try {
+        player.currentTime = seconds;
+        pb.time.value = seconds;
+      } catch {
+        // Released between the gesture and the seek.
+      }
+    };
+    pb.seek.current = seek;
+    return () => {
+      sub.remove();
+      if (pb.seek.current === seek) pb.seek.current = null;
+    };
+  }, [active, player]);
+
+  // Speed applies to the active page only; a neighbour waits at 1×.
+  useEffect(() => {
+    try {
+      player.playbackRate = active ? rate : 1;
+    } catch {}
+  }, [active, rate, player]);
 
   // Some Android surfaces never report the first frame for a TextureView
   // that was just attached; once the clip is really advancing, the frame on
@@ -367,6 +462,16 @@ function PlayerLayer({
     return () => clearTimeout(t);
   }, [waiting]);
 
+  // The card draws the loading bar (at the foot of the video, clear of the
+  // controls); this page only reports while it is the active one.
+  const reportWaiting = active && showSpinner;
+  const onWaitingRef = useRef(onWaitingChange);
+  onWaitingRef.current = onWaitingChange;
+  useEffect(() => {
+    onWaitingRef.current?.(reportWaiting);
+  }, [reportWaiting]);
+  useEffect(() => () => onWaitingRef.current?.(false), []);
+
   return (
     <>
       <VideoView
@@ -380,15 +485,6 @@ function PlayerLayer({
         surfaceType="textureView"
         onFirstFrameRender={() => callbacks.current.onFrame(true)}
       />
-      {active && showSpinner ? (
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, styles.center]}
-          accessibilityLabel="Loading video"
-        >
-          <ActivityIndicator color="#fff" size="large" />
-        </View>
-      ) : null}
       {active && load === "error" ? (
         <View style={[StyleSheet.absoluteFill, styles.center]}>
           <Pressable

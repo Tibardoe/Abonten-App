@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { useQuery } from "@tanstack/react-query";
 import { messagingKeys } from "./keys";
 
@@ -14,7 +15,8 @@ export function useUnreadMessageCount() {
     queryKey: [...messagingKeys.unreadCount(), session?.user.id],
     enabled: !!session?.user.id,
     queryFn: async () => {
-      const res = await api.messaging.unreadCount();
+      // A failed poll keeps the last count instead of clearing the badge.
+      const res = settleEnvelope(await api.messaging.unreadCount());
       return res.status === 200 ? (res.data?.count ?? 0) : 0;
     },
     staleTime: 20_000,

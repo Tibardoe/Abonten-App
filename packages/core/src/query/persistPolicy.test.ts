@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type PersistRule,
   type PersistableQuery,
+  isErrorEnvelopeData,
   matchPersistRule,
   selectPersistedQueries,
   trimInfiniteData,
@@ -108,5 +109,33 @@ describe("selectPersistedQueries", () => {
     expect(out.state.data).toEqual({ pages: ["p1"], pageParams: [null] });
     expect(input.state.data).toBe(data);
     expect(data.pages).toHaveLength(2);
+  });
+
+  it("never writes an error envelope, alone or inside infinite data", () => {
+    const out = selectPersistedQueries(
+      [
+        q(["mobile", "profile"], 5, { status: 500, message: "boom" }),
+        q(["profile", "public", "a"], 4, { status: 200, data: { id: "a" } }),
+        q(["mobile", "content", "feed", "u", "for_you"], 3, {
+          pages: [{ status: 200, data: [] }, { status: 503 }],
+          pageParams: [null, "c"],
+        }),
+      ],
+      rules,
+    );
+    expect(out.map((x) => x.queryKey)).toEqual([["profile", "public", "a"]]);
+  });
+});
+
+describe("isErrorEnvelopeData", () => {
+  it("recognises failures only", () => {
+    expect(isErrorEnvelopeData({ status: 404 })).toBe(true);
+    expect(isErrorEnvelopeData({ status: 200, data: [] })).toBe(false);
+    expect(isErrorEnvelopeData({ status: "404" })).toBe(false);
+    expect(isErrorEnvelopeData([1, 2])).toBe(false);
+    expect(isErrorEnvelopeData(null)).toBe(false);
+    expect(
+      isErrorEnvelopeData({ pages: [{ status: 401 }], pageParams: [null] }),
+    ).toBe(true);
   });
 });

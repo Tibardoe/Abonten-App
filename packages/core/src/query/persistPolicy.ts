@@ -76,6 +76,22 @@ export function trimInfiniteData<T>(data: T, maxPages: number | undefined): T {
 }
 
 /**
+ * True for an `{ status, message }` API envelope that carries a failure
+ * (HTTP-style status >= 400), or infinite data holding such a page. The
+ * typed /api/mobile client returns failures as data rather than throwing,
+ * so React Query calls them "success" — and one written to disk would be
+ * restored on the next cold start in place of the real content it replaced.
+ */
+export function isErrorEnvelopeData(data: unknown): boolean {
+  const isFailure = (value: unknown) => {
+    const status = (value as { status?: unknown } | null | undefined)?.status;
+    return typeof status === "number" && status >= 400;
+  };
+  if (isInfiniteData(data)) return data.pages.some(isFailure);
+  return isFailure(data);
+}
+
+/**
  * The queries to write to disk: successful, allowlisted, capped per rule
  * (most recently updated first) and with infinite data trimmed. Returns new
  * objects for trimmed queries and never mutates the input.
@@ -88,6 +104,7 @@ export function selectPersistedQueries<Q extends PersistableQuery>(
   for (const query of queries) {
     if (query.state.status !== "success") continue;
     if (query.state.data === undefined) continue;
+    if (isErrorEnvelopeData(query.state.data)) continue;
     const rule = matchPersistRule(query.queryKey, rules);
     if (!rule) continue;
     let group = groups.get(rule.id);

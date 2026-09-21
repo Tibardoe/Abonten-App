@@ -1,9 +1,11 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   type MyBooking,
   useCancelBooking,
   useMyBookings,
 } from "@/features/places/usePlaceBooking";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { resolveBookingState } from "@abonten/core/placeBooking";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
@@ -142,6 +144,7 @@ export default function MyBookingsScreen() {
   const q = useMyBookings();
 
   const rows = q.data?.pages.flatMap((p) => p.rows) ?? [];
+  const view = useQueryView(q, () => rows.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
@@ -185,13 +188,21 @@ export default function MyBookingsScreen() {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          <EmptyState
-            icon="calendar-outline"
-            title="No bookings yet"
-            description="Find a place you like and tap Book — your requests and their status land here."
-            actionLabel="Browse places"
-            onAction={() => router.push("/(app)/places")}
-          />
+          view.kind === "empty" ? (
+            <EmptyState
+              icon="calendar-outline"
+              title="No bookings yet"
+              description="Find a place you like and tap Book — your requests and their status land here."
+              actionLabel="Browse places"
+              onAction={() => router.push("/(app)/places")}
+            />
+          ) : (
+            <QueryUnavailable
+              view={view}
+              subject="your bookings"
+              onRetry={() => q.refetch()}
+            />
+          )
         }
         ListFooterComponent={
           <ListFooter

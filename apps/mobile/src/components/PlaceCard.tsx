@@ -1,5 +1,6 @@
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
+import { prefetchPlaceDetail } from "@/features/places/usePlaceDetail";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import type { PlaceType } from "@abonten/types/placeType";
@@ -11,6 +12,7 @@ import {
   Stars,
 } from "@abonten/ui-native";
 import { shadow } from "@abonten/ui-native/theme";
+import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -43,6 +45,7 @@ export function PlaceCard({
   sponsored?: boolean;
 }) {
   const router = useRouter();
+  const qc = useQueryClient();
   const [imageFailed, setImageFailed] = useState(false);
 
   const cover =
@@ -72,6 +75,7 @@ export function PlaceCard({
       accessibilityLabel={place.name}
       className="overflow-hidden rounded-2xl border border-border bg-card active:opacity-95"
       style={shadow.card}
+      onPressIn={() => prefetchPlaceDetail(qc, place.id)}
       onPress={() => router.push(`/(app)/place/${place.id}`)}
     >
       <View className="relative aspect-[3/2] bg-muted">

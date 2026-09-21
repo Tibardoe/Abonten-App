@@ -2,6 +2,7 @@ import { EventCardMenu } from "@/components/EventCardMenu";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
 import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds";
+import { prefetchEventDetail } from "@/features/discovery/useEventDetail";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
@@ -19,6 +20,7 @@ import {
   StatusPill,
 } from "@abonten/ui-native";
 import { shadow } from "@abonten/ui-native/theme";
+import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -116,6 +118,7 @@ function statusFor(event: UserPostType): CardStatus {
 
 export function EventCard({ event }: { event: UserPostType }) {
   const router = useRouter();
+  const qc = useQueryClient();
   const attendingIds = useAttendingEventIds();
   const [menuOpen, setMenuOpen] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
@@ -155,6 +158,9 @@ export function EventCard({ event }: { event: UserPostType }) {
       accessibilityLabel={event.title}
       className="overflow-hidden rounded-2xl border border-border bg-card active:opacity-95"
       style={shadow.card}
+      // The detail starts loading on touch-down, ~100 ms before the press
+      // lands, so the screen usually opens on cached data.
+      onPressIn={() => prefetchEventDetail(qc, event.id)}
       onPress={() => router.push(`/(app)/event/${event.id}`)}
     >
       <View className="relative aspect-[3/2] bg-muted">

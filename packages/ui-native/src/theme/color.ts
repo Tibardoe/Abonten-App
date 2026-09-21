@@ -43,3 +43,24 @@ export function tintBackground(
 export function tintBorder(color: string, scheme: "light" | "dark"): string {
   return withAlpha(color, scheme === "dark" ? 0.4 : 0.24);
 }
+
+/**
+ * The colour as an `rgb(r, g, b)` string. For consumers that parse colours
+ * themselves instead of handing them to the native layer (React
+ * Navigation's theme is run through the `color` library, which does not
+ * read the space-separated `hsl(H S% L%)` form every token uses). Falls
+ * back to the input unchanged if it isn't an `hsl(...)` triple.
+ */
+export function toRgb(color: string): string {
+  const parsed = parseHsl(color);
+  if (!parsed) return color;
+  const s = parsed.s / 100;
+  const l = parsed.l / 100;
+  const k = (n: number) => (n + parsed.h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) =>
+    Math.round(
+      255 * (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))),
+    );
+  return `rgb(${f(0)}, ${f(8)}, ${f(4)})`;
+}

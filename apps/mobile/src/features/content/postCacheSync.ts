@@ -50,3 +50,19 @@ export function readCachedPost(
   }
   return null;
 }
+
+/**
+ * A cached copy of the post plus when that copy was fetched — to seed a
+ * post screen opened from a feed, grid or Story that already has it, so it
+ * renders at once (and offline) and refreshes in the background by age.
+ */
+export function readCachedPostWithTime(
+  qc: QueryClient,
+  postId: string,
+): { post: ContentPostDocument; updatedAt: number } | null {
+  for (const query of qc.getQueryCache().findAll({ queryKey: CONTENT_KEY })) {
+    const found = findPostDocument(query.state.data, postId);
+    if (found) return { post: found, updatedAt: query.state.dataUpdatedAt };
+  }
+  return null;
+}

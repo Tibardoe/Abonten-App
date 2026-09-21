@@ -61,3 +61,32 @@ export function mergeSponsored(
   }
   return out;
 }
+
+type FeedPages = {
+  pages: { items: ContentFeedItem[] }[];
+  pageParams: unknown[];
+};
+
+/**
+ * A feed with the person's own just-published post at the top of its first
+ * page — so it is there when they return to the feed, without a refetch
+ * (which would re-rank everything under them). Any other copy of the post
+ * (a retried publish, a refresh that already brought it) is removed, so it
+ * appears exactly once. Returns the input unchanged when there is no page
+ * to put it on.
+ */
+export function prependOwnPost<T extends FeedPages>(
+  feed: T | undefined,
+  post: ContentPostDocument,
+): T | undefined {
+  if (!feed || feed.pages.length === 0) return feed;
+  const pages = feed.pages.map((page, i) => {
+    const rest = page.items.filter((item) => item.post.id !== post.id);
+    return i === 0
+      ? { ...page, items: [{ post, sponsored: null }, ...rest] }
+      : rest.length === page.items.length
+        ? page
+        : { ...page, items: rest };
+  });
+  return { ...feed, pages };
+}

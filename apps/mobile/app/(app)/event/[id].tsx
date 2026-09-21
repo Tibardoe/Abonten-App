@@ -4,6 +4,7 @@ import { EventCard } from "@/components/EventCard";
 import { EventReminderButton } from "@/components/EventReminderButton";
 import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
@@ -13,6 +14,8 @@ import {
   VerifiedPill,
   showsOrganizerBadge,
 } from "@/components/verification/VerifiedPill";
+import { useFreeRsvpFlow } from "@/features/checkout/useFreeRsvpFlow";
+import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
@@ -32,18 +35,22 @@ import { openDirections as openMapsDirections } from "@/lib/directions";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { eventShareUrl } from "@/lib/share";
 import { useNowTick } from "@/lib/useNowTick";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
+  formatDateWithSuffix,
   formatFullDateTimeRange,
   getFormattedEventDate,
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
+import { resolveEventCta } from "@abonten/core/eventCta";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import {
   AppText,
   Avatar,
+  BottomBar,
   Button,
   Icon,
   type IoniconName,
@@ -172,8 +179,9 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const similarCardWidth = useCarouselCardWidth();
-  const { data, isLoading, isError, error, isRefetching, refetch } =
-    useEventDetail(id);
+  const detail = useEventDetail(id);
+  const { data, isError, error, isRefetching, refetch } = detail;
+  const detailView = useQueryView(detail);
   const { session } = useSession();
   const messageOrganizer = useOpenConversation();
   // Advances every 30s and on foreground so the "ongoing / ended / next
@@ -212,6 +220,9 @@ export default function EventDetailScreen() {
   const eventCode = data?.event.event_code;
   const eventTitle = data?.event.title;
   const referralCode = useReferralCode();
+  // Before the loading/offline returns below: hooks can't follow them.
+  const rsvpFlow = useFreeRsvpFlow(data?.event);
+  const attendingIds = useAttendingEventIds();
 
   const header = (
     <AppHeader
@@ -247,23 +258,26 @@ export default function EventDetailScreen() {
   );
 
   // Cached data (restored from the last session too) keeps rendering when a
-  // refresh fails or the device is offline; only "never loaded" or "no
-  // longer exists" replaces it.
-  if (isLoading && !data) {
+  // refresh fails or the device is offline; only "no longer exists" or
+  // "not on this phone" replaces it (useQueryView).
+  if (isError && isNotFoundError(error)) {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <EventDetailSkeleton />
+        <ScreenError message="This event is no longer available." />
       </View>
     );
   }
-  if (!data || (isError && isNotFoundError(error))) {
+  if (!data || detailView.kind !== "content") {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError
-          message="This event could not be loaded."
+        <QueryUnavailable
+          view={detailView}
+          subject="this event"
           onRetry={() => refetch()}
+          loading={<EventDetailSkeleton />}
+          className="flex-1 justify-center"
         />
       </View>
     );
@@ -275,6 +289,15 @@ export default function EventDetailScreen() {
       ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
           width: 900,
           height: 540,
+        })
+      : null;
+  // The card-size flyer (EventCard's exact URL) is usually already on disk:
+  // it stands in while the large one loads, and offline it is the picture.
+  const flyerPlaceholder =
+    event.flyer_public_id && event.flyer_version
+      ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
+          width: 480,
+          height: 320,
         })
       : null;
   // Multi-date events carry their real dates in `event_occurrence` and can
@@ -322,6 +345,25 @@ export default function EventDetailScreen() {
     event.ticket_type.length > 0 &&
     event.ticket_type.every((t) => t.price === 0);
   const reviews = reviewsList.data?.pages.flatMap((p) => p.reviews) ?? [];
+  // The page's one primary action, pinned to its foot (resolveEventCta).
+  const cta = resolveEventCta({
+    canceled,
+    ended: hasEnded,
+    inProgressNoFuture,
+    soldOut,
+    ticketTypeCount: event.ticket_type.length,
+    isFree,
+    attending: attendingIds.has(event.id) || rsvpFlow.done,
+  });
+  const onCta = () => {
+    if (cta.kind === "buy") router.push(`/(app)/buy/${event.id}`);
+    else if (cta.kind === "rsvp") void rsvpFlow.submit();
+    else if (cta.kind === "going") router.push("/(app)/tickets");
+  };
+  const multiDateRsvp = cta.kind === "rsvp" && rsvpFlow.occurrences.length > 1;
+  const chosenDate = multiDateRsvp
+    ? rsvpFlow.occurrences.find((o) => o.id === rsvpFlow.occurrenceId)
+    : undefined;
 
   const openDirections = () => {
     void openMapsDirections({ label: event.title, address, coords }).then(
@@ -347,6 +389,10 @@ export default function EventDetailScreen() {
           {flyer ? (
             <Image
               source={{ uri: flyer }}
+              placeholder={
+                flyerPlaceholder ? { uri: flyerPlaceholder } : undefined
+              }
+              placeholderContentFit="cover"
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
               transition={150}
@@ -649,7 +695,7 @@ export default function EventDetailScreen() {
                 No tickets have been set up for this event yet.
               </AppText>
             ) : isFree ? (
-              <FreeRsvpCard event={event} />
+              <FreeRsvpCard event={event} flow={rsvpFlow} showAction={false} />
             ) : (
               <View className="gap-3 rounded-xl border border-border bg-card p-4">
                 <View className="flex-row items-center justify-between">
@@ -661,11 +707,12 @@ export default function EventDetailScreen() {
                   </View>
                   <Icon name="ticket-outline" size={22} tone="muted" />
                 </View>
-                <Button
-                  title="Buy tickets"
-                  fullWidth
-                  onPress={() => router.push(`/(app)/buy/${event.id}`)}
-                />
+                {/* The Buy button is the sticky bar at the foot of the page. */}
+                <AppText variant="meta">
+                  {event.ticket_type.length > 1
+                    ? `${event.ticket_type.length} ticket types — choose yours at checkout.`
+                    : "Choose how many at checkout."}
+                </AppText>
               </View>
             )}
           </View>
@@ -814,6 +861,59 @@ export default function EventDetailScreen() {
           label={reportTarget?.label ?? event.title}
         />
       </ScrollView>
+
+      {/* Sticky primary action. In the flex column under the ScrollView (not
+          floating over it), so it never covers content; BottomBar pads it
+          clear of the home indicator / gesture bar and collapses that pad
+          when a keyboard is up. It always says what the page's state is —
+          buy, reserve, your ticket, or why nothing can be bought. */}
+      <BottomBar>
+        <View className="flex-row items-center gap-3">
+          <View className="flex-1">
+            {cta.kind === "going" ? (
+              <>
+                <AppText variant="caption" tone="success">
+                  You're going
+                </AppText>
+                <AppText variant="bodyStrong" numberOfLines={1}>
+                  {when.date} · {when.time}
+                </AppText>
+              </>
+            ) : (
+              <>
+                <AppText variant="caption" numberOfLines={1}>
+                  {chosenDate
+                    ? `Date · ${formatDateWithSuffix(chosenDate.starts_at)}`
+                    : cta.actionable
+                      ? "Tickets"
+                      : "Tickets unavailable"}
+                </AppText>
+                <AppText variant="cardTitle" numberOfLines={1}>
+                  {event.ticket_type.length > 0
+                    ? priceRange(event.ticket_type)
+                    : "—"}
+                </AppText>
+              </>
+            )}
+          </View>
+          <Button
+            title={
+              cta.kind === "rsvp" && rsvpFlow.pending ? "Reserving…" : cta.label
+            }
+            variant={cta.kind === "going" ? "outline" : "primary"}
+            disabled={!cta.actionable}
+            loading={cta.kind === "rsvp" && rsvpFlow.pending}
+            onPress={onCta}
+            accessibilityHint={
+              cta.kind === "buy"
+                ? "Opens ticket selection"
+                : cta.kind === "rsvp"
+                  ? "Reserves a free ticket"
+                  : undefined
+            }
+          />
+        </View>
+      </BottomBar>
     </View>
   );
 }

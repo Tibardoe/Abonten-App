@@ -1,6 +1,7 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
@@ -30,7 +31,8 @@ import { useExplorePlaceSliders } from "@/features/discovery/useExplorePlaceSlid
 import { useFilteredEvents } from "@/features/discovery/useFilteredEvents";
 import { useFilteredPlaces } from "@/features/discovery/useFilteredPlaces";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
-import { useIsOnline } from "@/lib/network";
+import { useWarmDetails } from "@/features/discovery/useWarmDetails";
+import { useQueryView } from "@/lib/useQueryView";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -58,7 +60,6 @@ type Tab = "events" | "places";
 // places" list with filter-aware empty states.
 export default function Explore() {
   const router = useRouter();
-  const online = useIsOnline();
   const { location, resolving } = useExploreLocation();
   const coords = location ? { lat: location.lat, lng: location.lng } : null;
 
@@ -98,6 +99,20 @@ export default function Explore() {
     eventsQuery.data?.pages.flatMap((p) => p.rows) ?? [];
   const places: PlaceType[] =
     placesQuery.data?.pages.flatMap((p) => p.rows) ?? [];
+  // Warm what is at the top of the screen: the featured cards, then the
+  // start of the "All" list.
+  useWarmDetails(
+    tab === "events" ? "event" : "place",
+    tab === "events"
+      ? [
+          ...eventSliders.data.featured.slice(0, 2).map((e) => e.id),
+          ...events.map((e) => e.id),
+        ]
+      : [
+          ...placeSliders.data.featured.slice(0, 2).map((p) => p.id),
+          ...places.map((p) => p.id),
+        ],
+  );
 
   // The filter sheet feeds every relevant section, not just the "All" list:
   // each curated slider is client-filtered against the same nearby fetch it
@@ -183,9 +198,13 @@ export default function Explore() {
     else clearPlaceFilters();
   }
 
-  if (resolving) return <ExploreSkeleton />;
-
   const activeQuery = tab === "events" ? eventsQuery : placesQuery;
+  const activeView = useQueryView<unknown>(
+    activeQuery,
+    () => (tab === "events" ? events : places).length === 0,
+  );
+
+  if (resolving) return <ExploreSkeleton />;
 
   const eventCuratedEmpty =
     eventFilterCount > 0 &&
@@ -329,42 +348,43 @@ export default function Explore() {
     </View>
   );
 
-  // Offline with nothing cached for this view: say so, instead of claiming
-  // there are no events here (a paused offline query is not an error and
-  // has no data, which read as "No events in Accra").
-  const offlineEmpty =
-    !online && (activeQuery.isError || activeQuery.fetchStatus === "paused");
-  const emptyState = (
-    <EmptyState
-      icon={
-        offlineEmpty
-          ? "cloud-offline-outline"
-          : tab === "events"
-            ? "calendar-outline"
-            : "location-outline"
-      }
-      title={
-        offlineEmpty
-          ? "You're offline"
-          : activeQuery.isError
-            ? `Couldn't load ${tab}`
-            : activeCount > 0
-              ? `No ${tab} match your filters`
-              : `No ${tab} in ${location?.label ?? "this area"}`
-      }
-      description={
-        offlineEmpty
-          ? `${tab === "events" ? "Events" : "Places"} will load when you're back online.`
-          : activeQuery.isError
-            ? "Pull down to try again."
-            : activeCount > 0
-              ? "Try widening or clearing your filters."
-              : "Check back soon, or change your location."
-      }
-      actionLabel={activeCount > 0 ? "Clear filters" : undefined}
-      onAction={activeCount > 0 ? clearAllChips : undefined}
-    />
-  );
+  // Loading, offline and failed are resolved by useQueryView; "no events
+  // here" is only ever said for an answer the server actually gave.
+  const emptyState =
+    activeView.kind === "empty" ? (
+      <EmptyState
+        icon={tab === "events" ? "calendar-outline" : "location-outline"}
+        title={
+          activeCount > 0
+            ? `No ${tab} match your filters`
+            : `No ${tab} in ${location?.label ?? "this area"}`
+        }
+        description={
+          activeCount > 0
+            ? "Try widening or clearing your filters."
+            : "Check back soon, or change your location."
+        }
+        actionLabel={activeCount > 0 ? "Clear filters" : undefined}
+        onAction={activeCount > 0 ? clearAllChips : undefined}
+      />
+    ) : (
+      <QueryUnavailable
+        view={activeView}
+        subject={tab === "events" ? "events here" : "places here"}
+        onRetry={() => activeQuery.refetch()}
+        loading={
+          <View className="gap-4 px-4 pt-2">
+            {["a", "b", "c"].map((k) =>
+              tab === "events" ? (
+                <EventCardSkeleton key={k} />
+              ) : (
+                <PlaceCardSkeleton key={k} />
+              ),
+            )}
+          </View>
+        }
+      />
+    );
 
   return (
     <View className="flex-1 bg-background">
@@ -474,17 +494,7 @@ export default function Explore() {
               }
             />
           }
-          ListEmptyComponent={
-            eventsQuery.isLoading ? (
-              <View className="gap-4 px-4 pt-2">
-                {["a", "b", "c"].map((k) => (
-                  <EventCardSkeleton key={k} />
-                ))}
-              </View>
-            ) : (
-              emptyState
-            )
-          }
+          ListEmptyComponent={emptyState}
           ListFooterComponent={
             <ListFooter
               count={events.length}
@@ -512,17 +522,7 @@ export default function Explore() {
               }
             />
           }
-          ListEmptyComponent={
-            placesQuery.isLoading ? (
-              <View className="gap-4 px-4 pt-2">
-                {["a", "b", "c"].map((k) => (
-                  <PlaceCardSkeleton key={k} />
-                ))}
-              </View>
-            ) : (
-              emptyState
-            )
-          }
+          ListEmptyComponent={emptyState}
           ListFooterComponent={
             <ListFooter
               count={places.length}

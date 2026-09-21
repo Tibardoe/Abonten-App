@@ -1,13 +1,21 @@
 import { useSession } from "@/auth/SessionProvider";
 import { publisherLabel } from "@/features/content/contentLinks";
-import { useStoryTray } from "@/features/content/useContent";
+import {
+  prefetchStorySequence,
+  useStoryTray,
+} from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { hapticSelection } from "@/lib/haptics";
+import { useIsOnline } from "@/lib/network";
 import { YOUR_STORY_LABEL } from "@abonten/core/content/copy";
-import type { StoryTrayEntry } from "@abonten/types/contentType";
+import type {
+  ContentPublisherKind,
+  StoryTrayEntry,
+} from "@abonten/types/contentType";
 import { AppText, Avatar, Icon, Skeleton } from "@abonten/ui-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 // Ring geometry. The avatar is the photo; the ring is a coloured band
@@ -29,6 +37,24 @@ export function StoriesRow() {
   const { session } = useSession();
   const { program } = useContentProgram();
   const tray = useStoryTray(program.stories);
+  const qc = useQueryClient();
+  const online = useIsOnline();
+  const userId = session?.user.id ?? null;
+
+  // The unseen rings are what gets opened next: fetch their sequences now,
+  // so a tap starts on the Story itself (and it is there offline later).
+  const unseenKey = (tray.data?.entries ?? [])
+    .filter((e) => e.hasUnseen && !e.muted)
+    .slice(0, 4)
+    .map((e) => `${e.publisher.kind}:${e.publisher.id}`)
+    .join(",");
+  useEffect(() => {
+    if (!online || !unseenKey) return;
+    for (const part of unseenKey.split(",")) {
+      const [kind, id] = part.split(":");
+      prefetchStorySequence(qc, userId, kind as ContentPublisherKind, id);
+    }
+  }, [online, unseenKey, qc, userId]);
 
   if (!program.stories || !session) return null;
 

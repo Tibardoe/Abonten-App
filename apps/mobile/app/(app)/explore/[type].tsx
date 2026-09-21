@@ -1,6 +1,7 @@
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { EventListSkeleton, PlaceListSkeleton } from "@/components/skeletons";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
@@ -24,6 +25,7 @@ import {
   useExplorePlaceSliders,
 } from "@/features/discovery/useExplorePlaceSliders";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
+import { useQueryView } from "@/lib/useQueryView";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { EmptyState, Refresher } from "@abonten/ui-native";
@@ -87,6 +89,11 @@ export default function ExploreSectionScreen() {
     [rawPlaces, placeFilters],
   );
   const loading = query.isLoading;
+  // Loading / offline / failed, told apart from "there is nothing here".
+  const view = useQueryView<unknown>(
+    query,
+    () => (isEvent ? events : places).length === 0,
+  );
 
   const filterCount = isEvent
     ? countActiveEventFilters(eventFilters)
@@ -141,21 +148,29 @@ export default function ExploreSectionScreen() {
           contentContainerClassName="gap-4 px-4 pb-16 pt-3"
           refreshControl={<Refresher onRefresh={() => query.refetch()} />}
           ListEmptyComponent={
-            <EmptyState
-              icon="calendar-outline"
-              title={
-                filterCount > 0
-                  ? "No events match your filters"
-                  : "Nothing here right now"
-              }
-              description={
-                filterCount > 0
-                  ? "Try widening or clearing your filters."
-                  : "Check back soon, or change your location."
-              }
-              actionLabel={filterCount > 0 ? "Clear filters" : undefined}
-              onAction={filterCount > 0 ? clearEventFilters : undefined}
-            />
+            view.kind === "empty" ? (
+              <EmptyState
+                icon="calendar-outline"
+                title={
+                  filterCount > 0
+                    ? "No events match your filters"
+                    : "Nothing here right now"
+                }
+                description={
+                  filterCount > 0
+                    ? "Try widening or clearing your filters."
+                    : "Check back soon, or change your location."
+                }
+                actionLabel={filterCount > 0 ? "Clear filters" : undefined}
+                onAction={filterCount > 0 ? clearEventFilters : undefined}
+              />
+            ) : (
+              <QueryUnavailable
+                view={view}
+                subject="these events"
+                onRetry={() => query.refetch()}
+              />
+            )
           }
         />
       ) : (
@@ -166,21 +181,29 @@ export default function ExploreSectionScreen() {
           contentContainerClassName="gap-4 px-4 pb-16 pt-3"
           refreshControl={<Refresher onRefresh={() => query.refetch()} />}
           ListEmptyComponent={
-            <EmptyState
-              icon="location-outline"
-              title={
-                filterCount > 0
-                  ? "No places match your filters"
-                  : "Nothing here right now"
-              }
-              description={
-                filterCount > 0
-                  ? "Try widening or clearing your filters."
-                  : "Check back soon, or change your location."
-              }
-              actionLabel={filterCount > 0 ? "Clear filters" : undefined}
-              onAction={filterCount > 0 ? clearPlaceFilters : undefined}
-            />
+            view.kind === "empty" ? (
+              <EmptyState
+                icon="location-outline"
+                title={
+                  filterCount > 0
+                    ? "No places match your filters"
+                    : "Nothing here right now"
+                }
+                description={
+                  filterCount > 0
+                    ? "Try widening or clearing your filters."
+                    : "Check back soon, or change your location."
+                }
+                actionLabel={filterCount > 0 ? "Clear filters" : undefined}
+                onAction={filterCount > 0 ? clearPlaceFilters : undefined}
+              />
+            ) : (
+              <QueryUnavailable
+                view={view}
+                subject="these places"
+                onRetry={() => query.refetch()}
+              />
+            )
           }
         />
       )}

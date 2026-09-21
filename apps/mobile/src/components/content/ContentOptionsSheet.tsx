@@ -9,6 +9,11 @@ import { useContentProgram } from "@/features/content/useContentProgram";
 import { copyText } from "@/features/messaging/clipboardSupport";
 import { api } from "@/lib/api";
 import { hapticSelection } from "@/lib/haptics";
+import {
+  SPOTLIGHT_SPEEDS,
+  type SpotlightSpeed,
+  formatSpeed,
+} from "@abonten/core/content/playbackControls";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import {
   AppText,
@@ -51,6 +56,8 @@ export function ContentOptionsSheet({
   onShare,
   onNotInterested,
   onDeleted,
+  playbackSpeed,
+  onPlaybackSpeed,
 }: {
   post: ContentPostDocument;
   open: boolean;
@@ -60,6 +67,9 @@ export function ContentOptionsSheet({
   onShare?: () => void;
   onNotInterested?: () => void;
   onDeleted?: () => void;
+  /** A video's current speed; with onPlaybackSpeed, shows the speed row. */
+  playbackSpeed?: SpotlightSpeed;
+  onPlaybackSpeed?: (speed: SpotlightSpeed) => void;
 }) {
   const { session } = useSession();
   const { program } = useContentProgram();
@@ -267,6 +277,52 @@ export function ContentOptionsSheet({
               <View key={`spacer-${i.toString()}`} className="w-[23%]" />
             ))}
           </View>
+
+          {playbackSpeed !== undefined && onPlaybackSpeed ? (
+            <View className="gap-2">
+              <View className="flex-row items-center gap-2 px-1">
+                <Icon name="speedometer-outline" size={18} tone="foreground" />
+                <AppText variant="bodyStrong">Playback speed</AppText>
+              </View>
+              <View
+                className="flex-row gap-1.5"
+                accessibilityRole="radiogroup"
+                accessibilityLabel="Playback speed"
+              >
+                {SPOTLIGHT_SPEEDS.map((rate) => {
+                  const selected = rate === playbackSpeed;
+                  return (
+                    <Pressable
+                      key={rate}
+                      onPress={() => then(() => onPlaybackSpeed(rate))}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={`${formatSpeed(rate)} speed`}
+                      className={[
+                        "min-h-[40px] flex-1 items-center justify-center rounded-xl border",
+                        selected
+                          ? "border-primary bg-primary"
+                          : "border-border bg-card active:bg-muted",
+                      ].join(" ")}
+                    >
+                      <AppText
+                        variant="small"
+                        className={[
+                          "font-semibold",
+                          selected ? "text-primary-foreground" : "",
+                        ].join(" ")}
+                      >
+                        {rate === 1 ? "Normal" : formatSpeed(rate)}
+                      </AppText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <AppText variant="meta" className="px-1">
+                Tip: press and hold the video to play at 2× for a moment.
+              </AppText>
+            </View>
+          ) : null}
 
           <RowGroup rows={creator} />
           <RowGroup rows={general} />

@@ -2,7 +2,7 @@ import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { isUuid } from "@/lib/uuid";
 import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
-import { useQuery } from "@tanstack/react-query";
+import { type QueryClient, useQuery } from "@tanstack/react-query";
 
 // Same select shape the web event detail page (`events/[eventCode]/page.tsx`)
 // runs against `publicSupabase`, minus the reviews/similar-events extras the
@@ -62,23 +62,24 @@ async function fetchEventDetail(id: string): Promise<{
 }> {
   if (!isUuid(id)) throw new NotFoundError("Event");
 
-  const { data, error } = await supabase
-    .from("event")
-    .select(EVENT_DETAIL_SELECT)
-    .eq("id", id)
-    .maybeSingle();
+  // The event row and its attendance count only need the id, so they go out
+  // together; the organizer's rating needs the row's organizer_id.
+  const [eventRes, countRes] = await Promise.all([
+    supabase
+      .from("event")
+      .select(EVENT_DETAIL_SELECT)
+      .eq("id", id)
+      .maybeSingle(),
+    // `attendance` RLS only exposes a viewer's own rows, so a direct count
+    // would under-report. get_event_attendance_count is the narrow public
+    // SECURITY DEFINER aggregate the web page uses for the same reason.
+    supabase.rpc("get_event_attendance_count", { p_event_id: id }),
+  ]);
 
-  if (error) throw error;
-  if (!data) throw new NotFoundError("Event");
+  if (eventRes.error) throw eventRes.error;
+  if (!eventRes.data) throw new NotFoundError("Event");
 
-  const event = data as unknown as EventDetail;
-
-  // `attendance` RLS only exposes a viewer's own rows, so a direct count
-  // would under-report. get_event_attendance_count is the narrow public
-  // SECURITY DEFINER aggregate the web page uses for the same reason.
-  const { data: count } = await supabase.rpc("get_event_attendance_count", {
-    p_event_id: event.id,
-  });
+  const event = eventRes.data as unknown as EventDetail;
 
   // Same as the web page's getUserRating(organizer_id): the organizer rated
   // as a person via the generic `review` table. Aggregated in Postgres
@@ -93,13 +94,39 @@ async function fetchEventDetail(id: string): Promise<{
     average: roundRating(parsed.average),
   };
 
-  return { event, attendanceCount: Number(count ?? 0), organizerRating };
+  return {
+    event,
+    attendanceCount: Number(countRes.data ?? 0),
+    organizerRating,
+  };
+}
+
+/** A detail fetched ahead of a tap is still fresh when the tap comes. */
+const DETAIL_PREFETCH_STALE_MS = 5 * 60_000;
+
+export function eventDetailQueryKey(id: string | undefined) {
+  return ["mobile", "event", id] as const;
 }
 
 export function useEventDetail(id: string | undefined) {
   return useQuery({
-    queryKey: ["mobile", "event", id],
+    queryKey: eventDetailQueryKey(id),
     enabled: !!id,
     queryFn: () => fetchEventDetail(id ?? ""),
+  });
+}
+
+/**
+ * Load an event's detail before it is opened (a card being pressed, or the
+ * first cards of a list the person is looking at), so the screen renders
+ * from cache — and the event is saved for offline — instead of starting
+ * from a skeleton. A cached or in-flight detail is not fetched again.
+ */
+export function prefetchEventDetail(qc: QueryClient, id: string): void {
+  if (!isUuid(id)) return;
+  void qc.prefetchQuery({
+    queryKey: eventDetailQueryKey(id),
+    queryFn: () => fetchEventDetail(id),
+    staleTime: DETAIL_PREFETCH_STALE_MS,
   });
 }

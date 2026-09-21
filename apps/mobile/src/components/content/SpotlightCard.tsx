@@ -8,6 +8,10 @@ import {
   toggleSpotlightMuted,
   useSpotlightMuted,
 } from "@/features/content/playback/spotlightSound";
+import {
+  setSpotlightSpeed,
+  useSpotlightSpeed,
+} from "@/features/content/playback/spotlightSpeed";
 import { usePostEngagement } from "@/features/content/useContent";
 import {
   trackContentClick,
@@ -21,6 +25,7 @@ import {
   feedPosterUrl,
   feedShouldPlay,
 } from "@abonten/core/content/feedPlayback";
+import { formatSpeed, holdRate } from "@abonten/core/content/playbackControls";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type {
   ContentFeedItem,
@@ -35,7 +40,7 @@ import {
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Keyboard,
   Pressable,
@@ -45,6 +50,8 @@ import {
 } from "react-native";
 import Animated, {
   Easing,
+  FadeIn,
+  FadeOut,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -56,7 +63,8 @@ import { ContentCta } from "./ContentCta";
 import { ContentOptionsSheet } from "./ContentOptionsSheet";
 import { FollowButton } from "./FollowButton";
 import { SpotlightCommentsPanel } from "./SpotlightCommentsPanel";
-import { SpotlightVideo } from "./SpotlightVideo";
+import { SpotlightTimeline } from "./SpotlightTimeline";
+import { type SpotlightPlayback, SpotlightVideo } from "./SpotlightVideo";
 
 function compact(n: number): string {
   if (n < 1000) return String(n);
@@ -94,6 +102,7 @@ export const SpotlightCard = memo(function SpotlightCard({
   bottomObstruction = 0,
   topInset,
   onCommentsOpenChange,
+  onGestureLockChange,
 }: {
   item: ContentFeedItem;
   /** This page's place in the feed's media lifecycle. */
@@ -110,6 +119,11 @@ export const SpotlightCard = memo(function SpotlightCard({
   /** Space the screen's own header takes at the top. */
   topInset: number;
   onCommentsOpenChange?: (open: boolean) => void;
+  /**
+   * A gesture on this page owns the finger (scrubbing the timeline, holding
+   * for speed): the feed must not page until it lets go.
+   */
+  onGestureLockChange?: (locked: boolean) => void;
 }) {
   const { post, sponsored } = item;
   const campaignId = sponsored?.campaignId ?? null;
@@ -125,8 +139,22 @@ export const SpotlightCard = memo(function SpotlightCard({
   const [paused, setPaused] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const muted = useSpotlightMuted();
+  const speed = useSpotlightSpeed();
+  const [boosting, setBoosting] = useState(false);
+  const [scrubbing, setScrubbing] = useState(false);
+  const [waiting, setWaiting] = useState(false);
   const appActive = useAppActive();
   const active = mode === "active" && screenFocused;
+
+  // The active player's clock and seek, for the timeline (SpotlightVideo
+  // fills them only while this page is the active one).
+  const time = useSharedValue(0);
+  const duration = useSharedValue(0);
+  const seek = useRef<((seconds: number) => void) | null>(null);
+  const playback = useMemo<SpotlightPlayback>(
+    () => ({ time, duration, seek }),
+    [time, duration],
+  );
 
   const media = post.media[0];
   const isVideo = media?.type === "video";
@@ -142,8 +170,19 @@ export const SpotlightCard = memo(function SpotlightCard({
   });
 
   // Comments keep the video playing (it stays on screen); the options sheet
-  // covers it, so that pauses.
-  const held = optionsOpen;
+  // covers it, so that pauses — and so does scrubbing, which shows the frame
+  // under the finger and resumes from there on release.
+  const held = optionsOpen || scrubbing;
+  const rate = boosting ? holdRate(speed) : speed;
+
+  // One lock for the feed while any gesture here owns the finger.
+  const locked = boosting || scrubbing;
+  const lockRef = useRef(onGestureLockChange);
+  lockRef.current = onGestureLockChange;
+  useEffect(() => {
+    lockRef.current?.(locked);
+  }, [locked]);
+  useEffect(() => () => lockRef.current?.(false), []);
   const shouldPlay = feedShouldPlay({
     mode,
     screenFocused,
@@ -152,9 +191,14 @@ export const SpotlightCard = memo(function SpotlightCard({
     userPaused: paused,
   });
 
-  // A tap-to-pause belongs to one viewing: scrolling away forgets it.
+  // A tap-to-pause belongs to one viewing: scrolling away forgets it — and
+  // any hold or scrub the page was in the middle of.
   useEffect(() => {
-    if (!active) setPaused(false);
+    if (!active) {
+      setPaused(false);
+      setBoosting(false);
+      setScrubbing(false);
+    }
   }, [active]);
 
   // Images count as watched while their page is on screen.
@@ -186,6 +230,24 @@ export const SpotlightCard = memo(function SpotlightCard({
     if (!isVideo || !active) return;
     hapticLight();
     setPaused((v) => !v);
+  };
+  // Press and hold: faster playback until the finger lifts (holdRate), the
+  // same interaction as the big short-video apps. A hold is not a pause and
+  // never changes the speed chosen in the options sheet; RN does not fire
+  // onPress after a long press, so the two can never both happen.
+  //
+  // Deliberately the RN press system, NOT a gesture-handler LongPress: a
+  // native handler on this full-card surface competes for every touch inside
+  // its bounds — including touches that land on the action rail or the CTA
+  // drawn ABOVE it. Activating cancels their press, and "View event" stopped
+  // responding (caught on the emulator). The responder system respects what
+  // is on top. The timeline's own gesture is safe: its bounds are a 20 px
+  // strip with nothing over it.
+  const canBoost = isVideo && active && !commentsOpen && !paused;
+  const startBoost = () => {
+    if (!canBoost) return;
+    hapticLight();
+    setBoosting(true);
   };
 
   // ── Comments: shrink the video, raise the panel ───────────────────
@@ -246,8 +308,13 @@ export const SpotlightCard = memo(function SpotlightCard({
       borderRadius: progress.value * 18,
     };
   });
+  // Scrubbing clears the caption and rail away so the frame can be seen.
+  const scrubFade = useSharedValue(0);
+  useEffect(() => {
+    scrubFade.value = withTiming(scrubbing ? 1 : 0, { duration: 160 });
+  }, [scrubbing, scrubFade]);
   const chromeStyle = useAnimatedStyle(() => ({
-    opacity: 1 - Math.min(1, progress.value * 1.6),
+    opacity: (1 - Math.min(1, progress.value * 1.6)) * (1 - scrubFade.value),
   }));
 
   if (engagement.notInterested) {
@@ -297,7 +364,10 @@ export const SpotlightCard = memo(function SpotlightCard({
           accessibilityRole="button"
           style={StyleSheet.absoluteFill}
           onPress={togglePause}
-          onLongPress={() => !commentsOpen && setOptionsOpen(true)}
+          delayLongPress={320}
+          onLongPress={startBoost}
+          // Released, or the list took the touch over: back to normal speed.
+          onPressOut={() => setBoosting(false)}
           accessibilityLabel={
             commentsOpen
               ? "Close comments"
@@ -307,6 +377,11 @@ export const SpotlightCard = memo(function SpotlightCard({
                   : "Pause"
                 : "Spotlight photo"
           }
+          accessibilityHint={
+            isVideo && !commentsOpen
+              ? "Press and hold to play faster"
+              : undefined
+          }
         >
           {isVideo && media ? (
             <SpotlightVideo
@@ -315,6 +390,9 @@ export const SpotlightCard = memo(function SpotlightCard({
               shouldPlay={shouldPlay}
               posterUri={poster}
               recyclingKey={post.id}
+              rate={rate}
+              playback={playback}
+              onWaitingChange={setWaiting}
               onPlayingChange={onPlayingChange}
               onLoop={onLoop}
             />
@@ -342,8 +420,31 @@ export const SpotlightCard = memo(function SpotlightCard({
         </View>
       ) : null}
 
+      {boosting ? (
+        <Animated.View
+          entering={FadeIn.duration(120)}
+          exiting={FadeOut.duration(120)}
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: topInset + 12,
+            left: 0,
+            right: 0,
+          }}
+          className="items-center"
+          accessibilityLiveRegion="polite"
+        >
+          <View className="flex-row items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5">
+            <Icon name="play-forward" size={14} color="#fff" />
+            <AppText className="text-[13px] font-semibold text-white">
+              {formatSpeed(rate)} speed
+            </AppText>
+          </View>
+        </Animated.View>
+      ) : null}
+
       <Animated.View
-        pointerEvents={commentsOpen ? "none" : "box-none"}
+        pointerEvents={commentsOpen || scrubbing ? "none" : "box-none"}
         style={[StyleSheet.absoluteFill, chromeStyle]}
       >
         {/* Legibility scrims behind the header and the details. */}
@@ -538,6 +639,37 @@ export const SpotlightCard = memo(function SpotlightCard({
         </View>
       </Animated.View>
 
+      {/* The foot of the video: progress, the loading light, scrubbing.
+          Outside the chrome so it stays while the chrome fades for a scrub;
+          hidden under comments (the video is compact then). */}
+      {isVideo && active && !commentsMounted ? (
+        <SpotlightTimeline
+          playback={playback}
+          waiting={waiting && !paused}
+          bottom={Math.max(0, bottomInset - 22)}
+          onScrubbing={setScrubbing}
+        />
+      ) : null}
+
+      {/* Comments are a sheet over the page: everything above the panel —
+          the compact video and the black around it — is its backdrop, and
+          a tap anywhere there closes it (the video is part of the backdrop,
+          so tapping it closes too rather than pausing). */}
+      {commentsOpen ? (
+        <Pressable
+          onPress={closeComments}
+          accessibilityRole="button"
+          accessibilityLabel="Close comments"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: Math.max(0, height - panelHeight),
+          }}
+        />
+      ) : null}
+
       {commentsMounted ? (
         <SpotlightCommentsPanel
           postId={post.id}
@@ -559,6 +691,8 @@ export const SpotlightCard = memo(function SpotlightCard({
         onShare={share}
         onNotInterested={() => engagement.markNotInterested(true)}
         onDeleted={() => onHide?.(post.id)}
+        playbackSpeed={isVideo ? speed : undefined}
+        onPlaybackSpeed={isVideo ? setSpotlightSpeed : undefined}
       />
     </View>
   );
