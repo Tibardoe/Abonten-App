@@ -45,8 +45,10 @@ export function QueryUnavailable({
 
   const offline = view.kind === "offline";
   const title = offline ? "You're offline" : `Couldn't load ${subject}`;
+  // Worded to read right for singular and plural subjects alike
+  // ("this event", "your tickets").
   const description = offline
-    ? `${capitalise(subject)} hasn't been saved on this phone yet. It will load when you're back online.`
+    ? `Not saved on this phone yet. ${capitalise(subject)} will load when you're back online.`
     : "Check your connection and try again.";
 
   if (onMedia) {

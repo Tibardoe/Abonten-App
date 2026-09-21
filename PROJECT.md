@@ -3639,3 +3639,29 @@ swipe-back reveal in §40.1 is diagnosed from source (expo-router's
 screens) and the fix is theme-level, but no iPhone or simulator is available
 here; Android's native stack does not paint that container and the app has
 predictive back disabled, so the symptom cannot be reproduced on it.
+
+**§40.11 Verification pass (2026-09-21) — defects found and fixed.** A
+state-by-state device pass against a seeded local stack found four defects in
+this round's own work, all fixed:
+- *Good data dropped from disk after a failed refresh.* The persister wrote
+  only `status: "success"` queries; a query whose latest refresh failed keeps
+  its data but is `error`, so the next write (from any other query) removed
+  it — the inbox and thread vanished from the saved cache. It now writes any
+  allowlisted query holding data, as the success it last was
+  (`selectPersistedQueries`, unit-tested).
+- *A failed first-page refresh read as "Couldn't load more".* `ListFooter`
+  was given `isError`; every caller now passes `isFetchNextPageError`.
+- *Offline with nothing cached showed a skeleton for up to ~15 s* while the
+  auth refresh timed out. `resolveQueryView` now answers "offline" at once
+  when the (already debounced) connectivity signal says offline; restoring the
+  saved cache still wins.
+- *Stories offline notice collapsed to a bare "Continue"* (a `flex-none` on a
+  centred container). Fixed; the archived inbox also moved to the state
+  contract, and the offline copy reads right for plural subjects.
+Found and **not** fixed (pre-existing on `main`, outside this round, flagged):
+the Spotlight feed pages only on a firm swipe while offline (identical on
+`main`); a dev-only "state update on a component that hasn't mounted" warning
+at boot (2 of 8 launches on `main`); an event whose only tier is price 0 but
+not named `FREE` shows "Reserve spot" and the server refuses it
+(`issue_free_ticket` requires `type = 'FREE'`); a scrub that starts in
+Android's back-gesture edge zone triggers system Back.

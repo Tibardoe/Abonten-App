@@ -209,7 +209,7 @@ export default function MyBookingsScreen() {
             count={rows.length}
             isFetchingNextPage={q.isFetchingNextPage}
             hasNextPage={q.hasNextPage}
-            isError={q.isError}
+            isError={q.isFetchNextPageError}
             onRetry={() => q.fetchNextPage()}
           />
         }

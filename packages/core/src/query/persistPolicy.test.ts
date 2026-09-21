@@ -76,18 +76,42 @@ describe("selectPersistedQueries", () => {
     expect(out.map((x) => x.queryKey)).toEqual([["mobile", "profile"]]);
   });
 
-  it("drops failed or empty queries", () => {
+  it("drops queries without data", () => {
     const out = selectPersistedQueries(
       [
-        q(["mobile", "profile"], 5, { ok: 1 }, "error"),
         {
           queryKey: ["profile", "public", "a"],
           state: { data: undefined, dataUpdatedAt: 5, status: "success" },
+        },
+        {
+          queryKey: ["mobile", "profile"],
+          state: { data: undefined, dataUpdatedAt: 5, status: "error" },
         },
       ],
       rules,
     );
     expect(out).toEqual([]);
+  });
+
+  it("keeps good data whose latest refresh failed, written as that success", () => {
+    const failed = {
+      queryKey: ["mobile", "profile"],
+      state: {
+        data: { ok: 1 },
+        dataUpdatedAt: 5,
+        status: "error",
+        error: new Error("offline"),
+      },
+    };
+    const [out] = selectPersistedQueries([failed], rules);
+    expect(out.state).toEqual({
+      data: { ok: 1 },
+      dataUpdatedAt: 5,
+      status: "success",
+      error: null,
+    });
+    // The in-memory query is untouched.
+    expect(failed.state.status).toBe("error");
   });
 
   it("caps each rule to its newest entries", () => {

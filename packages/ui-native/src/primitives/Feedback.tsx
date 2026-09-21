@@ -53,7 +53,9 @@ export type ListFooterProps = {
 /**
  * The standard footer for an infinite `FlatList` (`ListFooterComponent`):
  * a spinner while the next page loads, a "couldn't load more — Retry" row on
- * a page error, or a quiet end-of-list note once everything is in. Renders
+ * a page error (pass the query's `isFetchNextPageError`, not `isError`: a
+ * failed REFRESH of the first page is not "couldn't load more", and the
+ * list's cached rows stay on screen), or a quiet end-of-list note once everything is in. Renders
  * nothing while idle mid-list or when the list is empty (the list's
  * `ListEmptyComponent` owns that case).
  */

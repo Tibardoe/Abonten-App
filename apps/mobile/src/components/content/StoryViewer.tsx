@@ -157,18 +157,18 @@ export function StoryViewer({
       ) : !sequence.data ||
         sequenceView.kind === "offline" ||
         sequenceView.kind === "error" ? (
-        <View className="flex-1 items-center justify-center gap-4">
+        <View className="flex-1 pb-16">
           <QueryUnavailable
             view={sequenceView}
             subject="these Stories"
             onRetry={() => sequence.refetch()}
             onMedia
-            className="flex-none"
           />
           <Pressable
             onPress={nextEntry}
             hitSlop={10}
             accessibilityRole="button"
+            className="items-center"
           >
             <AppText className="font-semibold text-white underline">
               Continue

@@ -137,7 +137,7 @@ export default function Notifications() {
               count={items.length}
               isFetchingNextPage={q.isFetchingNextPage}
               hasNextPage={q.hasNextPage}
-              isError={q.isError}
+              isError={q.isFetchNextPageError}
               onRetry={() => q.fetchNextPage()}
             />
           }

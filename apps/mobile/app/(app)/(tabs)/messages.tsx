@@ -278,7 +278,7 @@ export default function Messages() {
             count={rows.length}
             isFetchingNextPage={q.isFetchingNextPage}
             hasNextPage={q.hasNextPage}
-            isError={isError}
+            isError={q.isFetchNextPageError}
             onRetry={() => q.fetchNextPage()}
           />
         }

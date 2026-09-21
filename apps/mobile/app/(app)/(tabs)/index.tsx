@@ -500,7 +500,7 @@ export default function Explore() {
               count={events.length}
               isFetchingNextPage={eventsQuery.isFetchingNextPage}
               hasNextPage={eventsQuery.hasNextPage}
-              isError={eventsQuery.isError}
+              isError={eventsQuery.isFetchNextPageError}
               onRetry={() => eventsQuery.fetchNextPage()}
             />
           }
@@ -528,7 +528,7 @@ export default function Explore() {
               count={places.length}
               isFetchingNextPage={placesQuery.isFetchingNextPage}
               hasNextPage={placesQuery.hasNextPage}
-              isError={placesQuery.isError}
+              isError={placesQuery.isFetchNextPageError}
               onRetry={() => placesQuery.fetchNextPage()}
             />
           }

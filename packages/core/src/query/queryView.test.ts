@@ -50,13 +50,18 @@ describe("resolveQueryView", () => {
     expect(view({ status: "error" }).kind).toBe("error");
   });
 
-  it("calls a failed attempt offline at once instead of waiting on the retry", () => {
+  it("says offline at once when offline with nothing cached, even mid-attempt", () => {
+    expect(view({ fetchStatus: "fetching", online: false }).kind).toBe(
+      "offline",
+    );
     expect(
       view({ fetchStatus: "fetching", online: false, failureCount: 1 }).kind,
     ).toBe("offline");
-    // Online, a retry in flight is still loading.
+    // Online, a request (or retry) in flight is loading.
     expect(view({ fetchStatus: "fetching", failureCount: 1 }).kind).toBe(
       "loading",
     );
+    // The saved cache being read back still wins: it may hold the answer.
+    expect(view({ restoring: true, online: false }).kind).toBe("loading");
   });
 });

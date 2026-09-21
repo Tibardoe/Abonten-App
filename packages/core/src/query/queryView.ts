@@ -32,11 +32,7 @@ export type QueryViewInput = {
   /** The saved cache is still being read back from disk. */
   restoring: boolean;
   online: boolean;
-  /**
-   * Attempts that have failed since the last success. Offline, the first
-   * failed attempt settles it: the retry that follows can only wait for the
-   * network, so the person is told now rather than after the backoff.
-   */
+  /** Attempts that have failed since the last success (informational). */
   failureCount?: number;
 };
 
@@ -61,14 +57,18 @@ export function resolveQueryView(input: QueryViewInput): QueryView {
 
   const none = { refreshing: false, refreshFailed: false };
   if (restoring) return { kind: "loading", ...none };
-  if (!online && (input.failureCount ?? 0) > 0) {
-    return { kind: "offline", ...none };
-  }
+  // Confirmed offline (the app's connectivity signal is already debounced)
+  // with nothing cached: say so now. The attempt React Query still makes can
+  // sit for many seconds — an expired token first retries its refresh
+  // against an auth server it cannot reach — and a skeleton for that long
+  // claims something is coming. If the attempt does succeed, the data
+  // replaces this.
+  if (!online) return { kind: "offline", ...none };
   if (fetchStatus === "fetching") {
     return { kind: "loading", ...none };
   }
   // A paused query is one React Query is holding until the network returns.
-  if (fetchStatus === "paused" || !online) return { kind: "offline", ...none };
+  if (fetchStatus === "paused") return { kind: "offline", ...none };
   if (status === "error") return { kind: "error", ...none };
   // Pending and idle: about to start, or waiting on a dependency.
   return { kind: "loading", ...none };

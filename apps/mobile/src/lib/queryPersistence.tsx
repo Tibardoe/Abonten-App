@@ -135,8 +135,11 @@ function subscribeWrites(persister: Persister): () => void {
       buster: BUSTER,
       dehydrateOptions: {
         shouldDehydrateMutation: () => false,
+        // Any allowlisted query holding data — including one whose latest
+        // refresh failed; selectPersistedQueries writes that as the success
+        // it last was (see @abonten/core/query/persistPolicy).
         shouldDehydrateQuery: (q) =>
-          q.state.status === "success" && isPersisted(q),
+          q.state.data !== undefined && isPersisted(q),
       },
     }).catch(() => {
       // Disk full or similar: the in-memory cache is unaffected.

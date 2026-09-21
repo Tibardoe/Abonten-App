@@ -331,7 +331,7 @@ function LegacySearch() {
               count={resultRows.length}
               isFetchingNextPage={results.isFetchingNextPage}
               hasNextPage={results.hasNextPage}
-              isError={results.isError}
+              isError={results.isFetchNextPageError}
               onRetry={() => results.fetchNextPage()}
             />
           }

@@ -48,6 +48,11 @@ document's §8 exists to prevent. The file is per account, in the OS cache
 directory, and is deleted on sign-out, so nothing of one person's inbox can
 reach the next.
 
+**A failed refresh never drops good data.** A query whose latest refresh
+failed still holds its last good data (React Query marks it `error`); it is
+written to disk as the success it last was, so the cold start after an outage
+still has it. Only queries with no data are skipped.
+
 **An error is never written.** The typed /api/mobile client returns HTTP
 failures as data (`{ status, message }`), so React Query records them as
 successes. `selectPersistedQueries` skips any value that is an error envelope
