@@ -155,6 +155,18 @@ export const SpotlightVideo = memo(function SpotlightVideo({
     opacity: posterOpacity.value,
   }));
 
+  // The live player's load state, lifted here so the "couldn't play" /
+  // "you're offline" notice is drawn ABOVE the poster. The poster covers the
+  // player until the first frame — exactly the moment a failed load needs to
+  // be seen — so a notice inside the player layer was hidden under it
+  // (found on the emulator: readable by a screen reader, invisible on screen).
+  const online = useIsOnline();
+  const [load, setLoad] = useState<LoadState>("loading");
+  const retryRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (layer !== "live") setLoad("loading");
+  }, [layer]);
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {layer !== "none" ? (
@@ -172,6 +184,8 @@ export const SpotlightVideo = memo(function SpotlightVideo({
           onWaitingChange={onWaitingChange}
           onPlayingChange={onPlayingChange}
           onLoop={onLoop}
+          onLoadState={setLoad}
+          retryRef={retryRef}
         />
       ) : null}
       {posterUri ? (
@@ -188,9 +202,47 @@ export const SpotlightVideo = memo(function SpotlightVideo({
           />
         </Animated.View>
       ) : null}
+      {mode === "active" && layer === "live" && load === "error" ? (
+        <LoadNotice online={online} onRetry={() => retryRef.current?.()} />
+      ) : null}
     </View>
   );
 });
+
+/** Why the active clip is not playing, over the poster; a tap retries. */
+function LoadNotice({
+  online,
+  onRetry,
+}: {
+  online: boolean;
+  onRetry: () => void;
+}) {
+  return (
+    <View
+      style={[StyleSheet.absoluteFill, styles.center]}
+      pointerEvents="box-none"
+    >
+      <Pressable
+        onPress={onRetry}
+        accessibilityRole="button"
+        accessibilityLabel="Retry video"
+        className="items-center gap-2 rounded-2xl bg-black/60 px-5 py-4"
+      >
+        <Icon
+          name={online ? "refresh" : "cloud-offline-outline"}
+          size={26}
+          color="#fff"
+        />
+        <AppText className="text-center text-[14px] font-semibold text-white">
+          {online ? "Couldn't play this video" : "You're offline"}
+        </AppText>
+        <AppText className="text-center text-[12px] text-white/75">
+          {online ? "Tap to try again" : "It will play when you're back online"}
+        </AppText>
+      </Pressable>
+    </View>
+  );
+}
 
 type LoadState = "loading" | "ready" | "error";
 
@@ -219,6 +271,8 @@ function PlayerLayer({
   onWaitingChange,
   onPlayingChange,
   onLoop,
+  onLoadState,
+  retryRef,
 }: {
   media: ContentMediaItem;
   active: boolean;
@@ -233,6 +287,9 @@ function PlayerLayer({
   onWaitingChange?: (waiting: boolean) => void;
   onPlayingChange?: (playing: boolean) => void;
   onLoop?: () => void;
+  /** The load state, for the notice the parent draws above the poster. */
+  onLoadState: (load: LoadState) => void;
+  retryRef: MutableRefObject<(() => void) | null>;
 }) {
   const muted = useSpotlightMuted();
   const online = useIsOnline();
@@ -269,6 +326,9 @@ function PlayerLayer({
 
   const [load, setLoad] = useState<LoadState>("loading");
   const [buffering, setBuffering] = useState(false);
+  useEffect(() => {
+    onLoadState(load);
+  }, [load, onLoadState]);
   const callbacks = useRef({ onPlayingChange, onLoop, onFrame });
   callbacks.current = { onPlayingChange, onLoop, onFrame };
 
@@ -441,6 +501,13 @@ function PlayerLayer({
     });
   }, [player, uri]);
 
+  useEffect(() => {
+    retryRef.current = retry;
+    return () => {
+      if (retryRef.current === retry) retryRef.current = null;
+    };
+  }, [retry, retryRef]);
+
   // Connection back after a failed load: try again once, on the event
   // that makes success possible — not on a timer.
   const wasOnline = useRef(online);
@@ -485,30 +552,6 @@ function PlayerLayer({
         surfaceType="textureView"
         onFirstFrameRender={() => callbacks.current.onFrame(true)}
       />
-      {active && load === "error" ? (
-        <View style={[StyleSheet.absoluteFill, styles.center]}>
-          <Pressable
-            onPress={retry}
-            accessibilityRole="button"
-            accessibilityLabel="Retry video"
-            className="items-center gap-2 rounded-2xl bg-black/60 px-5 py-4"
-          >
-            <Icon
-              name={online ? "refresh" : "cloud-offline-outline"}
-              size={26}
-              color="#fff"
-            />
-            <AppText className="text-center text-[14px] font-semibold text-white">
-              {online ? "Couldn't play this video" : "You're offline"}
-            </AppText>
-            <AppText className="text-center text-[12px] text-white/75">
-              {online
-                ? "Tap to try again"
-                : "It will play when you're back online"}
-            </AppText>
-          </Pressable>
-        </View>
-      ) : null}
     </>
   );
 }

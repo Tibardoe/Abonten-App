@@ -3707,6 +3707,16 @@ are dealt with in §40.12.
   (gesture-handler stops looking for handlers at the topmost view under the
   finger, so a catcher that declines the touch still keeps it from the
   control underneath).
+- *The Spotlight "You're offline / Couldn't play this video" notice was
+  invisible.* Found while finally testing a clip whose video is not on the
+  phone (feed cached, `ExpoVideoCache` emptied, then offline): the player's
+  status was `error` and the notice was in the accessibility tree, but the
+  poster — kept on top of the player until its first frame, exactly the
+  moment a failed load needs to be seen — covered it. The load state is now
+  lifted out of the player layer and `SpotlightVideo` draws the notice
+  above the poster (`LoadNotice`); a tap retries, and the reconnect retry
+  is unchanged. Verified on the emulator: the notice shows offline, and the
+  clip plays by itself once the connection is back.
 - *"Offline, the feed pages only on a firm swipe" — not a defect.* Measured
   on the release build with the visible card read from screenshots: online
   and offline behave the same, and nothing in the feed's `scrollEnabled`
