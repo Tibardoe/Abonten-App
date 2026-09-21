@@ -1,3 +1,4 @@
+import { claimDrawerEdge } from "@/components/app/drawerGesture";
 import type { SpotlightPlayback } from "@/components/content/SpotlightVideo";
 import { hapticLight } from "@/lib/haptics";
 import {
@@ -18,6 +19,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { SystemGestureExclusionView } from "../../../modules/system-gesture-exclusion/src";
 
 // The line along the foot of a Spotlight video. One element, three jobs:
 //
@@ -36,6 +38,12 @@ import Animated, {
 // once it activates the card tells the feed to stop scrolling (onScrubbing)
 // so the page cannot move under the finger. Its touch strip is a thin band
 // at the very bottom, clear of the action rail and the CTA above it.
+//
+// The strip runs edge to edge, and with Android gesture navigation a touch
+// that starts near either edge belongs to the system Back gesture — a scrub
+// from the start of the clip fired Back instead. The strip is therefore a
+// SystemGestureExclusionView: Android leaves exactly that thin band to the
+// app, and everywhere else keeps its Back gesture.
 
 // The touch strip: kept to 20 px so it never reaches the CTA above it (the
 // card leaves 22 px of bottom inset for exactly this).
@@ -101,6 +109,19 @@ export function SpotlightTimeline({
     "worklet";
     return scrubTarget(x, width.value, duration.value);
   };
+
+  // The drawer's edge catcher lies over the strip's first 22 dp; a drag from
+  // there is a scrub, not a request for the menu, so the strip claims its
+  // rows of the edge while it is on screen (drawerGesture.ts).
+  const stripRef = useRef<View>(null);
+  const releaseClaim = useRef<(() => void) | null>(null);
+  const claimEdge = useCallback(() => {
+    stripRef.current?.measureInWindow((_x, y, _w, h) => {
+      releaseClaim.current?.();
+      releaseClaim.current = claimDrawerEdge({ top: y - 8, bottom: y + h });
+    });
+  }, []);
+  useEffect(() => () => releaseClaim.current?.(), []);
 
   const pan = Gesture.Pan()
     .activeOffsetX([-6, 6])
@@ -178,26 +199,30 @@ export function SpotlightTimeline({
           </AppText>
         </View>
       ) : null}
-      <GestureDetector gesture={gesture}>
-        <View
-          style={[styles.hit, { bottom }]}
-          onLayout={(e) => {
-            width.value = e.nativeEvent.layout.width;
-          }}
-          accessible
-          accessibilityRole="adjustable"
-          accessibilityLabel="Video position"
-        >
-          <Animated.View style={[styles.track, trackStyle]}>
-            <Animated.View style={[styles.fill, fillStyle]} />
-            {waiting ? <LoadingSweep reduceMotion={reduceMotion} /> : null}
-          </Animated.View>
-          <Animated.View
-            pointerEvents="none"
-            style={[styles.thumb, thumbStyle]}
-          />
-        </View>
-      </GestureDetector>
+      <SystemGestureExclusionView style={[styles.hit, { bottom }]}>
+        <GestureDetector gesture={gesture}>
+          <View
+            ref={stripRef}
+            style={styles.strip}
+            onLayout={(e) => {
+              width.value = e.nativeEvent.layout.width;
+              claimEdge();
+            }}
+            accessible
+            accessibilityRole="adjustable"
+            accessibilityLabel="Video position"
+          >
+            <Animated.View style={[styles.track, trackStyle]}>
+              <Animated.View style={[styles.fill, fillStyle]} />
+              {waiting ? <LoadingSweep reduceMotion={reduceMotion} /> : null}
+            </Animated.View>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.thumb, thumbStyle]}
+            />
+          </View>
+        </GestureDetector>
+      </SystemGestureExclusionView>
     </>
   );
 }
@@ -245,6 +270,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: TRACK_HIT,
+  },
+  strip: {
+    flex: 1,
     justifyContent: "flex-end",
     paddingBottom: 4,
   },

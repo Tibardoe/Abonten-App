@@ -1,0 +1,10 @@
+{
+  "name": "system-gesture-exclusion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A view whose bounds Android's edge Back gesture leaves to the app (for horizontal drags such as a video scrubber).",
+  "main": "src/index.tsx",
+  "license": "UNLICENSED",
+  "author": "Abonten Hub Ltd",
+  "homepage": "https://abontenhub.com"
+}

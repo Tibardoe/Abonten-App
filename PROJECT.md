@@ -3658,10 +3658,65 @@ this round's own work, all fixed:
 - *Stories offline notice collapsed to a bare "Continue"* (a `flex-none` on a
   centred container). Fixed; the archived inbox also moved to the state
   contract, and the offline copy reads right for plural subjects.
-Found and **not** fixed (pre-existing on `main`, outside this round, flagged):
-the Spotlight feed pages only on a firm swipe while offline (identical on
-`main`); a dev-only "state update on a component that hasn't mounted" warning
-at boot (2 of 8 launches on `main`); an event whose only tier is price 0 but
-not named `FREE` shows "Reserve spot" and the server refuses it
-(`issue_free_ticket` requires `type = 'FREE'`); a scrub that starts in
-Android's back-gesture edge zone triggers system Back.
+Four pre-existing problems were also found (all older than this round); they
+are dealt with in §40.12.
+
+**§40.12 Pre-existing problems fixed (2026-09-21, same branch).**
+- *Free events are decided by the `FREE` tier, everywhere.* The mobile event
+  screen (and the web event page) called an event free when every tier cost
+  0, but `issue_free_ticket` looks the tier up **by name** (`type = 'FREE'`),
+  so a 0-priced tier under another name showed "Reserve spot" and the server
+  refused it — and checkout could not have charged it either.
+  `@abonten/core/ticketTiers` now holds the rule: `hasFreeRegistration`
+  (the FREE tier exists) is what both clients read, and `paidTierProblem`
+  refuses a paid tier priced at or below 0, or named FREE, in
+  `postEventCore` / `updateEventTicketTypesCore` (the server, so every
+  transport) and in the mobile create/edit wizards before the request. The
+  organizer sees why. Production had no such row (checked); a row like it can
+  no longer be created.
+- *Dev-only "Can't perform a React state update on a component that hasn't
+  mounted yet" at boot.* The recorded stack pointed at expo-router's forked
+  `useLinking.native.js`: it recorded the launch URL as the "last unhandled
+  link" with a React state update **from inside the initial-URL promise**,
+  which on Android (always a promise) can resolve before the
+  `NavigationContainer`'s first commit. Nothing in expo-router reads
+  `lastUnhandledLink`, and upstream react-navigation has since deleted that
+  code. `patches/expo-router+57.0.22.patch` (patch-package, applied by the
+  root `postinstall`) removes it; the `setTimeout(0)` that `+native-intent.ts`
+  had used to push the promise past the commit — a timing hack that only
+  lowered the odds — is gone. Honest note: the warning did not reproduce in 30
+  cold launches on the day (it had been 2 of 8 the day before); the fix rests
+  on the recorded trace, not on a reproduction, and 13 launches plus a deep
+  link after the change showed none.
+- *A scrub that started in Android's back-gesture edge zone fired system
+  Back.* New local native module `apps/mobile/modules/system-gesture-exclusion`
+  (Android only): `SystemGestureExclusionView` excludes its own bounds from
+  system gestures (`View.setSystemGestureExclusionRects`, API 29+). The
+  timeline's 20 px touch strip is such a view, so a drag from the very edge
+  scrubs; everywhere else Back still works. On iOS, or in an app binary
+  built before the module existed, it is a plain `View`. **Needs a native
+  build** (like `volume-observer`). The release build then showed a second
+  owner of that edge: `AppDrawer`'s 22 dp edge-swipe catcher (an overlay
+  above every tab root) opened the menu on the same drag. The timeline now
+  claims the band of window rows its strip occupies (`drawerGesture.ts`)
+  and the drawer draws its catcher in segments with a gap over that band,
+  so on the strip a drag scrubs; the rest of the edge still opens the menu.
+  Two cheaper ideas failed on the device and are worth not repeating: a
+  gesture-handler `blocksExternalGesture` relation (did not hold across the
+  drawer's remounts) and making the catcher's pan fail at touch-down
+  (gesture-handler stops looking for handlers at the topmost view under the
+  finger, so a catcher that declines the touch still keeps it from the
+  control underneath).
+- *"Offline, the feed pages only on a firm swipe" — not a defect.* Measured
+  on the release build with the visible card read from screenshots: online
+  and offline behave the same, and nothing in the feed's `scrollEnabled`
+  depends on connectivity. The observation came from `adb shell input
+  swipe`: the emulator's UI thread stalls during any scroll (a 150 ms swipe
+  takes 500–800 ms to inject, on Home as well as Spotlight; `gfxinfo` 90th
+  percentile 450 ms per frame), and the injector waits for each event, so a
+  short swipe collapses to DOWN/MOVE/UP — read as a tap (it paused the
+  video) or as a half-page drag that snaps back. A finger delivers a
+  continuous stream and is not affected. Paging with React Native's Android
+  `pagingEnabled` still needs the drag to cross the page's midpoint or a
+  fling predicted to (`smoothScrollAndSnap`); that is the platform's paging
+  semantics on both branches, not something this round changed.

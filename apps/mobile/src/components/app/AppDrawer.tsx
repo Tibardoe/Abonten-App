@@ -31,7 +31,7 @@ import {
   useRouter,
   useSegments,
 } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
   BackHandler,
   Linking,
@@ -51,6 +51,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppearanceToggle } from "./AppearanceToggle";
+import {
+  edgeSegments,
+  getDrawerEdgeClaims,
+  subscribeDrawerEdgeClaims,
+} from "./drawerGesture";
 import { useMenuSheet } from "./menuSheet";
 
 // Full-screen navigation drawer — the native stand-in for the web header's
@@ -139,7 +144,7 @@ export function AppDrawer() {
   const tSettings = useTranslations("settings");
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height: windowHeight } = useWindowDimensions();
   const segments = useSegments();
   const pathname = usePathname();
   const rootState = useRootNavigationState() as NavState | undefined;
@@ -225,30 +230,44 @@ export function AppDrawer() {
 
   // Edge-swipe to OPEN: a rightward drag starting in the left edge strip.
   // Ignored once the drawer is already open; fails on a vertical drag so it
-  // never fights a list scroll.
-  const edgePan = Gesture.Pan()
-    .activeOffsetX(12)
-    .failOffsetX(-12)
-    .failOffsetY([-16, 16])
-    .onUpdate((e) => {
-      if (openSV.value === 1) return;
-      const dx = Math.min(width, Math.max(0, e.translationX));
-      tx.value = -width + dx;
-      progress.value = Math.min(dx / width, 1);
-    })
-    .onEnd((e) => {
-      if (openSV.value === 1) return;
-      const shouldOpen = e.translationX > width * 0.4 || e.velocityX > 500;
-      if (shouldOpen) {
-        tx.value = withTiming(0, { duration: 160 }, (finished) => {
-          if (finished) runOnJS(setOpen)(true);
-        });
-        progress.value = withTiming(1, { duration: 160 });
-      } else {
-        tx.value = withTiming(-width, { duration: 160 });
-        progress.value = withTiming(0, { duration: 160 });
-      }
-    });
+  // never fights a list scroll. The strip is drawn in segments that leave a
+  // gap over any band another edge control has claimed (the Spotlight
+  // timeline — see drawerGesture.ts), so a drag from there reaches that
+  // control; one gesture per segment, since a gesture attaches to one view.
+  const buildEdgePan = () =>
+    Gesture.Pan()
+      .activeOffsetX(12)
+      .failOffsetX(-12)
+      .failOffsetY([-16, 16])
+      .onUpdate((e) => {
+        if (openSV.value === 1) return;
+        const dx = Math.min(width, Math.max(0, e.translationX));
+        tx.value = -width + dx;
+        progress.value = Math.min(dx / width, 1);
+      })
+      .onEnd((e) => {
+        if (openSV.value === 1) return;
+        const shouldOpen = e.translationX > width * 0.4 || e.velocityX > 500;
+        if (shouldOpen) {
+          tx.value = withTiming(0, { duration: 160 }, (finished) => {
+            if (finished) runOnJS(setOpen)(true);
+          });
+          progress.value = withTiming(1, { duration: 160 });
+        } else {
+          tx.value = withTiming(-width, { duration: 160 });
+          progress.value = withTiming(0, { duration: 160 });
+        }
+      });
+  const edgeClaims = useSyncExternalStore(
+    subscribeDrawerEdgeClaims,
+    getDrawerEdgeClaims,
+  );
+  const edgeSegmentList = edgeSegments(
+    insets.top + HEADER_HEIGHT,
+    windowHeight,
+    edgeClaims,
+  );
+  const edgePans = edgeSegmentList.map(() => buildEdgePan());
 
   const dismissFromGesture = () => {
     returnTo.current = null;
@@ -320,19 +339,24 @@ export function AppDrawer() {
     // interactive children (edge strip / backdrop / panel) do.
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Left-edge catcher — only on the tab roots, and only while closed. */}
-      {!open && onTabRoot ? (
-        <GestureDetector gesture={edgePan}>
-          <View
-            style={{
-              position: "absolute",
-              left: 0,
-              top: insets.top + HEADER_HEIGHT,
-              bottom: 0,
-              width: EDGE_WIDTH,
-            }}
-          />
-        </GestureDetector>
-      ) : null}
+      {!open && onTabRoot
+        ? edgeSegmentList.map((seg, i) => (
+            <GestureDetector
+              key={`${seg.top}-${seg.bottom}`}
+              gesture={edgePans[i]}
+            >
+              <View
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: seg.top,
+                  height: seg.bottom - seg.top,
+                  width: EDGE_WIDTH,
+                }}
+              />
+            </GestureDetector>
+          ))
+        : null}
 
       {/* Backdrop — interactive only when open. */}
       <Animated.View

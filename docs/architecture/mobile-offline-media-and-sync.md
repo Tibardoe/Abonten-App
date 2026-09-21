@@ -368,7 +368,21 @@ buffers) is §2 and unchanged. On top of it:
   a vertical one, so a swipe that starts on the line still pages the feed;
   once it activates the card locks the feed's scrolling
   (`onGestureLockChange`). Clips shorter than half a second, or without a
-  known duration, cannot be scrubbed (`scrubTarget` returns null).
+  known duration, cannot be scrubbed (`scrubTarget` returns null). The strip
+  runs edge to edge, and with Android gesture navigation a touch that starts
+  near either screen edge belongs to the system Back gesture — so the strip
+  is a `SystemGestureExclusionView` (local module
+  `apps/mobile/modules/system-gesture-exclusion`, Android only,
+  `View.setSystemGestureExclusionRects`): Android leaves exactly that thin
+  band to the app. It is a plain `View` on iOS and in binaries built before
+  the module existed; it needs a native build. The app's own drawer also
+  watches that edge (`AppDrawer`'s 22 dp catcher above every tab root): the
+  strip claims its rows of the window while it is on screen
+  (`claimDrawerEdge` in `components/app/drawerGesture.ts`) and the drawer
+  draws its catcher in segments that leave a gap over a claimed band —
+  a gap, not a declined touch, because gesture-handler stops looking for
+  handlers at the topmost view under the finger. On the strip a drag
+  scrubs; anywhere else on the edge the drawer opens as before.
 - **Speed.** The options sheet offers 0.5× / 0.75× / 1× / 1.25× / 1.5× / 2×.
   The choice is app-wide for the session (`spotlightSpeed.ts`) — not stored on
   disk, because a feed still running at 1.5× the next morning reads as a
@@ -418,6 +432,18 @@ space-separated `hsl(H S% L%)` form. The three layers under the UI are now
 all themed: the native root (expo-system-ui), the RN root view, and the
 navigation theme.
 
+**The launch URL and the first commit.** expo-router's forked
+`useLinking.native.js` used to record the launch URL as the "last unhandled
+link" with a React state update from inside the initial-URL promise. On
+Android that URL is always a promise, and it can resolve before the
+`NavigationContainer` has committed — React's dev-only "state update on a
+component that hasn't mounted yet" at boot. Nothing in expo-router reads
+that state and upstream react-navigation has removed the code, so
+`patches/expo-router+57.0.22.patch` (patch-package, run by the root
+`postinstall`) removes it here too. Do not reintroduce a delay in
+`+native-intent.ts` to work around it; the patch is the fix, and it must be
+regenerated when expo-router is upgraded.
+
 ## 13. Sticky ticket and booking CTAs
 
 The primary action on an event or place no longer sits mid-page. Both detail
@@ -427,7 +453,11 @@ button. What that button is comes from `resolveEventCta`
 (`@abonten/core/eventCta`, unit tested): buy, reserve, "View my ticket" for a
 ticket already held (still reachable after sales close — that is when it is
 needed), or a disabled label saying why nothing can be bought (canceled,
-ended, in progress, sold out, none set up). The free-RSVP flow
+ended, in progress, sold out, none set up). "Free" means the `FREE` tier
+exists (`hasFreeRegistration` in `@abonten/core/ticketTiers`) — the same
+test `issue_free_ticket` applies — never "every tier costs 0"; a paid tier
+at price 0, or named FREE, is refused when an event is created or its
+tiers edited (`paidTierProblem`, on the server and in the mobile wizards). The free-RSVP flow
 (`useFreeRsvpFlow`) is shared state, so the date chips in the Tickets section
 and the sticky button are the same action; the in-page duplicate button is
 gone. A place shows "Book" (or "Sign in to book", which returns to the place

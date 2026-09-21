@@ -19,6 +19,7 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
+import { paidTierProblem } from "@abonten/core/ticketTiers";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
@@ -672,6 +673,8 @@ export function useEventWizard(
         message: "Each ticket type needs a name, a price and a valid quantity.",
       };
     }
+    const tierProblem = parsed.map(paidTierProblem).find(Boolean);
+    if (tierProblem) return { ok: false, message: tierProblem };
     return { ok: true, body: { multipleTickets: parsed } };
   }
 

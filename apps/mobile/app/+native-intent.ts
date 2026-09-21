@@ -32,19 +32,10 @@ async function resolvePlace(seg: string): Promise<string | null> {
 
 export async function redirectSystemPath({
   path,
-  initial,
 }: {
   path: string;
   initial: boolean;
 }): Promise<string> {
-  // The launch link is resolved while expo-router's NavigationContainer is
-  // still rendering for the first time (Android always hands it over as a
-  // promise). If this resolves within the same task, the router records the
-  // link with a state update on a container that has not mounted yet —
-  // React's dev-only "Can't perform a React state update on a component
-  // that hasn't mounted yet" at every launch. One macrotask lets the
-  // container commit first; the launch itself is not measurably slower.
-  if (initial) await new Promise<void>((resolve) => setTimeout(resolve, 0));
   try {
     const url = new URL(
       path,

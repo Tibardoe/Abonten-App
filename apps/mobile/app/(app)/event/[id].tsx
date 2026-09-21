@@ -47,6 +47,7 @@ import { resolveEventCta } from "@abonten/core/eventCta";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import {
   AppText,
   Avatar,
@@ -341,9 +342,7 @@ export default function EventDetailScreen() {
     attendeeCount: attendanceCount,
     ticketTypes: event.ticket_type,
   });
-  const isFree =
-    event.ticket_type.length > 0 &&
-    event.ticket_type.every((t) => t.price === 0);
+  const isFree = hasFreeRegistration(event.ticket_type);
   const reviews = reviewsList.data?.pages.flatMap((p) => p.reviews) ?? [];
   // The page's one primary action, pinned to its foot (resolveEventCta).
   const cta = resolveEventCta({

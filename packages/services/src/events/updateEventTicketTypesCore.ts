@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { paidTierProblem } from "@abonten/core/ticketTiers";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
@@ -45,6 +46,16 @@ export async function updateEventTicketTypesCore(
 ): Promise<UpdateEventTicketTypesCoreResult> {
   const { eventId, currency, freeEvent, singleTicket } = input;
   const multipleTickets = input.multipleTickets ?? [];
+
+  if (!freeEvent) {
+    for (const tier of [
+      ...(singleTicket ? [singleTicket] : []),
+      ...multipleTickets,
+    ]) {
+      const problem = paidTierProblem(tier);
+      if (problem) return { status: 400, message: problem };
+    }
+  }
 
   const { data: event, error: eventError } = await supabase
     .from("event")

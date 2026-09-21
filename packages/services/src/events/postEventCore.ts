@@ -1,6 +1,7 @@
 import { generateEventCode } from "@abonten/core/eventCodeGenerator";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
+import { paidTierProblem } from "@abonten/core/ticketTiers";
 import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
@@ -84,6 +85,17 @@ export async function postEventCore(
   });
   if (!locationCheck.valid) {
     return { status: 400, message: locationCheck.message };
+  }
+
+  if (!input.freeEvent) {
+    const tiers = [
+      ...(input.singleTicket ? [input.singleTicket] : []),
+      ...(input.multipleTickets ?? []),
+    ];
+    for (const tier of tiers) {
+      const problem = paidTierProblem(tier);
+      if (problem) return { status: 400, message: problem };
+    }
   }
 
   const eventCode = generateEventCode(input.title);
