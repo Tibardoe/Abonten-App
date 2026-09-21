@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { NotificationsSkeleton } from "@/components/skeletons";
 import { notificationTarget } from "@/features/notifications/notificationLink";
@@ -8,6 +9,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from "@/features/notifications/useNotifications";
+import { useQueryView } from "@/lib/useQueryView";
 import type { NotificationType } from "@abonten/types/notificationType";
 import { AppText, EmptyState, ListFooter, Refresher } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
@@ -67,6 +69,9 @@ export default function Notifications() {
     [markOne, router],
   );
 
+  // Loading / offline / failed vs "nothing has happened yet".
+  const view = useQueryView(q, () => items.length === 0);
+
   return (
     <View className="flex-1 bg-background">
       <AppHeader
@@ -91,7 +96,7 @@ export default function Notifications() {
         }
       />
 
-      {q.isLoading ? (
+      {view.kind === "loading" ? (
         <NotificationsSkeleton />
       ) : (
         <SectionList
@@ -113,28 +118,26 @@ export default function Notifications() {
           onEndReachedThreshold={0.5}
           refreshControl={<Refresher onRefresh={() => q.refetch()} />}
           ListEmptyComponent={
-            <EmptyState
-              icon="notifications-outline"
-              title={
-                q.isError
-                  ? "Couldn't load notifications"
-                  : "No notifications yet"
-              }
-              description={
-                q.isError
-                  ? "We couldn't reach the server. Check your connection."
-                  : "Updates about your tickets, events and messages show up here."
-              }
-              actionLabel={q.isError ? "Try again" : undefined}
-              onAction={q.isError ? () => q.refetch() : undefined}
-            />
+            view.kind === "empty" ? (
+              <EmptyState
+                icon="notifications-outline"
+                title="No notifications yet"
+                description="Updates about your tickets, events and messages show up here."
+              />
+            ) : (
+              <QueryUnavailable
+                view={view}
+                subject="your notifications"
+                onRetry={() => q.refetch()}
+              />
+            )
           }
           ListFooterComponent={
             <ListFooter
               count={items.length}
               isFetchingNextPage={q.isFetchingNextPage}
               hasNextPage={q.hasNextPage}
-              isError={q.isError}
+              isError={q.isFetchNextPageError}
               onRetry={() => q.fetchNextPage()}
             />
           }

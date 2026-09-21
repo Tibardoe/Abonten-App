@@ -1,4 +1,5 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { UnifiedSearch } from "@/components/search/UnifiedSearch";
@@ -14,6 +15,7 @@ import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
 import { useRecentSearches } from "@/features/search/recentSearches";
 import { useEventSearch } from "@/features/search/useEventSearch";
 import { useSearchSuggestions } from "@/features/search/useSearchSuggestions";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
@@ -196,6 +198,10 @@ function LegacySearch() {
 
   const resultRows: UserPostType[] =
     results.data?.pages.flatMap((p) => p.rows) ?? [];
+  const resultsView = useQueryView<unknown>(
+    results,
+    () => resultRows.length === 0,
+  );
 
   const onEndReached = useCallback(() => {
     if (results.hasNextPage && !results.isFetchingNextPage)
@@ -291,21 +297,11 @@ function LegacySearch() {
             ) : null
           }
           ListEmptyComponent={
-            results.isLoading ? (
-              <View className="gap-4 px-1 pt-2">
-                {["a", "b", "c"].map((k) => (
-                  <EventCardSkeleton key={k} />
-                ))}
-              </View>
-            ) : (
+            resultsView.kind === "empty" ? (
               <EmptyState
                 icon="search-outline"
-                title={results.isError ? "Search failed" : "No matching events"}
-                description={
-                  results.isError
-                    ? "Pull to refresh or try a different search."
-                    : "Try a different term or clear your filters."
-                }
+                title="No matching events"
+                description="Try a different term or clear your filters."
                 actionLabel={
                   activeFilterCount > 0 ? "Clear filters" : undefined
                 }
@@ -315,6 +311,19 @@ function LegacySearch() {
                     : undefined
                 }
               />
+            ) : (
+              <QueryUnavailable
+                view={resultsView}
+                subject="these results"
+                onRetry={() => results.refetch()}
+                loading={
+                  <View className="gap-4 px-1 pt-2">
+                    {["a", "b", "c"].map((k) => (
+                      <EventCardSkeleton key={k} />
+                    ))}
+                  </View>
+                }
+              />
             )
           }
           ListFooterComponent={
@@ -322,7 +331,7 @@ function LegacySearch() {
               count={resultRows.length}
               isFetchingNextPage={results.isFetchingNextPage}
               hasNextPage={results.hasNextPage}
-              isError={results.isError}
+              isError={results.isFetchNextPageError}
               onRetry={() => results.fetchNextPage()}
             />
           }

@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   contentShareUrl,
   publisherLabel,
@@ -22,6 +23,8 @@ import { useStoryReply } from "@/features/content/useStoryReply";
 import { copyText } from "@/features/messaging/clipboardSupport";
 import { api } from "@/lib/api";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
+import { useIsOnline } from "@/lib/network";
+import { useQueryView } from "@/lib/useQueryView";
 
 import { CONTENT_REACTIONS } from "@abonten/core/content/reactions";
 import {
@@ -42,7 +45,7 @@ import {
   useReducedMotion,
   useToast,
 } from "@abonten/ui-native";
-import { useQueryClient } from "@tanstack/react-query";
+import { onlineManager, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
@@ -141,21 +144,31 @@ export function StoryViewer({
     if (entryIndex > 0) setEntryIndex(entryIndex - 1);
   }, [entryIndex]);
 
+  // A sequence opened before is on disk (story-sequence persist rule); one
+  // that isn't says so offline instead of "couldn't load".
+  const sequenceView = useQueryView(sequence);
+
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
-      {!entry || sequence.isLoading ? (
+      {!entry || sequenceView.kind === "loading" ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#fff" />
         </View>
-      ) : sequence.isError || !sequence.data ? (
-        <View className="flex-1 items-center justify-center gap-3 px-8">
-          <AppText className="text-center text-white">
-            Couldn't load these Stories.
-          </AppText>
+      ) : !sequence.data ||
+        sequenceView.kind === "offline" ||
+        sequenceView.kind === "error" ? (
+        <View className="flex-1 pb-16">
+          <QueryUnavailable
+            view={sequenceView}
+            subject="these Stories"
+            onRetry={() => sequence.refetch()}
+            onMedia
+          />
           <Pressable
             onPress={nextEntry}
             hitSlop={10}
             accessibilityRole="button"
+            className="items-center"
           >
             <AppText className="font-semibold text-white underline">
               Continue
@@ -299,6 +312,13 @@ function StorySlide({
   const isAuthor = story.viewer.isAuthor;
 
   const [loaded, setLoaded] = useState(false);
+  // The media can't load right now because the phone is offline (it was
+  // never watched here, so nothing is cached). Held on this slide with an
+  // honest notice, not skipped as if the Story were broken, and retried
+  // when the connection returns.
+  const [unavailable, setUnavailable] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const online = useIsOnline();
   const [holding, setHolding] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [replyFocused, setReplyFocused] = useState(false);
@@ -346,6 +366,17 @@ function StorySlide({
     chrome.value = withTiming(holding ? 0 : 1, { duration: 150 });
   }, [holding, chrome]);
 
+  const onMediaFailed = useCallback((skip: () => void) => {
+    if (!onlineManager.isOnline()) setUnavailable(true);
+    else skip();
+  }, []);
+  useEffect(() => {
+    if (online && unavailable) {
+      setUnavailable(false);
+      setAttempt((n) => n + 1);
+    }
+  }, [online, unavailable]);
+
   // Video: load, then follow its clock.
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the media identity
   useEffect(() => {
@@ -362,12 +393,12 @@ function StorySlide({
         p.addListener("statusChange", ({ status }) => {
           if (status === "readyToPlay") setLoaded(true);
           if (status === "error") {
-            if (preferred !== media.mediaUrl) {
+            if (preferred !== media.mediaUrl && onlineManager.isOnline()) {
               void p
-                .replaceAsync({ uri: media.mediaUrl })
-                .catch(() => onNext());
+                .replaceAsync({ uri: media.mediaUrl, useCaching: true })
+                .catch(() => onMediaFailed(onNext));
             } else {
-              onNext();
+              onMediaFailed(onNext);
             }
           }
         }),
@@ -394,7 +425,9 @@ function StorySlide({
     });
     (async () => {
       try {
-        await player.replaceAsync({ uri: preferred });
+        // Cached on disk as it plays, so a Story watched once replays
+        // offline for the rest of its lifetime.
+        await player.replaceAsync({ uri: preferred, useCaching: true });
         if (cancelled) return;
         runPlayer((p) => {
           // A cached source can already be ready, with no status change
@@ -403,7 +436,7 @@ function StorySlide({
           p.play();
         });
       } catch {
-        if (!cancelled) onNext();
+        if (!cancelled) onMediaFailed(onNext);
       }
     })();
     return () => {
@@ -417,7 +450,8 @@ function StorySlide({
     };
     // `player` too: if the hook hands back a new player (it can be released
     // and recreated), loading the old one played sound into no view.
-  }, [media?.id, player]);
+    // `attempt`: reloaded when the connection returns after a failure.
+  }, [media?.id, player, attempt]);
 
   useEffect(() => {
     if (!isVideo) return;
@@ -695,11 +729,13 @@ function StorySlide({
             />
           ) : media ? (
             <Image
+              key={attempt}
               source={{ uri: media.mediaUrl }}
               style={{ position: "absolute", width, height }}
               contentFit="contain"
-              onLoadEnd={() => setLoaded(true)}
-              onError={() => onNext()}
+              cachePolicy="memory-disk"
+              onLoad={() => setLoaded(true)}
+              onError={() => onMediaFailed(onNext)}
             />
           ) : null}
           {!loaded ? (
@@ -710,7 +746,20 @@ function StorySlide({
                 { alignItems: "center", justifyContent: "center" },
               ]}
             >
-              <ActivityIndicator color="#fff" />
+              {unavailable ? (
+                <View className="items-center gap-2 rounded-2xl bg-black/60 px-6 py-5">
+                  <Icon name="cloud-offline-outline" size={28} color="#fff" />
+                  <AppText className="text-center text-[15px] font-semibold text-white">
+                    You're offline
+                  </AppText>
+                  <AppText className="text-center text-[13px] text-white/75">
+                    This Story hasn't been saved on this phone. It will play
+                    when you're back online.
+                  </AppText>
+                </View>
+              ) : (
+                <ActivityIndicator color="#fff" />
+              )}
             </View>
           ) : null}
         </Animated.View>

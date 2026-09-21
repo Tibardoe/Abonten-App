@@ -1,6 +1,8 @@
 import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useOwnCampaigns, useOwnContent } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { CAMPAIGN_STATUS_LABEL, countLabel } from "@abonten/core/content/copy";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
@@ -127,6 +129,7 @@ function Posts({ kind }: { kind: ContentKind }) {
   const router = useRouter();
   const q = useOwnContent(kind);
   const posts = q.data?.pages.flatMap((p) => p.posts) ?? [];
+  const view = useQueryView(q, () => posts.length === 0);
 
   return (
     <FlatList
@@ -138,21 +141,18 @@ function Posts({ kind }: { kind: ContentKind }) {
         q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
       }
       ListEmptyComponent={
-        q.isLoading ? (
-          <Spinner />
-        ) : (
+        view.kind === "empty" ? (
           <EmptyState
-            icon={q.isError ? "cloud-offline-outline" : "videocam-outline"}
-            title={
-              q.isError
-                ? "Couldn't load your posts"
-                : kind === "story"
-                  ? "No Stories yet"
-                  : "No Spotlights yet"
-            }
-            description={q.isError ? "Pull down to try again." : undefined}
-            actionLabel={q.isError ? undefined : "Create"}
+            icon="videocam-outline"
+            title={kind === "story" ? "No Stories yet" : "No Spotlights yet"}
+            actionLabel="Create"
             onAction={() => router.push(`/(app)/spotlight/new?kind=${kind}`)}
+          />
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="your posts"
+            onRetry={() => q.refetch()}
           />
         )
       }
@@ -216,6 +216,7 @@ function Campaigns() {
   const router = useRouter();
   const q = useOwnCampaigns();
   const rows: ContentCampaign[] = q.data ?? [];
+  const view = useQueryView(q, () => rows.length === 0);
   return (
     <FlatList
       data={rows}
@@ -223,17 +224,17 @@ function Campaigns() {
       contentContainerClassName="pb-16"
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
-        q.isLoading ? (
-          <Spinner />
-        ) : (
+        view.kind === "empty" ? (
           <EmptyState
             icon="megaphone-outline"
-            title={q.isError ? "Couldn't load promotions" : "No promotions yet"}
-            description={
-              q.isError
-                ? "Pull down to try again."
-                : "Open a live Spotlight and choose Promote."
-            }
+            title="No promotions yet"
+            description="Open a live Spotlight and choose Promote."
+          />
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="your promotions"
+            onRetry={() => q.refetch()}
           />
         )
       }

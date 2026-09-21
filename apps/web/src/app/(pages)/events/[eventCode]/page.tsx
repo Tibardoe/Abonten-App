@@ -27,6 +27,7 @@ import { readEventAddress } from "@abonten/core/eventAddress";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { asWkbHex } from "@abonten/core/parseWKBHex";
+import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -238,13 +239,9 @@ export default async function page({
     return getEventReviews(eventId, { cursor });
   }
 
-  // Mutually exclusive at creation time (postEvent.ts either creates one
-  // "FREE" ticket_type or only paid ones, and updateEvent.ts never touches
-  // ticket_type afterwards) — so "every ticket_type is free" is a safe,
-  // permanent definition rather than just checking the cheapest one.
-  const isAbsolutelyFreeEvent =
-    event.ticket_type.length > 0 &&
-    event.ticket_type.every((t) => t.price === 0);
+  // Free registration = the FREE tier, the same test issue_free_ticket
+  // applies (@abonten/core/ticketTiers).
+  const isAbsolutelyFreeEvent = hasFreeRegistration(event.ticket_type);
 
   return (
     <div className="bg-background">

@@ -85,3 +85,17 @@ export function useIsOnline(): boolean {
 export function offlineStartedAt(): number | null {
   return offlineSince;
 }
+
+/**
+ * True when the current connection is metered (mobile data, a hotspot) —
+ * speculative downloads (prefetching screens the person may never open)
+ * are skipped then. Unknown counts as metered.
+ */
+export async function isConnectionExpensive(): Promise<boolean> {
+  try {
+    const state = await NetInfo.fetch();
+    return state.details?.isConnectionExpensive !== false;
+  } catch {
+    return true;
+  }
+}

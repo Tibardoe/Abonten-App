@@ -5,6 +5,7 @@ import {
   setSpotlightMuted,
   useSpotlightMuted,
 } from "@/features/content/playback/spotlightSound";
+import { takeSpotlightFocus } from "@/features/content/publishedSpotlight";
 import { useCoarseLocation } from "@/features/content/useCoarseLocation";
 import {
   contentFeedKey,
@@ -131,6 +132,8 @@ export default function SpotlightFeedScreen() {
 
   const [height, setHeight] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  // A page's own gesture (scrub, hold-for-speed) owns the finger.
+  const [gestureLocked, setGestureLocked] = useState(false);
   const muted = useSpotlightMuted();
 
   // ── Which page is active ──────────────────────────────────────────
@@ -259,6 +262,22 @@ export default function SpotlightFeedScreen() {
     else if (feed.isFetchNextPageError) void feed.fetchNextPage();
   }, [online, feedEnabled, feed, items.length]);
 
+  // Just published a Spotlight (publishedSpotlight.ts put it at the top of
+  // this feed): open on it, the way the big apps show you your own post.
+  useEffect(() => {
+    if (!isFocused || height === 0) return;
+    const focusId = takeSpotlightFocus();
+    if (!focusId) return;
+    const index = ids.indexOf(focusId);
+    if (index < 0) return;
+    setActiveId(focusId);
+    lastIndex.current = index;
+    listRef.current?.scrollToOffset({
+      offset: index * height,
+      animated: false,
+    });
+  }, [isFocused, height, ids]);
+
   const onCommentsOpenChange = useCallback(
     (open: boolean) => setCommentsOpen(open),
     [],
@@ -384,9 +403,10 @@ export default function SpotlightFeedScreen() {
         surface={surface}
         onHide={onHide}
         topInset={topInset}
-        bottomInset={16}
+        bottomInset={22}
         bottomObstruction={bottomObstruction}
         onCommentsOpenChange={onCommentsOpenChange}
+        onGestureLockChange={setGestureLocked}
       />
     ),
     [
@@ -422,7 +442,7 @@ export default function SpotlightFeedScreen() {
           keyExtractor={(i) => i.post.id}
           renderItem={renderItem}
           extraData={activeIndex}
-          scrollEnabled={!commentsOpen}
+          scrollEnabled={!commentsOpen && !gestureLocked}
           // The comments composer lives inside a page: without this the
           // first tap on Send only closes the keyboard.
           keyboardShouldPersistTaps="handled"

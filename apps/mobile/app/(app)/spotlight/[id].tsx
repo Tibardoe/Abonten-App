@@ -1,4 +1,5 @@
 import { MediaStatusBar } from "@/components/app/MediaStatusBar";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { SpotlightCard } from "@/components/content/SpotlightCard";
 import {
   setSpotlightMuted,
@@ -7,7 +8,7 @@ import {
 import { useContentPost } from "@/features/content/useContent";
 import { flushContentViews } from "@/features/content/useContentTelemetry";
 import { useVolumeKeys } from "@/features/content/useVolumeKeys";
-import { useIsOnline } from "@/lib/network";
+import { useQueryView } from "@/lib/useQueryView";
 import { AppText, Button, Icon } from "@abonten/ui-native";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -23,7 +24,6 @@ export default function SpotlightPostScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
-  const online = useIsOnline();
   const query = useContentPost(id);
   const [height, setHeight] = useState(0);
   const muted = useSpotlightMuted();
@@ -42,7 +42,10 @@ export default function SpotlightPostScreen() {
       ? router.back()
       : router.replace("/(app)/(tabs)/spotlight");
 
-  const loading = !post && (query.isLoading || query.isFetching);
+  // No answer yet: loading, offline or a failed request (useQueryView). An
+  // answer without a post (404, removed) is the "isn't available" state.
+  const view = useQueryView(query);
+  const unanswered = !res && view.kind !== "content";
 
   return (
     <View
@@ -50,29 +53,30 @@ export default function SpotlightPostScreen() {
       onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
     >
       <MediaStatusBar />
-      {loading ? (
+      {unanswered && view.kind === "loading" ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#fff" />
         </View>
+      ) : unanswered ? (
+        <QueryUnavailable
+          view={view}
+          subject="this Spotlight"
+          onRetry={() => query.refetch()}
+          onMedia
+        />
       ) : !post || post.kind !== "spotlight" ? (
         <View className="flex-1 items-center justify-center gap-3 px-8">
           <AppText className="text-center text-[18px] font-semibold text-white">
-            {!online && !res
-              ? "You're offline"
-              : "This Spotlight isn't available"}
+            This Spotlight isn't available
           </AppText>
           <AppText className="text-center text-white/70">
-            {!online && !res
-              ? "It will open when you're back online."
-              : (res && "message" in res && res.message) ||
-                "It may have been removed."}
+            {(res && "message" in res && res.message) ||
+              "It may have been removed."}
           </AppText>
-          {online || res ? (
-            <Button
-              title="More Spotlights"
-              onPress={() => router.replace("/(app)/(tabs)/spotlight")}
-            />
-          ) : null}
+          <Button
+            title="More Spotlights"
+            onPress={() => router.replace("/(app)/(tabs)/spotlight")}
+          />
         </View>
       ) : height > 0 ? (
         <SpotlightCard
@@ -83,7 +87,7 @@ export default function SpotlightPostScreen() {
           surface="deep_link"
           onHide={back}
           topInset={insets.top + 48}
-          bottomInset={insets.bottom + 16}
+          bottomInset={insets.bottom + 22}
         />
       ) : null}
 

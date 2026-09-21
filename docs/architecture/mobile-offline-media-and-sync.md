@@ -2,10 +2,10 @@
 title: Mobile offline cache, Spotlight playback, live comments, search relevance and follower counts
 purpose: How the mobile app keeps previously loaded data across restarts and offline, how Spotlight video players are created, owned and torn down, how comments and likes stay in step across screens and devices, how search widens a query with related terms and dates, and how follower counts are maintained.
 audience: Engineering, QA, security reviewers
-scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the Spotlight feed and SpotlightVideo, commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
+scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail CTAs (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-19
+version: 1.2
+lastReviewed: 2026-09-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -14,8 +14,11 @@ complianceReviewRequired: no
 
 # Mobile offline cache, Spotlight playback, live comments, search relevance and follower counts
 
-This document covers the 2026-09-19 mobile overhaul. Each section states the
-rule the code follows, why, and where it lives. PROJECT.md §36 is the summary.
+This document covers the 2026-09-19 mobile overhaul and the 2026-09-21
+follow-up (screen-state contract, messages and Stories offline, detail
+prefetching, Spotlight playback controls, navigation theming, sticky detail
+CTAs). Each section states the rule the code follows, why, and where it
+lives. PROJECT.md §36 is the summary.
 
 ## 1. Offline-first query cache
 
@@ -32,11 +35,33 @@ function in `@abonten/core/query/persistPolicy` (unit tested).
 | Spotlight feed (first page per surface), opened posts, grids, saved | The feed opens at once |
 | Feature switches (content, discovery, rewards, verification, weekly) | Every programme hook fails closed; without these an offline start hides Spotlight, Search features and Rewards |
 | Notifications (first page), active promotions | Account screens offline |
+| Event/place secondary sections: ratings, first page of reviews, a place's upcoming events | A saved detail screen reads the same offline as online |
+| Story sequences (20) | What a Story ring opens; expiry is re-checked when it is shown, so a saved sequence never replays an ended Story |
+| The inbox's unfiltered views (first page), the latest page of the 15 most recent threads, their headers and the unread count | Messages opens offline to what was there, the way a messaging app is expected to |
 
 **Never written:** tickets and QR codes, payments, wallet, transactions,
-payouts and organizer finance, verification cases, messages (messaging keeps
-its own failed-send outbox), comments (live), search results, checkout
-sessions and quotes.
+payouts and organizer finance, verification cases, comments (live), search
+results, signed attachment links (they expire), checkout sessions and quotes.
+Messages were on this list until 2026-09-21: the inbox now persists, capped
+as above, because offline it said "No conversations yet" — the failure this
+document's §8 exists to prevent. The file is per account, in the OS cache
+directory, and is deleted on sign-out, so nothing of one person's inbox can
+reach the next.
+
+**A failed refresh never drops good data.** A query whose latest refresh
+failed still holds its last good data (React Query marks it `error`); it is
+written to disk as the success it last was, so the cold start after an outage
+still has it. Only queries with no data are skipped.
+
+**An error is never written.** The typed /api/mobile client returns HTTP
+failures as data (`{ status, message }`), so React Query records them as
+successes. `selectPersistedQueries` skips any value that is an error envelope
+(or infinite data holding one), and the query hooks whose answer a screen
+depends on throw on a TRANSIENT failure (401, 408, 429, 5xx —
+`apps/mobile/src/lib/envelope.ts`) so the last good data survives and the
+retry/refetch-on-reconnect machinery runs. A definite answer (403, 404, 410)
+is still returned as data, because the screen has something true to say
+about it.
 
 **Where.** One JSON file per account (`rq-cache-<user id>.json`, or `anon`)
 in the OS cache directory: excluded from device backups, may be purged by the
@@ -264,3 +289,176 @@ once on a network error, showed "Not posted yet… Try again", and succeeded
 on retry. The optimised copy was built (9.1 MB → 0.93 MB), the status went
 from `pending` to `ready` on read, and the post played. Both assets were
 deleted afterwards. Device (Android emulator, local stack): see PROJECT.md §36.
+
+## 8. What a screen shows: one state contract
+
+React Query exposes several independent flags (`status`, `fetchStatus`,
+`data`, `isRestoring`) and the app adds its own online state. Screens that
+branched on one or two of them conflated states that mean very different
+things to a person. Two real failures: Messages said **"No conversations
+yet"** when the inbox simply was not on the phone yet, and an event opened
+offline showed a bare **"could not be loaded / Retry"**.
+
+`resolveQueryView` (`@abonten/core/query/queryView`, unit tested) is the one
+decision, and `useQueryView` (`apps/mobile/src/lib/useQueryView.ts`) feeds it
+the query, the restore state and connectivity. It returns one of:
+
+| Kind | Meaning | What the screen draws |
+| --- | --- | --- |
+| `content` | Data is in the cache (restored, fetched or seeded) | The content — plus `refreshing` / `refreshFailed` flags; an error never replaces it |
+| `empty` | The server actually answered with nothing | The feature's own empty state ("No conversations yet") |
+| `loading` | The saved cache is still being read, or a request is in flight | The screen's skeleton |
+| `offline` | Nothing cached and no request can be made (paused retry, or a failed attempt while offline) | "You're offline — this hasn't been saved on this phone yet. It will load when you're back online." No Retry button: the reconnect refetches by itself |
+| `error` | A request was made, while online, and failed | "Couldn't load … / Retry" |
+
+`QueryUnavailable` (`components/app/QueryUnavailable.tsx`) renders the last
+three, including an on-media variant for Stories and Spotlight. Screens keep
+their own empty state, because only they know what "nothing" means.
+
+Applied to: Explore (events/places), explore by type, nearby places, event and
+place detail, Messages inbox and thread, Stories (sequence and each slide),
+a shared Spotlight, notifications, tickets, bookings, Your Spotlights and
+promotions. A value that is an error envelope counts as a failed request, not
+as data.
+
+## 9. Having the data before the tap
+
+Waiting until a screen mounts to fetch what the previous screen already
+implied is the difference between "instant" and "a spinner". The rules are
+deliberately narrow — prefetching everything costs data, memory and battery:
+
+- **Cards fetch their detail on touch-down.** `EventCard` / `PlaceCard` call
+  `prefetchEventDetail` / `prefetchPlaceDetail` in `onPressIn`, ~100 ms
+  before the press lands. A cached, fresh detail is not re-fetched.
+- **The top of a list is warmed.** `useWarmDetails` loads the detail of the
+  first six cards (featured + the start of the list) — only while online,
+  only on an **unmetered** connection (NetInfo `isConnectionExpensive`), and
+  only once per set of ids. Because details are persisted, those screens then
+  open offline after a restart too.
+- **Story rings are warmed.** The tray prefetches the sequences of up to four
+  unseen publishers (`prefetchStorySequence`), which is what a tap opens.
+- **A post opened from a feed, grid or Story starts from that copy.**
+  `useContentPost` seeds itself with the cached document and the time it was
+  fetched (`readCachedPostWithTime`), so it renders at once and still
+  refreshes on age.
+- **Detail heroes reuse the card image.** The detail screens pass the
+  card-size Cloudinary URL as the `placeholder` of the large one: it is
+  already on disk, so the hero is never an empty box — including offline.
+
+Not prefetched, on purpose: anything with a cost or a truth requirement —
+checkout, payments, tickets, organizer finance, verification — and the rest
+of any list beyond the first screenful.
+
+## 10. Spotlight playback controls
+
+The feed's media lifecycle (one player per page, ordered teardown, capped
+buffers) is §2 and unchanged. On top of it:
+
+- **Timeline and loading light** (`SpotlightTimeline.tsx`). One line along the
+  foot of the video: playback progress, animated on the UI thread from the
+  player's clock (`SpotlightPlayback` — two shared values and a seek, filled
+  in only by the ACTIVE page's player). While `expo-video` reports it is
+  waiting on data (first load or a rebuffer — the player's own status, not a
+  timer), a light sweeps along the line after a 350 ms grace, so a quick
+  refill never flashes. It never blocks a control.
+- **Scrubbing.** Drag the line (or tap a point) to seek. It thickens, a thumb
+  and `0:07 / 0:13` appear, the chrome fades, the video pauses on the frame
+  under the finger and resumes from there. Seeks are throttled to ~80 ms.
+  Gesture priority: the pan activates only on a horizontal move and fails on
+  a vertical one, so a swipe that starts on the line still pages the feed;
+  once it activates the card locks the feed's scrolling
+  (`onGestureLockChange`). Clips shorter than half a second, or without a
+  known duration, cannot be scrubbed (`scrubTarget` returns null). The strip
+  runs edge to edge, and with Android gesture navigation a touch that starts
+  near either screen edge belongs to the system Back gesture — so the strip
+  is a `SystemGestureExclusionView` (local module
+  `apps/mobile/modules/system-gesture-exclusion`, Android only,
+  `View.setSystemGestureExclusionRects`): Android leaves exactly that thin
+  band to the app. It is a plain `View` on iOS and in binaries built before
+  the module existed; it needs a native build. The app's own drawer also
+  watches that edge (`AppDrawer`'s 22 dp catcher above every tab root): the
+  strip claims its rows of the window while it is on screen
+  (`claimDrawerEdge` in `components/app/drawerGesture.ts`) and the drawer
+  draws its catcher in segments that leave a gap over a claimed band —
+  a gap, not a declined touch, because gesture-handler stops looking for
+  handlers at the topmost view under the finger. On the strip a drag
+  scrubs; anywhere else on the edge the drawer opens as before.
+- **Speed.** The options sheet offers 0.5× / 0.75× / 1× / 1.25× / 1.5× / 2×.
+  The choice is app-wide for the session (`spotlightSpeed.ts`) — not stored on
+  disk, because a feed still running at 1.5× the next morning reads as a
+  fault. `preservesPitch` is on.
+- **Press and hold** plays at 2× until the finger lifts (`holdRate` never
+  slows a faster choice), with a `2× speed` pill. It is a native LongPress
+  run exclusively with the tap, so a tap still pauses and a hold never also
+  toggles pause; the feed is locked while held. Long-press no longer opens
+  the options sheet — the "…" button does.
+- **Comments are a sheet.** Everything above the panel (the compact video and
+  the black around it) is its backdrop; a tap anywhere there closes it and
+  the video returns to full screen. Drag-down dismissal is unchanged.
+
+## 11. Publishing a Spotlight appears at once
+
+The feed is never refetched behind the viewer (§2), which is why a new post
+used to appear only after a manual refresh. `showPublishedSpotlight`
+(`features/content/publishedSpotlight.ts`) writes the document the create
+call returned into the cached For You feed — first, exactly once
+(`prependOwnPost` in `@abonten/core/content/feedMerge`, unit tested) — and
+records a one-shot focus request that the Spotlight screen consumes when it
+is next focused, scrolling to the new post. Nothing is faked: it runs only
+after the server confirmed the post, only for a published Spotlight, and a
+draft never enters a feed. A failed publish leaves the cache untouched and
+the composer shows "Try again" (the upload is idempotent by request id).
+
+## 12. Navigation surfaces are themed
+
+React Navigation paints native surfaces from **its own theme**, not from
+anything a screen styles: on iOS the native stack's `UINavigationController`
+view (`nativeContainerStyle` in expo-router's `NativeStackView`), every
+screen's default content background, the tab container, headers and cards.
+The app never provided a theme, so those surfaces used `DefaultTheme` —
+whose background is `rgb(242, 242, 242)` in **both** app themes. An
+interrupted or reversed iOS swipe-back moves the top screen past its resting
+position and exposes that container beside the screen, dimmed by UIKit's
+transition shade: it reads as a white panel in dark mode and a washed one in
+light mode. No screen style could reach it.
+
+`useNavigationTheme` (`apps/mobile/src/lib/navigationTheme.ts`) builds a
+React Navigation theme from the app's own tokens and the root wraps the
+navigator in its `ThemeProvider`, so every navigator — present and future —
+paints those surfaces with the app's colours. Colours are converted to
+`rgb()` (`toRgb` in `@abonten/ui-native/theme`) because React Navigation runs
+theme colours through the `color` library, which cannot read the tokens'
+space-separated `hsl(H S% L%)` form. The three layers under the UI are now
+all themed: the native root (expo-system-ui), the RN root view, and the
+navigation theme.
+
+**The launch URL and the first commit.** expo-router's forked
+`useLinking.native.js` used to record the launch URL as the "last unhandled
+link" with a React state update from inside the initial-URL promise. On
+Android that URL is always a promise, and it can resolve before the
+`NavigationContainer` has committed — React's dev-only "state update on a
+component that hasn't mounted yet" at boot. Nothing in expo-router reads
+that state and upstream react-navigation has removed the code, so
+`patches/expo-router+57.0.22.patch` (patch-package, run by the root
+`postinstall`) removes it here too. Do not reintroduce a delay in
+`+native-intent.ts` to work around it; the patch is the fix, and it must be
+regenerated when expo-router is upgraded.
+
+## 13. Sticky ticket and booking CTAs
+
+The primary action on an event or place no longer sits mid-page. Both detail
+screens end with a `BottomBar` (the shared sticky footer: safe-area padding
+that collapses under a keyboard) holding a price/status summary and one
+button. What that button is comes from `resolveEventCta`
+(`@abonten/core/eventCta`, unit tested): buy, reserve, "View my ticket" for a
+ticket already held (still reachable after sales close — that is when it is
+needed), or a disabled label saying why nothing can be bought (canceled,
+ended, in progress, sold out, none set up). "Free" means the `FREE` tier
+exists (`hasFreeRegistration` in `@abonten/core/ticketTiers`) — the same
+test `issue_free_ticket` applies — never "every tier costs 0"; a paid tier
+at price 0, or named FREE, is refused when an event is created or its
+tiers edited (`paidTierProblem`, on the server and in the mobile wizards). The free-RSVP flow
+(`useFreeRsvpFlow`) is shared state, so the date chips in the Tickets section
+and the sticky button are the same action; the in-page duplicate button is
+gone. A place shows "Book" (or "Sign in to book", which returns to the place
+after signing in) to anyone but its owner.

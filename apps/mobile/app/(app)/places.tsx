@@ -1,8 +1,10 @@
 import { PlaceCard } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { PlaceListSkeleton } from "@/components/skeletons";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
+import { useQueryView } from "@/lib/useQueryView";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
   Button,
@@ -21,6 +23,7 @@ export default function Places() {
   const q = useNearbyPlaces(location);
 
   const places: PlaceType[] = q.data?.pages.flatMap((p) => p.rows) ?? [];
+  const view = useQueryView(q, () => places.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
@@ -67,13 +70,19 @@ export default function Places() {
         onEndReachedThreshold={0.5}
         refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
-          <EmptyState
-            icon="location-outline"
-            title={q.isError ? "Couldn't load places" : "No places nearby"}
-            description={
-              q.isError ? "Pull down to try again." : "Check back soon."
-            }
-          />
+          view.kind === "empty" ? (
+            <EmptyState
+              icon="location-outline"
+              title="No places nearby"
+              description="Check back soon."
+            />
+          ) : (
+            <QueryUnavailable
+              view={view}
+              subject="places nearby"
+              onRetry={() => q.refetch()}
+            />
+          )
         }
         ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
       />

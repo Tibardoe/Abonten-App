@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { ImageViewer } from "@/components/ImageViewer";
 import { ReportSheet } from "@/components/ReportSheet";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { AnchoredMenu } from "@/components/messaging/AnchoredMenu";
 import { ChatToast } from "@/components/messaging/ChatToast";
 import { Composer } from "@/components/messaging/Composer";
@@ -41,6 +42,7 @@ import {
   useToggleReaction,
 } from "@/features/messaging/useMessagingActions";
 import { hapticSelection } from "@/lib/haptics";
+import { useQueryView } from "@/lib/useQueryView";
 import { isUuid } from "@/lib/uuid";
 import type { MessageRow } from "@abonten/api-client";
 import {
@@ -123,10 +125,16 @@ export default function ConversationScreen() {
     [serverMessages, outbox, myId],
   );
 
-  // No cached pages AND not yet errored -> genuine first load. A return
-  // visit has `messagesQ.data` from the (now long-lived) query cache, so the
-  // thread renders instantly and only a quiet background refetch runs.
-  const noThreadYet = messagesQ.data === undefined && !messagesQ.isError;
+  // A return visit — or a recent thread restored from the last session —
+  // has `messagesQ.data`, so the thread renders instantly and only a quiet
+  // background refetch runs. With nothing cached, useQueryView separates a
+  // real first load from "offline, not on this phone" (which used to spin
+  // forever: a paused query is neither loading-with-data nor an error).
+  const threadView = useQueryView(messagesQ, () => serverMessages.length === 0);
+  const noThreadYet = threadView.kind === "loading" && entries.length === 0;
+  const threadMissing =
+    (threadView.kind === "offline" || threadView.kind === "error") &&
+    entries.length === 0;
 
   // Once the server thread contains a client-generated id, the matching
   // optimistic row has done its job — drop it from the outbox so a long
@@ -492,40 +500,33 @@ export default function ConversationScreen() {
                 ) : null
               }
               ListEmptyComponent={
-                <View className="flex-1 items-center gap-3 px-8 pt-16">
-                  <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
-                    <Icon
-                      name={
-                        messagesQ.isError
-                          ? "cloud-offline-outline"
-                          : "chatbubbles-outline"
-                      }
-                      size={26}
-                      tone="primary"
-                    />
-                  </View>
-                  <AppText variant="bodyStrong" className="text-center">
-                    {messagesQ.isError
-                      ? "Couldn't load messages"
-                      : "Start the conversation"}
-                  </AppText>
-                  <AppText variant="muted" className="text-center">
-                    {messagesQ.isError
-                      ? "Check your connection and try again."
-                      : context?.subject.event
+                threadMissing ? (
+                  <QueryUnavailable
+                    view={threadView}
+                    subject="this conversation"
+                    onRetry={() => messagesQ.refetch()}
+                  />
+                ) : (
+                  <View className="flex-1 items-center gap-3 px-8 pt-16">
+                    <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
+                      <Icon
+                        name="chatbubbles-outline"
+                        size={26}
+                        tone="primary"
+                      />
+                    </View>
+                    <AppText variant="bodyStrong" className="text-center">
+                      Start the conversation
+                    </AppText>
+                    <AppText variant="muted" className="text-center">
+                      {context?.subject.event
                         ? `Ask about ${context.subject.event.title} — tickets, timing, anything.`
                         : context?.subject.place
                           ? `Ask ${context.subject.place.name} about a visit, a booking or their services.`
                           : "Say hello — your messages stay in the app."}
-                  </AppText>
-                  {messagesQ.isError ? (
-                    <Button
-                      title="Retry"
-                      variant="outline"
-                      onPress={() => messagesQ.refetch()}
-                    />
-                  ) : null}
-                </View>
+                    </AppText>
+                  </View>
+                )
               }
               renderItem={renderEntry}
             />

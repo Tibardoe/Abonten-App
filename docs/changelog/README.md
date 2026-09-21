@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-19
+lastReviewed: 2026-09-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,15 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-21 — Mobile navigation theme, offline state contract, Spotlight controls
+
+- `docs/architecture/mobile-offline-media-and-sync.md` 1.2: new §8 screen-state contract (`resolveQueryView` / `useQueryView` / `QueryUnavailable`), §9 prefetching rules, §10 Spotlight timeline, scrubbing and speed, §11 publish-to-feed, §12 navigation theming, §13 sticky detail CTAs; §1 updated for the messages/Stories/detail-extras persist rules and the "an error is never written" guard.
+- PROJECT.md §40; CLAUDE.md §36 note corrected (messages are persisted now, capped and per account).
+- `AppText` (ui-native): a caller's text colour class now replaces the tone colour — fixes near-white-on-white text on light chips in dark mode (PROJECT.md §40.10).
+- Verification pass: persister keeps data whose refresh failed; list footers use next-page errors; offline-without-cache resolves at once; Stories offline notice layout (PROJECT.md §40.11).
+- Behaviour: mobile screens tell offline, empty, loading and failed apart; the inbox, recent threads and Story sequences survive a restart; Spotlight gained a timeline with scrubbing, playback speed and press-and-hold 2×, comment-sheet backdrop dismissal, and a published Spotlight appears in the feed at once; event and place detail have sticky Buy / Reserve / Book bars. No env var, table, policy, job or permission changed.
+- Follow-up (PROJECT.md §40.12): "free event" = the `FREE` tier (`@abonten/core/ticketTiers`), and a paid tier at price 0 or named FREE is refused on create/edit; expo-router patched (`patches/expo-router+57.0.22.patch`, new root devDependency `patch-package` + `postinstall`) to stop recording the launch URL with a state update before the navigation container mounts, replacing a `setTimeout(0)` in `+native-intent.ts`; new Android local module `apps/mobile/modules/system-gesture-exclusion` so the Spotlight scrubber can be dragged from the screen edge (needs a native build), and the drawer's edge swipe yields to the scrubber there (the strip claims its rows of the edge, `drawerGesture.ts`); the Spotlight "You're offline / Couldn't play this video" notice is now drawn above the poster instead of under it.
 
 ## 2026-09-19 — Expo SDK and mobile dependency migration (audit 06)
 

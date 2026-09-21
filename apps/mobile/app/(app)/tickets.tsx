@@ -1,5 +1,6 @@
 import { TicketCard } from "@/components/TicketCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { PendingCheckoutsSection } from "@/components/checkout/PendingCheckoutsSection";
 import { EventsToReviewList } from "@/components/reviews/EventsToReviewList";
 import { ReviewedEventsList } from "@/components/reviews/ReviewedEventsList";
@@ -8,6 +9,7 @@ import {
   type TicketFilter,
   useMyTickets,
 } from "@/features/tickets/useMyTickets";
+import { useQueryView } from "@/lib/useQueryView";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import {
   EmptyState,
@@ -63,7 +65,9 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
-  if (q.isLoading) return <TicketListSkeleton />;
+  const view = useQueryView(q, () => tickets.length === 0);
+
+  if (view.kind === "loading") return <TicketListSkeleton />;
 
   return (
     <FlatList
@@ -80,15 +84,21 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
       onEndReachedThreshold={0.5}
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
-        <EmptyState
-          icon={q.isError ? "cloud-offline-outline" : "receipt-outline"}
-          title={q.isError ? "Couldn't load tickets" : EMPTY_COPY[tab].title}
-          description={
-            q.isError ? "Pull down to try again." : EMPTY_COPY[tab].description
-          }
-          actionLabel={q.isError ? "Retry" : undefined}
-          onAction={q.isError ? () => q.refetch() : undefined}
-        />
+        view.kind === "empty" ? (
+          <EmptyState
+            icon="receipt-outline"
+            title={EMPTY_COPY[tab].title}
+            description={EMPTY_COPY[tab].description}
+          />
+        ) : (
+          // Tickets are never written to disk (they carry a QR code and
+          // money), so offline this is honest about why they aren't here.
+          <QueryUnavailable
+            view={view}
+            subject="your tickets"
+            onRetry={() => q.refetch()}
+          />
+        )
       }
       ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
     />

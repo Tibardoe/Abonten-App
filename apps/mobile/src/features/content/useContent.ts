@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { ACTIVE_PROMOTIONS_KEY } from "@/features/promotions/useActivePromotions";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   ContentFeedItem,
   ContentFeedPage,
@@ -13,6 +14,7 @@ import type {
 import { useToast } from "@abonten/ui-native";
 import {
   type InfiniteData,
+  type QueryClient,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -20,6 +22,7 @@ import {
 } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { patchProfileFollow } from "../profile/usePublicProfile";
+import { readCachedPostWithTime } from "./postCacheSync";
 import { CONTENT_KEY } from "./useContentProgram";
 import { getContentViewerKey } from "./useContentTelemetry";
 
@@ -152,10 +155,27 @@ export function flattenFeed(
 
 export function useContentPost(postId: string | undefined) {
   const { session } = useSession();
+  const qc = useQueryClient();
   return useQuery({
     queryKey: [...CONTENT_KEY, "post", session?.user.id ?? null, postId],
     enabled: !!postId,
-    queryFn: () => api.content.post(postId as string),
+    // Opened from a feed, grid or Story that already holds this post: start
+    // from that copy (dated by when it was fetched, so it is refreshed in the
+    // background like any cached data) instead of a spinner.
+    initialData: () => {
+      const cached = postId ? readCachedPostWithTime(qc, postId) : null;
+      return cached
+        ? ({ status: 200, data: { post: cached.post } } as Awaited<
+            ReturnType<typeof api.content.post>
+          >)
+        : undefined;
+    },
+    initialDataUpdatedAt: () =>
+      postId ? readCachedPostWithTime(qc, postId)?.updatedAt : undefined,
+    // 404/410 are answers the screens render (an ended Story); a transient
+    // failure keeps the post already on screen.
+    queryFn: async () =>
+      settleEnvelope(await api.content.post(postId as string)),
   });
 }
 
@@ -268,29 +288,65 @@ export function useStoryTray(enabled: boolean) {
   });
 }
 
+function storySequenceKey(
+  userId: string | null,
+  publisherKind: ContentPublisherKind | undefined,
+  publisherId: string | undefined,
+) {
+  return [
+    ...CONTENT_KEY,
+    "stories",
+    "sequence",
+    userId,
+    publisherKind,
+    publisherId,
+  ];
+}
+
+async function fetchStorySequence(
+  publisherKind: ContentPublisherKind,
+  publisherId: string,
+) {
+  return unwrap(await api.content.storySequence(publisherKind, publisherId));
+}
+
 export function useStorySequence(
   publisherKind: ContentPublisherKind | undefined,
   publisherId: string | undefined,
 ) {
   const { session } = useSession();
   return useQuery({
-    queryKey: [
-      ...CONTENT_KEY,
-      "stories",
-      "sequence",
+    queryKey: storySequenceKey(
       session?.user.id ?? null,
       publisherKind,
       publisherId,
-    ],
+    ),
     enabled: !!publisherKind && !!publisherId,
-    queryFn: async () =>
-      unwrap(
-        await api.content.storySequence(
-          publisherKind as ContentPublisherKind,
-          publisherId as string,
-        ),
+    queryFn: () =>
+      fetchStorySequence(
+        publisherKind as ContentPublisherKind,
+        publisherId as string,
       ),
     staleTime: 30_000,
+  });
+}
+
+/**
+ * Load a Story ring's sequence before it is opened (the tray's unseen rings,
+ * a ring being pressed), so the viewer starts on the first Story instead of
+ * a spinner and the sequence is saved for offline. The sequence is a small
+ * document; the media itself loads as each Story plays.
+ */
+export function prefetchStorySequence(
+  qc: QueryClient,
+  userId: string | null,
+  publisherKind: ContentPublisherKind,
+  publisherId: string,
+): void {
+  void qc.prefetchQuery({
+    queryKey: storySequenceKey(userId, publisherKind, publisherId),
+    queryFn: () => fetchStorySequence(publisherKind, publisherId),
+    staleTime: 60_000,
   });
 }
 

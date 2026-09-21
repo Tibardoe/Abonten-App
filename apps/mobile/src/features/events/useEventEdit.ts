@@ -14,6 +14,7 @@ import {
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { paidTierProblem } from "@abonten/core/ticketTiers";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import { useQuery } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
@@ -481,6 +482,11 @@ export function useEventEdit(eventId: string) {
         description:
           "Each ticket type needs a name, a price and a valid quantity.",
       });
+      return null;
+    }
+    const tierProblem = parsed.map(paidTierProblem).find(Boolean);
+    if (tierProblem) {
+      toast.error("Check the ticket types", { description: tierProblem });
       return null;
     }
     return updateTickets.mutateAsync({

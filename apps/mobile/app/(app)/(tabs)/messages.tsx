@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { StoriesRow } from "@/components/content/StoriesRow";
 import { AddFilterSheet } from "@/components/messaging/AddFilterSheet";
 import { ArchivedEntryRow } from "@/components/messaging/ArchivedEntryRow";
@@ -24,6 +25,7 @@ import {
   useMarkConversationUnread,
   useSetConversationState,
 } from "@/features/messaging/useMessagingActions";
+import { useQueryView } from "@/lib/useQueryView";
 import type { ConversationListItem } from "@abonten/api-client";
 import {
   AppText,
@@ -82,6 +84,9 @@ export default function Messages() {
   // thrown error), so React Query's `isError` stays false for a 401/500 —
   // fold the envelope status in so the "couldn't load / retry" UI still shows.
   const isError = q.isError || hasConversationsPageError(q.data?.pages);
+  // Loading / offline / failed vs a genuinely empty inbox: an inbox that
+  // just isn't on this phone yet is never called "No conversations yet".
+  const view = useQueryView(q, () => rows.length === 0);
 
   const setState = useSetConversationState();
   const markRead = useMarkConversationRead();
@@ -225,53 +230,46 @@ export default function Messages() {
         keyboardShouldPersistTaps="handled"
         refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
-          q.isLoading ? (
-            <ConversationListSkeleton />
-          ) : (
+          view.kind === "empty" ? (
             <EmptyState
-              icon={
-                isError
-                  ? "cloud-offline-outline"
-                  : searching
-                    ? "search-outline"
-                    : "chatbubbles-outline"
-              }
+              icon={searching ? "search-outline" : "chatbubbles-outline"}
               title={
-                isError
-                  ? "Couldn't load messages"
-                  : searching
-                    ? "No conversations found"
-                    : roleScope === "business"
-                      ? "No organizer conversations yet"
-                      : filtered
-                        ? "Nothing matches these filters"
-                        : "No conversations yet"
+                searching
+                  ? "No conversations found"
+                  : roleScope === "business"
+                    ? "No organizer conversations yet"
+                    : filtered
+                      ? "Nothing matches these filters"
+                      : "No conversations yet"
               }
               description={
-                isError
-                  ? "Pull down to try again."
-                  : searching
-                    ? "Try another name, event, or place."
-                    : roleScope === "business"
-                      ? "When people reach out about your events or places, you'll find them here."
-                      : filtered
-                        ? "Remove a filter to see more."
-                        : "Chat with an organizer or place when you have a question about an event, venue, or experience."
+                searching
+                  ? "Try another name, event, or place."
+                  : roleScope === "business"
+                    ? "When people reach out about your events or places, you'll find them here."
+                    : filtered
+                      ? "Remove a filter to see more."
+                      : "Chat with an organizer or place when you have a question about an event, venue, or experience."
               }
               actionLabel={
-                isError
-                  ? "Retry"
-                  : !searching && !filtered && roleScope !== "business"
-                    ? "Explore events"
-                    : undefined
+                !searching && !filtered && roleScope !== "business"
+                  ? "Explore events"
+                  : undefined
               }
               onAction={
-                isError
-                  ? () => q.refetch()
-                  : !searching && !filtered && roleScope !== "business"
-                    ? () => router.push("/(app)/(tabs)")
-                    : undefined
+                !searching && !filtered && roleScope !== "business"
+                  ? () => router.push("/(app)/(tabs)")
+                  : undefined
               }
+            />
+          ) : (
+            <QueryUnavailable
+              view={view}
+              subject={
+                searching || filtered ? "these conversations" : "your messages"
+              }
+              onRetry={() => q.refetch()}
+              loading={<ConversationListSkeleton />}
             />
           )
         }
@@ -280,7 +278,7 @@ export default function Messages() {
             count={rows.length}
             isFetchingNextPage={q.isFetchingNextPage}
             hasNextPage={q.hasNextPage}
-            isError={isError}
+            isError={q.isFetchNextPageError}
             onRetry={() => q.fetchNextPage()}
           />
         }

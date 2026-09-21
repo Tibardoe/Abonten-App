@@ -1,5 +1,7 @@
+import { useSession } from "@/auth/SessionProvider";
 import { ImageCropModal } from "@/components/profile/ImageCropModal";
 import { VideoTrimBar } from "@/components/profile/VideoTrimBar";
+import { showPublishedSpotlight } from "@/features/content/publishedSpotlight";
 import {
   useAttachableEvents,
   useInvalidateContent,
@@ -25,6 +27,7 @@ import {
   ProgressBar,
   useToast,
 } from "@abonten/ui-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { type VideoThumbnail, VideoView, useVideoPlayer } from "expo-video";
@@ -51,6 +54,8 @@ export default function NewContentScreen() {
   const params = useLocalSearchParams<{ kind?: string }>();
   const { program, ready } = useContentProgram();
   const invalidate = useInvalidateContent();
+  const qc = useQueryClient();
+  const { session } = useSession();
   const composer = useHighlightComposer();
   const publish = useContentPublish();
 
@@ -77,6 +82,10 @@ export default function NewContentScreen() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [cropOpen, setCropOpen] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
+  // The preview's own controls. `previewPlaying` mirrors the player (its
+  // playingChange event), so the button never disagrees with the picture.
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [previewMuted, setPreviewMuted] = useState(false);
   const [previewFailed, setPreviewFailed] = useState(false);
   // A still of each picked video (from the trim bar's first frame): the
   // filmstrip and the publish card show it instead of a blank tile.
@@ -166,6 +175,9 @@ export default function NewContentScreen() {
       player.addListener("timeUpdate", ({ currentTime }) => {
         if (currentTime > 0.1) setPreviewReady(true);
       }),
+      player.addListener("playingChange", ({ isPlaying }) =>
+        setPreviewPlaying(isPlaying),
+      ),
     ];
     return () => {
       for (const s of subs) s.remove();
@@ -179,6 +191,19 @@ export default function NewContentScreen() {
       } catch {}
     }
   }, [step, player]);
+
+  useEffect(() => {
+    try {
+      player.muted = previewMuted;
+    } catch {}
+  }, [previewMuted, player]);
+
+  const togglePreviewPlay = () => {
+    try {
+      if (player.playing) player.pause();
+      else player.play();
+    } catch {}
+  };
 
   const tooLong = composer.items.some(
     (m) =>
@@ -197,7 +222,7 @@ export default function NewContentScreen() {
 
   async function submit(asDraft: boolean) {
     if (!rights || busy) return;
-    const ok = await publish.run(composer.items, {
+    const created = await publish.run(composer.items, {
       kind,
       publisherPlaceId: placeId,
       caption,
@@ -207,7 +232,10 @@ export default function NewContentScreen() {
       allowDownload,
       publish: !asDraft,
     });
-    if (!ok) return;
+    if (!created) return;
+    // Straight into the cached feed, and the feed opens on it next time it
+    // is shown — no manual refresh (publishedSpotlight.ts).
+    showPublishedSpotlight(qc, session?.user.id ?? null, created);
     invalidate();
     toast.success(
       asDraft
@@ -340,14 +368,77 @@ export default function NewContentScreen() {
                   onLoadEnd={() => setPreviewReady(true)}
                 />
               ) : (
-                <VideoView
-                  player={player}
+                <Pressable
                   style={{ flex: 1 }}
-                  contentFit="contain"
-                  nativeControls={false}
-                  onFirstFrameRender={() => setPreviewReady(true)}
-                />
+                  onPress={togglePreviewPlay}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    previewPlaying ? "Pause preview" : "Play preview"
+                  }
+                >
+                  <VideoView
+                    player={player}
+                    style={{ flex: 1 }}
+                    contentFit="contain"
+                    nativeControls={false}
+                    onFirstFrameRender={() => setPreviewReady(true)}
+                  />
+                </Pressable>
               )
+            ) : null}
+            {active?.type === "video" && previewReady ? (
+              <>
+                {!previewPlaying ? (
+                  <View
+                    pointerEvents="none"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <View className="h-16 w-16 items-center justify-center rounded-full bg-black/50">
+                      <Icon name="play" size={30} color="#fff" />
+                    </View>
+                  </View>
+                ) : null}
+                <View
+                  style={{ position: "absolute", right: 12, bottom: 12 }}
+                  className="flex-row gap-2"
+                >
+                  <Pressable
+                    onPress={togglePreviewPlay}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      previewPlaying ? "Pause preview" : "Play preview"
+                    }
+                    className="h-10 w-10 items-center justify-center rounded-full bg-black/55"
+                  >
+                    <Icon
+                      name={previewPlaying ? "pause" : "play"}
+                      size={19}
+                      color="#fff"
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setPreviewMuted((m) => !m)}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      previewMuted ? "Turn sound on" : "Turn sound off"
+                    }
+                    className="h-10 w-10 items-center justify-center rounded-full bg-black/55"
+                  >
+                    <Icon
+                      name={previewMuted ? "volume-mute" : "volume-high"}
+                      size={19}
+                      color="#fff"
+                    />
+                  </Pressable>
+                </View>
+              </>
             ) : null}
             {!previewReady && active ? (
               <View

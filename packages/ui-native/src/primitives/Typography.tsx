@@ -273,6 +273,23 @@ export type AppTextProps = RNTextProps & {
   className?: string;
 };
 
+// `text-*` utilities that are NOT colours: sizes, alignment, wrapping.
+const NON_COLOUR_TEXT =
+  /^text-(xs|sm|base|lg|[2-9]?xl|center|left|right|justify|start|end|ellipsis|clip|wrap|nowrap|balance|pretty|\[\d[^\]]*(px|rem|em|%)?\])$/;
+
+/** True when `className` sets a text colour (text-white, text-black, text-mint, text-[#fff], text-foreground …). */
+function hasTextColourClass(className: string | undefined): boolean {
+  if (!className) return false;
+  for (const raw of className.split(/\s+/)) {
+    // Ignore variant-prefixed utilities (dark:, active:, ios: …) — they
+    // apply conditionally, so the base tone must stay.
+    if (!raw.startsWith("text-")) continue;
+    const token = raw.split("/")[0];
+    if (!NON_COLOUR_TEXT.test(token)) return true;
+  }
+  return false;
+}
+
 export function AppText({
   variant = "body",
   tone,
@@ -281,8 +298,16 @@ export function AppText({
   maxFontSizeMultiplier = MAX_FONT_SIZE_MULTIPLIER,
   ...rest
 }: AppTextProps) {
-  const toneClass = TONE_CLASS[tone ?? VARIANT_TONE[variant]];
-  const combined = `${VARIANT_CLASS[variant]} ${toneClass}${
+  // A colour the caller passes replaces the tone's colour instead of sitting
+  // beside it. Both in one className is a conflict NativeWind resolves by
+  // specificity, not order — and in dark mode the variable-driven tone class
+  // (`text-foreground` under `.dark`) won, so `text-black` on a white chip
+  // (the Spotlight feed tabs) rendered near-white on white.
+  const callerColour = !tone && hasTextColourClass(className);
+  const toneClass = callerColour
+    ? ""
+    : TONE_CLASS[tone ?? VARIANT_TONE[variant]];
+  const combined = `${VARIANT_CLASS[variant]}${toneClass ? ` ${toneClass}` : ""}${
     className ? ` ${className}` : ""
   }`;
   const fontFamily = resolveFontFamily(variant, className, style);

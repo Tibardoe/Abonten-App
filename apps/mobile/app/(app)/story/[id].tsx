@@ -1,9 +1,11 @@
 import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
 import { MediaStatusBar } from "@/components/app/MediaStatusBar";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { StoryViewer } from "@/components/content/StoryViewer";
 import { publisherRoute } from "@/features/content/contentLinks";
 import { useContentPost } from "@/features/content/useContent";
+import { useQueryView } from "@/lib/useQueryView";
 import { STORY_EXPIRED_MESSAGE } from "@abonten/core/content/copy";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { AppText, Avatar, Button, Spinner } from "@abonten/ui-native";
@@ -36,11 +38,23 @@ export default function StoryLinkScreen() {
     else router.replace((route ?? "/(app)/(tabs)/messages") as never);
   };
 
-  if (q.isLoading) {
+  // 404/410 come back as data (an answer to show); no data at all is
+  // loading, offline or a failed request.
+  const view = useQueryView(q);
+  if (!res && view.kind !== "content") {
     return (
       <View className="flex-1 bg-black">
         <MediaStatusBar />
-        <Spinner />
+        {view.kind === "loading" ? (
+          <Spinner />
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="this Story"
+            onRetry={() => q.refetch()}
+            onMedia
+          />
+        )}
       </View>
     );
   }

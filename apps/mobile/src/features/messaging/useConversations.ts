@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   ConversationFilter,
   ConversationListItem,
@@ -20,16 +21,20 @@ export function useConversations(
   return useInfiniteQuery({
     queryKey: messagingKeys.list(filter, roleScope, narrow),
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.messaging.list({
-        filter,
-        roleScope,
-        cursor: pageParam,
-        pageSize: 20,
-        search: narrow.search,
-        type: narrow.type,
-        muted: narrow.muted,
-      }),
+    // A transient failure throws (settleEnvelope) so the inbox already on
+    // screen — or restored from the last session — is kept, not replaced.
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.messaging.list({
+          filter,
+          roleScope,
+          cursor: pageParam,
+          pageSize: 20,
+          search: narrow.search,
+          type: narrow.type,
+          muted: narrow.muted,
+        }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     staleTime: 15_000,
   });

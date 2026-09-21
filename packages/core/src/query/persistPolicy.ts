@@ -29,6 +29,7 @@ export type PersistableQuery = {
     data?: unknown;
     dataUpdatedAt: number;
     status: string;
+    error?: unknown;
   };
 };
 
@@ -76,9 +77,34 @@ export function trimInfiniteData<T>(data: T, maxPages: number | undefined): T {
 }
 
 /**
- * The queries to write to disk: successful, allowlisted, capped per rule
- * (most recently updated first) and with infinite data trimmed. Returns new
- * objects for trimmed queries and never mutates the input.
+ * True for an `{ status, message }` API envelope that carries a failure
+ * (HTTP-style status >= 400), or infinite data holding such a page. The
+ * typed /api/mobile client returns failures as data rather than throwing,
+ * so React Query calls them "success" — and one written to disk would be
+ * restored on the next cold start in place of the real content it replaced.
+ */
+export function isErrorEnvelopeData(data: unknown): boolean {
+  const isFailure = (value: unknown) => {
+    const status = (value as { status?: unknown } | null | undefined)?.status;
+    return typeof status === "number" && status >= 400;
+  };
+  if (isInfiniteData(data)) return data.pages.some(isFailure);
+  return isFailure(data);
+}
+
+/**
+ * The queries to write to disk: allowlisted queries holding real data, capped
+ * per rule (most recently updated first), with infinite data trimmed.
+ * Returns new objects for rewritten queries and never mutates the input.
+ *
+ * "Holding data" is the test, not "status is success": a query whose latest
+ * REFRESH failed (offline, server down) keeps its last good data but has
+ * status "error". Skipping those dropped exactly the content the cache exists
+ * for — the next write, triggered by any other query, removed the inbox the
+ * person had been reading, and the following cold start had nothing to
+ * show. Such a query is written as the success it last was (its data and
+ * the time that data was fetched), so it is restored as cached content that
+ * is due for a refresh, not as a failure. An error envelope is never data.
  */
 export function selectPersistedQueries<Q extends PersistableQuery>(
   queries: readonly Q[],
@@ -86,8 +112,8 @@ export function selectPersistedQueries<Q extends PersistableQuery>(
 ): Q[] {
   const groups = new Map<string, { rule: PersistRule; items: Q[] }>();
   for (const query of queries) {
-    if (query.state.status !== "success") continue;
     if (query.state.data === undefined) continue;
+    if (isErrorEnvelopeData(query.state.data)) continue;
     const rule = matchPersistRule(query.queryKey, rules);
     if (!rule) continue;
     let group = groups.get(rule.id);
@@ -103,10 +129,16 @@ export function selectPersistedQueries<Q extends PersistableQuery>(
     items.sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt);
     for (const query of items.slice(0, Math.max(0, rule.maxEntries))) {
       const data = trimInfiniteData(query.state.data, rule.maxPages);
+      const failedRefresh = query.state.status !== "success";
       out.push(
-        data === query.state.data
+        data === query.state.data && !failedRefresh
           ? query
-          : { ...query, state: { ...query.state, data } },
+          : {
+              ...query,
+              state: failedRefresh
+                ? { ...query.state, data, status: "success", error: null }
+                : { ...query.state, data },
+            },
       );
     }
   }

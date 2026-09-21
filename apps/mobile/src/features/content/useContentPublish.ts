@@ -2,7 +2,10 @@ import type { EditableMedia } from "@/features/profile/useHighlightComposer";
 import { api } from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { uuidv4 } from "@/lib/uuid";
-import type { ContentKind } from "@abonten/types/contentType";
+import type {
+  ContentKind,
+  ContentPostDocument,
+} from "@abonten/types/contentType";
 import { useCallback, useRef, useState } from "react";
 
 export type PublishDetails = {
@@ -42,7 +45,10 @@ export function useContentPublish() {
   }, []);
 
   const run = useCallback(
-    async (items: EditableMedia[], details: PublishDetails) => {
+    async (
+      items: EditableMedia[],
+      details: PublishDetails,
+    ): Promise<ContentPostDocument | null> => {
       try {
         const mediaIds: string[] = [];
         for (let i = 0; i < items.length; i += 1) {
@@ -113,11 +119,13 @@ export function useContentPublish() {
           publish: details.publish,
           clientRequestId: requestId.current,
         });
-        if (res.status !== 200) {
+        if (res.status !== 200 || !res.data) {
           throw new Error(res.message ?? "Couldn't create your post.");
         }
         setState({ phase: "done" });
-        return true;
+        // The server's own document for the new post, so the caller can put
+        // it on screen without refetching (publishedSpotlight.ts).
+        return res.data;
       } catch (error) {
         setState({
           phase: "error",
@@ -126,7 +134,7 @@ export function useContentPublish() {
               ? error.message
               : "Something went wrong. Please try again.",
         });
-        return false;
+        return null;
       }
     },
     [],

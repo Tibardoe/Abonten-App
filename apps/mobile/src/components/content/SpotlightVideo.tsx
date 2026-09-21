@@ -15,9 +15,18 @@ import type { ContentMediaItem } from "@abonten/types/contentType";
 import { AppText, Icon, useReducedMotion } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { type BufferOptions, VideoView, useVideoPlayer } from "expo-video";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import {
+  type MutableRefObject,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
+  Easing,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -38,12 +47,36 @@ import Animated, {
 // under a playing view — the two things behind the old frozen-frame /
 // audio-over-the-wrong-video failures.
 
+/**
+ * The active page's player, as its controls see it: the clock (UI-thread
+ * values the timeline animates from) and a seek. Only the ACTIVE page's
+ * player drives it, so a neighbour preloading in the background can never
+ * move the timeline or be seeked by it.
+ */
+export type SpotlightPlayback = {
+  /** Current position in seconds. */
+  time: SharedValue<number>;
+  /** Length in seconds; 0 until the player knows it. */
+  duration: SharedValue<number>;
+  /** Filled in while this page's player is active. */
+  seek: MutableRefObject<((seconds: number) => void) | null>;
+};
+
 type Props = {
   media: ContentMediaItem;
   mode: FeedPlaybackMode;
   shouldPlay: boolean;
   posterUri: string | null;
   recyclingKey: string;
+  /** Playback rate while active (the chosen speed, or the hold boost). */
+  rate?: number;
+  playback?: SpotlightPlayback;
+  /**
+   * The active video is waiting on data it should be playing — the first
+   * load or a buffer refill — for longer than a blink. Straight from the
+   * player's own status, never a timer standing in for it.
+   */
+  onWaitingChange?: (waiting: boolean) => void;
   onPlayingChange?: (playing: boolean) => void;
   /** The clip wrapped around to its start (telemetry: completion + replay). */
   onLoop?: () => void;
@@ -55,6 +88,9 @@ export const SpotlightVideo = memo(function SpotlightVideo({
   shouldPlay,
   posterUri,
   recyclingKey,
+  rate = 1,
+  playback,
+  onWaitingChange,
   onPlayingChange,
   onLoop,
 }: Props) {
@@ -119,6 +155,18 @@ export const SpotlightVideo = memo(function SpotlightVideo({
     opacity: posterOpacity.value,
   }));
 
+  // The live player's load state, lifted here so the "couldn't play" /
+  // "you're offline" notice is drawn ABOVE the poster. The poster covers the
+  // player until the first frame — exactly the moment a failed load needs to
+  // be seen — so a notice inside the player layer was hidden under it
+  // (found on the emulator: readable by a screen reader, invisible on screen).
+  const online = useIsOnline();
+  const [load, setLoad] = useState<LoadState>("loading");
+  const retryRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (layer !== "live") setLoad("loading");
+  }, [layer]);
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {layer !== "none" ? (
@@ -131,8 +179,13 @@ export const SpotlightVideo = memo(function SpotlightVideo({
           onRetired={onRetired}
           onFrame={onFrame}
           frameShown={frameShown}
+          rate={rate}
+          playback={playback}
+          onWaitingChange={onWaitingChange}
           onPlayingChange={onPlayingChange}
           onLoop={onLoop}
+          onLoadState={setLoad}
+          retryRef={retryRef}
         />
       ) : null}
       {posterUri ? (
@@ -149,9 +202,47 @@ export const SpotlightVideo = memo(function SpotlightVideo({
           />
         </Animated.View>
       ) : null}
+      {mode === "active" && layer === "live" && load === "error" ? (
+        <LoadNotice online={online} onRetry={() => retryRef.current?.()} />
+      ) : null}
     </View>
   );
 });
+
+/** Why the active clip is not playing, over the poster; a tap retries. */
+function LoadNotice({
+  online,
+  onRetry,
+}: {
+  online: boolean;
+  onRetry: () => void;
+}) {
+  return (
+    <View
+      style={[StyleSheet.absoluteFill, styles.center]}
+      pointerEvents="box-none"
+    >
+      <Pressable
+        onPress={onRetry}
+        accessibilityRole="button"
+        accessibilityLabel="Retry video"
+        className="items-center gap-2 rounded-2xl bg-black/60 px-5 py-4"
+      >
+        <Icon
+          name={online ? "refresh" : "cloud-offline-outline"}
+          size={26}
+          color="#fff"
+        />
+        <AppText className="text-center text-[14px] font-semibold text-white">
+          {online ? "Couldn't play this video" : "You're offline"}
+        </AppText>
+        <AppText className="text-center text-[12px] text-white/75">
+          {online ? "Tap to try again" : "It will play when you're back online"}
+        </AppText>
+      </Pressable>
+    </View>
+  );
+}
 
 type LoadState = "loading" | "ready" | "error";
 
@@ -175,8 +266,13 @@ function PlayerLayer({
   onRetired,
   onFrame,
   frameShown,
+  rate,
+  playback,
+  onWaitingChange,
   onPlayingChange,
   onLoop,
+  onLoadState,
+  retryRef,
 }: {
   media: ContentMediaItem;
   active: boolean;
@@ -186,8 +282,14 @@ function PlayerLayer({
   onRetired: () => void;
   onFrame: (shown: boolean) => void;
   frameShown: boolean;
+  rate: number;
+  playback?: SpotlightPlayback;
+  onWaitingChange?: (waiting: boolean) => void;
   onPlayingChange?: (playing: boolean) => void;
   onLoop?: () => void;
+  /** The load state, for the notice the parent draws above the poster. */
+  onLoadState: (load: LoadState) => void;
+  retryRef: MutableRefObject<(() => void) | null>;
 }) {
   const muted = useSpotlightMuted();
   const online = useIsOnline();
@@ -206,6 +308,8 @@ function PlayerLayer({
     p.timeUpdateEventInterval = 0.25;
     p.keepScreenOnWhilePlaying = true;
     p.bufferOptions = active ? ACTIVE_BUFFER : PRELOAD_BUFFER;
+    // Faster or slower playback keeps voices at their own pitch.
+    p.preservesPitch = true;
   });
 
   // Buffer caps. ExoPlayer's defaults size a video buffer for long-form
@@ -222,6 +326,9 @@ function PlayerLayer({
 
   const [load, setLoad] = useState<LoadState>("loading");
   const [buffering, setBuffering] = useState(false);
+  useEffect(() => {
+    onLoadState(load);
+  }, [load, onLoadState]);
   const callbacks = useRef({ onPlayingChange, onLoop, onFrame });
   callbacks.current = { onPlayingChange, onLoop, onFrame };
 
@@ -268,6 +375,54 @@ function PlayerLayer({
       releasePlayback(player);
     };
   }, [player, fallback, onFallback]);
+
+  // The timeline's clock and seek belong to the ACTIVE player only. Each
+  // timeUpdate (every 0.25 s) sets the target and the UI thread glides
+  // there linearly while playing, so the bar moves smoothly without a
+  // JS-side animation loop.
+  const playbackRef = useRef(playback);
+  playbackRef.current = playback;
+  useEffect(() => {
+    const pb = playbackRef.current;
+    if (!active || !pb) return;
+    pb.time.value = 0;
+    pb.duration.value = 0;
+    const sync = (currentTime: number) => {
+      const d = player.duration;
+      if (Number.isFinite(d) && d > 0) pb.duration.value = d;
+      const jump = Math.abs(currentTime - pb.time.value) > 0.6;
+      pb.time.value =
+        jump || !player.playing
+          ? currentTime
+          : withTiming(currentTime, {
+              duration: 250,
+              easing: Easing.linear,
+            });
+    };
+    const sub = player.addListener("timeUpdate", ({ currentTime }) =>
+      sync(currentTime),
+    );
+    const seek = (seconds: number) => {
+      try {
+        player.currentTime = seconds;
+        pb.time.value = seconds;
+      } catch {
+        // Released between the gesture and the seek.
+      }
+    };
+    pb.seek.current = seek;
+    return () => {
+      sub.remove();
+      if (pb.seek.current === seek) pb.seek.current = null;
+    };
+  }, [active, player]);
+
+  // Speed applies to the active page only; a neighbour waits at 1×.
+  useEffect(() => {
+    try {
+      player.playbackRate = active ? rate : 1;
+    } catch {}
+  }, [active, rate, player]);
 
   // Some Android surfaces never report the first frame for a TextureView
   // that was just attached; once the clip is really advancing, the frame on
@@ -346,6 +501,13 @@ function PlayerLayer({
     });
   }, [player, uri]);
 
+  useEffect(() => {
+    retryRef.current = retry;
+    return () => {
+      if (retryRef.current === retry) retryRef.current = null;
+    };
+  }, [retry, retryRef]);
+
   // Connection back after a failed load: try again once, on the event
   // that makes success possible — not on a timer.
   const wasOnline = useRef(online);
@@ -367,6 +529,16 @@ function PlayerLayer({
     return () => clearTimeout(t);
   }, [waiting]);
 
+  // The card draws the loading bar (at the foot of the video, clear of the
+  // controls); this page only reports while it is the active one.
+  const reportWaiting = active && showSpinner;
+  const onWaitingRef = useRef(onWaitingChange);
+  onWaitingRef.current = onWaitingChange;
+  useEffect(() => {
+    onWaitingRef.current?.(reportWaiting);
+  }, [reportWaiting]);
+  useEffect(() => () => onWaitingRef.current?.(false), []);
+
   return (
     <>
       <VideoView
@@ -380,39 +552,6 @@ function PlayerLayer({
         surfaceType="textureView"
         onFirstFrameRender={() => callbacks.current.onFrame(true)}
       />
-      {active && showSpinner ? (
-        <View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, styles.center]}
-          accessibilityLabel="Loading video"
-        >
-          <ActivityIndicator color="#fff" size="large" />
-        </View>
-      ) : null}
-      {active && load === "error" ? (
-        <View style={[StyleSheet.absoluteFill, styles.center]}>
-          <Pressable
-            onPress={retry}
-            accessibilityRole="button"
-            accessibilityLabel="Retry video"
-            className="items-center gap-2 rounded-2xl bg-black/60 px-5 py-4"
-          >
-            <Icon
-              name={online ? "refresh" : "cloud-offline-outline"}
-              size={26}
-              color="#fff"
-            />
-            <AppText className="text-center text-[14px] font-semibold text-white">
-              {online ? "Couldn't play this video" : "You're offline"}
-            </AppText>
-            <AppText className="text-center text-[12px] text-white/75">
-              {online
-                ? "Tap to try again"
-                : "It will play when you're back online"}
-            </AppText>
-          </Pressable>
-        </View>
-      ) : null}
     </>
   );
 }

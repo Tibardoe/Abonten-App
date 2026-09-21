@@ -13,6 +13,7 @@ import {
 import { installGlobalErrorHandler } from "@/lib/errorTracking";
 import { euclidFonts } from "@/lib/fonts";
 import { setNativeRootBackground } from "@/lib/nativeBackground";
+import { useNavigationTheme } from "@/lib/navigationTheme";
 import { startNetworkSync } from "@/lib/network";
 import { queryClient } from "@/lib/queryClient";
 import {
@@ -29,6 +30,7 @@ import { PortalProvider } from "@gorhom/portal";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import {
+  ThemeProvider as NavigationThemeProvider,
   Slot,
   useNavigationContainerRef,
   usePathname,
@@ -110,6 +112,7 @@ function useProtectedRoute() {
 function RootNavigator() {
   const initializing = useProtectedRoute();
   const { ready: themeReady, colors } = useTheme();
+  const navigationTheme = useNavigationTheme();
   // Held until the previous session's cached data is back in memory, so
   // the first screen renders what was there last time — even offline —
   // instead of a spinner followed by the same content.
@@ -137,19 +140,21 @@ function RootNavigator() {
     return <BrandedSplash />;
   }
 
-  // The themed ground under every navigator. React Navigation's containers
-  // and react-native-screens only paint a screen's own content; during a
-  // fast push/pop, a tab switch or an interrupted swipe-back the frame
-  // between two screens shows whatever is underneath — the bare RN root
-  // view, which is white. In dark mode that is a white flash; in light mode
-  // it is pure white against the off-white `background` token, a visibly
-  // wrong flash. Every navigator below also sets its own content style, but
-  // this one view is what guarantees the gap is never unpainted.
+  // Three layers, bottom up, all painted from the one theme:
+  //   * the native root (above) — the window under everything;
+  //   * this view — the RN root, visible in the frame between two screens
+  //     of a fast push/pop or a tab shift;
+  //   * the navigation theme — the surfaces React Navigation paints
+  //     natively itself, above all the iOS navigation controller's own view
+  //     that an interrupted or reversed swipe-back exposes beside the
+  //     screen (see navigationTheme.ts). Screens' own styles cannot reach it.
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <Slot />
-      <OfflineBanner />
-    </View>
+    <NavigationThemeProvider value={navigationTheme}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Slot />
+        <OfflineBanner />
+      </View>
+    </NavigationThemeProvider>
   );
 }
 

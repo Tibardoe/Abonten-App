@@ -1,16 +1,16 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { MessageRow } from "@abonten/api-client";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { messagingKeys } from "./keys";
 
-// Keep a conversation's header + messages in the cache long after the screen
-// unmounts, so backing out to the inbox and stepping straight back in
-// renders instantly from cache (a quiet background refetch reconciles) —
-// instead of dropping to a full-screen spinner after the default 5-min GC.
+// A conversation's header + messages stay cached after the screen unmounts
+// — and, for recent threads, on disk between launches (queryPersistPolicy:
+// the persisted rules set their gcTime) — so stepping back in renders
+// instantly, online or not, while a quiet background refetch reconciles.
 // (No `placeholderData` — the query key is per-conversation, and showing the
 // previous thread's rows while a new one loads would be worse than a brief
 // spinner.)
-const CONVERSATION_GC_TIME = 30 * 60_000;
 
 // Header / context for one conversation: subject (event or place), the
 // other participant's profile, my mute/archive state, who I've blocked.
@@ -20,9 +20,9 @@ export function useConversationDetail(conversationId: string | undefined) {
   return useQuery({
     queryKey: messagingKeys.detail(conversationId ?? "none"),
     enabled: !!conversationId,
-    queryFn: () => api.messaging.detail(conversationId as string),
+    queryFn: async () =>
+      settleEnvelope(await api.messaging.detail(conversationId as string)),
     staleTime: 30_000,
-    gcTime: CONVERSATION_GC_TIME,
   });
 }
 
@@ -36,14 +36,15 @@ export function useConversationMessages(conversationId: string | undefined) {
     queryKey: messagingKeys.messages(conversationId ?? "none"),
     enabled: !!conversationId,
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.messaging.messages(conversationId as string, {
-        cursor: pageParam,
-        pageSize: 30,
-      }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.messaging.messages(conversationId as string, {
+          cursor: pageParam,
+          pageSize: 30,
+        }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     staleTime: 10_000,
-    gcTime: CONVERSATION_GC_TIME,
   });
 }
 

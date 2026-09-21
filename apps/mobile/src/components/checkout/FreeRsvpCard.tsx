@@ -1,76 +1,34 @@
-import { useSession } from "@/auth/SessionProvider";
 import { RecommendationPromptCard } from "@/components/alerts/RecommendationPromptCard";
-import { useFreeRsvp } from "@/features/checkout/useFreeRsvp";
+import type { FreeRsvpFlow } from "@/features/checkout/useFreeRsvpFlow";
 import type { EventDetail } from "@/features/discovery/useEventDetail";
-import { setPendingRedirect } from "@/lib/authRedirect";
-import { useNowTick } from "@/lib/useNowTick";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
-import { AppText, Button, useToast } from "@abonten/ui-native";
-import { usePathname, useRouter } from "expo-router";
-import { useState } from "react";
+import { AppText, Button } from "@abonten/ui-native";
+import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
 // Native echo of the web AttendingButton's RSVP path. One free ticket per
-// event, quantity fixed at 1 server-side.
-export function FreeRsvpCard({ event }: { event: EventDetail }) {
-  const toast = useToast();
+// event, quantity fixed at 1 server-side. The state lives in the screen's
+// useFreeRsvpFlow, shared with the sticky "Reserve spot" button.
+export function FreeRsvpCard({
+  event,
+  flow,
+  showAction = true,
+}: {
+  event: EventDetail;
+  flow: FreeRsvpFlow;
+  /** False when the screen's sticky bar carries the RSVP button. */
+  showAction?: boolean;
+}) {
   const router = useRouter();
-  const pathname = usePathname();
-  const { session } = useSession();
-  const rsvp = useFreeRsvp(event.id);
-
-  const now = useNowTick();
-  const occurrences = event.event_occurrence ?? [];
-  // Only a strictly-future occurrence can be RSVP'd (same rule the server
-  // enforces); default to the earliest one.
-  const occurrenceState = resolveOccurrenceState(
-    event.starts_at,
-    event.ends_at,
-    occurrences,
+  const {
     now,
-  );
-  const [pickedOccurrenceId, setPickedOccurrenceId] = useState<string | null>(
-    null,
-  );
-  const isOccurrenceSelectable = (o: { starts_at: string | Date }) =>
-    new Date(o.starts_at).getTime() > now;
-  const occurrenceId =
-    pickedOccurrenceId &&
-    occurrences.some(
-      (o) => o.id === pickedOccurrenceId && isOccurrenceSelectable(o),
-    )
-      ? pickedOccurrenceId
-      : (occurrenceState.nextPurchasable?.id ?? null);
-  const [done, setDone] = useState(false);
-  // Only an RSVP made just now (not an existing ticket) offers alerts.
-  const [justRsvped, setJustRsvped] = useState(false);
-
-  async function onRsvp() {
-    if (!session) {
-      if (pathname) setPendingRedirect(pathname);
-      router.push("/(auth)/sign-in");
-      return;
-    }
-
-    const res = await rsvp.mutateAsync({ eventId: event.id, occurrenceId });
-
-    if (res.status === 200) {
-      setDone(true);
-      setJustRsvped(true);
-      return;
-    }
-    if (res.status === 300) {
-      setDone(true);
-      toast.success("You're in", {
-        description: "You already have a ticket for this event.",
-      });
-      return;
-    }
-    toast.error("Couldn't RSVP", {
-      description: res.message ?? "Please try again in a moment.",
-    });
-  }
+    occurrences,
+    occurrenceId,
+    isOccurrenceSelectable,
+    done,
+    justRsvped,
+  } = flow;
+  const setPickedOccurrenceId = flow.pick;
 
   if (done) {
     return (
@@ -146,11 +104,13 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
         This event is free — one ticket per person.
       </AppText>
 
-      <Button
-        title={rsvp.isPending ? "Reserving…" : "RSVP — get free ticket"}
-        loading={rsvp.isPending}
-        onPress={onRsvp}
-      />
+      {showAction ? (
+        <Button
+          title={flow.pending ? "Reserving…" : "RSVP — get free ticket"}
+          loading={flow.pending}
+          onPress={flow.submit}
+        />
+      ) : null}
     </View>
   );
 }

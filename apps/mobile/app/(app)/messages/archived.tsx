@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   type ConversationMenuTarget,
   ConversationPeekOverlay,
@@ -9,7 +10,6 @@ import { InboxSearchBar } from "@/components/messaging/InboxSearchBar";
 import type { Rect } from "@/components/messaging/contextMenu/menuPlacement";
 import {
   flattenConversations,
-  hasConversationsPageError,
   useConversations,
 } from "@/features/messaging/useConversations";
 import {
@@ -17,6 +17,7 @@ import {
   useMarkConversationUnread,
   useSetConversationState,
 } from "@/features/messaging/useMessagingActions";
+import { useQueryView } from "@/lib/useQueryView";
 import type { ConversationListItem } from "@abonten/api-client";
 import { EmptyState, ListFooter, Refresher, Spinner } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
@@ -40,7 +41,7 @@ export default function ArchivedMessages() {
     search: search || undefined,
   });
   const rows = flattenConversations(q.data?.pages);
-  const isError = q.isError || hasConversationsPageError(q.data?.pages);
+  const view = useQueryView(q, () => rows.length === 0);
   const setState = useSetConversationState();
   const markRead = useMarkConversationRead();
   const markUnread = useMarkConversationUnread();
@@ -128,29 +129,26 @@ export default function ArchivedMessages() {
         keyboardShouldPersistTaps="handled"
         refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
-          q.isLoading ? (
-            <View className="items-center py-16">
-              <Spinner />
-            </View>
-          ) : (
+          view.kind === "empty" ? (
             <EmptyState
-              icon={isError ? "cloud-offline-outline" : "archive-outline"}
-              title={
-                isError
-                  ? "Couldn't load archived chats"
-                  : search
-                    ? "No conversations found"
-                    : "No archived chats"
-              }
+              icon="archive-outline"
+              title={search ? "No conversations found" : "No archived chats"}
               description={
-                isError
-                  ? "Pull down to try again."
-                  : search
-                    ? "Try another name, event, or place."
-                    : "Conversations you archive show up here. Swipe one left to bring it back."
+                search
+                  ? "Try another name, event, or place."
+                  : "Conversations you archive show up here. Swipe one left to bring it back."
               }
-              actionLabel={isError ? "Retry" : undefined}
-              onAction={isError ? () => q.refetch() : undefined}
+            />
+          ) : (
+            <QueryUnavailable
+              view={view}
+              subject="your archived chats"
+              onRetry={() => q.refetch()}
+              loading={
+                <View className="items-center py-16">
+                  <Spinner />
+                </View>
+              }
             />
           )
         }
@@ -159,7 +157,7 @@ export default function ArchivedMessages() {
             count={rows.length}
             isFetchingNextPage={q.isFetchingNextPage}
             hasNextPage={q.hasNextPage}
-            isError={isError}
+            isError={q.isFetchNextPageError}
             onRetry={() => q.fetchNextPage()}
           />
         }
