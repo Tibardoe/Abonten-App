@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   PlaceDraftPayload,
   SavePlaceDraftBody,
@@ -17,7 +18,7 @@ const KEY = ["mobile", "organizer", "place-drafts"] as const;
 export function usePlaceDrafts() {
   return useQuery({
     queryKey: [...KEY],
-    queryFn: () => api.organizer.placeDrafts(),
+    queryFn: async () => settleEnvelope(await api.organizer.placeDrafts()),
     staleTime: 15_000,
   });
 }
@@ -25,7 +26,8 @@ export function usePlaceDrafts() {
 export function usePlaceDraft(draftId: string | undefined) {
   return useQuery({
     queryKey: [...KEY, draftId],
-    queryFn: () => api.organizer.placeDraft(draftId as string),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.placeDraft(draftId as string)),
     enabled: !!draftId,
   });
 }

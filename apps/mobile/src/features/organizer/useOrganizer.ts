@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   OrganizerDashboardPeriod,
   OrganizerLedgerTransactionRow,
@@ -18,7 +19,7 @@ export function useOrganizerOverview(
 ) {
   return useQuery({
     queryKey: [...KEY, "overview", period],
-    queryFn: () => api.organizer.overview(period),
+    queryFn: async () => settleEnvelope(await api.organizer.overview(period)),
     staleTime: STALE_TIME,
     enabled: options?.enabled ?? true,
   });
@@ -27,7 +28,7 @@ export function useOrganizerOverview(
 export function useOrganizerFinance() {
   return useQuery({
     queryKey: [...KEY, "finance"],
-    queryFn: () => api.organizer.finance(),
+    queryFn: async () => settleEnvelope(await api.organizer.finance()),
     staleTime: STALE_TIME,
   });
 }
@@ -40,7 +41,8 @@ export function useOrganizerFinance() {
 export function useOrganizerDashboardWidgets(period: OrganizerDashboardPeriod) {
   return useQuery({
     queryKey: [...KEY, "dashboard-widgets", period],
-    queryFn: () => api.organizer.dashboardWidgets(period),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.dashboardWidgets(period)),
     staleTime: STALE_TIME,
     // Switching period should keep the previous numbers on screen rather
     // than flash the skeleton — the cards animate to the new values.
@@ -52,8 +54,10 @@ export function useOrganizerEvents() {
   return useInfiniteQuery({
     queryKey: [...KEY, "events"],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.organizer.events({ cursor: pageParam, pageSize: 20 }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.organizer.events({ cursor: pageParam, pageSize: 20 }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
   });
 }
@@ -62,8 +66,10 @@ export function useOrganizerLedger() {
   return useInfiniteQuery({
     queryKey: [...KEY, "ledger"],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.organizer.ledger({ cursor: pageParam, pageSize: 20 }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.organizer.ledger({ cursor: pageParam, pageSize: 20 }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
   });
 }

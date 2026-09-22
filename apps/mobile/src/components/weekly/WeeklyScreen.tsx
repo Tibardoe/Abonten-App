@@ -1,5 +1,6 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { WeeklyBanner } from "@/components/weekly/WeeklyBanner";
 import { WeeklySectionView } from "@/components/weekly/WeeklySectionView";
 import {
@@ -10,6 +11,7 @@ import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider
 import { useWeeklyEdition } from "@/features/weekly/useWeekly";
 import { hapticLight } from "@/lib/haptics";
 import { weeklyShareUrl } from "@/lib/share";
+import { useQueryView } from "@/lib/useQueryView";
 import { useShareLink } from "@/lib/useShareLink";
 import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import {
@@ -155,6 +157,10 @@ export function WeeklyScreen({
   });
   const state = query.data;
   const doc = state?.edition ?? null;
+  // "This edition isn't available" is only ever said for an answer the
+  // server gave; loading, offline and failed are told apart (the edition
+  // is cached on disk, so a saved one still opens offline).
+  const view = useQueryView(query);
 
   const share = doc
     ? () =>
@@ -180,12 +186,12 @@ export function WeeklyScreen({
           ) : undefined
         }
       />
-      {query.isLoading ? (
-        <WeeklySkeleton />
-      ) : query.isError ? (
-        <ScreenError
-          message="Couldn't load Abonten Weekly. Check your connection and try again."
+      {view.kind !== "content" && view.kind !== "empty" ? (
+        <QueryUnavailable
+          view={view}
+          subject={WEEKLY_PRODUCT_NAME}
           onRetry={() => query.refetch()}
+          loading={<WeeklySkeleton />}
         />
       ) : (
         <ScrollView

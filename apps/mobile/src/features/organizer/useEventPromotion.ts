@@ -1,5 +1,6 @@
 import { ACTIVE_PROMOTIONS_KEY } from "@/features/promotions/useActivePromotions";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // The per-event Promotion tab — tiers + current promotion + eligibility,
@@ -9,7 +10,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export function useEventPromotionContext(eventId: string) {
   return useQuery({
     queryKey: ["mobile", "organizer", "event-promotion", eventId],
-    queryFn: () => api.organizer.eventPromotionContext(eventId),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.eventPromotionContext(eventId)),
     enabled: !!eventId,
     staleTime: 20_000,
   });

@@ -1,3 +1,4 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   flattenOrganizerLedger,
   useOrganizerFinance,
@@ -8,6 +9,7 @@ import {
   showPromotionCredit,
 } from "@/features/rewards/PromotionCreditCard";
 import { usePromotionCredit } from "@/features/rewards/useRewards";
+import { useQueryView } from "@/lib/useQueryView";
 import type {
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
@@ -179,9 +181,12 @@ export default function OrganizerFinanceScreen() {
     const lines = FILTER_LINES[filter];
     return lines ? deduped.filter((r) => lines.includes(r.line)) : deduped;
   }, [allRows, filter]);
-  const ledgerFailed =
-    ledger.isError ||
-    (ledger.data?.pages[0] && ledger.data.pages[0].status >= 400);
+  // Loading, offline and failed are told apart from "no earnings" / "no
+  // transactions": those are only ever said for an answer the server gave.
+  // Finance is never cached on disk (money), so offline with nothing loaded
+  // this session says so rather than showing a zero balance.
+  const financeView = useQueryView(finance, () => balances.length === 0);
+  const ledgerView = useQueryView(ledger, () => allRows.length === 0);
 
   const onEndReached = useCallback(() => {
     if (ledger.hasNextPage && !ledger.isFetchingNextPage)
@@ -190,20 +195,25 @@ export default function OrganizerFinanceScreen() {
 
   const header = (
     <View className="gap-4 pb-2">
-      {finance.isLoading ? (
-        <View className="items-center py-8">
-          <ActivityIndicator />
-        </View>
-      ) : balances.length === 0 ? (
+      {financeView.kind === "content" ? (
+        balances.map((b) => <BalanceCard key={b.currency} row={b} />)
+      ) : financeView.kind === "empty" ? (
         <View className="rounded-xl border border-border bg-card p-4">
           <AppText className="text-sm text-muted-foreground">
-            {finance.isError
-              ? "Couldn't load your balance."
-              : "No earnings yet."}
+            No earnings yet.
           </AppText>
         </View>
       ) : (
-        balances.map((b) => <BalanceCard key={b.currency} row={b} />)
+        <QueryUnavailable
+          view={financeView}
+          subject="your balance"
+          onRetry={() => finance.refetch()}
+          loading={
+            <View className="items-center py-8">
+              <ActivityIndicator />
+            </View>
+          }
+        />
       )}
 
       {showPromotionCredit(promotionCredit.data) ? (
@@ -255,12 +265,18 @@ export default function OrganizerFinanceScreen() {
         />
       }
       ListEmptyComponent={
-        ledger.isLoading ? (
-          <ActivityIndicator className="my-4" />
-        ) : (
+        ledgerView.kind === "empty" || ledgerView.kind === "content" ? (
+          // Content with every row filtered out by the chip, or none at all.
           <AppText className="mt-6 text-center text-sm text-muted-foreground">
-            {ledgerFailed ? "Couldn't load transactions." : "No transactions."}
+            No transactions.
           </AppText>
+        ) : (
+          <QueryUnavailable
+            view={ledgerView}
+            subject="your transactions"
+            onRetry={() => ledger.refetch()}
+            loading={<ActivityIndicator className="my-4" />}
+          />
         )
       }
       ListFooterComponent={

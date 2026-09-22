@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { OrganizerPlaceRow } from "@abonten/api-client";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
@@ -11,8 +12,10 @@ export function useOrganizerPlaces() {
   return useInfiniteQuery({
     queryKey: KEY,
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.organizer.places({ cursor: pageParam, pageSize: 20 }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.organizer.places({ cursor: pageParam, pageSize: 20 }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
   });
 }
@@ -26,7 +29,8 @@ export function flattenOrganizerPlaces(
 export function usePlaceInsights(placeId: string) {
   return useQuery({
     queryKey: [...KEY, placeId, "insights"],
-    queryFn: () => api.organizer.placeInsights(placeId),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.placeInsights(placeId)),
     enabled: !!placeId,
     staleTime: 20_000,
   });

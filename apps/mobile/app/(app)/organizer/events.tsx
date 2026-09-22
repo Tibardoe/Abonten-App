@@ -1,7 +1,9 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   flattenOrganizerEvents,
   useOrganizerEvents,
 } from "@/features/organizer/useOrganizer";
+import { useQueryView } from "@/lib/useQueryView";
 import type { UserPostType } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
@@ -99,20 +101,13 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
 export default function OrganizerEventsScreen() {
   const q = useOrganizerEvents();
   const events = flattenOrganizerEvents(q.data?.pages);
-  const failed =
-    q.isError || (q.data?.pages[0] && q.data.pages[0].status >= 400);
+  // "No events yet" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => events.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
-
-  if (q.isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
-  }
 
   return (
     <FlatList
@@ -125,9 +120,18 @@ export default function OrganizerEventsScreen() {
       onEndReachedThreshold={0.5}
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
-        <AppText className="mt-10 text-center text-sm text-muted-foreground">
-          {failed ? "Couldn't load your events." : "You have no events yet."}
-        </AppText>
+        view.kind === "empty" ? (
+          <AppText className="mt-10 text-center text-sm text-muted-foreground">
+            You have no events yet.
+          </AppText>
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="your events"
+            onRetry={() => q.refetch()}
+            loading={<ActivityIndicator className="mt-10" />}
+          />
+        )
       }
       ListFooterComponent={
         q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null

@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { OrganizerDashboardPeriod } from "@abonten/api-client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -14,7 +15,8 @@ export function useEventInsights(
 ) {
   return useQuery({
     queryKey: [...KEY, eventId, period],
-    queryFn: () => api.organizer.eventInsights(eventId, period),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.eventInsights(eventId, period)),
     staleTime: STALE_TIME,
     enabled: !!eventId,
   });

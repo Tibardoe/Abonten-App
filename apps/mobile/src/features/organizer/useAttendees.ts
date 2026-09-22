@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { AttendanceRow } from "@abonten/api-client";
 import {
   useInfiniteQuery,
@@ -17,11 +18,13 @@ export function useAttendees(eventId: string) {
   return useInfiniteQuery({
     queryKey: [...KEY, eventId],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.organizer.eventAttendees(eventId, {
-        cursor: pageParam,
-        pageSize: 20,
-      }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.organizer.eventAttendees(eventId, {
+          cursor: pageParam,
+          pageSize: 20,
+        }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     enabled: !!eventId,
   });

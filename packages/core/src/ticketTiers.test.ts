@@ -3,16 +3,15 @@ import { hasFreeRegistration, paidTierProblem } from "./ticketTiers";
 
 describe("hasFreeRegistration", () => {
   it("is true only when the FREE tier exists", () => {
-    expect(hasFreeRegistration([{ type: "FREE", price: 0 }])).toBe(true);
-    expect(hasFreeRegistration([{ type: "SINGLE TICKET", price: 50 }])).toBe(
-      false,
-    );
+    expect(hasFreeRegistration([{ type: "FREE" }])).toBe(true);
+    expect(hasFreeRegistration([{ type: "SINGLE TICKET" }])).toBe(false);
     expect(hasFreeRegistration([])).toBe(false);
   });
 
   it("does not treat a 0-priced tier under another name as free registration", () => {
-    // issue_free_ticket looks the tier up by name, so this would be refused.
-    expect(hasFreeRegistration([{ type: "Early bird", price: 0 }])).toBe(false);
+    // issue_free_ticket looks the tier up by name, so a tier priced 0 under
+    // another name would be refused; only the name is read here.
+    expect(hasFreeRegistration([{ type: "Early bird" }])).toBe(false);
   });
 });
 

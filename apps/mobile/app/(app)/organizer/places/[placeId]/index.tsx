@@ -1,7 +1,9 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
 import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
+import { useQueryView } from "@/lib/useQueryView";
 import {
   AppText,
   Icon,
@@ -52,8 +54,14 @@ export default function PlaceManageScreen() {
 
   const result = q.data;
   const insights = result && result.status === 200 ? result.data : null;
+  // The server's own answer (no such place) keeps its message; loading,
+  // offline and failed are told apart from it, and the tiles are never
+  // drawn as zeros for figures the phone does not have.
+  const definiteFailure = result !== undefined && result.status !== 200;
+  const view = useQueryView(q);
   const upcoming = usePlaceUpcomingEvents(id || undefined);
   const upcomingEvents = upcoming.data ?? [];
+  const upcomingView = useQueryView(upcoming, (list) => list.length === 0);
   const cardWidth = useCarouselCardWidth();
 
   return (
@@ -66,15 +74,21 @@ export default function PlaceManageScreen() {
         />
       }
     >
-      {q.isLoading ? (
-        <View className="items-center py-12">
-          <ActivityIndicator />
-        </View>
-      ) : q.isError || (result && result.status !== 200) ? (
+      {!definiteFailure && view.kind !== "content" && view.kind !== "empty" ? (
+        <QueryUnavailable
+          view={view}
+          subject="this place's insights"
+          onRetry={() => q.refetch()}
+          loading={
+            <View className="items-center py-12">
+              <ActivityIndicator />
+            </View>
+          }
+        />
+      ) : definiteFailure ? (
         <View className="items-center gap-3 py-12">
           <AppText className="text-center text-muted-foreground">
-            {(result && result.status === 404 && result.message) ||
-              "Couldn't load this place's insights."}
+            {result.message || "Couldn't load this place's insights."}
           </AppText>
           <Pressable
             accessibilityRole="button"
@@ -118,10 +132,18 @@ export default function PlaceManageScreen() {
               </Pressable>
             </Link>
           </View>
-          {upcoming.isLoading ? (
+          {upcomingView.kind === "loading" ? (
             <View style={{ width: cardWidth }}>
               <EventCardSkeleton />
             </View>
+          ) : upcomingView.kind === "offline" ||
+            upcomingView.kind === "error" ? (
+            <QueryUnavailable
+              view={upcomingView}
+              subject="upcoming events"
+              onRetry={() => upcoming.refetch()}
+              className="py-4"
+            />
           ) : upcomingEvents.length > 0 ? (
             <FlatList
               horizontal

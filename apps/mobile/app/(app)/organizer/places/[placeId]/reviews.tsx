@@ -1,9 +1,11 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   flattenReviews,
   useDeletePlaceReviewResponse,
   usePlaceReviews,
   useRespondToPlaceReview,
 } from "@/features/organizer/usePlaceBookingsReviews";
+import { useQueryView } from "@/lib/useQueryView";
 import type { OwnerPlaceReviewRow } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
@@ -261,7 +263,12 @@ export default function PlaceReviewsScreen() {
 
   const rows = flattenReviews(q.data?.pages);
   const firstPage = q.data?.pages[0];
-  const failed = q.isError || (firstPage && firstPage.status >= 400);
+  // The server's own answer that this place is not this person's: shown
+  // as such, never as a load failure.
+  const forbidden = firstPage?.status === 403;
+  // "No reviews yet" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => rows.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
@@ -278,16 +285,21 @@ export default function PlaceReviewsScreen() {
       onEndReachedThreshold={0.5}
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
-        q.isLoading ? (
-          <ActivityIndicator className="mt-10" />
-        ) : (
+        forbidden ? (
           <AppText variant="muted" className="mt-10 text-center">
-            {failed
-              ? firstPage && firstPage.status === 403
-                ? "You're not authorized to manage this place."
-                : "Couldn't load reviews."
-              : "No reviews yet."}
+            You're not authorized to manage this place.
           </AppText>
+        ) : view.kind === "empty" ? (
+          <AppText variant="muted" className="mt-10 text-center">
+            No reviews yet.
+          </AppText>
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="reviews"
+            onRetry={() => q.refetch()}
+            loading={<ActivityIndicator className="mt-10" />}
+          />
         )
       }
       ListFooterComponent={

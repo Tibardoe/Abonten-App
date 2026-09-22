@@ -3,6 +3,7 @@ import {
   flattenMessages,
   useConversationMessages,
 } from "@/features/messaging/useConversation";
+import { useQueryView } from "@/lib/useQueryView";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon, Spinner } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
@@ -59,6 +60,7 @@ export function PeekThread({
   const c = useThemeColors();
   const q = useConversationMessages(conversationId);
   const rows = flattenMessages(q.data?.pages);
+  const view = useQueryView(q, () => rows.length === 0);
 
   // flattenMessages is newest-first (the thread renders inverted); the peek
   // is a normal top-to-bottom strip, so take the newest TAIL and flip them.
@@ -72,13 +74,19 @@ export function PeekThread({
   );
 
   if (tail.length === 0) {
+    // "No messages yet" is only ever said for an answer the server gave; a
+    // thread this phone has not loaded says so instead.
     return (
       <View className="items-center justify-center py-6">
-        {q.isLoading ? (
+        {view.kind === "loading" ? (
           <Spinner />
         ) : (
           <AppText variant="meta" tone="muted">
-            No messages yet
+            {view.kind === "offline"
+              ? "You're offline — not saved on this phone yet"
+              : view.kind === "error"
+                ? "Couldn't load this conversation"
+                : "No messages yet"}
           </AppText>
         )}
       </View>

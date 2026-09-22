@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { NotificationType } from "@abonten/types/notificationType";
 import {
   type InfiniteData,
@@ -18,8 +19,10 @@ export function useNotifications(options?: { enabled?: boolean }) {
     queryKey: KEY,
     enabled: options?.enabled ?? true,
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.notifications.list({ cursor: pageParam, pageSize: 20 }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.notifications.list({ cursor: pageParam, pageSize: 20 }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     // A notification list is append-only from the user's point of view and
     // the bell badge polls separately, so re-reading it on every mount was

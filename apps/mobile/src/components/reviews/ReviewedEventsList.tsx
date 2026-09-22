@@ -1,8 +1,10 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { RowListSkeleton } from "@/components/skeletons";
 import {
   useDeleteEventReview,
   useUserEventReviews,
 } from "@/features/reviews/useEventReviews";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import {
@@ -30,6 +32,9 @@ export function ReviewedEventsList() {
   const router = useRouter();
 
   const reviews = q.data?.pages.flatMap((p) => p.reviews) ?? [];
+  // "No reviews yet" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => reviews.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
@@ -45,18 +50,22 @@ export function ReviewedEventsList() {
       },
     ]);
 
-  if (q.isLoading) return <RowListSkeleton count={4} />;
-
-  if (reviews.length === 0) {
+  if (view.kind === "empty") {
     return (
       <EmptyState
         icon="chatbox-ellipses-outline"
-        title={q.isError ? "Couldn't load your reviews" : "No reviews yet"}
-        description={
-          q.isError
-            ? "Pull down to try again."
-            : "Reviews you write appear here."
-        }
+        title="No reviews yet"
+        description="Reviews you write appear here."
+      />
+    );
+  }
+  if (view.kind !== "content") {
+    return (
+      <QueryUnavailable
+        view={view}
+        subject="your reviews"
+        onRetry={() => q.refetch()}
+        loading={<RowListSkeleton count={4} />}
       />
     );
   }

@@ -1,5 +1,7 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { PlacePhotoManager } from "@/components/places/PlacePhotoManager";
 import { usePlaceManageContext } from "@/features/organizer/useManagePlace";
+import { useQueryView } from "@/lib/useQueryView";
 import type { PlacePhotoRow } from "@abonten/api-client";
 import { AppText } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
@@ -12,16 +14,29 @@ export default function PlacePhotosScreen() {
 
   const ctx = q.data && q.data.status === 200 ? q.data.data : null;
   const photos: PlacePhotoRow[] = ctx?.photos ?? [];
+  // The server's own answer keeps its message; loading, offline and failed
+  // are told apart from it.
+  const definiteFailure = q.data !== undefined && q.data.status !== 200;
+  const view = useQueryView(q);
 
-  if (q.isLoading) {
+  if (!definiteFailure && view.kind !== "content" && view.kind !== "empty") {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={view}
+          subject="this place's photos"
+          onRetry={() => q.refetch()}
+          loading={
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator />
+            </View>
+          }
+        />
       </View>
     );
   }
 
-  if (q.isError || !ctx) {
+  if (!ctx) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background p-6">
         <AppText className="text-center text-muted-foreground">

@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { UpdatePromoCodeBody } from "@abonten/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -11,7 +12,8 @@ const KEY = ["mobile", "organizer", "promo-codes"] as const;
 export function useEventPromoCodes(eventId: string) {
   return useQuery({
     queryKey: [...KEY, eventId],
-    queryFn: () => api.organizer.eventPromoCodes(eventId),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.eventPromoCodes(eventId)),
     enabled: !!eventId,
     staleTime: 20_000,
   });

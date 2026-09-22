@@ -1,7 +1,9 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useDeletePlaceDraft,
   usePlaceDrafts,
 } from "@/features/places/usePlaceDrafts";
+import { useQueryView } from "@/lib/useQueryView";
 import type { PlaceDraftListItem } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
@@ -89,7 +91,9 @@ function DraftRow({ draft }: { draft: PlaceDraftListItem }) {
 export default function PlaceDraftsScreen() {
   const q = usePlaceDrafts();
   const drafts = q.data?.status === 200 ? q.data.data : [];
-  const failed = q.isError || (q.data && q.data.status !== 200);
+  // "No saved drafts" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => drafts.length === 0);
 
   return (
     <FlatList
@@ -105,14 +109,17 @@ export default function PlaceDraftsScreen() {
       }
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
-        q.isLoading ? (
-          <ActivityIndicator className="mt-10" />
-        ) : (
+        view.kind === "empty" ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            {failed
-              ? "Couldn't load your drafts."
-              : "No saved drafts. Start a place and tap “Save as draft”."}
+            No saved drafts. Start a place and tap “Save as draft”.
           </AppText>
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="your drafts"
+            onRetry={() => q.refetch()}
+            loading={<ActivityIndicator className="mt-10" />}
+          />
         )
       }
     />

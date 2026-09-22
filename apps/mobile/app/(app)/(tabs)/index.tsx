@@ -471,12 +471,22 @@ export default function Explore() {
       ) : null}
 
       {view === "map" ? (
-        <ExploreMap
-          kind={tab}
-          events={events}
-          places={places}
-          center={coords}
-        />
+        // The map draws whatever the list has; with nothing loaded it says
+        // why (loading, offline, failed) rather than "nothing to map".
+        activeView.kind === "content" || activeView.kind === "empty" ? (
+          <ExploreMap
+            kind={tab}
+            events={events}
+            places={places}
+            center={coords}
+          />
+        ) : (
+          <QueryUnavailable
+            view={activeView}
+            subject={tab === "events" ? "events here" : "places here"}
+            onRetry={() => activeQuery.refetch()}
+          />
+        )
       ) : tab === "events" ? (
         <FlatList
           key="events"

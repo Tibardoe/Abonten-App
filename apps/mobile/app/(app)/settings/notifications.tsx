@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useNotificationPreferences,
   useStopSubscription,
@@ -6,6 +7,7 @@ import {
   useUpdateNotificationPreferences,
 } from "@/features/alerts/useAlerts";
 import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
+import { useQueryView } from "@/lib/useQueryView";
 import type { NotificationSubscription } from "@abonten/types/discoveryType";
 import {
   AppText,
@@ -84,6 +86,10 @@ export default function NotificationSettings() {
 
   const p = prefs.data;
   const followed = subs.data ?? [];
+  // Loading, offline and failed are told apart from the settings and from
+  // "you don't follow anyone yet" (only ever said for a server answer).
+  const prefsView = useQueryView(prefs);
+  const subsView = useQueryView(subs, (list) => list.length === 0);
   const showFollowing = program.personalization || followed.length > 0;
   const pausedUntil = p?.pausedUntil ? new Date(p.pausedUntil) : null;
 
@@ -119,19 +125,18 @@ export default function NotificationSettings() {
           </Card>
         ) : null}
 
-        {prefs.isLoading ? (
-          <View className="gap-3">
-            {["a", "b", "c"].map((k) => (
-              <Skeleton key={k} width="100%" height={96} radius={16} />
-            ))}
-          </View>
-        ) : prefs.isError || !p ? (
-          <EmptyState
-            icon="cloud-offline-outline"
-            title="Couldn't load your settings"
-            description="Check your connection and try again."
-            actionLabel="Try again"
-            onAction={() => prefs.refetch()}
+        {!p ? (
+          <QueryUnavailable
+            view={prefsView}
+            subject="your settings"
+            onRetry={() => prefs.refetch()}
+            loading={
+              <View className="gap-3">
+                {["a", "b", "c"].map((k) => (
+                  <Skeleton key={k} width="100%" height={96} radius={16} />
+                ))}
+              </View>
+            }
           />
         ) : (
           <>
@@ -186,8 +191,14 @@ export default function NotificationSettings() {
             {showFollowing ? (
               <Card className="gap-2">
                 <AppText variant="cardTitle">What you follow</AppText>
-                {subs.isLoading ? (
+                {subsView.kind === "loading" ? (
                   <Skeleton width="100%" height={44} />
+                ) : subsView.kind === "offline" || subsView.kind === "error" ? (
+                  <AppText variant="small" tone="muted">
+                    {subsView.kind === "offline"
+                      ? "You're offline. What you follow will load when you're back online."
+                      : "Couldn't load what you follow. Pull down to try again."}
+                  </AppText>
                 ) : followed.length === 0 ? (
                   <AppText variant="small" tone="muted">
                     You don't follow anyone yet. Tap Notify me on an organizer's

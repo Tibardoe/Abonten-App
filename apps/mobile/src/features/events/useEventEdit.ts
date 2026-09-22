@@ -3,6 +3,8 @@ import { useUpdateEvent } from "@/features/events/useUpdateEvent";
 import { useUpdateEventTicketTypes } from "@/features/events/useUpdateEventTicketTypes";
 import { api } from "@/lib/api";
 import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
+import { settleEnvelope } from "@/lib/envelope";
+import { useQueryView } from "@/lib/useQueryView";
 import type {
   EventForEditData,
   UpdateEventResult,
@@ -66,9 +68,11 @@ export function useEventEdit(eventId: string) {
 
   const query = useQuery({
     queryKey: ["mobile", "organizer", "event-edit", eventId],
-    queryFn: () => api.organizer.eventEditContext(eventId),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.eventEditContext(eventId)),
     enabled: !!eventId,
   });
+  const loadView = useQueryView(query);
 
   const [prefilled, setPrefilled] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -498,6 +502,8 @@ export function useEventEdit(eventId: string) {
 
   return {
     isLoading: query.isLoading,
+    /** Loading, offline and failed, told apart, for the form's gate. */
+    loadView,
     loadError:
       query.isError ||
       (query.data && query.data.status !== 200

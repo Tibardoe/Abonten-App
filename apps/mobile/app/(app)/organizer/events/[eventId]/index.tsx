@@ -1,5 +1,7 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useEventInsights } from "@/features/organizer/useEventInsights";
 import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
+import { useQueryView } from "@/lib/useQueryView";
 import type {
   EventInsightsDateRow,
   EventInsightsFinance,
@@ -422,6 +424,11 @@ export default function EventInsightsScreen() {
 
   const result = q.data;
   const insights = result && result.status === 200 ? result.data : null;
+  // The server's own answer (not yours, no such event) keeps its message;
+  // loading, offline and failed are told apart from it, and the tiles are
+  // never drawn as zeros for figures the phone does not have.
+  const definiteFailure = result !== undefined && result.status !== 200;
+  const view = useQueryView(q);
 
   const dateRange = insights?.overview?.starts_at
     ? formatFullDateTimeRange(
@@ -508,16 +515,21 @@ export default function EventInsightsScreen() {
         ))}
       </View>
 
-      {q.isLoading ? (
-        <View className="items-center py-12">
-          <ActivityIndicator />
-        </View>
-      ) : q.isError || (result && result.status !== 200) ? (
+      {!definiteFailure && view.kind !== "content" && view.kind !== "empty" ? (
+        <QueryUnavailable
+          view={view}
+          subject="this event's insights"
+          onRetry={() => q.refetch()}
+          loading={
+            <View className="items-center py-12">
+              <ActivityIndicator />
+            </View>
+          }
+        />
+      ) : definiteFailure ? (
         <View className="items-center gap-3 py-12">
           <AppText className="text-center text-muted-foreground">
-            {(result && result.status === 403 && result.message) ||
-              (result && result.status !== 200 && result.message) ||
-              "Couldn't load this event's insights."}
+            {result.message || "Couldn't load this event's insights."}
           </AppText>
           <Pressable
             accessibilityRole="button"

@@ -1,12 +1,14 @@
 import { ImageViewer } from "@/components/ImageViewer";
 import { UploadProgress } from "@/components/UploadProgress";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ProfileCompletionCard } from "@/components/profile/ProfileCompletionCard";
 import { FormSkeleton } from "@/components/skeletons";
 import { useAvatarUpload } from "@/features/profile/useAvatarUpload";
 import { useProfile } from "@/features/profile/useProfile";
 import { useUpdateProfile } from "@/features/profile/useUpdateProfile";
 import { useUploadProgress } from "@/features/uploads/useUploadProgress";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   AppText,
@@ -36,12 +38,12 @@ type FormState = {
 };
 
 export default function EditProfile() {
-  const {
-    data: profile,
-    isLoading,
-    isError: profileError,
-    refetch: refetchProfile,
-  } = useProfile();
+  const profileQuery = useProfile();
+  const { data: profile, refetch: refetchProfile } = profileQuery;
+  // Loading, offline and failed are told apart: the form never opens on a
+  // profile the phone does not have (it is cached on disk, so a saved one
+  // still opens offline).
+  const profileView = useQueryView(profileQuery);
   const update = useUpdateProfile();
   const toast = useToast();
   const avatar = useAvatarUpload();
@@ -135,13 +137,25 @@ export default function EditProfile() {
     );
   }
 
-  if (isLoading) return <FormSkeleton fields={5} />;
-  if (profileError || !profile) {
+  if (!profile) {
+    if (profileView.kind === "content" || profileView.kind === "empty") {
+      // The server's own answer: no profile row yet.
+      return (
+        <ScreenError
+          message="Couldn't load your profile."
+          onRetry={() => refetchProfile()}
+        />
+      );
+    }
     return (
-      <ScreenError
-        message="Couldn't load your profile."
-        onRetry={() => refetchProfile()}
-      />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={profileView}
+          subject="your profile"
+          onRetry={() => refetchProfile()}
+          loading={<FormSkeleton fields={5} />}
+        />
+      </View>
     );
   }
 

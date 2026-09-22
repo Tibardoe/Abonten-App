@@ -1,5 +1,6 @@
 import { ACTIVE_PROMOTIONS_KEY } from "@/features/promotions/useActivePromotions";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // The per-place Promotion tab — tiers + current promotion, then a reserve
@@ -10,7 +11,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 export function usePlacePromotionContext(placeId: string) {
   return useQuery({
     queryKey: ["mobile", "organizer", "place-promotion", placeId],
-    queryFn: () => api.organizer.placePromotionContext(placeId),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.placePromotionContext(placeId)),
     enabled: !!placeId,
     staleTime: 20_000,
   });

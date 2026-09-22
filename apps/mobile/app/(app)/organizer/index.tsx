@@ -1,3 +1,4 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { DashboardWidgets } from "@/components/organizer/DashboardWidgets";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
@@ -6,6 +7,7 @@ import {
   useOrganizerOverview,
 } from "@/features/organizer/useOrganizer";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
+import { useQueryView } from "@/lib/useQueryView";
 import type {
   OrganizerDashboardPeriod,
   OrganizerOverviewResult,
@@ -166,15 +168,11 @@ export default function OrganizerDashboard() {
   // One shape for the KPI section whichever path fed it.
   const q: {
     data: OrganizerOverviewResult | undefined;
-    isLoading: boolean;
-    isError: boolean;
     isRefetching: boolean;
     refetch: () => unknown;
   } = inlineOverview
     ? {
         data: { status: 200, data: inlineOverview },
-        isLoading: false,
-        isError: false,
         isRefetching: widgetsQuery.isRefetching,
         refetch: widgetsQuery.refetch,
       }
@@ -184,11 +182,18 @@ export default function OrganizerDashboard() {
           // The single dashboard request carries the KPIs; until it settles
           // (or if it fails) the KPI section mirrors its state.
           data: widgetsQuery.data ?? undefined,
-          isLoading: widgetsQuery.isLoading,
-          isError: widgetsQuery.isError,
           isRefetching: widgetsQuery.isRefetching,
           refetch: widgetsQuery.refetch,
         };
+  // Loading, offline and failed are told apart from "no events yet": that is
+  // only ever said for an answer the server gave. The dashboard is never
+  // cached on disk (money), so offline with nothing loaded this session
+  // says so rather than showing zero sales.
+  const kpiView = useQueryView<unknown>(
+    !inlineOverview && widgetsQuery.data?.status === 200
+      ? fallbackOverview
+      : widgetsQuery,
+  );
   const draftsQuery = useEventDrafts();
   const draftCount =
     draftsQuery.data?.status === 200 ? draftsQuery.data.data.length : 0;
@@ -249,24 +254,13 @@ export default function OrganizerDashboard() {
         ))}
       </View>
 
-      {q.isLoading ? (
-        <DashboardSkeleton />
-      ) : q.isError || (result && result.status !== 200) ? (
-        <View className="items-center gap-3 py-12">
-          <AppText className="text-center text-muted-foreground">
-            {(result && result.status !== 200 && result.message) ||
-              "Couldn't load your dashboard."}
-          </AppText>
-          <Pressable
-            accessibilityRole="button"
-            className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
-            onPress={() => q.refetch()}
-          >
-            <AppText className="font-semibold text-primary-foreground">
-              Retry
-            </AppText>
-          </Pressable>
-        </View>
+      {kpiView.kind !== "content" && kpiView.kind !== "empty" ? (
+        <QueryUnavailable
+          view={kpiView}
+          subject="your dashboard"
+          onRetry={() => q.refetch()}
+          loading={<DashboardSkeleton />}
+        />
       ) : !hasEvents ? (
         <View className="items-center gap-3 py-12">
           <AppText variant="sectionHeading">No events yet</AppText>

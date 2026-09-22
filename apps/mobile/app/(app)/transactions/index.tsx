@@ -1,8 +1,10 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TransactionsSkeleton } from "@/components/skeletons";
 import {
   useTransactionHistory,
   useTransactionSummary,
 } from "@/features/transactions/useTransactions";
+import { useQueryView } from "@/lib/useQueryView";
 import {
   TRANSACTION_PERIOD_LABELS,
   type TransactionPeriod,
@@ -136,13 +138,18 @@ export default function Transactions() {
     historyQuery.data?.pages.flatMap((p) => p.rows as UserTransactionRow[]) ??
     [];
   const summary = summaryQuery.data?.[0];
+  // Loading, offline and failed are told apart from "nothing in this
+  // period": the empty state is only ever said for an answer the server
+  // gave. Transactions are never cached on disk (money), so offline with
+  // nothing loaded this session shows the offline state, not zero rows.
+  const historyView = useQueryView(historyQuery, () => rows.length === 0);
 
   const onEndReached = useCallback(() => {
     if (historyQuery.hasNextPage && !historyQuery.isFetchingNextPage)
       historyQuery.fetchNextPage();
   }, [historyQuery]);
 
-  if (summaryQuery.isLoading && historyQuery.isLoading)
+  if (historyView.kind === "loading" && summaryQuery.data === undefined)
     return <TransactionsSkeleton />;
 
   const header = (
@@ -162,21 +169,31 @@ export default function Transactions() {
         ))}
       </ScrollView>
 
+      {/* A figure is shown only when the summary actually loaded: a "0"
+          for a summary the phone could not fetch would read as "you spent
+          nothing". */}
       <View className="flex-row gap-3 px-4">
         <Tile
           label="Spent"
-          value={money(summary?.amount_spent ?? 0, summary?.currency ?? "GHS")}
+          value={
+            summary
+              ? money(summary.amount_spent ?? 0, summary.currency ?? "GHS")
+              : "—"
+          }
         />
         <Tile
           label="Transactions"
-          value={String(summary?.total_transactions ?? 0)}
+          value={summary ? String(summary.total_transactions ?? 0) : "—"}
         />
       </View>
       <View className="flex-row gap-3 px-4">
-        <Tile label="Tickets" value={String(summary?.tickets_purchased ?? 0)} />
+        <Tile
+          label="Tickets"
+          value={summary ? String(summary.tickets_purchased ?? 0) : "—"}
+        />
         <Tile
           label="Successful"
-          value={String(summary?.successful_count ?? 0)}
+          value={summary ? String(summary.successful_count ?? 0) : "—"}
         />
       </View>
     </View>
@@ -207,29 +224,18 @@ export default function Transactions() {
         />
       }
       ListEmptyComponent={
-        historyQuery.isLoading ? (
-          <Spinner className="mt-6" />
-        ) : (
+        historyView.kind === "empty" ? (
           <EmptyState
-            icon={
-              historyQuery.isError
-                ? "cloud-offline-outline"
-                : "swap-horizontal-outline"
-            }
-            title={
-              historyQuery.isError
-                ? "Couldn't load transactions"
-                : "No transactions for this period"
-            }
-            description={
-              historyQuery.isError
-                ? "Pull down to try again."
-                : "Purchases and promotions you pay for show up here."
-            }
-            actionLabel={historyQuery.isError ? "Retry" : undefined}
-            onAction={
-              historyQuery.isError ? () => historyQuery.refetch() : undefined
-            }
+            icon="swap-horizontal-outline"
+            title="No transactions for this period"
+            description="Purchases and promotions you pay for show up here."
+          />
+        ) : (
+          <QueryUnavailable
+            view={historyView}
+            subject="your transactions"
+            onRetry={() => historyQuery.refetch()}
+            loading={<Spinner className="mt-6" />}
           />
         )
       }

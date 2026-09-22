@@ -1,3 +1,4 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import {
   type ManageEventReview,
@@ -5,6 +6,7 @@ import {
   useEventReviewsManage,
   useRespondToEventReview,
 } from "@/features/organizer/useEventReviewsManage";
+import { useQueryView } from "@/lib/useQueryView";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import {
   AppText,
@@ -221,28 +223,13 @@ export default function ManageEventReviewsScreen() {
   const id = eventId ?? "";
   const q = useEventReviewsManage(id);
   const rows = q.data?.pages.flatMap((p) => p.reviews) ?? [];
+  // "No reviews yet" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => rows.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
-
-  if (q.isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Spinner />
-      </View>
-    );
-  }
-  if (q.isError) {
-    return (
-      <View className="flex-1 bg-background">
-        <ScreenError
-          message="Couldn't load reviews."
-          onRetry={() => q.refetch()}
-        />
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-background">
@@ -255,9 +242,18 @@ export default function ManageEventReviewsScreen() {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          <AppText variant="muted" className="mt-10 text-center">
-            No reviews yet.
-          </AppText>
+          view.kind === "empty" ? (
+            <AppText variant="muted" className="mt-10 text-center">
+              No reviews yet.
+            </AppText>
+          ) : (
+            <QueryUnavailable
+              view={view}
+              subject="reviews"
+              onRetry={() => q.refetch()}
+              loading={<Spinner className="mt-10" />}
+            />
+          )
         }
         ListFooterComponent={
           <ListFooter

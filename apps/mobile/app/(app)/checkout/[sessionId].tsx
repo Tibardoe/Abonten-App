@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { PaymentSection } from "@/features/checkout/PaymentSection";
 import {
   useCancelCheckout,
@@ -9,6 +10,7 @@ import {
   formatCountdown,
   useCheckoutCountdown,
 } from "@/features/checkout/useCheckoutCountdown";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -95,7 +97,12 @@ export default function CheckoutReviewScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data, isLoading, isError, refetch } = useCheckoutPrepare(sessionId);
+  const prepareQuery = useCheckoutPrepare(sessionId);
+  const { data, refetch } = prepareQuery;
+  // Loading, offline and failed are told apart from the server's own
+  // answer about this checkout (expired, already paid…), which keeps its
+  // message below.
+  const prepareView = useQueryView(prepareQuery);
   const sessionQuery = useCheckoutSession(sessionId);
   const cancel = useCancelCheckout();
 
@@ -104,15 +111,31 @@ export default function CheckoutReviewScreen() {
   const rows = (sessionQuery.data?.data ?? []) as { expires_at?: string }[];
   const expiresAt = rows[0]?.expires_at ?? null;
 
-  if (isLoading) {
+  // A definite answer from the server (a transient failure throws in the
+  // hook, so any non-200 envelope here is one) keeps its own message.
+  const definiteFailure = data !== undefined && data.status !== 200;
+  if (
+    !definiteFailure &&
+    prepareView.kind !== "content" &&
+    prepareView.kind !== "empty"
+  ) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={prepareView}
+          subject="this checkout"
+          onRetry={() => refetch()}
+          loading={
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator />
+            </View>
+          }
+        />
       </View>
     );
   }
 
-  if (isError || !data || data.status !== 200 || !data.data) {
+  if (!data || data.status !== 200 || !data.data) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
         <AppText className="text-center text-muted-foreground">

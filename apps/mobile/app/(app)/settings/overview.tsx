@@ -2,6 +2,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { useActivePromotions } from "@/features/promotions/useActivePromotions";
 import { useIsOrganizer } from "@/features/roles/useRoles";
 import { useIsOnline } from "@/lib/network";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import {
   PROMOTION_KIND_LABEL,
@@ -104,9 +105,12 @@ export default function SettingsOverview() {
   const isOrganizer = useIsOrganizer();
   const promotions = useActivePromotions();
   const items = promotions.data ?? [];
+  // "No active promotions" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(promotions, (list) => list.length === 0);
 
   let body: React.ReactNode;
-  if (promotions.isLoading) {
+  if (view.kind === "loading") {
     body = (
       <View className="gap-4 py-2" accessibilityLabel="Loading promotions">
         {["a", "b"].map((k) => (
@@ -118,22 +122,22 @@ export default function SettingsOverview() {
         ))}
       </View>
     );
-  } else if (items.length > 0) {
+  } else if (view.kind === "content") {
     body = items.map((p, i) => (
       <Fragment key={`${p.resourceType}-${p.campaignId ?? p.resourceId}`}>
         {i > 0 ? <Divider /> : null}
         <PromotionRow promotion={p} />
       </Fragment>
     ));
-  } else if (promotions.isError && !promotions.data) {
+  } else if (view.kind === "offline" || view.kind === "error") {
     body = (
       <View className="items-start gap-2 py-2">
         <AppText variant="body">
-          {online
+          {view.kind === "error"
             ? "Couldn't load your promotions."
             : "You're offline. Your promotions will load when you reconnect."}
         </AppText>
-        {online ? (
+        {view.kind === "error" ? (
           <Pressable
             accessibilityRole="button"
             onPress={() => promotions.refetch()}
@@ -172,7 +176,7 @@ export default function SettingsOverview() {
         <Overline>Promotions</Overline>
         <Card padded>
           {body}
-          {items.length === 0 && !promotions.isLoading && isOrganizer ? (
+          {view.kind === "empty" && isOrganizer ? (
             <>
               <Divider />
               <LinkRow
@@ -187,7 +191,7 @@ export default function SettingsOverview() {
             </>
           ) : null}
         </Card>
-        {items.length > 0 && promotions.isError ? (
+        {view.kind === "content" && view.refreshFailed ? (
           <AppText variant="caption" tone="muted">
             {online
               ? "Couldn't refresh. Showing what was last loaded."

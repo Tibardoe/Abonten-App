@@ -1,9 +1,11 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { FormSkeleton } from "@/components/skeletons";
 import { useOrganizerFinance } from "@/features/organizer/useOrganizer";
 import {
   usePayoutAccounts,
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
+import { useQueryView } from "@/lib/useQueryView";
 import {
   AppText,
   Button,
@@ -72,16 +74,19 @@ export default function WithdrawScreen() {
   const canProceed =
     !!selectedCurrency && !!defaultAccountId && amountValid && !overBalance;
 
-  const loading = finance.isLoading || accountsQ.isLoading;
-  // A failed load must not masquerade as "no payout accounts / zero balance"
-  // — those states drive real UI ("add an account", a disabled form) that
-  // would be wrong and confusing when the truth is a network error.
-  const loadFailed =
-    !loading &&
-    (finance.isError ||
-      accountsQ.isError ||
-      (finance.data != null && finance.data.status !== 200) ||
-      (accountsQ.data != null && accountsQ.data.status !== 200));
+  // A failed or offline load must not masquerade as "no payout accounts /
+  // zero balance" — those states drive real UI ("add an account", a
+  // disabled form) that would be wrong when the truth is that the phone
+  // does not have the figures.
+  const financeView = useQueryView(finance);
+  const accountsView = useQueryView(accountsQ);
+  const settled = (v: { kind: string }) =>
+    v.kind === "content" || v.kind === "empty";
+  const blocked = !settled(financeView)
+    ? financeView
+    : !settled(accountsView)
+      ? accountsView
+      : null;
 
   async function submit() {
     if (submittedRef.current || !canProceed || !selectedCurrency) return;
@@ -104,17 +109,19 @@ export default function WithdrawScreen() {
     );
   }
 
-  if (loading) return <FormSkeleton fields={3} />;
-
-  if (loadFailed) {
+  if (blocked) {
     return (
-      <ScreenError
-        message="Couldn't load your balance or payout accounts."
-        onRetry={() => {
-          finance.refetch();
-          accountsQ.refetch();
-        }}
-      />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={blocked}
+          subject="your balance and payout accounts"
+          onRetry={() => {
+            finance.refetch();
+            accountsQ.refetch();
+          }}
+          loading={<FormSkeleton fields={3} />}
+        />
+      </View>
     );
   }
 

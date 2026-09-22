@@ -1,9 +1,11 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useDismissRecommendation,
   useRecommendations,
 } from "@/features/alerts/useAlerts";
 import { api } from "@/lib/api";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { RecommendationItem } from "@abonten/types/discoveryType";
@@ -123,6 +125,8 @@ export default function ForYou() {
   const recs = useRecommendations();
   const dismiss = useDismissRecommendation();
   const items = recs.data ?? [];
+  // "No picks yet" is only ever said for an answer the server gave.
+  const view = useQueryView(recs, (list) => list.length === 0);
 
   return (
     <View className="flex-1 bg-background">
@@ -136,27 +140,26 @@ export default function ForYou() {
           <PickRow item={item} onDismiss={() => dismiss.mutate(item)} />
         )}
         ListEmptyComponent={
-          recs.isLoading ? (
-            <View className="gap-3">
-              {["a", "b", "c"].map((k) => (
-                <Skeleton key={k} width="100%" height={112} radius={16} />
-              ))}
-            </View>
-          ) : recs.isError ? (
-            <EmptyState
-              icon="cloud-offline-outline"
-              title="Couldn't load your picks"
-              description="Check your connection and try again."
-              actionLabel="Try again"
-              onAction={() => recs.refetch()}
-            />
-          ) : (
+          view.kind === "empty" ? (
             <EmptyState
               icon="sparkles-outline"
               title="No picks yet"
               description="Turn on alerts after you get a ticket, or tap Notify me on organizers and places you like."
               actionLabel="Manage notifications"
               onAction={() => router.push("/(app)/settings/notifications")}
+            />
+          ) : (
+            <QueryUnavailable
+              view={view}
+              subject="your picks"
+              onRetry={() => recs.refetch()}
+              loading={
+                <View className="gap-3">
+                  {["a", "b", "c"].map((k) => (
+                    <Skeleton key={k} width="100%" height={112} radius={16} />
+                  ))}
+                </View>
+              }
             />
           )
         }

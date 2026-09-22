@@ -1,5 +1,7 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { RowListSkeleton } from "@/components/skeletons";
 import { useEventsAwaitingReview } from "@/features/reviews/useEventReviews";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Button, Card, EmptyState } from "@abonten/ui-native";
 import { Image } from "expo-image";
@@ -13,26 +15,34 @@ import { AddReviewSheet } from "./AddReviewSheet";
 // the review sheet. An event drops out the moment its review is submitted
 // (usePostEventReview invalidates ["reviews","awaiting"]).
 export function EventsToReviewList() {
-  const { data, isLoading, isError } = useEventsAwaitingReview();
+  const query = useEventsAwaitingReview();
+  const { data } = query;
+  const events = data ?? [];
+  // "Nothing to review yet" is only ever said for an answer the server
+  // gave; loading, offline and failed are told apart.
+  const view = useQueryView(query, () => events.length === 0);
   const router = useRouter();
   const [reviewing, setReviewing] = useState<{
     id: string;
     title: string;
   } | null>(null);
 
-  if (isLoading) return <RowListSkeleton count={4} />;
-
-  const events = data ?? [];
-  if (events.length === 0) {
+  if (view.kind === "empty") {
     return (
       <EmptyState
         icon="star-outline"
-        title={isError ? "Couldn't load this list" : "Nothing to review yet"}
-        description={
-          isError
-            ? "Pull down to try again."
-            : "Events you've attended show up here once they end."
-        }
+        title="Nothing to review yet"
+        description="Events you've attended show up here once they end."
+      />
+    );
+  }
+  if (view.kind !== "content") {
+    return (
+      <QueryUnavailable
+        view={view}
+        subject="events to review"
+        onRetry={() => query.refetch()}
+        loading={<RowListSkeleton count={4} />}
       />
     );
   }

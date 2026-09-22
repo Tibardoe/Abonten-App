@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { useQuery } from "@tanstack/react-query";
 
 // Powers the header bell badge. A dedicated count query (GET
@@ -14,7 +15,7 @@ export function useUnreadNotificationCount() {
     queryKey: ["mobile", "notifications", "unread-count", session?.user.id],
     enabled: !!session?.user.id,
     queryFn: async () => {
-      const res = await api.notifications.unreadCount();
+      const res = settleEnvelope(await api.notifications.unreadCount());
       return res.status === 200 ? (res.data?.count ?? 0) : 0;
     },
     staleTime: 30 * 1000,

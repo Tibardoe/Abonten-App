@@ -3,6 +3,7 @@ import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
 import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { CreateActionSheet } from "@/components/profile/CreateActionSheet";
 import { ListingKindMenu } from "@/components/profile/ListingKindMenu";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
@@ -25,7 +26,8 @@ import {
   useProfileReviews,
 } from "@/features/profile/useProfileTabs";
 import { usePublicProfile } from "@/features/profile/usePublicProfile";
-import { useIsOnline } from "@/lib/network";
+import { isNotFoundError } from "@/lib/queryErrors";
+import { useQueryView } from "@/lib/useQueryView";
 import {
   type ListingKind,
   type ProfileTab,
@@ -81,9 +83,12 @@ export default function UserProfileScreen() {
   const { session } = useSession();
   const { program } = useContentProgram();
 
-  const online = useIsOnline();
   const profileQuery = usePublicProfile(username);
   const profile = profileQuery.data;
+  // A cached profile (this session or restored from the last one) always
+  // renders; loading, offline and failed are told apart only for a profile
+  // never loaded here.
+  const profileView = useQueryView(profileQuery);
   const isOwn = !!session && session.user.id === profile?.user_id;
 
   // A link can open a tab directly (Account › Saved Spotlights opens
@@ -254,35 +259,44 @@ export default function UserProfileScreen() {
 
   const closeListingMenu = useCallback(() => setListingMenu(null), []);
 
-  // A tab is still "loading" until its query has produced data at least
-  // once — `isPending` (no data yet), not `isLoading` (which is false while
-  // a switched-to / re-enabled query spins up), so a slow or just-enabled
-  // tab shows a spinner rather than flashing its empty state.
-  const showTabLoader = active.isPending && !active.isError;
+  // What the open tab shows: its list, a genuine empty state, or — with
+  // nothing loaded for it yet — loading, offline or failed. A tab the
+  // person has visited keeps its rows through a tab switch (React Query
+  // serves each from cache); a just-enabled one shows a spinner rather than
+  // flashing its empty state.
+  const tabView = useQueryView<unknown>(active, () => rows.length === 0);
 
-  // A cached profile (this session or restored from the last one) always
-  // renders, even when a background refresh fails or the device is
-  // offline; the error screen is only for a profile never loaded here.
-  if (!profile && profileQuery.isLoading) {
-    return (
-      <View className="flex-1 bg-background">
-        {navHeader}
-        <ProfileSkeleton />
-      </View>
-    );
-  }
   if (!profile) {
+    // The server's own answer: no such profile. Deterministic, so it is
+    // shown even offline and never as "couldn't load".
+    if (profileQuery.isError && isNotFoundError(profileQuery.error)) {
+      return (
+        <View className="flex-1 bg-background">
+          {navHeader}
+          <ScreenError message="This profile could not be found." />
+        </View>
+      );
+    }
+    if (profileView.kind === "loading") {
+      return (
+        <View className="flex-1 bg-background">
+          {navHeader}
+          <ProfileSkeleton />
+        </View>
+      );
+    }
     return (
       <View className="flex-1 bg-background">
         {navHeader}
-        <ScreenError
-          message={
-            online
-              ? "This profile could not be loaded."
-              : "You're offline. This profile will load when you reconnect."
-          }
-          onRetry={() => profileQuery.refetch()}
-        />
+        {profileView.kind === "offline" || profileView.kind === "error" ? (
+          <QueryUnavailable
+            view={profileView}
+            subject="this profile"
+            onRetry={() => profileQuery.refetch()}
+          />
+        ) : (
+          <ScreenError message="This profile could not be found." />
+        )}
       </View>
     );
   }
@@ -417,18 +431,8 @@ export default function UserProfileScreen() {
             />
           }
           ListEmptyComponent={
-            showTabLoader ? (
-              <Spinner className="mt-6" />
-            ) : currentTab === "favorites" &&
-              !session ? null : active.isError ? (
-              <EmptyState
-                icon="cloud-offline-outline"
-                title="Couldn't load this tab"
-                description="We couldn't reach the server. Check your connection."
-                actionLabel="Try again"
-                onAction={() => active.refetch()}
-              />
-            ) : (
+            currentTab === "favorites" && !session ? null : tabView.kind ===
+              "empty" ? (
               <EmptyState
                 icon={empty.icon}
                 title={empty.title}
@@ -439,6 +443,13 @@ export default function UserProfileScreen() {
                     ? () => router.push("/(app)/spotlight/new?kind=spotlight")
                     : undefined
                 }
+              />
+            ) : (
+              <QueryUnavailable
+                view={tabView}
+                subject="this tab"
+                onRetry={() => active.refetch()}
+                loading={<Spinner className="mt-6" />}
               />
             )
           }
