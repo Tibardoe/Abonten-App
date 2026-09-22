@@ -1,3 +1,4 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useAddPayoutAccount,
   usePayoutAccounts,
@@ -5,6 +6,7 @@ import {
   useSetDefaultPayoutAccount,
 } from "@/features/organizer/usePayouts";
 import { useMomoNetworks } from "@/features/wallet/usePaymentMethods";
+import { useQueryView } from "@/lib/useQueryView";
 import type {
   AddPayoutAccountBody,
   PayoutAccountRow,
@@ -36,7 +38,13 @@ function accountTitle(a: PayoutAccountRow): string {
 
 export default function PayoutAccountsScreen() {
   const toast = useToast();
-  const { data, isLoading, isError, refetch } = usePayoutAccounts();
+  const accountsQuery = usePayoutAccounts();
+  const { data, refetch } = accountsQuery;
+  // "No payout accounts yet" is only ever said for an answer the server
+  // gave; loading, offline and failed are told apart (payout accounts are
+  // never cached on disk, so offline with nothing loaded this session says
+  // so instead of inviting the person to add an account they already have).
+  const view = useQueryView(accountsQuery);
   const networks = useMomoNetworks();
   const add = useAddPayoutAccount();
   const remove = useRemovePayoutAccount();
@@ -154,21 +162,19 @@ export default function PayoutAccountsScreen() {
           ? "Bank account"
           : "";
 
-  if (isLoading) {
+  if (view.kind !== "content" && view.kind !== "empty") {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  if (isError) {
-    return (
-      <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <AppText className="text-center text-muted-foreground">
-          Couldn't load your payout accounts.
-        </AppText>
-        <Button title="Retry" onPress={() => refetch()} />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={view}
+          subject="your payout accounts"
+          onRetry={() => refetch()}
+          loading={
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator />
+            </View>
+          }
+        />
       </View>
     );
   }

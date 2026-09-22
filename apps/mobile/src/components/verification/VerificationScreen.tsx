@@ -1,3 +1,4 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   type StagedDoc,
   guessMime,
@@ -8,6 +9,7 @@ import {
   validateDoc,
   verificationView,
 } from "@/features/verification/useVerification";
+import { useQueryView } from "@/lib/useQueryView";
 import { uuidv4 } from "@/lib/uuid";
 import {
   HOW_REVIEW_WORKS,
@@ -176,6 +178,9 @@ export default function VerificationScreen({
   const toast = useToast();
   const q = useSubjectVerification(subjectType, subjectId);
   const view = verificationView(q.data);
+  // Loading, offline and failed are told apart (verification is never
+  // cached on disk, so offline with nothing loaded this session says so).
+  const loadView = useQueryView(q);
   const actions = useVerificationActions(subjectType, subjectId);
   const staged = useStagedDocs();
 
@@ -185,10 +190,19 @@ export default function VerificationScreen({
   const [busy, setBusy] = useState(false);
   const [evidenceType, setEvidenceType] = useState<string>("");
 
-  if (q.isLoading) {
+  if (loadView.kind !== "content" && loadView.kind !== "empty") {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <Spinner />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={loadView}
+          subject="verification"
+          onRetry={() => q.refetch()}
+          loading={
+            <View className="flex-1 items-center justify-center">
+              <Spinner />
+            </View>
+          }
+        />
       </View>
     );
   }

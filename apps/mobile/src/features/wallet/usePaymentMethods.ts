@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { AddMomoWalletBody } from "@abonten/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as WebBrowser from "expo-web-browser";
@@ -10,7 +11,7 @@ type AddCardResult = { status: number; message?: string };
 export function usePaymentMethods() {
   return useQuery({
     queryKey: KEY,
-    queryFn: () => api.paymentMethods.list(),
+    queryFn: async () => settleEnvelope(await api.paymentMethods.list()),
   });
 }
 
@@ -18,7 +19,7 @@ export function usePaymentMethods() {
 export function useMomoNetworks() {
   return useQuery({
     queryKey: ["mobile", "momo-networks"],
-    queryFn: () => api.paystack.momoNetworks(),
+    queryFn: async () => settleEnvelope(await api.paystack.momoNetworks()),
     staleTime: 1000 * 60 * 60,
   });
 }

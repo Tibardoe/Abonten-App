@@ -1,9 +1,11 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketScannerSheet } from "@/components/organizer/TicketScannerSheet";
 import {
   flattenAttendees,
   useAttendees,
   useCheckInTicket,
 } from "@/features/organizer/useAttendees";
+import { useQueryView } from "@/lib/useQueryView";
 import type { AttendanceRow } from "@abonten/api-client";
 import { AppText, Button, Refresher, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
@@ -136,21 +138,18 @@ export default function EventAttendeesScreen() {
   const q = useAttendees(id);
   const rows = flattenAttendees(q.data?.pages);
   const firstPage = q.data?.pages[0];
-  const failed = q.isError || (firstPage && firstPage.status >= 400);
+  // The server's own answer that this event is not this person's: shown
+  // as such, never as a load failure.
+  const forbidden = firstPage?.status === 403;
+  // "No attendees yet" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => rows.length === 0);
   const [scanOpen, setScanOpen] = useState(false);
-  const canScan = !failed;
+  const canScan = view.kind === "content" || view.kind === "empty";
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
-
-  if (q.isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-background">
@@ -177,13 +176,22 @@ export default function EventAttendeesScreen() {
         onEndReachedThreshold={0.5}
         refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
-          <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            {failed
-              ? firstPage && firstPage.status === 403
-                ? "You're not authorized to view this event."
-                : "Couldn't load the attendee list."
-              : "No attendees yet."}
-          </AppText>
+          forbidden ? (
+            <AppText className="mt-10 text-center text-sm text-muted-foreground">
+              You're not authorized to view this event.
+            </AppText>
+          ) : view.kind === "empty" ? (
+            <AppText className="mt-10 text-center text-sm text-muted-foreground">
+              No attendees yet.
+            </AppText>
+          ) : (
+            <QueryUnavailable
+              view={view}
+              subject="the attendee list"
+              onRetry={() => q.refetch()}
+              loading={<ActivityIndicator className="mt-10" />}
+            />
+          )
         }
         ListFooterComponent={
           q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null

@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { supabase } from "@/lib/supabase";
 import {
   type SubjectVerificationView,
@@ -70,7 +71,10 @@ export function useSubjectVerification(
   return useQuery({
     queryKey: VERIFICATION_KEY(subjectType, subjectId),
     enabled: (options?.enabled ?? true) && !!subjectId,
-    queryFn: () => api.verification.subject({ subjectType, subjectId }),
+    queryFn: async () =>
+      settleEnvelope(
+        await api.verification.subject({ subjectType, subjectId }),
+      ),
     staleTime: 30_000,
   });
 }
@@ -78,7 +82,7 @@ export function useSubjectVerification(
 export function useVerificationProgram() {
   return useQuery({
     queryKey: ["mobile", "verification", "program"] as const,
-    queryFn: () => api.verification.program(),
+    queryFn: async () => settleEnvelope(await api.verification.program()),
     staleTime: 5 * 60_000,
   });
 }

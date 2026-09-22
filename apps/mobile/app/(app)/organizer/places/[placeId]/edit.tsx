@@ -1,3 +1,4 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TimeField } from "@/components/datetime/TimeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import { PlacePhotoManager } from "@/components/places/PlacePhotoManager";
@@ -353,17 +354,22 @@ export default function EditPlaceScreen() {
   const w = usePlaceEdit(placeId ?? "");
   const [mapOpen, setMapOpen] = useState(false);
 
-  if (w.isLoading || !w.isReady) {
-    if (w.loadError) {
+  if (!w.isReady) {
+    // A definite answer from the server (not yours, no such place) keeps
+    // its message; loading, offline and failed are told apart from it, so
+    // the form never sits on a skeleton the phone cannot fill.
+    if (typeof w.loadError === "string") {
+      return <ScreenError message={w.loadError} onRetry={() => w.reload()} />;
+    }
+    if (w.loadView.kind === "offline" || w.loadView.kind === "error") {
       return (
-        <ScreenError
-          message={
-            typeof w.loadError === "string"
-              ? w.loadError
-              : "Couldn't load this place."
-          }
-          onRetry={() => w.reload()}
-        />
+        <View className="flex-1 bg-background">
+          <QueryUnavailable
+            view={w.loadView}
+            subject="this place"
+            onRetry={() => w.reload()}
+          />
+        </View>
       );
     }
     return <FormSkeleton fields={6} />;

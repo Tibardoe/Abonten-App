@@ -1,10 +1,12 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { PromotionPaymentSection } from "@/components/organizer/PromotionPaymentSection";
 import {
   useCampaign,
   useInvalidateContent,
 } from "@/features/content/useContent";
 import { api } from "@/lib/api";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachine";
 import {
@@ -34,6 +36,8 @@ export default function CampaignScreen() {
   const toast = useToast();
   const invalidate = useInvalidateContent();
   const q = useCampaign(id);
+  // Loading, offline and failed are told apart from "no such promotion".
+  const view = useQueryView(q);
   const [busy, setBusy] = useState<string | null>(null);
   const header = (
     <AppHeader
@@ -43,11 +47,16 @@ export default function CampaignScreen() {
     />
   );
 
-  if (q.isLoading) {
+  if (view.kind !== "content" && view.kind !== "empty") {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <Spinner />
+        <QueryUnavailable
+          view={view}
+          subject="this promotion"
+          onRetry={() => q.refetch()}
+          loading={<Spinner />}
+        />
       </View>
     );
   }

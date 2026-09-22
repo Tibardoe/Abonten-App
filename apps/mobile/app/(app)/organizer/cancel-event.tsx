@@ -1,7 +1,9 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useCancelEvent,
   useEventCancellationImpact,
 } from "@/features/organizer/usePayouts";
+import { useQueryView } from "@/lib/useQueryView";
 import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
@@ -37,8 +39,10 @@ export default function CancelEventScreen() {
 
   const data =
     impact.data && impact.data.status === 200 ? impact.data.data : null;
-  const impactError =
-    impact.isError || (impact.data && impact.data.status !== 200);
+  // Loading, offline and failed are told apart; cancelling stays disabled
+  // until the impact (tickets, buyers, refunds) has actually loaded.
+  const impactView = useQueryView(impact);
+  const impactError = impactView.kind !== "content" || data === null;
 
   async function onCancel() {
     const res = await cancel.mutateAsync(eventId ?? "");
@@ -53,7 +57,7 @@ export default function CancelEventScreen() {
     });
   }
 
-  if (impact.isLoading) {
+  if (impactView.kind === "loading") {
     return (
       <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator />
@@ -76,7 +80,9 @@ export default function CancelEventScreen() {
             {(impact.data &&
               impact.data.status !== 200 &&
               impact.data.message) ||
-              "Couldn't load the cancellation details — how many tickets and buyers this affects. Cancelling is disabled until this loads."}
+              (impactView.kind === "offline"
+                ? "You're offline. The cancellation details — how many tickets and buyers this affects — will load when you're back online. Cancelling is disabled until then."
+                : "Couldn't load the cancellation details — how many tickets and buyers this affects. Cancelling is disabled until this loads.")}
           </AppText>
           <Pressable
             onPress={() => impact.refetch()}

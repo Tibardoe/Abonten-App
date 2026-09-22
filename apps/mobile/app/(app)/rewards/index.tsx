@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { RewardEmailCard } from "@/features/rewards/RewardEmailCard";
 import { useReferralCode } from "@/features/rewards/useReferralCode";
 import {
@@ -9,6 +10,7 @@ import {
   useReferralInvite,
   useRewardsProgram,
 } from "@/features/rewards/useRewards";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import {
   formatCredit,
@@ -311,6 +313,13 @@ export default function Rewards() {
   const invite = useReferralInvite({ enabled });
   const loyalty = useLoyaltyProgress({ enabled });
   const items = flattenCreditActivity(activity.data?.pages);
+  // Loading, offline and failed are told apart from "switched off" / "no
+  // activity yet": those two are only ever said for an answer the server
+  // gave. The programme answer is cached on disk; balances and activity
+  // are not (credit is money), so offline they say so.
+  const programView = useQueryView(program);
+  const summaryView = useQueryView(summary);
+  const activityView = useQueryView(activity, () => items.length === 0);
 
   const onEndReached = useCallback(() => {
     if (activity.hasNextPage && !activity.isFetchingNextPage) {
@@ -326,7 +335,7 @@ export default function Rewards() {
     loyalty.refetch();
   }, [program, summary, activity, invite, loyalty]);
 
-  if (program.isLoading) {
+  if (programView.kind !== "content" && programView.kind !== "empty") {
     return (
       <View className="flex-1 bg-background">
         <AppHeader
@@ -334,10 +343,17 @@ export default function Rewards() {
           title="Rewards"
           backFallback="/(app)/account"
         />
-        <View className="gap-4 p-4">
-          <Skeleton height={144} radius={16} />
-          <Skeleton height={160} radius={16} />
-        </View>
+        <QueryUnavailable
+          view={programView}
+          subject="Rewards"
+          onRetry={() => program.refetch()}
+          loading={
+            <View className="gap-4 p-4">
+              <Skeleton height={144} radius={16} />
+              <Skeleton height={160} radius={16} />
+            </View>
+          }
+        />
       </View>
     );
   }
@@ -379,14 +395,16 @@ export default function Rewards() {
                   program.data.friendReferral?.minOrderMinor ?? null
                 }
               />
-            ) : summary.isError ? (
+            ) : summaryView.kind === "loading" ? (
+              <Skeleton height={144} radius={16} />
+            ) : (
               <Card>
                 <AppText variant="small">
-                  We couldn&apos;t load your balance. Pull down to try again.
+                  {summaryView.kind === "offline"
+                    ? "You're offline. Your balance will load when you're back online."
+                    : "We couldn't load your balance. Pull down to try again."}
                 </AppText>
               </Card>
-            ) : (
-              <Skeleton height={144} radius={16} />
             )}
             {loyalty.data ? <LoyaltyCard progress={loyalty.data} /> : null}
             {referralCode && program.data.eventReferral ? (
@@ -410,11 +428,18 @@ export default function Rewards() {
         onEndReachedThreshold={0.5}
         refreshControl={<Refresher onRefresh={refresh} />}
         ListEmptyComponent={
-          activity.isLoading ? null : (
+          activityView.kind === "empty" ? (
             <AppText variant="muted" className="py-8 text-center">
               No credit activity yet. Credit you earn or receive will show up
               here.
             </AppText>
+          ) : (
+            <QueryUnavailable
+              view={activityView}
+              subject="your credit activity"
+              onRetry={() => activity.refetch()}
+              loading={<Skeleton height={64} radius={12} />}
+            />
           )
         }
         ListFooterComponent={

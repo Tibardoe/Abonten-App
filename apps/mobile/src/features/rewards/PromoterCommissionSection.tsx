@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import {
   AppText,
@@ -26,7 +27,9 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
   const { data } = useQuery({
     queryKey: key,
     queryFn: async () => {
-      const res = await api.organizer.eventPromoterCommission(eventId);
+      const res = settleEnvelope(
+        await api.organizer.eventPromoterCommission(eventId),
+      );
       return res.status === 200 ? (res.data ?? null) : null;
     },
     staleTime: 30_000,

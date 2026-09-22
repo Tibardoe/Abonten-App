@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { RewardEmailPreference } from "@abonten/types/rewards";
 import { AppText, Card, useToast } from "@abonten/ui-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +17,7 @@ export function RewardEmailCard() {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {
-      const res = await api.notifications.rewardEmails();
+      const res = settleEnvelope(await api.notifications.rewardEmails());
       return res.status === 200 ? (res.data ?? null) : null;
     },
     staleTime: 60_000,

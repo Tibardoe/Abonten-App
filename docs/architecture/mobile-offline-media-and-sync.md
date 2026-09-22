@@ -2,10 +2,10 @@
 title: Mobile offline cache, Spotlight playback, live comments, search relevance and follower counts
 purpose: How the mobile app keeps previously loaded data across restarts and offline, how Spotlight video players are created, owned and torn down, how comments and likes stay in step across screens and devices, how search widens a query with related terms and dates, and how follower counts are maintained.
 audience: Engineering, QA, security reviewers
-scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail CTAs (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
+scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView, settleEnvelope in every /api/mobile query hook), the followed location (ExploreLocationProvider, useDeviceLocation, useCoarseLocation, @abonten/core/location/followDevice), the side menu lifecycle (AppDrawer), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail CTAs (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-21
+version: 1.3
+lastReviewed: 2026-09-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -315,11 +315,43 @@ the query, the restore state and connectivity. It returns one of:
 three, including an on-media variant for Stories and Spotlight. Screens keep
 their own empty state, because only they know what "nothing" means.
 
-Applied to: Explore (events/places), explore by type, nearby places, event and
-place detail, Messages inbox and thread, Stories (sequence and each slide),
-a shared Spotlight, notifications, tickets, bookings, Your Spotlights and
-promotions. A value that is an error envelope counts as a failed request, not
-as data.
+Applied to every data-driven screen since 2026-09-22 (the 2026-09-21 round
+covered Explore, explore by type, nearby places, event and place detail,
+Messages inbox and thread, Stories, a shared Spotlight, notifications,
+tickets, bookings, Your Spotlights and promotions). The audit that followed
+found the same false-empty bug on every screen that still branched on
+`isLoading` / `isError` alone: with no connection a query React Query has
+**paused** is neither loading nor failed, so Transactions said "No
+transactions for this period", Wallets "No wallets yet", Payout accounts "No
+payout accounts yet", the organizer dashboard drew zero sales, the balance
+tiles showed GHS 0, the invite screen said "Invites aren't available yet"
+and an invite link "isn't valid". Now also on the contract: Transactions
+(list, summary tiles and detail), Ticket detail, Wallets, Payout accounts,
+Withdraw, Payouts, organizer Dashboard / Events / Places / Finance /
+Attendees / Bookings / Reviews / Promo codes / Promote / Photos / Check-in /
+Insights / Cancel event / Edit event / Edit place / Drafts, Rewards (hub,
+activity, invite, invite link), For you, the public profile and its tabs,
+Spotlight campaign / post / promote, Settings › Notifications / Overview /
+Edit profile, Verification, Abonten Weekly, the review lists, the message
+peek, the Explore map view, and Buy tickets / Checkout.
+
+Two rules for the conversion, so nothing true was lost:
+
+- **A definite server answer keeps its message.** A 403 ("not your event"),
+  a 404, an expired checkout are answers, not failures; screens check the
+  envelope's status before asking the contract, and `NotFoundError` shows
+  "not found" even offline.
+- **A figure the phone does not have is never drawn as zero.** Summary tiles
+  and KPI cards show "—" until the summary loaded; the dashboard, balance
+  and insights sections use the contract rather than defaulting to 0.
+
+A value that is an error envelope counts as a failed request, not as data.
+Since 2026-09-22 every `/api/mobile` **query** hook also passes its envelope
+through `settleEnvelope` (`lib/envelope.ts`): a transient status (401, 408,
+429, 5xx) throws, so React Query keeps the last good data, retries with
+backoff and refetches on reconnect, instead of recording a `{ status: 503 }`
+body as a successful answer that then read as "no data". Only definite
+answers come back as data.
 
 ## 9. Having the data before the tap
 
@@ -462,3 +494,89 @@ tiers edited (`paidTierProblem`, on the server and in the mobile wizards). The f
 and the sticky button are the same action; the in-page duplicate button is
 gone. A place shows "Book" (or "Sign in to book", which returns to the place
 after signing in) to anyone but its owner.
+
+## 14. The area follows the phone (2026-09-22)
+
+**The defect.** The Explore area (`ExploreLocationProvider`) was seeded from
+the phone once, on first run, and then never read the phone again: "Use my
+current location" stored the fix as if it were a choice, and a stored value
+always won on the next start. Someone who travelled to another town kept
+seeing the first town's events until they changed the location by hand.
+Two other screens (Places near you, Spotlight › Nearby) asked the OS for
+their own fix on every mount, with their own permission prompt, and never
+moved either.
+
+**The model.** The area has an owner, `source`:
+
+| `source` | Who moves it | Set by |
+| --- | --- | --- |
+| `device` | The phone | first run, "Use my current location" |
+| `manual` | Nobody but the person | typing an address, autocomplete, the map picker |
+
+A manual choice stands until the person chooses again or hands the area
+back to the phone; the device never overrides it (the location sheet says
+"chosen by you" / "following your location" so the state is visible).
+
+**Following.** One position watcher runs while the app is in the
+foreground, location is allowed, and someone needs it — the device owns the
+area, or a screen holds the watch (`retainDeviceWatch`, used by
+`useDeviceLocation`). It reports after a few hundred metres; every report
+goes through `nextFollowedLocation` in `@abonten/core/location/followDevice`
+(unit tested), which changes the area only for a move past
+`SIGNIFICANT_MOVE_METRES` (2 km — a different neighbourhood or town, well
+above GPS jitter; a walk to the shop changes nothing). The watcher is
+removed in the background and restarted on return, taking the OS's newest
+position at once, so coming back to the app in another town updates without
+waiting. The first fix is refined the same way (a last-known position is
+shown instantly; the fresh fix replaces it only if it is a significant
+move), so nothing is fetched twice for a few hundred metres.
+
+**What changes with it.** Every location-keyed query already carries the
+coordinates in its key (`["explore", …, lat, lng]`, the nearby-places and
+Spotlight feed keys, the Weekly teaser), so a change refetches exactly the
+screens that depend on it; the previous area's rows are never shown under
+the new label, because the new key has no data until it loads (and the
+persisted cache keeps only the newest few Explore keys). Consumers of the
+phone's position — `useDeviceLocation` (Places near you, Spotlight Nearby)
+and `useCoarseLocation` (the rough position sent with the sponsored feed) —
+read the one followed position instead of asking the OS themselves, so they
+agree with Explore and move with the person while open. Permission is still
+asked only where it was before: on first run, on "Use my current location",
+and the first time a device-relative screen needs it.
+
+**Storage.** The record is stored under a new key
+(`abonten.explore-location.v2`) with its `source`; the old key is deleted
+rather than migrated, because a v1 record could have been a "use my current
+location" that must not come back frozen as a choice. A fallback (Accra) is
+never stored. Malformed records are dropped (`parseStoredLocation`).
+
+**Races.** A fix whose label (reverse geocode) is still resolving when the
+person picks a place by hand is discarded: the rule is re-checked after the
+await, and only the newest fix may commit (`fixSeq`).
+
+## 15. The drawer is a menu, not a screen (2026-09-22)
+
+The side menu (`AppDrawer`) is an overlay mounted once above the whole
+`(app)` stack — that is what makes the edge swipe live on every tab root
+and lets the panel track the finger. It is therefore never *under* a pushed
+screen: choosing Wallets closes it and pushes Wallets on top of the screen
+the menu was opened from.
+
+It used to remember that screen and reopen itself when Back returned there.
+The reopening could only start after the native pop had already revealed
+the screen underneath (the drawer cannot be beneath the popping screen), so
+it showed as "previous screen → pause → the menu slides out again", and at
+a different moment on each platform (Android updates the route as the pop
+starts, iOS when it ends), which is why it looked random and was worst on
+Messages, whose focus work delays the frame. That mechanism is gone: Back
+from a menu destination returns to the originating screen with the menu
+closed, exactly as the person left it, on both platforms. The one-frame
+`requestAnimationFrame` before the push is gone too — the close and the
+push start in the same commit.
+
+Making the menu a stack route (so Back would land *on* the menu) was
+considered and rejected: react-native-screens presents every screen that
+follows a modal as a modal on iOS, so Wallets would open as a sheet, and a
+pushed drawer loses the finger-tracked open/close and reveals blank space
+behind the panel during a drag. A menu that is visibly re-summoned is
+worse than one that stays closed.

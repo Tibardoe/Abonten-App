@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
 
@@ -11,7 +12,8 @@ export function useReferralCode(): string | null {
   const { data } = useQuery({
     queryKey: ["mobile", "rewards", "referral", userId],
     enabled: !!userId,
-    queryFn: async () => (await api.rewards.referral()).data ?? null,
+    queryFn: async () =>
+      settleEnvelope(await api.rewards.referral()).data ?? null,
     staleTime: 30 * 60_000,
   });
   return data?.code ?? null;

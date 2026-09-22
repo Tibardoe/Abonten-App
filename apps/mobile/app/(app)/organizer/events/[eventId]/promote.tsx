@@ -1,9 +1,11 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { PromotionPaymentSection } from "@/components/organizer/PromotionPaymentSection";
 import {
   useEventPromotionContext,
   useInvalidateEventPromotion,
   usePromoteEvent,
 } from "@/features/organizer/useEventPromotion";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
@@ -29,11 +31,24 @@ export default function PromoteEventScreen() {
   const [reserved, setReserved] = useState<Reserved | null>(null);
 
   const ctx = q.data?.status === 200 ? q.data.data : null;
+  // The server's own answer keeps its message; loading, offline and failed
+  // are told apart from it.
+  const definiteFailure = q.data !== undefined && q.data.status !== 200;
+  const view = useQueryView(q);
 
-  if (q.isLoading) {
+  if (!definiteFailure && view.kind !== "content" && view.kind !== "empty") {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={view}
+          subject="promotion options"
+          onRetry={() => q.refetch()}
+          loading={
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator />
+            </View>
+          }
+        />
       </View>
     );
   }

@@ -1,5 +1,6 @@
+import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // A rough position for sponsored placement on the For you / Trending tabs,
 // used only when the person has ALREADY allowed location for the app: this
@@ -7,20 +8,35 @@ import { useEffect, useState } from "react";
 // with the feed request only; it is not stored. Resolves to null quickly
 // when there is no permission or no recent fix, so the feed never waits
 // long for it.
+//
+// The position the app already follows (ExploreLocationProvider) is used
+// when it has one — it is the same phone, and it moves with the person —
+// so this only asks the OS itself before that first fix has arrived.
 
 const MAX_AGE_MS = 60 * 60 * 1000;
+
+const round = (n: number) => Math.round(n * 100) / 100;
 
 export function useCoarseLocation(enabled: boolean): {
   coords: { lat: number; lng: number } | null;
   done: boolean;
 } {
+  const { devicePosition } = useExploreLocation();
   const [state, setState] = useState<{
     coords: { lat: number; lng: number } | null;
     done: boolean;
   }>({ coords: null, done: !enabled });
 
+  const followed = useMemo(
+    () =>
+      devicePosition
+        ? { lat: round(devicePosition.lat), lng: round(devicePosition.lng) }
+        : null,
+    [devicePosition],
+  );
+
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || devicePosition) return;
     let cancelled = false;
     const timeout = setTimeout(() => {
       if (!cancelled)
@@ -34,7 +50,6 @@ export function useCoarseLocation(enabled: boolean): {
           maxAge: MAX_AGE_MS,
         });
         if (!last) throw new Error("no fix");
-        const round = (n: number) => Math.round(n * 100) / 100;
         if (!cancelled) {
           setState({
             coords: {
@@ -54,7 +69,9 @@ export function useCoarseLocation(enabled: boolean): {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [enabled]);
+  }, [enabled, devicePosition]);
 
+  if (!enabled) return { coords: null, done: true };
+  if (followed) return { coords: followed, done: true };
   return state;
 }

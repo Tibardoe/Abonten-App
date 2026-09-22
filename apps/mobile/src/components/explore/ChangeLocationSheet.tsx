@@ -102,7 +102,11 @@ export function ChangeLocationSheet({
           {location ? (
             <AppText variant="caption">
               Current: {location.label}
-              {location.isFallback ? " (default)" : ""}
+              {location.isFallback
+                ? " (default)"
+                : location.source === "device"
+                  ? " · following your location"
+                  : " · chosen by you"}
             </AppText>
           ) : null}
 

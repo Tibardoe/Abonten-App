@@ -1,10 +1,13 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   bindPendingInvite,
   captureInvite,
 } from "@/features/rewards/inviteCapture";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { bindResultMessage } from "@abonten/core/rewards/invite";
 import type { ReferralBindOutcome } from "@abonten/types/rewards";
@@ -35,7 +38,8 @@ export default function InviteScreen() {
   const info = useQuery({
     queryKey: ["mobile", "invite-code", code],
     enabled: !!code,
-    queryFn: async () => (await api.rewards.resolveReferral(code)).data ?? null,
+    queryFn: async () =>
+      settleEnvelope(await api.rewards.resolveReferral(code)).data ?? null,
     staleTime: 5 * 60_000,
   });
 
@@ -61,6 +65,9 @@ export default function InviteScreen() {
   }, [session, code, qc]);
 
   const data = info.data;
+  // "This invite isn't valid" is only ever said for an answer the server
+  // gave; loading, offline and failed are told apart.
+  const infoView = useQueryView(info);
   const name = data?.referrerName ?? "A friend";
   const offer =
     data?.programOn && data.welcomeMinor
@@ -74,10 +81,17 @@ export default function InviteScreen() {
   return (
     <View className="flex-1 bg-background">
       <AppHeader variant="title" title="Invite" backFallback="/(app)/(tabs)" />
-      {info.isLoading ? (
-        <View className="gap-4 p-4">
-          <Skeleton height={200} radius={16} />
-        </View>
+      {infoView.kind !== "content" && infoView.kind !== "empty" ? (
+        <QueryUnavailable
+          view={infoView}
+          subject="this invite"
+          onRetry={() => info.refetch()}
+          loading={
+            <View className="gap-4 p-4">
+              <Skeleton height={200} radius={16} />
+            </View>
+          }
+        />
       ) : !data?.valid ? (
         <EmptyState
           icon="link-outline"

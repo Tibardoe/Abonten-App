@@ -1,9 +1,11 @@
 import { RefundStatusPanel } from "@/components/RefundStatusPanel";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketDetailSkeleton } from "@/components/skeletons";
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
+import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
@@ -45,27 +47,32 @@ export default function TicketDetailScreen() {
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const {
-    data: ticket,
-    isLoading,
-    isError,
-    isRefetching,
-    refetch,
-  } = useTicketDetail(id);
+  const query = useTicketDetail(id);
+  const { data: ticket, isRefetching, refetch } = query;
   const cancel = useCancelTicket();
   const receipt = useTicketReceipt();
+  // Loading, offline and failed are told apart from "no such ticket".
+  // Tickets are never cached on disk (a QR code is money), so offline with
+  // nothing loaded this session says so rather than "could not be loaded".
+  const view = useQueryView(query);
 
   // A content-shaped skeleton, not a centred spinner: the QR block and the
   // detail rows land in the same places they will occupy, so nothing jumps
   // when the ticket arrives.
-  if (isLoading) return <TicketDetailSkeleton />;
-  if (isError || !ticket) {
+  if (view.kind === "loading") return <TicketDetailSkeleton />;
+  if (view.kind === "offline" || view.kind === "error") {
     return (
-      <ScreenError
-        message="This ticket could not be loaded."
-        onRetry={() => refetch()}
-      />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={view}
+          subject="this ticket"
+          onRetry={() => refetch()}
+        />
+      </View>
     );
+  }
+  if (!ticket) {
+    return <ScreenError message="This ticket could not be found." />;
   }
 
   const qr =

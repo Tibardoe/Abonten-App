@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-22 — Mobile location following, side menu lifecycle, offline-state audit
+
+- `docs/architecture/mobile-offline-media-and-sync.md` 1.3: §8 extended to every data-driven screen (the paused-query root cause, the "definite answer keeps its message" and "never draw a missing figure as zero" rules, `settleEnvelope` in every `/api/mobile` query hook); new §14 the area follows the phone (`source: device | manual`, one watcher, 2 km significance rule, `abonten.explore-location.v2`); new §15 the drawer is a menu, not a screen (no reopen on Back, why a stack route was rejected).
+- PROJECT.md §41.
+- Behaviour: the Explore area, Places near you and Spotlight Nearby follow the phone while the app is open and on return from the background, unless the person chose a place by hand; the side menu no longer re-summons itself after Back; offline screens say "You're offline" instead of "No … yet" or zeros. No env var, table, policy, job or permission changed.
+
 ## 2026-09-21 — Mobile navigation theme, offline state contract, Spotlight controls
 
 - `docs/architecture/mobile-offline-media-and-sync.md` 1.2: new §8 screen-state contract (`resolveQueryView` / `useQueryView` / `QueryUnavailable`), §9 prefetching rules, §10 Spotlight timeline, scrubbing and speed, §11 publish-to-feed, §12 navigation theming, §13 sticky detail CTAs; §1 updated for the messages/Stories/detail-extras persist rules and the "an error is never written" guard.

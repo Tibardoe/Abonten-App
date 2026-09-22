@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { WalletSkeleton } from "@/components/skeletons";
 import {
   useAddCard,
@@ -8,6 +9,7 @@ import {
   useRemovePaymentMethod,
   useSetDefaultPaymentMethod,
 } from "@/features/wallet/usePaymentMethods";
+import { useQueryView } from "@/lib/useQueryView";
 import type { PaymentMethodRow } from "@abonten/api-client";
 import {
   AppText,
@@ -46,8 +48,13 @@ function methodTitle(m: PaymentMethodRow): string {
 
 export default function WalletScreen() {
   const toast = useToast();
-  const { data, isLoading, isError, isRefetching, refetch } =
-    usePaymentMethods();
+  const methodsQuery = usePaymentMethods();
+  const { data, isRefetching, refetch } = methodsQuery;
+  // Loading, offline and failed are told apart from "no wallets yet": that
+  // is only ever said for an answer the server gave. Payment methods are
+  // never cached on disk, so offline with nothing loaded this session says
+  // so instead of inviting the person to add a wallet they already have.
+  const view = useQueryView(methodsQuery);
   const networks = useMomoNetworks();
   const addMomo = useAddMomoWallet();
   const addCard = useAddCard();
@@ -61,9 +68,6 @@ export default function WalletScreen() {
   const [phone, setPhone] = useState("");
 
   const methods = data?.status === 200 ? (data.data ?? []) : [];
-  // A non-200 envelope (401 / 500) isn't an `isError` throw — treat it as one
-  // so the screen shows a retry, not a misleading "no wallets yet".
-  const loadFailed = isError || (data != null && data.status !== 200);
   const networkList =
     networks.data?.status === 200 ? (networks.data.data ?? []) : [];
   const networksFailed =
@@ -148,7 +152,7 @@ export default function WalletScreen() {
           ? "Add debit / credit card"
           : "";
 
-  if (isLoading) {
+  if (view.kind !== "content" && view.kind !== "empty") {
     return (
       <View className="flex-1 bg-background">
         <AppHeader
@@ -156,27 +160,12 @@ export default function WalletScreen() {
           title="Wallets"
           backFallback="/(app)/account"
         />
-        <WalletSkeleton />
-      </View>
-    );
-  }
-
-  if (loadFailed) {
-    return (
-      <View className="flex-1 bg-background">
-        <AppHeader
-          variant="title"
-          title="Wallets"
-          backFallback="/(app)/account"
+        <QueryUnavailable
+          view={view}
+          subject="your payment methods"
+          onRetry={() => refetch()}
+          loading={<WalletSkeleton />}
         />
-        <View className="flex-1 items-center justify-center gap-3 px-6">
-          <Icon name="cloud-offline-outline" size={28} tone="muted" />
-          <AppText variant="muted" className="text-center">
-            {(data != null && data.status !== 200 && data.message) ||
-              "Couldn't load your payment methods."}
-          </AppText>
-          <Button title="Retry" onPress={() => refetch()} />
-        </View>
       </View>
     );
   }

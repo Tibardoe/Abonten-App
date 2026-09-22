@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useContentPost,
   useInsights,
@@ -7,6 +8,7 @@ import {
 } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { api } from "@/lib/api";
+import { useQueryView } from "@/lib/useQueryView";
 import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import {
@@ -54,6 +56,8 @@ export default function ManagePostScreen() {
     res && res.status === 200 && res.data && "post" in res.data
       ? res.data.post
       : null;
+  // Loading, offline and failed are told apart from "no such post".
+  const postView = useQueryView(query);
 
   const [caption, setCaption] = useState("");
   const [allowComments, setAllowComments] = useState(true);
@@ -75,11 +79,16 @@ export default function ManagePostScreen() {
     />
   );
 
-  if (query.isLoading) {
+  if (postView.kind !== "content" && postView.kind !== "empty") {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <Spinner />
+        <QueryUnavailable
+          view={postView}
+          subject="this post"
+          onRetry={() => query.refetch()}
+          loading={<Spinner />}
+        />
       </View>
     );
   }

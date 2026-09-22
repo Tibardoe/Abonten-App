@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import {
   DISABLED_WEEKLY_PROGRAM,
   type WeeklyEditionResult,
@@ -100,10 +101,12 @@ export function useWeeklyTeaser(
     queryKey: [...WEEKLY_KEY, "teaser", session?.user.id ?? null, lat, lng],
     enabled,
     queryFn: async (): Promise<WeeklyTeaser | null> => {
-      const res = await api.weekly.teaser({
-        lat: lat ?? undefined,
-        lng: lng ?? undefined,
-      });
+      const res = settleEnvelope(
+        await api.weekly.teaser({
+          lat: lat ?? undefined,
+          lng: lng ?? undefined,
+        }),
+      );
       return res.status === 200 ? (res.data ?? null) : null;
     },
     staleTime: 10 * 60 * 1000,

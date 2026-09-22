@@ -1,9 +1,11 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   type BookingFilter,
   flattenBookings,
   usePlaceBookings,
   useRespondToPlaceBooking,
 } from "@/features/organizer/usePlaceBookingsReviews";
+import { useQueryView } from "@/lib/useQueryView";
 import type { BookingStatus, OwnerPlaceBooking } from "@abonten/api-client";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { resolveBookingState } from "@abonten/core/placeBooking";
@@ -182,7 +184,12 @@ export default function PlaceBookingsScreen() {
 
   const rows = flattenBookings(q.data?.pages);
   const firstPage = q.data?.pages[0];
-  const failed = q.isError || (firstPage && firstPage.status >= 400);
+  // The server's own answer that this place is not this person's: shown
+  // as such, never as a load failure.
+  const forbidden = firstPage?.status === 403;
+  // "No bookings" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => rows.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
@@ -214,16 +221,21 @@ export default function PlaceBookingsScreen() {
       onEndReachedThreshold={0.5}
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
-        q.isLoading ? (
-          <ActivityIndicator className="mt-10" />
-        ) : (
+        forbidden ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            {failed
-              ? firstPage && firstPage.status === 403
-                ? "You're not authorized to manage this place."
-                : "Couldn't load bookings."
-              : `No ${filter === "all" ? "" : `${filter} `}bookings.`}
+            You're not authorized to manage this place.
           </AppText>
+        ) : view.kind === "empty" ? (
+          <AppText className="mt-10 text-center text-sm text-muted-foreground">
+            {`No ${filter === "all" ? "" : `${filter} `}bookings.`}
+          </AppText>
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="bookings"
+            onRetry={() => q.refetch()}
+            loading={<ActivityIndicator className="mt-10" />}
+          />
         )
       }
       ListFooterComponent={

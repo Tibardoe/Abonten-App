@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type { CreditActivityItem } from "@abonten/types/rewards";
 import {
   useInfiniteQuery,
@@ -100,7 +101,8 @@ export function useInvitesLive() {
   return useQuery({
     queryKey: ["mobile", "invites-live"],
     queryFn: async () =>
-      (await api.rewards.resolveReferral()).data?.programOn === true,
+      settleEnvelope(await api.rewards.resolveReferral()).data?.programOn ===
+      true,
     staleTime: 10 * 60_000,
   });
 }
@@ -110,8 +112,10 @@ export function useCreditActivity(options?: { enabled?: boolean }) {
     queryKey: ACTIVITY_KEY,
     enabled: options?.enabled ?? true,
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.rewards.activity({ cursor: pageParam, pageSize: 20 }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.rewards.activity({ cursor: pageParam, pageSize: 20 }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     staleTime: 30_000,
   });
@@ -129,10 +133,12 @@ export function usePromotionCreditQuote(
     queryKey: ["mobile", "rewards", "promotion-quote", kind, checkoutId],
     enabled: !!checkoutId,
     queryFn: async () => {
-      const res = await api.checkout.promotionCreditQuote({
-        kind,
-        checkoutId: checkoutId as string,
-      });
+      const res = settleEnvelope(
+        await api.checkout.promotionCreditQuote({
+          kind,
+          checkoutId: checkoutId as string,
+        }),
+      );
       const quote = res.status === 200 ? res.data : undefined;
       return quote?.offered && quote.creditMinor > 0 ? quote : null;
     },

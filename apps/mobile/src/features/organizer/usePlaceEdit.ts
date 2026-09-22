@@ -6,6 +6,7 @@ import {
   useUpdatePlace,
   useUpdatePlaceHours,
 } from "@/features/organizer/useManagePlace";
+import { useQueryView } from "@/lib/useQueryView";
 import type {
   PlaceHoursStatusResult,
   PlaceOpeningHoursInput,
@@ -73,6 +74,7 @@ function toHoursRows(
 export function usePlaceEdit(placeId: string) {
   const toast = useToast();
   const query = usePlaceManageContext(placeId);
+  const loadView = useQueryView(query);
   const categoriesQuery = usePlaceCategories();
   const autocomplete = usePlacesAutocomplete();
   const update = useUpdatePlace(placeId);
@@ -327,6 +329,8 @@ export function usePlaceEdit(placeId: string) {
 
   return {
     isLoading: query.isLoading,
+    /** Loading, offline and failed, told apart, for the form's gate. */
+    loadView,
     isReady: prefilled,
     services,
     loadError:

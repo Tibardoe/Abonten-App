@@ -1,8 +1,10 @@
 import { QrCode } from "@/components/QrCode";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { copyText } from "@/features/messaging/clipboardSupport";
 import { useReferralInvite } from "@/features/rewards/useRewards";
 import { api } from "@/lib/api";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import {
@@ -125,6 +127,9 @@ export default function InviteFriends() {
   const invite = useReferralInvite();
   const toast = useToast();
   const data = invite.data;
+  // "Invites aren't available" is only ever said for an answer the server
+  // gave; loading, offline and failed are told apart.
+  const view = useQueryView(invite);
 
   const message =
     data?.inviteUrl != null
@@ -169,11 +174,18 @@ export default function InviteFriends() {
         title="Invite friends"
         backFallback="/(app)/rewards"
       />
-      {invite.isLoading ? (
-        <View className="gap-4 p-4">
-          <Skeleton height={320} radius={16} />
-          <Skeleton height={120} radius={16} />
-        </View>
+      {view.kind !== "content" && view.kind !== "empty" ? (
+        <QueryUnavailable
+          view={view}
+          subject="your invites"
+          onRetry={() => invite.refetch()}
+          loading={
+            <View className="gap-4 p-4">
+              <Skeleton height={320} radius={16} />
+              <Skeleton height={120} radius={16} />
+            </View>
+          }
+        />
       ) : !data || (!data.enabled && !data.invitedBy) ? (
         <EmptyState
           icon="people-outline"

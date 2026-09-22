@@ -1,11 +1,20 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useDeletePromoCode,
   useEventPromoCodes,
   useUpdatePromoCode,
 } from "@/features/organizer/useEventPromoCodes";
 import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
+import { useQueryView } from "@/lib/useQueryView";
 import type { EventPromoCode } from "@abonten/api-client";
-import { AppText, Button, Field, Input, useToast } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Field,
+  Input,
+  Refresher,
+  useToast,
+} from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -282,34 +291,36 @@ export default function EventPromoCodesScreen() {
 
   const result = q.data;
   const codes = result && result.status === 200 ? result.data : [];
+  // The server's own answer that this event is not this person's: shown
+  // as such, never as a load failure.
+  const forbidden = result?.status === 403;
+  // "No promo codes" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => codes.length === 0);
 
   return (
     <ScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-3 p-4 pb-16"
+      refreshControl={<Refresher onRefresh={() => q.refetch()} />}
     >
       <AppText variant="screenTitle">Promo codes</AppText>
 
-      {q.isLoading ? (
-        <View className="items-center py-12">
-          <ActivityIndicator />
-        </View>
-      ) : q.isError || (result && result.status !== 200) ? (
-        <View className="items-center gap-3 py-12">
-          <AppText className="text-center text-muted-foreground">
-            {(result && result.status === 403 && result.message) ||
-              "Couldn't load this event's promo codes."}
-          </AppText>
-          <Pressable
-            accessibilityRole="button"
-            className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
-            onPress={() => q.refetch()}
-          >
-            <AppText className="font-semibold text-primary-foreground">
-              Retry
-            </AppText>
-          </Pressable>
-        </View>
+      {forbidden ? (
+        <AppText className="text-center text-muted-foreground">
+          {result.message || "You're not authorized to manage this event."}
+        </AppText>
+      ) : view.kind !== "content" && view.kind !== "empty" ? (
+        <QueryUnavailable
+          view={view}
+          subject="this event's promo codes"
+          onRetry={() => q.refetch()}
+          loading={
+            <View className="items-center py-12">
+              <ActivityIndicator />
+            </View>
+          }
+        />
       ) : codes.length === 0 ? (
         <AppText className="text-sm text-muted-foreground">
           This event has no promo codes. Add them when you create an event.

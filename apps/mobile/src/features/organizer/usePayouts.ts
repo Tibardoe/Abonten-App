@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   AddPayoutAccountBody,
   RequestPayoutBody,
@@ -14,14 +15,15 @@ const EVENTS_KEY = ["mobile", "organizer", "events"] as const;
 export function usePayoutAccounts() {
   return useQuery({
     queryKey: ACCOUNTS_KEY,
-    queryFn: () => api.organizer.payoutAccounts(),
+    queryFn: async () => settleEnvelope(await api.organizer.payoutAccounts()),
   });
 }
 
 export function usePayouts() {
   return useQuery({
     queryKey: PAYOUTS_KEY,
-    queryFn: () => api.organizer.payouts({ limit: 20 }),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.payouts({ limit: 20 })),
   });
 }
 
@@ -65,7 +67,8 @@ export function useRequestPayout() {
 export function useEventCancellationImpact(eventId: string, enabled = true) {
   return useQuery({
     queryKey: ["mobile", "organizer", "cancellation-impact", eventId],
-    queryFn: () => api.organizer.eventCancellationImpact(eventId),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.eventCancellationImpact(eventId)),
     enabled: enabled && !!eventId,
   });
 }

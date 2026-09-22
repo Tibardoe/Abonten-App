@@ -1,5 +1,7 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { DetailRowsSkeleton } from "@/components/skeletons";
 import { useTransactionDetail } from "@/features/transactions/useTransactionDetail";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { TransactionKind } from "@abonten/types/transactions";
@@ -54,18 +56,27 @@ export default function TransactionDetailScreen() {
     kind === "ticket" || kind === "subscription"
       ? (kind as TransactionKind)
       : undefined;
-  const { data, isLoading, isError, isRefetching, refetch } =
-    useTransactionDetail(validKind, id);
+  const query = useTransactionDetail(validKind, id);
+  const { data, refetch } = query;
+  // Loading, offline and failed are told apart; `null` is the server's own
+  // answer that no such transaction is visible to this person.
+  const view = useQueryView(query);
 
   if (!validKind) return <ScreenError message="Unknown transaction type." />;
-  if (isLoading) return <DetailRowsSkeleton />;
-  if (isError || data === null || data === undefined) {
+  if (view.kind === "loading") return <DetailRowsSkeleton />;
+  if (view.kind === "offline" || view.kind === "error") {
     return (
-      <ScreenError
-        message="This transaction could not be loaded."
-        onRetry={() => refetch()}
-      />
+      <View className="flex-1 bg-background">
+        <QueryUnavailable
+          view={view}
+          subject="this transaction"
+          onRetry={() => refetch()}
+        />
+      </View>
     );
+  }
+  if (data === null || data === undefined) {
+    return <ScreenError message="This transaction could not be found." />;
   }
 
   const statusInfo = resolveStatus(data.status, { fallback: "pending" });

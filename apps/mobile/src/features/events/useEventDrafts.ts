@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   EventDraftPayload,
   SaveEventDraftBody,
@@ -17,7 +18,7 @@ const KEY = ["mobile", "organizer", "event-drafts"] as const;
 export function useEventDrafts() {
   return useQuery({
     queryKey: [...KEY],
-    queryFn: () => api.organizer.eventDrafts(),
+    queryFn: async () => settleEnvelope(await api.organizer.eventDrafts()),
     staleTime: 15_000,
   });
 }
@@ -25,7 +26,8 @@ export function useEventDrafts() {
 export function useEventDraft(draftId: string | undefined) {
   return useQuery({
     queryKey: [...KEY, draftId],
-    queryFn: () => api.organizer.eventDraft(draftId as string),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.eventDraft(draftId as string)),
     enabled: !!draftId,
   });
 }

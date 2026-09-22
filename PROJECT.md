@@ -3730,3 +3730,74 @@ are dealt with in §40.12.
   `pagingEnabled` still needs the drag to cross the page's midpoint or a
   fling predicted to (`smoothScrollAndSnap`); that is the platform's paging
   semantics on both branches, not something this round changed.
+
+## 41. Mobile location, side menu and offline-state audit (2026-09-22)
+
+Owner brief: the Explore area did not follow the phone, the side menu
+re-summoned itself after Back (previous screen → pause → menu), and offline
+screens showed empty states ("No transactions yet"). Full detail in
+`docs/architecture/mobile-offline-media-and-sync.md` §8, §14 and §15
+(version 1.3). No migration, env var, table, policy, job or permission
+changed.
+
+### 41.1 The area follows the phone
+
+- `ExploreLocationProvider` is the one source of truth for both the Explore
+  area (`location`) and the phone's position (`devicePosition`). The area has
+  an owner, `source: "device" | "manual"`: the phone moves a device-owned
+  area, a manual choice (typed, autocomplete, map picker) stands until the
+  person chooses again or taps "Use my current location", which hands the
+  area back to the phone. Stored under a new key
+  (`abonten.explore-location.v2`); the old key is deleted, not migrated.
+- Following: one `watchPositionAsync` while the app is active, permission is
+  granted and someone needs it (device-owned area, or a screen holding the
+  watch); stopped in the background, restarted on return with the newest OS
+  position. Every fix goes through `nextFollowedLocation`
+  (`@abonten/core/location/followDevice`, unit tested): only a move past 2 km
+  changes the area, so jitter never refetches anything. Location-keyed
+  queries re-key from the provider, so a change refetches exactly the
+  dependent screens and never shows the previous area's rows under the new
+  label.
+- `useDeviceLocation` (Places near you, Spotlight Nearby) and
+  `useCoarseLocation` read the followed position instead of asking the OS
+  per mount; permission prompts happen only where they did before.
+
+### 41.2 The side menu
+
+- `AppDrawer` no longer remembers where it was opened or reopens on Back.
+  As an overlay above the stack it cannot sit under a pushed screen, so the
+  reopen could only start after the pop had revealed the screen beneath —
+  the "flash, wait, re-slide" the owner saw, timed differently per platform
+  (Android updates the route as the pop starts, iOS when it ends). Back from
+  a menu destination now returns to the originating screen with the menu
+  closed; the `requestAnimationFrame` before the push is gone. Making the
+  menu a stack route was rejected: react-native-screens presents every screen
+  after a modal as a modal on iOS, and a pushed drawer loses the
+  finger-tracked open/close.
+
+### 41.3 Offline is never "empty"
+
+- Root cause: with no connection React Query **pauses** a query
+  (`fetchStatus: "paused"`), which is neither `isLoading` nor `isError`, so
+  every screen that branched on those two fell through to its empty state or
+  drew zeros. The 2026-09-21 contract (`resolveQueryView` / `useQueryView` /
+  `QueryUnavailable`) now applies to every data-driven screen — Transactions
+  (list, tiles, detail), Ticket detail, Wallets, Payout accounts, Withdraw,
+  Payouts, the organizer Dashboard / Events / Places / Finance / Attendees /
+  Bookings / Reviews / Promo codes / Promote / Photos / Check-in / Insights /
+  Cancel / Edit / Drafts, Rewards (hub, activity, invite, invite link), For
+  you, the public profile and its tabs, Spotlight campaign / post / promote,
+  Settings › Notifications / Overview / Edit profile, Verification, Abonten
+  Weekly, the review lists, the message peek, the Explore map view, Buy
+  tickets and Checkout. A definite server answer (403, 404, expired) keeps
+  its own message; a figure the phone does not have is drawn as "—", never
+  0.
+- Transport: every `/api/mobile` query hook now passes its envelope through
+  `settleEnvelope`, so a transient status (401, 408, 429, 5xx) throws — React
+  Query keeps the last good data, retries and refetches on reconnect —
+  instead of caching `{ status: 503 }` as a successful answer (which the
+  infinite-page flatteners then read as an empty or broken page).
+- The global network model is unchanged (NetInfo → `onlineManager`, debounced
+  offline, `networkMode: "offlineFirst"`, `refetchOnReconnect`,
+  `OfflineBanner`); it was already one coherent signal and is what the
+  contract reads.

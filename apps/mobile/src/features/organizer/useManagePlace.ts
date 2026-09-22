@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   AddPlaceServiceBody,
   PlaceOpeningHoursInput,
@@ -19,7 +20,8 @@ const KEY = ["mobile", "organizer", "place-manage"] as const;
 export function usePlaceManageContext(placeId: string) {
   return useQuery({
     queryKey: [...KEY, placeId],
-    queryFn: () => api.organizer.placeManageContext(placeId),
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.placeManageContext(placeId)),
     enabled: !!placeId,
     staleTime: 20_000,
   });

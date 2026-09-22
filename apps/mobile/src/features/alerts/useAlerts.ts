@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   NotificationPreferences,
   NotificationPreferencesPatch,
@@ -32,7 +33,7 @@ export function usePromptOffer(context: PromptContext | null) {
     retry: false,
     queryFn: async (): Promise<PromptOffer | null> => {
       if (!context) return null;
-      const res = await api.alerts.prompt(context);
+      const res = settleEnvelope(await api.alerts.prompt(context));
       return res.status === 200 && res.data ? res.data : null;
     },
   });
@@ -67,7 +68,9 @@ export function useSubscriptionStatus(
     enabled: !!targetId && !!session && program.personalization,
     staleTime: 60_000,
     queryFn: async (): Promise<SubscriptionStatusResult> => {
-      const res = await api.alerts.status(kind, targetId as string);
+      const res = settleEnvelope(
+        await api.alerts.status(kind, targetId as string),
+      );
       return res.status === 200 && res.data
         ? res.data
         : { subscribed: false, subscriptionId: null };
@@ -196,7 +199,7 @@ export function useSubscriptions(enabled: boolean) {
     enabled,
     staleTime: 30_000,
     queryFn: async (): Promise<NotificationSubscription[]> => {
-      const res = await api.alerts.subscriptions();
+      const res = settleEnvelope(await api.alerts.subscriptions());
       return res.status === 200 && res.data ? res.data : [];
     },
   });

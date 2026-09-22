@@ -1,3 +1,4 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TimeField, prettyTime } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
@@ -29,17 +30,22 @@ export default function EditEventScreen() {
   const w = useEventEdit(eventId ?? "");
   const [mapOpen, setMapOpen] = useState(false);
 
-  if (w.isLoading || !w.isReady) {
-    if (w.loadError) {
+  if (!w.isReady) {
+    // A definite answer from the server (not yours, no such event) keeps
+    // its message; loading, offline and failed are told apart from it, so
+    // the form never sits on a skeleton the phone cannot fill.
+    if (typeof w.loadError === "string") {
+      return <ScreenError message={w.loadError} onRetry={() => w.reload()} />;
+    }
+    if (w.loadView.kind === "offline" || w.loadView.kind === "error") {
       return (
-        <ScreenError
-          message={
-            typeof w.loadError === "string"
-              ? w.loadError
-              : "Couldn't load this event."
-          }
-          onRetry={() => w.reload()}
-        />
+        <View className="flex-1 bg-background">
+          <QueryUnavailable
+            view={w.loadView}
+            subject="this event"
+            onRetry={() => w.reload()}
+          />
+        </View>
       );
     }
     return <FormSkeleton fields={6} />;

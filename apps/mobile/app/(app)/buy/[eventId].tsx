@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   useCancelCheckout,
   usePromoPreview,
@@ -7,7 +8,9 @@ import {
 } from "@/features/checkout/useCheckout";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { setPendingRedirect } from "@/lib/authRedirect";
+import { isNotFoundError } from "@/lib/queryErrors";
 import { useNowTick } from "@/lib/useNowTick";
+import { useQueryView } from "@/lib/useQueryView";
 import {
   allocatePromoEligibility,
   computeCheckoutFee,
@@ -67,7 +70,10 @@ export default function BuyTicketsScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const { session } = useSession();
-  const { data, isLoading, isError, refetch } = useEventDetail(eventId);
+  const detailQuery = useEventDetail(eventId);
+  const { data, isError, error, refetch } = detailQuery;
+  // Loading, offline and failed are told apart from "no such event".
+  const detailView = useQueryView(detailQuery);
   const validate = useValidateCheckout();
   const cancel = useCancelCheckout();
   const promoPreview = usePromoPreview();
@@ -161,24 +167,32 @@ export default function BuyTicketsScreen() {
     <AppHeader variant="title" title="Buy tickets" backFallback="/(app)" />
   );
 
-  if (isLoading) {
+  if (isError && isNotFoundError(error)) {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <View className="flex-1 items-center justify-center">
-          <Spinner />
-        </View>
+        <ScreenError message="This event could not be found." />
       </View>
     );
   }
-  if (isError || !event) {
+  if (!event) {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError
-          message="This event could not be loaded."
-          onRetry={() => refetch()}
-        />
+        {detailView.kind === "content" || detailView.kind === "empty" ? (
+          <ScreenError message="This event could not be found." />
+        ) : (
+          <QueryUnavailable
+            view={detailView}
+            subject="this event"
+            onRetry={() => refetch()}
+            loading={
+              <View className="flex-1 items-center justify-center">
+                <Spinner />
+              </View>
+            }
+          />
+        )}
       </View>
     );
   }

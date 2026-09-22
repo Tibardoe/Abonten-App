@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import type {
   BookingStatus,
   OwnerPlaceBooking,
@@ -26,12 +27,14 @@ export function usePlaceBookings(placeId: string, filter: BookingFilter) {
   return useInfiniteQuery({
     queryKey: [...BOOKINGS_KEY, placeId, filter],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.organizer.placeBookings(placeId, {
-        status: filter === "all" ? undefined : filter,
-        cursor: pageParam,
-        pageSize: 20,
-      }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.organizer.placeBookings(placeId, {
+          status: filter === "all" ? undefined : filter,
+          cursor: pageParam,
+          pageSize: 20,
+        }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     enabled: !!placeId,
   });
@@ -63,8 +66,13 @@ export function usePlaceReviews(placeId: string) {
   return useInfiniteQuery({
     queryKey: [...REVIEWS_KEY, placeId],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      api.organizer.placeReviews(placeId, { cursor: pageParam, pageSize: 20 }),
+    queryFn: async ({ pageParam }) =>
+      settleEnvelope(
+        await api.organizer.placeReviews(placeId, {
+          cursor: pageParam,
+          pageSize: 20,
+        }),
+      ),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     enabled: !!placeId,
   });

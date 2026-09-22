@@ -1,5 +1,7 @@
 import { QrCode } from "@/components/QrCode";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { usePlaceVisitPanel } from "@/features/rewards/usePlaceVisits";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { AppText, Button, Overline, Refresher } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
@@ -37,6 +39,8 @@ export default function PlaceCheckInScreen() {
   }, []);
 
   const panel = q.data;
+  // Loading, offline and failed are told apart from "not available yet".
+  const view = useQueryView(q);
   const secondsLeft = panel?.expiresAt
     ? Math.max(Math.ceil((Date.parse(panel.expiresAt) - now) / 1000), 0)
     : 0;
@@ -47,16 +51,21 @@ export default function PlaceCheckInScreen() {
       contentContainerClassName="gap-5 p-4 pb-16"
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
     >
-      {q.isLoading ? (
-        <View className="items-center py-12">
-          <ActivityIndicator />
-        </View>
-      ) : q.isError || !panel ? (
+      {view.kind !== "content" && view.kind !== "empty" ? (
+        <QueryUnavailable
+          view={view}
+          subject="the check-in code"
+          onRetry={() => q.refetch()}
+          loading={
+            <View className="items-center py-12">
+              <ActivityIndicator />
+            </View>
+          }
+        />
+      ) : !panel ? (
         <View className="items-center gap-3 py-12">
           <AppText className="text-center text-muted-foreground">
-            {q.error instanceof Error
-              ? q.error.message
-              : "Couldn't load the check-in code."}
+            Couldn't load the check-in code.
           </AppText>
           <Button title="Retry" size="sm" onPress={() => q.refetch()} />
         </View>

@@ -1,7 +1,9 @@
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import {
   flattenOrganizerPlaces,
   useOrganizerPlaces,
 } from "@/features/organizer/useOrganizerPlaces";
+import { useQueryView } from "@/lib/useQueryView";
 import type { OrganizerPlaceRow } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Refresher } from "@abonten/ui-native";
@@ -69,20 +71,13 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
 export default function OrganizerPlacesScreen() {
   const q = useOrganizerPlaces();
   const places = flattenOrganizerPlaces(q.data?.pages);
-  const failed =
-    q.isError || (q.data?.pages[0] && q.data.pages[0].status >= 400);
+  // "No places yet" is only ever said for an answer the server gave;
+  // loading, offline and failed are told apart.
+  const view = useQueryView(q, () => places.length === 0);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
-
-  if (q.isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
-  }
 
   return (
     <FlatList
@@ -107,11 +102,18 @@ export default function OrganizerPlacesScreen() {
       onEndReachedThreshold={0.5}
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
-        <AppText className="mt-10 text-center text-sm text-muted-foreground">
-          {failed
-            ? "Couldn't load your places."
-            : "You haven't added any places yet."}
-        </AppText>
+        view.kind === "empty" ? (
+          <AppText className="mt-10 text-center text-sm text-muted-foreground">
+            You haven't added any places yet.
+          </AppText>
+        ) : (
+          <QueryUnavailable
+            view={view}
+            subject="your places"
+            onRetry={() => q.refetch()}
+            loading={<ActivityIndicator className="mt-10" />}
+          />
+        )
       }
       ListFooterComponent={
         q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null

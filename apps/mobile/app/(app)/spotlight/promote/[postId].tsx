@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { PromotionPaymentSection } from "@/components/organizer/PromotionPaymentSection";
 import {
   useContentPost,
@@ -9,6 +10,7 @@ import {
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { useDebouncedValue } from "@/features/search/useEventSearch";
 import { api } from "@/lib/api";
+import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   CAMPAIGN_OBJECTIVES,
@@ -62,6 +64,8 @@ export default function PromoteSpotlightScreen() {
   const { program } = useContentProgram();
   const post = useContentPost(postId);
   const options = usePromotionOptions(program.spotlightPromotions);
+  const postView = useQueryView(post);
+  const optionsView = useQueryView(options);
   const [objective, setObjective] = useState<ContentCampaignObjective>("views");
   const [area, setArea] = useState<"everywhere" | "near_post">("everywhere");
   const [radiusKm, setRadiusKm] = useState(25);
@@ -131,11 +135,27 @@ export default function PromoteSpotlightScreen() {
       </View>
     );
   }
-  if (post.isLoading || options.isLoading) {
+  // Loading, offline and failed are told apart: the form never opens on a
+  // post or price list the phone does not have.
+  const blocked =
+    postView.kind !== "content" && postView.kind !== "empty"
+      ? postView
+      : optionsView.kind !== "content" && optionsView.kind !== "empty"
+        ? optionsView
+        : null;
+  if (blocked) {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <Spinner />
+        <QueryUnavailable
+          view={blocked}
+          subject="this Spotlight"
+          onRetry={() => {
+            post.refetch();
+            options.refetch();
+          }}
+          loading={<Spinner />}
+        />
       </View>
     );
   }

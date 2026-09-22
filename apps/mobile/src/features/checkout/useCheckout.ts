@@ -1,5 +1,6 @@
 import { referralHintForEvent } from "@/features/rewards/referralCapture";
 import { api } from "@/lib/api";
+import { settleEnvelope } from "@/lib/envelope";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type ValidateInput = {
@@ -38,7 +39,8 @@ export function useCheckoutPrepare(checkoutSessionId: string | undefined) {
   return useQuery({
     queryKey: ["mobile", "checkout", "prepare", checkoutSessionId],
     enabled: !!checkoutSessionId,
-    queryFn: () => api.checkout.prepare([checkoutSessionId as string]),
+    queryFn: async () =>
+      settleEnvelope(await api.checkout.prepare([checkoutSessionId as string])),
   });
 }
 
@@ -46,7 +48,10 @@ export function useCheckoutSession(checkoutSessionId: string | undefined) {
   return useQuery({
     queryKey: ["mobile", "checkout", "session", checkoutSessionId],
     enabled: !!checkoutSessionId,
-    queryFn: () => api.checkout.getSession(checkoutSessionId as string),
+    queryFn: async () =>
+      settleEnvelope(
+        await api.checkout.getSession(checkoutSessionId as string),
+      ),
   });
 }
 
@@ -68,7 +73,7 @@ export function useCancelCheckout() {
 export function usePendingCheckouts() {
   return useQuery({
     queryKey: ["mobile", "checkout", "pending"],
-    queryFn: () => api.checkout.pending(),
+    queryFn: async () => settleEnvelope(await api.checkout.pending()),
     staleTime: 30_000,
   });
 }
