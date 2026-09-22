@@ -452,6 +452,40 @@ export default function ConversationScreen() {
           <View className="flex-1 items-center justify-center">
             <Spinner />
           </View>
+        ) : entries.length === 0 ? (
+          // Empty states live OUTSIDE the inverted list. An inverted FlatList
+          // flips its whole scroll surface (scaleY -1) and counter-flips each
+          // row; the ListEmptyComponent only gets the counter-flip through a
+          // `style` prop that RN clones onto it, so any component that does
+          // not forward `style` (QueryUnavailable) rendered upside down at
+          // the bottom of the screen (seen offline on device, 2026-09-22).
+          // Rendering them as siblings keeps them upright on both platforms
+          // and leaves the list itself to rows only.
+          threadMissing ? (
+            <View className="flex-1 justify-center">
+              <QueryUnavailable
+                view={threadView}
+                subject="this conversation"
+                onRetry={() => messagesQ.refetch()}
+              />
+            </View>
+          ) : (
+            <View className="flex-1 items-center gap-3 px-8 pt-16">
+              <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
+                <Icon name="chatbubbles-outline" size={26} tone="primary" />
+              </View>
+              <AppText variant="bodyStrong" className="text-center">
+                Start the conversation
+              </AppText>
+              <AppText variant="muted" className="text-center">
+                {context?.subject.event
+                  ? `Ask about ${context.subject.event.title} — tickets, timing, anything.`
+                  : context?.subject.place
+                    ? `Ask ${context.subject.place.name} about a visit, a booking or their services.`
+                    : "Say hello — your messages stay in the app."}
+              </AppText>
+            </View>
+          )
         ) : (
           <View className="flex-1">
             <FlatList
@@ -498,35 +532,6 @@ export default function ConversationScreen() {
                     <Spinner />
                   </View>
                 ) : null
-              }
-              ListEmptyComponent={
-                threadMissing ? (
-                  <QueryUnavailable
-                    view={threadView}
-                    subject="this conversation"
-                    onRetry={() => messagesQ.refetch()}
-                  />
-                ) : (
-                  <View className="flex-1 items-center gap-3 px-8 pt-16">
-                    <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
-                      <Icon
-                        name="chatbubbles-outline"
-                        size={26}
-                        tone="primary"
-                      />
-                    </View>
-                    <AppText variant="bodyStrong" className="text-center">
-                      Start the conversation
-                    </AppText>
-                    <AppText variant="muted" className="text-center">
-                      {context?.subject.event
-                        ? `Ask about ${context.subject.event.title} — tickets, timing, anything.`
-                        : context?.subject.place
-                          ? `Ask ${context.subject.place.name} about a visit, a booking or their services.`
-                          : "Say hello — your messages stay in the app."}
-                    </AppText>
-                  </View>
-                )
               }
               renderItem={renderEntry}
             />

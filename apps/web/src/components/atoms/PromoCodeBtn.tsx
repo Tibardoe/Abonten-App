@@ -2,12 +2,12 @@ import { useState } from "react";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 type PromoCodeProp = {
-  ticket: string | null;
   handlePromoCodeFormPopup: (state: boolean) => void;
 };
 
+// Only rendered for a paid event — EventUploadFormFields hides the whole
+// promo-code section for a free one instead of disabling this button.
 export default function PromoCodeBtn({
-  ticket,
   handlePromoCodeFormPopup,
 }: PromoCodeProp) {
   const [showPromoCodeFormPopup, _setShowPromoCodeFormPopup] = useState(false);
@@ -16,7 +16,6 @@ export default function PromoCodeBtn({
     <button
       type="button"
       onClick={() => handlePromoCodeFormPopup(true)}
-      disabled={ticket === "Free"}
       className="flex justify-between items-center w-full"
     >
       Add Promo Code

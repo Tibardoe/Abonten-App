@@ -3842,3 +3842,36 @@ changed.
   one sequence number orders every choice and fix; typed-address geocoding
   offline says so.
 - Storage `abonten.browsing-area.v3` (`{ area, anchor }`), v2 migrated once.
+
+## 43. Event capacity rules, free-event promo codes, chat offline state, Spotlight paging (2026-09-22)
+
+### 43.1 Capacity and ticket quantities — one rule, four layers
+
+`event.capacity` is the headcount cap for the whole event; `ticket_type.quantity` is the **remaining** stock of one type (null = no stock limit of its own). The rule, decided once in `@abonten/core/ticketCapacity` (`ticketCapacityProblem`, `ticketCapacityHint`, `planTicketCapacity`, 24 unit tests):
+
+| Capacity | Quantities | Result |
+| --- | --- | --- |
+| unset | anything | valid, no capacity limit |
+| set | the ones that are set add up to ≤ capacity | valid; those seats are reserved for their types |
+| set | they add up to more | refused: "Ticket quantities total 110, which exceeds the event capacity of 100." |
+| set | some or all unset | the unset types **share** `capacity − Σ set quantities` between them |
+
+Enforced by:
+
+- **Forms** (live, before submit): web `useEventUploadForm` / `EventUploadFormFields` / `ManageEventDetailsSection`, mobile `useEventWizard` / `EventWizardTickets` (step gate) / `useEventEdit` / the edit screen. Web quantities are now optional (blank = null), as the app's already were.
+- **Services**: `postEventCore`, `updateEventTicketTypesCore` (against the saved capacity), `updateEventCore` (a capacity change against the saved quantities; keeps the FREE tier's quantity in step with the capacity, written before the event row so the lock order matches the checkout paths). A database check_violation is surfaced as 400 with the database's own message.
+- **Database** (migration `20260922120000_event_capacity_and_free_event_promo_guards.sql`, live in prod 2026-09-22): invariant `attending + pending checkout units + Σ quantity of types with a quantity ≤ capacity`, checked by `event_capacity_check(event_id)` (SECURITY DEFINER, per-event transaction advisory lock — never a row lock on `event`, so no cycle with the checkout / sweep / edit row locks) from **deferred constraint triggers** on `ticket_checkout` (pending insert / quantity), `attendance` (attending), `ticket_type` (insert; a client-session raise of stock — the backend's service-role restocks and every SECURITY DEFINER sweep are trusted, a decrement is skipped) and `event` (capacity). Deferred because `issue_tickets_for_checkout` inserts attendance before flipping the checkout off pending and the sweeps restore stock in the same transaction they flip the row. `create_ticket_checkout` pre-checks the shared pool (`event_shared_capacity_left`) for a friendly "This event is sold out." / "Only N spots are left for this event." before any stock is touched; the trigger is the race-safe backstop ("Not enough spots are left for this event."). Integration test `event-capacity.integration.test.ts` (9 tests incl. 8 concurrent buyers on a pool of 3, and organizer bypass attempts through PostgREST).
+
+Prod data at apply time: one published test event ("Test", capacity 100, tiers 50 + 100) already violated the rule; its next reservation is refused until the organizer lowers a quantity or raises the capacity. The migration does not edit event configuration.
+
+### 43.2 Free events have no promo codes
+
+`FREE_EVENT_PROMO_CODES_MESSAGE` / `freeEventPromoCodeProblem` in `@abonten/core/ticketTiers`. Web hides the promo section and drops drafted codes when Free is picked; the mobile wizard skips the promo step (step dots and "Step x of y" count the visible steps) and drops drafted codes; `postEventCore` refuses codes for a free event; `updateEventTicketTypesCore` retires the event's codes before writing the FREE tier (unused deleted, used deactivated — as the organizer, because the promo_code column guard only lets the organizer change a code's terms); `updatePromoCodeCore` refuses re-activating a code on a free event; the mobile promo-codes screen and the web Details tab say codes are unavailable on a free event. Database: `guard_promo_code_free_event` — BEFORE INSERT / UPDATE OF is_active, event_id on `promo_code` (an active code on an event with the FREE tier) and BEFORE INSERT / UPDATE OF type, event_id on `ticket_type` (a FREE tier beside an active code). The one pre-existing active code on a free event in prod was deactivated by the migration (with the table's user triggers switched off for that statement).
+
+### 43.3 Chat offline state upside down
+
+`ListEmptyComponent` of an inverted FlatList receives the counter-flip only through a `style` prop that React Native clones onto it; `QueryUnavailable` takes no `style`, so the offline / failed panel rendered rotated 180° at the bottom of the thread. The empty states (offline / failed / "Start the conversation") now render as siblings of the list, never inside the inverted surface; the list holds rows only. Verified on the Android emulator: offline open, cold launch offline → Messages → chat, reconnect with the thread open, navigate away and back. iOS shares the code path (no platform branch) but was not run.
+
+### 43.4 Spotlight "small step" before the page change (Android)
+
+React Native's Android `pagingEnabled` snaps with `smoothScrollTo`, a fixed ~250 ms accelerate/decelerate `ObjectAnimator` that ignores the release velocity (RN's own comment: "*waaay* too short"). Offset trace on device: 2.8 dp/ms under the finger, 0.9 dp/ms for the two frames after release, then 4+ dp/ms — the dip is the "step". Android now uses `snapToInterval={height}` + `disableIntervalMomentum` (the OverScroller fling path, which carries the finger's velocity and clamps at the next page); iOS keeps native `pagingEnabled`. Verified on the emulator: continuous offset after release; flick = one page in that direction, no skipping; edges hold; a near-still release springs back below the halfway point and advances past it; comments and playback unaffected. iOS not run (no device).

@@ -36,3 +36,24 @@ export function paidTierProblem(tier: {
   }
   return null;
 }
+
+/**
+ * Promo codes discount a ticket price, and a free event has none: every
+ * client hides the promo-code step for a free event, every create/update
+ * path refuses codes for one, and the database rejects an active code on
+ * an event with the FREE tier (migration
+ * 20260922120000_event_capacity_and_free_event_promo_guards.sql).
+ */
+export const FREE_EVENT_PROMO_CODES_MESSAGE =
+  "Promo codes aren't available on a free event. Remove them, or make the event paid.";
+
+/** Why these promo codes cannot be saved with this ticketing, or null. */
+export function freeEventPromoCodeProblem(
+  freeEvent: boolean,
+  promoCodes: readonly unknown[] | null | undefined,
+): string | null {
+  if (!freeEvent) return null;
+  return promoCodes && promoCodes.length > 0
+    ? FREE_EVENT_PROMO_CODES_MESSAGE
+    : null;
+}

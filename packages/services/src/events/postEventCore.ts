@@ -1,7 +1,11 @@
 import { generateEventCode } from "@abonten/core/eventCodeGenerator";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
-import { paidTierProblem } from "@abonten/core/ticketTiers";
+import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
+import {
+  freeEventPromoCodeProblem,
+  paidTierProblem,
+} from "@abonten/core/ticketTiers";
 import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
@@ -18,6 +22,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // is identical for both. Deliberately NOT a "use server" file.
 
 const UNIQUE_VIOLATION = "23505";
+const CHECK_VIOLATION = "23514";
 
 type DateInput = string | Date;
 
@@ -87,6 +92,17 @@ export async function postEventCore(
     return { status: 400, message: locationCheck.message };
   }
 
+  // Ticketing rules (@abonten/core/ticketTiers + ticketCapacity), checked
+  // here for both transports before anything is written. The database
+  // enforces the same two rules with triggers, so a caller that skips this
+  // service still cannot create a free event with promo codes or ticket
+  // quantities that add up to more than the capacity.
+  const promoProblem = freeEventPromoCodeProblem(
+    !!input.freeEvent,
+    input.promoCodes,
+  );
+  if (promoProblem) return { status: 400, message: promoProblem };
+
   if (!input.freeEvent) {
     const tiers = [
       ...(input.singleTicket ? [input.singleTicket] : []),
@@ -96,6 +112,8 @@ export async function postEventCore(
       const problem = paidTierProblem(tier);
       if (problem) return { status: 400, message: problem };
     }
+    const capacityProblem = ticketCapacityProblem(input.capacity, tiers);
+    if (capacityProblem) return { status: 400, message: capacityProblem };
   }
 
   const eventCode = generateEventCode(input.title);
@@ -202,6 +220,11 @@ export async function postEventCore(
   );
 
   if (createEventError) {
+    if (createEventError.code === CHECK_VIOLATION) {
+      // The capacity / free-event guards raise check_violation with a
+      // message written for the organizer (see the migration).
+      return { status: 400, message: createEventError.message };
+    }
     if (createEventError.code === UNIQUE_VIOLATION) {
       if (
         createEventError.message.includes(

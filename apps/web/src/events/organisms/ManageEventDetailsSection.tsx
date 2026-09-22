@@ -7,6 +7,10 @@ import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
 import { useToast } from "@/hooks/useToast";
+import {
+  ticketCapacityHint,
+  ticketCapacityProblem,
+} from "@abonten/core/ticketCapacity";
 import type {
   ManagedEvent,
   ManagedEventTicketType,
@@ -139,6 +143,25 @@ export default function ManageEventDetailsSection({
     }
   };
 
+  // Capacity (the core-fields form) vs the ticket quantities being edited
+  // here, live — the same rule updateEventCore / updateEventTicketTypesCore
+  // and the database apply (@abonten/core/ticketCapacity).
+  const watchedCapacity = eventEditForm.form.watch("capacity");
+  const tiersForCapacity =
+    ticketMode === "Single Ticket Type"
+      ? [{ quantity: singleTicketQuantity }]
+      : ticketMode === "Multiple Ticket Types"
+        ? multipleTickets.map((t) => ({ quantity: t.quantity }))
+        : [];
+  const capacityProblem =
+    ticketMode && ticketMode !== "Free"
+      ? ticketCapacityProblem(watchedCapacity, tiersForCapacity)
+      : null;
+  const capacityHint =
+    ticketMode && ticketMode !== "Free"
+      ? ticketCapacityHint(watchedCapacity, tiersForCapacity)
+      : null;
+
   const saveButtonLabel = isResolvingLocation
     ? "Resolving location..."
     : isSubmitting
@@ -171,10 +194,16 @@ export default function ManageEventDetailsSection({
           restrictedLocked={hasConfirmedParticipation}
         />
 
+        {capacityProblem && (
+          <p role="alert" className="text-sm text-destructive">
+            {capacityProblem}
+          </p>
+        )}
+
         <button
           type="button"
           onClick={handleSubmit(onSubmit)}
-          disabled={isSubmitting || !isReady}
+          disabled={isSubmitting || !isReady || !!capacityProblem}
           className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {saveButtonLabel}
@@ -223,13 +252,28 @@ export default function ManageEventDetailsSection({
               handleMultipleTickets={setMultipleTickets}
             />
           )}
+
+          {capacityProblem ? (
+            <p role="alert" className="text-sm text-destructive">
+              {capacityProblem}
+            </p>
+          ) : capacityHint ? (
+            <p className="text-xs text-muted-foreground">{capacityHint}</p>
+          ) : null}
+
+          {ticketMode === "Free" && initialTicketState.mode !== "Free" && (
+            <p className="text-xs text-muted-foreground">
+              Making this event free removes its promo codes: unused ones are
+              deleted and used ones are deactivated.
+            </p>
+          )}
         </fieldset>
 
         {!hasConfirmedParticipation && (
           <button
             type="button"
             onClick={handleSaveTicketTypes}
-            disabled={isSavingTickets || !ticketMode}
+            disabled={isSavingTickets || !ticketMode || !!capacityProblem}
             className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
             {isSavingTickets ? "Saving..." : "Save ticket types"}
@@ -241,7 +285,14 @@ export default function ManageEventDetailsSection({
 
       <div>
         <h2 className="font-semibold text-lg mb-2">Promo Codes</h2>
-        <ManagePromoCodesButton eventId={event.id} />
+        {initialTicketState.mode === "Free" ? (
+          <p className="text-sm text-muted-foreground">
+            Promo codes aren&apos;t available on a free event. Make the event
+            paid to offer discount codes.
+          </p>
+        ) : (
+          <ManagePromoCodesButton eventId={event.id} />
+        )}
       </div>
     </div>
   );

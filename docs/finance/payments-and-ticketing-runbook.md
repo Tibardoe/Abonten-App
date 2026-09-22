@@ -4,8 +4,8 @@ purpose: Describe, function by function, how a ticket purchase moves from select
 audience: Engineering, finance admins, support leads
 scope: Paid and free ticket checkouts, promotion checkouts, Paystack popup / direct charge / mobile-money OTP, webhook, fulfilment retry
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -49,7 +49,7 @@ sequenceDiagram
 
 | Step | Code | Tables | Failure handling |
 |---|---|---|---|
-| Validate and reserve | `packages/services/src/checkout/validateCheckoutCore.ts` → RPC `create_ticket_checkout` (`20260907094000`) | `ticket_checkout` (pending, `expires_at = now + 30 min`), `ticket_type.quantity` (single-statement CAS decrement), `promo_code_usage` | Any failure rolls the whole RPC back (INV-001/INV-002 fixed). Limits: 50 per type, 100 per order (`checkoutLimits.ts`), rate limit `checkout-validate:${userId}` 30/min. Refuses while a pending checkout or a ticket for the event exists. |
+| Validate and reserve | `packages/services/src/checkout/validateCheckoutCore.ts` → RPC `create_ticket_checkout` (`20260907094000`, capacity pre-check `20260922120000`) | `ticket_checkout` (pending, `expires_at = now + 30 min`), `ticket_type.quantity` (single-statement CAS decrement), `promo_code_usage` | Any failure rolls the whole RPC back (INV-001/INV-002 fixed). Limits: 50 per type, 100 per order (`checkoutLimits.ts`), rate limit `checkout-validate:${userId}` 30/min. Refuses while a pending checkout or a ticket for the event exists. **Event capacity** (`20260922120000`): seats taken (attending + pending) plus the stock still reserved for ticket types with a quantity may never exceed `event.capacity`; types without a quantity share the remainder. Enforced by deferred constraint triggers on `ticket_checkout`, `attendance`, `ticket_type` and `event` (`event_capacity_check`, per-event advisory lock) — "This event is sold out." / "Only N spots are left for this event." / "Not enough spots are left for this event." |
 | Free RSVP | `registerForFreeEventCore.ts` → `issue_free_ticket` | `ticket`, `attendance` | One per user per event; refused after the event (or its next date) has started. |
 | Payment attempt | `createMultiCheckoutPaymentAttemptCore.ts` (tickets), `createPromotionPaymentAttemptCore.ts` (promotions) → `paystackInit.ts` | `payment_attempt` (`initiated`, amount from the checkout rows, never the client) | Paystack init failure → attempt `failed`, checkout stays pending until expiry. |
 | Pay | Paystack popup (`usePaystackPopup.ts`), saved-card charge, MoMo direct charge + `submitPaystackChargeOtpCore.ts` | — | MoMo may return `pending` awaiting the customer's approval. |

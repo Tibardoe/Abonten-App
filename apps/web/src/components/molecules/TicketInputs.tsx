@@ -16,8 +16,16 @@ type TicketInputProp = {
   handleSingleTicket?: (amount: number) => void;
   multipleTickets?: Ticket[];
   handleMultipleTickets?: (tickets: Ticket[]) => void;
-  handleSingleTicketQuantity?: (quantity: number) => void;
+  handleSingleTicketQuantity?: (quantity: number | null) => void;
 };
+
+// A cleared quantity field means "no stock limit of its own" (null), not 0:
+// with an event capacity set, such a ticket type shares the seats the
+// capacity has left (@abonten/core/ticketCapacity).
+function readQuantity(e: React.ChangeEvent<HTMLInputElement>): number | null {
+  const value = e.target.valueAsNumber;
+  return Number.isFinite(value) ? value : null;
+}
 
 export default function TicketInputs({
   ticketType,
@@ -53,13 +61,7 @@ export default function TicketInputs({
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
-    if (
-      newCategory &&
-      newPrice !== null &&
-      quantity !== null &&
-      date &&
-      endDate
-    ) {
+    if (newCategory && newPrice !== null && date && endDate) {
       // Removal below is keyed on category name, so two ticket types
       // sharing a name would remove each other -- catch that at add time,
       // the same way PromoCodeInputs guards against duplicate codes.
@@ -124,12 +126,10 @@ export default function TicketInputs({
 
           <Input
             type="number"
-            min={0}
-            placeholder="Quantity"
+            min={1}
+            placeholder="Quantity (optional)"
             value={singleTicketQuantity ?? ""}
-            onChange={(e) =>
-              handleSingleTicketQuantity?.(Number(e.target.value))
-            }
+            onChange={(e) => handleSingleTicketQuantity?.(readQuantity(e))}
           />
         </div>
       )}
@@ -171,10 +171,10 @@ export default function TicketInputs({
 
               <Input
                 type="number"
-                min={0}
-                placeholder="Quantity"
+                min={1}
+                placeholder="Quantity (optional)"
                 value={quantity ?? ""}
-                onChange={(e) => setQuantity(Number(e.target.value))}
+                onChange={(e) => setQuantity(readQuantity(e))}
               />
             </div>
 
@@ -196,13 +196,7 @@ export default function TicketInputs({
             <Button
               className="self-end"
               onClick={handleClick}
-              disabled={
-                !newCategory ||
-                newPrice === null ||
-                quantity === null ||
-                !date ||
-                !endDate
-              }
+              disabled={!newCategory || newPrice === null || !date || !endDate}
             >
               Add
             </Button>
@@ -237,7 +231,7 @@ export default function TicketInputs({
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>Quantity</span>
-                    <p>{ticket.quantity}</p>
+                    <p>{ticket.quantity ?? "No limit of its own"}</p>
                   </div>
 
                   <div className="flex items-center justify-between">

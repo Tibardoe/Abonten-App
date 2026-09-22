@@ -55,6 +55,7 @@ const STEPS: { title: string; subtitle: string }[] = [
 ];
 const LAST_STEP = STEPS.length - 1;
 const BASICS_STEP = 1;
+const PROMOS_STEP = 5;
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -95,13 +96,22 @@ export default function CreateEventScreen() {
     });
   }
 
+  // A free event has no price to discount, so the promo-code step is not
+  // offered at all (the hook also drops any codes drafted before the
+  // switch). The step keeps its index so "Go there" links stay right.
+  const skipPromos = w.ticketMode === "free";
+  const visibleSteps = STEPS.map((_, i) => i).filter(
+    (i) => !(skipPromos && i === PROMOS_STEP),
+  );
+
   function goBack() {
     if (w.step === 0) {
       if (router.canGoBack()) router.back();
       else router.replace("/(app)/organizer");
       return;
     }
-    w.setStep(w.step - 1);
+    const previous = visibleSteps[visibleSteps.indexOf(w.step) - 1] ?? 0;
+    w.setStep(previous);
   }
 
   function goNext() {
@@ -110,7 +120,8 @@ export default function CreateEventScreen() {
       return;
     }
     if (w.step === BASICS_STEP && !w.validateBasics()) return;
-    w.setStep(w.step + 1);
+    const next = visibleSteps[visibleSteps.indexOf(w.step) + 1] ?? LAST_STEP;
+    w.setStep(next);
   }
 
   async function onSaveDraft() {
@@ -165,7 +176,10 @@ export default function CreateEventScreen() {
       >
         <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
-            <StepDots step={w.step} total={STEPS.length} />
+            <StepDots
+              step={visibleSteps.indexOf(w.step)}
+              total={visibleSteps.length}
+            />
             <Pressable
               accessibilityRole="button"
               onPress={onSaveDraft}
@@ -181,7 +195,7 @@ export default function CreateEventScreen() {
 
           <View className="gap-1">
             <Overline>
-              Step {w.step + 1} of {STEPS.length}
+              Step {visibleSteps.indexOf(w.step) + 1} of {visibleSteps.length}
             </Overline>
             <Hero>{stepInfo.title}</Hero>
             <AppText variant="muted">{stepInfo.subtitle}</AppText>

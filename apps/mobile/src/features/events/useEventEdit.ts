@@ -16,6 +16,10 @@ import {
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import {
+  ticketCapacityHint,
+  ticketCapacityProblem,
+} from "@abonten/core/ticketCapacity";
 import { paidTierProblem } from "@abonten/core/ticketTiers";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import { useQuery } from "@tanstack/react-query";
@@ -405,6 +409,11 @@ export function useEventEdit(eventId: string) {
       return null;
     }
 
+    if (capacityProblem) {
+      toast.error("Check the capacity", { description: capacityProblem });
+      return null;
+    }
+
     const capNum =
       capacity.trim() === "" ? null : Math.trunc(Number(capacity.trim()));
 
@@ -428,8 +437,40 @@ export function useEventEdit(eventId: string) {
     });
   }
 
+  // Capacity (core fields) vs the ticket quantities (their own save), live —
+  // the same rule updateEventCore / updateEventTicketTypesCore and the
+  // database apply (@abonten/core/ticketCapacity). Both saves hold while
+  // the two disagree, because each would be refused by the server anyway.
+  const capacityNumber =
+    capacity.trim() === "" ? null : Number(capacity.trim());
+  const tiersForCapacity =
+    ticketMode === "single"
+      ? [
+          {
+            quantity:
+              ticketQuantity.trim() === "" ? null : Number(ticketQuantity),
+          },
+        ]
+      : ticketMode === "multiple"
+        ? tiers.map((t) => ({
+            quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+          }))
+        : [];
+  const capacityProblem =
+    ticketMode === "free"
+      ? null
+      : ticketCapacityProblem(capacityNumber, tiersForCapacity);
+  const capacityHint =
+    ticketMode === "free"
+      ? null
+      : ticketCapacityHint(capacityNumber, tiersForCapacity);
+
   async function saveTicketTypes(): Promise<UpdateEventTicketTypesResult | null> {
     if (locked) return null;
+    if (capacityProblem) {
+      toast.error("Check the capacity", { description: capacityProblem });
+      return null;
+    }
 
     if (ticketMode === "free") {
       return updateTickets.mutateAsync({
@@ -566,6 +607,12 @@ export function useEventEdit(eventId: string) {
     // ticket types
     ticketMode,
     setTicketMode,
+    capacityProblem,
+    capacityHint,
+    /** The saved ticketing is the FREE tier (promo codes unavailable). */
+    savedFree:
+      query.data?.status === 200 &&
+      (query.data.data.event.ticket_type ?? []).some((t) => t.type === "FREE"),
     ticketPrice,
     setTicketPrice,
     ticketQuantity,

@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -49,7 +49,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Feature | App | Role | Entry | Workflow | Tables / RPCs | Service / action / API | Payments / notifications | Failure | Admin | Docs |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Free RSVP | W A | Cu | Register | one per event; window checks | `ticket`, `attendance`; `issue_free_ticket` | `checkout/registerForFreeEventCore`; action `registerForFreeEvent`; API `checkout/free-rsvp` | notification + email | 300 already; 409 window | — | help tickets |
-| Paid checkout | W A | Cu | Buy tickets | validate → `create_ticket_checkout` (30-min hold, limits 50/100, promo) | `ticket_checkout`, `ticket_type`, `promo_code_usage` | `checkout/validateCheckoutCore`, `promoUsage`, `ticketInventory`; action `validateCheckout`; API `checkout/validate` | — | sold out, existing checkout, rate limit 30/min | Finance › Transactions | finance runbook |
+| Paid checkout | W A | Cu | Buy tickets | validate → `create_ticket_checkout` (30-min hold, limits 50/100, promo, event capacity shared by types without a quantity) | `ticket_checkout`, `ticket_type`, `promo_code_usage` | `checkout/validateCheckoutCore`, `promoUsage`, `ticketInventory`; action `validateCheckout`; API `checkout/validate` | — | sold out, existing checkout, rate limit 30/min | Finance › Transactions | finance runbook |
 | Payment (card/MoMo/saved) | W A | Cu | Pay | attempt → Paystack → finalize (client + webhook) → `issue_tickets_for_checkout` → fee | `payment_attempt`, `transaction`, `ticket`, `organizer_ledger_entry`, `platform_fee_entry` | `payments/*`, `apps/web/src/utils/generateTicket.ts`; actions `createMultiCheckoutPaymentAttempt`, `verifyPaystackPayment`, `submitPaystackChargeOtp`, `retryPaymentFulfillment`; API `checkout/attempt`, `payments/*` | Paystack; email w/ PDF; notification + push | declined; stuck → reaper/retry | refund (step-up) | finance runbook |
 | Credit tender | W A | Cu | checkout (when live) | reserve → capture / release | `credit_reservation` | `rewards/ticketCreditCore`, `promotionCreditCore`; API `checkout/promotion-credit-quote` | — | stale reservations | Rewards module | finance credit-tender |
 | Wallet (saved methods) | W A | Cu | Wallet | card: GHS 1 verification → authorization code; MoMo display | `payment_method` | `payments/paymentMethodCore`, `cardVerificationCore`; API `payment-methods/*` | Paystack | — | — | help payments |

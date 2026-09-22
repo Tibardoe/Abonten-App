@@ -10,6 +10,10 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@/utils/eventDateValidation";
+import {
+  ticketCapacityHint,
+  ticketCapacityProblem,
+} from "@abonten/core/ticketCapacity";
 import type { EventDates, PostsType } from "@abonten/types/postsType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import type { Ticket } from "@abonten/types/ticketType";
@@ -297,6 +301,12 @@ export function useEventUploadForm({
   const handleTicketSelection = (selectedTicket: string) => {
     markTouched();
     setTicket(selectedTicket);
+    // A free event has nothing to discount: whatever codes were drafted
+    // before the switch go with it, so none can ride along on submit.
+    if (selectedTicket === "Free") {
+      setPromoCodes([]);
+      setShowPromoCodeFormPopup(false);
+    }
   };
 
   const handleSingleTicketWithTouch = (amount: number) => {
@@ -304,10 +314,29 @@ export function useEventUploadForm({
     setSingleTicket(amount);
   };
 
-  const handleSingleTicketQuantityWithTouch = (quantity: number) => {
+  const handleSingleTicketQuantityWithTouch = (quantity: number | null) => {
     markTouched();
     setSingleTicketQuantity(quantity);
   };
+
+  // Capacity vs ticket quantities (@abonten/core/ticketCapacity), live as
+  // the organizer types either side, so the problem shows in the form
+  // rather than as a toast at the end.
+  const watchedCapacity = form.watch("capacity");
+  const tiersForCapacity =
+    ticket === "Single Ticket Type"
+      ? [{ quantity: singleTicketQuantity }]
+      : ticket === "Multiple Ticket Types"
+        ? multipleTickets.map((t) => ({ quantity: t.quantity }))
+        : [];
+  const capacityProblem =
+    ticket && ticket !== "Free"
+      ? ticketCapacityProblem(watchedCapacity, tiersForCapacity)
+      : null;
+  const capacityHint =
+    ticket && ticket !== "Free"
+      ? ticketCapacityHint(watchedCapacity, tiersForCapacity)
+      : null;
 
   const handleMultipleTicketsWithTouch = (tickets: Ticket[]) => {
     markTouched();
@@ -461,13 +490,22 @@ export function useEventUploadForm({
         return;
       }
 
+      // Quantities are optional (unset = no stock limit of its own), so a
+      // paid event only needs a price / at least one tier here; the server
+      // re-checks every tier (paidTierProblem) before writing.
       const noTicketingSet =
-        !ticket &&
-        (!singleTicket || !singleTicketQuantity) &&
-        (!multipleTickets || multipleTickets.length === 0);
+        !ticket ||
+        (ticket === "Single Ticket Type" && !singleTicket) ||
+        (ticket === "Multiple Ticket Types" && multipleTickets.length === 0);
 
       if (noTicketingSet) {
         toast.error("Event ticketing must be set");
+        setInvalidSection("tickets");
+        return;
+      }
+
+      if (capacityProblem) {
+        toast.error(capacityProblem);
         setInvalidSection("tickets");
         return;
       }
@@ -482,7 +520,7 @@ export function useEventUploadForm({
         selectedFile: file,
         existingFlyer: !file ? existingFlyer : undefined,
         draftId: currentDraftId,
-        promoCodes,
+        promoCodes: ticket === "Free" ? [] : promoCodes,
         freeEvents: ticket,
         singleTicket,
         singleTicketQuantity,
@@ -545,6 +583,8 @@ export function useEventUploadForm({
     handleChecked,
     promoCodes,
     handlePromoCodesChange,
+    capacityProblem,
+    capacityHint,
     showPromoCodeFormPopup,
     handlePromoCodeFormPopup,
     hasMeaningfulContent,

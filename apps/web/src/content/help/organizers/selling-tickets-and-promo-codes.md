@@ -2,7 +2,7 @@
 title: Selling tickets, promo codes and promoter commission
 summary: How sales and holds work, creating promo codes, offering a promoter commission, and reading your sales insights.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-09-22
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,9 +18,22 @@ owner: Abonten Hub
 
 Buyers can hold at most 50 of one ticket type and 100 tickets per order, and one order per event at a time.
 
+## Capacity and ticket quantities
+
+Both are optional and work together:
+
+- **Capacity** (Basics) is the most people the whole event can take.
+- **Quantity** on a ticket type is how many of that type can be sold.
+- With no capacity, set any quantities you like or none at all.
+- With a capacity, the quantities you set must not add up to more than it — you will see "Ticket quantities total 110, which exceeds the event capacity of 100" and cannot save until it fits.
+- Ticket types you leave without a quantity **share whatever the capacity has left** after the quantities you set. Capacity 100 with Standard = 60 and VIP left blank means at most 60 Standard and, between every type without a quantity, at most 40 more. Leave every quantity blank and all 100 seats are shared.
+- Sales stop for a type when its own quantity is used up, and for every shared type when the shared seats are gone. Held tickets count until their 30-minute hold expires.
+
 ## Promo codes
 
 Open your event › **Promo codes** (web: Manage › Events › event; app: Organizer › Events › event › Promo codes).
+
+- **Free events have no promo codes.** A code discounts a ticket price, and a free ticket has none, so the option is not offered for a free event. Making a paid event free removes its codes: never-used codes are deleted and used ones are deactivated (their history stays). Make the event paid again to add codes.
 
 - A code applies a **percentage discount** to the ticket price for your event only.
 - You can set how many times it may be used and edit or delete it later; deleting does not affect tickets already bought with it.
@@ -41,4 +54,4 @@ Use **Share** on the event page. When the Abonten Rewards programme is live, sha
 
 ## Sold out and waiting lists
 
-Sales stop automatically when a ticket type's quantity is reached. Abonten does not have a waiting list; increase the quantity from **Edit** if you have more capacity.
+Sales stop automatically when a ticket type's quantity is reached, or when the event's capacity is. Abonten does not have a waiting list; increase the quantity or the capacity from **Edit** if you have more room (both are locked once the event has a confirmed ticket).

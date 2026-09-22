@@ -1,3 +1,7 @@
+import {
+  FREE_EVENT_PROMO_CODES_MESSAGE,
+  FREE_TICKET_TYPE,
+} from "@abonten/core/ticketTiers";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -81,9 +85,11 @@ export type UpdatePromoCodeCoreInput = {
 };
 
 export type UpdatePromoCodeCoreResult = {
-  status: 200 | 403 | 404 | 500;
+  status: 200 | 400 | 403 | 404 | 500;
   message: string;
 };
+
+const CHECK_VIOLATION = "23514";
 
 // Deliberately does not touch the promo_code text itself or event_id — keeps
 // this scoped to the terms of an existing code (discount, cap, expiry,
@@ -109,7 +115,7 @@ export async function updatePromoCodeCore(
 
   const { data: event, error: eventError } = await supabase
     .from("event")
-    .select("id")
+    .select("id, ticket_type(type)")
     .eq("id", promoCode.event_id)
     .eq("organizer_id", userId)
     .maybeSingle();
@@ -120,6 +126,15 @@ export async function updatePromoCodeCore(
 
   if (!event) {
     return { status: 403, message: "Not authorized to edit this promo code" };
+  }
+
+  // A code retired when the event went free can be edited but not switched
+  // back on while the event is still free (the database refuses that too).
+  const isFree = (event.ticket_type ?? []).some(
+    (t) => t.type === FREE_TICKET_TYPE,
+  );
+  if (input.isActive && isFree) {
+    return { status: 400, message: FREE_EVENT_PROMO_CODES_MESSAGE };
   }
 
   const { error: updateError } = await supabase
@@ -136,6 +151,9 @@ export async function updatePromoCodeCore(
     .eq("id", input.promoCodeId);
 
   if (updateError) {
+    if (updateError.code === CHECK_VIOLATION) {
+      return { status: 400, message: updateError.message };
+    }
     return {
       status: 500,
       message: `Failed to update promo code: ${updateError.message}`,

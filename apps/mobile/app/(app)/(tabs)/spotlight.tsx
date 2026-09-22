@@ -41,6 +41,7 @@ import {
   ActivityIndicator,
   FlatList,
   type ListRenderItem,
+  Platform,
   Pressable,
   ScrollView,
   View,
@@ -448,7 +449,25 @@ export default function SpotlightFeedScreen() {
           // The comments composer lives inside a page: without this the
           // first tap on Send only closes the keyboard.
           keyboardShouldPersistTaps="handled"
-          pagingEnabled
+          // One page per swipe, carrying the finger's momentum.
+          //
+          // iOS: UIScrollView's native paging — velocity-aware, the canonical
+          // full-screen pager.
+          //
+          // Android: NOT `pagingEnabled`. React Native's Android ScrollView
+          // implements it with `smoothScrollTo`, a fixed ~250 ms
+          // accelerate/decelerate animation that ignores the release velocity,
+          // so the moment the finger lifted the page slowed to a crawl and
+          // then sped up again into the next video — the "small step, then
+          // the snap" seen on device (offset trace 2026-09-22: 2.8 dp/ms under
+          // the finger, 0.9 dp/ms for the two frames after release, then 4+).
+          // The snap-interval path instead flings the platform OverScroller
+          // with the real velocity, clamped at the next page, so the motion
+          // continues from the finger at the speed it let go.
+          // `disableIntervalMomentum` keeps a hard fling to one page.
+          {...(Platform.OS === "android"
+            ? { snapToInterval: height, disableIntervalMomentum: true }
+            : { pagingEnabled: true })}
           showsVerticalScrollIndicator={false}
           decelerationRate="fast"
           getItemLayout={(_, index) => ({

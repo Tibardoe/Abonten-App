@@ -1,4 +1,6 @@
 import { logger } from "@abonten/core/logger";
+import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
+import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
@@ -20,6 +22,8 @@ import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedPar
 // see updateEventTicketTypesCore for the separate, lock-gated ticket editor.
 
 type DateInput = string | Date;
+
+const CHECK_VIOLATION = "23514";
 
 function toIsoString(d: DateInput): string;
 function toIsoString(d: DateInput | null | undefined): string | null;
@@ -89,7 +93,7 @@ export async function updateEventCore(
   const { data: existingEvent, error: fetchError } = await supabase
     .from("event")
     .select(
-      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_code, event_occurrence(starts_at, ends_at)",
+      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_code, event_occurrence(starts_at, ends_at), ticket_type(id, type, quantity)",
     )
     .eq("id", eventId)
     .eq("organizer_id", userId)
@@ -117,7 +121,7 @@ export async function updateEventCore(
     const existingAddress =
       (existingEvent.address as { full_address?: string } | null)
         ?.full_address ?? "";
-    const capacityChanged =
+    const lockedCapacityChanged =
       (capacity ?? null) !== (existingEvent.capacity ?? null);
     const addressChanged = address !== existingAddress;
     const datesChanged = haveEventDatesChanged(
@@ -128,11 +132,43 @@ export async function updateEventCore(
       isSpecificEvent ? null : (ends_at ?? null),
     );
 
-    if (capacityChanged || addressChanged || datesChanged) {
+    if (lockedCapacityChanged || addressChanged || datesChanged) {
       return {
         status: 409,
         message:
           "This event already has confirmed tickets — dates, location and capacity can't be changed.",
+      };
+    }
+  }
+
+  // A new capacity must still hold the quantities set on the ticket types
+  // (@abonten/core/ticketCapacity); the types without one share the rest.
+  // Only reachable before the first confirmed ticket (capacity is locked
+  // above once one exists), so `ticket_type.quantity` is still the
+  // configured stock. The database re-checks on the write below.
+  const ticketTypes = existingEvent.ticket_type ?? [];
+  const nextCapacity = capacity ?? null;
+  const capacityChanged = nextCapacity !== (existingEvent.capacity ?? null);
+  const freeTier = ticketTypes.find((t) => t.type === FREE_TICKET_TYPE);
+  if (capacityChanged && !freeTier) {
+    const capacityProblem = ticketCapacityProblem(nextCapacity, ticketTypes);
+    if (capacityProblem) return { status: 400, message: capacityProblem };
+  }
+
+  // A free event's FREE tier carries the capacity as its stock (create and
+  // ticket-type edits write it that way), so a capacity change keeps the
+  // two in step. Written before the event row so the lock order matches
+  // the checkout paths (ticket_type first, then the event).
+  if (capacityChanged && freeTier) {
+    const { error: freeTierError } = await supabase
+      .from("ticket_type")
+      .update({ quantity: nextCapacity })
+      .eq("id", freeTier.id)
+      .eq("event_id", eventId);
+    if (freeTierError) {
+      return {
+        status: 500,
+        message: `Error updating event: ${freeTierError.message}`,
       };
     }
   }
@@ -179,6 +215,10 @@ export async function updateEventCore(
     .eq("organizer_id", userId);
 
   if (updateError) {
+    if (updateError.code === CHECK_VIOLATION) {
+      // The capacity guard raises with an organizer-facing message.
+      return { status: 400, message: updateError.message };
+    }
     return {
       status: 500,
       message: `Error updating event: ${updateError.message}`,
