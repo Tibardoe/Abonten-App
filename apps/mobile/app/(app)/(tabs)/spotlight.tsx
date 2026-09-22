@@ -16,7 +16,7 @@ import {
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { flushContentViews } from "@/features/content/useContentTelemetry";
 import { useVolumeKeys } from "@/features/content/useVolumeKeys";
-import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
+import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useIsOnline } from "@/lib/network";
 import { FEED_SURFACES, FEED_SURFACE_LABEL } from "@abonten/core/content/copy";
 import {
@@ -96,20 +96,18 @@ export default function SpotlightFeedScreen() {
     [program],
   );
 
-  // Location is asked for only when the Nearby tab is opened.
+  // Nearby means near the area the app is browsing — the phone while it
+  // follows the phone, or the place the person chose — so it always agrees
+  // with Explore. With only the Accra default (location off, nothing
+  // chosen) the tab asks for a location rather than pretending.
   const needsLocation = surface === "nearby";
-  const [location, setLocation] = useState<{
-    lat: number;
-    lng: number;
-    isFallback: boolean;
-  } | null>(null);
-  const locating = needsLocation && location === null;
+  const { area, resolving: locating, followDevice } = useExploreLocation();
   // Other tabs use a rough position only if location is already allowed,
   // so a promotion aimed at an area can reach people there.
   const coarse = useCoarseLocation(!needsLocation);
   const coords = needsLocation
-    ? location && !location.isFallback
-      ? { lat: location.lat, lng: location.lng }
+    ? area && !area.isFallback
+      ? { lat: area.lat, lng: area.lng }
       : null
     : coarse.coords;
   const needsSignIn = surface === "following" && !session;
@@ -350,8 +348,15 @@ export default function SpotlightFeedScreen() {
     };
   } else if (needsLocation && !locating && !coords) {
     empty = {
-      title: "Location is off",
-      body: "Allow location access to see Spotlights near you.",
+      title: "Where are you?",
+      body: "Use your location, or choose an area in Explore, to see Spotlights near you.",
+      label: "Use my location",
+      action: () => {
+        void followDevice().then((outcome) => {
+          if (outcome !== "ok")
+            toast.error("We couldn't get your location right now.");
+        });
+      },
     };
   } else if (items.length > 0) {
     // Whatever is loaded (or restored from the last session) stays on
@@ -430,9 +435,6 @@ export default function SpotlightFeedScreen() {
       }}
     >
       <MediaStatusBar />
-      {needsLocation && location === null ? (
-        <LocationProbe onResult={setLocation} />
-      ) : null}
 
       {height > 0 && !empty && !loading ? (
         <FlatList
@@ -603,16 +605,4 @@ function TabsEdgeFade({ side }: { side: "start" | "end" }) {
       <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
     </Svg>
   );
-}
-
-function LocationProbe({
-  onResult,
-}: {
-  onResult: (l: { lat: number; lng: number; isFallback: boolean }) => void;
-}) {
-  const { location } = useDeviceLocation();
-  useEffect(() => {
-    if (location) onResult(location);
-  }, [location, onResult]);
-  return null;
 }

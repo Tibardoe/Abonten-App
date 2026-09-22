@@ -1,26 +1,28 @@
 import { PlaceCard } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
+import { AreaSuggestionCard } from "@/components/explore/AreaSuggestionCard";
+import { AreaSwitcher } from "@/components/explore/AreaSwitcher";
+import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
+import { whereText } from "@/components/explore/areaCopy";
 import { PlaceListSkeleton } from "@/components/skeletons";
-import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
+import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { useQueryView } from "@/lib/useQueryView";
 import type { PlaceType } from "@abonten/types/placeType";
-import {
-  Button,
-  Caption,
-  EmptyState,
-  Refresher,
-  Spinner,
-} from "@abonten/ui-native";
+import { Button, EmptyState, Refresher, Spinner } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { FlatList, View } from "react-native";
 
+// Places around the browsing area — the same area Explore shows, with the
+// same switcher, so "near you" here and there are always the same place.
 export default function Places() {
   const router = useRouter();
-  const { location } = useDeviceLocation();
-  const q = useNearbyPlaces(location);
+  const { area, resolving } = useExploreLocation();
+  const coords = area ? { lat: area.lat, lng: area.lng } : null;
+  const q = useNearbyPlaces(coords);
+  const [locationOpen, setLocationOpen] = useState(false);
 
   const places: PlaceType[] = q.data?.pages.flatMap((p) => p.rows) ?? [];
   const view = useQueryView(q, () => places.length === 0);
@@ -29,43 +31,43 @@ export default function Places() {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
-  if (q.isLoading) {
-    return (
-      <View className="flex-1 bg-background">
-        <AppHeader
-          variant="title"
-          title="Places"
-          backFallback="/(app)/account"
-        />
-        <PlaceListSkeleton />
-      </View>
-    );
-  }
-
-  return (
-    <View className="flex-1 bg-background">
+  const header = (
+    <View>
       <AppHeader variant="title" title="Places" backFallback="/(app)/account" />
-      <View className="px-4 pt-4">
+      <View className="flex-row items-center justify-between gap-2 px-4 pb-2 pt-3">
+        <AreaSwitcher onPress={() => setLocationOpen(true)} />
         <Button
           title="Add place"
           size="sm"
           onPress={() => router.push("/(app)/place/new")}
         />
       </View>
+      <AreaSuggestionCard />
+    </View>
+  );
 
-      {location?.isFallback ? (
-        <View className="px-4 pb-1 pt-3">
-          <Caption>
-            Showing Accra — enable location for places near you.
-          </Caption>
-        </View>
-      ) : null}
+  if (resolving || q.isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        {header}
+        <PlaceListSkeleton />
+        <ChangeLocationSheet
+          open={locationOpen}
+          onClose={() => setLocationOpen(false)}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1 bg-background">
+      {header}
 
       <FlatList
         data={places}
         keyExtractor={(p) => p.id}
         renderItem={({ item }) => <PlaceCard place={item} />}
-        contentContainerClassName="gap-4 px-4 pb-16 pt-4"
+        contentContainerClassName="gap-4 px-4 pb-16 pt-2"
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         refreshControl={<Refresher onRefresh={() => q.refetch()} />}
@@ -73,18 +75,23 @@ export default function Places() {
           view.kind === "empty" ? (
             <EmptyState
               icon="location-outline"
-              title="No places nearby"
-              description="Check back soon."
+              title={`No places ${whereText(area)}`}
+              description="Check back soon, or change your location."
             />
           ) : (
             <QueryUnavailable
               view={view}
-              subject="places nearby"
+              subject="places here"
               onRetry={() => q.refetch()}
             />
           )
         }
         ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
+      />
+
+      <ChangeLocationSheet
+        open={locationOpen}
+        onClose={() => setLocationOpen(false)}
       />
     </View>
   );

@@ -1,19 +1,19 @@
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
-import * as Location from "expo-location";
 import { useEffect, useMemo, useState } from "react";
 
 // A rough position for sponsored placement on the For you / Trending tabs,
 // used only when the person has ALREADY allowed location for the app: this
-// never shows a permission prompt. Rounded to about a kilometre and sent
-// with the feed request only; it is not stored. Resolves to null quickly
-// when there is no permission or no recent fix, so the feed never waits
-// long for it.
+// never shows a permission prompt. It is about where the person physically
+// is (so a promotion aimed at an area reaches people there), not the area
+// they are browsing, so it reads the phone's position the app already
+// follows (ExploreLocationProvider) — rounded to about a kilometre and
+// sent with the feed request only; it is not stored.
 //
-// The position the app already follows (ExploreLocationProvider) is used
-// when it has one — it is the same phone, and it moves with the person —
-// so this only asks the OS itself before that first fix has arrived.
+// Resolves quickly so the feed never waits long for it: at once when
+// location is not allowed, when the position arrives, or after a short
+// grace period if the first fix is slow.
 
-const MAX_AGE_MS = 60 * 60 * 1000;
+const GRACE_MS = 1500;
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
@@ -21,13 +21,10 @@ export function useCoarseLocation(enabled: boolean): {
   coords: { lat: number; lng: number } | null;
   done: boolean;
 } {
-  const { devicePosition } = useExploreLocation();
-  const [state, setState] = useState<{
-    coords: { lat: number; lng: number } | null;
-    done: boolean;
-  }>({ coords: null, done: !enabled });
+  const { devicePosition, devicePermission } = useExploreLocation();
+  const [graceOver, setGraceOver] = useState(false);
 
-  const followed = useMemo(
+  const coords = useMemo(
     () =>
       devicePosition
         ? { lat: round(devicePosition.lat), lng: round(devicePosition.lng) }
@@ -36,42 +33,14 @@ export function useCoarseLocation(enabled: boolean): {
   );
 
   useEffect(() => {
-    if (!enabled || devicePosition) return;
-    let cancelled = false;
-    const timeout = setTimeout(() => {
-      if (!cancelled)
-        setState((s) => (s.done ? s : { coords: null, done: true }));
-    }, 1500);
-    (async () => {
-      try {
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status !== "granted") throw new Error("no permission");
-        const last = await Location.getLastKnownPositionAsync({
-          maxAge: MAX_AGE_MS,
-        });
-        if (!last) throw new Error("no fix");
-        if (!cancelled) {
-          setState({
-            coords: {
-              lat: round(last.coords.latitude),
-              lng: round(last.coords.longitude),
-            },
-            done: true,
-          });
-        }
-      } catch {
-        if (!cancelled) setState({ coords: null, done: true });
-      } finally {
-        clearTimeout(timeout);
-      }
-    })();
-    return () => {
-      cancelled = true;
-      clearTimeout(timeout);
-    };
-  }, [enabled, devicePosition]);
+    if (!enabled || devicePosition || graceOver) return;
+    const timeout = setTimeout(() => setGraceOver(true), GRACE_MS);
+    return () => clearTimeout(timeout);
+  }, [enabled, devicePosition, graceOver]);
 
   if (!enabled) return { coords: null, done: true };
-  if (followed) return { coords: followed, done: true };
-  return state;
+  if (coords) return { coords, done: true };
+  const notAllowed =
+    devicePermission === "denied" || devicePermission === "blocked";
+  return { coords: null, done: notAllowed || graceOver };
 }

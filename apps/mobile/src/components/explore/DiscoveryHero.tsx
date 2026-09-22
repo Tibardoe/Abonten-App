@@ -30,13 +30,13 @@ export function DiscoveryHero({
   featuredPlaces: PlaceType[];
 }) {
   const { width } = useWindowDimensions();
-  const { location } = useExploreLocation();
+  const { area } = useExploreLocation();
   const { program } = useWeeklyProgram();
   const teaserQ = useWeeklyTeaser(
-    location ? { lat: location.lat, lng: location.lng } : null,
-    program.teaser && !!location,
+    area ? { lat: area.lat, lng: area.lng } : null,
+    program.teaser && !!area,
   );
-  const weeklyPending = program.teaser && !!location && teaserQ.isPending;
+  const weeklyPending = program.teaser && !!area && teaserQ.isPending;
 
   return (
     <View>

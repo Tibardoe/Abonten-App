@@ -147,13 +147,13 @@ export function WeeklyScreen({
   week?: string;
 }) {
   const router = useRouter();
-  const { location } = useExploreLocation();
+  const { area } = useExploreLocation();
   const shareLink = useShareLink();
   const query = useWeeklyEdition({
     scope,
     week,
-    lat: location?.lat,
-    lng: location?.lng,
+    lat: area?.lat,
+    lng: area?.lng,
   });
   const state = query.data;
   const doc = state?.edition ?? null;

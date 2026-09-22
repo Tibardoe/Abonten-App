@@ -54,8 +54,8 @@ export default function ExploreSectionScreen() {
     kind: "event" | "place";
     title: string;
   }>();
-  const { location } = useExploreLocation();
-  const coords = location ? { lat: location.lat, lng: location.lng } : null;
+  const { area } = useExploreLocation();
+  const coords = area ? { lat: area.lat, lng: area.lng } : null;
   const {
     eventFilters,
     placeFilters,
@@ -65,7 +65,7 @@ export default function ExploreSectionScreen() {
     clearPlaceFilters,
   } = useExploreFilters();
 
-  const eventSliders = useExploreEventSliders(coords, location?.label ?? "");
+  const eventSliders = useExploreEventSliders(coords, area?.label ?? "");
   const placeSliders = useExplorePlaceSliders(coords);
   const placeCategories = usePlaceCategories().data ?? [];
 

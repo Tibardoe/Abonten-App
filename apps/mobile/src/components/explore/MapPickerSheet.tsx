@@ -15,8 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Native echo of the web MapModal / MapPicker: a full-screen map with a
 // fixed centre pin. Pan the map under the pin, then "Use this location"
-// commits the centre coordinate. Default target is the Explore location
-// (ExploreLocationProvider); pass `onPick` to reuse it for another form
+// commits the centre coordinate. Default target is the browsing area
+// (ExploreLocationProvider, as a chosen area); pass `onPick` to reuse it for another form
 // (e.g. place creation), which gets the point + a reverse-geocoded label
 // and the provider is left untouched. Wrapped in MapErrorBoundary so a
 // stale binary shows a message instead of crashing.
@@ -45,7 +45,7 @@ export function MapPickerSheet({
     label: string;
   }) => void | Promise<void>;
 }) {
-  const { setPickedLocation } = useExploreLocation();
+  const { chooseArea } = useExploreLocation();
   const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(false);
   const centerRef = useRef<{ lat: number; lng: number }>({
@@ -67,7 +67,7 @@ export function MapPickerSheet({
       const label = await labelForCoords(lat, lng);
       await onPick({ lat, lng, label });
     } else {
-      await setPickedLocation(lat, lng);
+      await chooseArea(lat, lng);
     }
     setBusy(false);
     onClose();
