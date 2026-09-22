@@ -1,4 +1,8 @@
-import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import {
+  type ChooseOutcome,
+  type FollowOutcome,
+  useExploreLocation,
+} from "@/features/discovery/ExploreLocationProvider";
 import { usePlacesAutocomplete } from "@/features/discovery/usePlacesAutocomplete";
 import {
   AppText,
@@ -7,15 +11,26 @@ import {
   Icon,
   Input,
   Sheet,
+  SheetOption,
   useModalHandoff,
 } from "@abonten/ui-native";
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
 import { MapPickerSheet } from "./MapPickerSheet";
+import { describeArea } from "./areaCopy";
 
-// Native echo of the web ChangeLocationModal ("Set your location"): Google
-// Places autocomplete on the address field, a raw-text forward-geocode
-// fallback, "Choose on map" (the MapPicker), and "Use my current location".
+// The location sheet — native echo of the web ChangeLocationModal ("Set
+// your location"), organised around the two things a person can mean:
+//
+//   * "show me what's near me" — Use my current location, first, and the
+//     area then follows the phone as they move; or
+//   * "show me this place" — an address or city (Google Places
+//     autocomplete, with a raw-text forward-geocode fallback) or a point on
+//     the map; the area then stays put wherever the phone goes.
+//
+// It opens on a plain statement of what is being shown and why (near you /
+// chosen / location off), so nobody has to guess what the list below the
+// switcher is for.
 //
 // "Choose on map" hands off between two modals: this sheet closes first and
 // the full-screen map picker opens only from the sheet's `onDismiss`, once
@@ -24,6 +39,19 @@ import { MapPickerSheet } from "./MapPickerSheet";
 // iOS until it was force-quit (see useModalHandoff.ts). The picker owns its
 // own open state so it can be up while the parent's `open` is false.
 
+const FOLLOW_MESSAGES: Record<Exclude<FollowOutcome, "ok">, string> = {
+  denied: "Allow location for Abonten to follow where you are.",
+  blocked:
+    "Location is turned off for Abonten. Turn it on in Settings to follow where you are.",
+  unavailable:
+    "We couldn't get your location. Check that location is on and try again.",
+};
+
+const CHOOSE_MESSAGES: Record<Exclude<ChooseOutcome, "ok">, string> = {
+  not_found: "We couldn't find that address. Try another.",
+  offline: "You're offline. Try again when you're back online.",
+};
+
 export function ChangeLocationSheet({
   open,
   onClose,
@@ -31,13 +59,26 @@ export function ChangeLocationSheet({
   open: boolean;
   onClose: () => void;
 }) {
-  const { location, setTypedLocation, useCurrentLocation, setPickedLocation } =
+  const { area, devicePermission, chooseTypedArea, followDevice, chooseArea } =
     useExploreLocation();
-  const auto = usePlacesAutocomplete();
+  const auto = usePlacesAutocomplete(
+    area ? { lat: area.lat, lng: area.lng } : null,
+  );
   const [busy, setBusy] = useState<"typed" | "current" | "pick" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    message: string;
+    settings?: boolean;
+  } | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
   const handoff = useModalHandoff();
+  const shown = describeArea(area, devicePermission);
+
+  function finish() {
+    auto.setQuery("");
+    auto.clear();
+    setError(null);
+    onClose();
+  }
 
   async function pickPrediction(placeId: string) {
     if (busy) return;
@@ -46,12 +87,10 @@ export function ChangeLocationSheet({
     const resolved = await auto.resolvePlace(placeId);
     setBusy(null);
     if (resolved) {
-      await setPickedLocation(resolved.lat, resolved.lng, resolved.address);
-      auto.setQuery("");
-      auto.clear();
-      onClose();
+      await chooseArea(resolved.lat, resolved.lng, resolved.address);
+      finish();
     } else {
-      setError("We couldn't resolve that place. Try another.");
+      setError({ message: CHOOSE_MESSAGES.not_found });
     }
   }
 
@@ -59,26 +98,24 @@ export function ChangeLocationSheet({
     if (!auto.query.trim() || busy) return;
     setBusy("typed");
     setError(null);
-    const ok = await setTypedLocation(auto.query);
+    const outcome = await chooseTypedArea(auto.query);
     setBusy(null);
-    if (ok) {
-      auto.setQuery("");
-      auto.clear();
-      onClose();
-    } else {
-      setError("We couldn't find that address. Try another.");
-    }
+    if (outcome === "ok") finish();
+    else setError({ message: CHOOSE_MESSAGES[outcome] });
   }
 
   async function submitCurrent() {
     if (busy) return;
     setBusy("current");
     setError(null);
-    const ok = await useCurrentLocation();
+    const outcome = await followDevice();
     setBusy(null);
-    if (ok) onClose();
+    if (outcome === "ok") finish();
     else
-      setError("Location permission is off, or the position is unavailable.");
+      setError({
+        message: FOLLOW_MESSAGES[outcome],
+        settings: outcome === "blocked",
+      });
   }
 
   function chooseOnMap() {
@@ -92,6 +129,7 @@ export function ChangeLocationSheet({
         open={open}
         onClose={() => {
           handoff.cancel();
+          setError(null);
           onClose();
         }}
         onDismiss={handoff.onDismiss}
@@ -99,21 +137,37 @@ export function ChangeLocationSheet({
         minHeightRatio={0.62}
       >
         <View className="gap-4">
-          {location ? (
-            <AppText variant="caption">
-              Current: {location.label}
-              {location.isFallback
-                ? " (default)"
-                : location.source === "device"
-                  ? " · following your location"
-                  : " · chosen by you"}
+          <View className="flex-row items-start gap-2">
+            <Icon
+              name={shown.icon}
+              size={18}
+              tone={shown.status === "location_off" ? "muted" : "primary"}
+            />
+            <AppText variant="meta" className="flex-1">
+              {shown.sentence}
             </AppText>
-          ) : null}
+          </View>
+
+          <SheetOption
+            icon="navigate"
+            title={
+              busy === "current" ? "Finding you…" : "Use my current location"
+            }
+            subtitle={
+              shown.status === "near_you"
+                ? "Already following you as you move"
+                : "Follows you as you move"
+            }
+            onPress={submitCurrent}
+            disabled={busy !== null && busy !== "current"}
+          />
+
+          <Divider />
 
           <View className="flex-row items-end gap-2">
             <View className="flex-1">
               <Input
-                placeholder="Enter an address or city"
+                placeholder="Search a city, town or address"
                 autoCapitalize="words"
                 value={auto.query}
                 onChangeText={auto.setQuery}
@@ -156,8 +210,6 @@ export function ChangeLocationSheet({
             </View>
           ) : null}
 
-          <Divider />
-
           <Pressable
             accessibilityRole="button"
             onPress={chooseOnMap}
@@ -167,21 +219,22 @@ export function ChangeLocationSheet({
             <AppText variant="bodyStrong">Choose on map</AppText>
           </Pressable>
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={submitCurrent}
-            className="min-h-[44px] flex-row items-center gap-2 py-1 active:opacity-70"
-          >
-            <Icon name="locate-outline" size={20} tone="primary" />
-            <AppText variant="bodyStrong">
-              {busy === "current" ? "Locating…" : "Use my current location"}
-            </AppText>
-          </Pressable>
-
           {error ? (
-            <AppText variant="small" tone="error">
-              {error}
-            </AppText>
+            <View className="gap-2">
+              <AppText variant="small" tone="error">
+                {error.message}
+              </AppText>
+              {error.settings ? (
+                <View className="flex-row">
+                  <Button
+                    title="Open settings"
+                    variant="outline"
+                    size="sm"
+                    onPress={() => Linking.openSettings()}
+                  />
+                </View>
+              ) : null}
+            </View>
           ) : null}
         </View>
       </Sheet>
@@ -189,7 +242,7 @@ export function ChangeLocationSheet({
       <MapPickerSheet
         open={mapOpen}
         onClose={() => setMapOpen(false)}
-        initial={location ? { lat: location.lat, lng: location.lng } : null}
+        initial={area ? { lat: area.lat, lng: area.lng } : null}
       />
     </>
   );

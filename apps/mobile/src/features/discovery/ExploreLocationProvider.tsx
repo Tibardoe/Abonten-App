@@ -1,11 +1,16 @@
 import { useAppActive } from "@/lib/useAppActive";
 import {
-  type FollowedLocation,
+  type BrowsingArea,
   type LatLng,
+  type LocationState,
+  type PermissionState,
+  type PositionFix,
+  followedAreaAfterFix,
   isSignificantMove,
-  nextFollowedLocation,
-  parseStoredLocation,
-} from "@abonten/core/location/followDevice";
+  parseStoredLocationState,
+  shouldSuggestCurrentLocation,
+} from "@abonten/core/location/browsingArea";
+import { onlineManager } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import {
@@ -18,43 +23,56 @@ import {
   useState,
 } from "react";
 
-// The app's one source of truth for "where is this person looking".
+// The app's one source of truth for "where is Abonten showing me things".
+// The model — a browsing AREA that follows the phone until the person
+// chooses a place, plus a "you're now in…" suggestion when a chosen area
+// has been left behind — is in @abonten/core/location/browsingArea, with
+// the tests. This file supplies what the model cannot: the position
+// stream, permission, reverse geocoding, storage and React state.
 //
-// Two things live here:
+//   * `area` — what every location-dependent screen shows: Explore, search,
+//     Abonten Weekly, Places, Spotlight › Nearby. One area for the whole
+//     app, so no screen ever disagrees with another about "here".
+//   * `devicePosition` — where the phone is, moved only on a significant
+//     change. Used for things that are about physical presence, not
+//     browsing (the rough position sent with the sponsored feed), and to
+//     notice that a chosen area has been left behind.
 //
-//   * `location` — the Explore area (the web app carries this in the
-//     `/explore/[location]` slug; mobile has no location in the route). It
-//     has an owner, `source`: "device" means it follows the phone, "manual"
-//     means the person chose it (typed, picked on the map, autocomplete) and
-//     the phone never overrides it until they choose again or tap "Use my
-//     current location". Persisted per device so a restart opens where the
-//     person left off, then refreshed.
+// Following: one foreground position watcher runs whenever the app is in
+// front and location is allowed — nothing runs in the background. Every
+// report goes through the same rule: a following area moves only past
+// SIGNIFICANT_MOVE_METRES, a chosen area never moves. Coming back to the
+// app restarts the watcher with the OS's newest position, so arriving in
+// another town updates without waiting for the next report. Permission is
+// asked for on the first run and when the person taps "Use my current
+// location", never anywhere else; it is re-read (without asking) every time
+// the app returns to the foreground, so granting it in Settings takes
+// effect on the next return.
 //
-//   * `devicePosition` — the phone's own position, for screens that need
-//     the device rather than the chosen area (Places near you, Spotlight's
-//     Nearby feed). Also what `location` is derived from while the device
-//     owns it.
-//
-// Following the phone: while the app is in the foreground, location is
-// allowed, and either the device owns the area or a screen has asked for
-// the device position, one position watcher runs (a few hundred metres
-// between reports). Each report goes through the same rule
-// (@abonten/core/location/followDevice): only a move past
-// SIGNIFICANT_MOVE_METRES changes anything, so GPS jitter never refetches a
-// screen and a walk to the shop does not flip the area, but arriving in
-// another town does — automatically, including on return from the
-// background. Every location-keyed query re-keys from `location` /
-// `devicePosition`, so a change refetches exactly the screens that depend
-// on it and nothing keeps showing the previous area's results.
+// Every location-keyed query re-keys from `area` / `devicePosition`, so a
+// change refetches exactly the screens that depend on it and nothing keeps
+// showing the previous area's results under the new label.
 
-export type ExploreLocation = FollowedLocation;
+export type { BrowsingArea } from "@abonten/core/location/browsingArea";
 
-export type DevicePosition = LatLng & { isFallback: false };
+export type DevicePosition = LatLng;
 
-export type DevicePermission = "unknown" | "granted" | "denied";
+export type DevicePermission = PermissionState;
+
+/** Why "Use my current location" could not follow the phone. */
+export type FollowOutcome = "ok" | "denied" | "blocked" | "unavailable";
+
+/** Why a typed address could not become the area. */
+export type ChooseOutcome = "ok" | "not_found" | "offline";
+
+/** The phone is somewhere else than the chosen area. */
+export type AreaSuggestion = {
+  /** The town the phone is in, or null when it could not be named. */
+  label: string | null;
+};
 
 type Ctx = {
-  location: ExploreLocation | null;
+  area: BrowsingArea | null;
   /** true while the first value (stored, GPS or the fallback) is resolving. */
   resolving: boolean;
   /** The phone's position, moved only on a significant change. */
@@ -62,54 +80,51 @@ type Ctx = {
   /** Foreground location permission as last observed (never prompts). */
   devicePermission: DevicePermission;
   /**
-   * Get the phone's position for a screen that needs it, prompting for
-   * permission if it was never asked. Resolves null when not allowed or no
-   * fix could be had in time.
+   * Set while the area is chosen and the phone has moved on to somewhere
+   * else since the person chose it (or last dismissed this).
    */
-  ensureDevicePosition: () => Promise<DevicePosition | null>;
-  /**
-   * Keep the position watcher running while a screen shows device-relative
-   * content, even when the area is a manual choice. Returns the release.
-   */
-  retainDeviceWatch: () => () => void;
-  /** Forward-geocode a typed address and make it the (manual) area. */
-  setTypedLocation: (text: string) => Promise<boolean>;
-  /** Hand the area back to the phone: a fresh fix now, then following. */
-  useCurrentLocation: () => Promise<boolean>;
-  /** Commit an exact point (map picker / autocomplete) as the manual area. */
-  setPickedLocation: (
-    lat: number,
-    lng: number,
-    label?: string,
-  ) => Promise<void>;
+  suggestion: AreaSuggestion | null;
+  /** Put the suggestion away for as long as the phone stays around here. */
+  dismissSuggestion: () => void;
+  /** Hand the area to the phone: a fresh fix now, then following. */
+  followDevice: () => Promise<FollowOutcome>;
+  /** Forward-geocode a typed address and make it the chosen area. */
+  chooseTypedArea: (text: string) => Promise<ChooseOutcome>;
+  /** Make an exact point (map picker / autocomplete) the chosen area. */
+  chooseArea: (lat: number, lng: number, label?: string) => Promise<void>;
 };
 
 // Accra city centre — the fallback when location permission is denied or
 // unavailable, so discovery still shows something reasonable.
 export const FALLBACK_COORDS = { lat: 5.6037, lng: -0.187 } as const;
-const FALLBACK_LABEL = "Accra";
-const FALLBACK_LOCATION: ExploreLocation = {
-  label: FALLBACK_LABEL,
+const FALLBACK_AREA: BrowsingArea = {
+  label: "Accra",
   lat: FALLBACK_COORDS.lat,
   lng: FALLBACK_COORDS.lng,
+  mode: "following",
   isFallback: true,
-  source: "device",
 };
+/** The label of a following area whose town could not be named. */
+export const UNNAMED_AREA_LABEL = "Your location";
+const UNNAMED_CHOICE_LABEL = "Selected location";
 
-// v2: the record now carries its owner (`source`). The v1 key is removed on
-// first run rather than migrated — a v1 record could have been "use my
-// current location", which must not come back as a frozen choice.
-const STORAGE_KEY = "abonten.explore-location.v2";
-const LEGACY_STORAGE_KEY = "abonten.explore-location";
+// v3: `{ area, anchor }`. v2 (`{ …, source }`) is read once and migrated so
+// an area chosen before the upgrade is kept; v1 is deleted — it could have
+// been a "use my current location" that must not come back as a choice.
+const STORAGE_KEY = "abonten.browsing-area.v3";
+const LEGACY_KEYS = ["abonten.explore-location.v2", "abonten.explore-location"];
 // A cold GPS fix indoors, or a device with location services in a bad
 // state, can leave getCurrentPositionAsync pending for a very long time —
 // seen at ~40 s on a fresh emulator — and the whole Explore screen sat on
 // its skeleton until it resolved. Past this, fall back to Accra (the person
-// can still set a location by hand or tap "Use my current location").
+// can still choose an area or tap "Use my current location").
 const FIRST_FIX_TIMEOUT_MS = 8000;
 const ON_DEMAND_FIX_TIMEOUT_MS = 15_000;
 const GEOCODE_TIMEOUT_MS = 5000;
 const LAST_KNOWN_MAX_AGE_MS = 15 * 60 * 1000;
+// "Use my current location" answers at once from a position this fresh
+// rather than waiting for a new fix; the watcher refines it if it moves.
+const FRESH_ENOUGH_MS = 2 * 60 * 1000;
 // The watcher reports after this much movement; the significance rule then
 // decides whether anything changes. iOS ignores timeInterval.
 const WATCH_DISTANCE_METRES = 300;
@@ -133,41 +148,76 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 
 const ExploreLocationContext = createContext<Ctx | null>(null);
 
+/** The town for a point, or null when the geocoder cannot name it. */
+export async function townForCoords(
+  lat: number,
+  lng: number,
+): Promise<string | null> {
+  try {
+    const [place] = await withTimeout(
+      Location.reverseGeocodeAsync({ latitude: lat, longitude: lng }),
+      GEOCODE_TIMEOUT_MS,
+    );
+    return (
+      place?.city ?? place?.subregion ?? place?.region ?? place?.country ?? null
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** A label for a point chosen by hand (map picker, place forms). */
 export async function labelForCoords(
   lat: number,
   lng: number,
 ): Promise<string> {
-  try {
-    const [place] = await Location.reverseGeocodeAsync({
-      latitude: lat,
-      longitude: lng,
-    });
-    return (
-      place?.city ??
-      place?.subregion ??
-      place?.region ??
-      place?.country ??
-      "Selected location"
-    );
-  } catch {
-    return "Selected location";
-  }
+  return (await townForCoords(lat, lng)) ?? UNNAMED_CHOICE_LABEL;
 }
 
-/** A label for a device position, never slower than the geocode timeout. */
-function labelForDevice(point: LatLng): Promise<string> {
-  return withTimeout(
-    labelForCoords(point.lat, point.lng),
-    GEOCODE_TIMEOUT_MS,
-  ).catch(() => "Near you");
+function toFix(pos: Location.LocationObject): PositionFix {
+  return {
+    lat: pos.coords.latitude,
+    lng: pos.coords.longitude,
+    accuracy: pos.coords.accuracy,
+  };
 }
 
-function toPoint(pos: Location.LocationObject): LatLng {
-  return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+function toPermission(
+  res: Location.PermissionResponse,
+  servicesEnabled: boolean,
+): DevicePermission {
+  if (res.status === Location.PermissionStatus.GRANTED)
+    return servicesEnabled ? "granted" : "off";
+  if (res.status === Location.PermissionStatus.UNDETERMINED) return "unknown";
+  return res.canAskAgain ? "denied" : "blocked";
 }
 
-function toPermission(status: Location.PermissionStatus): DevicePermission {
-  return status === "granted" ? "granted" : "denied";
+/** Permission plus whether the phone's own location switch is on; never prompts. */
+async function readPermission(): Promise<DevicePermission> {
+  const [res, servicesEnabled] = await Promise.all([
+    Location.getForegroundPermissionsAsync(),
+    Location.hasServicesEnabledAsync().catch(() => true),
+  ]);
+  return toPermission(res, servicesEnabled);
+}
+
+/** Asks for permission (the OS prompt, if it has not been answered yet). */
+async function askPermission(): Promise<DevicePermission> {
+  const res = await Location.requestForegroundPermissionsAsync();
+  const servicesEnabled = await Location.hasServicesEnabledAsync().catch(
+    () => true,
+  );
+  return toPermission(res, servicesEnabled);
+}
+
+async function readStoredState(): Promise<LocationState | null> {
+  const raw = await SecureStore.getItemAsync(STORAGE_KEY);
+  if (raw) return parseStoredLocationState(JSON.parse(raw));
+  // Upgrade path: the previous record, read once, then removed.
+  const legacy = await SecureStore.getItemAsync(LEGACY_KEYS[0]);
+  for (const key of LEGACY_KEYS)
+    SecureStore.deleteItemAsync(key).catch(() => {});
+  return legacy ? parseStoredLocationState(JSON.parse(legacy)) : null;
 }
 
 export function ExploreLocationProvider({
@@ -175,122 +225,151 @@ export function ExploreLocationProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [location, setLocation] = useState<ExploreLocation | null>(null);
+  const [area, setArea] = useState<BrowsingArea | null>(null);
   const [resolving, setResolving] = useState(true);
   const [devicePosition, setDevicePosition] = useState<DevicePosition | null>(
     null,
   );
   const [devicePermission, setDevicePermission] =
     useState<DevicePermission>("unknown");
-  const [watchRetainers, setWatchRetainers] = useState(0);
+  const [suggestion, setSuggestion] = useState<AreaSuggestion | null>(null);
   const appActive = useAppActive();
 
   // The latest committed values, readable from async work that started
-  // earlier (a fix whose label was still resolving when the person picked
-  // a place by hand must not land on top of that pick).
-  const locationRef = useRef<ExploreLocation | null>(null);
-  const devicePositionRef = useRef<DevicePosition | null>(null);
-  // Only the most recent device fix may be committed once its label is in.
-  const fixSeq = useRef(0);
+  // earlier (a fix whose label was still resolving when the person chose
+  // a place must not land on top of that choice).
+  const stateRef = useRef<LocationState | null>(null);
+  const deviceRef = useRef<DevicePosition | null>(null);
+  // The device position the current suggestion was worked out for, so a
+  // report that changes nothing never geocodes again.
+  const suggestedForRef = useRef<DevicePosition | null>(null);
+  // Every intent (a choice, "use my location", a device fix) takes a new
+  // number; async work commits only if it is still the newest.
+  const intentSeq = useRef(0);
 
-  const commit = useCallback((next: ExploreLocation) => {
-    locationRef.current = next;
-    setLocation(next);
-    setResolving(false);
+  const persist = useCallback((state: LocationState) => {
     // The fallback is never stored: the next start should try the phone.
-    if (next.isFallback) return;
-    SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(next)).catch(() => {});
+    if (state.area.isFallback) return;
+    SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(state)).catch(
+      () => {},
+    );
   }, []);
 
-  const commitDevicePosition = useCallback((point: LatLng) => {
-    if (!isSignificantMove(devicePositionRef.current, point)) return;
-    const next: DevicePosition = {
-      lat: point.lat,
-      lng: point.lng,
-      isFallback: false,
-    };
-    devicePositionRef.current = next;
+  const commit = useCallback(
+    (state: LocationState) => {
+      stateRef.current = state;
+      setArea(state.area);
+      setResolving(false);
+      persist(state);
+    },
+    [persist],
+  );
+
+  const clearSuggestion = useCallback(() => {
+    suggestedForRef.current = null;
+    setSuggestion(null);
+  }, []);
+
+  /** Records the phone's position; moves only on a significant change. */
+  const commitDevicePosition = useCallback((fix: PositionFix) => {
+    if (!isSignificantMove(deviceRef.current, fix)) return;
+    const next: DevicePosition = { lat: fix.lat, lng: fix.lng };
+    deviceRef.current = next;
     setDevicePosition(next);
   }, []);
 
   /**
    * One device fix, from any source (boot, watcher, resume, on demand).
-   * Updates the device position and, when the device owns the area, the
-   * area — both through the significance rule. `force` commits the area
-   * regardless of distance: "Use my current location" must take effect
-   * even from a manual choice a few streets away.
+   * Updates the device position; moves a following area through the
+   * significance rule; for a chosen area, works out whether to suggest
+   * switching. `force` makes the fix the area regardless of distance:
+   * "Use my current location" must take effect even from a choice a few
+   * streets away.
    */
   const applyFix = useCallback(
-    async (point: LatLng, force = false) => {
-      commitDevicePosition(point);
+    async (fix: PositionFix, force = false) => {
+      commitDevicePosition(fix);
+      const current = stateRef.current;
       const next = force
-        ? { lat: point.lat, lng: point.lng }
-        : nextFollowedLocation(locationRef.current, point);
-      if (!next) return;
-      const seq = ++fixSeq.current;
-      const label = await labelForDevice(next);
-      if (seq !== fixSeq.current) return;
-      // Re-checked after the await: a manual pick may have landed meanwhile.
-      if (!force && !nextFollowedLocation(locationRef.current, point)) return;
-      commit({ ...next, label, isFallback: false, source: "device" });
+        ? { lat: fix.lat, lng: fix.lng }
+        : followedAreaAfterFix(current?.area ?? null, fix);
+
+      if (next) {
+        const seq = ++intentSeq.current;
+        const label =
+          (await townForCoords(next.lat, next.lng)) ?? UNNAMED_AREA_LABEL;
+        if (seq !== intentSeq.current) return;
+        // Re-checked after the await: a choice may have landed meanwhile.
+        if (
+          !force &&
+          !followedAreaAfterFix(stateRef.current?.area ?? null, fix)
+        )
+          return;
+        clearSuggestion();
+        commit({
+          area: { ...next, label, mode: "following", isFallback: false },
+          anchor: null,
+        });
+        return;
+      }
+
+      // A chosen area: has the phone moved on to somewhere else?
+      const device = deviceRef.current;
+      if (!shouldSuggestCurrentLocation(current, device)) {
+        if (suggestedForRef.current) clearSuggestion();
+        return;
+      }
+      if (!device || suggestedForRef.current === device) return;
+      suggestedForRef.current = device;
+      const label = await townForCoords(device.lat, device.lng);
+      // Still the same place, and still worth suggesting?
+      if (suggestedForRef.current !== device) return;
+      if (!shouldSuggestCurrentLocation(stateRef.current, device)) {
+        clearSuggestion();
+        return;
+      }
+      setSuggestion({ label });
     },
-    [commit, commitDevicePosition],
+    [commit, commitDevicePosition, clearSuggestion],
   );
 
-  // First value. A stored record is shown at once (the area the person
-  // last had), then — when the device owns it — refreshed from the phone.
-  // Nothing stored: ask for permission, open on the OS's last known
-  // position (instant), and refine with a fresh fix; denied or failed →
-  // Accra.
+  // First value. A stored area is shown at once (where the person last
+  // was, or what they chose); the watcher below then refreshes a
+  // following one from the phone. Nothing stored: ask for permission, open
+  // on the OS's last known position (instant) and refine with a fresh fix;
+  // denied or failed → Accra.
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       try {
-        SecureStore.deleteItemAsync(LEGACY_STORAGE_KEY).catch(() => {});
-        const raw = await SecureStore.getItemAsync(STORAGE_KEY);
-        const stored = raw ? parseStoredLocation(JSON.parse(raw)) : null;
+        const stored = await readStoredState().catch(() => null);
         if (cancelled) return;
 
         if (stored) {
-          locationRef.current = stored;
-          setLocation(stored);
+          stateRef.current = stored;
+          setArea(stored.area);
           setResolving(false);
-          if (stored.source === "manual") {
-            // A choice stands. Learn the permission state without asking,
-            // so screens that need the phone know whether they can have it.
-            const { status } = await Location.getForegroundPermissionsAsync();
-            if (!cancelled) setDevicePermission(toPermission(status));
-            return;
-          }
-          // Device-owned: a stale stored position is better than nothing,
-          // but only until the phone answers. No prompt here — permission
-          // was granted when this was stored; if it has since been revoked
-          // the stored area stays and the watcher simply does not run.
-          const { status } = await Location.getForegroundPermissionsAsync();
-          if (cancelled) return;
-          setDevicePermission(toPermission(status));
-          if (status !== "granted") return;
-          commitDevicePosition({ lat: stored.lat, lng: stored.lng });
-          const last = await Location.getLastKnownPositionAsync({
-            maxAge: LAST_KNOWN_MAX_AGE_MS,
-          }).catch(() => null);
-          if (last && !cancelled) await applyFix(toPoint(last));
+          // Learn the permission state without asking. If it has been
+          // revoked since, the area stays where it was and the switcher
+          // says location is off; the watcher simply does not run.
+          const permission = await readPermission();
+          if (!cancelled) setDevicePermission(permission);
           return;
         }
 
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        const permission = await askPermission();
         if (cancelled) return;
-        setDevicePermission(toPermission(status));
-        if (status !== "granted") {
-          commit(FALLBACK_LOCATION);
+        setDevicePermission(permission);
+        if (permission !== "granted") {
+          commit({ area: FALLBACK_AREA, anchor: null });
           return;
         }
 
         const last = await Location.getLastKnownPositionAsync({
           maxAge: LAST_KNOWN_MAX_AGE_MS,
         }).catch(() => null);
-        if (last && !cancelled) await applyFix(toPoint(last));
+        if (last && !cancelled) await applyFix(toFix(last));
 
         const pos = await withTimeout(
           Location.getCurrentPositionAsync({
@@ -298,11 +377,12 @@ export function ExploreLocationProvider({
           }),
           FIRST_FIX_TIMEOUT_MS,
         );
-        if (!cancelled) await applyFix(toPoint(pos));
+        if (!cancelled) await applyFix(toFix(pos));
       } catch {
         // Keep a last-known position already shown; only fall back to Accra
         // when nothing at all could be read.
-        if (!cancelled && !locationRef.current) commit(FALLBACK_LOCATION);
+        if (!cancelled && !stateRef.current)
+          commit({ area: FALLBACK_AREA, anchor: null });
       } finally {
         if (!cancelled) setResolving(false);
       }
@@ -311,20 +391,30 @@ export function ExploreLocationProvider({
     return () => {
       cancelled = true;
     };
-  }, [applyFix, commit, commitDevicePosition]);
+  }, [applyFix, commit]);
 
-  // Follow the phone. Runs while the app is in front, location is allowed,
-  // and someone needs it: the device owns the area, or a screen holds the
-  // watch. Stopped in the background (no work, no battery), restarted on
+  // Permission is external state: re-read it (never asking) each time the
+  // app comes to the front, so a change made in Settings takes effect.
+  useEffect(() => {
+    if (!appActive) return;
+    let cancelled = false;
+    readPermission()
+      .then((permission) => {
+        if (!cancelled) setDevicePermission(permission);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [appActive]);
+
+  // Follow the phone. Runs while the app is in front and location is
+  // allowed. Stopped in the background (no work, no battery), restarted on
   // return — and the restart takes the OS's newest position immediately,
   // so coming back to the app in another town updates without waiting for
-  // the next report.
-  const followArea =
-    location === null || location.source === "device" || location.isFallback;
-  const watchWanted =
-    appActive &&
-    devicePermission === "granted" &&
-    (followArea || watchRetainers > 0);
+  // the next report. It runs for a chosen area too: that is how the app
+  // notices the person has moved on and can offer their current location.
+  const watchWanted = appActive && devicePermission === "granted";
 
   useEffect(() => {
     if (!watchWanted) return;
@@ -336,7 +426,7 @@ export function ExploreLocationProvider({
         maxAge: LAST_KNOWN_MAX_AGE_MS,
       }).catch(() => null);
       if (cancelled) return;
-      if (last) void applyFix(toPoint(last));
+      if (last) void applyFix(toFix(last));
       try {
         subscription = await Location.watchPositionAsync(
           {
@@ -345,7 +435,7 @@ export function ExploreLocationProvider({
             timeInterval: WATCH_TIME_MS,
           },
           (pos) => {
-            if (!cancelled) void applyFix(toPoint(pos));
+            if (!cancelled) void applyFix(toFix(pos));
           },
           () => {
             // Provider unavailable (location services switched off): the
@@ -364,112 +454,125 @@ export function ExploreLocationProvider({
     };
   }, [watchWanted, applyFix]);
 
-  const retainDeviceWatch = useCallback(() => {
-    setWatchRetainers((n) => n + 1);
-    return () => setWatchRetainers((n) => Math.max(0, n - 1));
-  }, []);
+  const dismissSuggestion = useCallback(() => {
+    const current = stateRef.current;
+    clearSuggestion();
+    if (!current || current.area.mode !== "chosen") return;
+    // Anchored to where the phone is now: the suggestion returns only
+    // after the phone has moved on again.
+    commit({ area: current.area, anchor: deviceRef.current });
+  }, [commit, clearSuggestion]);
 
-  const ensureDevicePosition = useCallback(async () => {
-    if (devicePositionRef.current) return devicePositionRef.current;
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setDevicePermission(toPermission(status));
-      if (status !== "granted") return null;
-      const last = await Location.getLastKnownPositionAsync({
-        maxAge: LAST_KNOWN_MAX_AGE_MS,
-      }).catch(() => null);
-      const pos =
-        last ??
-        (await withTimeout(
-          Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          }),
-          ON_DEMAND_FIX_TIMEOUT_MS,
-        ));
-      await applyFix(toPoint(pos));
-      return devicePositionRef.current;
-    } catch {
-      return null;
-    }
-  }, [applyFix]);
-
-  const setTypedLocation = useCallback(
-    async (text: string) => {
-      const query = text.trim();
-      if (!query) return false;
-      try {
-        const [hit] = await Location.geocodeAsync(query);
-        if (!hit) return false;
-        const label = await labelForCoords(hit.latitude, hit.longitude);
-        commit({
-          label: label === "Selected location" ? query : label,
-          lat: hit.latitude,
-          lng: hit.longitude,
-          isFallback: false,
-          source: "manual",
-        });
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    [commit],
-  );
-
-  const setPickedLocation = useCallback(
+  const chooseArea = useCallback(
     async (lat: number, lng: number, label?: string) => {
+      const seq = ++intentSeq.current;
       const finalLabel = label?.trim() || (await labelForCoords(lat, lng));
+      if (seq !== intentSeq.current) return;
+      clearSuggestion();
       commit({
-        label: finalLabel,
-        lat,
-        lng,
-        isFallback: false,
-        source: "manual",
+        area: {
+          label: finalLabel,
+          lat,
+          lng,
+          mode: "chosen",
+          isFallback: false,
+        },
+        anchor: deviceRef.current,
       });
     },
-    [commit],
+    [commit, clearSuggestion],
   );
 
-  const useCurrentLocation = useCallback(async () => {
+  const chooseTypedArea = useCallback(
+    async (text: string): Promise<ChooseOutcome> => {
+      const query = text.trim();
+      if (!query) return "not_found";
+      if (!onlineManager.isOnline()) return "offline";
+      const seq = ++intentSeq.current;
+      try {
+        const [hit] = await Location.geocodeAsync(query);
+        if (!hit) return "not_found";
+        const town = await townForCoords(hit.latitude, hit.longitude);
+        if (seq !== intentSeq.current) return "ok";
+        clearSuggestion();
+        commit({
+          area: {
+            label: town ?? query,
+            lat: hit.latitude,
+            lng: hit.longitude,
+            mode: "chosen",
+            isFallback: false,
+          },
+          anchor: deviceRef.current,
+        });
+        return "ok";
+      } catch {
+        return onlineManager.isOnline() ? "not_found" : "offline";
+      }
+    },
+    [commit, clearSuggestion],
+  );
+
+  const followDevice = useCallback(async (): Promise<FollowOutcome> => {
+    const permission = await askPermission();
+    setDevicePermission(permission);
+    if (permission === "blocked") return "blocked";
+    if (permission === "off") return "unavailable";
+    if (permission !== "granted") return "denied";
+    // A position from the last couple of minutes is the current location:
+    // answer with it now instead of making the person wait for a new fix
+    // (indoors that can take the whole timeout). The watcher is running and
+    // moves the area if the next report is significantly elsewhere.
+    const recent = await Location.getLastKnownPositionAsync({
+      maxAge: FRESH_ENOUGH_MS,
+    }).catch(() => null);
+    if (recent) {
+      await applyFix(toFix(recent), true);
+      return "ok";
+    }
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setDevicePermission(toPermission(status));
-      if (status !== "granted") return false;
       const pos = await withTimeout(
         Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         }),
         ON_DEMAND_FIX_TIMEOUT_MS,
       );
-      await applyFix(toPoint(pos), true);
-      return true;
+      await applyFix(toFix(pos), true);
+      return "ok";
     } catch {
-      return false;
+      // The OS's newest position is better than nothing when a fresh fix
+      // cannot be had in time (indoors, location services off).
+      const last = await Location.getLastKnownPositionAsync({
+        maxAge: LAST_KNOWN_MAX_AGE_MS,
+      }).catch(() => null);
+      if (!last) return "unavailable";
+      await applyFix(toFix(last), true);
+      return "ok";
     }
   }, [applyFix]);
 
   const value = useMemo<Ctx>(
     () => ({
-      location,
+      area,
       resolving,
       devicePosition,
       devicePermission,
-      ensureDevicePosition,
-      retainDeviceWatch,
-      setTypedLocation,
-      useCurrentLocation,
-      setPickedLocation,
+      suggestion,
+      dismissSuggestion,
+      followDevice,
+      chooseTypedArea,
+      chooseArea,
     }),
     [
-      location,
+      area,
       resolving,
       devicePosition,
       devicePermission,
-      ensureDevicePosition,
-      retainDeviceWatch,
-      setTypedLocation,
-      useCurrentLocation,
-      setPickedLocation,
+      suggestion,
+      dismissSuggestion,
+      followDevice,
+      chooseTypedArea,
+      chooseArea,
     ],
   );
 

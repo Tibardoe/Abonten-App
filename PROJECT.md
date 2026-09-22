@@ -3740,7 +3740,7 @@ screens showed empty states ("No transactions yet"). Full detail in
 (version 1.3). No migration, env var, table, policy, job or permission
 changed.
 
-### 41.1 The area follows the phone
+### 41.1 The area follows the phone (superseded by §42 the same day)
 
 - `ExploreLocationProvider` is the one source of truth for both the Explore
   area (`location`) and the phone's position (`devicePosition`). The area has
@@ -3801,3 +3801,44 @@ changed.
   offline, `networkMode: "offlineFirst"`, `refetchOnReconnect`,
   `OfflineBanner`); it was already one coherent signal and is what the
   contract reads.
+
+## 42. Mobile browsing area: the product model (2026-09-22)
+
+Owner brief: make the location experience feel like a mature consumer
+app — always obvious what area is shown and why, following the phone when
+appropriate, an effortless way to browse somewhere else, and never "why is
+it still showing Accra?". Detail in
+`docs/architecture/mobile-offline-media-and-sync.md` §14 (version 1.4).
+Mobile only; no migration, env var, table, policy, job or permission
+changed.
+
+- **Model.** Two facts kept apart: the phone's position (`devicePosition`)
+  and the browsing area (`area`). The area has a `mode`: `following` (the
+  phone moves it, past 2 km) or `chosen` (only the person moves it; kept
+  across restarts). One area for the whole app — Explore, search, Abonten
+  Weekly, Places and Spotlight › Nearby all read it; `useDeviceLocation` is
+  gone. Decisions in `@abonten/core/location/browsingArea` (replaces
+  `followDevice`, 24 tests).
+- **Always visible.** The location switcher (`AreaSwitcher`, on Explore and
+  Places, wording in `areaCopy.ts`) shows a one-word line over the area
+  name: Near you / Browsing / Location off / Finding you…. Internal names
+  never reach the screen.
+- **"You're now in Tamale."** While browsing a chosen area, when the phone
+  is ≥ 10 km from it and ≥ 10 km from where it was when the person chose
+  (or last dismissed), `AreaSuggestionCard` offers the phone's town with one
+  tap; dismissing anchors it to the phone's position (persisted) so it
+  returns only after another move. Never while following; never a toast
+  or an alert.
+- **Sheet.** "Use my current location" first (with what following means),
+  then search (biased toward the area, region Ghana), then the map.
+  Denied / blocked / location-services-off / offline are told apart, with
+  Open settings where that is the only way out.
+- **Permission.** Asked on first run and on "Use my current location" only;
+  re-read on every return to the foreground (with `hasServicesEnabledAsync`),
+  so Settings changes take effect. A revoked permission keeps the last area
+  and says "Location off" instead of pretending to follow.
+- **Fixes.** An approximate fix cannot prove a move shorter than twice its
+  accuracy (Android approximate location no longer makes the area wander);
+  one sequence number orders every choice and fix; typed-address geocoding
+  offline says so.
+- Storage `abonten.browsing-area.v3` (`{ area, anchor }`), v2 migrated once.

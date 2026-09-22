@@ -3,6 +3,8 @@ import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
+import { AreaSuggestionCard } from "@/components/explore/AreaSuggestionCard";
+import { AreaSwitcher } from "@/components/explore/AreaSwitcher";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
 import { DiscoveryHero } from "@/components/explore/DiscoveryHero";
@@ -12,6 +14,7 @@ import {
   PlaceSliderRow,
 } from "@/components/explore/ExploreSliderRow";
 import { FilterSheet } from "@/components/explore/FilterSheet";
+import { whereText } from "@/components/explore/areaCopy";
 import { ExploreSkeleton } from "@/components/skeletons";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
@@ -60,8 +63,8 @@ type Tab = "events" | "places";
 // places" list with filter-aware empty states.
 export default function Explore() {
   const router = useRouter();
-  const { location, resolving } = useExploreLocation();
-  const coords = location ? { lat: location.lat, lng: location.lng } : null;
+  const { area, resolving } = useExploreLocation();
+  const coords = area ? { lat: area.lat, lng: area.lng } : null;
 
   const openSection = useCallback(
     (kind: "event" | "place", sliderKey: string, title: string) => {
@@ -92,7 +95,7 @@ export default function Explore() {
   const eventsQuery = useFilteredEvents(coords, eventFilters);
   const placesQuery = useFilteredPlaces(coords, placeFilters);
 
-  const eventSliders = useExploreEventSliders(coords, location?.label ?? "");
+  const eventSliders = useExploreEventSliders(coords, area?.label ?? "");
   const placeSliders = useExplorePlaceSliders(coords);
 
   const events: UserPostType[] =
@@ -357,7 +360,7 @@ export default function Explore() {
         title={
           activeCount > 0
             ? `No ${tab} match your filters`
-            : `No ${tab} in ${location?.label ?? "this area"}`
+            : `No ${tab} ${whereText(area)}`
         }
         description={
           activeCount > 0
@@ -390,20 +393,11 @@ export default function Explore() {
     <View className="flex-1 bg-background">
       <AppHeader variant="branded" />
       {/* Location switcher + Filters button — the web LocationAndFilterSection
-          row. */}
+          row. The switcher says what area is shown and why (near you /
+          browsing / location off); the card under it offers the phone's
+          town when a chosen area has been left behind. */}
       <View className="flex-row items-center justify-between gap-2 px-4 pb-2 pt-3">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Change location"
-          onPress={() => setLocationOpen(true)}
-          className="flex-1 flex-row items-center gap-1 active:opacity-70"
-        >
-          <Icon name="location-outline" size={20} tone="foreground" />
-          <AppText variant="bodyStrong" numberOfLines={1} className="shrink">
-            {location?.label ?? "Set location"}
-          </AppText>
-          <Icon name="chevron-down" size={16} tone="muted" />
-        </Pressable>
+        <AreaSwitcher onPress={() => setLocationOpen(true)} />
 
         <Pressable
           accessibilityRole="button"
@@ -426,6 +420,8 @@ export default function Explore() {
           ) : null}
         </Pressable>
       </View>
+
+      <AreaSuggestionCard />
 
       {/* Events / Places tabs — same segmented control as the web
           ExploreTabs (shadcn Tabs): full-width track, active segment lifted
@@ -463,12 +459,6 @@ export default function Explore() {
           </AppText>
         </Pressable>
       </View>
-
-      {location?.isFallback ? (
-        <Caption className="px-4 pb-1">
-          Showing {location.label} — set your location for nearby results.
-        </Caption>
-      ) : null}
 
       {view === "map" ? (
         // The map draws whatever the list has; with nothing loaded it says

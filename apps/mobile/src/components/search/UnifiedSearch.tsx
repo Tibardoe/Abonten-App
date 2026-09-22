@@ -227,7 +227,7 @@ export function UnifiedSearch() {
   const inputRef = useRef<TextInput>(null);
   const { program } = useDiscoveryProgram();
   const { program: content } = useContentProgram();
-  const { location } = useExploreLocation();
+  const { area } = useExploreLocation();
   const params = useLocalSearchParams<Record<string, string>>();
 
   // A link (or a remount) can carry the search: ?q=…&when=weekend&km=10…
@@ -285,13 +285,13 @@ export function UnifiedSearch() {
     (trimmed === "" && canBrowseWithoutQuery(filters, effectiveMode));
 
   // Distance needs a real position; ranking uses any known one.
-  const lat = location?.lat;
-  const lng = location?.lng;
+  const lat = area?.lat;
+  const lng = area?.lng;
   const origin = useMemo(
     () => (lat != null && lng != null ? { lat, lng } : null),
     [lat, lng],
   );
-  const hasRealLocation = !!location && !location.isFallback;
+  const hasRealLocation = !!area && !area.isFallback;
   const filterRequest = useMemo(
     () =>
       searchFiltersToRequest(
@@ -307,9 +307,9 @@ export function UnifiedSearch() {
       describeSearchFilters(
         filters,
         effectiveMode,
-        hasRealLocation ? location?.label : null,
+        hasRealLocation ? area?.label : null,
       ).filter((c) => c.key !== "radiusKm" || hasRealLocation),
-    [filters, effectiveMode, hasRealLocation, location?.label],
+    [filters, effectiveMode, hasRealLocation, area?.label],
   );
   const activeFilterCount = activeSearchFilters(
     filters,
@@ -988,7 +988,7 @@ export function UnifiedSearch() {
           // query itself is never changed by filtering.
           if (trimmed && submitted !== trimmed) runSearch(trimmed);
         }}
-        locationLabel={hasRealLocation ? (location?.label ?? null) : null}
+        locationLabel={hasRealLocation ? (area?.label ?? null) : null}
         hasLocation={hasRealLocation}
       />
     </View>

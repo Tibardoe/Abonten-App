@@ -2,9 +2,9 @@
 title: Mobile offline cache, Spotlight playback, live comments, search relevance and follower counts
 purpose: How the mobile app keeps previously loaded data across restarts and offline, how Spotlight video players are created, owned and torn down, how comments and likes stay in step across screens and devices, how search widens a query with related terms and dates, and how follower counts are maintained.
 audience: Engineering, QA, security reviewers
-scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView, settleEnvelope in every /api/mobile query hook), the followed location (ExploreLocationProvider, useDeviceLocation, useCoarseLocation, @abonten/core/location/followDevice), the side menu lifecycle (AppDrawer), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail CTAs (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
+scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView, settleEnvelope in every /api/mobile query hook), the browsing area (ExploreLocationProvider, AreaSwitcher, AreaSuggestionCard, ChangeLocationSheet, useCoarseLocation, @abonten/core/location/browsingArea), the side menu lifecycle (AppDrawer), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail CTAs (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
 status: Approved
-version: 1.3
+version: 1.4
 lastReviewed: 2026-09-22
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -495,64 +495,93 @@ and the sticky button are the same action; the in-page duplicate button is
 gone. A place shows "Book" (or "Sign in to book", which returns to the place
 after signing in) to anyone but its owner.
 
-## 14. The area follows the phone (2026-09-22)
+## 14. The browsing area (2026-09-22)
 
-**The defect.** The Explore area (`ExploreLocationProvider`) was seeded from
-the phone once, on first run, and then never read the phone again: "Use my
-current location" stored the fix as if it were a choice, and a stored value
-always won on the next start. Someone who travelled to another town kept
-seeing the first town's events until they changed the location by hand.
-Two other screens (Places near you, Spotlight › Nearby) asked the OS for
-their own fix on every mount, with their own permission prompt, and never
-moved either.
+**Two facts, kept apart.** Where the phone is, and where the app is
+showing things for. `ExploreLocationProvider` holds both; the decisions
+are in `@abonten/core/location/browsingArea` (unit tested).
 
-**The model.** The area has an owner, `source`:
-
-| `source` | Who moves it | Set by |
+| | `devicePosition` | `area` (the browsing area) |
 | --- | --- | --- |
-| `device` | The phone | first run, "Use my current location" |
-| `manual` | Nobody but the person | typing an address, autocomplete, the map picker |
+| Means | where the person physically is | what Explore, search, Abonten Weekly, Places and Spotlight › Nearby show |
+| Moves when | the phone moves past 2 km (`SIGNIFICANT_MOVE_METRES`), and a fix cannot prove a move shorter than twice its own accuracy | see `mode` |
+| Used for | the rough position sent with the sponsored feed (`useCoarseLocation`, never prompts); noticing a chosen area was left behind | every location-keyed query |
 
-A manual choice stands until the person chooses again or hands the area
-back to the phone; the device never overrides it (the location sheet says
-"chosen by you" / "following your location" so the state is visible).
+**One area for the whole app.** Every screen that shows "here" reads the
+same `area`; nothing asks the OS for its own fix (the venue forms and the
+place check-in take a one-off fix, because they are about a physical
+address or presence, not browsing). So Explore, Places and Spotlight ›
+Nearby can never disagree about where "near you" is.
 
-**Following.** One position watcher runs while the app is in the
-foreground, location is allowed, and someone needs it — the device owns the
-area, or a screen holds the watch (`retainDeviceWatch`, used by
-`useDeviceLocation`). It reports after a few hundred metres; every report
-goes through `nextFollowedLocation` in `@abonten/core/location/followDevice`
-(unit tested), which changes the area only for a move past
-`SIGNIFICANT_MOVE_METRES` (2 km — a different neighbourhood or town, well
-above GPS jitter; a walk to the shop changes nothing). The watcher is
-removed in the background and restarted on return, taking the OS's newest
-position at once, so coming back to the app in another town updates without
-waiting. The first fix is refined the same way (a last-known position is
-shown instantly; the fresh fix replaces it only if it is a significant
-move), so nothing is fetched twice for a few hundred metres.
+**The area has a mode.**
 
-**What changes with it.** Every location-keyed query already carries the
-coordinates in its key (`["explore", …, lat, lng]`, the nearby-places and
-Spotlight feed keys, the Weekly teaser), so a change refetches exactly the
-screens that depend on it; the previous area's rows are never shown under
-the new label, because the new key has no data until it loads (and the
-persisted cache keeps only the newest few Explore keys). Consumers of the
-phone's position — `useDeviceLocation` (Places near you, Spotlight Nearby)
-and `useCoarseLocation` (the rough position sent with the sponsored feed) —
-read the one followed position instead of asking the OS themselves, so they
-agree with Explore and move with the person while open. Permission is still
-asked only where it was before: on first run, on "Use my current location",
-and the first time a device-relative screen needs it.
+| `mode` | Who moves it | Set by | The person sees |
+| --- | --- | --- | --- |
+| `following` | the phone | first run, "Use my current location" | **Near you** · Kumasi |
+| `chosen` | nobody but the person | a typed address, autocomplete, the map picker | **Browsing** · Accra |
 
-**Storage.** The record is stored under a new key
-(`abonten.explore-location.v2`) with its `source`; the old key is deleted
-rather than migrated, because a v1 record could have been a "use my current
-location" that must not come back frozen as a choice. A fallback (Accra) is
-never stored. Malformed records are dropped (`parseStoredLocation`).
+A following area moves only past 2 km — a discovery radius is 5–20 km, so
+a walk changes nothing and never refetches anything. A chosen area stays
+put wherever the phone goes and across restarts: someone whose location is
+off, or who is planning a trip, does not set it again every launch. The
+one-word line over the area's name (`AreaSwitcher`, `areaCopy.ts`) always
+says which it is — plus **Location off** when the phone cannot be read and
+**Finding you…** while the first fix is on its way — so a chosen area is
+never mistaken for where the phone says the person is, and the internal
+names never reach the screen.
 
-**Races.** A fix whose label (reverse geocode) is still resolving when the
-person picks a place by hand is discarded: the rule is re-checked after the
-await, and only the newest fix may commit (`fixSeq`).
+**"You're now in Tamale."** A chosen area can be forgotten. While the area
+is chosen, the phone is still watched, and when it is far from the chosen
+area (`AREA_MISMATCH_METRES`, 10 km — a different town, deliberately more
+than the 2 km that silently re-centres a following area) AND far from
+where it was when the person chose (or last dismissed), a row under the
+switcher offers the phone's town with one tap (`AreaSuggestionCard`).
+Dismissing it anchors the suggestion to where the phone is
+(`LocationState.anchor`, persisted), so it returns only after the phone
+has moved on again: a commuter who chose home is asked once at work, not
+every day; someone who chose Osu while standing in Labadi is never asked,
+because the phone has not moved since. It is a row in the page, never a
+toast or an alert, and never shown while the area follows the phone.
+
+**Following.** One position watcher (`watchPositionAsync`, Balanced,
+300 m) runs whenever the app is in front and location is allowed —
+nothing in the background — and its restart on return takes the OS's
+newest position first, so coming back to the app in another town updates
+at once. Permission is asked for on the first run and on "Use my current
+location" only; it is re-read (never asked) every time the app comes to
+the front, together with whether the phone's own location switch is on
+(`hasServicesEnabledAsync`), so a change made in Settings takes effect on
+the next return. Denied, blocked (Settings only) and "location services
+off" are told apart in the sheet, with an Open settings button where that
+is the only way out. With the phone's location switch off, Android shows
+its own "turn on location" resolution dialog the first time the watcher
+starts (expo-location asks Play services for it); declining it leaves the
+switcher at "Location off" and the watcher stays off until the switch is
+back on.
+
+**Storage.** `abonten.browsing-area.v3` holds `{ area, anchor }`; the
+previous `abonten.explore-location.v2` (`source: device | manual`) is read
+once, migrated and deleted, so an area chosen before the upgrade is kept;
+v1 is deleted. A fallback (Accra) is never stored. Malformed records are
+dropped (`parseStoredLocationState`).
+
+**Races.** Every intent — a choice, "Use my current location", a device
+fix — takes a sequence number; async work (reverse geocoding, a forward
+geocode of a typed address) commits only if it is still the newest, and a
+following fix re-checks the rule after its await, so a choice made while a
+fix was resolving always wins and two quick choices land in order.
+
+**Queries.** Every location-keyed query carries the coordinates in its
+key, so a change refetches exactly the screens that depend on it and never
+shows the previous area's rows under the new label: the new key has no
+data until it loads, and the list shows its skeleton under the unchanged
+header. Stale rows are not kept as placeholder data on purpose — Accra's
+events under a "Kumasi" label is the one thing this must never show.
+
+**Autocomplete** (`usePlacesAutocomplete`) biases predictions toward the
+browsing area within 200 km with Ghana as the region, so "Osu" resolves to
+Osu, Accra; nothing is restricted, so a far-off place typed in full is
+still found.
 
 ## 15. The drawer is a menu, not a screen (2026-09-22)
 

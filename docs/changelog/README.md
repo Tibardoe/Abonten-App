@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-22 — Mobile browsing area product model
+
+- `docs/architecture/mobile-offline-media-and-sync.md` 1.4: §14 rewritten for the browsing-area model — `mode: following | chosen`, one area for every screen, the always-visible Near you / Browsing / Location off line, the "You're now in…" suggestion with its 10 km rule and dismissal anchor, permission re-read on foreground incl. location services, accuracy-aware fixes, `abonten.browsing-area.v3`.
+- PROJECT.md §42 (§41.1 marked superseded).
+- Behaviour: the location switcher on Explore and Places says whether the area is near you or chosen; Places and Spotlight › Nearby use the same area as Explore; a chosen area left behind gets a one-tap "Use my location" row; the location sheet leads with "Use my current location" and explains denied / blocked / location-off / offline. No env var, table, policy, job or permission changed.
+
 ## 2026-09-22 — Mobile location following, side menu lifecycle, offline-state audit
 
 - `docs/architecture/mobile-offline-media-and-sync.md` 1.3: §8 extended to every data-driven screen (the paused-query root cause, the "definite answer keeps its message" and "never draw a missing figure as zero" rules, `settleEnvelope` in every `/api/mobile` query hook); new §14 the area follows the phone (`source: device | manual`, one watcher, 2 km significance rule, `abonten.explore-location.v2`); new §15 the drawer is a menu, not a screen (no reopen on Back, why a stack route was rejected).

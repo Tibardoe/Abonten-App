@@ -18,11 +18,11 @@ import { WeeklyChip, weeklyListingPath } from "./weeklyBannerParts";
 export function WeeklyTeaserCard() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { location } = useExploreLocation();
+  const { area: browsing } = useExploreLocation();
   const { program } = useWeeklyProgram();
   const teaser = useWeeklyTeaser(
-    location ? { lat: location.lat, lng: location.lng } : null,
-    program.teaser && !!location,
+    browsing ? { lat: browsing.lat, lng: browsing.lng } : null,
+    program.teaser && !!browsing,
   ).data;
 
   if (!program.teaser || !teaser) return null;

@@ -6,11 +6,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // EXPO_PUBLIC_GOOGLE_MAPS_API_KEY. If the key is missing or referrer-locked
 // the requests fail quietly and the field degrades to plain manual entry
 // (same behaviour the web hook documents).
+//
+// Predictions are biased (not restricted) toward `near` — the area being
+// browsed — within BIAS_RADIUS_METRES, and Ghana is the request's region:
+// "Osu" then resolves to Osu, Accra before any other Osu in the world, and
+// a Ghanaian town name beats a same-named place elsewhere, while a far-off
+// place typed in full is still found. The web hook restricts to the
+// visitor's country instead (looked up by IP); the bias does the same job
+// without a lookup and without locking a traveller out.
 
 const KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 const AUTOCOMPLETE_URL =
   "https://maps.googleapis.com/maps/api/place/autocomplete/json";
 const DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json";
+const BIAS_RADIUS_METRES = 200_000;
+const REGION = "gh";
 
 export type PlacePrediction = {
   placeId: string;
@@ -24,9 +34,13 @@ function newSessionToken(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
-export function usePlacesAutocomplete() {
+export function usePlacesAutocomplete(
+  near: { lat: number; lng: number } | null = null,
+) {
   const [query, setQuery] = useState("");
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
+  const nearLat = near?.lat;
+  const nearLng = near?.lng;
   const sessionRef = useRef(newSessionToken());
   const reqIdRef = useRef(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -40,9 +54,13 @@ export function usePlacesAutocomplete() {
     const id = ++reqIdRef.current;
     debounceRef.current = setTimeout(async () => {
       try {
+        const bias =
+          nearLat != null && nearLng != null
+            ? `&location=${nearLat},${nearLng}&radius=${BIAS_RADIUS_METRES}`
+            : "";
         const url = `${AUTOCOMPLETE_URL}?input=${encodeURIComponent(
           query.trim(),
-        )}&sessiontoken=${sessionRef.current}&key=${KEY}`;
+        )}&region=${REGION}${bias}&sessiontoken=${sessionRef.current}&key=${KEY}`;
         const res = await fetch(url);
         const json = (await res.json()) as {
           status: string;
@@ -75,7 +93,7 @@ export function usePlacesAutocomplete() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query]);
+  }, [query, nearLat, nearLng]);
 
   const resolvePlace = useCallback(
     async (placeId: string): Promise<ResolvedPlace | null> => {
