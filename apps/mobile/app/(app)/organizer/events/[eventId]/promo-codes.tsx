@@ -4,9 +4,12 @@ import {
   useEventPromoCodes,
   useUpdatePromoCode,
 } from "@/features/organizer/useEventPromoCodes";
+import { api } from "@/lib/api";
 import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
+import { settleEnvelope } from "@/lib/envelope";
 import { useQueryView } from "@/lib/useQueryView";
 import type { EventPromoCode } from "@abonten/api-client";
+import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import {
   AppText,
   Button,
@@ -15,6 +18,7 @@ import {
   Refresher,
   useToast,
 } from "@abonten/ui-native";
+import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -288,6 +292,19 @@ export default function EventPromoCodesScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const id = eventId ?? "";
   const q = useEventPromoCodes(id);
+  // Same query the edit screen holds, so a free event (FREE tier) can say
+  // codes are unavailable instead of "add them when you create an event".
+  const context = useQuery({
+    queryKey: ["mobile", "organizer", "event-edit", id],
+    queryFn: async () =>
+      settleEnvelope(await api.organizer.eventEditContext(id)),
+    enabled: !!id,
+  });
+  const isFree =
+    context.data?.status === 200 &&
+    (context.data.data.event.ticket_type ?? []).some(
+      (t) => t.type === FREE_TICKET_TYPE,
+    );
 
   const result = q.data;
   const codes = result && result.status === 200 ? result.data : [];
@@ -323,12 +340,22 @@ export default function EventPromoCodesScreen() {
         />
       ) : codes.length === 0 ? (
         <AppText className="text-sm text-muted-foreground">
-          This event has no promo codes. Add them when you create an event.
+          {isFree
+            ? "Promo codes aren't available on a free event. Make the event paid to offer discount codes."
+            : "This event has no promo codes. Add them when you create an event."}
         </AppText>
       ) : (
-        codes.map((code) => (
-          <PromoCodeCard key={code.id} code={code} eventId={id} />
-        ))
+        <>
+          {isFree ? (
+            <AppText className="text-sm text-muted-foreground">
+              This event is free, so its promo codes can&apos;t be active. They
+              stay here for their history.
+            </AppText>
+          ) : null}
+          {codes.map((code) => (
+            <PromoCodeCard key={code.id} code={code} eventId={id} />
+          ))}
+        </>
       )}
     </ScrollView>
   );

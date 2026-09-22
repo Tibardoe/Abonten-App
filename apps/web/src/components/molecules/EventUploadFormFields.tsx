@@ -44,6 +44,8 @@ type EventUploadFormFieldsProps = Pick<
   | "handleMultipleTickets"
   | "handlePromoCodesChange"
   | "promoCodes"
+  | "capacityProblem"
+  | "capacityHint"
   | "showPromoCodeFormPopup"
   | "handlePromoCodeFormPopup"
   | "category"
@@ -93,6 +95,8 @@ export default function EventUploadFormFields({
   handleMultipleTickets,
   handlePromoCodesChange,
   promoCodes,
+  capacityProblem,
+  capacityHint,
   showPromoCodeFormPopup,
   handlePromoCodeFormPopup,
   category,
@@ -321,22 +325,40 @@ export default function EventUploadFormFields({
                 handleMultipleTickets={handleMultipleTickets}
               />
             )}
+
+            {/* Capacity vs quantities, live (@abonten/core/ticketCapacity):
+                the quantities that are set must fit the capacity; types
+                without one share what is left. */}
+            {capacityProblem ? (
+              <p role="alert" className="text-sm text-destructive">
+                {capacityProblem}
+              </p>
+            ) : capacityHint ? (
+              <p className="text-xs text-muted-foreground">{capacityHint}</p>
+            ) : null}
           </div>
 
-          {/* Promo codes -- optional, relates directly to ticket purchasing */}
-          <div className="space-y-2 text-sm font-normal">
-            <PromoCodeBtn
-              ticket={ticket}
-              handlePromoCodeFormPopup={handlePromoCodeFormPopup}
-            />
-
-            {showPromoCodeFormPopup && (
-              <PromoCodeInputs
-                onPromoCodesChange={handlePromoCodesChange}
-                initialPromoCodes={promoCodes}
+          {/* Promo codes -- optional, relates directly to ticket purchasing.
+              A free event has no price to discount, so the section is not
+              offered at all (and the hook drops any drafted codes). */}
+          {ticket === "Free" ? (
+            <p className="text-xs text-muted-foreground">
+              Promo codes aren&apos;t available on a free event.
+            </p>
+          ) : (
+            <div className="space-y-2 text-sm font-normal">
+              <PromoCodeBtn
+                handlePromoCodeFormPopup={handlePromoCodeFormPopup}
               />
-            )}
-          </div>
+
+              {showPromoCodeFormPopup && (
+                <PromoCodeInputs
+                  onPromoCodesChange={handlePromoCodesChange}
+                  initialPromoCodes={promoCodes}
+                />
+              )}
+            </div>
+          )}
 
           <hr className="border-border" />
         </div>

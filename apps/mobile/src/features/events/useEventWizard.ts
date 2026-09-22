@@ -19,6 +19,10 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@abonten/core/eventDateValidation";
+import {
+  ticketCapacityHint,
+  ticketCapacityProblem,
+} from "@abonten/core/ticketCapacity";
 import { paidTierProblem } from "@abonten/core/ticketTiers";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import * as ImagePicker from "expo-image-picker";
@@ -618,6 +622,41 @@ export function useEventWizard(
     };
   }
 
+  // Capacity (Basics step) vs the ticket quantities (Tickets step), live —
+  // the same rule postEventCore and the database apply
+  // (@abonten/core/ticketCapacity). Free events carry the capacity on their
+  // FREE tier, so nothing to check there.
+  const capacityNumber =
+    capacity.trim() === "" ? null : Number(capacity.trim());
+  const tiersForCapacity =
+    ticketMode === "single"
+      ? [
+          {
+            quantity:
+              ticketQuantity.trim() === "" ? null : Number(ticketQuantity),
+          },
+        ]
+      : ticketMode === "multiple"
+        ? tiers.map((t) => ({
+            quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+          }))
+        : [];
+  const capacityProblem =
+    ticketMode === "free"
+      ? null
+      : ticketCapacityProblem(capacityNumber, tiersForCapacity);
+  const capacityHint =
+    ticketMode === "free"
+      ? null
+      : ticketCapacityHint(capacityNumber, tiersForCapacity);
+
+  // A free event has nothing to discount: switching to it drops any promo
+  // codes drafted so far, and the wizard skips the promo step.
+  function selectTicketMode(mode: TicketMode) {
+    setTicketMode(mode);
+    if (mode === "free") setPromos([]);
+  }
+
   function buildTickets():
     | {
         ok: true;
@@ -645,6 +684,7 @@ export function useEventWizard(
           message: "Quantity must be a whole number above zero.",
         };
       }
+      if (capacityProblem) return { ok: false, message: capacityProblem };
       return {
         ok: true,
         body: { singleTicket: { price, quantity: qty } },
@@ -675,10 +715,12 @@ export function useEventWizard(
     }
     const tierProblem = parsed.map(paidTierProblem).find(Boolean);
     if (tierProblem) return { ok: false, message: tierProblem };
+    if (capacityProblem) return { ok: false, message: capacityProblem };
     return { ok: true, body: { multipleTickets: parsed } };
   }
 
   function buildPromos(): EventCreateBody["promoCodes"] {
+    if (ticketMode === "free") return null;
     const cleaned = promos
       .map((p) => ({
         promoCode: p.promoCode.trim().toUpperCase(),
@@ -844,10 +886,12 @@ export function useEventWizard(
         return scheduleValid;
       case 3:
         return !!address && !!coords;
+      case 4:
+        return !capacityProblem;
       default:
         return true;
     }
-  }, [step, flyerUri, scheduleValid, address, coords]);
+  }, [step, flyerUri, scheduleValid, address, coords, capacityProblem]);
 
   return {
     step,
@@ -927,7 +971,9 @@ export function useEventWizard(
     setVenuePlace,
     // tickets
     ticketMode,
-    setTicketMode,
+    setTicketMode: selectTicketMode,
+    capacityProblem,
+    capacityHint,
     ticketPrice,
     setTicketPrice,
     ticketQuantity,

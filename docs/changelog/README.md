@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-22 — Event capacity rules, free events without promo codes, chat offline state, Spotlight paging
+
+- Behaviour: event capacity and ticket quantities now follow one rule everywhere (`@abonten/core/ticketCapacity`): the quantities an organizer sets must fit inside the capacity, and ticket types left without a quantity share whatever the capacity has left; purchases across every type can never exceed the capacity (migration `20260922120000` — deferred constraint triggers on `ticket_checkout`, `attendance`, `ticket_type`, `event`; `create_ticket_checkout` pre-checks the shared pool; new `event_capacity_check` / `event_shared_capacity_left` functions). Free events cannot have promo codes: the create forms hide the step, the services refuse codes for a free event and retire them when a paid event goes free, and the database refuses an active code beside the FREE tier (and vice versa). Ticket quantities are optional on the web create/edit forms too (they already were in the app).
+- Mobile: a conversation's offline / failed / empty state is no longer rendered inside the inverted message list (it showed upside down); Spotlight on Android pages with the snap-interval fling (carries the finger's velocity) instead of the fixed 250 ms animation behind `pagingEnabled`, which produced a visible slow-down right after release.
+- Docs: `finance/payments-and-ticketing-runbook.md` 1.1, `architecture/feature-inventory.md` 1.1, help `organizers/selling-tickets-and-promo-codes` (capacity section, free-event rule), PROJECT.md §43. No env var, policy, job or permission changed.
+
 ## 2026-09-22 — Mobile browsing area product model
 
 - `docs/architecture/mobile-offline-media-and-sync.md` 1.4: §14 rewritten for the browsing-area model — `mode: following | chosen`, one area for every screen, the always-visible Near you / Browsing / Location off line, the "You're now in…" suggestion with its 10 km rule and dismissal anchor, permission re-read on foreground incl. location services, accuracy-aware fixes, `abonten.browsing-area.v3`.

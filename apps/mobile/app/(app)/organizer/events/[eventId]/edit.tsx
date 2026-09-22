@@ -567,11 +567,32 @@ export default function EditEventScreen() {
               </View>
             ) : null}
 
+            {/* Capacity (above) vs quantities, live
+                (@abonten/core/ticketCapacity). */}
+            {w.capacityProblem ? (
+              <AppText
+                variant="small"
+                tone="error"
+                accessibilityLiveRegion="polite"
+              >
+                {w.capacityProblem}
+              </AppText>
+            ) : w.capacityHint ? (
+              <AppText variant="meta">{w.capacityHint}</AppText>
+            ) : null}
+
+            {w.ticketMode === "free" && !w.savedFree ? (
+              <AppText variant="meta">
+                Making this event free removes its promo codes: unused ones are
+                deleted and used ones are deactivated.
+              </AppText>
+            ) : null}
+
             <Button
               title={w.isSavingTicketTypes ? "Saving…" : "Save ticket types"}
               variant="secondary"
               loading={w.isSavingTicketTypes}
-              disabled={w.isSavingTicketTypes}
+              disabled={w.isSavingTicketTypes || !!w.capacityProblem}
               onPress={onSaveTicketTypes}
             />
           </>

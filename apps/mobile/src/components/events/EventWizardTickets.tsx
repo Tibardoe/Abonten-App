@@ -40,7 +40,7 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
       {w.ticketMode === "free" ? (
         <AppText variant="muted">
           Attendees reserve a free ticket. Capacity (Basics step) caps the
-          total.
+          total. Promo codes aren&apos;t available on a free event.
         </AppText>
       ) : null}
 
@@ -123,6 +123,17 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
             onPress={addTier}
           />
         </View>
+      ) : null}
+
+      {/* Capacity vs quantities, live (@abonten/core/ticketCapacity): the
+          quantities that are set must fit the capacity from the Basics
+          step; types without one share what is left. */}
+      {w.capacityProblem ? (
+        <AppText variant="small" tone="error" accessibilityLiveRegion="polite">
+          {w.capacityProblem}
+        </AppText>
+      ) : w.capacityHint ? (
+        <AppText variant="meta">{w.capacityHint}</AppText>
       ) : null}
     </View>
   );

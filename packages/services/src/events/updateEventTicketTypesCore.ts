@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import { paidTierProblem } from "@abonten/core/ticketTiers";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -19,6 +20,33 @@ import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedPar
 // is checked first and returned as a clear message instead of a raw DB error.
 
 type DateInput = string | Date;
+
+const CHECK_VIOLATION = "23514";
+
+async function retireEventPromoCodes(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+): Promise<UpdateEventTicketTypesCoreResult | null> {
+  const { error: deleteError } = await supabase
+    .from("promo_code")
+    .delete()
+    .eq("event_id", eventId)
+    .eq("times_used", 0);
+  if (deleteError) {
+    logger.error(`Failed removing promo codes: ${deleteError.message}`);
+    return { status: 500, message: "Something went wrong!" };
+  }
+  const { error: deactivateError } = await supabase
+    .from("promo_code")
+    .update({ is_active: false })
+    .eq("event_id", eventId)
+    .eq("is_active", true);
+  if (deactivateError) {
+    logger.error(`Failed deactivating promo codes: ${deactivateError.message}`);
+    return { status: 500, message: "Something went wrong!" };
+  }
+  return null;
+}
 
 export type UpdateEventTicketTypesCoreInput = {
   eventId: string;
@@ -82,6 +110,17 @@ export async function updateEventTicketTypesCore(
       message:
         "Ticket types can't be changed anymore — this event already has confirmed tickets.",
     };
+  }
+
+  // The quantities that are set must fit inside the event's capacity; the
+  // types without one share what is left (@abonten/core/ticketCapacity).
+  // The database re-checks this on insert, this is the friendly copy.
+  if (!freeEvent) {
+    const capacityProblem = ticketCapacityProblem(event.capacity, [
+      ...(singleTicket ? [singleTicket] : []),
+      ...multipleTickets,
+    ]);
+    if (capacityProblem) return { status: 400, message: capacityProblem };
   }
 
   const ticketTypesPayload = freeEvent
@@ -172,11 +211,26 @@ export async function updateEventTicketTypesCore(
     }
   }
 
+  // Paid → free: a free event has no price to discount, so its promo codes
+  // go before the FREE tier is written (the database refuses a FREE tier
+  // while an active code exists, and an active code while a FREE tier
+  // exists). Never-used codes are deleted; used ones are deactivated so the
+  // redemption history they anchor stays intact — the same rule
+  // deletePromoCodeCore applies.
+  if (freeEvent) {
+    const retire = await retireEventPromoCodes(supabase, eventId);
+    if (retire) return retire;
+  }
+
   const { error: insertError } = await supabase
     .from("ticket_type")
     .insert(ticketTypesPayload.map((t) => ({ ...t, event_id: eventId })));
 
   if (insertError) {
+    if (insertError.code === CHECK_VIOLATION) {
+      // The capacity / free-event guards raise with an organizer-facing message.
+      return { status: 400, message: insertError.message };
+    }
     logger.error(`Failed inserting new ticket types: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
