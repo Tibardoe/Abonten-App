@@ -33,6 +33,10 @@ export default {
           foreground: "hsl(var(--primary-foreground))",
           fill: "hsl(var(--primary))",
         },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive-text))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
       },
       keyframes,
       animation,

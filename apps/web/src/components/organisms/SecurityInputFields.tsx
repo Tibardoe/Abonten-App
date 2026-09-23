@@ -15,6 +15,7 @@ import {
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -66,6 +67,14 @@ export default function SecurityInputFields({
       setIsLinkingGoogle(false);
     }
   };
+
+  // Account setup (checklist, reminder card, badge) counts a verified email
+  // and phone — refresh it as soon as either changes here.
+  const queryClient = useQueryClient();
+  const refreshAccountSetup = () =>
+    queryClient.invalidateQueries({
+      predicate: (query) => query.queryKey[0] === "profile-completion",
+    });
 
   // step 1: overview, step 2: enter new phone, step 3: verify OTP
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -196,6 +205,7 @@ export default function SecurityInputFields({
     setEmailStep("idle");
     setEmailOtp("");
     toast.success("Email updated.");
+    refreshAccountSetup();
   };
 
   // Supabase answers a wrong code and an expired one identically, so there
@@ -317,6 +327,7 @@ export default function SecurityInputFields({
       setCurrentPhone(phoneE164);
       setCurrentPhoneVerified(true);
       toast.success(response.message);
+      refreshAccountSetup();
       setStep(1);
     } catch (error) {
       logger.error("Phone update verify error:", error);

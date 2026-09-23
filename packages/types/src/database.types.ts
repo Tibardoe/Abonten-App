@@ -14,6 +14,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      account_setup_prompt_state: {
+        Row: {
+          dismiss_count: number;
+          dismissed_at: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          dismiss_count?: number;
+          dismissed_at?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          dismiss_count?: number;
+          dismissed_at?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "account_setup_prompt_state_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "account_setup_prompt_state_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       admin_audit_log: {
         Row: {
           action: string;
@@ -3608,7 +3644,9 @@ export type Database = {
         Row: {
           comment: string | null;
           created_at: string;
+          edited_at: string | null;
           event_id: string;
+          helpful_count: number;
           id: string;
           is_verified_attendee: boolean;
           moderated_at: string | null;
@@ -3625,7 +3663,9 @@ export type Database = {
         Insert: {
           comment?: string | null;
           created_at?: string;
+          edited_at?: string | null;
           event_id: string;
+          helpful_count?: number;
           id?: string;
           is_verified_attendee?: boolean;
           moderated_at?: string | null;
@@ -3642,7 +3682,9 @@ export type Database = {
         Update: {
           comment?: string | null;
           created_at?: string;
+          edited_at?: string | null;
           event_id?: string;
+          helpful_count?: number;
           id?: string;
           is_verified_attendee?: boolean;
           moderated_at?: string | null;
@@ -3674,6 +3716,46 @@ export type Database = {
           {
             foreignKeyName: "event_review_reviewer_id_fkey";
             columns: ["reviewer_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      event_review_helpful: {
+        Row: {
+          created_at: string;
+          review_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          review_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          review_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_review_helpful_review_id_fkey";
+            columns: ["review_id"];
+            isOneToOne: false;
+            referencedRelation: "event_review";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_review_helpful_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_review_helpful_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "user_profile_details";
             referencedColumns: ["user_id"];
@@ -7664,6 +7746,8 @@ export type Database = {
         Row: {
           comment: string | null;
           created_at: string;
+          edited_at: string | null;
+          helpful_count: number;
           id: string;
           moderated_at: string | null;
           moderated_by: string | null;
@@ -7680,6 +7764,8 @@ export type Database = {
         Insert: {
           comment?: string | null;
           created_at?: string;
+          edited_at?: string | null;
+          helpful_count?: number;
           id?: string;
           moderated_at?: string | null;
           moderated_by?: string | null;
@@ -7696,6 +7782,8 @@ export type Database = {
         Update: {
           comment?: string | null;
           created_at?: string;
+          edited_at?: string | null;
+          helpful_count?: number;
           id?: string;
           moderated_at?: string | null;
           moderated_by?: string | null;
@@ -7727,6 +7815,46 @@ export type Database = {
           {
             foreignKeyName: "place_review_reviewer_id_fkey";
             columns: ["reviewer_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      place_review_helpful: {
+        Row: {
+          created_at: string;
+          review_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          review_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          review_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "place_review_helpful_review_id_fkey";
+            columns: ["review_id"];
+            isOneToOne: false;
+            referencedRelation: "place_review";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "place_review_helpful_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "place_review_helpful_user_id_fkey";
+            columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "user_profile_details";
             referencedColumns: ["user_id"];
@@ -12403,6 +12531,20 @@ export type Database = {
         Args: { p_id: string; p_reason: string };
         Returns: undefined;
       };
+      _search_concept_alternatives: {
+        Args: { p_phrase: string; p_scope: string };
+        Returns: unknown;
+      };
+      _search_event_in_window: {
+        Args: {
+          p_ends_at: string;
+          p_event_id: string;
+          p_from: string;
+          p_starts_at: string;
+          p_to: string;
+        };
+        Returns: boolean;
+      };
       _search_event_pool: {
         Args: {
           p_as_of: string;
@@ -12418,6 +12560,7 @@ export type Database = {
           text_score: number;
         }[];
       };
+      _search_is_stopword: { Args: { p_word: string }; Returns: boolean };
       _search_like_escape: { Args: { p_text: string }; Returns: string };
       _search_normalize: { Args: { p_query: string }; Returns: string };
       _search_organizer_pool: {
@@ -12441,11 +12584,31 @@ export type Database = {
         }[];
       };
       _search_prefix_tsquery: { Args: { p_norm: string }; Returns: unknown };
+      _search_related_tsquery: {
+        Args: { p_norm: string; p_scope: string };
+        Returns: unknown;
+      };
+      _search_relaxed_tsquery: { Args: { p_norm: string }; Returns: unknown };
+      _search_temporal: {
+        Args: { p_as_of: string; p_norm: string };
+        Returns: {
+          date_from: string;
+          date_to: string;
+          rest: string;
+        }[];
+      };
       _search_trgm_thresholds: { Args: never; Returns: undefined };
       _search_web_tsquery: { Args: { p_norm: string }; Returns: unknown };
       _weekly_document_has_content: { Args: { p_doc: Json }; Returns: boolean };
       account_deletion_blockers: { Args: { p_user_id: string }; Returns: Json };
       account_is_restricted: { Args: never; Returns: boolean };
+      account_setup_prompt_dismiss: {
+        Args: never;
+        Returns: {
+          dismiss_count: number;
+          dismissed_at: string;
+        }[];
+      };
       admin_clear_payout_review: {
         Args: { p_admin_id: string; p_note: string; p_payout_id: string };
         Returns: string;
@@ -12792,6 +12955,10 @@ export type Database = {
         };
         Returns: boolean;
       };
+      content_realtime_can_join: {
+        Args: { p_post_id: string };
+        Returns: boolean;
+      };
       content_rollup_stats: { Args: { p_batch?: number }; Returns: Json };
       content_sponsored_candidates: {
         Args: {
@@ -13096,7 +13263,15 @@ export type Database = {
         Returns: undefined;
       };
       ensure_future_review_partitions: { Args: never; Returns: undefined };
+      event_capacity_check: {
+        Args: { p_event_id: string };
+        Returns: undefined;
+      };
       event_reminders_enqueue: { Args: never; Returns: number };
+      event_shared_capacity_left: {
+        Args: { p_event_id: string };
+        Returns: number;
+      };
       expire_stale_content_campaign_checkouts: {
         Args: never;
         Returns: undefined;
@@ -14355,6 +14530,7 @@ export type Database = {
           slug: string;
         }[];
       };
+      get_public_profile: { Args: { p_username: string }; Returns: Json };
       get_rewards_program_public: { Args: never; Returns: Json };
       get_similar_events: {
         Args: {
@@ -14392,10 +14568,6 @@ export type Database = {
         Returns: number;
       };
       get_unread_conversation_count: { Args: never; Returns: number };
-      get_public_profile: {
-        Args: { p_username: string };
-        Returns: Json;
-      };
       get_user_rating: {
         Args: { p_reviewed_id: string };
         Returns: {
@@ -14725,6 +14897,64 @@ export type Database = {
         };
         Returns: Json;
       };
+      review_list: {
+        Args: {
+          p_after_created?: string;
+          p_after_helpful?: number;
+          p_after_id?: string;
+          p_exclude_viewer?: boolean;
+          p_limit?: number;
+          p_rating?: number;
+          p_review_id?: string;
+          p_sort?: string;
+          p_subject_id: string;
+          p_subject_kind: string;
+        };
+        Returns: {
+          comment: string;
+          created_at: string;
+          edited_at: string;
+          helpful_count: number;
+          id: string;
+          is_verified_attendee: boolean;
+          photos: Json;
+          rating: number;
+          response: string;
+          response_at: string;
+          reviewer_avatar_public_id: string;
+          reviewer_avatar_version: string;
+          reviewer_deleted: boolean;
+          reviewer_full_name: string;
+          reviewer_id: string;
+          reviewer_username: string;
+          subject_id: string;
+          title: string;
+          viewer_found_helpful: boolean;
+        }[];
+      };
+      review_set_helpful: {
+        Args: {
+          p_helpful: boolean;
+          p_review_id: string;
+          p_review_kind: string;
+        };
+        Returns: {
+          helpful_count: number;
+          viewer_found_helpful: boolean;
+        }[];
+      };
+      review_summary: {
+        Args: { p_subject_id: string; p_subject_kind: string };
+        Returns: {
+          average_rating: number;
+          count_1: number;
+          count_2: number;
+          count_3: number;
+          count_4: number;
+          count_5: number;
+          total_ratings: number;
+        }[];
+      };
       revoke_admin_role: {
         Args: { p_actor_id: string; p_role_key: string; p_target_user: string };
         Returns: undefined;
@@ -14994,8 +15224,8 @@ export type Database = {
           added: boolean;
         }[];
       };
-      viewer_follows: {
-        Args: { p_kind: string; p_target_id: string };
+      user_block_set: {
+        Args: { p_block?: boolean; p_blocked_id: string };
         Returns: boolean;
       };
       verification_transition: {
@@ -15008,6 +15238,10 @@ export type Database = {
           p_reason?: string;
         };
         Returns: Json;
+      };
+      viewer_follows: {
+        Args: { p_kind: string; p_target_id: string };
+        Returns: boolean;
       };
       weekly_claim_edit: {
         Args: { p_edition_id: string; p_expected_version: number };

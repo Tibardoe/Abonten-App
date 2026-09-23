@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { AccountSetupCard } from "@/components/account/AccountSetupCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import { AppearanceToggle } from "@/components/app/AppearanceToggle";
 import { useContentProgram } from "@/features/content/useContentProgram";
@@ -127,6 +128,8 @@ export default function Account() {
             <Icon name="chevron-forward" size={16} tone="muted" />
           ) : null}
         </PressableCard>
+
+        <AccountSetupCard variant="row" />
 
         <View className="gap-2">
           <NavRow

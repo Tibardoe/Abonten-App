@@ -56,8 +56,8 @@ export default function AddEventReviewButton({
   });
 
   const invalidateReviewQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ["event-reviews", eventId] });
-    queryClient.invalidateQueries({ queryKey: ["event-rating", eventId] });
+    // The preview, breakdown and every filtered list of this event's reviews.
+    queryClient.invalidateQueries({ queryKey: ["reviews", "event", eventId] });
     queryClient.invalidateQueries({
       queryKey: ["event-review-eligibility", eventId],
     });

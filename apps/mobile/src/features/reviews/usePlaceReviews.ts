@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { formatTitle } from "@abonten/core/titleCase";
 import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { invalidateReviewSubject } from "./reviewQueryKeys";
 import type { ReviewPhotoRow } from "./useEventReviews";
 
 // Native echoes of the web place-review actions (getOwnPlaceReview /
@@ -22,6 +23,7 @@ export type OwnPlaceReview = {
   rating: number;
   title: string | null;
   comment: string | null;
+  owner_response?: string | null;
   place_review_photo?: ReviewPhotoRow[] | null;
 };
 
@@ -67,7 +69,7 @@ async function computeEligibility(
   const { data: own } = await supabase
     .from("place_review")
     .select(
-      "id, rating, title, comment, place_review_photo(id, public_id, version, position)",
+      "id, rating, title, comment, owner_response, place_review_photo(id, public_id, version, position)",
     )
     .eq("place_id", placeId)
     .eq("reviewer_id", userId)
@@ -102,17 +104,13 @@ function useInvalidateAfterReview(placeId: string | undefined) {
   const { session } = useSession();
   const userId = session?.user.id;
   return () => {
-    qc.invalidateQueries({ queryKey: ["mobile", "place-reviews", placeId] });
-    qc.invalidateQueries({ queryKey: ["mobile", "place", placeId] });
     qc.invalidateQueries({
       queryKey: ["mobile", "place-review-eligibility", placeId, userId],
     });
     qc.invalidateQueries({ queryKey: ["profile", "place-reviews", userId] });
-    // PlaceCard on the Explore / Around You feeds shows avg_rating +
-    // review_count straight from get_filtered_places / get_nearby_places —
-    // a new/edited/deleted review moves both, so refresh those lists.
-    qc.invalidateQueries({ queryKey: ["discovery", "places"] });
-    qc.invalidateQueries({ queryKey: ["explore"] });
+    // The place's preview + breakdown + lists, its detail (avg rating and
+    // count), the owner's inbox and the Explore / nearby cards.
+    invalidateReviewSubject(qc, "place", placeId);
   };
 }
 

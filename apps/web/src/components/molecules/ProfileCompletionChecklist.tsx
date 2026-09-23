@@ -2,48 +2,47 @@
 
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import Link from "next/link";
-import { IoCheckmarkCircle } from "react-icons/io5";
+import { IoEllipseOutline } from "react-icons/io5";
 
-// The full 4-item checklist (Part 15/18), shown on the Edit Profile page
-// above the editable fields. Disappears once every item is complete.
+// Shown above the Edit Profile fields while a profile step (name, a chosen
+// username, a photo) is still missing — all three are done on this page, so
+// the rows aren't links. The sign-in steps (email, phone) are on Account
+// setup, linked underneath. Gone once the profile steps are done.
 export default function ProfileCompletionChecklist() {
   const { data: completion } = useProfileCompletion();
+  if (!completion) return null;
 
-  if (!completion || completion.isComplete) return null;
+  const missing = completion.items.filter(
+    (i) => i.group === "profile" && !i.complete,
+  );
+  if (missing.length === 0) return null;
 
   return (
     <div className="rounded-xl border border-border bg-muted p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold">Complete your profile</h2>
-        <span className="text-sm text-muted-foreground">
-          {completion.completedCount}/{completion.total}
-        </span>
-      </div>
-
+      <h2 className="font-semibold">Finish your profile</h2>
       <ul className="space-y-2">
-        {completion.items.map((item) => (
-          <li key={item.key}>
-            <Link
-              href={item.href}
-              className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-            >
-              <IoCheckmarkCircle
-                className={`text-lg shrink-0 ${
-                  item.complete ? "text-mint" : "text-border"
-                }`}
-                aria-hidden
-              />
-              <span
-                className={
-                  item.complete ? "text-muted-foreground line-through" : ""
-                }
-              >
-                {item.label}
+        {missing.map((item) => (
+          <li key={item.key} className="flex gap-2">
+            <IoEllipseOutline
+              className="mt-0.5 shrink-0 text-lg text-muted-foreground"
+              aria-hidden
+            />
+            <span>
+              <span className="block text-sm font-medium">{item.label}</span>
+              <span className="block text-xs text-muted-foreground">
+                {item.description}
               </span>
-            </Link>
+            </span>
           </li>
         ))}
       </ul>
+      <Link
+        href="/settings/account-setup"
+        className="inline-block text-sm font-medium text-primary hover:underline"
+      >
+        See all account setup steps ({completion.completedCount} of{" "}
+        {completion.total} done)
+      </Link>
     </div>
   );
 }

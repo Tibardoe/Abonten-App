@@ -1,5 +1,3 @@
-import { getEventRating } from "@/actions/getEventRating";
-import { getEventReviews } from "@/actions/getEventReviews";
 import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
@@ -15,8 +13,10 @@ import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
-import EventReviewsSection from "@/events/organisms/EventReviewsSection";
+import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
+import { loadReviewPreview } from "@/reviews/loadReviews";
+import ReviewsPreview from "@/reviews/organisms/ReviewsPreview";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
@@ -172,8 +172,7 @@ export default async function page({
     { data: minTicket },
     averageRating,
     { lat, lng },
-    eventRating,
-    eventReviewsFirstPage,
+    reviewPreview,
   ] = await Promise.all([
     // `attendance` has RLS restricting SELECT to the row's owner or the
     // event's organizer — this cookie-free publicSupabase client always has
@@ -193,8 +192,9 @@ export default async function page({
     // from eventRating below, which rates this specific event.
     getUserRating(event.organizer_id),
     geocodeAddress(safeLocation),
-    getEventRating(event.id),
-    getEventReviews(event.id),
+    // The reviews block: summary + the three most helpful (never the
+    // whole history — "See all" opens /events/<code>/reviews).
+    loadReviewPreview("event", event.id),
   ]);
 
   const attendanceCount = Number(attendanceCountResult ?? 0);
@@ -233,11 +233,6 @@ export default async function page({
   // separate, page-level banner so a canceled/ended event is obvious above
   // the fold instead of only surfacing once a visitor scrolls all the way
   // down to the buy button.
-
-  async function fetchEventReviewsPage(cursor: string | null) {
-    "use server";
-    return getEventReviews(eventId, { cursor });
-  }
 
   // Free registration = the FREE tier, the same test issue_free_ticket
   // applies (@abonten/core/ticketTiers).
@@ -520,17 +515,26 @@ export default async function page({
         </div>
 
         <div className="mt-6 md:mt-8">
-          <EventReviewsSection
-            eventId={event.id}
-            organizerId={event.organizer_id}
-            eventStatus={event.status}
-            startsAt={event.starts_at}
-            endsAt={event.ends_at}
-            occurrences={event.event_occurrence}
-            avgRating={eventRating.averageRating}
-            reviewCount={eventRating.totalRatings}
-            initialPage={eventReviewsFirstPage}
-            fetchPage={fetchEventReviewsPage}
+          <ReviewsPreview
+            subject={{
+              kind: "event",
+              id: event.id,
+              slug: event.event_code,
+              title: event.title,
+              ownerId: event.organizer_id,
+            }}
+            initialSummary={reviewPreview.summary}
+            initialReviews={reviewPreview.reviews}
+            addReviewButton={
+              <AddEventReviewButton
+                eventId={event.id}
+                organizerId={event.organizer_id}
+                eventStatus={event.status}
+                startsAt={event.starts_at}
+                endsAt={event.ends_at}
+                occurrences={event.event_occurrence}
+              />
+            }
           />
         </div>
 

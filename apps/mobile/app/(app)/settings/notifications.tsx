@@ -23,7 +23,7 @@ import { useTranslations } from "@abonten/ui-native/i18n";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Linking, ScrollView, Switch, View } from "react-native";
+import { Linking, Pressable, ScrollView, Switch, View } from "react-native";
 
 // Settings › Notifications: the native echo of the web preference centre.
 // Only optional notices have a switch; tickets, payments, refunds,
@@ -291,6 +291,21 @@ export default function NotificationSettings() {
                 disabled={save.isPending || !p.email}
                 onChange={(v) => save.mutate({ rewardEmails: v })}
               />
+              {!p.email ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => router.push("/(app)/settings/account-setup")}
+                  className="self-start py-2 active:opacity-60"
+                >
+                  <AppText
+                    variant="small"
+                    tone="brand"
+                    className="font-semibold"
+                  >
+                    Add an email address
+                  </AppText>
+                </Pressable>
+              ) : null}
               {program.recommendationEmail || p.recommendationEmails ? (
                 <Row
                   title="Email me picks and alerts"

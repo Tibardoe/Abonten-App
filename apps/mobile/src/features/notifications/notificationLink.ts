@@ -12,7 +12,7 @@ import type {
 // --- legacy `link` string → native route -----------------------------------
 // The web app does `router.push(notification.link)`; on native the same links
 // have to be translated. Values seen in the wild:
-//   /settings/edit-profile · /manage/events/:id · /manage/places/:id ·
+//   /settings/edit-profile · /settings/account-setup · /manage/events/:id · /manage/places/:id ·
 //   /events/:code · /places/:slug · null
 const LINK_RULES: [RegExp, (id: string) => string][] = [
   [/^\/manage\/events\/([^/?#]+)/, (id) => `/(app)/organizer/events/${id}`],
@@ -35,6 +35,8 @@ export function notificationHref(
 ): string | null {
   if (!link) return null;
   if (link === "/settings/edit-profile") return "/(app)/settings/edit-profile";
+  if (link === "/settings/account-setup")
+    return "/(app)/settings/account-setup";
   if (link === "/manage/spotlight") return "/(app)/spotlight/manage";
   if (link === "/spotlight") return "/(app)/(tabs)/spotlight";
   for (const [pattern, build] of LINK_RULES) {
@@ -79,7 +81,7 @@ function targetFromData(
         return `/(app)/organizer/places/${data.placeId}/reviews`;
       return null;
     case "profile":
-      return "/(app)/settings/edit-profile";
+      return "/(app)/settings/account-setup";
     case "place_claim":
       return data.placeId ? `/(app)/organizer/places/${data.placeId}` : null;
     case "place_booking":

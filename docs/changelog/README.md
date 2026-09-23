@@ -16,6 +16,14 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-23 — Reviews experience, account-wide blocking, account setup
+
+- New `docs/architecture/reviews-and-account-setup.md` 1.0: the review read path (`review_list` keyset pages with star filter and Most helpful / Most recent, `review_summary` breakdown), helpful votes (`event_review_helpful` / `place_review_helpful`, `review_set_helpful`), the database-stamped `edited_at`, review sharing links, account-wide blocking (`user_block_set`), the account-setup model and its reminder rules (`account_setup_prompt_state`, 7/30/90-day quiet periods), and the contextual "Add your email to pay" prompt. Measured plans at 10,000 reviews.
+- Behaviour: event and place pages show a rating summary and the three most helpful reviews with "See all"; new pages `/events/<code>/reviews` and `/places/<slug>/reviews` and the app Reviews screen; Helpful, Share, Report and Block on every review; Edit/Delete of your own event review in the app; Settings › Account setup and Settings › Blocked accounts on web and app; checkout asks for an email before Pay when the account has none; choosing a username now completes "Choose a username" on every platform (`user_info_username_chosen` trigger + backfill); review photos follow their review's moderation state.
+- Accessibility: web `text-destructive` now uses a darker `--destructive-text` token (red text on its own tint was 3.84:1); axe scan and an SEO/e2e check cover the new reviews pages.
+- Migrations `20260923090000`, `20260923090100`, `20260923090200` (applied to production). New permissions: none. New jobs / env vars: none.
+- Help: `customers/reviews-and-highlights` (reading, filtering, Helpful, share, report, block), `customers/getting-started` (account setup). `architecture/feature-inventory.md` review rows; PROJECT.md §44; `docs/INDEX.md`.
+
 ## 2026-09-22 — Event capacity rules, free events without promo codes, chat offline state, Spotlight paging
 
 - Behaviour: event capacity and ticket quantities now follow one rule everywhere (`@abonten/core/ticketCapacity`): the quantities an organizer sets must fit inside the capacity, and ticket types left without a quantity share whatever the capacity has left; purchases across every type can never exceed the capacity (migration `20260922120000` — deferred constraint triggers on `ticket_checkout`, `attendance`, `ticket_type`, `event`; `create_ticket_checkout` pre-checks the shared pool; new `event_capacity_check` / `event_shared_capacity_left` functions). Free events cannot have promo codes: the create forms hide the step, the services refuse codes for a free event and retire them when a paid event goes free, and the database refuses an active code beside the FREE tier (and vice versa). Ticket quantities are optional on the web create/edit forms too (they already were in the app).

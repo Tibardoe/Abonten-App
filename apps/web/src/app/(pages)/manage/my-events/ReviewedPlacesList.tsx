@@ -44,10 +44,7 @@ function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
     queryClient.invalidateQueries({ queryKey: REVIEWED_PLACES_QUERY_KEY });
     queryClient.invalidateQueries({ queryKey: ["attending-events-counts"] });
     queryClient.invalidateQueries({
-      queryKey: ["place-reviews", review.place_id],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["place-rating", review.place_id],
+      queryKey: ["reviews", "place", review.place_id],
     });
     queryClient.invalidateQueries({
       queryKey: ["own-place-review", review.place_id],

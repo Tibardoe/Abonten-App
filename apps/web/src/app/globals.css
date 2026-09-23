@@ -27,6 +27,10 @@
        4.5:1 on white and on --background (the mint itself is 2.3:1). Fills
        keep --primary; text-primary uses this (tailwind.config.ts textColor). */
     --primary-text: 171 70% 27%;
+    /* Red as TEXT: the --destructive fill read at only 3.8:1 on its own
+       10% tint (error banners, "in progress" notices). Fills keep
+       --destructive; text-destructive uses this (tailwind textColor). */
+    --destructive-text: 0 72% 40%;
     --secondary: 220 16% 93%;
     --secondary-foreground: 220 25% 15%;
     --muted: 220 14% 95%;
@@ -79,6 +83,7 @@
     --primary-foreground: 171 45% 10%;
     /* On dark surfaces the mint itself reads fine as text. */
     --primary-text: 171 60% 52%;
+    --destructive-text: 0 84% 66%;
     --secondary: 222 14% 18%;
     --secondary-foreground: 220 15% 90%;
     --muted: 222 14% 16%;

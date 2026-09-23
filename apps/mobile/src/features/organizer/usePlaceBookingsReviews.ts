@@ -1,3 +1,4 @@
+import { invalidateReviewSubject } from "@/features/reviews/reviewQueryKeys";
 import { api } from "@/lib/api";
 import { settleEnvelope } from "@/lib/envelope";
 import type {
@@ -90,8 +91,7 @@ function invalidatePlaceReviewCaches(
 ) {
   qc.invalidateQueries({ queryKey: [...REVIEWS_KEY, placeId] });
   // Public place-detail surfaces that embed the owner response.
-  qc.invalidateQueries({ queryKey: ["mobile", "place-reviews", placeId] });
-  qc.invalidateQueries({ queryKey: ["mobile", "place", placeId] });
+  invalidateReviewSubject(qc, "place", placeId);
 }
 
 export function useRespondToPlaceReview(placeId: string) {

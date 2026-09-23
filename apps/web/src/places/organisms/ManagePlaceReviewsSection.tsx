@@ -57,8 +57,11 @@ export default function ManagePlaceReviewsSection({
 
   const reviewsQueryKey = ["manage-place-reviews", placeId];
 
-  const invalidate = () =>
+  const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: reviewsQueryKey });
+    // The public preview / reviews page show the reply too.
+    queryClient.invalidateQueries({ queryKey: ["reviews", "place", placeId] });
+  };
 
   const patchResponse = (reviewId: string, value: string | null) => {
     queryClient.setQueryData<InfiniteData<PaginatedResult<PlaceReviewRow>>>(

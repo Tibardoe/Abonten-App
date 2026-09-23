@@ -125,9 +125,8 @@ export default function PlaceReviewModal({
         if (response.message) toast.success(response.message);
         handleShowReviewModal(false);
         queryClient.invalidateQueries({
-          queryKey: ["place-reviews", placeId],
+          queryKey: ["reviews", "place", placeId],
         });
-        queryClient.invalidateQueries({ queryKey: ["place-rating", placeId] });
         queryClient.invalidateQueries({
           queryKey: ["own-place-review", placeId],
         });

@@ -1,3 +1,7 @@
+import {
+  EmailRequiredCard,
+  useNeedsEmailToPay,
+} from "@/components/account/EmailRequiredCard";
 import { CreditSwitch } from "@/features/rewards/CreditSwitch";
 import { useInvalidateCredit } from "@/features/rewards/useRewards";
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
@@ -48,6 +52,7 @@ export function PaymentSection({
   onCreditRefused?: () => void;
 }) {
   const router = useRouter();
+  const needsEmail = useNeedsEmailToPay();
   const { data: methodsRes } = usePaymentMethods();
   const methods = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
 
@@ -155,6 +160,12 @@ export function PaymentSection({
       <AppText className="text-sm text-destructive">{error}</AppText>
     </View>
   ) : null;
+
+  // No email on the account (a phone sign-up): every payment is refused
+  // without one, so ask for it here instead of failing on "Pay".
+  if (needsEmail) {
+    return <EmailRequiredCard purpose="tickets" />;
+  }
 
   if (creditCoversAll) {
     return (

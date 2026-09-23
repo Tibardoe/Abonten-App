@@ -5,8 +5,8 @@ import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
 
-// Native echo of the web SettingsDesktopSidebar — the same five entries,
-// same order, same `settings.nav.*` labels — plus two rows that open the
+// Native echo of the web SettingsDesktopSidebar — the same entries, same
+// order, same `settings.nav.*` labels — plus two rows that open the
 // public help centre and legal pages on the website (the web app reaches
 // them from its footer, which the native app has no equivalent of).
 const ITEMS: {
@@ -29,10 +29,22 @@ const ITEMS: {
     labelKey: "nav.editProfile",
   },
   {
+    key: "account-setup",
+    route: "/(app)/settings/account-setup",
+    icon: "checkmark-done-outline",
+    labelKey: "nav.accountSetup",
+  },
+  {
     key: "security",
     route: "/(app)/settings/security",
     icon: "shield-checkmark-outline",
     labelKey: "nav.security",
+  },
+  {
+    key: "blocked",
+    route: "/(app)/settings/blocked",
+    icon: "ban-outline",
+    labelKey: "nav.blockedAccounts",
   },
   {
     key: "notifications",

@@ -3,7 +3,7 @@
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import Link from "next/link";
 
-// Compact "2/4" progress badge with a ring, shown in the Edit Profile
+// Compact "3/5" account-setup badge with a ring, shown in the Edit Profile
 // header block (Part 17: reuse an existing surface rather than adding
 // something to global nav). Renders nothing once the profile is complete,
 // and nothing while loading/signed out.
@@ -18,9 +18,9 @@ export default function ProfileCompletionIndicator() {
 
   return (
     <Link
-      href="/settings/edit-profile"
+      href="/settings/account-setup"
       className="flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground/80 hover:bg-accent transition-colors"
-      aria-label={`Profile ${completedCount} of ${total} complete`}
+      aria-label={`Account setup: ${completedCount} of ${total} steps done`}
     >
       {/* biome-ignore lint/a11y/noSvgWithoutTitle: purely decorative, the parent Link already carries the accessible aria-label */}
       <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden>

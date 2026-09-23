@@ -1,8 +1,8 @@
 ---
 title: Reviews and highlights
-summary: Who can review an event or place, what a review contains, how organizers reply, and how highlights work.
+summary: Who can review an event or place, reading and filtering reviews, Helpful votes, sharing, reporting and blocking, how organizers reply, and how highlights work.
 order: 8
-lastUpdated: 2026-09-12
+lastUpdated: 2026-09-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -28,9 +28,28 @@ Anyone signed in can review a place from its page; the same rating, title, comme
 
 The organizer or owner can post **one public response** to your review and may edit or remove it. They cannot delete your review. If a response is abusive, report it.
 
-## Where reviews appear
+## Reading reviews
 
-Reviews show on the event or place page and under the reviewer's public profile (*Reviews* tab). Reviews that break the rules may be hidden or removed by Abonten; the author still sees their own hidden review.
+An event or place page shows the average rating, how many reviews it has, and the three most helpful. **See all reviews** opens every review with:
+
+- a breakdown of how many people gave 5, 4, 3, 2 and 1 stars — tap a row (or a star filter) to see only those reviews;
+- **Most helpful** (the default — reviews other people marked helpful first, newest first among equals) or **Most recent**.
+
+Reviews also appear under the reviewer's public profile (*Reviews* tab). An edited review is marked *Edited*. Reviews that break the rules may be hidden or removed by Abonten; the author still sees their own hidden review.
+
+## Helpful votes
+
+Tap **Helpful** on a review that helped you; tap again to take it back. Each person counts once per review. You can't vote on your own review, or on reviews of an event you organize or a place you own.
+
+## Sharing, reporting and blocking
+
+Every review has a **⋯** menu:
+
+- **Share review** sends a link that opens the reviews page with that review at the top (and in the app, if it's installed).
+- **Report review** sends it to Abonten's moderation team — see [Reporting a problem](/help/customers/reporting-a-problem).
+- **Block** hides that person's reviews from you, and neither of you can message the other; their Spotlights and comments are hidden from you too. They are not told. Unblock them any time in **Settings › Blocked accounts**.
+
+On your own review the menu offers **Edit**, **Share** and **Delete** instead.
 
 ## Drafts
 

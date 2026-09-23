@@ -2,7 +2,9 @@
   "nav": {
     "overview": "Aperçu",
     "editProfile": "Modifier le profil",
+    "accountSetup": "Configuration du compte",
     "security": "Sécurité",
+    "blockedAccounts": "Comptes bloqués",
     "switchAppearance": "Apparence",
     "language": "Langue",
     "notifications": "Notifications",

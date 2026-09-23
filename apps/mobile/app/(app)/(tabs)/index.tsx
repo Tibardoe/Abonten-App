@@ -1,5 +1,6 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
+import { AccountSetupCard } from "@/components/account/AccountSetupCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
@@ -332,6 +333,9 @@ export default function Explore() {
         featuredEvents={eventSliders.data.featured}
         featuredPlaces={placeSliders.data.featured}
       />
+
+      {/* Signed-in, setup unfinished, not put away recently. */}
+      <AccountSetupCard className="mx-4 mt-4" />
 
       {activeChips.length > 0 ? (
         <View className="pt-4">

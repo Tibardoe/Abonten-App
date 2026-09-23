@@ -1,6 +1,5 @@
 import { getNearByPlaces } from "@/actions/getNearByPlaces";
 import { getPlaceBySlug } from "@/actions/getPlaceBySlug";
-import { getPlaceReviews } from "@/actions/getPlaceReviews";
 import { getPlaceUpcomingEvents } from "@/actions/getPlaceUpcomingEvents";
 import JsonLd from "@/components/atoms/JsonLd";
 import StarRatingDisplay from "@/components/atoms/Rating";
@@ -10,6 +9,7 @@ import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import SubscribeBell from "@/discovery/molecules/SubscribeBell";
 import PlacePromptHost from "@/discovery/organisms/PlacePromptHost";
 import PlaceViewLogger from "@/places/atoms/PlaceViewLogger";
+import AddPlaceReviewButton from "@/places/molecules/AddPlaceReviewButton";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
 import ClaimPlaceButton from "@/places/molecules/ClaimPlaceButton";
 import PlaceCard from "@/places/molecules/PlaceCard";
@@ -18,7 +18,8 @@ import PlaceOpenStatusBadge from "@/places/molecules/PlaceOpenStatusBadge";
 import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
 import PlaceWebsiteLink from "@/places/molecules/PlaceWebsiteLink";
 import PlaceActionButtons from "@/places/organisms/PlaceActionButtons";
-import PlaceReviewsSection from "@/places/organisms/PlaceReviewsSection";
+import { loadReviewPreview } from "@/reviews/loadReviews";
+import ReviewsPreview from "@/reviews/organisms/ReviewsPreview";
 import FollowButton from "@/spotlight/molecules/FollowButton";
 import PublisherSpotlightGrid from "@/spotlight/organisms/PublisherSpotlightGrid";
 import { placeJsonLd } from "@/utils/structuredData";
@@ -112,12 +113,12 @@ export default async function page({
 
   const place = placeResponse.data;
 
-  // Upcoming events and the first reviews page only depend on the place's
-  // id (not on each other), so fetch them concurrently -- same pattern as
-  // the event details page's Promise.all for its independent fetches.
-  const [upcomingEventsResponse, reviewsFirstPage] = await Promise.all([
+  // Upcoming events and the reviews block (summary + the three most
+  // helpful — "See all" opens /places/<slug>/reviews) only depend on the
+  // place's id, so fetch them concurrently.
+  const [upcomingEventsResponse, reviewPreview] = await Promise.all([
     getPlaceUpcomingEvents(place.id),
-    getPlaceReviews(place.id),
+    loadReviewPreview("place", place.id),
   ]);
 
   // Similar Places genuinely depends on this place's own category+location,
@@ -136,11 +137,6 @@ export default async function page({
   )
     .filter((p) => p.id !== place.id && p.category_id === place.category_id)
     .slice(0, SIMILAR_PLACES_LIMIT);
-
-  async function fetchReviewsPage(cursor: string | null) {
-    "use server";
-    return getPlaceReviews(place.id, { cursor });
-  }
 
   const categoryName = place.place_category?.name ?? "Place";
   const fullAddress =
@@ -387,13 +383,22 @@ export default async function page({
             />
 
             {/* Reviews */}
-            <PlaceReviewsSection
-              placeId={place.id}
-              ownerId={place.owner_id}
-              avgRating={place.avgRating}
-              reviewCount={place.reviewCount}
-              initialPage={reviewsFirstPage}
-              fetchPage={fetchReviewsPage}
+            <ReviewsPreview
+              subject={{
+                kind: "place",
+                id: place.id,
+                slug: place.slug,
+                title: place.name,
+                ownerId: place.owner_id,
+              }}
+              initialSummary={reviewPreview.summary}
+              initialReviews={reviewPreview.reviews}
+              addReviewButton={
+                <AddPlaceReviewButton
+                  placeId={place.id}
+                  ownerId={place.owner_id}
+                />
+              }
             />
           </div>
 

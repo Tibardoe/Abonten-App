@@ -1,3 +1,7 @@
+import {
+  EmailRequiredCard,
+  useNeedsEmailToPay,
+} from "@/components/account/EmailRequiredCard";
 import { useCreatePromotionAttempt } from "@/features/organizer/useEventPromotion";
 import { useCreatePlacePromotionAttempt } from "@/features/organizer/usePlacePromotion";
 import { CreditSwitch } from "@/features/rewards/CreditSwitch";
@@ -47,6 +51,7 @@ export function PromotionPaymentSection({
   kind?: "event" | "place" | "spotlight";
 }) {
   const router = useRouter();
+  const needsEmail = useNeedsEmailToPay();
   const { data: methodsRes } = usePaymentMethods();
   const methods = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
 
@@ -226,6 +231,12 @@ export function PromotionPaymentSection({
       disabled={creatingAttempt}
     />
   ) : null;
+
+  // No email on the account (a phone sign-up): every payment is refused
+  // without one, so ask for it here instead of failing on "Pay".
+  if (needsEmail) {
+    return <EmailRequiredCard purpose="promotion" />;
+  }
 
   if (creditCoversAll) {
     return (
