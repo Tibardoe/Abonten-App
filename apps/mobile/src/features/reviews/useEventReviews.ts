@@ -14,6 +14,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { invalidateReviewSubject } from "./reviewQueryKeys";
 
 // Native echoes of the web event-review actions
 // (getEventReviewEligibility / getEventsAwaitingReview / postEventReview /
@@ -43,6 +44,7 @@ async function attachEventReviewPhotos(
   userId: string,
   reviewId: string,
   photos: ReviewPhotoInput[] | undefined,
+  startPosition = 0,
 ): Promise<void> {
   if (!photos?.length) return;
   const prefix = `event_review_photos/${userId}/`;
@@ -53,7 +55,7 @@ async function attachEventReviewPhotos(
       event_review_id: reviewId,
       public_id: p.publicId,
       version: p.version,
-      position: index,
+      position: startPosition + index,
     }));
   if (!rows.length) return;
   await supabase.from("event_review_photo").insert(rows);
@@ -73,6 +75,7 @@ export type OwnEventReview = {
   rating: number;
   title: string | null;
   comment: string | null;
+  organizer_response?: string | null;
   event_review_photo?: ReviewPhotoRow[] | null;
 };
 
@@ -116,7 +119,7 @@ async function computeEligibility(
   const { data: own } = await supabase
     .from("event_review")
     .select(
-      "id, rating, title, comment, event_review_photo(id, public_id, version, position)",
+      "id, rating, title, comment, organizer_response, event_review_photo(id, public_id, version, position)",
     )
     .eq("event_id", event.id)
     .eq("reviewer_id", userId)
@@ -352,21 +355,68 @@ export function usePostEventReview() {
         queryKey: ["reviews", "eligibility", input.eventId, userId],
       });
       qc.invalidateQueries({ queryKey: ["mobile", "event", input.eventId] });
-      // The event detail screen's own rating line + reviews list
-      // (useEventRating / useEventReviewsList) are separate query keys from
-      // ["mobile","event",...] -- without this a review posted from that
-      // exact screen leaves its own rating/list stale until it's
-      // unmounted and remounted.
+      invalidateReviewSubject(qc, "event", input.eventId);
+    },
+  });
+}
+
+/**
+ * Native echo of the web updateEventReview action: ownership-scoped (the
+ * update is filtered by reviewer_id and RLS/column guards back it), photos
+ * removed by id and new ones appended after the ones kept. Attendance and
+ * event-ended checks are deliberately not re-run — an existing review stays
+ * editable. The database stamps edited_at.
+ */
+export function useUpdateEventReview() {
+  const qc = useQueryClient();
+  const { session } = useSession();
+  const userId = session?.user.id;
+
+  return useMutation({
+    mutationFn: async (input: {
+      eventId: string;
+      reviewId: string;
+      rating: number;
+      title?: string;
+      comment?: string;
+      removedPhotoIds?: string[];
+      newPhotos?: ReviewPhotoInput[];
+      keptPhotoCount: number;
+    }) => {
+      if (!userId) throw new Error("Not signed in");
+      const { data: updated, error } = await supabase
+        .from("event_review")
+        .update({
+          rating: input.rating,
+          title: input.title ? formatTitle(input.title) : null,
+          comment: input.comment?.trim() ? input.comment.trim() : null,
+        })
+        .eq("id", input.reviewId)
+        .eq("reviewer_id", userId)
+        .select("id");
+      if (error) throw error;
+      if (!updated || updated.length === 0) throw new Error("Review not found");
+
+      if (input.removedPhotoIds?.length) {
+        await supabase
+          .from("event_review_photo")
+          .delete()
+          .eq("event_review_id", input.reviewId)
+          .in("id", input.removedPhotoIds);
+      }
+      await attachEventReviewPhotos(
+        userId,
+        input.reviewId,
+        input.newPhotos,
+        input.keptPhotoCount,
+      );
+    },
+    onSuccess: (_data, input) => {
+      qc.invalidateQueries({ queryKey: ["reviews", "mine", userId] });
       qc.invalidateQueries({
-        queryKey: ["mobile", "event-rating", input.eventId],
+        queryKey: ["reviews", "eligibility", input.eventId, userId],
       });
-      qc.invalidateQueries({
-        queryKey: ["mobile", "event-reviews", input.eventId],
-      });
-      // EventCard on the "All events" list (get_filtered_events) shows a live
-      // avg_rating — a new review moves it.
-      qc.invalidateQueries({ queryKey: ["explore"] });
-      qc.invalidateQueries({ queryKey: ["discovery"] });
+      invalidateReviewSubject(qc, "event", input.eventId);
     },
   });
 }
@@ -377,24 +427,27 @@ export function useDeleteEventReview() {
   const userId = session?.user.id;
 
   return useMutation({
-    mutationFn: async (reviewId: string) => {
-      const { error } = await supabase
+    mutationFn: async (
+      input: string | { reviewId: string; eventId?: string },
+    ) => {
+      const reviewId = typeof input === "string" ? input : input.reviewId;
+      if (!userId) throw new Error("Not signed in");
+      const { data: deleted, error } = await supabase
         .from("event_review")
         .delete()
-        .eq("id", reviewId);
+        .eq("id", reviewId)
+        .eq("reviewer_id", userId)
+        .select("id");
       if (error) throw error;
+      if (!deleted || deleted.length === 0) throw new Error("Review not found");
     },
-    onSuccess: () => {
+    onSuccess: (_data, input) => {
+      const eventId = typeof input === "string" ? undefined : input.eventId;
       qc.invalidateQueries({ queryKey: ["reviews", "awaiting", userId] });
       qc.invalidateQueries({ queryKey: ["reviews", "mine", userId] });
       qc.invalidateQueries({ queryKey: ["reviews", "eligibility"] });
-      // Unscoped (no eventId) since this mutation only has the review id --
-      // matches every cached event-rating/event-reviews query, same
-      // reasoning as usePostEventReview above.
-      qc.invalidateQueries({ queryKey: ["mobile", "event-rating"] });
-      qc.invalidateQueries({ queryKey: ["mobile", "event-reviews"] });
-      qc.invalidateQueries({ queryKey: ["explore"] });
-      qc.invalidateQueries({ queryKey: ["discovery"] });
+      // Unscoped when only the review id is known (the profile list).
+      invalidateReviewSubject(qc, "event", eventId);
     },
   });
 }

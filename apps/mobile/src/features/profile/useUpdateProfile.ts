@@ -30,6 +30,8 @@ export function useUpdateProfile() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["mobile", "profile"] });
       qc.invalidateQueries({ queryKey: ["profile", "public"] });
+      // The account-setup checklist and reminder card.
+      qc.invalidateQueries({ queryKey: ["account-setup"] });
     },
   });
 }

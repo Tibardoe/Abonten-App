@@ -2,7 +2,7 @@
 title: Getting started and signing in
 summary: Create your account with Google, your phone number or your email, and find your way around the website and the app.
 order: 1
-lastUpdated: 2026-09-12
+lastUpdated: 2026-09-23
 status: Draft
 owner: Abonten Hub
 ---
@@ -24,6 +24,12 @@ There are no passwords on Abonten. Choose whichever is easiest:
 The first time you sign in we create your account automatically — there is no separate "sign up". If you later sign in with a different method that uses the **same verified email address**, you land in the same account. A phone-number account can add an email later in Settings › Security, which links the two.
 
 **Web:** click *Sign in* in the header or side menu. **App:** the sign-in screen appears when you open the app, or from Account › *Sign in*.
+
+## Finishing your account setup
+
+**Settings › Account setup** lists five steps and says what each one is for: your name, a username you choose, a profile photo, a verified email and a verified phone number. None of them are required to use Abonten, with one exception at the moment it matters: **paying for tickets or promotions needs an email on your account** (your tickets and receipt are sent there), so checkout asks for one if you don't have it yet. Having both an email and a phone number gives you two ways to sign in if you lose access to one.
+
+While steps are left, a small card on Home (app) or Explore (website) reminds you. Tap *Not now* to put it away — it stays away for a week, then a month, then three months, on every device, and never returns once everything is done.
 
 ## Invite codes
 

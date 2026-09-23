@@ -3,6 +3,7 @@ import EventsTabContent from "@/events/organisms/EventsTabContent";
 import { isExploreTab } from "@/places/exploreTab";
 import ExploreTabs from "@/places/organisms/ExploreTabs";
 import PlacesTabContent from "@/places/organisms/PlacesTabContent";
+import AccountSetupReminder from "@/settings/organisms/AccountSetupReminder";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import WeeklyTeaser from "@/weekly/organisms/WeeklyTeaser";
 import { undoSlug } from "@abonten/core/geerateSlug";
@@ -100,6 +101,9 @@ export default async function page({
       <h1 className="text-xl md:text-2xl font-bold">Explore</h1>
 
       <LocationAndFilterSection />
+
+      {/* Signed-in, setup unfinished, not put away recently. */}
+      <AccountSetupReminder className="my-3" />
 
       {/* Abonten Weekly for this area, when it is on for the visitor and this
           week's edition is out. Streams in without holding up the page. */}

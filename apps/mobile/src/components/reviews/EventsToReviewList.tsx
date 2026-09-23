@@ -8,7 +8,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { FlatList, View } from "react-native";
-import { AddReviewSheet } from "./AddReviewSheet";
+import { ReviewComposerSheet } from "./ReviewComposerSheet";
 
 // Native echo of the web EventsToReviewList: the "rate your purchase" inbox —
 // every checked-in, ended, unreviewed event, each with a one-tap way into
@@ -86,11 +86,12 @@ export function EventsToReviewList() {
         )}
       />
 
-      <AddReviewSheet
+      <ReviewComposerSheet
         open={reviewing !== null}
         onClose={() => setReviewing(null)}
-        eventId={reviewing?.id ?? ""}
-        eventTitle={reviewing?.title ?? ""}
+        kind="event"
+        subjectId={reviewing?.id ?? ""}
+        subjectTitle={reviewing?.title ?? ""}
       />
     </>
   );

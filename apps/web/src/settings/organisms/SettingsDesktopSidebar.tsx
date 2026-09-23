@@ -21,10 +21,24 @@ export default async function SettingsDesktopSideBar() {
       />
 
       <SettingsNavLinks
+        href="/settings/account-setup"
+        imgUrl="/assets/images/checklist.svg"
+        arrowUrl="/assets/images/arrowRight.svg"
+        text={t("nav.accountSetup")}
+      />
+
+      <SettingsNavLinks
         href="/settings/security"
         imgUrl="/assets/images/security.svg"
         arrowUrl="/assets/images/arrowRight.svg"
         text={t("nav.security")}
+      />
+
+      <SettingsNavLinks
+        href="/settings/blocked"
+        imgUrl="/assets/images/blocked.svg"
+        arrowUrl="/assets/images/arrowRight.svg"
+        text={t("nav.blockedAccounts")}
       />
 
       <SettingsNavLinks

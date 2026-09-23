@@ -122,9 +122,8 @@ export default function EventReviewModal({
         if (response.message) toast.success(response.message);
         handleShowReviewModal(false);
         queryClient.invalidateQueries({
-          queryKey: ["event-reviews", eventId],
+          queryKey: ["reviews", "event", eventId],
         });
-        queryClient.invalidateQueries({ queryKey: ["event-rating", eventId] });
         queryClient.invalidateQueries({
           queryKey: ["event-review-eligibility", eventId],
         });

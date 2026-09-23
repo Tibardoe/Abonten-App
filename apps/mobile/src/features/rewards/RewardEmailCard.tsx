@@ -3,7 +3,8 @@ import { settleEnvelope } from "@/lib/envelope";
 import type { RewardEmailPreference } from "@abonten/types/rewards";
 import { AppText, Card, useToast } from "@abonten/ui-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Switch, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, Switch, View } from "react-native";
 
 const KEY = ["mobile", "rewards", "reward-emails"] as const;
 
@@ -12,6 +13,7 @@ const KEY = ["mobile", "rewards", "reward-emails"] as const;
 // changes. Phone-only accounts have no email address, so it's shown off
 // and disabled with a note.
 export function RewardEmailCard() {
+  const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
   const { data } = useQuery({
@@ -61,6 +63,17 @@ export function RewardEmailCard() {
               ? `To ${data.email}. At most one email every 12 hours.`
               : "Your account has no email address, so you'll get these in the app only."}
           </AppText>
+          {!hasEmail ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/(app)/settings/account-setup")}
+              className="self-start py-1 active:opacity-60"
+            >
+              <AppText variant="small" tone="brand" className="font-semibold">
+                Add an email address
+              </AppText>
+            </Pressable>
+          ) : null}
         </View>
         <Switch
           accessibilityLabel="Email me when credit is ready"

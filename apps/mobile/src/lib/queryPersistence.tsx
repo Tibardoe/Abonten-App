@@ -54,7 +54,7 @@ import { queryClient } from "./queryClient";
  * Bump when the shape of any persisted query's data changes, so an old file
  * is discarded instead of being fed to code that expects the new shape.
  */
-const QUERY_CACHE_VERSION = 1;
+const QUERY_CACHE_VERSION = 2;
 /** Older than this, a restored cache is more misleading than useful. */
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 /** Allowlisted queries stay in memory at least this long, so they reach disk. */

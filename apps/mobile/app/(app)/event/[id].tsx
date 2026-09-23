@@ -7,8 +7,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
-import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
-import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
+import { ReviewsPreviewSection } from "@/components/reviews/ReviewsPreviewSection";
 import { EventDetailSkeleton } from "@/components/skeletons";
 import {
   VerifiedPill,
@@ -20,12 +19,7 @@ import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
-import { useEventReviewEligibility } from "@/features/reviews/useEventReviews";
-import {
-  type EventReviewListItem,
-  useEventRating,
-  useEventReviewsList,
-} from "@/features/reviews/useEventReviewsList";
+import type { ReviewSubject } from "@/features/reviews/useReviewSubject";
 import { PromoterEarnNote } from "@/features/rewards/PromoterEarnNote";
 import {
   logEventShare,
@@ -103,78 +97,6 @@ function InfoRow({
   );
 }
 
-function ReviewItem({
-  review,
-  onReport,
-}: {
-  review: EventReviewListItem;
-  onReport?: () => void;
-}) {
-  return (
-    <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
-      <View className="flex-row items-center justify-between gap-2">
-        <View className="flex-1 flex-row items-center gap-2">
-          <Avatar
-            publicId={review.reviewer?.avatar_public_id ?? undefined}
-            version={review.reviewer?.avatar_version ?? undefined}
-            size={28}
-          />
-          <AppText
-            variant="small"
-            className="flex-1 font-semibold"
-            numberOfLines={1}
-          >
-            {review.reviewer?.username ?? "Attendee"}
-          </AppText>
-        </View>
-        <Stars rating={review.rating} size={13} />
-      </View>
-      {review.is_verified_attendee ? (
-        <View className="flex-row items-center gap-1">
-          <Icon name="checkmark-circle" size={12} tone="success" />
-          <AppText variant="caption" tone="success">
-            Verified attendee
-          </AppText>
-        </View>
-      ) : null}
-      {review.title ? (
-        <AppText variant="small" className="font-semibold">
-          {review.title}
-        </AppText>
-      ) : null}
-      {review.comment ? (
-        <AppText variant="muted">{review.comment}</AppText>
-      ) : null}
-      {review.event_review_photo?.length ? (
-        <ReviewPhotoStrip photos={review.event_review_photo} />
-      ) : null}
-      {review.organizer_response ? (
-        <View className="ml-3 mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
-          <AppText variant="label" className="mb-1 text-primary">
-            Organizer reply
-          </AppText>
-          <AppText variant="small">{review.organizer_response}</AppText>
-        </View>
-      ) : null}
-      <View className="flex-row items-center justify-between">
-        <AppText variant="caption">
-          {getRelativeTime(review.created_at)}
-        </AppText>
-        {onReport ? (
-          <AppText
-            variant="caption"
-            tone="muted"
-            className="font-medium"
-            onPress={onReport}
-          >
-            Report
-          </AppText>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
 export default function EventDetailScreen() {
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -189,29 +111,14 @@ export default function EventDetailScreen() {
   // date" state below recomputes while the screen sits open across an
   // occurrence boundary (issue §4).
   const nowMs = useNowTick();
-  const [reviewOpen, setReviewOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<{
-    targetType: "event" | "event_review";
+    targetType: "event";
     targetId: string;
     label: string;
   } | null>(null);
 
-  const reviewEvent = data
-    ? {
-        id: data.event.id,
-        organizer_id: data.event.organizer_id,
-        status: data.event.status,
-        starts_at: data.event.starts_at,
-        ends_at: data.event.ends_at,
-        event_occurrence: data.event.event_occurrence,
-      }
-    : undefined;
-  const { data: eligibility } = useEventReviewEligibility(reviewEvent);
-
   const address = data?.event.address?.full_address;
   const { data: coords } = useGeocode(address);
-  const rating = useEventRating(data?.event.id);
-  const reviewsList = useEventReviewsList(data?.event.id);
   const similar = useSimilarEvents(
     data?.event.id,
     data?.event.event_category,
@@ -343,7 +250,21 @@ export default function EventDetailScreen() {
     ticketTypes: event.ticket_type,
   });
   const isFree = hasFreeRegistration(event.ticket_type);
-  const reviews = reviewsList.data?.pages.flatMap((p) => p.reviews) ?? [];
+  const reviewSubject: ReviewSubject = {
+    kind: "event",
+    id: event.id,
+    title: event.title,
+    slug: event.event_code ?? null,
+    ownerId: event.organizer_id,
+    event: {
+      id: event.id,
+      organizer_id: event.organizer_id,
+      status: event.status,
+      starts_at: event.starts_at,
+      ends_at: event.ends_at,
+      event_occurrence: event.event_occurrence,
+    },
+  };
   // The page's one primary action, pinned to its foot (resolveEventCta).
   const cta = resolveEventCta({
     canceled,
@@ -716,96 +637,8 @@ export default function EventDetailScreen() {
             )}
           </View>
 
-          {/* Reviews */}
-          <View className="gap-3">
-            <View className="flex-row items-center justify-between">
-              <SectionTitle>Reviews</SectionTitle>
-              {rating.data && rating.data.count > 0 ? (
-                <View className="flex-row items-center gap-1.5">
-                  <Stars rating={rating.data.average} size={14} />
-                  <AppText variant="meta">
-                    {rating.data.average.toFixed(1)} ({rating.data.count})
-                  </AppText>
-                </View>
-              ) : null}
-            </View>
-
-            {eligibility?.canReview ? (
-              <Button
-                title="Write a review"
-                variant="outline"
-                leftIcon="create-outline"
-                onPress={() => setReviewOpen(true)}
-              />
-            ) : eligibility?.reason === "has_review" ? (
-              <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
-                <View className="flex-row items-center justify-between">
-                  <AppText variant="small" className="font-semibold">
-                    Your review
-                  </AppText>
-                  <Stars rating={eligibility.ownReview.rating} size={13} />
-                </View>
-                {eligibility.ownReview.title ? (
-                  <AppText variant="small" className="font-semibold">
-                    {eligibility.ownReview.title}
-                  </AppText>
-                ) : null}
-                {eligibility.ownReview.comment ? (
-                  <AppText variant="muted">
-                    {eligibility.ownReview.comment}
-                  </AppText>
-                ) : null}
-                {eligibility.ownReview.event_review_photo?.length ? (
-                  <ReviewPhotoStrip
-                    photos={eligibility.ownReview.event_review_photo}
-                  />
-                ) : null}
-              </View>
-            ) : null}
-
-            {reviewsList.isLoading ? (
-              <AppText variant="muted">Loading reviews…</AppText>
-            ) : reviews.length === 0 ? (
-              <AppText variant="muted">No reviews yet.</AppText>
-            ) : (
-              <View className="gap-2">
-                {reviews.map((r) => (
-                  <ReviewItem
-                    key={r.id}
-                    review={r}
-                    onReport={
-                      session
-                        ? () =>
-                            setReportTarget({
-                              targetType: "event_review",
-                              targetId: r.id,
-                              label: `Review by ${r.reviewer?.username ?? "an attendee"}`,
-                            })
-                        : undefined
-                    }
-                  />
-                ))}
-                {reviewsList.hasNextPage ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    className="items-center py-2 active:opacity-60"
-                    onPress={() => reviewsList.fetchNextPage()}
-                    disabled={reviewsList.isFetchingNextPage}
-                  >
-                    <AppText
-                      variant="small"
-                      tone="brand"
-                      className="font-semibold"
-                    >
-                      {reviewsList.isFetchingNextPage
-                        ? "Loading…"
-                        : "Show more reviews"}
-                    </AppText>
-                  </Pressable>
-                ) : null}
-              </View>
-            )}
-          </View>
+          {/* Reviews: a summary and the top few; "See all" opens the rest. */}
+          <ReviewsPreviewSection subject={reviewSubject} />
 
           {/* Similar events (item 13) */}
           {similar.data && similar.data.length > 0 ? (
@@ -844,13 +677,6 @@ export default function EventDetailScreen() {
             </Pressable>
           ) : null}
         </View>
-
-        <AddReviewSheet
-          open={reviewOpen}
-          onClose={() => setReviewOpen(false)}
-          eventId={event.id}
-          eventTitle={event.title}
-        />
 
         <ReportSheet
           open={reportTarget != null}

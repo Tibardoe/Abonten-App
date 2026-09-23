@@ -1,6 +1,7 @@
 import { captureInvite } from "@/features/rewards/inviteCapture";
 import { captureReferral } from "@/features/rewards/referralCapture";
 import { supabase } from "@/lib/supabase";
+import { parseSharedReviewId } from "@abonten/core/reviews/reviewList";
 
 // Translates an incoming Universal / App Link (https://abontenhub.com/...)
 // into the matching in-app route. The native detail screens are keyed by
@@ -56,9 +57,17 @@ export async function redirectSystemPath({
       const code = await captureInvite(decodeURIComponent(parts[1]), "link");
       return code ? `/(app)/invite/${code}` : "/(app)/(tabs)";
     }
+    // A shared review: /events/<code>/reviews?review=<id> opens the event's
+    // Reviews screen with that review pinned (the id is checked by shape;
+    // review_list decides whether it is still public).
+    const reviewParam = parseSharedReviewId(url.searchParams.get("review"));
+    const reviewsSuffix = reviewParam ? `?review=${reviewParam}` : "";
     if (parts[0] === "events" && parts[1]) {
       const id = await resolveEvent(decodeURIComponent(parts[1]));
       if (id && ref) void captureReferral(ref, { eventId: id });
+      if (id && parts[2] === "reviews") {
+        return `/(app)/reviews/event/${id}${reviewsSuffix}`;
+      }
       return id ? `/(app)/event/${id}` : "/(app)/(tabs)";
     }
     if (parts[0] === "places" && parts[1]) {
@@ -69,6 +78,9 @@ export async function redirectSystemPath({
       const visit = url.searchParams.get("visit");
       if (id && visit && /^[0-9A-Fa-f]{10}$/.test(visit)) {
         return `/(app)/place/${id}?visit=${visit.toUpperCase()}`;
+      }
+      if (id && parts[2] === "reviews") {
+        return `/(app)/reviews/place/${id}${reviewsSuffix}`;
       }
       return id ? `/(app)/place/${id}` : "/(app)/(tabs)";
     }

@@ -3875,3 +3875,39 @@ Prod data at apply time: one published test event ("Test", capacity 100, tiers 5
 ### 43.4 Spotlight "small step" before the page change (Android)
 
 React Native's Android `pagingEnabled` snaps with `smoothScrollTo`, a fixed ~250 ms accelerate/decelerate `ObjectAnimator` that ignores the release velocity (RN's own comment: "*waaay* too short"). Offset trace on device: 2.8 dp/ms under the finger, 0.9 dp/ms for the two frames after release, then 4+ dp/ms — the dip is the "step". Android now uses `snapToInterval={height}` + `disableIntervalMomentum` (the OverScroller fling path, which carries the finger's velocity and clamps at the next page); iOS keeps native `pagingEnabled`. Verified on the emulator: continuous offset after release; flick = one page in that direction, no skipping; edges hold; a near-still release springs back below the halfway point and advances past it; comments and playback unaffected. iOS not run (no device).
+
+## 44. Reviews experience, account-wide blocking, account setup (2026-09-23)
+
+Full design: [docs/architecture/reviews-and-account-setup.md](docs/architecture/reviews-and-account-setup.md). Migrations `20260923090000_reviews_helpful_summary_and_list`, `20260923090100_account_setup_prompt_state`, `20260923090200_username_chosen_flag` — all applied to production 2026-09-23 (additive; prod had 2 place reviews and 0 event reviews).
+
+### 44.1 Reviews
+
+- **Read path** — `review_list` (SECURITY INVOKER, keyset pages, star filter, `helpful` / `recent` order, the viewer's own vote, blocked reviewers left out, deleted reviewers anonymised, one-review mode for shared links) and `review_summary` (average + 1–5 counts). Shared row/cursor/summary code in `@abonten/core/reviews/reviewList`; web via `@abonten/services/reviews/reviewListQuery` (actions `getReviewPage`, `getReviewSummary`, `getSharedReview`); mobile calls the functions directly (class A). The old per-surface list reads (`getEventReviews`, `getEventRating`, mobile `useEventReviewsList` / `usePlaceReviewsList`) are gone.
+- **Details screens** show the summary and the three most helpful reviews only; "See all" opens `/events/<code>/reviews`, `/places/<slug>/reviews` (web, `ReviewsBrowser`) or `app/(app)/reviews/[kind]/[id]` (app). Web detail + review pages render the public view on the server and swap in the visitor's view after hydration (viewer-keyed queries, `keepPreviousData`).
+- **Helpful** — `event_review_helpful` / `place_review_helpful` (PK = one vote per person), cached `helpful_count` kept by trigger, `review_set_helpful` the only write (refuses own review, own listing, blocked pairs, hidden reviews, restricted accounts). Column guards now refuse a client write of `helpful_count`; `review_stamp_edit` forces it to 0 on insert and stamps `edited_at` on content edits.
+- **Scale** — partial indexes `idx_*_visible_{recent,helpful,by_rating}`; 10,000-review measurements in the architecture doc (all pages ≤ 8 ms).
+- **Sharing** — `…/reviews?review=<id>` links; the web page pins and quotes the review in its link preview; `+native-intent.ts` opens the app Reviews screen with it pinned.
+- **Mobile consolidation** — one `ReviewComposerSheet` (add + edit, events and places; replaces `AddReviewSheet` / `PlaceReviewSheet` and adds event-review editing, which mobile lacked), `ReviewCard`, `OwnReviewCard` (now shows the organizer/owner reply), `ReviewActionsSheet`, `useReviewInteractions`; one `invalidateReviewSubject` for every review mutation including organizer/owner replies; persisted under the `reviews` rule (`QUERY_CACHE_VERSION` 2).
+- **Web consolidation** — `ReviewListItem` takes the shared row shape; `EventReviewsSection`, `PlaceReviewsSection`, `ReviewsSectionHeader` replaced by `ReviewsPreview` / `ReviewsBrowser`; the organizer's inline reply moved to `OrganizerReplyControls`; manage-page owner replies also refresh the public lists.
+- **Moderation fix** — review photo read policies now follow the review's moderation state.
+
+### 44.2 Account-wide blocking
+
+`user_block_set` creates / removes the `conversation_block` row with no conversation that messaging, Spotlight, comments and follows already honoured but nothing let a person create; it also ends organizer follows between the two. Entry: review ⋯ menu. Management: Settings › Blocked accounts (web + app).
+
+### 44.3 Account setup
+
+- **Model** (`@abonten/core/profileCompletion`): name, chosen username, photo, verified email, verified phone — with the reason each helps. Phone is new (Google/email accounts had no recovery prompt); email is framed by what needs it (paying). Bio/website stay optional and unlisted.
+- **Reminder** (`@abonten/core/accountSetupPrompt`): card on app Home / web Explore, "Not now" → quiet 7 / 30 / 90 days via `account_setup_prompt_state` (server-side so it holds across devices). Non-dismissible links: app Account tab row, Edit Profile checklist and badge. One-time sign-in notification now uses the same message and opens Settings › Account setup.
+- **Contextual**: paying with no email on the account shows "Add your email to pay" with an inline code flow (web `EmailRequiredToPay` in `PaymentMethodSelector`; app `EmailRequiredCard` in `PaymentSection` / `PromotionPaymentSection`) instead of the old post-tap error. Notification / reward email settings link to adding an email.
+- **Screens**: app `settings/account-setup` (email/phone finished in sheets with `EmailVerificationForm` / `PhoneVerificationForm`, which Security now also uses; the email form resumes a pending change and confirms an unconfirmed address), web `/settings/account-setup`.
+- **Bug fixed**: the app never cleared `username_is_generated` when a username was chosen, so "Choose a username" could never complete from the app. The database now owns the flag (`user_info_username_chosen` trigger); the migration's rule-based backfill repaired 4 production accounts. Profile saves in the app now refresh the checklist (they didn't).
+
+### 44.4 Accessibility fix found by the e2e scan
+
+Red text on its own 10% tint (error banners, the event page's "in progress" notice) read at 3.84:1. Web now has `--destructive-text` (light `0 72% 40%`, dark `0 84% 66%`) mapped through Tailwind `textColor` like `--primary-text`; fills keep `--destructive`. The axe scan now also covers `/events/<code>/reviews` and `/places/<slug>/reviews`, and `e2e/seo.spec.ts` checks both render publicly with their own canonical URL.
+
+### 44.5 Known limits
+
+- Phone verification depends on Hubtel SMS delivery (see the phone OTP work); if SMS is unavailable the phone step can't be completed.
+- Admin: global blocks made from reviews appear in the existing read-only Admin › Blocks browser (`/blocks`); reviews are moderated as before (Content, reports). Helpful counts are public data on the review rows.

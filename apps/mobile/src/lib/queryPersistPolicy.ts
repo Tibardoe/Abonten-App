@@ -87,18 +87,13 @@ export const PERSIST_RULES: readonly PersistRule[] = [
   // Discovery. A detail screen's secondary sections are kept with it, so a
   // saved event or place reads the same offline as it did online.
   { id: "event-detail", prefix: ["mobile", "event"], maxEntries: 40 },
-  { id: "event-rating", prefix: ["mobile", "event-rating"], maxEntries: 40 },
-  {
-    id: "event-reviews",
-    prefix: ["mobile", "event-reviews"],
-    maxEntries: 20,
-    maxPages: 1,
-  },
   { id: "place-detail", prefix: ["mobile", "place"], maxEntries: 40 },
+  // Reviews of events and places: the rating breakdown and preview on each
+  // details screen, the first page of each filtered list, a shared review.
   {
-    id: "place-reviews",
-    prefix: ["mobile", "place-reviews"],
-    maxEntries: 20,
+    id: "reviews",
+    prefix: ["mobile", "reviews"],
+    maxEntries: 80,
     maxPages: 1,
   },
   {

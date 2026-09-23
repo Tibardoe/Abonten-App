@@ -2,6 +2,7 @@
 
 import createNotification from "@/actions/createNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { accountSetupPromptMessage } from "@abonten/core/accountSetupPrompt";
 import { logger } from "@abonten/core/logger";
 import { computeProfileCompletion } from "@abonten/core/profileCompletion";
 
@@ -44,9 +45,13 @@ export default async function ensureProfileCompletionNotification(
     avatarPublicId: userInfo.avatar_public_id,
     email: authUser.user.email,
     emailConfirmedAt: authUser.user.email_confirmed_at,
+    pendingEmail: authUser.user.new_email,
+    phone: authUser.user.phone,
+    phoneConfirmedAt: authUser.user.phone_confirmed_at,
   });
 
   if (completion.isComplete) return;
+  const message = accountSetupPromptMessage(completion);
 
   const { data: existing } = await supabase
     .from("notification")
@@ -61,9 +66,11 @@ export default async function ensureProfileCompletionNotification(
     {
       userId,
       type: "profile_completion",
-      title: "Complete your profile",
-      body: "Add a name, username, profile picture, and verify your email so people recognize you.",
-      link: "/settings/edit-profile",
+      // Same words as the in-app reminder card: leads with the step that
+      // matters most for this account, never one it has already done.
+      title: message.title,
+      body: message.body,
+      link: "/settings/account-setup",
     },
     supabase,
   );

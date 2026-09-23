@@ -8,6 +8,9 @@ import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import retryPaymentFulfillment from "@/actions/retryPaymentFulfillment";
 import submitPaystackChargeOtp from "@/actions/submitPaystackChargeOtp";
 import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
+import EmailRequiredToPay, {
+  useNeedsEmailToPay,
+} from "@/components/molecules/EmailRequiredToPay";
 import UseCreditToggle from "@/components/molecules/UseCreditToggle";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -142,6 +145,7 @@ export default function PaymentMethodSelector(
   const queryClient = useQueryClient();
   const router = useRouter();
   const toast = useToast();
+  const needsEmail = useNeedsEmailToPay();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [uiState, setUiState] = useState<PaymentUiState>({
     phase: "selecting",
@@ -531,6 +535,16 @@ export default function PaymentMethodSelector(
 
     return () => clearInterval(interval);
   }, [uiState]);
+
+  // No email on the account (a phone sign-up): every payment is refused
+  // without one, so ask for it here instead of failing on "Pay".
+  if (needsEmail) {
+    return (
+      <EmailRequiredToPay
+        purpose={props.kind === "ticket" ? "tickets" : "promotion"}
+      />
+    );
+  }
 
   if (props.kind === "ticket" && (isPreparePending || isPrepareError)) {
     return (

@@ -39,17 +39,14 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
 
   // Invalidates every cache this review could appear in — this list, and
   // (in case the viewer also has the Event Details page open in the same
-  // session) the eligibility/rating/list queries EventReviewsSection.tsx
-  // and AddEventReviewButton.tsx key off of for this same event.
+  // session) the eligibility query and the ["reviews", "event", id] review
+  // lists / summary for this same event.
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: REVIEWED_EVENTS_QUERY_KEY });
     queryClient.invalidateQueries({ queryKey: ["events-awaiting-review"] });
     queryClient.invalidateQueries({ queryKey: ["attending-events-counts"] });
     queryClient.invalidateQueries({
-      queryKey: ["event-reviews", review.event_id],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["event-rating", review.event_id],
+      queryKey: ["reviews", "event", review.event_id],
     });
     queryClient.invalidateQueries({
       queryKey: ["event-review-eligibility", review.event_id],

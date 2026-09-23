@@ -13,8 +13,7 @@ import { PublisherSpotlightStrip } from "@/components/content/PublisherSpotlight
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
-import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
-import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
+import { ReviewsPreviewSection } from "@/components/reviews/ReviewsPreviewSection";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
 import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
@@ -22,15 +21,8 @@ import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
-import {
-  type PlaceReviewItem,
-  usePlaceReviewsList,
-  usePlaceUpcomingEvents,
-} from "@/features/places/usePlaceExtras";
-import {
-  useDeletePlaceReview,
-  usePlaceReviewEligibility,
-} from "@/features/reviews/usePlaceReviews";
+import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
+import type { ReviewSubject } from "@/features/reviews/useReviewSubject";
 import { PlaceCheckInSheet } from "@/features/rewards/PlaceCheckInSheet";
 import { useCheckIn } from "@/features/rewards/usePlaceVisits";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
@@ -114,68 +106,6 @@ function ContactRow({
   );
 }
 
-function PlaceReviewCard({
-  review,
-  onReport,
-}: {
-  review: PlaceReviewItem;
-  onReport?: () => void;
-}) {
-  return (
-    <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
-      <View className="flex-row items-center justify-between gap-2">
-        <View className="flex-1 flex-row items-center gap-2">
-          <Avatar
-            publicId={review.reviewer?.avatar_public_id ?? undefined}
-            version={review.reviewer?.avatar_version ?? undefined}
-            size={28}
-          />
-          <AppText
-            variant="small"
-            className="flex-1 font-semibold"
-            numberOfLines={1}
-          >
-            {review.reviewer?.username ?? "Guest"}
-          </AppText>
-        </View>
-        <Stars rating={review.rating} size={13} />
-      </View>
-      {review.title ? (
-        <AppText variant="small" className="font-semibold">
-          {review.title}
-        </AppText>
-      ) : null}
-      {review.comment ? (
-        <AppText variant="muted">{review.comment}</AppText>
-      ) : null}
-      {review.place_review_photo?.length ? (
-        <ReviewPhotoStrip photos={review.place_review_photo} />
-      ) : null}
-      {review.owner_response ? (
-        <View className="mt-1 gap-0.5 rounded-lg bg-muted p-2">
-          <AppText variant="label">Response from the owner</AppText>
-          <AppText variant="meta">{review.owner_response}</AppText>
-        </View>
-      ) : null}
-      <View className="flex-row items-center justify-between">
-        <AppText variant="caption">
-          {getRelativeTime(review.created_at)}
-        </AppText>
-        {onReport ? (
-          <AppText
-            variant="caption"
-            tone="muted"
-            className="font-medium"
-            onPress={onReport}
-          >
-            Report
-          </AppText>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
 export default function PlaceDetailScreen() {
   const toast = useToast();
   // `visit`: opened from a place's check-in QR code (Rewards Phase 8).
@@ -186,11 +116,10 @@ export default function PlaceDetailScreen() {
   const detail = usePlaceDetail(id);
   const { data: place, isError, error, isRefetching, refetch } = detail;
   const detailView = useQueryView(detail);
-  const [reviewOpen, setReviewOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<{
-    targetType: "place" | "place_review";
+    targetType: "place";
     targetId: string;
     label: string;
   } | null>(null);
@@ -279,12 +208,6 @@ export default function PlaceDetailScreen() {
     }
   }, [place?.location]);
 
-  const reviewsList = usePlaceReviewsList(place?.id);
-  const { data: eligibility } = usePlaceReviewEligibility(
-    place?.id,
-    place?.owner_id,
-  );
-  const deleteReview = useDeletePlaceReview(place?.id);
   const { data: claim } = usePlaceClaimState(place?.id, place?.owner_id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
   // 10 km in metres — matches web's SIMILAR_PLACES_RADIUS_METERS.
@@ -343,7 +266,13 @@ export default function PlaceDetailScreen() {
     place.temporary_status,
   );
   const address = place.address?.full_address;
-  const reviews = reviewsList.data?.pages.flatMap((p) => p.reviews) ?? [];
+  const reviewSubject: ReviewSubject = {
+    kind: "place",
+    id: place.id,
+    title: place.name,
+    slug: place.slug ?? null,
+    ownerId: place.owner_id ?? null,
+  };
   const upcomingEvents = upcoming.data ?? [];
 
   const openDirections = () => {
@@ -738,140 +667,8 @@ export default function PlaceDetailScreen() {
             className="-mx-4"
           />
 
-          {/* Reviews */}
-          <View className="gap-3">
-            <View className="flex-row items-center justify-between">
-              <SectionTitle>Reviews</SectionTitle>
-              {place.reviewCount > 0 ? (
-                <View className="flex-row items-center gap-1.5">
-                  <Stars rating={place.avgRating} size={14} />
-                  <AppText variant="meta">
-                    {place.avgRating.toFixed(1)} ({place.reviewCount})
-                  </AppText>
-                </View>
-              ) : null}
-            </View>
-
-            {eligibility?.canReview ? (
-              <Button
-                title="Write a review"
-                variant="outline"
-                leftIcon="create-outline"
-                onPress={() => setReviewOpen(true)}
-              />
-            ) : eligibility?.reason === "has_review" ? (
-              <View className="gap-2 rounded-xl border border-border bg-card p-3">
-                <View className="flex-row items-center justify-between">
-                  <AppText variant="small" className="font-semibold">
-                    Your review
-                  </AppText>
-                  <Stars rating={eligibility.ownReview.rating} size={13} />
-                </View>
-                {eligibility.ownReview.title ? (
-                  <AppText variant="small" className="font-semibold">
-                    {eligibility.ownReview.title}
-                  </AppText>
-                ) : null}
-                {eligibility.ownReview.comment ? (
-                  <AppText variant="muted">
-                    {eligibility.ownReview.comment}
-                  </AppText>
-                ) : null}
-                {eligibility.ownReview.place_review_photo?.length ? (
-                  <ReviewPhotoStrip
-                    photos={eligibility.ownReview.place_review_photo}
-                  />
-                ) : null}
-                <View className="mt-1 flex-row gap-4">
-                  <Pressable
-                    accessibilityRole="button"
-                    className="active:opacity-60"
-                    onPress={() => setReviewOpen(true)}
-                  >
-                    <AppText
-                      variant="small"
-                      tone="brand"
-                      className="font-semibold"
-                    >
-                      Edit
-                    </AppText>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    className="active:opacity-60"
-                    disabled={deleteReview.isPending}
-                    onPress={() => {
-                      const reviewId = eligibility.ownReview.id;
-                      if (!reviewId) return;
-                      Alert.alert(
-                        "Delete your review?",
-                        "This can't be undone.",
-                        [
-                          { text: "Cancel", style: "cancel" },
-                          {
-                            text: "Delete",
-                            style: "destructive",
-                            onPress: () => deleteReview.mutate(reviewId),
-                          },
-                        ],
-                      );
-                    }}
-                  >
-                    <AppText
-                      variant="small"
-                      tone="error"
-                      className="font-semibold"
-                    >
-                      {deleteReview.isPending ? "Deleting…" : "Delete"}
-                    </AppText>
-                  </Pressable>
-                </View>
-              </View>
-            ) : null}
-
-            {reviewsList.isLoading ? (
-              <AppText variant="muted">Loading reviews…</AppText>
-            ) : reviews.length === 0 ? (
-              <AppText variant="muted">No reviews yet.</AppText>
-            ) : (
-              <View className="gap-2">
-                {reviews.map((r) => (
-                  <PlaceReviewCard
-                    key={r.id}
-                    review={r}
-                    onReport={
-                      session
-                        ? () =>
-                            setReportTarget({
-                              targetType: "place_review",
-                              targetId: r.id,
-                              label: `Review by ${r.reviewer?.username ?? "a guest"}`,
-                            })
-                        : undefined
-                    }
-                  />
-                ))}
-                {reviewsList.hasNextPage ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    className="items-center py-2 active:opacity-60"
-                    disabled={reviewsList.isFetchingNextPage}
-                    onPress={() => reviewsList.fetchNextPage()}
-                  >
-                    <AppText
-                      variant="small"
-                      tone="brand"
-                      className="font-semibold"
-                    >
-                      {reviewsList.isFetchingNextPage
-                        ? "Loading…"
-                        : "Show more reviews"}
-                    </AppText>
-                  </Pressable>
-                ) : null}
-              </View>
-            )}
-          </View>
+          {/* Reviews: a summary and the top few; "See all" opens the rest. */}
+          <ReviewsPreviewSection subject={reviewSubject} />
 
           {/* Upcoming events (item 13) */}
           {upcomingEvents.length > 0 ? (
@@ -962,20 +759,6 @@ export default function PlaceDetailScreen() {
           placeId={place.id}
           placeName={place.name}
           services={place.services.map((s) => ({ id: s.id, name: s.name }))}
-        />
-
-        <PlaceReviewSheet
-          open={reviewOpen}
-          onClose={() => setReviewOpen(false)}
-          placeId={place.id}
-          placeName={place.name}
-          existingReview={
-            eligibility && !eligibility.canReview
-              ? eligibility.reason === "has_review"
-                ? eligibility.ownReview
-                : null
-              : null
-          }
         />
       </ScrollView>
 

@@ -54,4 +54,7 @@ test("no serious accessibility violations on a live event and place page", async
   test.skip(!event && !place, "no public event or place in the catalogue");
   if (event) await scan(page, event);
   if (place) await scan(page, place);
+  // Their full reviews pages (breakdown, filters, sort, review rows).
+  if (event) await scan(page, `${event}/reviews`);
+  if (place) await scan(page, `${place}/reviews`);
 });

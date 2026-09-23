@@ -1,4 +1,8 @@
 import { generateSlug } from "@abonten/core/geerateSlug";
+import {
+  type ReviewSubjectKind,
+  reviewsPath,
+} from "@abonten/core/reviews/reviewList";
 import { withReferralCode } from "@abonten/core/rewards/referralCode";
 import { weeklyEditionPath } from "@abonten/core/weekly/copy";
 import { Platform, Share } from "react-native";
@@ -33,6 +37,27 @@ export function eventShareUrl(
 
 export function placeShareUrl(slug: string): string {
   return `${SITE}/places/${slug}`;
+}
+
+/**
+ * A link to one review: the subject's reviews page opened on it. On the
+ * web it renders the review first (with its own preview card); with the app
+ * installed, +native-intent opens the Reviews screen with it pinned. `slug`
+ * is the event's code or the place's slug. Null without one.
+ */
+export function reviewShareUrl(
+  kind: ReviewSubjectKind,
+  slugOrCode: string | null | undefined,
+  reviewId: string,
+): string | null {
+  const slug =
+    kind === "event"
+      ? slugOrCode
+        ? generateSlug(slugOrCode)
+        : null
+      : slugOrCode;
+  if (!slug) return null;
+  return `${SITE}${reviewsPath(kind, slug, reviewId)}`;
 }
 
 /** The dated Abonten Weekly edition link (the edition's canonical address). */

@@ -1,14 +1,23 @@
+import {
+  QUEUED_WRITE_LABEL,
+  QueuedWriteNotice,
+} from "@/components/QueuedWriteNotice";
 import { UploadProgress } from "@/components/UploadProgress";
 import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
 import {
-  type OwnPlaceReview,
-  type PlaceReviewPhotoInput,
+  type ReviewPhotoInput,
+  usePostEventReview,
+  useUpdateEventReview,
+} from "@/features/reviews/useEventReviews";
+import {
   usePostPlaceReview,
   useUpdatePlaceReview,
 } from "@/features/reviews/usePlaceReviews";
+import type { OwnReview } from "@/features/reviews/useReviewSubject";
 import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import type { ReviewSubjectKind } from "@abonten/core/reviews/reviewList";
 import {
   MAX_REVIEW_PHOTOS,
   MAX_REVIEW_PHOTO_SIZE_BYTES,
@@ -28,32 +37,34 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { StarRatingInput } from "./StarRatingInput";
 
-type ExistingPhoto = {
-  id: string;
-  public_id: string;
-  version: string;
-  position: number;
-};
+// Write or edit a review of an event or a place — the native echo of the
+// web EventReviewModal / PlaceReviewModal. Rating (required, 1–5), optional
+// title (≤150) and comment (≤500), up to MAX_REVIEW_PHOTOS photos. Photos go
+// straight to Cloudinary with a short-lived signature scoped to the caller's
+// own folder and are attached once the review row is saved; on edit, kept
+// photos stay, removed ones are deleted by id and new ones follow them.
+// Who may review is decided by the database (event_review eligibility
+// trigger, UNIQUE per subject and reviewer), not by this sheet.
 
-// Native echo of the web PlaceReviewModal: rating (required 1–5) + optional
-// title (≤150) + optional comment (≤500) + up to MAX_REVIEW_PHOTOS photos.
-// Handles both "add" and "edit" (existing review passed in): on edit the
-// user can drop already-attached photos and add new ones, mirroring
-// updatePlaceReview.ts. Photos upload straight to Cloudinary with a
-// short-lived signature scoped to the caller's folder.
-export function PlaceReviewSheet({
+type ExistingPhoto = OwnReview["photos"][number];
+
+export function ReviewComposerSheet({
   open,
   onClose,
-  placeId,
-  placeName,
+  onDismiss,
+  kind,
+  subjectId,
+  subjectTitle,
   existingReview,
   onSubmitted,
 }: {
   open: boolean;
   onClose: () => void;
-  placeId: string;
-  placeName: string;
-  existingReview?: OwnPlaceReview | null;
+  onDismiss?: () => void;
+  kind: ReviewSubjectKind;
+  subjectId: string;
+  subjectTitle: string;
+  existingReview?: OwnReview | null;
   onSubmitted?: () => void;
 }) {
   const toast = useToast();
@@ -68,17 +79,23 @@ export function PlaceReviewSheet({
   const progress = useUploadProgress();
   const [error, setError] = useState<string | null>(null);
 
-  const post = usePostPlaceReview(placeId);
-  const update = useUpdatePlaceReview(placeId);
+  const postEvent = usePostEventReview();
+  const updateEvent = useUpdateEventReview();
+  const postPlace = usePostPlaceReview(
+    kind === "place" ? subjectId : undefined,
+  );
+  const updatePlace = useUpdatePlaceReview(
+    kind === "place" ? subjectId : undefined,
+  );
+  const post = kind === "event" ? postEvent : postPlace;
+  const update = kind === "event" ? updateEvent : updatePlace;
 
   useEffect(() => {
     if (!open) return;
     setRating(existingReview?.rating ?? 0);
     setTitle(existingReview?.title ?? "");
     setComment(existingReview?.comment ?? "");
-    setExistingPhotos(
-      (existingReview?.place_review_photo ?? []) as ExistingPhoto[],
-    );
+    setExistingPhotos(existingReview?.photos ?? []);
     setRemovedPhotoIds([]);
     setNewPhotos([]);
     setUploading(false);
@@ -152,18 +169,22 @@ export function PlaceReviewSheet({
       return;
     }
 
-    let uploaded: PlaceReviewPhotoInput[] = [];
+    let uploaded: ReviewPhotoInput[] = [];
     if (newPhotos.length > 0) {
       setUploading(true);
       progress.start();
       try {
-        // Sequential, not Promise.all — see AddReviewSheet for why.
+        // Sequential, not Promise.all: on a slow link parallel uploads only
+        // fight each other, and a fraction only means something when one
+        // file is in flight at a time.
         const total = newPhotos.length;
         uploaded = [];
         for (const [i, uri] of newPhotos.entries()) {
-          const up = await uploadToCloudinary(uri, "place_review_photo", {
-            onProgress: (f) => progress.onProgress((i + f) / total),
-          });
+          const up = await uploadToCloudinary(
+            uri,
+            kind === "event" ? "event_review_photo" : "place_review_photo",
+            { onProgress: (f) => progress.onProgress((i + f) / total) },
+          );
           uploaded.push({ publicId: up.publicId, version: String(up.version) });
         }
       } catch {
@@ -181,75 +202,96 @@ export function PlaceReviewSheet({
     const onDone = () => {
       progress.reset();
       onSubmitted?.();
-      if (!isEditing && placeId) {
-        announcePlaceInteraction({ placeId, trigger: "review" });
+      if (!isEditing && kind === "place") {
+        announcePlaceInteraction({ placeId: subjectId, trigger: "review" });
       }
       onClose();
       toast.success(isEditing ? "Review updated" : "Review posted", {
-        description: "Thanks — it is on the place page now.",
+        description: isEditing
+          ? "Your changes are saved."
+          : `Thanks — it's on the ${kind} page now.`,
       });
     };
     const onErr = (e: unknown) => {
       progress.reset();
       setError(
-        e instanceof Error
+        e instanceof Error && e.message
           ? e.message
-          : "We couldn't post your review. Nothing was lost — try again.",
+          : "We couldn't save your review. Nothing was lost — try again.",
       );
     };
 
+    const fields = {
+      rating,
+      title: title || undefined,
+      comment: comment || undefined,
+    };
     if (isEditing && existingReview) {
-      update.mutate(
+      const edit = {
+        ...fields,
+        reviewId: existingReview.id,
+        removedPhotoIds: removedPhotoIds.length ? removedPhotoIds : undefined,
+        newPhotos: uploaded.length ? uploaded : undefined,
+        keptPhotoCount: existingPhotos.length,
+      };
+      if (kind === "event") {
+        updateEvent.mutate(
+          { ...edit, eventId: subjectId },
+          { onSuccess: onDone, onError: onErr },
+        );
+      } else {
+        updatePlace.mutate(edit, { onSuccess: onDone, onError: onErr });
+      }
+    } else if (kind === "event") {
+      postEvent.mutate(
         {
-          reviewId: existingReview.id,
-          rating,
-          title: title || undefined,
-          comment: comment || undefined,
-          removedPhotoIds: removedPhotoIds.length ? removedPhotoIds : undefined,
-          newPhotos: uploaded.length ? uploaded : undefined,
-          keptPhotoCount: existingPhotos.length,
+          ...fields,
+          eventId: subjectId,
+          photos: uploaded.length ? uploaded : undefined,
         },
         { onSuccess: onDone, onError: onErr },
       );
     } else {
-      post.mutate(
-        {
-          rating,
-          title: title || undefined,
-          comment: comment || undefined,
-          photos: uploaded.length ? uploaded : undefined,
-        },
+      postPlace.mutate(
+        { ...fields, photos: uploaded.length ? uploaded : undefined },
         { onSuccess: onDone, onError: onErr },
       );
     }
   }
 
   const busy = uploading || post.isPending || update.isPending;
+  const paused = post.isPaused || update.isPaused;
 
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title={isEditing ? "Edit your review" : "Add review"}
+      onDismiss={onDismiss}
+      title={isEditing ? "Edit your review" : "Write a review"}
       footer={
-        <Button
-          title={
-            uploading
-              ? "Uploading photos…"
-              : busy
-                ? "Saving…"
-                : isEditing
-                  ? "Save changes"
-                  : "Submit review"
-          }
-          onPress={submit}
-          disabled={busy}
-        />
+        <View className="gap-2">
+          {paused ? <QueuedWriteNotice /> : null}
+          <Button
+            title={
+              uploading
+                ? "Uploading photos…"
+                : paused
+                  ? QUEUED_WRITE_LABEL
+                  : busy
+                    ? "Saving…"
+                    : isEditing
+                      ? "Save changes"
+                      : "Post review"
+            }
+            onPress={submit}
+            disabled={busy}
+          />
+        </View>
       }
     >
       <View className="gap-4">
         <AppText variant="muted" numberOfLines={2}>
-          How was {placeName}?
+          How was {subjectTitle}?
         </AppText>
 
         <View className="gap-2">

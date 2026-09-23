@@ -1,3 +1,4 @@
+import { invalidateReviewSubject } from "@/features/reviews/reviewQueryKeys";
 import { supabase } from "@/lib/supabase";
 import { keysetOlderThan } from "@abonten/core/pagination";
 import {
@@ -76,9 +77,9 @@ function invalidateEventReviewCaches(
   qc: ReturnType<typeof useQueryClient>,
   eventId: string | undefined,
 ) {
-  qc.invalidateQueries({ queryKey: ["organizer", "event-reviews", eventId] });
-  qc.invalidateQueries({ queryKey: ["mobile", "event-reviews", eventId] });
-  qc.invalidateQueries({ queryKey: ["mobile", "event-rating", eventId] });
+  // The organizer list plus every public list, preview and shared card
+  // that shows the reply.
+  invalidateReviewSubject(qc, "event", eventId);
   qc.invalidateQueries({ queryKey: ["mobile", "event", eventId] });
 }
 

@@ -18,9 +18,8 @@ type ReviewPhotoGridProps = {
 
 // Thumbnail grid for a review's attached photos (place_review_photo /
 // event_review_photo, both selected with the same id/public_id/version/
-// position shape) -- shared by PlaceReviewsSection, ManagePlaceReviewsSection,
-// and EventReviewsSection so review photo display stays one component, not
-// three copies.
+// position shape) -- shared by ReviewListItem (event and place reviews) and
+// ManagePlaceReviewsSection so review photo display stays one component.
 export default function ReviewPhotoGrid({ photos }: ReviewPhotoGridProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 

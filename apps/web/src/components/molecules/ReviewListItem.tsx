@@ -1,135 +1,171 @@
+"use client";
+
 import StarRatingDisplay from "@/components/atoms/Rating";
-import ReportButton from "@/components/atoms/ReportButton";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import {
+  type ReviewListRow,
+  type ReviewSubjectKind,
+  reviewerDisplayName,
+} from "@abonten/core/reviews/reviewList";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import Link from "next/link";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import ReviewPhotoGrid from "./ReviewPhotoGrid";
 
-type ReviewPhoto = {
-  id: string;
-  public_id: string;
-  version: string;
-  position: number;
-};
-
 type ReviewListItemProps = {
-  avatarPublicId?: string | null;
-  avatarVersion?: string | null;
-  username?: string | null;
-  createdAt: string;
-  rating: number;
-  title?: string | null;
-  comment?: string | null;
-  isVerifiedAttendee?: boolean;
-  photos?: ReviewPhoto[] | null;
-  responseLabel?: string;
-  responseText?: string | null;
-  // "Report this review" affordance. Passed by the event/place review
-  // sections; the button hides itself for signed-out visitors and for the
-  // review's own author (reportReviewerId === viewer).
-  reportTargetType?: "event_review" | "place_review";
-  reportTargetId?: string;
-  reportReviewerId?: string | null;
-  // Event-only inline reply affordance (organizer's "Reply" button/composer).
-  // Places don't compose a response from this page, so this is simply
-  // omitted there.
+  review: ReviewListRow;
+  kind: ReviewSubjectKind;
+  /** The viewer wrote it. */
+  isOwn?: boolean;
+  /** Pinned from a shared link. */
+  highlighted?: boolean;
+  /** Helpful button + ⋯ menu (ReviewItemActions). */
+  actions?: ReactNode;
+  /** The organizer's reply composer, on their own event's reviews. */
   children?: ReactNode;
 };
 
-// Shared review row -- avatar, name, timestamp, rating, verified badge,
-// title/comment, photo grid, and an existing response -- previously
-// duplicated almost verbatim between EventReviewsSection and
-// PlaceReviewsSection. The two organisms still own their own InfiniteList
-// wiring and (for events) the reply-composer logic; this only unifies the
-// per-review markup.
+// One public review of an event or a place — avatar, name, when (and
+// whether it was edited), stars, verified-attendee badge, title, text,
+// photos, the organizer's / owner's reply — on the details preview and the
+// full reviews page alike. The row shape comes from review_list via
+// @abonten/core/reviews/reviewList, the same one the app renders.
 export default function ReviewListItem({
-  avatarPublicId,
-  avatarVersion,
-  username,
-  createdAt,
-  rating,
-  title,
-  comment,
-  isVerifiedAttendee,
-  photos,
-  responseLabel,
-  responseText,
-  reportTargetType,
-  reportTargetId,
-  reportReviewerId,
+  review,
+  kind,
+  isOwn = false,
+  highlighted = false,
+  actions,
   children,
 }: ReviewListItemProps) {
+  const [expanded, setExpanded] = useState(false);
+  // "Read more" only when the clamped text actually overflows — a character
+  // count can't know how wide the column is.
+  const commentRef = useRef<HTMLParagraphElement>(null);
+  const [overflows, setOverflows] = useState(false);
+  useEffect(() => {
+    const el = commentRef.current;
+    if (!el || expanded) return;
+    const measure = () => setOverflows(el.scrollHeight > el.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [expanded]);
+  const name = reviewerDisplayName(review.reviewer, kind);
+  const profileHref =
+    !review.reviewer.deleted && review.reviewer.username
+      ? `/user/${review.reviewer.username}/posts`
+      : null;
+  const avatar = review.reviewer.avatarPublicId ? (
+    <Image
+      src={buildCloudinaryUrl(
+        review.reviewer.avatarPublicId,
+        review.reviewer.avatarVersion,
+        { width: 40, height: 40 },
+      )}
+      alt=""
+      width={40}
+      height={40}
+      className="rounded-full border border-border"
+    />
+  ) : (
+    <div className="w-10 h-10 rounded-full bg-muted" />
+  );
+
   return (
-    <li className="border-b border-border pb-6 last:border-0 last:pb-0">
+    <li
+      id={`review-${review.id}`}
+      className={
+        highlighted
+          ? "rounded-xl border-2 border-primary p-4 scroll-mt-24"
+          : "border-b border-border pb-6 last:border-0 last:pb-0 scroll-mt-24"
+      }
+    >
+      {highlighted ? (
+        <p className="mb-2 text-xs font-semibold text-primary">Shared review</p>
+      ) : null}
       <div className="flex items-center gap-3">
-        {avatarPublicId ? (
-          <Image
-            src={buildCloudinaryUrl(avatarPublicId, avatarVersion, {
-              width: 40,
-              height: 40,
-            })}
-            alt={username ?? "Reviewer"}
-            width={40}
-            height={40}
-            className="rounded-full border border-border"
-          />
+        {profileHref ? (
+          <Link href={profileHref} aria-label={`${name}'s profile`}>
+            {avatar}
+          </Link>
         ) : (
-          <div className="w-10 h-10 rounded-full bg-muted" />
+          avatar
         )}
 
         <div className="flex-1 min-w-0">
           <p className="font-medium text-card-foreground truncate">
-            {username ?? "Anonymous"}
+            {profileHref ? (
+              <Link href={profileHref} className="hover:underline">
+                {name}
+              </Link>
+            ) : (
+              name
+            )}
+            {isOwn ? (
+              <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-primary">
+                You
+              </span>
+            ) : null}
           </p>
           <p className="text-xs text-muted-foreground">
-            {getRelativeTime(createdAt)}
+            {getRelativeTime(review.createdAt)}
+            {review.editedAt ? " · Edited" : ""}
           </p>
         </div>
 
         <div className="flex flex-col items-end gap-1">
-          <StarRatingDisplay rating={rating} />
-          {isVerifiedAttendee && (
+          <StarRatingDisplay rating={review.rating} />
+          {kind === "event" && review.isVerifiedAttendee ? (
             <span className="text-[11px] font-medium text-success whitespace-nowrap">
-              ✓ Verified Attendee
+              ✓ Verified attendee
             </span>
-          )}
-          {reportTargetType && reportTargetId && (
-            <ReportButton
-              targetType={reportTargetType}
-              targetId={reportTargetId}
-              targetLabel={
-                title
-                  ? `review "${title}"`
-                  : `review by ${username ?? "a user"}`
-              }
-              ownerId={reportReviewerId}
-              variant="icon"
-            />
-          )}
+          ) : null}
         </div>
       </div>
 
-      {title && (
-        <h4 className="font-medium text-card-foreground mt-2">{title}</h4>
-      )}
+      {review.title ? (
+        <h4 className="font-medium text-card-foreground mt-2">
+          {review.title}
+        </h4>
+      ) : null}
 
-      {comment && (
-        <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
-          {comment}
-        </p>
-      )}
+      {review.comment ? (
+        <div className="mt-1">
+          <p
+            ref={commentRef}
+            className={`text-muted-foreground text-sm leading-relaxed whitespace-pre-line ${
+              expanded ? "" : "line-clamp-5"
+            }`}
+          >
+            {review.comment}
+          </p>
+          {overflows || expanded ? (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="mt-1 text-sm font-medium text-primary hover:underline"
+            >
+              {expanded ? "Show less" : "Read more"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
-      <ReviewPhotoGrid photos={photos} />
+      <ReviewPhotoGrid photos={review.photos} />
 
-      {responseText && (
+      {review.response ? (
         <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">
           <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
-            {responseLabel}
+            {kind === "event" ? "Organizer's reply" : "Owner's reply"}
           </p>
-          <p className="text-sm text-foreground">{responseText}</p>
+          <p className="text-sm text-foreground">{review.response}</p>
         </div>
-      )}
+      ) : null}
+
+      {actions ? <div className="mt-3">{actions}</div> : null}
 
       {children}
     </li>

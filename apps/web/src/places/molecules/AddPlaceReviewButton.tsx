@@ -38,8 +38,8 @@ export default function AddPlaceReviewButton({
   });
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["place-reviews", placeId] });
-    queryClient.invalidateQueries({ queryKey: ["place-rating", placeId] });
+    // The preview, breakdown and every filtered list of this place's reviews.
+    queryClient.invalidateQueries({ queryKey: ["reviews", "place", placeId] });
     queryClient.invalidateQueries({ queryKey: ["own-place-review", placeId] });
     queryClient.invalidateQueries({ queryKey: ["user-place-reviews"] });
     queryClient.invalidateQueries({ queryKey: ["attending-events-counts"] });

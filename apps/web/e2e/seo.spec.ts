@@ -32,3 +32,35 @@ test("event and place pages carry Open Graph tags, a canonical URL and JSON-LD",
     expect(["Event", "LocalBusiness"]).toContain(data["@type"]);
   }
 });
+
+// The full reviews page of an event and a place: public, server-rendered
+// (a crawler or a link unfurler sees the reviews), its own canonical URL,
+// and a shared-review link that no longer resolves degrades to the list
+// instead of an error.
+test("event and place reviews pages render publicly with their own canonical URL", async ({
+  page,
+  request,
+}) => {
+  const xml = await (await request.get("/sitemap.xml")).text();
+  const paths = [
+    xml.match(/<loc>[^<]*(\/events\/[A-Z0-9]+)<\/loc>/)?.[1],
+    xml.match(/<loc>[^<]*(\/places\/[a-z0-9-]+)<\/loc>/)?.[1],
+  ].filter((p): p is string => Boolean(p));
+  test.skip(paths.length === 0, "no public event or place in the catalogue");
+
+  for (const path of paths) {
+    const reviews = `${path}/reviews`;
+    const response = await page.goto(
+      `${reviews}?review=00000000-0000-4000-8000-000000000000`,
+    );
+    expect(response?.status(), reviews).toBe(200);
+    expect(await page.title(), reviews).toMatch(
+      /^Reviews of .+ \| Abonten Hub$/,
+    );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      new RegExp(`${reviews.replace(/[/-]/g, "$&")}$`),
+    );
+    await expect(page.getByRole("heading", { name: "Reviews" })).toBeVisible();
+  }
+});

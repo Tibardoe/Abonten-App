@@ -2,7 +2,9 @@
   "nav": {
     "overview": "Overview",
     "editProfile": "Edit Profile",
+    "accountSetup": "Account setup",
     "security": "Security",
+    "blockedAccounts": "Blocked accounts",
     "switchAppearance": "Switch Appearance",
     "language": "Language",
     "notifications": "Notifications",
