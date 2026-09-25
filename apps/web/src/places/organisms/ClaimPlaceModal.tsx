@@ -17,7 +17,7 @@ type ClaimPlaceModalProps = {
  * modal convention (ReviewModal.tsx / ConfirmDeleteModal.tsx), not a new
  * Dialog primitive. Submits via submitPlaceClaimRequest.ts, which only ever
  * creates a pending place_claim_request row -- ownership never changes
- * here, only an admin approval does that (reviewPlaceClaimRequest.ts /
+ * here, only an admin approval does that (Admin › Claims /
  * approve_place_claim RPC).
  */
 export default function ClaimPlaceModal({

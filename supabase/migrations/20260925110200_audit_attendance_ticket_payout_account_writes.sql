@@ -29,9 +29,6 @@ begin
   if current_user not in ('authenticated', 'anon') then
     return new;
   end if;
-  if current_user = 'authenticated' and public.is_admin() then
-    return new;
-  end if;
   -- A repeated write that changes nothing (a retried cancel) is harmless.
   if to_jsonb(new) = to_jsonb(old) then
     return new;
@@ -70,9 +67,6 @@ set search_path to ''
 as $function$
 begin
   if current_user not in ('authenticated', 'anon') then
-    return new;
-  end if;
-  if current_user = 'authenticated' and public.is_admin() then
     return new;
   end if;
   -- A repeated write that changes nothing (a retried cancel) is harmless.

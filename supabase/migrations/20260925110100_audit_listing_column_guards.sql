@@ -17,8 +17,9 @@
 --   * ticket_type.price finer than its currency (0.001 GHS).
 -- The service still sets timezone / country_code after resolving them from
 -- the coordinates itself — now with the service role (updateEventCore,
--- updatePlaceCore), which this guard does not restrict. Staff (is_admin) and
--- SECURITY DEFINER paths are unaffected, as in guard_staff_managed_columns.
+-- updatePlaceCore), which this guard does not restrict, nor SECURITY DEFINER
+-- paths. Signed-in staff are clients like anyone else: their changes go
+-- through the admin console (service role, permission, audit).
 
 create or replace function public.guard_listing_market_columns()
 returns trigger
@@ -27,9 +28,6 @@ set search_path to ''
 as $function$
 begin
   if current_user not in ('authenticated', 'anon') then
-    return new;
-  end if;
-  if current_user = 'authenticated' and public.is_admin() then
     return new;
   end if;
 

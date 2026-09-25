@@ -18,9 +18,6 @@ begin
   if current_user not in ('authenticated', 'anon') then
     return new;
   end if;
-  if current_user = 'authenticated' and public.is_admin() then
-    return new;
-  end if;
 
   if tg_op = 'INSERT' then
     if new.status is distinct from 'pending' then

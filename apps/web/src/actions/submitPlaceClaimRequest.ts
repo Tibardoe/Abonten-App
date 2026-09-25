@@ -24,7 +24,7 @@ type SubmitPlaceClaimRequestInput = {
  * Submits a request to claim ownership of a place from its current owner.
  * This never transfers ownership itself -- it only inserts a pending
  * place_claim_request row. Ownership only ever changes via an admin
- * approval (reviewPlaceClaimRequest.ts calling the approve_place_claim
+ * approval (Admin › Claims calling the approve_place_claim
  * RPC). This is the inverse of updatePlace.ts's ownership check: a
  * claimant is explicitly NOT the current owner, so this blocks the request
  * if they already are one. The partial unique index
