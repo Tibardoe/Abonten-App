@@ -288,7 +288,7 @@ plus the small things found on the way.
 Two things the tooling was not allowed or able to do, and why:
 
 - **`PAYSTACK_SECRET_KEY` and `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` still target Preview.** The permission layer refused those two edits (secret-store writes). Effect today: a preview can still start a *test-mode* payment — against the preview database, not production. Cutover step 4 unticks them.
-- **The preview project's own service-role key** is not in Vercel: a secret cannot pass through this tooling without appearing in its record. Until it is pasted (Vercel → both projects → Preview → `SUPABASE_SERVICE_ROLE_KEY` = Supabase → Abonten Preview → Settings → API → service_role), previews build and render public pages but their server paths that need the service role report the missing variable. Nothing about production depends on it.
+- **The preview project's own service-role key** could not pass through this tooling without appearing in its record. The founder added it by hand at 23:33 UTC (a second, Preview-only `SUPABASE_SERVICE_ROLE_KEY` on each project, Sensitive; the Production-only one untouched) and redeployed. Proof: the web preview build of 23:04 had failed prerendering `/weekly` with "Missing Supabase service-role environment variables"; a fresh preview build at 23:37 (an empty commit) passed. Production redeployed READY on `ac2e8dbf` at 23:35–23:38.
 
 Results: core unit 735, services unit 155 (41 provider tests); full
 integration 86 files, 727 passed, 1 skipped; typecheck 11/11; API parity
