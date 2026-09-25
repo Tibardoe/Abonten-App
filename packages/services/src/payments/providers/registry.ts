@@ -73,6 +73,7 @@ export function accountFromConfig(
     currencies: config.currencies,
     payoutsEnabled: config.payoutsEnabled,
     accountRef: config.providerAccountRef ?? null,
+    options: config.options ?? {},
   };
 }
 

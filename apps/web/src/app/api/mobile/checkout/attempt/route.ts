@@ -1,16 +1,19 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { withLegacyPaystackField } from "@/app/api/mobile/_lib/legacyPaymentField";
+import { paymentChoiceFromBody } from "@/app/api/mobile/_lib/paymentChoiceBody";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
 import { createMultiCheckoutPaymentAttemptCore } from "@abonten/services/payments/createMultiCheckoutPaymentAttemptCore";
 
 // POST /api/mobile/checkout/attempt
-//   { checkoutSessionIds: string[], paymentMethodId?: string, useCredit?: boolean }
+//   { checkoutSessionIds: string[], paymentMethodId?: string, method?: string, useCredit?: boolean }
 //
-// paymentMethodId is required unless Abonten Credit covers the whole order
-// (then `data.paystack` is null and `data.verification` carries the
-// finalized result).
+// Pay with a saved instrument (paymentMethodId) or a way to pay on the
+// provider's page (method — one of GET /api/mobile/payments/options'
+// `methods`). One of them is required unless Abonten Credit covers the
+// whole order (then `data.payment` is null and `data.verification`
+// carries the finalized result).
 //
 // Records a payment_attempt per session (one paymentGroupId) and starts the
 // Paystack charge — same createMultiCheckoutPaymentAttempt logic the web
@@ -27,6 +30,7 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => null)) as {
       checkoutSessionIds?: unknown;
       paymentMethodId?: unknown;
+      method?: unknown;
       useCredit?: unknown;
     } | null;
 
@@ -43,13 +47,12 @@ export async function POST(req: Request) {
     }
 
     const useCredit = body?.useCredit === true;
-    const paymentMethodId =
-      typeof body?.paymentMethodId === "string" &&
-      body.paymentMethodId.length > 0
-        ? body.paymentMethodId
-        : null;
-    if (!paymentMethodId && !useCredit) {
-      return apiJson({ status: 400, message: "paymentMethodId is required" });
+    const choice = paymentChoiceFromBody(req, body);
+    if (!choice.paymentMethodId && !choice.method && !useCredit) {
+      return apiJson({
+        status: 400,
+        message: "paymentMethodId or method is required",
+      });
     }
 
     const result = await createMultiCheckoutPaymentAttemptCore(
@@ -58,7 +61,7 @@ export async function POST(req: Request) {
       auth.user.email,
       {
         checkoutSessionIds: ids as string[],
-        paymentMethodId,
+        ...choice,
         useCredit,
       },
       (checkoutSessionId) => `abonten://checkout/${checkoutSessionId}`,

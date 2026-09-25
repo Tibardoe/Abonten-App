@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { fromMajor, toMajor } from "@abonten/core/money/money";
 import type { TransactionKind } from "@abonten/types/transactions";
 
 type TransactionRef = {
@@ -95,11 +96,14 @@ export async function getUserTransactionDetail(
         );
 
         if (peerRevenue > 0) {
-          const fee =
-            Math.round(
-              (Number(txn.amount) * (thisRevenue / peerRevenue) - thisRevenue) *
-                100,
-            ) / 100;
+          // Rounded to what the order's currency can hold.
+          const fee = toMajor(
+            fromMajor(
+              Number(txn.amount) * (thisRevenue / peerRevenue) - thisRevenue,
+              (data.ticket_type as { currency?: string } | null)?.currency ??
+                "",
+            ),
+          );
           serviceFee = Math.max(0, fee);
           totalPaid = thisRevenue + serviceFee;
         }

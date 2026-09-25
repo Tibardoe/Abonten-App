@@ -53,9 +53,14 @@ const STRIPE_TYPE_FOR_METHOD: Partial<Record<PaymentMethodCode, string>> = {
   // automatically when the browser/device supports them.
   apple_pay: "card",
   google_pay: "card",
+  // Bancontact: Belgian bank redirect, euros only. Stripe's bank transfers
+  // (`customer_balance`) need a Customer object and reconciliation Abonten
+  // does not run, so bank_transfer is deliberately not offered here.
   bank_redirect: "bancontact",
-  bank_transfer: "customer_balance",
 };
+
+/** Stripe payment method types that only run in one currency. */
+const CURRENCY_FOR_TYPE: Record<string, string> = { bancontact: "EUR" };
 
 const sessionSchema = z.object({
   id: z.string(),
@@ -65,7 +70,10 @@ const sessionSchema = z.object({
   amount_total: z.number().nullable().optional(),
   currency: z.string().nullable().optional(),
   payment_intent: z
-    .union([z.string(), z.object({ id: z.string() })])
+    .union([
+      z.string(),
+      z.object({ id: z.string(), status: z.string().nullable().optional() }),
+    ])
     .nullable()
     .optional(),
   customer_details: z
@@ -150,6 +158,13 @@ function unsupported(what: string): never {
   );
 }
 
+/** The PaymentIntent behind a completed-but-unpaid session gave up. */
+function paymentIntentFailed(session: z.infer<typeof sessionSchema>): boolean {
+  const pi = session.payment_intent;
+  if (!pi || typeof pi === "string") return false;
+  return pi.status === "canceled" || pi.status === "requires_payment_method";
+}
+
 function paymentIntentId(
   session: z.infer<typeof sessionSchema>,
 ): string | null {
@@ -176,8 +191,10 @@ export const stripeProvider: PaymentProvider = {
   },
 
   supportsMethod(account, method, currency) {
-    if (!STRIPE_TYPE_FOR_METHOD[method]) return false;
-    if (method === "mobile_money") return false;
+    const type = STRIPE_TYPE_FOR_METHOD[method];
+    if (!type) return false;
+    const only = CURRENCY_FOR_TYPE[type];
+    if (only && only !== currency.toUpperCase()) return false;
     return account.currencies
       .map((c) => c.toUpperCase())
       .includes(currency.toUpperCase());
@@ -272,13 +289,15 @@ export const stripeProvider: PaymentProvider = {
     const s = parsed.data;
     const currency = (s.currency ?? "").toUpperCase();
     const mapped: VerificationResult["status"] =
-      s.payment_status === "paid"
+      s.payment_status === "paid" || s.payment_status === "no_payment_required"
         ? "success"
         : s.status === "expired"
           ? "abandoned"
-          : s.status === "open"
-            ? "pending"
-            : "failed";
+          : s.status === "complete" && paymentIntentFailed(s)
+            ? "failed"
+            : // open, or complete with an asynchronous method (a bank
+              // debit) still settling: not a decline yet.
+              "pending";
     return {
       status: mapped,
       reference: s.id,
@@ -369,6 +388,18 @@ export const stripeProvider: PaymentProvider = {
     switch (name) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded":
+        // A completed session paid by an asynchronous method is not paid
+        // yet; async_payment_succeeded / _failed follows.
+        if (
+          name === "checkout.session.completed" &&
+          obj.payment_status !== "paid"
+        ) {
+          event = {
+            type: "ignored",
+            eventName: `${name}:${String(obj.payment_status)}`,
+          };
+          break;
+        }
         event = {
           type: "payment.succeeded",
           reference: str(obj.id) ?? "",

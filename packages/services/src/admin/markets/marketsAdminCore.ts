@@ -342,8 +342,9 @@ export async function updateMarketAdminCore(
       },
     );
     const updated = await getMarket(code);
+    const warning = await recheckOpenMarket(supabase, ctx, code);
     return updated
-      ? { status: 200, data: updated }
+      ? { status: 200, data: updated, ...(warning ? { message: warning } : {}) }
       : { status: 500, message: "Reload failed" };
   } catch (e) {
     return adminError(e);
@@ -364,9 +365,87 @@ export type UpsertProviderInput = {
   priority?: number;
   payoutsEnabled: boolean;
   providerAccountRef?: string | null;
+  /**
+   * Provider facts for this account that differ by country (see
+   * MarketPaymentProvider.options). Omitted = keep what is stored.
+   */
+  options?: Record<string, unknown> | null;
 };
 
 const ENV_NAME = /^[A-Z][A-Z0-9_]{2,80}$/;
+
+/** Checks the provider options shape; returns a message when it is wrong. */
+function providerOptionsProblem(options: unknown): string | null {
+  if (options == null) return null;
+  if (typeof options !== "object" || Array.isArray(options))
+    return "Provider options must be a JSON object.";
+  if (JSON.stringify(options).length > 4000)
+    return "Provider options are too large.";
+  const o = options as Record<string, unknown>;
+  if (
+    o.channels !== undefined &&
+    !(
+      Array.isArray(o.channels) &&
+      o.channels.every((c) => typeof c === "string" && /^[a-z_]{2,32}$/.test(c))
+    )
+  )
+    return "options.channels must be a list of provider channel names.";
+  if (o.cardVerificationMinor !== undefined) {
+    const v = o.cardVerificationMinor;
+    if (
+      !v ||
+      typeof v !== "object" ||
+      Array.isArray(v) ||
+      !Object.entries(v).every(
+        ([k, n]) =>
+          /^[A-Z]{3}$/.test(k) &&
+          typeof n === "number" &&
+          Number.isInteger(n) &&
+          n > 0 &&
+          n < 1_000_000,
+      )
+    )
+      return "options.cardVerificationMinor must map currency codes to whole minor-unit amounts.";
+  }
+  if (o.bankCountry !== undefined && typeof o.bankCountry !== "string")
+    return "options.bankCountry must be text.";
+  return null;
+}
+
+/**
+ * After a configuration change to a market people can use (live or
+ * maintenance), check it again: a change that breaks a critical readiness
+ * item on a live market is recorded and said out loud, so it cannot go
+ * unnoticed. Returns the warning, or null when everything critical passes.
+ */
+async function recheckOpenMarket(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  code: string,
+): Promise<string | null> {
+  invalidateMarketCache();
+  const market = await getMarket(code);
+  if (!market || !["live", "maintenance"].includes(market.status)) return null;
+  const report = await computeReadiness(supabase, market);
+  await supabase.from("market_readiness_run").insert({
+    country_code: market.countryCode,
+    ran_by: ctx.userId,
+    can_activate: report.canActivate,
+    report: report as unknown as Json,
+  });
+  if (report.canActivate) return null;
+  const failing = report.checks
+    .filter((c) => c.critical && c.status === "fail")
+    .map((c) => c.label);
+  logger.error(
+    `markets: ${market.countryCode} is ${market.status} and now fails readiness (${failing.join(", ")})`,
+  );
+  return `${market.name} is ${market.status} and now fails: ${failing.join(", ")}. Fix this, or pause the market.`;
+}
+
+function withLiveWarning(saved: string, warning: string | null): string {
+  return warning ? `${saved} Warning — ${warning}` : saved;
+}
 
 export async function upsertProviderAdminCore(
   supabase: ServiceRoleClient,
@@ -392,6 +471,31 @@ export async function upsertProviderAdminCore(
     }
     if (!isKnownCurrency(input.settlementCurrency))
       return { status: 400, message: "Unknown settlement currency." };
+    const optionsProblem = providerOptionsProblem(input.options);
+    if (optionsProblem) return { status: 400, message: optionsProblem };
+    // Automated payouts move organizer money without a person in the loop:
+    // only an adapter that can execute transfers may be switched to it, and
+    // only by someone allowed to open markets (the action adds step-up).
+    if (input.payoutsEnabled) {
+      assertPermission(ctx, "markets.activate");
+      const adapter = getPaymentProvider(input.provider);
+      const canPayOut = adapter.capabilities({
+        provider: input.provider,
+        countryCode: code,
+        credentials: { secretKey: "", webhookSecret: "", publicKey: null },
+        settlementCurrency: input.settlementCurrency,
+        currencies: input.currencies,
+        payoutsEnabled: true,
+        accountRef: null,
+        options: input.options ?? {},
+      }).payouts;
+      if (!canPayOut) {
+        return {
+          status: 400,
+          message: `${input.provider} can't send organizer payouts from Abonten yet; keep payouts manual.`,
+        };
+      }
+    }
     const currencies = input.currencies.map((c) => c.toUpperCase());
     if (
       currencies.length === 0 ||
@@ -415,6 +519,7 @@ export async function upsertProviderAdminCore(
         priority: input.priority ?? 1,
         payouts_enabled: input.payoutsEnabled,
         provider_account_ref: input.providerAccountRef ?? null,
+        ...(input.options != null ? { options: input.options as Json } : {}),
       },
       { onConflict: "country_code,provider" },
     );
@@ -437,7 +542,13 @@ export async function upsertProviderAdminCore(
         requestMeta,
       },
     );
-    return { status: 200, message: "Provider saved." };
+    return {
+      status: 200,
+      message: withLiveWarning(
+        "Provider saved.",
+        await recheckOpenMarket(supabase, ctx, code),
+      ),
+    };
   } catch (e) {
     return adminError(e);
   }
@@ -488,6 +599,7 @@ export async function upsertPaymentMethodAdminCore(
         currencies: providerConfig.currencies,
         payoutsEnabled: providerConfig.payoutsEnabled,
         accountRef: null,
+        options: providerConfig.options ?? {},
       };
       if (
         !currencies.some((c) =>
@@ -524,7 +636,13 @@ export async function upsertPaymentMethodAdminCore(
       `${input.enabled ? "Enabled" : "Disabled"} ${input.method} via ${input.provider} in ${code}`,
       { requestMeta },
     );
-    return { status: 200, message: "Payment method saved." };
+    return {
+      status: 200,
+      message: withLiveWarning(
+        "Payment method saved.",
+        await recheckOpenMarket(supabase, ctx, code),
+      ),
+    };
   } catch (e) {
     return adminError(e);
   }
@@ -600,7 +718,13 @@ export async function upsertPayoutMethodAdminCore(
       `${input.enabled ? "Enabled" : "Disabled"} ${input.method} payouts (${input.currency}) in ${code}`,
       { requestMeta },
     );
-    return { status: 200, message: "Payout method saved." };
+    return {
+      status: 200,
+      message: withLiveWarning(
+        "Payout method saved.",
+        await recheckOpenMarket(supabase, ctx, code),
+      ),
+    };
   } catch (e) {
     return adminError(e);
   }
@@ -669,7 +793,13 @@ export async function upsertRegionAdminCore(
       `Saved region ${input.name} (${code})`,
       { requestMeta },
     );
-    return { status: 200, message: "Region saved." };
+    return {
+      status: 200,
+      message: withLiveWarning(
+        "Region saved.",
+        await recheckOpenMarket(supabase, ctx, code),
+      ),
+    };
   } catch (e) {
     return adminError(e);
   }
@@ -850,6 +980,9 @@ export async function transitionMarketAdminCore(
       p_actor_id: ctx.userId,
       p_reason: input.reason ?? undefined,
       p_readiness_ok: readinessOk,
+      // The readiness report above was computed on this version; an edit in
+      // between makes the database refuse the change.
+      p_expected_version: market.version,
     });
     if (error) {
       return {

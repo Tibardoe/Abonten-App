@@ -183,6 +183,7 @@ export default function CheckoutModal({
       ticket.price ?? 0,
       appliedPromo?.discountPercentage ?? 0,
       eligibleUnits,
+      ticket.currency,
     );
 
     return acc + amount;

@@ -7,6 +7,7 @@ import {
   useCheckoutCountdown,
 } from "@/features/checkout/useCheckoutCountdown";
 import type { PendingCheckoutSession } from "@abonten/api-client";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Button, Card, Icon, SectionTitle } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -165,11 +166,11 @@ function SessionCard({
             <AppText variant="muted">
               {line.type} × {line.quantity}
               {line.discount > 0
-                ? ` · −${line.currency} ${line.discount.toFixed(2)}`
+                ? ` · −${formatMoney(line.currency, line.discount)}`
                 : ""}
             </AppText>
             <AppText variant="small">
-              {line.currency} {line.amount.toFixed(2)}
+              {formatMoney(line.currency, line.amount)}
             </AppText>
           </View>
         ))}
@@ -180,7 +181,7 @@ function SessionCard({
           Checkout total
         </AppText>
         <AppText className="text-sm font-semibold text-foreground">
-          {currency} {session.sessionSubtotal.toFixed(2)}
+          {formatMoney(currency, session.sessionSubtotal)}
         </AppText>
       </View>
 

@@ -7,34 +7,36 @@ const labelSchema = z
   .optional()
   .or(z.literal(""));
 
-// Ghana mobile numbers: local format (0XXXXXXXXX, 10 digits) or
-// international (+233XXXXXXXXX). Normalized to the +233 form before being
-// sent to Paystack's Charge API — see phoneNumberFormatter.ts.
-const ghanaPhoneSchema = z
+// The wallet's phone number, in the person's own market's format: a local
+// number ("024 123 4567", "0712 345678") or an international one
+// ("+254712345678"). This only checks it looks like a phone number; the
+// service parses it against the person's market (@abonten/core/phone,
+// libphonenumber) and stores one E.164 form, so a Kenyan M-Pesa number is
+// as valid as a Ghanaian MTN one.
+const walletPhoneSchema = z
   .string()
   .trim()
-  .regex(
-    /^(0[0-9]{9}|\+233[0-9]{9})$/,
-    "Enter a valid Ghana phone number (e.g. 024XXXXXXX or +233XXXXXXXXX)",
-  );
+  .regex(/^\+?[0-9][0-9 ()-]{5,19}$/, "Enter a valid mobile money number");
 
-// User-submitted form: real phone number + a network chosen from Paystack's
-// live-fetched mobile money provider list (getPaystackMobileMoneyNetworks.ts)
-// rather than a hardcoded guess at what Paystack supports.
+// User-submitted form: real phone number + a network chosen from the
+// provider's live-fetched mobile money list for the person's market
+// (mobileMoneyNetworksCore) rather than a hardcoded guess.
 export const addMomoWalletSchema = z.object({
   type: z.literal("momo"),
   networkCode: z.string().min(1, "Select a mobile money network"),
   networkName: z.string().min(1),
-  phone: ghanaPhoneSchema,
+  phone: walletPhoneSchema,
   label: labelSchema,
 });
 
 // NOT a user-submitted form: a card is never typed in directly (no PAN/CVV
 // collection — PCI compliance and this repo's explicit rule). This shape is
-// constructed server-side from Paystack's own verified charge response
-// (see confirmCardVerification.ts) after a real GHS 1 verification charge
-// captures a reusable authorization_code. Still zod-validated as a safety
-// net against a malformed/unexpected Paystack response shape.
+// constructed server-side from the provider's own verified charge response
+// (cardVerificationCore) after a small, refunded verification charge in the
+// person's market currency captures a reusable token. `provider` and
+// `countryCode` record which provider ACCOUNT issued the token: it can only
+// be charged by that account (paymentChoice.ts). Still zod-validated as a
+// safety net against a malformed provider response.
 export const cardPaymentMethodSchema = z.object({
   type: z.literal("card"),
   brand: z.string().min(1),
@@ -43,6 +45,11 @@ export const cardPaymentMethodSchema = z.object({
   expiryYear: z.number().int(),
   authorizationCode: z.string().min(1),
   bank: z.string().nullable().optional(),
+  provider: z.string().min(1).optional(),
+  countryCode: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .optional(),
   label: labelSchema,
 });
 

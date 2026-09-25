@@ -1,3 +1,4 @@
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
 import { SectionHeading } from "@/components/metrics/SectionHeading";
@@ -155,6 +156,12 @@ export default async function DashboardPage({
       <section className="mb-6">
         <SectionHeading title="Activity" />
         <RangeCaption range={range} className="mb-2" />
+        <CurrencySwitcher
+          basePath="/"
+          current={currency}
+          currencies={snapshot.currencies}
+          params={sp}
+        />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <MetricCard
             metric="tickets.paid"

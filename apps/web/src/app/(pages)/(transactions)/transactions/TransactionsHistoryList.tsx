@@ -6,6 +6,7 @@ import TransactionStatusIcon, {
 import TransactionRowSkeleton from "@/components/molecules/TransactionRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTransactionRow } from "@abonten/types/transactions";
@@ -111,11 +112,11 @@ export default function TransactionsHistoryList({
                   {/* What the customer actually paid — ticket price + service
                       fee. `total_paid` falls back to `amount` for free/legacy
                       rows where no fee applies. */}
-                  {item.currency} {item.total_paid ?? item.amount}
+                  {formatMoney(item.currency, item.total_paid ?? item.amount)}
                 </p>
                 {item.credit_used ? (
                   <p className="text-xs font-normal text-muted-foreground">
-                    incl. {item.currency} {Number(item.credit_used).toFixed(2)}{" "}
+                    incl. {formatMoney(item.currency, Number(item.credit_used))}{" "}
                     credit
                   </p>
                 ) : null}

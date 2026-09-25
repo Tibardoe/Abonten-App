@@ -7,6 +7,7 @@ import {
 } from "@/features/organizer/usePlacePromotion";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -131,7 +132,7 @@ export default function PromotePlaceScreen() {
                 {reserved.tierLabel} placement
               </AppText>
               <AppText className="text-sm font-semibold text-foreground">
-                {reserved.currency} {reserved.amount.toFixed(2)}
+                {formatMoney(reserved.currency, reserved.amount)}
               </AppText>
             </View>
           </View>
@@ -166,7 +167,7 @@ export default function PromotePlaceScreen() {
                     {tier.duration_label}
                   </AppText>
                   <AppText className="text-sm text-muted-foreground">
-                    {tier.currency} {tier.price.toFixed(2)}
+                    {formatMoney(tier.currency, tier.price)}
                   </AppText>
                 </Pressable>
               );

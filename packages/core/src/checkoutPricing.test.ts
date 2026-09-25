@@ -45,14 +45,14 @@ describe("allocatePromoEligibility", () => {
 
 describe("computeLineAmount", () => {
   it("applies no discount when discountPercentage is 0", () => {
-    const { discount, amount } = computeLineAmount(2, 100, 0, 2);
+    const { discount, amount } = computeLineAmount(2, 100, 0, 2, "GHS");
     expect(discount).toBe(0);
     expect(amount).toBe(200);
   });
 
   it("discounts only the eligible units, not the full quantity", () => {
     // 4 units at 100 each = 400. Only 2 units are eligible for a 10% discount.
-    const { discount, amount } = computeLineAmount(4, 100, 10, 2);
+    const { discount, amount } = computeLineAmount(4, 100, 10, 2, "GHS");
     expect(discount).toBe(20); // 10% of (100 * 2 eligible units)
     expect(amount).toBe(380); // 400 - 20
   });
@@ -60,8 +60,30 @@ describe("computeLineAmount", () => {
   it("floors the amount at 0 instead of going negative", () => {
     // Pathological input (100% discount) should never produce a negative
     // charge even if upstream data is inconsistent.
-    const { amount } = computeLineAmount(1, 100, 100, 1);
+    const { amount } = computeLineAmount(1, 100, 100, 1, "GHS");
     expect(amount).toBe(0);
+  });
+
+  it("rounds to what the currency can hold", () => {
+    // 3 × 11.11 at 10%: 3.333 off; cedis keep two decimals.
+    expect(computeLineAmount(3, 11.11, 10, 3, "GHS")).toEqual({
+      discount: 3.33,
+      amount: 30,
+    });
+    // Yen and CFA francs have no decimals: 15% of 3 × ¥999 = ¥449.55.
+    expect(computeLineAmount(3, 999, 15, 3, "JPY")).toEqual({
+      discount: 450,
+      amount: 2547,
+    });
+    expect(computeLineAmount(1, 5000, 33, 1, "XOF")).toEqual({
+      discount: 1650,
+      amount: 3350,
+    });
+    // Kuwaiti dinars keep three.
+    expect(computeLineAmount(2, 1.005, 10, 2, "KWD")).toEqual({
+      discount: 0.201,
+      amount: 1.809,
+    });
   });
 });
 

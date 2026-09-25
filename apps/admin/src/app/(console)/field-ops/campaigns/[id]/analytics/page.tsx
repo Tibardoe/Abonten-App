@@ -1,3 +1,4 @@
+import { formatMoney } from "@abonten/core/formatMoney";
 import { ChartCard } from "@/components/metrics/ChartCard";
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { SectionHeading } from "@/components/metrics/SectionHeading";
@@ -67,14 +68,14 @@ export default async function FieldOpsCampaignAnalyticsPage({
           label: title,
           rangeLabel: PERIOD,
           formatBucket: formatAccraDate,
-          format: opts.money ? (v) => `${currency} ${v.toFixed(2)}` : undefined,
+          format: opts.money ? (v) => formatMoney(currency, v) : undefined,
         })}
         table={{
           caption: `${title} per day, ${PERIOD.toLowerCase()}`,
           columns: ["Day", title],
           rows: points.map((p) => [
             formatAccraDate(p.bucketStart),
-            opts.money ? p.value.toFixed(2) : p.value,
+            opts.money ? formatMoney(currency, p.value) : p.value,
           ]),
         }}
       >
@@ -134,7 +135,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
           format="money"
           currency={currency}
           period="All time"
-          secondary={`${currency} ${minorToMajor(stats.money.paid_minor, currency).toFixed(2)} of it paid`}
+          secondary={`${formatMoney(currency, minorToMajor(stats.money.paid_minor, currency))} of it paid`}
         />
         <MetricCard
           metric="fieldOps.costPerSuccess"
@@ -206,7 +207,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
               <Td className="tabular-nums">{m.rejected}</Td>
               <Td className="tabular-nums">{m.contentApproved}</Td>
               <Td className="whitespace-nowrap tabular-nums">
-                {currency} {minorToMajor(m.earnedMinor, currency).toFixed(2)}
+                {formatMoney(currency, minorToMajor(m.earnedMinor, currency))}
               </Td>
               <Td className="tabular-nums text-muted-foreground">
                 {m.medianReviewHours === null ? "—" : `${m.medianReviewHours}h`}

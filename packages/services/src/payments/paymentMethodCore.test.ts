@@ -5,6 +5,7 @@ import { addPaymentMethodCore } from "./paymentMethodCore";
 // The market lookup is configuration, not what this test is about: a Ghana
 // market that offers mobile money, so the phone rules below are Ghana rules.
 vi.mock("../markets/marketConfig", () => ({
+  getDefaultMarket: async () => ({ countryCode: "GH" }),
   getMarketOrDefault: async () => ({
     countryCode: "GH",
     name: "Ghana",

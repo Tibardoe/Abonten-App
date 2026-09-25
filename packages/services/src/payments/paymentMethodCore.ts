@@ -9,7 +9,7 @@ import {
   addPaymentMethodSchema,
 } from "@abonten/validation/paymentMethodSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getMarketOrDefault } from "../markets/marketConfig";
+import { getDefaultMarket, getMarketOrDefault } from "../markets/marketConfig";
 
 // Post-auth bodies of the four payment-method Server Actions, lifted so the
 // `/api/mobile/payment-methods/*` routes run the exact same logic. Each
@@ -30,6 +30,9 @@ export type CardPaymentMethodDetails = {
   expiryYear: number;
   authorizationCode: string;
   bank?: string | null;
+  /** The provider account that issued the token (absent on cards saved before 2026-09-25). */
+  provider?: string;
+  countryCode?: string;
   label?: string;
 };
 
@@ -68,13 +71,21 @@ export async function listPaymentMethodsCore(
 // Two saved methods are the same instrument when these agree. Brand case and
 // stray whitespace are normalised away because Paystack is not consistent
 // about either; the authorization code deliberately is NOT part of the key,
-// since re-verifying the same card is exactly what produces a new one.
-function cardKey(details: CardPaymentMethodDetails): string {
+// since re-verifying the same card is exactly what produces a new one. The
+// issuing account IS part of it: the same card tokenised by Paystack Ghana
+// and by Paystack Nigeria is two usable tokens. Cards saved before tokens
+// were bound came from the default market's account.
+function cardKey(
+  details: CardPaymentMethodDetails,
+  defaultCountry: string,
+): string {
   return [
     (details.brand ?? "").trim().toLowerCase(),
     (details.last4 ?? "").trim(),
     details.expiryMonth,
     details.expiryYear,
+    details.provider ?? "paystack",
+    (details.countryCode ?? defaultCountry).toUpperCase(),
   ].join("|");
 }
 
@@ -188,12 +199,13 @@ export async function addPaymentMethodCore(
     // production held two "visa 4081" cards with the same expiry and bank.
     // Treat a matching active card as already saved and hand it back.
     const normalizedCard = { ...card, brand: card.brand.trim() };
+    const defaultCountry = (await getDefaultMarket()).countryCode;
 
     const duplicate = active.find(
       (row) =>
         row.method_type === "card" &&
-        cardKey(row.details as CardPaymentMethodDetails) ===
-          cardKey(normalizedCard),
+        cardKey(row.details as CardPaymentMethodDetails, defaultCountry) ===
+          cardKey(normalizedCard, defaultCountry),
     );
     if (duplicate) return { status: 200, data: duplicate };
 

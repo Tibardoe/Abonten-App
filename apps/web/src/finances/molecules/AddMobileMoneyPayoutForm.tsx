@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import {
   type AddMobileMoneyPayoutAccountInput,
@@ -26,12 +25,6 @@ import { useForm } from "react-hook-form";
 type PopupCloseProp = {
   onSaved: (account: PayoutAccountRow) => void;
 };
-
-function normalizeGhanaPhone(phone: string): string {
-  const trimmed = phone.trim();
-  if (trimmed.startsWith("+233")) return trimmed;
-  return `+233${phoneNumberFormatter(trimmed)}`;
-}
 
 // Mirrors AddMomoWallet.tsx's exact form shape/flow, applied to organizer
 // payout destinations instead of buyer payment methods.
@@ -74,7 +67,8 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
     setServerError(null);
     const response = await addPayoutAccount({
       ...values,
-      phone: normalizeGhanaPhone(values.phone),
+      // Sent as typed: the service parses it for the account's market.
+      phone: values.phone.trim(),
     });
 
     if (response.status !== 200) {

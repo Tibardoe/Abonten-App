@@ -3,6 +3,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getMarketOrDefault } from "../markets/marketConfig";
+import { marketClosedForSales } from "./paymentChoice";
 import {
   type AddPaymentMethodResult,
   addPaymentMethodCore,
@@ -84,6 +85,8 @@ export async function initCardVerificationCore(
   }
 
   const { provider, account, currency } = resolved;
+  const closed = await marketClosedForSales(account.countryCode);
+  if (closed) return { status: 400, message: closed.message };
   const amount = provider.cardVerificationAmount(account, currency);
   if (!amount || !provider.capabilities(account).savedCards) {
     return {
@@ -216,6 +219,8 @@ export async function confirmCardVerificationCore(
     expiryYear: instrument.expiryYear,
     authorizationCode: instrument.token,
     bank: instrument.bank,
+    provider: account.provider,
+    countryCode: account.countryCode,
     label,
   });
 }

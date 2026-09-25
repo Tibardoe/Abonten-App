@@ -246,7 +246,11 @@ export function FilterSheet({
 
           <Section
             label="Price"
-            hint="Ticket price in GHS"
+            hint={
+              market?.defaultCurrency
+                ? `Ticket price in ${market.defaultCurrency}`
+                : "Ticket price"
+            }
             active={
               eDraft.minPrice != null ||
               (eDraft.maxPrice != null && eDraft.maxPrice < PRICE_ANY_MAX)

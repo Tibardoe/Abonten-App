@@ -26,7 +26,7 @@ import {
   zero,
 } from "@abonten/core/money/money";
 import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
-import { getActiveServiceFeeRate } from "@abonten/services/platform/platformFee";
+import { serviceFeeRateFor } from "@abonten/services/platform/platformFee";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type CheckoutRow = {
@@ -118,10 +118,10 @@ export async function prepareCheckoutPayment(
 
   const market = await getMarketOrDefault([...countries][0] ?? null);
   const currency = [...currencies][0] ?? market.defaultCurrency;
-  const feeRate =
-    market.fees.serviceFeeBps != null
-      ? market.fees.serviceFeeBps / 10_000
-      : await getActiveServiceFeeRate(supabase, currency, market.countryCode);
+  const feeRate = await serviceFeeRateFor(supabase, {
+    currency,
+    countryCode: market.countryCode,
+  });
   const serviceFeeBps = rateToBps(feeRate);
 
   type Acc = {

@@ -4,8 +4,6 @@ import {
 } from "@/components/account/EmailRequiredCard";
 import { CreditSwitch } from "@/features/rewards/CreditSwitch";
 import { useInvalidateCredit } from "@/features/rewards/useRewards";
-import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
-import type { PaymentMethodRow } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
   creditMinorToMajor,
@@ -17,6 +15,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { useCreateAttempt } from "./usePayment";
+import { PaymentChoiceList, usePaymentChoice } from "./usePaymentChoice";
 
 // Method picker + "Pay". Once the attempt is created this hands off to
 // <PaymentVerificationScreen> (app/(app)/payment/[attemptId]) — this component
@@ -26,13 +25,6 @@ import { useCreateAttempt } from "./usePayment";
 // Abonten Credit (quoted by the prepare step) a "Use credit" switch applies
 // it; if it covers everything, there's nothing to pick and the same
 // verification screen confirms the already-finalized order.
-
-function methodLabel(m: PaymentMethodRow): string {
-  const d = m.details as Record<string, string>;
-  return m.method_type === "momo"
-    ? `${d.networkName ?? "Mobile money"} · ${d.phone ?? ""}`
-    : `${d.brand ?? "Card"} ···· ${d.last4 ?? ""}`;
-}
 
 export function PaymentSection({
   sessionId,
@@ -56,8 +48,10 @@ export function PaymentSection({
 }) {
   const router = useRouter();
   const needsEmail = useNeedsEmailToPay();
-  const { data: methodsRes } = usePaymentMethods();
-  const methods = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
+  const payment = usePaymentChoice({
+    kind: "ticket",
+    checkoutSessionIds: [sessionId],
+  });
 
   const quote =
     creditQuote?.offered && creditQuote.creditMinor > 0 ? creditQuote : null;
@@ -70,12 +64,11 @@ export function PaymentSection({
       ? creditMinorToMajor(quote.cashMinor, quote.currency)
       : total;
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const createAttempt = useCreateAttempt();
 
-  const chosenId = selectedId ?? methods.find((m) => m.is_default)?.id ?? null;
-  const canPay = creditCoversAll || !!chosenId;
+  const chosen = payment.choice;
+  const canPay = creditCoversAll || !!chosen;
 
   async function onPay() {
     if (!canPay || createAttempt.isPending) return;
@@ -83,7 +76,10 @@ export function PaymentSection({
 
     const res = await createAttempt.mutateAsync({
       checkoutSessionIds: [sessionId],
-      paymentMethodId: creditCoversAll ? null : chosenId,
+      paymentMethodId: creditCoversAll
+        ? null
+        : (chosen?.paymentMethodId ?? null),
+      method: creditCoversAll ? null : (chosen?.method ?? null),
       useCredit,
     });
 
@@ -200,7 +196,7 @@ export function PaymentSection({
     );
   }
 
-  if (methods.length === 0) {
+  if (payment.saved.length === 0 && payment.hosted.length === 0) {
     return (
       <View className="gap-3 rounded-xl border border-border bg-card p-4">
         {creditSwitch}
@@ -228,37 +224,16 @@ export function PaymentSection({
       <AppText className="text-sm font-semibold text-foreground">
         {useCredit ? "Pay the rest with" : "Pay with"}
       </AppText>
-      {methods.map((m) => {
-        const selected = m.id === chosenId;
-        return (
-          <Pressable
-            accessibilityRole="button"
-            key={m.id}
-            onPress={() => setSelectedId(m.id)}
-            className={`flex-row items-center justify-between rounded-xl border p-3 ${
-              selected ? "border-primary bg-accent" : "border-border bg-card"
-            }`}
-          >
-            <AppText className="text-sm text-foreground">
-              {methodLabel(m)}
-            </AppText>
-            {selected ? (
-              <AppText variant="small" tone="brand" className="font-semibold">
-                ✓
-              </AppText>
-            ) : null}
-          </Pressable>
-        );
-      })}
+      <PaymentChoiceList state={payment} />
 
       {errorBox}
 
       <Pressable
         accessibilityRole="button"
-        disabled={!chosenId || createAttempt.isPending}
+        disabled={!chosen || createAttempt.isPending}
         onPress={onPay}
         className={`items-center rounded-xl px-4 py-3 ${
-          !chosenId || createAttempt.isPending ? "bg-muted" : "bg-primary"
+          !chosen || createAttempt.isPending ? "bg-muted" : "bg-primary"
         }`}
       >
         {createAttempt.isPending ? (
@@ -266,7 +241,7 @@ export function PaymentSection({
         ) : (
           <AppText
             className={`text-sm font-semibold ${
-              !chosenId ? "text-muted-foreground" : "text-primary-foreground"
+              !chosen ? "text-muted-foreground" : "text-primary-foreground"
             }`}
           >
             Pay {formatMoney(currency, payAmount)}

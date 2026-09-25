@@ -17,6 +17,7 @@ export async function createPromotionPaymentAttempt(input: {
   kind: "event" | "place" | "spotlight";
   checkoutId: string;
   paymentMethodId?: string | null;
+  method?: string | null;
   useCredit?: boolean;
 }): Promise<
   CreatePromotionPaymentAttemptResult | { status: 401; message: string }
@@ -47,6 +48,8 @@ export async function createPromotionPaymentAttempt(input: {
       kind: input.kind,
       checkoutId: input.checkoutId,
       paymentMethodId: input.paymentMethodId ?? null,
+      method: input.method ?? null,
+      platform: "web",
       useCredit: input.useCredit === true,
     },
     (id) => `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${id}?type=${type}`,

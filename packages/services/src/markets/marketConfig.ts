@@ -147,6 +147,12 @@ function buildMarket(
         providerAccountRef: p.provider_account_ref,
         currencies: p.currencies ?? [],
         payoutsEnabled: p.payouts_enabled,
+        options:
+          p.options &&
+          typeof p.options === "object" &&
+          !Array.isArray(p.options)
+            ? (p.options as Record<string, unknown>)
+            : {},
       }))
       .sort((a, b) => a.priority - b.priority),
     paymentMethods: methods

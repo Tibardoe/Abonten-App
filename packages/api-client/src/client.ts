@@ -48,6 +48,7 @@ import type {
   CheckInTicketResult,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
+  CheckoutPaymentOptions,
   CheckoutSessionRow,
   CloudinarySignatureData,
   ContentCampaignCheckoutResult,
@@ -808,6 +809,7 @@ export function createApiClient(options: ApiClientOptions) {
       promotionAttempt(body: {
         eventPromotionCheckoutId: string;
         paymentMethodId?: string | null;
+        method?: string | null;
         useCredit?: boolean;
       }) {
         return request<PromotionPaymentAttemptResult>(
@@ -822,6 +824,7 @@ export function createApiClient(options: ApiClientOptions) {
       placePromotionAttempt(body: {
         placePromotionCheckoutId: string;
         paymentMethodId?: string | null;
+        method?: string | null;
         useCredit?: boolean;
       }) {
         return request<PromotionPaymentAttemptResult>(
@@ -836,6 +839,7 @@ export function createApiClient(options: ApiClientOptions) {
       spotlightPromotionAttempt(body: {
         contentCampaignCheckoutId: string;
         paymentMethodId?: string | null;
+        method?: string | null;
       }) {
         return request<PromotionPaymentAttemptResult>(
           "/api/mobile/checkout/spotlight-promotion-attempt",
@@ -1073,7 +1077,27 @@ export function createApiClient(options: ApiClientOptions) {
 
     // Market-aware payment helpers.
     paymentsCatalog: {
-      /** Live Ghana mobile money networks for the add-wallet picker. */
+      /**
+       * How this order can be paid: the order's market decides the methods
+       * (card, bank transfer, USSD, Apple Pay…); `saved` says which wallet
+       * entries work there. Pass the chosen `method` (or a usable saved
+       * `paymentMethodId`) to the matching checkout attempt call.
+       */
+      options(
+        target:
+          | { kind: "ticket"; checkoutSessionIds: string[] }
+          | { kind: "event" | "place" | "spotlight"; checkoutId: string },
+      ) {
+        const q = new URLSearchParams({ kind: target.kind });
+        if (target.kind === "ticket")
+          q.set("ids", target.checkoutSessionIds.join(","));
+        else q.set("id", target.checkoutId);
+        return request<ApiEnvelope<CheckoutPaymentOptions>>(
+          `/api/mobile/payments/options?${q.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Live mobile money networks for the person's market (add-wallet picker). */
       momoNetworks() {
         return request<ApiEnvelope<MomoNetwork[]>>(
           "/api/mobile/payments/momo-networks",

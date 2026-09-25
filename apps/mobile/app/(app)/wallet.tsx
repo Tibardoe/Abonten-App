@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { WalletSkeleton } from "@/components/skeletons";
+import { useMarket } from "@/features/markets/MarketProvider";
 import {
   useAddCard,
   useAddMomoWallet,
@@ -11,6 +12,7 @@ import {
 } from "@/features/wallet/usePaymentMethods";
 import { useQueryView } from "@/lib/useQueryView";
 import type { PaymentMethodRow } from "@abonten/api-client";
+import { parsePhone, parsePhoneWithDialCode } from "@abonten/core/phone/phone";
 import {
   AppText,
   Button,
@@ -30,7 +32,15 @@ import {
   View,
 } from "react-native";
 
-const GH_PHONE = /^(0[0-9]{9}|\+233[0-9]{9})$/;
+// A first check before the request, in the market's own numbering plan
+// (libphonenumber via @abonten/core/phone). The server parses the number
+// again against the person's market and stores one E.164 form.
+function walletPhoneLooksValid(raw: string, dialCode: string | null): boolean {
+  const text = raw.trim();
+  if (text.startsWith("+")) return parsePhone(text).ok;
+  if (dialCode) return parsePhoneWithDialCode(dialCode, text).ok;
+  return text.replace(/\D/g, "").length >= 7;
+}
 
 // One coherent "manage your wallet" experience: a single + Add Wallet action
 // opens a bottom sheet that steps choose type -> fill form -> success, the
@@ -48,6 +58,10 @@ function methodTitle(m: PaymentMethodRow): string {
 
 export default function WalletScreen() {
   const toast = useToast();
+  const { markets, context } = useMarket();
+  const homeDialCode =
+    markets.find((m) => m.countryCode === context?.marketCountry)?.dialCode ??
+    null;
   const methodsQuery = usePaymentMethods();
   const { data, isRefetching, refetch } = methodsQuery;
   // Loading, offline and failed are told apart from "no wallets yet": that
@@ -90,8 +104,8 @@ export default function WalletScreen() {
       setFormError("Choose your mobile money network.");
       return;
     }
-    if (!GH_PHONE.test(phone.trim())) {
-      setFormError("Enter a valid Ghana phone number (024XXXXXXX or +233…).");
+    if (!walletPhoneLooksValid(phone, homeDialCode)) {
+      setFormError("Enter a valid mobile money number.");
       return;
     }
     const res = await addMomo.mutateAsync({
@@ -376,9 +390,9 @@ export default function WalletScreen() {
         ) : (
           <View className="gap-3">
             <AppText variant="muted">
-              Adding a card runs a GHS 1 verification charge that is refunded
-              immediately. Your card number is never stored — only a reusable
-              token from Paystack.
+              Adding a card runs a small verification charge in your currency
+              that is refunded immediately. Your card number is never stored —
+              only a reusable token from the payment provider.
             </AppText>
 
             {formError ? (

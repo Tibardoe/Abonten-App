@@ -1,4 +1,5 @@
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Icon, StatusPill } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link } from "expo-router";
@@ -14,11 +15,9 @@ import { Pressable, View } from "react-native";
 
 const num = (v: number | string | null | undefined): number => Number(v ?? 0);
 
+// The event's own currency sign, whole amounts on a card (GH₵1,250, ₦45,000).
 function money(currency: string | null | undefined, amount: number): string {
-  return `${currency ? `${currency} ` : "GHS "}${amount.toLocaleString(
-    undefined,
-    { maximumFractionDigits: 0 },
-  )}`;
+  return formatMoney(currency, amount, { trimZeroFraction: true });
 }
 
 /** Resolve the pill status, folding "sold out" in when capacity is hit. */

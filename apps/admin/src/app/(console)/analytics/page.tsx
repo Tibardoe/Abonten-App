@@ -1,3 +1,4 @@
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { ChartCard } from "@/components/metrics/ChartCard";
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
@@ -124,6 +125,12 @@ export default async function AnalyticsPage({
         actions={<RangePicker basePath="/analytics" range={range} />}
       />
       <RangeCaption range={range} className="mb-4" />
+      <CurrencySwitcher
+        basePath="/analytics"
+        current={currency}
+        currencies={snapshot.currencies}
+        params={sp}
+      />
 
       <section className="mb-6">
         <SectionHeading title="In this period" />

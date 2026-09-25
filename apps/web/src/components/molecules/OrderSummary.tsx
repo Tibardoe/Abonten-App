@@ -3,6 +3,7 @@ import {
   PROMOTION_REVIEW_NOTE,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
 import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
 
@@ -13,6 +14,7 @@ export type SpotlightPromotionSummaryProps = {
   estimatedReachLow: number;
   estimatedReachHigh: number;
   totalAmount: number;
+  currency: string;
 };
 
 type OrderSummaryProps = {
@@ -31,7 +33,7 @@ type OrderSummaryProps = {
  */
 export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
   if (orderSummary.type === "spotlight-promotion") {
-    const { postCaption, summaryLabel, totalAmount } = orderSummary;
+    const { postCaption, summaryLabel, totalAmount, currency } = orderSummary;
 
     return (
       <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
@@ -68,14 +70,14 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
         <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
           <p>Total Amount</p>
-          <p>₵{totalAmount}</p>
+          <p>{formatMoney(currency, totalAmount)}</p>
         </div>
       </div>
     );
   }
 
   if (orderSummary.type === "promotion") {
-    const { placeName, tierLabel, totalAmount } = orderSummary;
+    const { placeName, tierLabel, totalAmount, currency } = orderSummary;
 
     return (
       <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
@@ -97,13 +99,13 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
         <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
           <p>Total Amount</p>
-          <p>₵{totalAmount}</p>
+          <p>{formatMoney(currency, totalAmount)}</p>
         </div>
       </div>
     );
   }
 
-  const { eventTitle, tierLabel, totalAmount } = orderSummary;
+  const { eventTitle, tierLabel, totalAmount, currency } = orderSummary;
 
   return (
     <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
@@ -125,7 +127,7 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
       <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
         <p>Total Amount</p>
-        <p>₵{totalAmount}</p>
+        <p>{formatMoney(currency, totalAmount)}</p>
       </div>
     </div>
   );

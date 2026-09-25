@@ -138,6 +138,13 @@ export type MarketPaymentProvider = {
   currencies: string[];
   /** Is the provider allowed to move money out (payouts) for this market? */
   payoutsEnabled: boolean;
+  /**
+   * Provider facts for this one account that differ by country (Paystack:
+   * `channels`, `cardVerificationMinor`, `bankCountry`). Empty means the
+   * adapter's documented defaults; a new country is configured here, not
+   * in adapter code.
+   */
+  options: Record<string, unknown>;
 };
 
 export type MarketPaymentMethod = {
@@ -230,6 +237,12 @@ export type PublicMarket = {
   dialCode: string;
   addressSchema: AddressSchema | null;
   tax: Pick<TaxConfig, "mode" | "rateBps" | "label">;
+  /**
+   * The customer-paid service fee rate (0.05 = 5%) for this market's own
+   * currency, for previews; the charge is always computed server-side.
+   * Filled by the markets API (absent from the static config).
+   */
+  serviceFeeRate?: number | null;
   centre: { lat: number; lng: number } | null;
   paymentMethods: Pick<
     MarketPaymentMethod,

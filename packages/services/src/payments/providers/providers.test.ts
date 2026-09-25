@@ -28,6 +28,7 @@ const account = (over: Partial<ProviderAccount> = {}): ProviderAccount => ({
   currencies: ["GHS", "USD"],
   payoutsEnabled: false,
   accountRef: null,
+  options: {},
   ...over,
 });
 
@@ -46,6 +47,7 @@ const providerConfig = (
   currencies: ["NGN", "USD"],
   payoutsEnabled: false,
   providerAccountRef: null,
+  options: {},
   ...over,
 });
 
@@ -330,7 +332,9 @@ describe("stripe adapter", () => {
     const body = JSON.stringify({
       id: "evt_1",
       type: "checkout.session.completed",
-      data: { object: { id: "cs_1", payment_intent: "pi_1" } },
+      data: {
+        object: { id: "cs_1", payment_intent: "pi_1", payment_status: "paid" },
+      },
     });
     const ok = stripeProvider.parseWebhook(stripe, body, signStripe(body));
     expect(ok).toMatchObject({

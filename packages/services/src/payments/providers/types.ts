@@ -31,6 +31,8 @@ export type ProviderAccount = {
   payoutsEnabled: boolean;
   /** Provider-side identifier for logs and reconciliation (never a secret). */
   accountRef: string | null;
+  /** Per-account provider facts from the market row (see MarketPaymentProvider.options). */
+  options: Record<string, unknown>;
 };
 
 export type ProviderCapabilities = {

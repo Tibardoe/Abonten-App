@@ -16,6 +16,18 @@ export function num(v: unknown): number {
 
 type Row = Record<string, unknown>;
 
+/** A jsonb array of ISO currency codes, upper-cased and de-duplicated. */
+export function currencyList(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return [
+    ...new Set(
+      v
+        .filter((c): c is string => typeof c === "string" && c.length === 3)
+        .map((c) => c.toUpperCase()),
+    ),
+  ].sort();
+}
+
 export function toRangeMetrics(raw: unknown): AdminRangeMetrics {
   const r = (raw ?? {}) as Row;
   return {
@@ -54,6 +66,7 @@ export function toSnapshotMetrics(raw: unknown): AdminSnapshotMetrics {
     refundsPending: num(r.refundsPending),
     refundsPendingAmount: num(r.refundsPendingAmount),
     currency: typeof r.currency === "string" ? r.currency : "",
+    currencies: currencyList(r.currencies),
   };
 }
 

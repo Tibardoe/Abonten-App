@@ -35,8 +35,76 @@ import {
 } from "../rewards/creditRedemptionCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
+import { refundOrphanCapture } from "./orphanCapture";
 import { NoProviderError, resolveProviderAccount } from "./providers/registry";
-import type { ProviderAccount, VerificationResult } from "./providers/types";
+import type {
+  PaymentProvider,
+  ProviderAccount,
+  VerificationResult,
+} from "./providers/types";
+
+/**
+ * A failed or cancelled attempt the provider may still have been paid for.
+ * Success at the provider = an orphan capture, refunded in full; a refund
+ * request that fails comes back as "pending" so a webhook redelivers.
+ */
+async function reconcileClosedAttempt(
+  primary: PaymentAttemptFullRow,
+): Promise<FinalizeResult> {
+  let resolved: Awaited<ReturnType<typeof resolveProviderAccount>>;
+  let verification: VerificationResult;
+  try {
+    resolved = await resolveProviderAccount({
+      countryCode: primary.country_code,
+      currency: primary.currency,
+      providerCode: primary.provider,
+    });
+    verification = await resolved.provider.verify(
+      resolved.account,
+      primary.provider_reference as string,
+    );
+  } catch (error) {
+    logger.error(
+      `finalizePayment: could not check closed attempt ${primary.id} (${error instanceof Error ? error.message : String(error)})`,
+    );
+    return {
+      status: "pending",
+      message: "Could not verify payment right now. Please try again.",
+    };
+  }
+
+  if (
+    verification.status !== "success" ||
+    verification.reference !== primary.provider_reference
+  ) {
+    return {
+      status: "failed",
+      message:
+        primary.status === "cancelled"
+          ? "This payment was replaced by a newer one."
+          : "This payment didn't go through.",
+    };
+  }
+
+  const refunded = await refundOrphanCapture({
+    provider: resolved.provider,
+    account: resolved.account,
+    verification,
+    attempt: primary,
+    source: "webhook",
+    reason: `charge completed after the attempt was ${primary.status}`,
+  });
+  return refunded.status === "refund_requested"
+    ? {
+        status: "failed",
+        message:
+          "This payment arrived after the order had closed, so it is being refunded in full.",
+      }
+    : {
+        status: "pending",
+        message: "We're sorting out this payment. Please check back shortly.",
+      };
+}
 
 // Payments paid entirely with Abonten Credit (createPromotionPaymentAttemptCore)
 // run through this same function so retries, fulfilment and the recovery
@@ -221,6 +289,18 @@ export async function finalizePayment(
     return { status: "failed", message: "Payment was never started" };
   }
 
+  // A closed attempt (declined, expired, replaced by another method) can
+  // still be paid at the provider afterwards — a late mobile-money
+  // approval, a stale tab. Before, that money was simply kept: the lock
+  // below refused the attempt and the webhook retried for days. Now the
+  // provider is asked what happened, and a real capture is refunded.
+  if (
+    (primary.status === "failed" || primary.status === "cancelled") &&
+    primary.provider !== CREDIT_PROVIDER
+  ) {
+    return reconcileClosedAttempt(primary);
+  }
+
   let groupMembers: PaymentAttemptFullRow[] = [primary];
   if (primary.payment_group_id) {
     const { data: siblings, error: siblingsError } = await supabase
@@ -332,6 +412,7 @@ export async function finalizePayment(
   // The provider account is the one that started this charge: same
   // provider, same market, same currency.
   let account: ProviderAccount;
+  let providerImpl: PaymentProvider;
   let verification: VerificationResult;
   try {
     const resolved = await resolveProviderAccount({
@@ -340,6 +421,7 @@ export async function finalizePayment(
       providerCode: primary.provider,
     });
     account = resolved.account;
+    providerImpl = resolved.provider;
     verification = await resolved.provider.verify(
       account,
       primary.provider_reference,
@@ -402,6 +484,29 @@ export async function finalizePayment(
     });
     if (reservation) {
       await releaseReservation(reservation.id, "payment_failed");
+    }
+    // The provider took money, but not the amount this order costs (or in
+    // another currency): nothing is issued for it, and it goes back.
+    if (verification.status === "success" && !amountMatches) {
+      const refunded = await refundOrphanCapture({
+        provider: providerImpl,
+        account,
+        verification,
+        attempt: primary,
+        source: "verify",
+        reason: `amount mismatch: expected ${expectedCash.amountMinor} ${expectedCash.currency}`,
+      });
+      return refunded.status === "refund_requested"
+        ? {
+            status: "failed",
+            message:
+              "The amount charged didn't match your order, so it is being refunded in full.",
+          }
+        : {
+            status: "pending",
+            message:
+              "We're sorting out this payment. Please check back shortly.",
+          };
     }
     return {
       status: "failed",

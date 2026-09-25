@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
+import { fromMajor, toMajor } from "@abonten/core/money/money";
 import type {
   TransactionKind,
   TransactionStatus,
@@ -109,11 +110,13 @@ async function fetchTicketDetail(
         0,
       );
       if (peerRevenue > 0) {
-        const fee =
-          Math.round(
-            (Number(txn.amount) * (thisRevenue / peerRevenue) - thisRevenue) *
-              100,
-          ) / 100;
+        // Rounded to what the order's currency can hold.
+        const fee = toMajor(
+          fromMajor(
+            Number(txn.amount) * (thisRevenue / peerRevenue) - thisRevenue,
+            (row.ticket_type as { currency?: string } | null)?.currency ?? "",
+          ),
+        );
         serviceFee = Math.max(0, fee);
         totalPaid = thisRevenue + serviceFee;
       }

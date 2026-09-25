@@ -16,6 +16,7 @@
 
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
+import type { PaymentMethodCode } from "@abonten/core/market/types";
 import type { Money } from "@abonten/core/money/money";
 import type { Json } from "@abonten/types/database.types";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -48,18 +49,31 @@ async function storeInit(
   init: CheckoutInit,
   provider: string,
   countryCode: string,
+  methodCode: PaymentMethodCode,
 ): Promise<ChargeInitResult> {
+  // Keeps what the attempt already recorded (the tax share) and says how
+  // the charge was started, for support and reconciliation.
+  const {
+    mode: _mode,
+    access_code: _accessCode,
+    authorization_url: _authorizationUrl,
+    public_key: _publicKey,
+    url: _url,
+    ...kept
+  } = attempt.metadata ?? {};
+  const base: Record<string, unknown> = { ...kept, method: methodCode };
   const metadata: Record<string, unknown> =
     init.mode === "popup"
       ? {
+          ...base,
           mode: "popup",
           access_code: init.accessCode,
           authorization_url: init.authorizationUrl,
           public_key: init.publicKey,
         }
       : init.mode === "redirect"
-        ? { mode: "redirect", url: init.url }
-        : { mode: "direct" };
+        ? { ...base, mode: "redirect", url: init.url }
+        : { ...base, mode: "direct" };
   const { error } = await getSupabaseServiceClient()
     .from("payment_attempt")
     .update({
@@ -136,7 +150,9 @@ function describeFailure(error: unknown, fallback: string): ChargeInitResult {
 /**
  * Starts (or resumes) the charge for `attempt`: a direct charge when the
  * selected saved method carries a usable token and the provider supports
- * it, otherwise the provider's hosted page / popup.
+ * it, otherwise the provider's hosted page / popup for `methodCode`.
+ * `paymentMethod` is only the instrument paymentChoice.ts judged chargeable
+ * by this very account; a card tokenised elsewhere arrives as null.
  */
 export async function initiateChargeForAttempt(input: {
   attempt: PaymentAttemptRow;
@@ -144,25 +160,26 @@ export async function initiateChargeForAttempt(input: {
   countryCode: string | null | undefined;
   email: string;
   paymentMethod: SelectedPaymentMethod | null;
+  /** How the buyer is paying; decides the hosted page's channels. */
+  methodCode: PaymentMethodCode;
+  /** The provider paymentChoice.ts picked for that method. */
+  providerCode?: string | null;
   callbackUrl: string;
   description?: string;
 }): Promise<ChargeInitResult> {
-  const { attempt, amount, email, paymentMethod, callbackUrl } = input;
+  const { attempt, amount, email, paymentMethod, callbackUrl, methodCode } =
+    input;
 
   let provider: PaymentProvider;
   let account: ProviderAccount;
   try {
-    const method =
-      paymentMethod?.method_type === "momo"
-        ? "mobile_money"
-        : paymentMethod?.method_type === "card"
-          ? "card"
-          : null;
     ({ provider, account } = await resolveProviderAccount({
       countryCode: input.countryCode,
       currency: amount.currency,
-      providerCode: attempt.provider_reference ? attempt.provider : null,
-      method,
+      providerCode: attempt.provider_reference
+        ? attempt.provider
+        : (input.providerCode ?? null),
+      method: methodCode,
     }));
   } catch (error) {
     return describeFailure(error, "Failed to start payment. Please try again.");
@@ -198,7 +215,13 @@ export async function initiateChargeForAttempt(input: {
         reference: referenceFor(account.provider),
         token: token as string,
       });
-      return storeInit(attempt, init, account.provider, account.countryCode);
+      return storeInit(
+        attempt,
+        init,
+        account.provider,
+        account.countryCode,
+        methodCode,
+      );
     }
     if (canChargeMomoDirect) {
       const init = await provider.chargeMobileMoney(account, {
@@ -208,7 +231,13 @@ export async function initiateChargeForAttempt(input: {
         phoneE164: phone as string,
         networkCode: networkCode as string,
       });
-      return storeInit(attempt, init, account.provider, account.countryCode);
+      return storeInit(
+        attempt,
+        init,
+        account.provider,
+        account.countryCode,
+        methodCode,
+      );
     }
     if (cached) {
       return { status: 200, data: cached };
@@ -220,13 +249,19 @@ export async function initiateChargeForAttempt(input: {
       callbackUrl,
       metadata: { paymentAttemptId: attempt.id },
       description: input.description,
-      methods: paymentMethod?.method_type === "card" ? ["card"] : undefined,
+      methods: [methodCode],
     });
-    return storeInit(attempt, init, account.provider, account.countryCode);
+    return storeInit(
+      attempt,
+      init,
+      account.provider,
+      account.countryCode,
+      methodCode,
+    );
   } catch (error) {
     return describeFailure(
       error,
-      paymentMethod?.method_type === "momo"
+      methodCode === "mobile_money"
         ? "We couldn't start your mobile money payment. Please try again."
         : "We couldn't start your payment. Please try again.",
     );

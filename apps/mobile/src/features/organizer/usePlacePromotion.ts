@@ -30,6 +30,7 @@ export function useCreatePlacePromotionAttempt() {
     mutationFn: (v: {
       placePromotionCheckoutId: string;
       paymentMethodId: string | null;
+      method?: string | null;
       useCredit: boolean;
     }) => api.checkout.placePromotionAttempt(v),
   });

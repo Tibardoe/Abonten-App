@@ -516,6 +516,11 @@ function ProvidersSection({
   );
   const [payouts, setPayouts] = useState(existing?.payoutsEnabled ?? false);
   const [ref, setRef] = useState(existing?.providerAccountRef ?? "");
+  const [options, setOptions] = useState(
+    existing && Object.keys(existing.options ?? {}).length > 0
+      ? JSON.stringify(existing.options, null, 2)
+      : "",
+  );
 
   function pick(code: PaymentProviderCode) {
     setProvider(code);
@@ -534,6 +539,11 @@ function ProvidersSection({
     setCurrencies((row?.currencies ?? [market.defaultCurrency]).join(", "));
     setPayouts(row?.payoutsEnabled ?? false);
     setRef(row?.providerAccountRef ?? "");
+    setOptions(
+      row && Object.keys(row.options ?? {}).length > 0
+        ? JSON.stringify(row.options, null, 2)
+        : "",
+    );
   }
 
   return (
@@ -566,6 +576,18 @@ function ProvidersSection({
           onSubmit={(e) => {
             e.preventDefault();
             setMsg(null);
+            let parsedOptions: Record<string, unknown> = {};
+            if (options.trim()) {
+              try {
+                parsedOptions = JSON.parse(options);
+              } catch {
+                setMsg({
+                  ok: false,
+                  text: "Provider options are not valid JSON.",
+                });
+                return;
+              }
+            }
             start(async () => {
               const res = await upsertMarketProvider({
                 countryCode: market.countryCode,
@@ -581,6 +603,7 @@ function ProvidersSection({
                   .filter(Boolean),
                 payoutsEnabled: payouts,
                 providerAccountRef: ref.trim() || null,
+                options: parsedOptions,
               });
               setMsg({
                 ok: res.status === 200,
@@ -667,7 +690,21 @@ function ProvidersSection({
               checked={payouts}
               onChange={(e) => setPayouts(e.target.checked)}
             />{" "}
-            Automated payouts (provider transfers) allowed
+            Automated payouts (provider transfers) allowed — needs
+            markets.activate and a fresh identity check
+          </label>
+          <label className={`${label} col-span-2`}>
+            Provider options (JSON, optional) — per-country facts such as
+            {
+              ' {"channels": ["card", "mobile_money"], "cardVerificationMinor": {"KES": 1000}, "bankCountry": "kenya"}'
+            }
+            . Empty uses the provider's documented defaults.
+            <textarea
+              className={`${input} font-mono`}
+              rows={4}
+              value={options}
+              onChange={(e) => setOptions(e.target.value)}
+            />
           </label>
           <div className="col-span-2 flex items-center gap-2">
             <Button type="submit" size="sm" disabled={pending}>

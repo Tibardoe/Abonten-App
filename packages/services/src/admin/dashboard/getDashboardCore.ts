@@ -18,8 +18,9 @@ import {
 // dashboard's definition of "last 30 days".
 //
 // Days are UTC days for every market: one definition of "today" across the
-// console, whichever markets are open. (Ghana, the first market, is UTC+0,
-// so its local days are the same.)
+// console, whichever markets are open. Money is one currency at a time
+// (`currency`, default the default market's); `snapshot.currencies` lists
+// the others with activity.
 
 export type DashboardSnapshotV2 = AdminDashboardKpis & {
   range: ResolvedAdminRange;
@@ -30,6 +31,7 @@ export async function getDashboardCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
   range: ResolvedAdminRange,
+  currency?: string | null,
 ): Promise<AdminEnvelope<DashboardSnapshotV2>> {
   try {
     assertPermission(ctx, "dashboard.view");
@@ -42,6 +44,7 @@ export async function getDashboardCore(
     p_to: range.to,
     p_prev_from: range.prevFrom ?? range.from,
     p_prev_to: range.prevTo ?? range.from,
+    p_currency: currency ?? undefined,
   });
 
   if (error) {

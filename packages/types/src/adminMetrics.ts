@@ -50,7 +50,10 @@ export type AdminSnapshotMetrics = {
   places: number;
   refundsPending: number;
   refundsPendingAmount: number;
+  /** The currency every money figure here is in (one per report). */
   currency: string;
+  /** Currencies with activity: the report can be switched between them. */
+  currencies: string[];
 };
 
 export type AdminHealthRow = {
@@ -110,4 +113,5 @@ export type AdminFinanceOverview = {
   organizerMoney: AdminOrganizerBalance[];
   activeFeeRate: number | null;
   currency: string;
+  currencies: string[];
 };
