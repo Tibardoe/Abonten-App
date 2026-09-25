@@ -4,6 +4,7 @@ import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -74,7 +75,7 @@ export default function FinancesOverview({
         <div>
           <p className="text-sm text-muted-foreground">Available to withdraw</p>
           <p className="font-bold text-2xl md:text-3xl">
-            {primary.currency} {primary.available_balance.toLocaleString()}
+            {formatMoney(primary.currency, primary.available_balance)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             Money available after eligible event proceeds, refunds, and previous
@@ -96,13 +97,13 @@ export default function FinancesOverview({
           <div>
             <p className="text-sm text-muted-foreground">Pending</p>
             <p className="font-semibold text-lg">
-              {primary.currency} {primary.pending_balance.toLocaleString()}
+              {formatMoney(primary.currency, primary.pending_balance)}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Total earnings</p>
             <p className="font-semibold text-lg">
-              {primary.currency} {primary.total_earnings.toLocaleString()}
+              {formatMoney(primary.currency, primary.total_earnings)}
             </p>
           </div>
         </div>

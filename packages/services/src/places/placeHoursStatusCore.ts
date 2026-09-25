@@ -1,3 +1,4 @@
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -53,7 +54,7 @@ export async function updatePlaceOpeningHoursCore(
   if (deleteError) {
     return {
       status: 500,
-      message: `Error updating opening hours: ${deleteError.message}`,
+      message: userFacingError("Error updating opening hours", deleteError),
     };
   }
 
@@ -73,7 +74,7 @@ export async function updatePlaceOpeningHoursCore(
     if (insertError) {
       return {
         status: 500,
-        message: `Error inserting opening hours: ${insertError.message}`,
+        message: userFacingError("Error inserting opening hours", insertError),
       };
     }
   }
@@ -108,7 +109,7 @@ export async function setPlaceTemporaryStatusCore(
   if (updateError) {
     return {
       status: 500,
-      message: `Error updating place status: ${updateError.message}`,
+      message: userFacingError("Error updating place status", updateError),
     };
   }
 

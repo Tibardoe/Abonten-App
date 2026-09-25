@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type ReviewDraftPayload,
   reviewDraftPayloadSchema,
@@ -27,7 +28,7 @@ export async function saveReviewDraft({
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
   if (!user) {
@@ -54,7 +55,7 @@ export async function saveReviewDraft({
     if (existingDraftError) {
       return {
         status: 500,
-        message: `Error loading draft: ${existingDraftError.message}`,
+        message: userFacingError("Error loading draft", existingDraftError),
       };
     }
     if (!existingDraft || existingDraft.user_id !== user.id) {
@@ -93,7 +94,7 @@ export async function saveReviewDraft({
     if (updateDraftError) {
       return {
         status: 500,
-        message: `Failed to save draft: ${updateDraftError.message}`,
+        message: userFacingError("Failed to save draft", updateDraftError),
       };
     }
 
@@ -110,7 +111,10 @@ export async function saveReviewDraft({
     if (updateReviewDraftError) {
       return {
         status: 500,
-        message: `Failed to save draft: ${updateReviewDraftError.message}`,
+        message: userFacingError(
+          "Failed to save draft",
+          updateReviewDraftError,
+        ),
       };
     }
 
@@ -154,7 +158,7 @@ export async function saveReviewDraft({
     await supabase.from("drafts").delete().eq("id", newDraft.id);
     return {
       status: 500,
-      message: `Failed to save draft: ${insertReviewDraftError.message}`,
+      message: userFacingError("Failed to save draft", insertReviewDraftError),
     };
   }
 

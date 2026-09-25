@@ -12,6 +12,7 @@ import {
   getPaymentProvider,
   isPaymentProviderCode,
   missingProviderEnv,
+  providerEnvNameProblem,
 } from "./registry";
 import { stripeProvider } from "./stripeProvider";
 import type { ProviderAccount } from "./types";
@@ -420,5 +421,94 @@ describe("stripe adapter", () => {
       providerTransactionId: null,
       detail: "checkout.session.expired",
     });
+  });
+});
+
+describe("provider variable names", () => {
+  const gh = { countryCode: "GH", isDefault: true, currency: "GHS" };
+  const ng = { countryCode: "NG", isDefault: false, currency: "NGN" };
+  const fr = { countryCode: "FR", isDefault: false, currency: "EUR" };
+
+  it("accepts the seeded names", () => {
+    expect(
+      providerEnvNameProblem(
+        "paystack",
+        "secretKey",
+        "PAYSTACK_SECRET_KEY",
+        gh,
+      ),
+    ).toBeNull();
+    expect(
+      providerEnvNameProblem(
+        "paystack",
+        "publicKey",
+        "NEXT_PUBLIC_PAYSTACK_NG_PUBLIC_KEY",
+        ng,
+      ),
+    ).toBeNull();
+    expect(
+      providerEnvNameProblem("stripe", "secretKey", "STRIPE_SECRET_KEY_EU", fr),
+    ).toBeNull();
+  });
+
+  it("refuses any other server secret, whatever the field", () => {
+    for (const name of [
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "CLOUDINARY_API_SECRET",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    ]) {
+      expect(
+        providerEnvNameProblem("paystack", "publicKey", name),
+      ).not.toBeNull();
+      expect(
+        providerEnvNameProblem("stripe", "secretKey", name),
+      ).not.toBeNull();
+    }
+  });
+
+  it("refuses another market's keys", () => {
+    expect(
+      providerEnvNameProblem(
+        "paystack",
+        "secretKey",
+        "PAYSTACK_SECRET_KEY",
+        ng,
+      ),
+    ).not.toBeNull();
+    expect(
+      providerEnvNameProblem(
+        "paystack",
+        "secretKey",
+        "PAYSTACK_KE_SECRET_KEY",
+        ng,
+      ),
+    ).not.toBeNull();
+  });
+
+  it("an account pointed at a foreign secret is not built at all", () => {
+    const market = { countryCode: "GH" } as never;
+    const account = accountFromConfig(
+      market,
+      {
+        provider: "paystack",
+        enabled: true,
+        credentials: {
+          secretKeyEnv: "PAYSTACK_SECRET_KEY",
+          webhookSecretEnv: "PAYSTACK_WEBHOOK_SECRET",
+          publicKeyEnv: "SUPABASE_SERVICE_ROLE_KEY",
+        },
+        settlementCurrency: "GHS",
+        priority: 1,
+        providerAccountRef: null,
+        currencies: ["GHS"],
+        payoutsEnabled: false,
+        options: {},
+      },
+      {
+        PAYSTACK_SECRET_KEY: "sk_test_x",
+        SUPABASE_SERVICE_ROLE_KEY: "service-role-secret",
+      },
+    );
+    expect(account).toBeNull();
   });
 });

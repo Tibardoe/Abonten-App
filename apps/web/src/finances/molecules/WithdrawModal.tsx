@@ -11,6 +11,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { buildWithdrawAmountSchema } from "@abonten/validation/payoutSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -59,8 +60,13 @@ export default function WithdrawModal({
     staleTime: 20_000,
   });
 
-  const accounts =
+  // Only accounts that receive this balance's currency: a payout is paid
+  // in the currency it was earned in (the database refuses any other).
+  const allAccounts =
     accountsResponse?.status === 200 ? accountsResponse.data : [];
+  const accounts = allAccounts.filter(
+    (a) => a.currency?.toUpperCase() === currency.toUpperCase(),
+  );
 
   const schema = useMemo(
     () => buildWithdrawAmountSchema(availableBalance),
@@ -122,7 +128,7 @@ export default function WithdrawModal({
               <div className="rounded-md bg-muted p-3 text-sm">
                 Available:{" "}
                 <span className="font-semibold">
-                  {currency} {availableBalance.toLocaleString()}
+                  {formatMoney(currency, availableBalance)}
                 </span>
               </div>
 
@@ -168,7 +174,11 @@ export default function WithdrawModal({
                       </p>
                     ) : accounts.length === 0 ? (
                       <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground space-y-2">
-                        <p>You haven't added a payout account yet.</p>
+                        <p>
+                          {allAccounts.length === 0
+                            ? "You haven't added a payout account yet."
+                            : `None of your payout accounts receives ${currency}.`}
+                        </p>
                         <Link
                           href="/finances/payout-accounts"
                           className="font-medium text-primary hover:underline"
@@ -210,7 +220,7 @@ export default function WithdrawModal({
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Amount</span>
                 <span className="font-semibold">
-                  {currency} {Number(amount).toLocaleString()}
+                  {formatMoney(currency, Number(amount))}
                 </span>
               </div>
               <hr className="border-border" />
@@ -251,7 +261,7 @@ export default function WithdrawModal({
               >
                 {isSubmitting
                   ? "Submitting…"
-                  : `Withdraw ${currency} ${Number(amount).toLocaleString()}`}
+                  : `Withdraw ${formatMoney(currency, Number(amount))}`}
               </Button>
             </div>
           </div>

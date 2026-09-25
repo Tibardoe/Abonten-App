@@ -7,6 +7,7 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import { isBookingLapsed } from "@abonten/core/placeBooking";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type {
@@ -54,7 +55,7 @@ export async function fetchPlaceBookingsPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Error fetching place: ${placeError.message}`,
+      message: userFacingError("Error fetching place", placeError),
     };
   }
 
@@ -156,7 +157,7 @@ export async function respondToPlaceBookingCore(
   if (fetchError) {
     return {
       status: 500,
-      message: `Error fetching booking: ${fetchError.message}`,
+      message: userFacingError("Error fetching booking", fetchError),
     };
   }
 
@@ -270,7 +271,7 @@ export async function fetchPlaceReviewsForOwner(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Error fetching place: ${placeError.message}`,
+      message: userFacingError("Error fetching place", placeError),
     };
   }
 

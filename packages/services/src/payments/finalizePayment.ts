@@ -292,6 +292,24 @@ export async function finalizePayment(
   }
 
   if (primary.status === "succeeded") {
+    // A succeeded attempt answers only for the charge its transaction
+    // recorded. Its reference being a different one means this is a second
+    // charge (an older provider page paid after the order was paid another
+    // way) — money with no order, which must go back, not be acknowledged.
+    if (primary.transaction_id && primary.provider !== CREDIT_PROVIDER) {
+      const { data: txn } = await supabase
+        .from("transaction")
+        .select("provider_reference")
+        .eq("id", primary.transaction_id)
+        .maybeSingle();
+      if (
+        txn?.provider_reference &&
+        primary.provider_reference &&
+        txn.provider_reference !== primary.provider_reference
+      ) {
+        return reconcileClosedAttempt(primary);
+      }
+    }
     return { status: "succeeded" };
   }
 

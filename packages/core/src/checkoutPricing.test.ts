@@ -112,3 +112,13 @@ describe("computeCheckoutFee", () => {
     expect(computeCheckoutFee(3.3)).toBe(0.17);
   });
 });
+
+describe("computeCheckoutFee in the order's currency", () => {
+  it("rounds to whole francs for XOF and to thousandths for KWD", () => {
+    // 5% of 1,010 XOF is 50.5 -> 51 francs, never 50.5.
+    expect(computeCheckoutFee(1010, 0.05, "XOF")).toBe(51);
+    // 5% of 1.234 KWD is 0.0617 -> 0.062.
+    expect(computeCheckoutFee(1.234, 0.05, "KWD")).toBe(0.062);
+    expect(computeCheckoutFee(24, 0.05, "GHS")).toBe(1.2);
+  });
+});

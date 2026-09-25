@@ -9,6 +9,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import { getEventAttendanceCounts } from "./getAttendace";
@@ -61,7 +62,7 @@ export async function getUserPosts(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Failed fetching events: ${error.message}`,
+      message: userFacingError("Failed fetching events", error),
     };
   }
 

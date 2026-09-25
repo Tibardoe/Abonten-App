@@ -6,6 +6,7 @@ import getUserPendingTicketCheckouts, {
   type PendingCheckoutSession,
 } from "@/actions/getUserPendingTicketCheckouts";
 import issueFreeCheckoutTickets from "@/actions/issueFreeCheckoutTickets";
+import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
 import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPanel";
@@ -20,6 +21,7 @@ import {
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
 import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -69,6 +71,7 @@ export default function PendingCheckoutsBasket({
   const [completedCheckout, setCompletedCheckout] = useState<{
     sessionIds: string[];
     eventIds: string[];
+    ticketCount?: number;
   } | null>(null);
 
   // Purely a UI affordance — separate from selectedIds/quantities/payment
@@ -417,8 +420,32 @@ export default function PendingCheckoutsBasket({
   // createPaymentAttempt.ts / checkoutPaymentPreparation.ts) from the same
   // platform_fee_config rate so what's shown here matches what gets charged.
   const serviceFeeRate = useServiceFeeRate(currency || undefined);
-  const selectedFee = computeCheckoutFee(selectedTotal, serviceFeeRate);
-  const selectedGrandTotal = selectedTotal + selectedFee;
+  // The server's own figures for exactly this selection (the same query
+  // the Pay button reads, so it is fetched once): the fee is worked out per
+  // checkout in the market's currency and an exclusive-tax market adds tax.
+  // Until it answers, a local estimate stands in.
+  const sortedSelectedIds = selectedSessions
+    .map((s) => s.checkoutSessionId)
+    .sort();
+  const { data: prepared } = useQuery({
+    queryKey: ["prepare-multi-checkout", sortedSelectedIds],
+    queryFn: () => prepareMultiCheckoutPayment(sortedSelectedIds),
+    enabled: sortedSelectedIds.length > 0,
+  });
+  const authoritative =
+    prepared?.status === 200 && prepared.invalidSessionIds.length === 0
+      ? prepared
+      : null;
+  const selectedFee = authoritative
+    ? authoritative.validSessions.reduce((sum, s) => sum + s.fee, 0)
+    : computeCheckoutFee(selectedTotal, serviceFeeRate, currency);
+  const selectedTax = authoritative
+    ? authoritative.validSessions.reduce((sum, s) => sum + s.tax, 0)
+    : 0;
+  const taxLabel = authoritative?.taxLabel || "Tax";
+  const selectedGrandTotal = authoritative
+    ? authoritative.grandTotal
+    : selectedTotal + selectedFee;
 
   const allSelectedAreFree =
     selectedSessions.length > 0 &&
@@ -487,6 +514,7 @@ export default function PendingCheckoutsBasket({
         <TicketPurchaseSuccessPanel
           sessionIds={completedCheckout.sessionIds}
           eventIds={completedCheckout.eventIds}
+          ticketCount={completedCheckout.ticketCount}
         />
       );
     }
@@ -503,11 +531,14 @@ export default function PendingCheckoutsBasket({
         <TicketPurchaseSuccessPanel
           sessionIds={completedCheckout.sessionIds}
           eventIds={completedCheckout.eventIds}
+          ticketCount={completedCheckout.ticketCount}
         />
       )}
 
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-bold text-lg md:text-xl">Order Summary</h2>
+        <h2 className="font-bold text-lg md:text-xl">
+          {sessions.length > 1 ? "Your checkouts" : "Your checkout"}
+        </h2>
         {sessions.length > 1 && (
           <button
             type="button"
@@ -557,27 +588,27 @@ export default function PendingCheckoutsBasket({
         </p>
         <div className="flex justify-between text-sm text-muted-foreground">
           <p>Selected subtotal</p>
-          <p>
-            {currency} {selectedGrossSubtotal.toFixed(2)}
-          </p>
+          <p>{formatMoney(currency, selectedGrossSubtotal)}</p>
         </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <p>Discount</p>
-          <p>
-            -{currency} {selectedDiscount.toFixed(2)}
-          </p>
-        </div>
+        {selectedDiscount > 0 && (
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <p>Discount</p>
+            <p>-{formatMoney(currency, selectedDiscount)}</p>
+          </div>
+        )}
         <div className="flex justify-between text-sm text-muted-foreground">
           <p>Service fee</p>
-          <p>
-            {currency} {selectedFee.toFixed(2)}
-          </p>
+          <p>{formatMoney(currency, selectedFee)}</p>
         </div>
+        {selectedTax > 0 && (
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <p>{taxLabel}</p>
+            <p>{formatMoney(currency, selectedTax)}</p>
+          </div>
+        )}
         <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
           <p>Total</p>
-          <p>
-            {currency} {selectedGrandTotal.toFixed(2)}
-          </p>
+          <p>{formatMoney(currency, selectedGrandTotal)}</p>
         </div>
       </div>
 
@@ -585,7 +616,7 @@ export default function PendingCheckoutsBasket({
         isExpanded={isPaymentPanelExpanded}
         onToggle={() => setIsPaymentPanelExpanded((prev) => !prev)}
         toggleDisabled={isPaymentInFlight}
-        totalLabel={`${currency} ${selectedGrandTotal.toFixed(2)}`.trim()}
+        totalLabel={formatMoney(currency, selectedGrandTotal)}
         statusText={
           selectedSessions.length === 0
             ? "No checkout selected"
@@ -607,6 +638,10 @@ export default function PendingCheckoutsBasket({
                   eventIds: sessions
                     .filter((s) => selectedIds.has(s.checkoutSessionId))
                     .map((s) => s.eventId),
+                  ticketCount: selectedLines.reduce(
+                    (sum, line) => sum + line.quantity,
+                    0,
+                  ),
                 })
               }
             />
@@ -634,16 +669,20 @@ export default function PendingCheckoutsBasket({
 function TicketPurchaseSuccessPanel({
   sessionIds,
   eventIds,
+  ticketCount,
 }: {
   sessionIds: string[];
   eventIds: string[];
+  /** Tickets bought; the session count when unknown. */
+  ticketCount?: number;
 }) {
+  const plural = (ticketCount ?? sessionIds.length) !== 1;
   return (
     <div className="space-y-4">
       <div className="space-y-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-6 text-center">
         <p className="text-lg font-semibold">Payment successful</p>
         <p className="text-sm text-muted-foreground">
-          Your ticket{sessionIds.length === 1 ? " is" : "s are"} ready.
+          {plural ? "Your tickets are ready." : "Your ticket is ready."}
         </p>
         <Link
           href="/manage/my-events"

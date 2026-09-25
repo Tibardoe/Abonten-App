@@ -3,6 +3,7 @@
 import getEventFinanceSummary from "@/actions/getEventFinanceSummary";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -76,7 +77,7 @@ export default function EventFinanceSummary({
       <div className="rounded-xl border border-border bg-card text-card-foreground p-4 space-y-3">
         <Row
           label="Ticket sales"
-          value={`${summary.currency} ${summary.ticketSales.toLocaleString()}`}
+          value={formatMoney(summary.currency, summary.ticketSales)}
         />
         {/* Under the customer-paid-service-fee model the organizer keeps
             100% of the ticket price, so there is no fee to deduct here.
@@ -84,40 +85,40 @@ export default function EventFinanceSummary({
         {summary.platformFee !== 0 && (
           <Row
             label="Abonten fees"
-            value={`-${summary.currency} ${summary.platformFee.toLocaleString()}`}
+            value={`-${formatMoney(summary.currency, summary.platformFee)}`}
           />
         )}
         {summary.refunds !== 0 && (
           <div className="space-y-1">
             <Row
               label="Refunds"
-              value={`-${summary.currency} ${Math.abs(summary.refunds).toLocaleString()}`}
+              value={`-${formatMoney(summary.currency, Math.abs(summary.refunds))}`}
             />
             {(summary.pendingRefunds > 0 || summary.completedRefunds > 0) && (
               <p className="text-xs text-muted-foreground">
                 {summary.refundRequestCount} request
                 {summary.refundRequestCount === 1 ? "" : "s"} ·{" "}
-                {summary.currency} {summary.pendingRefunds.toLocaleString()}{" "}
-                pending · {summary.currency}{" "}
-                {summary.completedRefunds.toLocaleString()} completed
+                {formatMoney(summary.currency, summary.pendingRefunds)} pending
+                · {formatMoney(summary.currency, summary.completedRefunds)}{" "}
+                completed
               </p>
             )}
           </div>
         )}
         <Row
           label="Net sales"
-          value={`${summary.currency} ${summary.netSales.toLocaleString()}`}
+          value={formatMoney(summary.currency, summary.netSales)}
         />
         {summary.promoterCommissions !== 0 && (
           <Row
             label="Promoter commissions"
-            value={`-${summary.currency} ${Math.abs(summary.promoterCommissions).toLocaleString()}`}
+            value={`-${formatMoney(summary.currency, Math.abs(summary.promoterCommissions))}`}
           />
         )}
         <hr className="border-border" />
         <Row
           label="Organizer earnings"
-          value={`${summary.currency} ${summary.organizerEarnings.toLocaleString()}`}
+          value={formatMoney(summary.currency, summary.organizerEarnings)}
         />
 
         <hr className="border-border" />
@@ -133,8 +134,8 @@ export default function EventFinanceSummary({
           <div className="space-y-1">
             <p className="text-sm font-medium">Settlement status: Settled</p>
             <p className="text-xs text-muted-foreground">
-              {summary.currency} {summary.organizerEarnings.toLocaleString()} is
-              now available in your Finances balance.
+              {formatMoney(summary.currency, summary.organizerEarnings)} is now
+              available in your Finances balance.
             </p>
             <Link
               href="/finances"

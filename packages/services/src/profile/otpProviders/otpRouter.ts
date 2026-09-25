@@ -5,9 +5,10 @@
 // arrives.
 
 import { findCountry } from "@abonten/core/geo/countries";
+import { logger } from "@abonten/core/logger";
 import type { OtpProviderCode } from "@abonten/core/market/types";
-import { phoneCountry } from "@abonten/core/phone/phone";
-import { getMarket } from "../../markets/marketConfig";
+import { getDefaultMarket, marketForPhone } from "../../markets/marketConfig";
+import { getSupabaseServiceClient } from "../../supabase/serviceClient";
 import { hubtelOtpProvider } from "./hubtelOtpProvider";
 import { twilioVerifyProvider } from "./twilioVerifyProvider";
 import type { OtpProvider } from "./types";
@@ -30,11 +31,13 @@ export type OtpRoute =
         | "unknown_country"
         | "no_market"
         | "no_provider"
-        | "not_configured";
+        | "not_configured"
+        | "busy";
     };
 
 export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
-  const countryCode = phoneCountry(phoneE164);
+  const { market, numberCountry: countryCode } =
+    await marketForPhone(phoneE164);
   if (!countryCode) {
     return {
       ok: false,
@@ -42,9 +45,11 @@ export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
       message: "Enter a valid phone number.",
     };
   }
-  const market = await getMarket(countryCode);
-  const countryName = findCountry(countryCode)?.name ?? countryCode;
-  if (!market || market.status === "draft") {
+  const countryName =
+    findCountry(market?.countryCode ?? countryCode)?.name ?? countryCode;
+  // A market still being set up (draft, preparing) sends no codes: its
+  // provider may be configured for testing, and every send costs money.
+  if (!market || market.status === "draft" || market.status === "preparing") {
     return {
       ok: false,
       reason: "no_market",
@@ -67,5 +72,42 @@ export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
         "Text-message codes aren't available right now. Sign in with Google or email instead.",
     };
   }
-  return { ok: true, provider, countryCode };
+  // Circuit breaker against SMS pumping (bots requesting codes to premium
+  // number ranges from many addresses, which per-number and per-address
+  // limits don't stop): an hourly ceiling per country, far above real
+  // sign-in traffic. Tripping it is logged as an error so it pages someone.
+  const isDefault =
+    (await getDefaultMarket()).countryCode === market.countryCode;
+  const ceiling = isDefault
+    ? DEFAULT_MARKET_SENDS_PER_HOUR
+    : OTHER_MARKET_SENDS_PER_HOUR;
+  const { count, error } = await getSupabaseServiceClient()
+    .from("phone_otp_send_log")
+    .select("id", { count: "exact", head: true })
+    .like("phone_e164", `${market.dialCode}%`)
+    .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
+  if (!error && (count ?? 0) >= ceiling) {
+    logger.error(
+      `otpRouter: hourly send ceiling reached for ${market.countryCode} (${count}/${ceiling}); refusing codes`,
+      {
+        security: {
+          event: "otp_country_ceiling",
+          countryCode: market.countryCode,
+          count,
+          ceiling,
+        },
+      },
+    );
+    return {
+      ok: false,
+      reason: "busy",
+      message:
+        "We're sending a lot of codes right now. Please try again shortly, or sign in with Google or email.",
+    };
+  }
+  return { ok: true, provider, countryCode: market.countryCode };
 }
+
+/** Hourly code ceilings per country (see routeOtpForPhone). */
+export const DEFAULT_MARKET_SENDS_PER_HOUR = 5000;
+export const OTHER_MARKET_SENDS_PER_HOUR = 300;

@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
+import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -46,7 +47,7 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 
@@ -78,7 +79,7 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
   if (placeError) {
     return {
       status: 500,
-      message: `Error fetching place: ${placeError.message}`,
+      message: userFacingError("Error fetching place", placeError),
     };
   }
 

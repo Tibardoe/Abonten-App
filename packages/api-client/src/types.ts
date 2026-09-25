@@ -314,7 +314,7 @@ export type PromoPreviewResult =
       discountPercentage: number;
       remainingUses: number | null;
     }
-  | { status: 400 | 401 | 404 | 500; message: string };
+  | { status: 400 | 401 | 404 | 409 | 429 | 500; message: string };
 
 // One-click RSVP for a free event (registerForFreeEventCore). Flat reply:
 // 200 = registered; 300 = already have a ticket; 404 = no free

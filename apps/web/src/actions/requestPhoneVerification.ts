@@ -1,6 +1,5 @@
 "use server";
 
-import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import {
   type PhoneOtpSendResult,
   sendPhoneOtpCore,
@@ -8,12 +7,10 @@ import {
 import type { PhoneOtpPurpose } from "@abonten/services/profile/phoneOtpStore";
 import { headers } from "next/headers";
 
-const MAX_SENDS_PER_IP_PER_HOUR = 10;
-
-// Best-effort caller IP from standard proxy headers -- Vercel/most hosts set
-// x-forwarded-for. Never trust this for anything beyond a coarse abuse
-// signal (it's client-influenceable), only as an additional layer on top of
-// the authoritative per-phone-number cooldown/attempt-cap in the core.
+// Caller IP for the per-address cap. On Vercel x-forwarded-for is set by the
+// platform (a value the client sends is overwritten); elsewhere it can be
+// client-influenced, so it is only ever one layer on top of the per-number
+// cooldown and caps the core claims atomically.
 async function getCallerIp(): Promise<string | null> {
   const headerList = await headers();
   const forwardedFor = headerList.get("x-forwarded-for");
@@ -33,50 +30,16 @@ export default async function requestPhoneVerification(
   rawPhone: string,
   purpose: PhoneOtpPurpose,
 ): Promise<RequestPhoneVerificationResult> {
-  const ipAddress = await getCallerIp();
-
-  const result = await sendPhoneOtpCore({
+  // Anyone can call a Server Action with any arguments. The Field Ops owner
+  // code has its own signed-in flow; sent from here it would replace the
+  // code a Field Ops member just sent that owner.
+  if (purpose !== "sign-in" && purpose !== "phone-update") {
+    return { status: 400, message: "Enter a valid phone number." };
+  }
+  return sendPhoneOtpCore({
     dialCode,
     rawPhone,
     purpose,
-    beforeSend: async () => {
-      if (ipAddress && (await isIpOverSendCap(ipAddress))) {
-        return {
-          status: 429,
-          message:
-            "Too many verification codes requested. Please try again later.",
-        };
-      }
-      return null;
-    },
+    ipAddress: await getCallerIp(),
   });
-
-  if (result.status === 200) {
-    await logOtpSend(result.phoneE164, ipAddress);
-  }
-  return result;
-}
-
-async function isIpOverSendCap(ipAddress: string): Promise<boolean> {
-  const supabase = getSupabaseServiceClient();
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-
-  const { count } = await supabase
-    .from("phone_otp_send_log")
-    .select("id", { count: "exact", head: true })
-    .eq("ip_address", ipAddress)
-    .gte("created_at", oneHourAgo);
-
-  return (count ?? 0) >= MAX_SENDS_PER_IP_PER_HOUR;
-}
-
-async function logOtpSend(
-  phoneE164: string,
-  ipAddress: string | null,
-): Promise<void> {
-  const supabase = getSupabaseServiceClient();
-
-  await supabase
-    .from("phone_otp_send_log")
-    .insert({ phone_e164: phoneE164, ip_address: ipAddress });
 }

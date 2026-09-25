@@ -44,7 +44,7 @@
        status color plus an AA-safe foreground for solid fills. Values
        formalize the emerald/amber shades components were already using
        ad hoc, rather than introducing new brand colors. */
-    --success: 152 60% 36%;
+    --success: 152 60% 29%; /* 4.5:1 with white text and as text on its 10% tint (was 36%: 3.9:1) */
     --success-foreground: 0 0% 100%;
     --warning: 32 95% 44%;
     --warning-foreground: 32 40% 12%;

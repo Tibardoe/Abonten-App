@@ -122,13 +122,13 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Abonten needs access to your photos so you can set a profile picture."
+          "photosPermission": "Abonten uses your photos when you choose one: a profile picture, an event flyer, place photos, a review, a story or highlight, a picture in a message, or a document for verification."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Abonten uses the camera so organizers can scan ticket QR codes to check attendees in."
+          "cameraPermission": "Abonten uses the camera when you choose to: organizers scan ticket QR codes to check attendees in, you scan a place's check-in code, and you can take a photo to send in a message or for a verification document."
         }
       ],
       [

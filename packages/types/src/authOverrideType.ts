@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Lets a small set of checkout-completion actions (generateTicket,
- * insertUserAttendance, ticketPurchaseNotification, getTicketsByIds,
+ * ticketPurchaseNotification, getTicketsByIds,
  * activateEventPromotion, activatePlacePromotion) be driven by a caller that already resolved the
  * user server-side with its own Supabase client, instead of deriving the
  * session from request cookies. The only real caller today is the Paystack

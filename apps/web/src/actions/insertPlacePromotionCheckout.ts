@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { insertPlacePromotionCheckoutCore } from "@abonten/services/places/placePromotionCore";
 
 /**
@@ -25,7 +26,7 @@ export default async function insertPlacePromotionCheckout(
   if (userError) {
     return {
       status: 500 as const,
-      message: `Error fetching user: ${userError.message} `,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 

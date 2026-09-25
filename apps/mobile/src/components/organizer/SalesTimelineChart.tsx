@@ -2,6 +2,7 @@ import type {
   DashboardBucket,
   OrganizerTimelineRow,
 } from "@abonten/api-client";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Overline } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo, useState } from "react";
@@ -22,7 +23,7 @@ const CHART_H = 176;
 const TOP_PAD = 12; // headroom above the tallest bar
 
 function money(currency: string, amount: number): string {
-  return `${currency} ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  return formatMoney(currency, amount, { trimZeroFraction: true });
 }
 
 function compact(amount: number): string {

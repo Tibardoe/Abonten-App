@@ -16,6 +16,11 @@ import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import {
+  RESTRICTED_ACCOUNT_MESSAGE,
+  isAccountRestricted,
+} from "../security/accountStatus";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth, post-flyer-upload body of postEvent, lifted so the
 // `/api/mobile/events` route runs the exact same create flow as the web
@@ -82,7 +87,7 @@ export type PostEventCoreInput = {
 };
 
 export type PostEventCoreResult =
-  | { status: 400 | 409 | 500; message: string }
+  | { status: 400 | 403 | 409 | 500; message: string }
   | { status: 200; message: string; eventId: string };
 
 export async function postEventCore(
@@ -90,6 +95,14 @@ export async function postEventCore(
   userId: string,
   input: PostEventCoreInput,
 ): Promise<PostEventCoreResult> {
+  // create_event runs with the service role (it takes the owner, country, zone
+  // and currency as parameters, so clients may not call it — migration
+  // 20260925110100); the restricted-account check the database applies to
+  // a person's own writes is made here instead.
+  if (await isAccountRestricted(userId)) {
+    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+  }
+
   const locationCheck = validateLocationInput({
     address: input.address,
     latitude: input.latitude,
@@ -223,44 +236,46 @@ export async function postEventCore(
         }))
       : null;
 
-  const { data: eventId, error: createEventError } = await supabase.rpc(
-    "create_event",
-    // create_event's SQL signature has no DEFAULT on several of these
-    // params even though the function genuinely accepts (and this app has
-    // always passed) null for "not set" -- a generated-type gap, not a
-    // real constraint. Same class of cast as get_filtered_events, see
-    // useFilteredEvents.ts on mobile for the fuller explanation.
-    {
-      p_client_request_id: input.clientRequestId,
-      p_organizer_id: userId,
-      p_title: formattedTitle,
-      p_slug: slug,
-      p_description: input.description,
-      p_event_code: eventCode,
-      p_event_category: input.category,
-      p_event_type: input.types,
-      p_latitude: input.latitude,
-      p_longitude: input.longitude,
-      p_address: addressPayload,
-      p_capacity: input.capacity ?? null,
-      p_website_url: input.websiteUrl ?? null,
-      p_flyer_public_id: input.flyerPublicId,
-      p_flyer_version: String(input.flyerVersion),
-      p_starts_at: eventStartDate?.toISOString() ?? null,
-      p_ends_at: eventEndDate?.toISOString() ?? null,
-      p_require_registration: input.requireRegistration,
-      // Featuring an event happens only through the paid Promotion flow.
-      p_featured: false,
-      p_specific_dates: specificDatesPayload,
-      p_ticket_types: ticketTypesPayload.length > 0 ? ticketTypesPayload : null,
-      p_promo_codes: promoCodesPayload,
-      p_receiving_account: null,
-      p_place_id: input.placeId ?? null,
-      p_country_code: location.countryCode,
-      p_timezone: location.timeZone,
-      p_currency: currency,
-    } as unknown as Database["public"]["Functions"]["create_event"]["Args"],
-  );
+  const { data: eventId, error: createEventError } =
+    await getSupabaseServiceClient().rpc(
+      "create_event",
+      // create_event's SQL signature has no DEFAULT on several of these
+      // params even though the function genuinely accepts (and this app has
+      // always passed) null for "not set" -- a generated-type gap, not a
+      // real constraint. Same class of cast as get_filtered_events, see
+      // useFilteredEvents.ts on mobile for the fuller explanation.
+      {
+        p_client_request_id: input.clientRequestId,
+        p_organizer_id: userId,
+        p_title: formattedTitle,
+        p_slug: slug,
+        p_description: input.description,
+        p_event_code: eventCode,
+        p_event_category: input.category,
+        p_event_type: input.types,
+        p_latitude: input.latitude,
+        p_longitude: input.longitude,
+        p_address: addressPayload,
+        p_capacity: input.capacity ?? null,
+        p_website_url: input.websiteUrl ?? null,
+        p_flyer_public_id: input.flyerPublicId,
+        p_flyer_version: String(input.flyerVersion),
+        p_starts_at: eventStartDate?.toISOString() ?? null,
+        p_ends_at: eventEndDate?.toISOString() ?? null,
+        p_require_registration: input.requireRegistration,
+        // Featuring an event happens only through the paid Promotion flow.
+        p_featured: false,
+        p_specific_dates: specificDatesPayload,
+        p_ticket_types:
+          ticketTypesPayload.length > 0 ? ticketTypesPayload : null,
+        p_promo_codes: promoCodesPayload,
+        p_receiving_account: null,
+        p_place_id: input.placeId ?? null,
+        p_country_code: location.countryCode,
+        p_timezone: location.timeZone,
+        p_currency: currency,
+      } as unknown as Database["public"]["Functions"]["create_event"]["Args"],
+    );
 
   if (createEventError) {
     if (createEventError.code === CHECK_VIOLATION) {

@@ -8,6 +8,7 @@ import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of updatePlace, lifted so the mobile
 // PATCH /api/mobile/organizer/places/:id route runs the exact same edit.
@@ -109,8 +110,6 @@ export async function updatePlaceCore(
         country_code: location.countryCode,
       },
       location: `POINT(${longitude} ${latitude})`,
-      country_code: location.countryCode,
-      timezone: location.timeZone,
       ...(replacingCover && {
         cover_public_id: coverPublicId,
         cover_version: coverVersion,
@@ -121,9 +120,27 @@ export async function updatePlaceCore(
     .eq("owner_id", userId);
 
   if (updateError) {
+    logger.error(`updatePlaceCore: update failed (${updateError.message})`);
     return {
       status: 500,
-      message: `Error updating place: ${updateError.message}`,
+      message: "We couldn't save your place. Please try again.",
+    };
+  }
+
+  // Country and zone are resolved here from the venue, so the service role
+  // writes them: owners can't set them directly (guard_listing_market_columns).
+  const { error: marketError } = await getSupabaseServiceClient()
+    .from("place")
+    .update({ country_code: location.countryCode, timezone: location.timeZone })
+    .eq("id", placeId)
+    .eq("owner_id", userId);
+  if (marketError) {
+    logger.error(
+      `updatePlaceCore: market update failed (${marketError.message})`,
+    );
+    return {
+      status: 500,
+      message: "We couldn't save your place. Please try again.",
     };
   }
 

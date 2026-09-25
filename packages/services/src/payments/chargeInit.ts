@@ -1,10 +1,20 @@
 // Starting the charge for a payment_attempt through whichever provider the
 // market uses — the provider-neutral successor of paystackInit.ts.
 //
-// Reuse rules (unchanged from the Paystack-only version):
-//   * A hosted/popup initialisation never moves money by itself, so an
-//     existing-but-never-completed one may be replaced when a saved method
-//     can now be charged directly.
+// One attempt, one charge (2026-09-25):
+//   * An attempt is bound to the amount it was started for. Asked to charge
+//     a different amount, it is retired (cancelled, reference kept) and the
+//     caller starts a fresh attempt — a provider page opened for the old
+//     amount is never handed back for a new one.
+//   * A reference is never overwritten. Before, starting a new charge on an
+//     attempt replaced its reference, so paying the older page (a second
+//     tab) reached a webhook that no longer knew the reference and the money
+//     was silently kept. A retired attempt keeps its reference, so a late
+//     payment on it is found and refunded (finalizePayment →
+//     reconcileClosedAttempt).
+//   * The attempt is CLAIMED before the provider is called (our reference
+//     written where none was), so two concurrent requests can't both start a
+//     charge on it; the loser is told to try again.
 //   * A `direct` charge IS a charge attempt; an existing direct reference is
 //     always reused, never re-initiated, on pain of double-charging.
 //
@@ -36,7 +46,52 @@ export type SelectedPaymentMethod = {
 
 export type ChargeInitResult =
   | { status: 500 | 503; message: string }
+  /**
+   * The attempt was already started for a different charge (another amount,
+   * or a provider page this call would replace). It has been cancelled —
+   * its reference stays on it, so a late payment on it is found and
+   * refunded — and the caller should start again on a fresh attempt.
+   */
+  | { status: 409; message: string; stale: true }
   | { status: 200; data: CheckoutInit };
+
+const STALE_MESSAGE =
+  "This order changed since its payment was started. Please try again.";
+
+/** The charge an attempt was started for, when it recorded one. */
+function startedCharge(attempt: PaymentAttemptRow): Money | null {
+  const meta = attempt.metadata ?? {};
+  return typeof meta.charge_minor === "number" &&
+    typeof meta.charge_currency === "string"
+    ? { amountMinor: meta.charge_minor, currency: meta.charge_currency }
+    : null;
+}
+
+/**
+ * Retires an attempt that can't be reused for this charge. Only an open
+ * attempt moves; its provider reference is kept, which is what lets
+ * finalizePayment recognise (and refund) a late payment on it.
+ */
+async function retireAttempt(
+  attempt: PaymentAttemptRow,
+): Promise<ChargeInitResult> {
+  const { error } = await getSupabaseServiceClient()
+    .from("payment_attempt")
+    .update({
+      status: "cancelled",
+      failure_reason: "Replaced: the order changed after payment started",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", attempt.id)
+    .in("status", ["initiated", "pending"]);
+  if (error) {
+    logger.error(
+      `chargeInit: failed retiring attempt ${attempt.id}: ${error.message}`,
+    );
+    return { status: 500, message: "Something went wrong!" };
+  }
+  return { status: 409, message: STALE_MESSAGE, stale: true };
+}
 
 function referenceFor(provider: string): string {
   return provider === "paystack"
@@ -44,13 +99,12 @@ function referenceFor(provider: string): string {
     : `ABN-${randomUUID()}`;
 }
 
-async function storeInit(
+function initMetadata(
   attempt: PaymentAttemptRow,
-  init: CheckoutInit,
-  provider: string,
-  countryCode: string,
   methodCode: PaymentMethodCode,
-): Promise<ChargeInitResult> {
+  charge: Money,
+  init: CheckoutInit | null,
+): Record<string, unknown> {
   // Keeps what the attempt already recorded (the tax share) and says how
   // the charge was started, for support and reconciliation.
   const {
@@ -61,32 +115,83 @@ async function storeInit(
     url: _url,
     ...kept
   } = attempt.metadata ?? {};
-  const base: Record<string, unknown> = { ...kept, method: methodCode };
-  const metadata: Record<string, unknown> =
-    init.mode === "popup"
-      ? {
-          ...base,
-          mode: "popup",
-          access_code: init.accessCode,
-          authorization_url: init.authorizationUrl,
-          public_key: init.publicKey,
-        }
-      : init.mode === "redirect"
-        ? { ...base, mode: "redirect", url: init.url }
-        : { ...base, mode: "direct" };
-  const { error } = await getSupabaseServiceClient()
+  const base: Record<string, unknown> = {
+    ...kept,
+    method: methodCode,
+    charge_minor: charge.amountMinor,
+    charge_currency: charge.currency,
+  };
+  if (!init) return base;
+  return init.mode === "popup"
+    ? {
+        ...base,
+        mode: "popup",
+        access_code: init.accessCode,
+        authorization_url: init.authorizationUrl,
+        public_key: init.publicKey,
+      }
+    : init.mode === "redirect"
+      ? { ...base, mode: "redirect", url: init.url }
+      : { ...base, mode: "direct" };
+}
+
+/**
+ * Claims the attempt for one charge: writes our reference where there was
+ * none. Only one caller can win; the provider is called after this, so a
+ * lost race never starts a second charge.
+ */
+async function claimAttempt(
+  attempt: PaymentAttemptRow,
+  reference: string,
+  provider: string,
+  countryCode: string,
+  methodCode: PaymentMethodCode,
+  charge: Money,
+): Promise<"claimed" | "taken" | "error"> {
+  const { data, error } = await getSupabaseServiceClient()
     .from("payment_attempt")
     .update({
       provider,
       country_code: countryCode,
-      provider_reference: init.reference,
-      metadata: metadata as Json,
+      provider_reference: reference,
+      metadata: initMetadata(attempt, methodCode, charge, null) as Json,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", attempt.id);
+    .eq("id", attempt.id)
+    .is("provider_reference", null)
+    .in("status", ["initiated", "pending"])
+    .select("id")
+    .maybeSingle();
+  if (error) {
+    logger.error(
+      `chargeInit: failed claiming attempt ${attempt.id}: ${error.message}`,
+    );
+    return "error";
+  }
+  return data ? "claimed" : "taken";
+}
+
+/** Records how the claimed charge started (the provider's reference may differ). */
+async function recordInit(
+  attempt: PaymentAttemptRow,
+  claimedReference: string,
+  init: CheckoutInit,
+  methodCode: PaymentMethodCode,
+  charge: Money,
+): Promise<ChargeInitResult> {
+  const { error } = await getSupabaseServiceClient()
+    .from("payment_attempt")
+    .update({
+      provider_reference: init.reference,
+      metadata: initMetadata(attempt, methodCode, charge, init) as Json,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", attempt.id)
+    .eq("provider_reference", claimedReference);
   if (error) {
     logger.error(
       `Failed storing provider reference on payment_attempt: ${error.message}`,
+      { payment: { attemptId: attempt.id, reference: init.reference } },
     );
     return { status: 500, message: "Something went wrong!" };
   }
@@ -202,62 +307,81 @@ export async function initiateChargeForAttempt(input: {
     typeof networkCode === "string" &&
     networkCode.length > 0;
 
+  // An attempt started for another amount is never resumed: its provider
+  // page would collect the old figure. Attempts from before charge amounts
+  // were recorded are resumed as before.
+  const started = startedCharge(attempt);
+  if (
+    attempt.provider_reference &&
+    started &&
+    (started.amountMinor !== amount.amountMinor ||
+      started.currency !== amount.currency)
+  ) {
+    return retireAttempt(attempt);
+  }
+
   const cached = cachedInit(attempt, account.provider);
   if (cached && cached.mode === "direct") {
     return { status: 200, data: cached };
   }
+  if (cached && !canChargeCardDirect && !canChargeMomoDirect) {
+    return { status: 200, data: cached };
+  }
+  // Starting a new charge on an attempt that already handed one out would
+  // orphan the first reference; retire it and let the caller start fresh.
+  if (attempt.provider_reference) {
+    return retireAttempt(attempt);
+  }
+
+  const reference = referenceFor(account.provider);
+  const claim = await claimAttempt(
+    attempt,
+    reference,
+    account.provider,
+    account.countryCode,
+    methodCode,
+    amount,
+  );
+  if (claim === "error") {
+    return { status: 500, message: "Something went wrong!" };
+  }
+  if (claim === "taken") {
+    return {
+      status: 409,
+      message: "This payment is already being started. Please wait a moment.",
+      stale: true,
+    };
+  }
 
   try {
+    let init: CheckoutInit;
     if (canChargeCardDirect) {
-      const init = await provider.chargeSavedCard(account, {
+      init = await provider.chargeSavedCard(account, {
         email,
         amount,
-        reference: referenceFor(account.provider),
+        reference,
         token: token as string,
       });
-      return storeInit(
-        attempt,
-        init,
-        account.provider,
-        account.countryCode,
-        methodCode,
-      );
-    }
-    if (canChargeMomoDirect) {
-      const init = await provider.chargeMobileMoney(account, {
+    } else if (canChargeMomoDirect) {
+      init = await provider.chargeMobileMoney(account, {
         email,
         amount,
-        reference: referenceFor(account.provider),
+        reference,
         phoneE164: phone as string,
         networkCode: networkCode as string,
       });
-      return storeInit(
-        attempt,
-        init,
-        account.provider,
-        account.countryCode,
-        methodCode,
-      );
+    } else {
+      init = await provider.initializeCheckout(account, {
+        email,
+        amount,
+        reference,
+        callbackUrl,
+        metadata: { paymentAttemptId: attempt.id },
+        description: input.description,
+        methods: [methodCode],
+      });
     }
-    if (cached) {
-      return { status: 200, data: cached };
-    }
-    const init = await provider.initializeCheckout(account, {
-      email,
-      amount,
-      reference: referenceFor(account.provider),
-      callbackUrl,
-      metadata: { paymentAttemptId: attempt.id },
-      description: input.description,
-      methods: [methodCode],
-    });
-    return storeInit(
-      attempt,
-      init,
-      account.provider,
-      account.countryCode,
-      methodCode,
-    );
+    return recordInit(attempt, reference, init, methodCode, amount);
   } catch (error) {
     return describeFailure(
       error,

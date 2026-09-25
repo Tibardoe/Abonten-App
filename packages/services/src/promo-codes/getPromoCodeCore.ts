@@ -1,7 +1,9 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of getPromoCode — shared with validateCheckoutCore (and,
 // through it, `/api/mobile/checkout/validate`). Caller supplies an already-
@@ -46,7 +48,9 @@ export function promoExpiryCutoff(expiresAt: string): Date {
 }
 
 export type GetPromoCodeCoreResult =
-  | { status: 400 | 401 | 404 | 429 | 500; message: string }
+  // A code that exists but cannot be used now is 409, never 401: the mobile
+  // transport treats any 401 as a possibly-dead session.
+  | { status: 400 | 404 | 409 | 429 | 500; message: string }
   | {
       status: 200;
       id: string;
@@ -81,18 +85,23 @@ export async function getPromoCodeCore(
   // Promo codes are unique per (event_id, normalized code), not globally, so
   // the lookup must be scoped by event_id and normalized the same way codes
   // are stored (upper/trim).
-  const { data: promoCode, error: promoCodeError } = await supabase
-    .from("promo_code")
-    .select("*")
-    .eq("event_id", eventId)
-    .eq("promo_code", code.trim().toUpperCase())
-    .maybeSingle();
+  // Service role, one code on one event, after the rate limit above: the
+  // promo_code table is readable only by its event's organizer (migration
+  // 20260925110400) — before, any signed-in account could list every code
+  // on every event straight from the Data API, around this limit.
+  const { data: promoCode, error: promoCodeError } =
+    await getSupabaseServiceClient()
+      .from("promo_code")
+      .select("*")
+      .eq("event_id", eventId)
+      .eq("promo_code", code.trim().toUpperCase())
+      .maybeSingle();
 
   if (promoCodeError) {
     logger.error(`Error fetching promo code: ${promoCodeError.message}`);
     return {
       status: 500,
-      message: `Error fetching promo code: ${promoCodeError.message}`,
+      message: "Something went wrong. Please try again.",
     };
   }
 
@@ -112,14 +121,14 @@ export async function getPromoCodeCore(
   }
 
   if (promoCode.is_active === false) {
-    return { status: 401, message: "Promo code is no longer active!" };
+    return { status: 409, message: "Promo code is no longer active!" };
   }
 
   if (
     promoCode.expires_at &&
     promoExpiryCutoff(promoCode.expires_at) <= new Date()
   ) {
-    return { status: 401, message: "Promo code has expired!" };
+    return { status: 409, message: "Promo code has expired!" };
   }
 
   const { data: promoCodeUsage, error: promoCodeUsageError } = await supabase
@@ -133,7 +142,10 @@ export async function getPromoCodeCore(
     logger.error(promoCodeUsageError.message);
     return {
       status: 500,
-      message: `Error fetching promo code usage: ${promoCodeUsageError.message}`,
+      message: userFacingError(
+        "Error fetching promo code usage",
+        promoCodeUsageError,
+      ),
     };
   }
 
@@ -149,7 +161,7 @@ export async function getPromoCodeCore(
       : Math.max(0, promoCode.max_uses - promoCode.times_used);
 
   if (remainingUses !== null && remainingUses <= 0) {
-    return { status: 401, message: "Promo code has reached its usage limit!" };
+    return { status: 409, message: "Promo code has reached its usage limit!" };
   }
 
   return {

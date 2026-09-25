@@ -5,7 +5,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { isValidElement, useCallback } from "react";
 
 type InfiniteListProps<T> = {
   queryKey: unknown[];
@@ -15,6 +15,8 @@ type InfiniteListProps<T> = {
   emptyState: React.ReactNode;
   listClassName?: string;
   listElement?: "ul" | "div";
+  /** Wrap each rendered row in <li> (for rows that aren't list items). */
+  wrapItems?: boolean;
   loadingSkeleton?: React.ReactNode;
 };
 
@@ -34,6 +36,7 @@ export default function InfiniteList<T>({
   emptyState,
   listClassName,
   listElement = "ul",
+  wrapItems = false,
   loadingSkeleton,
 }: InfiniteListProps<T>) {
   const {
@@ -89,7 +92,19 @@ export default function InfiniteList<T>({
   return (
     <div>
       <List className={listClassName}>
-        {items.map((item, index) => renderItem(item, index))}
+        {items.map((item, index) => {
+          const node = renderItem(item, index);
+          // A <ul> may only contain <li>: with wrapItems, rows rendered as
+          // links are wrapped so screen readers announce a list of N items.
+          if (!wrapItems || List !== "ul") return node;
+          return (
+            <li
+              key={isValidElement(node) && node.key != null ? node.key : index}
+            >
+              {node}
+            </li>
+          );
+        })}
       </List>
 
       <div ref={sentinelRef} aria-hidden className="h-px" />

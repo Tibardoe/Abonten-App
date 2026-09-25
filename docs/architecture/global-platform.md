@@ -4,7 +4,7 @@ purpose: How Abonten runs in more than one country — the market model and its 
 audience: Engineers, operations, finance
 scope: supabase/migrations/20260924100000..20260925100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.1
+version: 1.3
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -65,8 +65,12 @@ Spotlight, credit-only orders), card saving and new listings refuse a
 market that is not live (`paymentChoice.ts`, `marketClosedForSales`,
 `resolveListingLocation`). Draft, preparing, ready and paused markets'
 listings are also hidden from discovery — every discovery function carries
-`listing_market_visible(country_code)` next to its moderation filter
-(migration `…100300`). Payments already in flight still complete and
+a market-visibility filter next to its moderation filter (migration
+`…100300`), since `…111100` written as `x.country_code <> all ((select
+public.hidden_listing_countries())::text[])` so the hidden countries are
+read once per query — `listing_market_visible()` is a SECURITY DEFINER
+call Postgres cannot inline and cost ~5.6 µs a row. Use the array form in
+new discovery SQL. Payments already in flight still complete and
 refunds still run in any status.
 
 **Readiness** (`@abonten/core/market/readiness`, probes gathered by
@@ -103,7 +107,10 @@ rates, monitoring, support contact.
   `@abonten/core/formatMoney` wraps it and never throws on a missing code.
 - **Listings carry their currency** — `event.currency`, `country_code`,
   `timezone` are NOT NULL, set from the venue's market at creation and
-  immutable after it; every `ticket_type.currency` equals its event's
+  immutable after it (enforced for direct client writes by
+  `guard_listing_market_columns` since 2026-09-25; the service sets zone and
+  country with the service role; `create_event` / `create_place` are
+  service-only); every `ticket_type.currency` equals its event's
   (trigger). Ghana's rows were backfilled from the default market.
 - **Canonical vs display** — prices are shown and charged in the listing's
   own currency. A visitor from elsewhere may additionally see "≈ £12"
@@ -139,6 +146,15 @@ events, list networks/banks, transfer recipient + transfer, probe.
 | Paystack (`paystackProvider.ts` over `paystackApi.ts`) | GH (live), NG, KE, ZA, CI (draft) | — (transfers off per market) |
 | Stripe (`stripeProvider.ts`, Checkout Sessions) | GB, US, FR, DE (draft) | saved cards, mobile money, payouts |
 
+- **Variable names are an allowlist** (2026-09-25) — a provider row may
+  only name its own provider's variables for that field, suffixed for its
+  market (`PAYSTACK_NG_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_EU`
+  for a euro market; no suffix only for the default market's account).
+  `providerEnvNameProblem` checks it on save and again whenever an account
+  is built: the public key's value is sent to buyers, so a free-form name
+  could have shipped any server secret to every checkout. The exchange-rate
+  app id must be `OPEN_EXCHANGE_RATES_APP_ID[_X]` and its scheduler URL
+  this app's own `/api/jobs/exchange-rates`.
 - **Routing** — `resolveProviderAccount({countryCode, currency, method})`
   picks the market's enabled account that accepts the currency and runs
   the method, reading credentials from the env variable *names* on its
@@ -146,6 +162,13 @@ events, list networks/banks, transfer recipient + transfer, probe.
   never a fallback to another market's keys. Accounts can charge without a
   webhook secret (the admin deployment), but then every webhook for them
   is refused.
+- **One attempt, one charge** (2026-09-25) — an attempt records the charge
+  it was started for (`metadata.charge_minor`, `charge_currency`) and is
+  claimed (our reference written) before the provider is called; asked to
+  charge another amount it is retired — cancelled with its reference kept,
+  so a late payment on it is refunded — and a fresh attempt starts. A
+  reference is never overwritten, only a group's primary carries one, and
+  the database allows one open attempt per checkout.
 - **Charging** — `initiateChargeForAttempt` (hosted page, popup or direct
   charge; direct references are reused, never re-initiated);
   `finalizePayment` verifies with the same provider/market/currency that
@@ -157,6 +180,9 @@ events, list networks/banks, transfer recipient + transfer, probe.
   legacy `/api/paystack/webhook` for Ghana) verify the signature with that
   market's secret, dedupe on `payment_webhook_event`, and ack only settled
   outcomes (503 lets the provider retry, as before).
+- **Payouts in the balance's currency** — `request_organizer_payout` and
+  `admin_create_payout` refuse an account in another currency, an amount
+  finer than the currency, and (organizer side) a restricted account.
 - **Refunds and payouts** — refunds go back through the provider that took
   the money; automated payouts run only when the market provider's
   `payouts_enabled` is on (off everywhere; it replaced
@@ -230,7 +256,12 @@ events, list networks/banks, transfer recipient + transfer, probe.
 - **Phones** — E.164 everywhere via `libphonenumber-js` (max metadata),
   validated for the country's rules; pickers list every country with the
   open markets first and the visitor's own country pre-selected.
-- **OTP** — routed by the number's market: Hubtel (Ghana, 4 digits) or
+- **OTP** — routed by the number's market (`marketForPhone`: a number in a
+  shared calling code whose own territory has no market — +44 7911 … is
+  Guernsey, +1 876 … Jamaica — belongs to the code's main country's market);
+  no codes for draft or preparing markets; an hourly send ceiling per
+  country (5,000 default market, 300 elsewhere) stops SMS pumping.
+  Providers: Hubtel (Ghana, 4 digits) or
   Twilio Verify (6 digits); the pending code remembers its provider; the
   code length travels to the client.
 - **Home market** — `user_info.country_code`, set from a new phone

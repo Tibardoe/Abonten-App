@@ -4,6 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
+import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -57,7 +58,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 
@@ -91,7 +92,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
   if (eventError) {
     return {
       status: 500,
-      message: `Error fetching event: ${eventError.message}`,
+      message: userFacingError("Error fetching event", eventError),
     };
   }
 
@@ -129,7 +130,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
   if (ticketsError) {
     return {
       status: 500,
-      message: `Error checking attendance: ${ticketsError.message}`,
+      message: userFacingError("Error checking attendance", ticketsError),
     };
   }
 

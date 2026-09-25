@@ -21,7 +21,7 @@ export default function LocationAndFilterSection() {
   const location =
     typeof locationParam === "string"
       ? undoSlug(locationParam)
-      : "Unknown Location"; // fallback if undefined or not a string
+      : "Choose a location"; // no location in the URL yet
 
   return (
     <>

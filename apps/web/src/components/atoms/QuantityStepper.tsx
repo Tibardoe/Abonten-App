@@ -8,6 +8,8 @@ type QuantityStepperProps = {
   disabled?: boolean;
   onIncrement: () => void;
   onDecrement: () => void;
+  /** What is being counted, for screen readers ("General tickets"). */
+  label?: string;
 };
 
 /**
@@ -23,28 +25,33 @@ export default function QuantityStepper({
   disabled = false,
   onIncrement,
   onDecrement,
+  label = "tickets",
 }: QuantityStepperProps) {
   return (
-    <div className="flex items-center gap-4">
+    <fieldset className="flex items-center gap-4" aria-label={label}>
       <button
         type="button"
         disabled={disabled || quantity <= minQuantity}
         onClick={onDecrement}
+        aria-label={`Remove one from ${label}`}
         className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-muted border border-border text-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <TfiMinus />
+        <TfiMinus aria-hidden />
       </button>
 
-      <span>{quantity}</span>
+      <output aria-live="polite" aria-label={`${quantity} ${label}`}>
+        {quantity}
+      </output>
 
       <button
         type="button"
         disabled={disabled || (maxQuantity !== null && quantity >= maxQuantity)}
         onClick={onIncrement}
+        aria-label={`Add one to ${label}`}
         className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <IoAddSharp />
+        <IoAddSharp aria-hidden />
       </button>
-    </div>
+    </fieldset>
   );
 }

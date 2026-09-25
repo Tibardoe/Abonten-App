@@ -2,6 +2,7 @@
 
 import getOrganizerRefundSummary from "@/actions/getOrganizerRefundSummary";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
 
 /**
@@ -52,13 +53,13 @@ export default function RefundSummary() {
             <div>
               <p className="text-sm text-muted-foreground">Pending refunds</p>
               <p className="font-semibold text-lg">
-                {row.currency} {row.pending_refund_amount.toLocaleString()}
+                {formatMoney(row.currency, row.pending_refund_amount)}
               </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Completed refunds</p>
               <p className="font-semibold text-lg">
-                {row.currency} {row.completed_refund_amount.toLocaleString()}
+                {formatMoney(row.currency, row.completed_refund_amount)}
               </p>
             </div>
           </div>

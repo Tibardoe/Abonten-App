@@ -84,7 +84,8 @@ where ui.id = o.id;
 
 insert into public.event (
   organizer_id, event_category, event_type, title, slug, description, location, address,
-  flyer_public_id, flyer_version, starts_at, ends_at, status, event_code, capacity, published_at
+  flyer_public_id, flyer_version, starts_at, ends_at, status, event_code, capacity, published_at,
+  country_code, timezone, currency
 )
 select
   o.id,
@@ -101,7 +102,9 @@ select
   'published',
   'P' || lpad(g::text, 7, '0'),
   200,
-  now() - interval '30 days'
+  now() - interval '30 days',
+  -- Listings carry their market since 2026-09-24 (global platform).
+  'GH', 'Africa/Accra', 'GHS'
 from generate_series(1, 100000) g
 join perf_orgs o    on o.n  = 1 + (g % 2000)
 join perf_common c1 on c1.n = (g * 7) % 50
@@ -109,7 +112,7 @@ join perf_common c2 on c2.n = (g * 13) % 50
 join perf_mid m     on m.n  = (g * 31) % 500
 join perf_rare r    on r.n  = g % 20000;
 
-insert into public.place (owner_id, name, slug, description, category_id, location, address, cover_public_id, cover_version, status, published_at)
+insert into public.place (owner_id, name, slug, description, category_id, location, address, cover_public_id, cover_version, status, published_at, country_code, timezone)
 select
   o.id,
   initcap(c.w) || ' ' || initcap(m.w) || ' ' || (array['Lounge','Grill','Gym','Cinema','Hotel'])[1 + (g % 5)],
@@ -118,7 +121,7 @@ select
   1 + (g % 14),
   extensions.st_setsrid(extensions.st_makepoint(-0.20 + random() * 0.4, 5.50 + random() * 0.3), 4326)::extensions.geography,
   jsonb_build_object('full_address', initcap(r.w) || ', Accra, Ghana'),
-  'perf/cover', '1', 'published', now() - interval '30 days'
+  'perf/cover', '1', 'published', now() - interval '30 days', 'GH', 'Africa/Accra'
 from generate_series(1, 20000) g
 join perf_orgs o   on o.n = 1 + (g % 2000)
 join perf_common c on c.n = (g * 11) % 50

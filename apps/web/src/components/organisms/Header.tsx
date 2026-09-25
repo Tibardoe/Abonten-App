@@ -198,6 +198,7 @@ export default function Header() {
               {profile.username && (
                 <Link
                   href={`/user/${profile.username}/posts`}
+                  aria-label="Your profile"
                   className={cn(
                     "bg-transparent rounded-full font-bold border-border",
                     { hidden: isUserAccount },

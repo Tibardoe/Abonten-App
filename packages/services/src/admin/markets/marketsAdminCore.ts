@@ -45,6 +45,7 @@ import {
 } from "../../markets/marketConfig";
 import {
   getPaymentProvider,
+  providerEnvNameProblem,
   resolveMarketAccounts,
 } from "../../payments/providers/registry";
 import { getOtpProvider } from "../../profile/otpProviders/otpRouter";
@@ -394,6 +395,23 @@ export type UpsertProviderInput = {
 };
 
 const ENV_NAME = /^[A-Z][A-Z0-9_]{2,80}$/;
+const OXR_APP_ID_ENV = /^OPEN_EXCHANGE_RATES_APP_ID(?:_[A-Z0-9]+)?$/;
+
+function isRefreshRouteUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    return (
+      (url.protocol === "https:" || (local && url.protocol === "http:")) &&
+      url.pathname === "/api/jobs/exchange-rates" &&
+      !url.username &&
+      !url.password &&
+      !url.search
+    );
+  } catch {
+    return false;
+  }
+}
 
 /** Checks the provider options shape; returns a message when it is wrong. */
 function providerOptionsProblem(options: unknown): string | null {
@@ -490,6 +508,39 @@ export async function upsertProviderAdminCore(
           "Environment variable names must be UPPER_SNAKE_CASE (never values).",
       };
     }
+    // Only this provider's own variables, named for this market: the
+    // public key's value is sent to buyers, and another market's keys must
+    // never charge here.
+    const market = (await getMarket(code)) as NonNullable<
+      Awaited<ReturnType<typeof getMarket>>
+    >;
+    const scope = {
+      countryCode: code,
+      isDefault: (await getDefaultMarket()).countryCode === code,
+      currency: market.defaultCurrency,
+    };
+    const envProblem =
+      providerEnvNameProblem(
+        input.provider,
+        "secretKey",
+        input.secretKeyEnv,
+        scope,
+      ) ??
+      providerEnvNameProblem(
+        input.provider,
+        "webhookSecret",
+        input.webhookSecretEnv,
+        scope,
+      ) ??
+      (input.publicKeyEnv
+        ? providerEnvNameProblem(
+            input.provider,
+            "publicKey",
+            input.publicKeyEnv,
+            scope,
+          )
+        : null);
+    if (envProblem) return { status: 400, message: envProblem };
     if (!isKnownCurrency(input.settlementCurrency))
       return { status: 400, message: "Unknown settlement currency." };
     const optionsProblem = providerOptionsProblem(input.options);
@@ -556,6 +607,10 @@ export async function upsertProviderAdminCore(
         after: {
           provider: input.provider,
           enabled: input.enabled,
+          // Names only, never values: which variables the account reads.
+          secretKeyEnv: input.secretKeyEnv,
+          webhookSecretEnv: input.webhookSecretEnv,
+          publicKeyEnv: input.publicKeyEnv ?? null,
           currencies,
           settlementCurrency: input.settlementCurrency,
           payoutsEnabled: input.payoutsEnabled,
@@ -1181,10 +1236,21 @@ export async function setExchangeRateConfigAdminCore(
     assertPermission(ctx, "markets.manage");
     if (input.base && !isKnownCurrency(input.base))
       return { status: 400, message: "Unknown base currency." };
-    if (input.appIdEnv && !ENV_NAME.test(input.appIdEnv))
+    // Only the Open Exchange Rates variable: the named value is sent to
+    // that service, so any other server secret must never be nameable here.
+    if (input.appIdEnv && !OXR_APP_ID_ENV.test(input.appIdEnv))
       return {
         status: 400,
-        message: "The app id env name must be UPPER_SNAKE_CASE.",
+        message:
+          "The app id variable must be OPEN_EXCHANGE_RATES_APP_ID (optionally with a _SUFFIX).",
+      };
+    // The scheduler posts the job token to this URL, so it may only be this
+    // app's own refresh route over HTTPS.
+    if (input.refreshUrl && !isRefreshRouteUrl(input.refreshUrl))
+      return {
+        status: 400,
+        message:
+          "The refresh URL must be https://<your web domain>/api/jobs/exchange-rates.",
       };
     const patch: Record<string, unknown> = {
       provider: input.provider,

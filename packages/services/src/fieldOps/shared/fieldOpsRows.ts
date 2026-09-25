@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
+import { isSystemDbMessage } from "@abonten/core/userFacingError";
 import type {
   FieldOpsAssignment,
   FieldOpsAssignmentMode,
@@ -44,7 +45,13 @@ export function dbErr(
         : error.code === "P0002"
           ? 404
           : 400;
-  return { status, message: `${friendly}: ${error.message}` };
+  // Postgres's own wording (constraint names, SQL) stays in the log.
+  return {
+    status,
+    message: isSystemDbMessage(error.message)
+      ? friendly
+      : `${friendly}: ${error.message}`,
+  };
 }
 
 /** Today as YYYY-MM-DD in UTC (the campaign's local day for GMT regions). */

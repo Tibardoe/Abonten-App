@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { fromMajor, toMajor } from "@abonten/core/money/money";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { TransactionKind } from "@abonten/types/transactions";
 
 type TransactionRef = {
@@ -27,7 +28,7 @@ export async function getUserTransactionDetail(
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 
@@ -48,7 +49,7 @@ export async function getUserTransactionDetail(
     if (error) {
       return {
         status: 500,
-        message: `Error fetching transaction: ${error.message}`,
+        message: userFacingError("Error fetching transaction", error),
       };
     }
 
@@ -123,7 +124,7 @@ export async function getUserTransactionDetail(
   if (error) {
     return {
       status: 500,
-      message: `Error fetching transaction: ${error.message}`,
+      message: userFacingError("Error fetching transaction", error),
     };
   }
 

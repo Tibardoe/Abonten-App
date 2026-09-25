@@ -1,6 +1,7 @@
 import StatTile from "@/components/atoms/StatTile";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { EventOverviewAnalytics } from "@abonten/types/eventAnalytics";
 
 export default function EventOverviewCards({
@@ -36,8 +37,7 @@ export default function EventOverviewCards({
   }
 
   const currency = overview.currency ?? "";
-  const money = (amount: number) =>
-    `${currency ? `${currency} ` : ""}${Number(amount).toLocaleString()}`;
+  const money = (amount: number) => formatMoney(currency, Number(amount));
 
   // Free/RSVP events lead with registrations, not a sales figure that would
   // otherwise misleadingly read as "GHS 0" — Gross Sales is only shown if

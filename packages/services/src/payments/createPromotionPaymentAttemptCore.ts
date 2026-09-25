@@ -179,47 +179,52 @@ export async function createPromotionPaymentAttemptCore(
   const choice = await cashChoiceFor(supabase, userId, input, order);
   if ("status" in choice) return choice;
 
-  const attemptResult = await upsertPaymentAttemptForSession(
-    userId,
-    cfg.attemptColumn,
-    input.checkoutId,
-    toMajor(total),
-    total.currency,
-    choice.paymentMethodId,
-    undefined,
-    { countryCode: order.countryCode ?? "", provider: choice.providerCode },
-    { method: choice.methodCode },
-  );
+  // A second pass only when chargeInit retired an attempt started for
+  // another amount (see chargeInit.ts); the retry opens a fresh one.
+  for (let pass = 0; ; pass++) {
+    const attemptResult = await upsertPaymentAttemptForSession(
+      userId,
+      cfg.attemptColumn,
+      input.checkoutId,
+      toMajor(total),
+      total.currency,
+      choice.paymentMethodId,
+      undefined,
+      { countryCode: order.countryCode ?? "", provider: choice.providerCode },
+      { method: choice.methodCode },
+    );
 
-  if (attemptResult.status !== 200) {
-    return attemptResult;
-  }
+    if (attemptResult.status !== 200) {
+      return attemptResult;
+    }
 
-  const chargeResult = await initiateChargeForAttempt({
-    attempt: attemptResult.data,
-    amount: total,
-    countryCode: order.countryCode,
-    email: userEmail,
-    paymentMethod: choice.saved,
-    methodCode: choice.methodCode,
-    providerCode: choice.providerCode,
-    callbackUrl: buildCallbackUrl(input.checkoutId),
-    description: order.label,
-  });
-
-  if (chargeResult.status !== 200) {
-    return chargeResult;
-  }
-
-  return {
-    status: 200,
-    data: {
+    const chargeResult = await initiateChargeForAttempt({
       attempt: attemptResult.data,
-      payment: chargeResult.data,
-      credit: null,
-      verification: null,
-    },
-  };
+      amount: total,
+      countryCode: order.countryCode,
+      email: userEmail,
+      paymentMethod: choice.saved,
+      methodCode: choice.methodCode,
+      providerCode: choice.providerCode,
+      callbackUrl: buildCallbackUrl(input.checkoutId),
+      description: order.label,
+    });
+
+    if (chargeResult.status === 409 && pass === 0) continue;
+    if (chargeResult.status !== 200) {
+      return { status: chargeResult.status, message: chargeResult.message };
+    }
+
+    return {
+      status: 200,
+      data: {
+        attempt: attemptResult.data,
+        payment: chargeResult.data,
+        credit: null,
+        verification: null,
+      },
+    };
+  }
 }
 
 /**

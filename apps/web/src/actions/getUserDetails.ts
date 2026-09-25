@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 
 type UserInfoRow = Database["public"]["Tables"]["user_info"]["Row"];
@@ -17,7 +18,7 @@ export async function getUserDetails(): Promise<GetUserDetailsResult> {
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 
@@ -34,7 +35,7 @@ export async function getUserDetails(): Promise<GetUserDetailsResult> {
   if (userDetailsError) {
     return {
       status: 500,
-      message: `Error fetching user details: ${userDetailsError.message}`,
+      message: userFacingError("Error fetching user details", userDetailsError),
     };
   }
 

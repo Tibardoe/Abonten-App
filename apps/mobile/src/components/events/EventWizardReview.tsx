@@ -1,6 +1,7 @@
 import { prettyTime } from "@/components/datetime/TimeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
@@ -28,7 +29,7 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
     w.ticketMode === "free"
       ? "Free"
       : w.ticketMode === "single"
-        ? `${w.currency} ${w.ticketPrice || "0"}${
+        ? `${formatMoney(w.currency, Number(w.ticketPrice || 0))}${
             w.ticketQuantity ? ` · ${w.ticketQuantity} available` : ""
           }`
         : `${w.tiers.length} ticket type${w.tiers.length === 1 ? "" : "s"}`;

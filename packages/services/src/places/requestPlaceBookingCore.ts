@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotificationCore } from "../notifications/createNotification";
@@ -70,7 +71,7 @@ export async function requestPlaceBookingCore(
   if (placeError) {
     return {
       status: 500,
-      message: `Error fetching place: ${placeError.message}`,
+      message: userFacingError("Error fetching place", placeError),
     };
   }
 
@@ -119,7 +120,7 @@ export async function requestPlaceBookingCore(
     if (serviceError) {
       return {
         status: 500,
-        message: `Error fetching service: ${serviceError.message}`,
+        message: userFacingError("Error fetching service", serviceError),
       };
     }
     if (!service) {
@@ -180,7 +181,7 @@ export async function cancelPlaceBookingCore(
   if (fetchError) {
     return {
       status: 500,
-      message: `Error fetching booking: ${fetchError.message}`,
+      message: userFacingError("Error fetching booking", fetchError),
     };
   }
 

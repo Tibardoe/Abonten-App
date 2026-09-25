@@ -2,6 +2,7 @@
 
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { generateSlug } from "@abonten/core/geerateSlug";
 // import { allEvents } from "@/data/allEvents";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -101,7 +102,7 @@ export default function Banner({ event }: BannerProps) {
             <div className="px-2 py-1 xs:px-3 xs:py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full font-medium text-xs xs:text-sm">
               {event.min_price === 0 || event.min_price === null
                 ? "FREE ENTRY"
-                : `FROM ${event.currency} ${event.min_price}`}
+                : `FROM ${formatMoney(event.currency, event.min_price, { trimZeroFraction: true })}`}
             </div>
 
             <Link

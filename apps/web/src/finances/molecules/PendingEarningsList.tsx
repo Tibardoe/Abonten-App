@@ -2,6 +2,7 @@
 
 import getOrganizerPendingEarnings from "@/actions/getOrganizerPendingEarnings";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
@@ -51,7 +52,7 @@ export default function PendingEarningsList() {
 
               <div className="flex items-center gap-3">
                 <p className="font-semibold text-sm">
-                  {row.currency} {row.amount.toLocaleString()}
+                  {formatMoney(row.currency, row.amount)}
                 </p>
                 <Link
                   href={`/manage/events/${row.event_id}?tab=insights`}

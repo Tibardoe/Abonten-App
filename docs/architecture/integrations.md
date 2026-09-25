@@ -4,8 +4,8 @@ purpose: For each external service — what Abonten uses it for, the code that c
 audience: Engineering, operations
 scope: Supabase, Vercel, Cloudinary, Paystack, Hubtel, Resend, Google, Expo/FCM, Sentry
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -25,7 +25,7 @@ complianceReviewRequired: no
 | **Open Exchange Rates** | Hourly display rates (USD base) for "≈" estimates only | `packages/services/src/fx/exchangeRateCore.ts`; `api/jobs/exchange-rates` (pg_cron `exchange-rates-refresh`) | `OPEN_EXCHANGE_RATES_APP_ID` (name configurable in Admin › Markets › Exchange rates) | — | Estimates hidden; prices unaffected |
 | **Hubtel** | SMS one-time codes (sign-in, phone change, field owner consent) | `packages/services/src/profile/otpProviders/hubtelOtpProvider.ts` (routed by `otpRouter.ts`), `phoneOtpStore.ts`, `phoneAuthCore.ts`, `fieldOps/member/ownerOtpCore.ts` | `HUBTEL_API_CLIENT_ID/SECRET` | `hubtel` (auth ping) | Phone sign-in unavailable; other methods work |
 | **Resend** | Transactional email (tickets with PDF, cancellations, reward updates with List-Unsubscribe); Supabase Auth SMTP for sign-in codes | `apps/web/src/actions/ticketPurchaseNotification.ts`, `eventCancellationNotification.ts`, `apps/web/src/utils/sendRewardUpdateEmail.ts`, `packages/services/src/notifications/deliveryCore.ts` | `RESEND_API_KEY`; Supabase SMTP settings | `resend` (`/domains`) | Emails skipped/queued; in-app notices unaffected |
-| **Google** | OAuth provider (via Supabase), Maps JS (web), Geocoding (`/api/geocode`, admin territories), Places autocomplete, Android Install Referrer | `GoogleAuthButton.tsx`, `apps/web/src/app/api/geocode/route.ts`, `geocodeServerSide.ts`, `usePlacesAutocomplete.ts`, `apps/mobile/src/features/rewards/inviteCapture.ts` | `GOOGLE_CLIENT_*` (Supabase), `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_API_KEY`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | — | Maps blank; Google sign-in fails |
+| **Google** | OAuth provider (via Supabase), Maps JS (web), Geocoding (`/api/geocode`, signed-in and rate limited; public location pages through `@abonten/services/geo/placeNameGeocode` — market regions, then `geocode_cache`, then Google within 20 per address / 10 min and 300 / hour), Places autocomplete, Android Install Referrer | `GoogleAuthButton.tsx`, `apps/web/src/app/api/geocode/route.ts`, `geocodeServerSide.ts`, `usePlacesAutocomplete.ts`, `apps/mobile/src/features/rewards/inviteCapture.ts` | `GOOGLE_CLIENT_*` (Supabase), `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_API_KEY`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` | — | Maps blank; Google sign-in fails |
 | **Expo / FCM** | Push delivery (`exp.host` API; FCM on Android), EAS Build/Update | `packages/services/src/notifications/sendPushNotification.ts`, `deviceTokenCore.ts`; `apps/mobile/src/features/notifications/usePushRegistration.ts`; `google-services.json` | `EXPO_ACCESS_TOKEN` (optional); EAS env | `expo` | Pushes fail; queue retries |
 | **Sentry** | Error monitoring web/admin/mobile, source maps | `apps/web/src/instrumentation*.ts`, `sentry.{server,edge}.config.ts`, `apps/admin/src/lib/sentry.ts`, `apps/mobile/src/lib/sentry.ts`, `withSentryConfig` | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `EXPO_PUBLIC_SENTRY_DSN` | — | Self-hosted error groups still record |
 | **GitHub Actions** | CI | `.github/workflows/checks.yml`, `integration-tests.yml` | repo secrets | — | — |

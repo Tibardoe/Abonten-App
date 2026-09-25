@@ -195,7 +195,7 @@ export async function cancelUserTicketCore(
   }
 
   // State-based, not a delete: the attendance row for this exact ticket
-  // (one row per ticket — see insertUserAttendance) is marked cancelled so
+  // (one row per ticket, written by the issuing RPCs) is marked cancelled so
   // attendance_count queries (which filter status = 'attending') stop
   // counting it, while keeping the row for any future audit/history need.
   const { error: updateAttendanceError } = await supabase

@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
+import { userFacingError } from "@abonten/core/userFacingError";
 
 type FormDataType = {
   title: string;
@@ -26,7 +27,7 @@ export async function postReview(formData: FormDataType) {
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 
@@ -43,7 +44,7 @@ export async function postReview(formData: FormDataType) {
   if (userDetailsError) {
     return {
       status: 500,
-      message: `Error fetching user details: ${userDetailsError.message}`,
+      message: userFacingError("Error fetching user details", userDetailsError),
     };
   }
 
@@ -68,7 +69,10 @@ export async function postReview(formData: FormDataType) {
   if (reviewedEventsError) {
     return {
       status: 500,
-      message: `Error fetching organizer events: ${reviewedEventsError.message}`,
+      message: userFacingError(
+        "Error fetching organizer events",
+        reviewedEventsError,
+      ),
     };
   }
 

@@ -14,7 +14,7 @@ import type {
   LocalePreferencesPatch,
 } from "@abonten/types/marketType";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
-import { getMarket, listMarkets } from "./marketConfig";
+import { getMarket, listMarkets, marketForPhone } from "./marketConfig";
 
 export type { LocalePreferences };
 
@@ -122,12 +122,9 @@ export async function adoptHomeCountryFromPhone(
   phoneE164: string,
 ): Promise<void> {
   try {
-    const country = phoneCountry(phoneE164);
-    if (!country) return;
-    const open = (await listMarkets()).some(
-      (m) => m.countryCode === country && isMarketOpen(m.status),
-    );
-    if (!open) return;
+    const { market } = await marketForPhone(phoneE164);
+    if (!market || !isMarketOpen(market.status)) return;
+    const country = market.countryCode;
     const { error } = await getSupabaseServiceClient()
       .from("user_info")
       .update({ country_code: country })

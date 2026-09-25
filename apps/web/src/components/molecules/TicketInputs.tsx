@@ -1,4 +1,5 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { Ticket } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
@@ -224,7 +225,7 @@ export default function TicketInputs({
                         Price
                       </span>
                       <span className="text-sm font-semibold">
-                        {currency} {ticket.price}
+                        {formatMoney(currency, ticket.price)}
                       </span>
                     </div>
                   </div>

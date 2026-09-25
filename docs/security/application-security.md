@@ -4,8 +4,8 @@ purpose: Document the application-layer controls as implemented — authenticati
 audience: Engineering, security reviewers
 scope: apps/web, apps/admin, apps/mobile, packages/services
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -19,7 +19,7 @@ complianceReviewRequired: no
 | Path | Mechanism | Notes |
 |---|---|---|
 | Google | Supabase Auth OAuth (PKCE); web callback `apps/web/src/app/(pages)/auth/callback/route.ts`; mobile native → `supabase.auth` | Redirect URLs must be allow-listed in Supabase |
-| Phone OTP | `requestPhoneVerification` → Hubtel (server-only, `hubtelOtpClient.ts`); state in `phone_otp_state` (5-min TTL, 60 s resend, 5 attempts); `verifyPhoneSignIn` → `phoneAuthCore.verifyPhoneOtpAndResolveUser` → find-or-create `auth.users` by phone (`get_auth_user_id_by_phone`, service-role only) → one-time password minted and immediately rotated → `signInWithPassword` on the SSR cookie client (web) / tokens returned to the app | The client never sees Hubtel's request id/prefix; per-IP send cap 10/h (`phone_otp_send_log`) |
+| Phone OTP | `requestPhoneVerification` → Hubtel (server-only, `hubtelOtpClient.ts`); state in `phone_otp_state` (5-min TTL, 5 attempts spent atomically by `phone_otp_take_attempt`); `verifyPhoneSignIn` → `phoneAuthCore.verifyPhoneOtpAndResolveUser` → find-or-create `auth.users` by phone (`get_auth_user_id_by_phone`, service-role only) → one-time password minted and immediately rotated → `signInWithPassword` on the SSR cookie client (web) / tokens returned to the app | The client never sees Hubtel's request id/prefix; every send is claimed before the provider call by `phone_otp_claim_send` under a lock: one code a minute per number across purposes, 5 an hour and 10 a day per number, 10 an hour per address, recorded in `phone_otp_send_log` (production gate 2026-09-25) |
 | Email OTP | Supabase `signInWithOtp` (6 digits) with app-level per-email and per-IP send caps (`emailAuthCore.ts`, `consume_rate_limit`); enumeration-safe copy | Verify is client-direct on mobile |
 | Admin | Google only + `ADMIN_EMAIL_ALLOWLIST` + `admin_user.status='active'` + roles; step-up token (`stepUpToken.ts`, HMAC, user-bound, 10 min) | No phone/email path in the console |
 

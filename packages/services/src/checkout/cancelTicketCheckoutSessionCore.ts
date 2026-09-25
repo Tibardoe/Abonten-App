@@ -97,12 +97,15 @@ export async function cancelTicketCheckoutSessionCore(
     // string: maybeSingle() then errored on the multiple rows and returned
     // null, so the buyer's usage was silently never released and they could
     // not re-apply their own code after cancelling.
-    const { data: promoCodeRow, error: promoCodeLookupError } = await supabase
-      .from("promo_code")
-      .select("id")
-      .eq("event_id", eventId)
-      .eq("promo_code", promoCode)
-      .maybeSingle();
+    // Service role: promo codes are readable only by their event's
+    // organizer (migration 20260925110400).
+    const { data: promoCodeRow, error: promoCodeLookupError } =
+      await getSupabaseServiceClient()
+        .from("promo_code")
+        .select("id")
+        .eq("event_id", eventId)
+        .eq("promo_code", promoCode)
+        .maybeSingle();
 
     if (promoCodeLookupError) {
       logger.error(

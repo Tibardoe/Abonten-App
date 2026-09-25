@@ -8,6 +8,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type {
   FavoriteEvents,
   TicketType,
@@ -31,7 +32,7 @@ export async function getUserFavoritePosts(options?: {
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Failed fetching user: ${userError.message}`,
+      message: userFacingError("Failed fetching user", userError),
     };
   }
 
@@ -67,7 +68,7 @@ export async function getUserFavoritePosts(options?: {
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Failed fetching events: ${error.message}`,
+      message: userFacingError("Failed fetching events", error),
     };
   }
 

@@ -33,6 +33,66 @@ export function isPaymentProviderCode(
   return typeof code === "string" && code in PROVIDERS;
 }
 
+export type ProviderEnvField = "secretKey" | "webhookSecret" | "publicKey";
+
+// The only variable names a provider row may point at. A market row stores
+// variable NAMES that the server resolves at runtime, and the public key's
+// value is sent to buyers' browsers and apps — so a free-form name let
+// anyone with markets.manage point it at SUPABASE_SERVICE_ROLE_KEY (or any
+// other server secret) and have it shipped to every checkout.
+const ENV_FAMILIES: Record<
+  PaymentProviderCode,
+  Record<ProviderEnvField, RegExp>
+> = {
+  paystack: {
+    secretKey: /^PAYSTACK(?:_([A-Z]{2}))?_SECRET_KEY$/,
+    // Paystack signs webhooks with the secret key itself.
+    webhookSecret: /^PAYSTACK(?:_([A-Z]{2}))?_(?:WEBHOOK_SECRET|SECRET_KEY)$/,
+    publicKey: /^NEXT_PUBLIC_PAYSTACK(?:_([A-Z]{2}))?_PUBLIC_KEY$/,
+  },
+  stripe: {
+    secretKey: /^STRIPE_SECRET_KEY(?:_([A-Z]{2}))?$/,
+    webhookSecret: /^STRIPE_WEBHOOK_SECRET(?:_([A-Z]{2}))?$/,
+    publicKey: /^NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY(?:_([A-Z]{2}))?$/,
+  },
+};
+
+/**
+ * Whether `name` is a variable this provider's `field` may be read from.
+ * With `market`, the name's country suffix must also be that market's (or
+ * EU for a euro-area Stripe account); no suffix is the default market's own
+ * account. Null when it is fine, else a reason.
+ */
+export function providerEnvNameProblem(
+  provider: PaymentProviderCode,
+  field: ProviderEnvField,
+  name: string,
+  market?: { countryCode: string; isDefault: boolean; currency: string },
+): string | null {
+  const family = ENV_FAMILIES[provider]?.[field];
+  const match = family?.exec(name);
+  if (!match) {
+    const words = {
+      secretKey: "secret key",
+      webhookSecret: "webhook secret",
+      publicKey: "public key",
+    }[field];
+    return `${name} is not a ${provider} ${words} variable.`;
+  }
+  if (!market) return null;
+  const suffix = match[1] ?? null;
+  if (suffix === null) {
+    return market.isDefault
+      ? null
+      : `${name} belongs to the default market's account; use one named for ${market.countryCode}.`;
+  }
+  if (suffix === market.countryCode) return null;
+  if (provider === "stripe" && suffix === "EU" && market.currency === "EUR") {
+    return null;
+  }
+  return `${name} is named for another market (${suffix}).`;
+}
+
 /** The env variable names a provider account needs, and which are unset. */
 export function missingProviderEnv(
   config: MarketPaymentProvider,
@@ -57,6 +117,18 @@ export function accountFromConfig(
   config: MarketPaymentProvider,
   env: Record<string, string | undefined> = process.env,
 ): ProviderAccount | null {
+  // Refuse a row that points at anything but this provider's own
+  // variables (see ENV_FAMILIES) — however the row was written.
+  const names: [ProviderEnvField, string | null][] = [
+    ["secretKey", config.credentials.secretKeyEnv],
+    ["webhookSecret", config.credentials.webhookSecretEnv],
+    ["publicKey", config.credentials.publicKeyEnv ?? null],
+  ];
+  for (const [field, name] of names) {
+    if (name && providerEnvNameProblem(config.provider, field, name)) {
+      return null;
+    }
+  }
   const secretKey = env[config.credentials.secretKeyEnv];
   const webhookSecret = env[config.credentials.webhookSecretEnv] ?? "";
   if (!secretKey) return null;

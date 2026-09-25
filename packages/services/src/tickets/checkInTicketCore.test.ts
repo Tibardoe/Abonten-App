@@ -20,10 +20,15 @@ type TicketFixture = {
   status: string;
   eventId: string;
   organizerId: string;
+  occurrence?: { starts_at: string; ends_at: string | null };
 };
 
 /** Records the update that checkInTicketCore attempted, if any. */
-type Recorder = { updated: Record<string, unknown> | null };
+type Recorder = {
+  updated: Record<string, unknown> | null;
+  /** Another door moved the ticket between the read and the write. */
+  raced?: boolean;
+};
 
 function stubClient(
   ticket: TicketFixture | null,
@@ -33,6 +38,7 @@ function stubClient(
     ? {
         id: ticket.id,
         status: ticket.status,
+        occurrence: ticket.occurrence ?? null,
         ticket_type: {
           event: { id: ticket.eventId, organizer_id: ticket.organizerId },
         },
@@ -53,7 +59,17 @@ function stubClient(
         },
         update(values: Record<string, unknown>) {
           recorder.updated = values;
-          return { eq: async () => ({ error: null }) };
+          // .eq(id).eq(status).select().maybeSingle(): the conditional
+          // write only moves a ticket still in the status that was read.
+          const chain = {
+            eq: () => chain,
+            select: () => chain,
+            maybeSingle: async () => ({
+              data: recorder.raced ? null : { id: ticket?.id },
+              error: null,
+            }),
+          };
+          return chain;
         },
       };
     },
@@ -197,5 +213,59 @@ describe("checkInTicketCore", () => {
 
     expect(result.status).toBe(404);
     expect(rec.updated).toBeNull();
+  });
+
+  it("admits a ticket once when two doors scan it at the same moment", async () => {
+    const rec: Recorder = { updated: null, raced: true };
+    const result = await checkInTicketCore(
+      stubClient(activeTicket, rec),
+      ORGANIZER,
+      TICKET_ID,
+      true,
+      EVENT_A,
+    );
+    expect(result.status).toBe(400);
+    expect(result.message).toMatch(/already checked in/);
+  });
+
+  it("refuses a ticket for a later date of a multi-date event", async () => {
+    const rec: Recorder = { updated: null };
+    const inTwoDays = new Date(Date.now() + 48 * 3_600_000).toISOString();
+    const result = await checkInTicketCore(
+      stubClient(
+        {
+          ...activeTicket,
+          occurrence: { starts_at: inTwoDays, ends_at: inTwoDays },
+        },
+        rec,
+      ),
+      ORGANIZER,
+      TICKET_ID,
+      true,
+      EVENT_A,
+    );
+    expect(result.status).toBe(400);
+    expect(rec.updated).toBeNull();
+  });
+
+  it("admits a ticket for today's date of a multi-date event", async () => {
+    const rec: Recorder = { updated: null };
+    const result = await checkInTicketCore(
+      stubClient(
+        {
+          ...activeTicket,
+          occurrence: {
+            starts_at: new Date(Date.now() + 3_600_000).toISOString(),
+            ends_at: new Date(Date.now() + 4 * 3_600_000).toISOString(),
+          },
+        },
+        rec,
+      ),
+      ORGANIZER,
+      TICKET_ID,
+      true,
+      EVENT_A,
+    );
+    expect(result.status).toBe(200);
   });
 });

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type SavePlaceDraftCoreResult,
   savePlaceDraftCore,
@@ -39,7 +40,7 @@ export async function savePlaceDraft({
   if (userError) {
     return {
       status: 500 as const,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
   if (!user) {

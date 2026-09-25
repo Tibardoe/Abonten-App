@@ -3,6 +3,7 @@
 import getOrganizerPayouts from "@/actions/getOrganizerPayouts";
 import { Button } from "@/components/ui/button";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerPayoutRow } from "@abonten/types/organizerFinance";
 import Link from "next/link";
 import { useState } from "react";
@@ -63,7 +64,7 @@ export default function FinancesPayoutsList({
               >
                 <div className="space-y-1">
                   <h2 className="font-bold">
-                    {payout.currency} {payout.amount.toLocaleString()}
+                    {formatMoney(payout.currency, payout.amount)}
                   </h2>
                   <p className="text-sm text-muted-foreground">{date}</p>
                   <p className="text-xs text-muted-foreground font-mono">

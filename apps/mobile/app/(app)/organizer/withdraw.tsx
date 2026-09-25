@@ -6,6 +6,7 @@ import {
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
 import { useQueryView } from "@/lib/useQueryView";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   AppText,
   Button,
@@ -21,10 +22,7 @@ import { useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 
 function fmt(currency: string, v: number): string {
-  return `${currency} ${v.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return formatMoney(currency, v);
 }
 
 export default function WithdrawScreen() {
@@ -36,7 +34,7 @@ export default function WithdrawScreen() {
 
   const balances =
     finance.data && finance.data.status === 200 ? finance.data.data : [];
-  const accounts =
+  const allAccounts =
     accountsQ.data && accountsQ.data.status === 200 ? accountsQ.data.data : [];
 
   const [currency, setCurrency] = useState<string | null>(null);
@@ -48,6 +46,13 @@ export default function WithdrawScreen() {
   const submittedRef = useRef(false);
 
   const selectedCurrency = currency ?? balances[0]?.currency ?? null;
+  // Only accounts that receive the chosen balance's currency: a payout is
+  // paid in the currency it was earned in (the database refuses any other).
+  const accounts = allAccounts.filter(
+    (a) =>
+      !selectedCurrency ||
+      a.currency?.toUpperCase() === selectedCurrency.toUpperCase(),
+  );
   const available = useMemo(
     () =>
       balances.find((b) => b.currency === selectedCurrency)
@@ -55,7 +60,9 @@ export default function WithdrawScreen() {
     [balances, selectedCurrency],
   );
   const defaultAccountId =
-    accountId ??
+    (accountId && accounts.some((a) => a.id === accountId)
+      ? accountId
+      : null) ??
     accounts.find((a) => a.is_default)?.id ??
     accounts[0]?.id ??
     null;
@@ -125,7 +132,7 @@ export default function WithdrawScreen() {
     );
   }
 
-  if (accounts.length === 0) {
+  if (allAccounts.length === 0) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
         <AppText className="text-center text-muted-foreground">
@@ -193,6 +200,12 @@ export default function WithdrawScreen() {
 
       <View className="gap-2">
         <Overline>To account</Overline>
+        {accounts.length === 0 ? (
+          <AppText variant="muted">
+            None of your payout accounts receives {selectedCurrency}. Add one in
+            that currency to withdraw this balance.
+          </AppText>
+        ) : null}
         {accounts.map((a) => {
           const active = a.id === defaultAccountId;
           return (
