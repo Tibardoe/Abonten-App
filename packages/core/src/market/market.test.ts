@@ -99,6 +99,7 @@ const probesOk: ReadinessProbes = {
   ],
   exchangeRateAvailable: true,
   exchangeRateAgeHours: 2,
+  otherMarketCurrencies: ["GHS"],
   otpProviderConfigured: true,
   emailConfigured: true,
   monitoringActive: true,
@@ -167,6 +168,25 @@ describe("readiness", () => {
       probesOk,
     );
     expect(unacknowledgedTax.canActivate).toBe(false);
+  });
+
+  it("asks for an exchange rate only once another currency is in play", () => {
+    const noRate = { ...probesOk, exchangeRateAvailable: false };
+    const alone = evaluateReadiness(ghana, {
+      ...noRate,
+      otherMarketCurrencies: [],
+    });
+    expect(alone.checks.find((c) => c.key === "exchange_rates")?.status).toBe(
+      "pass",
+    );
+    const beside = evaluateReadiness(ghana, {
+      ...noRate,
+      otherMarketCurrencies: ["NGN"],
+    });
+    expect(beside.checks.find((c) => c.key === "exchange_rates")?.status).toBe(
+      "warn",
+    );
+    expect(beside.canActivate).toBe(true);
   });
 });
 

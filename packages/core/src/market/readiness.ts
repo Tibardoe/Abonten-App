@@ -42,6 +42,8 @@ export type ReadinessProbes = {
   /** An exchange rate for the market's default currency is on file. */
   exchangeRateAvailable: boolean;
   exchangeRateAgeHours: number | null;
+  /** Default currencies of the other markets people can see (live or maintenance). */
+  otherMarketCurrencies: string[];
   /** An OTP/SMS provider is configured and its credentials are present. */
   otpProviderConfigured: boolean;
   otpProviderDetail?: string;
@@ -304,8 +306,11 @@ export function evaluateReadiness(
     ),
   );
 
+  // A rate matters once a price here can be shown to someone whose own
+  // market uses another currency, or the market itself takes several.
   const fxNeeded =
-    market.supportedCurrencies.length > 1 || market.defaultCurrency !== "GHS";
+    market.supportedCurrencies.length > 1 ||
+    probes.otherMarketCurrencies.some((c) => c !== market.defaultCurrency);
   checks.push(
     check(
       "exchange_rates",

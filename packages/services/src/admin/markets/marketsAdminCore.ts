@@ -751,6 +751,12 @@ async function computeReadiness(
     ? (Date.now() - new Date(rates.asOf).getTime()) / 3_600_000
     : null;
 
+  const { data: others } = await supabase
+    .from("market")
+    .select("default_currency")
+    .neq("country_code", market.countryCode)
+    .in("status", ["live", "maintenance"]);
+
   const otp = market.otpProvider ? getOtpProvider(market.otpProvider) : null;
 
   const { data: feeRate } = await supabase.rpc("get_active_platform_fee_rate", {
@@ -783,6 +789,7 @@ async function computeReadiness(
     providers,
     exchangeRateAvailable: rate != null,
     exchangeRateAgeHours: rateAgeHours,
+    otherMarketCurrencies: (others ?? []).map((m) => m.default_currency),
     otpProviderConfigured: !!otp && otp.isConfigured(),
     otpProviderDetail: otp
       ? `${otp.code} needs ${otp.requiredEnv().join(", ")}`

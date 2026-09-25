@@ -3,6 +3,7 @@ import { useMarket } from "@/features/markets/MarketProvider";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import {
   type DistanceUnit,
@@ -43,7 +44,7 @@ function eventItem(e: UserPostType, unit: DistanceUnit): SocialMapItem | null {
   );
   const venue = e.address?.full_address || "Location not specified";
   const price = e.min_price ?? e.ticket_price;
-  const currency = e.currency ?? e.ticket_currency ?? "GHS";
+  const currency = e.currency ?? e.ticket_currency ?? null;
   const lines = [
     [dt.date, dt.time].filter(Boolean).join("  ·  ") || "Date TBC",
     venue,
@@ -69,7 +70,7 @@ function eventItem(e: UserPostType, unit: DistanceUnit): SocialMapItem | null {
     tag:
       price == null || price === 0
         ? "Free"
-        : `${currency} ${price.toLocaleString()}`,
+        : formatMoney(currency, price, { trimZeroFraction: true }),
   };
 }
 
