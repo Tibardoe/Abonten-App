@@ -18,7 +18,9 @@ export default function page() {
     <div>
       <LocationAndFilterSection />
       <div className="min-h-[50vh] flex justify-center items-center">
-        No address set
+        <p className="text-center text-muted-foreground px-4">
+          Choose a location above to see what's happening near it.
+        </p>
       </div>
     </div>
   );
