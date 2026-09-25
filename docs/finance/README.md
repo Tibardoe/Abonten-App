@@ -28,7 +28,7 @@ complianceReviewRequired: yes
 
 1. **Prices are decided on the server.** The client sends quantities and a promo-code string; `validateCheckoutCore` prices the order (`@abonten/core/checkoutPricing`) and the RPC `create_ticket_checkout` reserves inventory at that price. A client-supplied amount is never trusted.
 2. **Money tables are server-write-only.** `transaction`, `payment_attempt`, `ticket_checkout`, `*_promotion_checkout`, `*_promotion`, `promo_code_usage`, `subscription*` have no client INSERT/UPDATE/DELETE (policies dropped and grants revoked, migration `20260910230109`). Writes happen from `@abonten/services` on the service-role client after ownership has been proven.
-3. **Every posting is idempotent.** `transaction.paystack_reference` is UNIQUE; `payment_attempt` moves through a CAS lock; `issue_tickets_for_checkout` returns existing tickets if the checkout is already paid; `issueRefundCore` checks `transaction.status` before acting; credit postings carry an idempotency key.
+3. **Every posting is idempotent.** `transaction (provider, provider_reference)` is UNIQUE; `payment_attempt` moves through a CAS lock; `issue_tickets_for_checkout` returns existing tickets if the checkout is already paid; `issueRefundCore` checks `transaction.status` before acting; credit postings carry an idempotency key.
 4. **Ledgers are append-only.** `organizer_ledger_entry`, `platform_fee_entry`, `credit_journal`/`credit_entry`, `fieldops_commission_event` and `admin_audit_log` are never edited; corrections are new rows.
 
 ## Who can do what

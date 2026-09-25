@@ -67,8 +67,8 @@ begin
   for r in select * from (values ('A', 5000::bigint, 7), ('B', 30000::bigint, 7), ('C', 10000::bigint, 3)) as t(label, budget, days) loop
     i := i + 1;
     select author_id into v_advertiser from public.content_post where id = v_posts[i];
-    insert into public.transaction (user_id, full_name, email, reason, amount, currency, status, payment_method, paystack_reference)
-    values (v_advertiser, 'Simulation', 'simulation@example.com', 'Promotion_Purchase', r.budget / 100.0, 'GHS', 'successful', 'paystack', 'SIM-' || gen_random_uuid())
+    insert into public.transaction (user_id, full_name, email, reason, amount, currency, status, payment_method, provider, provider_reference)
+    values (v_advertiser, 'Simulation', 'simulation@example.com', 'Promotion_Purchase', r.budget / 100.0, 'GHS', 'successful', 'paystack', 'paystack', 'SIM-' || gen_random_uuid())
     returning id into v_tx;
     insert into public.content_campaign (
       post_id, advertiser_id, objective, budget_minor, currency, duration_days,
