@@ -104,7 +104,7 @@ order by c.ord;
 
 -- Budget for the broad cases: a search whose words are in (nearly) every
 -- listing must stay bounded. Laptop Docker numbers; fails the run loudly.
-do $
+do $$
 declare
   worst record;
 begin
@@ -119,7 +119,7 @@ begin
     raise exception 'search budget exceeded: % p95 % ms (budget 500 ms)', worst.fn, round(worst.p95::numeric, 1);
   end if;
   raise notice 'broad search budget ok: worst p95 % ms (%)', round(worst.p95::numeric, 1), worst.fn;
-end $;
+end $$;
 
 -- ---------------------------------------------------------------------
 -- Plans for stage-1 candidate queries: they must use the partial GIN,
