@@ -37,3 +37,27 @@ export function buildCloudinaryUrl(
 
   return `${CLOUDINARY_BASE_URL}${transformParts.join(",")}/v${version}/${publicId}.jpg`;
 }
+
+/** The shared "no photo yet" avatar every surface falls back to. */
+export const DEFAULT_AVATAR = {
+  publicId: "AnonymousProfile_rn6qez",
+  version: "1743533914",
+} as const;
+
+/**
+ * A person's avatar at a size, or the default avatar when they have none —
+ * never a `/vnull/null.jpg` URL that 404s.
+ */
+export function buildAvatarUrl(
+  publicId: string | null | undefined,
+  version: string | number | null | undefined,
+  options: CloudinaryImageOptions,
+): string {
+  return publicId
+    ? buildCloudinaryUrl(publicId, version ?? 1, options)
+    : buildCloudinaryUrl(
+        DEFAULT_AVATAR.publicId,
+        DEFAULT_AVATAR.version,
+        options,
+      );
+}

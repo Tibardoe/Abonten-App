@@ -3,6 +3,7 @@ import { DetailRowsSkeleton } from "@/components/skeletons";
 import { useTransactionDetail } from "@/features/transactions/useTransactionDetail";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { TransactionKind } from "@abonten/types/transactions";
 import {
@@ -125,7 +126,7 @@ export default function TransactionDetailScreen() {
           Amount
         </AppText>
         <AppText variant="bodyStrong">
-          {currency} {Number(amount).toLocaleString()}
+          {formatMoney(currency, Number(amount))}
         </AppText>
       </View>
 
@@ -151,22 +152,31 @@ export default function TransactionDetailScreen() {
             <Row label="Event" value={data.event?.title ?? null} />
             <Row label="Ticket type" value={data.ticket_type?.type ?? null} />
             <Row label="Quantity" value={data.quantity} />
-            <Row label="Unit price" value={`${currency} ${data.unit_price}`} />
+            <Row
+              label="Unit price"
+              value={formatMoney(currency, data.unit_price)}
+            />
             {data.discount > 0 ? (
-              <Row label="Discount" value={`-${currency} ${data.discount}`} />
+              <Row
+                label="Discount"
+                value={`-${formatMoney(currency, data.discount)}`}
+              />
             ) : null}
             <Row
               label="Ticket price"
-              value={`${currency} ${data.total_price}`}
+              value={formatMoney(currency, data.total_price)}
             />
             {data.serviceFee > 0 ? (
               <Row
                 label="Service fee"
-                value={`${currency} ${data.serviceFee}`}
+                value={formatMoney(currency, data.serviceFee)}
               />
             ) : null}
             {data.totalPaid !== data.total_price ? (
-              <Row label="Total paid" value={`${currency} ${data.totalPaid}`} />
+              <Row
+                label="Total paid"
+                value={formatMoney(currency, data.totalPaid)}
+              />
             ) : null}
             <Row label="Date/Time" value={dt(data.created_at)} />
             <Row
@@ -184,13 +194,19 @@ export default function TransactionDetailScreen() {
         ) : (
           <>
             <Row label="Plan" value={data.subscription_plan_name} />
-            <Row label="Unit price" value={`${currency} ${data.unit_price}`} />
+            <Row
+              label="Unit price"
+              value={formatMoney(currency, data.unit_price)}
+            />
             {data.discount > 0 ? (
-              <Row label="Discount" value={`-${currency} ${data.discount}`} />
+              <Row
+                label="Discount"
+                value={`-${formatMoney(currency, data.discount)}`}
+              />
             ) : null}
             <Row
               label="Total price"
-              value={`${currency} ${data.total_price}`}
+              value={formatMoney(currency, data.total_price)}
             />
             <Row label="Date/Time" value={dt(data.created_at)} />
             <Row label="Reference" value={id} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerEventPerformanceRow } from "@abonten/types/eventAnalytics";
 import Link from "next/link";
 import AnalyticsRowsSkeleton from "./AnalyticsRowsSkeleton";
@@ -90,8 +91,7 @@ export default function OrganizerEventPerformanceList({
               </div>
               <div className="text-right shrink-0">
                 <p className="font-bold">
-                  {event.currency ? `${event.currency} ` : ""}
-                  {Number(event.revenue).toLocaleString()}
+                  {formatMoney(event.currency, Number(event.revenue))}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {Number(event.tickets_sold).toLocaleString()} tickets

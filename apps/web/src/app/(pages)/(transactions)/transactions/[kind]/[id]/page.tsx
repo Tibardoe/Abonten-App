@@ -3,6 +3,7 @@ import TransactionStatusIcon, {
   getTransactionStatusMeta,
 } from "@/components/atoms/TransactionStatusIcon";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type {
   TransactionKind,
@@ -117,10 +118,12 @@ export default async function Page({
       <div className="font-bold text-muted-foreground flex justify-between items-center bg-muted rounded-md p-5">
         <p>Amount</p>
         <p>
-          {currency}{" "}
-          {row.kind === "ticket" && typeof row.totalPaid === "number"
-            ? row.totalPaid
-            : row.total_price}
+          {formatMoney(
+            currency,
+            row.kind === "ticket" && typeof row.totalPaid === "number"
+              ? row.totalPaid
+              : row.total_price,
+          )}
         </p>
       </div>
 
@@ -148,29 +151,29 @@ export default async function Page({
             <DetailRow label="Quantity" value={row.quantity} />
             <DetailRow
               label="Unit Price"
-              value={`${currency} ${row.unit_price}`}
+              value={formatMoney(currency, row.unit_price)}
             />
             {row.discount > 0 && (
               <DetailRow
                 label="Discount"
-                value={`-${currency} ${row.discount}`}
+                value={`-${formatMoney(currency, row.discount)}`}
               />
             )}
             <DetailRow
               label="Ticket Price"
-              value={`${currency} ${row.total_price}`}
+              value={formatMoney(currency, row.total_price)}
             />
             {typeof row.serviceFee === "number" && row.serviceFee > 0 && (
               <DetailRow
                 label="Service fee"
-                value={`${currency} ${row.serviceFee}`}
+                value={formatMoney(currency, row.serviceFee)}
               />
             )}
             {typeof row.totalPaid === "number" &&
               row.totalPaid !== row.total_price && (
                 <DetailRow
                   label="Total Paid"
-                  value={`${currency} ${row.totalPaid}`}
+                  value={formatMoney(currency, row.totalPaid)}
                 />
               )}
             <DetailRow
@@ -203,17 +206,17 @@ export default async function Page({
             <DetailRow label="Plan" value={row.subscription_plan_name} />
             <DetailRow
               label="Unit Price"
-              value={`${currency} ${row.unit_price}`}
+              value={formatMoney(currency, row.unit_price)}
             />
             {row.discount > 0 && (
               <DetailRow
                 label="Discount"
-                value={`-${currency} ${row.discount}`}
+                value={`-${formatMoney(currency, row.discount)}`}
               />
             )}
             <DetailRow
               label="Total Price"
-              value={`${currency} ${row.total_price}`}
+              value={formatMoney(currency, row.total_price)}
             />
             <DetailRow
               label="Date/Time"

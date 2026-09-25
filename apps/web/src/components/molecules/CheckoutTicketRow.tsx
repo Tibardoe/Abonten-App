@@ -1,6 +1,7 @@
 import type { getTickets } from "@/actions/getTickets";
 import QuantityStepper from "@/components/atoms/QuantityStepper";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { MdDiscount } from "react-icons/md";
 
 type Ticket = NonNullable<
@@ -36,6 +37,7 @@ export default function CheckoutTicketRow({
         <p>{ticket.type}</p>
 
         <QuantityStepper
+          label={`${ticket.type} tickets`}
           quantity={quantity}
           maxQuantity={ticket.quantity}
           onIncrement={onIncrement}
@@ -49,13 +51,13 @@ export default function CheckoutTicketRow({
         <div className="flex justify-between items-center w-full font-bold">
           <div className="flex flex-col">
             <p className="flex items-center gap-2">
-              {ticket.currency} {""}
               {discountedUnitPrice !== null ? (
                 <span className="flex justify-center items-center gap-1">
-                  {discountedUnitPrice} <MdDiscount className="text-lg" />
+                  {formatMoney(ticket.currency, discountedUnitPrice)}{" "}
+                  <MdDiscount className="text-lg" aria-label="Discounted" />
                 </span>
               ) : (
-                ticket.price
+                formatMoney(ticket.currency, ticket.price)
               )}
             </p>
 

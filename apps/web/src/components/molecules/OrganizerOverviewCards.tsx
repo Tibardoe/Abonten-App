@@ -6,6 +6,7 @@ import {
   type TrendResult,
   computeTrend,
 } from "@abonten/core/admin/computeTrend";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   DASHBOARD_PERIOD_COMPARISON_LABELS,
   type DashboardPeriod,
@@ -79,7 +80,7 @@ export default function OrganizerOverviewCards({
   const comparisonLabel = DASHBOARD_PERIOD_COMPARISON_LABELS[period];
 
   const money = (amount: number, currency: string | null) =>
-    `${currency ? `${currency} ` : ""}${Number(amount).toLocaleString()}`;
+    formatMoney(currency, Number(amount));
 
   const ticketsSold = Number(primary.tickets_sold ?? 0);
   const registrations = Number(primary.registrations ?? 0);

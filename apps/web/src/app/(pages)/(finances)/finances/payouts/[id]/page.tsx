@@ -3,6 +3,7 @@ import FinanceLineIcon, {
   getFinanceStatusMeta,
 } from "@/finances/atoms/FinanceLineIcon";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
 import { notFound } from "next/navigation";
 
@@ -58,9 +59,7 @@ export default async function PayoutDetailPage({
     <div className="space-y-10 text-sm mb-5 md:mb-0 w-full">
       <div className="font-bold text-muted-foreground flex justify-between items-center bg-muted rounded-md p-5">
         <p>Amount</p>
-        <p>
-          {payout.currency} {payout.amount.toLocaleString()}
-        </p>
+        <p>{formatMoney(payout.currency, payout.amount)}</p>
       </div>
 
       <div className="flex gap-3 bg-muted rounded-md p-5 items-center">

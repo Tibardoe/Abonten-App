@@ -114,12 +114,14 @@ export default function TicketCheckoutSessionCard({
                   disabled={isLinePending}
                   onClick={() => onDeleteLine(line.ticketCheckoutId)}
                   className="hover:opacity-70 transition-opacity disabled:opacity-40"
+                  aria-label={`Remove ${line.type} tickets`}
                 >
-                  <RiDeleteBin6Line className="text-destructive" />
+                  <RiDeleteBin6Line className="text-destructive" aria-hidden />
                 </button>
               </div>
 
               <QuantityStepper
+                label={`${line.type} tickets`}
                 quantity={line.quantity}
                 minQuantity={1}
                 maxQuantity={maxQuantity}
@@ -134,9 +136,7 @@ export default function TicketCheckoutSessionCard({
 
               <div className="flex justify-between text-xs text-muted-foreground">
                 <p>Unit price:</p>
-                <p>
-                  {line.currency} {line.unitPrice}
-                </p>
+                <p>{formatMoney(line.currency, line.unitPrice)}</p>
               </div>
 
               {line.discount > 0 && (

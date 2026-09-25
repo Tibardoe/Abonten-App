@@ -19,10 +19,17 @@ export type GeocodeResult = {
 // take the whole page down through the error boundary — which is what an
 // uncaught deadline from fetchWithTimeout would do.
 export async function geocodeAddress(address: string): Promise<GeocodeResult> {
-  if (!address) throw new Error("Address is required");
+  // No address (a listing with a structured address only) or no key is a
+  // "no coordinates" result like any other — never a failed page.
+  if (!address?.trim()) {
+    return { lat: null, lng: null, error: "No address" };
+  }
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) throw new Error("Missing Google Maps API Key");
+  if (!apiKey) {
+    logger.error("geocodeAddress: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set");
+    return { lat: null, lng: null, error: "Location lookup unavailable" };
+  }
 
   try {
     const res = await fetchWithTimeout(

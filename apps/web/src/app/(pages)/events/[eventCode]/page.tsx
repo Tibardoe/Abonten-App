@@ -17,16 +17,19 @@ import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import { loadReviewPreview } from "@/reviews/loadReviews";
 import ReviewsPreview from "@/reviews/organisms/ReviewsPreview";
-import { geocodeAddress } from "@/utils/geocodeServerSide";
-import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import {
+  buildAvatarUrl,
+  buildCloudinaryUrl,
+} from "@abonten/core/cloudinaryUrl";
 import {
   getFormattedEventDate,
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
 import { readEventAddress } from "@abonten/core/eventAddress";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
-import { asWkbHex } from "@abonten/core/parseWKBHex";
+import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
@@ -160,9 +163,14 @@ export default async function page({
         [{ starts_at: event.starts_at ?? "", ends_at: event.ends_at ?? "" }];
 
   const address = readEventAddress(event.address);
-  const safeLocation = address.full_address;
   const eventId = event.id;
   const locationWkb = asWkbHex(event.location);
+  // The event row carries its own coordinates. Before 2026-09-25 the page
+  // geocoded the address text instead: a billed Google call per page, a
+  // guess where the venue pin is exact, and an event with no address line
+  // (structured address only) threw and took the whole page down.
+  const { eventLat, eventLng } = parseWKBHex(locationWkb);
+  const eventCoordinates = { lat: eventLat, lng: eventLng };
 
   // attendanceCount, minTicket, averageRating, and the geocode lookup only
   // depend on `event` (not on each other), so run them concurrently instead
@@ -191,7 +199,7 @@ export default async function page({
     // Rates the organizer as a person (generic `review` table) — distinct
     // from eventRating below, which rates this specific event.
     getUserRating(event.organizer_id),
-    geocodeAddress(safeLocation),
+    eventCoordinates,
     // The reviews block: summary + the three most helpful (never the
     // whole history — "See all" opens /events/<code>/reviews).
     loadReviewPreview("event", event.id),
@@ -268,7 +276,10 @@ export default async function page({
                 <span>Free Entry</span>
               ) : (
                 <span>
-                  From {minTicket?.currency} {minTicket?.price}
+                  From{" "}
+                  {formatMoney(minTicket?.currency, minTicket?.price, {
+                    trimZeroFraction: true,
+                  })}
                 </span>
               )}
             </span>
@@ -297,7 +308,7 @@ export default async function page({
                   className="shrink-0 hover:scale-105 transition-transform"
                 >
                   <Image
-                    src={buildCloudinaryUrl(
+                    src={buildAvatarUrl(
                       event.user_info.avatar_public_id,
                       event.user_info.avatar_version,
                       { width: 56, height: 56 },

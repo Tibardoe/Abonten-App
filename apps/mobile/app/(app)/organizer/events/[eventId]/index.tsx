@@ -12,6 +12,7 @@ import type {
   OrganizerDashboardPeriod,
 } from "@abonten/api-client";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Chip, Overline, Refresher } from "@abonten/ui-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -29,7 +30,7 @@ const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null | undefined, amount: number): string {
-  return `${currency ? `${currency} ` : ""}${amount.toLocaleString()}`;
+  return formatMoney(currency, amount);
 }
 
 function SectionTitle({ children }: { children: string }) {
@@ -164,7 +165,7 @@ function FinanceSection({
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Row
             label="Ticket sales"
-            value={`${finance.currency} ${n(finance.ticketSales).toLocaleString()}`}
+            value={money(finance.currency, n(finance.ticketSales))}
           />
           {/* Under the customer-paid-service-fee model the organizer keeps
               100% of the ticket price; older sales that carried a 2%
@@ -172,48 +173,41 @@ function FinanceSection({
           {n(finance.platformFee) !== 0 ? (
             <Row
               label="Abonten fees"
-              value={`-${finance.currency} ${n(finance.platformFee).toLocaleString()}`}
+              value={`-${money(finance.currency, n(finance.platformFee))}`}
             />
           ) : null}
           {n(finance.refunds) !== 0 ? (
             <View className="gap-1">
               <Row
                 label="Refunds"
-                value={`-${finance.currency} ${Math.abs(
-                  n(finance.refunds),
-                ).toLocaleString()}`}
+                value={`-${money(finance.currency, Math.abs(n(finance.refunds)))}`}
               />
               {n(finance.pendingRefunds) > 0 ||
               n(finance.completedRefunds) > 0 ? (
                 <AppText variant="muted">
                   {n(finance.refundRequestCount)} request
                   {n(finance.refundRequestCount) === 1 ? "" : "s"} ·{" "}
-                  {finance.currency}{" "}
-                  {n(finance.pendingRefunds).toLocaleString()} pending ·{" "}
-                  {finance.currency}{" "}
-                  {n(finance.completedRefunds).toLocaleString()} completed
+                  {money(finance.currency, n(finance.pendingRefunds))} pending ·{" "}
+                  {money(finance.currency, n(finance.completedRefunds))}{" "}
+                  completed
                 </AppText>
               ) : null}
             </View>
           ) : null}
           <Row
             label="Net sales"
-            value={`${finance.currency} ${n(finance.netSales).toLocaleString()}`}
+            value={money(finance.currency, n(finance.netSales))}
           />
           {n(finance.promoterCommissions) !== 0 ? (
             <Row
               label="Promoter commissions"
-              value={`-${finance.currency} ${Math.abs(
-                n(finance.promoterCommissions),
-              ).toLocaleString()}`}
+              value={`-${money(finance.currency, Math.abs(n(finance.promoterCommissions)))}`}
             />
           ) : null}
           <View className="h-px bg-border" />
           <Row
             label="Organizer earnings"
-            value={`${finance.currency} ${n(
-              finance.organizerEarnings,
-            ).toLocaleString()}`}
+            value={money(finance.currency, n(finance.organizerEarnings))}
           />
           <View className="h-px bg-border" />
           {period !== "all" ? (
@@ -228,8 +222,8 @@ function FinanceSection({
           </AppText>
           {finance.settled ? (
             <AppText variant="muted">
-              {finance.currency} {n(finance.organizerEarnings).toLocaleString()}{" "}
-              is now available in your Finances balance.
+              {money(finance.currency, n(finance.organizerEarnings))} is now
+              available in your Finances balance.
             </AppText>
           ) : null}
         </View>

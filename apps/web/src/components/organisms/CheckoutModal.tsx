@@ -200,7 +200,11 @@ export default function CheckoutModal({
   const serviceFeeRate = useServiceFeeRate(
     ticketList[0]?.currency ?? undefined,
   );
-  const fee = computeCheckoutFee(subTotal, serviceFeeRate);
+  const fee = computeCheckoutFee(
+    subTotal,
+    serviceFeeRate,
+    ticketList[0]?.currency,
+  );
 
   const total = subTotal + fee;
 
@@ -263,8 +267,9 @@ export default function CheckoutModal({
               type="button"
               onClick={() => handleCheckoutModal(false)}
               className="self-start"
+              aria-label="Close checkout"
             >
-              <MdOutlineCancel className="text-2xl" />
+              <MdOutlineCancel className="text-2xl" aria-hidden />
             </button>
           </div>
 
@@ -307,12 +312,18 @@ export default function CheckoutModal({
                 const eligibleUnits =
                   promoEligibility?.eligibleUnitsByTicket[ticket.id] ?? 0;
                 const ticketPrice = ticket.price ?? 0;
-                const discountedUnitPrice = appliedPromo
-                  ? +(
-                      ticketPrice -
-                      (appliedPromo.discountPercentage / 100) * ticketPrice
-                    ).toFixed(2)
-                  : null;
+                // Same per-unit rounding as the server (the ticket's own
+                // currency's minor units), not a fixed two decimals.
+                const discountedUnitPrice =
+                  appliedPromo && ticket.currency
+                    ? computeLineAmount(
+                        1,
+                        ticketPrice,
+                        appliedPromo.discountPercentage,
+                        1,
+                        ticket.currency,
+                      ).amount
+                    : null;
 
                 return (
                   <CheckoutTicketRow

@@ -1,6 +1,7 @@
 "use client";
 
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardBucket } from "@abonten/core/organizerDashboardDateRange";
 import type { OrganizerSalesTimelinePoint } from "@abonten/types/eventAnalytics";
 import {
@@ -46,8 +47,8 @@ function TimelineTooltip({
     <div className="bg-popover text-popover-foreground border border-border rounded-md shadow-md px-3 py-2 text-sm">
       <p className="font-medium">{row.label}</p>
       <p className="text-muted-foreground">
-        {currency} {Number(row.gross).toLocaleString()} &middot; {row.orders}{" "}
-        order{row.orders === 1 ? "" : "s"}
+        {formatMoney(currency, Number(row.gross))} &middot; {row.orders} order
+        {row.orders === 1 ? "" : "s"}
       </p>
     </div>
   );
@@ -102,7 +103,7 @@ export default function OrganizerSalesTimelineChart({
   return (
     <div
       role="img"
-      aria-label={`Sales over time chart. Total ${currency} ${total.toLocaleString()} across ${chartData.length} ${bucket === "hour" ? "hours" : bucket === "month" ? "months" : "days"}.`}
+      aria-label={`Sales over time chart. Total ${formatMoney(currency, total)} across ${chartData.length} ${bucket === "hour" ? "hours" : bucket === "month" ? "months" : "days"}.`}
     >
       <ResponsiveContainer width="100%" height={256}>
         <BarChart

@@ -4,6 +4,7 @@ import StatTile from "@/components/atoms/StatTile";
 import TransactionStatusIcon from "@/components/atoms/TransactionStatusIcon";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { TransactionPeriod } from "@abonten/core/transactionsDateRange";
 import type { UserTransactionSummaryRow } from "@abonten/types/transactions";
 import { useQuery } from "@tanstack/react-query";
@@ -59,7 +60,7 @@ export default function TransactionsSummaryCards({
   const otherCurrencyRows = data.data.slice(1);
 
   const money = (amount: number, currency: string) =>
-    `${currency} ${Number(amount).toLocaleString()}`;
+    formatMoney(currency, Number(amount));
 
   return (
     <div className="flex flex-col gap-3">

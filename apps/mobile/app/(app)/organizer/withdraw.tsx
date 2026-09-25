@@ -6,6 +6,7 @@ import {
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
 import { useQueryView } from "@/lib/useQueryView";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   AppText,
   Button,
@@ -21,10 +22,7 @@ import { useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 
 function fmt(currency: string, v: number): string {
-  return `${currency} ${v.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return formatMoney(currency, v);
 }
 
 export default function WithdrawScreen() {

@@ -173,6 +173,7 @@ export default function BuyTicketsScreen() {
   const feePreview = computeCheckoutFee(
     discountedSubtotal,
     eventMarket?.serviceFeeRate ?? undefined,
+    currency || null,
   );
   const totalPreview = discountedSubtotal + feePreview;
   const partialPromo =

@@ -15,6 +15,7 @@ import type {
   OrganizerLedgerTransactionRow,
 } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   AppText,
   Chip,
@@ -70,10 +71,7 @@ const FILTER_LINES: Record<
 
 function amount(currency: string, value: number): string {
   const sign = value < 0 ? "−" : "";
-  return `${sign}${currency} ${Math.abs(value).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return `${sign}${formatMoney(currency, Math.abs(value))}`;
 }
 
 function BalanceLine({

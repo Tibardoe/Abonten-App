@@ -1,3 +1,4 @@
+import { isKnownCurrency } from "./money/currencies";
 import {
   fromMajor,
   money,
@@ -88,8 +89,16 @@ export const DEFAULT_SERVICE_FEE_RATE = 0.05;
 export function computeCheckoutFee(
   amountBeforeFee: number,
   feeRate: number = DEFAULT_SERVICE_FEE_RATE,
+  currency?: string | null,
 ): number {
   if (amountBeforeFee <= 0) return 0;
+  // With the order's currency, rounded to what that currency can hold
+  // (whole francs or yen, thousandths of a dinar), the way the server
+  // prices it; without one, the historical 2 decimals.
+  if (currency && isKnownCurrency(currency)) {
+    const base = fromMajor(amountBeforeFee, currency);
+    return toMajor(money(base.amountMinor * feeRate, currency));
+  }
   // Money is 2dp everywhere it is stored (numeric(10,2)) and charged
   // (toPesewas rounds to the nearest pesewa), so the fee is rounded to 2dp
   // here too rather than being left as a raw product. A rate like 0.05 on

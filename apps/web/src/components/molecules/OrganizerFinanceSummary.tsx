@@ -3,6 +3,7 @@
 import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
@@ -52,13 +53,13 @@ export default function OrganizerFinanceSummary() {
         <div>
           <p className="text-xs text-muted-foreground">Available to withdraw</p>
           <p className="font-bold">
-            {overview.currency} {overview.available_balance.toLocaleString()}
+            {formatMoney(overview.currency, overview.available_balance)}
           </p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Pending</p>
           <p className="font-bold">
-            {overview.currency} {overview.pending_balance.toLocaleString()}
+            {formatMoney(overview.currency, overview.pending_balance)}
           </p>
         </div>
       </div>
