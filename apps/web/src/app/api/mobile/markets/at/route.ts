@@ -1,7 +1,11 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
-import { getListingMarketCore } from "@abonten/services/markets/marketContextCore";
+import {
+  LISTING_MARKET_LOOKUPS_PER_MINUTE,
+  getListingMarketCore,
+} from "@abonten/services/markets/marketContextCore";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 
 // GET /api/mobile/markets/at?lat=..&lng=..&country=GB
 //
@@ -12,6 +16,17 @@ export async function GET(req: Request) {
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
   try {
+    const allowed = await checkRateLimit(
+      `listing-market:${auth.user.id}`,
+      LISTING_MARKET_LOOKUPS_PER_MINUTE,
+      60,
+    );
+    if (!allowed) {
+      return apiJson({
+        status: 429,
+        message: "Too many location checks. Please wait a moment.",
+      });
+    }
     const url = new URL(req.url);
     const lat = Number(url.searchParams.get("lat"));
     const lng = Number(url.searchParams.get("lng"));

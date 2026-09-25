@@ -131,11 +131,22 @@ export type ListingMarketResult =
  * currency the prices are in and which zone the times are read in. The
  * same resolver the save path uses, so the preview and the result agree.
  */
+/** Per account, per minute: each new venue point can cost a Google call. */
+export const LISTING_MARKET_LOOKUPS_PER_MINUTE = 60;
+
 export async function getListingMarketCore(input: {
   lat: number;
   lng: number;
   countryHint?: string | null;
 }): Promise<ListingMarketResult> {
+  if (
+    !Number.isFinite(input.lat) ||
+    !Number.isFinite(input.lng) ||
+    Math.abs(input.lat) > 90 ||
+    Math.abs(input.lng) > 180
+  ) {
+    return { ok: false, message: "Choose a location first." };
+  }
   const location = await resolveLocation(input);
   if (!location.countryCode) {
     return {

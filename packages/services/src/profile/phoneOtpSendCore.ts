@@ -52,7 +52,12 @@ export async function sendPhoneOtpCore(input: {
   const route = await routeOtpForPhone(phoneE164);
   if (!route.ok) {
     return {
-      status: route.reason === "not_configured" ? 503 : 400,
+      status:
+        route.reason === "not_configured"
+          ? 503
+          : route.reason === "busy"
+            ? 429
+            : 400,
       message: route.message,
     };
   }

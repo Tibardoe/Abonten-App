@@ -1,6 +1,7 @@
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { getMarketContextCore } from "@abonten/services/markets/marketContextCore";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 
@@ -12,6 +13,8 @@ import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 // display-rate table for price estimates and the feature flags that apply.
 // Works signed out (the default market + request country); a Bearer token,
 // when present, adds the person's saved preferences and cohorts.
+const MARKET_CONTEXT_POINT_LOOKUPS_PER_MINUTE = 30;
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -20,7 +23,7 @@ export async function GET(req: Request) {
     const browsingCountry = url.searchParams.get("country");
     const lat = Number(url.searchParams.get("lat"));
     const lng = Number(url.searchParams.get("lng"));
-    const browsingPoint =
+    let browsingPoint =
       url.searchParams.has("lat") &&
       url.searchParams.has("lng") &&
       Number.isFinite(lat) &&
@@ -57,6 +60,23 @@ export async function GET(req: Request) {
         userId = data.user.id;
         supabase = client;
       }
+    }
+
+    // A new point can cost a billed Google reverse-geocode call and this
+    // route answers signed-out callers, so point lookups are rate limited
+    // per account (or per address when signed out). Over the limit the
+    // point is ignored and the request country / saved area decide instead.
+    if (browsingPoint) {
+      const ip =
+        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        req.headers.get("x-real-ip") ||
+        "unknown";
+      const allowed = await checkRateLimit(
+        userId ? `market-context:${userId}` : `market-context-ip:${ip}`,
+        MARKET_CONTEXT_POINT_LOOKUPS_PER_MINUTE,
+        60,
+      );
+      if (!allowed) browsingPoint = null;
     }
 
     const result = await getMarketContextCore({
