@@ -402,7 +402,7 @@ service-only table); Admin › Monitoring health checks; Sentry for
 | 20:26 | Step 8: payment state (read-only) | no attempt in `processing` over an hour; 0 orphan captures; 20 webhooks in 7 days, all `settled` / HTTP 200; 4 `initiated` attempts from 18–24 Aug are abandoned checkouts from before this work |
 | 20:27 | Step 10: logs since the deploy | Postgres: only the smoke script's own deliberate probes (`attendance`, `payout_account`); Vercel admin: no errors; Vercel web: Resend refused the throwaway `@example.com` buyers' ticket emails (expected; registration succeeded) |
 
-| 20:31 | Final `production-smoke.mjs` run after fixing the script's own Ghana check (it held a literal backspace where `` was meant, and a bare "Ghana" could also match the test address): it now requires F3's rendering "Ghana (GH)" | 32 passed, 0 failed, every test row removed |
+| 20:28 | Final `production-smoke.mjs` run after fixing the script's own Ghana check (it held a literal backspace where `` was meant, and a bare "Ghana" could also match the test address): it now requires F3's rendering "Ghana (GH)" | 32 passed, 0 failed, every test row removed |
 
 At deployment, production had no upcoming published events, so a direct
 `search_events('accra')` returns no rows; the smoke script's search check
