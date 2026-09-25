@@ -483,6 +483,22 @@ export async function handleProviderWebhook(input: {
   }
   const provider = getPaymentProvider(providerCode);
   const parsed = provider.parseWebhook(account, rawBody, headers);
+  if (!parsed.ok && parsed.reason === "mode_mismatch") {
+    // Correctly signed but from the other mode — a test dashboard pointed at
+    // this deployment, or a secret left over from before the switch to
+    // live. Acknowledge so it is not redelivered for days; change nothing.
+    logger.error(
+      `Ignored ${providerCode} webhook for ${countryCode}: event is from the other test/live mode`,
+      {
+        payment: {
+          provider: providerCode,
+          country: countryCode,
+          failure: "mode_mismatch",
+        },
+      },
+    );
+    return { status: 200, body: { received: true, ignored: "mode_mismatch" } };
+  }
   if (!parsed.ok) {
     logger.warn(
       `Rejected ${providerCode} webhook for ${countryCode}: ${parsed.reason}`,
@@ -557,6 +573,14 @@ export async function handleProviderWebhook(input: {
         country_code: countryCode,
         event_id: parsed.eventId,
         event_name: parsed.eventName,
+        // What the delivery was about, for reconciliation: the payment's
+        // provider reference, or the transfer code of a payout.
+        reference:
+          "transferCode" in event
+            ? event.transferCode || null
+            : "reference" in event
+              ? (event.reference ?? null) || null
+              : null,
         outcome: outcome.settled ? "settled" : "retry",
         http_status: outcome.status,
         attempts: (seen?.attempts ?? 0) + 1,

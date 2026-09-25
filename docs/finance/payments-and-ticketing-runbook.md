@@ -4,8 +4,8 @@ purpose: Describe, function by function, how a ticket purchase moves from select
 audience: Engineering, finance admins, support leads
 scope: Paid and free ticket checkouts, promotion checkouts, Paystack popup / direct charge / mobile-money OTP, webhook, fulfilment retry
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-22
+version: 1.2
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -65,20 +65,21 @@ Same shape with `insertEventPromotionCheckoutCore` / `placePromotionCore` → `e
 
 ## 4. The webhook
 
-`apps/web/src/app/api/paystack/webhook/route.ts` — excluded from the cookie middleware matcher. Verifies the Paystack signature header against `PAYSTACK_WEBHOOK_SECRET`; handles `charge.success` (→ finalize), `refund.processed` / `refund.failed` (→ transaction `refunded` or back to `successful` with `refund_requested_at` set), `charge.dispute.*` (→ `record_payment_dispute` + incident), `transfer.success|failed|reversed` (→ `admin_settle_payout`, only when Transfers are enabled). Every handler is idempotent; a redelivered event is a no-op.
+`apps/web/src/app/api/paystack/webhook/route.ts` — excluded from the cookie middleware matcher. Verifies the Paystack signature header against `PAYSTACK_WEBHOOK_SECRET`; handles `charge.success` (→ finalize), `refund.processed` / `refund.failed` (→ transaction `refunded` or back to `successful` with `refund_requested_at` set), `charge.dispute.*` (→ `record_payment_dispute` + incident), `transfer.success|failed|reversed` (→ `admin_settle_payout`, only when Transfers are enabled). Every handler is idempotent; a redelivered event is a no-op. A signed event whose `domain` is the other test/live mode is acknowledged and ignored, and an account whose keys mix test and live (or contradict `PAYMENTS_MODE`) is refused — see [paystack-live-cutover.md](paystack-live-cutover.md).
 
 ## 5. Health and automatic backstops
 
 | Job | Schedule | What it protects |
 |---|---|---|
 | `expire-stale-ticket-checkouts` | */5 min | Releases seats from pending checkouts past `expires_at` **unless** a live `payment_attempt` (`initiated/pending/processing`) exists (DATA-001) |
+| `payment-reconcile` → `run_payment_reconcile_dispatch()` → `POST /api/maintenance/payment-reconcile` | */5 min | Charges still open 35 min after the attempt (under 2 days) are verified with the provider and finished via `finalizePayment`; attempts that never reached the provider are cancelled after 1 h, so their seats are released (2026-09-25) |
 | `recover_stale_payment_attempts()` | */5 min | `processing` > 15 min → `fulfillment_failed` (transaction exists) or `pending` (not) |
 | `financial-reconciliation` → `run_financial_reconciliation()` | */30 min | Opens an `incident` for: paid checkout without earning; succeeded payment without ticket; negative inventory; attempt stuck processing > 1 h; plus credit and field-ops invariants |
 | `abonten-health-check` | */2 min | Probes Paystack `/bank`, Resend, Hubtel, Cloudinary, Expo, DB/auth/storage → Admin › Monitoring |
 
 ## 6. What to do when…
 
-- **Customer paid, no ticket** — Admin › Finance › Transactions: search the Paystack reference or email. If the transaction is `successful` and the checkout is `paid` with tickets → they are issued; resend the email or point them to My Tickets. If the attempt is `fulfillment_failed` or `processing` → have the customer press Retry, or an engineer calls `retryPaymentFulfillmentCore`; check Cloudinary (QR upload) and Sentry for the error. If Paystack shows success but no transaction row exists → the webhook or verify never ran; replay the webhook from the Paystack dashboard or call finalize with the attempt id. Never issue tickets by hand.
+- **Customer paid, no ticket** — Admin › Finance › Transactions: search the Paystack reference or email. If the transaction is `successful` and the checkout is `paid` with tickets → they are issued; resend the email or point them to My Tickets. If the attempt is `fulfillment_failed` or `processing` → have the customer press Retry, or an engineer calls `retryPaymentFulfillmentCore`; check Cloudinary (QR upload) and Sentry for the error. If Paystack shows success but no transaction row exists → the webhook or verify never ran; the `payment-reconcile` sweep finishes such a charge within minutes of the 35-minute mark (up to two days old); older, replay the webhook from the Paystack dashboard or call finalize with the attempt id. Never issue tickets by hand.
 - **Customer charged twice** — one Paystack reference per attempt; check both references in Finance › Transactions. A second `successful` transaction for the same checkout is impossible (`already_issued` path); a second charge would be a separate attempt for a separate checkout, or a bank authorization that will drop. Refund the duplicate via Finance › Transactions › Refund (step-up).
 - **Ticket type shows negative or wrong availability** — cannot happen after DATA-002 (`quantity >= 0` CHECK) and the CAS decrement; if a report suggests it, run the reconciliation check and inspect `ticket_checkout` expiry for that type.
 - **Paystack is down** — health check shows Paystack down; new payments fail at init; existing pending checkouts keep their seats while an attempt is live. See `../incident-response/outages-service-email-push-third-party.md`.

@@ -7666,6 +7666,30 @@ export type Database = {
           },
         ]
       }
+      payment_reconcile_config: {
+        Row: {
+          dispatch_url: string | null
+          id: boolean
+          last_dispatched_at: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          dispatch_url?: string | null
+          id?: boolean
+          last_dispatched_at?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          dispatch_url?: string | null
+          id?: boolean
+          last_dispatched_at?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_webhook_event: {
         Row: {
           attempts: number
@@ -7677,6 +7701,7 @@ export type Database = {
           last_received_at: string
           outcome: string
           provider: string
+          reference: string | null
         }
         Insert: {
           attempts?: number
@@ -7688,6 +7713,7 @@ export type Database = {
           last_received_at?: string
           outcome: string
           provider: string
+          reference?: string | null
         }
         Update: {
           attempts?: number
@@ -7699,6 +7725,7 @@ export type Database = {
           last_received_at?: string
           outcome?: string
           provider?: string
+          reference?: string | null
         }
         Relationships: []
       }
@@ -15958,6 +15985,7 @@ export type Database = {
       run_exchange_rate_refresh: { Args: never; Returns: undefined }
       run_financial_reconciliation: { Args: never; Returns: Json }
       run_notification_delivery: { Args: never; Returns: undefined }
+      run_payment_reconcile_dispatch: { Args: never; Returns: undefined }
       run_scheduled_health_check: { Args: never; Returns: undefined }
       run_storage_purge_dispatch: { Args: never; Returns: undefined }
       search_events: {

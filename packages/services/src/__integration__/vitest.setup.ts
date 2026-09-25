@@ -54,3 +54,31 @@ process.env.PAYSTACK_WEBHOOK_SECRET ??= "whsec_placeholder_integration_suite";
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= process.env.SUPABASE_TEST_URL;
 process.env.SUPABASE_SERVICE_ROLE_KEY ??=
   process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
+
+// This suite writes with the service role, and the Paystack sandbox suite
+// makes real test-mode charges. Neither may ever run against a hosted
+// database: a production URL left in the shell (NEXT_PUBLIC_SUPABASE_URL
+// wins over the test one above) would point every write at production.
+// Only a stack on this machine is accepted — a deliberate stop, not a
+// convention to remember.
+for (const name of ["SUPABASE_TEST_URL", "NEXT_PUBLIC_SUPABASE_URL"]) {
+  const value = process.env[name] ?? "";
+  let host = "";
+  try {
+    host = new URL(value).hostname;
+  } catch {}
+  if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(host)) {
+    throw new Error(
+      `${name} must point at the local test stack (127.0.0.1); got "${host || value}". The integration suites never run against a hosted database.`,
+    );
+  }
+}
+// A live key never enters this process: payment tests replace the provider
+// API, and the sandbox suite requires a test key of its own.
+for (const name of ["PAYSTACK_SECRET_KEY", "PAYSTACK_SANDBOX_SECRET_KEY"]) {
+  if (process.env[name]?.trim().startsWith("sk_live_")) {
+    throw new Error(
+      `${name} is a LIVE Paystack key; the integration suites accept test keys only.`,
+    );
+  }
+}

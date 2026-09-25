@@ -27,6 +27,9 @@ export type HealthCheckConfig = {
   hubtelClientId?: string;
   hubtelClientSecret?: string;
   expoAccessToken?: string;
+  /** PAYMENTS_MODE and VERCEL_ENV of this deployment, reported as-is. */
+  paymentsMode?: string | null;
+  deploymentEnv?: string | null;
 };
 
 async function timed<T>(
@@ -117,7 +120,13 @@ export async function runHealthChecksCore(
   // credentials set and answers an authenticated call.
   const providerOutcomes = new Map<
     "paystack" | "stripe",
-    { ms: number; ok: boolean; markets: Record<string, string> }
+    {
+      ms: number;
+      ok: boolean;
+      markets: Record<string, string>;
+      // "test" / "live" / "unknown" per key — never a key or a fragment.
+      modes: Record<string, Record<string, string>>;
+    }
   >();
   for (const market of await listOpenMarkets()) {
     for (const entry of await resolveMarketAccounts(market.countryCode)) {
@@ -127,11 +136,13 @@ export async function runHealthChecksCore(
         ms: 0,
         ok: true,
         markets: {},
+        modes: {},
       };
+      agg.modes[market.countryCode] = entry.modes;
       if (!entry.account) {
         agg.ok = false;
         agg.markets[market.countryCode] =
-          `missing ${entry.missingEnv.join(", ")}`;
+          entry.problem ?? `missing ${entry.missingEnv.join(", ")}`;
       } else {
         const account = entry.account;
         const probe = await timed(() =>
@@ -147,13 +158,41 @@ export async function runHealthChecksCore(
       providerOutcomes.set(code, agg);
     }
   }
+  // A charge the provider took that nothing has settled two hours on: the
+  // payment-reconcile sweep should have finished it, so a person must look
+  // (Admin › Finance). Counted over the last week.
+  const unsettled = await timed(async () => {
+    const { count, error } = await serviceClient
+      .from("payment_attempt")
+      .select("id", { count: "exact", head: true })
+      .eq("provider", "paystack")
+      .in("status", ["initiated", "pending", "processing"])
+      .not("provider_reference", "is", null)
+      .lt("created_at", new Date(Date.now() - 2 * 3_600_000).toISOString())
+      .gte("created_at", new Date(Date.now() - 7 * 86_400_000).toISOString());
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+  });
   for (const [code, agg] of providerOutcomes) {
+    const stuck = code === "paystack" ? (unsettled.value ?? 0) : 0;
+    const ok = agg.ok && stuck === 0 && unsettled.err === null;
     push(
       code,
-      { ms: agg.ms, err: agg.ok ? null : "one or more market accounts failed" },
-      agg.ok,
+      {
+        ms: agg.ms,
+        err: ok
+          ? null
+          : !agg.ok
+            ? "one or more market accounts failed"
+            : "charged payments not settled",
+      },
+      ok,
       {
         markets: agg.markets,
+        modes: agg.modes,
+        declaredMode: config.paymentsMode ?? null,
+        deployment: config.deploymentEnv ?? null,
+        ...(code === "paystack" ? { unsettledPayments: unsettled.value } : {}),
       },
     );
   }

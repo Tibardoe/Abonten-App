@@ -212,7 +212,13 @@ export type ParsedWebhook =
     }
   | {
       ok: false;
-      reason: "missing_signature" | "invalid_signature" | "malformed";
+      reason:
+        | "missing_signature"
+        | "invalid_signature"
+        | "malformed"
+        // Signed, but the event is from the other mode (a test-mode event
+        // reaching a live account, or the reverse): never acted on.
+        | "mode_mismatch";
     };
 
 export class PaymentProviderError extends Error {

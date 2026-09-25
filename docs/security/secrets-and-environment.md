@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-24
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -33,7 +33,10 @@ complianceReviewRequired: no
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | yes | Cloudinary URLs | media fails |
 | `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | secret | Signed uploads, destroys, health probe | uploads fail |
 | `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` | secret | Ghana's Paystack account: payments, refunds, webhook signature (the names Ghana's `market_payment_provider` row points at) | Ghana payments fail / webhooks rejected |
-| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | yes | Ghana's Paystack popup | popup fails |
+| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | yes | Ghana's Paystack popup (returned per checkout by the server, not bundled) | popup fails |
+| `PAYMENTS_MODE` | no (`live` / `test`) | The Paystack/Stripe mode this deployment must run in; a key of the other mode is refused. Set `live` on Production (web and admin) at the switch to live keys | unset: no declared mode (mixed keys are still refused) |
+
+**Test and live.** The three Ghana Paystack variables must all be one mode — `PAYSTACK_WEBHOOK_SECRET` equals `PAYSTACK_SECRET_KEY` (Paystack signs webhooks with the secret key). Live keys go on **Production only**: Preview deployments use the production database, so they get no Paystack keys once production is live. Procedure: [../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md).
 | Other markets' provider keys — `PAYSTACK_<CC>_SECRET_KEY`, `PAYSTACK_<CC>_WEBHOOK_SECRET`, `NEXT_PUBLIC_PAYSTACK_<CC>_PUBLIC_KEY` (NG, KE, ZA, CI); `STRIPE_SECRET_KEY_<GB|US|EU>`, `STRIPE_WEBHOOK_SECRET_<…>`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_<…>` | secret (public keys public) | **Names, not values, are stored** on each market's provider row (Admin › Markets); set a market's variables only when that market is being prepared. A market cannot be activated while its readiness check reports them missing | that market cannot activate; nothing else is affected |
 | `HUBTEL_API_CLIENT_ID`, `HUBTEL_API_CLIENT_SECRET` | secret | Ghana SMS OTP (4-digit codes) | Ghana phone sign-in fails |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` | secret | Phone OTP for markets whose `otp_provider` is `twilio` (6-digit codes) | phone sign-in refused there; Ghana unaffected |
@@ -57,7 +60,7 @@ complianceReviewRequired: no
 
 ## apps/admin (Vercel project `abonten-app-admin`, CI `build-admin`)
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `WEB_BASE_URL` (optional; web origin for Abonten Weekly preview links, default `https://abontenhub.com`), `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` (for admin refund/payout actions via services — plus the matching `PAYSTACK_<CC>_SECRET_KEY` / `STRIPE_SECRET_KEY_<…>` of any other market being refunded; webhook secrets are not needed in the admin deployment), `GOOGLE_MAPS_API_KEY` (territory geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`, `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` and `RECOMMENDATION_EMAIL_KILL_SWITCH` (display only in Admin › Discovery; the web deployment enforces them).
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `WEB_BASE_URL` (optional; web origin for Abonten Weekly preview links, default `https://abontenhub.com`), `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` and `PAYMENTS_MODE` (for admin refund/payout actions via services — plus the matching `PAYSTACK_<CC>_SECRET_KEY` / `STRIPE_SECRET_KEY_<…>` of any other market being refunded; webhook secrets are not needed in the admin deployment), `GOOGLE_MAPS_API_KEY` (territory geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`, `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` and `RECOMMENDATION_EMAIL_KILL_SWITCH` (display only in Admin › Discovery; the web deployment enforces them).
 
 ## apps/mobile (EAS environments development / preview / production; local `apps/mobile/.env` mirror)
 

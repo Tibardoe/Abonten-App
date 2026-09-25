@@ -197,8 +197,9 @@ second refund (`paystack-sandbox.integration.test.ts`).
   credited earnings that were never collected. There are no upcoming paid
   events today, so nothing is exposed yet. Fix (founder, not code): set the
   live `PAYSTACK_SECRET_KEY`, `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` and
-  webhook secret in Vercel production and `EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY`
-  in the EAS production environment, point the live dashboard's webhook at
+  webhook secret in Vercel production (correction 2026-09-25: the mobile app
+  holds no Paystack key — no EAS change is needed; see
+  `../finance/paystack-live-cutover.md`), point the live dashboard's webhook at
   `/api/paystack/webhook`, and keep the test dashboard's webhook off
   production.
 - **Web and admin code**: none, once this branch is deployed (runbook below).

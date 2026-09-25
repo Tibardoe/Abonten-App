@@ -4,8 +4,8 @@ purpose: What the automated reconciliation checks, how its incidents appear, and
 audience: Finance admins, engineering
 scope: run_financial_reconciliation, rewards_health, fieldops_health, Paystack dashboard reconciliation
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -28,6 +28,14 @@ complianceReviewRequired: yes
 | Field-ops invariants | A `succeeded` onboarding without exactly one live commission; a payable commission without a rule; ledger-paid ≠ payout-items-sent; `in_payout` without a live batch; `paid` without a reference (`fieldops_payout_reconciliation`) |
 
 Each failing check opens **one** `incident` row via `open_reconciliation_incident()` (re-used while open) — visible in Admin › Monitoring › Incidents. `rewards_health()` and `fieldops_health()` feed the health panel with lag/backlog figures (check keys `rewards_health`, `fieldops`).
+
+`payment-reconcile` (every 5 minutes, migration `20260925120000`) is the
+provider-side backstop: open charges past the checkout hold and under two
+days old are verified with Paystack and finished through `finalizePayment`
+(fulfilled, failed or refunded); never-started attempts are cancelled after
+an hour. The health check's `paystack` row counts charged payments still
+unsettled after two hours (`unsettledPayments`) and shows each key's
+test/live mode.
 
 ## Daily review (finance admin)
 
@@ -56,5 +64,39 @@ select la.code, sum(e.amount_minor) from credit_entry e
 join credit_ledger_account la on la.id = e.ledger_account_id
 where la.owner_user_id = '<user>' group by 1;
 ```
+
+## Provider ↔ Abonten, by reference
+
+"Paystack says this happened — what does Abonten think?" and "Abonten says
+this is paid — what proves it?" are one query each, keyed by the provider
+reference (`PSK-…`), which is unique per charge and never overwritten:
+
+```sql
+-- Everything Abonten recorded about one Paystack reference
+select a.id attempt, a.status attempt_status, a.amount, a.currency, a.created_at,
+       t.id transaction, t.status transaction_status, t.amount paid, t.currency,
+       (select count(*) from ticket k where k.transaction_id = t.id) tickets,
+       (select json_agg(json_build_object('type', l.entry_type, 'amount', l.amount))
+          from organizer_ledger_entry l where l.transaction_id = t.id) ledger,
+       (select json_agg(json_build_object('event', w.event_name, 'outcome', w.outcome,
+                                          'at', w.last_received_at))
+          from payment_webhook_event w
+          where w.provider = 'paystack' and w.reference = a.provider_reference) webhooks,
+       (select o.status from payment_orphan_capture o
+          where o.provider_reference = a.provider_reference) orphan_refund
+from payment_attempt a
+left join transaction t on t.provider = a.provider
+                       and t.provider_reference = a.provider_reference
+where a.provider = 'paystack' and a.provider_reference = '<PSK-…>';
+```
+
+A `successful` transaction exists only after the server verified that
+reference with Paystack and the amount and currency matched. The other
+direction — every Paystack success checked against Abonten — was run on
+2026-09-25 against the test account: all 57 production transactions matched
+in amount, currency and state; 10 August test-mode captures had no
+transaction (they predate orphan-capture refunds and are test money; see
+`../audit/10-live-paystack-cutover-2026-09-25.md`). Repeat it on the live
+account once live sales start, from Paystack's transaction export.
 
 Never fix a discrepancy by editing a ledger table: use the RPCs (`record_*`, `credit_*`, `admin_settle_payout`) so the correction is itself a posted, audited row.

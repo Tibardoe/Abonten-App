@@ -28,6 +28,12 @@ const env = Object.fromEntries(
     }),
 );
 const SITE = "https://abontenhub.com";
+// `--expect-mode live|test`: fail unless production's Paystack keys are that mode.
+const EXPECT_MODE = (() => {
+  const i = process.argv.indexOf("--expect-mode");
+  const m = i > 0 ? process.argv[i + 1] : null;
+  return m === "live" || m === "test" ? m : null;
+})();
 const ADMIN = "https://admin.abontenhub.com";
 const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL;
 const ANON = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -380,13 +386,59 @@ async function main() {
       `HTTP ${v.http}, total ${co?.[0]?.total_price} GHS`,
     );
     if (v.json?.checkoutSessionId) {
+      // Start a card payment: the server asks Paystack for a checkout page
+      // and nothing is charged (nobody pays it; the reservation is cancelled
+      // next). Its public key and reference tell which Paystack mode the
+      // server runs — printed as "test"/"live", never the key.
+      const start = await api("/api/mobile/checkout/attempt", buyer.token, {
+        checkoutSessionIds: [v.json.checkoutSessionId],
+        method: "card",
+      });
+      const payment = start.json?.data?.payment ?? start.json?.payment ?? null;
+      const pkMode = /^pk_live_/.test(payment?.publicKey ?? "")
+        ? "live"
+        : /^pk_test_/.test(payment?.publicKey ?? "")
+          ? "test"
+          : "none";
+      let secretMode = "unknown";
+      if (
+        payment?.reference &&
+        /^sk_test_/.test(env.PAYSTACK_SECRET_KEY ?? "")
+      ) {
+        // Found on the TEST account = production's secret key is the test key.
+        const r = await fetch(
+          `https://api.paystack.co/transaction/verify/${encodeURIComponent(payment.reference)}`,
+          { headers: { authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}` } },
+        );
+        secretMode = r.status === 200 ? "test" : "not test";
+      }
+      const hosted = /^https:\/\/checkout\.paystack\.com\//.test(
+        payment?.authorizationUrl ?? "",
+      );
+      const modeOk =
+        !EXPECT_MODE ||
+        (pkMode === EXPECT_MODE &&
+          (EXPECT_MODE === "live"
+            ? secretMode === "not test"
+            : secretMode === "test"));
+      record(
+        "customer",
+        "start a card payment (Paystack checkout page opened, nothing charged)",
+        start.http === 200 && hosted && modeOk,
+        `HTTP ${start.http}; hosted page ${hosted}; public key ${pkMode}; secret key ${secretMode}${EXPECT_MODE ? `; expected ${EXPECT_MODE}` : ""}`,
+      );
       const c = await api("/api/mobile/checkout/cancel", buyer.token, {
         checkoutSessionId: v.json.checkoutSessionId,
       });
+      // With a payment open the order cannot be cancelled (it might still be
+      // paid); the payment-reconcile sweep closes an abandoned one after the
+      // checkout hold. Without one, cancelling releases the tickets at once.
       record(
         "customer",
-        "cancel the unpaid reservation",
-        c.http === 200,
+        payment
+          ? "cancel refused while the payment is open"
+          : "cancel the unpaid reservation",
+        payment ? c.http === 409 : c.http === 200,
         `HTTP ${c.http}`,
       );
     }
