@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 
 export async function deleteEvent(eventId: string) {
@@ -48,7 +49,7 @@ export async function deleteEvent(eventId: string) {
   if (deleteError) {
     return {
       status: 500,
-      message: `Failed to delete event: ${deleteError.message}`,
+      message: userFacingError("Failed to delete event", deleteError),
     };
   }
 

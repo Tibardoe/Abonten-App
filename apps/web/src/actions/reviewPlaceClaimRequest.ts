@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import createNotification from "./createNotification";
 
 type ReviewPlaceClaimRequestInput = {
@@ -38,7 +39,7 @@ export async function reviewPlaceClaimRequest(
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 
@@ -55,7 +56,7 @@ export async function reviewPlaceClaimRequest(
   if (userInfoError) {
     return {
       status: 500,
-      message: `Error checking admin status: ${userInfoError.message}`,
+      message: userFacingError("Error checking admin status", userInfoError),
     };
   }
 
@@ -74,7 +75,7 @@ export async function reviewPlaceClaimRequest(
   if (fetchError) {
     return {
       status: 500,
-      message: `Error fetching claim request: ${fetchError.message}`,
+      message: userFacingError("Error fetching claim request", fetchError),
     };
   }
 

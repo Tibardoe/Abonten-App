@@ -11,6 +11,7 @@ import {
   type TransactionPeriod,
   getTransactionPeriodRange,
 } from "@abonten/core/transactionsDateRange";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { UserTransactionRow } from "@abonten/types/transactions";
@@ -35,7 +36,7 @@ export async function getUserTransactionHistory(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 

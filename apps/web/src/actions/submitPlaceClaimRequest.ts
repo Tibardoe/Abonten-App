@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 
 // Postgres error code for a unique-constraint violation.
@@ -45,7 +46,7 @@ export async function submitPlaceClaimRequest(
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 
@@ -77,7 +78,7 @@ export async function submitPlaceClaimRequest(
   if (fetchError) {
     return {
       status: 500,
-      message: `Error fetching place: ${fetchError.message}`,
+      message: userFacingError("Error fetching place", fetchError),
     };
   }
 

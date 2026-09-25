@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type PostPlaceCoreResult,
   postPlaceCore,
@@ -21,7 +22,7 @@ export async function postPlace(
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message}`,
+      message: userFacingError("Error fetching user", userError),
     };
   }
 

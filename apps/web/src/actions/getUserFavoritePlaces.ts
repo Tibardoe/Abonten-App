@@ -12,6 +12,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import { userFacingError } from "@abonten/core/userFacingError";
 import {
   fetchPlaceRatings,
   roundRating,
@@ -55,7 +56,7 @@ export async function getUserFavoritePlaces(options?: {
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Failed fetching user: ${userError.message}`,
+      message: userFacingError("Failed fetching user", userError),
     };
   }
 
@@ -91,7 +92,7 @@ export async function getUserFavoritePlaces(options?: {
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: `Failed fetching favorite places: ${error.message}`,
+      message: userFacingError("Failed fetching favorite places", error),
     };
   }
 

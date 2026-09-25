@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotificationCore } from "../notifications/createNotification";
@@ -135,7 +136,7 @@ export async function respondToPlaceReviewCore(
   if (updateError) {
     return {
       status: 500,
-      message: `Error responding to review: ${updateError.message}`,
+      message: userFacingError("Error responding to review", updateError),
     };
   }
 
@@ -219,7 +220,7 @@ export async function deletePlaceReviewResponseCore(
   if (updateError) {
     return {
       status: 500,
-      message: `Error removing reply: ${updateError.message}`,
+      message: userFacingError("Error removing reply", updateError),
     };
   }
 
@@ -296,7 +297,7 @@ export async function respondToEventReviewCore(
   if (updateError) {
     return {
       status: 500,
-      message: `Error responding to review: ${updateError.message}`,
+      message: userFacingError("Error responding to review", updateError),
     };
   }
 
@@ -375,7 +376,7 @@ export async function deleteEventReviewResponseCore(
     logger.error(`Error removing event review reply: ${updateError.message}`);
     return {
       status: 500,
-      message: `Error removing reply: ${updateError.message}`,
+      message: userFacingError("Error removing reply", updateError),
     };
   }
 

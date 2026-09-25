@@ -2,6 +2,7 @@ import {
   FREE_EVENT_PROMO_CODES_MESSAGE,
   FREE_TICKET_TYPE,
 } from "@abonten/core/ticketTiers";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -156,7 +157,7 @@ export async function updatePromoCodeCore(
     }
     return {
       status: 500,
-      message: `Failed to update promo code: ${updateError.message}`,
+      message: userFacingError("Failed to update promo code", updateError),
     };
   }
 
@@ -218,7 +219,10 @@ export async function deletePromoCodeCore(
     if (deactivateError) {
       return {
         status: 500,
-        message: `Failed to deactivate promo code: ${deactivateError.message}`,
+        message: userFacingError(
+          "Failed to deactivate promo code",
+          deactivateError,
+        ),
       };
     }
 
@@ -238,7 +242,7 @@ export async function deletePromoCodeCore(
   if (deleteError) {
     return {
       status: 500,
-      message: `Failed to delete promo code: ${deleteError.message}`,
+      message: userFacingError("Failed to delete promo code", deleteError),
     };
   }
 

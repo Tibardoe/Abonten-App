@@ -1,3 +1,4 @@
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -72,7 +73,7 @@ export async function addPlaceServiceCore(
   if (insertError) {
     return {
       status: 500,
-      message: `Error adding service: ${insertError.message}`,
+      message: userFacingError("Error adding service", insertError),
     };
   }
 
@@ -122,7 +123,7 @@ export async function updatePlaceServiceCore(
   if (updateError) {
     return {
       status: 500,
-      message: `Error updating service: ${updateError.message}`,
+      message: userFacingError("Error updating service", updateError),
     };
   }
 
@@ -148,7 +149,7 @@ export async function removePlaceServiceCore(
   if (deleteError) {
     return {
       status: 500,
-      message: `Failed to remove service: ${deleteError.message}`,
+      message: userFacingError("Failed to remove service", deleteError),
     };
   }
 

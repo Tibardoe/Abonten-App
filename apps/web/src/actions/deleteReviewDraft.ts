@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { userFacingError } from "@abonten/core/userFacingError";
 
 export async function deleteReviewDraft(draftId: string) {
   const supabase = await createClient();
@@ -40,7 +41,7 @@ export async function deleteReviewDraft(draftId: string) {
   if (deleteError) {
     return {
       status: 500,
-      message: `Failed to delete draft: ${deleteError.message}`,
+      message: userFacingError("Failed to delete draft", deleteError),
     };
   }
 

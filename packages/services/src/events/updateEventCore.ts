@@ -7,6 +7,7 @@ import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
@@ -192,7 +193,7 @@ export async function updateEventCore(
     if (freeTierError) {
       return {
         status: 500,
-        message: `Error updating event: ${freeTierError.message}`,
+        message: userFacingError("Error updating event", freeTierError),
       };
     }
   }
@@ -295,7 +296,10 @@ export async function updateEventCore(
   if (deleteOccurrenceError) {
     return {
       status: 500,
-      message: `Error updating event dates: ${deleteOccurrenceError.message}`,
+      message: userFacingError(
+        "Error updating event dates",
+        deleteOccurrenceError,
+      ),
     };
   }
 
@@ -313,7 +317,10 @@ export async function updateEventCore(
     if (insertOccurrenceError) {
       return {
         status: 500,
-        message: `Error inserting event occurrences: ${insertOccurrenceError.message}`,
+        message: userFacingError(
+          "Error inserting event occurrences",
+          insertOccurrenceError,
+        ),
       };
     }
   }

@@ -1,5 +1,6 @@
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { getEventAttendanceCounts } from "./getAttendace";
 
 export async function getSimilarEvents(
@@ -25,7 +26,10 @@ export async function getSimilarEvents(
 
     return {
       status: 500,
-      message: `Error fetching similar events: ${similarEventsError.message}`,
+      message: userFacingError(
+        "Error fetching similar events",
+        similarEventsError,
+      ),
     };
   }
 

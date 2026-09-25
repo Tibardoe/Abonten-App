@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -81,7 +82,7 @@ export async function deleteHighlightGroupCore(
   if (deleteError) {
     return {
       status: 500,
-      message: `Failed to delete highlight: ${deleteError.message}`,
+      message: userFacingError("Failed to delete highlight", deleteError),
     };
   }
 
@@ -141,7 +142,7 @@ export async function deleteHighlightSlideCore(
   if (deleteError) {
     return {
       status: 500,
-      message: `Failed to delete slide: ${deleteError.message}`,
+      message: userFacingError("Failed to delete slide", deleteError),
     };
   }
 

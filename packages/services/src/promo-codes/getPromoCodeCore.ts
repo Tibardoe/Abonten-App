@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -139,7 +140,10 @@ export async function getPromoCodeCore(
     logger.error(promoCodeUsageError.message);
     return {
       status: 500,
-      message: `Error fetching promo code usage: ${promoCodeUsageError.message}`,
+      message: userFacingError(
+        "Error fetching promo code usage",
+        promoCodeUsageError,
+      ),
     };
   }
 

@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -59,7 +60,7 @@ export async function addPlacePhotoCore(
   if (insertError) {
     return {
       status: 500,
-      message: `Error adding photo: ${insertError.message}`,
+      message: userFacingError("Error adding photo", insertError),
     };
   }
 
@@ -94,7 +95,7 @@ export async function removePlacePhotoCore(
   if (deleteError) {
     return {
       status: 500,
-      message: `Failed to remove photo: ${deleteError.message}`,
+      message: userFacingError("Failed to remove photo", deleteError),
     };
   }
 
@@ -146,7 +147,7 @@ export async function setPlaceCoverFromPhotoCore(
   if (updateError) {
     return {
       status: 500,
-      message: `Failed to set cover: ${updateError.message}`,
+      message: userFacingError("Failed to set cover", updateError),
     };
   }
 
