@@ -47,7 +47,7 @@ Finance › Organizers › [id] › **Create payout** (`admin_create_payout`) �
 
 ### Paystack Transfers (not live)
 
-`sendPayoutAdminCore` exists behind `PAYSTACK_TRANSFERS_ENABLED`; with the flag unset it returns 409. To activate: enable Transfers on the Paystack account, set the flag on **both** `apps/web` (webhook) and `apps/admin` (action), add the UI button on `/finance/payouts`, and test with a small transfer. The webhook handlers for `transfer.*` will then settle payouts automatically. **Unverified against live Paystack** (decision F2).
+`sendPayoutAdminCore` exists behind the market provider's **Automated payouts** switch (`market_payment_provider.payouts_enabled`, off for every market since 2026-09-24; it replaced the `PAYSTACK_TRANSFERS_ENABLED` env flag); with it off the action returns 409. To activate for a market: enable Transfers on that market's Paystack account, tick Automated payouts in Admin › Markets › the market, add the UI button on `/finance/payouts`, and test with a small transfer. The webhook handlers for `transfer.*` will then settle payouts automatically. **Unverified against live Paystack** (decision F2).
 
 ## Cadence
 

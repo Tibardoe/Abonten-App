@@ -33,7 +33,7 @@ Forward-only: write and apply a new migration that reverts. If data was destroye
 | Rewards programme | Admin › Rewards › Settings "Program switched on"; or `REWARDS_KILL_SWITCH=true` (web env, redeploy) | UI hidden, no credit posted / spent |
 | Field programme | Admin › Field Ops › Settings (programme / worker UI / commission generation / payouts); or `FIELD_OPS_KILL_SWITCH=true` (web + admin env) | `/field` 404, sweep no-op, batches blocked |
 | Spotlight & Stories | Admin › Spotlight & Stories › Programme settings (Spotlight / Stories / promotions switches); or `SPOTLIGHT_KILL_SWITCH=true` / `STORIES_KILL_SWITCH=true` (web + admin env) | Every entry point hidden; posts, follows and promotions kept; pause running promotions separately |
-| Paystack Transfers | `PAYSTACK_TRANSFERS_ENABLED` unset (web + admin) | Send-payout action returns 409; manual transfers |
+| Provider transfers (payouts) | Admin › Markets › the market's provider: untick "Automated payouts" (`market_payment_provider.payouts_enabled = false`) | Send-payout action returns 409; manual transfers |
 | Reward notifications | Admin › Rewards › Settings › Notifications switches | Stop reward pushes/emails |
 | Campaign | Pause / wind down in Admin › Field Ops | Stops field work per region |
 | Account | Users › Suspend | Revokes sessions |

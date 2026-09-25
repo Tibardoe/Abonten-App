@@ -5,7 +5,7 @@ audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-12
+lastReviewed: 2026-09-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,8 @@ complianceReviewRequired: no
 # Secrets and environment variables
 
 **Never** write a value into this or any document, commit a `.env*` file (gitignored except `.env.example`), or prefix a secret with `NEXT_PUBLIC_` / `EXPO_PUBLIC_` (those are bundled into the browser/app).
+
+**Retired 2026-09-24:** `PAYSTACK_TRANSFERS_ENABLED`. Automated payouts are now switched per market on the provider row (Admin › Markets › provider › Automated payouts, `market_payment_provider.payouts_enabled`), off for every market.
 
 **Checked at boot (2026-09-19).** Each Next.js app's `src/instrumentation.ts` lists the variables it cannot run without and calls `checkEnv` / `enforceEnv` (`@abonten/core/env/checkEnv`) once per server process. In a production deployment (`VERCEL_ENV=production`) a missing required variable throws, so the deploy fails to start instead of failing at the first payment; in preview, CI and local development the missing names are logged. Web requires the Supabase pair and service-role key, `NEXT_PUBLIC_BASE_URL`, the Cloudinary trio, `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` and `OBSERVABILITY_INGEST_SECRET`; admin requires the Supabase pair and service-role key, `ADMIN_EMAIL_ALLOWLIST` and `OBSERVABILITY_INGEST_SECRET`. Everything else is "recommended" and only produces a warning.
 
@@ -30,10 +32,12 @@ complianceReviewRequired: no
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | secret | Used by Supabase Auth Google provider (set in Supabase too); vestigial in build env | OAuth config |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | yes | Cloudinary URLs | media fails |
 | `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | secret | Signed uploads, destroys, health probe | uploads fail |
-| `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` | secret | Payments, refunds, webhook signature | payments fail / webhooks rejected |
-| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | yes | Paystack popup | popup fails |
-| `PAYSTACK_TRANSFERS_ENABLED` | flag | Enables Paystack Transfers (default off) | manual payouts (default) |
-| `HUBTEL_API_CLIENT_ID`, `HUBTEL_API_CLIENT_SECRET` | secret | SMS OTP | phone sign-in fails |
+| `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` | secret | Ghana's Paystack account: payments, refunds, webhook signature (the names Ghana's `market_payment_provider` row points at) | Ghana payments fail / webhooks rejected |
+| `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | yes | Ghana's Paystack popup | popup fails |
+| Other markets' provider keys — `PAYSTACK_<CC>_SECRET_KEY`, `PAYSTACK_<CC>_WEBHOOK_SECRET`, `NEXT_PUBLIC_PAYSTACK_<CC>_PUBLIC_KEY` (NG, KE, ZA, CI); `STRIPE_SECRET_KEY_<GB|US|EU>`, `STRIPE_WEBHOOK_SECRET_<…>`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_<…>` | secret (public keys public) | **Names, not values, are stored** on each market's provider row (Admin › Markets); set a market's variables only when that market is being prepared. A market cannot be activated while its readiness check reports them missing | that market cannot activate; nothing else is affected |
+| `HUBTEL_API_CLIENT_ID`, `HUBTEL_API_CLIENT_SECRET` | secret | Ghana SMS OTP (4-digit codes) | Ghana phone sign-in fails |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` | secret | Phone OTP for markets whose `otp_provider` is `twilio` (6-digit codes) | phone sign-in refused there; Ghana unaffected |
+| `OPEN_EXCHANGE_RATES_APP_ID` (name configurable in Admin › Markets › Exchange rates) | secret | Hourly display rates for “≈” estimates | estimates hidden; prices and charges unaffected |
 | `RESEND_API_KEY` | secret | Transactional email | emails skipped (code is env-gated) |
 | `OBSERVABILITY_INGEST_SECRET` | secret | `/api/observability/*` auth; must equal `observability_config.secret` in the DB | health/error ingest 401 |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_AUTH_TOKEN` | DSN public; token secret | Error monitoring; source-map upload (CI/Vercel only) | no Sentry events / no source maps |
@@ -49,11 +53,11 @@ complianceReviewRequired: no
 | `EXPO_ACCESS_TOKEN` | secret | Expo push API auth (optional) | pushes may be rate-limited |
 | `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_VERCEL_ENV`, `VERCEL*`, `NODE_ENV`, `CI` | platform | Tagging | — |
 | `NEXTAUTH_SECRET`, `NEXTAUTH_URL` | vestigial | No `next-auth` dependency; safe to remove (LOW-008) | — |
-| `TWILIO_*` | removed 2026-09-19 | The `twilio` package was never imported; the dependency is gone | — |
+| `TWILIO_*` (history) | — | The unused `twilio` SDK was removed 2026-09-19; since 2026-09-24 Twilio Verify is called over plain HTTPS with the three variables above (no SDK dependency) | — |
 
 ## apps/admin (Vercel project `abonten-app-admin`, CI `build-admin`)
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `WEB_BASE_URL` (optional; web origin for Abonten Weekly preview links, default `https://abontenhub.com`), `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` (for admin refund/payout actions via services), `PAYSTACK_TRANSFERS_ENABLED`, `GOOGLE_MAPS_API_KEY` (territory geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`, `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` and `RECOMMENDATION_EMAIL_KILL_SWITCH` (display only in Admin › Discovery; the web deployment enforces them).
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `WEB_BASE_URL` (optional; web origin for Abonten Weekly preview links, default `https://abontenhub.com`), `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` (for admin refund/payout actions via services — plus the matching `PAYSTACK_<CC>_SECRET_KEY` / `STRIPE_SECRET_KEY_<…>` of any other market being refunded; webhook secrets are not needed in the admin deployment), `GOOGLE_MAPS_API_KEY` (territory geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`, `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` and `RECOMMENDATION_EMAIL_KILL_SWITCH` (display only in Admin › Discovery; the web deployment enforces them).
 
 ## apps/mobile (EAS environments development / preview / production; local `apps/mobile/.env` mirror)
 

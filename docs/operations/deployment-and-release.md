@@ -43,4 +43,4 @@ User-visible changes to policies: version bump + effective date per `../legal/ve
 
 ## Rollback
 
-Vercel: promote the previous deployment. Mobile: `eas update --republish` of the previous update or roll the channel back. Database: forward-only — write a new migration that reverts; never edit applied files. Programme kill switches: `REWARDS_KILL_SWITCH`, `FIELD_OPS_KILL_SWITCH`, `PAYSTACK_TRANSFERS_ENABLED`. Detail: `../deployment/rollback-and-recovery.md`.
+Vercel: promote the previous deployment. Mobile: `eas update --republish` of the previous update or roll the channel back. Database: forward-only — write a new migration that reverts; never edit applied files. Programme kill switches: `REWARDS_KILL_SWITCH`, `FIELD_OPS_KILL_SWITCH`; provider transfers: the market's Automated payouts switch (Admin › Markets); a whole market: pause it in Admin › Markets. Detail: `../deployment/rollback-and-recovery.md`.

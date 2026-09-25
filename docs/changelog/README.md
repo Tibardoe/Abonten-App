@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-21
+lastReviewed: 2026-09-24
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,14 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-24 — Global platform: markets, money, payments, time and locale
+
+- New `docs/architecture/global-platform.md` 1.0 (market model and state machine, readiness, money as integer minor units, providers per market, time zones, phones, OTP routing, home market, per-currency reporting, feature flags) and `docs/admin/markets.md` 1.0 (permissions, statuses, the "open Nigeria" runbook, flags, exchange rates).
+- Behaviour: Ghana unchanged for customers (same prices, Paystack account, mobile money, 4-digit codes, times). Prices now show the currency's own sign everywhere ("GH₵50", not "GHS 50"); event times read on the venue's clock with a zone hint for visitors elsewhere; phone pickers list every country with open markets first; Settings › Region & currency on web and app; Admin › Markets (Countries, Feature flags, Exchange rates) with a currency switcher on the Rewards and Spotlight overviews.
+- Payments: provider interface with Paystack and Stripe adapters, routed per market; `transaction.paystack_reference` → `provider_reference` plus `provider`, `provider_transaction_id`, settlement, provider fee, tax and country columns; `payment_webhook_event` dedupe; new webhook route `/api/payments/webhook/{provider}/{country}` (the Ghana route stays).
+- Migrations `20260924100000`–`20260924100500` (markets foundation, domain currency/country/zone columns and function rewrites, time zones, per-currency credit and campaign reporting, listing zones, home-country guard), plus `20260924100600` (deploy bridge: keeps the previously deployed code working during the rollout) and `20260924100700` (removes the bridge; applied only after the new deployment is checked). App builds released before this date keep working: attempt responses also carry `paystack`, and `/api/mobile/paystack/momo-networks` still answers. New permissions: `markets.view`, `markets.manage`, `markets.activate`. New job: `exchange-rates-refresh`. New env names: `PAYSTACK_<CC>_*`, `STRIPE_*_<GB|US|EU>`, `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_VERIFY_SERVICE_SID`, `OPEN_EXCHANGE_RATES_APP_ID`. Retired: `PAYSTACK_TRANSFERS_ENABLED` (now the per-market provider "Automated payouts" switch, off everywhere).
+- Updated: `security/secrets-and-environment.md`, `architecture/integrations.md`, `finance/settlement-ledger-and-payouts.md`, `security/payment-security.md`, `deployment/rollback-and-recovery.md`, `operations/deployment-and-release.md`, `operations/what-do-i-do-when.md`, `incident-response/unauthorized-refunds.md`, `OPERATIONAL_DECISIONS_REQUIRED.md` (F2), PROJECT.md §45, `docs/INDEX.md`.
 
 ## 2026-09-23 — Reviews experience, account-wide blocking, account setup
 
