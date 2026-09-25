@@ -118,6 +118,33 @@ describe("readiness", () => {
     expect(r.checks.every((c) => c.status === "pass")).toBe(true);
   });
 
+  it("keeps a market off UTC+0 from going live until every calendar is local", () => {
+    for (const zone of ["Africa/Nairobi", "Europe/London", "Africa/Lagos"]) {
+      const r = evaluateReadiness(
+        { ...ghana, defaultTimeZone: zone },
+        probesOk,
+      );
+      expect(r.checks.find((c) => c.key === "utc_calendar")?.status, zone).toBe(
+        "fail",
+      );
+      expect(r.canActivate, zone).toBe(false);
+    }
+    // UTC+0 all year (no summer time) passes.
+    for (const zone of [
+      "Africa/Accra",
+      "Africa/Abidjan",
+      "Atlantic/Reykjavik",
+    ]) {
+      const r = evaluateReadiness(
+        { ...ghana, defaultTimeZone: zone },
+        probesOk,
+      );
+      expect(r.checks.find((c) => c.key === "utc_calendar")?.status, zone).toBe(
+        "pass",
+      );
+    }
+  });
+
   it("blocks activation on a critical failure and only warns on soft ones", () => {
     const noCreds = evaluateReadiness(ghana, {
       ...probesOk,
