@@ -4,8 +4,8 @@ purpose: How Abonten searches events, places and organizers, how results are ran
 audience: Engineering, operations, security and privacy reviewers
 scope: The search_* and recommendation* database functions and tables, notification_subscription, notification_prompt_state and notification_consent_event, push delivery (Expo receipts, web push), @abonten/services search and notifications modules, web and mobile surfaces, admin module and scheduled jobs. Not covered - the older filter-only browsing RPCs (get_filtered_events and siblings), which are unchanged.
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-15
+version: 1.2
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -59,7 +59,7 @@ The same rules run in SQL and in `packages/core/src/search/parseSearchQuery.ts` 
 
 Each group is found in two stages.
 
-**Stage 1 — candidates** (`_search_event_pool`, `_search_place_pool`, `_search_organizer_pool`). The precise match runs first: full text, last-word prefix, place category names, place services, handle prefix and display-name word starts. Only when that finds fewer than five candidates are trigram matches added, so a typo ("afrobeets") still finds "Afrobeats" while a well-spelled query stays exact (`20260913090500_search_trigram_fallback.sql`). Each OR of different indexes is written as a UNION so every branch uses its own index (`20260913090600_search_pool_index_paths.sql`). Pools are capped at 400 rows per group.
+**Stage 1 — candidates** (`_search_event_pool`, `_search_place_pool`, `_search_organizer_pool`). The precise match runs first: full text, last-word prefix, place category names, place services, handle prefix and display-name word starts. Only when that finds fewer than five candidates are trigram matches added, so a typo ("afrobeets") still finds "Afrobeats" while a well-spelled query stays exact (`20260913090500_search_trigram_fallback.sql`). Each OR of different indexes is written as a UNION so every branch uses its own index (`20260913090600_search_pool_index_paths.sql`). Pools are capped at 400 rows per group, and since 2026-09-25 (`20260925111700`) every ranking branch — precise, dated, related, relaxed, trigram, place services — scores at most `greatest(p_limit, 1500)` matching rows, the limit placed after every filter (market, moderation, radius, date window, category, organizer). Below the cap results are unchanged; above it the best of the first 1,500 matches are returned, so a word found in every listing costs about the same as a rare one.
 
 **Stage 2 — score.** Weights live in the function bodies; changing one is a migration.
 
@@ -186,6 +186,8 @@ Picks are listed on **For you** (`/for-you`, `/(app)/for-you`) from `recommendat
 - Security advisors after the migrations: no new errors. The anon-executable `SECURITY DEFINER` warnings on `search_*` are intentional and match the existing discovery RPCs.
 
 ## 8. Why Postgres and not a search engine
+
+Broad queries (a word in nearly every listing, e.g. the city) were measured on 2026-09-25 before and after the ranking cap: `search_events` 2.6 s → 115 ms, `search_suggest` 1.0 s → 38 ms on the same 100,000-event catalogue. The perf harness now includes these cases and fails if their p95 exceeds 500 ms.
 
 Measured on 100,000 events, 20,000 places and 50,000 accounts, the slowest search shape had a p95 of 68 ms in the database and result pages stayed under 31 ms ([perf/discovery-2026-09.md](perf/discovery-2026-09.md)). An external engine becomes worth its operational cost for multi-language stemming, faceted counts over millions of rows or learned ranking. Revisit points: organizer search scans accounts whose names match a common word before checking they organize anything (fine to roughly 500,000 accounts; beyond that, maintain a flag), and popularity is computed per request over the candidate pool (fine to roughly a million engagement rows).
 

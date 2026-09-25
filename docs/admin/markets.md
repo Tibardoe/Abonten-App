@@ -4,7 +4,7 @@ purpose: How to prepare, check, open, pause and maintain a country (market), tar
 audience: Operations, finance, engineering
 scope: Admin › Markets (Countries, market editor, Feature flags, Exchange rates), the markets.view / markets.manage / markets.activate permissions
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -86,7 +86,12 @@ when a critical one now fails.
      than ₦999. Readiness warns while it is 1.
    - Cities: check Lagos and Abuja, add others.
 6. **Run readiness checks.** Every critical row must pass — a failing row
-   says what is missing. Fix and run again.
+   says what is missing. Fix and run again. Since 2026-09-25 the **Day
+   boundaries** row fails for any zone that is not UTC+0 all year (Nigeria,
+   Africa/Lagos, is UTC+1): the organizer dashboard and transaction
+   periods, promo-code expiry and the monthly rebate run still count days
+   in UTC. That work must ship before such a market can go live; it is not
+   something to fix from this screen.
 7. **Prepare → Mark ready → Activate** with a reason; each is audited. The
    last needs step-up.
 8. **Watch.** Admin › Monitoring shows the Paystack probe per market; a

@@ -4,7 +4,7 @@ purpose: How Abonten runs in more than one country — the market model and its 
 audience: Engineers, operations, finance
 scope: supabase/migrations/20260924100000..20260925100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.3
+version: 1.4
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -70,7 +70,11 @@ a market-visibility filter next to its moderation filter (migration
 public.hidden_listing_countries())::text[])` so the hidden countries are
 read once per query — `listing_market_visible()` is a SECURITY DEFINER
 call Postgres cannot inline and cost ~5.6 µs a row. Use the array form in
-new discovery SQL. Payments already in flight still complete and
+new discovery SQL.
+
+**Day boundaries** (2026-09-25): the organizer dashboard and transaction periods, promo-code expiry and the monthly rebate run count days in UTC — exact for Ghana (UTC+0 all year). Weekly and the recommendation digest already use each market's calendar. Until the four follow the market's zone, readiness has a critical `utc_calendar` check that refuses activation for any zone that is not UTC+0 all year.
+
+**Client-callable helpers** (2026-09-25, `20260925111500`): `default_market_country/currency/timezone()` run as their owner — they are called inside functions organizers run with their own session (the dashboard's sales timeline), and as SECURITY INVOKER they failed on the service-only `market` table. Rule: a function a client can execute must not read a service-only table with the caller's rights (checked by `session-rpc-reachability.integration.test.ts`). Payments already in flight still complete and
 refunds still run in any status.
 
 **Readiness** (`@abonten/core/market/readiness`, probes gathered by
