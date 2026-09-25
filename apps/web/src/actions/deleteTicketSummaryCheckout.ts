@@ -97,7 +97,10 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     // cancelTicketCheckoutSessionCore.ts): without the event scope two
     // events using the same code made maybeSingle() error, and the usage was
     // silently never released.
-    const { data: promoCode } = await supabase
+    // Service role: promo codes are readable only by their event's
+    // organizer (migration 20260925110400); this line's code is already
+    // known from the buyer's own checkout row.
+    const { data: promoCode } = await getSupabaseServiceClient()
       .from("promo_code")
       .select("id")
       .eq("event_id", checkout.event_id)

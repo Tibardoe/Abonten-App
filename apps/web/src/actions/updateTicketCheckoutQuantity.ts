@@ -104,12 +104,16 @@ export default async function updateTicketCheckoutQuantity(
 
   if (checkout.promo_code) {
     // Event-scoped: codes are unique per event, not globally.
-    const { data: promoCode, error: promoCodeError } = await supabase
-      .from("promo_code")
-      .select("id, times_used, max_uses, discount_percentage")
-      .eq("event_id", checkout.event_id)
-      .eq("promo_code", checkout.promo_code)
-      .maybeSingle();
+    // Service role: promo codes are readable only by their event's
+    // organizer (migration 20260925110400); this line's code is already
+    // known from the buyer's own checkout row.
+    const { data: promoCode, error: promoCodeError } =
+      await getSupabaseServiceClient()
+        .from("promo_code")
+        .select("id, times_used, max_uses, discount_percentage")
+        .eq("event_id", checkout.event_id)
+        .eq("promo_code", checkout.promo_code)
+        .maybeSingle();
 
     if (
       promoCodeError ||

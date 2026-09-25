@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // (migration 20260925110100). Owners keep editing their own content; the
 // market-derived and paid-for columns are the service's.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { getPromoCodeCore } from "../promo-codes/getPromoCodeCore";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -189,5 +190,163 @@ describe("attendance, ticket and payout-account writes (migration 20260925110200
       currency: "NGN",
     });
     expect(error?.code).toBe("42501");
+  });
+});
+
+describe("place booking transitions (migration 20260925110300)", () => {
+  let service: SupabaseClient<Database>;
+  let owner: TestUser;
+  let customer: TestUser;
+  let placeId: string;
+
+  beforeAll(async () => {
+    service = getServiceClient();
+    [owner, customer] = await Promise.all([
+      createTestUser(service),
+      createTestUser(service),
+    ]);
+    const { data: category } = await service
+      .from("place_category")
+      .select("id")
+      .limit(1)
+      .single();
+    const { data, error } = await service
+      .from("place")
+      .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
+        owner_id: owner.id,
+        name: "Booking Guard Venue",
+        slug: `booking-guard-${crypto.randomUUID()}`,
+        description: "Created by the listing-guards suite.",
+        category_id: category?.id as number,
+        location: "POINT(-0.187 5.6037)",
+        address: { city: "Accra" },
+        cover_public_id: "test/cover",
+        cover_version: "1",
+        status: "published",
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    placeId = data.id;
+  });
+
+  afterAll(async () => {
+    await service.from("place_booking").delete().eq("place_id", placeId);
+    await service.from("place").delete().eq("id", placeId);
+    await Promise.all(
+      [owner, customer].map((u) => deleteTestUser(service, u.id)),
+    );
+  });
+
+  const request = (status = "pending") =>
+    customer.client
+      .from("place_booking")
+      .insert({
+        place_id: placeId,
+        customer_id: customer.id,
+        requested_time: new Date(Date.now() + 86_400_000).toISOString(),
+        party_size: 2,
+        status,
+      })
+      .select("id")
+      .single();
+
+  it("a customer cannot book themselves in as accepted", async () => {
+    const { error } = await request("accepted");
+    expect(error?.code).toBe("42501");
+  });
+
+  it("walks request -> accept -> cancel, and refuses the shortcuts", async () => {
+    const { data: booking, error } = await request();
+    expect(error).toBeNull();
+    const id = booking?.id as string;
+
+    const selfAccept = await customer.client
+      .from("place_booking")
+      .update({ status: "accepted" })
+      .eq("id", id);
+    expect(selfAccept.error?.code).toBe("42501");
+
+    const moveTime = await customer.client
+      .from("place_booking")
+      .update({ requested_time: new Date().toISOString() })
+      .eq("id", id);
+    expect(moveTime.error?.code).toBe("42501");
+
+    const accept = await owner.client
+      .from("place_booking")
+      .update({ status: "accepted", updated_at: new Date().toISOString() })
+      .eq("id", id);
+    expect(accept.error).toBeNull();
+
+    const cancel = await customer.client
+      .from("place_booking")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", id);
+    expect(cancel.error).toBeNull();
+  });
+});
+
+describe("promo code visibility (migration 20260925110400)", () => {
+  let service: SupabaseClient<Database>;
+  let organizer: TestUser;
+  let buyer: TestUser;
+  let eventId: string;
+
+  beforeAll(async () => {
+    service = getServiceClient();
+    [organizer, buyer] = await Promise.all([
+      createTestUser(service),
+      createTestUser(service),
+    ]);
+    ({ eventId } = await createTestEventWithTicketType(service, organizer.id, {
+      quantity: 5,
+      price: 50,
+    }));
+    const { error } = await service.from("promo_code").insert({
+      event_id: eventId,
+      promo_code: "VIPCOMP",
+      discount_percentage: 100,
+      max_uses: 3,
+      times_used: 0,
+      is_active: true,
+    });
+    if (error) throw new Error(error.message);
+  });
+
+  afterAll(async () => {
+    await service.from("promo_code").delete().eq("event_id", eventId);
+    await deleteTestEvent(service, eventId).catch(() => undefined);
+    await Promise.all(
+      [organizer, buyer].map((u) => deleteTestUser(service, u.id)),
+    );
+  });
+
+  it("a buyer cannot list an event's codes", async () => {
+    const { data } = await buyer.client
+      .from("promo_code")
+      .select("promo_code")
+      .eq("event_id", eventId);
+    expect(data).toEqual([]);
+  });
+
+  it("the organizer still sees their codes", async () => {
+    const { data } = await organizer.client
+      .from("promo_code")
+      .select("promo_code")
+      .eq("event_id", eventId);
+    expect(data).toEqual([{ promo_code: "VIPCOMP" }]);
+  });
+
+  it("a buyer who knows the code can still apply it", async () => {
+    const result = await getPromoCodeCore(
+      buyer.client,
+      buyer.id,
+      "vipcomp",
+      eventId,
+    );
+    expect(result.status).toBe(200);
   });
 });
