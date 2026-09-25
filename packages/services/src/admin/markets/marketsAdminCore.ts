@@ -45,6 +45,7 @@ import {
 } from "../../markets/marketConfig";
 import {
   getPaymentProvider,
+  providerEnvNameProblem,
   resolveMarketAccounts,
 } from "../../payments/providers/registry";
 import { getOtpProvider } from "../../profile/otpProviders/otpRouter";
@@ -490,6 +491,39 @@ export async function upsertProviderAdminCore(
           "Environment variable names must be UPPER_SNAKE_CASE (never values).",
       };
     }
+    // Only this provider's own variables, named for this market: the
+    // public key's value is sent to buyers, and another market's keys must
+    // never charge here.
+    const market = (await getMarket(code)) as NonNullable<
+      Awaited<ReturnType<typeof getMarket>>
+    >;
+    const scope = {
+      countryCode: code,
+      isDefault: (await getDefaultMarket()).countryCode === code,
+      currency: market.defaultCurrency,
+    };
+    const envProblem =
+      providerEnvNameProblem(
+        input.provider,
+        "secretKey",
+        input.secretKeyEnv,
+        scope,
+      ) ??
+      providerEnvNameProblem(
+        input.provider,
+        "webhookSecret",
+        input.webhookSecretEnv,
+        scope,
+      ) ??
+      (input.publicKeyEnv
+        ? providerEnvNameProblem(
+            input.provider,
+            "publicKey",
+            input.publicKeyEnv,
+            scope,
+          )
+        : null);
+    if (envProblem) return { status: 400, message: envProblem };
     if (!isKnownCurrency(input.settlementCurrency))
       return { status: 400, message: "Unknown settlement currency." };
     const optionsProblem = providerOptionsProblem(input.options);
@@ -556,6 +590,10 @@ export async function upsertProviderAdminCore(
         after: {
           provider: input.provider,
           enabled: input.enabled,
+          // Names only, never values: which variables the account reads.
+          secretKeyEnv: input.secretKeyEnv,
+          webhookSecretEnv: input.webhookSecretEnv,
+          publicKeyEnv: input.publicKeyEnv ?? null,
           currencies,
           settlementCurrency: input.settlementCurrency,
           payoutsEnabled: input.payoutsEnabled,
