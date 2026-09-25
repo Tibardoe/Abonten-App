@@ -603,3 +603,65 @@ describe("place reviews (migration 20260925110800)", () => {
     }
   });
 });
+
+describe("create_event is the server's (migration 20260925110100)", () => {
+  it("a signed-in organizer calling create_event directly, as themselves, is refused and nothing is created", async () => {
+    const service = getServiceClient();
+    const organizer = await createTestUser(service);
+    const requestId = crypto.randomUUID();
+    try {
+      const { error } = await organizer.client.rpc("create_event", {
+        p_client_request_id: requestId,
+        p_organizer_id: organizer.id,
+        p_title: "Direct RPC event",
+        p_slug: `direct-rpc-${requestId}`,
+        p_description: "Should never exist.",
+        p_event_code: requestId.slice(0, 8).toUpperCase(),
+        p_event_category: "conference",
+        p_event_type: ["Live Concerts"],
+        p_latitude: 5.6037,
+        p_longitude: -0.187,
+        p_address: { city: "Accra", country: "Ghana" },
+        p_capacity: 100,
+        p_website_url: null,
+        p_flyer_public_id: "test/flyer",
+        p_flyer_version: "1",
+        p_starts_at: new Date(Date.now() + 86_400_000).toISOString(),
+        p_ends_at: new Date(Date.now() + 90_000_000).toISOString(),
+        p_require_registration: false,
+        p_featured: true,
+        p_specific_dates: null,
+        p_ticket_types: [
+          {
+            type: "General",
+            price: 1,
+            currency: "GHS",
+            quantity: 5,
+            available_from: null,
+            available_until: null,
+          },
+        ],
+        p_promo_codes: null,
+        p_receiving_account: null,
+        p_place_id: null,
+        // Before 20260925110100 this call also failed, but only by accident:
+        // create_event (SECURITY INVOKER) reads the service-only currency
+        // table, which is why production event creation through the
+        // caller's session broke on 2026-09-24. Now the missing EXECUTE
+        // grant refuses it on purpose; postEventCore calls it as the server.
+        p_country_code: "GH",
+        p_timezone: "Africa/Accra",
+        p_currency: "GHS",
+      } as never);
+      expect(error?.code).toBe("42501");
+      const { data } = await service
+        .from("event")
+        .select("id")
+        .eq("client_request_id", requestId);
+      expect(data).toEqual([]);
+    } finally {
+      await service.from("event").delete().eq("client_request_id", requestId);
+      await deleteTestUser(service, organizer.id);
+    }
+  });
+});
