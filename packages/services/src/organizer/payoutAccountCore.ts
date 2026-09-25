@@ -11,6 +11,11 @@ import type {
 import { addPayoutAccountSchema } from "@abonten/validation/payoutAccountSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getMarketOrDefault } from "../markets/marketConfig";
+import {
+  RESTRICTED_ACCOUNT_MESSAGE,
+  isAccountRestricted,
+} from "../security/accountStatus";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth bodies for an organizer's payout destinations + withdrawal
 // history, shared by the Server Actions (cookie session) and the mobile
@@ -27,7 +32,7 @@ export type ListPayoutAccountsResult =
   | { status: 200; data: PayoutAccountRow[] };
 
 export type AddPayoutAccountResult =
-  | { status: 400 | 401 | 500; message: string }
+  | { status: 400 | 401 | 403 | 500; message: string }
   | { status: 200; data: PayoutAccountRow };
 
 export type MutatePayoutAccountResult = {
@@ -64,6 +69,12 @@ export async function addPayoutAccountCore(
   userId: string,
   input: unknown,
 ): Promise<AddPayoutAccountResult> {
+  // Payout destinations are written by the service only (the database
+  // refuses client writes since 2026-09-25): the rail, country, currency
+  // and number format below are the checks a direct write skipped.
+  if (await isAccountRestricted(userId)) {
+    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+  }
   const parsed = addPayoutAccountSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -174,7 +185,7 @@ export async function addPayoutAccountCore(
     }
   }
 
-  const { data: inserted, error } = await supabase
+  const { data: inserted, error } = await getSupabaseServiceClient()
     .from("payout_account")
     .insert({
       organizer_id: userId,
@@ -260,7 +271,7 @@ export async function removePayoutAccountCore(
     };
   }
 
-  const { error: removeError } = await supabase
+  const { error: removeError } = await getSupabaseServiceClient()
     .from("payout_account")
     .update({
       status: "removed",
@@ -286,7 +297,7 @@ export async function removePayoutAccountCore(
       .maybeSingle();
 
     if (nextDefault) {
-      await supabase
+      await getSupabaseServiceClient()
         .from("payout_account")
         .update({ is_default: true, updated_at: new Date().toISOString() })
         .eq("id", nextDefault.id)
@@ -319,7 +330,7 @@ export async function setDefaultPayoutAccountCore(
     return { status: 404, message: "Payout account not found" };
   }
 
-  const { error: unsetError } = await supabase
+  const { error: unsetError } = await getSupabaseServiceClient()
     .from("payout_account")
     .update({ is_default: false, updated_at: new Date().toISOString() })
     .eq("organizer_id", userId)
@@ -331,7 +342,7 @@ export async function setDefaultPayoutAccountCore(
     return { status: 500, message: "Something went wrong!" };
   }
 
-  const { error: setError } = await supabase
+  const { error: setError } = await getSupabaseServiceClient()
     .from("payout_account")
     .update({ is_default: true, updated_at: new Date().toISOString() })
     .eq("id", payoutAccountId)

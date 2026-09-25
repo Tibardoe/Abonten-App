@@ -259,6 +259,19 @@ describe("money path: clients can't write it", () => {
       .select("id");
     expect(revived).toEqual([]);
 
+    // Nor can the organizer admit a cancelled ticket (since 2026-09-25 a
+    // client may only move a ticket active <-> used)…
+    const { error: reviveError } = await organizer.client
+      .from("ticket")
+      .update({ status: "used" })
+      .eq("id", ticket?.id as string);
+    expect(reviveError?.code).toBe("42501");
+
+    // …but checks a live one in as before.
+    await service
+      .from("ticket")
+      .update({ status: "active" })
+      .eq("id", ticket?.id as string);
     const { data: checkedIn, error: checkInError } = await organizer.client
       .from("ticket")
       .update({ status: "used" })

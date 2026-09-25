@@ -87,3 +87,107 @@ describe("listing column guards", () => {
     expect(error?.code).toBe("42501");
   });
 });
+
+describe("attendance, ticket and payout-account writes (migration 20260925110200)", () => {
+  let service: SupabaseClient<Database>;
+  let organizer: TestUser;
+  let guest: TestUser;
+  let stranger: TestUser;
+  let eventId: string;
+  let ticketId: string;
+
+  beforeAll(async () => {
+    service = getServiceClient();
+    [organizer, guest, stranger] = await Promise.all([
+      createTestUser(service),
+      createTestUser(service),
+      createTestUser(service),
+    ]);
+    const fixture = await createTestEventWithTicketType(service, organizer.id, {
+      quantity: 5,
+      price: 0,
+    });
+    eventId = fixture.eventId;
+    await service
+      .from("ticket_type")
+      .update({ type: "FREE" })
+      .eq("id", fixture.ticketTypeId);
+    const { data, error } = await service.rpc("issue_free_ticket", {
+      p_user_id: guest.id,
+      p_event_id: eventId,
+      p_occurrence_id: null,
+      p_ticket_code: `TKT-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      p_qr_public_id: "test/qr",
+      p_qr_version: "1",
+      p_expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+    } as unknown as Database["public"]["Functions"]["issue_free_ticket"]["Args"]);
+    if (error) throw new Error(error.message);
+    ticketId = data as string;
+  });
+
+  afterAll(async () => {
+    await deleteTestEvent(service, eventId).catch(() => undefined);
+    await Promise.all(
+      [organizer, guest, stranger].map((u) => deleteTestUser(service, u.id)),
+    );
+  });
+
+  it("no one can claim a spot at someone else's event by writing attendance", async () => {
+    const { error } = await stranger.client.from("attendance").insert({
+      user_id: stranger.id,
+      event_id: eventId,
+      number_of_tickets: 90,
+      status: "attending",
+    });
+    expect(error?.code).toBe("42501");
+  });
+
+  it("an attendee cannot grow their own attendance", async () => {
+    const { error } = await guest.client
+      .from("attendance")
+      .update({ number_of_tickets: 50 })
+      .eq("user_id", guest.id);
+    expect(error?.code).toBe("42501");
+  });
+
+  it("an organizer cannot move a ticket to another account", async () => {
+    const { error } = await organizer.client
+      .from("ticket")
+      .update({ user_id: organizer.id })
+      .eq("id", ticketId);
+    expect(error?.code).toBe("42501");
+  });
+
+  it("an organizer can still check a ticket in and undo it", async () => {
+    const checkIn = await organizer.client
+      .from("ticket")
+      .update({ status: "used", used_at: new Date().toISOString() })
+      .eq("id", ticketId);
+    expect(checkIn.error).toBeNull();
+    const undo = await organizer.client
+      .from("ticket")
+      .update({ status: "active", used_at: null })
+      .eq("id", ticketId);
+    expect(undo.error).toBeNull();
+  });
+
+  it("an attendee can still cancel their attendance row", async () => {
+    const { error } = await guest.client
+      .from("attendance")
+      .update({ status: "cancelled" })
+      .eq("user_id", guest.id);
+    expect(error).toBeNull();
+  });
+
+  it("payout accounts can't be written around the service's checks", async () => {
+    const { error } = await organizer.client.from("payout_account").insert({
+      organizer_id: organizer.id,
+      account_type: "bank",
+      account_holder_name: "Forged",
+      account_number: "0551234987",
+      country_code: "NG",
+      currency: "NGN",
+    });
+    expect(error?.code).toBe("42501");
+  });
+});
