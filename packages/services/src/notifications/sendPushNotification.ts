@@ -53,7 +53,11 @@ async function sendExpoPushToUser(
   const { data: tokens, error } = await supabase
     .from("device_token")
     .select("token")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    // The ten most recently seen devices (the database keeps no more than
+    // that per account either — migration 20260925111600).
+    .order("last_seen_at", { ascending: false, nullsFirst: false })
+    .limit(10);
 
   if (error) {
     logger.error(`Push: failed reading device tokens: ${error.message}`);
