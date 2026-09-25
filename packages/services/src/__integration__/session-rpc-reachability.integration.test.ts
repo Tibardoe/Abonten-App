@@ -87,15 +87,41 @@ describe("reads the apps make with a person's own session", () => {
   });
 
   it("a place's open-now check works for a visitor", async () => {
-    const { data: place } = await service
-      .from("place")
+    // Its own place: with none in the database the call never reached the
+    // zone lookup, and this passed while visitors got "permission denied
+    // for function default_market_timezone" (migration 20260925111800).
+    const { data: category } = await service
+      .from("place_category")
       .select("id")
       .limit(1)
-      .maybeSingle();
-    if (!place) return;
-    const { error } = await anon.rpc("place_is_open_now", {
-      p_place_id: place.id,
-    } as never);
-    expect(error?.message ?? "").not.toMatch(PERMISSION);
+      .single();
+    const { data: place, error: placeError } = await service
+      .from("place")
+      .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
+        owner_id: organizer.id,
+        name: "Open-now check",
+        description: "Created by the session-rpc-reachability suite.",
+        cover_public_id: "place_covers/open-now-check",
+        cover_version: "1",
+        slug: `open-now-${crypto.randomUUID()}`,
+        category_id: category?.id,
+        location: "POINT(-0.187 5.6037)",
+        address: { city: "Accra" },
+        status: "published",
+      } as never)
+      .select("id")
+      .single();
+    if (placeError || !place) throw new Error(placeError?.message);
+    try {
+      const { data, error } = await anon.rpc("place_is_open_now", {
+        p_place_id: place.id,
+      } as never);
+      expect(error?.message ?? "").not.toMatch(PERMISSION);
+      expect(data).toBe(false);
+    } finally {
+      await service.from("place").delete().eq("id", place.id);
+    }
   });
 });
