@@ -6,6 +6,7 @@ import {
   formatCountdown,
   useCheckoutCountdown,
 } from "@/hooks/useCheckoutCountdown";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { useEffect, useRef } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 
@@ -141,17 +142,13 @@ export default function TicketCheckoutSessionCard({
               {line.discount > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <p>Discount:</p>
-                  <p>
-                    -{line.currency} {line.discount.toFixed(2)}
-                  </p>
+                  <p>−{formatMoney(line.currency, line.discount)}</p>
                 </div>
               )}
 
               <div className="flex justify-between text-xs font-semibold text-foreground">
                 <p>Subtotal:</p>
-                <p>
-                  {line.currency} {line.amount.toFixed(2)}
-                </p>
+                <p>{formatMoney(line.currency, line.amount)}</p>
               </div>
             </div>
           );
@@ -161,8 +158,7 @@ export default function TicketCheckoutSessionCard({
       <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
         <p>Checkout total</p>
         <p>
-          {session.lines[0]?.currency ?? ""}{" "}
-          {session.sessionSubtotal.toFixed(2)}
+          {formatMoney(session.lines[0]?.currency, session.sessionSubtotal)}
         </p>
       </div>
     </div>

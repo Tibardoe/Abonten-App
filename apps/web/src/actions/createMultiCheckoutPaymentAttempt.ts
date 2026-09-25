@@ -9,8 +9,10 @@ import {
 
 type CreateMultiCheckoutPaymentAttemptInput = {
   checkoutSessionIds: string[];
-  /** Required unless Abonten Credit covers the whole order. */
+  /** A saved instrument; or `method`. Not needed when Abonten Credit covers the whole order. */
   paymentMethodId?: string | null;
+  /** A way to pay on the provider's page ("card", "bank_transfer"…). */
+  method?: string | null;
   useCredit?: boolean;
 };
 
@@ -46,7 +48,13 @@ export default async function createMultiCheckoutPaymentAttempt(
     supabase,
     user.id,
     user.email,
-    input,
+    {
+      checkoutSessionIds: input.checkoutSessionIds,
+      paymentMethodId: input.paymentMethodId ?? null,
+      method: input.method ?? null,
+      platform: "web",
+      useCredit: input.useCredit === true,
+    },
     (checkoutSessionId) =>
       `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${checkoutSessionId}?type=ticket`,
     paymentFulfillmentDeps,

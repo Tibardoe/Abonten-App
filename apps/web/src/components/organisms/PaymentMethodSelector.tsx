@@ -2,6 +2,7 @@
 
 import createMultiCheckoutPaymentAttempt from "@/actions/createMultiCheckoutPaymentAttempt";
 import { createPromotionPaymentAttempt } from "@/actions/createPromotionPaymentAttempt";
+import getCheckoutPaymentOptions from "@/actions/getCheckoutPaymentOptions";
 import { getPromotionCreditQuote } from "@/actions/getPromotionCreditQuote";
 import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
 import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
@@ -30,6 +31,7 @@ import PaymentMethodCard, {
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getFulfillmentMessage } from "@abonten/core/paymentStatusCopy";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { creditMinorToMajor } from "@abonten/core/rewards/creditAmount";
@@ -38,6 +40,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useState } from "react";
+
+type PayChoice = { paymentMethodId: string | null; method: string | null };
 
 type PaymentMethodSelectorProps = (
   | {
@@ -135,7 +139,20 @@ export default function PaymentMethodSelector(
   const router = useRouter();
   const toast = useToast();
   const needsEmail = useNeedsEmailToPay();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Either a saved wallet entry or a way to pay on the provider's page —
+  // never both. The order's market decides which of either are offered.
+  const [selectedId, setSelectedIdState] = useState<string | null>(null);
+  const [selectedHostedMethod, setSelectedHostedMethodState] = useState<
+    string | null
+  >(null);
+  const setSelectedId = (id: string | null) => {
+    setSelectedIdState(id);
+    if (id) setSelectedHostedMethodState(null);
+  };
+  const setSelectedMethod = (method: string | null) => {
+    setSelectedHostedMethodState(method);
+    if (method) setSelectedIdState(null);
+  };
   const [uiState, setUiState] = useState<PaymentUiState>({
     phase: "selecting",
   });
@@ -234,11 +251,51 @@ export default function PaymentMethodSelector(
 
   const methods = data ?? [];
 
+  const optionsTarget =
+    props.kind === "ticket"
+      ? sortedSessionIds.length > 0
+        ? { kind: "ticket" as const, checkoutSessionIds: sortedSessionIds }
+        : null
+      : promotionTarget;
+  const { data: optionsResponse } = useQuery({
+    queryKey: [
+      "checkout-payment-options",
+      optionsTarget?.kind,
+      optionsTarget && "checkoutId" in optionsTarget
+        ? optionsTarget.checkoutId
+        : sortedSessionIds,
+    ],
+    queryFn: () =>
+      optionsTarget
+        ? getCheckoutPaymentOptions(optionsTarget)
+        : Promise.resolve(null),
+    enabled: !!optionsTarget,
+  });
+  const paymentOptions =
+    optionsResponse?.status === 200 ? optionsResponse.data : null;
+  const savedOption = (id: string) =>
+    paymentOptions?.saved.find((s) => s.id === id) ?? null;
+  // Until the options arrive every saved entry is shown as before; once
+  // they do, one that cannot pay in this order's market is shown but
+  // cannot be picked, with the reason.
+  const isUsable = (id: string) => savedOption(id)?.usable ?? true;
+  const hostedMethods = paymentOptions?.methods ?? [];
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pick a default once per options/wallet change; the setters are stable wrappers.
   useEffect(() => {
-    if (selectedId || methods.length === 0) return;
-    const defaultMethod = methods.find((m) => m.is_default) ?? methods[0];
-    setSelectedId(defaultMethod.id);
-  }, [methods, selectedId]);
+    if (selectedId && isUsable(selectedId)) return;
+    if (selectedHostedMethod) return;
+    const usable = methods.filter((m) => isUsable(m.id));
+    const defaultSaved = usable.find((m) => m.is_default) ?? usable[0];
+    if (defaultSaved) {
+      setSelectedId(defaultSaved.id);
+      return;
+    }
+    if (selectedId) setSelectedIdState(null);
+    const recommended =
+      hostedMethods.find((m) => m.recommended) ?? hostedMethods[0];
+    if (recommended) setSelectedMethod(recommended.method);
+  }, [methods, selectedId, selectedHostedMethod, paymentOptions]);
 
   const selectedMethod = methods.find((m) => m.id === selectedId) ?? null;
 
@@ -248,14 +305,23 @@ export default function PaymentMethodSelector(
       phase: uiState.phase,
       selectedMethodLabel: selectedMethod
         ? getPaymentMethodDisplay(selectedMethod).title
-        : null,
+        : (hostedMethods.find((m) => m.method === selectedHostedMethod)
+            ?.label ?? null),
     });
-  }, [uiState.phase, selectedMethod]);
+  }, [uiState.phase, selectedMethod, selectedHostedMethod]);
 
   const handlePaymentInit = (
     primaryAttemptId: string,
     payment: PaymentInit,
   ) => {
+    if (payment.mode === "popup" && payment.provider !== "paystack") {
+      // An in-page overlay is only wired for Paystack's inline SDK; any
+      // other provider's popup continues on its hosted page instead.
+      setUiState({ phase: "verifying" });
+      window.location.assign(payment.authorizationUrl);
+      return;
+    }
+
     if (payment.mode === "popup") {
       setUiState({
         phase: "awaiting-popup",
@@ -299,11 +365,12 @@ export default function PaymentMethodSelector(
   // With credit covering everything there's no Paystack step: the tickets
   // are issued before the call returns and `verification` carries the result.
   const ticketPayMutation = useMutation({
-    mutationFn: (paymentMethodId: string | null) =>
+    mutationFn: (choice: PayChoice) =>
       createMultiCheckoutPaymentAttempt({
         checkoutSessionIds:
           props.kind === "ticket" ? props.checkoutSessionIds : [],
-        paymentMethodId,
+        paymentMethodId: choice.paymentMethodId,
+        method: choice.method,
         useCredit,
       }),
     onSuccess: (response) => {
@@ -335,11 +402,12 @@ export default function PaymentMethodSelector(
   // credit covering everything there's no Paystack step: the promotion is
   // activated before the call returns and `verification` carries the result.
   const promotionPayMutation = useMutation({
-    mutationFn: (paymentMethodId: string | null) =>
+    mutationFn: (choice: PayChoice) =>
       createPromotionPaymentAttempt({
         kind: promotionTarget?.kind ?? "event",
         checkoutId: promotionTarget?.checkoutId ?? "",
-        paymentMethodId,
+        paymentMethodId: choice.paymentMethodId,
+        method: choice.method,
         useCredit,
       }),
     onSuccess: (response) => {
@@ -680,7 +748,7 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
-          <p>Complete your payment in the Paystack window…</p>
+          <p>Complete your payment in the secure payment window…</p>
         </div>
       </>
     );
@@ -769,16 +837,69 @@ export default function PaymentMethodSelector(
             </p>
           ) : (
             <div className="space-y-2">
-              {methods.map((method) => (
-                <PaymentMethodCard
-                  key={method.id}
-                  method={method}
-                  selected={selectedId === method.id}
-                  onSelect={() => setSelectedId(method.id)}
-                />
-              ))}
+              {methods.map((method) => {
+                const option = savedOption(method.id);
+                const usable = isUsable(method.id);
+                return (
+                  <div
+                    key={method.id}
+                    className={usable ? undefined : "opacity-60"}
+                    aria-disabled={!usable}
+                  >
+                    <PaymentMethodCard
+                      method={method}
+                      selected={usable && selectedId === method.id}
+                      onSelect={
+                        usable ? () => setSelectedId(method.id) : undefined
+                      }
+                    />
+                    {!usable && option?.reason ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {option.reason}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           )}
+
+          {hostedMethods.length > 0 ? (
+            <fieldset className="space-y-2">
+              <legend className="mb-1 text-xs font-medium text-muted-foreground">
+                {methods.length > 0 ? "Or pay another way" : "Ways to pay"}
+              </legend>
+              {hostedMethods.map((m) => (
+                <label
+                  key={`${m.provider}:${m.method}`}
+                  className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-3 text-sm ${
+                    selectedHostedMethod === m.method
+                      ? "border-primary bg-primary/5"
+                      : "border-border"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="pay-another-way"
+                      checked={selectedHostedMethod === m.method}
+                      onChange={() => setSelectedMethod(m.method)}
+                    />
+                    {m.label}
+                  </span>
+                  {m.recommended ? (
+                    <span className="text-xs text-muted-foreground">
+                      Recommended
+                    </span>
+                  ) : null}
+                </label>
+              ))}
+            </fieldset>
+          ) : paymentOptions && !paymentOptions.transacting ? (
+            <p className="text-xs text-muted-foreground">
+              Sales are paused in {paymentOptions.marketName} right now.
+            </p>
+          ) : null}
 
           <AddWalletButton
             onAdded={(method) => {
@@ -793,12 +914,20 @@ export default function PaymentMethodSelector(
 
       <button
         type="button"
-        disabled={(!creditCoversAll && !selectedId) || payMutation.isPending}
+        disabled={
+          (!creditCoversAll && !selectedId && !selectedHostedMethod) ||
+          payMutation.isPending
+        }
         onClick={() => {
           if (creditCoversAll) {
-            payMutation.mutate(null);
+            payMutation.mutate({ paymentMethodId: null, method: null });
           } else if (selectedId) {
-            payMutation.mutate(selectedId);
+            payMutation.mutate({ paymentMethodId: selectedId, method: null });
+          } else if (selectedHostedMethod) {
+            payMutation.mutate({
+              paymentMethodId: null,
+              method: selectedHostedMethod,
+            });
           }
         }}
         className="w-full rounded-md p-4 font-bold text-primary-foreground bg-primary text-center mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -809,7 +938,7 @@ export default function PaymentMethodSelector(
             : "Starting payment…"
           : creditCoversAll
             ? "Confirm and pay with credit"
-            : `Pay ${currency} ${amount.toFixed(2)}`}
+            : `Pay ${formatMoney(currency, amount)}`}
       </button>
     </div>
   );

@@ -53,16 +53,23 @@ export const EMPTY_PLACE_FILTERS: PlaceFilters = {
   maxDistanceKm: null,
 };
 
-// "[0, 999]" is the web modal's "Any price" sentinel — 999 renders as "Any"
-// there, so treat a max of 999+ as "no upper bound".
+// The price slider's top, in cedi-sized units: the slider runs 0 to
+// PRICE_ANY_MAX × the market's priceScale, and its top reads "Any". A filter
+// with no upper bound carries maxPrice null (never a sentinel number), so a
+// ₦5,000 cap is a real cap.
 export const PRICE_ANY_MAX = 999;
+
+/** The slider top for a market (display only). */
+export function priceSliderMax(priceScale = 1): number {
+  const scale = Number.isFinite(priceScale) && priceScale > 0 ? priceScale : 1;
+  return Math.max(1, Math.round(PRICE_ANY_MAX * scale));
+}
 
 export function countActiveEventFilters(f: EventFilters): number {
   let n = 0;
   if (f.category) n++;
   if (f.types.length) n++;
-  if (f.minPrice != null || (f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX))
-    n++;
+  if (f.minPrice != null || f.maxPrice != null) n++;
   if (f.startDate || f.endDate) n++;
   if (f.minRating != null) n++;
   if (f.maxDistanceKm != null) n++;
@@ -159,14 +166,10 @@ export function eventMatchesFilters(
     if (!f.types.some((t) => eventTypes.includes(t))) return false;
   }
 
-  if (
-    f.minPrice != null ||
-    (f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX)
-  ) {
+  if (f.minPrice != null || f.maxPrice != null) {
     const price = eventPrice(event) ?? 0;
     if (f.minPrice != null && price < f.minPrice) return false;
-    if (f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX && price > f.maxPrice)
-      return false;
+    if (f.maxPrice != null && price > f.maxPrice) return false;
   }
 
   if (f.startDate || f.endDate) {

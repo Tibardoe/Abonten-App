@@ -144,6 +144,7 @@ export async function getPlatformAnalyticsCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
   range: ResolvedAdminRange,
+  currency?: string | null,
 ): Promise<AdminEnvelope<PlatformAnalyticsV2>> {
   try {
     assertPermission(ctx, "analytics.view");
@@ -160,6 +161,7 @@ export async function getPlatformAnalyticsCore(
       p_to: range.to,
       p_prev_from: prevFrom,
       p_prev_to: prevTo,
+      p_currency: currency ?? undefined,
     }),
     supabase.rpc("admin_platform_analytics", {
       p_from: range.from,
@@ -167,6 +169,7 @@ export async function getPlatformAnalyticsCore(
       p_bucket: range.bucket,
       p_prev_from: prevFrom,
       p_prev_to: prevTo,
+      p_currency: currency ?? undefined,
     }),
     supabase.rpc("admin_user_demographics", {
       p_from: range.from,

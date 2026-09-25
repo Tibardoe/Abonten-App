@@ -9,7 +9,8 @@ import { AreaForm } from "./AreaForm";
 // Admin › Abonten Weekly › Areas. An edition belongs to one area: the whole
 // country, or a centre point and radius (for example Accra, 35 km). Visitors
 // are matched to the smallest active area containing their location and see
-// Ghana-wide picks, labelled as such, when their area has no edition.
+// their country's picks, labelled as such, when their area has no edition.
+// An area belongs to the market its centre is in.
 
 export default async function WeeklyAreasPage() {
   await requirePermissionPage("weekly.view");

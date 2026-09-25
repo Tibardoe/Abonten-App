@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
 import {
   type AddMomoWalletInput,
   addMomoWalletSchema,
@@ -26,14 +25,6 @@ import { useForm } from "react-hook-form";
 type PopupCloseProp = {
   onSaved: (method: PaymentMethodRow) => void;
 };
-
-// Ghana local format (0XXXXXXXXX) is normalized to Paystack's expected
-// international form before it's ever sent to the server.
-function normalizeGhanaPhone(phone: string): string {
-  const trimmed = phone.trim();
-  if (trimmed.startsWith("+233")) return trimmed;
-  return `+233${phoneNumberFormatter(trimmed)}`;
-}
 
 export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
   const [serverError, setServerError] = useState<string | null>(null);
@@ -74,7 +65,9 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
     setServerError(null);
     const response = await addPaymentMethod({
       ...values,
-      phone: normalizeGhanaPhone(values.phone),
+      // Sent as typed: the service parses it for the person's market
+      // (a Ghanaian 024…, a Kenyan 0712…) and stores E.164.
+      phone: values.phone.trim(),
     });
 
     if (response.status !== 200) {

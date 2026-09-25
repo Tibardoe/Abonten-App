@@ -1,15 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
+import type { ClientPlatform } from "@abonten/core/market/types";
 import { money, toMajor } from "@abonten/core/money/money";
-import {
-  type SelectedPaymentMethod,
-  initiateChargeForAttempt,
-} from "@abonten/services/payments/chargeInit";
+import { initiateChargeForAttempt } from "@abonten/services/payments/chargeInit";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
 } from "@abonten/services/payments/paymentAttempt";
-import { resolveProviderAccount } from "@abonten/services/payments/providers/registry";
+import {
+  type ResolvedPaymentChoice,
+  marketClosedForSales,
+  resolvePaymentChoice,
+} from "@abonten/services/payments/paymentChoice";
 import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -68,29 +70,28 @@ export type CreatePromotionPaymentAttemptResult =
 const ATTEMPT_SELECT =
   "id, provider, country_code, status, amount, currency, payment_method_id, provider_reference, metadata";
 
-/** The provider that will take the cash part, from the listing's market. */
-async function cashProviderFor(
+type PaymentChoiceFields = {
+  /** A saved instrument, or `method` below. */
+  paymentMethodId?: string | null;
+  /** Pay with this method on the provider's page ("card", "bank_transfer"…). */
+  method?: string | null;
+  platform?: ClientPlatform | null;
+};
+
+/** How the cash part is paid, checked against the listing's market. */
+async function cashChoiceFor(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  input: PaymentChoiceFields,
   order: { countryCode: string | null; currency: string },
-  method: SelectedPaymentMethod,
-): Promise<string | { status: 400; message: string }> {
-  try {
-    return (
-      await resolveProviderAccount({
-        countryCode: order.countryCode,
-        currency: order.currency,
-        method: method.method_type === "momo" ? "mobile_money" : "card",
-      })
-    ).provider.code;
-  } catch (error) {
-    logger.error(
-      `createPromotionPaymentAttemptCore: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return {
-      status: 400,
-      message:
-        "This payment method isn't available for this market. Choose another.",
-    };
-  }
+): Promise<
+  | ResolvedPaymentChoice
+  | { status: 400 | 404 | 409 | 500 | 503; message: string }
+> {
+  const result = await resolvePaymentChoice(supabase, userId, input, order);
+  return result.ok
+    ? result.choice
+    : { status: result.status, message: result.message };
 }
 
 export async function createPromotionPaymentAttemptCore(
@@ -100,8 +101,10 @@ export async function createPromotionPaymentAttemptCore(
   input: {
     kind: PromotionKind;
     checkoutId: string;
-    /** Required unless credit covers the whole order. */
+    /** A saved instrument, or `method`. Not needed when credit covers everything. */
     paymentMethodId?: string | null;
+    method?: string | null;
+    platform?: ClientPlatform | null;
     useCredit?: boolean;
   },
   buildCallbackUrl: (checkoutId: string) => string,
@@ -136,20 +139,8 @@ export async function createPromotionPaymentAttemptCore(
     );
   }
 
-  if (!input.paymentMethodId) {
+  if (!input.paymentMethodId && !input.method) {
     return { status: 400, message: "Choose a payment method" };
-  }
-
-  const method = await loadPaymentMethod(
-    supabase,
-    userId,
-    input.paymentMethodId,
-  );
-  if (method === "error") {
-    return { status: 500, message: "Something went wrong!" };
-  }
-  if (!method) {
-    return { status: 404, message: "Payment method not found" };
   }
 
   // Priced from the tier, the same way the credit path is, so cash and
@@ -185,9 +176,8 @@ export async function createPromotionPaymentAttemptCore(
   if (switched !== "ok") return switched;
 
   const total = money(order.orderTotalMinor, order.currency);
-  const selected = method as unknown as SelectedPaymentMethod;
-  const providerCode = await cashProviderFor(order, selected);
-  if (typeof providerCode !== "string") return providerCode;
+  const choice = await cashChoiceFor(supabase, userId, input, order);
+  if ("status" in choice) return choice;
 
   const attemptResult = await upsertPaymentAttemptForSession(
     userId,
@@ -195,9 +185,10 @@ export async function createPromotionPaymentAttemptCore(
     input.checkoutId,
     toMajor(total),
     total.currency,
-    input.paymentMethodId,
+    choice.paymentMethodId,
     undefined,
-    { countryCode: order.countryCode ?? "", provider: providerCode },
+    { countryCode: order.countryCode ?? "", provider: choice.providerCode },
+    { method: choice.methodCode },
   );
 
   if (attemptResult.status !== 200) {
@@ -209,7 +200,9 @@ export async function createPromotionPaymentAttemptCore(
     amount: total,
     countryCode: order.countryCode,
     email: userEmail,
-    paymentMethod: selected,
+    paymentMethod: choice.saved,
+    methodCode: choice.methodCode,
+    providerCode: choice.providerCode,
     callbackUrl: buildCallbackUrl(input.checkoutId),
     description: order.label,
   });
@@ -227,25 +220,6 @@ export async function createPromotionPaymentAttemptCore(
       verification: null,
     },
   };
-}
-
-async function loadPaymentMethod(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-  paymentMethodId: string,
-) {
-  const { data, error } = await supabase
-    .from("payment_method")
-    .select("id, method_type, details")
-    .eq("id", paymentMethodId)
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
-  if (error) {
-    logger.error(`Failed fetching payment method: ${error.message}`);
-    return "error" as const;
-  }
-  return data;
 }
 
 /**
@@ -315,8 +289,7 @@ async function startCreditPayment(
   input: {
     kind: PromotionKind;
     checkoutId: string;
-    paymentMethodId?: string | null;
-  },
+  } & PaymentChoiceFields,
   buildCallbackUrl: (checkoutId: string) => string,
   fulfillmentDeps: PaymentFulfillmentDeps | undefined,
 ): Promise<CreatePromotionPaymentAttemptResult> {
@@ -350,20 +323,22 @@ async function startCreditPayment(
     };
   }
 
-  let method: Awaited<ReturnType<typeof loadPaymentMethod>> = null;
+  let choice: ResolvedPaymentChoice | null = null;
   if (!quote.creditOnly) {
-    if (!input.paymentMethodId) {
+    if (!input.paymentMethodId && !input.method) {
       return {
         status: 400,
         message: "Choose a payment method for the rest of the amount",
       };
     }
-    method = await loadPaymentMethod(supabase, userId, input.paymentMethodId);
-    if (method === "error") {
-      return { status: 500, message: "Something went wrong!" };
-    }
-    if (!method) return { status: 404, message: "Payment method not found" };
-  } else if (!fulfillmentDeps) {
+    const resolved = await cashChoiceFor(supabase, userId, input, order);
+    if ("status" in resolved) return resolved;
+    choice = resolved;
+  } else {
+    const closed = await marketClosedForSales(order.countryCode);
+    if (closed) return closed;
+  }
+  if (quote.creditOnly && !fulfillmentDeps) {
     // Programming error: a credit-only order is finalized right here.
     logger.error("createPromotionPaymentAttemptCore: missing fulfillmentDeps");
     return { status: 500, message: "Something went wrong!" };
@@ -378,15 +353,7 @@ async function startCreditPayment(
   );
   if (dropped !== "ok") return dropped;
 
-  let cashProvider = "abonten_credit";
-  if (!quote.creditOnly) {
-    const resolved = await cashProviderFor(
-      order,
-      method as unknown as SelectedPaymentMethod,
-    );
-    if (typeof resolved !== "string") return resolved;
-    cashProvider = resolved;
-  }
+  const cashProvider = choice?.providerCode ?? "abonten_credit";
 
   const cash = money(quote.cashMinor, quote.currency);
   const service = getSupabaseServiceClient();
@@ -395,9 +362,7 @@ async function startCreditPayment(
     .insert({
       user_id: userId,
       [cfg.attemptColumn]: input.checkoutId,
-      payment_method_id: quote.creditOnly
-        ? null
-        : (input.paymentMethodId ?? null),
+      payment_method_id: choice?.paymentMethodId ?? null,
       amount: toMajor(cash),
       credit_amount: toMajor(money(quote.creditMinor, quote.currency)),
       currency: quote.currency,
@@ -473,7 +438,9 @@ async function startCreditPayment(
     amount: cash,
     countryCode: order.countryCode,
     email: userEmail,
-    paymentMethod: method as unknown as SelectedPaymentMethod,
+    paymentMethod: choice?.saved ?? null,
+    methodCode: choice?.methodCode ?? "card",
+    providerCode: choice?.providerCode ?? null,
     callbackUrl: buildCallbackUrl(input.checkoutId),
     description: order.label,
   });

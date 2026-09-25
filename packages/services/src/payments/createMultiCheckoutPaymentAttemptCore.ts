@@ -1,17 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
+import type { ClientPlatform } from "@abonten/core/market/types";
 import { money, toMajor } from "@abonten/core/money/money";
 import { apportionCredit } from "@abonten/core/rewards/creditAllocation";
 import { prepareCheckoutPayment } from "@abonten/services/checkout/checkoutPaymentPreparation";
-import {
-  type SelectedPaymentMethod,
-  initiateChargeForAttempt,
-} from "@abonten/services/payments/chargeInit";
+import { initiateChargeForAttempt } from "@abonten/services/payments/chargeInit";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
 } from "@abonten/services/payments/paymentAttempt";
-import { resolveProviderAccount } from "@abonten/services/payments/providers/registry";
+import {
+  marketClosedForSales,
+  resolvePaymentChoice,
+} from "@abonten/services/payments/paymentChoice";
 import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -64,25 +65,6 @@ export type CreateMultiCheckoutPaymentAttemptCoreResult =
 
 const ATTEMPT_SELECT =
   "id, provider, country_code, status, amount, currency, payment_method_id, provider_reference, metadata";
-
-async function loadPaymentMethod(
-  supabase: SupabaseClient<Database>,
-  userId: string,
-  paymentMethodId: string,
-) {
-  const { data, error } = await supabase
-    .from("payment_method")
-    .select("id, method_type, details")
-    .eq("id", paymentMethodId)
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
-  if (error) {
-    logger.error(`Failed fetching payment method: ${error.message}`);
-    return "error" as const;
-  }
-  return data;
-}
 
 /**
  * Cancels the open attempts on these sessions (all of them, or only those
@@ -163,8 +145,11 @@ export async function createMultiCheckoutPaymentAttemptCore(
   userEmail: string | undefined,
   input: {
     checkoutSessionIds: string[];
-    /** Required unless credit covers the whole order. */
+    /** A saved instrument, or `method` below. Not needed when credit covers everything. */
     paymentMethodId?: string | null;
+    /** Pay with this method on the provider's page instead ("card", "bank_transfer"…). */
+    method?: string | null;
+    platform?: ClientPlatform | null;
     useCredit?: boolean;
   },
   callbackUrlFor: (checkoutSessionId: string) => string,
@@ -214,20 +199,18 @@ export async function createMultiCheckoutPaymentAttemptCore(
     );
   }
 
-  if (!input.paymentMethodId) {
-    return { status: 400, message: "Choose a payment method" };
+  // The event's market and currency decide what can pay for it; the
+  // client's choice is checked against that, never trusted.
+  const resolvedChoice = await resolvePaymentChoice(supabase, userId, input, {
+    countryCode: prepared.countryCode,
+    currency: prepared.currency,
+  });
+  if (!resolvedChoice.ok) {
+    return resolvedChoice.status === 409
+      ? { status: 409, message: resolvedChoice.message, invalidSessionIds: [] }
+      : { status: resolvedChoice.status, message: resolvedChoice.message };
   }
-  const method = await loadPaymentMethod(
-    supabase,
-    userId,
-    input.paymentMethodId,
-  );
-  if (method === "error") {
-    return { status: 500, message: "Something went wrong!" };
-  }
-  if (!method) {
-    return { status: 404, message: "Payment method not found" };
-  }
+  const choice = resolvedChoice.choice;
 
   // Switching from a credit payment back to cash: an open attempt started
   // with credit must not be reused (it would charge only the cash part).
@@ -239,27 +222,8 @@ export async function createMultiCheckoutPaymentAttemptCore(
   if (switched !== "ok") return withNoInvalidSessions(switched);
 
   // The provider that will charge this order: the event's market and
-  // currency decide it, never the client. Resolved once, before any row is
-  // written, so an unconfigured market fails cleanly.
-  let providerCode: string;
-  try {
-    providerCode = (
-      await resolveProviderAccount({
-        countryCode: prepared.countryCode,
-        currency: prepared.currency,
-        method: method.method_type === "momo" ? "mobile_money" : "card",
-      })
-    ).provider.code;
-  } catch (error) {
-    logger.error(
-      `createMultiCheckoutPaymentAttemptCore: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return {
-      status: 400,
-      message:
-        "This payment method isn't available for this event's market. Choose another.",
-    };
-  }
+  // currency decide it, never the client (paymentChoice above).
+  const providerCode = choice.providerCode;
 
   const paymentGroupId = randomUUID();
   const insertedAttempts: PaymentAttemptRow[] = [];
@@ -271,10 +235,10 @@ export async function createMultiCheckoutPaymentAttemptCore(
       session.checkoutSessionId,
       session.total,
       prepared.currency,
-      input.paymentMethodId,
+      choice.paymentMethodId,
       paymentGroupId,
       { countryCode: prepared.countryCode, provider: providerCode },
-      { taxMinor: session.taxMinor },
+      { taxMinor: session.taxMinor, method: choice.methodCode },
     );
 
     if (result.status !== 200) {
@@ -305,7 +269,9 @@ export async function createMultiCheckoutPaymentAttemptCore(
     amount: money(prepared.grandTotalMinor, prepared.currency),
     countryCode: prepared.countryCode,
     email: userEmail,
-    paymentMethod: method as unknown as SelectedPaymentMethod,
+    paymentMethod: choice.saved,
+    methodCode: choice.methodCode,
+    providerCode: choice.providerCode,
     callbackUrl: callbackUrlFor(prepared.validSessions[0].checkoutSessionId),
     description:
       prepared.validSessions.length === 1
@@ -340,7 +306,11 @@ async function startCreditPayment(
   supabase: SupabaseClient<Database>,
   userId: string,
   userEmail: string,
-  input: { paymentMethodId?: string | null },
+  input: {
+    paymentMethodId?: string | null;
+    method?: string | null;
+    platform?: ClientPlatform | null;
+  },
   prepared: Awaited<ReturnType<typeof prepareCheckoutPayment>>,
   callbackUrlFor: (checkoutSessionId: string) => string,
   fulfillmentDeps: PaymentFulfillmentDeps | undefined,
@@ -364,20 +334,41 @@ async function startCreditPayment(
     };
   }
 
-  let method: Awaited<ReturnType<typeof loadPaymentMethod>> = null;
+  // The cash part (if any) goes through the event market's provider, by a
+  // method that market can complete; a credit-only order still needs the
+  // market to be taking sales.
+  let choice:
+    | Extract<
+        Awaited<ReturnType<typeof resolvePaymentChoice>>,
+        { ok: true }
+      >["choice"]
+    | null = null;
   if (!quote.creditOnly) {
-    if (!input.paymentMethodId) {
+    if (!input.paymentMethodId && !input.method) {
       return {
         status: 400,
         message: "Choose a payment method for the rest of the amount",
       };
     }
-    method = await loadPaymentMethod(supabase, userId, input.paymentMethodId);
-    if (method === "error") {
-      return { status: 500, message: "Something went wrong!" };
+    const resolvedChoice = await resolvePaymentChoice(supabase, userId, input, {
+      countryCode: prepared.countryCode,
+      currency: quote.currency,
+    });
+    if (!resolvedChoice.ok) {
+      return resolvedChoice.status === 409
+        ? {
+            status: 409,
+            message: resolvedChoice.message,
+            invalidSessionIds: [],
+          }
+        : { status: resolvedChoice.status, message: resolvedChoice.message };
     }
-    if (!method) return { status: 404, message: "Payment method not found" };
-  } else if (!fulfillmentDeps) {
+    choice = resolvedChoice.choice;
+  } else {
+    const closed = await marketClosedForSales(prepared.countryCode);
+    if (closed) return { ...closed, invalidSessionIds: [] };
+  }
+  if (quote.creditOnly && !fulfillmentDeps) {
     // Programming error: a credit-only order is finalized right here.
     logger.error(
       "createMultiCheckoutPaymentAttemptCore: missing fulfillmentDeps",
@@ -392,28 +383,7 @@ async function startCreditPayment(
   );
   if (dropped !== "ok") return withNoInvalidSessions(dropped);
 
-  // The cash part (if any) goes through the event market's provider.
-  let cashProvider = "abonten_credit";
-  if (!quote.creditOnly) {
-    try {
-      cashProvider = (
-        await resolveProviderAccount({
-          countryCode: prepared.countryCode,
-          currency: quote.currency,
-          method: method?.method_type === "momo" ? "mobile_money" : "card",
-        })
-      ).provider.code;
-    } catch (error) {
-      logger.error(
-        `createMultiCheckoutPaymentAttemptCore: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return {
-        status: 400,
-        message:
-          "This payment method isn't available for this event's market. Choose another.",
-      };
-    }
-  }
+  const cashProvider = choice?.providerCode ?? "abonten_credit";
 
   const paymentGroupId = randomUUID();
   const creditShares = apportionCredit(
@@ -425,9 +395,7 @@ async function startCreditPayment(
   const rows = order.sessions.map((session, index) => ({
     user_id: userId,
     checkout_session_id: session.checkoutSessionId,
-    payment_method_id: quote.creditOnly
-      ? null
-      : (input.paymentMethodId ?? null),
+    payment_method_id: choice?.paymentMethodId ?? null,
     amount: toMajor(
       money(session.totalMinor - creditShares[index], quote.currency),
     ),
@@ -522,7 +490,9 @@ async function startCreditPayment(
     amount: money(quote.cashMinor, quote.currency),
     countryCode: prepared.countryCode,
     email: userEmail,
-    paymentMethod: method as unknown as SelectedPaymentMethod,
+    paymentMethod: choice?.saved ?? null,
+    methodCode: choice?.methodCode ?? "card",
+    providerCode: choice?.providerCode ?? null,
     callbackUrl: callbackUrlFor(order.sessions[0].checkoutSessionId),
     description: order.label,
   });

@@ -573,10 +573,18 @@ export type MomoNetwork = { code: string; name: string };
 
 export type CheckoutAttemptBody = {
   checkoutSessionIds: string[];
-  /** Required unless Abonten Credit covers the whole order. */
+  /** A saved instrument; or `method`. Not needed when Abonten Credit covers the whole order. */
   paymentMethodId?: string | null;
+  /** A way to pay on the provider's page, from payments.options(). */
+  method?: string | null;
   useCredit?: boolean;
 };
+
+export type {
+  AvailablePaymentMethod,
+  CheckoutPaymentOptions,
+  SavedInstrumentOption,
+} from "@abonten/types/paymentOptionsType";
 
 /**
  * How the client continues after the server started a payment, for any
@@ -1737,7 +1745,8 @@ export type FieldOpsPayoutDestinationResult =
 export type FieldOpsPayoutDestinationBody = {
   campaignId: string;
   momoNumber: string;
-  momoNetwork: "MTN" | "Telecel" | "AirtelTigo";
+  /** A network the campaign country's provider lists (see availableNetworks). */
+  momoNetwork: string;
   holderName: string;
 };
 

@@ -1,5 +1,6 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { withLegacyPaystackField } from "@/app/api/mobile/_lib/legacyPaymentField";
+import { paymentChoiceFromBody } from "@/app/api/mobile/_lib/paymentChoiceBody";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => null)) as {
       contentCampaignCheckoutId?: unknown;
       paymentMethodId?: unknown;
+      method?: unknown;
     } | null;
 
     const checkoutId =
@@ -29,13 +31,9 @@ export async function POST(req: Request) {
       body.contentCampaignCheckoutId.length > 0
         ? body.contentCampaignCheckoutId
         : null;
-    const paymentMethodId =
-      typeof body?.paymentMethodId === "string" &&
-      body.paymentMethodId.length > 0
-        ? body.paymentMethodId
-        : null;
+    const choice = paymentChoiceFromBody(req, body);
 
-    if (!checkoutId || !paymentMethodId) {
+    if (!checkoutId || (!choice.paymentMethodId && !choice.method)) {
       return apiJson({
         status: 400,
         message: "contentCampaignCheckoutId and paymentMethodId are required",
@@ -46,7 +44,7 @@ export async function POST(req: Request) {
       auth.supabase,
       auth.user.id,
       auth.user.email,
-      { kind: "spotlight", checkoutId, paymentMethodId, useCredit: false },
+      { kind: "spotlight", checkoutId, ...choice, useCredit: false },
       (id) => `abonten://promotion/${id}`,
       paymentFulfillmentDeps,
     );

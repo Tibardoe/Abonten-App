@@ -49,6 +49,10 @@ const CHANNEL_FOR_METHOD: Partial<Record<PaymentMethodCode, string>> = {
   apple_pay: "apple_pay",
 };
 
+// Documented defaults per business country. A market row's provider
+// `options` overrides each of them, so opening another Paystack country is
+// configuration (Admin › Markets › Payment providers), not a code change.
+
 /** Channels Paystack offers per business country (documented availability). */
 const CHANNELS_BY_COUNTRY: Record<string, string[]> = {
   GH: ["card", "mobile_money"],
@@ -77,6 +81,50 @@ const BANK_COUNTRY: Record<string, string> = {
   CI: "côte d'ivoire",
 };
 
+function channelsFor(account: ProviderAccount): string[] {
+  const configured = account.options.channels;
+  if (
+    Array.isArray(configured) &&
+    configured.length > 0 &&
+    configured.every((c) => typeof c === "string")
+  )
+    return configured as string[];
+  return CHANNELS_BY_COUNTRY[account.countryCode] ?? ["card"];
+}
+
+function cardVerificationMinorFor(
+  account: ProviderAccount,
+  currency: string,
+): number | null {
+  const configured = account.options.cardVerificationMinor;
+  const code = currency.toUpperCase();
+  if (configured && typeof configured === "object") {
+    const v = (configured as Record<string, unknown>)[code];
+    if (typeof v === "number" && Number.isInteger(v) && v > 0) return v;
+  }
+  return CARD_VERIFICATION_MINOR[code] ?? null;
+}
+
+/** Paystack's bank-transfer recipient type per business country. */
+const BANK_RECIPIENT_TYPE: Record<string, string> = {
+  GH: "ghipss",
+  ZA: "basa",
+  KE: "kepss",
+  NG: "nuban",
+};
+
+function bankRecipientTypeFor(account: ProviderAccount): string {
+  const configured = account.options.bankRecipientType;
+  if (typeof configured === "string" && configured.trim()) return configured;
+  return BANK_RECIPIENT_TYPE[account.countryCode] ?? "nuban";
+}
+
+function bankCountryFor(account: ProviderAccount): string | null {
+  const configured = account.options.bankCountry;
+  if (typeof configured === "string" && configured.trim()) return configured;
+  return BANK_COUNTRY[account.countryCode] ?? null;
+}
+
 function chargeInit(data: PaystackChargeData): CheckoutInit {
   return {
     mode: "direct",
@@ -95,7 +143,7 @@ export const paystackProvider: PaymentProvider = {
   code: "paystack",
 
   capabilities(account): ProviderCapabilities {
-    const channels = CHANNELS_BY_COUNTRY[account.countryCode] ?? ["card"];
+    const channels = channelsFor(account);
     const methods = (
       Object.keys(CHANNEL_FOR_METHOD) as PaymentMethodCode[]
     ).filter((m) => channels.includes(CHANNEL_FOR_METHOD[m] as string));
@@ -115,7 +163,7 @@ export const paystackProvider: PaymentProvider = {
   supportsMethod(account, method, currency) {
     const channel = CHANNEL_FOR_METHOD[method];
     if (!channel) return false;
-    const channels = CHANNELS_BY_COUNTRY[account.countryCode] ?? ["card"];
+    const channels = channelsFor(account);
     if (!channels.includes(channel)) return false;
     // Local rails only run in the local currency; cards take every
     // currency the business accepts.
@@ -129,8 +177,8 @@ export const paystackProvider: PaymentProvider = {
       .includes(currency.toUpperCase());
   },
 
-  cardVerificationAmount(_account, currency) {
-    const minor = CARD_VERIFICATION_MINOR[currency.toUpperCase()];
+  cardVerificationAmount(account, currency) {
+    const minor = cardVerificationMinorFor(account, currency);
     return minor ? money(minor, currency) : null;
   },
 
@@ -371,7 +419,7 @@ export const paystackProvider: PaymentProvider = {
     account,
     currency,
   ): Promise<MobileMoneyNetwork[]> {
-    const country = BANK_COUNTRY[account.countryCode];
+    const country = bankCountryFor(account);
     const banks = await api.listBanks(
       account,
       `${country ? `country=${encodeURIComponent(country)}&` : ""}currency=${encodeURIComponent(currency)}&type=mobile_money`,
@@ -405,13 +453,7 @@ export const paystackProvider: PaymentProvider = {
       type:
         input.method === "mobile_money"
           ? "mobile_money"
-          : account.countryCode === "GH"
-            ? "ghipss"
-            : account.countryCode === "ZA"
-              ? "basa"
-              : account.countryCode === "KE"
-                ? "kepss"
-                : "nuban",
+          : bankRecipientTypeFor(account),
       name: input.name,
       accountNumber: input.accountNumber,
       bankCode: input.destinationCode,

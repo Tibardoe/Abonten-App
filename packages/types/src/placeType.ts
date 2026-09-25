@@ -149,6 +149,8 @@ export type PlacePromotionSummaryProps = {
   tierLabel: string;
   amount: number;
   totalAmount: number;
+  /** The promotion price list's currency (the place's market). */
+  currency: string;
   status: CheckoutSessionStatus;
   expiresAt: string | null;
 };

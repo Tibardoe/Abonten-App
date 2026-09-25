@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 import { useState, useTransition } from "react";
 
-const NETWORKS = ["MTN", "Telecel", "AirtelTigo"] as const;
-
 const field =
   "w-full rounded-lg border bg-background px-3 py-2.5 text-base outline-none focus:ring-2 focus:ring-primary";
 
@@ -26,7 +24,10 @@ export default function PayoutDestinationForm({
   const [editing, setEditing] = useState(!current?.numberMasked);
   const [saved, setSaved] = useState(current);
   const [number, setNumber] = useState("");
-  const [network, setNetwork] = useState<(typeof NETWORKS)[number]>("MTN");
+  // The campaign country's networks, as its payment provider lists them;
+  // a free-text field when the provider can't list any.
+  const networks = current?.availableNetworks ?? [];
+  const [network, setNetwork] = useState(current?.network ?? networks[0] ?? "");
   const [holder, setHolder] = useState(current?.holderName ?? "");
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -77,32 +78,43 @@ export default function PayoutDestinationForm({
         matches the account, or the transfer will fail.
       </p>
       <div className="mt-3 flex flex-col gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Network</span>
-          <select
-            className={field}
-            value={network}
-            onChange={(e) =>
-              setNetwork(e.target.value as (typeof NETWORKS)[number])
-            }
-          >
-            {NETWORKS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="payout-network" className="text-sm font-medium">
+            Network
+          </label>
+          {networks.length > 0 ? (
+            <select
+              id="payout-network"
+              className={field}
+              value={network}
+              onChange={(e) => setNetwork(e.target.value)}
+            >
+              {networks.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              id="payout-network"
+              className={field}
+              value={network}
+              onChange={(e) => setNetwork(e.target.value)}
+              placeholder="Your mobile money network"
+            />
+          )}
+        </div>
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium">Mobile money number</span>
           <input
             className={field}
-            inputMode="numeric"
-            autoComplete="tel-national"
-            placeholder="024 123 4567"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="Your mobile money number"
             value={number}
-            onChange={(e) => setNumber(e.target.value.replace(/\D/g, ""))}
-            maxLength={10}
+            onChange={(e) => setNumber(e.target.value.replace(/[^\d+ ]/g, ""))}
+            maxLength={20}
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -110,7 +122,7 @@ export default function PayoutDestinationForm({
           <input
             className={field}
             autoComplete="name"
-            placeholder="As it appears on MoMo"
+            placeholder="As it appears on the account"
             value={holder}
             onChange={(e) => setHolder(e.target.value)}
           />
@@ -119,7 +131,10 @@ export default function PayoutDestinationForm({
           <Button
             onClick={submit}
             disabled={
-              pending || number.trim().length !== 10 || holder.trim().length < 2
+              pending ||
+              number.replace(/\D/g, "").length < 7 ||
+              network.trim().length < 2 ||
+              holder.trim().length < 2
             }
           >
             Save

@@ -149,8 +149,8 @@ export default async function DiscoveryPage({
       />
       <DiscoveryTabs active="/discovery" />
       <p className="-mt-3 text-xs text-muted-foreground">
-        {period} · a rolling window ending now, not whole calendar days ·
-        Africa/Accra · no comparison with the period before
+        {period} · a rolling window ending now, not whole calendar days · UTC ·
+        no comparison with the period before
       </p>
 
       <Card className="flex flex-wrap items-center gap-2 p-3 text-sm">
@@ -208,7 +208,7 @@ export default async function DiscoveryPage({
         </Badge>
         <span className="text-muted-foreground">
           Caps: {settings.dailyPushCap}/day, {settings.weeklyPushCap}/week ·
-          digest at {settings.digestHourLocal}:00 Accra
+          digest at {settings.digestHourLocal}:00 each person's local time
         </span>
       </Card>
 

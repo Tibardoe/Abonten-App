@@ -9,6 +9,7 @@ import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { PaginatedResult } from "@abonten/types/pagination";
@@ -109,7 +110,7 @@ function TicketCard({
               <RefundStatusBadge badge={refundBadge} />
               {refundAmount !== undefined && (
                 <span className="text-sm font-semibold">
-                  {event.transaction?.currency} {refundAmount.toFixed(2)}
+                  {formatMoney(event.transaction?.currency, refundAmount)}
                 </span>
               )}
             </div>

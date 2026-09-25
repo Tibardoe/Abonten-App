@@ -1,7 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import { weeklyEditionPath } from "@abonten/core/weekly/copy";
-import { weekEndFor, weekStartFor } from "@abonten/core/weekly/week";
+import { weekStartFor, weekWindow } from "@abonten/core/weekly/week";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type {
@@ -13,6 +13,7 @@ import type {
   WeeklyEditionRequest,
   WeeklyTeaserRequest,
 } from "@abonten/validation/weeklySchemas";
+import { getMarketOrDefault } from "../markets/marketConfig";
 import { mapWeeklyDocument } from "./weeklyDocument";
 import { resolveWeeklyAccess } from "./weeklyProgram";
 
@@ -32,9 +33,10 @@ export type WeeklyEditionResponse = WeeklyEditionResult & {
   visibility: "public" | "personal";
 };
 
-// Geographic centre of Ghana and a radius that covers the whole country,
-// used only for the "happening this week" block when no edition is out.
-const GHANA_CENTRE = { lat: 7.9465, lng: -1.0232, radiusKm: 450 };
+// The "happening this week" block when no edition is out: around the
+// area's centre, or — for a country-wide area — around the market's centre
+// within this radius.
+const COUNTRY_FALLBACK_RADIUS_KM = 450;
 const FALLBACK_EVENT_LIMIT = 12;
 
 const closed = (
@@ -70,27 +72,45 @@ async function fallbackEvents(
   scopeSlug: string | null,
   now: Date,
 ): Promise<{ events: UserPostType[]; scopeFound: boolean }> {
-  let centre = GHANA_CENTRE;
+  let countryCode: string | null = null;
+  let areaCentre: { lat: number; lng: number; radiusKm: number } | null = null;
   let scopeFound = true;
   if (scopeSlug) {
     const { data: scope } = await supabase
       .from("weekly_scope")
-      .select("centre_lat, centre_lng, radius_km, status")
+      .select("centre_lat, centre_lng, radius_km, status, country_code")
       .eq("slug", scopeSlug)
       .maybeSingle();
     if (!scope || scope.status !== "active") {
       scopeFound = false;
-    } else if (scope.centre_lat != null && scope.centre_lng != null) {
-      centre = {
-        lat: scope.centre_lat,
-        lng: scope.centre_lng,
-        radiusKm: Number(scope.radius_km ?? GHANA_CENTRE.radiusKm),
-      };
+    } else {
+      countryCode = scope.country_code;
+      if (scope.centre_lat != null && scope.centre_lng != null) {
+        areaCentre = {
+          lat: scope.centre_lat,
+          lng: scope.centre_lng,
+          radiusKm: Number(scope.radius_km ?? COUNTRY_FALLBACK_RADIUS_KM),
+        };
+      }
     }
   }
   if (!scopeFound) return { events: [], scopeFound };
 
-  const weekEnd = new Date(`${weekEndFor(weekStartFor(now))}T23:59:59.999Z`);
+  const market = await getMarketOrDefault(countryCode);
+  const centre =
+    areaCentre ??
+    (market.centre
+      ? { ...market.centre, radiusKm: COUNTRY_FALLBACK_RADIUS_KM }
+      : null);
+  if (!centre) return { events: [], scopeFound };
+
+  // The week on the area's own calendar (its market's zone).
+  const weekEnd = new Date(
+    weekWindow(
+      weekStartFor(now, market.defaultTimeZone),
+      market.defaultTimeZone,
+    ).end,
+  );
   const { data, error } = await supabase.rpc("get_events_in_window", {
     p_user_lat: centre.lat,
     p_user_lng: centre.lng,
@@ -116,7 +136,7 @@ async function fallbackEvents(
  * The edition a visitor asked for. `input.week` picks an exact past or
  * current edition (404 when it is not published); otherwise the current
  * edition for `input.scope`, or for the scope containing `lat`/`lng`, or
- * Ghana-wide.
+ * the default market's country-wide edition.
  */
 export async function getWeeklyEditionCore(
   supabase: ServiceRoleClient,

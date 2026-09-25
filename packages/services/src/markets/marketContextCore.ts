@@ -18,6 +18,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { listFeatureFlags } from "../flags/featureFlagCore";
 import { getDisplayRateTable } from "../fx/exchangeRateCore";
 import { resolveLocation } from "../geo/locationResolution";
+import { serviceFeeRateFor } from "../platform/platformFee";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getDefaultMarket, listPublicMarkets } from "./marketConfig";
 
 export type MarketContextResult = {
@@ -41,10 +43,21 @@ export async function getMarketContextCore(input: {
   installId?: string | null;
   cohorts?: string[];
 }): Promise<MarketContextResult> {
-  const [markets, defaultMarket] = await Promise.all([
+  const [publicMarkets, defaultMarket] = await Promise.all([
     listPublicMarkets(),
     getDefaultMarket(),
   ]);
+  const feeClient = input.supabase ?? getSupabaseServiceClient();
+  const markets = await Promise.all(
+    publicMarkets.map(async (m) => ({
+      ...m,
+      serviceFeeRate: await serviceFeeRateFor(
+        feeClient,
+        { currency: m.defaultCurrency, countryCode: m.countryCode },
+        { cached: true },
+      ).catch(() => null),
+    })),
+  );
 
   let preferences: LocaleContextInput["preferences"] = null;
   if (input.supabase && input.userId) {

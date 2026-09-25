@@ -302,8 +302,17 @@ export function UnifiedSearch() {
         effectiveMode,
         new Date(),
         origin,
+        market?.defaultTimeZone ?? "UTC",
+        market?.priceScale ?? 1,
       ),
-    [filters, effectiveMode, hasRealLocation, origin],
+    [
+      filters,
+      effectiveMode,
+      hasRealLocation,
+      origin,
+      market?.defaultTimeZone,
+      market?.priceScale,
+    ],
   );
   const filterChips = useMemo(
     () =>
@@ -312,8 +321,16 @@ export function UnifiedSearch() {
         effectiveMode,
         hasRealLocation ? area?.label : null,
         marketCurrency,
+        market?.priceScale ?? 1,
       ).filter((c) => c.key !== "radiusKm" || hasRealLocation),
-    [filters, effectiveMode, hasRealLocation, area?.label, marketCurrency],
+    [
+      filters,
+      effectiveMode,
+      hasRealLocation,
+      area?.label,
+      marketCurrency,
+      market?.priceScale,
+    ],
   );
   const activeFilterCount = activeSearchFilters(
     filters,

@@ -62,10 +62,10 @@ export async function upsertPaymentAttemptForSession(
   matchValue: string,
   amount: number,
   currency: string,
-  paymentMethodId: string,
+  paymentMethodId: string | null,
   paymentGroupId: string | undefined,
   market: { countryCode: string; provider: string },
-  extra: { taxMinor?: number } = {},
+  extra: { taxMinor?: number; method?: string } = {},
 ): Promise<UpsertPaymentAttemptResult> {
   const supabase = getSupabaseServiceClient();
   const { data: existingAttempt, error: existingError } = await supabase
@@ -84,7 +84,20 @@ export async function upsertPaymentAttemptForSession(
   }
 
   if (existingAttempt) {
-    if (existingAttempt.payment_method_id === paymentMethodId) {
+    // The same choice again reuses the open attempt (and its provider
+    // reference): same saved instrument, same way to pay, same provider.
+    // Two hosted methods (card vs bank transfer) both have no saved
+    // instrument, so the method and provider are compared too.
+    const existingMethod = (
+      existingAttempt.metadata as Record<string, unknown> | null
+    )?.method;
+    const sameChoice =
+      existingAttempt.payment_method_id === paymentMethodId &&
+      existingAttempt.provider === market.provider &&
+      (paymentMethodId !== null ||
+        (typeof existingMethod === "string" &&
+          existingMethod === extra.method));
+    if (sameChoice) {
       if (!paymentGroupId) {
         return { status: 200, data: existingAttempt as PaymentAttemptRow };
       }
@@ -129,7 +142,13 @@ export async function upsertPaymentAttemptForSession(
       country_code: market.countryCode,
       status: "initiated",
       payment_group_id: paymentGroupId ?? null,
-      metadata: extra.taxMinor ? { tax_minor: extra.taxMinor } : null,
+      metadata:
+        extra.taxMinor || extra.method
+          ? {
+              ...(extra.taxMinor ? { tax_minor: extra.taxMinor } : {}),
+              ...(extra.method ? { method: extra.method } : {}),
+            }
+          : null,
       // matchColumn is a dynamic (CheckoutMatchColumn) key -- the typed
       // insert's excess-property check can't be validated against a
       // computed property name.

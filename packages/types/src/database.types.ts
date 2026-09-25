@@ -5971,6 +5971,7 @@ export type Database = {
           default_locale: string
           default_timezone: string
           dial_code: string
+          display_config: Json
           distance_unit: string
           fee_config: Json
           is_default: boolean
@@ -5996,6 +5997,7 @@ export type Database = {
           default_locale: string
           default_timezone: string
           dial_code: string
+          display_config?: Json
           distance_unit?: string
           fee_config?: Json
           is_default?: boolean
@@ -6021,6 +6023,7 @@ export type Database = {
           default_locale?: string
           default_timezone?: string
           dial_code?: string
+          display_config?: Json
           distance_unit?: string
           fee_config?: Json
           is_default?: boolean
@@ -6159,6 +6162,7 @@ export type Database = {
           created_at: string
           currencies: string[]
           enabled: boolean
+          options: Json
           payouts_enabled: boolean
           priority: number
           provider: string
@@ -6174,6 +6178,7 @@ export type Database = {
           created_at?: string
           currencies?: string[]
           enabled?: boolean
+          options?: Json
           payouts_enabled?: boolean
           priority?: number
           provider: string
@@ -6189,6 +6194,7 @@ export type Database = {
           created_at?: string
           currencies?: string[]
           enabled?: boolean
+          options?: Json
           payouts_enabled?: boolean
           priority?: number
           provider?: string
@@ -7548,6 +7554,93 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payment_orphan_capture: {
+        Row: {
+          amount: number
+          attempt_status: string | null
+          attempts: number
+          country_code: string
+          currency: string
+          detected_at: string
+          id: string
+          last_error: string | null
+          note: string | null
+          payment_attempt_id: string | null
+          provider: string
+          provider_reference: string
+          provider_transaction_id: string | null
+          refund_requested_at: string | null
+          refunded_at: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          attempt_status?: string | null
+          attempts?: number
+          country_code: string
+          currency: string
+          detected_at?: string
+          id?: string
+          last_error?: string | null
+          note?: string | null
+          payment_attempt_id?: string | null
+          provider: string
+          provider_reference: string
+          provider_transaction_id?: string | null
+          refund_requested_at?: string | null
+          refunded_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          attempt_status?: string | null
+          attempts?: number
+          country_code?: string
+          currency?: string
+          detected_at?: string
+          id?: string
+          last_error?: string | null
+          note?: string | null
+          payment_attempt_id?: string | null
+          provider?: string
+          provider_reference?: string
+          provider_transaction_id?: string | null
+          refund_requested_at?: string | null
+          refunded_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_orphan_capture_currency_fkey"
+            columns: ["currency"]
+            isOneToOne: false
+            referencedRelation: "currency"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "payment_orphan_capture_payment_attempt_id_fkey"
+            columns: ["payment_attempt_id"]
+            isOneToOne: false
+            referencedRelation: "payment_attempt"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_webhook_event: {
         Row: {
@@ -13408,6 +13501,7 @@ export type Database = {
       admin_dashboard_counts: { Args: never; Returns: Json }
       admin_dashboard_kpis: {
         Args: {
+          p_currency?: string
           p_from: string
           p_prev_from: string
           p_prev_to: string
@@ -13422,6 +13516,7 @@ export type Database = {
       }
       admin_finance_overview: {
         Args: {
+          p_currency?: string
           p_from: string
           p_prev_from: string
           p_prev_to: string
@@ -13437,6 +13532,7 @@ export type Database = {
       admin_platform_analytics: {
         Args: {
           p_bucket: string
+          p_currency?: string
           p_from: string
           p_prev_from: string
           p_prev_to: string
@@ -14029,6 +14125,7 @@ export type Database = {
           voided_minor: number
         }[]
       }
+      currency_minor_units: { Args: { p_currency: string }; Returns: number }
       default_market_country: { Args: never; Returns: string }
       default_market_currency: { Args: never; Returns: string }
       default_market_timezone: { Args: never; Returns: string }
@@ -14896,6 +14993,7 @@ export type Database = {
         Returns: {
           address: Json
           capacity: number
+          country_code: string
           created_at: string
           currency: string
           description: string
@@ -14914,10 +15012,9 @@ export type Database = {
           slug: string
           starts_at: string
           status: string
+          timezone: string
           title: string
           website_url: string
-          country_code: string
-          timezone: string
         }[]
       }
       get_filtered_events: {
@@ -14943,6 +15040,7 @@ export type Database = {
           attendance_count: number
           avg_rating: number
           capacity: number
+          country_code: string
           created_at: string
           currency: string
           distance_km: number
@@ -14958,9 +15056,8 @@ export type Database = {
           organizer_id: string
           starts_at: string
           status: string
-          title: string
-          country_code: string
           timezone: string
+          title: string
         }[]
       }
       get_filtered_places: {
@@ -15135,7 +15232,7 @@ export type Database = {
           // (confirmed via pg_proc.proisstrict on 2026-09-12) and
           // organizerDashboardQuery.ts passes null for "all time". The
           // generator drops the `| null`; kept by hand so regeneration does
-          // not break that caller (re-applied by hand on 2026-09-24).
+          // not break that caller (re-applied by hand on 2026-09-25).
           p_end: string | null
           p_prev_end: string | null
           p_prev_start: string | null
@@ -15242,7 +15339,12 @@ export type Database = {
         }[]
       }
       get_organizer_sales_timeline: {
-        Args: { p_bucket: string; p_end: string; p_start: string }
+        Args: {
+          p_bucket: string
+          p_currency?: string
+          p_end: string
+          p_start: string
+        }
         Returns: {
           bucket_start: string
           gross: number
@@ -15298,6 +15400,7 @@ export type Database = {
         Returns: {
           address: Json
           capacity: number
+          country_code: string
           created_at: string
           description: string
           ends_at: string
@@ -15316,10 +15419,9 @@ export type Database = {
           status: string
           ticket_currency: string
           ticket_price: number
+          timezone: string
           title: string
           website_url: string
-          country_code: string
-          timezone: string
         }[]
       }
       get_transaction_refundable_amount: {
@@ -15448,7 +15550,15 @@ export type Database = {
           unread_count: number
         }[]
       }
+      listing_market_visible: {
+        Args: { p_country_code: string }
+        Returns: boolean
+      }
       loyalty_progress: { Args: { p_user_id: string }; Returns: Json }
+      major_to_minor: {
+        Args: { p_amount: number; p_currency: string }
+        Returns: number
+      }
       mark_conversation_read: {
         Args: { p_conversation_id: string; p_up_to?: string }
         Returns: undefined
@@ -15470,6 +15580,7 @@ export type Database = {
         Args: {
           p_actor_id: string
           p_country_code: string
+          p_expected_version?: number
           p_readiness_ok?: boolean
           p_reason?: string
           p_transition: string
@@ -15484,6 +15595,7 @@ export type Database = {
           default_locale: string
           default_timezone: string
           dial_code: string
+          display_config: Json
           distance_unit: string
           fee_config: Json
           is_default: boolean
@@ -15505,6 +15617,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      minor_to_major: {
+        Args: { p_currency: string; p_minor: number }
+        Returns: number
+      }
+      money_currencies_in_use: { Args: never; Returns: Json }
+      money_round: {
+        Args: { p_amount: number; p_currency: string }
+        Returns: number
       }
       notification_delivery_claim: {
         Args: { p_limit?: number }
@@ -15581,9 +15702,9 @@ export type Database = {
           subject_id: string
           subject_type: string
           subtitle: string
-          title: string
           timezone: string
-          }[]
+          title: string
+        }[]
       }
       recommendation_dismiss: {
         Args: { p_subject_id: string; p_subject_type: string; p_user: string }
@@ -15641,6 +15762,10 @@ export type Database = {
           p_resolution: string
           p_status: string
         }
+        Returns: string
+      }
+      record_payout_reversal: {
+        Args: { p_payout_id: string; p_reason?: string }
         Returns: string
       }
       record_platform_fee: {
@@ -15820,6 +15945,7 @@ export type Database = {
           attendance_count: number
           avg_rating: number
           capacity: number
+          country_code: string
           created_at: string
           currency: string
           distance_km: number
@@ -15839,9 +15965,8 @@ export type Database = {
           score: number
           starts_at: string
           status: string
-          title: string
-          country_code: string
           timezone: string
+          title: string
         }[]
       }
       search_log_click: {

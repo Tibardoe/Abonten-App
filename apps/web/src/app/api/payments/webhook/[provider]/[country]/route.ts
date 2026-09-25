@@ -1,6 +1,7 @@
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
 import { handleProviderWebhook } from "@abonten/services/payments/webhookCore";
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 
 // POST /api/payments/webhook/{provider}/{country}
@@ -18,6 +19,10 @@ export async function POST(
   context: { params: Promise<{ provider: string; country: string }> },
 ) {
   const { provider, country } = await context.params;
+  // Every error from this delivery is filterable by provider and market in
+  // Sentry (a Paystack Nigeria outage looks different from a Stripe UK one).
+  Sentry.setTag("payment.provider", provider);
+  Sentry.setTag("payment.country", country.toUpperCase());
   try {
     const rawBody = await req.text();
     const result = await handleProviderWebhook({
@@ -27,9 +32,22 @@ export async function POST(
       headers: req.headers,
       deps: paymentFulfillmentDeps,
     });
+    if (result.status >= 500) {
+      logger.warn(
+        `payments webhook ${provider}/${country} answered ${result.status}`,
+        {
+          payment: {
+            provider,
+            country: country.toUpperCase(),
+            status: result.status,
+          },
+        },
+      );
+    }
     return NextResponse.json(result.body, { status: result.status });
   } catch (error) {
     logger.error(`payments webhook ${provider}/${country} failed`, error);
+    Sentry.captureException(error);
     return NextResponse.json({ error: "Server error" }, { status: 503 });
   }
 }

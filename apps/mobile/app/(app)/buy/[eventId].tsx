@@ -7,6 +7,7 @@ import {
   useValidateCheckout,
 } from "@/features/checkout/useCheckout";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { useNowTick } from "@/lib/useNowTick";
@@ -18,6 +19,7 @@ import {
 } from "@abonten/core/checkoutPricing";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import {
   AppText,
@@ -56,7 +58,7 @@ function isOnSale(
 }
 
 function money(currency: string, n: number): string {
-  return `${currency} ${n.toFixed(2)}`;
+  return formatMoney(currency, n);
 }
 
 // The mobile "Buy tickets" screen: pick an occurrence + quantities, optionally
@@ -71,6 +73,7 @@ export default function BuyTicketsScreen() {
   const pathname = usePathname();
   const { session } = useSession();
   const detailQuery = useEventDetail(eventId);
+  const { markets } = useMarket();
   const { data, isError, error, refetch } = detailQuery;
   // Loading, offline and failed are told apart from "no such event".
   const detailView = useQueryView(detailQuery);
@@ -152,13 +155,25 @@ export default function BuyTicketsScreen() {
         l.price,
         applied.discountPercentage,
         elig,
+        currency,
       ).discount;
     }
     return { discount: d, eligibleUnits: units };
-  }, [applied, lines]);
+  }, [applied, lines, currency]);
 
   const discountedSubtotal = Math.max(0, subtotal - discount);
-  const feePreview = computeCheckoutFee(discountedSubtotal);
+  // The event market's own service fee (from the markets API), so a market
+  // with its own rate is not previewed at the platform default. The charged
+  // amount is computed on the server either way.
+  const eventMarket = markets.find(
+    (m) =>
+      m.countryCode ===
+      (event as { country_code?: string | null } | undefined)?.country_code,
+  );
+  const feePreview = computeCheckoutFee(
+    discountedSubtotal,
+    eventMarket?.serviceFeeRate ?? undefined,
+  );
   const totalPreview = discountedSubtotal + feePreview;
   const partialPromo =
     applied != null && eligibleUnits > 0 && eligibleUnits < totalCount;

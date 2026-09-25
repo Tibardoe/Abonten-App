@@ -10,8 +10,8 @@ import {
 import {
   addDays,
   defaultScheduleFor,
-  fromAccraInputValue,
-  toAccraInputValue,
+  fromZoneInputValue,
+  toZoneInputValue,
 } from "@abonten/core/weekly/week";
 import type {
   WeeklyAdminEditionHeader,
@@ -20,7 +20,7 @@ import type {
 } from "@abonten/types/weeklyType";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { formatAccraDateTime } from "../format";
+import { formatOpsDateTime } from "../format";
 import { fieldClass, useEditor } from "./EditorContext";
 
 // Preview, schedule, publish, unpublish, archive, restore, and "copy to next
@@ -32,22 +32,30 @@ export function PublishPanel({
   validation,
   stepUpFresh,
   defaultHour,
+  timeZone,
 }: {
   edition: WeeklyAdminEditionHeader;
   validation: WeeklyValidation;
   stepUpFresh: boolean;
   defaultHour: number;
+  /** The area's market zone: schedule times are entered and shown on it. */
+  timeZone: string;
 }) {
   const router = useRouter();
   const { editionId, canEdit, canPublish, pending, run } = useEditor();
   const [linkPending, startLink] = useTransition();
   const [reason, setReason] = useState("");
   const [when, setWhen] = useState(() => {
-    const suggested = defaultScheduleFor(edition.weekStart, defaultHour);
-    return toAccraInputValue(
+    const suggested = defaultScheduleFor(
+      edition.weekStart,
+      defaultHour,
+      timeZone,
+    );
+    return toZoneInputValue(
       new Date(suggested).getTime() > Date.now()
         ? suggested
         : new Date(Date.now() + 15 * 60_000).toISOString(),
+      timeZone,
     );
   });
   const [preview, setPreview] = useState<{
@@ -109,20 +117,20 @@ export function PublishPanel({
       }
     });
 
-  const scheduledFor = fromAccraInputValue(when);
+  const scheduledFor = fromZoneInputValue(when, timeZone);
 
   return (
     <Card className="space-y-3 p-4 text-sm">
       <p className="font-semibold">Publishing</p>
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
         <dt className="text-muted-foreground">Scheduled</dt>
-        <dd>{formatAccraDateTime(edition.scheduledFor)}</dd>
+        <dd>{formatOpsDateTime(edition.scheduledFor, timeZone)}</dd>
         <dt className="text-muted-foreground">Published</dt>
-        <dd>{formatAccraDateTime(edition.publishedAt)}</dd>
+        <dd>{formatOpsDateTime(edition.publishedAt, timeZone)}</dd>
         {edition.unpublishedAt ? (
           <>
             <dt className="text-muted-foreground">Unpublished</dt>
-            <dd>{formatAccraDateTime(edition.unpublishedAt)}</dd>
+            <dd>{formatOpsDateTime(edition.unpublishedAt)}</dd>
           </>
         ) : null}
       </dl>
@@ -149,7 +157,7 @@ export function PublishPanel({
       </div>
       {preview ? (
         <p className="break-all text-xs text-muted-foreground">
-          Preview link (works until {formatAccraDateTime(preview.expiresAt)}):{" "}
+          Preview link (works until {formatOpsDateTime(preview.expiresAt)}):{" "}
           <a
             href={preview.url}
             target="_blank"
@@ -212,7 +220,7 @@ export function PublishPanel({
           {status === "draft" ? (
             <div className="space-y-1">
               <label className="block text-xs">
-                <span className="font-medium">Publish at (Accra time)</span>
+                <span className="font-medium">Publish at ({timeZone})</span>
                 <input
                   type="datetime-local"
                   value={when}

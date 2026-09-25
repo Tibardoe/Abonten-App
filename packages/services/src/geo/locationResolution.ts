@@ -25,7 +25,7 @@ import {
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
 import type { MarketConfig } from "@abonten/core/market/types";
-import { isMarketOpen } from "@abonten/core/market/types";
+import { isMarketTransacting } from "@abonten/core/market/types";
 import { isValidTimeZone } from "@abonten/core/time/timeZone";
 import tzlookup from "@photostructure/tz-lookup";
 import { listMarkets } from "../markets/marketConfig";
@@ -177,7 +177,7 @@ export async function resolveLocation(input: {
 
 /**
  * For creating or moving a listing: the point must be in a country Abonten
- * has an OPEN market for. Returns the resolved location or a message the
+ * has a LIVE market for. Returns the resolved location or a message the
  * organizer can act on.
  */
 export async function resolveListingLocation(input: {
@@ -203,11 +203,13 @@ export async function resolveListingLocation(input: {
       message: `Abonten isn't available in ${name} yet.`,
     };
   }
-  if (!isMarketOpen(location.market.status)) {
+  // New listings need a market that is taking business: not paused, and
+  // not in maintenance (browsable, but nothing new is sold or listed).
+  if (!isMarketTransacting(location.market.status)) {
     return {
       ok: false,
       reason: "market_closed",
-      message: `Abonten isn't open in ${location.market.name} right now.`,
+      message: `Abonten isn't taking new listings in ${location.market.name} right now.`,
     };
   }
   return { ok: true, location };

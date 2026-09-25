@@ -1,11 +1,11 @@
+import { instantToWallClock, isValidTimeZone } from "./time/timeZone";
+
 // Client-safe TypeScript mirror of the SQL `place_is_open_now` function
 // (see supabase/migrations/20260820090000_add_places_feature.sql), extended
-// to also produce a human-readable label instead of just a boolean. No
-// per-place timezone column exists (same single-timezone assumption already
-// made elsewhere, e.g. proxy.ts's default "GH" country code), so this always
-// evaluates against the caller's local time (`now`, defaulting to `new
-// Date()` — the browser's local time on the client, the server's local time
-// during SSR).
+// to also produce a human-readable label instead of just a boolean.
+// Opening hours are the PLACE's wall-clock times: pass place.timezone and
+// they are read on its clock (as the SQL function does); without a zone the
+// caller's local time is used, which is only right for a viewer beside it.
 
 export type PlaceOpeningHourRow = {
   day_of_week: number; // 0 (Sunday) .. 6 (Saturday) — matches Date.getDay()
@@ -43,6 +43,26 @@ function formatTime(time: string): string {
   return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
 }
 
+/** Weekday (0 Sunday) and minutes past midnight at the place. */
+export function placeLocalNow(
+  now: Date,
+  timeZone?: string | null,
+): { dow: number; minutes: number } {
+  if (!timeZone || !isValidTimeZone(timeZone)) {
+    return {
+      dow: now.getDay(),
+      minutes: now.getHours() * 60 + now.getMinutes(),
+    };
+  }
+  const w = instantToWallClock(now, timeZone);
+  const [y, m, d] = w.date.split("-").map(Number);
+  const [hh, mm] = w.time.split(":").map(Number);
+  return {
+    dow: new Date(Date.UTC(y, m - 1, d)).getUTCDay(),
+    minutes: hh * 60 + mm,
+  };
+}
+
 /**
  * Full detail-page version — needs the place's weekly `place_opening_hours`
  * rows (getPlaceBySlug.ts already fetches these). Mirrors place_is_open_now
@@ -54,15 +74,22 @@ export function computePlaceOpenStatus(
   openingHours: PlaceOpeningHourRow[],
   temporaryStatus: string | null,
   now: Date = new Date(),
+  /**
+   * The place's own zone (place.timezone). Opening hours are its local
+   * wall-clock times; reading them on the viewer's or server's clock would
+   * say a London café is closed when it is open.
+   */
+  timeZone?: string | null,
 ): PlaceOpenStatus {
   const temporaryLabel = temporaryStatusLabel(temporaryStatus);
   if (temporaryLabel) {
     return { isOpen: false, label: temporaryLabel };
   }
 
-  const dow = now.getDay();
+  const local = placeLocalNow(now, timeZone);
+  const dow = local.dow;
   const yesterdayDow = (dow + 6) % 7;
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const nowMinutes = local.minutes;
 
   const todayRow = openingHours.find((h) => h.day_of_week === dow);
   const yesterdayRow = openingHours.find((h) => h.day_of_week === yesterdayDow);

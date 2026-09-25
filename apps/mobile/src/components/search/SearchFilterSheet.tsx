@@ -133,7 +133,10 @@ export function SearchFilterSheet({
   const placeCategories = usePlaceCategories();
   // Price buckets read in the browsed market's currency ("Under ₦50").
   const { market } = useMarket();
-  const priceOptions = searchPriceOptions(market?.defaultCurrency ?? "");
+  const priceOptions = searchPriceOptions(
+    market?.defaultCurrency ?? "",
+    market?.priceScale ?? 1,
+  );
   const offered = new Set(searchFiltersFor(mode));
   const activeCount = activeSearchFilters(draft, mode).length;
 

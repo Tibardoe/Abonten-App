@@ -4,10 +4,11 @@ import { SectionHeading } from "@/components/metrics/SectionHeading";
 import { TimeSeriesChart } from "@/components/metrics/charts/TimeSeriesChart";
 import { Badge, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
 import { loadFieldOpsCampaignAnalytics } from "@/lib/data";
-import { formatAccraDate } from "@/lib/format";
+import { formatOpsDate } from "@/lib/format";
 import { minorToMajor } from "@/lib/moneyUnits";
 import { describeSeries } from "@abonten/core/admin/describeSeries";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { FieldOpsDailyPoint } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "../../../FieldOpsTabs";
@@ -66,21 +67,21 @@ export default async function FieldOpsCampaignAnalyticsPage({
         summary={describeSeries(points, {
           label: title,
           rangeLabel: PERIOD,
-          formatBucket: formatAccraDate,
-          format: opts.money ? (v) => `${currency} ${v.toFixed(2)}` : undefined,
+          formatBucket: formatOpsDate,
+          format: opts.money ? (v) => formatMoney(currency, v) : undefined,
         })}
         table={{
           caption: `${title} per day, ${PERIOD.toLowerCase()}`,
           columns: ["Day", title],
           rows: points.map((p) => [
-            formatAccraDate(p.bucketStart),
-            opts.money ? p.value.toFixed(2) : p.value,
+            formatOpsDate(p.bucketStart),
+            opts.money ? formatMoney(currency, p.value) : p.value,
           ]),
         }}
       >
         <TimeSeriesChart
           data={points.map((p) => ({
-            label: formatAccraDate(p.bucketStart),
+            label: formatOpsDate(p.bucketStart),
             value: p.value,
           }))}
           valueLabel={title}
@@ -134,7 +135,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
           format="money"
           currency={currency}
           period="All time"
-          secondary={`${currency} ${minorToMajor(stats.money.paid_minor, currency).toFixed(2)} of it paid`}
+          secondary={`${formatMoney(currency, minorToMajor(stats.money.paid_minor, currency))} of it paid`}
         />
         <MetricCard
           metric="fieldOps.costPerSuccess"
@@ -206,7 +207,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
               <Td className="tabular-nums">{m.rejected}</Td>
               <Td className="tabular-nums">{m.contentApproved}</Td>
               <Td className="whitespace-nowrap tabular-nums">
-                {currency} {minorToMajor(m.earnedMinor, currency).toFixed(2)}
+                {formatMoney(currency, minorToMajor(m.earnedMinor, currency))}
               </Td>
               <Td className="tabular-nums text-muted-foreground">
                 {m.medianReviewHours === null ? "—" : `${m.medianReviewHours}h`}

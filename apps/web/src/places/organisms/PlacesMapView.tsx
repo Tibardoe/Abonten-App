@@ -20,12 +20,6 @@ const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
 const containerClass =
   "w-full h-[500px] md:h-[600px] rounded-lg overflow-hidden";
 
-// Ghana-wide fallback center (matches this codebase's existing GH-default
-// assumption, e.g. proxy.ts's default country code) — only ever used if
-// `places` somehow contains zero parseable locations, since the empty-state
-// branch below normally short-circuits before the map ever mounts.
-const FALLBACK_CENTER = { lat: 5.6037, lng: -0.187 };
-
 type PlaceMarker = { place: PlaceType; lat: number; lng: number };
 
 // Multi-marker map rendering of the Places tab's "All Places" section
@@ -137,7 +131,9 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
     );
   }
 
-  const initialCenter = markers[0] ?? FALLBACK_CENTER;
+  // The empty state above returns first, so there is always a marker to
+  // centre on — no fixed fallback city.
+  const initialCenter = markers[0];
 
   return (
     <div className="relative">

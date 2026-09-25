@@ -13,10 +13,12 @@ import { useState, useTransition } from "react";
 /** The region's territories with edit / complete / reopen, plus the add form. */
 export default function LeadTerritoryList({
   campaignId,
+  placeContext,
   territories,
   editable,
 }: {
   campaignId: string;
+  placeContext: string;
   territories: FieldOpsTerritory[];
   editable: boolean;
 }) {
@@ -48,6 +50,7 @@ export default function LeadTerritoryList({
         adding ? (
           <LeadTerritoryForm
             campaignId={campaignId}
+            placeContext={placeContext}
             towns={towns}
             onDone={() => setAdding(false)}
           />
@@ -69,6 +72,7 @@ export default function LeadTerritoryList({
               <li key={t.id}>
                 <LeadTerritoryForm
                   campaignId={campaignId}
+                  placeContext={placeContext}
                   towns={towns}
                   initial={t}
                   onDone={() => setEditing(null)}

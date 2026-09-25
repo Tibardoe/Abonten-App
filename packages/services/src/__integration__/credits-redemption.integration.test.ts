@@ -32,11 +32,13 @@ import {
 
 const paystack = vi.hoisted(() => ({
   verifyTransaction: vi.fn(),
+  refundTransaction: vi.fn(),
 }));
 
 vi.mock("../payments/providers/paystackApi", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   verifyTransaction: paystack.verifyTransaction,
+  refundTransaction: paystack.refundTransaction,
 }));
 
 type SettingsRow =
@@ -194,6 +196,8 @@ describe("paying for promotions with credit", () => {
 
   beforeEach(() => {
     paystack.verifyTransaction.mockReset();
+    paystack.refundTransaction.mockReset();
+    paystack.refundTransaction.mockResolvedValue({ status: "pending" });
   });
 
   afterEach(async () => {
@@ -568,9 +572,10 @@ describe("paying for promotions with credit", () => {
     };
 
     // Paystack reports the full GH₵ 20 instead of the GH₵ 8 cash part:
-    // refused, and the credit goes back.
+    // refused, the credit goes back, and the charge is refunded in full.
     const mismatch = await pay(TIER_PRICE_MINOR);
     expect(mismatch.result.status).toBe("failed");
+    expect(paystack.refundTransaction).toHaveBeenCalledTimes(1);
     const { data: releasedRow } = await service
       .from("credit_reservation")
       .select("status")

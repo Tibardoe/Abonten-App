@@ -100,9 +100,10 @@ export default function AddBankCard({ onSaved }: PopupCloseProp) {
 
       <div className="flex flex-col gap-5">
         <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-          We'll charge GHS 1 through Paystack's secure payment window to verify
-          your card, then refund it immediately. We never see or store your card
-          number or CVV — only Paystack does.
+          We'll make a small charge in your currency through the payment
+          provider's secure window to verify your card, then refund it
+          immediately. We never see or store your card number or CVV — only the
+          provider does.
         </p>
 
         <div className="flex flex-col gap-2">
@@ -121,7 +122,7 @@ export default function AddBankCard({ onSaved }: PopupCloseProp) {
 
         {state.phase === "awaiting-popup" && (
           <p className="text-sm text-muted-foreground text-center">
-            Complete the GHS 1 verification in the Paystack window…
+            Complete the verification in the secure payment window…
           </p>
         )}
 

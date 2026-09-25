@@ -343,8 +343,8 @@ export function SettingsForm({
             <span className="block">Send push notifications</span>
             <span className="block text-xs text-muted-foreground">
               To the Abonten app on the person&apos;s phone. Pushes wait until
-              08:00 if a notice comes in at night (Accra time), and several
-              notices at once go as one push.
+              08:00 on their own clock if a notice comes in at night, and
+              several notices at once go as one push.
             </span>
           </span>
         </label>

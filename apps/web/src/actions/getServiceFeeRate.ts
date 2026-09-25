@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { DEFAULT_SERVICE_FEE_RATE } from "@abonten/core/checkoutPricing";
-import { getActiveServiceFeeRate } from "@abonten/services/platform/platformFee";
+import { serviceFeeRateFor } from "@abonten/services/platform/platformFee";
 
 type GetServiceFeeRateResult = { status: 200; data: number };
 
@@ -18,10 +18,14 @@ type GetServiceFeeRateResult = { status: 200; data: number };
  */
 export default async function getServiceFeeRate(
   currency?: string | null,
+  countryCode?: string | null,
 ): Promise<GetServiceFeeRateResult> {
   try {
     const supabase = await createClient();
-    const rate = await getActiveServiceFeeRate(supabase, currency ?? null);
+    const rate = await serviceFeeRateFor(supabase, {
+      currency: currency ?? null,
+      countryCode: countryCode ?? null,
+    });
     return { status: 200, data: rate };
   } catch {
     return { status: 200, data: DEFAULT_SERVICE_FEE_RATE };

@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | Abonten Hub",
   },
   description:
-    "Discover events and places around you in Ghana, buy tickets and find your next experience on Abonten Hub.",
+    "Discover events and places around you, buy tickets and find your next experience on Abonten Hub.",
   icons: {
     icon: "/assets/images/abonten-logo-only-white.svg",
     shortcut: "/assets/images/abonten-logo-only-white.svg",

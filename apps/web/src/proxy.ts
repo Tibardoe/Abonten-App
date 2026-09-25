@@ -30,14 +30,15 @@ export async function proxy(request: NextRequest) {
   // Get stored country from cookies
   const storedCountry = request.cookies.get("country")?.value;
 
-  // Determine current country
-  const currentCountry = (
+  // The visitor's country from the edge, when it is known. With no header
+  // (local development, a proxy that strips it) nothing is assumed: the
+  // market context falls back to the default market from the database.
+  const detectedCountry =
     request.headers.get("x-vercel-ip-country") ??
-    request.headers.get("x-country-code") ??
-    "GH"
-  ).toUpperCase();
+    request.headers.get("x-country-code");
+  const currentCountry = detectedCountry?.toUpperCase() ?? null;
 
-  if (!storedCountry || storedCountry !== currentCountry) {
+  if (currentCountry && storedCountry !== currentCountry) {
     response.cookies.set("country", currentCountry, {
       path: "/",
       httpOnly: false, // allow client access if needed

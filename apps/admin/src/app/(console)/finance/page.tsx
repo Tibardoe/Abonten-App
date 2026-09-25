@@ -1,3 +1,4 @@
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
 import { SectionHeading } from "@/components/metrics/SectionHeading";
@@ -63,6 +64,12 @@ export default async function FinancePage({
       />
       <FinanceTabs active="/finance" />
       <RangeCaption range={range} className="mb-3" />
+      <CurrencySwitcher
+        basePath="/finance"
+        current={currency}
+        currencies={f.currencies}
+        params={sp}
+      />
       {f.activeFeeRate != null ? (
         <p className="mb-3 text-xs text-muted-foreground">
           Service fee in force: {(f.activeFeeRate * 100).toFixed(1)}% of the
@@ -140,8 +147,8 @@ export default async function FinancePage({
             secondary={
               current.feeEntries > 0 &&
               current.feeEntriesWithKnownCost < current.feeEntries
-                ? `After ${money(current.processingCost, currency)} Paystack cost, known for ${current.feeEntriesWithKnownCost} of ${current.feeEntries} payments`
-                : `After ${money(current.processingCost, currency)} Paystack cost`
+                ? `After ${money(current.processingCost, currency)} processing cost, known for ${current.feeEntriesWithKnownCost} of ${current.feeEntries} payments`
+                : `After ${money(current.processingCost, currency)} processing cost`
             }
           />
         </div>

@@ -10,7 +10,7 @@ import {
   money,
   timeAgo,
 } from "@/components/ui";
-import { loadRefunds } from "@/lib/data";
+import { loadOrphanCaptures, loadRefunds } from "@/lib/data";
 import Link from "next/link";
 import { FinanceTabs } from "../FinanceTabs";
 
@@ -29,7 +29,10 @@ export default async function RefundsPage({
   const status = (
     TABS.some((t) => t.key === sp.status) ? sp.status : "refund_pending"
   ) as "refund_pending" | "refunded" | "all";
-  const res = await loadRefunds({ status, cursor: sp.cursor ?? null });
+  const [res, orphans] = await Promise.all([
+    loadRefunds({ status, cursor: sp.cursor ?? null }),
+    loadOrphanCaptures(),
+  ]);
 
   return (
     <div>
@@ -110,6 +113,72 @@ export default async function RefundsPage({
           </Link>
         </div>
       ) : null}
+
+      <section className="mt-8">
+        <h2 className="mb-1 text-sm font-semibold">Charges with no order</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Money a provider took after its payment had closed (a late mobile
+          money approval, a stale payment page, a wrong amount). Nothing was
+          issued for it and the full amount is refunded automatically; a row
+          stuck on “refund failed” needs a manual refund in the provider’s
+          dashboard.
+        </p>
+        {orphans.status !== 200 || !orphans.data ? (
+          <EmptyState>{orphans.message ?? "Couldn't load them."}</EmptyState>
+        ) : orphans.data.length === 0 ? (
+          <EmptyState>None.</EmptyState>
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                <Th>Reference</Th>
+                <Th>Market</Th>
+                <Th>Amount</Th>
+                <Th>Status</Th>
+                <Th>Why</Th>
+                <Th>Detected</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {orphans.data.map((o) => (
+                <tr key={o.id}>
+                  <Td className="font-mono text-xs">{o.providerReference}</Td>
+                  <Td>
+                    {o.provider} · {o.countryCode}
+                  </Td>
+                  <Td className="tabular-nums">
+                    {money(o.amount, o.currency)}
+                  </Td>
+                  <Td>
+                    <Badge
+                      tone={
+                        o.status === "refund_failed"
+                          ? "danger"
+                          : o.status === "refunded"
+                            ? "success"
+                            : "warning"
+                      }
+                    >
+                      {o.status.replace(/_/g, " ")}
+                    </Badge>
+                    {o.lastError ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {o.lastError}
+                      </p>
+                    ) : null}
+                  </Td>
+                  <Td className="text-xs text-muted-foreground">
+                    {o.note ?? "—"}
+                  </Td>
+                  <Td className="whitespace-nowrap text-muted-foreground">
+                    {timeAgo(o.detectedAt)}
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </section>
     </div>
   );
 }

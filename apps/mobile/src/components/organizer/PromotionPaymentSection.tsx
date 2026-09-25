@@ -2,6 +2,10 @@ import {
   EmailRequiredCard,
   useNeedsEmailToPay,
 } from "@/components/account/EmailRequiredCard";
+import {
+  PaymentChoiceList,
+  usePaymentChoice,
+} from "@/features/checkout/usePaymentChoice";
 import { useCreatePromotionAttempt } from "@/features/organizer/useEventPromotion";
 import { useCreatePlacePromotionAttempt } from "@/features/organizer/usePlacePromotion";
 import { CreditSwitch } from "@/features/rewards/CreditSwitch";
@@ -9,9 +13,7 @@ import {
   useInvalidateCredit,
   usePromotionCreditQuote,
 } from "@/features/rewards/useRewards";
-import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import { api } from "@/lib/api";
-import type { PaymentMethodRow } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
   creditMinorToMajor,
@@ -28,13 +30,6 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 // the user has Abonten Credit, a "Use credit" switch (on by default) applies
 // the server-quoted amount; if it covers everything there's nothing to pick
 // and the same verification screen simply confirms the result.
-
-function methodLabel(m: PaymentMethodRow): string {
-  const d = m.details as Record<string, string>;
-  return m.method_type === "momo"
-    ? `${d.networkName ?? "Mobile money"} · ${d.phone ?? ""}`
-    : `${d.brand ?? "Card"} ···· ${d.last4 ?? ""}`;
-}
 
 export function PromotionPaymentSection({
   checkoutId,
@@ -56,8 +51,7 @@ export function PromotionPaymentSection({
 }) {
   const router = useRouter();
   const needsEmail = useNeedsEmailToPay();
-  const { data: methodsRes } = usePaymentMethods();
-  const methods = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
+  const payment = usePaymentChoice({ kind, checkoutId });
 
   // Credit can't be used for Spotlight promotions, so there is no quote.
   const { data: quote, refetch: refetchQuote } = usePromotionCreditQuote(
@@ -73,7 +67,6 @@ export function PromotionPaymentSection({
       ? creditMinorToMajor(quote.cashMinor, quote.currency)
       : amount;
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const createEventAttempt = useCreatePromotionAttempt();
@@ -84,14 +77,17 @@ export function PromotionPaymentSection({
     createPlaceAttempt.isPending ||
     creatingSpotlight;
 
-  const chosenId = selectedId ?? methods.find((m) => m.is_default)?.id ?? null;
-  const canPay = creditCoversAll || !!chosenId;
+  const chosen = payment.choice;
+  const canPay = creditCoversAll || !!chosen;
 
   async function onPay() {
     if (!canPay || creatingAttempt) return;
     setError(null);
 
-    const paymentMethodId = creditCoversAll ? null : chosenId;
+    const paymentMethodId = creditCoversAll
+      ? null
+      : (chosen?.paymentMethodId ?? null);
+    const method = creditCoversAll ? null : (chosen?.method ?? null);
     let res: Awaited<ReturnType<typeof api.checkout.promotionAttempt>>;
     if (kind === "spotlight") {
       setCreatingSpotlight(true);
@@ -99,6 +95,7 @@ export function PromotionPaymentSection({
         res = await api.checkout.spotlightPromotionAttempt({
           contentCampaignCheckoutId: checkoutId,
           paymentMethodId,
+          method,
         });
       } catch {
         setError("Couldn't start the payment. Check your connection.");
@@ -112,11 +109,13 @@ export function PromotionPaymentSection({
           ? await createPlaceAttempt.mutateAsync({
               placePromotionCheckoutId: checkoutId,
               paymentMethodId,
+              method,
               useCredit,
             })
           : await createEventAttempt.mutateAsync({
               eventPromotionCheckoutId: checkoutId,
               paymentMethodId,
+              method,
               useCredit,
             });
 
@@ -257,7 +256,7 @@ export function PromotionPaymentSection({
     );
   }
 
-  if (methods.length === 0) {
+  if (payment.saved.length === 0 && payment.hosted.length === 0) {
     return (
       <View className="gap-3">
         {creditSwitch}
@@ -285,28 +284,7 @@ export function PromotionPaymentSection({
       <AppText className="text-sm font-semibold text-foreground">
         {useCredit ? "Pay the rest with" : "Pay with"}
       </AppText>
-      {methods.map((m) => {
-        const selected = m.id === chosenId;
-        return (
-          <Pressable
-            accessibilityRole="button"
-            key={m.id}
-            onPress={() => setSelectedId(m.id)}
-            className={`flex-row items-center justify-between rounded-xl border p-3 ${
-              selected ? "border-primary bg-accent" : "border-border bg-card"
-            }`}
-          >
-            <AppText className="text-sm text-foreground">
-              {methodLabel(m)}
-            </AppText>
-            {selected ? (
-              <AppText variant="small" tone="brand" className="font-semibold">
-                ✓
-              </AppText>
-            ) : null}
-          </Pressable>
-        );
-      })}
+      <PaymentChoiceList state={payment} />
 
       {errorBox}
       {payButton}

@@ -50,7 +50,7 @@ const monthLabel = (period: string) =>
   new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric",
-    timeZone: "Africa/Accra",
+    timeZone: "UTC",
   }).format(new Date(`${period}T00:00:00Z`));
 
 // The last six months that have started (this month first).

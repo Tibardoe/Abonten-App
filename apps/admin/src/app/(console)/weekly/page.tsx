@@ -18,7 +18,7 @@ import { WeeklyTabs } from "./WeeklyTabs";
 import {
   editionStatusLabel,
   editionStatusTone,
-  formatAccraDateTime,
+  formatOpsDateTime,
 } from "./format";
 
 // Admin › Abonten Weekly: every edition, newest week first. Editors open an
@@ -175,7 +175,7 @@ export default async function WeeklyEditionsPage({
                   </Badge>
                   {e.status === "scheduled" ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {formatAccraDateTime(e.scheduledFor)}
+                      {formatOpsDateTime(e.scheduledFor)}
                     </span>
                   ) : null}
                 </Td>

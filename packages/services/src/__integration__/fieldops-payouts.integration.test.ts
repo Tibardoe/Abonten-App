@@ -396,7 +396,7 @@ describe("building a batch", () => {
       adminCtx(admin.id, ["users.view_pii"]),
       batchId,
     );
-    expect(withPii.data?.items[0].destination.number).toBe("0241234567");
+    expect(withPii.data?.items[0].destination.number).toBe("+233241234567");
   });
 
   it("refuses a destination change while the payment is in flight", async () => {

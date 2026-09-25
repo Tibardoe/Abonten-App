@@ -129,7 +129,7 @@ export default async function TransactionDetailPage({
             <dd>{t.payerPhone ?? "(hidden)"}</dd>
             <dt className="text-muted-foreground">Method</dt>
             <dd>{t.paymentMethod ?? "—"}</dd>
-            <dt className="text-muted-foreground">Paystack ref</dt>
+            <dt className="text-muted-foreground">Provider ref</dt>
             <dd className="break-all">{t.providerReference ?? "—"}</dd>
             <dt className="text-muted-foreground">Reason</dt>
             <dd>{t.reason ?? "—"}</dd>

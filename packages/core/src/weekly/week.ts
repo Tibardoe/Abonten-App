@@ -1,8 +1,12 @@
-// Week arithmetic for Abonten Weekly. Ghana (Africa/Accra) is UTC+0 all year
-// with no daylight saving, so an Accra calendar day is a UTC calendar day and
-// plain UTC date maths is exact here (same rule as organizerDashboardDateRange).
-// The SQL twin is `week_start` (isodow = 1) and `at time zone 'Africa/Accra'`
-// in supabase/migrations/20260913120000_weekly_core.sql.
+// Week arithmetic for Abonten Weekly. A week is a calendar week (Monday to
+// Sunday) in the ZONE of the edition's area — its market's zone — so a
+// London edition turns over at midnight London time, across daylight-saving
+// changes. Every instant-taking function accepts that zone; the default
+// "UTC" is also Ghana's calendar (UTC+0 all year), which is what the first
+// market's editions have always used. Dates (yyyy-mm-dd) are zone-free.
+// The SQL twin is weekly_edition_view, which reads the scope market's zone.
+
+import { instantToWallClock, wallClockToInstant } from "../time/timeZone";
 
 const DAY_MS = 86_400_000;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -22,21 +26,39 @@ export function isIsoDate(value: string): boolean {
   return !Number.isNaN(date.getTime()) && toIsoDate(date) === value;
 }
 
-/** Today's date in Accra, yyyy-mm-dd. */
+/** Today's date in `timeZone`, yyyy-mm-dd. */
+export function todayIn(now: Date = new Date(), timeZone = "UTC"): string {
+  return instantToWallClock(now, timeZone).date;
+}
+
+/** @deprecated The first market's calendar; use todayIn(now, zone). */
 export function accraToday(now: Date = new Date()): string {
-  return toIsoDate(now);
+  return todayIn(now, "UTC");
+}
+
+/** The instant a local date starts in `timeZone`. */
+function localMidnight(isoDate: string, timeZone: string): Date {
+  return (
+    wallClockToInstant(isoDate, "00:00", timeZone) ?? toUtcMidnight(isoDate)
+  );
 }
 
 export function addDays(isoDate: string, days: number): string {
   return toIsoDate(new Date(toUtcMidnight(isoDate).getTime() + days * DAY_MS));
 }
 
-/** The Monday (yyyy-mm-dd) of the ISO week containing `date`. */
-export function weekStartFor(date: Date | string = new Date()): string {
+/**
+ * The Monday (yyyy-mm-dd) of the ISO week containing `date` — a date
+ * string, or an instant read on `timeZone`'s calendar.
+ */
+export function weekStartFor(
+  date: Date | string = new Date(),
+  timeZone = "UTC",
+): string {
   const day =
     typeof date === "string"
       ? toUtcMidnight(date.slice(0, 10))
-      : toUtcMidnight(toIsoDate(date));
+      : toUtcMidnight(todayIn(date, timeZone));
   // getUTCDay: Sunday 0 .. Saturday 6. ISO weeks start on Monday.
   const isoDow = day.getUTCDay() === 0 ? 7 : day.getUTCDay();
   return addDays(toIsoDate(day), 1 - isoDow);
@@ -52,21 +74,33 @@ export function weekEndFor(weekStart: string): string {
 }
 
 /** Monday of next week. */
-export function nextWeekStart(now: Date = new Date()): string {
-  return addDays(weekStartFor(now), 7);
+export function nextWeekStart(
+  now: Date = new Date(),
+  timeZone = "UTC",
+): string {
+  return addDays(weekStartFor(now, timeZone), 7);
 }
 
-/** True once the whole week (through Sunday 23:59:59 Accra) is over. */
-export function isWeekOver(weekStart: string, now: Date = new Date()): boolean {
-  return toUtcMidnight(addDays(weekStart, 7)).getTime() <= now.getTime();
+/** True once the whole week (through Sunday 23:59:59 local) is over. */
+export function isWeekOver(
+  weekStart: string,
+  now: Date = new Date(),
+  timeZone = "UTC",
+): boolean {
+  return (
+    localMidnight(addDays(weekStart, 7), timeZone).getTime() <= now.getTime()
+  );
 }
 
 /** Start and end instants (ISO) of the week, for "happening this week" reads. */
-export function weekWindow(weekStart: string): { start: string; end: string } {
+export function weekWindow(
+  weekStart: string,
+  timeZone = "UTC",
+): { start: string; end: string } {
   return {
-    start: toUtcMidnight(weekStart).toISOString(),
+    start: localMidnight(weekStart, timeZone).toISOString(),
     end: new Date(
-      toUtcMidnight(addDays(weekStart, 7)).getTime() - 1,
+      localMidnight(addDays(weekStart, 7), timeZone).getTime() - 1,
     ).toISOString(),
   };
 }
@@ -95,25 +129,45 @@ export function formatWeekRange(weekStart: string, locale = "en-GB"): string {
   return `${day(start)}–${day(end)} ${month(end)} ${year(end)}`;
 }
 
-/** ISO instant for `hour`:00 Accra on the edition's Monday. */
+/** ISO instant for `hour`:00 local on the edition's Monday. */
 export function defaultScheduleFor(
   weekStart: string,
   hourLocal: number,
+  timeZone = "UTC",
 ): string {
   const hour = Math.min(Math.max(Math.trunc(hourLocal), 0), 23);
-  return new Date(
-    toUtcMidnight(weekStart).getTime() + hour * 3_600_000,
-  ).toISOString();
+  const at =
+    wallClockToInstant(
+      weekStart,
+      `${String(hour).padStart(2, "0")}:00`,
+      timeZone,
+    ) ?? new Date(toUtcMidnight(weekStart).getTime() + hour * 3_600_000);
+  return at.toISOString();
 }
 
-/** Value for an <input type="datetime-local"> showing Accra time. */
-export function toAccraInputValue(iso: string): string {
-  return new Date(iso).toISOString().slice(0, 16);
+/** Value for an <input type="datetime-local"> showing `timeZone`'s clock. */
+export function toZoneInputValue(iso: string, timeZone = "UTC"): string {
+  const w = instantToWallClock(new Date(iso), timeZone);
+  return `${w.date}T${w.time}`;
 }
 
-/** Parse an <input type="datetime-local"> value entered in Accra time. */
-export function fromAccraInputValue(value: string): string | null {
+/** Parse an <input type="datetime-local"> value entered on `timeZone`'s clock. */
+export function fromZoneInputValue(
+  value: string,
+  timeZone = "UTC",
+): string | null {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
-  const date = new Date(`${value}:00.000Z`);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  const [date, time] = value.split("T");
+  const at = wallClockToInstant(date, time, timeZone);
+  return at ? at.toISOString() : null;
+}
+
+/** @deprecated Use toZoneInputValue(iso, zone). */
+export function toAccraInputValue(iso: string): string {
+  return toZoneInputValue(iso, "UTC");
+}
+
+/** @deprecated Use fromZoneInputValue(value, zone). */
+export function fromAccraInputValue(value: string): string | null {
+  return fromZoneInputValue(value, "UTC");
 }

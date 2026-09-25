@@ -1,3 +1,4 @@
+import { useMarket } from "@/features/markets/MarketProvider";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
@@ -11,8 +12,6 @@ import { View } from "react-native";
 // and Account setup. Once it's on the account, the number can be used to
 // sign in with a code.
 
-const DEFAULT_DIAL_CODE = "+233";
-
 export function PhoneVerificationForm({
   onDone,
   onCancel,
@@ -20,7 +19,14 @@ export function PhoneVerificationForm({
   onDone: (message: string) => void;
   onCancel?: () => void;
 }) {
-  const [dialCode, setDialCode] = useState(DEFAULT_DIAL_CODE);
+  // Starts on the person's own market (their dial code), editable for a
+  // number from anywhere else.
+  const { markets, context } = useMarket();
+  const homeDialCode =
+    markets.find((m) => m.countryCode === context?.marketCountry)?.dialCode ??
+    "";
+  const [typedDialCode, setDialCode] = useState<string | null>(null);
+  const dialCode = typedDialCode ?? homeDialCode;
   const [rawPhone, setRawPhone] = useState("");
   const [phoneE164, setPhoneE164] = useState<string | null>(null);
   const [codeLength, setCodeLength] = useState(DEFAULT_PHONE_OTP_CODE_LENGTH);

@@ -1,3 +1,4 @@
+import { money, toMajorString } from "@abonten/core/money/money";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { FieldOpsAnalytics } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
@@ -80,8 +81,8 @@ export async function exportCampaignStatsCsvCore(
       String(m.succeeded),
       String(m.rejected),
       String(m.contentApproved),
-      (m.earnedMinor / 100).toFixed(2),
-      (m.paidMinor / 100).toFixed(2),
+      toMajorString(money(m.earnedMinor, campaign.currency)),
+      toMajorString(money(m.paidMinor, campaign.currency)),
       m.medianReviewHours === null ? "" : String(m.medianReviewHours),
     ].join(","),
   );

@@ -1,7 +1,7 @@
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
 import { loadContentPost } from "@/lib/data";
-import { formatAccraDateTime } from "@/lib/format";
+import { formatOpsDateTime } from "@/lib/format";
 import Link from "next/link";
 import { ContentActions } from "../../../content/ContentActions";
 import { SpotlightTabs } from "../../SpotlightTabs";
@@ -34,7 +34,7 @@ export default async function SpotlightPostDetailPage({
     <div>
       <PageHeader
         title={`${noun} by ${post.publisher.name}`}
-        description={`Posted by ${authorName ?? post.authorId} · ${formatAccraDateTime(post.publishedAt)}`}
+        description={`Posted by ${authorName ?? post.authorId} · ${formatOpsDateTime(post.publishedAt)}`}
         actions={
           <ContentActions
             targetType={post.kind}
@@ -162,7 +162,7 @@ export default async function SpotlightPostDetailPage({
             {post.expiresAt ? (
               <p>
                 <span className="text-muted-foreground">Expires: </span>
-                {formatAccraDateTime(post.expiresAt)}
+                {formatOpsDateTime(post.expiresAt)}
               </p>
             ) : null}
             <p>

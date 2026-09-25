@@ -28,7 +28,7 @@ export default function WeeklyEditionView({
 
   const notices = [
     doc.isFallbackScope
-      ? "There is no edition for your area this week, so these are Ghana-wide picks."
+      ? `There is no edition for your area this week, so these are ${e.scopeName}-wide picks.`
       : null,
     doc.isPreviousWeek
       ? "This week's edition is on its way. Here is last week's."

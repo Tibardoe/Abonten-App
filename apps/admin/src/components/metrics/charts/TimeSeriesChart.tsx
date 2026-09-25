@@ -21,7 +21,7 @@ import { Skeleton } from "../Skeleton";
 //
 // Everything is drawn from CSS variables, so it follows the console's theme
 // rather than carrying colours of its own, and the axis labels are formatted
-// in Africa/Accra by the server-rendered parent, which passes them in.
+// on the operations clock (UTC) by the server-rendered parent, which passes them in.
 
 export type TimeSeriesPoint = {
   /** Pre-formatted bucket label, e.g. "12 Sep". */

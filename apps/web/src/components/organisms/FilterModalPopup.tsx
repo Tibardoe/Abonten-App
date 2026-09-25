@@ -9,6 +9,7 @@ import { distances, rating } from "@/data/distanceAndRating";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
+import { priceSliderMax } from "@abonten/core/exploreFilters";
 import { currencySymbol } from "@abonten/core/money/formatMoney";
 import { priceParam } from "@abonten/core/parseFilterModalQueries";
 import { useParams, useRouter } from "next/navigation";
@@ -87,6 +88,12 @@ function usePriceSymbol(): string {
   return code ? currencySymbol(code) : "";
 }
 
+/** The slider's top for the browsed market (999 cedis, 99,900 naira…). */
+function usePriceSliderMax(): number {
+  const { market } = useMarketContext();
+  return priceSliderMax(market?.priceScale ?? 1);
+}
+
 export default function FilterModalPopup({
   handlePopup,
   contentType = "events",
@@ -116,13 +123,14 @@ export default function FilterModalPopup({
       : undefined,
   );
 
-  // [0, 999] is "Any price" (999 already renders as "Any" below) -- the true
-  // no-filter default, rather than an arbitrary 0-20 cap that would silently
-  // exclude every event priced above GHS 20 until the user notices.
+  // [0, sliderMax] is "Any price" (the top renders as "Any" below) -- the
+  // true no-filter default. The top is sized by the market's priceScale, so
+  // a naira range is not capped at ₦999.
   const priceSymbol = usePriceSymbol();
+  const sliderMax = usePriceSliderMax();
   const [minMax, setMinMax] = useState<[number, number]>([
     initialMinPrice ?? 0,
-    initialMaxPrice ?? 999,
+    initialMaxPrice ?? sliderMax,
   ]);
 
   const [category, setCategory] = useState(initialCategory);
@@ -182,7 +190,7 @@ export default function FilterModalPopup({
       if (values.minMax[0] > 0) {
         query.set("eventMinPrice", String(values.minMax[0]));
       }
-      if (values.minMax[1] < 999) {
+      if (values.minMax[1] < sliderMax) {
         query.set("eventMaxPrice", String(values.minMax[1]));
       }
       if (values.date?.from)
@@ -220,7 +228,7 @@ export default function FilterModalPopup({
     }
 
     const query = new URLSearchParams({
-      price: priceParam(values.minMax[0], values.minMax[1]),
+      price: priceParam(values.minMax[0], values.minMax[1], sliderMax),
       category: values.category,
       types: values.types.join(","),
       from: values.date?.from?.toISOString() || "",
@@ -320,7 +328,7 @@ export default function FilterModalPopup({
 
               <PriceRangeSlider
                 min={0}
-                max={999}
+                max={sliderMax}
                 value={minMax}
                 onChange={setMinMax}
                 currencyPrefix={priceSymbol}

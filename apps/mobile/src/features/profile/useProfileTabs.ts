@@ -30,6 +30,8 @@ function enrichPlaceRow(
   const open = computePlaceOpenStatus(
     row.place_opening_hours ?? [],
     row.temporary_status ?? null,
+    new Date(),
+    (row as { timezone?: string | null }).timezone,
   );
   return {
     ...row,

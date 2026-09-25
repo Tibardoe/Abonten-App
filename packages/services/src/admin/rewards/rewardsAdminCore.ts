@@ -5,6 +5,7 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type {
@@ -841,7 +842,7 @@ export async function requestCreditAdjustmentCore(
     action: "rewards.adjustment.request",
     targetType: "user",
     targetId: input.userId,
-    summary: `${input.direction === "credit" ? "Add" : "Remove"} ${(input.amountMinor / 100).toFixed(2)} GHS credit${
+    summary: `${input.direction === "credit" ? "Add" : "Remove"} ${formatCredit(input.amountMinor, await creditCurrencyFor(input.userId))} credit${
       request.requires_second_approver ? " (awaiting second approver)" : ""
     }`,
     reason: input.reason,
@@ -1002,7 +1003,7 @@ export async function grantGoodwillCreditCore(
       action: "rewards.goodwill.grant",
       targetType: "user",
       targetId: input.userId,
-      summary: `Goodwill credit ${(input.amountMinor / 100).toFixed(2)} GHS`,
+      summary: `Goodwill credit ${formatCredit(input.amountMinor, await creditCurrencyFor(input.userId))}`,
       reason: input.reason,
       after: { journalId: result.journal_id },
       requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },

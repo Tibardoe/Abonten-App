@@ -1,6 +1,7 @@
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { readEventAddress } from "@abonten/core/eventAddress";
+import { fromMajor, toMajorString } from "@abonten/core/money/money";
 
 // schema.org payloads for the two public listing pages. Only facts a
 // signed-out visitor can already see on the page go in here.
@@ -59,7 +60,17 @@ export function eventJsonLd(event: EventForJsonLd): Record<string, unknown> {
   const address = readEventAddress(event.address).full_address || undefined;
   const offers = event.ticket_type.map((t) => ({
     "@type": "Offer",
-    price: Number(t.price ?? 0).toFixed(2),
+    // schema.org wants a plain decimal in the currency's own precision
+    // ("1500" for yen, "25.00" for cedis).
+    price:
+      t.currency || event.currency
+        ? toMajorString(
+            fromMajor(
+              Number(t.price ?? 0),
+              (t.currency || event.currency) as string,
+            ),
+          )
+        : Number(t.price ?? 0).toFixed(2),
     priceCurrency: t.currency || event.currency || undefined,
     url,
     availability:

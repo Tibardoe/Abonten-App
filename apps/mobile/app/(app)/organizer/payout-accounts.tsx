@@ -1,4 +1,5 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
+import { useMarket } from "@/features/markets/MarketProvider";
 import {
   useAddPayoutAccount,
   usePayoutAccounts,
@@ -11,6 +12,7 @@ import type {
   AddPayoutAccountBody,
   PayoutAccountRow,
 } from "@abonten/api-client";
+import { parsePhone, parsePhoneWithDialCode } from "@abonten/core/phone/phone";
 import {
   AppText,
   Button,
@@ -24,7 +26,15 @@ import {
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
-const GH_PHONE = /^(0[0-9]{9}|\+233[0-9]{9})$/;
+// A first check before the request, in the market's own numbering plan
+// (libphonenumber via @abonten/core/phone). The server parses the number
+// again against the person's market and stores one E.164 form.
+function walletPhoneLooksValid(raw: string, dialCode: string | null): boolean {
+  const text = raw.trim();
+  if (text.startsWith("+")) return parsePhone(text).ok;
+  if (dialCode) return parsePhoneWithDialCode(dialCode, text).ok;
+  return text.replace(/\D/g, "").length >= 7;
+}
 
 // Same "choose type -> form -> success" bottom-sheet shell as the Wallet
 // screen (and the web AddPayoutAccountPopup), applied to organizer payout
@@ -38,6 +48,10 @@ function accountTitle(a: PayoutAccountRow): string {
 
 export default function PayoutAccountsScreen() {
   const toast = useToast();
+  const { markets, context } = useMarket();
+  const homeDialCode =
+    markets.find((m) => m.countryCode === context?.marketCountry)?.dialCode ??
+    null;
   const accountsQuery = usePayoutAccounts();
   const { data, refetch } = accountsQuery;
   // "No payout accounts yet" is only ever said for an answer the server
@@ -88,8 +102,8 @@ export default function PayoutAccountsScreen() {
         setFormError("Pick a mobile money network.");
         return;
       }
-      if (!GH_PHONE.test(phone.trim())) {
-        setFormError("Enter a valid Ghana phone number (024XXXXXXX or +233…).");
+      if (!walletPhoneLooksValid(phone, homeDialCode)) {
+        setFormError("Enter a valid mobile money number.");
         return;
       }
       body = {

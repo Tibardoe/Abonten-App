@@ -1,4 +1,7 @@
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
+import { formatMoney } from "@abonten/core/money/formatMoney";
+import { money, toMajorString } from "@abonten/core/money/money";
+import { formatPhoneNational } from "@abonten/core/phone/phone";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
   FieldOpsPayoutBatch,
@@ -322,7 +325,7 @@ export async function buildPayoutBatchCore(
     action: "fieldops.payout.build",
     targetType: "fieldops_payout_batch",
     targetId: row.id,
-    summary: `Built "${input.label}": ${row.item_count} member(s), ${row.currency} ${(num(row.total_minor) / 100).toFixed(2)}`,
+    summary: `Built "${input.label}": ${row.item_count} member(s), ${formatMoney(money(num(row.total_minor), row.currency))}`,
     reason: input.reason,
     before: {},
     after: { totalMinor: num(row.total_minor), itemCount: row.item_count },
@@ -362,7 +365,7 @@ export async function approvePayoutBatchCore(
     action: "fieldops.payout.approve",
     targetType: "fieldops_payout_batch",
     targetId: row.id,
-    summary: `Approved "${row.label}" for payment: ${row.currency} ${(num(row.total_minor) / 100).toFixed(2)}`,
+    summary: `Approved "${row.label}" for payment: ${formatMoney(money(num(row.total_minor), row.currency))}`,
     reason: input.reason,
     before: { status: "draft" },
     after: { status: "approved" },
@@ -409,7 +412,7 @@ export async function markPayoutItemCore(
     targetId: row.id,
     summary:
       input.status === "paid"
-        ? `Paid ${row.currency} ${(num(row.amount_minor) / 100).toFixed(2)}, reference ${input.reference}`
+        ? `Paid ${formatMoney(money(num(row.amount_minor), row.currency))}, reference ${input.reference}`
         : `Transfer failed: ${input.failureReason}`,
     reason: input.reference ?? input.failureReason ?? "",
     before: { status: "pending" },
@@ -504,9 +507,15 @@ export async function exportPayoutBatchCsvCore(
     return [
       csvCell(m?.full_name_snapshot ?? null),
       csvCell(m?.payout_momo_network ?? null),
-      csvCell(m?.payout_momo_number ?? null),
+      // Bulk mobile-money uploads take the national form (024…, 0712…);
+      // numbers are stored as E.164 since 2026-09-25, older ones as typed.
+      csvCell(
+        m?.payout_momo_number?.startsWith("+")
+          ? formatPhoneNational(m.payout_momo_number).replace(/\s/g, "")
+          : (m?.payout_momo_number ?? null),
+      ),
       csvCell(m?.payout_holder_name ?? null),
-      (num(i.amount_minor) / 100).toFixed(2),
+      toMajorString(money(num(i.amount_minor), i.currency)),
       i.currency,
       String(num(i.commission_count)),
       i.status,

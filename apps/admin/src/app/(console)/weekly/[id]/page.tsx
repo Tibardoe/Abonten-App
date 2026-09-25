@@ -20,7 +20,7 @@ export default async function WeeklyEditionPage({
 }) {
   await requirePermissionPage("weekly.view");
   const { id } = await params;
-  const { ctx, edition, settings } = await loadWeeklyEdition(id);
+  const { ctx, edition, settings, timeZone } = await loadWeeklyEdition(id);
 
   if (edition.status !== 200 || !edition.data) {
     return (
@@ -91,6 +91,7 @@ export default async function WeeklyEditionPage({
             validation={doc.validation}
             stepUpFresh={stepUpFresh}
             defaultHour={settings.data?.settings.defaultPublishHourLocal ?? 6}
+            timeZone={timeZone}
           />
           <ValidationPanel
             validation={doc.validation}

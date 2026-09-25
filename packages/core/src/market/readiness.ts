@@ -44,6 +44,8 @@ export type ReadinessProbes = {
   exchangeRateAgeHours: number | null;
   /** Default currencies of the other markets people can see (live or maintenance). */
   otherMarketCurrencies: string[];
+  /** The default market's currency (the one the built-in filter steps suit). */
+  defaultMarketCurrency: string;
   /** An OTP/SMS provider is configured and its credentials are present. */
   otpProviderConfigured: boolean;
   otpProviderDetail?: string;
@@ -308,6 +310,22 @@ export function evaluateReadiness(
 
   // A rate matters once a price here can be shown to someone whose own
   // market uses another currency, or the market itself takes several.
+  // Price filters are sized in cedi steps unless the market says otherwise;
+  // a market in another currency should set its own scale.
+  if (market.defaultCurrency !== probes.defaultMarketCurrency) {
+    checks.push(
+      check(
+        "price_filters",
+        "Price filters",
+        market.priceScale !== 1,
+        market.priceScale !== 1
+          ? `Scaled ×${market.priceScale} for ${market.defaultCurrency}.`
+          : `Price filters still use cedi-sized steps; set the price filter scale for ${market.defaultCurrency}.`,
+        { warnOnly: true, critical: false },
+      ),
+    );
+  }
+
   const fxNeeded =
     market.supportedCurrencies.length > 1 ||
     probes.otherMarketCurrencies.some((c) => c !== market.defaultCurrency);

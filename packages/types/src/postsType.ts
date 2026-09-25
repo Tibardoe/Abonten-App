@@ -174,6 +174,8 @@ export type EventPromotionSummaryProps = {
   tierLabel: string;
   amount: number;
   totalAmount: number;
+  /** The promotion price list's currency (the event's market). */
+  currency: string;
   status: CheckoutSessionStatus;
   expiresAt: string | null;
 };

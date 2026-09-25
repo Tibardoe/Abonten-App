@@ -29,6 +29,7 @@ import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { getDefaultMarket } from "../../markets/marketConfig";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
+import { currencyList } from "../shared/metricRows";
 
 // READ-ONLY Finance ops centre (Phase 3). Reconciliation + investigation
 // only — no admin-initiated refund/payout here (that is a later phase and
@@ -88,14 +89,6 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-// Money arrives as Postgres `numeric` (exact) and is summed here as a
-// JavaScript float (not exact), so a few hundred rows of pesewas drift into
-// values like 6.999999999999886. Round every total back to the pesewa before
-// it leaves this module, so the console and the ledger agree.
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
-
 // ─────────────────────────────────────────────────────────────
 // Overview
 // ─────────────────────────────────────────────────────────────
@@ -149,6 +142,7 @@ export async function getFinanceOverviewCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
   range: ResolvedAdminRange,
+  currency?: string | null,
 ): Promise<AdminEnvelope<FinanceOverviewV2>> {
   try {
     assertPermission(ctx, "finance.view");
@@ -161,6 +155,7 @@ export async function getFinanceOverviewCore(
     p_to: range.to,
     p_prev_from: range.prevFrom ?? range.from,
     p_prev_to: range.prevTo ?? range.from,
+    p_currency: currency ?? undefined,
   });
 
   if (error) {
@@ -180,6 +175,7 @@ export async function getFinanceOverviewCore(
       organizerMoney: toOrganizerBalances(d.organizerMoney),
       activeFeeRate: d.activeFeeRate == null ? null : num(d.activeFeeRate),
       currency: typeof d.currency === "string" ? d.currency : "",
+      currencies: currencyList(d.currencies),
     },
   };
 }
@@ -807,5 +803,71 @@ export async function getOrganizerFinanceCore(
       recentLedger: ledgerView,
       recentPayouts: payoutView,
     },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Charges with no order (payment_orphan_capture)
+// ─────────────────────────────────────────────────────────────
+
+export type OrphanCaptureRow = {
+  id: string;
+  provider: string;
+  countryCode: string;
+  providerReference: string;
+  amount: number;
+  currency: string;
+  status: string;
+  attemptStatus: string | null;
+  note: string | null;
+  lastError: string | null;
+  detectedAt: string;
+  refundRequestedAt: string | null;
+  refundedAt: string | null;
+};
+
+/**
+ * Money a provider captured after Abonten had closed the payment attempt,
+ * newest first. Each is refunded automatically (payments/orphanCapture);
+ * this is where Finance sees them and any refund that still needs a hand.
+ */
+export async function listOrphanCapturesCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  limit = 50,
+): Promise<AdminEnvelope<OrphanCaptureRow[]>> {
+  try {
+    assertPermission(ctx, "finance.view");
+  } catch (e) {
+    return { status: 403, message: (e as Error).message };
+  }
+  const { data, error } = await supabase
+    .from("payment_orphan_capture")
+    .select(
+      "id, provider, country_code, provider_reference, amount, currency, status, attempt_status, note, last_error, detected_at, refund_requested_at, refunded_at",
+    )
+    .order("detected_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 200));
+  if (error) {
+    logger.error(`listOrphanCapturesCore failed: ${error.message}`);
+    return { status: 500, message: "Couldn't load unmatched charges." };
+  }
+  return {
+    status: 200,
+    data: (data ?? []).map((r) => ({
+      id: r.id,
+      provider: r.provider,
+      countryCode: r.country_code,
+      providerReference: r.provider_reference,
+      amount: num(r.amount),
+      currency: r.currency,
+      status: r.status,
+      attemptStatus: r.attempt_status,
+      note: r.note,
+      lastError: r.last_error,
+      detectedAt: r.detected_at,
+      refundRequestedAt: r.refund_requested_at,
+      refundedAt: r.refunded_at,
+    })),
   };
 }

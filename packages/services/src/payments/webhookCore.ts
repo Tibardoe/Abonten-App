@@ -24,6 +24,7 @@ import { createNotificationCore } from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { type FinalizeResult, finalizePayment } from "./finalizePayment";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
+import { markOrphanCaptureRefund } from "./orphanCapture";
 import {
   accountFromConfig,
   getPaymentProvider,
@@ -145,19 +146,63 @@ async function handleRefundOutcome(
   body: Record<string, unknown>;
   settled: boolean;
 }> {
-  const match = await findTransaction(supabase, provider, event, "id, status");
+  const match = await findTransaction(
+    supabase,
+    provider,
+    event,
+    "id, status, refund_claimed_at",
+  );
   if (!match) {
+    // Not an order: possibly the refund of a charge that arrived after its
+    // order had closed (orphanCapture.ts).
+    const orphan = await markOrphanCaptureRefund({
+      provider,
+      reference: event.reference,
+      providerTransactionId: event.providerTransactionId,
+      outcome: event.type === "refund.processed" ? "refunded" : "refund_failed",
+      detail: event.type === "refund.failed" ? event.detail : null,
+    });
+    if (orphan === "error") {
+      return {
+        status: WEBHOOK_ACK_RETRY,
+        body: { error: "Server error" },
+        settled: false,
+      };
+    }
     logger.info(
-      `webhook: ${event.type} for ${provider} — no matching transaction`,
+      `webhook: ${event.type} for ${provider} — ${orphan === "matched" ? "orphan capture updated" : "no matching transaction"}`,
     );
     return {
       status: WEBHOOK_ACK_OK,
-      body: { received: true, ignored: "unknown_transaction" },
+      body: {
+        received: true,
+        ...(orphan === "matched" ? {} : { ignored: "unknown_transaction" }),
+      },
       settled: true,
     };
   }
   const newStatus =
     event.type === "refund.processed" ? "refunded" : "successful";
+
+  // The provider can confirm a refund before issueRefundCore has recorded
+  // the hold (it asks the provider first, then moves the transaction to
+  // refund_pending) — Stripe often answers within a second. While that
+  // request is still in flight (the claim is held), ask the provider to
+  // redeliver instead of acknowledging an update that would be lost.
+  if (
+    match.status === "successful" &&
+    typeof match.refund_claimed_at === "string" &&
+    Date.now() - new Date(match.refund_claimed_at).getTime() < 2 * 60_000
+  ) {
+    logger.info(
+      `webhook: ${event.type} for ${provider} arrived before the refund was recorded; asking for redelivery`,
+    );
+    return {
+      status: WEBHOOK_ACK_RETRY,
+      body: { received: true, retry: "refund_in_flight" },
+      settled: false,
+    };
+  }
 
   // Only transitions a transaction that is actually awaiting this
   // confirmation — a retried delivery, or one that arrives after this was
@@ -187,6 +232,22 @@ async function handleRefundOutcome(
     };
   }
   if (!updated) {
+    // A refund of a paid order Abonten never asked for — made in the
+    // provider's dashboard. The ledger still shows the sale: finance must
+    // record it (Admin › Finance), so this is an error, not a shrug.
+    if (match.status === "successful" && event.type === "refund.processed") {
+      logger.error(
+        `webhook: ${provider} refunded transaction ${match.id} outside Abonten; the ledger was not adjusted`,
+        {
+          payment: {
+            transactionId: match.id,
+            provider,
+            reference: event.reference,
+            failure: "external_refund",
+          },
+        },
+      );
+    }
     return {
       status: WEBHOOK_ACK_OK,
       body: { received: true, ignored: "not_refund_pending" },
@@ -322,6 +383,41 @@ async function handleTransfer(
       ? "reversed"
       : "failed";
 
+  // A reversal can arrive after the transfer succeeded (the bank sent
+  // the money back): the payout is then reversed and the organizer's
+  // balance restored, once (record_payout_reversal).
+  if (event.type === "transfer.reversed") {
+    const { data: done } = await supabase
+      .from("payout")
+      .select("id, status")
+      .eq("transfer_code", event.transferCode)
+      .maybeSingle();
+    if (done?.status === "completed" || done?.status === "reversed") {
+      const { error: reverseErr } = await supabase.rpc(
+        "record_payout_reversal",
+        {
+          p_payout_id: done.id,
+          p_reason: event.detail ?? "Transfer reversed by the provider",
+        },
+      );
+      if (reverseErr) {
+        logger.error(
+          `webhook: record_payout_reversal failed for payout ${done.id} (${reverseErr.message})`,
+        );
+        return {
+          status: WEBHOOK_ACK_RETRY,
+          body: { error: "Server error" },
+          settled: false,
+        };
+      }
+      return {
+        status: WEBHOOK_ACK_OK,
+        body: { received: true },
+        settled: true,
+      };
+    }
+  }
+
   const { data: payout, error: payoutErr } = await supabase
     .from("payout")
     .update({
@@ -403,7 +499,7 @@ export async function handleProviderWebhook(input: {
   // without doing the work again.
   const { data: seen } = await supabase
     .from("payment_webhook_event")
-    .select("outcome")
+    .select("outcome, attempts")
     .eq("provider", providerCode)
     .eq("country_code", countryCode)
     .eq("event_id", parsed.eventId)
@@ -463,7 +559,7 @@ export async function handleProviderWebhook(input: {
         event_name: parsed.eventName,
         outcome: outcome.settled ? "settled" : "retry",
         http_status: outcome.status,
-        attempts: (typeof seen === "object" && seen ? 1 : 0) + 1,
+        attempts: (seen?.attempts ?? 0) + 1,
         last_received_at: new Date().toISOString(),
       },
       { onConflict: "provider,country_code,event_id" },

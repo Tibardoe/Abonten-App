@@ -49,7 +49,7 @@ const NUMBERS: {
   {
     key: "digestHourLocal",
     label: "Digest hour",
-    hint: "Accra time, 8 to 20. Pushes never go out at night.",
+    hint: "On each person's own clock (their market's zone), 8 to 20. Pushes never go out at night.",
     suffix: ":00",
   },
   {
@@ -173,16 +173,16 @@ function AudienceSelect({
 }
 
 // Same text on the server render and in the browser (a locale-dependent
-// toLocaleString() broke hydration), in the timezone operations works in.
-function formatAccraTime(iso: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Africa/Accra",
+// toLocaleString() broke hydration), on the console's operations clock.
+function formatOpsTime(iso: string): string {
+  return `${new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
     day: "numeric",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(iso));
+  }).format(new Date(iso))} UTC`;
 }
 
 export function SettingsForm({
@@ -418,7 +418,7 @@ export function SettingsForm({
         ) : null}
         <Toggle
           label="Start from now"
-          hint={`Only recommend listings published after this save. Current starting point: ${formatAccraTime(settings.generateWatermark)}.`}
+          hint={`Only recommend listings published after this save. Current starting point: ${formatOpsTime(settings.generateWatermark)}.`}
           checked={resetWatermark}
           disabled={!editable}
           onChange={setResetWatermark}

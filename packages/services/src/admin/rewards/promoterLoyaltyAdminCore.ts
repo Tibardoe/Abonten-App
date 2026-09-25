@@ -1,5 +1,6 @@
 import type { ResolvedAdminRange } from "@abonten/core/admin/adminDateRange";
 import { logger } from "@abonten/core/logger";
+import { fromMajor } from "@abonten/core/money/money";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
   AdminPromoterLoyaltySummary,
@@ -40,6 +41,9 @@ export async function getPromoterLoyaltySummaryCore(
     return adminError(e) as AdminEnvelope<never>;
   }
 
+  // One currency per report: commission charged in another currency is
+  // never added to this one.
+  const currency = await rewardRulesCurrency();
   const [events, offers, ledger, settings, live] = await Promise.all([
     supabase
       .from("reward_event")
@@ -59,6 +63,7 @@ export async function getPromoterLoyaltySummaryCore(
     supabase
       .from("organizer_ledger_entry")
       .select("amount", { count: "exact" })
+      .eq("currency", currency)
       .in("entry_type", ["promoter_commission", "promoter_commission_reversal"])
       .gte("created_at", range.from)
       .lt("created_at", range.to)
@@ -125,7 +130,7 @@ export async function getPromoterLoyaltySummaryCore(
   }
 
   const charged = (ledger.data ?? []).reduce(
-    (sum, r) => sum - Math.round(num(r.amount) * 100),
+    (sum, r) => sum - fromMajor(num(r.amount), currency).amountMinor,
     0,
   );
   const top = [...promoters.entries()]
@@ -139,7 +144,7 @@ export async function getPromoterLoyaltySummaryCore(
   return {
     status: 200,
     data: {
-      currency: await rewardRulesCurrency(),
+      currency,
       sinceDays: range.days,
       from: range.from,
       to: range.to,

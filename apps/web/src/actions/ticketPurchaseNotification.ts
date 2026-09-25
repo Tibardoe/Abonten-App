@@ -7,6 +7,7 @@ import { createClient } from "@/config/supabase/server";
 import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { logger } from "@abonten/core/logger";
 import {
   buildTicketPdfData,
@@ -118,7 +119,7 @@ export default async function ticketPurchaseNotification(
     const currency = firstTicket.ticket_type.currency;
     const amountLabel =
       orderAmount && orderAmount > 0
-        ? `${currency} ${orderAmount.toFixed(2)}`
+        ? formatMoney(currency, orderAmount)
         : "Free";
 
     const ticketLines: EmailTicketLine[] = tickets.map((ticket) => ({

@@ -3,7 +3,6 @@ import {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
   type EventFilters,
-  PRICE_ANY_MAX,
   type PlaceFilters,
   RATING_OPTIONS,
   clearEventFilterKey,
@@ -246,15 +245,17 @@ export function FilterSheet({
 
           <Section
             label="Price"
-            hint="Ticket price in GHS"
-            active={
-              eDraft.minPrice != null ||
-              (eDraft.maxPrice != null && eDraft.maxPrice < PRICE_ANY_MAX)
+            hint={
+              market?.defaultCurrency
+                ? `Ticket price in ${market.defaultCurrency}`
+                : "Ticket price"
             }
+            active={eDraft.minPrice != null || eDraft.maxPrice != null}
             onClear={() => setEDraft((d) => clearEventFilterKey(d, "price"))}
           >
             <PriceRangeField
               currency={market?.defaultCurrency ?? ""}
+              scale={market?.priceScale ?? 1}
               min={eDraft.minPrice}
               max={eDraft.maxPrice}
               onChange={({ min, max }) =>

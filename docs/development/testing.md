@@ -4,8 +4,8 @@ purpose: What automated tests exist, how to run them, what they cover, and what 
 audience: Engineers
 scope: Vitest unit tests, the Supabase integration suite, parity and documentation checks
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -32,6 +32,27 @@ npm run test:db:down
 Covers: authz and RLS (`authz`, `sec001-*`, `money-path-lockdown`, `promo-subscription-lockdown`, `review-response-authz`), checkout concurrency/idempotency/time guards, discovery filters, ratings, email auth, messaging (service, moderation, reactions, realtime), support admin, credits (ledger, authz, concurrency, admin ops, redemption, ticket redemption), rewards (event referral, friend referral, rebates, P8, notification delivery), field ops (rbac, lifecycle, assignments, onboarding, sweep, payouts, events/claims, content, analytics). Hubtel is faked via injected `sendOtp`/`verifyOtp` deps; Paystack is not called.
 
 The setup script copies migrations to a temp dir and neutralises a few documented statements that cannot replay by timestamp alone; production is never touched. A from-scratch replay is fingerprint-compared to production after schema work.
+
+### Paystack sandbox (opt-in, real provider)
+
+`paystack-sandbox.integration.test.ts` runs the Ghana money path against
+Paystack's **test-mode** API with nothing mocked: a saved MTN test wallet
+is charged, verified, the ticket issued, the fee and organizer earning
+booked, the ticket price refunded through Paystack's refund API (fee
+kept), and the signed `refund.processed` webhook delivered. It is skipped
+unless `PAYSTACK_SANDBOX_SECRET_KEY` holds an `sk_test_` key — a live key
+never enables it. Run it after a change to the charge, verify, fulfilment
+or refund path:
+
+```bash
+PAYSTACK_SANDBOX_SECRET_KEY=<the test secret key> npx vitest run \
+  --config vitest.integration.config.ts paystack-sandbox   # in packages/services
+```
+
+It leaves test-mode charges and refunds in the Paystack test dashboard;
+the test webhook URL configured there receives them and ignores the
+unknown references. It does not prove a live charge: a real card or
+wallet in live mode is still the launch check.
 
 ## Browser suite (Playwright, web)
 

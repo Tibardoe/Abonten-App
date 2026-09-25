@@ -78,6 +78,7 @@ import {
   getFinanceOverviewCore,
   getOrganizerFinanceCore,
   getTransactionDetailCore,
+  listOrphanCapturesCore,
   listPayoutsCore,
   listRefundsCore,
   listTransactionsCore,
@@ -147,6 +148,7 @@ import {
   getWeeklySettingsCore,
   listWeeklyScopesCore,
 } from "@abonten/services/admin/weekly/weeklySettingsAdminCore";
+import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { DashboardRange } from "@abonten/types/adminTypes";
 
 const REPORT_ATTACH_TTL = 300;
@@ -175,6 +177,16 @@ async function signVerificationEvidence(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
+/** `?currency=NGN` on a money report: an ISO code, else the default. */
+function reportCurrencyParam(
+  searchParams: Record<string, string | string[] | undefined>,
+): string | null {
+  const v = searchParams.currency;
+  return typeof v === "string" && /^[A-Za-z]{3}$/.test(v)
+    ? v.toUpperCase()
+    : null;
+}
+
 // Pages hand their raw search params straight in: the range is parsed and
 // validated in one place (@abonten/core/admin/adminDateRange), so a bad link
 // shows a sensible 30-day view instead of an error.
@@ -186,6 +198,7 @@ export async function loadDashboard(
     getServiceClient(),
     ctx,
     parseAdminRangeParams(searchParams),
+    reportCurrencyParam(searchParams),
   );
 }
 
@@ -329,6 +342,7 @@ export async function loadFinanceOverview(
     getServiceClient(),
     ctx,
     parseAdminRangeParams(searchParams),
+    reportCurrencyParam(searchParams),
   );
 }
 export async function loadTransactions(filters: ListTransactionsFilters) {
@@ -344,6 +358,10 @@ export async function loadRefunds(
 ) {
   const ctx = await requireAdmin();
   return listRefundsCore(getServiceClient(), ctx, filters);
+}
+export async function loadOrphanCaptures() {
+  const ctx = await requireAdmin();
+  return listOrphanCapturesCore(getServiceClient(), ctx);
 }
 export async function loadPayouts(
   filters: Parameters<typeof listPayoutsCore>[2],
@@ -371,6 +389,7 @@ export async function loadAnalytics(
     getServiceClient(),
     ctx,
     parseAdminRangeParams(searchParams),
+    reportCurrencyParam(searchParams),
   );
 }
 
@@ -722,7 +741,19 @@ export async function loadWeeklyEdition(editionId: string) {
     getWeeklyEditionAdminCore(svc, ctx, editionId),
     getWeeklySettingsCore(svc, ctx),
   ]);
-  return { ctx, edition, settings };
+  // An edition is scheduled on its area's own clock: the market's zone.
+  let timeZone = "UTC";
+  const scopeId = edition.data?.edition.scopeId;
+  if (scopeId) {
+    const { data: scope } = await svc
+      .from("weekly_scope")
+      .select("country_code")
+      .eq("id", scopeId)
+      .maybeSingle();
+    timeZone = (await getMarketOrDefault(scope?.country_code ?? null))
+      .defaultTimeZone;
+  }
+  return { ctx, edition, settings, timeZone };
 }
 
 export async function loadWeeklyScopes() {

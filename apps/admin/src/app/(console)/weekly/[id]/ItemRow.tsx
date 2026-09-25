@@ -11,7 +11,7 @@ import type {
 } from "@abonten/types/weeklyType";
 import { ArrowDown, ArrowUp, Pin } from "lucide-react";
 import { useEffect, useState } from "react";
-import { formatAccraDateTime } from "../format";
+import { formatOpsDateTime } from "../format";
 import { fieldClass, useEditor } from "./EditorContext";
 
 function describe(item: WeeklyAdminItem) {
@@ -21,7 +21,7 @@ function describe(item: WeeklyAdminItem) {
     return {
       title: item.event.title,
       meta: [
-        first ? formatAccraDateTime(String(first)) : null,
+        first ? formatOpsDateTime(String(first)) : null,
         item.event.address?.full_address,
       ]
         .filter(Boolean)

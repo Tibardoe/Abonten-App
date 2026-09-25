@@ -67,8 +67,8 @@ export default async function SearchPage({
         <EmptyState>{res.message ?? "Search failed."}</EmptyState>
       ) : total === 0 ? (
         <EmptyState>
-          Nothing matched. Try a name, an event code, a Paystack reference, or
-          an exact id.
+          Nothing matched. Try a name, an event code, a payment provider
+          reference, or an exact id.
         </EmptyState>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">

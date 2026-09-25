@@ -19,6 +19,7 @@ type CheckoutRow = {
   discounted_units: number;
   promo_code: string | null;
   status: string;
+  ticket_type: { currency: string } | null;
 };
 
 /**
@@ -64,7 +65,7 @@ export default async function updateTicketCheckoutQuantity(
   const { data: rawCheckout, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
-      "id, event_id, ticket_type_id, quantity, unit_price, discounted_units, promo_code, status",
+      "id, event_id, ticket_type_id, quantity, unit_price, discounted_units, promo_code, status, ticket_type:ticket_type_id(currency)",
     )
     .eq("id", ticketCheckoutId)
     .eq("user_id", user.id)
@@ -187,6 +188,7 @@ export default async function updateTicketCheckoutQuantity(
     checkout.unit_price,
     discountPercentage,
     newDiscountedUnits,
+    checkout.ticket_type?.currency ?? "",
   );
 
   const { data: updated, error: updateError } = await getSupabaseServiceClient()

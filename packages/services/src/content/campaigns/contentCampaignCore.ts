@@ -5,6 +5,7 @@ import {
 } from "@abonten/core/content/campaignMoney";
 import { logger } from "@abonten/core/logger";
 import { formatMoney } from "@abonten/core/money/formatMoney";
+import { money, toMajor } from "@abonten/core/money/money";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type {
   ContentCampaign,
@@ -230,8 +231,10 @@ export async function createContentCampaignCore(
     .insert({
       campaign_id: campaign.id,
       owner_id: userId,
-      unit_price: estimate.budgetMinor / 100,
-      total_price: estimate.budgetMinor / 100,
+      // Major units in the campaign's own currency: whole francs or yen,
+      // pesewas, thousandths of a dinar — never a fixed ÷100.
+      unit_price: toMajor(money(estimate.budgetMinor, estimate.currency)),
+      total_price: toMajor(money(estimate.budgetMinor, estimate.currency)),
       currency: estimate.currency,
       status: "pending",
       expires_at: getCheckoutExpiryTimestamp().toISOString(),

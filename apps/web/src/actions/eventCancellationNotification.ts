@@ -3,6 +3,7 @@
 import EventCancellationEmailTemplate from "@/components/organisms/EventCancellationEmailTemplate";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { logger } from "@abonten/core/logger";
 import type { CancelledAttendeeRefund } from "@abonten/services/events/cancelEventCore";
 
@@ -73,7 +74,7 @@ export default async function eventCancellationNotification(
           react: EventCancellationEmailTemplate({
             username,
             eventTitle,
-            amountLabel: attendee.amount.toFixed(2),
+            amountLabel: formatMoney(attendee.currency, attendee.amount),
             currency: attendee.currency,
             myTicketsUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/manage/my-events?tab=refunds`,
           }),

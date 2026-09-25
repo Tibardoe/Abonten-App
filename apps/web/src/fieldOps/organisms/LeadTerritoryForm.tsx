@@ -17,11 +17,14 @@ import { useState, useTransition } from "react";
  */
 export default function LeadTerritoryForm({
   campaignId,
+  placeContext,
   towns,
   initial,
   onDone,
 }: {
   campaignId: string;
+  /** "Ashanti, Ghana" — appended to the typed town name for geocoding. */
+  placeContext: string;
   /** Existing towns, for the "part of" picker on areas. */
   towns: FieldOpsTerritory[];
   initial?: FieldOpsTerritory;
@@ -47,7 +50,7 @@ export default function LeadTerritoryForm({
     setLocating(true);
     try {
       const res = await fetch(
-        `/api/geocode?address=${encodeURIComponent(`${name}, Ghana`)}`,
+        `/api/geocode?address=${encodeURIComponent(placeContext ? `${name}, ${placeContext}` : name)}`,
       );
       const data = (await res.json()) as {
         lat?: number;

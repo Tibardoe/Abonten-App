@@ -9,7 +9,7 @@ import {
 } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
 import { loadContentCampaign } from "@/lib/data";
-import { formatAccraDateTime } from "@/lib/format";
+import { formatOpsDateTime } from "@/lib/format";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
@@ -62,7 +62,7 @@ export default async function SpotlightCampaignDetailPage({
     ],
     [
       "Runs",
-      `${formatAccraDateTime(c.startsAt)} → ${formatAccraDateTime(c.endsAt)}`,
+      `${formatOpsDateTime(c.startsAt)} → ${formatOpsDateTime(c.endsAt)}`,
     ],
     [
       "Priced at",
@@ -204,7 +204,7 @@ export default async function SpotlightCampaignDetailPage({
                   {ledger.map((l) => (
                     <tr key={l.id}>
                       <Td className="text-xs">
-                        {formatAccraDateTime(l.createdAt)}
+                        {formatOpsDateTime(l.createdAt)}
                       </Td>
                       <Td>{l.entryType}</Td>
                       <Td className="tabular-nums">
@@ -229,7 +229,7 @@ export default async function SpotlightCampaignDetailPage({
                     {e.fromStatus ?? "new"} → {e.toStatus}
                   </span>{" "}
                   <span className="text-xs text-muted-foreground">
-                    by {e.actorKind} · {formatAccraDateTime(e.createdAt)}
+                    by {e.actorKind} · {formatOpsDateTime(e.createdAt)}
                   </span>
                   {e.reason ? (
                     <p className="text-xs text-muted-foreground">{e.reason}</p>

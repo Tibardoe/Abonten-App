@@ -71,6 +71,9 @@ export async function updateMarket(input: UpdateMarketInput) {
 export async function upsertMarketProvider(input: UpsertProviderInput) {
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
+    // Switching a provider to automated payouts moves organizer money:
+    // the same fresh identity check as the finance money paths.
+    if (input.payoutsEnabled) assertStepUpFresh(ctx);
     const res = await upsertProviderAdminCore(
       svc(),
       ctx,

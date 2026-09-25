@@ -4,8 +4,8 @@ purpose: How organizer earnings are recorded, when they become available, how pa
 audience: Finance admins, operations
 scope: organizer_ledger_entry, payout, payout_account, admin_settle_payout, admin_create_payout, Paystack Transfers (flag off)
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -47,7 +47,7 @@ Finance › Organizers › [id] › **Create payout** (`admin_create_payout`) �
 
 ### Paystack Transfers (not live)
 
-`sendPayoutAdminCore` exists behind the market provider's **Automated payouts** switch (`market_payment_provider.payouts_enabled`, off for every market since 2026-09-24; it replaced the `PAYSTACK_TRANSFERS_ENABLED` env flag); with it off the action returns 409. To activate for a market: enable Transfers on that market's Paystack account, tick Automated payouts in Admin › Markets › the market, add the UI button on `/finance/payouts`, and test with a small transfer. The webhook handlers for `transfer.*` will then settle payouts automatically. **Unverified against live Paystack** (decision F2).
+`sendPayoutAdminCore` exists behind the market provider's **Automated payouts** switch (`market_payment_provider.payouts_enabled`, off for every market since 2026-09-24; it replaced the `PAYSTACK_TRANSFERS_ENABLED` env flag); with it off the action returns 409. To activate for a market: enable Transfers on that market's Paystack account, tick Automated payouts in Admin › Markets › the market (needs `markets.activate` and step-up; refused for a provider whose adapter cannot send transfers, e.g. Stripe), add the UI button on `/finance/payouts`, and test with a small transfer. The webhook handlers for `transfer.*` will then settle payouts automatically; a `transfer.reversed` after a payout completed marks it **reversed** and returns the amount to the organizer's available balance once (`record_payout_reversal`). **Unverified against live Paystack** (decision F2).
 
 ## Cadence
 

@@ -26,6 +26,7 @@ const ghana: MarketConfig = {
     supportEmail: "support@abontenhub.com",
   },
   centre: { lat: 5.6037, lng: -0.187 },
+  priceScale: 1,
   launchedAt: "2026-01-01T00:00:00Z",
   version: 1,
   paymentProviders: [
@@ -41,6 +42,7 @@ const ghana: MarketConfig = {
       priority: 1,
       currencies: ["GHS", "USD"],
       payoutsEnabled: false,
+      options: {},
     },
   ],
   paymentMethods: [
@@ -100,6 +102,7 @@ const probesOk: ReadinessProbes = {
   exchangeRateAvailable: true,
   exchangeRateAgeHours: 2,
   otherMarketCurrencies: ["GHS"],
+  defaultMarketCurrency: "GHS",
   otpProviderConfigured: true,
   emailConfigured: true,
   monitoringActive: true,

@@ -127,6 +127,38 @@ describe("searchWhenWindow", () => {
     });
     expect(searchWhenWindow("any", NOW)).toBeNull();
   });
+
+  it("uses the browsed area's own calendar", () => {
+    // 14:30 UTC on Wednesday 16 September 2026.
+    // London (BST, UTC+1): tomorrow is Thursday from 23:00 UTC tonight.
+    expect(searchWhenWindow("tomorrow", NOW, "Europe/London")).toEqual({
+      startDate: "2026-09-16T23:00:00.000Z",
+      endDate: "2026-09-17T23:00:00.000Z",
+    });
+    // Tokyo (UTC+9): it is already 23:30 Wednesday; tomorrow starts in 30 min.
+    expect(searchWhenWindow("tomorrow", NOW, "Asia/Tokyo")).toEqual({
+      startDate: "2026-09-16T15:00:00.000Z",
+      endDate: "2026-09-17T15:00:00.000Z",
+    });
+    // New York (EDT, UTC-4): Friday 17:00 local is 21:00 UTC.
+    expect(searchWhenWindow("weekend", NOW, "America/New_York")).toEqual({
+      startDate: "2026-09-18T21:00:00.000Z",
+      endDate: "2026-09-21T04:00:00.000Z",
+    });
+    // Accra is UTC+0 all year: the same answer as before.
+    expect(searchWhenWindow("weekend", NOW, "Africa/Accra")).toEqual(
+      searchWhenWindow("weekend", NOW),
+    );
+  });
+
+  it("counts a daylight-saving day by the local calendar", () => {
+    // London falls back on Sunday 25 October 2026: that day has 25 hours.
+    const sat = new Date("2026-10-24T09:00:00Z");
+    expect(searchWhenWindow("tomorrow", sat, "Europe/London")).toEqual({
+      startDate: "2026-10-24T23:00:00.000Z",
+      endDate: "2026-10-26T00:00:00.000Z",
+    });
+  });
 });
 
 describe("clearing", () => {

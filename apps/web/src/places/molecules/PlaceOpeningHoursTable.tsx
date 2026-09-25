@@ -3,11 +3,8 @@ import { DISPLAY_DAYS } from "@abonten/core/dayOfWeek";
 
 type PlaceOpeningHoursTableProps = {
   openingHours: PlaceOpeningHourRow[];
-  // Injectable for predictable rendering; defaults to the render-time day.
-  // No per-place timezone column exists (same single-timezone assumption
-  // made elsewhere in this app, e.g. proxy.ts's default "GH" country code) —
-  // and Ghana has no DST and sits at UTC+0, so a server-rendered "today"
-  // matches Ghana wall-clock time exactly, unlike most other timezones.
+  // The weekday at the PLACE (its own zone — the page passes
+  // placeLocalNow(now, place.timezone).dow); defaults to the render-time day.
   today?: number;
 };
 

@@ -72,7 +72,11 @@ export type PublicMarket = {
     rateBps: number;
     label: string;
   };
+  /** Customer-paid service fee rate (0.05 = 5%) in the market currency, for previews. */
+  serviceFeeRate?: number | null;
   centre: { lat: number; lng: number } | null;
+  /** Sizes the price filters for this currency (1 = cedi-sized). */
+  priceScale?: number;
   paymentMethods: PublicMarketPaymentMethod[];
   payoutMethods: PublicMarketPayoutMethod[];
   regions: PublicMarketRegion[];

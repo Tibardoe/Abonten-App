@@ -11,11 +11,14 @@ import { useQuery } from "@tanstack/react-query";
 // updates once — it can't make the buyer be charged a different amount than
 // they approved. Long staleTime: the rate changes at most a handful of times
 // in the product's life.
-export function useServiceFeeRate(currency?: string) {
+export function useServiceFeeRate(currency?: string, countryCode?: string) {
   const { data } = useQuery({
-    queryKey: ["service-fee-rate", currency ?? null],
+    queryKey: ["service-fee-rate", currency ?? null, countryCode ?? null],
     queryFn: async () => {
-      const result = await getServiceFeeRate(currency ?? null);
+      const result = await getServiceFeeRate(
+        currency ?? null,
+        countryCode ?? null,
+      );
       return result.data;
     },
     staleTime: 60 * 60 * 1000,

@@ -1,3 +1,10 @@
+import {
+  fromMajor,
+  money,
+  roundHalfAwayFromZero,
+  toMajor,
+} from "./money/money";
+
 // Single source of truth for promo-eligibility allocation and per-line price
 // math, shared by validateCheckout.ts (server, authoritative), CheckoutModal.tsx
 // (client live preview), and updateTicketCheckoutQuantity.ts (server). Not a
@@ -35,19 +42,32 @@ export function allocatePromoEligibility(
  * Percentage-off-unit-price math for one line: discount only applies to the
  * eligible units (which may be fewer than the full quantity), and the amount
  * is floored at 0.
+ *
+ * Worked in the currency's integer minor units and rounded once (half away
+ * from zero) to what that currency can actually hold — whole yen or francs,
+ * pesewas, thousandths of a dinar — so the preview, the stored checkout row
+ * and the charged amount agree. Floating-point percentages of major units
+ * used to leave values like 33.333 for a stored numeric column to round.
  */
 export function computeLineAmount(
   quantity: number,
   unitPrice: number,
   discountPercentage: number,
   eligibleUnits: number,
+  currency: string,
 ): { discount: number; amount: number } {
-  const discount = discountPercentage
-    ? (discountPercentage / 100) * unitPrice * eligibleUnits
+  const unitMinor = fromMajor(unitPrice, currency).amountMinor;
+  const discountMinor = discountPercentage
+    ? roundHalfAwayFromZero(
+        (unitMinor * eligibleUnits * discountPercentage) / 100,
+      )
     : 0;
-  const amount = Math.max(0, quantity * unitPrice - discount);
+  const amountMinor = Math.max(0, unitMinor * quantity - discountMinor);
 
-  return { discount, amount };
+  return {
+    discount: toMajor(money(discountMinor, currency)),
+    amount: toMajor(money(amountMinor, currency)),
+  };
 }
 
 // Ticket checkout only — the customer-paid Abonten service fee, added on top

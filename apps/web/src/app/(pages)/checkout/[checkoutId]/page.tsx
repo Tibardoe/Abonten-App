@@ -60,6 +60,7 @@ export default async function page({
       tierLabel: data.place_promotion_tier?.duration_label ?? "",
       amount: data.unit_price,
       totalAmount: data.total_price,
+      currency: data.currency,
       status: sessionStatus,
       expiresAt,
     };
@@ -213,6 +214,7 @@ export default async function page({
             estimatedReachLow: data.estimatedReachLow,
             estimatedReachHigh: data.estimatedReachHigh,
             totalAmount: data.totalPrice,
+            currency: data.currency,
           }}
           checkoutId={checkoutId}
         />
@@ -270,6 +272,7 @@ export default async function page({
       tierLabel: data.event_promotion_tier?.duration_label ?? "",
       amount: data.unit_price,
       totalAmount: data.total_price,
+      currency: data.currency,
       status: sessionStatus,
       expiresAt,
     };

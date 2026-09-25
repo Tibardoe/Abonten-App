@@ -289,7 +289,7 @@ export async function validateCheckoutCore(
 
   const { data: ticketTypeRows, error: ticketTypeError } = await supabase
     .from("ticket_type")
-    .select("id, price")
+    .select("id, price, currency")
     .in("id", ticketTypeIds);
 
   if (ticketTypeError) {
@@ -301,6 +301,12 @@ export async function validateCheckoutCore(
     (ticketTypeRows ?? []).map((row) => [
       row.id as string,
       row.price as number,
+    ]),
+  );
+  const currencyById = new Map(
+    (ticketTypeRows ?? []).map((row) => [
+      row.id as string,
+      row.currency as string,
     ]),
   );
 
@@ -329,6 +335,7 @@ export async function validateCheckoutCore(
       unitPrice,
       discountPercentage,
       eligibleUnits,
+      currencyById.get(ticketTypeId) as string,
     );
 
     rows.push({

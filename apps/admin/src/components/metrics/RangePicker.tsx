@@ -1,4 +1,4 @@
-import { formatAccraDate } from "@/lib/format";
+import { formatOpsDate } from "@/lib/format";
 import {
   ADMIN_RANGE_LABELS,
   type ResolvedAdminRange,
@@ -111,16 +111,15 @@ export function RangeCaption({
   ).toISOString();
   const comparison =
     range.prevFrom && range.prevTo
-      ? `Compared with ${formatAccraDate(range.prevFrom)} – ${formatAccraDate(
+      ? `Compared with ${formatOpsDate(range.prevFrom)} – ${formatOpsDate(
           new Date(new Date(range.prevTo).getTime() - 1).toISOString(),
         )}`
       : null;
 
   return (
     <p className={cn("text-xs text-muted-foreground", className)}>
-      {range.label} · {formatAccraDate(range.from)} –{" "}
-      {range.isPartial ? "now" : formatAccraDate(lastIncludedDay)} ·
-      Africa/Accra
+      {range.label} · {formatOpsDate(range.from)} –{" "}
+      {range.isPartial ? "now" : formatOpsDate(lastIncludedDay)} · UTC
       {comparison ? ` · ${comparison}` : ""}
       {range.isPartial ? " · today is still in progress" : ""}
     </p>

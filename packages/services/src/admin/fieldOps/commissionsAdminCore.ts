@@ -1,3 +1,5 @@
+import { formatMoney } from "@abonten/core/money/formatMoney";
+import { money } from "@abonten/core/money/money";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
   FieldOpsCommission,
@@ -176,7 +178,7 @@ export async function reverseCommissionAdminCore(
     action: "fieldops.commission.reverse",
     targetType: "fieldops_commission",
     targetId: input.commissionId,
-    summary: `Reversed ${before.currency} ${(Number(before.amount_minor) / 100).toFixed(2)} for ${before.fieldops_team_member?.full_name_snapshot ?? before.member_user_id}`,
+    summary: `Reversed ${formatMoney(money(Number(before.amount_minor), before.currency))} for ${before.fieldops_team_member?.full_name_snapshot ?? before.member_user_id}`,
     reason: input.reason,
     before: { status: before.status, amountMinor: Number(before.amount_minor) },
     after: { status: "reversed" },

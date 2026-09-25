@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import * as weekW from "./week";
 import {
   accraToday,
   addDays,
@@ -119,5 +120,59 @@ describe("scheduling inputs", () => {
     expect(toAccraInputValue(iso)).toBe("2026-09-14T06:30");
     expect(fromAccraInputValue("2026-09-14T06:30")).toBe(iso);
     expect(fromAccraInputValue("tomorrow")).toBeNull();
+  });
+});
+
+describe("weeks in the area's own zone", () => {
+  it("turns the week over at local midnight", () => {
+    // Sunday 20 September 2026, 23:30 in London (22:30 UTC): still that week.
+    const lateSunday = new Date("2026-09-20T22:30:00Z");
+    expect(weekW.weekStartFor(lateSunday, "Europe/London")).toBe("2026-09-14");
+    // 23:30 UTC is already Monday 00:30 in London.
+    expect(
+      weekW.weekStartFor(new Date("2026-09-20T23:30:00Z"), "Europe/London"),
+    ).toBe("2026-09-21");
+    // Tokyo is nine hours ahead: Monday started at 15:00 UTC on Sunday.
+    expect(
+      weekW.weekStartFor(new Date("2026-09-20T15:30:00Z"), "Asia/Tokyo"),
+    ).toBe("2026-09-21");
+  });
+
+  it("bounds the week with local midnights across a DST change", () => {
+    // London falls back on 25 October 2026 (inside the week of 19 October).
+    expect(weekW.weekWindow("2026-10-19", "Europe/London")).toEqual({
+      start: "2026-10-18T23:00:00.000Z",
+      end: "2026-10-25T23:59:59.999Z",
+    });
+    expect(
+      weekW.isWeekOver(
+        "2026-10-19",
+        new Date("2026-10-25T23:30:00Z"),
+        "Europe/London",
+      ),
+    ).toBe(false);
+    expect(
+      weekW.isWeekOver(
+        "2026-10-19",
+        new Date("2026-10-26T00:00:00Z"),
+        "Europe/London",
+      ),
+    ).toBe(true);
+  });
+
+  it("schedules and reads times on the area's clock", () => {
+    expect(weekW.defaultScheduleFor("2026-09-21", 9, "Africa/Lagos")).toBe(
+      "2026-09-21T08:00:00.000Z",
+    );
+    expect(
+      weekW.toZoneInputValue("2026-09-21T08:00:00.000Z", "Africa/Lagos"),
+    ).toBe("2026-09-21T09:00");
+    expect(weekW.fromZoneInputValue("2026-09-21T09:00", "Africa/Lagos")).toBe(
+      "2026-09-21T08:00:00.000Z",
+    );
+    // Ghana is UTC+0: the same answers as the first market always had.
+    expect(weekW.defaultScheduleFor("2026-09-21", 9, "Africa/Accra")).toBe(
+      weekW.defaultScheduleFor("2026-09-21", 9),
+    );
   });
 });

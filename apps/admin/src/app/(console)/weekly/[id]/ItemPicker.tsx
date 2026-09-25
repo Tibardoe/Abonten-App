@@ -9,7 +9,7 @@ import type {
   WeeklySubjectOption,
 } from "@abonten/types/weeklyType";
 import { useId, useState, useTransition } from "react";
-import { formatAccraDateTime } from "../format";
+import { formatOpsDateTime } from "../format";
 import { fieldClass, useEditor } from "./EditorContext";
 
 // Find a listing to add: a search phrase, an event code, a pasted
@@ -121,7 +121,7 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
                     </p>
                     <p className="truncate text-muted-foreground">
                       {[
-                        r.startsAt ? formatAccraDateTime(r.startsAt) : null,
+                        r.startsAt ? formatOpsDateTime(r.startsAt) : null,
                         r.sublabel,
                       ]
                         .filter(Boolean)

@@ -29,6 +29,7 @@ export function useCreatePromotionAttempt() {
     mutationFn: (v: {
       eventPromotionCheckoutId: string;
       paymentMethodId: string | null;
+      method?: string | null;
       useCredit: boolean;
     }) => api.checkout.promotionAttempt(v),
   });

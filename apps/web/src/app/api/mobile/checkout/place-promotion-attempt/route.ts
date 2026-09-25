@@ -1,5 +1,6 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { withLegacyPaystackField } from "@/app/api/mobile/_lib/legacyPaymentField";
+import { paymentChoiceFromBody } from "@/app/api/mobile/_lib/paymentChoiceBody";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => null)) as {
       placePromotionCheckoutId?: unknown;
       paymentMethodId?: unknown;
+      method?: unknown;
       useCredit?: unknown;
     } | null;
 
@@ -30,14 +32,13 @@ export async function POST(req: Request) {
       body.placePromotionCheckoutId.length > 0
         ? body.placePromotionCheckoutId
         : null;
-    const paymentMethodId =
-      typeof body?.paymentMethodId === "string" &&
-      body.paymentMethodId.length > 0
-        ? body.paymentMethodId
-        : null;
+    const choice = paymentChoiceFromBody(req, body);
     const useCredit = body?.useCredit === true;
 
-    if (!checkoutId || (!paymentMethodId && !useCredit)) {
+    if (
+      !checkoutId ||
+      (!choice.paymentMethodId && !choice.method && !useCredit)
+    ) {
       return apiJson({
         status: 400,
         message: "placePromotionCheckoutId and paymentMethodId are required",
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
       auth.supabase,
       auth.user.id,
       auth.user.email,
-      { kind: "place", checkoutId, paymentMethodId, useCredit },
+      { kind: "place", checkoutId, ...choice, useCredit },
       (id) => `abonten://promotion/${id}`,
       paymentFulfillmentDeps,
     );

@@ -138,6 +138,13 @@ export type MarketPaymentProvider = {
   currencies: string[];
   /** Is the provider allowed to move money out (payouts) for this market? */
   payoutsEnabled: boolean;
+  /**
+   * Provider facts for this one account that differ by country (Paystack:
+   * `channels`, `cardVerificationMinor`, `bankCountry`). Empty means the
+   * adapter's documented defaults; a new country is configured here, not
+   * in adapter code.
+   */
+  options: Record<string, unknown>;
 };
 
 export type MarketPaymentMethod = {
@@ -205,6 +212,12 @@ export type MarketConfig = {
   legal: MarketLegalConfig;
   /** Fallback map centre when the person's location is unknown. */
   centre: { lat: number; lng: number } | null;
+  /**
+   * Sizes the price filters for this currency (display only): 1 is the
+   * cedi-sized default (slider 0–999, chips under 50 / under 200), 100 suits
+   * naira, 0.1 pounds. market.display_config.priceScale.
+   */
+  priceScale: number;
   launchedAt: string | null;
   version: number;
   paymentProviders: MarketPaymentProvider[];
@@ -230,7 +243,15 @@ export type PublicMarket = {
   dialCode: string;
   addressSchema: AddressSchema | null;
   tax: Pick<TaxConfig, "mode" | "rateBps" | "label">;
+  /**
+   * The customer-paid service fee rate (0.05 = 5%) for this market's own
+   * currency, for previews; the charge is always computed server-side.
+   * Filled by the markets API (absent from the static config).
+   */
+  serviceFeeRate?: number | null;
   centre: { lat: number; lng: number } | null;
+  /** Sizes the price filters for this currency (1 = cedi-sized). */
+  priceScale: number;
   paymentMethods: Pick<
     MarketPaymentMethod,
     "method" | "provider" | "currencies" | "platforms" | "recommended" | "label"
@@ -257,6 +278,7 @@ export function toPublicMarket(m: MarketConfig): PublicMarket {
     addressSchema: m.addressSchema,
     tax: { mode: m.tax.mode, rateBps: m.tax.rateBps, label: m.tax.label },
     centre: m.centre,
+    priceScale: m.priceScale,
     paymentMethods: m.paymentMethods
       .filter((pm) => pm.enabled)
       .map((pm) => ({

@@ -43,12 +43,14 @@ export function RefundPanel({
       <p className="text-sm font-semibold">Issue a refund</p>
       <p className="text-xs text-muted-foreground">
         {creditAlreadyReturnedLabel
-          ? `Sends the remaining ${cashBackLabel ?? refundableLabel} back via Paystack (${creditAlreadyReturnedLabel} of Abonten Credit was already returned on an earlier attempt)`
+          ? `Sends the remaining ${cashBackLabel ?? refundableLabel} back through the payment provider (${creditAlreadyReturnedLabel} of Abonten Credit was already returned on an earlier attempt)`
           : creditBackLabel
             ? `Returns ${refundableLabel}: ${creditBackLabel} as Abonten Credit${
-                cashBackLabel ? ` and ${cashBackLabel} via Paystack` : ""
+                cashBackLabel
+                  ? ` and ${cashBackLabel} through the payment provider`
+                  : ""
               }, in proportion to how the order was paid`
-            : `Sends ${refundableLabel} back via Paystack`}{" "}
+            : `Sends ${refundableLabel} back through the payment provider`}{" "}
         (ticket revenue only — the service fee is retained) and holds it against
         the organizer&apos;s ledger. Idempotent; a retry won&apos;t
         double-refund.

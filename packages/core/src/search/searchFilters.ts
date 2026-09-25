@@ -1,6 +1,11 @@
 import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
 import { currencyMinorFactor, isKnownCurrency } from "../money/currencies";
 import { formatMoney } from "../money/formatMoney";
+import {
+  instantToWallClock,
+  isValidTimeZone,
+  wallClockToInstant,
+} from "../time/timeZone";
 
 // Filters for global search (Discovery). Deliberately NOT the Explore
 // event/place filters: those browse one kind of listing around a place;
@@ -88,9 +93,27 @@ export const SEARCH_PRICE_VALUES: readonly SearchPrice[] = [
   "under_200",
 ];
 
+/**
+ * The two price caps of the search chips, in the market's currency: 50 and
+ * 200 scaled by the market's priceScale (₦5,000 and ₦20,000 at scale 100).
+ * The keys stay "under_50" / "under_200" so saved links keep working.
+ */
+export function searchPriceCaps(priceScale = 1): {
+  under_50: number;
+  under_200: number;
+} {
+  const scale = Number.isFinite(priceScale) && priceScale > 0 ? priceScale : 1;
+  return {
+    under_50: Math.max(1, Math.round(50 * scale)),
+    under_200: Math.max(1, Math.round(200 * scale)),
+  };
+}
+
 export function searchPriceOptions(
   currency: string,
+  priceScale = 1,
 ): { value: SearchPrice; label: string }[] {
+  const caps = searchPriceCaps(priceScale);
   // Before the market is known the labels carry the bare number.
   const under = (major: number) =>
     isKnownCurrency(currency)
@@ -102,8 +125,8 @@ export function searchPriceOptions(
   return [
     { value: "any", label: "Any price" },
     { value: "free", label: "Free" },
-    { value: "under_50", label: under(50) },
-    { value: "under_200", label: under(200) },
+    { value: "under_50", label: under(caps.under_50) },
+    { value: "under_200", label: under(caps.under_200) },
   ];
 }
 
@@ -197,6 +220,7 @@ export function describeSearchFilters(
   locationLabel: string | null | undefined,
   /** The market currency the price buckets are labelled in. */
   currency: string,
+  priceScale = 1,
 ): { key: SearchFilterKey; label: string }[] {
   return activeSearchFilters(filters, mode).map((key) => {
     switch (key) {
@@ -216,8 +240,9 @@ export function describeSearchFilters(
         return {
           key,
           label:
-            searchPriceOptions(currency).find((o) => o.value === filters.price)
-              ?.label ?? "",
+            searchPriceOptions(currency, priceScale).find(
+              (o) => o.value === filters.price,
+            )?.label ?? "",
         };
       case "eventCategory":
         return { key, label: filters.eventCategory ?? "" };
@@ -232,50 +257,65 @@ export function describeSearchFilters(
 }
 
 /**
- * The date window for `when`, in Africa/Accra (UTC+0, no daylight saving),
- * rounded to the hour so the request — and the cache key built from it —
- * stays the same for the rest of the hour instead of changing every render.
+ * The date window for `when`, in the calendar of `timeZone` — the zone of
+ * the area being browsed, so "tonight" and "this weekend" mean the local
+ * ones in London, Lagos or Tokyo, across daylight-saving changes. Rounded
+ * to the hour so the request (and the cache key built from it) stays the
+ * same for the rest of the hour instead of changing every render.
  */
 export function searchWhenWindow(
   when: SearchWhen,
   now: Date,
+  timeZone = "UTC",
 ): { startDate: string; endDate: string } | null {
   if (when === "any") return null;
+  const zone = isValidTimeZone(timeZone) ? timeZone : "UTC";
   const hour = new Date(now);
-  hour.setUTCMinutes(0, 0, 0);
-  const dayStart = (d: Date) =>
-    new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-  const addDays = (d: Date, n: number) =>
-    new Date(d.getTime() + n * 86_400_000);
-  const today = dayStart(now);
+  // The top of the hour in the zone (zones with :30/:45 offsets included).
+  const local = instantToWallClock(now, zone);
+  hour.setTime(
+    (
+      wallClockToInstant(local.date, `${local.time.slice(0, 2)}:00`, zone) ??
+      now
+    ).getTime(),
+  );
+  const [y, m, d] = local.date.split("-").map(Number);
+  // Local midnight `n` calendar days from today (a day can be 23 or 25 h).
+  const midnight = (n: number): Date => {
+    const cal = new Date(Date.UTC(y, m - 1, d + n));
+    const iso = cal.toISOString().slice(0, 10);
+    return wallClockToInstant(iso, "00:00", zone) ?? cal;
+  };
+  const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0 Sunday
   let start: Date;
   let end: Date;
   switch (when) {
     case "today":
       start = hour;
-      end = addDays(today, 1);
+      end = midnight(1);
       break;
     case "tomorrow":
-      start = addDays(today, 1);
-      end = addDays(today, 2);
+      start = midnight(1);
+      end = midnight(2);
       break;
     case "weekend": {
-      // Friday 17:00 to Monday 00:00 — this week's, or the one under way.
-      const dow = today.getUTCDay(); // 0 Sunday … 6 Saturday
-      const toFriday = dow === 0 ? -2 : 5 - dow;
-      const friday = addDays(today, toFriday);
-      start = new Date(friday.getTime() + 17 * 3_600_000);
-      end = addDays(friday, 3);
+      // Friday 17:00 to Monday 00:00 local — this week's, or the one under way.
+      const toFriday = weekday === 0 ? -2 : 5 - weekday;
+      const friday = new Date(Date.UTC(y, m - 1, d + toFriday))
+        .toISOString()
+        .slice(0, 10);
+      start = wallClockToInstant(friday, "17:00", zone) ?? midnight(toFriday);
+      end = midnight(toFriday + 3);
       if (start < hour) start = hour;
       break;
     }
     case "week":
       start = hour;
-      end = addDays(today, 8);
+      end = midnight(8);
       break;
     case "month":
       start = hour;
-      end = addDays(today, 31);
+      end = midnight(31);
       break;
   }
   return { startDate: start.toISOString(), endDate: end.toISOString() };
@@ -291,6 +331,10 @@ export function searchFiltersToRequest(
   mode: SearchMode,
   now: Date,
   origin: { lat: number; lng: number } | null,
+  /** The browsed area's zone, for "today" / "this weekend". */
+  timeZone = "UTC",
+  /** The browsed market's priceScale, for the price caps. */
+  priceScale = 1,
 ): Partial<SearchRequest> {
   const active = new Set(activeSearchFilters(filters, mode));
   const out: Partial<SearchRequest> = {};
@@ -302,7 +346,7 @@ export function searchFiltersToRequest(
     }
   }
   if (active.has("when")) {
-    const window = searchWhenWindow(filters.when, now);
+    const window = searchWhenWindow(filters.when, now, timeZone);
     if (window) {
       out.startDate = window.startDate;
       out.endDate = window.endDate;
@@ -313,9 +357,9 @@ export function searchFiltersToRequest(
       out.minPrice = 0;
       out.maxPrice = 0;
     } else if (filters.price === "under_50") {
-      out.maxPrice = 50;
+      out.maxPrice = searchPriceCaps(priceScale).under_50;
     } else if (filters.price === "under_200") {
-      out.maxPrice = 200;
+      out.maxPrice = searchPriceCaps(priceScale).under_200;
     }
   }
   if (active.has("eventCategory") && filters.eventCategory) {

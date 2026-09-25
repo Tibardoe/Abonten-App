@@ -55,10 +55,7 @@ export default function EventCancellationEmailTemplate({
       <EmailDivider />
       <EmailSection>
         <EmailDetailRow label="Event" value={eventTitle} />
-        <EmailDetailRow
-          label="Refund amount"
-          value={`${currency} ${amountLabel}`}
-        />
+        <EmailDetailRow label="Refund amount" value={amountLabel} />
         <EmailDetailRow label="Refund status" value="Processing" />
       </EmailSection>
 
