@@ -20,7 +20,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - New `audit/08-production-gate-2026-09-25.md` 1.0 (live event-creation defect the deployment fixes; 8 new findings fixed; deployment rehearsal A–D; migration review; load at 10/50/100; iOS release-risk list; rollout sequence). PROJECT.md §46.1, CLAUDE.md, `docs/INDEX.md`, `architecture/global-platform.md` 1.3, `security/application-security.md` 1.1, `architecture/integrations.md` 1.1.
 - Behaviour: staff accounts no longer write profiles, places or claims through the Data API and staff reads follow the permission matrix; restricted accounts cannot read attendee contacts; phone codes are claimed atomically (1/min per number across purposes, 5/h and 10/day per number, 10/h per address) and verify attempts are spent atomically; public location pages geocode from market regions and a cache before Google, within a budget; unusable promo codes answer 409; the legacy web `/admin` claims page is gone.
-- Migrations `20260925110900`–`20260925111300` (with `110000`–`110800`: 13, not yet applied to production — deploy code first). New table `geocode_cache`; new functions `hidden_listing_countries`, `phone_otp_claim_send`, `phone_otp_take_attempt`. New jobs, env vars, permissions: none.
+- Migrations `20260925110900`–`20260925111400` (with `110000`–`110800`: 15), **applied to production 2026-09-25** after the code deployed (`111200`/`111300` first — the code calls them); rollout record in the report §7.1, v1.1. New table `geocode_cache`; new functions `hidden_listing_countries`, `phone_otp_claim_send`, `phone_otp_take_attempt`. New jobs, env vars, permissions: none.
 
 ## 2026-09-25 — Full-system adversarial audit
 

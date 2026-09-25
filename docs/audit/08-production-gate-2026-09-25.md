@@ -4,7 +4,7 @@ purpose: Record the go/no-go verification of the full-system audit branch before
 audience: Founder, engineering, whoever deploys the branch
 scope: apps/web, apps/admin, apps/mobile, packages/*, supabase/migrations (local stack), read-only checks against production project sderrexhawjbmsugndcq
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -151,6 +151,34 @@ blocker (section 9).
    ticket at the door; open Admin › Claims.
 5. Mobile: nothing server-side changed its API shape. The iOS purpose
    strings ship with the next native build.
+
+**Correction found while rolling out:** migrations `111200` and `111300`
+were added after the rehearsal, and the new code *calls* `111200`'s
+functions — so between the code going live and step 3, phone sign-in
+would have failed (the code check answers "Something went wrong", and
+verifying a code is refused). Both migrations only add things the old code
+never touches, so they belong **before** the code, not after. The order
+actually used is below.
+
+### 7.1 Rollout record (2026-09-25)
+
+| Time (UTC) | Step | Result |
+|---|---|---|
+| 17:21 | `main` ← `audit/production-gate-2026-09-25` (merge `8e0103c2`), pushed; Vercel builds web and admin | web `dpl_DTsfrHUpRwhCXQmBmfxSHu7GRfJi`, admin `dpl_AXd1LTEDr5XTxWt74Zss8RMriqmb`, both READY |
+| during the web build | `gate_otp_send_claim` and `gate_geocode_cache` applied first (see the correction above) | success |
+| after web READY | smoke test 1 with two throwaway accounts (created and deleted by the script) | 12/12: paid event with a promo code and a free event created (event creation works again); `/explore/accra` and an unknown place 200; promo code applied at checkout (GH₵1 → 0.90) then cancelled; free RSVP; two simultaneous scans admit once; one phone code sent to the owner's own verified number, the second request held by the cooldown; every test row removed |
+| then | the remaining 12 migrations, one at a time, in filename order: `110000` … `110800`, `110900`, `111000`, `111100` | all succeeded; no discovery function still calls `listing_market_visible()` per row (11 rewritten); `authenticated` can no longer execute `create_event` |
+| then | smoke test 2 | 11/11: as above plus the new event appears in signed-out discovery (nearby and date window), and a buyer can no longer list promo codes (0 rows; 1 before the migrations); every test row removed |
+| then | Admin › Claims opened as the allowlisted admin (session minted in memory, signed out after) | HTTP 200, "Place Claims … No claims in this view" (production has no claim requests) |
+| then | advisors | new objects only raise expected notices (`geocode_cache` has RLS with no policy — service only, like 101 others; `hidden_listing_countries` callable by clients, by design; new indexes not used yet). One real item: `throttle_place_analytics_event()` still had EXECUTE for clients → `20260925111400` revokes it (tested: inserts still fire the trigger) |
+
+So the final count is **15 migrations**: `20260925110000`–`110800` (nine), `110900`, `111000`, `111100`, `111200`, `111300` and `111400`.
+
+Production logs after the rollout show no errors except Resend refusing the
+test accounts' `@example.com` addresses (no email sent). The ticket-PDF
+step logs "Attempt to access memory outside buffer bounds" twice per free
+RSVP; the PDF and email code did not change in this release, and the RSVP
+succeeds — noted, not investigated here.
 
 ## 8. Final regression
 
