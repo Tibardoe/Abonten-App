@@ -3959,3 +3959,13 @@ Report: `docs/audit/09-incident-recovery-and-release-gate-2026-09-25.md`. Branch
 - **Production Paystack is in TEST mode** (2026-09-25 evidence: production transactions verify as `domain: test` with the test key; production accepts test-environment webhooks). No real money can be collected, and Paystack test cards would buy real tickets — set live keys before selling real tickets (founder).
 - **iOS blockers** (not web): paid promotions / Spotlight boosts via Paystack (Guideline 3.1.3(g)); Google sign-in without an equivalent private-email login (4.8).
 - **Production smoke tool**: `scripts/release/production-smoke.mjs` (throwaway accounts, no payment, cleans up).
+
+### 46.3 Live Paystack cutover safety (2026-09-25)
+
+Report `docs/audit/10-live-paystack-cutover-2026-09-25.md`; procedure `docs/finance/paystack-live-cutover.md`.
+
+- **Audit**: production web + admin run Paystack **test** keys (classified from production's own behaviour, never by reading a key; all 57 production transactions verify on the test account with matching amount, currency and state). `PAYSTACK_SECRET_KEY` and `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` are single variables shared by Production **and Preview**, and previews use the production database. The mobile app holds **no** Paystack key (hosted checkout page) — no EAS change or build is needed for the switch (report 09's EAS instruction was wrong).
+- **Test/live separation** (`payments/providers/keyMode.ts`): an account whose keys mix modes, or contradict the new `PAYMENTS_MODE` variable, is refused; a signed webhook whose `domain` is the other mode is acknowledged and ignored; the `paystack` health check reports each key's mode, the declared mode and unsettled charges.
+- **Payment reconcile sweep** (`reconcilePaymentAttemptsCore`, `POST /api/maintenance/payment-reconcile`, pg_cron `payment-reconcile` */5, migration `20260925120000`): open charges 35 min–2 days old are verified and finished through `finalizePayment`; never-started attempts are cancelled after 1 h (a group's uncharged members are kept). Fixes a lost-settlement gap (production held two test-mode charges "success" at Paystack, "initiated" here, since August) and abandoned payments holding tickets indefinitely. `payment_webhook_event.reference` links each delivery to its payment.
+- **Test-suite guard**: the integration suites refuse a non-local database and a live Paystack key.
+- **Live switch and the first live transaction are the founder's steps** (keys only in the Paystack dashboard); until then production is not ready for paid sales.

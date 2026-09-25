@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-25 — Live Paystack cutover safety
+
+- New `finance/paystack-live-cutover.md` 1.0 (audited configuration, ordered switch to live keys, no-charge verification, the one controlled live transaction, rollback) and `audit/10-live-paystack-cutover-2026-09-25.md` 1.0. `finance/reconciliation.md` 1.1, `finance/payments-and-ticketing-runbook.md` 1.2, `security/payment-security.md` 1.1, `security/secrets-and-environment.md` 1.1, PROJECT.md §46.3, CLAUDE.md, `docs/INDEX.md`; report 09 corrected (the mobile app holds no Paystack key).
+- Behaviour: Paystack keys that mix test and live, or contradict `PAYMENTS_MODE`, are refused; a signed webhook from the other mode is acknowledged and ignored; charges the app and webhook both missed are verified and finished within minutes (35 min–2 days); payments that never reached Paystack are cancelled after an hour and release their tickets; the `paystack` health row shows key modes and unsettled charges; the integration suites refuse a non-local database or a live key.
+- Migration `20260925120000_payment_reconcile_sweep` (table `payment_reconcile_config`, function `run_payment_reconcile_dispatch`, column `payment_webhook_event.reference`). New job `payment-reconcile` (*/5). New route `POST /api/maintenance/payment-reconcile` (cron token). New env var `PAYMENTS_MODE` (optional; `live` on Production at the switch). Permissions: none.
+
 ## 2026-09-25 — Incident recovery and final release gate
 
 - New `audit/09-incident-recovery-and-release-gate-2026-09-25.md` 1.0 (incident timelines with evidence, fixes F1–F7, verified / not verified, iOS checklist against Guidelines 3.1.3(g) and 4.8, production runbook). PROJECT.md §46.2, CLAUDE.md, `docs/INDEX.md`, `architecture/global-platform.md` 1.4, `architecture/discovery-search-and-recommendations.md` 1.2, `security/application-security.md` 1.2, `admin/markets.md` 1.2.
