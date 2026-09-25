@@ -283,7 +283,7 @@ plus the small things found on the way.
 | `payment_attempt` stayed `succeeded` after a refund | The attempt becomes `refunded` when `refund.processed` arrives or a credit-only refund completes; `finalizePayment` answers "This payment was refunded." for it | integration (the refund webhook closes the attempt; finalize → failed) |
 | Every abandoned or declined verification logged as an error | Logged at warn; an amount mismatch (money taken) stays an error with the payment log data | code |
 | Stale docs said the mobile app needs a Paystack public key | `docs/mobile/08`, `docs/mobile/09` and `apps/mobile/.env.example` corrected | docs check |
-| Vercel "readable-secret" variables | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` are read by no code: neutralised (sensitive, marker value; delete when convenient). `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` are used and can only be re-entered as Sensitive by a person in the Vercel dashboard (a value cannot be re-typed through this tooling without exposing it) | Vercel |
+| Vercel "readable-secret" variables | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` are read by no code: neutralised (sensitive, marker value; delete when convenient). `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` could only be re-entered by a person (a value cannot be re-typed through this tooling without exposing it); the founder did so at 23:48 UTC — both now Sensitive, no readable-secret flag left on either project | Vercel variable list |
 
 Two things the tooling was not allowed or able to do, and why:
 
