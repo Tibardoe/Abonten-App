@@ -1,0 +1,671 @@
+// Production release check (docs/audit/09-incident-recovery-and-release-gate-2026-09-25.md
+// runbook steps 3, 4, 7 and 9). Organizer / customer / admin flows plus
+// direct Data API security probes against https://abontenhub.com and the
+// production database, with throwaway @example.com accounts it creates and
+// deletes (every row it writes is removed and checked). No payment is
+// made. The admin checks sign in as the allowlisted Big_Ceo account with a
+// session minted in memory and signed out afterwards. Prints outcomes
+// only — never a key, token, e-mail address or phone number.
+//
+//   node scripts/release/production-smoke.mjs apps/web/.env.local
+//
+// Needs the production service-role key in that file: run it only from a
+// trusted machine, and only when a production check is intended.
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+
+const require = createRequire(
+  new globalThis.URL("../../packages/services/package.json", import.meta.url),
+);
+const { createClient } = require("@supabase/supabase-js");
+const env = Object.fromEntries(
+  readFileSync(process.argv[2], "utf8")
+    .split(/\r?\n/)
+    .filter((l) => /^[A-Z_]+=/.test(l))
+    .map((l) => {
+      const i = l.indexOf("=");
+      return [l.slice(0, i), l.slice(i + 1).replace(/^"|"$/g, "")];
+    }),
+);
+const SITE = "https://abontenhub.com";
+const ADMIN = "https://admin.abontenhub.com";
+const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL;
+const ANON = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const REF = new globalThis.URL(SUPABASE_URL).hostname.split(".")[0];
+const service = createClient(SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+const results = [];
+const record = (area, step, ok, detail = "") => {
+  results.push({ area, step, ok });
+  console.log(
+    `${ok ? "PASS" : "FAIL"}  [${area}] ${step}${detail ? `  — ${detail}` : ""}`,
+  );
+};
+const created = { users: [], events: [], payout: [], drafts: [] };
+const tag = `gate${Date.now().toString(36)}`;
+
+async function throwaway(label) {
+  const email = `gate-${label}-${Date.now()}@example.com`;
+  const password = `Gate-${crypto.randomUUID()}-x1`;
+  const { data, error } = await service.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: `Gate ${label}` },
+  });
+  if (error) throw new Error(`createUser ${label}: ${error.message}`);
+  created.users.push(data.user.id);
+  const anon = createClient(SUPABASE_URL, ANON, { auth: { persistSession: false } });
+  const { data: s, error: e2 } = await anon.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (e2) throw new Error(`sign in ${label}: ${e2.message}`);
+  const db = createClient(SUPABASE_URL, ANON, {
+    global: { headers: { authorization: `Bearer ${s.session.access_token}` } },
+    auth: { persistSession: false },
+  });
+  return { id: data.user.id, token: s.session.access_token, db };
+}
+
+async function api(path, token, body, method = "POST") {
+  const res = await fetch(`${SITE}${path}`, {
+    method,
+    headers: {
+      "content-type": "application/json",
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let json = null;
+  try {
+    json = await res.json();
+  } catch {}
+  return { http: res.status, json };
+}
+
+async function adminSession() {
+  const { data: owner } = await service
+    .from("user_info")
+    .select("id")
+    .eq("username", "Big_Ceo")
+    .single();
+  const { data: u } = await service.auth.admin.getUserById(owner.id);
+  const { data: link } = await service.auth.admin.generateLink({
+    type: "magiclink",
+    email: u.user.email,
+  });
+  const anon = createClient(SUPABASE_URL, ANON, { auth: { persistSession: false } });
+  const { data: v, error } = await anon.auth.verifyOtp({
+    type: "magiclink",
+    token_hash: link.properties.hashed_token,
+  });
+  if (error) throw new Error(`admin session: ${error.message}`);
+  const value = `base64-${Buffer.from(JSON.stringify(v.session)).toString("base64url")}`;
+  const name = `sb-${REF}-auth-token`;
+  const parts = [];
+  for (let i = 0; i * 3180 < value.length; i++)
+    parts.push(`${name}.${i}=${value.slice(i * 3180, (i + 1) * 3180)}`);
+  return {
+    cookie: value.length <= 3180 ? `${name}=${value}` : parts.join("; "),
+    token: v.session.access_token,
+  };
+}
+const pageText = (html) =>
+  html
+    .replace(/<script[\s\S]*?<\/script>/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+
+async function main() {
+  const { data: flyer } = await service
+    .from("event")
+    .select("flyer_public_id, flyer_version")
+    .not("flyer_public_id", "is", null)
+    .limit(1)
+    .single();
+  const org = await throwaway("org");
+  const buyer = await throwaway("buyer");
+  const soon = new Date(Date.now() + 60 * 60_000);
+  const later = new Date(Date.now() + 3 * 60 * 60_000);
+  const base = {
+    description:
+      "Automated release check by Abonten engineering. Removed within minutes.",
+    category: "Business & Networking",
+    types: ["Conferences"],
+    address: "Independence Avenue, Accra, Ghana",
+    latitude: 5.5566,
+    longitude: -0.1969,
+    requireRegistration: false,
+    flyerPublicId: flyer.flyer_public_id,
+    flyerVersion: String(flyer.flyer_version),
+    capacity: 20,
+    startsAt: soon.toISOString(),
+    endsAt: later.toISOString(),
+  };
+  const code = `GATE${Date.now().toString().slice(-6)}`;
+
+  // ── Organizer ──────────────────────────────────────────────────────────
+  const paid = await api("/api/mobile/events", org.token, {
+    ...base,
+    title: `Release check paid ${tag}`,
+    clientRequestId: crypto.randomUUID(),
+    singleTicket: { price: 1, quantity: 10 },
+    promoCodes: [
+      {
+        promoCode: code,
+        discount: 10,
+        maximumUse: 5,
+        expiryDate: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+      },
+    ],
+  });
+  const paidId = paid.json?.eventId;
+  if (paidId) created.events.push(paidId);
+  record(
+    "organizer",
+    "create paid event",
+    paid.http === 200 && !!paidId,
+    `HTTP ${paid.http}`,
+  );
+
+  const free = await api("/api/mobile/events", org.token, {
+    ...base,
+    title: `Release check free ${tag}`,
+    clientRequestId: crypto.randomUUID(),
+    freeEvent: true,
+  });
+  const freeId = free.json?.eventId;
+  if (freeId) created.events.push(freeId);
+  record(
+    "organizer",
+    "create free event",
+    free.http === 200 && !!freeId,
+    `HTTP ${free.http}`,
+  );
+
+  const draft = await api("/api/mobile/organizer/event-drafts", org.token, {
+    payload: { title: `Release check draft ${tag}`, capacity: 20 },
+  });
+  const draftId = draft.json?.data?.draftId;
+  if (draftId) created.drafts.push(draftId);
+  const fromDraft = await api("/api/mobile/events", org.token, {
+    ...base,
+    title: `Release check draft ${tag}`,
+    clientRequestId: crypto.randomUUID(),
+    freeEvent: true,
+    draftId,
+  });
+  if (fromDraft.json?.eventId) created.events.push(fromDraft.json.eventId);
+  const { count: draftLeft } = await service
+    .from("drafts")
+    .select("id", { count: "exact", head: true })
+    .eq("id", draftId ?? "00000000-0000-0000-0000-000000000000");
+  record(
+    "organizer",
+    "save a draft, then publish it (draft removed)",
+    draft.http === 200 && fromDraft.http === 200 && draftLeft === 0,
+    `draft HTTP ${draft.http}, publish HTTP ${fromDraft.http}, draft rows left ${draftLeft}`,
+  );
+
+  if (paidId) {
+    const edit = await api(
+      `/api/mobile/organizer/events/${paidId}`,
+      org.token,
+      {
+        title: `Release check paid ${tag} edited`,
+        description: base.description,
+        address: base.address,
+        latitude: base.latitude,
+        longitude: base.longitude,
+        category: base.category,
+        types: base.types,
+        checked: false,
+        capacity: 25,
+        startsAt: base.startsAt,
+        endsAt: base.endsAt,
+      },
+      "PATCH",
+    );
+    const { data: row } = await service
+      .from("event")
+      .select(
+        "title, capacity, status, currency, country_code, timezone, organizer_id, featured",
+      )
+      .eq("id", paidId)
+      .single();
+    record(
+      "organizer",
+      "edit event",
+      edit.http === 200 &&
+        row?.capacity === 25 &&
+        /edited$/i.test(row?.title ?? ""),
+      `HTTP ${edit.http}, capacity ${row?.capacity}, title "${row?.title}"`,
+    );
+    record(
+      "database",
+      "event row: owner, market, currency, zone, status",
+      row?.organizer_id === org.id &&
+        row?.country_code === "GH" &&
+        row?.currency === "GHS" &&
+        row?.timezone === "Africa/Accra" &&
+        row?.status === "published" &&
+        row?.featured === false,
+      `${row?.status} ${row?.country_code} ${row?.currency} ${row?.timezone} featured=${row?.featured}`,
+    );
+  }
+
+  const dash = await api(
+    "/api/mobile/organizer/dashboard?period=7d",
+    org.token,
+    null,
+    "GET",
+  );
+  record(
+    "organizer",
+    "dashboard loads",
+    dash.http === 200,
+    `HTTP ${dash.http}`,
+  );
+
+  const payout = await api("/api/mobile/organizer/payout-accounts", org.token, {
+    accountType: "mobile_money",
+    accountHolderName: "Gate Check",
+    networkCode: "MTN",
+    networkName: "MTN",
+    phone: "0240000000",
+  });
+  const { data: pa } = await service
+    .from("payout_account")
+    .select("id, currency, country_code")
+    .eq("organizer_id", org.id);
+  (pa ?? []).forEach((p) => created.payout.push(p.id));
+  record(
+    "organizer",
+    "add a payout account",
+    payout.http === 200 && pa?.length === 1 && pa[0].currency === "GHS",
+    `HTTP ${payout.http} ${payout.json?.message ?? ""}, rows ${pa?.length ?? 0} ${pa?.[0]?.currency ?? ""}`.trim(),
+  );
+
+  // ── Customer ───────────────────────────────────────────────────────────
+  const anonDb = createClient(SUPABASE_URL, ANON, { auth: { persistSession: false } });
+  if (paidId) {
+    const { data: near } = await anonDb.rpc("get_nearby_events", {
+      user_lat: 5.5566,
+      user_lng: -0.1969,
+      search_radius: 5000,
+      p_cursor_sort_key: null,
+      p_cursor_id: null,
+      p_page_size: 50,
+    });
+    record(
+      "customer",
+      "event appears in signed-out discovery",
+      (near ?? []).some((e) => e.id === paidId),
+    );
+    const { data: ev } = await service
+      .from("event")
+      .select("event_code")
+      .eq("id", paidId)
+      .single();
+    const page = await fetch(`${SITE}/events/${ev.event_code}`);
+    const text = pageText(await page.text());
+    record(
+      "customer",
+      "event page opens and shows the ticket price",
+      page.status === 200 &&
+        text.toLowerCase().includes(tag) &&
+        /GH₵s?(1|0.9)/.test(text),
+      `HTTP ${page.status}; title ${text.toLowerCase().includes(tag)}; prices ${(text.match(/GH₵s?[0-9.,]+/g) ?? []).slice(0, 3).join(", ") || "none"}`,
+    );
+    const { data: tt } = await service
+      .from("ticket_type")
+      .select("id")
+      .eq("event_id", paidId)
+      .single();
+    const v = await api("/api/mobile/checkout/validate", buyer.token, {
+      eventId: paidId,
+      quantities: { [tt.id]: 1 },
+      promoCode: code,
+    });
+    const { data: co } = await service
+      .from("ticket_checkout")
+      .select("discount, total_price, status")
+      .eq("event_id", paidId)
+      .eq("user_id", buyer.id);
+    record(
+      "customer",
+      "reserve a ticket with the promo code (no payment)",
+      v.http === 200 && Number(co?.[0]?.discount) > 0,
+      `HTTP ${v.http}, total ${co?.[0]?.total_price} GHS`,
+    );
+    if (v.json?.checkoutSessionId) {
+      const c = await api("/api/mobile/checkout/cancel", buyer.token, {
+        checkoutSessionId: v.json.checkoutSessionId,
+      });
+      record(
+        "customer",
+        "cancel the unpaid reservation",
+        c.http === 200,
+        `HTTP ${c.http}`,
+      );
+    }
+  }
+  let ticketId = null;
+  if (freeId) {
+    const r = await api("/api/mobile/checkout/free-rsvp", buyer.token, {
+      eventId: freeId,
+    });
+    const { data: types } = await service
+      .from("ticket_type")
+      .select("id")
+      .eq("event_id", freeId);
+    const { data: t } = await service
+      .from("ticket")
+      .select("id, status")
+      .eq("user_id", buyer.id)
+      .in(
+        "ticket_type_id",
+        (types ?? []).map((x) => x.id),
+      )
+      .maybeSingle();
+    ticketId = t?.id ?? null;
+    record(
+      "customer",
+      "register for the free event",
+      r.http === 200 && t?.status === "active",
+      `HTTP ${r.http}`,
+    );
+  }
+
+  // ── Admin ──────────────────────────────────────────────────────────────
+  if (paidId) {
+    const admin = await adminSession();
+    try {
+      const list = await fetch(`${ADMIN}/events?q=${encodeURIComponent(tag)}`, {
+        headers: { cookie: admin.cookie },
+        redirect: "manual",
+      });
+      const listText = pageText(await list.text());
+      record(
+        "admin",
+        "find the event in Admin › Events",
+        list.status === 200 && listText.toLowerCase().includes(tag),
+        `HTTP ${list.status}; snippet "${listText.slice(listText.lastIndexOf("Sign out") + 8, listText.lastIndexOf("Sign out") + 300)}"`,
+      );
+      const detail = await fetch(`${ADMIN}/events/${paidId}`, {
+        headers: { cookie: admin.cookie },
+        redirect: "manual",
+      });
+      const dText = pageText(await detail.text());
+      record(
+        "admin",
+        "event detail shows organizer, market, currency and status",
+        detail.status === 200 &&
+          dText.toLowerCase().includes(tag) &&
+          /GH₵|GHS/.test(dText) &&
+          /published/i.test(dText) &&
+          /Ghana|GH/.test(dText),
+        `HTTP ${detail.status}; title ${dText.toLowerCase().includes(tag)}, money ${/GH₵|GHS/.test(dText)}, published ${/published/i.test(dText)}, Ghana ${/Ghana|GH/.test(dText)}`,
+      );
+    } finally {
+      await fetch(`${SUPABASE_URL}/auth/v1/logout?scope=local`, {
+        method: "POST",
+        headers: { apikey: ANON, authorization: `Bearer ${admin.token}` },
+      });
+    }
+  }
+
+  // ── Security probes (Data API, as the organizer / buyer) ──────────────
+  if (paidId) {
+    for (const [field, value] of [
+      ["currency", "USD"],
+      ["country_code", "NG"],
+      ["featured", true],
+      ["timezone", "Africa/Lagos"],
+    ]) {
+      const { error } = await org.db
+        .from("event")
+        .update({ [field]: value })
+        .eq("id", paidId);
+      const { data: row } = await service
+        .from("event")
+        .select(field)
+        .eq("id", paidId)
+        .single();
+      record(
+        "security",
+        `organizer cannot change event.${field} directly`,
+        !!error && row[field] !== value,
+        error?.code ?? "no error",
+      );
+    }
+    const { data: tt } = await service
+      .from("ticket_type")
+      .select("id, quantity")
+      .eq("event_id", paidId)
+      .single();
+    const { error: capErr } = await org.db
+      .from("ticket_type")
+      .update({ quantity: 500 })
+      .eq("id", tt.id);
+    const { data: tt2 } = await service
+      .from("ticket_type")
+      .select("quantity")
+      .eq("id", tt.id)
+      .single();
+    record(
+      "security",
+      "organizer cannot raise ticket quantity past capacity",
+      !!capErr && tt2.quantity === tt.quantity,
+      capErr?.code ?? "no error",
+    );
+    const { error: attErr } = await buyer.db
+      .from("attendance")
+      .insert({
+        user_id: buyer.id,
+        event_id: paidId,
+        number_of_tickets: 25,
+        status: "attending",
+      });
+    record(
+      "security",
+      "no one can insert attendance to fill an event",
+      !!attErr,
+      attErr?.code ?? "inserted!",
+    );
+    const { data: codes } = await buyer.db
+      .from("promo_code")
+      .select("promo_code")
+      .eq("event_id", paidId);
+    record(
+      "security",
+      "buyer cannot list promo codes",
+      (codes ?? []).length === 0,
+      `${(codes ?? []).length} visible`,
+    );
+  }
+  const ce = await org.db.rpc("create_event", {
+    p_client_request_id: crypto.randomUUID(),
+    p_organizer_id: org.id,
+  });
+  record(
+    "security",
+    "direct create_event is refused",
+    !!ce.error && /42501|PGRST202/.test(ce.error.code ?? ""),
+    ce.error?.code,
+  );
+  const cp = await org.db.rpc("create_place", {
+    p_client_request_id: crypto.randomUUID(),
+    p_owner_id: org.id,
+  });
+  record(
+    "security",
+    "direct create_place is refused",
+    !!cp.error && /42501|PGRST202/.test(cp.error.code ?? ""),
+    cp.error?.code,
+  );
+  const { error: paErr } = await org.db
+    .from("payout_account")
+    .insert({
+      organizer_id: org.id,
+      account_type: "bank",
+      account_holder_name: "X",
+      provider: "x",
+      account_number: "123456789",
+      currency: "NGN",
+      country_code: "NG",
+    });
+  record(
+    "security",
+    "payout accounts cannot be written directly",
+    !!paErr,
+    paErr?.code ?? "inserted!",
+  );
+  if (ticketId) {
+    const { error: moveErr } = await org.db
+      .from("ticket")
+      .update({ user_id: org.id })
+      .eq("id", ticketId);
+    const { data: t } = await service
+      .from("ticket")
+      .select("user_id")
+      .eq("id", ticketId)
+      .single();
+    record(
+      "security",
+      "organizer cannot move a buyer's ticket to another account",
+      t.user_id === buyer.id,
+      moveErr?.code ?? "no error, row unchanged",
+    );
+    const cancel = await api("/api/mobile/tickets/cancel", buyer.token, {
+      ticketId,
+    });
+    const { error: reviveErr } = await org.db
+      .from("ticket")
+      .update({ status: "active" })
+      .eq("id", ticketId);
+    const { data: t2 } = await service
+      .from("ticket")
+      .select("status")
+      .eq("id", ticketId)
+      .single();
+    record(
+      "security",
+      "organizer cannot restore a cancelled ticket",
+      cancel.http === 200 && t2.status !== "active",
+      `cancel HTTP ${cancel.http}, ticket ${t2.status}, ${reviveErr?.code ?? "no error"}`,
+    );
+  }
+  // Banned organizer and attendee PII.
+  await service.from("user_info").update({ status_id: 3 }).eq("id", org.id);
+  const pii = await org.db.rpc("get_event_attendee_contacts", {
+    p_event_id: freeId,
+  });
+  record(
+    "security",
+    "a banned organizer's token cannot read attendee contacts",
+    !!pii.error,
+    pii.error?.code ?? `${pii.data?.length} rows`,
+  );
+  const bannedApi = await api(
+    "/api/mobile/organizer/dashboard?period=7d",
+    org.token,
+    null,
+    "GET",
+  );
+  record(
+    "security",
+    "a banned organizer's token is refused by the mobile API",
+    bannedApi.http === 403 || bannedApi.http === 401,
+    `HTTP ${bannedApi.http}`,
+  );
+
+  // Service-role key never reaches the browser.
+  const home = await (await fetch(`${SITE}/`)).text();
+  const scripts = [...home.matchAll(/src="(\/_next\/static\/[^"]+\.js)"/g)].map(
+    (m) => m[1],
+  );
+  let leaked = 0;
+  const needles = [
+    env.SUPABASE_SERVICE_ROLE_KEY,
+    env.PAYSTACK_SECRET_KEY,
+    env.CLOUDINARY_API_SECRET,
+  ].filter(Boolean); // real values only; supabase-js contains the literal prefix "sb_secret_"
+  for (const s of scripts) {
+    const js = await (await fetch(`${SITE}${s}`)).text();
+    if (needles.some((n) => js.includes(n))) leaked++;
+  }
+  record(
+    "security",
+    `no secret key in the ${scripts.length} browser scripts of the home page`,
+    leaked === 0 && scripts.length > 0,
+    `${leaked} script(s) matched`,
+  );
+}
+
+async function cleanup() {
+  for (const id of created.events) {
+    await service.from("ticket_checkout").delete().eq("event_id", id);
+    const { data: tts } = await service
+      .from("ticket_type")
+      .select("id")
+      .eq("event_id", id);
+    const { data: tickets } = await service
+      .from("ticket")
+      .select("id")
+      .in(
+        "ticket_type_id",
+        (tts ?? []).map((t) => t.id),
+      );
+    const ids = (tickets ?? []).map((t) => t.id);
+    if (ids.length) {
+      await service.from("attendance").delete().in("ticket_id", ids);
+      await service.from("ticket").delete().in("id", ids);
+    }
+    await service.from("attendance").delete().eq("event_id", id);
+    await service.from("promo_code").delete().eq("event_id", id);
+    const { error } = await service.from("event").delete().eq("id", id);
+    if (error) console.log(`cleanup: event not deleted: ${error.message}`);
+  }
+  for (const id of created.payout)
+    await service.from("payout_account").delete().eq("id", id);
+  for (const id of created.drafts)
+    await service.from("drafts").delete().eq("id", id);
+  for (const id of created.users) {
+    const { error } = await service.auth.admin.deleteUser(id);
+    if (error) console.log(`cleanup: user not deleted: ${error.message}`);
+  }
+  const left = [];
+  for (const id of created.events) {
+    const { count } = await service
+      .from("event")
+      .select("id", { count: "exact", head: true })
+      .eq("id", id);
+    if (count) left.push(`event ${id}`);
+  }
+  for (const id of created.users) {
+    const { count } = await service
+      .from("user_info")
+      .select("id", { count: "exact", head: true })
+      .eq("id", id);
+    if (count) left.push(`user_info ${id}`);
+  }
+  console.log(
+    left.length
+      ? `CLEANUP LEFT: ${left.join(", ")}`
+      : "cleanup: every test row removed",
+  );
+}
+
+try {
+  await main();
+} catch (e) {
+  record("script", "run", false, String(e.message ?? e));
+} finally {
+  await cleanup();
+  const failed = results.filter((r) => !r.ok).length;
+  console.log(`— ${results.length - failed} passed, ${failed} failed —`);
+}
