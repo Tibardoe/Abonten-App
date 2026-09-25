@@ -39,9 +39,15 @@ function Row({
 }: { label: string; value: string | number | null }) {
   if (value === null || value === undefined || value === "") return null;
   return (
-    <View className="flex-row items-center justify-between">
-      <AppText variant="muted">{label}</AppText>
-      <AppText variant="small">{String(value)}</AppText>
+    <View className="flex-row items-start justify-between gap-4">
+      <AppText variant="muted" className="shrink-0">
+        {label}
+      </AppText>
+      {/* A long value (an order reference) wraps inside the card instead of
+          running into the label and past the edge. */}
+      <AppText variant="small" className="flex-1 text-right" selectable>
+        {String(value)}
+      </AppText>
     </View>
   );
 }
