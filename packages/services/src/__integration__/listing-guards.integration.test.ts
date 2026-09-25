@@ -6,6 +6,10 @@ import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 // (migration 20260925110100). Owners keep editing their own content; the
 // market-derived and paid-for columns are the service's.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { postEventCore } from "../events/postEventCore";
+import { updateEventCore } from "../events/updateEventCore";
+import { postPlaceCore } from "../places/postPlaceCore";
+import { updatePlaceCore } from "../places/updatePlaceCore";
 import { getPromoCodeCore } from "../promo-codes/getPromoCodeCore";
 import {
   type TestUser,
@@ -402,6 +406,141 @@ describe("place analytics throttle (migration 20260925110600)", () => {
       ).toBe(true);
     } finally {
       await service.from("place").delete().eq("id", placeId);
+      await deleteTestUser(service, owner.id);
+    }
+  });
+});
+
+describe("listing creation and edits through the service (service-role create_event)", () => {
+  it("an organizer creates and edits an event; a restricted one cannot create", async () => {
+    const service = getServiceClient();
+    const organizer = await createTestUser(service);
+    const inTwoDays = new Date(Date.now() + 2 * 86_400_000);
+    const input = {
+      title: "service path event",
+      description: "Created through postEventCore by the listing-guards suite.",
+      category: "conference",
+      types: ["Live Concerts"],
+      address: "Independence Avenue, Accra",
+      addressDetails: { country_code: "GH", city: "Accra" },
+      latitude: 5.6037,
+      longitude: -0.187,
+      capacity: 50,
+      requireRegistration: false,
+      startsAt: inTwoDays.toISOString(),
+      endsAt: new Date(inTwoDays.getTime() + 3_600_000).toISOString(),
+      singleTicket: { price: 25, quantity: 20 },
+      flyerPublicId: "test/flyer",
+      flyerVersion: "1",
+      clientRequestId: crypto.randomUUID(),
+    };
+    let eventId: string | null = null;
+    try {
+      const created = await postEventCore(
+        organizer.client,
+        organizer.id,
+        input,
+      );
+      expect(created.status, created.message).toBe(200);
+      if (created.status !== 200) return;
+      eventId = created.eventId;
+      const { data: row } = await service
+        .from("event")
+        .select("organizer_id, country_code, currency, timezone, featured")
+        .eq("id", eventId)
+        .single();
+      expect(row).toMatchObject({
+        organizer_id: organizer.id,
+        country_code: "GH",
+        currency: "GHS",
+        timezone: "Africa/Accra",
+        featured: false,
+      });
+
+      const edited = await updateEventCore(organizer.client, organizer.id, {
+        eventId,
+        title: "service path event, edited",
+        description: input.description,
+        address: input.address,
+        addressDetails: input.addressDetails,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        capacity: 60,
+        category: input.category,
+        types: input.types,
+        checked: false,
+        starts_at: input.startsAt,
+        ends_at: input.endsAt,
+      });
+      expect(edited.status, edited.message).toBe(200);
+
+      await service
+        .from("user_info")
+        .update({ status_id: 3 })
+        .eq("id", organizer.id);
+      const refused = await postEventCore(organizer.client, organizer.id, {
+        ...input,
+        clientRequestId: crypto.randomUUID(),
+      });
+      expect(refused.status).toBe(403);
+    } finally {
+      if (eventId)
+        await deleteTestEvent(service, eventId).catch(() => undefined);
+      await deleteTestUser(service, organizer.id);
+    }
+  });
+});
+
+describe("place creation and edits through the service", () => {
+  it("an owner creates a place and moves it within Ghana", async () => {
+    const service = getServiceClient();
+    const owner = await createTestUser(service);
+    const { data: category } = await service
+      .from("place_category")
+      .select("id")
+      .limit(1)
+      .single();
+    let placeId: string | null = null;
+    try {
+      const created = await postPlaceCore(owner.client, owner.id, {
+        name: "Service Path Venue",
+        categoryId: category?.id as number,
+        description: "Created by the listing-guards suite.",
+        address: "Oxford Street, Accra",
+        addressDetails: { country_code: "GH", city: "Accra" },
+        latitude: 5.556,
+        longitude: -0.182,
+        coverPublicId: "test/cover",
+        coverVersion: "1",
+        openingHours: [],
+        clientRequestId: crypto.randomUUID(),
+      });
+      expect(created.status, created.message).toBe(200);
+      if (created.status !== 200) return;
+      placeId = created.placeId;
+      const updated = await updatePlaceCore(owner.client, owner.id, {
+        placeId,
+        name: "Service Path Venue (Kumasi)",
+        description: "Moved by the listing-guards suite.",
+        categoryId: category?.id as number,
+        address: "Adum, Kumasi",
+        addressDetails: { country_code: "GH", city: "Kumasi" },
+        latitude: 6.6885,
+        longitude: -1.6244,
+      });
+      expect(updated.status, updated.message).toBe(200);
+      const { data: row } = await service
+        .from("place")
+        .select("name, country_code, timezone")
+        .eq("id", placeId)
+        .single();
+      expect(row).toMatchObject({
+        name: "Service Path Venue (Kumasi)",
+        country_code: "GH",
+        timezone: "Africa/Accra",
+      });
+    } finally {
+      if (placeId) await service.from("place").delete().eq("id", placeId);
       await deleteTestUser(service, owner.id);
     }
   });
