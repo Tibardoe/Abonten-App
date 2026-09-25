@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-25 — Full-system adversarial audit
+
+- New `audit/07-full-system-audit-2026-09-25.md` 1.0 (28 findings, all fixed on `audit/full-system-2026-09-25`; how each was reproduced and verified; rollout order). `architecture/global-platform.md` 1.2, PROJECT.md §46, CLAUDE.md, `docs/INDEX.md`.
+- Behaviour: a payment attempt is bound to one charge (changed basket → fresh provider page; stale tabs refunded; one open attempt per checkout); payouts only to an account in the balance's currency; door check-in admits a ticket once; listing owners can no longer write `featured`, currency, country, zone or publish dates directly and `create_event` / `create_place` / `issue_free_ticket` are service-only; attendance, tickets, payout accounts and bookings accept only the writes the apps make; promo codes are private to their organizer; restricted accounts are refused on every Server Action; OTP has a per-country hourly ceiling and no codes for markets being set up; numbers in shared calling codes use the code's main market; provider rows may only name that provider's own variables; money on every screen goes through `formatMoney`; database error text is no longer shown to people.
+- Migrations `20260925110000`–`20260925110800` (not yet applied to production: deploy web/admin first). New jobs, env vars, permissions: none.
+
 ## 2026-09-25 — Global platform hardening
 
 - `architecture/global-platform.md` 1.1, `development/testing.md` 1.1 (opt-in Paystack sandbox suite), `admin/markets.md` 1.1, `admin/finance.md` 1.3, `finance/settlement-ledger-and-payouts.md` 1.1, PROJECT.md §45, CLAUDE.md.
