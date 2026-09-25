@@ -126,20 +126,40 @@ export function accountModes(
 
 /**
  * Why this provider row cannot be used on this deployment, or null: a
- * variable is missing, or its keys mix test and live, or they are not the
- * mode PAYMENTS_MODE declares.
+ * variable is missing, its keys mix test and live, they are not the mode
+ * PAYMENTS_MODE declares, a live key sits on a non-production deployment,
+ * or (Paystack) the webhook secret is not the secret key.
  */
 export function accountProblem(
   config: MarketPaymentProvider,
   env: Record<string, string | undefined> = process.env,
 ): string | null {
-  if (!env[config.credentials.secretKeyEnv]) {
-    return `missing ${config.credentials.secretKeyEnv}`;
+  const secretEnv = config.credentials.secretKeyEnv;
+  const webhookEnv = config.credentials.webhookSecretEnv;
+  if (!env[secretEnv]?.trim()) {
+    return `missing ${secretEnv}`;
   }
-  return accountModeProblem(
+  const problem = accountModeProblem(
     accountModes(config, env),
     declaredPaymentsMode(env),
+    {
+      webhookSecretIsKey: config.provider === "paystack",
+      deploymentEnv: env.VERCEL_ENV?.trim() || null,
+    },
   );
+  if (problem) return problem;
+  // Paystack signs every webhook with the account's secret key — there is
+  // no separate webhook secret. A different value here (an old key, a typo)
+  // would refuse every live webhook while payments still went through.
+  if (
+    config.provider === "paystack" &&
+    webhookEnv !== secretEnv &&
+    env[webhookEnv]?.trim() &&
+    env[webhookEnv]?.trim() !== env[secretEnv]?.trim()
+  ) {
+    return `${webhookEnv} must hold the same value as ${secretEnv} (Paystack signs webhooks with the secret key)`;
+  }
+  return null;
 }
 
 /**

@@ -45,7 +45,9 @@ for (const line of readFileSync(envPath, "utf8").split("\n")) {
 // made. These are placeholders for the test process only — nothing here
 // reaches a provider — and a real value in the environment wins.
 process.env.PAYSTACK_SECRET_KEY ??= "sk_test_placeholder_integration_suite";
-process.env.PAYSTACK_WEBHOOK_SECRET ??= "whsec_placeholder_integration_suite";
+// Paystack signs webhooks with the secret key, and the registry refuses a
+// webhook secret that differs from it — so the placeholder is the same value.
+process.env.PAYSTACK_WEBHOOK_SECRET ??= process.env.PAYSTACK_SECRET_KEY;
 
 // Market configuration, the provider registry and other shared services
 // read through the service-role client, exactly as in production, so the

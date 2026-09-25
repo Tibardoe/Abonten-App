@@ -96,9 +96,15 @@ describe("live Paystack cutover", () => {
   const events: string[] = [];
   const envNames: string[] = [];
   const savedEnv: Record<string, string | undefined> = {};
+  // How many issuances still fail (a QR upload outage, say).
+  let failIssuance = 0;
 
   const deps: PaymentFulfillmentDeps = {
     issueTickets: async (sessionId, transactionId, metadata, auth) => {
+      if (failIssuance > 0) {
+        failIssuance -= 1;
+        return { status: 500, message: "simulated QR upload failure" };
+      }
       const { data: rows } = await service
         .from("ticket_checkout")
         .select("id, ticket_type_id, quantity, status")
@@ -486,5 +492,90 @@ describe("live Paystack cutover", () => {
     expect(JSON.stringify(refused)).not.toContain(TEST_KEY);
     setKeys(LIVE_KEY, LIVE_KEY, "live");
     expect((await pay([session])).status).toBe(200);
+  });
+
+  it("a webhook secret that is not the secret key is refused; the reason names no key", async () => {
+    fakePaystack();
+    const fixture = await newEvent();
+    const session = await openSession(fixture);
+    setKeys(LIVE_KEY, "sk_live_some_other_value", "live");
+    const refused = await pay([session]);
+    expect(refused.status).not.toBe(200);
+    expect(JSON.stringify(refused)).not.toContain("some_other_value");
+    setKeys(LIVE_KEY, LIVE_KEY, "live");
+    expect((await pay([session])).status).toBe(200);
+  });
+
+  it("a live key on a preview deployment is refused", async () => {
+    fakePaystack();
+    const fixture = await newEvent();
+    const session = await openSession(fixture);
+    const saved = process.env.VERCEL_ENV;
+    process.env.VERCEL_ENV = "preview";
+    try {
+      setKeys(LIVE_KEY, LIVE_KEY, "live");
+      expect((await pay([session])).status).not.toBe(200);
+      setKeys(TEST_KEY, TEST_KEY, "test");
+      expect((await pay([session])).status).toBe(200);
+    } finally {
+      if (saved === undefined)
+        Reflect.deleteProperty(process.env, "VERCEL_ENV");
+      else process.env.VERCEL_ENV = saved;
+      invalidateMarketCache();
+    }
+  });
+
+  it("a recorded charge whose issuance failed is issued by the sweep, once, after its backoff", async () => {
+    const provider = fakePaystack();
+    const fixture = await newEvent();
+    const session = await openSession(fixture);
+    const started = await payOk([session]);
+    const id = started.attempts[0].id;
+    const ref = started.payment?.reference as string;
+    provider.paid.add(ref);
+    failIssuance = 1;
+    // The webhook verifies the charge; the ticket step fails after the
+    // transaction is recorded.
+    const hook = await handleProviderWebhook({
+      providerCode: "paystack",
+      countryCode: "GH",
+      ...signed(TEST_KEY, "charge.success", {
+        reference: ref,
+        id: 7,
+        domain: "test",
+      }),
+      deps,
+    });
+    expect(hook.status).not.toBe(200);
+    expect((await attempt(id))?.status).toBe("fulfillment_failed");
+    const { data: txns } = await service
+      .from("transaction")
+      .select("id")
+      .eq("user_id", buyer.id);
+    expect(txns).toHaveLength(1);
+
+    // Touched moments ago: the sweep leaves it for its backoff.
+    await service
+      .from("payment_attempt")
+      .update({ created_at: new Date(Date.now() - 40 * 60_000).toISOString() })
+      .eq("id", id);
+    await reconcilePaymentAttemptsCore(deps);
+    expect((await attempt(id))?.status).toBe("fulfillment_failed");
+
+    await age(id, session, 40);
+    const run = await reconcilePaymentAttemptsCore(deps);
+    expect(run.outcomes.succeeded).toBe(1);
+    expect((await attempt(id))?.status).toBe("succeeded");
+    await reconcilePaymentAttemptsCore(deps);
+    const { data: tickets } = await service
+      .from("ticket")
+      .select("id")
+      .eq("user_id", buyer.id);
+    const { data: txnsAfter } = await service
+      .from("transaction")
+      .select("id")
+      .eq("user_id", buyer.id);
+    expect(tickets).toHaveLength(1);
+    expect(txnsAfter).toHaveLength(1);
   });
 });

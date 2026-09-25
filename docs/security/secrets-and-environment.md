@@ -4,7 +4,7 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -32,11 +32,11 @@ complianceReviewRequired: no
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | secret | Used by Supabase Auth Google provider (set in Supabase too); vestigial in build env | OAuth config |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | yes | Cloudinary URLs | media fails |
 | `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | secret | Signed uploads, destroys, health probe | uploads fail |
-| `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` | secret | Ghana's Paystack account: payments, refunds, webhook signature (the names Ghana's `market_payment_provider` row points at) | Ghana payments fail / webhooks rejected |
+| `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` | secret | Ghana's Paystack account: payments, refunds, webhook signature (the names Ghana's `market_payment_provider` row points at). **Both hold the same value** — Paystack signs webhooks with the secret key; a differing webhook value makes the registry refuse the account (2026-09-25) | Ghana payments fail / webhooks rejected |
 | `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | yes | Ghana's Paystack popup (returned per checkout by the server, not bundled) | popup fails |
 | `PAYMENTS_MODE` | no (`live` / `test`) | The Paystack/Stripe mode this deployment must run in; a key of the other mode is refused. Set `live` on Production (web and admin) at the switch to live keys | unset: no declared mode (mixed keys are still refused) |
 
-**Test and live.** The three Ghana Paystack variables must all be one mode — `PAYSTACK_WEBHOOK_SECRET` equals `PAYSTACK_SECRET_KEY` (Paystack signs webhooks with the secret key). Live keys go on **Production only**: Preview deployments use the production database, so they get no Paystack keys once production is live. Procedure: [../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md).
+**Test and live.** The three Ghana Paystack variables must all be one mode — `PAYSTACK_WEBHOOK_SECRET` equals `PAYSTACK_SECRET_KEY` (Paystack signs webhooks with the secret key; the code refuses a different value). Live keys go on **Production only**: Preview deployments use the production database, so they get no Paystack keys once production is live — and the code refuses a live key on any deployment whose `VERCEL_ENV` is not `production`. With `PAYMENTS_MODE` set, a malformed key is refused too. Procedure: [../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md).
 | Other markets' provider keys — `PAYSTACK_<CC>_SECRET_KEY`, `PAYSTACK_<CC>_WEBHOOK_SECRET`, `NEXT_PUBLIC_PAYSTACK_<CC>_PUBLIC_KEY` (NG, KE, ZA, CI); `STRIPE_SECRET_KEY_<GB|US|EU>`, `STRIPE_WEBHOOK_SECRET_<…>`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_<…>` | secret (public keys public) | **Names, not values, are stored** on each market's provider row (Admin › Markets); set a market's variables only when that market is being prepared. A market cannot be activated while its readiness check reports them missing | that market cannot activate; nothing else is affected |
 | `HUBTEL_API_CLIENT_ID`, `HUBTEL_API_CLIENT_SECRET` | secret | Ghana SMS OTP (4-digit codes) | Ghana phone sign-in fails |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` | secret | Phone OTP for markets whose `otp_provider` is `twilio` (6-digit codes) | phone sign-in refused there; Ghana unaffected |

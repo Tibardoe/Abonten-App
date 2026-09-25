@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-25 — Live Paystack cutover: final verification
+
+- `finance/paystack-live-cutover.md` 1.1 (webhook secret = secret key made explicit; the 13-step sequence with expected result, failure sign and rollback per step; the exact record chain for the GH₵1.05 purchase and its refund with read-only SQL; monitoring), `audit/10-live-paystack-cutover-2026-09-25.md` 1.1 (§9 final verification), `security/secrets-and-environment.md` 1.2, `security/payment-security.md` 1.2, `finance/reconciliation.md` 1.2, `finance/payments-and-ticketing-runbook.md` 1.3, PROJECT.md §46.3.
+- Behaviour: a Paystack account whose `PAYSTACK_WEBHOOK_SECRET` differs from `PAYSTACK_SECRET_KEY` is refused (Paystack signs with the secret key); with `PAYMENTS_MODE` set, a malformed key is refused; a live key is refused on any non-production Vercel deployment; the reconcile sweep and the `paystack` health row also cover `fulfillment_failed` attempts (money taken, nothing issued), retried every 30 minutes; `production-smoke.mjs` now checks the recorded attempt, the verify path, production's own health report of key modes, both webhook URLs' signature refusal and the reconcile wiring.
+- Migration `20260925121000_payment_reconcile_fulfillment_failed` (replaces `run_payment_reconcile_dispatch`). New jobs, env vars, permissions: none.
+
 ## 2026-09-25 — Live Paystack cutover safety
 
 - New `finance/paystack-live-cutover.md` 1.0 (audited configuration, ordered switch to live keys, no-charge verification, the one controlled live transaction, rollback) and `audit/10-live-paystack-cutover-2026-09-25.md` 1.0. `finance/reconciliation.md` 1.1, `finance/payments-and-ticketing-runbook.md` 1.2, `security/payment-security.md` 1.1, `security/secrets-and-environment.md` 1.1, PROJECT.md §46.3, CLAUDE.md, `docs/INDEX.md`; report 09 corrected (the mobile app holds no Paystack key).

@@ -427,22 +427,187 @@ async function main() {
         start.http === 200 && hosted && modeOk,
         `HTTP ${start.http}; hosted page ${hosted}; public key ${pkMode}; secret key ${secretMode}${EXPECT_MODE ? `; expected ${EXPECT_MODE}` : ""}`,
       );
+      // The attempt the server recorded: provider, market, currency and the
+      // charge it asked Paystack for — all decided server-side.
+      const { data: att } = await service
+        .from("payment_attempt")
+        .select(
+          "id, provider, country_code, currency, amount, provider_reference, metadata, status",
+        )
+        .eq("user_id", buyer.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const total = Number(co?.[0]?.total_price ?? 0);
+      const chargeMinor = Number(att?.metadata?.charge_minor ?? -1);
+      record(
+        "customer",
+        "the recorded attempt carries the server's market, currency and charge",
+        !!att &&
+          att.provider === "paystack" &&
+          att.country_code === "GH" &&
+          att.currency === "GHS" &&
+          att.metadata?.charge_currency === "GHS" &&
+          att.metadata?.mode === "popup" &&
+          /^PSK-/.test(att.provider_reference ?? "") &&
+          Number(att.amount) > total &&
+          chargeMinor === Math.round(Number(att.amount) * 100) &&
+          att.provider_reference === payment?.reference,
+        att
+          ? `${att.provider}/${att.country_code} ${att.amount} ${att.currency} (order ${total}; charge ${chargeMinor} minor; reference matches ${att.provider_reference === payment?.reference})`
+          : "no attempt row",
+      );
+
+      // With a payment open the order cannot be cancelled (it might still be
+      // paid).
+      const early = await api("/api/mobile/checkout/cancel", buyer.token, {
+        checkoutSessionId: v.json.checkoutSessionId,
+      });
+      record(
+        "customer",
+        "cancel refused while the payment is open",
+        early.http === 409,
+        `HTTP ${early.http}`,
+      );
+
+      // The verify path, end to end: the server asks Paystack about the
+      // unpaid reference with its configured key. Paystack answers
+      // "abandoned" (nobody paid) and the attempt closes as failed — the
+      // same code a returning buyer runs, and proof the key that started
+      // the charge can also verify it.
+      const ver = att
+        ? await api("/api/mobile/payments/verify", buyer.token, {
+            paymentAttemptId: att.id,
+          })
+        : { http: 0, json: null };
+      const { data: attAfter } = att
+        ? await service
+            .from("payment_attempt")
+            .select("status, failure_reason")
+            .eq("id", att.id)
+            .maybeSingle()
+        : { data: null };
+      const finalized = ver.json?.data?.finalized ?? ver.json?.finalized;
+      record(
+        "customer",
+        "verify reaches Paystack for the unpaid charge (nothing to fulfil)",
+        (ver.http === 400 &&
+          finalized === "failed" &&
+          attAfter?.status === "failed") ||
+          (ver.http === 202 && finalized === "pending"),
+        `HTTP ${ver.http}; finalized ${finalized ?? "-"}; attempt ${attAfter?.status ?? "-"}${attAfter?.failure_reason ? ` (${attAfter.failure_reason})` : ""}`,
+      );
+
+      // Closed by verify: the reservation can now be cancelled and its
+      // ticket goes back on sale. (Still pending at Paystack: the
+      // payment-reconcile sweep closes it after the checkout hold.)
       const c = await api("/api/mobile/checkout/cancel", buyer.token, {
         checkoutSessionId: v.json.checkoutSessionId,
       });
-      // With a payment open the order cannot be cancelled (it might still be
-      // paid); the payment-reconcile sweep closes an abandoned one after the
-      // checkout hold. Without one, cancelling releases the tickets at once.
       record(
         "customer",
-        payment
-          ? "cancel refused while the payment is open"
-          : "cancel the unpaid reservation",
-        payment ? c.http === 409 : c.http === 200,
+        attAfter?.status === "failed"
+          ? "cancel the reservation once its payment is closed"
+          : "cancel still refused while the payment is pending",
+        attAfter?.status === "failed" ? c.http === 200 : c.http === 409,
         `HTTP ${c.http}`,
       );
     }
   }
+
+  // ── Payment configuration (production's own report; no charge) ───────
+  // The health check runs every 2 minutes on the web deployment and records
+  // the mode of each key (never the key), the declared PAYMENTS_MODE and
+  // charged payments nothing has settled.
+  const { data: health } = await service
+    .from("health_check_result")
+    .select("ok, detail, checked_at")
+    .eq("check_key", "paystack")
+    .order("checked_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const modes = health?.detail?.modes?.GH ?? {};
+  const fresh =
+    !!health &&
+    Date.now() - new Date(health.checked_at).getTime() < 10 * 60_000;
+  // Live must be declared (PAYMENTS_MODE=live); before the switch, test keys
+  // with no declared mode is the expected state.
+  const declared = health?.detail?.declaredMode ?? null;
+  const modesOk =
+    !EXPECT_MODE ||
+    (["secretKey", "publicKey", "webhookSecret"].every(
+      (k) => modes[k] === EXPECT_MODE,
+    ) &&
+      (declared === EXPECT_MODE ||
+        (EXPECT_MODE === "test" && declared === null)));
+  record(
+    "payments",
+    "health check: keys, declared mode and unsettled charges",
+    fresh &&
+      health?.ok === true &&
+      health?.detail?.deployment === "production" &&
+      Number(health?.detail?.unsettledPayments ?? 1) === 0 &&
+      modesOk,
+    health
+      ? `${Math.round((Date.now() - new Date(health.checked_at).getTime()) / 60_000)} min ago; ok ${health.ok}; secret ${modes.secretKey}, public ${modes.publicKey}, webhook ${modes.webhookSecret}; declared ${health.detail?.declaredMode ?? "none"}; deployment ${health.detail?.deployment}; unsettled ${health.detail?.unsettledPayments}${EXPECT_MODE ? `; expected ${EXPECT_MODE}` : ""}`
+      : "no health row",
+  );
+
+  // The webhook endpoints are up and refuse anything unsigned or
+  // mis-signed (both answer before touching any record).
+  for (const path of [
+    "/api/paystack/webhook",
+    "/api/payments/webhook/paystack/GH",
+  ]) {
+    const unsigned = await fetch(`${SITE}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        event: "charge.success",
+        data: { reference: "PSK-none" },
+      }),
+    });
+    const unsignedBody = await unsigned.json().catch(() => ({}));
+    const missigned = await fetch(`${SITE}${path}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-paystack-signature": "00",
+      },
+      body: JSON.stringify({
+        event: "charge.success",
+        data: { reference: "PSK-none" },
+      }),
+    });
+    const missignedBody = await missigned.json().catch(() => ({}));
+    record(
+      "payments",
+      `webhook ${path} refuses unsigned and mis-signed events`,
+      unsigned.status === 401 &&
+        unsignedBody.error === "missing_signature" &&
+        missigned.status === 401 &&
+        missignedBody.error === "invalid_signature",
+      `unsigned ${unsigned.status} ${unsignedBody.error ?? ""}; mis-signed ${missigned.status} ${missignedBody.error ?? ""}`,
+    );
+  }
+
+  // The reconcile sweep is wired to this site and its route needs the token.
+  const { data: rc } = await service
+    .from("payment_reconcile_config")
+    .select("dispatch_url, token, last_dispatched_at")
+    .eq("id", true)
+    .maybeSingle();
+  const rcProbe = await fetch(`${SITE}/api/maintenance/payment-reconcile`, {
+    method: "POST",
+  });
+  record(
+    "payments",
+    "payment-reconcile sweep points here and its route is token-protected",
+    rc?.dispatch_url === `${SITE}/api/maintenance/payment-reconcile` &&
+      (rc?.token?.length ?? 0) >= 32 &&
+      rcProbe.status === 401,
+    `url ${rc?.dispatch_url === `${SITE}/api/maintenance/payment-reconcile` ? "ok" : "WRONG"}; token set ${(rc?.token?.length ?? 0) >= 32}; unauthenticated ${rcProbe.status}; last dispatched ${rc?.last_dispatched_at ?? "never"}`,
+  );
   let ticketId = null;
   if (freeId) {
     const r = await api("/api/mobile/checkout/free-rsvp", buyer.token, {

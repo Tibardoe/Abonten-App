@@ -597,13 +597,18 @@ describe("money captured after the attempt closed", () => {
   it("redelivers a refund confirmation that arrives before the refund is recorded", async () => {
     const { data: acct } = await service
       .from("market_payment_provider")
-      .select("webhook_secret_env")
+      .select("secret_key_env, webhook_secret_env")
       .eq("country_code", "GH")
       .eq("provider", "paystack")
       .single();
+    // Paystack signs webhooks with the secret key, and the registry refuses
+    // a webhook secret that differs from it: both variables get one value.
+    const keyEnv = acct?.secret_key_env as string;
     const secretEnv = acct?.webhook_secret_env as string;
+    const previousKey = process.env[keyEnv];
     const previous = process.env[secretEnv];
-    process.env[secretEnv] = "whsec_integration";
+    process.env[keyEnv] = "sk_test_integration_hardening";
+    process.env[secretEnv] = "sk_test_integration_hardening";
     invalidateMarketCache();
     const reference = `PSK-${crypto.randomUUID()}`;
     const { data: txn } = await service
@@ -647,7 +652,10 @@ describe("money captured after the attempt closed", () => {
           countryCode: "GH",
           rawBody: body,
           headers: new Headers({
-            "x-paystack-signature": createHmac("sha512", "whsec_integration")
+            "x-paystack-signature": createHmac(
+              "sha512",
+              "sk_test_integration_hardening",
+            )
               .update(body)
               .digest("hex"),
           }),
@@ -672,6 +680,8 @@ describe("money captured after the attempt closed", () => {
         .single();
       expect(after?.status).toBe("refunded");
     } finally {
+      if (previousKey === undefined) delete process.env[keyEnv];
+      else process.env[keyEnv] = previousKey;
       if (previous === undefined) delete process.env[secretEnv];
       else process.env[secretEnv] = previous;
       invalidateMarketCache();
