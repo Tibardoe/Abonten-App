@@ -1,5 +1,6 @@
 import type { FieldOpsCommissionTotals } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { getDefaultMarket } from "../../markets/marketConfig";
 import { num } from "./fieldOpsAdminShared";
 
 // One read for "what does the programme owe": admin_fieldops_commission_totals
@@ -25,7 +26,7 @@ export function parseCommissionTotals(
   return raw.map((row) => {
     const r = (row ?? {}) as Record<string, unknown>;
     return {
-      currency: typeof r.currency === "string" ? r.currency.trim() : "GHS",
+      currency: typeof r.currency === "string" ? r.currency.trim() : "",
       rows: num(r.rows),
       pendingMinor: num(r.pending),
       approvedMinor: num(r.approved),
@@ -40,7 +41,7 @@ export function parseCommissionTotals(
 /**
  * Totals per currency, the busiest first. `fallbackCurrency` names the
  * primary row when there are no commissions yet, so a tile can still say
- * "GHS 0.00" in the right currency.
+ * "GH₵0.00" in the right currency.
  */
 export async function loadCommissionTotals(
   supabase: ServiceRoleClient,
@@ -55,6 +56,11 @@ export async function loadCommissionTotals(
     { p_campaign_id: opts.campaignId ?? undefined },
   );
   const rows = parseCommissionTotals(data);
-  const [primary = EMPTY(opts.fallbackCurrency ?? "GHS"), ...others] = rows;
+  const [
+    primary = EMPTY(
+      opts.fallbackCurrency ?? (await getDefaultMarket()).defaultCurrency,
+    ),
+    ...others
+  ] = rows;
   return { primary, others, error: error?.message ?? null };
 }

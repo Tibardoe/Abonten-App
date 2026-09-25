@@ -56,7 +56,8 @@ describe("account deletion keeps the financial record", () => {
         currency: "GHS",
         status: "successful",
         payment_method: "paystack",
-        paystack_reference: `DEL-${crypto.randomUUID()}`,
+        provider: "paystack",
+        provider_reference: `DEL-${crypto.randomUUID()}`,
       })
       .select("id")
       .single();

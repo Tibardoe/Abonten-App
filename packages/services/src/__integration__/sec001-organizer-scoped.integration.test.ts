@@ -88,7 +88,8 @@ describe("SEC-001: organizer-scoped SECURITY DEFINER functions", () => {
         amount: 50,
         currency: "GHS",
         status: "refund_pending",
-        paystack_reference: `test-${crypto.randomUUID()}`,
+        provider: "paystack",
+        provider_reference: `test-${crypto.randomUUID()}`,
       })
       .select("id")
       .single();
@@ -126,6 +127,8 @@ describe("SEC-001: organizer-scoped SECURITY DEFINER functions", () => {
     const { data: payoutAccountRow, error: payoutAccountError } = await service
       .from("payout_account")
       .insert({
+        country_code: "GH",
+        currency: "GHS",
         organizer_id: organizer.id,
         account_type: "mobile_money",
         account_holder_name: "Test Organizer",

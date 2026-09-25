@@ -36,12 +36,12 @@ async function ownedEvent(
   userId: string,
   eventId: string,
 ): Promise<
-  | { ok: true; status: string }
+  | { ok: true; status: string; currency: string }
   | { ok: false; status: 404 | 403 | 500; message: string }
 > {
   const { data, error } = await getSupabaseServiceClient()
     .from("event")
-    .select("organizer_id, status")
+    .select("organizer_id, status, currency")
     .eq("id", eventId)
     .maybeSingle();
   if (error) {
@@ -56,7 +56,7 @@ async function ownedEvent(
       message: "Only the event's organizer can change this.",
     };
   }
-  return { ok: true, status: String(data.status) };
+  return { ok: true, status: String(data.status), currency: data.currency };
 }
 
 /** The organizer's view of an event's promoter commission. */
@@ -95,6 +95,7 @@ export async function getEventPromoterCommissionCore(
   return {
     status: 200,
     data: {
+      currency: owned.currency,
       available: !!terms,
       rateBps: offer.data?.is_active ? offer.data.rate_bps : null,
       minRateBps: terms?.minRateBps ?? 100,

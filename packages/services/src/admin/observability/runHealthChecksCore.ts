@@ -1,6 +1,11 @@
 import { logger } from "@abonten/core/logger";
 import type { HealthCheckKey } from "@abonten/types/adminTypes";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { listOpenMarkets } from "../../markets/marketConfig";
+import {
+  getPaymentProvider,
+  resolveMarketAccounts,
+} from "../../payments/providers/registry";
 import {
   type HealthCheckOutcome,
   recordHealthResultsCore,
@@ -15,7 +20,6 @@ import {
 // this stays env-agnostic.
 
 export type HealthCheckConfig = {
-  paystackSecretKey?: string;
   resendApiKey?: string;
   cloudinaryCloudName?: string;
   cloudinaryApiKey?: string;
@@ -107,16 +111,51 @@ export async function runHealthChecksCore(
   });
   push("storage", storage, storage.value === true);
 
-  // paystack
-  if (config.paystackSecretKey) {
-    const ps = await timed(() =>
-      httpProbe("https://api.paystack.co/bank?perPage=1", {
-        headers: { Authorization: `Bearer ${config.paystackSecretKey}` },
-      }),
+  // payment providers: one check per provider, covering every enabled
+  // account across the open markets (Admin › Markets decides which exist).
+  // A provider is healthy only when each of its accounts has its
+  // credentials set and answers an authenticated call.
+  const providerOutcomes = new Map<
+    "paystack" | "stripe",
+    { ms: number; ok: boolean; markets: Record<string, string> }
+  >();
+  for (const market of await listOpenMarkets()) {
+    for (const entry of await resolveMarketAccounts(market.countryCode)) {
+      if (!entry.config.enabled) continue;
+      const code = entry.config.provider;
+      const agg = providerOutcomes.get(code) ?? {
+        ms: 0,
+        ok: true,
+        markets: {},
+      };
+      if (!entry.account) {
+        agg.ok = false;
+        agg.markets[market.countryCode] =
+          `missing ${entry.missingEnv.join(", ")}`;
+      } else {
+        const account = entry.account;
+        const probe = await timed(() =>
+          getPaymentProvider(code).probe(account),
+        );
+        agg.ms = Math.max(agg.ms, probe.ms);
+        const reachable = probe.value?.reachable ?? false;
+        if (!reachable) agg.ok = false;
+        agg.markets[market.countryCode] = reachable
+          ? "ok"
+          : (probe.value?.detail ?? probe.err ?? "unreachable");
+      }
+      providerOutcomes.set(code, agg);
+    }
+  }
+  for (const [code, agg] of providerOutcomes) {
+    push(
+      code,
+      { ms: agg.ms, err: agg.ok ? null : "one or more market accounts failed" },
+      agg.ok,
+      {
+        markets: agg.markets,
+      },
     );
-    push("paystack", ps, ps.value?.ok ?? false, {
-      httpStatus: ps.value?.status,
-    });
   }
 
   // resend

@@ -49,6 +49,8 @@ async function createTestPlace(
   const { data, error } = await service
     .from("place")
     .insert({
+      country_code: "GH",
+      timezone: "Africa/Accra",
       owner_id: ownerId,
       name: "Integration Test Place",
       slug: `integration-test-place-${crypto.randomUUID()}`,

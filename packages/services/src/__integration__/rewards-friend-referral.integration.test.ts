@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Abonten Rewards Phase 5 -- friend invites through the real code: a new
 // account binds to an inviter's code (bindReferralCodeCore), gets welcome
 // credit once their phone is verified, spends it on a first ticket order
-// (createMultiCheckoutPaymentAttemptCore / finalizePaystackPayment with
+// (createMultiCheckoutPaymentAttemptCore / finalizePayment with
 // Paystack's HTTP calls mocked), and the reward engine turns the friend's
 // qualifying action into a pending reward for the inviter that settlement
 // releases -- or a refund voids.
@@ -21,7 +21,7 @@ import {
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
-import { finalizePaystackPayment } from "../payments/finalizePaystackPayment";
+import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import {
   bindReferralCodeCore,
@@ -42,7 +42,7 @@ const paystack = vi.hoisted(() => ({
   refundTransaction: vi.fn(),
 }));
 
-vi.mock("../payments/gateway/paystackService", async (importOriginal) => ({
+vi.mock("../payments/providers/paystackApi", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   verifyTransaction: paystack.verifyTransaction,
   initializeTransaction: paystack.initializeTransaction,
@@ -175,7 +175,7 @@ describe("friend invites: binding, welcome credit and the inviter's reward", () 
     paystack.verifyTransaction.mockResolvedValueOnce({
       id: 1,
       status: "success",
-      reference: res.data.paystack?.reference as string,
+      reference: res.data.payment?.reference as string,
       amount: cashMinor,
       currency: "GHS",
       gateway_response: "Approved",
@@ -190,7 +190,7 @@ describe("friend invites: binding, welcome credit and the inviter's reward", () 
         channel: "card",
       },
     });
-    const done = await finalizePaystackPayment(res.data.attempts[0].id, deps);
+    const done = await finalizePayment(res.data.attempts[0].id, deps);
     expect(done.status).toBe("succeeded");
 
     const { data: checkout } = await service
@@ -430,7 +430,7 @@ describe("friend invites: binding, welcome credit and the inviter's reward", () 
     paystack.initializeTransaction.mockReset();
     paystack.refundTransaction.mockReset();
     paystack.initializeTransaction.mockImplementation(
-      async (p: { reference: string }) => ({
+      async (_account: unknown, p: { reference: string }) => ({
         reference: p.reference,
         access_code: "test-access",
         authorization_url: "https://checkout.paystack.test/x",
@@ -485,6 +485,7 @@ describe("friend invites: binding, welcome credit and the inviter's reward", () 
     expect(first.status).toBe(200);
     expect(first.data).toEqual({
       result: "bound",
+      currency: "GHS",
       referrerName: "Ama K.",
       welcome: "needs_phone",
       welcomeMinor: 200,
@@ -726,6 +727,8 @@ describe("friend invites: binding, welcome credit and the inviter's reward", () 
     const { data: place } = await service
       .from("place")
       .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
         owner_id: organizer.id,
         name: "Friend Referral Test Place",
         slug: `friend-referral-place-${crypto.randomUUID()}`,

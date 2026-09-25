@@ -1,20 +1,20 @@
 import { randomBytes } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { OTP_MESSAGES } from "@abonten/core/otpMessages";
-import { verifyHubtelOtp } from "@abonten/services/profile/hubtelOtpClient";
+import { verifyPendingOtp } from "@abonten/services/profile/phoneOtpSendCore";
 import {
   clearPendingOtp,
   getPendingOtp,
   registerVerifyAttempt,
 } from "@abonten/services/profile/phoneOtpStore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { adoptHomeCountryFromPhone } from "../markets/localePreferencesCore";
 
 // Transport-neutral core of phone sign-in verification, shared by the web
 // Server Action (src/actions/verifyPhoneSignIn.ts, cookie session) and the
 // mobile HTTP route (src/app/api/mobile/auth/phone/verify, token body).
 //
-// Everything here is identical regardless of caller: confirm the Hubtel OTP,
+// Everything here is identical regardless of caller: confirm the code with the provider that sent it,
 // then find-or-create the Supabase user for the phone number, then hand back
 // a one-time password the caller consumes with signInWithPassword. The two
 // callers differ ONLY in how they turn that password into a live session
@@ -33,7 +33,7 @@ export type FindOrCreateResult =
 
 /**
  * Steps 1–7 of phone verification: format check, pending-OTP lookup, attempt
- * budget, Hubtel verify, consume the pending code, resolve the user. It
+ * budget, provider verify, consume the pending code, resolve the user. It
  * never trusts anything the client claims about the phone belonging to a new
  * or existing account — that's decided here, server-side, against
  * auth.users itself.
@@ -42,7 +42,7 @@ export async function verifyPhoneOtpAndResolveUser(
   phoneE164: string,
   code: string,
 ): Promise<ResolvePhoneUserResult> {
-  if (!new RegExp(`^\\d{${HUBTEL_OTP_CODE_LENGTH}}$`).test(code)) {
+  if (!/^\d{4,8}$/.test(code)) {
     return { ok: false, status: 400, message: OTP_MESSAGES.invalidFormat };
   }
 
@@ -62,11 +62,7 @@ export async function verifyPhoneOtpAndResolveUser(
     return { ok: false, status: 401, message: OTP_MESSAGES.expired };
   }
 
-  const verifyResult = await verifyHubtelOtp(
-    pending.requestId,
-    pending.prefix,
-    code,
-  );
+  const verifyResult = await verifyPendingOtp(pending, code);
 
   if (!verifyResult.ok) {
     return { ok: false, status: 401, message: verifyResult.message };
@@ -107,6 +103,8 @@ export async function findOrCreateUserByPhone(
     });
 
   if (!createError && createData.user) {
+    // A brand-new account starts in the market of its verified number.
+    await adoptHomeCountryFromPhone(createData.user.id, phoneE164);
     return { userId: createData.user.id, isNewUser: true };
   }
 

@@ -1,11 +1,17 @@
+import {
+  type StructuredAddress,
+  readStructuredAddress,
+} from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
+import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveListingLocation } from "../geo/locationResolution";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
 // Post-auth, post-flyer-upload body of updateEvent, lifted so the
@@ -37,6 +43,7 @@ export type UpdateEventCoreInput = {
   title: string;
   description: string;
   address: string;
+  addressDetails?: Partial<StructuredAddress> | null;
   latitude: number;
   longitude: number;
   capacity?: number | null;
@@ -84,6 +91,22 @@ export async function updateEventCore(
     return { status: 400, message: locationCheck.message };
   }
 
+  // A moved event stays in its market: the currency its tickets were sold
+  // in cannot change, so a venue in another country is refused.
+  const resolved = await resolveListingLocation({
+    lat: latitude,
+    lng: longitude,
+    countryHint: input.addressDetails?.country_code ?? null,
+  });
+  if (!resolved.ok) return { status: 400, message: resolved.message };
+  const { location } = resolved;
+  const toInstant = (value: DateInput | null | undefined): Date | null =>
+    value == null
+      ? null
+      : value instanceof Date
+        ? value
+        : parseEventTimestamp(value, location.timeZone);
+
   const isSpecificEvent = !!specific_dates && specific_dates.length > 0;
 
   // Ownership-scoped fetch first — also gives us the current flyer (only
@@ -93,7 +116,7 @@ export async function updateEventCore(
   const { data: existingEvent, error: fetchError } = await supabase
     .from("event")
     .select(
-      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_code, event_occurrence(starts_at, ends_at), ticket_type(id, type, quantity)",
+      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_code, country_code, event_occurrence(starts_at, ends_at), ticket_type(id, type, quantity)",
     )
     .eq("id", eventId)
     .eq("organizer_id", userId)
@@ -185,16 +208,33 @@ export async function updateEventCore(
 
   const formattedTitle = formatTitle(title);
 
-  const eventStartDate = isSpecificEvent ? null : (starts_at ?? null);
-  const eventEndDate = isSpecificEvent ? null : (ends_at ?? null);
+  if (existingEvent.country_code !== location.countryCode) {
+    return {
+      status: 400,
+      message:
+        "An event can't move to another country. Create a new event there instead.",
+    };
+  }
+
+  const eventStartDate = isSpecificEvent ? null : toInstant(starts_at);
+  const eventEndDate = isSpecificEvent ? null : toInstant(ends_at);
+  if (!isSpecificEvent && (!eventStartDate || !eventEndDate)) {
+    return { status: 400, message: "Enter a valid start and end time." };
+  }
+  const addressPayload: StructuredAddress = {
+    ...readStructuredAddress(input.addressDetails ?? null),
+    full_address: address,
+    country_code: location.countryCode,
+  };
 
   const { error: updateError } = await supabase
     .from("event")
     .update({
       title: formattedTitle,
       description,
-      address: { full_address: address },
+      address: addressPayload,
       location: `POINT(${longitude} ${latitude})`,
+      timezone: location.timeZone,
       capacity,
       website_url,
       event_category: category,
@@ -206,8 +246,8 @@ export async function updateEventCore(
       // `string[] | string | null` type, which already anticipates this).
       event_type: JSON.stringify(types),
       require_registration: checked,
-      starts_at: toIsoString(eventStartDate),
-      ends_at: toIsoString(eventEndDate),
+      starts_at: eventStartDate?.toISOString() ?? null,
+      ends_at: eventEndDate?.toISOString() ?? null,
       flyer_public_id: nextFlyerPublicId,
       flyer_version: nextFlyerVersion,
     })

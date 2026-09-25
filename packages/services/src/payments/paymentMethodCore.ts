@@ -1,11 +1,15 @@
 import { logger } from "@abonten/core/logger";
-import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
+import {
+  PHONE_ERROR_MESSAGE,
+  parsePhoneWithDialCode,
+} from "@abonten/core/phone/phone";
 import type { Database } from "@abonten/types/database.types";
 import {
   type AddPaymentMethodInput,
   addPaymentMethodSchema,
 } from "@abonten/validation/paymentMethodSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getMarketOrDefault } from "../markets/marketConfig";
 
 // Post-auth bodies of the four payment-method Server Actions, lifted so the
 // `/api/mobile/payment-methods/*` routes run the exact same logic. Each
@@ -138,14 +142,30 @@ export async function addPaymentMethodCore(
 
   if (parsedInput.type === "momo") {
     const { type: _momo, ...momo } = parsedInput;
-    // Store one canonical form. The web PhoneInput already composes E.164;
-    // the mobile wallet form sends whatever was typed, so the same wallet
-    // could land as "0241234567" on one row and "+233241234987" on another
-    // (both were in production). The Paystack charge path normalises again
-    // at charge time, so this only fixes storage and display.
-    const normalized = normalizePhoneNumber("+233", momo.phone);
+    // Store one canonical E.164 form, validated for the person's home
+    // market (a Ghanaian wallet is a Ghanaian number, a Kenyan one Kenyan).
+    // The web PhoneInput already composes E.164; the mobile wallet form
+    // sends whatever was typed, so the same wallet could otherwise land as
+    // "0241234567" on one row and "+233241234987" on another.
+    const { data: profile } = await supabase
+      .from("user_info")
+      .select("country_code")
+      .eq("id", userId)
+      .maybeSingle();
+    const market = await getMarketOrDefault(profile?.country_code ?? null);
+    if (
+      !market.paymentMethods.some(
+        (m) => m.enabled && m.method === "mobile_money",
+      )
+    ) {
+      return {
+        status: 400,
+        message: `Mobile money isn't available in ${market.name} yet.`,
+      };
+    }
+    const normalized = parsePhoneWithDialCode(market.dialCode, momo.phone);
     if (!normalized.ok) {
-      return { status: 400, message: normalized.error };
+      return { status: 400, message: PHONE_ERROR_MESSAGE[normalized.error] };
     }
 
     // The same wallet saved twice is the same instrument, whatever label the
@@ -162,7 +182,7 @@ export async function addPaymentMethodCore(
     details = { ...momo, phone: normalized.e164 };
   } else {
     const { type: _card, ...card } = parsedInput;
-    // A card is added by re-running Paystack's GHS 1 verification, and a
+    // A card is added by re-running the provider's small verification charge, and a
     // second verification of the same card yields a new authorization_code.
     // Without this, every re-verification saved another identical row --
     // production held two "visa 4081" cards with the same expiry and bank.

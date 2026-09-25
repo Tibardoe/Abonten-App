@@ -61,6 +61,8 @@ describe("reviews experience", () => {
     const { data: place, error: placeError } = await service
       .from("place")
       .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
         owner_id: owner.id,
         name: "Reviews Test Lounge",
         slug: `reviews-test-lounge-${crypto.randomUUID()}`,

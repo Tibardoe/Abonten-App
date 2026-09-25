@@ -13,16 +13,19 @@ import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Returns the active service-fee rate (e.g. 0.05) for the given currency,
+ * Returns the active service-fee rate (e.g. 0.05) for the given currency and
+ * market (country + currency > country > currency > global),
  * falling back to DEFAULT_SERVICE_FEE_RATE if the config can't be read — so
  * a transient DB hiccup never silently charges a 0% fee.
  */
 export async function getActiveServiceFeeRate(
   supabase: SupabaseClient<Database>,
   currency?: string | null,
+  countryCode?: string | null,
 ): Promise<number> {
   const { data, error } = await supabase.rpc("get_active_platform_fee_rate", {
     p_currency: currency ?? undefined,
+    p_country_code: countryCode ?? undefined,
   });
 
   if (error || data == null) {

@@ -33,6 +33,8 @@ export type RecommendationEmailItem = {
   /** Venue or place category / address. */
   subtitle: string | null;
   startsAt: string | null;
+  /** The event's zone: the email states the time on the venue's clock. */
+  timeZone: string | null;
   imagePublicId: string | null;
   imageVersion: string | null;
   /** Site path, e.g. /events/abc123 or /places/some-slug. */
@@ -257,6 +259,7 @@ export async function deliverQueuedNotificationsCore(
           title: row.title,
           subtitle: row.subtitle ?? null,
           startsAt: row.starts_at ?? null,
+          timeZone: row.timezone ?? null,
           imagePublicId: row.image_public_id ?? null,
           imageVersion: row.image_version ?? null,
           path: row.path,

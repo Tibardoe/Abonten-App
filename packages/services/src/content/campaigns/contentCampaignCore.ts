@@ -4,6 +4,7 @@ import {
   remainingMinor,
 } from "@abonten/core/content/campaignMoney";
 import { logger } from "@abonten/core/logger";
+import { formatMoney } from "@abonten/core/money/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type {
   ContentCampaign,
@@ -277,7 +278,11 @@ export async function createContentCampaignCore(
         totalPrice: Number(checkout.total_price),
         currency: checkout.currency,
         expiresAt: checkout.expires_at,
-        summaryLabel: summaryLabel(estimate.budgetMinor, estimate.durationDays),
+        summaryLabel: summaryLabel(
+          estimate.budgetMinor,
+          estimate.durationDays,
+          checkout.currency,
+        ),
         estimatedReachLow: estimate.reachLow,
         estimatedReachHigh: estimate.reachHigh,
         postCaption: null,
@@ -323,6 +328,7 @@ export async function getContentCampaignCheckoutCore(
       summaryLabel: summaryLabel(
         campaign.data.budgetMinor,
         campaign.data.durationDays,
+        data.currency,
       ),
       estimatedReachLow: campaign.data.estimatedReachLow,
       estimatedReachHigh: campaign.data.estimatedReachHigh,
@@ -372,14 +378,17 @@ export async function loadCampaignMetrics(
   return (data as unknown as ContentCampaignMetrics | null) ?? null;
 }
 
-/** "GH₵ 50 budget · up to 7 days" */
+/** "GH₵50 budget · up to 7 days", in the campaign's own currency. */
 export function summaryLabel(
   budgetMinor: number,
   durationDays: number,
+  currency: string,
 ): string {
-  const cedis = budgetMinor / 100;
-  const amount = Number.isInteger(cedis) ? cedis.toString() : cedis.toFixed(2);
-  return `GH₵ ${amount} budget · up to ${durationDays} day${durationDays === 1 ? "" : "s"}`;
+  const amount = formatMoney(
+    { amountMinor: budgetMinor, currency },
+    { trimZeroFraction: true },
+  );
+  return `${amount} budget · up to ${durationDays} day${durationDays === 1 ? "" : "s"}`;
 }
 
 // PostgREST returns the geography column as WKB hex; the same parser the

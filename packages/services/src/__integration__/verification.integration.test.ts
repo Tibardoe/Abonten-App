@@ -61,6 +61,8 @@ async function makePlace(name: string, ownerId: string): Promise<string> {
   const { data, error } = await svc
     .from("place")
     .insert({
+      country_code: "GH",
+      timezone: "Africa/Accra",
       owner_id: ownerId,
       name,
       slug,

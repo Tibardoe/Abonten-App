@@ -47,7 +47,7 @@ const denied = <T>(e: unknown): AdminEnvelope<T> =>
 export async function getContentOverviewCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
-  range: { from: string; to: string },
+  range: { from: string; to: string; currency?: string | null },
 ): Promise<AdminEnvelope<ContentAdminOverview>> {
   try {
     assertPermission(ctx, "spotlight.view");
@@ -57,6 +57,7 @@ export async function getContentOverviewCore(
   const { data, error } = await supabase.rpc("content_admin_overview", {
     p_from: range.from,
     p_to: range.to,
+    p_currency: range.currency ?? undefined,
   });
   if (error) {
     logger.error(`content_admin_overview failed: ${error.message}`);

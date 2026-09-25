@@ -194,7 +194,7 @@ export type AdminEnvelope<T = undefined> = {
 // Maps a thrown AdminForbiddenError / AdminUnauthenticatedError (or
 // anything else) to the standard { status, message } envelope so admin
 // services can `try { ... } catch (e) { return adminError(e) }`.
-export function adminError(err: unknown): AdminEnvelope {
+export function adminError(err: unknown): AdminEnvelope<never> {
   if (
     err instanceof AdminUnauthenticatedError ||
     err instanceof AdminForbiddenError

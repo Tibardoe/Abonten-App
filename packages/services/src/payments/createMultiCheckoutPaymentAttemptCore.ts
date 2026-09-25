@@ -1,16 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { fromPesewas } from "@abonten/core/paystackAmount";
+import { money, toMajor } from "@abonten/core/money/money";
 import { apportionCredit } from "@abonten/core/rewards/creditAllocation";
 import { prepareCheckoutPayment } from "@abonten/services/checkout/checkoutPaymentPreparation";
+import {
+  type SelectedPaymentMethod,
+  initiateChargeForAttempt,
+} from "@abonten/services/payments/chargeInit";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
 } from "@abonten/services/payments/paymentAttempt";
-import {
-  type SelectedPaymentMethod,
-  initiatePaystackChargeForAttempt,
-} from "@abonten/services/payments/paystackInit";
+import { resolveProviderAccount } from "@abonten/services/payments/providers/registry";
+import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -23,43 +25,29 @@ import { quoteTicketCredit } from "../rewards/ticketCreditCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import {
-  type VerifyPaystackPaymentCoreResult,
-  verifyPaystackPaymentCore,
-} from "./verifyPaystackPaymentCore";
+  type VerifyPaymentCoreResult,
+  verifyPaymentCore,
+} from "./verifyPaymentCore";
 
 // Post-auth body of createMultiCheckoutPaymentAttempt, lifted so the mobile
 // route (`/api/mobile/checkout/attempt`) runs the exact same logic — see
 // src/actions/createMultiCheckoutPaymentAttempt.ts. Caller supplies an
 // already-authenticated Supabase client, the resolved userId + email, and
 // `callbackUrlFor` which turns the primary checkout session id into a
-// Paystack callback URL (a web checkout page URL on web; an `abonten://`
+// provider callback URL (a web checkout page URL on web; an `abonten://`
 // deep link on mobile) — called with the first *valid* session id.
 // Deliberately NOT a "use server" file (see ticketInventory.ts).
 //
-// With `useCredit`, Abonten Credit pays for part of the order (Paystack
-// charges the rest) or -- when the program allows it -- all of it. The
+// With `useCredit`, Abonten Credit pays for part of the order (the market's
+// provider charges the rest) or -- when the program allows it -- all of it. The
 // credit is reserved against the payment group and captured by
-// finalizePaystackPayment once the purchase is confirmed; each attempt row
+// finalizePayment once the purchase is confirmed; each attempt row
 // records its own cash (`amount`) and credit (`credit_amount`) share.
 // payment_attempt is written with the service-role client (clients can't
 // write it); every query is scoped to the caller's userId.
 
-export type PaystackPaymentInfo =
-  | {
-      mode: "popup";
-      reference: string;
-      accessCode: string;
-      authorizationUrl: string;
-    }
-  | {
-      mode: "direct";
-      reference: string;
-      chargeStatus: string;
-      displayMessage?: string;
-    };
-
 export type CreateMultiCheckoutPaymentAttemptCoreResult =
-  | { status: 400 | 404 | 500; message: string }
+  | { status: 400 | 404 | 500 | 503; message: string }
   | { status: 409; message: string; invalidSessionIds: string[] }
   | {
       status: 200;
@@ -67,15 +55,15 @@ export type CreateMultiCheckoutPaymentAttemptCoreResult =
         paymentGroupId: string;
         attempts: PaymentAttemptRow[];
         /** null when credit paid for everything. */
-        paystack: PaystackPaymentInfo | null;
+        payment: CheckoutInit | null;
         credit: { appliedMinor: number; cashMinor: number } | null;
         /** Credit-only orders are finalized immediately; this is the outcome. */
-        verification: VerifyPaystackPaymentCoreResult | null;
+        verification: VerifyPaymentCoreResult | null;
       };
     };
 
 const ATTEMPT_SELECT =
-  "id, status, amount, currency, payment_method_id, provider_reference, metadata";
+  "id, provider, country_code, status, amount, currency, payment_method_id, provider_reference, metadata";
 
 async function loadPaymentMethod(
   supabase: SupabaseClient<Database>,
@@ -250,6 +238,29 @@ export async function createMultiCheckoutPaymentAttemptCore(
   );
   if (switched !== "ok") return withNoInvalidSessions(switched);
 
+  // The provider that will charge this order: the event's market and
+  // currency decide it, never the client. Resolved once, before any row is
+  // written, so an unconfigured market fails cleanly.
+  let providerCode: string;
+  try {
+    providerCode = (
+      await resolveProviderAccount({
+        countryCode: prepared.countryCode,
+        currency: prepared.currency,
+        method: method.method_type === "momo" ? "mobile_money" : "card",
+      })
+    ).provider.code;
+  } catch (error) {
+    logger.error(
+      `createMultiCheckoutPaymentAttemptCore: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return {
+      status: 400,
+      message:
+        "This payment method isn't available for this event's market. Choose another.",
+    };
+  }
+
   const paymentGroupId = randomUUID();
   const insertedAttempts: PaymentAttemptRow[] = [];
 
@@ -262,6 +273,8 @@ export async function createMultiCheckoutPaymentAttemptCore(
       prepared.currency,
       input.paymentMethodId,
       paymentGroupId,
+      { countryCode: prepared.countryCode, provider: providerCode },
+      { taxMinor: session.taxMinor },
     );
 
     if (result.status !== 200) {
@@ -282,22 +295,25 @@ export async function createMultiCheckoutPaymentAttemptCore(
     insertedAttempts.push(result.data);
   }
 
-  // Only the group's first (primary) attempt row is initialized with
-  // Paystack — one Paystack transaction covers the whole group's grand
-  // total, rather than opening a separate popup per checkout session.
-  // finalizePaystackPayment.ts fans a successful verification back out to
-  // every member sharing this paymentGroupId.
+  // Only the group's first (primary) attempt row is initialized with the
+  // provider — one charge covers the whole group's grand total, rather than
+  // opening a separate popup per checkout session. finalizePayment fans a
+  // successful verification back out to every member sharing this group.
   const primary = insertedAttempts[0];
-  const paystackResult = await initiatePaystackChargeForAttempt(
-    primary,
-    prepared.grandTotal,
-    prepared.currency,
-    userEmail,
-    method as unknown as SelectedPaymentMethod,
-    callbackUrlFor(prepared.validSessions[0].checkoutSessionId),
-  );
+  const chargeResult = await initiateChargeForAttempt({
+    attempt: primary,
+    amount: money(prepared.grandTotalMinor, prepared.currency),
+    countryCode: prepared.countryCode,
+    email: userEmail,
+    paymentMethod: method as unknown as SelectedPaymentMethod,
+    callbackUrl: callbackUrlFor(prepared.validSessions[0].checkoutSessionId),
+    description:
+      prepared.validSessions.length === 1
+        ? `Tickets · ${prepared.validSessions[0].eventTitle}`
+        : `Tickets for ${prepared.validSessions.length} events`,
+  });
 
-  if (paystackResult.status !== 200) {
+  if (chargeResult.status !== 200) {
     await getSupabaseServiceClient()
       .from("payment_attempt")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
@@ -305,7 +321,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
         "id",
         insertedAttempts.map((a) => a.id),
       );
-    return paystackResult;
+    return chargeResult;
   }
 
   return {
@@ -313,7 +329,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
     data: {
       paymentGroupId,
       attempts: insertedAttempts,
-      paystack: paystackResult.data,
+      payment: chargeResult.data,
       credit: null,
       verification: null,
     },
@@ -376,6 +392,29 @@ async function startCreditPayment(
   );
   if (dropped !== "ok") return withNoInvalidSessions(dropped);
 
+  // The cash part (if any) goes through the event market's provider.
+  let cashProvider = "abonten_credit";
+  if (!quote.creditOnly) {
+    try {
+      cashProvider = (
+        await resolveProviderAccount({
+          countryCode: prepared.countryCode,
+          currency: quote.currency,
+          method: method?.method_type === "momo" ? "mobile_money" : "card",
+        })
+      ).provider.code;
+    } catch (error) {
+      logger.error(
+        `createMultiCheckoutPaymentAttemptCore: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return {
+        status: 400,
+        message:
+          "This payment method isn't available for this event's market. Choose another.",
+      };
+    }
+  }
+
   const paymentGroupId = randomUUID();
   const creditShares = apportionCredit(
     quote.creditMinor,
@@ -389,11 +428,15 @@ async function startCreditPayment(
     payment_method_id: quote.creditOnly
       ? null
       : (input.paymentMethodId ?? null),
-    amount: fromPesewas(session.totalMinor - creditShares[index]),
-    credit_amount: fromPesewas(creditShares[index]),
+    amount: toMajor(
+      money(session.totalMinor - creditShares[index], quote.currency),
+    ),
+    credit_amount: toMajor(money(creditShares[index], quote.currency)),
     currency: quote.currency,
+    country_code: prepared.countryCode,
+    metadata: session.taxMinor ? { tax_minor: session.taxMinor } : null,
     status: "initiated",
-    provider: quote.creditOnly ? "abonten_credit" : "paystack",
+    provider: quote.creditOnly ? "abonten_credit" : cashProvider,
     // Credit-only orders never reach Paystack; the primary row gets an
     // internal reference so payment_attempt / transaction stay traceable.
     provider_reference:
@@ -462,7 +505,7 @@ async function startCreditPayment(
   };
 
   if (quote.creditOnly) {
-    const verification = await verifyPaystackPaymentCore(
+    const verification = await verifyPaymentCore(
       supabase,
       userId,
       primary.id,
@@ -470,23 +513,24 @@ async function startCreditPayment(
     );
     return {
       status: 200,
-      data: { paymentGroupId, attempts, paystack: null, credit, verification },
+      data: { paymentGroupId, attempts, payment: null, credit, verification },
     };
   }
 
-  const paystackResult = await initiatePaystackChargeForAttempt(
-    primary,
-    fromPesewas(quote.cashMinor),
-    quote.currency,
-    userEmail,
-    method as unknown as SelectedPaymentMethod,
-    callbackUrlFor(order.sessions[0].checkoutSessionId),
-  );
+  const chargeResult = await initiateChargeForAttempt({
+    attempt: primary,
+    amount: money(quote.cashMinor, quote.currency),
+    countryCode: prepared.countryCode,
+    email: userEmail,
+    paymentMethod: method as unknown as SelectedPaymentMethod,
+    callbackUrl: callbackUrlFor(order.sessions[0].checkoutSessionId),
+    description: order.label,
+  });
 
-  if (paystackResult.status !== 200) {
+  if (chargeResult.status !== 200) {
     await releaseReservation(reserved.reservationId, "payment_not_started");
     await failGroup("Payment could not be started");
-    return paystackResult;
+    return chargeResult;
   }
 
   return {
@@ -494,7 +538,7 @@ async function startCreditPayment(
     data: {
       paymentGroupId,
       attempts,
-      paystack: paystackResult.data,
+      payment: chargeResult.data,
       credit,
       verification: null,
     },

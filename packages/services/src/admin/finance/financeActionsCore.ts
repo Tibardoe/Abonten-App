@@ -1,14 +1,13 @@
 import { logger } from "@abonten/core/logger";
+import { fromMajor } from "@abonten/core/money/money";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { issueRefundCore } from "../../organizer/issueRefundCore";
-import { PaystackApiError } from "../../payments/gateway/paystackService";
 import {
-  createTransferRecipient,
-  initiatePaystackTransfer,
-  paystackTransfersEnabled,
-  resolvePaystackDestination,
-} from "../../payments/gateway/paystackTransfer";
+  NoProviderError,
+  resolveProviderAccount,
+} from "../../payments/providers/registry";
+import { PaymentProviderError } from "../../payments/providers/types";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -185,12 +184,13 @@ export async function createPayoutAdminCore(
   };
 }
 
-// ── Payout: initiate a real Paystack transfer ───────────────
-// Attaches an automated Paystack transfer to an existing pending payout.
-// The payout is NOT marked completed here — the transfer.success webhook
-// (api/paystack/webhook) settles it. GATED: with PAYSTACK_TRANSFERS_ENABLED
-// unset this returns 409 and changes nothing, so the manual "send then
-// admin_settle_payout" flow is unaffected.
+// ── Payout: initiate a real provider transfer ───────────────
+// Attaches an automated transfer to an existing pending payout through the
+// payout market's provider account. The payout is NOT marked completed here
+// — the provider's transfer.success webhook settles it. GATED per market:
+// the provider row's `payouts_enabled` switch (Admin › Markets) must be on
+// and the adapter must support payouts; otherwise this returns 409 and the
+// manual "send then admin_settle_payout" flow is unaffected.
 
 export async function sendPayoutAdminCore(
   supabase: ServiceRoleClient,
@@ -204,18 +204,10 @@ export async function sendPayoutAdminCore(
     return { status: 403, message: (e as Error).message };
   }
 
-  if (!paystackTransfersEnabled()) {
-    return {
-      status: 409,
-      message:
-        "Automated Paystack transfers aren't enabled. Send the funds, then mark this payout completed.",
-    };
-  }
-
   const { data: payout, error: payoutError } = await supabase
     .from("payout")
     .select(
-      "id, organizer_id, payout_account_id, amount, currency, status, reference, transfer_status, review_status, payout_account:payout_account_id(account_type, account_holder_name, provider, account_number)",
+      "id, organizer_id, payout_account_id, amount, currency, status, reference, transfer_status, review_status, country_code, payout_account:payout_account_id(account_type, account_holder_name, provider, provider_code, account_number, country_code, currency)",
     )
     .eq("id", input.payoutId)
     .maybeSingle();
@@ -255,7 +247,7 @@ export async function sendPayoutAdminCore(
     return { status: 400, message: "This payout has no payout account." };
   }
   // `payout_account.account_type` is free text in the schema; only the two
-  // kinds Paystack transfers support may reach the gateway.
+  // kinds a provider transfer supports may reach the gateway.
   const accountType =
     acct.account_type === "bank" || acct.account_type === "mobile_money"
       ? acct.account_type
@@ -268,19 +260,53 @@ export async function sendPayoutAdminCore(
   }
 
   try {
-    const dest = await resolvePaystackDestination({
-      provider: acct.provider,
-      accountType,
-    });
-    const recipientCode = await createTransferRecipient({
-      recipientType: dest.recipientType,
-      name: acct.account_holder_name,
-      accountNumber: acct.account_number,
-      bankCode: dest.bankCode,
+    const { provider, account } = await resolveProviderAccount({
+      countryCode: payout.country_code ?? acct.country_code,
       currency: payout.currency,
     });
-    const { transferCode, status } = await initiatePaystackTransfer({
-      amountPesewas: Math.round(Number(payout.amount) * 100),
+    if (!account.payoutsEnabled || !provider.capabilities(account).payouts) {
+      return {
+        status: 409,
+        message:
+          "Automated transfers aren't enabled for this market. Send the funds, then mark this payout completed.",
+      };
+    }
+    // The destination code was captured when the organizer chose their
+    // bank/network (provider_code); older accounts saved only a name, which
+    // is matched against the provider's destination list.
+    let destinationCode = acct.provider_code;
+    if (!destinationCode) {
+      const norm = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const destinations = await provider.listPayoutDestinations(
+        account,
+        payout.currency,
+        accountType,
+      );
+      const target = norm(acct.provider ?? "");
+      const hit =
+        destinations.find((d) => norm(d.name) === target) ??
+        destinations.find(
+          (d) =>
+            target &&
+            (norm(d.name).includes(target) || target.includes(norm(d.name))),
+        );
+      if (!hit) {
+        return {
+          status: 400,
+          message: `Couldn't map "${acct.provider ?? "the account's provider"}" to a ${provider.code} ${accountType === "mobile_money" ? "mobile-money" : "bank"} destination — settle this payout manually.`,
+        };
+      }
+      destinationCode = hit.code;
+    }
+    const recipientCode = await provider.createTransferRecipient(account, {
+      method: accountType,
+      name: acct.account_holder_name,
+      accountNumber: acct.account_number,
+      destinationCode,
+      currency: payout.currency,
+    });
+    const { transferCode, status } = await provider.initiateTransfer(account, {
+      amount: fromMajor(Number(payout.amount), payout.currency),
       recipientCode,
       reference: payout.reference,
       reason: `Abonten organizer payout ${payout.reference}`,
@@ -299,14 +325,14 @@ export async function sendPayoutAdminCore(
       .eq("status", "processing");
 
     if (updateError) {
-      // The transfer is already in flight at Paystack — surface it so an
+      // The transfer is already in flight at the provider — surface it so an
       // admin reconciles rather than silently losing the transfer_code.
       logger.error(
         `sendPayoutAdminCore: transfer ${transferCode} initiated but payout ${payout.id} update failed: ${updateError.message}`,
       );
       return {
         status: 500,
-        message: `Transfer ${transferCode} was initiated at Paystack but the payout couldn't be updated — reconcile manually.`,
+        message: `Transfer ${transferCode} was initiated at the provider but the payout couldn't be updated — reconcile manually.`,
       };
     }
 
@@ -316,7 +342,7 @@ export async function sendPayoutAdminCore(
       action: "finance.payout.send",
       targetType: "payout",
       targetId: payout.id,
-      summary: `Initiated Paystack transfer ${transferCode} (${status}) for ${payout.currency} ${payout.amount} — ${payout.reference}`,
+      summary: `Initiated ${provider.code} transfer ${transferCode} (${status}) for ${payout.currency} ${payout.amount} — ${payout.reference}`,
       reason: input.reason,
       after: { transferCode, transferStatus: "pending" },
       requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
@@ -324,11 +350,11 @@ export async function sendPayoutAdminCore(
 
     return {
       status: 200,
-      message: `Transfer initiated (${transferCode}). It settles when Paystack confirms.`,
+      message: `Transfer initiated (${transferCode}). It settles when the provider confirms.`,
       data: { transferCode, transferStatus: status },
     };
   } catch (e) {
-    if (e instanceof PaystackApiError) {
+    if (e instanceof PaymentProviderError || e instanceof NoProviderError) {
       return { status: 400, message: e.message };
     }
     logger.error("sendPayoutAdminCore failed", e);

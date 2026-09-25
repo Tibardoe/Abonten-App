@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // The Paystack webhook's promise: 200 means "never redeliver this", 503 means
 // "try again". This suite proves the half of that contract that lives below
 // the HTTP handler -- that a redelivery, a concurrent duplicate delivery, and
-// a retry after a fulfilment failure all run through finalizePaystackPayment
+// a retry after a fulfilment failure all run through finalizePayment
 // without a second ticket, a second organizer earning, a second fee entry or
 // a second transaction row. Only Paystack's HTTP calls are replaced (vi.mock
 // below); the lock, the RPCs and every table are the real ones.
@@ -20,12 +20,12 @@ import {
 } from "vitest";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
-import { finalizePaystackPayment } from "../payments/finalizePaystackPayment";
+import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import {
   WEBHOOK_ACK_OK,
   WEBHOOK_ACK_RETRY,
-  paystackWebhookAckStatus,
+  webhookAckStatus,
 } from "../payments/webhookAck";
 import {
   type TestUser,
@@ -41,7 +41,7 @@ const paystack = vi.hoisted(() => ({
   refundTransaction: vi.fn(),
 }));
 
-vi.mock("../payments/gateway/paystackService", async (importOriginal) => ({
+vi.mock("../payments/providers/paystackApi", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   verifyTransaction: paystack.verifyTransaction,
   initializeTransaction: paystack.initializeTransaction,
@@ -182,7 +182,7 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
         service
           .from("transaction")
           .select("id", { count: "exact", head: true })
-          .eq("paystack_reference", attempt?.provider_reference as string),
+          .eq("provider_reference", attempt?.provider_reference as string),
         service
           .from("platform_fee_entry")
           .select("id", { count: "exact", head: true })
@@ -249,7 +249,7 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
     paystack.verifyTransaction.mockReset();
     paystack.initializeTransaction.mockReset();
     paystack.initializeTransaction.mockImplementation(
-      async (p: { reference: string }) => ({
+      async (_account: unknown, p: { reference: string }) => ({
         reference: p.reference,
         access_code: "test-access",
         authorization_url: "https://checkout.paystack.test/x",
@@ -262,8 +262,8 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
     paystackSaysPaid(reference);
 
     const [a, b] = await Promise.all([
-      finalizePaystackPayment(attemptId, deps),
-      finalizePaystackPayment(attemptId, deps),
+      finalizePayment(attemptId, deps),
+      finalizePayment(attemptId, deps),
     ]);
     const statuses = [a.status, b.status].sort();
     // Whichever caller loses the compare-and-set sees 'already_processing'
@@ -275,7 +275,7 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
     }
     // The loser answers 503 so Paystack comes back and then gets a 200 from
     // the finished state -- never a 200 for work it did not do.
-    expect(paystackWebhookAckStatus(a)).toBe(
+    expect(webhookAckStatus(a)).toBe(
       a.status === "succeeded" ? WEBHOOK_ACK_OK : WEBHOOK_ACK_RETRY,
     );
 
@@ -296,9 +296,9 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
     paystackSaysPaid(reference);
 
     failNextIssuance = true;
-    const first = await finalizePaystackPayment(attemptId, deps);
+    const first = await finalizePayment(attemptId, deps);
     expect(first.status).toBe("fulfillment_failed");
-    expect(paystackWebhookAckStatus(first)).toBe(WEBHOOK_ACK_RETRY);
+    expect(webhookAckStatus(first)).toBe(WEBHOOK_ACK_RETRY);
     // The charge is recorded (so a retry can never re-charge), nothing is
     // issued, and the checkout is still open for the retry.
     const afterFailure = await financialFootprint(attemptId);
@@ -313,9 +313,9 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
     expect(afterFailure.transactionId).not.toBeNull();
 
     // Paystack redelivers.
-    const second = await finalizePaystackPayment(attemptId, deps);
+    const second = await finalizePayment(attemptId, deps);
     expect(second.status).toBe("succeeded");
-    expect(paystackWebhookAckStatus(second)).toBe(WEBHOOK_ACK_OK);
+    expect(webhookAckStatus(second)).toBe(WEBHOOK_ACK_OK);
     const afterRetry = await financialFootprint(attemptId);
     expect(afterRetry).toMatchObject({
       attemptStatus: "succeeded",
@@ -330,7 +330,7 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
     // A third delivery of the same event (a late duplicate) is a no-op that
     // does not even re-verify.
     paystack.verifyTransaction.mockClear();
-    const third = await finalizePaystackPayment(attemptId, deps);
+    const third = await finalizePayment(attemptId, deps);
     expect(third.status).toBe("succeeded");
     expect(paystack.verifyTransaction).not.toHaveBeenCalled();
     expect(await financialFootprint(attemptId)).toMatchObject({
@@ -347,9 +347,9 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
       new Error("simulated Paystack time-out"),
     );
 
-    const outage = await finalizePaystackPayment(attemptId, deps);
+    const outage = await finalizePayment(attemptId, deps);
     expect(outage.status).toBe("pending");
-    expect(paystackWebhookAckStatus(outage)).toBe(WEBHOOK_ACK_RETRY);
+    expect(webhookAckStatus(outage)).toBe(WEBHOOK_ACK_RETRY);
     expect(await financialFootprint(attemptId)).toMatchObject({
       attemptStatus: "pending",
       tickets: 0,
@@ -358,7 +358,7 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
     });
 
     paystackSaysPaid(reference);
-    const redelivered = await finalizePaystackPayment(attemptId, deps);
+    const redelivered = await finalizePayment(attemptId, deps);
     expect(redelivered.status).toBe("succeeded");
     expect(await financialFootprint(attemptId)).toMatchObject({
       attemptStatus: "succeeded",
@@ -373,9 +373,7 @@ describe("webhook redelivery: finalisation is idempotent below the HTTP layer", 
   it("the ticket RPC itself refuses to issue a paid session twice, even when called directly with a fresh ticket list", async () => {
     const { attemptId, reference } = await openAndPay();
     paystackSaysPaid(reference);
-    expect((await finalizePaystackPayment(attemptId, deps)).status).toBe(
-      "succeeded",
-    );
+    expect((await finalizePayment(attemptId, deps)).status).toBe("succeeded");
     const before = await financialFootprint(attemptId);
 
     // Bypass finalize's lock entirely and hit the database function the way

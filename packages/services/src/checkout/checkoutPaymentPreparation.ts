@@ -10,8 +10,22 @@ import type { Database } from "@abonten/types/database.types";
 // every number here comes from the already-authoritative ticket_checkout
 // rows (locked in at checkout creation / quantity-update time), re-read
 // fresh on every call after self-healing expiry.
+//
+// Money: totals are computed in integer minor units of the EVENT's currency
+// (every session in one payment shares it) with the market's service fee and
+// tax rules, then handed back as major-unit numbers for the envelope the
+// clients already read. One order never mixes currencies or markets: paying
+// for a London event and an Accra event together is refused.
 
-import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import { computeOrderTotals, rateToBps } from "@abonten/core/market/pricing";
+import {
+  type Money,
+  add,
+  fromMajor,
+  toMajor,
+  zero,
+} from "@abonten/core/money/money";
+import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import { getActiveServiceFeeRate } from "@abonten/services/platform/platformFee";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -20,8 +34,7 @@ type CheckoutRow = {
   total_price: number;
   discount: number;
   event_id: string;
-  event: { title: string } | null;
-  ticket_type: { currency: string } | null;
+  event: { title: string; currency: string; country_code: string } | null;
 };
 
 export type PreparedCheckoutSession = {
@@ -31,15 +44,33 @@ export type PreparedCheckoutSession = {
   subtotal: number;
   discount: number;
   fee: number;
+  /** Tax added on top (exclusive-tax markets); 0 otherwise. */
+  tax: number;
   total: number;
+  /** Integer minor units, for the money paths. */
+  totalMinor: number;
+  taxMinor: number;
 };
 
 export type PreparedCheckoutPayment = {
   validSessions: PreparedCheckoutSession[];
   invalidSessionIds: string[];
   grandTotal: number;
+  grandTotalMinor: number;
   currency: string;
+  countryCode: string;
+  serviceFeeBps: number;
+  taxLabel: string;
+  /** Set when the selected sessions span more than one currency/market. */
+  mixedMarkets: boolean;
 };
+
+export class MixedMarketCheckoutError extends Error {
+  constructor() {
+    super("The selected checkouts belong to different markets or currencies");
+    this.name = "MixedMarketCheckoutError";
+  }
+}
 
 /**
  * Re-reads the given checkout sessions fresh (after self-healing expiry),
@@ -53,9 +84,6 @@ export async function prepareCheckoutPayment(
   checkoutSessionIds: string[],
   client: SupabaseClient<Database>,
 ): Promise<PreparedCheckoutPayment> {
-  // `client` lets an already-authenticated caller (the mobile checkout
-  // routes) reuse its own Supabase client; the "use server" actions omit it
-  // and get the cookie client exactly as before.
   const supabase = client;
   const uniqueIds = Array.from(new Set(checkoutSessionIds));
 
@@ -64,7 +92,7 @@ export async function prepareCheckoutPayment(
   const { data, error } = await supabase
     .from("ticket_checkout")
     .select(
-      "checkout_session_id, total_price, discount, event_id, event:event_id(title), ticket_type:ticket_type_id(currency)",
+      "checkout_session_id, total_price, discount, event_id, event:event_id(title, currency, country_code)",
     )
     .in("checkout_session_id", uniqueIds)
     .eq("user_id", userId)
@@ -76,41 +104,91 @@ export async function prepareCheckoutPayment(
 
   const rows = (data ?? []) as unknown as CheckoutRow[];
 
-  const sessionsById = new Map<string, PreparedCheckoutSession>();
-  let currency = "GHS";
+  // The order's market and currency come from its events. A basket that
+  // mixes them is refused before any money maths.
+  const currencies = new Set<string>();
+  const countries = new Set<string>();
+  for (const row of rows) {
+    if (row.event?.currency) currencies.add(row.event.currency.toUpperCase());
+    if (row.event?.country_code)
+      countries.add(row.event.country_code.toUpperCase());
+  }
+  const mixedMarkets = currencies.size > 1 || countries.size > 1;
+  if (mixedMarkets) throw new MixedMarketCheckoutError();
+
+  const market = await getMarketOrDefault([...countries][0] ?? null);
+  const currency = [...currencies][0] ?? market.defaultCurrency;
+  const feeRate =
+    market.fees.serviceFeeBps != null
+      ? market.fees.serviceFeeBps / 10_000
+      : await getActiveServiceFeeRate(supabase, currency, market.countryCode);
+  const serviceFeeBps = rateToBps(feeRate);
+
+  type Acc = {
+    eventId: string;
+    eventTitle: string;
+    subtotal: Money;
+    discount: Money;
+    net: Money;
+  };
+  const sessionsById = new Map<string, Acc>();
 
   for (const row of rows) {
-    let session = sessionsById.get(row.checkout_session_id);
-
-    if (!session) {
-      session = {
-        checkoutSessionId: row.checkout_session_id,
+    let acc = sessionsById.get(row.checkout_session_id);
+    if (!acc) {
+      acc = {
         eventId: row.event_id,
         eventTitle: row.event?.title ?? "",
-        subtotal: 0,
-        discount: 0,
-        fee: 0,
-        total: 0,
+        subtotal: zero(currency),
+        discount: zero(currency),
+        net: zero(currency),
       };
-      sessionsById.set(row.checkout_session_id, session);
+      sessionsById.set(row.checkout_session_id, acc);
     }
-
-    session.subtotal += row.total_price + row.discount;
-    session.discount += row.discount;
-    session.total += row.total_price;
-    currency = row.ticket_type?.currency ?? currency;
+    const net = fromMajor(Number(row.total_price), currency);
+    const discount = fromMajor(Number(row.discount), currency);
+    acc.subtotal = add(acc.subtotal, add(net, discount));
+    acc.discount = add(acc.discount, discount);
+    acc.net = add(acc.net, net);
   }
 
-  const feeRate = await getActiveServiceFeeRate(supabase, currency);
-
-  for (const session of sessionsById.values()) {
-    session.fee = computeCheckoutFee(session.total, feeRate);
-    session.total += session.fee;
+  const validSessions: PreparedCheckoutSession[] = [];
+  let grand = zero(currency);
+  for (const [checkoutSessionId, acc] of sessionsById) {
+    // The checkout rows already carry the discounted total (`total_price`),
+    // so the fee and tax are computed on that net figure directly.
+    const totals = computeOrderTotals({
+      subtotal: acc.net,
+      discount: null,
+      serviceFeeBps,
+      tax: market.tax,
+    });
+    grand = add(grand, totals.total);
+    validSessions.push({
+      checkoutSessionId,
+      eventId: acc.eventId,
+      eventTitle: acc.eventTitle,
+      subtotal: toMajor(acc.subtotal),
+      discount: toMajor(acc.discount),
+      fee: toMajor(totals.serviceFee),
+      tax: toMajor(totals.taxAdded),
+      total: toMajor(totals.total),
+      totalMinor: totals.total.amountMinor,
+      taxMinor: totals.taxAdded.amountMinor,
+    });
   }
 
-  const validSessions = Array.from(sessionsById.values());
   const invalidSessionIds = uniqueIds.filter((id) => !sessionsById.has(id));
-  const grandTotal = validSessions.reduce((sum, s) => sum + s.total, 0);
 
-  return { validSessions, invalidSessionIds, grandTotal, currency };
+  return {
+    validSessions,
+    invalidSessionIds,
+    grandTotal: toMajor(grand),
+    grandTotalMinor: grand.amountMinor,
+    currency,
+    countryCode: market.countryCode,
+    serviceFeeBps,
+    taxLabel: market.tax.mode === "exclusive" ? market.tax.label : "",
+    mixedMarkets: false,
+  };
 }

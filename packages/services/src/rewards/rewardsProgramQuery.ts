@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { RewardsProgram } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { rewardRulesCurrency } from "./creditCurrency";
 
 // The public, sanitized view of the Rewards program (get_rewards_program_
 // public): whether it's switched on for the caller, and the ACTIVE rule
@@ -62,6 +63,9 @@ type ProgramJson = {
 
 export const DISABLED_REWARDS_PROGRAM: RewardsProgram = {
   enabled: false,
+  // Nothing is shown while the programme is off; the real currency is
+  // filled in by getRewardsProgramCore.
+  currency: "",
   eventReferral: null,
   friendReferral: null,
   organizerRebate: null,
@@ -79,10 +83,14 @@ export const DISABLED_REWARDS_PROGRAM: RewardsProgram = {
   withdrawals: { enabled: false, minMinor: 10000 },
 };
 
-export function mapRewardsProgram(json: ProgramJson | null): RewardsProgram {
-  if (!json) return DISABLED_REWARDS_PROGRAM;
+export function mapRewardsProgram(
+  json: ProgramJson | null,
+  currency: string,
+): RewardsProgram {
+  if (!json) return { ...DISABLED_REWARDS_PROGRAM, currency };
   return {
     enabled: json.enabled === true,
+    currency,
     eventReferral: json.event_referral
       ? {
           rateBps: json.event_referral.rate_bps,
@@ -168,8 +176,9 @@ export function rewardsKillSwitchOn(): boolean {
 export async function getRewardsProgramCore(
   supabase: SupabaseClient<Database>,
 ): Promise<{ status: 200 | 500; message?: string; data: RewardsProgram }> {
+  const currency = await rewardRulesCurrency();
   if (rewardsKillSwitchOn()) {
-    return { status: 200, data: DISABLED_REWARDS_PROGRAM };
+    return { status: 200, data: { ...DISABLED_REWARDS_PROGRAM, currency } };
   }
 
   const { data, error } = await supabase.rpc("get_rewards_program_public");
@@ -179,9 +188,12 @@ export async function getRewardsProgramCore(
     return {
       status: 500,
       message: "Something went wrong!",
-      data: DISABLED_REWARDS_PROGRAM,
+      data: { ...DISABLED_REWARDS_PROGRAM, currency },
     };
   }
 
-  return { status: 200, data: mapRewardsProgram(data as ProgramJson | null) };
+  return {
+    status: 200,
+    data: mapRewardsProgram(data as ProgramJson | null, currency),
+  };
 }

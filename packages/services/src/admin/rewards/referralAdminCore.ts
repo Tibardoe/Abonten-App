@@ -16,6 +16,7 @@ import type {
   RewardRuleSummary,
 } from "@abonten/types/rewards";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { rewardRulesCurrency } from "../../rewards/creditCurrency";
 import {
   type AdminEnvelope,
   adminError,
@@ -41,6 +42,7 @@ const denied = (e: unknown): AdminEnvelope<never> =>
 type RequestMeta = Record<string, unknown> | undefined;
 
 type RewardEventRow = {
+  currency: string;
   id: string;
   rule_key: string;
   rule_version: number | null;
@@ -66,7 +68,7 @@ type RewardEventRow = {
 };
 
 const EVENT_COLUMNS =
-  "id, rule_key, rule_version, is_shadow, status, decision, status_reason, amount_minor, released_minor, risk_score, risk_flags, basis, beneficiary_user_id, buyer_user_id, event_id, transaction_id, release_at, created_at, settled_at, reviewed_by, reviewed_at, review_note";
+  "id, currency, rule_key, rule_version, is_shadow, status, decision, status_reason, amount_minor, released_minor, risk_score, risk_flags, basis, beneficiary_user_id, buyer_user_id, event_id, transaction_id, release_at, created_at, settled_at, reviewed_by, reviewed_at, review_note";
 
 async function mapEvents(
   supabase: ServiceRoleClient,
@@ -91,6 +93,7 @@ async function mapEvents(
   }
   return rows.map((r) => ({
     id: r.id,
+    currency: r.currency,
     ruleKey: r.rule_key,
     ruleVersion: r.rule_version,
     isShadow: r.is_shadow,
@@ -334,6 +337,7 @@ export async function getReferralSummaryCore(
   return {
     status: 200,
     data: {
+      currency: await rewardRulesCurrency(),
       sinceDays: range.days,
       from: range.from,
       to: range.to,
@@ -487,6 +491,8 @@ export async function publishRewardRuleVersionCore(
       withdrawable: latest.withdrawable,
       withdrawable_delay: latest.withdrawable_delay,
       note: input.note,
+      // A new version keeps paying in the currency of the version it replaces.
+      currency: latest.currency,
       created_by: ctx.userId,
     })
     .select("id, version")

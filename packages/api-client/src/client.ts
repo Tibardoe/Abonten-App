@@ -11,6 +11,12 @@ import type {
   SubscriptionStatusResult,
   SubscriptionTarget,
 } from "@abonten/types/discoveryType";
+import type {
+  ListingMarket,
+  LocalePreferences,
+  LocalePreferencesPatch,
+  MarketContextResult,
+} from "@abonten/types/marketType";
 import type { ActivePromotionSummary } from "@abonten/types/promotionSummaryType";
 import type {
   SearchClickInput,
@@ -661,7 +667,28 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     account: {
-      /** Send a Hubtel OTP to change/add the signed-in user's phone number
+      /** Home market, estimate currency, distance unit and locale. */
+      localePreferences() {
+        return request<ApiEnvelope<LocalePreferences>>(
+          "/api/mobile/account/locale",
+          {
+            method: "GET",
+            auth: true,
+          },
+        );
+      },
+      /** Change them; the home market must be an open market. */
+      updateLocalePreferences(body: LocalePreferencesPatch) {
+        return request<ApiEnvelope<LocalePreferences>>(
+          "/api/mobile/account/locale",
+          {
+            method: "PATCH",
+            body,
+            auth: true,
+          },
+        );
+      },
+      /** Send a phone OTP to change/add the signed-in user's phone number
        *  (purpose "phone-update"). */
       requestPhoneChange(body: RequestPhoneOtpBody) {
         return request<ApiEnvelope<RequestPhoneOtpData>>(
@@ -775,7 +802,7 @@ export function createApiClient(options: ApiClientOptions) {
        * Start paying for a pending event-promotion checkout. Completion is
        * the shared payments.verify path. With `useCredit` the quoted Abonten
        * Credit is applied; if it covers everything, no paymentMethodId is
-       * needed, `data.paystack` is null and `data.verification` holds the
+       * needed, `data.payment` is null and `data.verification` holds the
        * outcome.
        */
       promotionAttempt(body: {
@@ -999,11 +1026,57 @@ export function createApiClient(options: ApiClientOptions) {
       },
     },
 
-    paystack: {
+    // Markets: what makes the app local (open markets, the viewer's locale
+    // context, display rates, feature flags) and the market of a venue point.
+    markets: {
+      context(params: {
+        platform: "ios" | "android";
+        country?: string | null;
+        /** The browsing area's centre; the server finds its country. */
+        lat?: number | null;
+        lng?: number | null;
+        appVersion?: string | null;
+        installId?: string | null;
+        tz?: string | null;
+        locale?: string | null;
+      }) {
+        const q = new URLSearchParams();
+        q.set("platform", params.platform);
+        if (params.country) q.set("country", params.country);
+        if (params.lat != null && params.lng != null) {
+          q.set("lat", params.lat.toFixed(3));
+          q.set("lng", params.lng.toFixed(3));
+        }
+        if (params.appVersion) q.set("appVersion", params.appVersion);
+        if (params.installId) q.set("installId", params.installId);
+        if (params.tz) q.set("tz", params.tz);
+        if (params.locale) q.set("locale", params.locale);
+        // Signed out is fine: the helper only attaches a token when it has one.
+        return request<ApiEnvelope<MarketContextResult>>(
+          `/api/mobile/markets/context?${q.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** The market (currency, zone) of a venue point, for the create/edit forms. */
+      at(params: { lat: number; lng: number; country?: string | null }) {
+        const q = new URLSearchParams({
+          lat: String(params.lat),
+          lng: String(params.lng),
+        });
+        if (params.country) q.set("country", params.country);
+        return request<ApiEnvelope<ListingMarket>>(
+          `/api/mobile/markets/at?${q.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+    },
+
+    // Market-aware payment helpers.
+    paymentsCatalog: {
       /** Live Ghana mobile money networks for the add-wallet picker. */
       momoNetworks() {
         return request<ApiEnvelope<MomoNetwork[]>>(
-          "/api/mobile/paystack/momo-networks",
+          "/api/mobile/payments/momo-networks",
           { method: "GET", auth: true },
         );
       },

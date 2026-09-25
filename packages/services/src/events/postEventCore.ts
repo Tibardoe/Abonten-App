@@ -1,15 +1,21 @@
 import { generateEventCode } from "@abonten/core/eventCodeGenerator";
 import { generateSlug } from "@abonten/core/geerateSlug";
+import {
+  type StructuredAddress,
+  readStructuredAddress,
+} from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
   freeEventPromoCodeProblem,
   paidTierProblem,
 } from "@abonten/core/ticketTiers";
+import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveListingLocation } from "../geo/locationResolution";
 
 // Post-auth, post-flyer-upload body of postEvent, lifted so the
 // `/api/mobile/events` route runs the exact same create flow as the web
@@ -32,16 +38,17 @@ export type PostEventCoreInput = {
   category: string;
   types: string[];
   address: string;
+  /** Structured address from the client's geocoder, when it has one. */
+  addressDetails?: Partial<StructuredAddress> | null;
   latitude: number;
   longitude: number;
   capacity?: number | null;
   websiteUrl?: string | null;
   requireRegistration: boolean;
-  // Passed straight into each ticket type's `currency`. The web form always
-  // resolves this (defaults to "GHS"); left nullable to match its type.
-  currency: string | null | undefined;
   // Schedule — a single start/end range OR a list of specific date entries
-  // (occurrences), never both.
+  // (occurrences), never both. Each value is either an instant (ISO string
+  // with a zone, or a Date) or a wall-clock "yyyy-mm-ddTHH:MM" in the
+  // VENUE's zone — which the server works out from the coordinates.
   startsAt?: DateInput | null;
   endsAt?: DateInput | null;
   specificDates?: { start: DateInput; end: DateInput }[] | null;
@@ -92,6 +99,24 @@ export async function postEventCore(
     return { status: 400, message: locationCheck.message };
   }
 
+  // Where the venue is decides the market, and with it the currency the
+  // tickets are priced in, the time zone the times are read in and the
+  // provider that will take payment. Never taken from the client.
+  const resolved = await resolveListingLocation({
+    lat: input.latitude,
+    lng: input.longitude,
+    countryHint: input.addressDetails?.country_code ?? null,
+  });
+  if (!resolved.ok) return { status: 400, message: resolved.message };
+  const { location } = resolved;
+  const currency = location.market?.defaultCurrency as string;
+  const toInstant = (value: DateInput | null | undefined): Date | null =>
+    value == null
+      ? null
+      : value instanceof Date
+        ? value
+        : parseEventTimestamp(value, location.timeZone);
+
   // Ticketing rules (@abonten/core/ticketTiers + ticketCapacity), checked
   // here for both transports before anything is written. The database
   // enforces the same two rules with triggers, so a caller that skips this
@@ -128,23 +153,38 @@ export async function postEventCore(
   const isSpecificEvent =
     !!input.specificDates && input.specificDates.length > 0;
 
-  const eventStartDate = isSpecificEvent ? null : (input.startsAt ?? null);
-  const eventEndDate = isSpecificEvent ? null : (input.endsAt ?? null);
+  const eventStartDate = isSpecificEvent ? null : toInstant(input.startsAt);
+  const eventEndDate = isSpecificEvent ? null : toInstant(input.endsAt);
+  if (!isSpecificEvent && (!eventStartDate || !eventEndDate)) {
+    return { status: 400, message: "Enter a valid start and end time." };
+  }
 
   const specificDatesPayload = isSpecificEvent
     ? // biome-ignore lint/style/noNonNullAssertion: guarded by isSpecificEvent
       input.specificDates!.map((entry) => ({
-        start: entry.start,
-        end: entry.end,
+        start: toInstant(entry.start)?.toISOString() ?? null,
+        end: toInstant(entry.end)?.toISOString() ?? null,
       }))
     : null;
+  if (specificDatesPayload?.some((d) => !d.start || !d.end)) {
+    return {
+      status: 400,
+      message: "Enter a valid start and end time for every date.",
+    };
+  }
+
+  const addressPayload: StructuredAddress = {
+    ...readStructuredAddress(input.addressDetails ?? null),
+    full_address: input.address,
+    country_code: location.countryCode,
+  };
 
   const ticketTypesPayload = input.freeEvent
     ? [
         {
           type: "FREE",
           price: 0,
-          currency: input.currency,
+          currency,
           quantity: input.capacity ?? null,
           available_from: null,
           available_until: null,
@@ -156,7 +196,7 @@ export async function postEventCore(
               {
                 type: "SINGLE TICKET",
                 price: input.singleTicket.price,
-                currency: input.currency,
+                currency,
                 quantity: input.singleTicket.quantity,
                 available_from: null,
                 available_until: null,
@@ -169,7 +209,7 @@ export async function postEventCore(
           quantity: ticket.quantity,
           available_from: ticket.availableFrom ?? null,
           available_until: ticket.availableUntil ?? null,
-          currency: input.currency,
+          currency,
         })),
       ];
 
@@ -201,13 +241,13 @@ export async function postEventCore(
       p_event_type: input.types,
       p_latitude: input.latitude,
       p_longitude: input.longitude,
-      p_address: { full_address: input.address },
+      p_address: addressPayload,
       p_capacity: input.capacity ?? null,
       p_website_url: input.websiteUrl ?? null,
       p_flyer_public_id: input.flyerPublicId,
       p_flyer_version: String(input.flyerVersion),
-      p_starts_at: eventStartDate,
-      p_ends_at: eventEndDate,
+      p_starts_at: eventStartDate?.toISOString() ?? null,
+      p_ends_at: eventEndDate?.toISOString() ?? null,
       p_require_registration: input.requireRegistration,
       // Featuring an event happens only through the paid Promotion flow.
       p_featured: false,
@@ -216,6 +256,9 @@ export async function postEventCore(
       p_promo_codes: promoCodesPayload,
       p_receiving_account: null,
       p_place_id: input.placeId ?? null,
+      p_country_code: location.countryCode,
+      p_timezone: location.timeZone,
+      p_currency: currency,
     } as unknown as Database["public"]["Functions"]["create_event"]["Args"],
   );
 

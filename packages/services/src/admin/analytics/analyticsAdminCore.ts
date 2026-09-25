@@ -235,7 +235,7 @@ export async function getPlatformAnalyticsCore(
       id: String(r.id ?? ""),
       name: r.name ? String(r.name) : null,
       grossTicketSales: num(r.grossTicketSales),
-      currency: typeof r.currency === "string" ? r.currency : "GHS",
+      currency: typeof r.currency === "string" ? r.currency : "",
     } satisfies AnalyticsTopOrganizerRow;
   });
 

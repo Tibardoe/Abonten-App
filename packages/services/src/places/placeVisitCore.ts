@@ -91,6 +91,7 @@ export async function getPlaceVisitPanelCore(
     return {
       status: 200,
       data: {
+        currency: program.data.currency,
         available: false,
         verified: place.verified,
         code: null,
@@ -126,6 +127,7 @@ export async function getPlaceVisitPanelCore(
   return {
     status: 200,
     data: {
+      currency: program.data.currency,
       available: true,
       verified: place.verified,
       code: c.code,

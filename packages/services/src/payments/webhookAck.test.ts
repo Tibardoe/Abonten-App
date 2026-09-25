@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { FinalizeResult } from "./finalizePaystackPayment";
+import type { FinalizeResult } from "./finalizePayment";
 import {
   WEBHOOK_ACK_OK,
   WEBHOOK_ACK_RETRY,
-  paystackWebhookAckStatus,
+  webhookAckStatus,
 } from "./webhookAck";
 
-describe("paystackWebhookAckStatus", () => {
+describe("webhookAckStatus", () => {
   const settled: FinalizeResult[] = [
     { status: "succeeded" },
     { status: "failed", message: "Your payment was declined." },
@@ -25,20 +25,20 @@ describe("paystackWebhookAckStatus", () => {
 
   it("acknowledges a settled outcome so Paystack stops redelivering", () => {
     for (const r of settled) {
-      expect(paystackWebhookAckStatus(r)).toBe(WEBHOOK_ACK_OK);
+      expect(webhookAckStatus(r)).toBe(WEBHOOK_ACK_OK);
     }
   });
 
   it("refuses to acknowledge an outcome a retry could still change", () => {
     for (const r of unsettled) {
-      expect(paystackWebhookAckStatus(r)).toBe(WEBHOOK_ACK_RETRY);
+      expect(webhookAckStatus(r)).toBe(WEBHOOK_ACK_RETRY);
     }
   });
 
   it("never answers 2xx for a paid order without a fulfilled purchase", () => {
     // The regression this guards: a transient verify failure returned 200,
     // Paystack stopped, and the paid-for ticket was never issued.
-    const paidButNotIssued = paystackWebhookAckStatus({
+    const paidButNotIssued = webhookAckStatus({
       status: "pending",
       message: "Could not verify payment right now. Please try again.",
     });

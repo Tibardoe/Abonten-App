@@ -3,6 +3,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { PromotionCredit, RebateKind } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { creditCurrencyFor } from "./creditCurrency";
 import { getRewardsProgramCore } from "./rewardsProgramQuery";
 
 // Promotion credit for organizers and venue owners (Abonten Rewards Phase 6),
@@ -49,13 +50,14 @@ export async function getPromotionCreditCore(
   if (!userId) return { status: 401, message: "User not logged in" };
 
   const service = getSupabaseServiceClient();
-  const [program, stats, spendable] = await Promise.all([
+  const [program, stats, spendable, currency] = await Promise.all([
     getRewardsProgramCore(supabase),
     service.rpc("rebate_stats", { p_user_id: userId }),
     service.rpc("credit_spendable", {
       p_user_id: userId,
       p_scope: "promotions",
     }),
+    creditCurrencyFor(userId),
   ]);
 
   if (program.status !== 200 || stats.error || spendable.error) {
@@ -74,6 +76,7 @@ export async function getPromotionCreditCore(
   return {
     status: 200,
     data: {
+      currency,
       enabled: p.enabled,
       canRedeem: p.enabled && p.redemption.promotions,
       spendableMinor: p.enabled ? num(spend.spendable_minor) : 0,

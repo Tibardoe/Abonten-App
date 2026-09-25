@@ -168,7 +168,8 @@ async function pay(checkoutId: string, amount: number) {
       currency: "GHS",
       status: "successful",
       payment_method: "paystack",
-      paystack_reference: `IT-PROMO-${crypto.randomUUID()}`,
+      provider: "paystack",
+      provider_reference: `IT-PROMO-${crypto.randomUUID()}`,
     } as never)
     .select("id")
     .single();
@@ -957,6 +958,8 @@ describe("promotion checkout cancellation", () => {
     const { data: place, error } = await svc
       .from("place")
       .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
         owner_id: organizer.id,
         name: "Promo Cancel Lounge",
         slug: `promo-cancel-lounge-${crypto.randomUUID()}`,

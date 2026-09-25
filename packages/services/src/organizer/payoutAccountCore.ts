@@ -1,5 +1,8 @@
 import { logger } from "@abonten/core/logger";
-import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
+import {
+  PHONE_ERROR_MESSAGE,
+  parsePhoneWithDialCode,
+} from "@abonten/core/phone/phone";
 import type { Database } from "@abonten/types/database.types";
 import type {
   OrganizerPayoutRow,
@@ -7,6 +10,7 @@ import type {
 } from "@abonten/types/organizerFinance";
 import { addPayoutAccountSchema } from "@abonten/validation/payoutAccountSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getMarketOrDefault } from "../markets/marketConfig";
 
 // Post-auth bodies for an organizer's payout destinations + withdrawal
 // history, shared by the Server Actions (cookie session) and the mobile
@@ -16,7 +20,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // fork. `revalidatePath` is Next-specific and stays in the action wrappers.
 
 const ACCOUNT_COLUMNS =
-  "id, account_type, account_holder_name, provider, account_number, is_default, created_at";
+  "id, account_type, account_holder_name, provider, provider_code, account_number, country_code, currency, details, is_default, created_at";
 
 export type ListPayoutAccountsResult =
   | { status: 401 | 500; message: string }
@@ -81,22 +85,94 @@ export async function addPayoutAccountCore(
   }
 
   const data = parsed.data;
+
+  // The market the account belongs to: the one the organizer named, else
+  // their home market. Its payout method rows say which rails exist here
+  // and which account fields each needs.
+  let homeCountry: string | null = null;
+  if (!data.countryCode) {
+    const { data: profile } = await supabase
+      .from("user_info")
+      .select("country_code")
+      .eq("id", userId)
+      .maybeSingle();
+    homeCountry = profile?.country_code ?? null;
+  }
+  const market = await getMarketOrDefault(data.countryCode ?? homeCountry);
+  const rail = market.payoutMethods.find(
+    (m) => m.enabled && m.method === data.accountType,
+  );
+  if (!rail) {
+    return {
+      status: 400,
+      message:
+        data.accountType === "mobile_money"
+          ? `Mobile money payouts aren't available in ${market.name} yet.`
+          : `Bank payouts aren't available in ${market.name} yet.`,
+    };
+  }
+
+  // Rail-specific fields (sort code, routing number, IBAN…) are checked
+  // against the market's own rules. Phone and account number have their own
+  // columns and are validated below.
+  const details: Record<string, string> = {};
+  for (const field of rail.fields) {
+    if (
+      field.key === "phone" ||
+      field.key === "network" ||
+      field.key === "bankName" ||
+      field.key === "accountNumber"
+    )
+      continue;
+    const value = (data.details?.[field.key] ?? "").trim();
+    if (!value) {
+      if (field.required) {
+        return { status: 400, message: `${field.label} is required.` };
+      }
+      continue;
+    }
+    if (
+      field.pattern &&
+      !new RegExp(field.pattern, "i").test(value.replace(/\s+/g, ""))
+    ) {
+      return {
+        status: 400,
+        message: field.example
+          ? `Enter a valid ${field.label.toLowerCase()} (e.g. ${field.example}).`
+          : `Enter a valid ${field.label.toLowerCase()}.`,
+      };
+    }
+    details[field.key] = value;
+  }
+
   const provider =
     data.accountType === "mobile_money" ? data.networkName : data.bankName;
+  const providerCode =
+    data.accountType === "mobile_money"
+      ? data.networkCode
+      : (data.bankCode ?? null);
+
   // Mobile-money numbers are stored in one canonical E.164 form whichever
-  // transport sent them (the web form composes "+233…", the mobile form
-  // sends the digits as typed — both shapes were in production).
-  const momoNumber =
-    data.accountType === "mobile_money"
-      ? normalizePhoneNumber("+233", data.phone)
-      : null;
-  if (momoNumber && !momoNumber.ok) {
-    return { status: 400, message: momoNumber.error };
+  // transport sent them, validated for the market's country.
+  let accountNumber: string;
+  if (data.accountType === "mobile_money") {
+    const phone = parsePhoneWithDialCode(market.dialCode, data.phone);
+    if (!phone.ok) {
+      return { status: 400, message: PHONE_ERROR_MESSAGE[phone.error] };
+    }
+    accountNumber = phone.e164;
+  } else {
+    accountNumber = data.accountNumber.replace(/\s+/g, "").toUpperCase();
+    const rule = rail.fields.find((f) => f.key === "accountNumber");
+    if (rule?.pattern && !new RegExp(rule.pattern, "i").test(accountNumber)) {
+      return {
+        status: 400,
+        message: rule.example
+          ? `Enter a valid ${rule.label.toLowerCase()} (e.g. ${rule.example}).`
+          : `Enter a valid ${rule.label.toLowerCase()}.`,
+      };
+    }
   }
-  const accountNumber =
-    data.accountType === "mobile_money"
-      ? (momoNumber as { ok: true; e164: string }).e164
-      : data.accountNumber;
 
   const { data: inserted, error } = await supabase
     .from("payout_account")
@@ -105,7 +181,11 @@ export async function addPayoutAccountCore(
       account_type: data.accountType,
       account_holder_name: data.accountHolderName,
       provider,
+      provider_code: providerCode,
       account_number: accountNumber,
+      country_code: market.countryCode,
+      currency: rail.currency,
+      details,
       is_default: (count ?? 0) === 0,
       status: "active",
     })

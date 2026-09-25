@@ -1,61 +1,110 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { toPesewas } from "@abonten/core/paystackAmount";
-import {
-  initializeTransaction,
-  refundTransaction,
-  verifyTransaction,
-} from "@abonten/services/payments/gateway/paystackService";
+import type { Database } from "@abonten/types/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getMarketOrDefault } from "../markets/marketConfig";
 import {
   type AddPaymentMethodResult,
   addPaymentMethodCore,
-} from "@abonten/services/payments/paymentMethodCore";
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+} from "./paymentMethodCore";
+import { NoProviderError, resolveProviderAccount } from "./providers/registry";
+import type {
+  CheckoutInit,
+  PaymentProvider,
+  ProviderAccount,
+} from "./providers/types";
 
 // Post-auth bodies of initCardVerification / confirmCardVerification, lifted
 // so the `/api/mobile/payment-methods/card/*` routes run the exact same
-// flow as the web Server Actions. Paystack has no way to tokenise a card
-// without a real charge, so this starts a GHS 1 `card`-channel charge,
-// captures the reusable authorization from the verified result, refunds the
-// GHS 1 (best-effort), and saves only the non-sensitive display fields +
-// the authorization token — never a PAN/CVV. Deliberately NOT a "use server"
-// file (see ticketInventory.ts).
-
-const CARD_VERIFICATION_AMOUNT_GHS = 1;
+// flow as the web Server Actions. A provider that tokenises cards through a
+// real charge (Paystack) starts a small `card`-channel charge in the
+// person's home market currency, captures the reusable token from the
+// verified result, refunds the charge (best-effort), and saves only the
+// non-sensitive display fields + the token — never a PAN/CVV. A market
+// whose provider cannot tokenise (Stripe, in this version) refuses with a
+// clear message and the checkout uses the hosted page each time instead.
+// Deliberately NOT a "use server" file (see ticketInventory.ts).
 
 export type InitCardVerificationCoreResult =
-  | { status: 500; message: string }
+  | { status: 400 | 500; message: string }
   | {
       status: 200;
-      data: { reference: string; accessCode: string; authorizationUrl: string };
+      data: {
+        reference: string;
+        accessCode: string;
+        authorizationUrl: string;
+        publicKey: string | null;
+        provider: string;
+      };
     };
+
+async function providerForUser(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<{
+  provider: PaymentProvider;
+  account: ProviderAccount;
+  currency: string;
+}> {
+  const { data: profile } = await supabase
+    .from("user_info")
+    .select("country_code")
+    .eq("id", userId)
+    .maybeSingle();
+  const market = await getMarketOrDefault(profile?.country_code ?? null);
+  const { provider, account } = await resolveProviderAccount({
+    countryCode: market.countryCode,
+    currency: market.defaultCurrency,
+    method: "card",
+  });
+  return { provider, account, currency: market.defaultCurrency };
+}
 
 export async function initCardVerificationCore(
+  supabase: SupabaseClient<Database>,
   userId: string,
   userEmail: string,
+  callbackUrl: string,
 ): Promise<InitCardVerificationCoreResult> {
-  const reference = `PSKCARD-${randomUUID()}`;
-
+  let resolved: Awaited<ReturnType<typeof providerForUser>>;
   try {
-    const initialized = await initializeTransaction({
-      email: userEmail,
-      amountInPesewas: toPesewas(CARD_VERIFICATION_AMOUNT_GHS),
-      currency: "GHS",
-      reference,
-      callbackUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/wallet`,
-      channels: ["card"],
-      metadata: { purpose: "card_verification", userId },
-    });
-
+    resolved = await providerForUser(supabase, userId);
+  } catch (error) {
+    if (error instanceof NoProviderError) {
+      return {
+        status: 400,
+        message: "Card payments aren't available in your market yet.",
+      };
+    }
+    logger.error(`initCardVerification: provider resolution failed: ${error}`);
     return {
-      status: 200,
-      data: {
-        reference: initialized.reference,
-        accessCode: initialized.access_code,
-        authorizationUrl: initialized.authorization_url,
-      },
+      status: 500,
+      message: "Couldn't start card verification. Please try again.",
     };
+  }
+
+  const { provider, account, currency } = resolved;
+  const amount = provider.cardVerificationAmount(account, currency);
+  if (!amount || !provider.capabilities(account).savedCards) {
+    return {
+      status: 400,
+      message:
+        "Saving a card isn't available in your market. You can still pay by card at checkout.",
+    };
+  }
+
+  const reference = `PSKCARD-${randomUUID()}`;
+  let init: CheckoutInit;
+  try {
+    init = await provider.initializeCheckout(account, {
+      email: userEmail,
+      amount,
+      reference,
+      callbackUrl,
+      methods: ["card"],
+      metadata: { purpose: "card_verification", userId },
+      description: "Card verification (refunded)",
+    });
   } catch (error) {
     logger.error(`Failed initializing card verification: ${error}`);
     return {
@@ -63,6 +112,24 @@ export async function initCardVerificationCore(
       message: "Couldn't start card verification. Please try again.",
     };
   }
+  if (init.mode !== "popup") {
+    return {
+      status: 400,
+      message:
+        "Saving a card isn't available in your market. You can still pay by card at checkout.",
+    };
+  }
+
+  return {
+    status: 200,
+    data: {
+      reference: init.reference,
+      accessCode: init.accessCode,
+      authorizationUrl: init.authorizationUrl,
+      publicKey: init.publicKey,
+      provider: init.provider,
+    },
+  };
 }
 
 export type ConfirmCardVerificationCoreResult =
@@ -76,9 +143,23 @@ export async function confirmCardVerificationCore(
   reference: string,
   label?: string,
 ): Promise<ConfirmCardVerificationCoreResult> {
-  let verification: Awaited<ReturnType<typeof verifyTransaction>>;
+  let resolved: Awaited<ReturnType<typeof providerForUser>>;
   try {
-    verification = await verifyTransaction(reference);
+    resolved = await providerForUser(supabase, userId);
+  } catch (error) {
+    logger.error(
+      `confirmCardVerification: provider resolution failed: ${error}`,
+    );
+    return {
+      status: 500,
+      message: "Couldn't verify your card. Please try again.",
+    };
+  }
+  const { provider, account } = resolved;
+
+  let verification: Awaited<ReturnType<PaymentProvider["verify"]>>;
+  try {
+    verification = await provider.verify(account, reference);
   } catch (error) {
     logger.error(`Failed verifying card verification charge: ${error}`);
     return {
@@ -89,7 +170,7 @@ export async function confirmCardVerificationCore(
 
   // A reference alone isn't proof of ownership — the verified charge's
   // customer email must match the caller.
-  if (verification.customer.email !== userEmail) {
+  if (verification.customerEmail !== userEmail) {
     logger.error(
       "confirmCardVerification: verified charge belongs to a different customer email",
     );
@@ -103,9 +184,9 @@ export async function confirmCardVerificationCore(
     };
   }
 
-  const authorization = verification.authorization;
+  const instrument = verification.instrument;
 
-  if (!authorization || !authorization.reusable) {
+  if (!instrument || !instrument.reusable) {
     return {
       status: 400,
       message:
@@ -114,10 +195,14 @@ export async function confirmCardVerificationCore(
   }
 
   try {
-    await refundTransaction(reference);
+    await provider.refund(account, {
+      reference,
+      providerTransactionId: verification.providerTransactionId,
+      amount: null,
+    });
   } catch (error) {
-    // Best-effort only — the authorization is already captured and safe to
-    // save regardless of whether the refund succeeds.
+    // Best-effort only — the token is already captured and safe to save
+    // regardless of whether the refund succeeds.
     logger.error(
       `Card verification refund failed for reference ${reference}: ${error}`,
     );
@@ -125,12 +210,12 @@ export async function confirmCardVerificationCore(
 
   return addPaymentMethodCore(supabase, userId, {
     type: "card",
-    brand: authorization.card_type,
-    last4: authorization.last4,
-    expiryMonth: Number(authorization.exp_month),
-    expiryYear: Number(authorization.exp_year),
-    authorizationCode: authorization.authorization_code,
-    bank: authorization.bank,
+    brand: instrument.brand,
+    last4: instrument.last4,
+    expiryMonth: instrument.expiryMonth,
+    expiryYear: instrument.expiryYear,
+    authorizationCode: instrument.token,
+    bank: instrument.bank,
     label,
   });
 }

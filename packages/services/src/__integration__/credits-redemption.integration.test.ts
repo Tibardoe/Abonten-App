@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Paying for promotions with Abonten Credit (migration credit_reservations):
 // the reserve / capture / release functions, the sweep, their privileges,
 // and the real payment path -- createPromotionPaymentAttemptCore and
-// finalizePaystackPayment -- for credit-only and part-credit orders. Only
+// finalizePayment -- for credit-only and part-credit orders. Only
 // the Paystack HTTP call is replaced (vi.mock below); everything else runs
 // against real Postgres.
 import {
@@ -18,7 +18,7 @@ import {
   vi,
 } from "vitest";
 import { createPromotionPaymentAttemptCore } from "../payments/createPromotionPaymentAttemptCore";
-import { finalizePaystackPayment } from "../payments/finalizePaystackPayment";
+import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import { insertEventPromotionCheckoutCore } from "../promotions/insertEventPromotionCheckoutCore";
 import { getPromotionCreditQuoteCore } from "../rewards/creditRedemptionCore";
@@ -34,7 +34,7 @@ const paystack = vi.hoisted(() => ({
   verifyTransaction: vi.fn(),
 }));
 
-vi.mock("../payments/gateway/paystackService", async (importOriginal) => ({
+vi.mock("../payments/providers/paystackApi", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   verifyTransaction: paystack.verifyTransaction,
 }));
@@ -228,6 +228,7 @@ describe("paying for promotions with credit", () => {
       target_type: "event_promotion_checkout",
       target_id: target,
       amount_minor: 100,
+      currency: "GHS",
       order_total_minor: 100,
       expires_at: new Date(Date.now() + 600_000).toISOString(),
     });
@@ -398,7 +399,7 @@ describe("paying for promotions with credit", () => {
     );
     expect(res.status).toBe(200);
     if (res.status !== 200) return;
-    expect(res.data.paystack).toBeNull();
+    expect(res.data.payment).toBeNull();
     expect(res.data.verification?.status).toBe(200);
     expect(paystack.verifyTransaction).not.toHaveBeenCalled();
 
@@ -449,7 +450,7 @@ describe("paying for promotions with credit", () => {
     ).toBe(0);
 
     // Replaying verification changes nothing.
-    const replay = await finalizePaystackPayment(res.data.attempt.id, deps);
+    const replay = await finalizePayment(res.data.attempt.id, deps);
     expect(replay.status).toBe("succeeded");
     expect((await available(organizer)).available_minor).toBe(
       after.available_minor,
@@ -492,7 +493,7 @@ describe("paying for promotions with credit", () => {
       .single();
     expect(error).toBeNull();
 
-    const result = await finalizePaystackPayment(forged?.id as string, deps);
+    const result = await finalizePayment(forged?.id as string, deps);
     expect(result.status).toBe("failed");
     const { count } = await service
       .from("event_promotion")
@@ -562,7 +563,7 @@ describe("paying for promotions with credit", () => {
         channel: "card",
         customer: { email: organizer.email },
       });
-      const result = await finalizePaystackPayment(attempt?.id as string, deps);
+      const result = await finalizePayment(attempt?.id as string, deps);
       return { result, checkoutId, reservationId: reserved.data as string };
     };
 

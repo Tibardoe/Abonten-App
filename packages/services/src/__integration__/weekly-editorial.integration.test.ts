@@ -110,6 +110,8 @@ async function makePlace(name: string) {
   const { data } = await svc
     .from("place")
     .insert({
+      country_code: "GH",
+      timezone: "Africa/Accra",
       owner_id: organizer.id,
       name,
       slug: `${name.toLowerCase().replace(/\W+/g, "-")}-${crypto.randomUUID()}`,

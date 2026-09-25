@@ -53,7 +53,7 @@ export function toSnapshotMetrics(raw: unknown): AdminSnapshotMetrics {
     places: num(r.places),
     refundsPending: num(r.refundsPending),
     refundsPendingAmount: num(r.refundsPendingAmount),
-    currency: typeof r.currency === "string" ? r.currency : "GHS",
+    currency: typeof r.currency === "string" ? r.currency : "",
   };
 }
 

@@ -13,10 +13,11 @@ import type { Database } from "@abonten/types/database.types";
 // Not a "use server" file — it takes an already-constructed Supabase client.
 
 import { logger } from "@abonten/core/logger";
-import { fromPesewas, toPesewas } from "@abonten/core/paystackAmount";
+import { formatMoney } from "@abonten/core/money/formatMoney";
+import { fromMajor, money } from "@abonten/core/money/money";
 import { splitRefundTender } from "@abonten/core/rewards/refundTenderSplit";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
-import { refundTransaction } from "@abonten/services/payments/gateway/paystackService";
+import { resolveProviderAccount } from "@abonten/services/payments/providers/registry";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -28,7 +29,11 @@ export type IssueRefundResult = {
 type RefundTransactionRow = {
   id: string;
   status: string;
-  paystack_reference: string | null;
+  provider: string;
+  provider_reference: string | null;
+  provider_transaction_id: string | null;
+  currency: string;
+  country_code: string | null;
   user_id: string;
   amount: number;
   credit_amount: number;
@@ -69,8 +74,14 @@ function tenderSplit(
   transaction: RefundTransactionRow,
   refundableMinor: number,
 ) {
-  const cashMinor = toPesewas(Number(transaction.amount ?? 0));
-  const creditMinor = toPesewas(Number(transaction.credit_amount ?? 0));
+  const cashMinor = fromMajor(
+    Number(transaction.amount ?? 0),
+    transaction.currency,
+  ).amountMinor;
+  const creditMinor = fromMajor(
+    Number(transaction.credit_amount ?? 0),
+    transaction.currency,
+  ).amountMinor;
   return splitRefundTender({
     refundMinor:
       refundableMinor > 0 ? refundableMinor : cashMinor + creditMinor,
@@ -96,7 +107,7 @@ export async function issueRefundCore(
   let query = supabase
     .from("transaction")
     .select(
-      "id, status, paystack_reference, user_id, amount, credit_amount, credit_refunded_amount",
+      "id, status, provider, provider_reference, provider_transaction_id, currency, country_code, user_id, amount, credit_amount, credit_refunded_amount",
     )
     .eq("id", transactionId);
 
@@ -128,7 +139,8 @@ export async function issueRefundCore(
       );
       const again = tenderSplit(
         transaction,
-        toPesewas(Number(refundableAgain ?? 0)),
+        fromMajor(Number(refundableAgain ?? 0), transaction.currency)
+          .amountMinor,
       );
       if (!(await returnCreditShare(transaction, again.creditBackMinor)).ok) {
         return {
@@ -142,7 +154,8 @@ export async function issueRefundCore(
       ? { status: 200, message: "This payment was already refunded" }
       : {
           status: 200,
-          message: "Your refund is already being processed by Paystack",
+          message:
+            "Your refund is already being processed by the payment provider",
         };
   }
 
@@ -150,7 +163,7 @@ export async function issueRefundCore(
     return { status: 400, message: "Only successful payments can be refunded" };
   }
 
-  if (!transaction.paystack_reference) {
+  if (!transaction.provider_reference) {
     return { status: 400, message: "No payment reference on this transaction" };
   }
 
@@ -201,7 +214,7 @@ export async function issueRefundCore(
   let refundableMinor = 0;
 
   if (Number.isFinite(refundable) && refundable > 0) {
-    refundableMinor = toPesewas(refundable);
+    refundableMinor = fromMajor(refundable, transaction.currency).amountMinor;
   } else {
     // refundable resolved to 0. Distinguish a genuine accounting gap (a
     // real ticket-backed purchase whose earning rows are missing) from an
@@ -236,10 +249,19 @@ export async function issueRefundCore(
   // old full-refund fallback (amount omitted).
   if (split.cashBackMinor > 0) {
     try {
-      await refundTransaction(
-        transaction.paystack_reference,
-        hasCredit || refundableMinor > 0 ? split.cashBackMinor : undefined,
-      );
+      const { provider, account } = await resolveProviderAccount({
+        countryCode: transaction.country_code,
+        currency: transaction.currency,
+        providerCode: transaction.provider,
+      });
+      await provider.refund(account, {
+        reference: transaction.provider_reference,
+        providerTransactionId: transaction.provider_transaction_id,
+        amount:
+          hasCredit || refundableMinor > 0
+            ? money(split.cashBackMinor, transaction.currency)
+            : null,
+      });
     } catch (error) {
       logger.error(`Refund failed for transaction ${transaction.id}: ${error}`);
 
@@ -332,7 +354,7 @@ export async function issueRefundCore(
   // notification never undoes a real refund request. Completion/failure is
   // notified separately by the webhook once Paystack actually confirms it.
   const creditText = credit.returnedNow
-    ? `GH₵ ${fromPesewas(split.creditBackMinor).toFixed(2)} is back in your Abonten Credit`
+    ? `${formatMoney(money(split.creditBackMinor, transaction.currency))} is back in your Abonten Credit`
     : null;
   const completed = split.cashBackMinor === 0;
   await createNotificationCore(privileged, {
@@ -364,6 +386,6 @@ export async function issueRefundCore(
     status: 200,
     message: completed
       ? "Refunded to your Abonten Credit"
-      : "Refund requested — Paystack will confirm once it's processed",
+      : "Refund requested — you'll be notified once the payment provider confirms it",
   };
 }

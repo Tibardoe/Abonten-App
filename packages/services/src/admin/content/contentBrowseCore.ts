@@ -285,8 +285,15 @@ export async function contentModerationCountsCore(
     restricted: 0,
   };
   for (const s of ["hidden", "removed", "restricted"] as const) {
-    const { count } = await supabase
-      .from(cfg.table as keyof Database["public"]["Tables"])
+    // The table name is dynamic; the generic query builder's typing over the
+    // full schema union is too deep for the compiler, so this one call is
+    // made through an untyped builder.
+    const { count } = await (
+      supabase as unknown as {
+        from: (t: string) => ReturnType<typeof supabase.from>;
+      }
+    )
+      .from(cfg.table as string)
       .select("id", { count: "exact", head: true })
       .eq("moderation_state" as never, s);
     out[s] = count ?? 0;

@@ -20,6 +20,7 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { getDefaultMarket } from "../../markets/marketConfig";
 import {
   fetchEventRating,
   fetchPlaceRating,
@@ -156,15 +157,18 @@ async function eventSales(
   supabase: ServiceRoleClient,
   eventId: string,
 ): Promise<{ ticketsSold: number; grossSales: number; currency: string }> {
-  const { data: tts } = await supabase
-    .from("ticket_type")
-    .select("id, price, currency")
-    .eq("event_id", eventId);
+  const [{ data: tts }, { data: ev }] = await Promise.all([
+    supabase
+      .from("ticket_type")
+      .select("id, price, currency")
+      .eq("event_id", eventId),
+    supabase.from("event").select("currency").eq("id", eventId).maybeSingle(),
+  ]);
   let ticketsSold = 0;
   let grossSales = 0;
-  let currency = "GHS";
+  // Every tier carries the event's currency (trigger-enforced).
+  const currency = ev?.currency ?? tts?.[0]?.currency ?? "";
   for (const tt of tts ?? []) {
-    if (tt.currency) currency = tt.currency;
     const { count } = await supabase
       .from("ticket")
       .select("id", { count: "exact", head: true })
@@ -740,15 +744,25 @@ export async function getOrganizerDetailCore(
   const organizerRating = await fetchUserRating(supabase, organizerId);
   const avgOrganizerRating = roundRating(organizerRating.average, 2);
 
-  let grossSales = 0;
+  // An organizer's events can be in different markets. Sales are added up
+  // per currency and the headline shows the currency with the most sales;
+  // amounts in other currencies are never added into it.
   let ticketsSold = 0;
-  let currency = "GHS";
+  const salesByCurrency = new Map<string, number>();
   for (const ev of evRows ?? []) {
     const s = await eventSales(supabase, ev.id);
-    grossSales += s.grossSales;
     ticketsSold += s.ticketsSold;
-    if (s.currency) currency = s.currency;
+    salesByCurrency.set(
+      s.currency,
+      (salesByCurrency.get(s.currency) ?? 0) + s.grossSales,
+    );
   }
+  const [currency, grossSales] = [...salesByCurrency.entries()].sort(
+    (a, b) => b[1] - a[1],
+  )[0] ?? [(await getDefaultMarket()).defaultCurrency, 0];
+  const otherSales = [...salesByCurrency.entries()]
+    .filter(([code]) => code !== currency)
+    .map(([code, amount]) => ({ currency: code, grossSales: amount }));
 
   const recentEvents: EventAdminListItem[] = (evRows ?? []).map((r) => ({
     id: r.id,
@@ -795,6 +809,7 @@ export async function getOrganizerDetailCore(
         ticketsSold,
         grossSales,
         currency,
+        otherSales,
         avgOrganizerRating,
         organizerRatingCount: organizerRating.count,
         reportsAgainst: reportsAgainst ?? 0,

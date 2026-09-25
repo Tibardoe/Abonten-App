@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 // Abonten Rewards Phase 6 -- the monthly organizer / venue rebate run and the
 // organizer milestone, through real ticket purchases (validateCheckoutCore /
-// createMultiCheckoutPaymentAttemptCore / finalizePaystackPayment with
+// createMultiCheckoutPaymentAttemptCore / finalizePayment with
 // Paystack's HTTP calls mocked), then rewards_run_monthly_rebates for the
 // month the event settled in.
 import {
@@ -18,7 +18,7 @@ import {
 } from "vitest";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
-import { finalizePaystackPayment } from "../payments/finalizePaystackPayment";
+import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import { getPromotionCreditCore } from "../rewards/promotionCreditCore";
 import {
@@ -35,7 +35,7 @@ const paystack = vi.hoisted(() => ({
   refundTransaction: vi.fn(),
 }));
 
-vi.mock("../payments/gateway/paystackService", async (importOriginal) => ({
+vi.mock("../payments/providers/paystackApi", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   verifyTransaction: paystack.verifyTransaction,
   initializeTransaction: paystack.initializeTransaction,
@@ -178,7 +178,7 @@ describe("monthly rebates: organizer, venue and milestone", () => {
     paystack.verifyTransaction.mockResolvedValueOnce({
       id: 1,
       status: "success",
-      reference: res.data.paystack?.reference as string,
+      reference: res.data.payment?.reference as string,
       amount: 10_500,
       currency: "GHS",
       gateway_response: "Approved",
@@ -195,7 +195,7 @@ describe("monthly rebates: organizer, venue and milestone", () => {
             channel: "card",
           },
     });
-    const done = await finalizePaystackPayment(res.data.attempts[0].id, deps);
+    const done = await finalizePayment(res.data.attempts[0].id, deps);
     expect(done.status).toBe("succeeded");
     const { data: checkout } = await service
       .from("ticket_checkout")
@@ -295,6 +295,8 @@ describe("monthly rebates: organizer, venue and milestone", () => {
     const { data: place, error } = await service
       .from("place")
       .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
         owner_id: ownerId,
         name: "Rebate Test Venue",
         slug: `rebate-venue-${crypto.randomUUID()}`,
@@ -423,7 +425,7 @@ describe("monthly rebates: organizer, venue and milestone", () => {
     paystack.verifyTransaction.mockReset();
     paystack.initializeTransaction.mockReset();
     paystack.initializeTransaction.mockImplementation(
-      async (p: { reference: string }) => ({
+      async (_account: unknown, p: { reference: string }) => ({
         reference: p.reference,
         access_code: "test-access",
         authorization_url: "https://checkout.paystack.test/x",
@@ -718,6 +720,8 @@ describe("monthly rebates: organizer, venue and milestone", () => {
       .eq("id", placeId);
     expect(verify.error?.message).toMatch(/staff/);
     const insertVerified = await user.client.from("place").insert({
+      country_code: "GH",
+      timezone: "Africa/Accra",
       owner_id: user.id,
       name: "Self-verified",
       slug: `self-verified-${crypto.randomUUID()}`,

@@ -133,7 +133,8 @@ beforeAll(async () => {
         amount: 210, // 200 ticket revenue + 10 service fee
         currency: "GHS",
         status: "refunded",
-        paystack_reference: `admin-fin-refunded-${crypto.randomUUID()}`,
+        provider: "paystack",
+        provider_reference: `admin-fin-refunded-${crypto.randomUUID()}`,
       },
       {
         user_id: buyer.id,
@@ -143,7 +144,8 @@ beforeAll(async () => {
         amount: 105,
         currency: "GHS",
         status: "refund_pending",
-        paystack_reference: `admin-fin-pending-${crypto.randomUUID()}`,
+        provider: "paystack",
+        provider_reference: `admin-fin-pending-${crypto.randomUUID()}`,
         refund_requested_at: new Date().toISOString(),
       },
     ])
@@ -239,6 +241,8 @@ beforeAll(async () => {
   const { data: account, error: accountError } = await service
     .from("payout_account")
     .insert({
+      country_code: "GH",
+      currency: "GHS",
       organizer_id: organizer.id,
       account_type: "mobile_money",
       provider: "MTN",

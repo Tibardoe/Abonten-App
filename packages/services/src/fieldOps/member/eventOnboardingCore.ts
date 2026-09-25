@@ -172,7 +172,6 @@ export async function submitEventOnboardingCore(
       capacity: input.event.capacity ?? null,
       websiteUrl: input.event.websiteUrl ?? null,
       requireRegistration: input.event.requireRegistration,
-      currency: "GHS",
       startsAt: input.event.startsAt,
       endsAt: input.event.endsAt,
       freeEvent: input.event.freeEvent,

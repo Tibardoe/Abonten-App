@@ -1,6 +1,6 @@
-import { countries } from "@abonten/core/countries";
 import { distanceMetres } from "@abonten/core/fieldOps/territory";
 import { logger } from "@abonten/core/logger";
+import { dialCodeFor } from "@abonten/core/phone/phone";
 import type {
   FieldOpsOnboarding,
   FieldOpsOnboardingDetail,
@@ -10,6 +10,7 @@ import type {
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { FieldOpsPlaceDetailsInput } from "@abonten/validation/fieldOpsSchemas";
+import { getDefaultMarket } from "../../markets/marketConfig";
 import { postPlaceCore } from "../../places/postPlaceCore";
 import { getResendCooldownRemainingMs } from "../../profile/phoneOtpStore";
 import {
@@ -250,8 +251,10 @@ async function regionDialCode(
     .select("country_code")
     .eq("id", regionId)
     .maybeSingle();
-  const code = (data?.country_code ?? "GH").toUpperCase();
-  return countries.find((c) => c.countryCode === code)?.callingCode ?? "+233";
+  const code = (
+    data?.country_code ?? (await getDefaultMarket()).countryCode
+  ).toUpperCase();
+  return dialCodeFor(code) ?? (await getDefaultMarket()).dialCode;
 }
 
 // ── Read back ───────────────────────────────────────────────

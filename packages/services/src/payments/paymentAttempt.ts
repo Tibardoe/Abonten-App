@@ -18,6 +18,8 @@ import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 export type PaymentAttemptRow = {
   id: string;
+  provider: string;
+  country_code: string | null;
   status:
     | "initiated"
     | "pending"
@@ -34,7 +36,7 @@ export type PaymentAttemptRow = {
 };
 
 const PAYMENT_ATTEMPT_ROW_SELECT =
-  "id, status, amount, currency, payment_method_id, provider_reference, metadata";
+  "id, provider, country_code, status, amount, currency, payment_method_id, provider_reference, metadata";
 
 type UpsertPaymentAttemptResult =
   | { status: 500; message: string }
@@ -62,6 +64,8 @@ export async function upsertPaymentAttemptForSession(
   currency: string,
   paymentMethodId: string,
   paymentGroupId: string | undefined,
+  market: { countryCode: string; provider: string },
+  extra: { taxMinor?: number } = {},
 ): Promise<UpsertPaymentAttemptResult> {
   const supabase = getSupabaseServiceClient();
   const { data: existingAttempt, error: existingError } = await supabase
@@ -120,9 +124,12 @@ export async function upsertPaymentAttemptForSession(
       [matchColumn]: matchValue,
       payment_method_id: paymentMethodId,
       amount,
-      currency,
+      currency: currency.toUpperCase(),
+      provider: market.provider,
+      country_code: market.countryCode,
       status: "initiated",
       payment_group_id: paymentGroupId ?? null,
+      metadata: extra.taxMinor ? { tax_minor: extra.taxMinor } : null,
       // matchColumn is a dynamic (CheckoutMatchColumn) key -- the typed
       // insert's excess-property check can't be validated against a
       // computed property name.
