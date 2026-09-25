@@ -231,7 +231,10 @@ function. Order: apply `…100000`–`…100600` → deploy web and admin → ch
 a Ghana purchase, refund and cancellation → apply `…100700`, which removes
 the bridge. For app builds already on phones the mobile API keeps the old
 `paystack` field on payment-attempt responses and the old
-`/api/mobile/paystack/momo-networks` path.
+`/api/mobile/paystack/momo-networks` path. In production the bridge was
+removed on 2026-09-25, once both new deployments were serving traffic and
+the full integration suite had passed against the post-removal schema; a
+live Ghana purchase and refund on the new build is still owed.
 
 ## 11. Known limits
 

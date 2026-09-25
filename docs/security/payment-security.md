@@ -27,7 +27,7 @@ Abonten never receives, stores or transmits full card numbers, CVVs or PINs. Car
 | Attempt amount | Derived from checkout rows, never from the client | `createMultiCheckoutPaymentAttemptCore` |
 | Secrets | `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` server-only; `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` public by design | Vercel env |
 | Verification | Every payment verified server-side with Paystack before any ticket is issued; amount and currency must match | `finalizePaystackPayment.ts` |
-| Race safety | CAS lock on `payment_attempt` (`initiated|pending|fulfillment_failed → processing`); `transaction.paystack_reference` UNIQUE | same |
+| Race safety | CAS lock on `payment_attempt` (`initiated|pending|fulfillment_failed → processing`); `transaction (provider, provider_reference)` UNIQUE; `payment_webhook_event` dedupes deliveries | same |
 | Webhook | Signature verified against `PAYSTACK_WEBHOOK_SECRET`; handlers idempotent; route excluded from cookie middleware | `api/paystack/webhook/route.ts` |
 | Issuance | `issue_tickets_for_checkout` authorizes a paid issuance only with a matching attempt **and** a `successful` transaction owned by the caller; free issuance only when every row is priced 0; idempotent | migration `20260907093200` |
 | Client-callable fulfilment | `issueFreeCheckoutTickets` re-verifies every row is pending, caller-owned and priced 0 | `apps/web/src/actions/issueFreeCheckoutTickets.ts` |

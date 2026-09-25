@@ -41,7 +41,7 @@ Only `initiated`, `pending` and `fulfillment_failed` can be locked into `process
 
 ## `transaction.status`
 
-`successful` (inserted on verify) → `refund_pending` (refund requested, `record_refund_hold`) → `refunded` (webhook `refund.processed`, `record_refund_release`) · `refund_pending → successful` with `refund_requested_at` set (webhook `refund.failed` — the UI shows "Refund failed" and a Retry refund button). `pending` and `failed` exist for legacy rows. `paystack_reference` is UNIQUE — the idempotency key of the whole path.
+`successful` (inserted on verify) → `refund_pending` (refund requested, `record_refund_hold`) → `refunded` (webhook `refund.processed`, `record_refund_release`) · `refund_pending → successful` with `refund_requested_at` set (webhook `refund.failed` — the UI shows "Refund failed" and a Retry refund button). `pending` and `failed` exist for legacy rows. `(provider, provider_reference)` is UNIQUE — the idempotency key of the whole path (the column was `paystack_reference` before 2026-09-24).
 
 ## `ticket.status`
 

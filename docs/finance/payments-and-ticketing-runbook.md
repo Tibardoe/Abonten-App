@@ -38,7 +38,7 @@ sequenceDiagram
   end
   F->>DB: CAS payment_attempt → processing
   F->>P: verify(reference)
-  F->>DB: insert transaction (paystack_reference UNIQUE)
+  F->>DB: insert transaction ((provider, provider_reference) UNIQUE)
   F->>G: deps.issueTickets
   G->>DB: issue_tickets_for_checkout — tickets + attendance + checkout=paid + record_organizer_earning (one transaction)
   F->>DB: record_platform_fee(transaction, processing_cost)
