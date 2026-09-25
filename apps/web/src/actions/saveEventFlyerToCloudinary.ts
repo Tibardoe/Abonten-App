@@ -1,54 +1,38 @@
-"use server";
+import "server-only";
 
-import { unlink, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { logger } from "@abonten/core/logger";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import {
-  CLOUDINARY_API_TIMEOUT_MS,
-  cloudinary,
+  sniffImageMime,
+  uploadImageBuffer,
 } from "@abonten/services/media/cloudinaryClient";
 
+// Mirrors the flyer rules for every caller — postEvent and updateEvent.
+// A plain server module, not a Server Action: it is only ever called by
+// other actions after they have authenticated the caller, so it must not be
+// an endpoint of its own.
 export async function saveEventFlyerToCloudinary(selectedFile: File) {
   if (!selectedFile) return { error: "No file selected" };
 
-  if (!selectedFile.type.startsWith("image/")) {
-    return { error: "Only image files are allowed for event flyers" };
-  }
-
-  // Defense-in-depth: postEvent.ts/updateEvent.ts/saveEventDraft.ts's
-  // callers already reject an oversized flyer client-side before it's ever
-  // selected (see useImageSelection.ts / useEventEditForm.ts), but this
-  // action is the one shared chokepoint for every caller, present and
-  // future.
   if (selectedFile.size > MAX_EVENT_FLYER_SIZE_BYTES) {
     return { error: "Image is too large. Maximum size is 5MB." };
   }
 
   try {
-    const fileBuffer = Buffer.from(await selectedFile.arrayBuffer());
-
-    const tempDir = os.tmpdir();
-    const safeName = path.basename(selectedFile.name);
-    const tempFilePath = path.join(tempDir, safeName);
-
-    await writeFile(tempFilePath, fileBuffer);
-
-    const result = await cloudinary.uploader.upload(tempFilePath, {
-      timeout: CLOUDINARY_API_TIMEOUT_MS,
+    const buffer = Buffer.from(await selectedFile.arrayBuffer());
+    // The bytes decide, not the browser-supplied type.
+    const mime = sniffImageMime(buffer);
+    if (!mime) {
+      return { error: "Only image files are allowed for event flyers" };
+    }
+    const uploaded = await uploadImageBuffer(buffer, {
       folder: "event_flyers",
-      resource_type: "image",
+      mime,
     });
-
-    const transformation = `${result.width}, ${result.height}`;
-
-    await unlink(tempFilePath);
-
     return {
-      public_id: result.public_id,
-      version: result.version,
-      transformation: transformation,
+      public_id: uploaded.public_id,
+      version: uploaded.version,
+      transformation: uploaded.transformation,
     };
   } catch (error) {
     logger.error(`Cloudinary upload error: ${error}`);

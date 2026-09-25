@@ -6,6 +6,7 @@ import {
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import {
   generateQRCodeDataURL,
   generateTicketCode,
@@ -153,9 +154,11 @@ export async function registerForFreeEventCore(
   // occurrence, insert ticket + attendance. On any failure nothing is
   // written, so there is no reservation to hand back — only a (rare,
   // race-only) orphan QR in Cloudinary, same as the paid path.
-  const { data: ticketId, error: issueError } = await supabase.rpc(
-    "issue_free_ticket",
-    {
+  // Service role: the RPC trusts the ticket code, QR and expiry it is
+  // given, so only the server may call it (migration 20260925110000);
+  // userId is the caller's own, resolved from their session.
+  const { data: ticketId, error: issueError } =
+    await getSupabaseServiceClient().rpc("issue_free_ticket", {
       p_user_id: userId,
       p_event_id: eventId,
       p_occurrence_id: occurrenceId ?? null,
@@ -163,8 +166,7 @@ export async function registerForFreeEventCore(
       p_qr_public_id: uploadResponse.public_id,
       p_qr_version: String(uploadResponse.version),
       p_expires_at: eventEndDate.toISOString(),
-    } as unknown as Database["public"]["Functions"]["issue_free_ticket"]["Args"],
-  );
+    } as unknown as Database["public"]["Functions"]["issue_free_ticket"]["Args"]);
 
   if (issueError || !ticketId) {
     logger.error(

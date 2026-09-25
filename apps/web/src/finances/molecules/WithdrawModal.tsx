@@ -59,8 +59,13 @@ export default function WithdrawModal({
     staleTime: 20_000,
   });
 
-  const accounts =
+  // Only accounts that receive this balance's currency: a payout is paid
+  // in the currency it was earned in (the database refuses any other).
+  const allAccounts =
     accountsResponse?.status === 200 ? accountsResponse.data : [];
+  const accounts = allAccounts.filter(
+    (a) => a.currency?.toUpperCase() === currency.toUpperCase(),
+  );
 
   const schema = useMemo(
     () => buildWithdrawAmountSchema(availableBalance),
@@ -168,7 +173,11 @@ export default function WithdrawModal({
                       </p>
                     ) : accounts.length === 0 ? (
                       <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground space-y-2">
-                        <p>You haven't added a payout account yet.</p>
+                        <p>
+                          {allAccounts.length === 0
+                            ? "You haven't added a payout account yet."
+                            : `None of your payout accounts receives ${currency}.`}
+                        </p>
                         <Link
                           href="/finances/payout-accounts"
                           className="font-medium text-primary hover:underline"

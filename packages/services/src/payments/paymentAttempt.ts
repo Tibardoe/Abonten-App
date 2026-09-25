@@ -39,7 +39,7 @@ const PAYMENT_ATTEMPT_ROW_SELECT =
   "id, provider, country_code, status, amount, currency, payment_method_id, provider_reference, metadata";
 
 type UpsertPaymentAttemptResult =
-  | { status: 500; message: string }
+  | { status: 409 | 500; message: string }
   | { status: 200; data: PaymentAttemptRow };
 
 /**
@@ -91,7 +91,15 @@ export async function upsertPaymentAttemptForSession(
     const existingMethod = (
       existingAttempt.metadata as Record<string, unknown> | null
     )?.method;
+    // …and the same amount: an attempt is bound to what it costs. A changed
+    // price (quantity, promo, fee) gets a fresh attempt, so a provider page
+    // opened for the old amount can never be handed back for the new one.
+    const sameAmount =
+      existingAttempt.currency === currency.toUpperCase() &&
+      Math.round(Number(existingAttempt.amount) * 1000) ===
+        Math.round(amount * 1000);
     const sameChoice =
+      sameAmount &&
       existingAttempt.payment_method_id === paymentMethodId &&
       existingAttempt.provider === market.provider &&
       (paymentMethodId !== null ||
@@ -123,11 +131,21 @@ export async function upsertPaymentAttemptForSession(
       return { status: 200, data: updated as PaymentAttemptRow };
     }
 
+    // A payment being confirmed right now is never cancelled from under
+    // the finalizer.
+    if (existingAttempt.status === "processing") {
+      return {
+        status: 409,
+        message:
+          "A payment for this order is being confirmed. Wait a moment, then check its status.",
+      };
+    }
     await supabase
       .from("payment_attempt")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", existingAttempt.id)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .in("status", ["initiated", "pending"]);
   }
 
   const { data: attempt, error: insertError } = await supabase
@@ -156,6 +174,16 @@ export async function upsertPaymentAttemptForSession(
     .select(PAYMENT_ATTEMPT_ROW_SELECT)
     .single();
 
+  if (insertError?.code === "23505") {
+    // Another request opened this checkout's attempt at the same moment
+    // (a double-tapped Pay); one open attempt per checkout is enforced by
+    // the database, so this one stands down instead of starting a second
+    // charge.
+    return {
+      status: 409,
+      message: "This payment is already being started. Please wait a moment.",
+    };
+  }
   if (insertError) {
     logger.error(`Failed creating payment attempt: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };

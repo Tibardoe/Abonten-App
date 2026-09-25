@@ -1,55 +1,38 @@
-"use server";
+import "server-only";
 
-import { unlink, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { logger } from "@abonten/core/logger";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import {
-  CLOUDINARY_API_TIMEOUT_MS,
-  cloudinary,
+  sniffImageMime,
+  uploadImageBuffer,
 } from "@abonten/services/media/cloudinaryClient";
 
-// Mirrors saveEventFlyerToCloudinary.ts — this is the shared chokepoint for
-// a place's cover photo (a raw File argument to a Server Action), reusing
-// the same 5MB cap as event flyers since it's the same kind of marketing
-// image. The multi-photo gallery uses the separate signed direct-upload
-// path (getPlacePhotoUploadSignature.ts) instead, to avoid the Server
-// Action body size limit for multiple files.
+// A place's cover photo (postPlace / updatePlace), same 5MB cap as event flyers. The multi-photo gallery uses the signed direct-upload path (getPlacePhotoUploadSignature.ts) instead.
+// A plain server module, not a Server Action: it is only ever called by
+// other actions after they have authenticated the caller, so it must not be
+// an endpoint of its own.
 export async function savePlacePhotoToCloudinary(selectedFile: File) {
   if (!selectedFile) return { error: "No file selected" };
-
-  if (!selectedFile.type.startsWith("image/")) {
-    return { error: "Only image files are allowed for place photos" };
-  }
 
   if (selectedFile.size > MAX_EVENT_FLYER_SIZE_BYTES) {
     return { error: "Image is too large. Maximum size is 5MB." };
   }
 
   try {
-    const fileBuffer = Buffer.from(await selectedFile.arrayBuffer());
-
-    const tempDir = os.tmpdir();
-    const safeName = path.basename(selectedFile.name);
-    const tempFilePath = path.join(tempDir, safeName);
-
-    await writeFile(tempFilePath, fileBuffer);
-
-    const result = await cloudinary.uploader.upload(tempFilePath, {
-      timeout: CLOUDINARY_API_TIMEOUT_MS,
+    const buffer = Buffer.from(await selectedFile.arrayBuffer());
+    // The bytes decide, not the browser-supplied type.
+    const mime = sniffImageMime(buffer);
+    if (!mime) {
+      return { error: "Only image files are allowed for place photos" };
+    }
+    const uploaded = await uploadImageBuffer(buffer, {
       folder: "place_photos",
-      resource_type: "image",
+      mime,
     });
-
-    const transformation = `${result.width}, ${result.height}`;
-
-    await unlink(tempFilePath);
-
     return {
-      public_id: result.public_id,
-      version: result.version,
-      transformation: transformation,
+      public_id: uploaded.public_id,
+      version: uploaded.version,
+      transformation: uploaded.transformation,
     };
   } catch (error) {
     logger.error(`Cloudinary upload error: ${error}`);

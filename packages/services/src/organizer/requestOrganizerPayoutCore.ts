@@ -37,9 +37,15 @@ export async function requestOrganizerPayoutCore(
     const balanceStale = error.message.includes("exceeds available balance");
     const message = balanceStale
       ? "Your available balance has changed. Please review your updated balance before withdrawing."
-      : error.message.includes("Invalid payout account")
-        ? "Select a valid payout account"
-        : "Something went wrong. Please try again";
+      : error.message.includes("Invalid payout account currency")
+        ? `Choose a payout account that receives ${currency.toUpperCase()}.`
+        : error.message.includes("Invalid payout account")
+          ? "Select a valid payout account"
+          : error.message.includes("precision")
+            ? `That amount has too many decimal places for ${currency.toUpperCase()}.`
+            : error.message.includes("Account restricted")
+              ? "Your account is restricted. Contact support."
+              : "Something went wrong. Please try again";
 
     return { status: 400, message, balanceStale };
   }

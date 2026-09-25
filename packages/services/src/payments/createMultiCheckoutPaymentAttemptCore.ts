@@ -3,7 +3,10 @@ import { logger } from "@abonten/core/logger";
 import type { ClientPlatform } from "@abonten/core/market/types";
 import { money, toMajor } from "@abonten/core/money/money";
 import { apportionCredit } from "@abonten/core/rewards/creditAllocation";
-import { prepareCheckoutPayment } from "@abonten/services/checkout/checkoutPaymentPreparation";
+import {
+  MixedMarketCheckoutError,
+  prepareCheckoutPayment,
+} from "@abonten/services/checkout/checkoutPaymentPreparation";
 import { initiateChargeForAttempt } from "@abonten/services/payments/chargeInit";
 import {
   type PaymentAttemptRow,
@@ -174,6 +177,14 @@ export async function createMultiCheckoutPaymentAttemptCore(
       supabase,
     );
   } catch (error) {
+    if (error instanceof MixedMarketCheckoutError) {
+      return {
+        status: 409,
+        message:
+          "These tickets are sold in different countries or currencies. Pay for them separately.",
+        invalidSessionIds: [],
+      };
+    }
     logger.error(`Failed preparing checkout payment: ${error}`);
     return { status: 500, message: "Something went wrong!" };
   }
@@ -225,80 +236,112 @@ export async function createMultiCheckoutPaymentAttemptCore(
   // currency decide it, never the client (paymentChoice above).
   const providerCode = choice.providerCode;
 
-  const paymentGroupId = randomUUID();
-  const insertedAttempts: PaymentAttemptRow[] = [];
-
-  for (const session of prepared.validSessions) {
-    const result = await upsertPaymentAttemptForSession(
-      userId,
-      "checkout_session_id",
-      session.checkoutSessionId,
-      session.total,
-      prepared.currency,
-      choice.paymentMethodId,
-      paymentGroupId,
-      { countryCode: prepared.countryCode, provider: providerCode },
-      { taxMinor: session.taxMinor, method: choice.methodCode },
-    );
-
-    if (result.status !== 200) {
-      // Roll back everything already created in this group so a failed
-      // multi-pay attempt never leaves a half-formed group behind.
-      if (insertedAttempts.length > 0) {
-        await getSupabaseServiceClient()
-          .from("payment_attempt")
-          .update({ status: "cancelled", updated_at: new Date().toISOString() })
-          .in(
-            "id",
-            insertedAttempts.map((a) => a.id),
-          );
-      }
-      return { status: 500, message: "Something went wrong!" };
-    }
-
-    insertedAttempts.push(result.data);
-  }
-
-  // Only the group's first (primary) attempt row is initialized with the
-  // provider — one charge covers the whole group's grand total, rather than
-  // opening a separate popup per checkout session. finalizePayment fans a
-  // successful verification back out to every member sharing this group.
-  const primary = insertedAttempts[0];
-  const chargeResult = await initiateChargeForAttempt({
-    attempt: primary,
-    amount: money(prepared.grandTotalMinor, prepared.currency),
-    countryCode: prepared.countryCode,
-    email: userEmail,
-    paymentMethod: choice.saved,
-    methodCode: choice.methodCode,
-    providerCode: choice.providerCode,
-    callbackUrl: callbackUrlFor(prepared.validSessions[0].checkoutSessionId),
-    description:
-      prepared.validSessions.length === 1
-        ? `Tickets · ${prepared.validSessions[0].eventTitle}`
-        : `Tickets for ${prepared.validSessions.length} events`,
-  });
-
-  if (chargeResult.status !== 200) {
-    await getSupabaseServiceClient()
+  const service = getSupabaseServiceClient();
+  const cancel = (ids: string[]) =>
+    service
       .from("payment_attempt")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
-      .in(
-        "id",
-        insertedAttempts.map((a) => a.id),
-      );
-    return chargeResult;
-  }
+      .in("id", ids)
+      .in("status", ["initiated", "pending"]);
 
+  // Twice at most: a first pass can find an attempt that was started for
+  // another charge (the basket or price changed since); chargeInit retires
+  // it and the second pass starts everything fresh.
+  for (let pass = 0; pass < 2; pass++) {
+    const paymentGroupId = randomUUID();
+    const insertedAttempts: PaymentAttemptRow[] = [];
+
+    for (const session of prepared.validSessions) {
+      const result = await upsertPaymentAttemptForSession(
+        userId,
+        "checkout_session_id",
+        session.checkoutSessionId,
+        session.total,
+        prepared.currency,
+        choice.paymentMethodId,
+        paymentGroupId,
+        { countryCode: prepared.countryCode, provider: providerCode },
+        { taxMinor: session.taxMinor, method: choice.methodCode },
+      );
+
+      if (result.status !== 200) {
+        // Roll back everything already created in this group so a failed
+        // multi-pay attempt never leaves a half-formed group behind.
+        if (insertedAttempts.length > 0) {
+          await cancel(insertedAttempts.map((a) => a.id));
+        }
+        return result.status === 409
+          ? { status: 409, message: result.message, invalidSessionIds: [] }
+          : { status: 500, message: "Something went wrong!" };
+      }
+
+      insertedAttempts.push(result.data);
+    }
+
+    // Only the group's primary attempt is charged — one charge covers the
+    // whole group's grand total; finalizePayment fans a verified payment out
+    // to every member. A member that already started a charge of its own
+    // (an earlier order of just that session) may only be the primary: as a
+    // plain member its live reference would, once paid, finalize this whole
+    // group against the wrong amount — or, after the group succeeded, be
+    // kept without a refund. So it leads, and any second one is retired.
+    const started = insertedAttempts.filter((a) => a.provider_reference);
+    if (started.length > 1) {
+      await cancel(insertedAttempts.map((a) => a.id));
+      continue;
+    }
+    const primary = started[0] ?? insertedAttempts[0];
+    const attempts = [
+      primary,
+      ...insertedAttempts.filter((a) => a.id !== primary.id),
+    ];
+    // insertedAttempts[i] belongs to validSessions[i].
+    const primarySession =
+      prepared.validSessions[insertedAttempts.indexOf(primary)];
+
+    const chargeResult = await initiateChargeForAttempt({
+      attempt: primary,
+      amount: money(prepared.grandTotalMinor, prepared.currency),
+      countryCode: prepared.countryCode,
+      email: userEmail,
+      paymentMethod: choice.saved,
+      methodCode: choice.methodCode,
+      providerCode: choice.providerCode,
+      callbackUrl: callbackUrlFor(primarySession.checkoutSessionId),
+      description:
+        prepared.validSessions.length === 1
+          ? `Tickets · ${prepared.validSessions[0].eventTitle}`
+          : `Tickets for ${prepared.validSessions.length} events`,
+    });
+
+    if (chargeResult.status !== 200) {
+      await cancel(insertedAttempts.map((a) => a.id));
+      if (chargeResult.status === 409 && pass === 0) continue;
+      return chargeResult.status === 409
+        ? {
+            status: 409,
+            message: chargeResult.message,
+            invalidSessionIds: [],
+          }
+        : chargeResult;
+    }
+
+    return {
+      status: 200,
+      data: {
+        paymentGroupId,
+        attempts,
+        payment: chargeResult.data,
+        credit: null,
+        verification: null,
+      },
+    };
+  }
   return {
-    status: 200,
-    data: {
-      paymentGroupId,
-      attempts: insertedAttempts,
-      payment: chargeResult.data,
-      credit: null,
-      verification: null,
-    },
+    status: 409,
+    message:
+      "This order changed since its payment was started. Please try again.",
+    invalidSessionIds: [],
   };
 }
 
@@ -500,7 +543,9 @@ async function startCreditPayment(
   if (chargeResult.status !== 200) {
     await releaseReservation(reserved.reservationId, "payment_not_started");
     await failGroup("Payment could not be started");
-    return chargeResult;
+    return chargeResult.status === 409
+      ? { status: 409, message: chargeResult.message, invalidSessionIds: [] }
+      : chargeResult;
   }
 
   return {

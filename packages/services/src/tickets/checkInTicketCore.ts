@@ -14,6 +14,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 type TicketRow = {
   id: string;
   status: string;
+  occurrence: { starts_at: string; ends_at: string | null } | null;
   ticket_type: {
     event: { id: string; organizer_id: string } | null;
   } | null;
@@ -27,6 +28,8 @@ export type CheckInTicketCoreResult =
 // ticket UUID. Passing a non-UUID string into `.eq("id", …)` makes Postgres
 // throw a cast error, so the two have to be routed to different columns.
 const TICKET_CODE_RE = /^TKT-[A-Z0-9]+$/i;
+
+const HOUR_MS = 60 * 60 * 1000;
 
 /**
  * @param ticketRef  either the ticket's UUID (the attendee-list toggle) or
@@ -52,7 +55,7 @@ export async function checkInTicketCore(
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
     .select(
-      "id, status, ticket_type:ticket_type_id(event:event_id(id, organizer_id))",
+      "id, status, occurrence:occurrence_id(starts_at, ends_at), ticket_type:ticket_type_id(event:event_id(id, organizer_id))",
     )
     .eq(byCode ? "ticket_code" : "id", ref)
     .maybeSingle();
@@ -90,18 +93,55 @@ export async function checkInTicketCore(
     };
   }
 
+  // A ticket bought for one date of a multi-date event admits only on that
+  // date: refuse it well before its start or well after its end (generous
+  // windows — doors open early and shows overrun).
+  if (checkedIn && ticket.occurrence) {
+    const now = Date.now();
+    const starts = new Date(ticket.occurrence.starts_at).getTime();
+    const ends = ticket.occurrence.ends_at
+      ? new Date(ticket.occurrence.ends_at).getTime()
+      : starts + 24 * HOUR_MS;
+    if (starts - now > 12 * HOUR_MS) {
+      return {
+        status: 400,
+        message: "This ticket is for a later date of this event.",
+      };
+    }
+    if (now - ends > 6 * HOUR_MS) {
+      return {
+        status: 400,
+        message: "This ticket was for an earlier date of this event.",
+      };
+    }
+  }
+
   if (!checkedIn && ticket.status !== "used") {
     return { status: 400, message: "This ticket isn't checked in." };
   }
 
-  const { error: updateError } = await supabase
+  // Conditional on the status just read: two doors scanning the same code
+  // at the same moment both read 'active', and only one may admit it.
+  const { data: moved, error: updateError } = await supabase
     .from("ticket")
     .update({
       status: checkedIn ? "used" : "active",
       used_at: checkedIn ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", ticket.id);
+    .eq("id", ticket.id)
+    .eq("status", checkedIn ? "active" : "used")
+    .select("id")
+    .maybeSingle();
+
+  if (!updateError && !moved) {
+    return {
+      status: 400,
+      message: checkedIn
+        ? "This ticket is already checked in."
+        : "This ticket isn't checked in.",
+    };
+  }
 
   if (updateError) {
     logger.error(
