@@ -174,3 +174,18 @@ the test dashboard's webhooks still point at production.
 5. The controlled GH₵1.05 live purchase and refund, recorded.
 
 Only after 5 can the gate read READY FOR REAL PAID SALES.
+
+## 8. Deployment record (2026-09-25, UTC)
+
+| Time | Step | Result |
+|---|---|---|
+| 21:05 | Migration `20260925120000_payment_reconcile_sweep` via the Supabase MCP (additive; before the code) | applied: target URL `https://abontenhub.com/api/maintenance/payment-reconcile`, 64-character token, RLS on, no client grants, function executable by the service role only; the four August attempts unchanged |
+| 21:06 | Security advisors | only the expected INFO "RLS enabled, no policy" for the new service-only table; warning counts unchanged (24 / 66) |
+| 21:07 | `feat/live-paystack-cutover-safety` merged into `main` (`fed46f8f`) | web READY 21:13, admin READY 21:15 |
+| 21:15 | `POST /api/maintenance/payment-reconcile` without / with a wrong token | 401 / 401 |
+| 21:16 | Health check `paystack` (production, first run on the new code) | ok; modes GH: secret test, public test, webhook test; declared mode none; unsettled payments 0 |
+| 21:18 | `production-smoke.mjs --expect-mode test` | 33 passed, 0 failed; card payment started (hosted Paystack page, nothing charged), public key test, secret key test; cancel refused while the payment is open (409); every test row removed |
+| 21:19 | Runtime errors since the deploy | web: only Resend refusing the throwaway `@example.com` buyers' emails (expected); admin: none |
+
+Production still runs the Paystack **test** keys; the live switch (§7) is
+the founder's.
