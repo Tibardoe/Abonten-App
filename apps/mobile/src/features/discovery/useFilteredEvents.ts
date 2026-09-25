@@ -3,7 +3,6 @@ import type { Database } from "@abonten/types/database.types";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { EventFilters } from "./exploreFilters";
-import { PRICE_ANY_MAX } from "./exploreFilters";
 
 // get_filtered_events' generated Args type marks most filter params as
 // required (non-null) -- its live SQL signature genuinely lacks
@@ -44,8 +43,7 @@ async function fetchPage(
   // type; pass null (not []) for "no filter" so the RPC's null short-circuit
   // applies — same as getQueriedEvents.
   const normalizedType = f.types.length > 0 ? f.types : null;
-  const maxPrice =
-    f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX ? f.maxPrice : null;
+  const maxPrice = f.maxPrice != null ? f.maxPrice : null;
 
   const { data, error } = await supabase.rpc("get_filtered_events", {
     p_min_price: f.minPrice,

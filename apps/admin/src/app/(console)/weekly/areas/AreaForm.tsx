@@ -36,7 +36,9 @@ export function AreaForm({ scope }: { scope?: WeeklyScope }) {
   const lookup = () =>
     start(async () => {
       setMsg(null);
-      const res = await geocodeWeeklyArea({ query: `${name}, Ghana` });
+      // A bare place name: the result's label says which country it is
+      // in, and the server files the area under the market at its centre.
+      const res = await geocodeWeeklyArea({ query: name });
       if (res.status === 200 && "data" in res && res.data) {
         setLat(res.data.lat.toFixed(6));
         setLng(res.data.lng.toFixed(6));
@@ -54,7 +56,7 @@ export function AreaForm({ scope }: { scope?: WeeklyScope }) {
         status === "retired" &&
         scope.status === "active" &&
         !window.confirm(
-          `Retire ${scope.name}? Its editions stop being shown and visitors there see Ghana-wide picks.`,
+          `Retire ${scope.name}? Its editions stop being shown and visitors there see the country-wide picks.`,
         )
       ) {
         return;

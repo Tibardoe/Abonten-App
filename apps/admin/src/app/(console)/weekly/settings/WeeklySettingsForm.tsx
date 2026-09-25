@@ -27,7 +27,7 @@ const NUMBERS: {
   {
     key: "defaultPublishHourLocal",
     label: "Suggested publishing hour",
-    hint: "Accra time on the week's Monday, offered when scheduling.",
+    hint: "On the area's own clock (its market's zone), on the week's Monday, offered when scheduling.",
     min: 0,
     max: 23,
   },

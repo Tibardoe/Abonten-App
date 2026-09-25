@@ -12,26 +12,26 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 // instead — the old PanResponder claimed every touch-move unconditionally,
 // which is what made the filter modal scroll while you dragged the slider.
 //
-// Domain 0..MAX; a max at/above ANY_THRESHOLD reads as "Any" and reports
-// null (matches exploreFilters' PRICE_ANY_MAX / the web [0, 999] sentinel).
+// Domain 0..MAX in the browsed market's currency, sized by its priceScale
+// (1000 cedis, 100,000 naira…); a max at/above the "Any" threshold reports
+// null — no upper bound — like the web slider's top.
 
-const MAX = 1000;
-const STEP = 10;
-const ANY_THRESHOLD = 990;
+const BASE_MAX = 1000;
+const BASE_STEP = 10;
+const BASE_ANY_THRESHOLD = 990;
 const THUMB = 24;
-
-function snap(v: number): number {
-  return Math.round(v / STEP) * STEP;
-}
 
 export function PriceRangeField({
   min,
   max,
   onChange,
   currency,
+  scale = 1,
 }: {
   /** The browsed market's currency; the bounds are in its major units. */
   currency: string;
+  /** The market's priceScale: 100 for naira, 0.1 for pounds (display only). */
+  scale?: number;
   /** null = no lower bound (treated as 0). */
   min: number | null;
   /** null = "Any" (no upper bound). */
@@ -39,6 +39,11 @@ export function PriceRangeField({
   onChange: (next: { min: number | null; max: number | null }) => void;
 }) {
   const c = useThemeColors();
+  const factor = Number.isFinite(scale) && scale > 0 ? scale : 1;
+  const MAX = BASE_MAX * factor;
+  const STEP = Math.max(BASE_STEP * factor, 1);
+  const ANY_THRESHOLD = BASE_ANY_THRESHOLD * factor;
+  const snap = (v: number) => Math.round(v / STEP) * STEP;
   const amount = (v: number) =>
     formatMoney(currency, v, { trimZeroFraction: true });
   const [trackWidth, setTrackWidth] = useState(0);

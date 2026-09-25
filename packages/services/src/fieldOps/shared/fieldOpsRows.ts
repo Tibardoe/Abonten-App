@@ -140,7 +140,7 @@ export async function campaignSummary(
   const { data, error } = await supabase
     .from("fieldops_campaign")
     .select(
-      "id, name, status, currency, region_id, starts_on, ends_on, fieldops_region(name)",
+      "id, name, status, currency, region_id, starts_on, ends_on, fieldops_region(name, country_code)",
     )
     .eq("id", campaignId)
     .maybeSingle();
@@ -148,7 +148,10 @@ export async function campaignSummary(
     if (error) logger.error(`fieldOps campaignSummary: ${error.message}`);
     return null;
   }
-  const region = data.fieldops_region as unknown as { name: string } | null;
+  const region = data.fieldops_region as unknown as {
+    name: string;
+    country_code: string;
+  } | null;
   return {
     id: data.id,
     name: data.name,
@@ -156,6 +159,7 @@ export async function campaignSummary(
     currency: data.currency,
     regionId: data.region_id,
     regionName: region?.name ?? "",
+    countryCode: region?.country_code ?? "",
     startsOn: data.starts_on,
     endsOn: data.ends_on,
   };

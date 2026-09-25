@@ -1,6 +1,7 @@
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
 import { formatMoney } from "@abonten/core/money/formatMoney";
 import { money, toMajorString } from "@abonten/core/money/money";
+import { formatPhoneNational } from "@abonten/core/phone/phone";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
   FieldOpsPayoutBatch,
@@ -506,7 +507,13 @@ export async function exportPayoutBatchCsvCore(
     return [
       csvCell(m?.full_name_snapshot ?? null),
       csvCell(m?.payout_momo_network ?? null),
-      csvCell(m?.payout_momo_number ?? null),
+      // Bulk mobile-money uploads take the national form (024…, 0712…);
+      // numbers are stored as E.164 since 2026-09-25, older ones as typed.
+      csvCell(
+        m?.payout_momo_number?.startsWith("+")
+          ? formatPhoneNational(m.payout_momo_number).replace(/\s/g, "")
+          : (m?.payout_momo_number ?? null),
+      ),
       csvCell(m?.payout_holder_name ?? null),
       toMajorString(money(num(i.amount_minor), i.currency)),
       i.currency,

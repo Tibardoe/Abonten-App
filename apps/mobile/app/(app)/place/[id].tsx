@@ -271,6 +271,8 @@ export default function PlaceDetailScreen() {
   const openStatus = computePlaceOpenStatus(
     place.openingHours,
     place.temporary_status,
+    new Date(),
+    (place as { timezone?: string | null }).timezone,
   );
   const address = place.address?.full_address;
   const reviewSubject: ReviewSubject = {

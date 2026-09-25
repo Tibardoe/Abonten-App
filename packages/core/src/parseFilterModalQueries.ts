@@ -24,17 +24,19 @@ export function parseFilters(params: FilterParams) {
   let minPrice: number | null = null;
   let maxPrice: number | null = null;
   if (params.price) {
-    // "0-250" -> 0 and 250; "0-999" is the modal's "Any". Links written
-    // before prices were currency-neutral ("GHS 0 - GHS 250") parse the same.
+    // "0-250" -> 0 and 250; "20-any" has no upper bound and "0-any" is the
+    // modal's "Any". The top of the slider depends on the market (₦99,900
+    // for naira), so the modal writes "any" rather than a number. Links from
+    // before that ("0-999", the cedi slider's top) still read as "Any"; links
+    // from before prices were currency-neutral ("GHS 0 - GHS 250") parse too.
     const priceMatch = params.price.match(/(\d+)\D+(\d+|any)/i);
     if (priceMatch) {
       const min = Number(priceMatch[1]);
-      const max =
-        priceMatch[2].toLowerCase() === "any" ? null : Number(priceMatch[2]);
-      const isAny = min === 0 && (max === null || max >= 999);
-      if (!isAny) {
+      const raw = priceMatch[2].toLowerCase();
+      const max = raw === "any" || raw === "999" ? null : Number(raw);
+      if (!(min === 0 && max === null)) {
         minPrice = min;
-        maxPrice = max === null || max >= 999 ? 999999 : max;
+        maxPrice = max;
       }
     }
   }
@@ -75,9 +77,15 @@ export function parseFilters(params: FilterParams) {
   };
 }
 
-/** The ?price= value the filter modal writes: currency-neutral, "0-250". */
-export function priceParam(min: number, max: number): string {
-  return `${Math.max(0, Math.round(min))}-${Math.max(0, Math.round(max))}`;
+/**
+ * The ?price= value the filter modal writes: currency-neutral, "0-250", or
+ * "20-any" when the upper thumb sits at the slider's top (`sliderMax`).
+ */
+export function priceParam(min: number, max: number, sliderMax = 999): string {
+  const lo = Math.max(0, Math.round(min));
+  return max >= sliderMax
+    ? `${lo}-any`
+    : `${lo}-${Math.max(0, Math.round(max))}`;
 }
 
 /** True when ?price= is absent or the modal's unfiltered "Any" range. */
@@ -95,6 +103,6 @@ export function describePriceParam(
   if (isAnyPriceParam(raw)) return null;
   const { minPrice, maxPrice } = parseFilters({ price: raw ?? "" });
   const f = (n: number) => formatMoney(currency, n, { trimZeroFraction: true });
-  if (maxPrice == null || maxPrice >= 999999) return `From ${f(minPrice ?? 0)}`;
+  if (maxPrice == null) return `From ${f(minPrice ?? 0)}`;
   return `${f(minPrice ?? 0)} – ${f(maxPrice)}`;
 }

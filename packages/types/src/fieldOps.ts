@@ -310,6 +310,8 @@ export type FieldOpsCampaignSummary = {
   currency: string;
   regionId: string;
   regionName: string;
+  /** ISO country of the campaign's region. */
+  countryCode: string;
   startsOn: string | null;
   endsOn: string | null;
 };
@@ -754,6 +756,11 @@ export type FieldOpsPayoutDestination = {
   network: string | null;
   holderName: string | null;
   updatedAt: string | null;
+  /**
+   * The mobile money networks of the campaign's country, from its payment
+   * provider (empty when the provider can't list them: type the network).
+   */
+  availableNetworks?: string[];
 };
 
 /** One line of a member's own payout history. */

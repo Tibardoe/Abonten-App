@@ -1,9 +1,5 @@
 import { distances, rating } from "@abonten/core/distanceAndRating";
-import {
-  type EventFilters,
-  PRICE_ANY_MAX,
-  type PlaceFilters,
-} from "@abonten/core/exploreFilters";
+import type { EventFilters, PlaceFilters } from "@abonten/core/exploreFilters";
 import { formatMoney } from "@abonten/core/formatMoney";
 
 // The Explore Filter modal's field set + predicates now live in
@@ -18,6 +14,7 @@ export {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
   PRICE_ANY_MAX,
+  priceSliderMax,
   countActiveEventFilters,
   countActivePlaceFilters,
   eventFiltersNeedServerData,
@@ -50,17 +47,11 @@ export function describeEventFilters(
   const chips: FilterChip[] = [];
   if (f.category) chips.push({ key: "category", label: f.category });
   for (const type of f.types) chips.push({ key: `type:${type}`, label: type });
-  if (
-    f.minPrice != null ||
-    (f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX)
-  ) {
+  if (f.minPrice != null || f.maxPrice != null) {
     const min = f.minPrice ?? 0;
     const fmt = (v: number) =>
       formatMoney(currency, v, { trimZeroFraction: true });
-    const max =
-      f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX
-        ? fmt(f.maxPrice)
-        : "Any";
+    const max = f.maxPrice != null ? fmt(f.maxPrice) : "Any";
     chips.push({ key: "price", label: `${fmt(min)} – ${max}` });
   }
   if (f.startDate || f.endDate) {

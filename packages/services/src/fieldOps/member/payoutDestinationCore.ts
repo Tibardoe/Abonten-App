@@ -1,7 +1,14 @@
 import { logger } from "@abonten/core/logger";
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
+import {
+  PHONE_ERROR_MESSAGE,
+  dialCodeFor,
+  parsePhoneWithDialCode,
+} from "@abonten/core/phone/phone";
 import type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { getMarketOrDefault } from "../../markets/marketConfig";
+import { listMobileMoneyNetworksCore } from "../../payments/mobileMoneyNetworksCore";
 import {
   fieldOpsError,
   requireMembership,
@@ -18,18 +25,45 @@ import { type FieldOpsEnvelope, dbErr } from "../shared/fieldOpsRows";
 // payment to a number the batch never recorded, so it is refused until the
 // batch is paid or cancelled.
 
+/** The campaign region's country: its dial code and mobile money networks. */
+async function campaignCountry(
+  supabase: ServiceRoleClient,
+  regionId: string,
+): Promise<{ countryCode: string; dialCode: string; networks: string[] }> {
+  const { data } = await supabase
+    .from("fieldops_region")
+    .select("country_code")
+    .eq("id", regionId)
+    .maybeSingle();
+  const market = await getMarketOrDefault(data?.country_code ?? null);
+  const countryCode = (data?.country_code ?? market.countryCode).toUpperCase();
+  const listed = await listMobileMoneyNetworksCore(countryCode).catch(
+    () => null,
+  );
+  return {
+    countryCode,
+    dialCode: dialCodeFor(countryCode) ?? market.dialCode,
+    networks:
+      listed && listed.status === 200
+        ? listed.data.networks.map((n) => n.name)
+        : [],
+  };
+}
+
 export async function getPayoutDestinationCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: { campaignId: string },
 ): Promise<FieldOpsEnvelope<FieldOpsPayoutDestination>> {
   let membershipId: string;
+  let regionId: string;
   try {
     const ctx = await resolveFieldOpsContext(supabase, userId);
-    membershipId = requireMembership(ctx, input.campaignId).membershipId;
+    ({ membershipId, regionId } = requireMembership(ctx, input.campaignId));
   } catch (e) {
     return fieldOpsError(e);
   }
+  const country = await campaignCountry(supabase, regionId);
   const { data, error } = await supabase
     .from("fieldops_team_member")
     .select(
@@ -47,6 +81,7 @@ export async function getPayoutDestinationCore(
       network: data?.payout_momo_network ?? null,
       holderName: data?.payout_holder_name ?? null,
       updatedAt: data?.payout_updated_at ?? null,
+      availableNetworks: country.networks,
     },
   };
 }
@@ -62,11 +97,38 @@ export async function setPayoutDestinationCore(
   },
 ): Promise<FieldOpsEnvelope<FieldOpsPayoutDestination>> {
   let membershipId: string;
+  let regionId: string;
   try {
     const ctx = await resolveFieldOpsContext(supabase, userId);
-    membershipId = requireMembership(ctx, input.campaignId).membershipId;
+    ({ membershipId, regionId } = requireMembership(ctx, input.campaignId));
   } catch (e) {
     return fieldOpsError(e);
+  }
+
+  // The number is read in the campaign country's numbering plan (a
+  // Ghanaian 024…, a Kenyan 0712…) and stored as E.164; the network must be
+  // one that country's provider lists, when it lists any.
+  const country = await campaignCountry(supabase, regionId);
+  const phone = parsePhoneWithDialCode(country.dialCode, input.momoNumber);
+  if (!phone.ok) {
+    return { status: 400, message: PHONE_ERROR_MESSAGE[phone.error] };
+  }
+  if (phone.country && phone.country !== country.countryCode) {
+    return {
+      status: 400,
+      message: "Use a mobile money number from the campaign's country.",
+    };
+  }
+  if (
+    country.networks.length > 0 &&
+    !country.networks.some(
+      (n) => n.toLowerCase() === input.momoNetwork.trim().toLowerCase(),
+    )
+  ) {
+    return {
+      status: 400,
+      message: `Choose one of: ${country.networks.join(", ")}.`,
+    };
   }
 
   // A batch that is already built or approved carries a snapshot of the old
@@ -90,7 +152,7 @@ export async function setPayoutDestinationCore(
   const { data, error } = await supabase
     .from("fieldops_team_member")
     .update({
-      payout_momo_number: input.momoNumber,
+      payout_momo_number: phone.e164,
       payout_momo_network: input.momoNetwork,
       payout_holder_name: input.holderName,
       payout_updated_at: new Date().toISOString(),
@@ -115,6 +177,7 @@ export async function setPayoutDestinationCore(
       network: data?.payout_momo_network ?? null,
       holderName: data?.payout_holder_name ?? null,
       updatedAt: data?.payout_updated_at ?? null,
+      availableNetworks: country.networks,
     },
   };
 }

@@ -1,12 +1,18 @@
+import { OPS_TIME_ZONE } from "@/lib/format";
 import { WEEKLY_EDITION_STATUS_LABEL } from "@abonten/core/weekly/copy";
 import type { WeeklyEditionStatus } from "@abonten/types/weeklyType";
 
 // Same text on the server render and in the browser (a locale-dependent
-// toLocaleString() breaks hydration), in the timezone operations works in.
-export function formatAccraDateTime(iso: string | null | undefined): string {
+// toLocaleString() breaks hydration). `timeZone` is the area's own clock
+// where the time belongs to it (an edition's schedule); the console's
+// operations clock otherwise.
+export function formatOpsDateTime(
+  iso: string | null | undefined,
+  timeZone: string = OPS_TIME_ZONE,
+): string {
   if (!iso) return "—";
   return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Africa/Accra",
+    timeZone,
     weekday: "short",
     day: "numeric",
     month: "short",

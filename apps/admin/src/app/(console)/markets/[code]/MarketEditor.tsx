@@ -137,6 +137,7 @@ function OverviewForm({
   const [centreLng, setCentreLng] = useState(
     market.centre ? String(market.centre.lng) : "",
   );
+  const [priceScale, setPriceScale] = useState(String(market.priceScale ?? 1));
 
   return (
     <Section
@@ -170,6 +171,7 @@ function OverviewForm({
                 centreLat.trim() && centreLng.trim()
                   ? { lat: Number(centreLat), lng: Number(centreLng) }
                   : null,
+              priceScale: priceScale.trim() ? Number(priceScale) : null,
             });
             setMsg({
               ok: res.status === 200,
@@ -293,6 +295,17 @@ function OverviewForm({
             className={input}
             value={centreLng}
             onChange={(e) => setCentreLng(e.target.value)}
+            disabled={!canManage}
+          />
+        </label>
+        <label className={label}>
+          Price filter scale (display only) — 1 sizes the filters for cedis
+          (slider to 999, chips under 50 / 200); 100 for naira; 0.1 for pounds
+          <input
+            className={input}
+            inputMode="decimal"
+            value={priceScale}
+            onChange={(e) => setPriceScale(e.target.value)}
             disabled={!canManage}
           />
         </label>

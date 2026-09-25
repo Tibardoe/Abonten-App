@@ -38,6 +38,7 @@ import {
   setManualExchangeRate,
 } from "../../fx/exchangeRateCore";
 import {
+  getDefaultMarket,
   getMarket,
   invalidateMarketCache,
   listMarkets,
@@ -199,6 +200,8 @@ export type UpdateMarketInput = {
   };
   centre?: { lat: number; lng: number } | null;
   addressSchema?: Json | null;
+  /** Sizes the price filters (display only): 1 cedi-sized, 100 naira-sized. */
+  priceScale?: number | null;
 };
 
 export async function updateMarketAdminCore(
@@ -320,6 +323,24 @@ export async function updateMarketAdminCore(
     }
     if (input.addressSchema !== undefined)
       patch.address_schema = input.addressSchema;
+    if (input.priceScale !== undefined) {
+      if (
+        input.priceScale !== null &&
+        !(
+          Number.isFinite(input.priceScale) &&
+          input.priceScale > 0 &&
+          input.priceScale <= 100_000
+        )
+      ) {
+        return {
+          status: 400,
+          message:
+            "Price filter scale must be a positive number (1 = cedi-sized).",
+        };
+      }
+      patch.display_config =
+        input.priceScale === null ? {} : { priceScale: input.priceScale };
+    }
 
     const { error } = await supabase
       .from("market")
@@ -920,6 +941,7 @@ async function computeReadiness(
     exchangeRateAvailable: rate != null,
     exchangeRateAgeHours: rateAgeHours,
     otherMarketCurrencies: (others ?? []).map((m) => m.default_currency),
+    defaultMarketCurrency: (await getDefaultMarket()).defaultCurrency,
     otpProviderConfigured: !!otp && otp.isConfigured(),
     otpProviderDetail: otp
       ? `${otp.code} needs ${otp.requiredEnv().join(", ")}`

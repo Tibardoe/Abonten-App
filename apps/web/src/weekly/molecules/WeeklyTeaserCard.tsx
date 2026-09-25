@@ -10,7 +10,8 @@ import WeeklyBanner from "../organisms/WeeklyBanner";
 // the caption opens the listing on show. Only rendered while this week's
 // edition is out for this visitor.
 export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
-  const area = teaser.isFallbackScope ? "Ghana" : teaser.scopeName;
+  // A fallback edition is the country-wide one; its scope name is the country.
+  const area = teaser.scopeName;
   const week = formatWeekRange(teaser.weekStart);
   const picks = `${teaser.itemCount} ${teaser.itemCount === 1 ? "pick" : "picks"}`;
 
@@ -34,7 +35,7 @@ export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
           </span>
           {teaser.isFallbackScope ? (
             <span className="rounded-full bg-black/35 px-3 py-1.5 text-[11px] font-medium text-white/90 ring-1 ring-white/15 backdrop-blur-md">
-              Ghana-wide picks
+              {teaser.scopeName}-wide picks
             </span>
           ) : null}
         </>

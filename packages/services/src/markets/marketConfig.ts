@@ -103,6 +103,14 @@ function asFields(value: unknown): MarketPayoutMethod["fields"] {
     .filter((f) => f.key);
 }
 
+function asPriceScale(raw: unknown): number {
+  const v =
+    raw && typeof raw === "object"
+      ? (raw as Record<string, unknown>).priceScale
+      : null;
+  return typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 1;
+}
+
 function buildMarket(
   m: MarketRow,
   providers: ProviderRow[],
@@ -126,6 +134,9 @@ function buildMarket(
     fees: asFees(m.fee_config),
     otpProvider: (m.otp_provider as MarketConfig["otpProvider"]) ?? null,
     legal: asLegal(m.legal_config),
+    priceScale: asPriceScale(
+      (m as { display_config?: unknown }).display_config,
+    ),
     centre:
       m.centre_lat != null && m.centre_lng != null
         ? { lat: m.centre_lat, lng: m.centre_lng }

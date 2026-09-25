@@ -119,6 +119,8 @@ export async function getUserFavoritePlaces(options?: {
     const { isOpen } = computePlaceOpenStatus(
       openingHours,
       place.temporary_status,
+      new Date(),
+      (place as { timezone?: string | null }).timezone,
     );
     const rating = ratingsByPlaceId[place.id];
 

@@ -8,6 +8,7 @@ import type {
   WeeklyScopeInput,
   WeeklySettingsInput,
 } from "@abonten/validation/weeklySchemas";
+import { resolveLocation } from "../../geo/locationResolution";
 import {
   isWeeklyKillSwitchOn,
   mapWeeklySettings,
@@ -227,6 +228,19 @@ export async function upsertWeeklyScopeCore(
   }
   if (hasCentre) {
     row.centre = `SRID=4326;POINT(${s.centreLng} ${s.centreLat})`;
+    // The area belongs to the market its centre is in (its editions use
+    // that market's calendar and fall back to its country-wide picks).
+    const where = await resolveLocation({
+      lat: s.centreLat as number,
+      lng: s.centreLng as number,
+    });
+    if (!where.market) {
+      return {
+        status: 400,
+        message: "That point isn't in a country Abonten has a market for.",
+      };
+    }
+    row.country_code = where.countryCode;
   }
 
   if (!input.scopeId) {

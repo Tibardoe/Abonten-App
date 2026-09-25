@@ -787,16 +787,26 @@ export type FieldOpsStipendRunInput = z.infer<typeof fieldOpsStipendRunSchema>;
 
 // -- Phase 4: payouts ----------------------------------------
 
-/** Ghana MoMo networks; kept as a closed list so the CSV stays uploadable. */
-const momoNetwork = z.enum(["MTN", "Telecel", "AirtelTigo"]);
+/**
+ * The network name as the campaign country's provider lists it (MTN,
+ * Telecel, M-PESA, Orange Money…). The service checks it against that list
+ * when the provider can give one.
+ */
+const momoNetwork = z
+  .string()
+  .trim()
+  .min(2, "Choose your mobile money network")
+  .max(40);
 
 /** A member sets where their own earnings go. */
 export const fieldOpsPayoutDestinationSchema = z.object({
   campaignId: uuid,
+  // Local or international; the service reads it with the campaign
+  // country's numbering plan and stores E.164.
   momoNumber: z
     .string()
     .trim()
-    .regex(/^0[235][0-9]{8}$/, "Enter a 10-digit Ghana mobile money number"),
+    .regex(/^\+?[0-9][0-9 ()-]{5,19}$/, "Enter your mobile money number"),
   momoNetwork,
   holderName: z
     .string()

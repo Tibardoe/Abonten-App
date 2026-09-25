@@ -25,7 +25,10 @@ import PublisherSpotlightGrid from "@/spotlight/organisms/PublisherSpotlightGrid
 import { placeJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import {
+  computePlaceOpenStatus,
+  placeLocalNow,
+} from "@abonten/core/computePlaceOpenStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
@@ -152,6 +155,8 @@ export default async function page({
   const openStatus = computePlaceOpenStatus(
     place.openingHours,
     place.temporary_status,
+    new Date(),
+    (place as { timezone?: string | null }).timezone,
   );
   const galleryPhotos = place.photos ?? [];
   const services = place.services ?? [];
@@ -299,7 +304,15 @@ export default async function page({
               <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-card-foreground">
                 Opening Hours
               </h2>
-              <PlaceOpeningHoursTable openingHours={place.openingHours} />
+              <PlaceOpeningHoursTable
+                openingHours={place.openingHours}
+                today={
+                  placeLocalNow(
+                    new Date(),
+                    (place as { timezone?: string | null }).timezone,
+                  ).dow
+                }
+              />
             </div>
 
             {/* Services */}

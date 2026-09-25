@@ -1,7 +1,6 @@
 import {
   EMPTY_EVENT_FILTERS,
   type EventFilters,
-  PRICE_ANY_MAX,
   countActiveEventFilters,
 } from "@/features/discovery/exploreFilters";
 import { supabase } from "@/lib/supabase";
@@ -44,10 +43,7 @@ async function fetchPage(
   // upper bound. This mirrors the web /search page, which runs the ticket
   // filters through getQueriedEvents.
   const normalizedType = filters.types.length > 0 ? filters.types : null;
-  const maxPrice =
-    filters.maxPrice != null && filters.maxPrice < PRICE_ANY_MAX
-      ? filters.maxPrice
-      : null;
+  const maxPrice = filters.maxPrice != null ? filters.maxPrice : null;
 
   const { data, error } = await supabase.rpc("get_filtered_events", {
     p_min_price: filters.minPrice,

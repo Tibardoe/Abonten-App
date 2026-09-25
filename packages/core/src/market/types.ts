@@ -212,6 +212,12 @@ export type MarketConfig = {
   legal: MarketLegalConfig;
   /** Fallback map centre when the person's location is unknown. */
   centre: { lat: number; lng: number } | null;
+  /**
+   * Sizes the price filters for this currency (display only): 1 is the
+   * cedi-sized default (slider 0–999, chips under 50 / under 200), 100 suits
+   * naira, 0.1 pounds. market.display_config.priceScale.
+   */
+  priceScale: number;
   launchedAt: string | null;
   version: number;
   paymentProviders: MarketPaymentProvider[];
@@ -244,6 +250,8 @@ export type PublicMarket = {
    */
   serviceFeeRate?: number | null;
   centre: { lat: number; lng: number } | null;
+  /** Sizes the price filters for this currency (1 = cedi-sized). */
+  priceScale: number;
   paymentMethods: Pick<
     MarketPaymentMethod,
     "method" | "provider" | "currencies" | "platforms" | "recommended" | "label"
@@ -270,6 +278,7 @@ export function toPublicMarket(m: MarketConfig): PublicMarket {
     addressSchema: m.addressSchema,
     tax: { mode: m.tax.mode, rateBps: m.tax.rateBps, label: m.tax.label },
     centre: m.centre,
+    priceScale: m.priceScale,
     paymentMethods: m.paymentMethods
       .filter((pm) => pm.enabled)
       .map((pm) => ({

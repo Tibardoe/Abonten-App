@@ -72,6 +72,7 @@ const market: MarketConfig = {
   paymentMethods: [],
   payoutMethods: [],
   regions: [],
+  priceScale: 1,
   launchedAt: null,
   version: 1,
 };

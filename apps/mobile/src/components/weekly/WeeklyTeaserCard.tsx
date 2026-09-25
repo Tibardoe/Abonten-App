@@ -27,7 +27,8 @@ export function WeeklyTeaserCard() {
 
   if (!program.teaser || !teaser) return null;
 
-  const area = teaser.isFallbackScope ? "Ghana" : teaser.scopeName;
+  // A fallback edition is the country-wide one; its scope name is the country.
+  const area = teaser.scopeName;
   const week = formatWeekRange(teaser.weekStart);
   const picks = `${teaser.itemCount} ${teaser.itemCount === 1 ? "pick" : "picks"}`;
   const height = Math.round(Math.min(Math.max(width * 1.02, 380), 480));
@@ -55,7 +56,7 @@ export function WeeklyTeaserCard() {
               ✨ {WEEKLY_PRODUCT_NAME} · {area}
             </WeeklyChip>
             {teaser.isFallbackScope ? (
-              <WeeklyChip>Ghana-wide picks</WeeklyChip>
+              <WeeklyChip>{teaser.scopeName}-wide picks</WeeklyChip>
             ) : null}
           </>
         }

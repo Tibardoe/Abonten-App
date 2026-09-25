@@ -15,7 +15,7 @@ import {
   money,
 } from "@/components/ui";
 import { loadAnalytics } from "@/lib/data";
-import { formatAccraDate } from "@/lib/format";
+import { OPS_TIME_ZONE, formatOpsDate } from "@/lib/format";
 import { computeTrend } from "@abonten/core/admin/computeTrend";
 import { describeSeries } from "@abonten/core/admin/describeSeries";
 import { statusMeta } from "@abonten/core/admin/statusLabels";
@@ -50,13 +50,13 @@ function bucketLabel(iso: string, bucket: "hour" | "day" | "week"): string {
   if (Number.isNaN(d.getTime())) return "—";
   if (bucket === "hour") {
     return new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Africa/Accra",
+      timeZone: OPS_TIME_ZONE,
       hour: "2-digit",
       minute: "2-digit",
     }).format(d);
   }
   return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Africa/Accra",
+    timeZone: OPS_TIME_ZONE,
     day: "numeric",
     month: "short",
   }).format(d);
@@ -640,8 +640,8 @@ export default async function AnalyticsPage({
 
       <p className="mt-6 text-xs text-muted-foreground">
         Read from the database when this page loaded, for{" "}
-        {formatAccraDate(range.from)} onwards. These are operational figures,
-        not audited accounts.
+        {formatOpsDate(range.from)} onwards. These are operational figures, not
+        audited accounts.
       </p>
     </div>
   );

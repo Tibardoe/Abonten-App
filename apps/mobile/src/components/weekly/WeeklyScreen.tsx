@@ -35,7 +35,7 @@ import { ScrollView, View, useWindowDimensions } from "react-native";
 
 // Abonten Weekly in the app: this week's edition for the explored area (or a
 // scope / dated edition from a shared link), laid out section by section.
-// Pull to refresh; honest notices when Ghana-wide or last week's picks are
+// Pull to refresh; honest notices when country-wide or last week's picks are
 // shown; never a dead end when nothing is out.
 
 function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
@@ -48,7 +48,7 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
   const height = Math.round(Math.min(Math.max(width * 1.15, 420), 560));
   const notices = [
     doc.isFallbackScope
-      ? "There is no edition for your area this week, so these are Ghana-wide picks."
+      ? `There is no edition for your area this week, so these are ${e.scopeName}-wide picks.`
       : null,
     doc.isPreviousWeek
       ? "This week's edition is on its way. Here is last week's."

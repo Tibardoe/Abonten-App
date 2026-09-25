@@ -148,6 +148,7 @@ import {
   getWeeklySettingsCore,
   listWeeklyScopesCore,
 } from "@abonten/services/admin/weekly/weeklySettingsAdminCore";
+import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { DashboardRange } from "@abonten/types/adminTypes";
 
 const REPORT_ATTACH_TTL = 300;
@@ -740,7 +741,19 @@ export async function loadWeeklyEdition(editionId: string) {
     getWeeklyEditionAdminCore(svc, ctx, editionId),
     getWeeklySettingsCore(svc, ctx),
   ]);
-  return { ctx, edition, settings };
+  // An edition is scheduled on its area's own clock: the market's zone.
+  let timeZone = "UTC";
+  const scopeId = edition.data?.edition.scopeId;
+  if (scopeId) {
+    const { data: scope } = await svc
+      .from("weekly_scope")
+      .select("country_code")
+      .eq("id", scopeId)
+      .maybeSingle();
+    timeZone = (await getMarketOrDefault(scope?.country_code ?? null))
+      .defaultTimeZone;
+  }
+  return { ctx, edition, settings, timeZone };
 }
 
 export async function loadWeeklyScopes() {

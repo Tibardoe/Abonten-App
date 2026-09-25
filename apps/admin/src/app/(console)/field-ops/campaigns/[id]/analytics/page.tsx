@@ -1,14 +1,14 @@
-import { formatMoney } from "@abonten/core/formatMoney";
 import { ChartCard } from "@/components/metrics/ChartCard";
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { SectionHeading } from "@/components/metrics/SectionHeading";
 import { TimeSeriesChart } from "@/components/metrics/charts/TimeSeriesChart";
 import { Badge, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
 import { loadFieldOpsCampaignAnalytics } from "@/lib/data";
-import { formatAccraDate } from "@/lib/format";
+import { formatOpsDate } from "@/lib/format";
 import { minorToMajor } from "@/lib/moneyUnits";
 import { describeSeries } from "@abonten/core/admin/describeSeries";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { FieldOpsDailyPoint } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "../../../FieldOpsTabs";
@@ -67,21 +67,21 @@ export default async function FieldOpsCampaignAnalyticsPage({
         summary={describeSeries(points, {
           label: title,
           rangeLabel: PERIOD,
-          formatBucket: formatAccraDate,
+          formatBucket: formatOpsDate,
           format: opts.money ? (v) => formatMoney(currency, v) : undefined,
         })}
         table={{
           caption: `${title} per day, ${PERIOD.toLowerCase()}`,
           columns: ["Day", title],
           rows: points.map((p) => [
-            formatAccraDate(p.bucketStart),
+            formatOpsDate(p.bucketStart),
             opts.money ? formatMoney(currency, p.value) : p.value,
           ]),
         }}
       >
         <TimeSeriesChart
           data={points.map((p) => ({
-            label: formatAccraDate(p.bucketStart),
+            label: formatOpsDate(p.bucketStart),
             value: p.value,
           }))}
           valueLabel={title}

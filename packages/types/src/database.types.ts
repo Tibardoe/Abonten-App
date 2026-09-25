@@ -5971,6 +5971,7 @@ export type Database = {
           default_locale: string
           default_timezone: string
           dial_code: string
+          display_config: Json
           distance_unit: string
           fee_config: Json
           is_default: boolean
@@ -5996,6 +5997,7 @@ export type Database = {
           default_locale: string
           default_timezone: string
           dial_code: string
+          display_config?: Json
           distance_unit?: string
           fee_config?: Json
           is_default?: boolean
@@ -6021,6 +6023,7 @@ export type Database = {
           default_locale?: string
           default_timezone?: string
           dial_code?: string
+          display_config?: Json
           distance_unit?: string
           fee_config?: Json
           is_default?: boolean
@@ -15547,6 +15550,10 @@ export type Database = {
           unread_count: number
         }[]
       }
+      listing_market_visible: {
+        Args: { p_country_code: string }
+        Returns: boolean
+      }
       loyalty_progress: { Args: { p_user_id: string }; Returns: Json }
       major_to_minor: {
         Args: { p_amount: number; p_currency: string }
@@ -15588,6 +15595,7 @@ export type Database = {
           default_locale: string
           default_timezone: string
           dial_code: string
+          display_config: Json
           distance_unit: string
           fee_config: Json
           is_default: boolean
