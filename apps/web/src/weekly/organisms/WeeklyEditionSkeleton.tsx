@@ -3,7 +3,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WeeklyEditionSkeleton() {
   return (
-    <div
+    // A labelled <section> is a region: a label on a bare <div> is ignored
+    // by assistive tech (axe aria-prohibited-attr).
+    <section
       className="mx-auto flex w-full max-w-7xl flex-col gap-8"
       aria-busy="true"
       aria-label="Loading Abonten Weekly"
@@ -16,6 +18,6 @@ export default function WeeklyEditionSkeleton() {
       </div>
       <EventsSliderSkeleton />
       <EventsSliderSkeleton />
-    </div>
+    </section>
   );
 }
