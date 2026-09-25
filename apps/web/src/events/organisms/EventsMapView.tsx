@@ -3,6 +3,7 @@
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { UserPostType } from "@abonten/types/postsType";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
@@ -254,7 +255,9 @@ function EventPreviewPanel({
           <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground">
             {event.min_price === 0 || event.min_price == null
               ? "Free Entry"
-              : `${event.currency} ${event.min_price?.toLocaleString()}`}
+              : formatMoney(event.currency, event.min_price, {
+                  trimZeroFraction: true,
+                })}
           </span>
         </div>
       </Link>

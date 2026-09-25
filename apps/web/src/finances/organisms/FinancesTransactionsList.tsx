@@ -4,6 +4,7 @@ import { getOrganizerLedgerTransactions } from "@/actions/getOrganizerLedgerTran
 import TransactionRowSkeleton from "@/components/molecules/TransactionRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerLedgerTransactionRow } from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import FinanceLineIcon, {
@@ -26,7 +27,7 @@ function TransactionsListSkeleton() {
 // color alone, per the task's explicit "not color-only" requirement.
 function formatSignedAmount(amount: number, currency: string) {
   const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
-  return `${sign}${currency} ${Math.abs(amount).toLocaleString()}`;
+  return `${sign}${formatMoney(currency, Math.abs(amount))}`;
 }
 
 type FinancesTransactionsListProps = {

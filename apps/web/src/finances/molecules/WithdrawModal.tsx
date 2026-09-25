@@ -11,6 +11,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { buildWithdrawAmountSchema } from "@abonten/validation/payoutSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -127,7 +128,7 @@ export default function WithdrawModal({
               <div className="rounded-md bg-muted p-3 text-sm">
                 Available:{" "}
                 <span className="font-semibold">
-                  {currency} {availableBalance.toLocaleString()}
+                  {formatMoney(currency, availableBalance)}
                 </span>
               </div>
 
@@ -219,7 +220,7 @@ export default function WithdrawModal({
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Amount</span>
                 <span className="font-semibold">
-                  {currency} {Number(amount).toLocaleString()}
+                  {formatMoney(currency, Number(amount))}
                 </span>
               </div>
               <hr className="border-border" />
@@ -260,7 +261,7 @@ export default function WithdrawModal({
               >
                 {isSubmitting
                   ? "Submitting…"
-                  : `Withdraw ${currency} ${Number(amount).toLocaleString()}`}
+                  : `Withdraw ${formatMoney(currency, Number(amount))}`}
               </Button>
             </div>
           </div>

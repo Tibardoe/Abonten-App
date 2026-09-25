@@ -72,7 +72,12 @@ export function providerEnvNameProblem(
   const family = ENV_FAMILIES[provider]?.[field];
   const match = family?.exec(name);
   if (!match) {
-    return `${name} is not a ${provider} ${field} variable.`;
+    const words = {
+      secretKey: "secret key",
+      webhookSecret: "webhook secret",
+      publicKey: "public key",
+    }[field];
+    return `${name} is not a ${provider} ${words} variable.`;
   }
   if (!market) return null;
   const suffix = match[1] ?? null;

@@ -4,6 +4,7 @@ import insertEventPromotionCheckout from "@/actions/insertEventPromotionCheckout
 import { useToast } from "@/hooks/useToast";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { EventStatus } from "@abonten/core/eventStatus";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { EventPromotionTier } from "@abonten/types/postsType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -131,7 +132,7 @@ export default function ManageEventPromotionSection({
                 >
                   <span className="font-medium">{tier.duration_label}</span>
                   <span className="text-sm text-muted-foreground">
-                    {tier.currency} {tier.price.toFixed(2)}
+                    {formatMoney(tier.currency, tier.price)}
                   </span>
                 </button>
               ))}

@@ -44,9 +44,11 @@ function getRefundSummary(item: UserTransactionRow) {
 
 function TransactionsListSkeleton() {
   return (
-    <ul>
+    <ul aria-busy="true" aria-label="Loading transactions">
       {Array.from({ length: 6 }, (_, i) => (
-        <TransactionRowSkeleton key={i.toLocaleString()} />
+        <li key={i.toLocaleString()}>
+          <TransactionRowSkeleton />
+        </li>
       ))}
     </ul>
   );
@@ -72,6 +74,7 @@ export default function TransactionsHistoryList({
       fetchPage={fetchPage}
       emptyState={emptyState}
       loadingSkeleton={<TransactionsListSkeleton />}
+      wrapItems
       renderItem={(item: UserTransactionRow) => {
         const { date } = formatSingleDateTime(item.created_at);
         const { label: statusLabel } = getTransactionStatusMeta(item.status);
