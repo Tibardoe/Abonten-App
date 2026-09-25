@@ -4,7 +4,7 @@ purpose: Describe, function by function, how a ticket purchase moves from select
 audience: Engineering, finance admins, support leads
 scope: Paid and free ticket checkouts, promotion checkouts, Paystack popup / direct charge / mobile-money OTP, webhook, fulfilment retry
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -72,7 +72,7 @@ Same shape with `insertEventPromotionCheckoutCore` / `placePromotionCore` → `e
 | Job | Schedule | What it protects |
 |---|---|---|
 | `expire-stale-ticket-checkouts` | */5 min | Releases seats from pending checkouts past `expires_at` **unless** a live `payment_attempt` (`initiated/pending/processing`) exists (DATA-001) |
-| `payment-reconcile` → `run_payment_reconcile_dispatch()` → `POST /api/maintenance/payment-reconcile` | */5 min | Charges still open 35 min after the attempt (under 2 days) are verified with the provider and finished via `finalizePayment`; attempts that never reached the provider are cancelled after 1 h, so their seats are released (2026-09-25) |
+| `payment-reconcile` → `run_payment_reconcile_dispatch()` → `POST /api/maintenance/payment-reconcile` | */5 min | Charges still open 35 min after the attempt (under 2 days), and recorded charges whose issuance failed (`fulfillment_failed`), are verified with the provider and finished via `finalizePayment` (30 min between tries per attempt); attempts that never reached the provider are cancelled after 1 h, so their seats are released (2026-09-25) |
 | `recover_stale_payment_attempts()` | */5 min | `processing` > 15 min → `fulfillment_failed` (transaction exists) or `pending` (not) |
 | `financial-reconciliation` → `run_financial_reconciliation()` | */30 min | Opens an `incident` for: paid checkout without earning; succeeded payment without ticket; negative inventory; attempt stuck processing > 1 h; plus credit and field-ops invariants |
 | `abonten-health-check` | */2 min | Probes Paystack `/bank`, Resend, Hubtel, Cloudinary, Expo, DB/auth/storage → Admin › Monitoring |

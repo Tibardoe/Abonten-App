@@ -17,6 +17,9 @@
 //   provider says success  -> fulfilled (or refunded if the order closed)
 //   abandoned / failed     -> attempt failed, checkout released next sweep
 //   still pending / unreachable -> left open, tried again later.
+// A `fulfillment_failed` attempt (the charge is recorded, the ticket or
+// promotion was not issued — a QR upload or email step failed) is retried
+// the same way, at most once every 30 minutes, until it is issued.
 // Attempts older than the look-back window are left for a person (Admin ›
 // Finance); the health check counts any still open.
 
@@ -31,6 +34,8 @@ import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 export const RECONCILE_AFTER_MINUTES = CHECKOUT_RESERVATION_MINUTES + 5;
 /** Older open attempts are reported, not retried automatically. */
 export const RECONCILE_LOOKBACK_DAYS = 2;
+/** An attempt touched more recently than this is left for the next sweep. */
+export const RECONCILE_BACKOFF_MINUTES = 30;
 const BATCH = 25;
 
 /** The cron's `x-reconcile-token` against payment_reconcile_config. */
@@ -64,14 +69,21 @@ export async function reconcilePaymentAttemptsCore(
   const supabase = getSupabaseServiceClient();
   const before = new Date(now.getTime() - RECONCILE_AFTER_MINUTES * 60_000);
   const since = new Date(now.getTime() - RECONCILE_LOOKBACK_DAYS * 86_400_000);
+  const untouchedSince = new Date(
+    now.getTime() - RECONCILE_BACKOFF_MINUTES * 60_000,
+  );
   const { data, error } = await supabase
     .from("payment_attempt")
     .select("id")
-    .in("status", ["initiated", "pending"])
+    .in("status", ["initiated", "pending", "fulfillment_failed"])
     .not("provider_reference", "is", null)
     .neq("provider", CREDIT_PROVIDER)
     .lt("created_at", before.toISOString())
     .gte("created_at", since.toISOString())
+    // A verify or webhook that just touched it (a pending mobile-money
+    // approval, a failed issuance) gets its half hour before the sweep
+    // asks the provider again.
+    .lt("updated_at", untouchedSince.toISOString())
     // Least recently tried first, so one that stays pending cannot starve
     // the rest of the batch.
     .order("updated_at", { ascending: true })

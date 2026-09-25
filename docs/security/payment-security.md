@@ -4,7 +4,7 @@ purpose: Document the security properties of the Paystack integration — initia
 audience: Engineering, finance, security reviewers
 scope: packages/services/src/payments, apps/web/src/app/api/paystack/webhook, money-path RPCs
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -26,8 +26,8 @@ Abonten never receives, stores or transmits full card numbers, CVVs or PINs. Car
 | Inventory | Single-statement CAS decrement in one transaction with the checkout insert | `create_ticket_checkout` |
 | Attempt amount | Derived from checkout rows, never from the client | `createMultiCheckoutPaymentAttemptCore` |
 | Secrets | `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` server-only; `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` public by design | Vercel env |
-| Test/live separation | An account whose keys mix test and live, or contradict `PAYMENTS_MODE`, is refused; a signed webhook whose `domain` is the other mode is acknowledged and ignored; the health check reports each key's mode (never the key) | `providers/keyMode.ts`, `registry.ts`, `paystackProvider.parseWebhook` |
-| Lost settlements | `payment-reconcile` (*/5) verifies open charges past the checkout hold with the provider and finishes them through `finalizePayment`; never-started attempts cancelled after 1 h | `reconcilePaymentAttemptsCore.ts`, migration `20260925120000` |
+| Test/live separation | An account whose keys mix test and live, contradict `PAYMENTS_MODE` (or are malformed under it), hold a live key off a production deployment, or (Paystack) whose webhook secret is not the secret key, is refused; a signed webhook whose `domain` is the other mode is acknowledged and ignored; the health check reports each key's mode (never the key) | `providers/keyMode.ts`, `registry.ts`, `paystackProvider.parseWebhook` |
+| Lost settlements | `payment-reconcile` (*/5) verifies open charges past the checkout hold with the provider and finishes them through `finalizePayment`; recorded charges whose issuance failed (`fulfillment_failed`) are retried the same way every 30 min; never-started attempts cancelled after 1 h | `reconcilePaymentAttemptsCore.ts`, migrations `20260925120000`, `20260925121000` |
 | Verification | Every payment verified server-side with Paystack before any ticket is issued; amount and currency must match | `finalizePaystackPayment.ts` |
 | Race safety | CAS lock on `payment_attempt` (`initiated|pending|fulfillment_failed → processing`); `transaction (provider, provider_reference)` UNIQUE; `payment_webhook_event` dedupes deliveries | same |
 | Webhook | Signature verified against `PAYSTACK_WEBHOOK_SECRET`; handlers idempotent; route excluded from cookie middleware | `api/paystack/webhook/route.ts` |

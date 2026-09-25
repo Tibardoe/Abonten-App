@@ -124,9 +124,10 @@ describe("provider registry", () => {
   });
 
   it("builds the account from the named variables, public key optional", () => {
+    // Paystack signs webhooks with the secret key, so the two hold one value.
     const env = {
       PAYSTACK_NG_SECRET_KEY: "sk_ng",
-      PAYSTACK_NG_WEBHOOK_SECRET: "wh_ng",
+      PAYSTACK_NG_WEBHOOK_SECRET: "sk_ng",
     };
     const acct = accountFromConfig(market, providerConfig(), env);
     expect(acct).toMatchObject({
@@ -135,7 +136,7 @@ describe("provider registry", () => {
       settlementCurrency: "NGN",
       credentials: {
         secretKey: "sk_ng",
-        webhookSecret: "wh_ng",
+        webhookSecret: "sk_ng",
         publicKey: null,
       },
     });
@@ -563,8 +564,95 @@ describe("test and live keys", () => {
     expect(keyMode("pk_test_abc")).toBe("test");
     expect(keyMode("rk_live_abc")).toBe("live");
     expect(keyMode("whsec_abc")).toBe("unknown");
-    expect(keyMode(undefined)).toBe("unknown");
+    expect(keyMode(undefined)).toBe("missing");
+    expect(keyMode("   ")).toBe("missing");
     expect(keyMode(" sk_test_x ")).toBe("test");
+  });
+
+  it("with a declared mode, a malformed or unrecognised key is refused", () => {
+    const config = providerConfig();
+    expect(
+      accountProblem(
+        config,
+        env({ PAYSTACK_NG_SECRET_KEY: "not-a-key", PAYMENTS_MODE: "live" }),
+      ),
+    ).toMatch(/secret key is not a recognised/);
+    // Without a declared mode the key is still tried (Paystack answers 401).
+    expect(
+      accountFromConfig(
+        market,
+        config,
+        env({
+          PAYSTACK_NG_SECRET_KEY: "not-a-key",
+          PAYSTACK_NG_WEBHOOK_SECRET: "not-a-key",
+        }),
+      ),
+    ).not.toBeNull();
+    expect(
+      accountProblem(
+        config,
+        env({
+          NEXT_PUBLIC_PAYSTACK_NG_PUBLIC_KEY: "oops",
+          PAYMENTS_MODE: "live",
+        }),
+      ),
+    ).toMatch(/public key is not a recognised/);
+    // A missing public key is allowed (the clients do not use it).
+    expect(
+      accountProblem(
+        config,
+        env({
+          NEXT_PUBLIC_PAYSTACK_NG_PUBLIC_KEY: undefined,
+          PAYMENTS_MODE: "live",
+        }),
+      ),
+    ).toBeNull();
+    // Stripe's whsec_ secret carries no mode and is not judged by it.
+    expect(
+      accountModeProblem(
+        { secretKey: "live", publicKey: "live", webhookSecret: "unknown" },
+        "live",
+        { webhookSecretIsKey: false, deploymentEnv: "production" },
+      ),
+    ).toBeNull();
+  });
+
+  it("Paystack's webhook secret must be the secret key itself", () => {
+    const config = providerConfig();
+    const problem = accountProblem(
+      config,
+      env({ PAYSTACK_NG_WEBHOOK_SECRET: "sk_live_rotated_or_mistyped" }),
+    );
+    expect(problem).toBe(
+      "PAYSTACK_NG_WEBHOOK_SECRET must hold the same value as PAYSTACK_NG_SECRET_KEY (Paystack signs webhooks with the secret key)",
+    );
+    expect(problem).not.toContain("rotated_or_mistyped");
+    // Not set at all (the admin deployment): fine, it cannot receive webhooks.
+    expect(
+      accountProblem(config, env({ PAYSTACK_NG_WEBHOOK_SECRET: undefined })),
+    ).toBeNull();
+  });
+
+  it("a live key is refused on a preview or development deployment", () => {
+    const config = providerConfig();
+    expect(accountProblem(config, env({ VERCEL_ENV: "preview" }))).toBe(
+      "live keys are not allowed on a preview deployment",
+    );
+    expect(accountProblem(config, env({ VERCEL_ENV: "development" }))).toMatch(
+      /not allowed on a development/,
+    );
+    expect(
+      accountProblem(config, env({ VERCEL_ENV: "production" })),
+    ).toBeNull();
+    expect(accountProblem(config, env({ VERCEL_ENV: undefined }))).toBeNull();
+    const testKeys = {
+      PAYSTACK_NG_SECRET_KEY: "sk_test_a",
+      PAYSTACK_NG_WEBHOOK_SECRET: "sk_test_a",
+      NEXT_PUBLIC_PAYSTACK_NG_PUBLIC_KEY: "pk_test_b",
+    };
+    expect(
+      accountProblem(config, env({ ...testKeys, VERCEL_ENV: "preview" })),
+    ).toBeNull();
   });
 
   it("builds an account only when every key is the same mode", () => {

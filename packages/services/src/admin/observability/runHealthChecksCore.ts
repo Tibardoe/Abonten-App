@@ -158,7 +158,8 @@ export async function runHealthChecksCore(
       providerOutcomes.set(code, agg);
     }
   }
-  // A charge the provider took that nothing has settled two hours on: the
+  // A charge the provider took that nothing has settled two hours on — still
+  // open, or recorded but never issued (fulfillment_failed): the
   // payment-reconcile sweep should have finished it, so a person must look
   // (Admin › Finance). Counted over the last week.
   const unsettled = await timed(async () => {
@@ -166,7 +167,12 @@ export async function runHealthChecksCore(
       .from("payment_attempt")
       .select("id", { count: "exact", head: true })
       .eq("provider", "paystack")
-      .in("status", ["initiated", "pending", "processing"])
+      .in("status", [
+        "initiated",
+        "pending",
+        "processing",
+        "fulfillment_failed",
+      ])
       .not("provider_reference", "is", null)
       .lt("created_at", new Date(Date.now() - 2 * 3_600_000).toISOString())
       .gte("created_at", new Date(Date.now() - 7 * 86_400_000).toISOString());
