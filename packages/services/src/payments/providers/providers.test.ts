@@ -6,9 +6,12 @@ import type {
 import { NO_TAX } from "@abonten/core/market/types";
 import { money } from "@abonten/core/money/money";
 import { describe, expect, it } from "vitest";
+import { accountModeProblem, declaredPaymentsMode, keyMode } from "./keyMode";
 import { paystackProvider } from "./paystackProvider";
 import {
   accountFromConfig,
+  accountModes,
+  accountProblem,
   getPaymentProvider,
   isPaymentProviderCode,
   missingProviderEnv,
@@ -221,6 +224,40 @@ describe("paystack adapter", () => {
     expect(
       paystackProvider.parseWebhook(account(), "not json", sign("not json")),
     ).toEqual({ ok: false, reason: "malformed" });
+  });
+
+  it("ignores a correctly signed event from the other test/live mode", () => {
+    const body = (domain: string) =>
+      JSON.stringify({
+        event: "charge.success",
+        data: { reference: "PSK-1", id: 42, domain },
+      });
+    const live = account({
+      credentials: {
+        secretKey: "sk_live_x",
+        webhookSecret: "whsec_x",
+        publicKey: "pk_live_x",
+      },
+    });
+    expect(
+      paystackProvider.parseWebhook(live, body("test"), sign(body("test"))),
+    ).toEqual({ ok: false, reason: "mode_mismatch" });
+    expect(
+      paystackProvider.parseWebhook(live, body("live"), sign(body("live"))).ok,
+    ).toBe(true);
+    expect(
+      paystackProvider.parseWebhook(
+        account(),
+        body("live"),
+        sign(body("live")),
+      ),
+    ).toEqual({ ok: false, reason: "mode_mismatch" });
+    // An event without a domain is judged by its signature alone.
+    const bare = JSON.stringify({
+      event: "charge.success",
+      data: { reference: "PSK-1" },
+    });
+    expect(paystackProvider.parseWebhook(live, bare, sign(bare)).ok).toBe(true);
   });
 
   it("normalises charge, refund, dispute and transfer events", () => {
@@ -510,5 +547,86 @@ describe("provider variable names", () => {
       },
     );
     expect(account).toBeNull();
+  });
+});
+
+describe("test and live keys", () => {
+  const env = (over: Record<string, string | undefined>) => ({
+    PAYSTACK_NG_SECRET_KEY: "sk_live_a",
+    PAYSTACK_NG_WEBHOOK_SECRET: "sk_live_a",
+    NEXT_PUBLIC_PAYSTACK_NG_PUBLIC_KEY: "pk_live_b",
+    ...over,
+  });
+
+  it("reads the mode from the prefix only", () => {
+    expect(keyMode("sk_live_abc")).toBe("live");
+    expect(keyMode("pk_test_abc")).toBe("test");
+    expect(keyMode("rk_live_abc")).toBe("live");
+    expect(keyMode("whsec_abc")).toBe("unknown");
+    expect(keyMode(undefined)).toBe("unknown");
+    expect(keyMode(" sk_test_x ")).toBe("test");
+  });
+
+  it("builds an account only when every key is the same mode", () => {
+    const config = providerConfig();
+    expect(accountFromConfig(market, config, env({}))).not.toBeNull();
+    expect(
+      accountFromConfig(
+        market,
+        config,
+        env({ NEXT_PUBLIC_PAYSTACK_NG_PUBLIC_KEY: "pk_test_b" }),
+      ),
+    ).toBeNull();
+    expect(
+      accountFromConfig(
+        market,
+        config,
+        env({ PAYSTACK_NG_WEBHOOK_SECRET: "sk_test_a" }),
+      ),
+    ).toBeNull();
+    expect(
+      accountProblem(config, env({ PAYSTACK_NG_WEBHOOK_SECRET: "sk_test_a" })),
+    ).toMatch(/mix test and live/);
+  });
+
+  it("refuses keys that contradict PAYMENTS_MODE", () => {
+    const config = providerConfig();
+    const testKeys = {
+      PAYSTACK_NG_SECRET_KEY: "sk_test_a",
+      PAYSTACK_NG_WEBHOOK_SECRET: "sk_test_a",
+      NEXT_PUBLIC_PAYSTACK_NG_PUBLIC_KEY: "pk_test_b",
+    };
+    expect(
+      accountFromConfig(
+        market,
+        config,
+        env({ ...testKeys, PAYMENTS_MODE: "live" }),
+      ),
+    ).toBeNull();
+    expect(
+      accountFromConfig(
+        market,
+        config,
+        env({ ...testKeys, PAYMENTS_MODE: "test" }),
+      ),
+    ).not.toBeNull();
+    expect(
+      accountFromConfig(market, config, env({ PAYMENTS_MODE: "live" })),
+    ).not.toBeNull();
+    expect(declaredPaymentsMode({ PAYMENTS_MODE: " LIVE " })).toBe("live");
+    expect(declaredPaymentsMode({ PAYMENTS_MODE: "prod" })).toBeNull();
+  });
+
+  it("never puts a key in its reason", () => {
+    const reason = accountModeProblem(
+      { secretKey: "live", publicKey: "test", webhookSecret: "unknown" },
+      null,
+    );
+    expect(reason).toBe(
+      "keys mix test and live (secretKey live, publicKey test)",
+    );
+    expect(
+      accountModeProblem(accountModes(providerConfig(), env({})), "live"),
+    ).toBeNull();
   });
 });

@@ -930,6 +930,9 @@ async function computeReadiness(
         provider: entry.config.provider,
         credentialsPresent: false,
         missingEnv: entry.missingEnv,
+        // Set when the keys are present but mix test and live, or are not
+        // the deployment's declared PAYMENTS_MODE.
+        ...(entry.problem ? { detail: entry.problem } : {}),
         reachable: null,
         payoutsCapable: false,
         refundsCapable: false,

@@ -12,6 +12,12 @@ import type {
   PaymentProviderCode,
 } from "@abonten/core/market/types";
 import { getMarketOrDefault } from "../../markets/marketConfig";
+import {
+  type AccountModes,
+  accountModeProblem,
+  declaredPaymentsMode,
+  keyMode,
+} from "./keyMode";
 import { paystackProvider } from "./paystackProvider";
 import { stripeProvider } from "./stripeProvider";
 import type { PaymentProvider, ProviderAccount } from "./types";
@@ -105,9 +111,42 @@ export function missingProviderEnv(
   return names.filter((n) => !env[n] || env[n]?.trim() === "");
 }
 
+/** The test/live mode of each key a provider row points at (never a value). */
+export function accountModes(
+  config: MarketPaymentProvider,
+  env: Record<string, string | undefined> = process.env,
+): AccountModes {
+  const publicKeyEnv = config.credentials.publicKeyEnv;
+  return {
+    secretKey: keyMode(env[config.credentials.secretKeyEnv]),
+    publicKey: keyMode(publicKeyEnv ? env[publicKeyEnv] : null),
+    webhookSecret: keyMode(env[config.credentials.webhookSecretEnv]),
+  };
+}
+
+/**
+ * Why this provider row cannot be used on this deployment, or null: a
+ * variable is missing, or its keys mix test and live, or they are not the
+ * mode PAYMENTS_MODE declares.
+ */
+export function accountProblem(
+  config: MarketPaymentProvider,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  if (!env[config.credentials.secretKeyEnv]) {
+    return `missing ${config.credentials.secretKeyEnv}`;
+  }
+  return accountModeProblem(
+    accountModes(config, env),
+    declaredPaymentsMode(env),
+  );
+}
+
 /**
  * Builds the account from a market's provider row, or null when its secret
- * key is not set. The webhook secret is only needed where webhooks are
+ * key is not set, or its keys are not all one mode (see accountProblem) —
+ * a half-finished switch from test to live keys stops payments rather than
+ * charging on one account and verifying on the other. The webhook secret is only needed where webhooks are
  * received (the web deployment): without it the account can still charge,
  * verify and refund (the admin console), and every webhook for it is
  * refused as unsigned. Readiness still requires both before activation.
@@ -132,6 +171,7 @@ export function accountFromConfig(
   const secretKey = env[config.credentials.secretKeyEnv];
   const webhookSecret = env[config.credentials.webhookSecretEnv] ?? "";
   if (!secretKey) return null;
+  if (accountProblem(config, env)) return null;
   const publicKeyEnv = config.credentials.publicKeyEnv;
   return {
     provider: config.provider,
@@ -185,10 +225,13 @@ export async function resolveProviderAccount(input: {
       p.currencies.map((c) => c.toUpperCase()).includes(currency),
   );
   const missing: string[] = [];
+  const problems: string[] = [];
   for (const config of candidates) {
     const account = accountFromConfig(market, config);
     if (!account) {
       missing.push(...missingProviderEnv(config));
+      const problem = accountProblem(config);
+      if (problem && !problem.startsWith("missing ")) problems.push(problem);
       continue;
     }
     const provider = getPaymentProvider(config.provider);
@@ -202,9 +245,11 @@ export async function resolveProviderAccount(input: {
   throw new NoProviderError(
     market.countryCode,
     currency,
-    missing.length > 0
-      ? `Payment provider for ${market.countryCode} is not configured (missing ${missing.join(", ")})`
-      : `No enabled payment provider accepts ${currency} in ${market.countryCode}${input.method ? ` for ${input.method}` : ""}`,
+    problems.length > 0
+      ? `Payment provider for ${market.countryCode} is refused: ${problems.join("; ")}`
+      : missing.length > 0
+        ? `Payment provider for ${market.countryCode} is not configured (missing ${missing.join(", ")})`
+        : `No enabled payment provider accepts ${currency} in ${market.countryCode}${input.method ? ` for ${input.method}` : ""}`,
   );
 }
 
@@ -214,6 +259,8 @@ export async function resolveMarketAccounts(countryCode: string): Promise<
     config: MarketPaymentProvider;
     account: ProviderAccount | null;
     missingEnv: string[];
+    modes: AccountModes;
+    problem: string | null;
   }[]
 > {
   const market = await getMarketOrDefault(countryCode);
@@ -221,5 +268,7 @@ export async function resolveMarketAccounts(countryCode: string): Promise<
     config,
     account: accountFromConfig(market, config),
     missingEnv: missingProviderEnv(config),
+    modes: accountModes(config),
+    problem: accountProblem(config),
   }));
 }

@@ -46,6 +46,8 @@ export async function GET(req: Request) {
         hubtelClientId: process.env.HUBTEL_API_CLIENT_ID,
         hubtelClientSecret: process.env.HUBTEL_API_CLIENT_SECRET,
         expoAccessToken: process.env.EXPO_ACCESS_TOKEN,
+        paymentsMode: process.env.PAYMENTS_MODE ?? null,
+        deploymentEnv: process.env.VERCEL_ENV ?? null,
       },
     );
     return NextResponse.json(

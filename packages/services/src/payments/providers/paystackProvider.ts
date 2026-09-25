@@ -18,6 +18,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { logger } from "@abonten/core/logger";
 import type { PaymentMethodCode } from "@abonten/core/market/types";
 import { type Money, money } from "@abonten/core/money/money";
+import { keyMode } from "./keyMode";
 import * as api from "./paystackApi";
 import type { PaystackChargeData } from "./paystackApi";
 import type {
@@ -313,6 +314,18 @@ export const paystackProvider: PaymentProvider = {
     }
     const name = typeof body.event === "string" ? body.event : "";
     const data = (body.data ?? {}) as Record<string, unknown>;
+    // Paystack stamps every event with the mode it happened in. Production
+    // has received test-mode events signed with a test key that was, at the
+    // time, also its own; once the account is live, an event from the other
+    // mode is refused even if the webhook secret was left behind.
+    const accountMode = keyMode(account.credentials.secretKey);
+    if (
+      (data.domain === "test" || data.domain === "live") &&
+      accountMode !== "unknown" &&
+      data.domain !== accountMode
+    ) {
+      return { ok: false, reason: "mode_mismatch" };
+    }
     const reference =
       typeof data.reference === "string" ? data.reference : null;
     const id = data.id != null ? String(data.id) : null;
