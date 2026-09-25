@@ -179,9 +179,11 @@ Nothing below has been exercised on a real device. Build/typecheck/
 `expo export` pass for all of it; the logic mirrors the web Server Actions
 1:1 via the extracted cores.
 
-**Paystack test keys first:** set `EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY` (test
-`pk_test_…`) as an EAS env var, and point the **web** deployment's Paystack
-secret at the matching `sk_test_…` for the environment the app talks to.
+**Paystack test keys first:** the app holds no Paystack key (corrected
+2026-09-25 — the server starts every charge and the app opens Paystack's
+hosted page); point the **web** deployment the app talks to at the
+`sk_test_…` keys for testing, and at the live keys only per
+`docs/finance/paystack-live-cutover.md`.
 
 | Slice | Flow to verify on device |
 |---|---|

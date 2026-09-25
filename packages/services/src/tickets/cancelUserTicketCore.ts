@@ -267,7 +267,7 @@ async function areAllTicketsForTransactionCancelled(
 // flip its status to 'cancelled' once every ticket it produced is
 // cancelled, so /transactions doesn't show a whole purchase as cancelled
 // when only some of its tickets actually are.
-async function markCheckoutCancelledIfAllTicketsCancelled(
+export async function markCheckoutCancelledIfAllTicketsCancelled(
   supabase: SupabaseClient<Database>,
   ticketCheckoutId: string,
 ) {
@@ -302,7 +302,7 @@ async function markCheckoutCancelledIfAllTicketsCancelled(
   }
 }
 
-async function releasePromoUsageIfEventFullyCancelled(
+export async function releasePromoUsageIfEventFullyCancelled(
   supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,

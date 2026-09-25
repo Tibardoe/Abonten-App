@@ -334,6 +334,11 @@ export async function issueRefundCore(
       .update({ status: "refunded", updated_at: new Date().toISOString() })
       .eq("id", transaction.id)
       .eq("status", "refund_pending");
+    await privileged
+      .from("payment_attempt")
+      .update({ status: "refunded", updated_at: new Date().toISOString() })
+      .eq("transaction_id", transaction.id)
+      .eq("status", "succeeded");
   }
 
   // Audit-only row: records that the ticket revenue was returned and the

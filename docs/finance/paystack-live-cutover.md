@@ -4,7 +4,7 @@ purpose: The exact, ordered steps that move production from Paystack test mode t
 audience: Founder (holds the Paystack dashboard and Vercel), engineering
 scope: Ghana's Paystack account on the web and admin deployments; preview deployments; the Paystack dashboards' webhook settings; the mobile app (no key); the integration suites
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -38,11 +38,19 @@ Evidence that production has never taken real money: all 57 production
 Paystack transactions verify on the **test** account with the same amount
 and currency (33 successful ↔ success, 24 refunded ↔ reversed).
 
-**Preview deployments use the production database** (`SUPABASE_SERVICE_ROLE_KEY`
-and the Supabase URL target Preview too). They sit behind Vercel's team
-login (a POST to a preview API answers 401 without it), so Paystack cannot
-post webhooks to them and the public cannot reach them; a signed-in team
-member could still start a payment from a preview if it had Paystack keys.
+**Preview deployments no longer touch the production database** (fixed
+2026-09-25). They have their own Supabase project, **Abonten Preview**
+(`qasxtirvfbreygsqwwat`, same region, schema replayed from the migrations,
+no production data); the production URL, anon key and service-role key are
+now Production-only on both Vercel projects, and both apps refuse to start
+on a preview or development deployment whose Supabase URL is the production
+project (`@abonten/core/env/productionProject`). Previews still sit behind
+Vercel's team login. One value remains for a person to paste (a secret
+cannot pass through this tooling): Vercel → `abonten` and
+`abonten-app-admin` → Preview → `SUPABASE_SERVICE_ROLE_KEY` = the Abonten
+Preview project's service-role key (Supabase → Abonten Preview → Settings →
+API). Until then a preview builds but its server paths report the missing
+variable.
 
 ## 2. What the code enforces (deployed 2026-09-25)
 
@@ -65,6 +73,8 @@ function, and there is no other read of a Paystack variable in the code.
 - **No live keys off production.** On a Vercel preview or development
   deployment (`VERCEL_ENV` ≠ `production`) a live key is refused whatever
   variables were ticked.
+- **No production database off production.** A preview or development
+  deployment pointed at the production Supabase project does not start.
 - **Webhook mode.** A correctly signed event whose `domain` is the other
   mode is acknowledged (200) and ignored, and logged as an error.
 - **Server-side verification.** A payment counts only after the server
@@ -93,7 +103,7 @@ file or a terminal.
 | 1 | **Paystack LIVE dashboard** → Settings → API Keys & Webhooks (Live): Webhook URL `https://abontenhub.com/api/paystack/webhook`; Callback URL empty (Abonten sends its own per payment) | saved | — | clear the URL |
 | 2 | **Paystack TEST dashboard** → same page: **clear** the webhook URL (or point it at a non-production URL you control) | saved | test events keep arriving at production (they are now ignored as `mode_mismatch`, but should stop) | — |
 | 3 | **Vercel `abonten` → Settings → Environment Variables (Production):** `PAYSTACK_SECRET_KEY` = live secret key; `PAYSTACK_WEBHOOK_SECRET` = **the same live secret key**; `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` = live public key; add `PAYMENTS_MODE` = `live` | four variables, Production only | a value pasted with a stray space or the wrong key: step 7 refuses the account and names the variable (never the value) | put the test values back, `PAYMENTS_MODE` = `test` |
-| 4 | **Vercel `abonten` (Preview):** while editing the three Paystack variables above, **untick Preview**. Add nothing for Preview. (With no keys a preview cannot start a payment; the code also refuses live keys there.) | Preview has no Paystack variables | a preview checkout shows a Paystack page | untick again |
+| 4 | **Vercel `abonten` (Preview):** while editing `PAYSTACK_SECRET_KEY` and `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` above, **untick Preview** (the tooling used on 2026-09-25 was not allowed to change these two; the database variables were already moved). Add nothing for Preview: with no keys a preview cannot start a payment, and the code refuses live keys there regardless. | Preview has no Paystack variables | a preview checkout shows a Paystack page | untick again |
 | 5 | **Vercel `abonten-app-admin` (Production):** `PAYSTACK_SECRET_KEY` = live secret key; add `PAYMENTS_MODE` = `live` | two variables | admin refunds answer "not configured" | test values back |
 | 6 | **Redeploy both projects** (Deployments → latest production → ⋯ → Redeploy). Variables reach new deployments only | both READY | build error | Vercel Instant Rollback to the previous deployment (which still has the old variables baked in) |
 | 7 | **Smoke test, no charge:** `node scripts/release/production-smoke.mjs apps/web/.env.local --expect-mode live` | 40 passed: the "start a card payment" step opens a live Paystack page (nobody pays), the recorded attempt is GH/GHS with the server's charge, and the health row shows all three keys `live`, `declaredMode live`, `deployment production`, `unsettled 0`; both webhook URLs answer 401 to unsigned events | any FAIL line — read its detail; a refused account names the variable at fault | fix the variable and redeploy; nothing has been charged |
@@ -112,8 +122,11 @@ run while any Paystack dashboard's webhook points at production.
 
 Performed by the founder with their own card or mobile-money wallet; an
 engineer watches the records. Real money, smallest amount, fully refunded
-in §5. If Paystack's page refuses the amount as below its minimum, use a
-GH₵5 ticket (total GH₵5.25): every check below scales the same way.
+in §5. Paystack publishes no minimum charge for GHS (its Ghana pricing and
+transaction-pricing pages state fees only), and its API accepted a
+1-pesewa `initialize` on the test account on 2026-09-25; the buyer's bank
+or wallet may still refuse a very small amount, in which case use a GH₵5
+ticket (total GH₵5.25): every check below scales the same way.
 
 **Setup.** A throwaway organizer account creates a paid event for
 tomorrow: capacity 1, one ticket tier priced GH₵1, no promo code. It is
@@ -190,8 +203,10 @@ at least one `charge.success` settled, 0 orphan rows.
 ticket** (web `cancelUserTicket`, app "Cancel ticket"). This is the path
 customers use: it cancels the ticket and its attendance, releases the seat,
 and — because it was the only ticket on the transaction — requests the
-refund. (Admin › Finance › Transactions → Refund moves the money only and
-leaves the ticket active; use it only if the buyer path fails.)
+refund. Admin › Finance › Transactions → Refund now does the same for the
+whole order (since 2026-09-25 it cancels every active ticket, releases the
+seats and then refunds; checked-in tickets are kept) — either path gives
+the records below.
 
 **Immediately** (synchronous, before Paystack confirms):
 
@@ -214,6 +229,7 @@ events are acknowledged and ignored):
 |---|---|
 | `payment_webhook_event` | a `refund.processed` row with the reference, outcome `settled` |
 | `transaction` | status **`refunded`** |
+| `payment_attempt` | status `refunded` (follows its transaction since 2026-09-25) |
 | notification | "Refund completed" |
 | Paystack dashboard | the transaction shows a refund of GH₵1.00; status may read partially refunded |
 

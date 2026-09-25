@@ -5,6 +5,7 @@
 // Handlers and Server Actions to Sentry.
 
 import { checkEnv, enforceEnv } from "@abonten/core/env/checkEnv";
+import { productionDatabaseOffProductionProblem } from "@abonten/core/env/productionProject";
 import { logger } from "@abonten/core/logger";
 import * as Sentry from "@sentry/nextjs";
 
@@ -27,6 +28,10 @@ const ADMIN_ENV = {
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // A preview or development deployment on the production database does
+    // not start, whatever variables it was given.
+    const offProduction = productionDatabaseOffProductionProblem(process.env);
+    if (offProduction) throw new Error(offProduction);
     enforceEnv(checkEnv(process.env, ADMIN_ENV), {
       app: "admin",
       strict: process.env.VERCEL_ENV === "production",
