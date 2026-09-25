@@ -41,7 +41,12 @@ export function applySmallSampleRule(
     const nextSmallest = buckets
       .filter((b) => !hidden.has(b.key) && b.count > 0)
       .sort((a, b) => a.count - b.count)[0];
-    if (nextSmallest) hidden.add(nextSmallest.key);
+    // When the small bucket is the only non-empty one, the total itself is
+    // that bucket: hide an empty bucket with it so the count cannot be
+    // attributed to one answer.
+    const fallback = buckets.find((b) => !hidden.has(b.key));
+    const pick = nextSmallest ?? fallback;
+    if (pick) hidden.add(pick.key);
   }
 
   const result = buckets.map((b) => ({

@@ -1,6 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
-import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
+import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -100,7 +100,8 @@ export async function removePlacePhotoCore(
   }
 
   try {
-    await destroyAsset(photo.public_id, {});
+    // Kept when another listing or photo still uses it.
+    await destroyAssetIfUnused(photo.public_id, {});
   } catch (cloudError) {
     logger.error("Cloudinary deletion of place photo failed:", cloudError);
     // Not failing the whole removal if Cloudinary cleanup fails.

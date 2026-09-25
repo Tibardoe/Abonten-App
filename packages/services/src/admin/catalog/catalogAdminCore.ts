@@ -345,6 +345,8 @@ export async function getEventDetailCore(
       ticketsSold: sales.ticketsSold,
       grossSales: sales.grossSales,
       currency: sales.currency,
+      countryCode: e.country_code ?? null,
+      timezone: e.timezone ?? null,
       avgRating: rating.avg,
       reviewCount: rating.count,
       moderationReason: e.moderation_reason ?? null,

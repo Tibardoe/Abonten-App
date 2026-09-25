@@ -10,6 +10,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { invalidateMarketCache } from "../markets/marketConfig";
+import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
 import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
@@ -286,5 +287,44 @@ describe("a paid checkout in XOF (no minor unit)", () => {
       .select("id", { count: "exact", head: true })
       .eq("user_id", buyer.id);
     expect(count).toBe(1);
+
+    // The refund returns the ticket price in whole francs (the fee is kept)
+    // and holds it against the organizer's balance.
+    const refunds: { amountMinor: number; currency: string }[] = [];
+    vi.spyOn(paystackProvider, "refund").mockImplementation(
+      async (_account, input) => {
+        if (input.amount) refunds.push(input.amount);
+      },
+    );
+    const refund = await issueRefundCore(service, txn?.id as string);
+    expect(refund.status, refund.message).toBe(200);
+    expect(refunds).toEqual([{ amountMinor: 5000, currency: "XOF" }]);
+    const { data: hold } = await service
+      .from("organizer_ledger_entry")
+      .select("entry_type, amount, currency")
+      .eq("transaction_id", txn?.id as string)
+      .eq("entry_type", "refund_hold");
+    expect(hold).toEqual([
+      { entry_type: "refund_hold", amount: -5000, currency: "XOF" },
+    ]);
+  });
+
+  it("refuses prices and payouts finer than the currency allows", async () => {
+    // XOF has no minor unit; KWD has three decimals.
+    const { error: xofFraction } = await service
+      .from("ticket_type")
+      .update({ price: 5000.5 })
+      .eq("id", ticketTypeId);
+    expect(xofFraction?.message).toMatch(/decimal/i);
+    const { data: kwd } = await service.rpc("money_round", {
+      p_amount: 1.2345,
+      p_currency: "KWD",
+    } as never);
+    expect(Number(kwd)).toBe(1.235);
+    const { data: ghs } = await service.rpc("money_round", {
+      p_amount: 1.235,
+      p_currency: "GHS",
+    } as never);
+    expect(Number(ghs)).toBe(1.24);
   });
 });

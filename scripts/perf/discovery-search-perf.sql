@@ -57,6 +57,16 @@ select * from (
          format('select count(*) from public.search_organizers(%L)', (select w from perf_mid where n = 91))
   union all select 41, 'organizers · @handle prefix',
          format('select count(*) from public.search_organizers(%L)', '@perf_jazz')
+  -- The city is in every listing's address: the broadest query there is.
+  -- Ranking is capped (migration 20260925111700); budget checked below.
+  union all select 50, 'broad      · events, city word',
+         format('select count(*) from public.search_events(%L)', 'accra')
+  union all select 51, 'broad      · events, city + common word, with location',
+         format('select count(*) from public.search_events(%L, 5.6, -0.19, 50)', 'accra music')
+  union all select 52, 'broad      · suggest, city prefix',
+         format('select count(*) from public.search_suggest(%L, 5.6, -0.19)', 'acc')
+  union all select 53, 'broad      · places, city word',
+         format('select count(*) from public.search_places(%L)', 'accra')
 ) c;
 grant select on perf_cases to anon;
 
@@ -91,6 +101,25 @@ from perf_timings t
 join perf_cases c on c.name = t.fn
 group by t.fn, c.ord
 order by c.ord;
+
+-- Budget for the broad cases: a search whose words are in (nearly) every
+-- listing must stay bounded. Laptop Docker numbers; fails the run loudly.
+do $$
+declare
+  worst record;
+begin
+  select t.fn, percentile_cont(0.95) within group (order by t.ms) as p95
+    into worst
+  from perf_timings t
+  where t.fn like 'broad%'
+  group by t.fn
+  order by 2 desc
+  limit 1;
+  if worst.p95 > 500 then
+    raise exception 'search budget exceeded: % p95 % ms (budget 500 ms)', worst.fn, round(worst.p95::numeric, 1);
+  end if;
+  raise notice 'broad search budget ok: worst p95 % ms (%)', round(worst.p95::numeric, 1), worst.fn;
+end $$;
 
 -- ---------------------------------------------------------------------
 -- Plans for stage-1 candidate queries: they must use the partial GIN,

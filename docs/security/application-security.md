@@ -4,7 +4,7 @@ purpose: Document the application-layer controls as implemented — authenticati
 audience: Engineering, security reviewers
 scope: apps/web, apps/admin, apps/mobile, packages/services
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -37,6 +37,9 @@ Account linking relies on Supabase semantics (same verified email → same accou
 - Services take the resolved `userId`; ownership checks precede any service-role write (pattern documented in `@abonten/services` README).
 - Admin: `requireAdmin()` + `assertPermission` per service function + `assertStepUpFresh` for the 13 sensitive permissions.
 - Field programme: `resolveFieldOpsContext` + `requireMembership(role)`; campaign-status gates; admins refused as members.
+- Staff have no Data API powers from being staff (2026-09-25): staff reads of others' data need `admin_has_permission(...)`, and staff writes go through the console's service role. `staff-access-regression.integration.test.ts` checks every role in the live matrix.
+- A function a client can execute never reads a service-only table with the caller's rights (`session-rpc-reachability.integration.test.ts`); `create_event` / `create_place` are service-only.
+- Push tokens: Expo format only, at most ten per account (`20260925111600`); the sender reads at most ten.
 
 ## Input validation
 
@@ -48,7 +51,7 @@ Postgres primitive `consume_rate_limit(key, limit, window)` (fixed window, servi
 
 ## Uploads and media
 
-Direct-to-Cloudinary uploads with **server-signed** parameters scoped to the user's folder (`cloudinaryUploadSignature.ts`; field-ops checks the folder at submission). Size limits in `@abonten/core/uploadLimits`. Private Supabase buckets for claim documents, report attachments, message attachments and field evidence, served by short-lived signed URLs. Highlight video delivery via `highlightVideoDelivery.ts`.
+Direct-to-Cloudinary uploads with **server-signed** parameters scoped to the user's folder (`cloudinaryUploadSignature.ts`; field-ops checks the folder at submission). Size limits in `@abonten/core/uploadLimits`. Private Supabase buckets for claim documents, report attachments, message attachments and field evidence, served by short-lived signed URLs. Highlight video delivery via `highlightVideoDelivery.ts`. Listing, draft and gallery images carry a client-sent `public_id`, so a replaced or abandoned image is destroyed only through `destroyAssetIfUnused` (`media/assetReferences.ts`), which keeps any asset another event, place, draft, gallery photo or avatar still references (2026-09-25; before, one organizer could delete another's image).
 
 ## Web security posture
 

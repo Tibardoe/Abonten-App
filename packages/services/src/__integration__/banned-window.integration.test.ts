@@ -29,6 +29,7 @@ describe("banned account, token still valid", () => {
   let ownEventId: string;
   let otherEventId: string;
   let conversationId: string | null = null;
+  let otherOrganizerId: string;
   const results: Record<string, Outcome> = {};
 
   beforeAll(async () => {
@@ -42,6 +43,7 @@ describe("banned account, token still valid", () => {
       banned.id,
       { quantity: 5, price: 10 },
     ));
+    otherOrganizerId = (await createTestUser(service)).id;
     ({ eventId: otherEventId } = await createTestEventWithTicketType(
       service,
       other.id,
@@ -67,7 +69,9 @@ describe("banned account, token still valid", () => {
       await deleteTestEvent(service, id).catch(() => undefined);
     }
     await Promise.all(
-      [banned, other].map((u) => deleteTestUser(service, u.id)),
+      [banned.id, other.id, otherOrganizerId].map((id) =>
+        deleteTestUser(service, id),
+      ),
     );
   });
 
@@ -227,5 +231,131 @@ describe("banned account, token still valid", () => {
     ];
     const leaks = mustBeBlocked.filter((k) => results[k] === "allowed");
     expect(leaks).toEqual([]);
+  });
+
+  // The three actions still open to a banned token only touch the account's
+  // own rows. Checked for indirect effects on anyone else.
+  describe("what a banned token can still do reaches no one else", () => {
+    async function counts() {
+      const [n, o, f] = await Promise.all([
+        service
+          .from("notification")
+          .select("id", { count: "exact", head: true })
+          .in("user_id", [other.id]),
+        service
+          .from("reward_outbox" as never)
+          .select("id", { count: "exact", head: true }),
+        service
+          .from("follow")
+          .select("id", { count: "exact", head: true })
+          .eq("follower_id", other.id),
+      ]);
+      return {
+        notifications: n.count,
+        outbox: o.count,
+        othersFollows: f.count,
+      };
+    }
+
+    it("push tokens: own rows only, Expo format only, ten at most", async () => {
+      const c = banned.client;
+      const { error: forOther } = await c.from("device_token").insert({
+        user_id: other.id,
+        token: `ExponentPushToken[${crypto.randomUUID()}]`,
+        platform: "android",
+      } as never);
+      expect(forOther).not.toBeNull();
+      const { error: garbage } = await c.from("device_token").insert({
+        user_id: banned.id,
+        token: "x".repeat(5000),
+        platform: "android",
+      } as never);
+      expect(garbage).not.toBeNull();
+      // Someone else's device keeps its owner.
+      const theirs = `ExponentPushToken[${crypto.randomUUID()}]`;
+      await service
+        .from("device_token")
+        .insert({ user_id: other.id, token: theirs, platform: "ios" } as never);
+      const { error: steal } = await c.from("device_token").insert({
+        user_id: banned.id,
+        token: theirs,
+        platform: "ios",
+      } as never);
+      expect(steal).not.toBeNull();
+      const { data: owner } = await service
+        .from("device_token")
+        .select("user_id")
+        .eq("token", theirs)
+        .single();
+      expect(owner?.user_id).toBe(other.id);
+      // A flood keeps only the newest ten.
+      for (let i = 0; i < 30; i++) {
+        await c.from("device_token").insert({
+          user_id: banned.id,
+          token: `ExponentPushToken[flood-${i}-${crypto.randomUUID()}]`,
+          platform: "android",
+        } as never);
+      }
+      const { count } = await service
+        .from("device_token")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", banned.id);
+      expect(count).toBeLessThanOrEqual(10);
+      await service
+        .from("device_token")
+        .delete()
+        .in("user_id", [banned.id, other.id]);
+    });
+
+    it("favourites and blocks touch no one else's data and notify no one", async () => {
+      await service.from("follow").insert({
+        follower_id: other.id,
+        target_kind: "organizer",
+        target_id: banned.id,
+      } as never);
+      await service.from("follow").insert({
+        follower_id: other.id,
+        target_kind: "organizer",
+        target_id: victimOrganizer(),
+      } as never);
+      const before = await counts();
+      const c = banned.client;
+      const { error: favForOther } = await c
+        .from("favorite")
+        .insert({ user_id: other.id, event_id: otherEventId } as never);
+      expect(favForOther).not.toBeNull();
+      await c
+        .from("favorite")
+        .insert({ user_id: banned.id, event_id: otherEventId } as never);
+      const { error: blockForOther } = await c
+        .from("conversation_block")
+        .insert({
+          blocker_id: other.id,
+          blocked_id: banned.id,
+        } as never);
+      expect(blockForOther).not.toBeNull();
+      await c.rpc("user_block_set", { p_blocked_id: other.id, p_block: true });
+      const after = await counts();
+      expect(after.notifications).toBe(before.notifications);
+      expect(after.outbox).toBe(before.outbox);
+      // Blocking removes only the follow between the two of them.
+      expect(after.othersFollows).toBe((before.othersFollows ?? 0) - 1);
+      const { data: kept } = await service
+        .from("follow")
+        .select("target_id")
+        .eq("follower_id", other.id);
+      expect((kept ?? []).map((k) => k.target_id)).toEqual([victimOrganizer()]);
+      await service.from("follow").delete().eq("follower_id", other.id);
+      await service
+        .from("conversation_block")
+        .delete()
+        .eq("blocker_id", banned.id);
+      await service.from("favorite").delete().eq("user_id", banned.id);
+    });
+
+    // A third account the follow above points at: the other organizer.
+    function victimOrganizer() {
+      return otherOrganizerId;
+    }
   });
 });

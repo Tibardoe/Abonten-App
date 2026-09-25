@@ -3,7 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
-import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
+import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 
 export async function deleteEvent(eventId: string) {
   const supabase = await createClient();
@@ -55,7 +55,8 @@ export async function deleteEvent(eventId: string) {
 
   try {
     if (flyerPublicId) {
-      await destroyAsset(flyerPublicId, {});
+      // Kept when another listing or draft still uses it.
+      await destroyAssetIfUnused(flyerPublicId, {});
     }
   } catch (cloudError) {
     logger.error("Cloudinary deletion failed:", cloudError);

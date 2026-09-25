@@ -9,6 +9,11 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadEventDetail } from "@/lib/data";
+import { findCountry } from "@abonten/core/geo/countries";
+import {
+  formatInTimeZone,
+  zoneAbbreviation,
+} from "@abonten/core/time/timeZone";
 import Link from "next/link";
 
 function modTone(s: string | null) {
@@ -91,9 +96,20 @@ export default async function EventDetailPage({
               <dd>{e.category ?? "—"}</dd>
               <dt className="text-muted-foreground">Capacity</dt>
               <dd>{e.capacity ?? "—"}</dd>
+              <dt className="text-muted-foreground">Market</dt>
+              <dd>
+                {e.countryCode
+                  ? `${findCountry(e.countryCode)?.name ?? e.countryCode} (${e.countryCode}) · ${e.currency || "—"}`
+                  : "—"}
+              </dd>
               <dt className="text-muted-foreground">Starts</dt>
               <dd>
-                {e.startsAt ? new Date(e.startsAt).toLocaleString() : "—"}
+                {/* In the event's own zone: the server renders in UTC. */}
+                {e.startsAt
+                  ? e.timezone
+                    ? `${formatInTimeZone(e.startsAt, e.timezone, { dateStyle: "medium", timeStyle: "short" })} ${zoneAbbreviation(new Date(e.startsAt), e.timezone)}`
+                    : new Date(e.startsAt).toLocaleString()
+                  : "—"}
               </dd>
               <dt className="text-muted-foreground">Event code</dt>
               <dd>{e.eventCode ?? "—"}</dd>

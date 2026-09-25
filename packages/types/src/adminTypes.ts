@@ -901,6 +901,10 @@ export type EventAdminDetail = EventAdminListItem & {
   ticketsSold: number;
   grossSales: number;
   currency: string;
+  /** The listing's market, fixed at creation. */
+  countryCode: string | null;
+  /** IANA zone the event's times are read in. */
+  timezone: string | null;
   avgRating: number;
   reviewCount: number;
   moderationReason: string | null;
