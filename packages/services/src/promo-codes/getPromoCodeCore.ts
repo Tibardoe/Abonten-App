@@ -48,7 +48,9 @@ export function promoExpiryCutoff(expiresAt: string): Date {
 }
 
 export type GetPromoCodeCoreResult =
-  | { status: 400 | 401 | 404 | 429 | 500; message: string }
+  // A code that exists but cannot be used now is 409, never 401: the mobile
+  // transport treats any 401 as a possibly-dead session.
+  | { status: 400 | 404 | 409 | 429 | 500; message: string }
   | {
       status: 200;
       id: string;
@@ -119,14 +121,14 @@ export async function getPromoCodeCore(
   }
 
   if (promoCode.is_active === false) {
-    return { status: 401, message: "Promo code is no longer active!" };
+    return { status: 409, message: "Promo code is no longer active!" };
   }
 
   if (
     promoCode.expires_at &&
     promoExpiryCutoff(promoCode.expires_at) <= new Date()
   ) {
-    return { status: 401, message: "Promo code has expired!" };
+    return { status: 409, message: "Promo code has expired!" };
   }
 
   const { data: promoCodeUsage, error: promoCodeUsageError } = await supabase
@@ -159,7 +161,7 @@ export async function getPromoCodeCore(
       : Math.max(0, promoCode.max_uses - promoCode.times_used);
 
   if (remainingUses !== null && remainingUses <= 0) {
-    return { status: 401, message: "Promo code has reached its usage limit!" };
+    return { status: 409, message: "Promo code has reached its usage limit!" };
   }
 
   return {
