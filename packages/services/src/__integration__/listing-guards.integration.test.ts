@@ -545,3 +545,61 @@ describe("place creation and edits through the service", () => {
     }
   });
 });
+
+describe("place reviews (migration 20260925110800)", () => {
+  it("an owner cannot review their own place, anyone else can", async () => {
+    const service = getServiceClient();
+    const [owner, visitor] = await Promise.all([
+      createTestUser(service),
+      createTestUser(service),
+    ]);
+    const { data: category } = await service
+      .from("place_category")
+      .select("id")
+      .limit(1)
+      .single();
+    const { data: place } = await service
+      .from("place")
+      .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
+        owner_id: owner.id,
+        name: "Self Review Venue",
+        slug: `self-review-${crypto.randomUUID()}`,
+        description: "Created by the listing-guards suite.",
+        category_id: category?.id as number,
+        location: "POINT(-0.187 5.6037)",
+        address: { city: "Accra" },
+        cover_public_id: "test/cover",
+        cover_version: "1",
+        status: "published",
+      })
+      .select("id")
+      .single();
+    const placeId = place?.id as string;
+    try {
+      const own = await owner.client.from("place_review").insert({
+        place_id: placeId,
+        reviewer_id: owner.id,
+        rating: 5,
+        comment: "Best place ever",
+        status: "approved",
+      });
+      expect(own.error?.message).toMatch(/own place/);
+      const other = await visitor.client.from("place_review").insert({
+        place_id: placeId,
+        reviewer_id: visitor.id,
+        rating: 4,
+        comment: "Nice",
+        status: "approved",
+      });
+      expect(other.error).toBeNull();
+    } finally {
+      await service.from("place_review").delete().eq("place_id", placeId);
+      await service.from("place").delete().eq("id", placeId);
+      await Promise.all(
+        [owner, visitor].map((u) => deleteTestUser(service, u.id)),
+      );
+    }
+  });
+});
