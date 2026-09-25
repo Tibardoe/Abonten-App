@@ -4,7 +4,7 @@ purpose: Record the audit of production's Paystack configuration, the safety cha
 audience: Founder, engineering
 scope: Paystack configuration (Vercel web and admin, EAS, Paystack dashboards), the payment path from checkout to ledger, webhooks, refunds, reconciliation, abandoned payments, test-suite safety
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -268,3 +268,33 @@ stale webhook secret, live keys on a preview), settles or closes every
 payment state without human help, and the runbook's steps, checks and
 rollbacks were each verified against the deployed code. What remains is
 the founder's manual sequence and the one live transaction (§7).
+
+## 10. Remaining risks closed (2026-09-25, 22:30–23:10 UTC)
+
+Every item listed under "risks still present" in §9's report was fixed,
+plus the small things found on the way.
+
+| Risk | What was done | Proof |
+|---|---|---|
+| Preview deployments shared the production database | A second Supabase project, **Abonten Preview** (`qasxtirvfbreygsqwwat`, eu-west-3, Postgres 17, free tier — the organisation is on the free plan, so no cost), with the schema replayed the way the local test stack replays it (the setup script's own neutralise / skip / patch functions, then `supabase db push --db-url` through the `aws-1` session pooler; the direct host is IPv6-only) and `seed.sql` applied. Vercel: the production `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are now **Production-only** on both projects; Preview + Development have the preview project's URL and anon key. Code: `@abonten/core/env/productionProject` — both apps throw at boot on a preview or development deployment whose Supabase URL is the production project | preview project: 246 tables, 448 functions, 297 migrations, 41 cron jobs (dispatching nowhere: their config rows are empty), 1 live market seeded, 0 users, 0 events, 0 transactions; unit tests for the boot check; a preview can no longer hold the production service-role key even by ticking a box |
+| Admin refund left the tickets active | `refundTransactionAdminCore` first runs `cancelTicketsForTransactionCore` (ticket → cancelled by compare-and-set, attendance cancelled, checkout cancelled once all its tickets are, seat back on sale, promo usage released; checked-in tickets kept), then refunds; the audit row records the counts | integration "an admin refund cancels the order's tickets, releases the seat and refunds once": ticket, attendance and checkout `cancelled`, stock 4 → 5, `refund_pending`, ledger earning 50 / refund_hold −50, a repeat cancels nothing and asks Paystack for nothing |
+| Only the abandoned Paystack shape had been captured | The card-success, mobile-money-success, reversed and failed `verify` shapes were captured from the test account for production's own references (values replaced) and added to `paystackApi.test.ts` | 6 parser tests pass; the only shape the strict parser ever refused was `authorization: {}` |
+| Paystack's GHS minimum unconfirmed | Paystack's Ghana pricing and transaction-pricing pages state fees only (1.95%), no minimum; the API accepted `initialize` for 1, 10, 50, 100 and 105 pesewas on the test account. The runbook now says so, and keeps GH₵5 as the fallback if a bank or wallet refuses a tiny charge | initialize responses 200 for each amount |
+| `payment_attempt` stayed `succeeded` after a refund | The attempt becomes `refunded` when `refund.processed` arrives or a credit-only refund completes; `finalizePayment` answers "This payment was refunded." for it | integration (the refund webhook closes the attempt; finalize → failed) |
+| Every abandoned or declined verification logged as an error | Logged at warn; an amount mismatch (money taken) stays an error with the payment log data | code |
+| Stale docs said the mobile app needs a Paystack public key | `docs/mobile/08`, `docs/mobile/09` and `apps/mobile/.env.example` corrected | docs check |
+| Vercel "readable-secret" variables | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` are read by no code: neutralised (sensitive, marker value; delete when convenient). `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` are used and can only be re-entered as Sensitive by a person in the Vercel dashboard (a value cannot be re-typed through this tooling without exposing it) | Vercel |
+
+Two things the tooling was not allowed or able to do, and why:
+
+- **`PAYSTACK_SECRET_KEY` and `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` still target Preview.** The permission layer refused those two edits (secret-store writes). Effect today: a preview can still start a *test-mode* payment — against the preview database, not production. Cutover step 4 unticks them.
+- **The preview project's own service-role key** is not in Vercel: a secret cannot pass through this tooling without appearing in its record. Until it is pasted (Vercel → both projects → Preview → `SUPABASE_SERVICE_ROLE_KEY` = Supabase → Abonten Preview → Settings → API → service_role), previews build and render public pages but their server paths that need the service role report the missing variable. Nothing about production depends on it.
+
+Results: core unit 735, services unit 155 (41 provider tests); full
+integration 86 files, 727 passed, 1 skipped; typecheck 11/11; API parity
+222; docs OK; web and admin builds OK. `fee56c0f` merged 22:57 UTC, web
+READY 23:02; production smoke `--expect-mode test` 40/40 at 23:03 (verify
+closes the abandoned charge as failed, the reservation is cancelled with
+200; health row ok, unsettled 0).
+
+Not done, with the reason: the 33 "unindexed foreign key" advisor items are staff-id and currency-code columns never used for lookups (adding indexes would only add write cost); the Postgres minor-version upgrade and leaked-password protection are dashboard-only operations (Settings → Infrastructure; Authentication → Providers) that this tooling cannot perform and that the founder should schedule in a maintenance window.
