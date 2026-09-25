@@ -39,7 +39,7 @@ export default async function TransactionsPage({
     <div>
       <PageHeader
         title="Transactions"
-        description="Every customer payment, with its full Paystack trace on the detail page."
+        description="Every customer payment, with its full payment-provider trace on the detail page."
       />
       <FinanceTabs active="/finance/transactions" />
 
@@ -47,7 +47,7 @@ export default async function TransactionsPage({
         <input
           name="q"
           defaultValue={q}
-          placeholder="Paystack ref / email / name…"
+          placeholder="Provider ref / email / name…"
           className="h-8 w-72 rounded border border-border bg-background px-2 text-sm"
         />
         {status ? <input type="hidden" name="status" value={status} /> : null}

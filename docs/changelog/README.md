@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-24
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,13 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-25 — Global platform hardening
+
+- `architecture/global-platform.md` 1.1, `development/testing.md` 1.1 (opt-in Paystack sandbox suite), `admin/markets.md` 1.1, `admin/finance.md` 1.3, `finance/settlement-ledger-and-payouts.md` 1.1, PROJECT.md §45, CLAUDE.md.
+- Behaviour: checkout offers the market's own methods (card, bank transfer, USSD… on the provider's page) beside saved cards and wallets, so a market with no saved cards can take payment; a saved card is charged directly only by the provider account that saved it. Markets that are not live show no listings and take no payments or new listings. Price filters scale with the market (`display_config.priceScale`); the /search URL writes an open price bound as `any`. Weekly weeks, the digest hour, place "open now" and "today / this weekend" use the local clock. Field-ops payout numbers are stored as E.164 and networks come from the campaign country's provider (old names such as Telecel still accepted). Admin console times are UTC and labelled; Dashboard, Finance and Analytics show one currency at a time.
+- Money: money columns hold three decimals and SQL rounds with each currency's own exponent (fixes XOF/JPY/KWD amounts booked at 1/100); per-currency admin reports. Payments: money captured after its checkout closed, or for the wrong amount, is recorded in `payment_orphan_capture` and refunded in full (Finance › Refunds › Charges with no order); `transfer.reversed` after completion reverses the payout; a refund confirmation that overtakes the refund request is redelivered; refunds made in a provider dashboard are logged as `external_refund`. Markets: `market.version`, activation pinned to it, provider `options`, automated payouts need `markets.activate`.
+- Migrations `20260925100000`–`20260925100500` (money precision, per-currency reports, payment lifecycle, paused listings, local calendars, display config). Flag removed: `markets.browse_abroad` (unused). New endpoint: `GET /api/mobile/payments/options`.
 
 ## 2026-09-24 — Global platform: markets, money, payments, time and locale
 

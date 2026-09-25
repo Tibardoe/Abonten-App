@@ -12,12 +12,21 @@ import { useState, useTransition } from "react";
 const input =
   "w-full rounded border border-border bg-background px-2 py-1.5 text-sm";
 
-export function RegionForm({ region }: { region?: FieldOpsRegion }) {
+export function RegionForm({
+  region,
+  defaultCountry = "",
+}: {
+  region?: FieldOpsRegion;
+  /** The default market's country, for a new region. */
+  defaultCountry?: string;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [name, setName] = useState(region?.name ?? "");
-  const [countryCode, setCountryCode] = useState(region?.countryCode ?? "GH");
+  const [countryCode, setCountryCode] = useState(
+    region?.countryCode ?? defaultCountry,
+  );
   const [adminCode, setAdminCode] = useState(region?.adminCode ?? "");
   const [lat, setLat] = useState(
     region?.centre ? String(region.centre.lat) : "",

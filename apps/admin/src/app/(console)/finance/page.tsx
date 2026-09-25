@@ -147,8 +147,8 @@ export default async function FinancePage({
             secondary={
               current.feeEntries > 0 &&
               current.feeEntriesWithKnownCost < current.feeEntries
-                ? `After ${money(current.processingCost, currency)} Paystack cost, known for ${current.feeEntriesWithKnownCost} of ${current.feeEntries} payments`
-                : `After ${money(current.processingCost, currency)} Paystack cost`
+                ? `After ${money(current.processingCost, currency)} processing cost, known for ${current.feeEntriesWithKnownCost} of ${current.feeEntries} payments`
+                : `After ${money(current.processingCost, currency)} processing cost`
             }
           />
         </div>

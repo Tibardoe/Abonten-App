@@ -2,12 +2,10 @@ import { instantToWallClock, isValidTimeZone } from "./time/timeZone";
 
 // Client-safe TypeScript mirror of the SQL `place_is_open_now` function
 // (see supabase/migrations/20260820090000_add_places_feature.sql), extended
-// to also produce a human-readable label instead of just a boolean. No
-// per-place timezone column exists (same single-timezone assumption already
-// made elsewhere, e.g. proxy.ts's default "GH" country code), so this always
-// evaluates against the caller's local time (`now`, defaulting to `new
-// Date()` — the browser's local time on the client, the server's local time
-// during SSR).
+// to also produce a human-readable label instead of just a boolean.
+// Opening hours are the PLACE's wall-clock times: pass place.timezone and
+// they are read on its clock (as the SQL function does); without a zone the
+// caller's local time is used, which is only right for a viewer beside it.
 
 export type PlaceOpeningHourRow = {
   day_of_week: number; // 0 (Sunday) .. 6 (Saturday) — matches Date.getDay()

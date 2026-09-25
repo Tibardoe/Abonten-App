@@ -748,7 +748,7 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
-          <p>Complete your payment in the Paystack window…</p>
+          <p>Complete your payment in the secure payment window…</p>
         </div>
       </>
     );

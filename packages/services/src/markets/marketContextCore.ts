@@ -51,10 +51,11 @@ export async function getMarketContextCore(input: {
   const markets = await Promise.all(
     publicMarkets.map(async (m) => ({
       ...m,
-      serviceFeeRate: await serviceFeeRateFor(feeClient, {
-        currency: m.defaultCurrency,
-        countryCode: m.countryCode,
-      }).catch(() => null),
+      serviceFeeRate: await serviceFeeRateFor(
+        feeClient,
+        { currency: m.defaultCurrency, countryCode: m.countryCode },
+        { cached: true },
+      ).catch(() => null),
     })),
   );
 

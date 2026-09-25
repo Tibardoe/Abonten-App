@@ -20,19 +20,31 @@ import { getMarket } from "../markets/marketConfig";
  * rate for the currency and country. Previews use this too, so a market
  * with its own fee is never previewed at the platform default.
  */
+// Previews (the market context asks for every market's rate on each app
+// start) may use a minute's cache; the charge path never does, so a rate
+// change applies to the next order at once.
+const RATE_TTL_MS = 60_000;
+const rateCache = new Map<string, { at: number; rate: number }>();
+
 export async function serviceFeeRateFor(
   supabase: SupabaseClient<Database>,
   input: { currency?: string | null; countryCode?: string | null },
+  options: { cached?: boolean } = {},
 ): Promise<number> {
   const market = input.countryCode ? await getMarket(input.countryCode) : null;
   if (market?.fees.serviceFeeBps != null) {
     return market.fees.serviceFeeBps / 10_000;
   }
-  return getActiveServiceFeeRate(
+  const key = `${input.countryCode ?? ""}|${input.currency ?? ""}`;
+  const hit = options.cached ? rateCache.get(key) : undefined;
+  if (hit && Date.now() - hit.at < RATE_TTL_MS) return hit.rate;
+  const rate = await getActiveServiceFeeRate(
     supabase,
     input.currency ?? null,
     input.countryCode ?? null,
   );
+  rateCache.set(key, { at: Date.now(), rate });
+  return rate;
 }
 
 /**

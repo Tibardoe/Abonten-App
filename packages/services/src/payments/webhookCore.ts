@@ -146,7 +146,12 @@ async function handleRefundOutcome(
   body: Record<string, unknown>;
   settled: boolean;
 }> {
-  const match = await findTransaction(supabase, provider, event, "id, status");
+  const match = await findTransaction(
+    supabase,
+    provider,
+    event,
+    "id, status, refund_claimed_at",
+  );
   if (!match) {
     // Not an order: possibly the refund of a charge that arrived after its
     // order had closed (orphanCapture.ts).
@@ -179,6 +184,26 @@ async function handleRefundOutcome(
   const newStatus =
     event.type === "refund.processed" ? "refunded" : "successful";
 
+  // The provider can confirm a refund before issueRefundCore has recorded
+  // the hold (it asks the provider first, then moves the transaction to
+  // refund_pending) — Stripe often answers within a second. While that
+  // request is still in flight (the claim is held), ask the provider to
+  // redeliver instead of acknowledging an update that would be lost.
+  if (
+    match.status === "successful" &&
+    typeof match.refund_claimed_at === "string" &&
+    Date.now() - new Date(match.refund_claimed_at).getTime() < 2 * 60_000
+  ) {
+    logger.info(
+      `webhook: ${event.type} for ${provider} arrived before the refund was recorded; asking for redelivery`,
+    );
+    return {
+      status: WEBHOOK_ACK_RETRY,
+      body: { received: true, retry: "refund_in_flight" },
+      settled: false,
+    };
+  }
+
   // Only transitions a transaction that is actually awaiting this
   // confirmation — a retried delivery, or one that arrives after this was
   // resolved another way, is a no-op rather than clobbering a later state.
@@ -207,6 +232,22 @@ async function handleRefundOutcome(
     };
   }
   if (!updated) {
+    // A refund of a paid order Abonten never asked for — made in the
+    // provider's dashboard. The ledger still shows the sale: finance must
+    // record it (Admin › Finance), so this is an error, not a shrug.
+    if (match.status === "successful" && event.type === "refund.processed") {
+      logger.error(
+        `webhook: ${provider} refunded transaction ${match.id} outside Abonten; the ledger was not adjusted`,
+        {
+          payment: {
+            transactionId: match.id,
+            provider,
+            reference: event.reference,
+            failure: "external_refund",
+          },
+        },
+      );
+    }
     return {
       status: WEBHOOK_ACK_OK,
       body: { received: true, ignored: "not_refund_pending" },

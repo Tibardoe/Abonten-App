@@ -11,6 +11,7 @@ import {
 } from "@/components/ui";
 import { loadFieldOpsRegions } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
+import { getDefaultMarket } from "@abonten/services/markets/marketConfig";
 import Link from "next/link";
 import { FieldOpsTabs } from "../FieldOpsTabs";
 import { RegionForm } from "./RegionForm";
@@ -100,7 +101,7 @@ export default async function FieldOpsRegionsPage() {
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
             New region
           </h3>
-          <RegionForm />
+          <RegionForm defaultCountry={(await getDefaultMarket()).countryCode} />
         </div>
       ) : null}
     </div>

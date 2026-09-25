@@ -94,6 +94,17 @@ export async function refundOrphanCapture(input: {
 
   logger.error(
     `orphanCapture: ${account.provider}/${account.countryCode} captured ${verification.amount.amountMinor} ${verification.amount.currency} for closed attempt ${attempt.id} (${input.reason}); refunding`,
+    {
+      payment: {
+        attemptId: attempt.id,
+        provider: account.provider,
+        country: account.countryCode,
+        currency: verification.amount.currency,
+        amountMinor: verification.amount.amountMinor,
+        reference: verification.reference,
+        failure: "orphan_capture",
+      },
+    },
   );
 
   try {

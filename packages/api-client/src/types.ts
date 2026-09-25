@@ -1745,7 +1745,8 @@ export type FieldOpsPayoutDestinationResult =
 export type FieldOpsPayoutDestinationBody = {
   campaignId: string;
   momoNumber: string;
-  momoNetwork: "MTN" | "Telecel" | "AirtelTigo";
+  /** A network the campaign country's provider lists (see availableNetworks). */
+  momoNetwork: string;
   holderName: string;
 };
 

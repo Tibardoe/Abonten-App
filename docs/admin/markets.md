@@ -4,8 +4,8 @@ purpose: How to prepare, check, open, pause and maintain a country (market), tar
 audience: Operations, finance, engineering
 scope: Admin › Markets (Countries, market editor, Feature flags, Exchange rates), the markets.view / markets.manage / markets.activate permissions
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-24
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -33,7 +33,19 @@ Architecture and rules: [../architecture/global-platform.md](../architecture/glo
 | maintenance | yes (browse) | no |
 | paused | no | no |
 
+"Visible" includes listings: a market that is not live or in maintenance
+has its events and places left out of search, maps and home feeds, and
+nobody can create a listing in it. Payments already started still finish,
+and refunds work in every status.
+
 Ghana is the default market: it can never be paused or returned to draft.
+
+**A readiness report is pinned to the configuration it checked.** Any
+change to the market, its providers, methods, payout rails or cities
+bumps the market's version; an activation using an older report is
+refused ("the configuration changed after the readiness check — run it
+again"). Saving a change to a live market re-runs the checks and warns
+when a critical one now fails.
 
 ## Open a country — worked example: Nigeria
 
@@ -57,11 +69,21 @@ Ghana is the default market: it can never be paused or returned to draft.
      code +234, text-message codes Twilio Verify.
    - Tax, fees and legal: enter what step 1 decided, tick both
      acknowledgements, set the support email.
-   - Payment providers: select paystack, tick Enabled, save.
+   - Payment providers: select paystack, tick Enabled, save. Provider
+     options (JSON) holds what differs by country and is empty by
+     default — e.g. `{"channels": {"bank_transfer": ["bank_transfer"]}}`,
+     `{"cardVerificationMinor": 5000}` (the charge used to save a card, in
+     kobo), `{"bankRecipientType": "nuban"}`. Leave it empty unless the
+     provider's documentation for Nigeria says otherwise.
    - Customer payment methods: enable card (and bank transfer / USSD if
      wanted); mark the recommended one.
    - Organizer payouts: enable bank with its account fields; leave
-     Automated off until transfers are tested.
+     Automated off until transfers are tested. Turning Automated on needs
+     `markets.activate` and step-up, and is refused for a provider that
+     cannot send transfers.
+   - Presentation: set **Price scale** to 100 (naira prices are about a
+     hundred times cedi prices) so the price filter reaches ₦100,000 rather
+     than ₦999. Readiness warns while it is 1.
    - Cities: check Lagos and Abuja, add others.
 6. **Run readiness checks.** Every critical row must pass — a failing row
    says what is missing. Fix and run again.
@@ -92,6 +114,20 @@ older than a week is never used.
 
 ## Reports in more than one currency
 
-The Rewards and Spotlight overviews show one currency at a time; a
-currency switcher appears once a second currency has activity. Money in
-different currencies is never added together.
+The Dashboard, Finance, Analytics, Rewards and Spotlight overviews show one
+currency at a time; a currency switcher appears once a second currency has
+activity. Money in different currencies is never added together. All
+console dates and times are on one clock, UTC, and say so.
+
+## Charges with no order
+
+Finance › Refunds › "Charges with no order" lists money a provider took
+after its checkout had closed (a late mobile-money approval, a paid stale
+tab, a charge for the wrong amount). Each is refunded in full
+automatically; the row shows whether the refund was requested, confirmed
+or failed. A failed one is retried on the provider's next delivery —
+escalate to engineering if it stays failed for a day.
+
+**Refund from Admin › Finance, never from the provider's dashboard.** A
+dashboard refund is not recorded in the organizer ledger; it is logged as
+an error (`external_refund`) so finance can reconcile it by hand.

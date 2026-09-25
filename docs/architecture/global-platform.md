@@ -2,10 +2,10 @@
 title: Global platform — markets, money, payments, time and locale
 purpose: How Abonten runs in more than one country — the market model and its activation checks, money as integer minor units, providers per market, time zones, phones, addresses, locale, reporting per currency, and the feature flags that roll it out.
 audience: Engineers, operations, finance
-scope: supabase/migrations/20260924100000..20260924100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
+scope: supabase/migrations/20260924100000..20260925100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-24
+version: 1.1
+lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -30,8 +30,8 @@ same times. What changed is that none of it is assumed any more.
 
 | Table | Holds |
 |---|---|
-| `market` | one row per country: `status` (draft · preparing · ready · live · paused · maintenance), `is_default` (exactly one — Ghana), default and supported currencies, default zone and locales, dial code, distance unit, `otp_provider` (hubtel / twilio / none), `tax_config`, `fee_config` (optional service-fee override), `legal_config` (terms version, support email, legal acknowledgement), fallback centre |
-| `market_payment_provider` | one row per provider **account** for the market: provider, enabled, the **names** of the env variables holding its secret key / webhook secret / public key, settlement currency, accepted currencies, priority, `payouts_enabled` |
+| `market` | one row per country: `status` (draft · preparing · ready · live · paused · maintenance), `is_default` (exactly one — Ghana), default and supported currencies, default zone and locales, dial code, distance unit, `otp_provider` (hubtel / twilio / none), `tax_config`, `fee_config` (optional service-fee override), `legal_config` (terms version, support email, legal acknowledgement), fallback centre, `display_config` (`priceScale` — sizes the price filters for the currency), `version` (bumped by every configuration change) |
+| `market_payment_provider` | one row per provider **account** for the market: provider, enabled, the **names** of the env variables holding its secret key / webhook secret / public key, settlement currency, accepted currencies, priority, `payouts_enabled`, `options` (provider facts that differ by country — Paystack `channels`, `cardVerificationMinor`, `bankCountry`, `bankRecipientType`; empty = the adapter's documented defaults) |
 | `market_payment_method` | what people there pay with (card, mobile_money, bank_transfer, ussd, qr, eft, apple_pay…), on which provider, currencies, platforms, recommended |
 | `market_payout_method` | the rails organizers are paid on and the account fields each needs (JSON rules: key, label, required, pattern) |
 | `market_region` | cities/regions: discovery fallback centres and, in multi-zone countries, their own zone |
@@ -52,10 +52,22 @@ mirrors it). `prepare` draft→preparing, `mark_ready` preparing→ready,
 refuse unless the caller passes a fresh passing readiness report; the
 default market can never be paused or returned to draft. Activation,
 pause and resume need `markets.activate` **and** step-up in the console.
+Every configuration change (the market row, its providers, methods,
+payout rails, cities) bumps `market.version`; the console passes the
+version its readiness report ran on (`p_expected_version`), so an edit
+made between the check and the click is refused rather than activated
+unchecked. Editing a market that is live or in maintenance re-runs
+readiness and warns in the save message when a critical item now fails.
 
 **Open vs transacting** — `live` and `maintenance` markets are *open*
-(browsable); only `live` transacts. Paused and draft markets are invisible
-to clients and every server path refuses to charge in them.
+(browsable); only `live` transacts: every checkout (tickets, promotions,
+Spotlight, credit-only orders), card saving and new listings refuse a
+market that is not live (`paymentChoice.ts`, `marketClosedForSales`,
+`resolveListingLocation`). Draft, preparing, ready and paused markets'
+listings are also hidden from discovery — every discovery function carries
+`listing_market_visible(country_code)` next to its moderation filter
+(migration `…100300`). Payments already in flight still complete and
+refunds still run in any status.
 
 **Readiness** (`@abonten/core/market/readiness`, probes gathered by
 `runReadinessAdminCore`) — critical: country + currency + zone valid,
@@ -76,7 +88,14 @@ rates, monitoring, support contact.
 - **In the database** amounts stay `numeric` major units next to an
   explicit `currency` — nothing defaults to GHS any more (every
   `DEFAULT 'GHS'` and `'GHS'` literal in functions was removed; a sanity
-  block in the migration fails the deploy if one comes back).
+  block in the migration fails the deploy if one comes back). Money
+  columns hold **three** decimals (migration `…100000` of 2026-09-25) and
+  every ledger, refund, credit and reporting function rounds with the
+  row's currency — `currency_minor_units`, `money_round`,
+  `minor_to_major`, `major_to_minor`; an unknown code is an error, never
+  a silent 2. (Before, a fixed `/ 100` booked a 500-franc XOF commission as
+  5.00.) A market may only use a currency the `currency` table holds
+  (exponent 0, 2 or 3).
 - **Formatting** — `formatMoney(money)` uses Abonten's own sign table
   ("GH₵50.00", "₦25,000.00", "KSh 1,500.00"; "US$25" when a viewer's own
   currency also uses `$`), because Hermes on Android lacks `narrowSymbol`.
@@ -96,7 +115,15 @@ rates, monitoring, support contact.
 - **Orders never mix markets** — a basket spanning two currencies or
   countries is refused (`MixedMarketCheckoutError`); the order's fee and
   tax come from its market (`computeOrderTotals`: discount → fee → tax,
-  inclusive or exclusive).
+  inclusive or exclusive). Line discounts are worked in minor units
+  (`computeLineAmount(…, currency)`); previews and the charge use the same
+  fee precedence (`serviceFeeRateFor`: the market's own fee, else the
+  platform rate for the currency and country).
+- **Reports never add currencies** — `admin_dashboard_kpis`,
+  `admin_finance_overview`, `admin_platform_analytics`,
+  `admin_rewards_overview`, `content_admin_overview` take `p_currency` and
+  return the currencies with activity (the console shows a switcher);
+  `get_organizer_sales_timeline` charts one currency (the busiest).
 
 ## 3. Payments
 
@@ -134,9 +161,43 @@ events, list networks/banks, transfer recipient + transfer, probe.
   the money; automated payouts run only when the market provider's
   `payouts_enabled` is on (off everywhere; it replaced
   `PAYSTACK_TRANSFERS_ENABLED`).
-- **Methods offered** — `listAvailablePaymentMethods` = enabled methods on
-  an enabled, configured provider, for this currency and platform, that the
-  adapter supports. The server refuses anything else.
+- **How a buyer chooses** — with a **saved instrument** (a card token, a
+  mobile-money wallet) or with a **method** paid on the provider's own
+  page (card, bank transfer, USSD, Apple Pay…). `GET
+  /api/mobile/payments/options` / `getCheckoutPaymentOptions` answer for
+  one order: the order's market decides the methods
+  (`listAvailablePaymentMethods`: enabled on an enabled, configured
+  provider, for the currency and platform, that the adapter supports, and
+  allowed by any `checkout.<provider>` rollout flag) and each saved entry
+  says whether it can pay there. `paymentChoice.ts` checks the same again
+  on every attempt; the client's list is never trusted. A saved card is
+  charged directly only by the provider **account** that tokenised it
+  (cards record `provider` + `countryCode`; older cards are the default
+  market's) — elsewhere it goes through the hosted page. A wallet must be a
+  number in the order's country. Before 2026-09-25 checkout required a
+  saved card or wallet, so a Stripe market (no saved cards) could not take
+  payment at all.
+- **Money captured after its attempt closed** — a late mobile-money
+  approval, a stale payment tab, or a charge for the wrong amount has no
+  order to fulfil. `finalizePayment` asks the provider what happened to a
+  failed/cancelled attempt; a real capture is recorded once in
+  `payment_orphan_capture` (provider + reference) and refunded in full
+  through the same account, the buyer is told, and the provider's refund
+  confirmation marks it refunded. A failed refund request answers 503 so
+  the provider redelivers. Finance › Refunds lists them.
+- **Refund confirmations that arrive early** — a provider can confirm a
+  refund before `issueRefundCore` has recorded its hold; while the refund
+  claim is held the webhook answers 503 so the confirmation is redelivered
+  instead of lost.
+- **Payouts reversed after completing** — `transfer.reversed` for a
+  completed payout calls `record_payout_reversal`: status `reversed`, the
+  amount back in the organizer's available balance, once. Switching a
+  provider to automated payouts needs `markets.activate`, step-up and an
+  adapter that can execute transfers (Stripe cannot).
+- **Stripe** — asynchronous methods: a completed session that is not yet
+  paid is *pending*, not failed; `checkout.session.completed` with
+  `payment_status ≠ paid` is ignored until `async_payment_*` arrives.
+  Bancontact is EUR-only; bank transfer (`customer_balance`) is not offered.
 
 ## 4. Time
 
@@ -151,10 +212,18 @@ events, list networks/banks, transfer recipient + transfer, probe.
   (`getFormattedEventDate(…, event.timezone)`), with the zone abbreviation
   added only when the viewer's clock differs ("7:30 PM WAT"). Discovery
   RPCs return `timezone`/`country_code` (migration `…100400`).
-- Reminders, digests, weekly editions and place visit days compute in the
+- Reminders, weekly editions and place visit days compute in the
   subject's zone (`event_reminders_enqueue`, `_search_temporal`, …); emails
-  state times in the event's zone. Admin reports use UTC days for every
-  market.
+  state times in the event's zone. Since 2026-09-25 (migration `…100400`):
+  a Weekly edition's week is its area's market week (`weekly_edition_view`,
+  and `@abonten/core/weekly/week` takes a zone); the recommendation digest
+  goes out at the configured hour of **each person's** clock and counts
+  their local day; `place_is_open_now` / `computePlaceOpenStatus` read
+  opening hours on the place's zone; the app's "today / this weekend"
+  search windows use the browsed area's zone (`searchWhenWindow`).
+- The admin console shows every timestamp on one labelled operations
+  clock, **UTC** (the clock its date ranges are cut on); a Weekly
+  edition's schedule is entered and shown on its area's zone.
 
 ## 5. People, phones, addresses, locale
 
@@ -196,11 +265,21 @@ events, list networks/banks, transfer recipient + transfer, probe.
 `feature_flag` rows (Admin › Markets › Feature flags) with rules
 `{countries, platforms, cohorts, percent, minAppVersion, allowSubjects}`;
 `evaluateFlag` is deterministic (FNV-1a bucket of flag + subject) and fails
-closed. Seeded switched on but inert until their prerequisite exists:
-`currency.display_conversion` (shows nothing until exchange rates are
-configured), `checkout.stripe` (no Stripe market is live) and
-`markets.browse_abroad` (only Ghana is open). Switch one off here to keep
-it off after its prerequisite arrives.
+closed. `currency.display_conversion` gates the "≈" estimates (nothing
+shows until exchange rates are configured). A flag named
+`checkout.<provider>` (seeded: `checkout.stripe`) gates that provider's
+methods at checkout by country, platform or percentage — present and off
+means nobody is offered them; absent means no gate. The seeded
+`markets.browse_abroad` was removed on 2026-09-25: nothing read it.
+
+## 7a. Presentation per market
+
+`market.display_config.priceScale` sizes the price filters (display only):
+1 is cedi-sized (slider to 999, chips "under 50 / under 200"), 100 suits
+naira, 0.1 pounds. The /search URL writes an open upper bound as `any`
+(`20-any`) and reads the old cedi slider top `999` as "Any"; a real cap
+above it (`0-5000`) is kept. Readiness warns when a market in another
+currency still uses scale 1.
 
 ## 8. Security rules that carry the model
 
@@ -243,4 +322,13 @@ live Ghana purchase and refund on the new build is still owed.
 - Credit is single-currency per person; a person who moves keeps credit in
   the currency it started in.
 - Tax is a configured rate (inclusive or exclusive), not a tax engine.
-- Admin day boundaries are UTC for every market.
+- Admin day boundaries and console timestamps are UTC for every market
+  (labelled).
+- Organizer dashboard "today" and day buckets are UTC days: right for UTC+0
+  markets, up to a few hours off elsewhere (the numbers are totals, not
+  money movements).
+- A ticket-level cancellation refunds once every ticket on the order is
+  cancelled (existing product rule); there is no partially-refunded
+  transaction state.
+- Mobile money for field-ops payouts is paid by hand from the CSV; numbers
+  are E.164 since 2026-09-25 and exported in the national form.

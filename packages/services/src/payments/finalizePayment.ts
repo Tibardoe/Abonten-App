@@ -106,6 +106,32 @@ async function reconcileClosedAttempt(
       };
 }
 
+/**
+ * The fields every money-path log line carries, so a log drain or alert can
+ * split failures by market, provider, method and currency. Never a secret,
+ * a card detail or a phone number.
+ */
+function paymentLogData(
+  attempt: PaymentAttemptFullRow,
+  failure: string,
+): { payment: Record<string, unknown> } {
+  return {
+    payment: {
+      attemptId: attempt.id,
+      transactionId: attempt.transaction_id,
+      provider: attempt.provider,
+      country: attempt.country_code,
+      currency: attempt.currency,
+      method:
+        typeof attempt.metadata?.method === "string"
+          ? attempt.metadata.method
+          : null,
+      reference: attempt.provider_reference,
+      failure,
+    },
+  };
+}
+
 // Payments paid entirely with Abonten Credit (createPromotionPaymentAttemptCore)
 // run through this same function so retries, fulfilment and the recovery
 // cron behave identically; they skip only the provider verification call.
@@ -430,9 +456,15 @@ export async function finalizePayment(
     if (error instanceof NoProviderError) {
       // Configuration, not a decline: the charge may well have succeeded at
       // the provider. Keep the attempt retryable and shout.
-      logger.error(`finalizePayment: ${error.message} (attempt ${primary.id})`);
+      logger.error(
+        `finalizePayment: ${error.message} (attempt ${primary.id})`,
+        paymentLogData(primary, "provider_not_configured"),
+      );
     } else {
-      logger.error(`finalizePayment: verify call failed (${error})`);
+      logger.error(
+        `finalizePayment: verify call failed (${error})`,
+        paymentLogData(primary, "verify_unreachable"),
+      );
     }
     // FIN-003: a transient provider/network failure is not a decline — it
     // must not permanently fail a charge that may well have succeeded.
@@ -452,6 +484,7 @@ export async function finalizePayment(
   if (verification.reference !== primary.provider_reference) {
     logger.error(
       `finalizePayment: reference mismatch for attempt ${primary.id}`,
+      paymentLogData(primary, "reference_mismatch"),
     );
     await markGroup("failed", { failure_reason: "Reference mismatch" });
     return { status: "failed", message: "Payment could not be verified" };

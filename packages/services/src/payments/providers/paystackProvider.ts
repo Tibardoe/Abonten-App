@@ -105,6 +105,20 @@ function cardVerificationMinorFor(
   return CARD_VERIFICATION_MINOR[code] ?? null;
 }
 
+/** Paystack's bank-transfer recipient type per business country. */
+const BANK_RECIPIENT_TYPE: Record<string, string> = {
+  GH: "ghipss",
+  ZA: "basa",
+  KE: "kepss",
+  NG: "nuban",
+};
+
+function bankRecipientTypeFor(account: ProviderAccount): string {
+  const configured = account.options.bankRecipientType;
+  if (typeof configured === "string" && configured.trim()) return configured;
+  return BANK_RECIPIENT_TYPE[account.countryCode] ?? "nuban";
+}
+
 function bankCountryFor(account: ProviderAccount): string | null {
   const configured = account.options.bankCountry;
   if (typeof configured === "string" && configured.trim()) return configured;
@@ -439,13 +453,7 @@ export const paystackProvider: PaymentProvider = {
       type:
         input.method === "mobile_money"
           ? "mobile_money"
-          : account.countryCode === "GH"
-            ? "ghipss"
-            : account.countryCode === "ZA"
-              ? "basa"
-              : account.countryCode === "KE"
-                ? "kepss"
-                : "nuban",
+          : bankRecipientTypeFor(account),
       name: input.name,
       accountNumber: input.accountNumber,
       bankCode: input.destinationCode,
