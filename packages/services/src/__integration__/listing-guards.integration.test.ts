@@ -1,5 +1,5 @@
 import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 //
 // What a listing owner may and may not write straight through the Data API
@@ -348,5 +348,61 @@ describe("promo code visibility (migration 20260925110400)", () => {
       eventId,
     );
     expect(result.status).toBe(200);
+  });
+});
+
+describe("place analytics throttle (migration 20260925110600)", () => {
+  it("keeps at most 60 of one event type per place per minute, stamped by the server", async () => {
+    const service = getServiceClient();
+    const owner = await createTestUser(service);
+    const { data: category } = await service
+      .from("place_category")
+      .select("id")
+      .limit(1)
+      .single();
+    const { data: place } = await service
+      .from("place")
+      .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
+        owner_id: owner.id,
+        name: "Analytics Throttle Venue",
+        slug: `analytics-throttle-${crypto.randomUUID()}`,
+        description: "Created by the listing-guards suite.",
+        category_id: category?.id as number,
+        location: "POINT(-0.187 5.6037)",
+        address: { city: "Accra" },
+        cover_public_id: "test/cover",
+        cover_version: "1",
+        status: "published",
+      })
+      .select("id")
+      .single();
+    const placeId = place?.id as string;
+    try {
+      const anon = createClient<Database>(
+        process.env.SUPABASE_TEST_URL as string,
+        process.env.SUPABASE_TEST_ANON_KEY as string,
+        { auth: { persistSession: false } },
+      );
+      for (let i = 0; i < 70; i++) {
+        await anon.from("place_analytics_event").insert({
+          place_id: placeId,
+          event_type: "view",
+          created_at: "2020-01-01T00:00:00Z",
+        });
+      }
+      const { data: rows } = await service
+        .from("place_analytics_event")
+        .select("created_at")
+        .eq("place_id", placeId);
+      expect(rows?.length).toBe(60);
+      expect(
+        rows?.every((r) => new Date(r.created_at).getFullYear() > 2020),
+      ).toBe(true);
+    } finally {
+      await service.from("place").delete().eq("id", placeId);
+      await deleteTestUser(service, owner.id);
+    }
   });
 });
