@@ -7,12 +7,7 @@
 import { findCountry } from "@abonten/core/geo/countries";
 import { logger } from "@abonten/core/logger";
 import type { OtpProviderCode } from "@abonten/core/market/types";
-import {
-  countryForDialCode,
-  dialCodeFor,
-  phoneCountry,
-} from "@abonten/core/phone/phone";
-import { getDefaultMarket, getMarket } from "../../markets/marketConfig";
+import { getDefaultMarket, marketForPhone } from "../../markets/marketConfig";
 import { getSupabaseServiceClient } from "../../supabase/serviceClient";
 import { hubtelOtpProvider } from "./hubtelOtpProvider";
 import { twilioVerifyProvider } from "./twilioVerifyProvider";
@@ -41,22 +36,14 @@ export type OtpRoute =
     };
 
 export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
-  const countryCode = phoneCountry(phoneE164);
+  const { market, numberCountry: countryCode } =
+    await marketForPhone(phoneE164);
   if (!countryCode) {
     return {
       ok: false,
       reason: "unknown_country",
       message: "Enter a valid phone number.",
     };
-  }
-  // Numbers in a shared calling code belong to the code's main market when
-  // their own territory has none: +44 7911 … is Guernsey to libphonenumber,
-  // +1 876 … Jamaica, but a UK or US market serves them.
-  let market = await getMarket(countryCode);
-  if (!market) {
-    const dial = dialCodeFor(countryCode);
-    const main = dial ? countryForDialCode(dial) : null;
-    if (main && main !== countryCode) market = await getMarket(main);
   }
   const countryName =
     findCountry(market?.countryCode ?? countryCode)?.name ?? countryCode;

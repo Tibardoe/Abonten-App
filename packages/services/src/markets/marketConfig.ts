@@ -26,6 +26,11 @@ import {
   isMarketOpen,
   toPublicMarket,
 } from "@abonten/core/market/types";
+import {
+  countryForDialCode,
+  dialCodeFor,
+  phoneCountry,
+} from "@abonten/core/phone/phone";
 import type { DistanceUnit } from "@abonten/core/units/distance";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -313,4 +318,23 @@ export async function listPublicMarkets(): Promise<PublicMarket[]> {
  */
 export function marketServiceFeeBps(market: MarketConfig): number | null {
   return market.fees.serviceFeeBps;
+}
+
+/**
+ * The market a phone number belongs to. Numbers in a shared calling code
+ * whose own territory has no market belong to the code's main country's
+ * market (+44 7911 … is Guernsey to libphonenumber, +1 876 … Jamaica).
+ */
+export async function marketForPhone(
+  phoneE164: string,
+): Promise<{ market: MarketConfig | null; numberCountry: string | null }> {
+  const numberCountry = phoneCountry(phoneE164);
+  if (!numberCountry) return { market: null, numberCountry: null };
+  let market = await getMarket(numberCountry);
+  if (!market) {
+    const dial = dialCodeFor(numberCountry);
+    const main = dial ? countryForDialCode(dial) : null;
+    if (main && main !== numberCountry) market = await getMarket(main);
+  }
+  return { market, numberCountry };
 }
