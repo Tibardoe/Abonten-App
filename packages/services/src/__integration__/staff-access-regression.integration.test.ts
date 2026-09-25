@@ -249,22 +249,20 @@ describe("staff roles have no direct Data API powers", () => {
         .from("transaction")
         .update({ amount: 0, status: "refunded" } as never)
         .eq("id", transactionId);
-      await c
-        .from("organizer_ledger_entry")
-        .insert({
-          organizer_id: u.id,
-          entry_type: "earning",
-          amount: 1000,
-          currency: "GHS",
-        } as never);
+      await c.from("organizer_ledger_entry").insert({
+        organizer_id: u.id,
+        entry_type: "earning",
+        amount: 1000,
+        currency: "GHS",
+      } as never);
       await c
         .from("market")
         .update({ status: "paused" } as never)
         .eq("country_code", "GH");
       await c
         .from("platform_fee_config")
-        .update({ rate: 0 } as never)
-        .neq("rate", -1);
+        .update({ fee_rate: 0 } as never)
+        .neq("fee_rate", -1);
       await c
         .from("admin_user")
         .insert({ user_id: victim.id, status: "active" } as never);
