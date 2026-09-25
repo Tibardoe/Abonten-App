@@ -122,7 +122,7 @@ the apps.
 |---|---|---|---|---|
 | F1 | Dashboard helpers INVOKER on a service-only table | `20260925111500` (applied) | session-rpc-reachability | pass (local), dashboard 200 (production) |
 | F2 | Restricted organizer's edit answered 500 | `updateEventCore` checks restriction → 403 | event-creation-recovery | pass |
-| F3 | Admin could not see an event's market; start time shown in server UTC without a zone | Admin › Events detail shows "Ghana (GH) · GHS" and the start in the event's zone | typecheck + admin build; the production check's "Ghana" assertion fails until this branch is deployed (runbook step 4) | pending deploy |
+| F3 | Admin could not see an event's market; start time shown in server UTC without a zone | Admin › Events detail shows "Ghana (GH) · GHS" and the start in the event's zone | typecheck + admin build; production smoke "event detail shows … Ghana" | pass (production, after the 20:15 UTC deploy) |
 | F4 | Any account could insert unlimited, unformatted push tokens; each push fanned out to all of them | `20260925111600`: Expo format, keep ten newest; sender reads ten | banned-window (added cases) | pass |
 | F5 | A word in every listing made each search branch rank every match (2.6 s) | `20260925111700`: each ranking branch scores at most `greatest(p_limit, 1500)` matches, after all filters | results identical below the cap (6 query shapes compared); perf harness budget | 2.6 s → 115 ms; pass |
 | F6 | Four calendars count UTC days | readiness `utc_calendar` check blocks activating a non-UTC+0 market | market.test.ts | pass |
@@ -300,11 +300,12 @@ any production load test.
 Current state (step 1) is described first; each later step lists the
 action, what to expect, what counts as failure and how to recover.
 
-**Step 1 — Current production state.** Code `23e13a5d`
+**Step 1 — Production state before this release.** Code `23e13a5d`
 (`8e0103c2` + docs); all migrations through `20260925111500` applied;
 `20260925111600` (push tokens), `20260925111700` (search cap) and
 `20260925111800` (visitor open-now check) not yet.
-Event creation and the dashboard work.
+Event creation and the dashboard work. (Steps 2–10 were carried out on
+2026-09-25 — see section 12.)
 
 **Step 2 — Deploy application code.** Merge `gate/final-release-2026-09-25`
 into `main` (`--no-ff`) and push; Vercel builds `abonten` and
@@ -335,7 +336,10 @@ in one transaction, so nothing is left half-applied). *Recovery*: for
 111600, `drop trigger device_token_keep_recent on public.device_token;
 alter table public.device_token drop constraint device_token_expo_format;`;
 for 111700, re-create `_search_event_pool` / `_search_place_pool` from
-`20260925111100` (the version before the cap); for 111800, re-create
+`20260925100300` and then re-run the rewrite block of `20260925111100`
+(which changes their market filter in place — the definitions in `100300`
+alone are older than production's); the result must fingerprint as
+`md5(pg_get_functiondef(...))` = `a6d2d660…` / `a4444796…`; for 111800, re-create
 `place_is_open_now` from `20260925100400` (visitors are refused again, as
 before).
 
@@ -381,3 +385,25 @@ service-only table); Admin › Monitoring health checks; Sentry for
   `get_organizer_dashboard`, `search_*`.
 - Paystack: webhook delivery status; `payment_orphan_capture` rows.
 - Push: `device_token` count per account (≤ 10) and Expo receipt errors.
+
+## 12. Deployment record (2026-09-25, UTC)
+
+| Time | Step | Result |
+|---|---|---|
+| 20:08 | `gate/final-release-2026-09-25` merged into `main` (`be928ad7`) and pushed | — |
+| 20:12 | Vercel `abonten-app-admin` `dpl_3hagGFG4pwpgqyThYNn9o5i5MZYd` | READY |
+| 20:15 | Vercel `abonten` `dpl_C27e89gXsuDYT3mj7UXAZAoAk5QX` (abontenhub.com) | READY |
+| 20:18 | `production-smoke.mjs` (steps 3, 4, 9) | 29 passed, 0 failed, every test row removed — including Admin › Events detail showing "Ghana" (F3) |
+| 20:19 | `20260925111600_gate_device_token_cap` via MCP (all 5 production tokens pre-checked against the format; no account over 4) | applied |
+| 20:22 | `20260925111700_gate_search_ranking_cap` via MCP — production's two pool functions were fingerprinted first and matched the version the migration was written against; afterwards they match the tested local version (`540d0ac2…`, `5ed43e04…`), grants still `service_role` only | applied |
+| 20:22 | `20260925111800_gate_place_open_now_visitor` via MCP (fingerprint pre-checked) | applied |
+| 20:23 | Advisors: security — nothing involving the three migrations; performance — INFO only (33 unindexed foreign keys, 180 unused indexes), none on the objects changed | no new finding |
+| 20:25 | `production-smoke.mjs` extended with step 7 checks | 32 passed, 0 failed: signed-out search finds the new event (233 ms round trip), signed-out open-now answers a boolean, a malformed push token is refused (23514) and an account keeps 10 of 12 |
+| 20:26 | Step 8: payment state (read-only) | no attempt in `processing` over an hour; 0 orphan captures; 20 webhooks in 7 days, all `settled` / HTTP 200; 4 `initiated` attempts from 18–24 Aug are abandoned checkouts from before this work |
+| 20:27 | Step 10: logs since the deploy | Postgres: only the smoke script's own deliberate probes (`attendance`, `payout_account`); Vercel admin: no errors; Vercel web: Resend refused the throwaway `@example.com` buyers' ticket emails (expected; registration succeeded) |
+
+| 20:31 | Final `production-smoke.mjs` run after fixing the script's own Ghana check (it held a literal backspace where `` was meant, and a bare "Ghana" could also match the test address): it now requires F3's rendering "Ghana (GH)" | 32 passed, 0 failed, every test row removed |
+
+At deployment, production had no upcoming published events, so a direct
+`search_events('accra')` returns no rows; the smoke script's search check
+creates its own event to prove results come back.

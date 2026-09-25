@@ -20,7 +20,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - New `audit/09-incident-recovery-and-release-gate-2026-09-25.md` 1.0 (incident timelines with evidence, fixes F1–F7, verified / not verified, iOS checklist against Guidelines 3.1.3(g) and 4.8, production runbook). PROJECT.md §46.2, CLAUDE.md, `docs/INDEX.md`, `architecture/global-platform.md` 1.4, `architecture/discovery-search-and-recommendations.md` 1.2, `security/application-security.md` 1.2, `admin/markets.md` 1.2.
 - Behaviour: the organizer dashboard loads again; a restricted organizer's edit answers 403; Admin event detail shows the market and the start in the event's zone; push tokens must be Expo tokens and an account keeps ten; broad searches rank at most 1,500 matches per branch; a market off UTC+0 cannot be activated; a replaced or abandoned image is kept while anything else uses it.
-- Migrations `20260925111500` (applied to production 18:27 UTC), `20260925111600`, `20260925111700`, `20260925111800` (to apply after the code deploys; 111800 lets signed-out visitors call `place_is_open_now` again). New tool `scripts/release/production-smoke.mjs`. New jobs, env vars, permissions: none.
+- Migrations `20260925111500` (applied to production 18:27 UTC), `20260925111600`, `20260925111700`, `20260925111800` (applied to production 20:19–20:22 UTC after the code deployed at 20:15; 111800 lets signed-out visitors call `place_is_open_now` again). New tool `scripts/release/production-smoke.mjs`. New jobs, env vars, permissions: none.
 
 ## 2026-09-25 — Final production gate
 
