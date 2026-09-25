@@ -313,6 +313,11 @@ export async function finalizePayment(
     return { status: "succeeded" };
   }
 
+  // Marked when the order's refund completed: nothing to verify or issue.
+  if (primary.status === "refunded") {
+    return { status: "failed", message: "This payment was refunded." };
+  }
+
   if (
     primary.status === "processing" &&
     Date.now() - new Date(primary.updated_at).getTime() >
@@ -524,9 +529,14 @@ export async function finalizePayment(
     verification.amount.currency === expectedCash.currency;
 
   if (verification.status !== "success" || !amountMatches) {
-    logger.error(
-      `finalizePayment: verification mismatch for attempt ${primary.id} (status=${verification.status}, amount=${verification.amount.amountMinor} ${verification.amount.currency} vs ${expectedCash.amountMinor} ${expectedCash.currency})`,
-    );
+    // A declined or abandoned charge is an everyday outcome; money taken for
+    // the wrong amount is the one that must page someone.
+    const line = `finalizePayment: verification mismatch for attempt ${primary.id} (status=${verification.status}, amount=${verification.amount.amountMinor} ${verification.amount.currency} vs ${expectedCash.amountMinor} ${expectedCash.currency})`;
+    if (verification.status === "success") {
+      logger.error(line, paymentLogData(primary, "amount_mismatch"));
+    } else {
+      logger.warn(line);
+    }
     await markGroup("failed", {
       failure_reason:
         verification.status !== "success"

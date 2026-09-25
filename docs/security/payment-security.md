@@ -4,7 +4,7 @@ purpose: Document the security properties of the Paystack integration — initia
 audience: Engineering, finance, security reviewers
 scope: packages/services/src/payments, apps/web/src/app/api/paystack/webhook, money-path RPCs
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -33,7 +33,7 @@ Abonten never receives, stores or transmits full card numbers, CVVs or PINs. Car
 | Webhook | Signature verified against `PAYSTACK_WEBHOOK_SECRET`; handlers idempotent; route excluded from cookie middleware | `api/paystack/webhook/route.ts` |
 | Issuance | `issue_tickets_for_checkout` authorizes a paid issuance only with a matching attempt **and** a `successful` transaction owned by the caller; free issuance only when every row is priced 0; idempotent | migration `20260907093200` |
 | Client-callable fulfilment | `issueFreeCheckoutTickets` re-verifies every row is pending, caller-owned and priced 0 | `apps/web/src/actions/issueFreeCheckoutTickets.ts` |
-| Refunds | Partial refund of ticket revenue via `get_transaction_refundable_amount` (service-role only); `record_refund_hold` / `record_refund_release`; idempotent on status | `issueRefundCore.ts` |
+| Refunds | Partial refund of ticket revenue via `get_transaction_refundable_amount` (service-role only); `record_refund_hold` / `record_refund_release`; idempotent on status; an admin refund first cancels the order's active tickets (seats released, attendance and checkout cancelled) like the buyer's own cancel; the attempt is marked `refunded` when the refund completes | `issueRefundCore.ts`, `cancelTicketsForTransactionCore.ts` |
 | Financial RPCs | Six `record_*` functions `service_role`-only (`20260903200000`) | migrations |
 | Ledger integrity | Append-only entries; reconciliation every 30 min | `run_financial_reconciliation` |
 | Disputes | `charge.dispute.*` recorded, incident opened, payout review forced | webhook, `payout_guard_review` |
@@ -43,10 +43,9 @@ Abonten never receives, stores or transmits full card numbers, CVVs or PINs. Car
 ## Residual risks
 
 - The client-verify path runs as the buyer and calls the same finalize function as the webhook — safe by design (server verifies with Paystack), but a Paystack outage during verify leaves attempts `pending` until the reaper/retry (by design, FIN-003).
-- `payment_attempt.status` is not updated on refund (informational `refunded` exists but is not driven) — known cosmetic gap.
 - Paystack test vs live keys: until the switch in [../finance/paystack-live-cutover.md](../finance/paystack-live-cutover.md), production runs on the **test** keys (verified 2026-09-25 from production's own behaviour), so a Paystack test card buys a real ticket. Mixed keys and a contradicting `PAYMENTS_MODE` are now refused, and the health check shows each key's mode.
-- Preview deployments share the production database; they must not hold live keys (cutover §3).
-- Five orphan early-2026 transactions with no tickets exist in production (harmless; refund path refuses them).
+- Preview deployments have their own database since 2026-09-25 and cannot hold live keys (refused by code).
+- One orphan August-2026 test-mode transaction with no tickets exists in production (GH₵102, 19 Aug; harmless; the refund path refuses it), plus one succeeded 18 Aug test-mode attempt from before transactions were recorded.
 
 ## Verification history
 

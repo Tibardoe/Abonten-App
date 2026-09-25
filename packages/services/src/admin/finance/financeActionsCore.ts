@@ -8,6 +8,7 @@ import {
   resolveProviderAccount,
 } from "../../payments/providers/registry";
 import { PaymentProviderError } from "../../payments/providers/types";
+import { cancelTicketsForTransactionCore } from "../../tickets/cancelTicketsForTransactionCore";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -33,12 +34,31 @@ export async function refundTransactionAdminCore(
     return { status: 403, message: (e as Error).message };
   }
 
+  // A refunded order is a cancelled order: its tickets are cancelled first
+  // (seats released, attendance and checkout cancelled, promo usage freed;
+  // checked-in tickets are kept) — the same effects as the buyer cancelling
+  // each ticket. Before 2026-09-25 this refunded the money and left the
+  // tickets active. Idempotent: a repeat cancels nothing more.
+  let cancelled: { cancelled: number; kept: number };
+  try {
+    cancelled = await cancelTicketsForTransactionCore(input.transactionId);
+  } catch (e) {
+    return {
+      status: 500,
+      message: `Could not cancel the order's tickets: ${(e as Error).message}`,
+    };
+  }
+
   // `supabase` is already the service-role client here — this is the same
   // "identity proven upstream" trust context cancelEvent uses: no
   // expectedUserId, so any transaction is in scope. issueRefundCore is
   // idempotent (re-checks transaction.status) and only refunds the ticket
   // revenue, retaining the Abonten service fee.
   const res = await issueRefundCore(supabase, input.transactionId);
+  const ticketsNote =
+    cancelled.cancelled > 0
+      ? ` ${cancelled.cancelled} ticket(s) cancelled${cancelled.kept > 0 ? `, ${cancelled.kept} kept (checked in or already cancelled)` : ""}.`
+      : "";
 
   if (res.status === 200) {
     await recordAdminAudit(supabase, {
@@ -47,13 +67,18 @@ export async function refundTransactionAdminCore(
       action: "finance.refund",
       targetType: "transaction",
       targetId: input.transactionId,
-      summary: `Refund requested — ${res.message}`,
+      summary: `Refund requested — ${res.message}.${ticketsNote}`,
       reason: input.reason,
-      requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+      requestMeta: {
+        ...(requestMeta ?? {}),
+        roles: ctx.roles,
+        ticketsCancelled: cancelled.cancelled,
+        ticketsKept: cancelled.kept,
+      },
     });
   }
 
-  return { status: res.status, message: res.message };
+  return { status: res.status, message: `${res.message}.${ticketsNote}` };
 }
 
 // ── Payout settlement ───────────────────────────────────────

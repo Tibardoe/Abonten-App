@@ -5,6 +5,7 @@
 // to Sentry.
 
 import { checkEnv, enforceEnv } from "@abonten/core/env/checkEnv";
+import { productionDatabaseOffProductionProblem } from "@abonten/core/env/productionProject";
 import { logger } from "@abonten/core/logger";
 import * as Sentry from "@sentry/nextjs";
 
@@ -39,6 +40,10 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     // A production deployment with a required variable missing must not
     // come up; anywhere else (dev, preview, CI build) the gap is logged.
+    // A preview or development deployment on the production database does
+    // not start, whatever variables it was given.
+    const offProduction = productionDatabaseOffProductionProblem(process.env);
+    if (offProduction) throw new Error(offProduction);
     enforceEnv(checkEnv(process.env, WEB_ENV), {
       app: "web",
       strict: process.env.VERCEL_ENV === "production",

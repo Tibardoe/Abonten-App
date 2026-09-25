@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-25 — Live Paystack cutover: remaining risks closed
+
+- `finance/paystack-live-cutover.md` 1.2, `security/secrets-and-environment.md` 1.3, `security/payment-security.md` 1.3, `audit/10-live-paystack-cutover-2026-09-25.md` 1.2 (§10), `mobile/08-phase-6-release-prep.md`, `mobile/09-phase-1-web-parity.md`, `apps/mobile/.env.example`, PROJECT.md §46.3, CLAUDE.md.
+- Behaviour: Vercel Preview and Development deployments use a new **Abonten Preview** Supabase project (`qasxtirvfbreygsqwwat`, schema replayed, no production data); the production database's URL, anon and service-role variables are Production-only; both apps refuse to start on a non-production deployment pointed at the production project. Admin › Finance → Refund now cancels the order's active tickets (seats released, attendance and checkout cancelled) before refunding; `payment_attempt` becomes `refunded` when its refund completes and `finalizePayment` answers "refunded" for it; a declined or abandoned verification logs at warn (an amount mismatch stays an error). Paystack's verify parser is tested against the four real response shapes captured from the test account.
+- Vercel: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` neutralised (unused). New env vars: none. Migrations: none (the preview project replays the existing ones).
+
 ## 2026-09-25 — Live Paystack cutover: final verification
 
 - `finance/paystack-live-cutover.md` 1.1 (webhook secret = secret key made explicit; the 13-step sequence with expected result, failure sign and rollback per step; the exact record chain for the GH₵1.05 purchase and its refund with read-only SQL; monitoring), `audit/10-live-paystack-cutover-2026-09-25.md` 1.1 (§9 final verification), `security/secrets-and-environment.md` 1.2, `security/payment-security.md` 1.2, `finance/reconciliation.md` 1.2, `finance/payments-and-ticketing-runbook.md` 1.3, PROJECT.md §46.3.

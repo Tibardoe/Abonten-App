@@ -25,7 +25,9 @@ import {
 } from "vitest";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { invalidateMarketCache } from "../markets/marketConfig";
+import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
+import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import { paystackProvider } from "../payments/providers/paystackProvider";
 import type {
@@ -34,6 +36,7 @@ import type {
 } from "../payments/providers/types";
 import { reconcilePaymentAttemptsCore } from "../payments/reconcilePaymentAttemptsCore";
 import { handleProviderWebhook } from "../payments/webhookCore";
+import { cancelTicketsForTransactionCore } from "../tickets/cancelTicketsForTransactionCore";
 import {
   type TestUser,
   createTestEventWithTicketType,
@@ -84,8 +87,13 @@ function fakePaystack() {
       raw: {},
     }),
   );
-  vi.spyOn(paystackProvider, "refund").mockResolvedValue(undefined);
-  return { opened, paid, pending };
+  const refunds: string[] = [];
+  vi.spyOn(paystackProvider, "refund").mockImplementation(
+    async (_account, input) => {
+      refunds.push(input.reference ?? "");
+    },
+  );
+  return { opened, paid, pending, refunds };
 }
 
 describe("live Paystack cutover", () => {
@@ -577,5 +585,90 @@ describe("live Paystack cutover", () => {
       .eq("user_id", buyer.id);
     expect(tickets).toHaveLength(1);
     expect(txnsAfter).toHaveLength(1);
+  });
+
+  it("an admin refund cancels the order's tickets, releases the seat and refunds once", async () => {
+    const provider = fakePaystack();
+    const fixture = await newEvent();
+    const session = await openSession(fixture);
+    const started = await payOk([session]);
+    const ref = started.payment?.reference as string;
+    provider.paid.add(ref);
+    expect((await finalizePayment(started.attempts[0].id, deps)).status).toBe(
+      "succeeded",
+    );
+    expect(await stockOf(fixture.ticketTypeId)).toBe(4);
+    const { data: txn } = await service
+      .from("transaction")
+      .select("id")
+      .eq("provider_reference", ref)
+      .single();
+
+    // What refundTransactionAdminCore does, on the service role.
+    const first = await cancelTicketsForTransactionCore(txn?.id as string);
+    expect(first).toEqual({ cancelled: 1, kept: 0 });
+    const refund = await issueRefundCore(service, txn?.id as string);
+    expect(refund.status, refund.message).toBe(200);
+
+    const { data: ticket } = await service
+      .from("ticket")
+      .select(
+        "status, attendance(status), ticket_checkout:ticket_checkout_id(status)",
+      )
+      .eq("transaction_id", txn?.id as string)
+      .single();
+    expect(ticket?.status).toBe("cancelled");
+    expect(
+      (ticket as { attendance: { status: string }[] })?.attendance,
+    ).toEqual([{ status: "cancelled" }]);
+    expect(
+      (ticket as { ticket_checkout: { status: string } })?.ticket_checkout
+        ?.status,
+    ).toBe("cancelled");
+    expect(await stockOf(fixture.ticketTypeId)).toBe(5);
+    const { data: after } = await service
+      .from("transaction")
+      .select("status")
+      .eq("id", txn?.id as string)
+      .single();
+    expect(after?.status).toBe("refund_pending");
+    const { data: ledger } = await service
+      .from("organizer_ledger_entry")
+      .select("entry_type, amount")
+      .eq("transaction_id", txn?.id as string)
+      .order("created_at");
+    expect(ledger).toEqual([
+      { entry_type: "earning", amount: 50 },
+      { entry_type: "refund_hold", amount: -50 },
+    ]);
+
+    // A repeat changes nothing and asks Paystack for nothing more.
+    const refundsBefore = provider.refunds.length;
+    expect(await cancelTicketsForTransactionCore(txn?.id as string)).toEqual({
+      cancelled: 0,
+      kept: 1,
+    });
+    const again = await issueRefundCore(service, txn?.id as string);
+    expect(again.status).toBe(200);
+    expect(provider.refunds.length).toBe(refundsBefore);
+    expect(await stockOf(fixture.ticketTypeId)).toBe(5);
+
+    // The refund confirmation also closes the attempt.
+    const hook = await handleProviderWebhook({
+      providerCode: "paystack",
+      countryCode: "GH",
+      ...signed(TEST_KEY, "refund.processed", {
+        transaction_reference: ref,
+        amount: 5000,
+        currency: "GHS",
+        domain: "test",
+      }),
+      deps,
+    });
+    expect(hook.status).toBe(200);
+    expect((await attempt(started.attempts[0].id))?.status).toBe("refunded");
+    expect((await finalizePayment(started.attempts[0].id, deps)).status).toBe(
+      "failed",
+    );
   });
 });

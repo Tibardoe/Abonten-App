@@ -259,6 +259,16 @@ async function handleRefundOutcome(
     `webhook: transaction ${updated.id} -> ${newStatus} via ${event.type}`,
   );
 
+  // The attempt follows its transaction, so Finance and the buyer's payment
+  // history read one story (until 2026-09-25 it stayed "succeeded").
+  if (newStatus === "refunded") {
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "refunded", updated_at: new Date().toISOString() })
+      .eq("transaction_id", updated.id)
+      .eq("status", "succeeded");
+  }
+
   // A failed refund means the money never left the organizer: reverse the
   // hold recorded when the refund was requested (cash share only — credit
   // was already returned to the buyer).

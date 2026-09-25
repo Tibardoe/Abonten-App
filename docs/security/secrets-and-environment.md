@@ -4,7 +4,7 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -19,6 +19,8 @@ complianceReviewRequired: no
 **Retired 2026-09-24:** `PAYSTACK_TRANSFERS_ENABLED`. Automated payouts are now switched per market on the provider row (Admin › Markets › provider › Automated payouts, `market_payment_provider.payouts_enabled`), off for every market.
 
 **Checked at boot (2026-09-19).** Each Next.js app's `src/instrumentation.ts` lists the variables it cannot run without and calls `checkEnv` / `enforceEnv` (`@abonten/core/env/checkEnv`) once per server process. In a production deployment (`VERCEL_ENV=production`) a missing required variable throws, so the deploy fails to start instead of failing at the first payment; in preview, CI and local development the missing names are logged. Web requires the Supabase pair and service-role key, `NEXT_PUBLIC_BASE_URL`, the Cloudinary trio, `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` and `OBSERVABILITY_INGEST_SECRET`; admin requires the Supabase pair and service-role key, `ADMIN_EMAIL_ALLOWLIST` and `OBSERVABILITY_INGEST_SECRET`. Everything else is "recommended" and only produces a warning.
+
+**Preview deployments (2026-09-25).** Vercel Preview and Development builds of both apps use the **Abonten Preview** Supabase project (`qasxtirvfbreygsqwwat`; schema only, no production data): `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist twice (Production → production project; Preview + Development → preview project), `SUPABASE_SERVICE_ROLE_KEY` is Production-only until the preview project's own key is added for Preview, and the production URL/anon/service-role variables never target Preview again. Both apps refuse to start on a non-production deployment pointed at the production project (`@abonten/core/env/productionProject`). `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are read by no code and were neutralised (sensitive, marker value) — delete them when convenient. `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` are still stored as *encrypted* (readable in the dashboard) rather than *sensitive*: re-enter them as Sensitive in the Vercel dashboard (a value cannot be re-typed through the tooling without exposing it).
 
 ## apps/web (Vercel project `abonten`, also GitHub Actions `build-web`)
 

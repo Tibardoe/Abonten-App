@@ -475,10 +475,12 @@ filter controls (`4f423d4`), 2b card overlays + favourites (`b2c1a82`),
 
 ## WP-2g — Deferral cleanup (2026-09-01)
 
-Env: `apps/mobile/.env` gained the three client-safe keys mirrored from
-`apps/web/.env.local` — `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME`,
-`EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`
-(publishable keys only; server secrets stay behind `/api/mobile/**`).
+Env: `apps/mobile/.env` gained the client-safe keys mirrored from
+`apps/web/.env.local` — `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME` and
+`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` (publishable keys only; server secrets
+stay behind `/api/mobile/**`). A Paystack public key was listed here at the
+time but is not used: the app opens Paystack's hosted page (corrected
+2026-09-25).
 
 ### WP-2g-1 — Euclid Circular B font (done 2026-09-01)
 
