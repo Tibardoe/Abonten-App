@@ -15481,6 +15481,7 @@ export type Database = {
         Args: { p_actor_id: string; p_role_key: string; p_target_user: string }
         Returns: undefined
       }
+      hidden_listing_countries: { Args: never; Returns: string[] }
       is_admin: { Args: never; Returns: boolean }
       is_conversation_participant: {
         Args: { p_conversation_id: string; p_user_id?: string }
@@ -15659,6 +15660,21 @@ export type Database = {
           p_title: string
         }
         Returns: undefined
+      }
+      phone_otp_claim_send: {
+        Args: {
+          p_cooldown_seconds: number
+          p_ip_address: string | null
+          p_per_ip_hour: number
+          p_per_number_day: number
+          p_per_number_hour: number
+          p_phone_e164: string
+        }
+        Returns: Json
+      }
+      phone_otp_take_attempt: {
+        Args: { p_max_attempts: number; p_phone_e164: string; p_purpose: string }
+        Returns: boolean
       }
       place_is_open_now: {
         Args: { p_now?: string; p_place_id: string }

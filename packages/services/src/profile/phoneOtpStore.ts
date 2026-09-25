@@ -12,6 +12,7 @@
 // queried only through the service-role client, so this state is shared
 // and authoritative regardless of which instance handles a given request.
 
+import { logger } from "@abonten/core/logger";
 import type { OtpProviderCode } from "@abonten/core/market/types";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
@@ -30,6 +31,72 @@ export type PendingOtp = {
 const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
 const MAX_VERIFY_ATTEMPTS = 5;
+// Text-message codes per number and per caller address. Checked and
+// recorded in one locked statement (phone_otp_claim_send), before the
+// provider is called, so simultaneous requests cannot all pass.
+const SENDS_PER_NUMBER_PER_HOUR = 5;
+const SENDS_PER_NUMBER_PER_DAY = 10;
+const SENDS_PER_IP_PER_HOUR = 10;
+
+export type OtpSendClaim =
+  | { ok: true }
+  | { ok: false; status: 429 | 500; message: string };
+
+/**
+ * Takes the right to send one code to this number (from this address, when
+ * known). The resend cooldown covers every purpose: a sign-in code and a
+ * phone-change code are both texts to the same phone.
+ */
+export async function claimOtpSend(
+  phoneE164: string,
+  ipAddress: string | null,
+): Promise<OtpSendClaim> {
+  const { data, error } = await getSupabaseServiceClient().rpc(
+    "phone_otp_claim_send",
+    {
+      p_phone_e164: phoneE164,
+      p_ip_address: ipAddress,
+      p_cooldown_seconds: RESEND_COOLDOWN_MS / 1000,
+      p_per_number_hour: SENDS_PER_NUMBER_PER_HOUR,
+      p_per_number_day: SENDS_PER_NUMBER_PER_DAY,
+      p_per_ip_hour: SENDS_PER_IP_PER_HOUR,
+    },
+  );
+  if (error || !data) {
+    logger.error(`phone_otp_claim_send failed: ${error?.message}`);
+    return {
+      ok: false,
+      status: 500,
+      message: "Something went wrong. Please try again.",
+    };
+  }
+  const claim = data as {
+    ok: boolean;
+    reason?: "cooldown" | "number_hour" | "number_day" | "ip_hour";
+    retry_after_seconds?: number;
+  };
+  if (claim.ok) return { ok: true };
+  if (claim.reason === "cooldown") {
+    return {
+      ok: false,
+      status: 429,
+      message: `Please wait ${claim.retry_after_seconds ?? 60}s before requesting another code.`,
+    };
+  }
+  if (claim.reason === "ip_hour") {
+    return {
+      ok: false,
+      status: 429,
+      message: "Too many verification codes requested. Please try again later.",
+    };
+  }
+  return {
+    ok: false,
+    status: 429,
+    message:
+      "Too many codes have been sent to this number. Please try again later, or sign in with Google or email.",
+  };
+}
 
 export async function getResendCooldownRemainingMs(
   purpose: PhoneOtpPurpose,
@@ -114,37 +181,22 @@ export async function registerVerifyAttempt(
   purpose: PhoneOtpPurpose,
   phoneE164: string,
 ): Promise<boolean> {
-  const supabase = getSupabaseServiceClient();
-
-  // Supabase-js can't express `attempts = attempts + 1` in a single
-  // .update() call without a raw SQL expression, so this reads then writes.
-  // The attempt cap only needs to be approximately race-safe (a genuine
-  // double-submit race here just costs an attacker one extra guess, not a
-  // security hole), so this two-step read/write is an acceptable tradeoff
-  // for staying on the plain PostgREST client instead of adding an RPC.
-  const { data: current } = await supabase
-    .from("phone_otp_state")
-    .select("attempts")
-    .eq("purpose", purpose)
-    .eq("phone_e164", phoneE164)
-    .maybeSingle();
-
-  if (!current) return false;
-
-  const nextAttempts = current.attempts + 1;
-
-  if (nextAttempts > MAX_VERIFY_ATTEMPTS) {
-    await clearPendingOtp(purpose, phoneE164);
+  // One conditional UPDATE (phone_otp_take_attempt): simultaneous guesses
+  // each take one of the remaining attempts or are refused, so a burst of
+  // requests can never try more than MAX_VERIFY_ATTEMPTS codes.
+  const { data, error } = await getSupabaseServiceClient().rpc(
+    "phone_otp_take_attempt",
+    {
+      p_purpose: purpose,
+      p_phone_e164: phoneE164,
+      p_max_attempts: MAX_VERIFY_ATTEMPTS,
+    },
+  );
+  if (error) {
+    logger.error(`phone_otp_take_attempt failed: ${error.message}`);
     return false;
   }
-
-  await supabase
-    .from("phone_otp_state")
-    .update({ attempts: nextAttempts })
-    .eq("purpose", purpose)
-    .eq("phone_e164", phoneE164);
-
-  return true;
+  return data === true;
 }
 
 // Called once a code has been successfully verified, so it can never be

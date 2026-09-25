@@ -1,9 +1,10 @@
 // Sending a sign-in / phone-change / consent code: the one implementation
 // behind the web action and the mobile route. Normalises the number for the
-// picker's country (libphonenumber), applies the per-number resend
-// cooldown, routes to the market's OTP provider and records the pending
-// handle server-side. The per-IP cap and the send log stay in the transport
-// (it is what knows the caller's IP). Deliberately NOT a "use server" file.
+// picker's country (libphonenumber), routes to the market's OTP provider,
+// claims the send (resend cooldown, per-number and per-address caps, and
+// the send log, all in one locked statement — phone_otp_claim_send) and
+// records the pending handle server-side. The transport passes the caller's
+// address. Deliberately NOT a "use server" file.
 
 import {
   PHONE_ERROR_MESSAGE,
@@ -12,7 +13,7 @@ import {
 import { routeOtpForPhone } from "./otpProviders/otpRouter";
 import {
   type PhoneOtpPurpose,
-  getResendCooldownRemainingMs,
+  claimOtpSend,
   recordOtpSent,
 } from "./phoneOtpStore";
 
@@ -24,30 +25,14 @@ export async function sendPhoneOtpCore(input: {
   dialCode: string;
   rawPhone: string;
   purpose: PhoneOtpPurpose;
-  /** Runs after normalisation, before the send: the transport's IP cap. */
-  beforeSend?: (
-    phoneE164: string,
-  ) => Promise<{ status: 429; message: string } | null>;
+  /** The caller's address, for the per-address cap (null when unknown). */
+  ipAddress: string | null;
 }): Promise<PhoneOtpSendResult> {
   const parsed = parsePhoneWithDialCode(input.dialCode, input.rawPhone);
   if (!parsed.ok) {
     return { status: 400, message: PHONE_ERROR_MESSAGE[parsed.error] };
   }
   const phoneE164 = parsed.e164;
-
-  const cooldownRemainingMs = await getResendCooldownRemainingMs(
-    input.purpose,
-    phoneE164,
-  );
-  if (cooldownRemainingMs > 0) {
-    return {
-      status: 429,
-      message: `Please wait ${Math.ceil(cooldownRemainingMs / 1000)}s before requesting another code.`,
-    };
-  }
-
-  const gate = input.beforeSend ? await input.beforeSend(phoneE164) : null;
-  if (gate) return gate;
 
   const route = await routeOtpForPhone(phoneE164);
   if (!route.ok) {
@@ -61,6 +46,11 @@ export async function sendPhoneOtpCore(input: {
       message: route.message,
     };
   }
+
+  // Last step before money is spent: from here on the send counts, even if
+  // the provider then fails (a timed-out request may still have texted).
+  const claim = await claimOtpSend(phoneE164, input.ipAddress);
+  if (!claim.ok) return { status: claim.status, message: claim.message };
 
   const sent = await route.provider.send(phoneE164, route.countryCode);
   if (!sent.ok) {

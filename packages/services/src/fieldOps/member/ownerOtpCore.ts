@@ -13,9 +13,9 @@ import type {
 import { findOrCreateUserByPhone } from "../../profile/phoneAuthCore";
 import { verifyPendingOtp } from "../../profile/phoneOtpSendCore";
 import {
+  claimOtpSend,
   clearPendingOtp,
   getPendingOtp,
-  getResendCooldownRemainingMs,
   recordOtpSent,
   registerVerifyAttempt,
 } from "../../profile/phoneOtpStore";
@@ -200,13 +200,6 @@ export async function requestOwnerOtpCore(
       message: "Too many codes requested this hour. Try again later.",
     };
   }
-  const cooldown = await getResendCooldownRemainingMs(OTP_PURPOSE, phone);
-  if (cooldown > 0) {
-    return {
-      status: 429,
-      message: `Please wait ${Math.ceil(cooldown / 1000)}s before sending another code.`,
-    };
-  }
   // Tests inject a fake sender; production routes by the number's market.
   let providerCode: "hubtel" | "twilio" = "hubtel";
   let send = deps.sendOtp;
@@ -217,6 +210,10 @@ export async function requestOwnerOtpCore(
     const provider = route.provider;
     send = (p) => provider.send(p, route.countryCode);
   }
+  // The same atomic claim as a sign-in code (cooldown across purposes,
+  // per-number caps, the send log the country ceiling reads).
+  const claim = await claimOtpSend(phone, null);
+  if (!claim.ok) return { status: claim.status, message: claim.message };
   const sent = await send(phone);
   if (!sent.ok) return { status: 502, message: sent.message };
   await recordOtpSent(
