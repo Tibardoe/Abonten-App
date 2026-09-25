@@ -88,4 +88,30 @@ describe("OTP routing", () => {
     expect(route.ok).toBe(false);
     if (!route.ok) expect(route.reason).toBe("busy");
   });
+
+  it("serves a number in a shared calling code from the code's main market", async () => {
+    const { data: gb } = await service
+      .from("market")
+      .select("status")
+      .eq("country_code", "GB")
+      .single();
+    await service
+      .from("market")
+      .update({ status: "ready" })
+      .eq("country_code", "GB");
+    invalidateMarketCache();
+    try {
+      // libphonenumber files +44 7911 … under Guernsey (GG), which has no
+      // market of its own; the UK market serves it.
+      const route = await routeOtpForPhone("+447911123456");
+      expect(route.ok).toBe(true);
+      if (route.ok) expect(route.countryCode).toBe("GB");
+    } finally {
+      await service
+        .from("market")
+        .update({ status: gb?.status as string })
+        .eq("country_code", "GB");
+      invalidateMarketCache();
+    }
+  });
 });

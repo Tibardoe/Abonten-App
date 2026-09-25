@@ -7,7 +7,11 @@
 import { findCountry } from "@abonten/core/geo/countries";
 import { logger } from "@abonten/core/logger";
 import type { OtpProviderCode } from "@abonten/core/market/types";
-import { phoneCountry } from "@abonten/core/phone/phone";
+import {
+  countryForDialCode,
+  dialCodeFor,
+  phoneCountry,
+} from "@abonten/core/phone/phone";
 import { getDefaultMarket, getMarket } from "../../markets/marketConfig";
 import { getSupabaseServiceClient } from "../../supabase/serviceClient";
 import { hubtelOtpProvider } from "./hubtelOtpProvider";
@@ -45,8 +49,17 @@ export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
       message: "Enter a valid phone number.",
     };
   }
-  const market = await getMarket(countryCode);
-  const countryName = findCountry(countryCode)?.name ?? countryCode;
+  // Numbers in a shared calling code belong to the code's main market when
+  // their own territory has none: +44 7911 … is Guernsey to libphonenumber,
+  // +1 876 … Jamaica, but a UK or US market serves them.
+  let market = await getMarket(countryCode);
+  if (!market) {
+    const dial = dialCodeFor(countryCode);
+    const main = dial ? countryForDialCode(dial) : null;
+    if (main && main !== countryCode) market = await getMarket(main);
+  }
+  const countryName =
+    findCountry(market?.countryCode ?? countryCode)?.name ?? countryCode;
   // A market still being set up (draft, preparing) sends no codes: its
   // provider may be configured for testing, and every send costs money.
   if (!market || market.status === "draft" || market.status === "preparing") {
@@ -76,7 +89,8 @@ export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
   // number ranges from many addresses, which per-number and per-address
   // limits don't stop): an hourly ceiling per country, far above real
   // sign-in traffic. Tripping it is logged as an error so it pages someone.
-  const isDefault = (await getDefaultMarket()).countryCode === countryCode;
+  const isDefault =
+    (await getDefaultMarket()).countryCode === market.countryCode;
   const ceiling = isDefault
     ? DEFAULT_MARKET_SENDS_PER_HOUR
     : OTHER_MARKET_SENDS_PER_HOUR;
@@ -87,9 +101,14 @@ export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
     .gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
   if (!error && (count ?? 0) >= ceiling) {
     logger.error(
-      `otpRouter: hourly send ceiling reached for ${countryCode} (${count}/${ceiling}); refusing codes`,
+      `otpRouter: hourly send ceiling reached for ${market.countryCode} (${count}/${ceiling}); refusing codes`,
       {
-        security: { event: "otp_country_ceiling", countryCode, count, ceiling },
+        security: {
+          event: "otp_country_ceiling",
+          countryCode: market.countryCode,
+          count,
+          ceiling,
+        },
       },
     );
     return {
@@ -99,7 +118,7 @@ export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
         "We're sending a lot of codes right now. Please try again shortly, or sign in with Google or email.",
     };
   }
-  return { ok: true, provider, countryCode };
+  return { ok: true, provider, countryCode: market.countryCode };
 }
 
 /** Hourly code ceilings per country (see routeOtpForPhone). */
