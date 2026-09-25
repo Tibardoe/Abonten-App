@@ -62,7 +62,21 @@ const verifyDataSchema = z.object({
     .object({ email: z.string().nullable().optional() })
     .passthrough()
     .optional(),
-  authorization: authorizationSchema.nullable().optional(),
+  // A charge nobody completed (an initialized page never opened, an
+  // abandoned one) carries `authorization: {}` — an empty object, not
+  // null. Anything without an authorization code is "no instrument".
+  // Found on production 2026-09-25: the strict shape made every such
+  // verify look like a provider outage, so an abandoned attempt was never
+  // closed and kept its tickets.
+  authorization: z
+    .union([authorizationSchema, z.object({}).passthrough()])
+    .nullable()
+    .optional()
+    .transform((a) =>
+      a && typeof a === "object" && "authorization_code" in a
+        ? (a as z.infer<typeof authorizationSchema>)
+        : null,
+    ),
 });
 
 const verifySchema = z.object({
@@ -72,6 +86,12 @@ const verifySchema = z.object({
 });
 
 export type PaystackVerifyData = z.infer<typeof verifyDataSchema>;
+
+/** Parses a raw `/transaction/verify` body, or null when it is not one. */
+export function parseVerifyResponse(json: unknown): PaystackVerifyData | null {
+  const parsed = verifySchema.safeParse(json);
+  return parsed.success ? parsed.data.data : null;
+}
 
 const chargeDataSchema = z.object({
   reference: z.string(),
@@ -287,9 +307,9 @@ export async function verifyTransaction(
     { method: "GET" },
   );
   if (!ok) fail(messageOf(json), "Paystack verification failed", status);
-  const parsed = verifySchema.safeParse(json);
-  if (!parsed.success) fail(null, "Unexpected Paystack verify response shape");
-  return parsed.data.data;
+  const data = parseVerifyResponse(json);
+  if (!data) fail(null, "Unexpected Paystack verify response shape");
+  return data;
 }
 
 export async function refundTransaction(

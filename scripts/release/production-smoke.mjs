@@ -472,9 +472,10 @@ async function main() {
 
       // The verify path, end to end: the server asks Paystack about the
       // unpaid reference with its configured key. Paystack answers
-      // "abandoned" (nobody paid) and the attempt closes as failed — the
-      // same code a returning buyer runs, and proof the key that started
-      // the charge can also verify it.
+      // "abandoned" (nobody paid) and the attempt must close as failed —
+      // the same code a returning buyer runs, and proof the key that
+      // started the charge can also verify it. Anything else (202
+      // "pending") means the server could not read Paystack's answer.
       const ver = att
         ? await api("/api/mobile/payments/verify", buyer.token, {
             paymentAttemptId: att.id,
@@ -491,25 +492,21 @@ async function main() {
       record(
         "customer",
         "verify reaches Paystack for the unpaid charge (nothing to fulfil)",
-        (ver.http === 400 &&
+        ver.http === 400 &&
           finalized === "failed" &&
-          attAfter?.status === "failed") ||
-          (ver.http === 202 && finalized === "pending"),
+          attAfter?.status === "failed",
         `HTTP ${ver.http}; finalized ${finalized ?? "-"}; attempt ${attAfter?.status ?? "-"}${attAfter?.failure_reason ? ` (${attAfter.failure_reason})` : ""}`,
       );
 
       // Closed by verify: the reservation can now be cancelled and its
-      // ticket goes back on sale. (Still pending at Paystack: the
-      // payment-reconcile sweep closes it after the checkout hold.)
+      // ticket goes back on sale.
       const c = await api("/api/mobile/checkout/cancel", buyer.token, {
         checkoutSessionId: v.json.checkoutSessionId,
       });
       record(
         "customer",
-        attAfter?.status === "failed"
-          ? "cancel the reservation once its payment is closed"
-          : "cancel still refused while the payment is pending",
-        attAfter?.status === "failed" ? c.http === 200 : c.http === 409,
+        "cancel the reservation once its payment is closed",
+        c.http === 200,
         `HTTP ${c.http}`,
       );
     }
