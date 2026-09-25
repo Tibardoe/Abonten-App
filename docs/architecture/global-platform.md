@@ -4,7 +4,7 @@ purpose: How Abonten runs in more than one country — the market model and its 
 audience: Engineers, operations, finance
 scope: supabase/migrations/20260924100000..20260925100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -65,8 +65,12 @@ Spotlight, credit-only orders), card saving and new listings refuse a
 market that is not live (`paymentChoice.ts`, `marketClosedForSales`,
 `resolveListingLocation`). Draft, preparing, ready and paused markets'
 listings are also hidden from discovery — every discovery function carries
-`listing_market_visible(country_code)` next to its moderation filter
-(migration `…100300`). Payments already in flight still complete and
+a market-visibility filter next to its moderation filter (migration
+`…100300`), since `…111100` written as `x.country_code <> all ((select
+public.hidden_listing_countries())::text[])` so the hidden countries are
+read once per query — `listing_market_visible()` is a SECURITY DEFINER
+call Postgres cannot inline and cost ~5.6 µs a row. Use the array form in
+new discovery SQL. Payments already in flight still complete and
 refunds still run in any status.
 
 **Readiness** (`@abonten/core/market/readiness`, probes gathered by

@@ -3936,3 +3936,16 @@ Report: `docs/audit/07-full-system-audit-2026-09-25.md` (28 findings, how each w
 - **Other**: uploads from memory (no temp files named by the client), image type sniffed from bytes; event page uses stored coordinates; `userFacingError` for database errors; check-in conditional update + multi-date rule; accessibility fixes (success colour, stepper/close/profile names, list semantics, Weekly skeleton).
 - **Rollout**: deploy web + admin first (new code runs on the old schema), then apply the nine migrations, then advisors.
 
+### 46.1 Production gate (2026-09-25)
+
+Report: `docs/audit/08-production-gate-2026-09-25.md`. Branch `audit/production-gate-2026-09-25` (on top of the audit branch).
+
+- **Live defect the deployment fixes**: since 2026-09-25 06:13 UTC production `create_event` (SECURITY INVOKER, reads the service-only `currency` table) fails for any organizer session; `main` calls it with the user's client. The branch calls it with the service role. Code goes first.
+- **Staff Data API powers** (`20260925110900`): `user_info` / `place` updates are owner-only; staff read policies use `admin_has_permission('…')` (support.view, users.view, reports.view, claims.view, events.view), not `is_admin()`; the guard triggers have no `is_admin()` bypass. Legacy web `/admin` claims page removed (Admin › Claims).
+- **Restricted accounts** (`20260925111000`): `get_event_attendee_contacts` refuses them.
+- **Discovery** (`20260925111100`): market visibility is `x.country_code <> all ((select public.hidden_listing_countries())::text[])` — read once per query. `listing_market_visible()` still exists but must not be used per row in new discovery SQL.
+- **Phone codes** (`20260925111200`): `phone_otp_claim_send` checks and records every send under a lock before the provider (1/min per number across purposes, 5/h and 10/day per number, 10/h per address); `phone_otp_take_attempt` spends verify attempts atomically. `sendPhoneOtpCore({ …, ipAddress })`.
+- **Geocoding** (`20260925111300`): public location pages resolve through `@abonten/services/geo/placeNameGeocode` — market regions, then `geocode_cache`, then Google within 20 per address / 10 min and 300 / hour.
+- Promo codes that exist but can't be used answer **409**, never 401.
+- **Rollout**: code first, smoke test, then the 13 migrations `20260925110000` … `20260925111300` in order via MCP, advisors, smoke test.
+
