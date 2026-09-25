@@ -208,6 +208,7 @@ defects in the mechanism itself were found, fixed and proved:
 | V2 | With `PAYMENTS_MODE=live` a malformed key ("unknown" mode) was accepted | under a declared mode, an unrecognised secret, public or (Paystack) webhook key is refused; a missing public key stays allowed (no client uses it) | unit tests |
 | V3 | Nothing stopped a live key on a Preview deployment, which shares the production database | a live key is refused when `VERCEL_ENV` is not `production` | unit test; integration "a live key on a preview deployment is refused" |
 | V4 | `fulfillment_failed` (charge recorded, nothing issued) was reached only by the buyer's Retry and counted nowhere | the sweep retries it through `finalizePayment` every 30 min (migration `20260925121000`); the health row counts it | integration "a recorded charge whose issuance failed is issued by the sweep, once, after its backoff" |
+| V5 | **Found on production by the new smoke check.** Paystack answers `verify` for a hosted page that was initialized and never opened with `status: "abandoned"` and `authorization: {}` (an empty object). The strict parser refused that shape; `finalizePayment` took the refusal for a provider outage ("verify_unreachable") and left the attempt open — so an abandoned payment kept its tickets, and the new sweep would have retried it every 30 minutes for two days instead of closing it. Invisible until now because every payment test simulates Paystack | an `authorization` without an `authorization_code` means "no instrument" (`paystackApi.ts`, `d07b8a09`) | reproduced against Paystack's test API (initialize, no charge; the raw shape captured); unit test with that shape; the real adapter run against the test API answers `abandoned, 105 GHS, instrument null`; the smoke's verify check is now strict (the attempt must close as failed and the reservation become cancellable) |
 
 Also: the smoke script now checks the recorded attempt (market, currency,
 charge in minor units, reference), the verify path against Paystack, the
@@ -252,5 +253,18 @@ web and admin production builds OK. Production: migration
 at 22:04; health row 22:04 ok; runtime errors since the deploy: web only
 Resend refusing the throwaway buyers' emails, admin none.
 
+Then V5: `d07b8a09` READY 22:16 (web and admin); smoke `--expect-mode
+test` 40/40 at 22:18 with the strict verify check — the unpaid charge was
+verified as "abandoned (The transaction was not completed)", the attempt
+closed as failed and the reservation cancelled (200). Services unit 153
+(39 provider tests); the four payment suites 37/37 after the fix.
+
 Not run: the Paystack sandbox suite (the test dashboard's webhooks still
 point at production until cutover step 2).
+
+**Verdict: READY FOR MANUAL LIVE CUTOVER** — the mechanism refuses every
+misconfiguration the switch could produce (wrong or mismatched keys, a
+stale webhook secret, live keys on a preview), settles or closes every
+payment state without human help, and the runbook's steps, checks and
+rollbacks were each verified against the deployed code. What remains is
+the founder's manual sequence and the one live transaction (§7).
