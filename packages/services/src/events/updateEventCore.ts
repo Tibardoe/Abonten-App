@@ -13,6 +13,10 @@ import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import {
+  RESTRICTED_ACCOUNT_MESSAGE,
+  isAccountRestricted,
+} from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
@@ -61,7 +65,7 @@ export type UpdateEventCoreInput = {
 };
 
 export type UpdateEventCoreResult =
-  | { status: 400 | 404 | 409 | 500; message: string }
+  | { status: 400 | 403 | 404 | 409 | 500; message: string }
   | { status: 200; message: string; eventCode: string };
 
 export async function updateEventCore(
@@ -87,6 +91,13 @@ export async function updateEventCore(
     flyerPublicId,
     flyerVersion,
   } = input;
+
+  // A restricted account's own writes are refused by the database trigger,
+  // but the zone update below runs as the service — check first, and answer
+  // with the reason instead of a generic failure.
+  if (await isAccountRestricted(userId)) {
+    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+  }
 
   const locationCheck = validateLocationInput({ address, latitude, longitude });
   if (!locationCheck.valid) {
