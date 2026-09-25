@@ -36,6 +36,7 @@ import { useFilteredEvents } from "@/features/discovery/useFilteredEvents";
 import { useFilteredPlaces } from "@/features/discovery/useFilteredPlaces";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import { useWarmDetails } from "@/features/discovery/useWarmDetails";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { useQueryView } from "@/lib/useQueryView";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceType } from "@abonten/types/placeType";
@@ -65,6 +66,7 @@ type Tab = "events" | "places";
 export default function Explore() {
   const router = useRouter();
   const { area, resolving } = useExploreLocation();
+  const { market } = useMarket();
   const coords = area ? { lat: area.lat, lng: area.lng } : null;
 
   const openSection = useCallback(
@@ -181,7 +183,7 @@ export default function Explore() {
 
   const activeChips =
     tab === "events"
-      ? describeEventFilters(eventFilters)
+      ? describeEventFilters(eventFilters, market?.defaultCurrency ?? "")
       : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
 
   const activeCount = tab === "events" ? eventFilterCount : placeFilterCount;

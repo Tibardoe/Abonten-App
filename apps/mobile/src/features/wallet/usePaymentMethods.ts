@@ -19,7 +19,8 @@ export function usePaymentMethods() {
 export function useMomoNetworks() {
   return useQuery({
     queryKey: ["mobile", "momo-networks"],
-    queryFn: async () => settleEnvelope(await api.paystack.momoNetworks()),
+    queryFn: async () =>
+      settleEnvelope(await api.paymentsCatalog.momoNetworks()),
     staleTime: 1000 * 60 * 60,
   });
 }

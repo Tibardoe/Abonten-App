@@ -166,7 +166,7 @@ export default async function DashboardPage({
             }}
             secondary={
               current.ticketsCancelled > 0
-                ? `${current.ticketsCancelled.toLocaleString("en-GH")} later cancelled`
+                ? `${current.ticketsCancelled.toLocaleString("en-GB")} later cancelled`
                 : undefined
             }
           />
@@ -297,21 +297,21 @@ export default async function DashboardPage({
             metric="users.active"
             value={snapshot.activeUsers}
             period="Right now"
-            secondary={`${snapshot.allAccounts.toLocaleString("en-GH")} accounts including suspended and deleted`}
+            secondary={`${snapshot.allAccounts.toLocaleString("en-GB")} accounts including suspended and deleted`}
             href="/users"
           />
           <MetricCard
             metric="organizers.total"
             value={snapshot.organizers}
             period="Right now"
-            secondary={`${snapshot.placeOwners.toLocaleString("en-GH")} place owners`}
+            secondary={`${snapshot.placeOwners.toLocaleString("en-GB")} place owners`}
             href="/organizers"
           />
           <MetricCard
             metric="events.published"
             value={snapshot.eventsPublished}
             period="Right now"
-            secondary={`${snapshot.eventsAll.toLocaleString("en-GH")} including drafts and past events`}
+            secondary={`${snapshot.eventsAll.toLocaleString("en-GB")} including drafts and past events`}
             href="/events"
           />
           <MetricCard

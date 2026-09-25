@@ -27,6 +27,8 @@ import {
   budgetProblem,
   formatReachRange,
 } from "@abonten/core/content/promotionEstimate";
+import { currencyMinorFactor } from "@abonten/core/money/currencies";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
 import type {
   ContentCampaignObjective,
   ContentPromotionTargetingInput,
@@ -99,17 +101,23 @@ export default function CampaignCreateDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const opts = options.data;
+  // Minor units per major unit of the campaign's currency (100 for GH₵,
+  // 1 for a zero-decimal currency like CFA francs).
+  const factor = opts ? currencyMinorFactor(opts.currency) : 100;
   useEffect(() => {
     if (!opts) return;
     setBudgetCedis((b) =>
       b === ""
-        ? String((opts.suggestedBudgetsMinor[1] ?? opts.minBudgetMinor) / 100)
+        ? String(
+            (opts.suggestedBudgetsMinor[1] ?? opts.minBudgetMinor) /
+              currencyMinorFactor(opts.currency),
+          )
         : b,
     );
     setDurationDays((d) => d ?? opts.defaultDurationDays);
   }, [opts]);
 
-  const budgetMinor = Math.round(Number(budgetCedis) * 100);
+  const budgetMinor = Math.round(Number(budgetCedis) * factor);
   const budgetError =
     opts && budgetCedis !== "" ? budgetProblem(opts, budgetMinor) : null;
   const targeting: ContentPromotionTargetingInput =
@@ -277,7 +285,7 @@ export default function CampaignCreateDialog({
                     key={b}
                     type="button"
                     aria-pressed={budgetMinor === b}
-                    onClick={() => setBudgetCedis(String(b / 100))}
+                    onClick={() => setBudgetCedis(String(b / factor))}
                     className={cn(
                       "rounded-full border px-3 py-1 text-sm font-semibold",
                       budgetMinor === b
@@ -290,14 +298,16 @@ export default function CampaignCreateDialog({
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">GH₵</span>
+                <span className="text-sm text-muted-foreground">
+                  {currencySymbol(opts.currency)}
+                </span>
                 <input
                   id={`${ids}-budget`}
                   type="number"
                   inputMode="decimal"
-                  min={opts.minBudgetMinor / 100}
-                  max={opts.maxBudgetMinor / 100}
-                  step={opts.budgetStepMinor / 100}
+                  min={opts.minBudgetMinor / factor}
+                  max={opts.maxBudgetMinor / factor}
+                  step={opts.budgetStepMinor / factor}
                   value={budgetCedis}
                   onChange={(e) => setBudgetCedis(e.target.value)}
                   aria-invalid={!!budgetError}

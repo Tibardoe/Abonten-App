@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import { upsertFieldOpsCampaign } from "@/server/actions/fieldOps";
 import type { FieldOpsCampaign, FieldOpsRegion } from "@abonten/types/fieldOps";
 import { useRouter } from "next/navigation";
@@ -9,16 +10,16 @@ import { useState, useTransition } from "react";
 const input =
   "w-full rounded border border-border bg-background px-2 py-1.5 text-sm";
 
-const cedis = (minor: number | null) =>
-  minor === null ? "" : (minor / 100).toFixed(2);
-
 /** Create a campaign (draft) or edit an existing one's details. */
 export function CampaignForm({
   regions,
   campaign,
+  defaultCurrency,
 }: {
   regions: Pick<FieldOpsRegion, "id" | "name" | "liveCampaignId">[];
   campaign?: FieldOpsCampaign;
+  /** The default market's currency, for a brand-new campaign. */
+  defaultCurrency: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -27,10 +28,19 @@ export function CampaignForm({
   const [regionId, setRegionId] = useState(
     campaign?.regionId ?? regions[0]?.id ?? "",
   );
-  const [currency, setCurrency] = useState(campaign?.currency ?? "GHS");
+  // A new campaign starts in its region's market currency (set by the
+  // server from the region's country); an admin may still change it.
+  const [currency, setCurrency] = useState(
+    campaign?.currency ?? defaultCurrency,
+  );
   const [startsOn, setStartsOn] = useState(campaign?.startsOn ?? "");
   const [endsOn, setEndsOn] = useState(campaign?.endsOn ?? "");
-  const [budget, setBudget] = useState(cedis(campaign?.budgetCapMinor ?? null));
+  const [budget, setBudget] = useState(
+    minorToInput(
+      campaign?.budgetCapMinor ?? null,
+      campaign?.currency ?? defaultCurrency,
+    ),
+  );
   const [holding, setHolding] = useState(
     campaign?.holdingDaysOverride === null ||
       campaign?.holdingDaysOverride === undefined
@@ -52,7 +62,7 @@ export function CampaignForm({
         startsOn: startsOn || null,
         endsOn: endsOn || null,
         budgetCapMinor:
-          budget.trim() === "" ? null : Math.round(Number(budget) * 100),
+          budget.trim() === "" ? null : majorToMinor(Number(budget), currency),
         holdingDaysOverride:
           holding.trim() === "" ? null : Math.round(Number(holding)),
         description: description.trim() || null,

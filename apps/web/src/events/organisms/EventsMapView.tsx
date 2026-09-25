@@ -200,6 +200,7 @@ function EventPreviewPanel({
     event.starts_at,
     event.ends_at,
     event.occurrences,
+    event.timezone,
   );
 
   return (

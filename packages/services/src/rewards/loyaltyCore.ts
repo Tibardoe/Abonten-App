@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { LoyaltyProgress } from "@abonten/types/rewards";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { creditCurrencyFor } from "./creditCurrency";
 import { rewardsKillSwitchOn } from "./rewardsProgramQuery";
 
 // The loyalty fee rebate (Abonten Rewards Phase 8): every Nth ticket order
@@ -49,6 +50,7 @@ export async function getLoyaltyProgressCore(userId: string): Promise<{
   return {
     status: 200,
     data: {
+      currency: await creditCurrencyFor(userId),
       ordersRequired: num(p.orders_required),
       windowDays: num(p.window_days),
       minOrderMinor: num(p.min_order_minor),

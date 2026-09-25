@@ -94,6 +94,7 @@ export default function TicketDetailScreen() {
   const when = formatFullDateTimeRange(
     ticket.event.starts_at,
     ticket.event.ends_at,
+    ticket.event.timezone,
   );
   const cancelledByOrganizer = ticket.event.status === "canceled";
   const eventEnded =

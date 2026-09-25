@@ -1,4 +1,5 @@
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsOnboardingDetail } from "@abonten/types/fieldOps";
 import Link from "next/link";
 
@@ -147,8 +148,8 @@ export default function OnboardingDetailView({
             <>
               <dt className="text-muted-foreground">Pays</dt>
               <dd className="col-span-2">
-                {(detail.rule.amountMinor / 100).toFixed(2)}{" "}
-                {detail.rule.currency} after {detail.rule.holdingDays} days
+                {formatMinor(detail.rule.amountMinor, detail.rule.currency)}{" "}
+                after {detail.rule.holdingDays} days
               </dd>
             </>
           ) : null}

@@ -5,7 +5,7 @@ import activateContentCampaign from "@abonten/services/content/campaigns/activat
 import type { PaymentFulfillmentDeps } from "@abonten/services/payments/fulfillmentDeps";
 
 // The concrete apps/web implementations of the three purchase-fulfilment
-// steps @abonten/services/payments/finalizePaystackPayment needs injected.
+// steps @abonten/services/payments/finalizePayment needs injected.
 // They live here (not in the package) because each uses Next primitives
 // (revalidatePath / after) and renders React email templates. None of the
 // three is a Server Action, so none is reachable as a public endpoint. Every Next

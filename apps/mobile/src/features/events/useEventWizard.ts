@@ -5,6 +5,7 @@ import {
   useSaveEventDraft,
 } from "@/features/events/useEventDrafts";
 import { useUploadProgress } from "@/features/uploads/useUploadProgress";
+import { api } from "@/lib/api";
 import { TIME_RE, combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
 import type {
@@ -24,7 +25,9 @@ import {
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
 import { paidTierProblem } from "@abonten/core/ticketTiers";
+import { wallClockString } from "@abonten/core/time/timeZone";
 import { getEventSchema } from "@abonten/validation/eventSchema";
+import { useQuery } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -63,10 +66,6 @@ const EVENT_MESSAGES = {
   capacityNotWhole: "Capacity must be a whole number.",
   capacityMustBePositive: "Capacity must be greater than zero.",
 };
-
-// Mobile has no country-metadata lookup; the web form's currency query also
-// falls back to this. Ticket prices are entered in this currency.
-const CURRENCY = "GHS";
 
 export type ScheduleMode = "single" | "specific";
 export type TicketMode = "free" | "single" | "multiple";
@@ -174,6 +173,25 @@ export function useEventWizard(
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+  // The venue decides the market: the currency prices are entered in and
+  // the zone the times are read in (same resolver the server saves with).
+  const venueMarket = useQuery({
+    queryKey: ["listing-market", coords?.lat, coords?.lng],
+    queryFn: () =>
+      api.markets.at({
+        lat: coords?.lat as number,
+        lng: coords?.lng as number,
+      }),
+    enabled: coords !== null,
+    staleTime: 10 * 60 * 1000,
+  });
+  const CURRENCY = venueMarket.data?.data?.currency ?? null;
+  const venueMarketMessage =
+    venueMarket.data && venueMarket.data.status !== 200
+      ? (venueMarket.data.message ?? null)
+      : null;
+  const venueTimeZone = venueMarket.data?.data?.timeZone ?? null;
+
   const [resolvingLocation, setResolvingLocation] = useState(false);
   // The Abonten Place this event happens at, if any (see the header note).
   const [venuePlace, setVenuePlaceState] = useState<VenuePlace | null>(null);
@@ -595,8 +613,14 @@ export function useEventWizard(
       if (!check.ok) return { ok: false, message: check.message };
       return {
         ok: true,
-        startsAt: (start as Date).toISOString(),
-        endsAt: (end as Date).toISOString(),
+        startsAt: wallClockString(
+          rangeStart as string,
+          rangeStartTime,
+        ) as string,
+        endsAt: wallClockString(
+          (rangeEnd ?? rangeStart) as string,
+          rangeEndTime,
+        ) as string,
       };
     }
     const entries = occurrences.map((o) => ({
@@ -615,9 +639,9 @@ export function useEventWizard(
     if (!check.ok) return { ok: false, message: check.message };
     return {
       ok: true,
-      specificDates: entries.map((e) => ({
-        start: (e.start as Date).toISOString(),
-        end: (e.end as Date).toISOString(),
+      specificDates: occurrences.map((o) => ({
+        start: wallClockString(o.dateIso, o.start) as string,
+        end: wallClockString(o.dateIso, o.end) as string,
       })),
     };
   }
@@ -820,7 +844,6 @@ export function useEventWizard(
           capNum && Number.isFinite(capNum) && capNum > 0 ? capNum : null,
         websiteUrl: website.trim() || null,
         requireRegistration,
-        currency: CURRENCY,
         clientRequestId,
         ...flyerFields,
         startsAt: schedule.startsAt ?? null,
@@ -981,6 +1004,8 @@ export function useEventWizard(
     tiers,
     setTiers,
     currency: CURRENCY,
+    venueMarketMessage,
+    venueTimeZone,
     // promos
     promos,
     setPromos,

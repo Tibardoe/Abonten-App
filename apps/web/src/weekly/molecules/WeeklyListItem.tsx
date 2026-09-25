@@ -19,8 +19,12 @@ export default function WeeklyListItem({ item }: { item: WeeklyItem }) {
   const imageVersion = event ? event.flyer_version : place?.cover_version;
   const detail = event
     ? [
-        getFormattedEventDate(event.starts_at, event.ends_at, event.occurrences)
-          .date,
+        getFormattedEventDate(
+          event.starts_at,
+          event.ends_at,
+          event.occurrences,
+          event.timezone,
+        ).date,
         event.address?.full_address,
       ]
     : [

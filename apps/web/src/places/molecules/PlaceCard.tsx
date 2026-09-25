@@ -3,8 +3,10 @@
 import StarRatingDisplay from "@/components/atoms/Rating";
 import DiscoveryCardCoverImage from "@/components/molecules/DiscoveryCardCoverImage";
 import DiscoveryCardTitleRow from "@/components/molecules/DiscoveryCardTitleRow";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { formatDistance } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
 import { IoLocationOutline } from "react-icons/io5";
 import AddPlaceToFavoriteButton from "./AddPlaceToFavoriteButton";
@@ -27,6 +29,7 @@ export default function PlaceCard({
   verified,
   priority,
 }: PlaceType & { priority?: boolean }) {
+  const { context } = useMarketContext();
   const openStatus = derivePlaceCardOpenStatus(is_open, temporary_status);
   const fullAddress =
     (address as { full_address?: string })?.full_address ??
@@ -79,7 +82,11 @@ export default function PlaceCard({
 
             {distance_km != null && (
               <span className="px-2 py-1 bg-muted rounded-full text-xs text-muted-foreground">
-                {distance_km.toFixed(1)} km away
+                {formatDistance(
+                  distance_km * 1000,
+                  context?.distanceUnit ?? "km",
+                )}{" "}
+                away
               </span>
             )}
           </div>

@@ -13,6 +13,7 @@ import type {
   OrganizerOverviewResult,
   OrganizerOverviewRow,
 } from "@abonten/api-client";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   AppText,
   Chip,
@@ -35,10 +36,7 @@ const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null, amount: number | string): string {
-  return `${currency ?? "GHS"} ${n(amount).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return formatMoney(currency, n(amount));
 }
 
 // Percent change vs. the previous period. null when there's no comparable
@@ -216,7 +214,7 @@ export default function OrganizerDashboard() {
   // and identical on every row.
   const moneyRows = rows.filter((r) => r.currency != null);
   const prevMoney = prevRows?.filter((r) => r.currency != null) ?? null;
-  const primaryCurrency = moneyRows[0]?.currency ?? "GHS";
+  const primaryCurrency = moneyRows[0]?.currency ?? "";
   // Match the primary currency row across periods so the delta compares
   // like with like rather than "row 0" against "row 0".
   const prevPrimaryMoney =

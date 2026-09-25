@@ -37,13 +37,14 @@ export default function LoyaltyProgressCard({
       <p className="mt-3 text-sm text-muted-foreground">{copy.detail}</p>
       {progress.pendingMinor > 0 ? (
         <p className="mt-2 text-sm">
-          {formatCredit(progress.pendingMinor)} of service fees is on its way
-          back to you.
+          {formatCredit(progress.pendingMinor, progress.currency)} of service
+          fees is on its way back to you.
         </p>
       ) : null}
       {progress.earnedMinor > 0 ? (
         <p className="mt-1 text-xs text-muted-foreground">
-          {formatCredit(progress.earnedMinor)} given back so far.
+          {formatCredit(progress.earnedMinor, progress.currency)} given back so
+          far.
         </p>
       ) : null}
     </section>

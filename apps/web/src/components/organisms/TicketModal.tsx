@@ -126,6 +126,7 @@ export default function TicketModal({
                     event.event.starts_at,
                     event.event.ends_at,
                     event.event.occurrences,
+                    event.event.timezone,
                   ).date
                 }
               </p>

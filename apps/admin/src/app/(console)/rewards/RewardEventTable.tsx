@@ -103,7 +103,9 @@ function rebateDetail(e: AdminRewardEvent): string {
     parts.push(`${b.unique_buyers ?? "?"} unique buyers`);
   } else {
     if (typeof b.net_cash_minor === "number") {
-      parts.push(`${formatCredit(b.net_cash_minor)} cash net revenue`);
+      parts.push(
+        `${formatCredit(b.net_cash_minor, e.currency)} cash net revenue`,
+      );
     }
     if (typeof b.unique_buyers === "number") {
       parts.push(`${b.unique_buyers} buyer${b.unique_buyers === 1 ? "" : "s"}`);
@@ -212,7 +214,7 @@ export function RewardEventTable({
                     ? ` · ${e.event.title}`
                     : ""}
                   {typeof e.basis.ticket_revenue_minor === "number"
-                    ? ` · ${formatCredit(e.basis.ticket_revenue_minor)} of tickets`
+                    ? ` · ${formatCredit(e.basis.ticket_revenue_minor, e.currency)} of tickets`
                     : ""}
                   {e.ruleKey === "promoter_commission" &&
                   typeof e.basis.rate_bps === "number"
@@ -237,6 +239,7 @@ export function RewardEventTable({
                 e.status === "released"
                   ? (e.releasedMinor ?? 0)
                   : e.amountMinor,
+                e.currency,
               )}
               {e.status !== "rejected" &&
               typeof e.basis.limited_by === "string" &&

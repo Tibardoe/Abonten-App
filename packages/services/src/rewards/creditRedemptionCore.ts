@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
-import { toPesewas } from "@abonten/core/paystackAmount";
+import { formatMoney } from "@abonten/core/money/formatMoney";
+import { fromMajor, money } from "@abonten/core/money/money";
 import { allocateCredit } from "@abonten/core/rewards/creditAllocation";
 import type { Database } from "@abonten/types/database.types";
 import type { CreditBlockedReason, CreditQuote } from "@abonten/types/rewards";
@@ -72,6 +73,8 @@ export type PromotionOrder = {
   status: string;
   orderTotalMinor: number;
   currency: string;
+  /** The market the promoted listing (or the advertiser) belongs to. */
+  countryCode: string | null;
   expiresAt: string | null;
   /** Shown on the credit activity line: "Used on a feature for {name}". */
   label: string;
@@ -83,7 +86,11 @@ type CheckoutWithTier = {
   currency: string;
   expires_at: string | null;
   tier: { price: number; currency: string } | null;
-  entity: { name?: string | null; title?: string | null } | null;
+  entity: {
+    name?: string | null;
+    title?: string | null;
+    country_code?: string | null;
+  } | null;
 };
 
 /** The caller's own promotion checkout, priced from its tier. */
@@ -97,8 +104,8 @@ export async function loadPromotionOrder(
     return loadCampaignOrder(supabase, userId, checkoutId);
   const select =
     kind === "event"
-      ? "id, status, currency, expires_at, tier:event_promotion_tier(price, currency), entity:event(title)"
-      : "id, status, currency, expires_at, tier:place_promotion_tier(price, currency), entity:place(name)";
+      ? "id, status, currency, expires_at, tier:event_promotion_tier(price, currency), entity:event(title, country_code)"
+      : "id, status, currency, expires_at, tier:place_promotion_tier(price, currency), entity:place(name, country_code)";
 
   const { data, error } = await supabase
     .from(PROMOTION_TARGETS[kind].checkoutTable)
@@ -115,11 +122,13 @@ export async function loadPromotionOrder(
   if (!row?.tier) return null;
 
   const name = row.entity?.title ?? row.entity?.name ?? null;
+  const currency = (row.tier.currency ?? row.currency).toUpperCase();
   return {
     checkoutId: row.id,
     status: row.status,
-    orderTotalMinor: toPesewas(Number(row.tier.price)),
-    currency: row.tier.currency ?? row.currency,
+    orderTotalMinor: fromMajor(Number(row.tier.price), currency).amountMinor,
+    currency,
+    countryCode: row.entity?.country_code ?? null,
     expiresAt: row.expires_at,
     label: name ? `a feature for ${name}` : "a promotion",
   };
@@ -135,7 +144,7 @@ async function loadCampaignOrder(
   const { data, error } = await supabase
     .from("content_campaign_checkout")
     .select(
-      "id, status, currency, expires_at, campaign:content_campaign!content_campaign_checkout_campaign_id_fkey(budget_minor, currency, duration_days)",
+      "id, status, currency, expires_at, campaign:content_campaign!content_campaign_checkout_campaign_id_fkey(budget_minor, currency, duration_days, advertiser:user_info!content_campaign_advertiser_id_fkey(country_code))",
     )
     .eq("id", checkoutId)
     .eq("owner_id", userId)
@@ -148,15 +157,18 @@ async function loadCampaignOrder(
     budget_minor: number;
     currency: string;
     duration_days: number;
+    advertiser: { country_code: string | null } | null;
   } | null;
   if (!data || !campaign) return null;
+  const currency = (campaign.currency ?? data.currency).toUpperCase();
   return {
     checkoutId: data.id,
     status: data.status,
     orderTotalMinor: Number(campaign.budget_minor),
-    currency: campaign.currency ?? data.currency,
+    currency,
+    countryCode: campaign.advertiser?.country_code ?? null,
     expiresAt: data.expires_at,
-    label: `a Spotlight promotion (GH₵ ${(Number(campaign.budget_minor) / 100).toFixed(2)} budget)`,
+    label: `a Spotlight promotion (${formatMoney(money(Number(campaign.budget_minor), currency))} budget)`,
   };
 }
 
@@ -187,6 +199,7 @@ export async function getSpendableCredit(
   userId: string,
   scope: "promotions" | "tickets",
   orderTotalMinor?: number,
+  orderCurrency?: string | null,
 ): Promise<SpendableCredit> {
   if (rewardsKillSwitchOn()) {
     return {
@@ -196,6 +209,32 @@ export async function getSpendableCredit(
       maxShareBps: 10000,
       allowFullCredit: false,
     };
+  }
+  // Credit is held in one currency — the person's home market's. It can
+  // only pay for an order in that same currency; there is no conversion.
+  if (orderCurrency) {
+    const { data: account, error: accountError } =
+      await getSupabaseServiceClient()
+        .from("credit_account")
+        .select("currency")
+        .eq("user_id", userId)
+        .maybeSingle();
+    if (accountError) {
+      logger.error(`credit_account lookup failed: ${accountError.message}`);
+      throw new Error("Failed to read spendable credit");
+    }
+    if (
+      account &&
+      account.currency.toUpperCase() !== orderCurrency.toUpperCase()
+    ) {
+      return {
+        spendableMinor: 0,
+        blockedReason: "currency",
+        minCashChargeMinor: 100,
+        maxShareBps: 10000,
+        allowFullCredit: false,
+      };
+    }
   }
   const { data, error } = await getSupabaseServiceClient().rpc(
     "credit_spendable",
@@ -297,7 +336,12 @@ export async function getPromotionCreditQuoteCore(
         }),
       };
     }
-    const spendable = await getSpendableCredit(userId, "promotions");
+    const spendable = await getSpendableCredit(
+      userId,
+      "promotions",
+      undefined,
+      order.currency,
+    );
     return { status: 200, data: quoteCredit(order, spendable) };
   } catch {
     return { status: 500, message: "Something went wrong!" };
@@ -308,7 +352,10 @@ export async function computePromotionCredit(
   order: PromotionOrder,
   userId: string,
 ): Promise<CreditQuote> {
-  return quoteCredit(order, await getSpendableCredit(userId, "promotions"));
+  return quoteCredit(
+    order,
+    await getSpendableCredit(userId, "promotions", undefined, order.currency),
+  );
 }
 
 // ── Reservation lifecycle (service role) ────────────────────────────

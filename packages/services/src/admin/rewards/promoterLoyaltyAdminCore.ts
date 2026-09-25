@@ -6,6 +6,7 @@ import type {
   RewardEventStatus,
 } from "@abonten/types/rewards";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { rewardRulesCurrency } from "../../rewards/creditCurrency";
 import {
   type AdminEnvelope,
   adminError,
@@ -138,6 +139,7 @@ export async function getPromoterLoyaltySummaryCore(
   return {
     status: 200,
     data: {
+      currency: await rewardRulesCurrency(),
       sinceDays: range.days,
       from: range.from,
       to: range.to,

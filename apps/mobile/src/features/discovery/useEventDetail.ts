@@ -19,6 +19,10 @@ const EVENT_DETAIL_SELECT = `
 export type EventDetail = {
   id: string;
   title: string;
+  /** The event's IANA zone; its times read on the venue's clock. */
+  timezone: string | null;
+  country_code: string | null;
+  currency: string | null;
   description: string;
   event_category: string;
   event_type: string;

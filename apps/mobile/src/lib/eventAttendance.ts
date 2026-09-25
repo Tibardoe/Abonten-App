@@ -81,7 +81,7 @@ export async function fetchEventTicketTypes(
     }
     list.push({
       price: Number(row.price ?? 0),
-      currency: row.currency ?? "GHS",
+      currency: row.currency ?? "",
       quantity: row.quantity == null ? null : Number(row.quantity),
     });
   }
@@ -116,7 +116,7 @@ function inlineTicketTypes(value: unknown): TicketTypeRow[] | null {
     const row = (t ?? {}) as Record<string, unknown>;
     return {
       price: Number(row.price ?? 0),
-      currency: typeof row.currency === "string" ? row.currency : "GHS",
+      currency: typeof row.currency === "string" ? row.currency : "",
       quantity: row.quantity == null ? null : Number(row.quantity),
     };
   });

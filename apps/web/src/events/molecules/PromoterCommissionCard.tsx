@@ -134,19 +134,19 @@ export default function PromoterCommissionCard({
           <div>
             <dt className="text-muted-foreground">Ticket sales</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.revenueMinor)}
+              {formatCredit(s.revenueMinor, offer.currency)}
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Commission pending</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.pendingMinor)}
+              {formatCredit(s.pendingMinor, offer.currency)}
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">Commission paid</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.paidMinor)}
+              {formatCredit(s.paidMinor, offer.currency)}
             </dd>
           </div>
         </dl>

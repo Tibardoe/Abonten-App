@@ -23,11 +23,11 @@ export default function UseCreditToggle({
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold">
-            Use {formatCredit(quote.creditMinor)} Abonten Credit
+            Use {formatCredit(quote.creditMinor, quote.currency)} Abonten Credit
           </p>
           <p className="text-xs text-muted-foreground">
             {!quote.creditOnly
-              ? `You have ${formatCredit(quote.spendableMinor)} you can use here.`
+              ? `You have ${formatCredit(quote.spendableMinor, quote.currency)} you can use here.`
               : checked
                 ? "Your credit covers this. No card or wallet is charged."
                 : "Your credit can cover all of this. Turn it on to use it."}
@@ -57,12 +57,16 @@ export default function UseCreditToggle({
       {checked ? (
         <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-border pt-2 text-sm tabular-nums">
           <dt className="text-muted-foreground">Total</dt>
-          <dd className="text-right">{formatCredit(quote.orderTotalMinor)}</dd>
+          <dd className="text-right">
+            {formatCredit(quote.orderTotalMinor, quote.currency)}
+          </dd>
           <dt className="text-muted-foreground">Credit</dt>
-          <dd className="text-right">−{formatCredit(quote.creditMinor)}</dd>
+          <dd className="text-right">
+            −{formatCredit(quote.creditMinor, quote.currency)}
+          </dd>
           <dt className="font-semibold">You pay</dt>
           <dd className="text-right font-semibold">
-            {formatCredit(quote.cashMinor)}
+            {formatCredit(quote.cashMinor, quote.currency)}
           </dd>
         </dl>
       ) : null}

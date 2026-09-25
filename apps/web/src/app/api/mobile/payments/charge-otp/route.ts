@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
-import { submitPaystackChargeOtpCore } from "@abonten/services/payments/submitPaystackChargeOtpCore";
+import { submitChargeOtpCore } from "@abonten/services/payments/submitChargeOtpCore";
 
 // POST /api/mobile/payments/charge-otp  { paymentAttemptId: string, otp: string }
 //
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       return apiJson({ status: 400, message: "otp is required" });
     }
 
-    const result = await submitPaystackChargeOtpCore(
+    const result = await submitChargeOtpCore(
       auth.supabase,
       auth.user.id,
       body.paymentAttemptId,

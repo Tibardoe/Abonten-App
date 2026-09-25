@@ -1,13 +1,17 @@
-import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { OTP_MESSAGES } from "@abonten/core/otpMessages";
+import { maskPhoneNumber } from "@abonten/core/phone/phone";
 import type {
   FieldOpsConsentView,
   FieldOpsOnboarding,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { sendHubtelOtp, verifyHubtelOtp } from "../../profile/hubtelOtpClient";
+import { routeOtpForPhone } from "../../profile/otpProviders/otpRouter";
+import type {
+  OtpSendResult,
+  OtpVerifyResult,
+} from "../../profile/otpProviders/types";
 import { findOrCreateUserByPhone } from "../../profile/phoneAuthCore";
+import { verifyPendingOtp } from "../../profile/phoneOtpSendCore";
 import {
   clearPendingOtp,
   getPendingOtp,
@@ -125,7 +129,7 @@ export async function requestOwnerOtpCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: OwnerOtpRequestInput,
-  deps: { sendOtp?: typeof sendHubtelOtp } = {},
+  deps: { sendOtp?: (phoneE164: string) => Promise<OtpSendResult> } = {},
 ): Promise<
   FieldOpsEnvelope<{
     ownerPhoneMasked: string;
@@ -203,10 +207,25 @@ export async function requestOwnerOtpCore(
       message: `Please wait ${Math.ceil(cooldown / 1000)}s before sending another code.`,
     };
   }
-  const send = deps.sendOtp ?? sendHubtelOtp;
+  // Tests inject a fake sender; production routes by the number's market.
+  let providerCode: "hubtel" | "twilio" = "hubtel";
+  let send = deps.sendOtp;
+  if (!send) {
+    const route = await routeOtpForPhone(phone);
+    if (!route.ok) return { status: 400, message: route.message };
+    providerCode = route.provider.code;
+    const provider = route.provider;
+    send = (p) => provider.send(p, route.countryCode);
+  }
   const sent = await send(phone);
   if (!sent.ok) return { status: 502, message: sent.message };
-  await recordOtpSent(OTP_PURPOSE, phone, sent.requestId, sent.prefix);
+  await recordOtpSent(
+    OTP_PURPOSE,
+    phone,
+    sent.requestId,
+    sent.prefix,
+    providerCode,
+  );
 
   const { error } = await supabase
     .from("fieldops_onboarding")
@@ -240,9 +259,15 @@ export async function requestOwnerOtpCore(
 async function confirmCode(
   phone: string,
   code: string,
-  deps: { verifyOtp?: typeof verifyHubtelOtp },
+  deps: {
+    verifyOtp?: (
+      requestId: string,
+      prefix: string,
+      code: string,
+    ) => Promise<OtpVerifyResult>;
+  },
 ): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
-  if (!new RegExp(`^\\d{${HUBTEL_OTP_CODE_LENGTH}}$`).test(code)) {
+  if (!/^\d{4,8}$/.test(code)) {
     return { ok: false, status: 400, message: OTP_MESSAGES.invalidFormat };
   }
   if (!(await getPendingOtp(OTP_PURPOSE, phone))) {
@@ -254,8 +279,9 @@ async function confirmCode(
   const pending = await getPendingOtp(OTP_PURPOSE, phone);
   if (!pending)
     return { ok: false, status: 401, message: OTP_MESSAGES.expired };
-  const verify = deps.verifyOtp ?? verifyHubtelOtp;
-  const result = await verify(pending.requestId, pending.prefix, code);
+  const result = deps.verifyOtp
+    ? await deps.verifyOtp(pending.requestId, pending.prefix, code)
+    : await verifyPendingOtp(pending, code);
   if (!result.ok) return { ok: false, status: 401, message: result.message };
   await clearPendingOtp(OTP_PURPOSE, phone);
   return { ok: true };
@@ -349,7 +375,13 @@ export async function verifyOwnerOtpCore(
   supabase: ServiceRoleClient,
   userId: string,
   input: { campaignId: string; onboardingId: string; code: string },
-  deps: { verifyOtp?: typeof verifyHubtelOtp } = {},
+  deps: {
+    verifyOtp?: (
+      requestId: string,
+      prefix: string,
+      code: string,
+    ) => Promise<OtpVerifyResult>;
+  } = {},
 ): Promise<FieldOpsEnvelope<FieldOpsOnboarding>> {
   try {
     const ctx = await resolveFieldOpsContext(supabase, userId);
@@ -409,7 +441,13 @@ export async function getConsentViewCore(
 export async function verifyConsentByTokenCore(
   supabase: ServiceRoleClient,
   input: { token: string; code: string },
-  deps: { verifyOtp?: typeof verifyHubtelOtp } = {},
+  deps: {
+    verifyOtp?: (
+      requestId: string,
+      prefix: string,
+      code: string,
+    ) => Promise<OtpVerifyResult>;
+  } = {},
 ): Promise<FieldOpsEnvelope<{ verified: boolean }>> {
   const parsed = readConsentToken(input.token);
   if (!parsed) return { status: 404, message: "This link isn't valid." };

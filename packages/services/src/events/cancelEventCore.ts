@@ -51,7 +51,7 @@ export type CancelEventResult =
 type RefundableTransactionRow = {
   refund_transaction_id: string;
   attendee_user_id: string;
-  paystack_reference: string | null;
+  provider_reference: string | null;
   transaction_amount: number;
   transaction_currency: string;
   event_title: string;

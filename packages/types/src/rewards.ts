@@ -49,7 +49,8 @@ export type CreditJournalType =
 export type CreditSummary = {
   /** Whether the Rewards program is switched on for this user. */
   enabled: boolean;
-  currency: "GHS";
+  /** The person's credit currency (their home market's). */
+  currency: string;
   status: CreditAccountStatus;
   availableMinor: number;
   pendingMinor: number;
@@ -84,6 +85,8 @@ export type CreditActivityState =
 
 export type CreditActivityItem = {
   id: string;
+  /** The person's credit currency. */
+  currency: string;
   createdAt: string;
   journalType: CreditJournalType;
   /** Signed, from the user's point of view. */
@@ -103,6 +106,8 @@ export type CreditActivityItem = {
 
 export type RewardsProgram = {
   enabled: boolean;
+  /** The currency the rule amounts below are in. */
+  currency: string;
   eventReferral: {
     rateBps: number;
     minOrderMinor: number;
@@ -165,7 +170,9 @@ export type CreditBlockedReason =
   | "in_debt"
   | "order_too_small"
   /** Credit can't pay for tickets to an event you organize. */
-  | "own_event";
+  | "own_event"
+  /** The order is in a different currency from the person's credit. */
+  | "currency";
 
 /**
  * What the checkout "Use credit" switch offers for one order. `creditMinor`
@@ -232,6 +239,8 @@ export type ReferralBindResult =
   | "error";
 
 export type ReferralBindOutcome = {
+  /** The currency of welcomeMinor. */
+  currency: string;
   result: ReferralBindResult;
   /** The inviter as the friend sees them: "Ama K." */
   referrerName: string | null;
@@ -242,6 +251,8 @@ export type ReferralBindOutcome = {
 
 /** The caller's invite page: their link, the offer and how it's going. */
 export type ReferralInvite = {
+  /** The currency of the offer and the stats. */
+  currency: string;
   /** Invites are live (referral capture on and the friend rule live). */
   enabled: boolean;
   code: string | null;
@@ -272,6 +283,8 @@ export type ReferralInvite = {
 
 /** What the public invite page shows for a code. */
 export type ReferralCodeInfo = {
+  /** The currency of the welcome offer. */
+  currency: string;
   valid: boolean;
   code: string | null;
   programOn: boolean;
@@ -285,6 +298,8 @@ export type RebateKind = "organizer" | "venue" | "milestone" | "visits";
 
 /** The caller's count towards the next loyalty fee rebate (Phase 8). */
 export type LoyaltyProgress = {
+  /** The person's credit currency; every *Minor below is in it. */
+  currency: string;
   ordersRequired: number;
   windowDays: number;
   minOrderMinor: number;
@@ -300,6 +315,8 @@ export type LoyaltyProgress = {
 
 /** An organizer's promoter commission on one event (Phase 8). */
 export type EventPromoterCommission = {
+  /** The event's currency; the stats below are in it. */
+  currency: string;
   /** Commissions are switched on for this organizer and link capture is on. */
   available: boolean;
   /** The rate on offer now; null when the organizer hasn't offered one. */
@@ -319,6 +336,8 @@ export type EventPromoterCommission = {
 
 /** What a place owner sees to let visitors check in (Phase 8). */
 export type PlaceVisitPanel = {
+  /** The currency of perVisitorMinor and earnedMinor (the reward rules'). */
+  currency: string;
   /** The visits reward is live and switched on for this owner. */
   available: boolean;
   /** Only verified places earn promotion credit from visits. */
@@ -363,6 +382,8 @@ export type PlaceVisitResult = {
  * terms. Only live rebates are counted -- never shadow-mode decisions.
  */
 export type PromotionCredit = {
+  /** The person's credit currency; every *Minor below is in it. */
+  currency: string;
   /** Rewards is switched on for the caller. */
   enabled: boolean;
   /** Paying for promotions with credit is switched on. */
@@ -397,6 +418,10 @@ export type PromotionCredit = {
 // ─────────────────────────────────────────────────────────────
 
 export type AdminRewardsOverview = {
+  /** The currency every amount below is in (one currency per report). */
+  currency: string;
+  /** Currencies that have credit accounts, for switching the report. */
+  currencies: string[];
   balances: {
     accounts: number;
     frozenAccounts: number;
@@ -473,6 +498,7 @@ export type AdminNotificationDeliveryStats = {
 };
 
 export type RewardRuleSummary = {
+  currency: string;
   id: string;
   ruleKey: string;
   version: number;
@@ -494,6 +520,7 @@ export type RewardRuleSummary = {
 };
 
 export type AdminCreditAccountListItem = {
+  currency: string;
   userId: string;
   username: string | null;
   fullName: string | null;
@@ -550,6 +577,8 @@ export type AdminCreditJournal = {
 export type AdminCreditAdjustmentRequest = {
   id: string;
   userId: string;
+  /** The user's credit currency (amountMinor is in it). */
+  currency: string;
   userName: string | null;
   direction: "credit" | "debit";
   amountMinor: number;
@@ -570,6 +599,8 @@ export type AdminCreditAdjustmentRequest = {
 };
 
 export type AdminCreditAccountDetail = {
+  /** The account's credit currency; every *Minor here is in it. */
+  currency: string;
   user: {
     id: string;
     username: string | null;
@@ -634,6 +665,7 @@ export type RewardEventStatus =
 
 /** One reward decision (admin only; risk flags are never shown to users). */
 export type AdminRewardEvent = {
+  currency: string;
   id: string;
   ruleKey: string;
   ruleVersion: number | null;
@@ -660,6 +692,8 @@ export type AdminRewardEvent = {
 import type { AdminReadTruncation } from "./adminMetrics";
 
 export type AdminReferralSummary = {
+  /** The reward rules' currency, which every amount below is in. */
+  currency: string;
   /** Calendar days the window covers (today counted as one). */
   sinceDays: number;
   /** Half-open window [from, to), ISO. */
@@ -712,6 +746,7 @@ export type MonthlyRewardRuleKey =
 
 /** One monthly rebate run (Phase 6). */
 export type AdminRebateRun = {
+  currency: string;
   id: string;
   periodStart: string;
   triggeredBy: string | null;
@@ -741,6 +776,7 @@ export type AdminRebateRun = {
 
 /** Admin › Rewards › Rebates. */
 export type AdminRebateSummary = {
+  currency: string;
   sinceDays: number;
   from: string;
   to: string;
@@ -773,6 +809,7 @@ export type AdminRebateSummary = {
 
 /** Admin › Rewards › Promoters & loyalty (Phase 8). */
 export type AdminPromoterLoyaltySummary = {
+  currency: string;
   sinceDays: number;
   from: string;
   to: string;

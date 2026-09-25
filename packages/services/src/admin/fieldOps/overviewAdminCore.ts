@@ -65,7 +65,7 @@ export async function getFieldOpsOverviewCore(
   }
 
   const totals = await loadCommissionTotals(supabase, {
-    fallbackCurrency: campaigns.data[0]?.currency ?? "GHS",
+    fallbackCurrency: campaigns.data[0]?.currency ?? undefined,
   });
   if (totals.error) {
     return { status: 500, message: "Couldn't total the commissions." };

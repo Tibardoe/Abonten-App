@@ -31,6 +31,7 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
         url,
         refereeMinor: invite.refereeMinor,
         minOrderMinor: invite.minOrderMinor,
+        currency: invite.currency,
       })
     : null;
 
@@ -63,14 +64,14 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
       <CardTitle id="invite-friends-title">Invite friends</CardTitle>
       {invite.referrerMinor ? (
         <p className="mt-2 text-sm text-muted-foreground">
-          You get {formatCredit(invite.referrerMinor)} when a friend you invite
-          buys their first ticket
+          You get {formatCredit(invite.referrerMinor, invite.currency)} when a
+          friend you invite buys their first ticket
           {invite.minOrderMinor
-            ? ` of ${formatCredit(invite.minOrderMinor)} or more`
+            ? ` of ${formatCredit(invite.minOrderMinor, invite.currency)} or more`
             : ""}{" "}
           and their event has taken place.
           {invite.refereeMinor
-            ? ` They get ${formatCredit(invite.refereeMinor)} off that ticket.`
+            ? ` They get ${formatCredit(invite.refereeMinor, invite.currency)} off that ticket.`
             : ""}{" "}
           Invites work for new accounts, in their first week.
         </p>
@@ -129,13 +130,13 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
         <div>
           <dt className="text-muted-foreground">Earned</dt>
           <dd className="text-lg font-semibold tabular-nums">
-            {formatCredit(stats.earnedMinor)}
+            {formatCredit(stats.earnedMinor, invite.currency)}
           </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Pending</dt>
           <dd className="text-lg font-semibold tabular-nums">
-            {formatCredit(stats.pendingMinor)}
+            {formatCredit(stats.pendingMinor, invite.currency)}
           </dd>
         </div>
       </dl>

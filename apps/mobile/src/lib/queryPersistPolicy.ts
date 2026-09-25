@@ -51,6 +51,15 @@ export const PERSIST_RULES: readonly PersistRule[] = [
     maxEntries: 1,
   },
   { id: "weekly", prefix: ["mobile", "weekly"], maxEntries: 4 },
+  // Which market is being browsed, its currency and payment methods, the
+  // display rates and the feature flags: public configuration plus the
+  // person's own preferences. Without it an offline cold start would not
+  // know which currency or payment methods to show.
+  {
+    id: "market-context",
+    prefix: ["mobile", "markets", "context"],
+    maxEntries: 3,
+  },
 
   // Profiles
   { id: "public-profile", prefix: ["profile", "public"], maxEntries: 30 },

@@ -1,3 +1,5 @@
+import { isKnownCurrency } from "../money/currencies";
+import { formatMoney } from "../money/formatMoney";
 // Campaign money in pesewas (integers). Mirrors content_campaign_accrue
 // (migration 20260916130000) and content_campaign_refundable_minor so the UI
 // can project spend and refunds exactly as the database records them.
@@ -39,8 +41,8 @@ export function remainingMinor(input: {
   return Math.max(0, input.paidMinor - input.spentMinor - input.refundedMinor);
 }
 
-/** "GH₵ 50.00" from pesewas. */
-export function formatMinor(minor: number, currency = "GHS"): string {
-  const cedis = (Math.round(minor) / 100).toFixed(2);
-  return currency === "GHS" ? `GH₵ ${cedis}` : `${currency} ${cedis}`;
+/** "GH₵50.00" from minor units, in the campaign's own currency. */
+export function formatMinor(minor: number, currency: string): string {
+  if (!isKnownCurrency(currency)) return (Math.round(minor) / 100).toFixed(2);
+  return formatMoney({ amountMinor: Math.round(minor), currency });
 }

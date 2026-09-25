@@ -13,6 +13,7 @@ import {
 import { loadFieldOpsCampaigns } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/fieldOps/campaignLifecycle";
+import { getDefaultMarket } from "@abonten/services/markets/marketConfig";
 import Link from "next/link";
 import { FieldOpsTabs } from "../FieldOpsTabs";
 import { campaignStatusTone } from "../page";
@@ -32,6 +33,7 @@ export default async function FieldOpsCampaignsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
+  const defaultCurrency = (await getDefaultMarket()).defaultCurrency;
   const status =
     (FILTERS.find((f) => f.key === sp.status)?.key as
       | (typeof FILTERS)[number]["key"]
@@ -134,7 +136,10 @@ export default async function FieldOpsCampaignsPage({
             New campaign
           </h3>
           {regions.status === 200 && regions.data && regions.data.length > 0 ? (
-            <CampaignForm regions={regions.data} />
+            <CampaignForm
+              regions={regions.data}
+              defaultCurrency={defaultCurrency}
+            />
           ) : (
             <EmptyState>
               Create a region (and its territories) first under{" "}

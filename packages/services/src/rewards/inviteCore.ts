@@ -13,6 +13,7 @@ import type {
 } from "@abonten/types/rewards";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { creditCurrencyFor, rewardRulesCurrency } from "./creditCurrency";
 import { rewardsKillSwitchOn } from "./rewardsProgramQuery";
 
 // Friend invites (Abonten Rewards Phase 5), shared by the web Server Actions
@@ -41,10 +42,12 @@ const KNOWN_RESULTS = new Set<ReferralBindResult>([
 
 function outcome(
   result: ReferralBindResult,
+  currency: string,
   extra: Partial<ReferralBindOutcome> = {},
 ): ReferralBindOutcome {
   return {
     result,
+    currency,
     referrerName: null,
     welcome: "none",
     welcomeMinor: null,
@@ -74,12 +77,14 @@ export async function bindReferralCodeCore(
   userId: string,
   input: { code: string; source: InviteSource },
 ): Promise<BindEnvelope> {
+  const currency = await creditCurrencyFor(userId);
   const code = normalizeReferralCode(input.code);
-  if (!code) return envelope(400, outcome("invalid"));
-  if (rewardsKillSwitchOn()) return envelope(200, outcome("capture_off"));
+  if (!code) return envelope(400, outcome("invalid", currency));
+  if (rewardsKillSwitchOn())
+    return envelope(200, outcome("capture_off", currency));
 
   const allowed = await checkRateLimit(`referral-bind:${userId}`, 5, 3600);
-  if (!allowed) return envelope(429, outcome("rate_limited"));
+  if (!allowed) return envelope(429, outcome("rate_limited", currency));
 
   const { data, error } = await getSupabaseServiceClient().rpc(
     "referral_bind",
@@ -87,7 +92,7 @@ export async function bindReferralCodeCore(
   );
   if (error) {
     logger.error(`referral_bind failed for ${userId}: ${error.message}`);
-    return envelope(500, outcome("error"));
+    return envelope(500, outcome("error", currency));
   }
 
   const json = (data ?? {}) as {
@@ -102,7 +107,7 @@ export async function bindReferralCodeCore(
 
   return envelope(
     200,
-    outcome(result, {
+    outcome(result, currency, {
       referrerName: json.referrer_name ?? null,
       welcome:
         json.welcome === "released"
@@ -163,7 +168,7 @@ export async function getReferralInviteCore(
       .maybeSingle(),
     service
       .from("reward_rule")
-      .select("rule_key, flat_minor, min_basis_minor")
+      .select("rule_key, flat_minor, min_basis_minor, currency")
       .eq("is_active", true)
       .in("rule_key", ["friend_referral_referrer", "friend_referral_referee"]),
     service.rpc("referral_stats", { p_user_id: userId }),
@@ -207,6 +212,7 @@ export async function getReferralInviteCore(
   return {
     status: 200,
     data: {
+      currency: referrerRule?.currency ?? (await creditCurrencyFor(userId)),
       enabled,
       code,
       inviteUrl: code ? inviteUrl(code, origin) : null,
@@ -248,7 +254,9 @@ export async function resolveReferralCodeCore(
   limiterKey: string | null,
 ): Promise<{ status: 200 | 400 | 429 | 500; data?: ReferralCodeInfo }> {
   const code = normalizeReferralCode(rawCode);
+  const currency = await rewardRulesCurrency();
   const invalid: ReferralCodeInfo = {
+    currency,
     valid: false,
     code: null,
     programOn: false,
@@ -291,6 +299,7 @@ export async function resolveReferralCodeCore(
   return {
     status: 200,
     data: {
+      currency,
       valid: true,
       code: json.code ?? code,
       programOn: !rewardsKillSwitchOn() && json.program_on === true,

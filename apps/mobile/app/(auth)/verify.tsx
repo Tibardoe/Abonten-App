@@ -6,7 +6,7 @@ import {
   EMAIL_OTP_MESSAGES,
   maskEmail,
 } from "@abonten/core/emailOtp";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import {
   AbontenLogo,
   AbontenWordmark,
@@ -55,6 +55,7 @@ export default function Verify() {
   const params = useLocalSearchParams<{
     channel?: "phone" | "email";
     phoneE164?: string;
+    codeLength?: string;
     dialCode?: string;
     rawPhone?: string;
     email?: string;
@@ -63,8 +64,11 @@ export default function Verify() {
   const channel = params.channel === "email" ? "email" : "phone";
   const { phoneE164, dialCode, rawPhone, email } = params;
 
+  const [phoneCodeLength, setPhoneCodeLength] = useState(
+    Number(params.codeLength) || DEFAULT_PHONE_OTP_CODE_LENGTH,
+  );
   const codeLength =
-    channel === "email" ? EMAIL_OTP_CODE_LENGTH : HUBTEL_OTP_CODE_LENGTH;
+    channel === "email" ? EMAIL_OTP_CODE_LENGTH : phoneCodeLength;
   const destination =
     channel === "email"
       ? email
@@ -192,6 +196,7 @@ export default function Verify() {
           setError(res.message ?? "Couldn't resend the code. Try again.");
           return;
         }
+        setPhoneCodeLength(res.data.codeLength);
       }
       setCode("");
       setNotice("A new code is on its way.");

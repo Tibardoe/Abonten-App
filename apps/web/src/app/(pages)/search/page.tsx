@@ -1,10 +1,15 @@
 import { getDiscoveryProgram } from "@/actions/discovery/getDiscoveryProgram";
 import { searchDiscovery } from "@/actions/discovery/searchDiscovery";
+import getMarketContext from "@/actions/getMarketContext";
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import DiscoveryResults from "@/discovery/organisms/DiscoveryResults";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { generateSlug } from "@abonten/core/geerateSlug";
+import {
+  describePriceParam,
+  isAnyPriceParam,
+} from "@abonten/core/parseFilterModalQueries";
 import { parseFilters } from "@abonten/core/parseFilterModalQueries";
 import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
 import Link from "next/link";
@@ -120,7 +125,19 @@ export default async function page({
     type,
   };
 
-  const firstPage = await getQueriedEvents(filters);
+  const [firstPage, marketContext] = await Promise.all([
+    getQueriedEvents(filters),
+    getMarketContext(),
+  ]);
+  const priceRaw = Array.isArray(queryParams.price)
+    ? queryParams.price[0]
+    : queryParams.price;
+  const priceChip = describePriceParam(
+    priceRaw,
+    marketContext.markets.find(
+      (m) => m.countryCode === marketContext.context.marketCountry,
+    )?.defaultCurrency,
+  );
 
   async function fetchPage(cursor: string | null) {
     "use server";
@@ -142,7 +159,7 @@ export default async function page({
   // "is anything actually active" -- otherwise the chip row and "Clear all"
   // link would show up on every single visit to this page.
   const hasActiveFilters = Boolean(
-    (queryParams.price && queryParams.price !== "GHS 0 - GHS 999") ||
+    !isAnyPriceParam(priceRaw) ||
       queryParams.category ||
       queryParams.types ||
       (queryParams.from && queryParams.to) ||
@@ -174,9 +191,9 @@ export default async function page({
       {hasActiveFilters && (
         <div className="flex flex-wrap items-center gap-3">
           {/* Render Price */}
-          {queryParams.price && queryParams.price !== "GHS 0 - GHS 999" && (
+          {priceChip && (
             <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
-              {queryParams.price}
+              {priceChip}
             </span>
           )}
 

@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 // Paying for tickets with Abonten Credit (migration credit_ticket_redemption)
 // through the real payment path -- createMultiCheckoutPaymentAttemptCore,
-// finalizePaystackPayment, issueRefundCore, cancel_event_and_release_tickets
+// finalizePayment, issueRefundCore, cancel_event_and_release_tickets
 // and the payout review. Only Paystack's HTTP calls are replaced (vi.mock
 // below); everything else runs against real Postgres.
 import {
@@ -19,7 +19,7 @@ import {
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
-import { finalizePaystackPayment } from "../payments/finalizePaystackPayment";
+import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import {
   type TestUser,
@@ -35,7 +35,7 @@ const paystack = vi.hoisted(() => ({
   refundTransaction: vi.fn(),
 }));
 
-vi.mock("../payments/gateway/paystackService", async (importOriginal) => ({
+vi.mock("../payments/providers/paystackApi", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   verifyTransaction: paystack.verifyTransaction,
   initializeTransaction: paystack.initializeTransaction,
@@ -254,7 +254,7 @@ describe("paying for tickets with credit", () => {
     paystack.initializeTransaction.mockReset();
     paystack.refundTransaction.mockReset();
     paystack.initializeTransaction.mockImplementation(
-      async (p: { reference: string }) => ({
+      async (_account: unknown, p: { reference: string }) => ({
         reference: p.reference,
         access_code: "test-access",
         authorization_url: "https://checkout.paystack.test/x",
@@ -303,7 +303,7 @@ describe("paying for tickets with credit", () => {
     const res = await pay(buyer, sessionId, { useCredit: true });
     expect(res.status).toBe(200);
     if (res.status !== 200) return;
-    expect(res.data.paystack).toBeNull();
+    expect(res.data.payment).toBeNull();
     expect(res.data.credit).toEqual({
       appliedMinor: ORDER_TOTAL_MINOR,
       cashMinor: 0,
@@ -380,9 +380,10 @@ describe("paying for tickets with credit", () => {
     if (res.status !== 200) return;
     expect(res.data.credit).toEqual({ appliedMinor: 3000, cashMinor: 7500 });
     expect(paystack.initializeTransaction).toHaveBeenCalledWith(
-      expect.objectContaining({ amountInPesewas: 7500 }),
+      expect.anything(),
+      expect.objectContaining({ amountMinor: 7500 }),
     );
-    const reference = res.data.paystack?.reference as string;
+    const reference = res.data.payment?.reference as string;
 
     paystack.verifyTransaction.mockResolvedValueOnce({
       id: 1,
@@ -397,7 +398,7 @@ describe("paying for tickets with credit", () => {
       channel: "card",
       customer: { email: buyer.email },
     });
-    const done = await finalizePaystackPayment(res.data.attempts[0].id, deps);
+    const done = await finalizePayment(res.data.attempts[0].id, deps);
     expect(done.status).toBe("succeeded");
 
     const txn = await transactionOf(res.data.attempts[0].id);
@@ -423,7 +424,11 @@ describe("paying for tickets with credit", () => {
     await setBalance(buyer, 0);
     const refund = await issueRefundCore(service, txn?.id as string);
     expect(refund.status).toBe(200);
-    expect(paystack.refundTransaction).toHaveBeenCalledWith(reference, 7143);
+    expect(paystack.refundTransaction).toHaveBeenCalledWith(
+      expect.anything(),
+      reference,
+      7143,
+    );
     const after = await transactionOf(res.data.attempts[0].id);
     expect(after).toMatchObject({
       status: "refund_pending",
@@ -485,6 +490,7 @@ describe("paying for tickets with credit", () => {
     expect(retry.status).toBe(200);
     expect(paystack.refundTransaction).toHaveBeenCalledTimes(2);
     expect(paystack.refundTransaction).toHaveBeenLastCalledWith(
+      expect.anything(),
       reference,
       7143,
     );
@@ -553,6 +559,8 @@ describe("paying for tickets with credit", () => {
     const { data: account } = await service
       .from("payout_account")
       .insert({
+        country_code: "GH",
+        currency: "GHS",
         organizer_id: organizer.id,
         account_type: "mobile_money",
         account_holder_name: "Test Organizer",

@@ -5,13 +5,14 @@ import { TimeSeriesChart } from "@/components/metrics/charts/TimeSeriesChart";
 import { Badge, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
 import { loadFieldOpsCampaignAnalytics } from "@/lib/data";
 import { formatAccraDate } from "@/lib/format";
+import { minorToMajor } from "@/lib/moneyUnits";
 import { describeSeries } from "@abonten/core/admin/describeSeries";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsDailyPoint } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "../../../FieldOpsTabs";
 import { ExportTeamCsv } from "./ExportTeamCsv";
 
-const cedis = (minor: number) => minor / 100;
 const DAYS = 30;
 const PERIOD = `Last ${DAYS} days`;
 
@@ -50,7 +51,9 @@ export default async function FieldOpsCampaignAnalyticsPage({
   ) => {
     const points = daily.map((p) => ({
       bucketStart: `${p.day}T00:00:00Z`,
-      value: opts.money ? cedis(Number(p[pick])) : Number(p[pick]),
+      value: opts.money
+        ? minorToMajor(Number(p[pick]), currency)
+        : Number(p[pick]),
     }));
     const total = points.reduce((n, p) => n + p.value, 0);
     return (
@@ -127,18 +130,18 @@ export default async function FieldOpsCampaignAnalyticsPage({
         />
         <MetricCard
           metric="fieldOps.committed"
-          value={cedis(committed)}
+          value={minorToMajor(committed, currency)}
           format="money"
           currency={currency}
           period="All time"
-          secondary={`${currency} ${cedis(stats.money.paid_minor).toFixed(2)} of it paid`}
+          secondary={`${currency} ${minorToMajor(stats.money.paid_minor, currency).toFixed(2)} of it paid`}
         />
         <MetricCard
           metric="fieldOps.costPerSuccess"
           value={
             stats.costPerSuccessMinor === null
               ? null
-              : cedis(stats.costPerSuccessMinor)
+              : minorToMajor(stats.costPerSuccessMinor, currency)
           }
           format="money"
           currency={currency}
@@ -203,7 +206,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
               <Td className="tabular-nums">{m.rejected}</Td>
               <Td className="tabular-nums">{m.contentApproved}</Td>
               <Td className="whitespace-nowrap tabular-nums">
-                {currency} {cedis(m.earnedMinor).toFixed(2)}
+                {currency} {minorToMajor(m.earnedMinor, currency).toFixed(2)}
               </Td>
               <Td className="tabular-nums text-muted-foreground">
                 {m.medianReviewHours === null ? "—" : `${m.medianReviewHours}h`}

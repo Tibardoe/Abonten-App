@@ -117,7 +117,7 @@ export default async function SpotlightPostDetailPage({
               <div key={label}>
                 <p className="text-xs text-muted-foreground">{label}</p>
                 <p className="font-semibold tabular-nums">
-                  {value.toLocaleString("en-GH")}
+                  {value.toLocaleString("en-GB")}
                 </p>
               </div>
             ))}

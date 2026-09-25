@@ -1,6 +1,6 @@
-// Hubtel's OTP product issues 4-digit codes. Shared by the client-side OTP
-// box UI (src/components/molecules/OtpInput.tsx and its callers) and the
-// server-side verify actions, so the two never drift out of sync. Plain
-// constants (no server-only code) so it's safe to import from "use client"
-// files.
-export const HUBTEL_OTP_CODE_LENGTH = 4;
+// The number of digits in a text-message code depends on the provider the
+// market uses (Hubtel sends 4, Twilio Verify 6). The send response carries
+// the real `codeLength`; this is only the fallback the OTP box shows before
+// a code has been requested. Plain constants (no server-only code) so it's
+// safe to import from "use client" files.
+export const DEFAULT_PHONE_OTP_CODE_LENGTH = 4;

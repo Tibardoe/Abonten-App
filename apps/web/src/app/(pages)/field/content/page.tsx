@@ -3,13 +3,13 @@ import { PageTitle, SupportingText } from "@/components/ui/typography";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import ContentSubmitForm from "@/fieldOps/organisms/ContentSubmitForm";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const money = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 export default async function FieldContentPage() {
   const me = await loadFieldOpsMe();

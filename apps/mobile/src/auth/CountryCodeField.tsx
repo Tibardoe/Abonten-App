@@ -1,23 +1,32 @@
-import { type Country, matchCountry } from "@abonten/core/countries";
+import {
+  type Country,
+  matchCountry,
+  phoneCountries,
+} from "@abonten/core/countries";
 import { AppText, Icon, Input, Sheet } from "@abonten/ui-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
 // The phone country-code control: a compact "🇬🇭 +233 ▾" chip that opens a
-// searchable country sheet (match on name or dial code). Country data is the
+// searchable sheet of every country (match on name, dial code or ISO code),
+// with the countries Abonten is open in listed first. Country data is the
 // shared @abonten/core/countries list, so it stays in lock-step with the web
 // PhoneInput dropdown.
 
 export function CountryCodeField({
   value,
   onChange,
+  priority = [],
 }: {
   value: Country;
   onChange: (country: Country) => void;
+  /** ISO codes listed first: the open markets, then the visitor's own. */
+  priority?: readonly string[];
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const results = matchCountry(query);
+  const ordered = useMemo(() => phoneCountries(priority), [priority]);
+  const results = matchCountry(query, ordered);
 
   function close() {
     setOpen(false);

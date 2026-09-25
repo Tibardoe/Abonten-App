@@ -1,14 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { fromPesewas } from "@abonten/core/paystackAmount";
+import { money, toMajor } from "@abonten/core/money/money";
+import {
+  type SelectedPaymentMethod,
+  initiateChargeForAttempt,
+} from "@abonten/services/payments/chargeInit";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
 } from "@abonten/services/payments/paymentAttempt";
-import {
-  type SelectedPaymentMethod,
-  initiatePaystackChargeForAttempt,
-} from "@abonten/services/payments/paystackInit";
+import { resolveProviderAccount } from "@abonten/services/payments/providers/registry";
+import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -24,9 +26,9 @@ import {
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import {
-  type VerifyPaystackPaymentCoreResult,
-  verifyPaystackPaymentCore,
-} from "./verifyPaystackPaymentCore";
+  type VerifyPaymentCoreResult,
+  verifyPaymentCore,
+} from "./verifyPaymentCore";
 
 // Starts paying for a pending event/place promotion checkout -- the single
 // implementation behind the web createPromotionPaymentAttempt action and the
@@ -49,36 +51,47 @@ import {
 // write it -- migration lock_money_path_client_writes); every query is
 // scoped to the caller's userId. Deliberately NOT a "use server" file.
 
-export type PromotionPaystackInfo =
-  | {
-      mode: "popup";
-      reference: string;
-      accessCode: string;
-      authorizationUrl: string;
-    }
-  | {
-      mode: "direct";
-      reference: string;
-      chargeStatus: string;
-      displayMessage?: string;
-    };
-
 export type CreatePromotionPaymentAttemptResult =
-  | { status: 400 | 404 | 409 | 410 | 500; message: string }
+  | { status: 400 | 404 | 409 | 410 | 500 | 503; message: string }
   | {
       status: 200;
       data: {
         attempt: PaymentAttemptRow;
         /** null when credit paid for everything. */
-        paystack: PromotionPaystackInfo | null;
+        payment: CheckoutInit | null;
         credit: { appliedMinor: number; cashMinor: number } | null;
         /** Credit-only orders are finalized immediately; this is the outcome. */
-        verification: VerifyPaystackPaymentCoreResult | null;
+        verification: VerifyPaymentCoreResult | null;
       };
     };
 
 const ATTEMPT_SELECT =
-  "id, status, amount, currency, payment_method_id, provider_reference, metadata";
+  "id, provider, country_code, status, amount, currency, payment_method_id, provider_reference, metadata";
+
+/** The provider that will take the cash part, from the listing's market. */
+async function cashProviderFor(
+  order: { countryCode: string | null; currency: string },
+  method: SelectedPaymentMethod,
+): Promise<string | { status: 400; message: string }> {
+  try {
+    return (
+      await resolveProviderAccount({
+        countryCode: order.countryCode,
+        currency: order.currency,
+        method: method.method_type === "momo" ? "mobile_money" : "card",
+      })
+    ).provider.code;
+  } catch (error) {
+    logger.error(
+      `createPromotionPaymentAttemptCore: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return {
+      status: 400,
+      message:
+        "This payment method isn't available for this market. Choose another.",
+    };
+  }
+}
 
 export async function createPromotionPaymentAttemptCore(
   supabase: SupabaseClient<Database>,
@@ -171,41 +184,45 @@ export async function createPromotionPaymentAttemptCore(
   );
   if (switched !== "ok") return switched;
 
-  const amount = fromPesewas(order.orderTotalMinor);
-  const currency = order.currency;
+  const total = money(order.orderTotalMinor, order.currency);
+  const selected = method as unknown as SelectedPaymentMethod;
+  const providerCode = await cashProviderFor(order, selected);
+  if (typeof providerCode !== "string") return providerCode;
 
   const attemptResult = await upsertPaymentAttemptForSession(
     userId,
     cfg.attemptColumn,
     input.checkoutId,
-    amount,
-    currency,
+    toMajor(total),
+    total.currency,
     input.paymentMethodId,
     undefined,
+    { countryCode: order.countryCode ?? "", provider: providerCode },
   );
 
   if (attemptResult.status !== 200) {
     return attemptResult;
   }
 
-  const paystackResult = await initiatePaystackChargeForAttempt(
-    attemptResult.data,
-    amount,
-    currency,
-    userEmail,
-    method as unknown as SelectedPaymentMethod,
-    buildCallbackUrl(input.checkoutId),
-  );
+  const chargeResult = await initiateChargeForAttempt({
+    attempt: attemptResult.data,
+    amount: total,
+    countryCode: order.countryCode,
+    email: userEmail,
+    paymentMethod: selected,
+    callbackUrl: buildCallbackUrl(input.checkoutId),
+    description: order.label,
+  });
 
-  if (paystackResult.status !== 200) {
-    return paystackResult;
+  if (chargeResult.status !== 200) {
+    return chargeResult;
   }
 
   return {
     status: 200,
     data: {
       attempt: attemptResult.data,
-      paystack: paystackResult.data,
+      payment: chargeResult.data,
       credit: null,
       verification: null,
     },
@@ -361,7 +378,17 @@ async function startCreditPayment(
   );
   if (dropped !== "ok") return dropped;
 
-  const cashCedis = fromPesewas(quote.cashMinor);
+  let cashProvider = "abonten_credit";
+  if (!quote.creditOnly) {
+    const resolved = await cashProviderFor(
+      order,
+      method as unknown as SelectedPaymentMethod,
+    );
+    if (typeof resolved !== "string") return resolved;
+    cashProvider = resolved;
+  }
+
+  const cash = money(quote.cashMinor, quote.currency);
   const service = getSupabaseServiceClient();
   const { data: inserted, error: insertError } = await service
     .from("payment_attempt")
@@ -371,12 +398,13 @@ async function startCreditPayment(
       payment_method_id: quote.creditOnly
         ? null
         : (input.paymentMethodId ?? null),
-      amount: cashCedis,
-      credit_amount: fromPesewas(quote.creditMinor),
+      amount: toMajor(cash),
+      credit_amount: toMajor(money(quote.creditMinor, quote.currency)),
       currency: quote.currency,
+      country_code: order.countryCode,
       status: "initiated",
-      provider: quote.creditOnly ? "abonten_credit" : "paystack",
-      // Credit-only orders never reach Paystack; an internal reference keeps
+      provider: cashProvider,
+      // Credit-only orders never reach a provider; an internal reference keeps
       // payment_attempt / transaction references unique and traceable.
       provider_reference: quote.creditOnly ? `ABNCR-${randomUUID()}` : null,
       // attemptColumn is a computed key -- the typed insert's excess-property
@@ -428,7 +456,7 @@ async function startCreditPayment(
   };
 
   if (quote.creditOnly) {
-    const verification = await verifyPaystackPaymentCore(
+    const verification = await verifyPaymentCore(
       supabase,
       userId,
       attempt.id,
@@ -436,20 +464,21 @@ async function startCreditPayment(
     );
     return {
       status: 200,
-      data: { attempt, paystack: null, credit, verification },
+      data: { attempt, payment: null, credit, verification },
     };
   }
 
-  const paystackResult = await initiatePaystackChargeForAttempt(
+  const chargeResult = await initiateChargeForAttempt({
     attempt,
-    cashCedis,
-    quote.currency,
-    userEmail,
-    method as unknown as SelectedPaymentMethod,
-    buildCallbackUrl(input.checkoutId),
-  );
+    amount: cash,
+    countryCode: order.countryCode,
+    email: userEmail,
+    paymentMethod: method as unknown as SelectedPaymentMethod,
+    callbackUrl: buildCallbackUrl(input.checkoutId),
+    description: order.label,
+  });
 
-  if (paystackResult.status !== 200) {
+  if (chargeResult.status !== 200) {
     await releaseReservation(reserved.reservationId, "payment_not_started");
     await service
       .from("payment_attempt")
@@ -459,14 +488,14 @@ async function startCreditPayment(
         updated_at: new Date().toISOString(),
       })
       .eq("id", attempt.id);
-    return paystackResult;
+    return chargeResult;
   }
 
   return {
     status: 200,
     data: {
       attempt,
-      paystack: paystackResult.data,
+      payment: chargeResult.data,
       credit,
       verification: null,
     },

@@ -131,12 +131,13 @@ export function inviteShareMessage(input: {
   url: string;
   refereeMinor: number | null;
   minOrderMinor: number | null;
+  currency: string;
 }): string {
   const offer =
     input.refereeMinor && input.refereeMinor > 0
-      ? ` and get ${formatCredit(input.refereeMinor)} off your first ticket${
+      ? ` and get ${formatCredit(input.refereeMinor, input.currency)} off your first ticket${
           input.minOrderMinor
-            ? ` of ${formatCredit(input.minOrderMinor)} or more`
+            ? ` of ${formatCredit(input.minOrderMinor, input.currency)} or more`
             : ""
         }`
       : "";
@@ -157,13 +158,13 @@ export function bindResultMessage(outcome: ReferralBindOutcome): {
       if (outcome.welcome === "granted" && outcome.welcomeMinor) {
         return {
           tone: "success",
-          text: `${joined} ${formatCredit(outcome.welcomeMinor)} welcome credit is ready for your first ticket.`,
+          text: `${joined} ${formatCredit(outcome.welcomeMinor, outcome.currency)} welcome credit is ready for your first ticket.`,
         };
       }
       if (outcome.welcome === "needs_phone" && outcome.welcomeMinor) {
         return {
           tone: "success",
-          text: `${joined} Verify your phone number to get ${formatCredit(outcome.welcomeMinor)} off your first ticket.`,
+          text: `${joined} Verify your phone number to get ${formatCredit(outcome.welcomeMinor, outcome.currency)} off your first ticket.`,
         };
       }
       return { tone: "success", text: joined };

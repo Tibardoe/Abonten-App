@@ -1,3 +1,4 @@
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { StepUpButton } from "@/components/StepUpButton";
 import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
 import {
@@ -48,6 +49,7 @@ const RULE_LABEL: Record<string, string> = {
 };
 
 function ruleTerms(r: {
+  currency: string;
   rateBps: number | null;
   netShareCapBps: number | null;
   flatMinor: number | null;
@@ -56,7 +58,7 @@ function ruleTerms(r: {
   const parts: string[] = [];
   if (r.rateBps != null)
     parts.push(`${(r.rateBps / 100).toFixed(2)}% of ticket value`);
-  if (r.flatMinor != null) parts.push(formatCredit(r.flatMinor));
+  if (r.flatMinor != null) parts.push(formatCredit(r.flatMinor, r.currency));
   if (r.netShareCapBps != null)
     parts.push(
       r.rateBps != null
@@ -64,7 +66,7 @@ function ruleTerms(r: {
         : `${(r.netShareCapBps / 100).toFixed(0)}% of net revenue`,
     );
   if (r.minBasisMinor > 0)
-    parts.push(`min order ${formatCredit(r.minBasisMinor)}`);
+    parts.push(`min order ${formatCredit(r.minBasisMinor, r.currency)}`);
   return parts.join(" · ");
 }
 
@@ -75,7 +77,10 @@ export default async function RewardsOverviewPage({
 }) {
   const sp = await searchParams;
   const range = parseAdminRangeParams(sp);
-  const { ctx, overview, pending } = await loadRewardsOverview(range);
+  const { ctx, overview, pending } = await loadRewardsOverview({
+    ...range,
+    currency: sp.currency ?? null,
+  });
   const canAdjust = ctx.permissions.includes("finance.adjust");
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
@@ -90,6 +95,14 @@ export default async function RewardsOverviewPage({
       />
       <RewardsTabs active="/rewards" />
       <RangeCaption range={range} className="mb-3" />
+      {overview.data ? (
+        <CurrencySwitcher
+          basePath="/rewards"
+          current={overview.data.currency}
+          currencies={overview.data.currencies}
+          params={sp}
+        />
+      ) : null}
 
       {overview.status !== 200 || !overview.data ? (
         <EmptyState>
@@ -131,17 +144,26 @@ export default async function RewardsOverviewPage({
           <div className="grid gap-3 sm:grid-cols-4">
             <Stat
               label="Available to spend"
-              value={formatCredit(overview.data.balances.availableMinor)}
+              value={formatCredit(
+                overview.data.balances.availableMinor,
+                overview.data.currency,
+              )}
               hint={`${overview.data.balances.accounts} accounts`}
             />
             <Stat
               label="Of which promotion-only"
-              value={formatCredit(overview.data.promotionOnlyMinor)}
+              value={formatCredit(
+                overview.data.promotionOnlyMinor,
+                overview.data.currency,
+              )}
               hint="≈ no cash cost to Abonten"
             />
             <Stat
               label="Pending (contingent)"
-              value={formatCredit(overview.data.balances.pendingMinor)}
+              value={formatCredit(
+                overview.data.balances.pendingMinor,
+                overview.data.currency,
+              )}
               hint="not yet spendable"
             />
             <Stat
@@ -150,6 +172,7 @@ export default async function RewardsOverviewPage({
                 overview.data.balances.reservedMinor +
                   overview.data.balances.frozenMinor +
                   overview.data.balances.withdrawingMinor,
+                overview.data.currency,
               )}
               hint="reserved at checkout or frozen"
             />
@@ -168,7 +191,10 @@ export default async function RewardsOverviewPage({
             <Stat
               label="Accounts in debt"
               value={overview.data.balances.inDebtAccounts}
-              hint={formatCredit(overview.data.balances.debtMinor)}
+              hint={formatCredit(
+                overview.data.balances.debtMinor,
+                overview.data.currency,
+              )}
               tone={
                 overview.data.balances.inDebtAccounts > 0
                   ? "warning"
@@ -210,7 +236,10 @@ export default async function RewardsOverviewPage({
                     <tr key={type}>
                       <Td>{FLOW_LABEL[type as CreditJournalType]}</Td>
                       <Td className="text-right tabular-nums">
-                        {formatCredit(amount ?? 0)}
+                        {formatCredit(
+                          amount ?? 0,
+                          overview.data?.currency ?? "",
+                        )}
                       </Td>
                     </tr>
                   ))}
@@ -298,7 +327,7 @@ export default async function RewardsOverviewPage({
                     </Td>
                     <Td className="tabular-nums">
                       {a.direction === "credit" ? "+" : "−"}
-                      {formatCredit(a.amountMinor)}
+                      {formatCredit(a.amountMinor, a.currency)}
                     </Td>
                     <Td className="max-w-xs text-muted-foreground">
                       {a.reason}

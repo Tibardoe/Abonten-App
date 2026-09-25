@@ -134,6 +134,7 @@ export default function InviteFriends() {
   const message =
     data?.inviteUrl != null
       ? inviteShareMessage({
+          currency: data.currency,
           url: data.inviteUrl,
           refereeMinor: data.refereeMinor,
           minOrderMinor: data.minOrderMinor,
@@ -201,14 +202,14 @@ export default function InviteFriends() {
             <Card elevated className="items-center gap-3">
               {data.referrerMinor ? (
                 <AppText variant="body" className="text-center">
-                  You get {formatCredit(data.referrerMinor)} when a friend you
-                  invite buys their first ticket
+                  You get {formatCredit(data.referrerMinor, data.currency)} when
+                  a friend you invite buys their first ticket
                   {data.minOrderMinor
-                    ? ` of ${formatCredit(data.minOrderMinor)} or more`
+                    ? ` of ${formatCredit(data.minOrderMinor, data.currency)} or more`
                     : ""}{" "}
                   and their event has taken place.
                   {data.refereeMinor
-                    ? ` They get ${formatCredit(data.refereeMinor)} off that ticket.`
+                    ? ` They get ${formatCredit(data.refereeMinor, data.currency)} off that ticket.`
                     : ""}
                 </AppText>
               ) : null}
@@ -263,8 +264,11 @@ export default function InviteFriends() {
               {[
                 ["Friends joined", String(data.stats.joined)],
                 ["Bought a ticket", String(data.stats.qualified)],
-                ["Earned", formatCredit(data.stats.earnedMinor)],
-                ["Pending", formatCredit(data.stats.pendingMinor)],
+                ["Earned", formatCredit(data.stats.earnedMinor, data.currency)],
+                [
+                  "Pending",
+                  formatCredit(data.stats.pendingMinor, data.currency),
+                ],
               ].map(([label, value]) => (
                 <View key={label} className="w-1/2 gap-0.5">
                   <AppText variant="meta">{label}</AppText>

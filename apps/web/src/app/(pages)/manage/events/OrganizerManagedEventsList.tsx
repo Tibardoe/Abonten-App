@@ -50,6 +50,7 @@ export default function OrganizerManagedEventsList({
           event.starts_at,
           event.ends_at,
           event.occurrences,
+          event.timezone,
         );
         const overlayStatus = getEventStatusOverlay(
           event.starts_at,

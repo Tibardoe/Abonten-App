@@ -1,6 +1,6 @@
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { AppText, Button, Field, Input, OtpInput } from "@abonten/ui-native";
 import { useState } from "react";
 import { View } from "react-native";
@@ -23,6 +23,7 @@ export function PhoneVerificationForm({
   const [dialCode, setDialCode] = useState(DEFAULT_DIAL_CODE);
   const [rawPhone, setRawPhone] = useState("");
   const [phoneE164, setPhoneE164] = useState<string | null>(null);
+  const [codeLength, setCodeLength] = useState(DEFAULT_PHONE_OTP_CODE_LENGTH);
   const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +47,7 @@ export function PhoneVerificationForm({
       }
       if (phoneE164) setSentNote(`A new code is on its way to ${phoneE164}.`);
       setPhoneE164(res.data.phoneE164);
+      setCodeLength(res.data.codeLength);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -58,7 +60,7 @@ export function PhoneVerificationForm({
   async function verify(code?: string) {
     if (!phoneE164) return;
     const value = (code ?? otp).trim();
-    if (value.length < HUBTEL_OTP_CODE_LENGTH) return;
+    if (value.length < codeLength) return;
     setError(null);
     setBusy(true);
     try {
@@ -88,7 +90,7 @@ export function PhoneVerificationForm({
             value={otp}
             onChange={setOtp}
             onComplete={verify}
-            length={HUBTEL_OTP_CODE_LENGTH}
+            length={codeLength}
             disabled={busy}
             invalid={!!error}
           />
@@ -103,7 +105,7 @@ export function PhoneVerificationForm({
           <Button
             title={busy ? "Verifying…" : "Verify"}
             onPress={() => verify()}
-            disabled={busy || otp.trim().length < HUBTEL_OTP_CODE_LENGTH}
+            disabled={busy || otp.trim().length < codeLength}
           />
           <Button
             title="Resend code"

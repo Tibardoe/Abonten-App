@@ -1,8 +1,13 @@
+import {
+  type StructuredAddress,
+  readStructuredAddress,
+} from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveListingLocation } from "../geo/locationResolution";
 
 // Post-auth body of updatePlace, lifted so the mobile
 // PATCH /api/mobile/organizer/places/:id route runs the exact same edit.
@@ -22,6 +27,7 @@ export type UpdatePlaceCoreInput = {
   whatsapp?: string | null;
   socialLinks?: Record<string, string> | null;
   address: string;
+  addressDetails?: Partial<StructuredAddress> | null;
   latitude: number;
   longitude: number;
   // Both omitted (undefined) = keep the current cover photo.
@@ -60,6 +66,14 @@ export async function updatePlaceCore(
     return { status: 400, message: locationCheck.message };
   }
 
+  const resolved = await resolveListingLocation({
+    lat: latitude,
+    lng: longitude,
+    countryHint: input.addressDetails?.country_code ?? null,
+  });
+  if (!resolved.ok) return { status: 400, message: resolved.message };
+  const { location } = resolved;
+
   const { data: existingPlace, error: fetchError } = await supabase
     .from("place")
     .select("id, owner_id, cover_public_id")
@@ -89,8 +103,14 @@ export async function updatePlaceCore(
       phone: phone ?? null,
       whatsapp: whatsapp ?? null,
       social_links: socialLinks ?? null,
-      address: { full_address: address },
+      address: {
+        ...readStructuredAddress(input.addressDetails ?? null),
+        full_address: address,
+        country_code: location.countryCode,
+      },
       location: `POINT(${longitude} ${latitude})`,
+      country_code: location.countryCode,
+      timezone: location.timeZone,
       ...(replacingCover && {
         cover_public_id: coverPublicId,
         cover_version: coverVersion,

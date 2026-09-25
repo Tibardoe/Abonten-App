@@ -145,7 +145,7 @@ export default async function AnalyticsPage({
               result: computeTrend(current.paidTickets, previous.paidTickets),
               comparisonLabel: comparison,
             }}
-            secondary={`${current.freeRegistrations.toLocaleString("en-GH")} free registrations`}
+            secondary={`${current.freeRegistrations.toLocaleString("en-GB")} free registrations`}
           />
           <MetricCard
             metric="money.grossTicketSales"
@@ -432,7 +432,7 @@ export default async function AnalyticsPage({
             format="percent"
             period="All time"
             state={demo.buyerConversion === null ? "insufficient" : undefined}
-            secondary={`${demo.buyersAllTime.toLocaleString("en-GH")} of ${demo.activeUsers.toLocaleString("en-GH")} active users`}
+            secondary={`${demo.buyersAllTime.toLocaleString("en-GB")} of ${demo.activeUsers.toLocaleString("en-GB")} active users`}
           />
           <MetricCard
             metric="demo.returningBuyers"
@@ -491,7 +491,7 @@ export default async function AnalyticsPage({
             <p className="mt-2 text-xs text-muted-foreground">
               {demo.platformUsersTotal === 0
                 ? "Nobody has allowed notifications on a phone yet, so there is nothing to show."
-                : `Only the ${demo.platformUsersTotal.toLocaleString("en-GH")} ${
+                : `Only the ${demo.platformUsersTotal.toLocaleString("en-GB")} ${
                     demo.platformUsersTotal === 1 ? "person" : "people"
                   } who allowed notifications on a phone, counted once per platform they use. Not a share of all users, and web-only users do not appear.`}
             </p>
@@ -524,19 +524,19 @@ export default async function AnalyticsPage({
             metric="users.active"
             value={snapshot.activeUsers}
             period="Right now"
-            secondary={`${snapshot.allAccounts.toLocaleString("en-GH")} accounts in total`}
+            secondary={`${snapshot.allAccounts.toLocaleString("en-GB")} accounts in total`}
           />
           <MetricCard
             metric="organizers.total"
             value={snapshot.organizers}
             period="Right now"
-            secondary={`${snapshot.placeOwners.toLocaleString("en-GH")} place owners`}
+            secondary={`${snapshot.placeOwners.toLocaleString("en-GB")} place owners`}
           />
           <MetricCard
             metric="events.published"
             value={snapshot.eventsPublished}
             period="Right now"
-            secondary={`${snapshot.eventsAll.toLocaleString("en-GH")} including drafts`}
+            secondary={`${snapshot.eventsAll.toLocaleString("en-GB")} including drafts`}
           />
           <MetricCard
             metric="places.total"

@@ -20,9 +20,10 @@ export type UpdateEventInput = {
   category: string;
   types: string[];
   checked: boolean;
-  starts_at?: Date;
-  ends_at?: Date;
-  specific_dates?: { start: Date; end: Date }[];
+  /** Wall-clock "yyyy-mm-ddTHH:MM" in the venue's zone. */
+  starts_at?: string;
+  ends_at?: string;
+  specific_dates?: { start: string; end: string }[];
   selectedFile?: File | null;
 };
 

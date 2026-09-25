@@ -3,6 +3,7 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { hapticLight } from "@/lib/haptics";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
@@ -81,7 +82,12 @@ function HeroItem({ item }: { item: WeeklyItem }) {
   const imageId = event ? event.flyer_public_id : place?.cover_public_id;
   const imageVersion = event ? event.flyer_version : place?.cover_version;
   const when = event
-    ? getEventCardDateTime(event.starts_at, event.ends_at, event.occurrences)
+    ? getEventCardDateTime(
+        event.starts_at,
+        event.ends_at,
+        event.occurrences,
+        event.timezone,
+      )
     : null;
   const kicker = event
     ? (event.event_category ?? "Event")
@@ -96,7 +102,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
   const price = event
     ? event.min_price === 0 || event.min_price == null
       ? "Free entry"
-      : `From ${event.currency ?? "GHS"} ${Number(event.min_price).toLocaleString()}`
+      : `From ${formatMoney(event.currency, event.min_price, { trimZeroFraction: true })}`
     : null;
   const status = event
     ? event.status === "canceled"

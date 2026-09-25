@@ -3,12 +3,12 @@ import { PageTitle, SupportingText } from "@/components/ui/typography";
 import StatTile from "@/fieldOps/atoms/StatTile";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const money = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 /** "3 of 4" reads better than "75%" at these volumes. */
 const outOf = (part: number, whole: number) =>

@@ -4,10 +4,12 @@ import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
 import { SectionHeading } from "@/components/metrics/SectionHeading";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
 import { loadPromoters } from "@/lib/data";
+import { minorToMajor } from "@/lib/moneyUnits";
 import {
   adminRangeQuery,
   parseAdminRangeParams,
 } from "@abonten/core/admin/adminDateRange";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { RewardEventStatus } from "@abonten/types/rewards";
 import Link from "next/link";
@@ -25,7 +27,6 @@ const sum = (b: Buckets, statuses: RewardEventStatus[]) =>
     }),
     { count: 0, amountMinor: 0 },
   );
-const cedis = (minor: number) => minor / 100;
 
 // Rewards Phase 8's per-sale rewards: commissions organizers pay promoters
 // (in Abonten Credit, charged to the organizer's payout) and the loyalty fee
@@ -106,30 +107,36 @@ export default async function PromotersPage({
             />
             <MetricCard
               metric="promoters.sales"
-              value={cedis(s.commission.revenueMinor)}
+              value={minorToMajor(s.commission.revenueMinor, s.currency)}
               format="money"
               period={range.label}
               secondary={`${decided(s.commission.byStatus).count} order${decided(s.commission.byStatus).count === 1 ? "" : "s"} through promoters' links`}
             />
             <MetricCard
               metric="promoters.commission"
-              value={cedis(decided(s.commission.byStatus).amountMinor)}
+              value={minorToMajor(
+                decided(s.commission.byStatus).amountMinor,
+                s.currency,
+              )}
               format="money"
               period={range.label}
-              secondary={`${formatCredit(s.commission.organizerChargedMinor)} charged to organizers, net of what was given back${
+              secondary={`${formatCredit(s.commission.organizerChargedMinor, s.currency)} charged to organizers, net of what was given back${
                 s.commission.shadow.count > 0
-                  ? ` · ${formatCredit(s.commission.shadow.amountMinor)} in shadow`
+                  ? ` · ${formatCredit(s.commission.shadow.amountMinor, s.currency)} in shadow`
                   : ""
               }`}
             />
             <MetricCard
               metric="loyalty.feeRebates"
-              value={cedis(decided(s.loyalty.byStatus).amountMinor)}
+              value={minorToMajor(
+                decided(s.loyalty.byStatus).amountMinor,
+                s.currency,
+              )}
               format="money"
               period={range.label}
               secondary={`${decided(s.loyalty.byStatus).count} order${decided(s.loyalty.byStatus).count === 1 ? "" : "s"} · ${s.loyalty.byStatus.rejected?.count ?? 0} refused${
                 s.loyalty.shadow.count > 0
-                  ? ` · ${formatCredit(s.loyalty.shadow.amountMinor)} in shadow`
+                  ? ` · ${formatCredit(s.loyalty.shadow.amountMinor, s.currency)} in shadow`
                   : ""
               }`}
             />
@@ -155,7 +162,7 @@ export default async function PromotersPage({
                     </Link>
                     <span className="whitespace-nowrap tabular-nums">
                       {p.sales} order{p.sales === 1 ? "" : "s"} ·{" "}
-                      {formatCredit(p.amountMinor)}
+                      {formatCredit(p.amountMinor, s.currency)}
                     </span>
                   </li>
                 ))}

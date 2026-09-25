@@ -37,7 +37,8 @@ describe("refund claim", () => {
         currency: "GHS",
         status: "successful",
         payment_method: "paystack",
-        paystack_reference: `CLM-${crypto.randomUUID()}`,
+        provider: "paystack",
+        provider_reference: `CLM-${crypto.randomUUID()}`,
       })
       .select("id")
       .single();

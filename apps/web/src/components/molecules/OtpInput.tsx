@@ -1,6 +1,6 @@
 "use client";
 
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
@@ -16,7 +16,7 @@ type Props = {
 // sign-in) and SecurityInputFields.tsx (Settings phone update). Auto-advances
 // between digits, supports backspace-to-previous and full-code paste/autofill.
 export default function OtpInput({
-  length = HUBTEL_OTP_CODE_LENGTH,
+  length = DEFAULT_PHONE_OTP_CODE_LENGTH,
   value,
   onChange,
   disabled = false,

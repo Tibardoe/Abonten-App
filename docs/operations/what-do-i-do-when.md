@@ -60,4 +60,4 @@ Each entry: **first check → do → then**. Keywords in bold help search.
 
 **…a field agent's account may be compromised** → lead suspends the membership; admin checks their submissions since; hold their commissions → `../incident-response/field-agent-compromise.md`.
 
-**…I need to switch a programme off in an emergency** → Rewards: Admin › Rewards › Settings "Program switched on" or `REWARDS_KILL_SWITCH=true`; Field Ops: Admin › Field Ops › Settings or `FIELD_OPS_KILL_SWITCH=true`; Paystack Transfers: `PAYSTACK_TRANSFERS_ENABLED` unset → `../deployment/rollback-and-recovery.md`.
+**…I need to switch a programme off in an emergency** → Rewards: Admin › Rewards › Settings "Program switched on" or `REWARDS_KILL_SWITCH=true`; Field Ops: Admin › Field Ops › Settings or `FIELD_OPS_KILL_SWITCH=true`; provider transfers: untick Automated payouts on the market's provider in Admin › Markets; a whole country: pause the market there → `../deployment/rollback-and-recovery.md`.

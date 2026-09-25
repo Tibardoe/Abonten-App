@@ -1,11 +1,18 @@
-// The curated set of countries Abonten supports for phone sign-in and
-// currency handling. Kept small and hand-verified (dial codes, ISO codes,
-// ISO-4217 currency, flag emoji) rather than pulled from a live API — the
-// restcountries.com v3.1 endpoint this app once used is deprecated and now
-// errors on every request, and a static list needs no external flag host.
+// The country list for phone sign-in and the other country pickers: every
+// ISO 3166-1 country (from ./geo/countries), in the shape the pickers were
+// built around. Order it with `phoneCountries(liveMarketCodes)` so the open
+// markets come first and the rest follow alphabetically — no market is the
+// default here; the market context decides that.
 //
 // This is the single source of truth: apps/web/src/data/countryDetails.ts
 // re-exports it, and the mobile auth country picker consumes it directly.
+
+import {
+  COUNTRIES,
+  matchCountries,
+  prioritiseCountries,
+} from "./geo/countries";
+import { COUNTRY_DEFAULTS } from "./geo/countryDefaults";
 
 export type Country = {
   name: string;
@@ -13,68 +20,48 @@ export type Country = {
   countryCode: string;
   /** E.164 dial prefix, incl. the leading "+". */
   callingCode: string;
-  /** ISO 4217. */
+  /** ISO 4217 of the country's usual currency, "" when not curated. */
   currency: string;
   /** Unicode flag emoji. */
   flag: string;
 };
 
-export const countries: Country[] = [
-  {
-    name: "Ghana",
-    countryCode: "GH",
-    callingCode: "+233",
-    currency: "GHS",
-    flag: "🇬🇭",
-  },
-  {
-    name: "Nigeria",
-    countryCode: "NG",
-    callingCode: "+234",
-    currency: "NGN",
-    flag: "🇳🇬",
-  },
-  {
-    name: "South Africa",
-    countryCode: "ZA",
-    callingCode: "+27",
-    currency: "ZAR",
-    flag: "🇿🇦",
-  },
-  {
-    name: "Kenya",
-    countryCode: "KE",
-    callingCode: "+254",
-    currency: "KES",
-    flag: "🇰🇪",
-  },
-  {
-    name: "Rwanda",
-    countryCode: "RW",
-    callingCode: "+250",
-    currency: "RWF",
-    flag: "🇷🇼",
-  },
-  {
-    name: "Botswana",
-    countryCode: "BW",
-    callingCode: "+267",
-    currency: "BWP",
-    flag: "🇧🇼",
-  },
-];
+function toCountry(c: (typeof COUNTRIES)[number]): Country {
+  return {
+    name: c.name,
+    countryCode: c.code,
+    callingCode: c.dialCode,
+    currency: COUNTRY_DEFAULTS[c.code]?.currency ?? "",
+    flag: c.flag,
+  };
+}
 
-/** The default sign-in country (Abonten is Ghana-first). */
-export const DEFAULT_COUNTRY: Country = countries[0];
+/** Every country, alphabetical. */
+export const countries: Country[] = COUNTRIES.map(toCountry);
 
-/** Case-insensitive match on country name or dial code (with/without "+"). */
-export function matchCountry(query: string): Country[] {
-  const q = query.trim().toLowerCase().replace(/^\+/, "");
-  if (!q) return countries;
-  return countries.filter(
-    (c) =>
-      c.name.toLowerCase().includes(q) ||
-      c.callingCode.replace("+", "").includes(q) ||
-      c.countryCode.toLowerCase() === q,
+/** The country for an ISO code, or null. */
+export function countryForCode(
+  code: string | null | undefined,
+): Country | null {
+  if (!code) return null;
+  const upper = code.toUpperCase();
+  return countries.find((c) => c.countryCode === upper) ?? null;
+}
+
+/** Countries with `first` (the open markets, then the viewer's) on top. */
+export function phoneCountries(first: readonly string[]): Country[] {
+  return prioritiseCountries(first, COUNTRIES).map(toCountry);
+}
+
+/** Case-insensitive match on country name, dial code (with/without "+") or ISO code. */
+export function matchCountry(
+  query: string,
+  pool: readonly Country[] = countries,
+): Country[] {
+  const codes = new Set(pool.map((c) => c.countryCode));
+  const ordered = COUNTRIES.filter((c) => codes.has(c.code));
+  const byCode = new Map(pool.map((c) => [c.countryCode, c]));
+  return matchCountries(query, ordered).map(
+    (c) => byCode.get(c.code) as Country,
   );
 }

@@ -38,9 +38,11 @@ function terms(r: RewardRuleSummary): string {
       `every ${caps.orders_required ?? 5}th order on a different event within ${caps.window_days ?? 90} days: ${(r.rateBps ?? 10000) / 100}% of the cash service fee back`,
     );
     if (typeof caps.max_per_reward_minor === "number")
-      parts.push(`max ${formatCredit(caps.max_per_reward_minor)}`);
+      parts.push(`max ${formatCredit(caps.max_per_reward_minor, r.currency)}`);
     if (r.minBasisMinor > 0)
-      parts.push(`orders of ${formatCredit(r.minBasisMinor)}+ count`);
+      parts.push(
+        `orders of ${formatCredit(r.minBasisMinor, r.currency)}+ count`,
+      );
     if (r.expiryDays !== null) parts.push(`expires after ${r.expiryDays} days`);
     return parts.join(" · ");
   }
@@ -53,7 +55,7 @@ function terms(r: RewardRuleSummary): string {
   }
   if (r.ruleKey === "place_visits") {
     parts.push(
-      `${formatCredit(r.flatMinor ?? 0)} per different verified visitor a month, max ${caps.max_visitors_per_month ?? 40}, within ${caps.radius_m ?? 150} m`,
+      `${formatCredit(r.flatMinor ?? 0, r.currency)} per different verified visitor a month, max ${caps.max_visitors_per_month ?? 40}, within ${caps.radius_m ?? 150} m`,
     );
     if (r.expiryDays !== null) parts.push(`expires after ${r.expiryDays} days`);
     return parts.join(" · ");
@@ -65,9 +67,9 @@ function terms(r: RewardRuleSummary): string {
         ? `${r.netShareCapBps / 100}% of cash net revenue, monthly`
         : `max ${r.netShareCapBps / 100}% of net revenue`,
     );
-  if (r.flatMinor !== null) parts.push(formatCredit(r.flatMinor));
+  if (r.flatMinor !== null) parts.push(formatCredit(r.flatMinor, r.currency));
   if (r.minBasisMinor > 0)
-    parts.push(`min order ${formatCredit(r.minBasisMinor)}`);
+    parts.push(`min order ${formatCredit(r.minBasisMinor, r.currency)}`);
   if (r.expiryDays !== null) parts.push(`expires after ${r.expiryDays} days`);
   return parts.join(" · ");
 }

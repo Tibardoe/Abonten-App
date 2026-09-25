@@ -3,20 +3,20 @@
 import { createClient } from "@/config/supabase/server";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import {
-  type VerifyPaystackPaymentCoreResult,
-  verifyPaystackPaymentCore,
-} from "@abonten/services/payments/verifyPaystackPaymentCore";
+  type VerifyPaymentCoreResult,
+  verifyPaymentCore,
+} from "@abonten/services/payments/verifyPaymentCore";
 
 /**
  * Optimistic, client-triggered verification step, called right after the
  * Paystack popup reports success — this is a fast path for UI feedback
  * only, never the sole source of truth. It calls the exact same
- * finalizePaystackPayment() the webhook calls, so whichever of the two
+ * finalizePayment() the webhook calls, so whichever of the two
  * "wins" the race does the real work, and the other is a no-op.
  */
 export default async function verifyPaystackPayment(
   paymentAttemptId: string,
-): Promise<VerifyPaystackPaymentCoreResult | { status: 401; message: string }> {
+): Promise<VerifyPaymentCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
   const {
@@ -28,7 +28,7 @@ export default async function verifyPaystackPayment(
     return { status: 401, message: "User not logged in" };
   }
 
-  return verifyPaystackPaymentCore(
+  return verifyPaymentCore(
     supabase,
     user.id,
     paymentAttemptId,

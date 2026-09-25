@@ -12,13 +12,14 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadFieldOpsOverview } from "@/lib/data";
+import { minorToMajor } from "@/lib/moneyUnits";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/fieldOps/campaignLifecycle";
 import type { FieldOpsCampaignStatus } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "./FieldOpsTabs";
 
 // Commission amounts are minor units; the tiles take major units.
-const cedis = (minor: number) => minor / 100;
 
 export function campaignStatusTone(status: FieldOpsCampaignStatus) {
   switch (status) {
@@ -154,7 +155,7 @@ export default async function FieldOpsOverviewPage() {
                   <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                     <MetricCard
                       metric="fieldOps.inHolding"
-                      value={cedis(m.pendingMinor)}
+                      value={minorToMajor(m.pendingMinor, m.currency)}
                       format="money"
                       currency={m.currency}
                       period="Right now"
@@ -162,7 +163,7 @@ export default async function FieldOpsOverviewPage() {
                     />
                     <MetricCard
                       metric="fieldOps.readyToPay"
-                      value={cedis(m.approvedMinor)}
+                      value={minorToMajor(m.approvedMinor, m.currency)}
                       format="money"
                       currency={m.currency}
                       period="Right now"
@@ -170,7 +171,7 @@ export default async function FieldOpsOverviewPage() {
                     />
                     <MetricCard
                       metric="fieldOps.inPayoutBatch"
-                      value={cedis(m.inPayoutMinor)}
+                      value={minorToMajor(m.inPayoutMinor, m.currency)}
                       format="money"
                       currency={m.currency}
                       period="Right now"
@@ -178,12 +179,12 @@ export default async function FieldOpsOverviewPage() {
                     />
                     <MetricCard
                       metric="fieldOps.paid"
-                      value={cedis(m.paidMinor)}
+                      value={minorToMajor(m.paidMinor, m.currency)}
                       format="money"
                       currency={m.currency}
                       period="All time"
                       href="/field-ops/commissions?status=paid"
-                      secondary={`From ${m.rows.toLocaleString("en-GH")} commission${m.rows === 1 ? "" : "s"} on record`}
+                      secondary={`From ${m.rows.toLocaleString("en-GB")} commission${m.rows === 1 ? "" : "s"} on record`}
                     />
                   </div>
                   {m.otherCurrencies.length > 0 ? (
@@ -192,7 +193,7 @@ export default async function FieldOpsOverviewPage() {
                       {m.otherCurrencies
                         .map(
                           (o) =>
-                            `${o.currency} — in holding ${money(cedis(o.pendingMinor), o.currency)}, ready ${money(cedis(o.approvedMinor), o.currency)}, in a batch ${money(cedis(o.inPayoutMinor), o.currency)}, paid ${money(cedis(o.paidMinor), o.currency)}`,
+                            `${o.currency} — in holding ${formatMinor(o.pendingMinor, o.currency)}, ready ${formatMinor(o.approvedMinor, o.currency)}, in a batch ${formatMinor(o.inPayoutMinor, o.currency)}, paid ${formatMinor(o.paidMinor, o.currency)}`,
                         )
                         .join(" · ")}
                     </p>

@@ -1,33 +1,37 @@
 "use server";
 
-import { logger } from "@abonten/core/logger";
-import { listMobileMoneyProviders } from "@abonten/services/payments/gateway/paystackService";
+import { listMobileMoneyNetworksCore } from "@abonten/services/payments/mobileMoneyNetworksCore";
 
 export type MobileMoneyNetworkOption = {
   code: string;
   name: string;
 };
 
-type GetPaystackMobileMoneyNetworksResult =
-  | { status: 500; message: string }
-  | { status: 200; data: MobileMoneyNetworkOption[] };
+type GetMobileMoneyNetworksResult =
+  | { status: 404 | 500; message: string }
+  | {
+      status: 200;
+      data: MobileMoneyNetworkOption[];
+      countryCode: string;
+      currency: string;
+    };
 
 /**
- * Live list of Ghana mobile money networks Paystack currently supports,
- * instead of a hardcoded guess — feeds the network dropdown in
- * AddMomoWallet.tsx. Safe to call unauthenticated (no user-specific data);
- * the client caches this with a long staleTime since it rarely changes.
+ * Live list of the mobile money networks the market's provider supports —
+ * feeds the network dropdown in AddMomoWallet.tsx and the payout form.
+ * `countryCode` is the market the wallet is for (the person's home market
+ * by default); the server refuses markets without mobile money. Safe to
+ * call unauthenticated (no user-specific data).
  */
-export default async function getPaystackMobileMoneyNetworks(): Promise<GetPaystackMobileMoneyNetworksResult> {
-  try {
-    const banks = await listMobileMoneyProviders();
-
-    return {
-      status: 200,
-      data: banks.map((bank) => ({ code: bank.code, name: bank.name })),
-    };
-  } catch (error) {
-    logger.error(`Failed listing Paystack mobile money providers: ${error}`);
-    return { status: 500, message: "Couldn't load mobile money networks" };
-  }
+export default async function getPaystackMobileMoneyNetworks(
+  countryCode?: string | null,
+): Promise<GetMobileMoneyNetworksResult> {
+  const result = await listMobileMoneyNetworksCore(countryCode ?? null);
+  if (result.status !== 200) return result;
+  return {
+    status: 200,
+    data: result.data.networks,
+    countryCode: result.data.countryCode,
+    currency: result.data.currency,
+  };
 }

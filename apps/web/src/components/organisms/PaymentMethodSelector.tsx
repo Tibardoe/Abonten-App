@@ -32,7 +32,8 @@ import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
 import { getFulfillmentMessage } from "@abonten/core/paymentStatusCopy";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
-import { creditMinorToCedis } from "@abonten/core/rewards/creditAmount";
+import { creditMinorToMajor } from "@abonten/core/rewards/creditAmount";
+import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -83,19 +84,7 @@ export type PaymentSelectorStatus = {
   selectedMethodLabel: string | null;
 };
 
-type PaystackPaymentInfo =
-  | {
-      mode: "popup";
-      reference: string;
-      accessCode: string;
-      authorizationUrl: string;
-    }
-  | {
-      mode: "direct";
-      reference: string;
-      chargeStatus: string;
-      displayMessage?: string;
-    };
+type PaymentInit = CheckoutInit;
 
 type PaymentUiState =
   | { phase: "selecting" }
@@ -222,7 +211,7 @@ export default function PaymentMethodSelector(
 
   const amount =
     useCredit && creditQuote
-      ? creditMinorToCedis(creditQuote.cashMinor)
+      ? creditMinorToMajor(creditQuote.cashMinor, creditQuote.currency)
       : props.kind !== "ticket"
         ? props.amount
         : prepared?.status === 200
@@ -263,22 +252,31 @@ export default function PaymentMethodSelector(
     });
   }, [uiState.phase, selectedMethod]);
 
-  const handlePaystackInfo = (
+  const handlePaymentInit = (
     primaryAttemptId: string,
-    paystack: PaystackPaymentInfo,
+    payment: PaymentInit,
   ) => {
-    if (paystack.mode === "popup") {
+    if (payment.mode === "popup") {
       setUiState({
         phase: "awaiting-popup",
         primaryAttemptId,
-        accessCode: paystack.accessCode,
+        accessCode: payment.accessCode,
       });
       return;
     }
 
+    if (payment.mode === "redirect") {
+      // A hosted provider page (Stripe Checkout): the person leaves this
+      // page and comes back to the checkout URL, where the pending-attempt
+      // banner and the verify action pick the payment up.
+      setUiState({ phase: "verifying" });
+      window.location.assign(payment.url);
+      return;
+    }
+
     if (
-      paystack.chargeStatus === "failed" ||
-      paystack.chargeStatus === "success"
+      payment.chargeStatus === "failed" ||
+      payment.chargeStatus === "success"
     ) {
       // Already conclusively resolved (declined, or — for some mobile money
       // networks — approved instantly with no phone prompt at all) — verify
@@ -293,8 +291,8 @@ export default function PaymentMethodSelector(
     setUiState({
       phase: "awaiting-direct",
       primaryAttemptId,
-      chargeStatus: paystack.chargeStatus,
-      displayMessage: paystack.displayMessage,
+      chargeStatus: payment.chargeStatus,
+      displayMessage: payment.displayMessage,
     });
   };
 
@@ -322,8 +320,8 @@ export default function PaymentMethodSelector(
         return;
       }
       const primaryAttemptId = response.data.attempts[0].id;
-      if (response.data.paystack) {
-        handlePaystackInfo(primaryAttemptId, response.data.paystack);
+      if (response.data.payment) {
+        handlePaymentInit(primaryAttemptId, response.data.payment);
         return;
       }
       if (response.data.verification) {
@@ -350,8 +348,8 @@ export default function PaymentMethodSelector(
         if (response.status === 409) refreshCreditQuote();
         return;
       }
-      if (response.data.paystack) {
-        handlePaystackInfo(response.data.attempt.id, response.data.paystack);
+      if (response.data.payment) {
+        handlePaymentInit(response.data.attempt.id, response.data.payment);
         return;
       }
       if (response.data.verification) {

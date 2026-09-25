@@ -403,6 +403,7 @@ export async function loadBlocks(filters: ListBlocksFilters) {
 export async function loadRewardsOverview(range: {
   from: string;
   to: string;
+  currency?: string | null;
 }) {
   const ctx = await requireAdmin();
   const svc = getServiceClient();
@@ -743,9 +744,11 @@ export async function loadContentOverview(
 ) {
   const ctx = await requireAdmin();
   const range = parseAdminRangeParams(searchParams);
+  const currencyParam = searchParams.currency;
   const overview = await getContentOverviewCore(getServiceClient(), ctx, {
     from: range.from,
     to: range.to,
+    currency: typeof currencyParam === "string" ? currencyParam : null,
   });
   return { ctx, range, overview };
 }

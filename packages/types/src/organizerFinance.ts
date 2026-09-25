@@ -62,7 +62,14 @@ export type PayoutAccountRow = {
   account_type: PayoutAccountType;
   account_holder_name: string;
   provider: string | null;
+  /** Provider-side destination code (bank code / network code), when captured. */
+  provider_code: string | null;
   account_number: string;
+  /** The market the account belongs to and the currency it is paid in. */
+  country_code: string;
+  currency: string;
+  /** Rail-specific fields (sort code, routing number, IBAN, BIC…). */
+  details: Record<string, string>;
   is_default: boolean;
   created_at: string;
 };

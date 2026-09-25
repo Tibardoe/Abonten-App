@@ -1,3 +1,4 @@
+import { cachedMarketCentre } from "@/features/markets/marketContextCache";
 import { useAppActive } from "@/lib/useAppActive";
 import {
   type BrowsingArea,
@@ -94,16 +95,22 @@ type Ctx = {
   chooseArea: (lat: number, lng: number, label?: string) => Promise<void>;
 };
 
-// Accra city centre — the fallback when location permission is denied or
-// unavailable, so discovery still shows something reasonable.
+// Where discovery centres when location permission is denied or
+// unavailable: the first city of the market the app last knew (the default
+// market's, from the cached market context). Before the app has ever
+// loaded the market context — a first launch without a connection — it is
+// Accra, the default market's first city.
 export const FALLBACK_COORDS = { lat: 5.6037, lng: -0.187 } as const;
-const FALLBACK_AREA: BrowsingArea = {
-  label: "Accra",
-  lat: FALLBACK_COORDS.lat,
-  lng: FALLBACK_COORDS.lng,
-  mode: "following",
-  isFallback: true,
-};
+function fallbackArea(): BrowsingArea {
+  const known = cachedMarketCentre();
+  return {
+    label: known?.label ?? "Accra",
+    lat: known?.lat ?? FALLBACK_COORDS.lat,
+    lng: known?.lng ?? FALLBACK_COORDS.lng,
+    mode: "following",
+    isFallback: true,
+  };
+}
 /** The label of a following area whose town could not be named. */
 export const UNNAMED_AREA_LABEL = "Your location";
 const UNNAMED_CHOICE_LABEL = "Selected location";
@@ -362,7 +369,7 @@ export function ExploreLocationProvider({
         if (cancelled) return;
         setDevicePermission(permission);
         if (permission !== "granted") {
-          commit({ area: FALLBACK_AREA, anchor: null });
+          commit({ area: fallbackArea(), anchor: null });
           return;
         }
 
@@ -382,7 +389,7 @@ export function ExploreLocationProvider({
         // Keep a last-known position already shown; only fall back to Accra
         // when nothing at all could be read.
         if (!cancelled && !stateRef.current)
-          commit({ area: FALLBACK_AREA, anchor: null });
+          commit({ area: fallbackArea(), anchor: null });
       } finally {
         if (!cancelled) setResolving(false);
       }

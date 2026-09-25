@@ -1,24 +1,26 @@
 // Server-only, durable pending-OTP store, backed by the phone_otp_state
 // Postgres table (see supabase/migrations/20260902100000_durable_phone_otp_state.sql).
-// Holds the Hubtel requestId/prefix returned by a successful send, keyed by
-// phone number + purpose, so the client never receives them (it only ever
-// sends {phone, code} to verify) and so a resend/replay can't reuse an
-// already-consumed code.
+// Holds the provider's request handle (Hubtel requestId/prefix, Twilio
+// Verification SID) returned by a successful send, keyed by phone number +
+// purpose, so the client never receives it (it only ever sends {phone,
+// code} to verify) and so a resend/replay can't reuse an already-consumed
+// code. The provider that sent the code is recorded with it, so the check
+// goes back to the same one whichever market the number belongs to.
 //
 // Previously an in-memory Map -- fine on a single long-lived process, but
-// silently broken across multiple server instances (a resend/verify routed
-// to a different instance than the original send would see no pending
-// state at all). Moved to Postgres, queried only through the service-role
-// client, so this state is shared and authoritative regardless of which
-// instance handles a given request.
+// silently broken across multiple server instances. Moved to Postgres,
+// queried only through the service-role client, so this state is shared
+// and authoritative regardless of which instance handles a given request.
 
+import type { OtpProviderCode } from "@abonten/core/market/types";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
 // "fieldops-owner": the business owner's consent code in a Field Ops
 // onboarding (migration fieldops_onboarding widened the CHECK).
 export type PhoneOtpPurpose = "sign-in" | "phone-update" | "fieldops-owner";
 
-type PendingOtp = {
+export type PendingOtp = {
+  provider: OtpProviderCode;
   requestId: string;
   prefix: string;
   createdAt: number;
@@ -54,6 +56,7 @@ export async function recordOtpSent(
   phoneE164: string,
   requestId: string,
   prefix: string,
+  provider: OtpProviderCode,
 ): Promise<void> {
   const supabase = getSupabaseServiceClient();
   const now = new Date().toISOString();
@@ -64,6 +67,7 @@ export async function recordOtpSent(
       phone_e164: phoneE164,
       request_id: requestId,
       prefix,
+      provider,
       attempts: 0,
       created_at: now,
       last_sent_at: now,
@@ -80,7 +84,7 @@ export async function getPendingOtp(
 
   const { data } = await supabase
     .from("phone_otp_state")
-    .select("request_id, prefix, created_at, attempts")
+    .select("request_id, prefix, provider, created_at, attempts")
     .eq("purpose", purpose)
     .eq("phone_e164", phoneE164)
     .maybeSingle();
@@ -95,6 +99,7 @@ export async function getPendingOtp(
   }
 
   return {
+    provider: data.provider as OtpProviderCode,
     requestId: data.request_id,
     prefix: data.prefix,
     createdAt,
@@ -102,7 +107,7 @@ export async function getPendingOtp(
   };
 }
 
-// Called before attempting a Hubtel verify. Returns false once the attempt
+// Called before attempting a provider verify. Returns false once the attempt
 // budget is exhausted, in which case the pending entry is cleared and the
 // caller must request a fresh code.
 export async function registerVerifyAttempt(

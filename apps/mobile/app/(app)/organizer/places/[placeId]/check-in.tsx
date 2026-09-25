@@ -92,7 +92,7 @@ export default function PlaceCheckInScreen() {
             Show this at your counter or entrance. Visitors scan it with their
             phone while they're here to check in (once a day).
             {panel.verified
-              ? ` Every different person who checks in during a month earns you ${formatCredit(panel.perVisitorMinor)} of promotion credit (up to ${panel.maxVisitors} a month), added early the next month.`
+              ? ` Every different person who checks in during a month earns you ${formatCredit(panel.perVisitorMinor, panel.currency)} of promotion credit (up to ${panel.maxVisitors} a month), added early the next month.`
               : " Visits are counted now; only verified places earn promotion credit from them."}
           </AppText>
 
@@ -108,7 +108,7 @@ export default function PlaceCheckInScreen() {
             />
             <Tile
               label="Credit earned"
-              value={formatCredit(panel.stats.earnedMinor)}
+              value={formatCredit(panel.stats.earnedMinor, panel.currency)}
             />
           </View>
         </>

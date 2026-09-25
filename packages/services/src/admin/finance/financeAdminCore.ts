@@ -27,12 +27,14 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { getDefaultMarket } from "../../markets/marketConfig";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
 // READ-ONLY Finance ops centre (Phase 3). Reconciliation + investigation
 // only — no admin-initiated refund/payout here (that is a later phase and
-// gets its own step-up-gated actions). Abonten operates in Ghana
-// (Africa/Accra = UTC+0), so UTC day boundaries are local.
+// gets its own step-up-gated actions). Day boundaries are UTC for every
+// market, one definition across the console; money is never summed across
+// currencies (each figure carries its own).
 
 const REFUND_STATUSES = ["refund_pending", "refunded"];
 
@@ -121,7 +123,7 @@ export function toOrganizerBalances(raw: unknown): AdminOrganizerBalance[] {
   return raw.map((row) => {
     const r = (row ?? {}) as Record<string, unknown>;
     return {
-      currency: typeof r.currency === "string" ? r.currency : "GHS",
+      currency: typeof r.currency === "string" ? r.currency : "",
       booked: num(r.booked),
       refundsDeducted: num(r.refundsDeducted),
       totalEarnings: num(r.totalEarnings),
@@ -177,7 +179,7 @@ export async function getFinanceOverviewCore(
       refundsPendingAmount: num(d.refundsPendingAmount),
       organizerMoney: toOrganizerBalances(d.organizerMoney),
       activeFeeRate: d.activeFeeRate == null ? null : num(d.activeFeeRate),
-      currency: typeof d.currency === "string" ? d.currency : "GHS",
+      currency: typeof d.currency === "string" ? d.currency : "",
     },
   };
 }
@@ -219,7 +221,7 @@ export async function listTransactionsCore(
   let query = supabase
     .from("transaction")
     .select(
-      "id, status, amount, currency, reason, full_name, email, paystack_reference, payment_method, created_at, refund_requested_at",
+      "id, status, amount, currency, reason, full_name, email, provider_reference, payment_method, created_at, refund_requested_at",
     )
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
@@ -231,7 +233,7 @@ export async function listTransactionsCore(
   if (filters.search?.trim()) {
     const s = filters.search.trim().replace(/[%,()]/g, "");
     query = query.or(
-      `paystack_reference.ilike.%${s}%,email.ilike.%${s}%,full_name.ilike.%${s}%,phone_number.ilike.%${s}%`,
+      `provider_reference.ilike.%${s}%,email.ilike.%${s}%,full_name.ilike.%${s}%,phone_number.ilike.%${s}%`,
     );
   }
   if (cursor) {
@@ -256,11 +258,11 @@ export async function listTransactionsCore(
     id: t.id,
     status: t.status,
     amount: num(t.amount),
-    currency: t.currency ?? "GHS",
+    currency: t.currency ?? "",
     reason: t.reason ?? null,
     payerName: t.full_name ?? null,
     payerEmail: canPii ? (t.email ?? null) : null,
-    paystackReference: t.paystack_reference ?? null,
+    providerReference: t.provider_reference ?? null,
     paymentMethod: t.payment_method ?? null,
     createdAt: t.created_at,
     refundRequestedAt: t.refund_requested_at ?? null,
@@ -380,13 +382,13 @@ export async function getTransactionDetailCore(
       amount: num(t.amount),
       creditAmount: num(t.credit_amount),
       creditRefundedAmount: num(t.credit_refunded_amount),
-      currency: t.currency ?? "GHS",
+      currency: t.currency ?? "",
       reason: t.reason ?? null,
       payerName: t.full_name ?? null,
       payerEmail: canPii ? (t.email ?? null) : null,
       payerPhone: canPii ? (t.phone_number ?? null) : null,
       userId: t.user_id ?? null,
-      paystackReference: t.paystack_reference ?? null,
+      providerReference: t.provider_reference ?? null,
       paymentMethod: t.payment_method ?? null,
       gatewayResponse:
         typeof t.payment_gateway_response === "string"
@@ -404,7 +406,7 @@ export async function getTransactionDetailCore(
         provider: a.provider ?? null,
         providerReference: a.provider_reference ?? null,
         amount: num(a.amount),
-        currency: a.currency ?? "GHS",
+        currency: a.currency ?? "",
         failureReason: a.failure_reason ?? null,
         paidAt: a.paid_at ?? null,
         verifiedAt: a.verified_at ?? null,
@@ -416,7 +418,7 @@ export async function getTransactionDetailCore(
         amount: num(l.amount),
         grossAmount: l.gross_amount != null ? num(l.gross_amount) : null,
         feeAmount: l.fee_amount != null ? num(l.fee_amount) : null,
-        currency: l.currency ?? "GHS",
+        currency: l.currency ?? "",
         organizerId: l.organizer_id ?? null,
         organizerName: l.organizer_id
           ? (names.get(l.organizer_id) ?? null)
@@ -438,7 +440,7 @@ export async function getTransactionDetailCore(
           f.processing_cost != null ? num(f.processing_cost) : null,
         netRevenue: f.net_revenue != null ? num(f.net_revenue) : null,
         feeRate: f.fee_rate != null ? num(f.fee_rate) : null,
-        currency: f.currency ?? "GHS",
+        currency: f.currency ?? "",
         createdAt: f.created_at,
       })),
       ticketsIssued: (ticketRows ?? []).length,
@@ -477,7 +479,7 @@ export async function listRefundsCore(
   let query = supabase
     .from("transaction")
     .select(
-      "id, status, amount, currency, full_name, paystack_reference, refund_requested_at, created_at",
+      "id, status, amount, currency, full_name, provider_reference, refund_requested_at, created_at",
     )
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
@@ -533,9 +535,9 @@ export async function listRefundsCore(
     transactionId: r.id,
     status: r.status,
     amount: num(r.amount),
-    currency: r.currency ?? "GHS",
+    currency: r.currency ?? "",
     payerName: r.full_name ?? null,
-    paystackReference: r.paystack_reference ?? null,
+    providerReference: r.provider_reference ?? null,
     refundRequestedAt: r.refund_requested_at ?? null,
     refundableAmount: refundableById.get(r.id) ?? 0,
     createdAt: r.created_at,
@@ -647,7 +649,7 @@ export async function listPayoutsCore(
       organizerId: r.organizer_id as string,
       organizerName: names.get(r.organizer_id as string) ?? null,
       amount: num(r.amount),
-      currency: (r.currency as string) ?? "GHS",
+      currency: (r.currency as string) ?? "",
       status: (r.status as string) ?? "unknown",
       reference: (r.reference as string) ?? null,
       failureReason: (r.failure_reason as string) ?? null,
@@ -732,7 +734,8 @@ export async function getOrganizerFinanceCore(
   // currencies.
   const balances = toOrganizerBalances(balancesRaw);
   const primary = balances[0] ?? null;
-  const currency = primary?.currency ?? "GHS";
+  const currency =
+    primary?.currency ?? (await getDefaultMarket()).defaultCurrency;
 
   const ledgerView: LedgerEntryView[] = (ledger ?? [])
     .slice(0, 25)

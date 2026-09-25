@@ -20,6 +20,8 @@ type EventDateSelectorProps = {
   soldOut?: boolean;
   isAbsolutelyFreeEvent?: boolean;
   eventStatus?: string;
+  /** The event's zone: every date and time reads on the venue's clock. */
+  timeZone?: string | null;
 };
 
 export default function EventDateSelector({
@@ -30,6 +32,7 @@ export default function EventDateSelector({
   soldOut,
   isAbsolutelyFreeEvent,
   eventStatus,
+  timeZone,
 }: EventDateSelectorProps) {
   // Re-render on a fixed cadence so a tab left open across an occurrence's
   // start/end time recomputes which date is selectable (and whether the CTA
@@ -88,6 +91,7 @@ export default function EventDateSelector({
     ? formatFullDateTimeRange(
         selectedOccurrence.starts_at,
         selectedOccurrence.ends_at,
+        timeZone,
       )
     : null;
 
@@ -100,7 +104,10 @@ export default function EventDateSelector({
             {sortedEventDates.map((occurrence, index) => {
               const dateValue = occurrence.starts_at;
 
-              const { day, month, date, time } = getDateParts(dateValue);
+              const { day, month, date, time } = getDateParts(
+                dateValue,
+                timeZone,
+              );
 
               // Only a strictly-future occurrence is selectable: an ongoing
               // one can't be bought for (walk-up sales are closed once it

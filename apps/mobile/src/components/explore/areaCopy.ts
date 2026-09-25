@@ -40,7 +40,7 @@ export function describeArea(
   permission: DevicePermission,
 ): AreaPresentation {
   const status = areaStatus(area, permission);
-  const label = area?.label ?? "Accra";
+  const label = area?.label ?? "your area";
   switch (status) {
     case "near_you":
       return {

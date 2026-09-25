@@ -61,6 +61,8 @@ async function makePlace(name: string, ownerId: string): Promise<string> {
   const { data, error } = await svc
     .from("place")
     .insert({
+      country_code: "GH",
+      timezone: "Africa/Accra",
       owner_id: ownerId,
       name,
       slug,
@@ -81,6 +83,14 @@ async function makePlace(name: string, ownerId: string): Promise<string> {
 
 /** Opens a case and attaches one confirmed document, ready to submit. */
 async function caseWithEvidence(placeId: string): Promise<string> {
+  // The per-owner hourly start/upload caps are real here (the shared
+  // service client points at the local stack); this suite opens far more
+  // cases for one owner than a person could, so each case starts with a
+  // fresh allowance (the limiter primitive is covered in email-auth).
+  await getServiceClient()
+    .from("rate_limit_bucket")
+    .delete()
+    .like("key", `verification:%:${owner.id}`);
   const started = await startVerificationCaseCore(svc, owner.id, {
     subjectType: "place",
     subjectId: placeId,

@@ -1,3 +1,4 @@
+import { CurrencySwitcher } from "@/components/CurrencySwitcher";
 import { RangePicker } from "@/components/metrics/RangePicker";
 import { SectionHeading } from "@/components/metrics/SectionHeading";
 import { EmptyState, PageHeader, Stat } from "@/components/ui";
@@ -12,7 +13,7 @@ import { SpotlightTabs } from "./SpotlightTabs";
 // so view figures can lag by up to an hour.
 
 function n(value: number): string {
-  return value.toLocaleString("en-GH");
+  return value.toLocaleString("en-GB");
 }
 
 export default async function SpotlightOverviewPage({
@@ -32,6 +33,14 @@ export default async function SpotlightOverviewPage({
         actions={<RangePicker basePath="/spotlight" range={range} />}
       />
       <SpotlightTabs active="/spotlight" />
+      {overview.data ? (
+        <CurrencySwitcher
+          basePath="/spotlight"
+          current={overview.data.campaigns.currency}
+          currencies={overview.data.campaigns.currencies}
+          params={sp}
+        />
+      ) : null}
 
       {overview.status !== 200 || !overview.data ? (
         <EmptyState>
@@ -181,16 +190,25 @@ export default async function SpotlightOverviewPage({
               />
               <Stat
                 label="Paid"
-                value={formatMinor(overview.data.campaigns.paidMinor)}
+                value={formatMinor(
+                  overview.data.campaigns.paidMinor,
+                  overview.data.campaigns.currency,
+                )}
               />
               <Stat
                 label="Delivered"
-                value={formatMinor(overview.data.campaigns.spentMinor)}
+                value={formatMinor(
+                  overview.data.campaigns.spentMinor,
+                  overview.data.campaigns.currency,
+                )}
                 hint="Recognised per delivered sponsored impression"
               />
               <Stat
                 label="Refunded"
-                value={formatMinor(overview.data.campaigns.refundedMinor)}
+                value={formatMinor(
+                  overview.data.campaigns.refundedMinor,
+                  overview.data.campaigns.currency,
+                )}
               />
               <Stat
                 label="Sponsored impressions"
@@ -204,7 +222,10 @@ export default async function SpotlightOverviewPage({
               />
               <Stat
                 label="Unused budget to decide"
-                value={formatMinor(overview.data.campaigns.unusedToReviewMinor)}
+                value={formatMinor(
+                  overview.data.campaigns.unusedToReviewMinor,
+                  overview.data.campaigns.currency,
+                )}
                 hint="Completed or cancelled, not refunded"
               />
             </div>

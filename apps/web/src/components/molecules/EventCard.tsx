@@ -1,9 +1,11 @@
 "use client";
 
 import { useAttendingEventIds } from "@/hooks/useAttendingEventIds";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -30,9 +32,18 @@ export default function EventCard({
   event_code,
   status,
   organizer_id,
+  timezone,
   priority,
 }: UserPostType & { priority?: boolean }) {
-  const dateTime = getFormattedEventDate(starts_at, ends_at, occurrences);
+  // "≈ £12" beside a price in another currency, when estimates are on.
+  const { estimate } = useMarketContext();
+  const approx = estimate(min_price, currency);
+  const dateTime = getFormattedEventDate(
+    starts_at,
+    ends_at,
+    occurrences,
+    timezone,
+  );
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, occurrences);
   const attendees = attendanceCount ?? attendance_count ?? 0;
   const soldOut = getEventSoldOutStatus({
@@ -154,7 +165,9 @@ export default function EventCard({
             <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground">
               {min_price === 0 || min_price === null
                 ? "Free Entry"
-                : `${currency} ${min_price?.toLocaleString()}`}
+                : `${formatMoney(currency, min_price, { trimZeroFraction: true })}${
+                    approx ? ` · ${approx}` : ""
+                  }`}
             </span>
           </div>
         </div>

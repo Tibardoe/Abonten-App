@@ -145,6 +145,7 @@ describe("promo codes and subscriptions: clients can't write them", () => {
       user_id: buyer.id,
       unit_price: 0,
       total_price: 0,
+      currency: "GHS",
       status: "paid",
     });
     expect(checkout.error?.code).toBe("42501");

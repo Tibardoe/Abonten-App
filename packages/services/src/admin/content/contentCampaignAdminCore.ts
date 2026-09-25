@@ -1,4 +1,6 @@
 import { logger } from "@abonten/core/logger";
+import { formatMoney } from "@abonten/core/money/formatMoney";
+import { money } from "@abonten/core/money/money";
 import {
   decodeCursor,
   encodeCursor,
@@ -20,7 +22,7 @@ import {
   mapCampaign,
 } from "../../content/campaigns/contentCampaignCore";
 import { notifyCampaign } from "../../content/contentNotifyCore";
-import { refundTransaction } from "../../payments/gateway/paystackService";
+import { resolveProviderAccount } from "../../payments/providers/registry";
 import {
   type AdminEnvelope,
   adminError,
@@ -104,7 +106,8 @@ export async function getCampaignAdminCore(
       id: string;
       status: string;
       amount: number;
-      paystackReference: string | null;
+      currency: string;
+      providerReference: string | null;
     } | null;
   }>
 > {
@@ -130,7 +133,7 @@ export async function getCampaignAdminCore(
   if (campaign.transactionId) {
     const { data: tx } = await supabase
       .from("transaction")
-      .select("id, status, amount, paystack_reference")
+      .select("id, status, amount, currency, provider_reference")
       .eq("id", campaign.transactionId)
       .maybeSingle();
     if (tx) {
@@ -138,7 +141,8 @@ export async function getCampaignAdminCore(
         id: tx.id,
         status: tx.status,
         amount: Number(tx.amount),
-        paystackReference: tx.paystack_reference,
+        currency: tx.currency,
+        providerReference: tx.provider_reference,
       };
     }
   }
@@ -314,10 +318,12 @@ async function executeCampaignRefund(
   }
   const { data: tx } = await supabase
     .from("transaction")
-    .select("id, status, paystack_reference, payment_method")
+    .select(
+      "id, status, provider, provider_reference, provider_transaction_id, currency, country_code, payment_method",
+    )
     .eq("id", campaign.transaction_id)
     .maybeSingle();
-  if (!tx || tx.status !== "successful" || !tx.paystack_reference) {
+  if (!tx || tx.status !== "successful" || !tx.provider_reference) {
     return {
       status: 409,
       message: "The payment is not in a refundable state.",
@@ -348,10 +354,19 @@ async function executeCampaignRefund(
     return { status: 409, message: "This campaign was already refunded." };
   }
   try {
-    await refundTransaction(tx.paystack_reference, amount);
+    const { provider, account } = await resolveProviderAccount({
+      countryCode: tx.country_code,
+      currency: tx.currency,
+      providerCode: tx.provider,
+    });
+    await provider.refund(account, {
+      reference: tx.provider_reference,
+      providerTransactionId: tx.provider_transaction_id,
+      amount: money(amount, tx.currency),
+    });
   } catch (error) {
     logger.error(
-      `refundCampaignAdminCore: Paystack refund failed for ${tx.paystack_reference}: ${
+      `refundCampaignAdminCore: ${tx.provider} refund failed for ${tx.provider_reference}: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
@@ -360,7 +375,7 @@ async function executeCampaignRefund(
     return {
       status: 500,
       message:
-        "The refund was recorded but Paystack refused the request. Check Finance › Refunds and retry there.",
+        "The refund was recorded but the payment provider refused the request. Check Finance › Refunds and retry there.",
     };
   }
   await recordAdminAudit(supabase, {
@@ -369,7 +384,7 @@ async function executeCampaignRefund(
     action: "spotlight.campaign.refund",
     targetType: "content_campaign",
     targetId: input.campaignId,
-    summary: `Refunded ${amount} pesewas of an unspent campaign budget`,
+    summary: `Refunded ${formatMoney(money(amount, tx.currency))} of an unspent campaign budget`,
     reason: input.reason,
     after: { refunded_minor: amount, transaction_id: campaign.transaction_id },
     requestMeta: { ...(input.requestMeta ?? {}), roles: ctx.roles },
@@ -378,7 +393,7 @@ async function executeCampaignRefund(
     id: input.campaignId,
     advertiserId: campaign.advertiser_id,
     status: "refunded",
-    reason: `GH₵ ${(amount / 100).toFixed(2)} is being returned to your payment method.`,
+    reason: `${formatMoney(money(amount, tx.currency))} is being returned to your payment method.`,
   });
   return {
     status: 200,

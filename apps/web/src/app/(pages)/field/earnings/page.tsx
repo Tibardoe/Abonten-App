@@ -4,14 +4,14 @@ import { PageTitle, SupportingText } from "@/components/ui/typography";
 import StatTile from "@/fieldOps/atoms/StatTile";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import PayoutDestinationForm from "@/fieldOps/organisms/PayoutDestinationForm";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsCommission } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const money = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 const STATUS_COPY: Record<string, string> = {
   pending: "In holding",

@@ -130,13 +130,13 @@ export async function globalSearchCore(
       let query = supabase
         .from("transaction")
         .select(
-          "id, paystack_reference, full_name, email, amount, currency, status",
+          "id, provider_reference, full_name, email, amount, currency, status",
         )
         .limit(PER_GROUP);
       query = isId
         ? query.eq("id", q)
         : query.or(
-            `paystack_reference.ilike.${like},email.ilike.${like},full_name.ilike.${like}`,
+            `provider_reference.ilike.${like},email.ilike.${like},full_name.ilike.${like}`,
           );
       const { data, error } = await query;
       if (error) {
@@ -146,7 +146,7 @@ export async function globalSearchCore(
       results.transactions = (data ?? []).map(
         (t): GlobalSearchHit => ({
           id: t.id,
-          label: t.paystack_reference ?? `${t.id.slice(0, 8)}…`,
+          label: t.provider_reference ?? `${t.id.slice(0, 8)}…`,
           sublabel: `${t.full_name ?? "—"} · ${t.currency ?? ""} ${t.amount ?? ""} · ${t.status}`,
           href: `/finance/transactions/${t.id}`,
         }),

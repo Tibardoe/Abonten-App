@@ -96,7 +96,9 @@ describe("credit ledger authorization", () => {
 
   it("a signed-in user cannot write any credit table directly", async () => {
     const writes = [
-      alice.client.from("credit_account").insert({ user_id: alice.id }),
+      alice.client
+        .from("credit_account")
+        .insert({ user_id: alice.id, currency: "GHS" }),
       alice.client
         .from("credit_account")
         .update({ available_minor: 999999 })
@@ -107,6 +109,7 @@ describe("credit ledger authorization", () => {
         spend_scope: "any",
         status: "active",
         funding_code: "campaign_expense",
+        currency: "GHS",
         original_minor: 1000,
         remaining_minor: 1000,
       }),
@@ -114,6 +117,7 @@ describe("credit ledger authorization", () => {
         journal_type: "bonus.grant",
         idempotency_key: "forged",
         actor_type: "user",
+        currency: "GHS",
       }),
     ];
     for (const res of await Promise.all(writes)) {
@@ -163,6 +167,7 @@ describe("credit ledger authorization", () => {
       journal_id: crypto.randomUUID(),
       ledger_account_id: ledgerAccount?.id as string,
       amount_minor: 1,
+      currency: "GHS",
     });
     expect(forged.error?.code).toBe("42501");
 

@@ -21,6 +21,7 @@ import {
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
 import { paidTierProblem } from "@abonten/core/ticketTiers";
+import { wallClockString } from "@abonten/core/time/timeZone";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import { useQuery } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
@@ -122,7 +123,8 @@ export function useEventEdit(eventId: string) {
   const [ticketPrice, setTicketPrice] = useState("");
   const [ticketQuantity, setTicketQuantity] = useState("");
   const [tiers, setTiers] = useState<TicketTier[]>([]);
-  const [ticketCurrency, setTicketCurrency] = useState("GHS");
+  // Filled from the event (its market's currency) once it loads.
+  const [ticketCurrency, setTicketCurrency] = useState("");
 
   const seededAddress = useRef<string>("");
 
@@ -181,7 +183,7 @@ export function useEventEdit(eventId: string) {
 
     // Ticket types — mirrors the web inferInitialTicketState.
     const tt = event.ticket_type ?? [];
-    setTicketCurrency(tt[0]?.currency ?? "GHS");
+    setTicketCurrency(event.currency ?? tt[0]?.currency ?? "");
     if (tt.length === 1 && tt[0].type === "FREE") {
       setTicketMode("free");
     } else if (tt.length === 1 && tt[0].type === "SINGLE TICKET") {
@@ -352,8 +354,14 @@ export function useEventEdit(eventId: string) {
       }
       return {
         ok: true,
-        startsAt: (start as Date).toISOString(),
-        endsAt: (end as Date).toISOString(),
+        startsAt: wallClockString(
+          rangeStart as string,
+          rangeStartTime,
+        ) as string,
+        endsAt: wallClockString(
+          (rangeEnd ?? rangeStart) as string,
+          rangeEndTime,
+        ) as string,
       };
     }
     const entries = occurrences.map((o) => ({
@@ -374,9 +382,9 @@ export function useEventEdit(eventId: string) {
     }
     return {
       ok: true,
-      specificDates: entries.map((e) => ({
-        start: (e.start as Date).toISOString(),
-        end: (e.end as Date).toISOString(),
+      specificDates: occurrences.map((o) => ({
+        start: wallClockString(o.dateIso, o.start) as string,
+        end: wallClockString(o.dateIso, o.end) as string,
       })),
     };
   }

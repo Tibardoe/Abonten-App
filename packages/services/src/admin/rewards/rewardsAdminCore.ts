@@ -24,6 +24,10 @@ import type {
 } from "@abonten/types/rewards";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
+  creditCurrencyFor,
+  rewardRulesCurrency,
+} from "../../rewards/creditCurrency";
+import {
   type AdminEnvelope,
   adminError,
   assertPermission,
@@ -160,6 +164,7 @@ export async function readRules(
   );
   return (data ?? []).map((r) => ({
     id: r.id,
+    currency: r.currency,
     ruleKey: r.rule_key,
     version: r.version,
     isActive: r.is_active,
@@ -183,6 +188,8 @@ export async function readRules(
 // ── Overview ────────────────────────────────────────────────
 
 type OverviewJson = {
+  currency?: string;
+  currencies?: string[];
   balances?: Record<string, number>;
   promotion_only_minor?: number;
   flows?: Record<string, number>;
@@ -193,7 +200,7 @@ type OverviewJson = {
 export async function getRewardsOverviewCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
-  range: { from: string; to: string },
+  range: { from: string; to: string; currency?: string | null },
 ): Promise<AdminEnvelope<AdminRewardsOverview>> {
   try {
     assertPermission(ctx, "rewards.view");
@@ -205,6 +212,7 @@ export async function getRewardsOverviewCore(
     supabase.rpc("admin_rewards_overview", {
       p_from: range.from,
       p_to: range.to,
+      p_currency: range.currency ?? undefined,
     }),
     supabase.rpc("credit_reconciliation_checks"),
     readSettings(supabase),
@@ -229,6 +237,8 @@ export async function getRewardsOverviewCore(
   return {
     status: 200,
     data: {
+      currency: o.currency ?? (await rewardRulesCurrency()),
+      currencies: o.currencies ?? [],
       balances: {
         accounts: num(b.accounts),
         frozenAccounts: num(b.frozen_accounts),
@@ -307,7 +317,7 @@ export async function listCreditAccountsCore(
   let query = supabase
     .from("credit_account")
     .select(
-      "user_id, status, available_minor, pending_minor, lifetime_earned_minor, updated_at",
+      "user_id, currency, status, available_minor, pending_minor, lifetime_earned_minor, updated_at",
     )
     .order("updated_at", { ascending: false })
     .order("user_id", { ascending: false })
@@ -338,6 +348,7 @@ export async function listCreditAccountsCore(
     status: 200,
     data: page.map((r) => ({
       userId: r.user_id,
+      currency: r.currency,
       username: names.get(r.user_id)?.username ?? null,
       fullName: names.get(r.user_id)?.fullName ?? null,
       status: r.status as CreditAccountStatus,
@@ -380,13 +391,29 @@ async function mapAdjustments(
   supabase: ServiceRoleClient,
   rows: AdjustmentRow[],
 ): Promise<AdminCreditAdjustmentRequest[]> {
-  const names = await namesFor(
-    supabase,
-    rows.flatMap((r) => [r.user_id, r.requested_by, r.decided_by]),
+  const userIds = [...new Set(rows.map((r) => r.user_id))];
+  const [names, accounts, fallbackCurrency] = await Promise.all([
+    namesFor(
+      supabase,
+      rows.flatMap((r) => [r.user_id, r.requested_by, r.decided_by]),
+    ),
+    userIds.length > 0
+      ? supabase
+          .from("credit_account")
+          .select("user_id, currency")
+          .in("user_id", userIds)
+      : Promise.resolve({
+          data: [] as { user_id: string; currency: string }[],
+        }),
+    rewardRulesCurrency(),
+  ]);
+  const currencyOf = new Map(
+    (accounts.data ?? []).map((a) => [a.user_id, a.currency]),
   );
   return rows.map((r) => ({
     id: r.id,
     userId: r.user_id,
+    currency: currencyOf.get(r.user_id) ?? fallbackCurrency,
     userName: displayName(names.get(r.user_id)),
     direction: r.direction,
     amountMinor: num(r.amount_minor),
@@ -430,7 +457,6 @@ export async function getCreditAccountDetailCore(
         .from("credit_account")
         .select("*")
         .eq("user_id", userId)
-        .eq("currency", "GHS")
         .maybeSingle(),
       supabase
         .from("credit_lot")
@@ -540,6 +566,7 @@ export async function getCreditAccountDetailCore(
   return {
     status: 200,
     data: {
+      currency: accountRes.data?.currency ?? (await creditCurrencyFor(userId)),
       user: {
         id: userId,
         username: user?.username ?? null,

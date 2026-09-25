@@ -7,6 +7,7 @@ import type {
   MonthlyRewardRuleKey,
 } from "@abonten/types/rewards";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { rewardRulesCurrency } from "../../rewards/creditCurrency";
 import {
   type AdminEnvelope,
   adminError,
@@ -66,6 +67,7 @@ type RunRow = {
 function mapRun(
   row: RunRow,
   names: Map<string, { username: string | null; fullName: string | null }>,
+  currency: string,
 ): AdminRebateRun {
   const stats = row.stats ?? {};
   const byRule: AdminRebateRun["byRule"] = {};
@@ -83,6 +85,7 @@ function mapRun(
   }
   return {
     id: row.id,
+    currency,
     periodStart: row.period_start,
     triggeredBy: row.triggered_by
       ? (displayName(names.get(row.triggered_by)) ?? "an admin")
@@ -110,6 +113,7 @@ export async function getRebateSummaryCore(
     return denied(e);
   }
 
+  const currency = await rewardRulesCurrency();
   const [runs, events, settings, live] = await Promise.all([
     supabase
       .from("reward_rebate_run")
@@ -212,6 +216,7 @@ export async function getRebateSummaryCore(
   return {
     status: 200,
     data: {
+      currency,
       sinceDays: range.days,
       from: range.from,
       to: range.to,
@@ -219,7 +224,7 @@ export async function getRebateSummaryCore(
       shadowMode: settings.data?.shadow_mode !== false,
       liveRules: (live.data ?? []).map((r) => r.rule_key as RuleKey),
       runs: ((runs.data ?? []) as unknown as RunRow[]).map((r) =>
-        mapRun(r, names),
+        mapRun(r, names, currency),
       ),
       byRule,
       netRevenueMinor: net,
@@ -272,7 +277,11 @@ export async function runMonthlyRebatesCore(
     .eq("id", result.run_id as string)
     .maybeSingle();
   const run = row
-    ? mapRun(row as unknown as RunRow, await namesFor(supabase, [ctx.userId]))
+    ? mapRun(
+        row as unknown as RunRow,
+        await namesFor(supabase, [ctx.userId]),
+        await rewardRulesCurrency(),
+      )
     : null;
 
   await recordAdminAudit(supabase, {

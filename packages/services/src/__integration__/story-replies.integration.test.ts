@@ -124,6 +124,8 @@ beforeAll(async () => {
   const { data: place, error } = await svc
     .from("place")
     .insert({
+      country_code: "GH",
+      timezone: "Africa/Accra",
       owner_id: organizer.id,
       name: "Story Reply Lounge",
       slug: `story-reply-lounge-${crypto.randomUUID()}`,

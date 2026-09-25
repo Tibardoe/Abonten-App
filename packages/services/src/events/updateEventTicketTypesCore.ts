@@ -23,6 +23,9 @@ type DateInput = string | Date;
 
 const CHECK_VIOLATION = "23514";
 
+const toIso = (value: DateInput | null | undefined): string | null =>
+  value == null ? null : value instanceof Date ? value.toISOString() : value;
+
 async function retireEventPromoCodes(
   supabase: SupabaseClient<Database>,
   eventId: string,
@@ -72,7 +75,7 @@ export async function updateEventTicketTypesCore(
   userId: string,
   input: UpdateEventTicketTypesCoreInput,
 ): Promise<UpdateEventTicketTypesCoreResult> {
-  const { eventId, currency, freeEvent, singleTicket } = input;
+  const { eventId, freeEvent, singleTicket } = input;
   const multipleTickets = input.multipleTickets ?? [];
 
   if (!freeEvent) {
@@ -87,13 +90,23 @@ export async function updateEventTicketTypesCore(
 
   const { data: event, error: eventError } = await supabase
     .from("event")
-    .select("id, capacity")
+    .select("id, capacity, currency")
     .eq("id", eventId)
     .eq("organizer_id", userId)
     .maybeSingle();
 
   if (eventError || !event) {
     return { status: 404, message: "Event not found or unauthorized" };
+  }
+
+  // Every ticket type carries the event's canonical currency; a client that
+  // names a different one is refused rather than silently corrected.
+  const currency = event.currency;
+  if (input.currency && input.currency.toUpperCase() !== currency) {
+    return {
+      status: 400,
+      message: `Tickets for this event are priced in ${currency}.`,
+    };
   }
 
   const participation = await getEventHasConfirmedParticipationCore(
@@ -151,8 +164,8 @@ export async function updateEventTicketTypesCore(
           type: ticket.type,
           price: ticket.price,
           quantity: ticket.quantity,
-          available_from: ticket.availableFrom ?? null,
-          available_until: ticket.availableUntil ?? null,
+          available_from: toIso(ticket.availableFrom),
+          available_until: toIso(ticket.availableUntil),
           currency,
         })),
       ];

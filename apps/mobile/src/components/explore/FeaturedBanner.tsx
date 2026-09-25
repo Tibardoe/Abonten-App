@@ -26,7 +26,12 @@ import { View, useWindowDimensions } from "react-native";
 // each caption repeats it.
 
 function eventSlide(e: UserPostType): WeeklyBannerSlide {
-  const when = getFormattedEventDate(e.starts_at, e.ends_at, e.occurrences);
+  const when = getFormattedEventDate(
+    e.starts_at,
+    e.ends_at,
+    e.occurrences,
+    e.timezone,
+  );
   const meta = [when?.date, e.address?.full_address]
     .filter(Boolean)
     .join(" · ");

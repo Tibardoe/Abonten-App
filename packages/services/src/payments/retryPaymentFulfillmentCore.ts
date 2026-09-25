@@ -1,7 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { finalizePaystackPayment } from "./finalizePaystackPayment";
+import { finalizePayment } from "./finalizePayment";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 
 // Post-auth body of retryPaymentFulfillment — shared with
@@ -53,7 +53,7 @@ export async function retryPaymentFulfillmentCore(
     return { status: 403, message: "Not authorized" };
   }
 
-  const result = await finalizePaystackPayment(paymentAttemptId, deps);
+  const result = await finalizePayment(paymentAttemptId, deps);
 
   if (result.status === "succeeded") {
     return { status: 200, data: { finalized: "succeeded" } };

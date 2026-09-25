@@ -1,5 +1,4 @@
 import { logger } from "@abonten/core/logger";
-import { toPesewas } from "@abonten/core/paystackAmount";
 import type { Database } from "@abonten/types/database.types";
 import type { CreditQuote } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -15,8 +14,10 @@ import { getSpendableCredit, quoteCredit } from "./creditRedemptionCore";
 
 export type TicketOrderSession = {
   checkoutSessionId: string;
-  /** Session total including the service fee, in pesewas. */
+  /** Session total including the service fee and any tax, in minor units of the order currency. */
   totalMinor: number;
+  /** Tax added on top of this session (exclusive-tax markets), in minor units. */
+  taxMinor: number;
   expiresAt: string | null;
   eventTitle: string;
   organizerId: string | null;
@@ -77,7 +78,8 @@ export async function loadTicketOrder(
       .sort();
     return {
       checkoutSessionId: s.checkoutSessionId,
-      totalMinor: toPesewas(s.total),
+      totalMinor: s.totalMinor,
+      taxMinor: s.taxMinor,
       expiresAt: expiries[0] ?? null,
       eventTitle: s.eventTitle || sessionRows[0]?.event?.title || "",
       organizerId: sessionRows[0]?.event?.organizer_id ?? null,
@@ -122,6 +124,7 @@ export async function quoteTicketCredit(
     userId,
     "tickets",
     order.orderTotalMinor,
+    order.currency,
   );
   return {
     quote: quoteCredit(order, spendable, order.ownEvent ? "own_event" : null),

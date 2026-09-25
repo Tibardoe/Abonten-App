@@ -210,7 +210,8 @@ describe("campaign money", () => {
         refundedMinor: 4000,
       }),
     ).toBe(0);
-    expect(formatMinor(5000)).toBe("GH₵ 50.00");
+    expect(formatMinor(5000, "GHS")).toBe("GH₵50.00");
+    expect(formatMinor(5000, "KES")).toBe("KSh 50.00");
   });
 });
 

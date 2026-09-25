@@ -18,6 +18,7 @@ import type {
   CreditSummary,
 } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { creditCurrencyFor } from "./creditCurrency";
 import { getRewardsProgramCore } from "./rewardsProgramQuery";
 
 // The signed-in user's own credit balance and activity. Both reads run on
@@ -27,6 +28,7 @@ import { getRewardsProgramCore } from "./rewardsProgramQuery";
 // logging and to refuse a missing session early.
 
 type SummaryJson = {
+  currency?: string;
   status?: CreditAccountStatus;
   available_minor?: number;
   pending_minor?: number;
@@ -57,6 +59,7 @@ const num = (value: unknown): number => {
 export function mapCreditSummary(
   json: SummaryJson | null,
   enabled: boolean,
+  fallbackCurrency: string,
 ): CreditSummary {
   const byScope: Partial<Record<CreditSpendScope, number>> = {};
   for (const [scope, value] of Object.entries(json?.by_scope ?? {})) {
@@ -65,7 +68,7 @@ export function mapCreditSummary(
 
   return {
     enabled,
-    currency: "GHS",
+    currency: json?.currency ?? fallbackCurrency,
     status: json?.status ?? "active",
     availableMinor: num(json?.available_minor),
     pendingMinor: num(json?.pending_minor),
@@ -125,6 +128,7 @@ export async function getCreditSummaryCore(
     data: mapCreditSummary(
       summary.data as SummaryJson | null,
       program.data.enabled,
+      await creditCurrencyFor(userId),
     ),
   };
 }
@@ -166,6 +170,7 @@ export async function getCreditActivityCore(
     };
   }
 
+  const currency = await creditCurrencyFor(userId);
   const { page, hasNextPage } = splitPage<CreditActivityRow>(
     (data ?? []) as unknown as CreditActivityRow[],
     pageSize,
@@ -182,7 +187,7 @@ export async function getCreditActivityCore(
 
   return {
     status: 200,
-    data: page.map(toCreditActivityItem),
+    data: page.map((row) => toCreditActivityItem(row, currency)),
     nextCursor,
     hasNextPage,
   };

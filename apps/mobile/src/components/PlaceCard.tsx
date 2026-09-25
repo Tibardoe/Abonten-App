@@ -1,8 +1,10 @@
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { prefetchPlaceDetail } from "@/features/places/usePlaceDetail";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { formatDistance } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
   AppText,
@@ -47,6 +49,7 @@ export function PlaceCard({
   const router = useRouter();
   const qc = useQueryClient();
   const [imageFailed, setImageFailed] = useState(false);
+  const { context } = useMarket();
 
   const cover =
     place.cover_public_id && place.cover_version
@@ -173,7 +176,10 @@ export function PlaceCard({
               <View className="flex-row items-center gap-1">
                 <Icon name="navigate-outline" size={13} tone="muted" />
                 <AppText variant="meta">
-                  {(place.distance_km as number).toFixed(1)} km
+                  {formatDistance(
+                    (place.distance_km as number) * 1000,
+                    context?.distanceUnit ?? "km",
+                  )}
                 </AppText>
               </View>
             ) : null}

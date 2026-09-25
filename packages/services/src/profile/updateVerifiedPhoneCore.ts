@@ -1,7 +1,6 @@
 import { logger } from "@abonten/core/logger";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { OTP_MESSAGES } from "@abonten/core/otpMessages";
-import { verifyHubtelOtp } from "@abonten/services/profile/hubtelOtpClient";
+import { verifyPendingOtp } from "@abonten/services/profile/phoneOtpSendCore";
 import {
   clearPendingOtp,
   getPendingOtp,
@@ -24,7 +23,9 @@ export async function updateVerifiedPhoneCore(
   phoneE164: string,
   code: string,
 ): Promise<UpdateVerifiedPhoneResult> {
-  if (!new RegExp(`^\\d{${HUBTEL_OTP_CODE_LENGTH}}$`).test(code)) {
+  // The exact length depends on the provider that sent the code; the
+  // provider check below enforces it.
+  if (!/^\d{4,8}$/.test(code)) {
     return { status: 400, message: OTP_MESSAGES.invalidFormat };
   }
 
@@ -44,11 +45,7 @@ export async function updateVerifiedPhoneCore(
     return { status: 401, message: OTP_MESSAGES.expired };
   }
 
-  const verifyResult = await verifyHubtelOtp(
-    pending.requestId,
-    pending.prefix,
-    code,
-  );
+  const verifyResult = await verifyPendingOtp(pending, code);
 
   if (!verifyResult.ok) {
     return { status: 401, message: verifyResult.message };

@@ -287,7 +287,7 @@ export async function previewPayoutBatchCore(
     data: {
       lines: lines.map(({ hasDestination: _drop, ...rest }) => rest),
       totalMinor: lines.reduce((t, l) => t + l.amountMinor, 0),
-      currency: campaign?.currency ?? "GHS",
+      currency: campaign?.currency ?? "",
       withoutDestination: all
         .filter((a) => !a.hasDestination)
         .map((a) => ({ memberName: a.memberName, amountMinor: a.amountMinor })),

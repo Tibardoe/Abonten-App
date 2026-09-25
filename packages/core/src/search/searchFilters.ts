@@ -1,4 +1,6 @@
 import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
+import { currencyMinorFactor, isKnownCurrency } from "../money/currencies";
+import { formatMoney } from "../money/formatMoney";
 
 // Filters for global search (Discovery). Deliberately NOT the Explore
 // event/place filters: those browse one kind of listing around a place;
@@ -74,12 +76,36 @@ export const SEARCH_RADIUS_OPTIONS: { value: number | null; label: string }[] =
     { value: 50, label: "Within 50 km" },
   ];
 
-export const SEARCH_PRICE_OPTIONS: { value: SearchPrice; label: string }[] = [
-  { value: "any", label: "Any price" },
-  { value: "free", label: "Free" },
-  { value: "under_50", label: "Under GH₵50" },
-  { value: "under_200", label: "Under GH₵200" },
+/**
+ * The price buckets, labelled in the market's currency ("Under ₦50" in
+ * Nigeria). The thresholds are in major units of that currency; the search
+ * RPC applies them against the listing's own currency.
+ */
+export const SEARCH_PRICE_VALUES: readonly SearchPrice[] = [
+  "any",
+  "free",
+  "under_50",
+  "under_200",
 ];
+
+export function searchPriceOptions(
+  currency: string,
+): { value: SearchPrice; label: string }[] {
+  // Before the market is known the labels carry the bare number.
+  const under = (major: number) =>
+    isKnownCurrency(currency)
+      ? `Under ${formatMoney(
+          { amountMinor: major * currencyMinorFactor(currency), currency },
+          { trimZeroFraction: true },
+        )}`
+      : `Under ${major}`;
+  return [
+    { value: "any", label: "Any price" },
+    { value: "free", label: "Free" },
+    { value: "under_50", label: under(50) },
+    { value: "under_200", label: under(200) },
+  ];
+}
 
 export const SEARCH_RATING_OPTIONS: { value: number | null; label: string }[] =
   [
@@ -168,7 +194,9 @@ export function clearSearchFiltersFor(
 export function describeSearchFilters(
   filters: SearchFilters,
   mode: SearchMode,
-  locationLabel?: string | null,
+  locationLabel: string | null | undefined,
+  /** The market currency the price buckets are labelled in. */
+  currency: string,
 ): { key: SearchFilterKey; label: string }[] {
   return activeSearchFilters(filters, mode).map((key) => {
     switch (key) {
@@ -188,7 +216,7 @@ export function describeSearchFilters(
         return {
           key,
           label:
-            SEARCH_PRICE_OPTIONS.find((o) => o.value === filters.price)
+            searchPriceOptions(currency).find((o) => o.value === filters.price)
               ?.label ?? "",
         };
       case "eventCategory":
@@ -353,7 +381,7 @@ export function searchFiltersFromParams(
       ? (when as SearchWhen)
       : "any",
     radiusKm: SEARCH_RADIUS_OPTIONS.some((o) => o.value === km) ? km : null,
-    price: SEARCH_PRICE_OPTIONS.some((o) => o.value === price)
+    price: SEARCH_PRICE_VALUES.includes(price as SearchPrice)
       ? (price as SearchPrice)
       : "any",
     eventCategory: one("cat")?.slice(0, 80) || null,

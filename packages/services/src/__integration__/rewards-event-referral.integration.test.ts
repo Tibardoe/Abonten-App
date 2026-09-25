@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 // Abonten Rewards Phase 4 -- event referrals end to end through the real
 // code: a referral link is opened (touch), the buyer opens a checkout
-// (attribution stamped), pays (finalizePaystackPayment with Paystack's HTTP
+// (attribution stamped), pays (finalizePayment with Paystack's HTTP
 // calls mocked), the reward engine evaluates the sale from its outbox, and
 // settlement releases -- or a refund voids -- the reward.
 import {
@@ -19,7 +19,7 @@ import {
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
-import { finalizePaystackPayment } from "../payments/finalizePaystackPayment";
+import { finalizePayment } from "../payments/finalizePayment";
 import type { PaymentFulfillmentDeps } from "../payments/fulfillmentDeps";
 import {
   getReferralLinkCore,
@@ -39,7 +39,7 @@ const paystack = vi.hoisted(() => ({
   refundTransaction: vi.fn(),
 }));
 
-vi.mock("../payments/gateway/paystackService", async (importOriginal) => ({
+vi.mock("../payments/providers/paystackApi", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   verifyTransaction: paystack.verifyTransaction,
   initializeTransaction: paystack.initializeTransaction,
@@ -172,7 +172,7 @@ describe("event referrals: capture, attribution and the reward engine", () => {
     );
     expect(res.status).toBe(200);
     if (res.status !== 200) throw new Error("payment attempt failed");
-    const reference = res.data.paystack?.reference as string;
+    const reference = res.data.payment?.reference as string;
     paystack.verifyTransaction.mockResolvedValueOnce({
       id: 1,
       status: "success",
@@ -191,7 +191,7 @@ describe("event referrals: capture, attribution and the reward engine", () => {
         channel: "card",
       },
     });
-    const done = await finalizePaystackPayment(res.data.attempts[0].id, deps);
+    const done = await finalizePayment(res.data.attempts[0].id, deps);
     expect(done.status).toBe("succeeded");
 
     const { data: checkout } = await service
@@ -315,7 +315,7 @@ describe("event referrals: capture, attribution and the reward engine", () => {
     paystack.initializeTransaction.mockReset();
     paystack.refundTransaction.mockReset();
     paystack.initializeTransaction.mockImplementation(
-      async (p: { reference: string }) => ({
+      async (_account: unknown, p: { reference: string }) => ({
         reference: p.reference,
         access_code: "test-access",
         authorization_url: "https://checkout.paystack.test/x",
@@ -581,7 +581,8 @@ describe("event referrals: capture, attribution and the reward engine", () => {
       currency: "GHS",
       status: "successful",
       payment_method: "paystack",
-      paystack_reference: `FP-${crypto.randomUUID()}`,
+      provider: "paystack",
+      provider_reference: `FP-${crypto.randomUUID()}`,
       payment_gateway_response: { authorization: card },
     });
     // ...and the "friend" pays with it too.

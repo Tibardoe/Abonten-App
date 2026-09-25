@@ -16,6 +16,7 @@
     "@abonten/core": "*",
     "@abonten/types": "*",
     "@abonten/validation": "*",
+    "@photostructure/tz-lookup": "^11.7.0",
     "@supabase/supabase-js": "^2.49.1",
     "cloudinary": "^2.6.0",
     "qrcode": "^1.5.4",

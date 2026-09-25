@@ -130,8 +130,10 @@ export async function clearPayoutReview(input: unknown) {
   }
 }
 
-// Initiate a real Paystack transfer for an existing pending payout.
-// No-op (409) unless PAYSTACK_TRANSFERS_ENABLED=true — see
+// Initiate a real provider transfer for an existing pending payout.
+// No-op (409) unless the payout's market has automated payouts switched on
+// for its provider account (Admin › Markets › provider "Automated payouts",
+// market_payment_provider.payouts_enabled; off everywhere by default) — see
 // sendPayoutAdminCore. The payout settles via the transfer.* webhook.
 export async function sendPayout(input: unknown) {
   const parsed = sendPayoutSchema.safeParse(input);

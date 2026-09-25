@@ -12,8 +12,10 @@ import {
 } from "@/components/ui";
 import { loadFieldOpsCampaign } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/fieldOps/campaignLifecycle";
 import { ACTIVITY_LABEL } from "@abonten/services/admin/fieldOps/fieldOpsAdminShared";
+import { getDefaultMarket } from "@abonten/services/markets/marketConfig";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FieldOpsTabs } from "../../FieldOpsTabs";
@@ -29,8 +31,7 @@ const ROLE_LABEL: Record<string, string> = {
   online_member: "Online member",
 };
 
-const money = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 export default async function FieldOpsCampaignPage({
   params,
@@ -38,7 +39,11 @@ export default async function FieldOpsCampaignPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { ctx, detail, members } = await loadFieldOpsCampaign(id);
+  const [{ ctx, detail, members }, defaultMarket] = await Promise.all([
+    loadFieldOpsCampaign(id),
+    getDefaultMarket(),
+  ]);
+  const defaultCurrency = defaultMarket.defaultCurrency;
   if (detail.status === 404) notFound();
   const canManage = ctx.permissions.includes("fieldops.manage");
   const stepUpFresh =
@@ -266,6 +271,7 @@ export default async function FieldOpsCampaignPage({
       </h3>
       {editable && campaign.status !== "archived" ? (
         <CampaignForm
+          defaultCurrency={defaultCurrency}
           regions={[
             {
               id: campaign.regionId,

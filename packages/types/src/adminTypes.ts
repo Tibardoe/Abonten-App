@@ -70,6 +70,9 @@ export type AdminPermissionKey =
   | "audit.view"
   | "settings.view"
   | "settings.manage"
+  | "markets.view"
+  | "markets.manage"
+  | "markets.activate"
   | "admins.manage"
   | "support.view"
   | "support.respond"
@@ -559,7 +562,9 @@ export const HEALTH_CHECK_KEYS = [
   "db",
   "auth",
   "storage",
+  // Payment providers: one key per adapter, covering every market account.
   "paystack",
+  "stripe",
   "resend",
   "hubtel",
   "push",
@@ -955,8 +960,11 @@ export type OrganizerDetail = {
     events: number;
     places: number;
     ticketsSold: number;
+    /** Sales in `currency`, the organizer's busiest currency. */
     grossSales: number;
     currency: string;
+    /** Sales in any other currency, never added into grossSales. */
+    otherSales: { currency: string; grossSales: number }[];
     avgOrganizerRating: number;
     organizerRatingCount: number;
     reportsAgainst: number;
@@ -1023,7 +1031,7 @@ export type TransactionListItem = {
   reason: string | null;
   payerName: string | null;
   payerEmail: string | null; // null unless users.view_pii
-  paystackReference: string | null;
+  providerReference: string | null;
   paymentMethod: string | null;
   createdAt: string;
   refundRequestedAt: string | null;
@@ -1084,7 +1092,7 @@ export type TransactionDetail = {
   payerEmail: string | null; // null unless users.view_pii
   payerPhone: string | null; // null unless users.view_pii
   userId: string | null;
-  paystackReference: string | null;
+  providerReference: string | null;
   paymentMethod: string | null;
   gatewayResponse: string | null;
   metadata: Record<string, unknown> | null;
@@ -1114,7 +1122,7 @@ export type RefundListItem = {
   amount: number;
   currency: string;
   payerName: string | null;
-  paystackReference: string | null;
+  providerReference: string | null;
   refundRequestedAt: string | null;
   refundableAmount: number;
   createdAt: string;

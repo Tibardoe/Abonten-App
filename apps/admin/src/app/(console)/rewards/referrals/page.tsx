@@ -4,11 +4,13 @@ import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
 import { SectionHeading } from "@/components/metrics/SectionHeading";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { loadReferrals } from "@/lib/data";
+import { minorToMajor } from "@/lib/moneyUnits";
 import {
   adminRangeQuery,
   parseAdminRangeParams,
 } from "@abonten/core/admin/adminDateRange";
 import { statusMeta } from "@abonten/core/admin/statusLabels";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { riskFlagLabel } from "@abonten/core/rewards/riskScore";
 import type { RewardEventStatus } from "@abonten/types/rewards";
@@ -27,7 +29,6 @@ const STATUSES: RewardEventStatus[] = [
 ];
 
 // Credit amounts arrive in pesewas; the metric tiles take major units.
-const cedis = (minor: number) => minor / 100;
 
 // Event referrals and friend invites: what the engine decided and what it
 // would cost, over the console's shared period (whole calendar days, today
@@ -118,18 +119,18 @@ export default async function ReferralsPage({
                 metric="referrals.linkVisits"
                 value={s.touches}
                 period={range.label}
-                secondary={`${s.attributedCheckouts.toLocaleString("en-GH")} referred paid checkout${s.attributedCheckouts === 1 ? "" : "s"}`}
+                secondary={`${s.attributedCheckouts.toLocaleString("en-GB")} referred paid checkout${s.attributedCheckouts === 1 ? "" : "s"}`}
               />
               <MetricCard
                 metric="referrals.referredTicketSales"
-                value={cedis(s.referredTicketRevenueMinor)}
+                value={minorToMajor(s.referredTicketRevenueMinor, s.currency)}
                 format="money"
                 period={range.label}
-                secondary={`Abonten's net revenue on them: ${formatCredit(s.referredNetRevenueMinor)}`}
+                secondary={`Abonten's net revenue on them: ${formatCredit(s.referredNetRevenueMinor, s.currency)}`}
               />
               <MetricCard
                 metric="referrals.rewards"
-                value={cedis(projected)}
+                value={minorToMajor(projected, s.currency)}
                 format="money"
                 period={range.label}
                 secondary={`${count("pending")} pending · ${count("held")} held · ${count("released")} released`}
@@ -212,7 +213,7 @@ export default async function ReferralsPage({
                         {r.name ?? `${r.userId.slice(0, 8)}…`}
                       </Link>
                       <span className="whitespace-nowrap tabular-nums">
-                        {r.rewards} · {formatCredit(r.amountMinor)}
+                        {r.rewards} · {formatCredit(r.amountMinor, s.currency)}
                       </span>
                     </li>
                   ))}
@@ -242,14 +243,14 @@ export default async function ReferralsPage({
               />
               <MetricCard
                 metric="referrals.inviterRewards"
-                value={cedis(inviterRewards)}
+                value={minorToMajor(inviterRewards, s.currency)}
                 format="money"
                 period={range.label}
                 secondary={`${s.friend.byStatus.rejected?.count ?? 0} refused · ${s.friend.byStatus.voided?.count ?? 0} voided`}
               />
               <MetricCard
                 metric="referrals.welcomeCredit"
-                value={cedis(s.friend.welcome.amountMinor)}
+                value={minorToMajor(s.friend.welcome.amountMinor, s.currency)}
                 format="money"
                 period={range.label}
                 secondary={`${s.friend.welcome.granted} friend${s.friend.welcome.granted === 1 ? "" : "s"} · ${s.friend.welcome.rejected} refused (already bought or same device)`}

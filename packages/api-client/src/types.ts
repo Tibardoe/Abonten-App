@@ -195,6 +195,8 @@ export type RequestPhoneOtpBody = {
 
 export type RequestPhoneOtpData = {
   phoneE164: string;
+  /** Digits in the code the market's provider sent (Hubtel 4, Twilio 6). */
+  codeLength: number;
 };
 
 export type VerifyPhoneOtpBody = {
@@ -417,7 +419,8 @@ export type EventCreateBody = {
   latitude: number;
   longitude: number;
   requireRegistration: boolean;
-  currency: string;
+  /** Ignored: the server prices the event in its venue market's currency. */
+  currency?: string;
   flyerPublicId: string;
   flyerVersion: string;
   clientRequestId: string;
@@ -575,15 +578,29 @@ export type CheckoutAttemptBody = {
   useCredit?: boolean;
 };
 
-export type PaystackPaymentInfo =
+/**
+ * How the client continues after the server started a payment, for any
+ * provider: an in-page popup (Paystack inline), a hosted page to open
+ * (Stripe Checkout), or a direct charge the person approves on their phone.
+ */
+export type PaymentInit =
   | {
       mode: "popup";
+      provider: string;
       reference: string;
       accessCode: string;
       authorizationUrl: string;
+      publicKey: string | null;
+    }
+  | {
+      mode: "redirect";
+      provider: string;
+      reference: string;
+      url: string;
     }
   | {
       mode: "direct";
+      provider: string;
       reference: string;
       chargeStatus: string;
       displayMessage?: string;
@@ -597,7 +614,7 @@ export type CheckoutAttemptResult =
         // payment_attempt rows — only `id` is read by the app
         attempts: { id: string }[];
         /** null when credit paid for everything. */
-        paystack: PaystackPaymentInfo | null;
+        payment: PaymentInit | null;
         credit: { appliedMinor: number; cashMinor: number } | null;
         /** Credit-only orders are finalized immediately; this is the outcome. */
         verification: VerifyPaymentResult | null;
@@ -1002,6 +1019,10 @@ export type EventInsightsResult =
 export type EventForEditData = {
   id: string;
   title: string;
+  /** The event's market currency, zone and country (fixed at creation). */
+  currency: string;
+  timezone: string;
+  country_code: string;
   description: string;
   address: { full_address?: string } | null;
   capacity: number | null;
@@ -1123,20 +1144,7 @@ export type PromotionPaymentAttemptResult =
           currency: string;
         };
         /** null when Abonten Credit paid for everything. */
-        paystack:
-          | {
-              mode: "popup";
-              reference: string;
-              accessCode: string;
-              authorizationUrl: string;
-            }
-          | {
-              mode: "direct";
-              reference: string;
-              chargeStatus: string;
-              displayMessage?: string;
-            }
-          | null;
+        payment: PaymentInit | null;
         credit: { appliedMinor: number; cashMinor: number } | null;
         /** Set for credit-only orders, which are finalized immediately. */
         verification: VerifyPaymentResult | null;

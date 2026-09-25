@@ -89,6 +89,8 @@ const TARGET_KINDS = new Set(["event", "place", "ticket", "promotion"]);
 
 export function toCreditActivityItem(
   row: CreditActivityRow,
+  /** The person's credit currency (every row of one person shares it). */
+  currency: string,
 ): CreditActivityItem {
   const type = row.journal_type as CreditJournalType;
   const lotStatus = (row.lot_status as CreditLotStatus | null) ?? null;
@@ -142,6 +144,7 @@ export function toCreditActivityItem(
 
   return {
     id: row.id,
+    currency,
     createdAt: row.created_at,
     journalType: type,
     amountMinor: Number(row.amount_minor),

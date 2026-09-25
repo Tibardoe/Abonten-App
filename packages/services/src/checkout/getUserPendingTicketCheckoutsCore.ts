@@ -24,6 +24,7 @@ type PendingCheckoutRow = {
   event: {
     title: string;
     event_code: string;
+    timezone: string | null;
     starts_at: string | null;
     ends_at: string | null;
     event_occurrence: { id: string; starts_at: string; ends_at: string }[];
@@ -81,7 +82,7 @@ export async function getUserPendingTicketCheckoutsCore(
     .select(
       `id, checkout_session_id, event_id, ticket_type_id, quantity, unit_price,
        discount, discounted_units, total_price, promo_code, expires_at,
-       event:event_id(title, event_code, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)),
+       event:event_id(title, event_code, starts_at, ends_at, timezone, event_occurrence(id, starts_at, ends_at)),
        ticket_type:ticket_type_id(type, currency, quantity)`,
     )
     .eq("user_id", userId)
@@ -110,6 +111,7 @@ export async function getUserPendingTicketCheckoutsCore(
           row.event.starts_at,
           row.event.ends_at,
           row.event.event_occurrence,
+          row.event.timezone,
         ),
         expiresAt: row.expires_at,
         promoCode: row.promo_code,

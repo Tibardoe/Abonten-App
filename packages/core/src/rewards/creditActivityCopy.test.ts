@@ -33,6 +33,7 @@ describe("toCreditActivityItem", () => {
         source_type: "event",
         source_id: "e1",
       }),
+      "GHS",
     );
     expect(item.title).toBe("Reward");
     expect(item.state).toBe("pending");
@@ -49,6 +50,7 @@ describe("toCreditActivityItem", () => {
         lot_kind: "reward",
         lot_status: "active",
       }),
+      "GHS",
     );
     expect(item.state).toBe("available");
     expect(item.expiresAt).toBe("2026-12-01T00:00:00Z");
@@ -61,15 +63,16 @@ describe("toCreditActivityItem", () => {
         lot_kind: "reward",
         lot_status: "voided",
       }),
+      "GHS",
     );
     expect(item.state).toBe("reversed");
     expect(item.subtitle).toMatch(/refunded or cancelled/);
   });
 
   it("marks a fully spent grant as completed, not available", () => {
-    expect(toCreditActivityItem(row({ lot_status: "exhausted" })).state).toBe(
-      "completed",
-    );
+    expect(
+      toCreditActivityItem(row({ lot_status: "exhausted" }), "GHS").state,
+    ).toBe("completed");
   });
 
   it("describes spending and expiry as negative lines", () => {
@@ -79,6 +82,7 @@ describe("toCreditActivityItem", () => {
         amount_minor: -300,
         label: "Ticket to X",
       }),
+      "GHS",
     );
     expect(spent.title).toBe("Used on Ticket to X");
     expect(spent.state).toBe("used");
@@ -86,6 +90,7 @@ describe("toCreditActivityItem", () => {
 
     const expired = toCreditActivityItem(
       row({ journal_type: "expire", amount_minor: -200 }),
+      "GHS",
     );
     expect(expired.title).toBe("Credit expired");
     expect(expired.state).toBe("expired");
@@ -94,6 +99,7 @@ describe("toCreditActivityItem", () => {
   it("ignores unknown source types rather than linking to them", () => {
     const item = toCreditActivityItem(
       row({ source_type: "adjustment_request", source_id: "r1" }),
+      "GHS",
     );
     expect(item.target).toBeNull();
   });

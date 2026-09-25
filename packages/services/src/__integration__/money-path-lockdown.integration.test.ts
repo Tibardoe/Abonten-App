@@ -138,6 +138,7 @@ describe("money path: clients can't write it", () => {
         user_id: buyer.id,
         amount: 1,
         currency: "GHS",
+        provider: "paystack",
         status: "initiated",
       }),
       buyer.client.from("transaction").insert({
@@ -149,7 +150,8 @@ describe("money path: clients can't write it", () => {
         currency: "GHS",
         status: "successful",
         payment_method: "paystack",
-        paystack_reference: `FAKE-${id}`,
+        provider: "paystack",
+        provider_reference: `FAKE-${id}`,
       }),
       buyer.client.from("event_promotion_checkout").insert({
         event_id: eventId,

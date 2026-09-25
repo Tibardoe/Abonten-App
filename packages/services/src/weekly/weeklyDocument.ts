@@ -43,7 +43,7 @@ export function mapWeeklyEventRow(raw: unknown): WeeklyEventRow | null {
     .filter(isObj)
     .map((t) => ({
       price: num(t.price) ?? 0,
-      currency: str(t.currency) ?? "GHS",
+      currency: str(t.currency) ?? str(raw.currency) ?? "",
       quantity: num(t.quantity),
     }));
   return {
@@ -52,7 +52,7 @@ export function mapWeeklyEventRow(raw: unknown): WeeklyEventRow | null {
       ? (raw.address as { full_address: string })
       : { full_address: "" },
     min_price: num(raw.min_price) ?? undefined,
-    currency: str(raw.currency) ?? "GHS",
+    currency: str(raw.currency) ?? "",
     capacity: num(raw.capacity) ?? undefined,
     attendance_count: attendance,
     attendanceCount: attendance,

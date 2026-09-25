@@ -18,7 +18,7 @@ Severity S1.
 
 1. **Detect:** Audit Logs show `finance.refund`, `finance.payout.*`, `rewards.adjustment.*`, `fieldops.payout.*` rows nobody recognises; Paystack dashboard shows refunds/transfers not matching Abonten; reconciliation incident; an organizer says they were paid twice.
 2. **Confirm:** every refund in Abonten goes through `issueRefundCore` and leaves `refund_hold` + `finance.refund` (admin) or a buyer/organizer cancellation trail; every payout settlement leaves `finance.payout.settle`. A Paystack refund **without** an Abonten trail means the Paystack account itself was used → `leaked-secret.md` / provider account compromise.
-3. **Contain:** disable the admin account involved (`admin-compromise.md`); rotate `PAYSTACK_SECRET_KEY` if Paystack was used directly; set `PAYSTACK_TRANSFERS_ENABLED` unset (it should already be); pause payout processing.
+3. **Contain:** disable the admin account involved (`admin-compromise.md`); rotate `PAYSTACK_SECRET_KEY` if Paystack was used directly; make sure every market's provider has Automated payouts off (Admin › Markets; it should already be); pause payout processing.
 4. **Preserve:** export audit rows, transactions, payouts, Paystack exports.
 5. **Assess:** total amount; whether money left Abonten's Paystack balance or bank/MoMo account; which organizers/users received it.
 6. **Escalate:** commander; counsel; Paystack support (refund reversal is generally not possible — recovery is by request to the recipient); bank/MoMo provider for transfers.

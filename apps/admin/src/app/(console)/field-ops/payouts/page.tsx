@@ -10,12 +10,13 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadFieldOpsPayouts } from "@/lib/data";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import Link from "next/link";
 import { FieldOpsTabs } from "../FieldOpsTabs";
 import { BuildBatchForm } from "./BuildBatchForm";
 
 export const payoutMoney = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+  formatMinor(minor, currency);
 
 export function batchTone(s: string) {
   switch (s) {

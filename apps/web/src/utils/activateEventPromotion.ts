@@ -7,7 +7,7 @@ import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
 /**
  * Commit step for an Event Promotion purchase — mirrors
- * activatePlacePromotion.ts exactly. Called only by finalizePaystackPayment
+ * activatePlacePromotion.ts exactly. Called only by finalizePayment
  * (injected as a paymentFulfillmentDeps step) once it has verified payment
  * for the given checkout. Never trusts a client-supplied duration/price —
  * everything comes from the already-priced event_promotion_checkout row and

@@ -1,5 +1,6 @@
 import { Badge, Card, EmptyState, PageHeader, timeAgo } from "@/components/ui";
 import { loadFieldOpsFlagQueue } from "@/lib/data";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import Link from "next/link";
 import { FieldOpsTabs } from "../FieldOpsTabs";
 import { FlagDecision } from "./FlagDecision";
@@ -24,8 +25,7 @@ const FLAG_LABELS: Record<string, string> = {
   reversed: "A commission on this onboarding was reversed",
 };
 
-const money = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 export default async function FieldOpsReviewQueuePage({
   searchParams,

@@ -50,6 +50,9 @@ export async function getEventForEditCore(
       `
       id,
       title,
+      currency,
+      timezone,
+      country_code,
       description,
       address,
       capacity,

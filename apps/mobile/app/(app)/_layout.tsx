@@ -2,6 +2,7 @@ import { AppDrawer } from "@/components/app/AppDrawer";
 import { MenuSheetProvider } from "@/components/app/menuSheet";
 import { ExploreFiltersProvider } from "@/features/discovery/ExploreFiltersProvider";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
+import { MarketProvider } from "@/features/markets/MarketProvider";
 import { useInboxRealtime } from "@/features/messaging/useInboxRealtime";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { HighlightUploadProvider } from "@/features/profile/HighlightUploadProvider";
@@ -94,14 +95,16 @@ function StackHost() {
 export default function AppLayout() {
   return (
     <ExploreLocationProvider>
-      <ExploreFiltersProvider>
-        <HighlightUploadProvider>
-          <MenuSheetProvider>
-            <StackHost />
-            <AppDrawer />
-          </MenuSheetProvider>
-        </HighlightUploadProvider>
-      </ExploreFiltersProvider>
+      <MarketProvider>
+        <ExploreFiltersProvider>
+          <HighlightUploadProvider>
+            <MenuSheetProvider>
+              <StackHost />
+              <AppDrawer />
+            </MenuSheetProvider>
+          </HighlightUploadProvider>
+        </ExploreFiltersProvider>
+      </MarketProvider>
     </ExploreLocationProvider>
   );
 }

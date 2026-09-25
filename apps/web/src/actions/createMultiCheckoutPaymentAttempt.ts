@@ -19,7 +19,7 @@ type CreateMultiCheckoutPaymentAttemptInput = {
  * events) in one action. For each session it creates one payment_attempt
  * row (never merging them), all tagged with the same paymentGroupId. It does
  * NOT complete the purchase — the Paystack popup/direct charge does that,
- * and finalizePaystackPayment.ts fans a successful verification back out to
+ * and finalizePayment.ts fans a successful verification back out to
  * the whole group.
  *
  * Always re-validates against the database (never the client) right before

@@ -3,9 +3,11 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
 import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds";
 import { prefetchEventDetail } from "@/features/discovery/useEventDetail";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   getEventSoldOutStatus,
   getEventSpotsLeft,
@@ -71,12 +73,12 @@ function GlassButton({
 function priceLabel(event: UserPostType): string {
   const price = event.min_price ?? event.ticket_price;
   if (price == null || price === 0) return "Free entry";
-  const currency = event.currency ?? event.ticket_currency ?? "GHS";
+  const currency = event.currency ?? event.ticket_currency ?? "";
   const from =
     event.min_price != null && event.min_price !== event.ticket_price
       ? "From "
       : "";
-  return `${from}${currency} ${price.toLocaleString()}`;
+  return `${from}${formatMoney(currency, price, { trimZeroFraction: true })}`;
 }
 
 function spotsLeft(event: UserPostType, attendees: number): number | null {
@@ -132,10 +134,17 @@ export function EventCard({ event }: { event: UserPostType }) {
       : null;
   const showImage = flyer != null && !imageFailed;
   const cardStatus = statusFor(event);
+  // "≈ £12" beside a price in another currency, when estimates are on.
+  const { estimate } = useMarket();
+  const approx = estimate(
+    event.min_price ?? event.ticket_price,
+    event.currency ?? event.ticket_currency ?? "",
+  );
   const dt = getEventCardDateTime(
     event.starts_at,
     event.ends_at,
     event.occurrences,
+    event.timezone,
   );
   const attendees = event.attendanceCount ?? event.attendance_count ?? 0;
   const remaining = spotsLeft(event, attendees);
@@ -238,6 +247,7 @@ export function EventCard({ event }: { event: UserPostType }) {
           <Icon name="pricetag-outline" size={14} tone="foreground" />
           <AppText variant="metaStrong" className="flex-1" numberOfLines={1}>
             {priceLabel(event)}
+            {approx ? ` · ${approx}` : ""}
           </AppText>
         </View>
 

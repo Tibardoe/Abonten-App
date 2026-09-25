@@ -25,6 +25,7 @@ import {
   useExplorePlaceSliders,
 } from "@/features/discovery/useExplorePlaceSliders";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { useQueryView } from "@/lib/useQueryView";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -55,6 +56,7 @@ export default function ExploreSectionScreen() {
     title: string;
   }>();
   const { area } = useExploreLocation();
+  const { market } = useMarket();
   const coords = area ? { lat: area.lat, lng: area.lng } : null;
   const {
     eventFilters,
@@ -104,7 +106,7 @@ export default function ExploreSectionScreen() {
         null)
       : null;
   const activeChips = isEvent
-    ? describeEventFilters(eventFilters)
+    ? describeEventFilters(eventFilters, market?.defaultCurrency ?? "")
     : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
 
   const header = (

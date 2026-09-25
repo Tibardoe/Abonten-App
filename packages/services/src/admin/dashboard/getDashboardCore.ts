@@ -17,10 +17,9 @@ import {
 // resolves dates of its own and the console cannot drift from the organizer
 // dashboard's definition of "last 30 days".
 //
-// Abonten operates in Ghana, which is Africa/Accra = UTC+0 all year with no
-// DST, so a UTC day boundary IS the local one. If the platform ever spans
-// offsets this becomes a real timezone conversion.
-export const PLATFORM_TZ = "Africa/Accra";
+// Days are UTC days for every market: one definition of "today" across the
+// console, whichever markets are open. (Ghana, the first market, is UTC+0,
+// so its local days are the same.)
 
 export type DashboardSnapshotV2 = AdminDashboardKpis & {
   range: ResolvedAdminRange;

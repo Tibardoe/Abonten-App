@@ -68,7 +68,8 @@ export async function PUT(
 
     const input: UpdateEventTicketTypesCoreInput = {
       eventId,
-      currency: str(body.currency) ?? "GHS",
+      // The event's own currency is authoritative; a sent one is only checked.
+      currency: str(body.currency),
       freeEvent: body.freeEvent === true,
       singleTicket,
       multipleTickets,

@@ -1,5 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { generateSlug } from "@abonten/core/geerateSlug";
+import {
+  type StructuredAddress,
+  readStructuredAddress,
+} from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
@@ -8,6 +12,7 @@ import type {
   PlaceServiceInput,
 } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { resolveListingLocation } from "../geo/locationResolution";
 
 // Post-auth, post-cover-upload body of postPlace, lifted so the
 // `/api/mobile/places` route runs the exact same create flow as the web
@@ -27,6 +32,7 @@ export type PostPlaceCoreInput = {
   categoryId: number;
   description: string;
   address: string;
+  addressDetails?: Partial<StructuredAddress> | null;
   latitude: number;
   longitude: number;
   websiteUrl?: string | null;
@@ -64,6 +70,15 @@ export async function postPlaceCore(
     return { status: 400, message: locationCheck.message };
   }
 
+  // The place's market, time zone and country come from where it is.
+  const resolved = await resolveListingLocation({
+    lat: input.latitude,
+    lng: input.longitude,
+    countryHint: input.addressDetails?.country_code ?? null,
+  });
+  if (!resolved.ok) return { status: 400, message: resolved.message };
+  const { location } = resolved;
+
   // Places have no event-code-style human identifier to append (unlike
   // postEvent.ts) — a short random suffix does the collision-resistance job.
   const slug = `${generateSlug(input.name)}-${randomUUID().split("-")[0]}`;
@@ -100,7 +115,13 @@ export async function postPlaceCore(
       p_category_id: input.categoryId,
       p_latitude: input.latitude,
       p_longitude: input.longitude,
-      p_address: { full_address: input.address },
+      p_address: {
+        ...readStructuredAddress(input.addressDetails ?? null),
+        full_address: input.address,
+        country_code: location.countryCode,
+      },
+      p_country_code: location.countryCode,
+      p_timezone: location.timeZone,
       p_website_url: input.websiteUrl ?? null,
       p_phone: input.phone ?? null,
       p_whatsapp: input.whatsapp ?? null,

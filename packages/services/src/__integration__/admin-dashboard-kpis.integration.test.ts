@@ -98,7 +98,8 @@ beforeAll(async () => {
       amount: 42,
       currency: "GHS",
       status: "successful",
-      paystack_reference: `admin-dash-${crypto.randomUUID()}`,
+      provider: "paystack",
+      provider_reference: `admin-dash-${crypto.randomUUID()}`,
     })
     .select("id")
     .single();
@@ -229,7 +230,8 @@ describe("admin dashboard KPIs", () => {
         amount: 1,
         currency: "GHS",
         status: "successful",
-        paystack_reference: `admin-dash-edge-${crypto.randomUUID()}`,
+        provider: "paystack",
+        provider_reference: `admin-dash-edge-${crypto.randomUUID()}`,
         created_at: boundary,
       })
       .select("id")

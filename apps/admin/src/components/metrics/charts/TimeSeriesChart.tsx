@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@abonten/core/formatMoney";
 import { useSyncExternalStore } from "react";
 import {
   Bar,
@@ -37,7 +38,7 @@ export function TimeSeriesChart({
   valueLabel,
   previousLabel,
   format = "count",
-  currency = "GHS",
+  currency = "",
   height = 200,
 }: {
   data: TimeSeriesPoint[];
@@ -63,12 +64,8 @@ export function TimeSeriesChart({
 
   const fmt = (v: number) =>
     format === "money"
-      ? new Intl.NumberFormat("en-GH", {
-          style: "currency",
-          currency,
-          maximumFractionDigits: 0,
-        }).format(v || 0)
-      : v.toLocaleString("en-GH");
+      ? formatMoney(currency, Math.round(v || 0), { trimZeroFraction: true })
+      : v.toLocaleString("en-GB");
   const hasPrevious =
     previousLabel != null && data.some((d) => d.previous != null);
 

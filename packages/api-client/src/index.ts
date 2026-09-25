@@ -106,7 +106,7 @@ export type {
   PayoutStatus,
   PendingCheckoutSession,
   PendingCheckoutSessionLine,
-  PaystackPaymentInfo,
+  PaymentInit,
   PlaceCreateBody,
   PlaceCreateResult,
   PlaceOpeningHoursInput,

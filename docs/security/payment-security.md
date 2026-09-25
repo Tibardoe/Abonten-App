@@ -35,7 +35,7 @@ Abonten never receives, stores or transmits full card numbers, CVVs or PINs. Car
 | Financial RPCs | Six `record_*` functions `service_role`-only (`20260903200000`) | migrations |
 | Ledger integrity | Append-only entries; reconciliation every 30 min | `run_financial_reconciliation` |
 | Disputes | `charge.dispute.*` recorded, incident opened, payout review forced | webhook, `payout_guard_review` |
-| Transfers | Flag-gated off (`PAYSTACK_TRANSFERS_ENABLED`); recipient/transfer creation and webhook settlement coded to Paystack docs, **unverified live**; admin action needs `finance.payout` + step-up | `paystackTransfer.ts`, `sendPayoutAdminCore` |
+| Transfers | Off per market (`market_payment_provider.payouts_enabled`, Admin › Markets); recipient/transfer creation and webhook settlement coded to Paystack docs, **unverified live**; admin action needs `finance.payout` + step-up | `paystackProvider.ts`, `sendPayoutAdminCore` |
 | Admin money actions | `finance.refund` / `finance.payout` + step-up + reason + audit | `financeActionsCore.ts` |
 
 ## Residual risks

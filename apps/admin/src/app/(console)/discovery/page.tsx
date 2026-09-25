@@ -54,7 +54,7 @@ function KeyValues({
           <span className="text-muted-foreground">
             {statusLabel(family, k)}
           </span>
-          <span className="tabular-nums">{v.toLocaleString("en-GH")}</span>
+          <span className="tabular-nums">{v.toLocaleString("en-GB")}</span>
         </li>
       ))}
     </ul>
@@ -229,7 +229,7 @@ export default async function DiscoveryPage({
             period={period}
             state={rateState === "ok" ? undefined : rateState}
             stateNote={rateNote}
-            secondary={`${totals.zero_results.toLocaleString("en-GH")} searches found nothing`}
+            secondary={`${totals.zero_results.toLocaleString("en-GB")} searches found nothing`}
             tone={
               rateState === "ok" && totals.zero_results / totals.searches > 0.3
                 ? "warning"
@@ -243,7 +243,7 @@ export default async function DiscoveryPage({
             period={period}
             state={rateState === "ok" ? undefined : rateState}
             stateNote={rateNote}
-            secondary={`${totals.clicks.toLocaleString("en-GH")} opened a result`}
+            secondary={`${totals.clicks.toLocaleString("en-GB")} opened a result`}
           />
           <MetricCard
             metric="search.latencyP50"
@@ -365,7 +365,7 @@ export default async function DiscoveryPage({
             format="percent"
             period={period}
             stateNote={`No suggestions in ${period.toLowerCase()}`}
-            secondary={`${suggest.opened.toLocaleString("en-GH")} opened a suggestion`}
+            secondary={`${suggest.opened.toLocaleString("en-GB")} opened a suggestion`}
           />
           <MetricCard
             metric="search.suggestLatencyP95"

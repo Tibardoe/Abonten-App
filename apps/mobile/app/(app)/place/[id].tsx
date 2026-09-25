@@ -17,6 +17,7 @@ import { ReviewsPreviewSection } from "@/components/reviews/ReviewsPreviewSectio
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
 import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
@@ -34,6 +35,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
@@ -115,6 +117,11 @@ export default function PlaceDetailScreen() {
   const carouselCardWidth = useCarouselCardWidth();
   const detail = usePlaceDetail(id);
   const { data: place, isError, error, isRefetching, refetch } = detail;
+  const { markets } = useMarket();
+  // Service prices are in the place's market currency.
+  const placeCurrency =
+    markets.find((m) => m.countryCode === place?.country_code)
+      ?.defaultCurrency ?? "";
   const detailView = useQueryView(detail);
   const [claimOpen, setClaimOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
@@ -638,7 +645,9 @@ export default function PlaceDetailScreen() {
                     </AppText>
                     {s.show_price && s.price != null ? (
                       <AppText variant="muted">
-                        GHS {s.price}
+                        {formatMoney(placeCurrency, s.price, {
+                          trimZeroFraction: true,
+                        })}
                         {s.price_unit ? ` / ${s.price_unit}` : ""}
                       </AppText>
                     ) : null}

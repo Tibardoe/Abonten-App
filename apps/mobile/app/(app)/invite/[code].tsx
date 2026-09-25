@@ -71,9 +71,9 @@ export default function InviteScreen() {
   const name = data?.referrerName ?? "A friend";
   const offer =
     data?.programOn && data.welcomeMinor
-      ? `Get ${formatCredit(data.welcomeMinor)} off your first ticket${
+      ? `Get ${formatCredit(data.welcomeMinor, data.currency)} off your first ticket${
           data.minOrderMinor
-            ? ` of ${formatCredit(data.minOrderMinor)} or more`
+            ? ` of ${formatCredit(data.minOrderMinor, data.currency)} or more`
             : ""
         }.`
       : null;

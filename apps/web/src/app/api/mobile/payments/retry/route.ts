@@ -8,7 +8,7 @@ import { retryPaymentFulfillmentCore } from "@abonten/services/payments/retryPay
 //
 // Recovery for the "paid but ticket issuance failed" state (a 207 from
 // /payments/verify). Never re-charges — re-runs the same
-// finalizePaystackPayment pipeline. 200 = tickets issued; 202 = still
+// finalizePayment pipeline. 200 = tickets issued; 202 = still
 // working (retry shortly); 207 = issuance still failing; 400 = payment
 // failed.
 export async function POST(req: Request) {

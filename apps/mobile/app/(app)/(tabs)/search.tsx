@@ -12,6 +12,7 @@ import {
   describeEventFilters,
 } from "@/features/discovery/exploreFilters";
 import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { useRecentSearches } from "@/features/search/recentSearches";
 import { useEventSearch } from "@/features/search/useEventSearch";
 import { useSearchSuggestions } from "@/features/search/useSearchSuggestions";
@@ -150,6 +151,7 @@ function LegacySearch() {
   const [filters, setFilters] = useState<EventFilters>(EMPTY_EVENT_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
 
+  const { market } = useMarket();
   const { recents, add, remove, clear } = useRecentSearches();
   const suggest = useSearchSuggestions(raw);
   const results = useEventSearch(submitted ?? "", filters);
@@ -157,7 +159,10 @@ function LegacySearch() {
   const trimmed = raw.trim();
   const typing = trimmed.length >= 2;
   const activeFilterCount = countActiveEventFilters(filters);
-  const filterChips = useMemo(() => describeEventFilters(filters), [filters]);
+  const filterChips = useMemo(
+    () => describeEventFilters(filters, market?.defaultCurrency ?? ""),
+    [filters, market?.defaultCurrency],
+  );
 
   const showResults =
     (submitted != null && submitted === trimmed) ||

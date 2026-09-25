@@ -1,4 +1,5 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
+import { withLegacyPaystackField } from "@/app/api/mobile/_lib/legacyPaymentField";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
@@ -10,7 +11,7 @@ import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/cr
 // The place sibling of /checkout/promotion-attempt — starts paying for a
 // pending place-promotion checkout (createPromotionPaymentAttemptCore, kind
 // "place"). The completion path is the shared /api/mobile/payments/verify ->
-// finalizePaystackPayment -> activatePlacePromotion (finalize already
+// finalizePayment -> activatePlacePromotion (finalize already
 // dispatches on the place_promotion_checkout_id column, no place-specific
 // verify needed). `useCredit` behaves as on the event route.
 export async function POST(req: Request) {
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
       paymentFulfillmentDeps,
     );
 
-    return fromActionResult(result);
+    return fromActionResult(withLegacyPaystackField(result));
   } catch (error) {
     logger.error("mobile POST /checkout/place-promotion-attempt failed", error);
     return apiJson({ status: 500, message: "Something went wrong!" });

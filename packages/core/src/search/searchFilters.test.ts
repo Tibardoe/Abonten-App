@@ -143,7 +143,7 @@ describe("clearing", () => {
 
 describe("chips", () => {
   it("labels active filters, with the location for distance", () => {
-    expect(describeSearchFilters(full, "places", "Osu")).toEqual([
+    expect(describeSearchFilters(full, "places", "Osu", "GHS")).toEqual([
       { key: "radiusKm", label: "Within 10 km of Osu" },
       { key: "placeCategoryId", label: "Restaurants" },
       { key: "openNow", label: "Open now" },

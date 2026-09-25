@@ -7,7 +7,10 @@ import { useInvalidateCredit } from "@/features/rewards/useRewards";
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import type { PaymentMethodRow } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { formatCredit } from "@abonten/core/rewards/creditAmount";
+import {
+  creditMinorToMajor,
+  formatCredit,
+} from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
@@ -62,7 +65,10 @@ export function PaymentSection({
   const [useCreditChoice, setUseCreditChoice] = useState<boolean | null>(null);
   const useCredit = !!quote && (useCreditChoice ?? true);
   const creditCoversAll = useCredit && !!quote?.creditOnly;
-  const payAmount = useCredit && quote ? quote.cashMinor / 100 : total;
+  const payAmount =
+    useCredit && quote
+      ? creditMinorToMajor(quote.cashMinor, quote.currency)
+      : total;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +103,7 @@ export function PaymentSection({
       setError("Couldn't start the payment.");
       return;
     }
-    const ps = res.data.paystack;
+    const ps = res.data.payment;
     const verification = res.data.verification;
     if (useCredit) invalidateCredit();
 
@@ -128,7 +134,7 @@ export function PaymentSection({
         ...(eventId ? { eventId } : {}),
         amountLabel: ps
           ? formatMoney(currency, payAmount)
-          : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0)} credit`,
+          : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0, currency)} credit`,
         successHref: "/(app)/tickets",
         successCtaLabel: "View my tickets",
         ...(ps === null
@@ -138,10 +144,12 @@ export function PaymentSection({
             }
           : ps.mode === "popup"
             ? { authorizationUrl: ps.authorizationUrl }
-            : {
-                chargeStatus: ps.chargeStatus,
-                displayMessage: ps.displayMessage,
-              }),
+            : ps.mode === "redirect"
+              ? { authorizationUrl: ps.url }
+              : {
+                  chargeStatus: ps.chargeStatus,
+                  displayMessage: ps.displayMessage,
+                }),
       },
     });
   }

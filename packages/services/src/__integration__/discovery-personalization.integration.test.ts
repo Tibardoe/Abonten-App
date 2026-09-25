@@ -465,6 +465,8 @@ describe("opt-in prompts", () => {
     const { data: place } = await svc
       .from("place")
       .insert({
+        country_code: "GH",
+        timezone: "Africa/Accra",
         owner_id: organizer.id,
         name: "Prompt Test Lounge",
         slug: `prompt-test-lounge-${crypto.randomUUID()}`,

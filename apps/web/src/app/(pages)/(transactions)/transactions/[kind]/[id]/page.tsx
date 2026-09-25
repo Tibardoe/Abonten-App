@@ -73,6 +73,7 @@ export default async function Page({
         | {
             kind: "subscription";
             subscription_plan_name: string | null;
+            currency: string | null;
           }
       ))
     | undefined;
@@ -82,7 +83,7 @@ export default async function Page({
   }
 
   const currency =
-    row.kind === "ticket" ? (row.ticket_type?.currency ?? "GHS") : "GHS";
+    (row.kind === "ticket" ? row.ticket_type?.currency : row.currency) ?? "";
   const cancelledTickets =
     row.kind === "ticket"
       ? row.tickets.filter((t) => t.status === "cancelled")

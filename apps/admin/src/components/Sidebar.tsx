@@ -13,6 +13,7 @@ import {
   Compass,
   Flag,
   Gift,
+  Globe,
   LayoutDashboard,
   LifeBuoy,
   MapPinned,
@@ -132,6 +133,12 @@ const ITEMS: Item[] = [
     label: "Abonten Weekly",
     icon: Newspaper,
     permission: "weekly.view",
+  },
+  {
+    href: "/markets",
+    label: "Markets",
+    icon: Globe,
+    permission: "markets.view",
   },
   {
     href: "/notifications",

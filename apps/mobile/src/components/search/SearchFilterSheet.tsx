@@ -1,7 +1,7 @@
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
-  SEARCH_PRICE_OPTIONS,
   SEARCH_RADIUS_OPTIONS,
   SEARCH_RATING_OPTIONS,
   SEARCH_WHEN_OPTIONS,
@@ -11,6 +11,7 @@ import {
   clearSearchFilter,
   clearSearchFiltersFor,
   searchFiltersFor,
+  searchPriceOptions,
 } from "@abonten/core/search/searchFilters";
 import type { SearchMode } from "@abonten/types/searchType";
 import {
@@ -130,6 +131,9 @@ export function SearchFilterSheet({
 }) {
   const [draft, setDraft] = useState(filters);
   const placeCategories = usePlaceCategories();
+  // Price buckets read in the browsed market's currency ("Under ₦50").
+  const { market } = useMarket();
+  const priceOptions = searchPriceOptions(market?.defaultCurrency ?? "");
   const offered = new Set(searchFiltersFor(mode));
   const activeCount = activeSearchFilters(draft, mode).length;
 
@@ -200,7 +204,7 @@ export function SearchFilterSheet({
       onClear={() => clear("price")}
     >
       <Choices
-        options={SEARCH_PRICE_OPTIONS}
+        options={priceOptions}
         value={draft.price}
         onChange={(v) => set("price", v)}
       />

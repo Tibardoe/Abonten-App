@@ -8,7 +8,11 @@ import {
   setCreditAccountStatus,
   setReferralCodeDisabled,
 } from "@/server/actions/rewards";
-import { formatCredit } from "@abonten/core/rewards/creditAmount";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
+import {
+  formatCredit,
+  majorToCreditMinor,
+} from "@abonten/core/rewards/creditAmount";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -85,6 +89,7 @@ export function FreezePanel({
 
 // Small support goodwill, capped per user per month by the database.
 export function GoodwillPanel({
+  currency,
   userId,
   canGrant,
   usedMinor,
@@ -94,6 +99,7 @@ export function GoodwillPanel({
   canGrant: boolean;
   usedMinor: number;
   capMinor: number;
+  currency: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -109,14 +115,15 @@ export function GoodwillPanel({
     <Card className="space-y-2 p-3">
       <p className="text-sm font-semibold">Give goodwill credit</p>
       <p className="text-xs text-muted-foreground">
-        For small service failures. {formatCredit(left)} left for this user this
-        month (limit {formatCredit(capMinor)}). Expires in 90 days.
+        For small service failures. {formatCredit(left, currency)} left for this
+        user this month (limit {formatCredit(capMinor, currency)}). Expires in
+        90 days.
       </p>
       <div className="flex gap-2">
         <input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="GH₵"
+          placeholder={currencySymbol(currency)}
           inputMode="decimal"
           className={cn(inputClass, "w-24")}
         />
@@ -159,6 +166,7 @@ export function GoodwillPanel({
 // Manual adjustment. At or above the dual-approval threshold it is only
 // recorded as a request until a different admin approves it.
 export function AdjustmentPanel({
+  currency,
   userId,
   canAdjust,
   stepUpFresh,
@@ -168,6 +176,7 @@ export function AdjustmentPanel({
   canAdjust: boolean;
   stepUpFresh: boolean;
   thresholdMinor: number;
+  currency: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -186,8 +195,8 @@ export function AdjustmentPanel({
     <Card className="space-y-2 p-3">
       <p className="text-sm font-semibold">Adjust credit</p>
       <p className="text-xs text-muted-foreground">
-        Adjustments of {formatCredit(thresholdMinor)} or more need a second
-        admin to approve them.
+        Adjustments of {formatCredit(thresholdMinor, currency)} or more need a
+        second admin to approve them.
       </p>
       {!stepUpFresh ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -207,7 +216,7 @@ export function AdjustmentPanel({
         <input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="GH₵"
+          placeholder={currencySymbol(currency)}
           inputMode="decimal"
           className={cn(inputClass, "w-28")}
         />
@@ -248,7 +257,11 @@ export function AdjustmentPanel({
         <div className="flex items-center gap-2">
           <span className="text-xs">
             {direction === "credit" ? "Add" : "Remove"}{" "}
-            {formatCredit(Math.round(Number(amount) * 100))}?
+            {formatCredit(
+              majorToCreditMinor(Number(amount), currency),
+              currency,
+            )}
+            ?
           </span>
           <Button
             size="sm"

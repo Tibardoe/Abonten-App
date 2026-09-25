@@ -14,6 +14,7 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadRebates } from "@/lib/data";
+import { minorToMajor } from "@/lib/moneyUnits";
 import {
   adminRangeQuery,
   parseAdminRangeParams,
@@ -21,6 +22,7 @@ import {
 } from "@abonten/core/admin/adminDateRange";
 import type { MetricKey } from "@abonten/core/admin/metricDefinitions";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { AdminRebateRun } from "@abonten/types/rewards";
 import Link from "next/link";
@@ -41,8 +43,6 @@ const RULE_METRIC: Record<keyof typeof RULE_TITLES, MetricKey> = {
   organizer_milestone: "rebates.milestone",
   place_visits: "rebates.placeVisits",
 };
-
-const cedis = (minor: number) => minor / 100;
 
 // Month names in a fixed locale and zone: the page is server-rendered and
 // must not follow the server's locale.
@@ -72,7 +72,7 @@ function runLine(run: AdminRebateRun): string {
   if (run.skipped) return "Nothing live, nothing decided";
   const parts = Object.entries(run.byRule).map(
     ([key, r]) =>
-      `${RULE_TITLES[key as keyof typeof RULE_TITLES]}: ${r?.decided ?? 0} (${formatCredit(r?.amountMinor ?? 0)})`,
+      `${RULE_TITLES[key as keyof typeof RULE_TITLES]}: ${r?.decided ?? 0} (${formatCredit(r?.amountMinor ?? 0, run.currency)})`,
   );
   return parts.length > 0 ? parts.join(" · ") : "No new decisions";
 }
@@ -179,12 +179,12 @@ export default async function RebatesPage({
                     <MetricCard
                       key={key}
                       metric={RULE_METRIC[key]}
-                      value={cedis(r?.amountMinor ?? 0)}
+                      value={minorToMajor(r?.amountMinor ?? 0, s.currency)}
                       format="money"
                       period={range.label}
                       secondary={`${r?.count ?? 0} paid or pending · ${r?.rejected ?? 0} refused${
                         r?.shadowAmountMinor
-                          ? ` · ${formatCredit(r.shadowAmountMinor)} in shadow`
+                          ? ` · ${formatCredit(r.shadowAmountMinor, s.currency)} in shadow`
                           : ""
                       }`}
                     />
@@ -193,7 +193,7 @@ export default async function RebatesPage({
               )}
               <MetricCard
                 metric="rebates.netRevenueBasis"
-                value={cedis(s.netRevenueMinor)}
+                value={minorToMajor(s.netRevenueMinor, s.currency)}
                 format="money"
                 period={range.label}
               />
@@ -231,7 +231,7 @@ export default async function RebatesPage({
                           : t.events === 1
                             ? "event"
                             : "events"}{" "}
-                        · {formatCredit(t.amountMinor)}
+                        · {formatCredit(t.amountMinor, s.currency)}
                       </span>
                     </li>
                   ))}

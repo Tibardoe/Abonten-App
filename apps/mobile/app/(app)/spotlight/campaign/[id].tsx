@@ -17,6 +17,7 @@ import {
   PROMOTION_ESTIMATE_NOTE,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
+import { currencyMinorFactor } from "@abonten/core/money/currencies";
 import {
   AppText,
   Button,
@@ -161,7 +162,7 @@ export default function CampaignScreen() {
               checkoutId={c.checkoutId}
               entityId={c.id}
               currency={c.currency}
-              amount={c.budgetMinor / 100}
+              amount={c.budgetMinor / currencyMinorFactor(c.currency)}
               onFeatured={() => {
                 invalidate();
                 q.refetch();

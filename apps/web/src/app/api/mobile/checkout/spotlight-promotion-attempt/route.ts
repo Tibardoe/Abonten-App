@@ -1,4 +1,5 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
+import { withLegacyPaystackField } from "@/app/api/mobile/_lib/legacyPaymentField";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
@@ -11,7 +12,7 @@ import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/cr
 // service as the event / place promotion attempts, with the fifth
 // payment_attempt target. Cash only (Abonten Credit is refused for this
 // kind); completion is the shared /api/mobile/payments/verify →
-// finalizePaystackPayment → activateContentCampaign path, which leaves the
+// finalizePayment → activateContentCampaign path, which leaves the
 // campaign in review.
 export async function POST(req: Request) {
   const auth = await getMobileAuth(req);
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
       paymentFulfillmentDeps,
     );
 
-    return fromActionResult(result);
+    return fromActionResult(withLegacyPaystackField(result));
   } catch (error) {
     logger.error(
       "mobile POST /checkout/spotlight-promotion-attempt failed",

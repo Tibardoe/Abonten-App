@@ -2,7 +2,7 @@ import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
 
 /**
- * Whether a promotion checkout has a payment that finalizePaystackPayment
+ * Whether a promotion checkout has a payment that finalizePayment
  * has verified: an attempt for this checkout, owned by this user, that
  * carries a recorded `successful` transaction and is being (or has been)
  * fulfilled. The promotion activation steps refuse to run without one --

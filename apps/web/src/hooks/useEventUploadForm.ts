@@ -1,7 +1,7 @@
 "use client";
 
-import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { postEvent } from "@/actions/postEvent";
+import resolveListingMarket from "@/actions/resolveListingMarket";
 import { saveEventDraft } from "@/actions/saveEventDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useToast } from "@/hooks/useToast";
@@ -14,6 +14,7 @@ import {
   ticketCapacityHint,
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
+import { toWallClockString } from "@abonten/core/time/timeZone";
 import type { EventDates, PostsType } from "@abonten/types/postsType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import type { Ticket } from "@abonten/types/ticketType";
@@ -180,8 +181,15 @@ export function useEventUploadForm({
 
   const addressInputRef = useRef<PostAutoCompleteHandle>(null);
   const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  // Mirrors coordsRef as state so the venue-market lookup re-runs when the
+  // organizer picks another place.
+  const [venueCoords, setVenueCoords] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const handleSelectCoordinates = (location: ResolvedLocation) => {
     coordsRef.current = { lat: location.lat, lng: location.lng };
+    setVenueCoords({ lat: location.lat, lng: location.lng });
   };
 
   const [category, setCategory] = useState(initialValues?.category ?? "");
@@ -247,14 +255,25 @@ export function useEventUploadForm({
   const [touched, setTouched] = useState(false);
   const markTouched = () => setTouched(true);
 
-  const { data: userCurrency } = useQuery({
-    queryKey: ["user-currency"],
-    queryFn: async () => {
-      const countryMetadata = await fetchCountryMetadata();
-      return countryMetadata?.currency ?? "GHS";
-    },
-    initialData: initialValues?.currency ?? undefined,
+  // The venue decides the market: the currency the prices are in and the
+  // zone the times are read in. Resolved by the same server code that
+  // saves the event, so the form never shows one thing and stores another.
+  const { data: venueMarket } = useQuery({
+    queryKey: ["listing-market", venueCoords?.lat, venueCoords?.lng],
+    queryFn: () =>
+      resolveListingMarket({
+        lat: venueCoords?.lat as number,
+        lng: venueCoords?.lng as number,
+      }),
+    enabled: venueCoords !== null,
+    staleTime: 10 * 60 * 1000,
   });
+  const userCurrency = venueMarket?.ok
+    ? venueMarket.currency
+    : (initialValues?.currency ?? null);
+  const venueMarketMessage =
+    venueMarket && !venueMarket.ok ? venueMarket.message : null;
+  const venueTimeZone = venueMarket?.ok ? venueMarket.timeZone : null;
 
   const handleDateAndTime = (date: DateRange | DateEntry[]) => {
     markTouched();
@@ -467,8 +486,8 @@ export function useEventUploadForm({
         }
 
         eventDates = {
-          starts_at: new Date(singleDateRange.from as Date),
-          ends_at: new Date(singleDateRange.to as Date),
+          starts_at: toWallClockString(singleDateRange.from as Date),
+          ends_at: toWallClockString(singleDateRange.to as Date),
         };
       } else if (dateType === "specific") {
         const result = validateSpecificDates(multipleDates, bufferedNow);
@@ -478,7 +497,12 @@ export function useEventUploadForm({
           return;
         }
 
-        eventDates = { specific_dates: multipleDates };
+        eventDates = {
+          specific_dates: multipleDates.map((d) => ({
+            start: toWallClockString(d.start),
+            end: toWallClockString(d.end),
+          })),
+        };
       } else {
         toast.error("Invalid date selection");
         setInvalidSection("date");

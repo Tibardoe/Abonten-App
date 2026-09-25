@@ -5,6 +5,7 @@ import {
   useTransactionSummary,
 } from "@/features/transactions/useTransactions";
 import { useQueryView } from "@/lib/useQueryView";
+import { formatMoney } from "@abonten/core/formatMoney";
 import {
   TRANSACTION_PERIOD_LABELS,
   type TransactionPeriod,
@@ -39,7 +40,7 @@ const PERIODS: TransactionPeriod[] = [
 ];
 
 function money(amount: number, currency: string) {
-  return `${currency || "GHS"} ${Number(amount ?? 0).toLocaleString()}`;
+  return formatMoney(currency, Number(amount ?? 0));
 }
 
 function Tile({ label, value }: { label: string; value: string }) {
@@ -177,7 +178,7 @@ export default function Transactions() {
           label="Spent"
           value={
             summary
-              ? money(summary.amount_spent ?? 0, summary.currency ?? "GHS")
+              ? money(summary.amount_spent ?? 0, summary.currency ?? "")
               : "—"
           }
         />

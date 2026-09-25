@@ -2,6 +2,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it, vi } from "vitest";
 import { addPaymentMethodCore } from "./paymentMethodCore";
 
+// The market lookup is configuration, not what this test is about: a Ghana
+// market that offers mobile money, so the phone rules below are Ghana rules.
+vi.mock("../markets/marketConfig", () => ({
+  getMarketOrDefault: async () => ({
+    countryCode: "GH",
+    name: "Ghana",
+    dialCode: "+233",
+    paymentMethods: [{ enabled: true, method: "mobile_money" }],
+  }),
+}));
+
 // A stub for the three payment_method queries addPaymentMethodCore makes:
 // the active-count head query, the existing-methods lookup, and the insert.
 // Each resolves to whatever the test hands it.
@@ -19,10 +30,14 @@ function fakeClient(opts: {
   // real promise that still exposes .eq() — Object.assign onto a resolved
   // promise gives that without hand-rolling a thenable.
   const resolved = <T>(value: T) => {
-    const node: { eq: () => typeof node } & Promise<T> = Object.assign(
-      Promise.resolve(value),
-      { eq: () => node },
-    );
+    const node: {
+      eq: () => typeof node;
+      maybeSingle: () => Promise<{ data: null; error: null }>;
+    } & Promise<T> = Object.assign(Promise.resolve(value), {
+      eq: () => node,
+      // The user_info home-country read: no row means the default market.
+      maybeSingle: async () => ({ data: null, error: null }),
+    });
     return node;
   };
 
