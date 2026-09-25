@@ -1,6 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
-import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
+import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import {
   type PlaceDraftPayload,
@@ -150,7 +150,7 @@ export async function savePlaceDraftCore(
       previousCoverPublicId !== coverPublicId
     ) {
       try {
-        await destroyAsset(previousCoverPublicId, {
+        await destroyAssetIfUnused(previousCoverPublicId, {
           resource_type: "image",
         });
       } catch (cloudError) {
@@ -344,9 +344,12 @@ export async function deletePlaceDraftCore(
   // destroy leaves the row so the asset can be found and retried.
   if (placeDraft?.cover_public_id) {
     try {
-      const result = await destroyAsset(placeDraft.cover_public_id, {
-        resource_type: "image",
-      });
+      // Kept when a published place (or anything else) still uses it.
+      const result = await destroyAssetIfUnused(
+        placeDraft.cover_public_id,
+        { resource_type: "image" },
+        { table: "place_drafts", draftId },
+      );
       if (result.result !== "ok" && result.result !== "not found") {
         return {
           status: 500,

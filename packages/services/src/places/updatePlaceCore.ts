@@ -4,7 +4,7 @@ import {
 } from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
-import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
+import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
@@ -146,7 +146,8 @@ export async function updatePlaceCore(
 
   if (previousCoverPublicId && previousCoverPublicId !== coverPublicId) {
     try {
-      await destroyAsset(previousCoverPublicId, {});
+      // Kept when another listing or draft still uses it.
+      await destroyAssetIfUnused(previousCoverPublicId, {});
     } catch (cloudError) {
       logger.error(
         "Cloudinary deletion of old cover photo failed:",

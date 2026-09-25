@@ -9,7 +9,7 @@ import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
 import { userFacingError } from "@abonten/core/userFacingError";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
-import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
+import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
@@ -338,7 +338,8 @@ export async function updateEventCore(
 
   if (previousFlyerPublicId) {
     try {
-      await destroyAsset(previousFlyerPublicId, {});
+      // Kept when another listing or draft still uses it.
+      await destroyAssetIfUnused(previousFlyerPublicId, {});
     } catch (cloudError) {
       logger.error("Cloudinary deletion of old flyer failed:", cloudError);
       // Not failing the whole update if cleanup of the old flyer fails.
