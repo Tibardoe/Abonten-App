@@ -230,6 +230,29 @@ const SERVICE_ROLE_ONLY: Call[] = [
     why: "locked 2026-09-25: it trusts the ticket code, QR and expiry it is given",
   },
   {
+    name: "phone_otp_claim_send",
+    // An invalid number: the service call is refused inside the function,
+    // so it proves the signature without writing a send-log row.
+    args: {
+      p_phone_e164: "not-a-number",
+      p_ip_address: null,
+      p_cooldown_seconds: 60,
+      p_per_number_hour: 5,
+      p_per_number_day: 10,
+      p_per_ip_hour: 10,
+    },
+    why: "gate 2026-09-25: a caller could spend other people's text-message budget",
+  },
+  {
+    name: "phone_otp_take_attempt",
+    args: {
+      p_purpose: "sign-in",
+      p_phone_e164: "+10000000000",
+      p_max_attempts: 5,
+    },
+    why: "gate 2026-09-25: it clears a pending code",
+  },
+  {
     name: "weekly_edition_document",
     args: { p_edition_id: ABSENT_ID },
     why: "Abonten Weekly reads go through the programme check in @abonten/services",

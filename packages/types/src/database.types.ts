@@ -5825,6 +5825,30 @@ export type Database = {
         }
         Relationships: []
       }
+      geocode_cache: {
+        Row: {
+          created_at: string
+          found: boolean
+          lat: number | null
+          lng: number | null
+          query_key: string
+        }
+        Insert: {
+          created_at?: string
+          found: boolean
+          lat?: number | null
+          lng?: number | null
+          query_key: string
+        }
+        Update: {
+          created_at?: string
+          found?: boolean
+          lat?: number | null
+          lng?: number | null
+          query_key?: string
+        }
+        Relationships: []
+      }
       health_check_result: {
         Row: {
           check_key: string
