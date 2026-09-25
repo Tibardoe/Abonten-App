@@ -4,7 +4,7 @@ purpose: Record the audit of production's Paystack configuration, the safety cha
 audience: Founder, engineering
 scope: Paystack configuration (Vercel web and admin, EAS, Paystack dashboards), the payment path from checkout to ledger, webhooks, refunds, reconciliation, abandoned payments, test-suite safety
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-25
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -189,3 +189,68 @@ Only after 5 can the gate read READY FOR REAL PAID SALES.
 
 Production still runs the Paystack **test** keys; the live switch (§7) is
 the founder's.
+
+## 9. Final verification of the cutover mechanism (2026-09-25, 21:30–22:05 UTC)
+
+A second, independent read of the payment implementation as deployed —
+initialization, amount and currency, reference, hosted page, return,
+webhook signature, server verification, transaction, fulfilment, earnings,
+fee, reconciliation, refund, duplicates, recovery, abandonment, failure —
+confirmed that checkout, app verification, webhook, the reconcile sweep,
+retry, admin refund and buyer refund all resolve the account through one
+function (`accountFromConfig`; there is no other read of a Paystack
+variable in the code) and settle through one `finalizePayment`. Four
+defects in the mechanism itself were found, fixed and proved:
+
+| # | Defect | Fix | Proof |
+|---|---|---|---|
+| V1 | `PAYSTACK_WEBHOOK_SECRET` had to equal the secret key (Paystack signs with the secret key; the variable name is historical) but nothing checked it: a wrong live value would have refused every live webhook while charges went through | the registry refuses a Paystack account whose webhook secret differs from its secret key (reason names the variables, never a value) | unit test; integration "a webhook secret that is not the secret key is refused"; production smoke after deploy accepted the account, so production's two values are equal |
+| V2 | With `PAYMENTS_MODE=live` a malformed key ("unknown" mode) was accepted | under a declared mode, an unrecognised secret, public or (Paystack) webhook key is refused; a missing public key stays allowed (no client uses it) | unit tests |
+| V3 | Nothing stopped a live key on a Preview deployment, which shares the production database | a live key is refused when `VERCEL_ENV` is not `production` | unit test; integration "a live key on a preview deployment is refused" |
+| V4 | `fulfillment_failed` (charge recorded, nothing issued) was reached only by the buyer's Retry and counted nowhere | the sweep retries it through `finalizePayment` every 30 min (migration `20260925121000`); the health row counts it | integration "a recorded charge whose issuance failed is issued by the sweep, once, after its backoff" |
+
+Also: the smoke script now checks the recorded attempt (market, currency,
+charge in minor units, reference), the verify path against Paystack, the
+health row's key modes / declared mode / deployment / unsettled count, both
+webhook URLs' refusal of unsigned and mis-signed events, and the reconcile
+wiring — 40 checks. The runbook (v1.1) carries the 13-step sequence with an
+expected result, failure sign and rollback per step, and the exact record
+chain for the GH₵1.05 purchase and its refund with read-only SQL (both
+queries validated against the schema).
+
+Preview deployments: a POST to a preview API answers 401 (Vercel team
+login), so Paystack cannot post to one and the public cannot reach one; a
+signed-in team member could start a payment from a preview only while it
+holds Paystack keys. The cutover removes them from Preview (step 4) and
+V3 refuses live keys there regardless. Sharing the production database
+with previews remains an architectural risk outside payments.
+
+Production reconciliation (read-only, 21:40 UTC): 57 Paystack
+transactions; 0 duplicate references (unique constraint present); 0
+transactions without an attempt; 0 paid checkouts over-issued or without an
+earning; 0 duplicate earning or fee rows; 0 `fulfillment_failed`, 0
+`processing`, 0 orphan captures, 0 refunds pending over 3 days; 0 open
+incidents; `financial-reconciliation`, `recover-stale-payment-attempts` and
+`payment-reconcile` all succeeding on schedule. Two historical August
+test-money rows remain and were left unchanged: a succeeded attempt of
+18 Aug (GH₵1.02) from before transactions were recorded, and a successful
+19 Aug transaction (GH₵102) with no ticket (the refund path refuses it). The
+three `initiated` attempts with references are outside the sweep's window
+and cannot become live transactions: their references exist only on the
+test account, so a live key answers "not found", which is treated as
+pending, never success.
+
+Results (local): core unit 733, services unit 150 (36 provider tests);
+payment suites 62 (`payment-live-cutover` 12, `payment-gate`,
+`payment-attempt-reuse`, `concurrency`, `idempotency`,
+`refund-claim-and-reminders`, `global-hardening`, `money-path-lockdown`,
+`checkout-time-guards`, `international-checkout`); full integration 86
+files, 726 passed, 1 skipped; typecheck 11/11; API parity 222; docs OK;
+web and admin production builds OK. Production: migration
+`20260925121000` applied 21:55 (function widened, service-role only);
+`88c13b40` READY 22:01 (web and admin); smoke `--expect-mode test` 40/40
+at 22:04; health row 22:04 ok; runtime errors since the deploy: web only
+Resend refusing the throwaway buyers' emails, admin none.
+
+Not run: the Paystack sandbox suite (the test dashboard's webhooks still
+point at production until cutover step 2).
