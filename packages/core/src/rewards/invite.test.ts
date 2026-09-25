@@ -77,20 +77,27 @@ describe("invite copy", () => {
     expect(
       inviteShareMessage({
         url: "https://abontenhub.com/invite/K7QX2MA",
+        currency: "GHS",
         refereeMinor: 200,
         minOrderMinor: 3000,
       }),
     ).toBe(
-      "Join me on Abonten to find events and places near you and get GH₵ 2.00 off your first ticket of GH₵ 30.00 or more: https://abontenhub.com/invite/K7QX2MA",
+      "Join me on Abonten to find events and places near you and get GH₵2.00 off your first ticket of GH₵30.00 or more: https://abontenhub.com/invite/K7QX2MA",
     );
     expect(
-      inviteShareMessage({ url: "u", refereeMinor: null, minOrderMinor: null }),
+      inviteShareMessage({
+        url: "u",
+        refereeMinor: null,
+        minOrderMinor: null,
+        currency: "GHS",
+      }),
     ).toBe("Join me on Abonten to find events and places near you: u");
   });
 
   it("explains every bind answer", () => {
     const base = {
       referrerName: "Ama K.",
+      currency: "GHS",
       welcome: "none" as const,
       welcomeMinor: 200,
     };
@@ -98,7 +105,7 @@ describe("invite copy", () => {
       bindResultMessage({ ...base, result: "bound", welcome: "granted" }),
     ).toEqual({
       tone: "success",
-      text: "You joined with Ama K.'s invite. GH₵ 2.00 welcome credit is ready for your first ticket.",
+      text: "You joined with Ama K.'s invite. GH₵2.00 welcome credit is ready for your first ticket.",
     });
     expect(
       bindResultMessage({ ...base, result: "bound", welcome: "needs_phone" })

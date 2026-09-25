@@ -4,6 +4,7 @@ import { loyaltyProgressCopy, rewardsEarnLines } from "./earnCopy";
 
 const OFF: RewardsProgram = {
   enabled: true,
+  currency: "GHS",
   eventReferral: null,
   friendReferral: null,
   organizerRebate: null,
@@ -54,15 +55,16 @@ describe("rewardsEarnLines", () => {
     expect(lines[0]).toContain("you earn 1% of the ticket price");
     expect(lines[1]).toContain("paid by the organizer");
     expect(lines[2]).toContain("5 different events within 90 days");
-    expect(lines[2]).toContain("up to GH₵ 10.00");
+    expect(lines[2]).toContain("up to GH₵10.00");
     expect(lines[3]).toContain(
-      "GH₵ 0.50 of promotion credit (up to 40 a month)",
+      "GH₵0.50 of promotion credit (up to 40 a month)",
     );
   });
 });
 
 describe("loyaltyProgressCopy", () => {
   const base: LoyaltyProgress = {
+    currency: "GHS",
     ordersRequired: 5,
     windowDays: 90,
     minOrderMinor: 2000,
@@ -78,10 +80,10 @@ describe("loyaltyProgressCopy", () => {
     expect(loyaltyProgressCopy({ ...base, ordersCounted: 3 })).toEqual({
       headline: "3 of 5 events",
       detail:
-        "2 more ticket orders of GH₵ 20.00 or more to different events within 90 days and we give you back the service fee on the last one as credit (up to GH₵ 10.00).",
+        "2 more ticket orders of GH₵20.00 or more to different events within 90 days and we give you back the service fee on the last one as credit (up to GH₵10.00).",
     });
     expect(loyaltyProgressCopy({ ...base, ordersCounted: 4 }).detail).toMatch(
-      /^One more ticket order of GH₵ 20.00 or more/,
+      /^One more ticket order of GH₵20.00 or more/,
     );
     expect(loyaltyProgressCopy({ ...base, ordersCounted: 5 }).detail).toMatch(
       /comes back as credit/,

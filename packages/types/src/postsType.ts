@@ -35,11 +35,12 @@ export type PostsType = {
   longitude: number;
   category: string;
   types: string[];
-  starts_at?: Date | undefined;
-  ends_at?: Date | undefined;
+  /** Wall-clock "yyyy-mm-ddTHH:MM" in the venue's zone (see @abonten/core/time). */
+  starts_at?: string | undefined;
+  ends_at?: string | undefined;
   specific_dates?: {
-    start: Date;
-    end: Date;
+    start: string;
+    end: string;
   }[];
   title: string;
   checked: boolean;
@@ -81,11 +82,12 @@ export type PostsType = {
 };
 
 export type EventDates = {
-  starts_at?: Date;
-  ends_at?: Date;
+  /** Wall-clock "yyyy-mm-ddTHH:MM" in the venue's zone. */
+  starts_at?: string;
+  ends_at?: string;
   specific_dates?: {
-    start: Date;
-    end: Date;
+    start: string;
+    end: string;
   }[];
 };
 
@@ -120,6 +122,10 @@ export type UserPostType = {
   event_code: string;
   occurrences?: Occurrence[];
   event_occurrence?: Occurrence[];
+  /** The event's IANA zone: its times are shown on the venue's clock. */
+  timezone?: string | null;
+  /** The event's market (ISO country). */
+  country_code?: string | null;
   title: string;
   // Null when the organizer set no limit.
   capacity?: number | null;

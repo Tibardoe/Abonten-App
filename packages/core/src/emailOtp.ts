@@ -5,7 +5,7 @@
 // Email OTP differs from the phone (Hubtel) OTP in two ways that matter here:
 //   1. Supabase issues 6-digit codes for email (auth.email.otp_length), not
 //      Hubtel's 4 — so this has its own length constant. Do NOT reuse
-//      HUBTEL_OTP_CODE_LENGTH for email.
+//      DEFAULT_PHONE_OTP_CODE_LENGTH for email.
 //   2. Supabase owns the entire token lifecycle (generation, hashing,
 //      expiry, single-use, per-IP verification cap). The app never sees or
 //      stores an email code, so there is no phone_otp_state equivalent.

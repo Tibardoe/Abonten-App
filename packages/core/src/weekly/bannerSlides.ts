@@ -36,6 +36,7 @@ export function weeklyBannerSlides(
           event.starts_at,
           event.ends_at,
           event.occurrences,
+          event.timezone,
         );
         seen.add(subjectKey);
         slides.push({

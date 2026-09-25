@@ -3,6 +3,7 @@ import type {
   ContentPromotionEstimate,
   ContentPromotionPricing,
 } from "@abonten/types/contentType";
+import { formatMoney } from "../money/formatMoney";
 
 // The reach estimate for a promoted Spotlight. Pure and deterministic so the
 // server (the only place a price or an estimate is decided) and the unit
@@ -44,7 +45,7 @@ export function roundReach(n: number, direction: "down" | "up"): number {
 export function budgetProblem(
   pricing: Pick<
     ContentPromotionPricing,
-    "minBudgetMinor" | "maxBudgetMinor" | "budgetStepMinor"
+    "minBudgetMinor" | "maxBudgetMinor" | "budgetStepMinor" | "currency"
   >,
   budgetMinor: number,
 ): string | null {
@@ -52,13 +53,13 @@ export function budgetProblem(
     return "Choose a budget.";
   }
   if (budgetMinor < pricing.minBudgetMinor) {
-    return `The smallest budget is ${cedis(pricing.minBudgetMinor)}.`;
+    return `The smallest budget is ${amount(pricing.minBudgetMinor, pricing.currency)}.`;
   }
   if (budgetMinor > pricing.maxBudgetMinor) {
-    return `The largest budget is ${cedis(pricing.maxBudgetMinor)}.`;
+    return `The largest budget is ${amount(pricing.maxBudgetMinor, pricing.currency)}.`;
   }
   if (budgetMinor % pricing.budgetStepMinor !== 0) {
-    return `Budgets go up in steps of ${cedis(pricing.budgetStepMinor)}.`;
+    return `Budgets go up in steps of ${amount(pricing.budgetStepMinor, pricing.currency)}.`;
   }
   return null;
 }
@@ -176,7 +177,9 @@ export function formatReachRange(estimate: {
     : `${f(estimate.reachLow)}–${f(estimate.reachHigh)} people`;
 }
 
-function cedis(minor: number): string {
-  const v = minor / 100;
-  return `GH₵ ${Number.isInteger(v) ? v.toString() : v.toFixed(2)}`;
+function amount(minor: number, currency: string): string {
+  return formatMoney(
+    { amountMinor: minor, currency },
+    { trimZeroFraction: true },
+  );
 }

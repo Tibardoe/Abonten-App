@@ -21,9 +21,9 @@ export function rewardsEarnLines(program: RewardsProgram): string[] {
   }
   if (program.friendReferral?.referrerMinor) {
     lines.push(
-      `Invite a friend. When they buy their first ticket, you get ${formatCredit(program.friendReferral.referrerMinor)}${
+      `Invite a friend. When they buy their first ticket, you get ${formatCredit(program.friendReferral.referrerMinor, program.currency)}${
         program.friendReferral.refereeMinor
-          ? ` and they get ${formatCredit(program.friendReferral.refereeMinor)} off`
+          ? ` and they get ${formatCredit(program.friendReferral.refereeMinor, program.currency)} off`
           : ""
       }.`,
     );
@@ -31,7 +31,7 @@ export function rewardsEarnLines(program: RewardsProgram): string[] {
   if (program.loyaltyFeeRebate) {
     const l = program.loyaltyFeeRebate;
     lines.push(
-      `Keep going out. Buy tickets to ${l.ordersRequired} different events within ${l.windowDays} days and the service fee on the ${l.ordersRequired === 5 ? "5th" : "last"} order comes back as credit after the event (up to ${formatCredit(l.maxMinor)}).`,
+      `Keep going out. Buy tickets to ${l.ordersRequired} different events within ${l.windowDays} days and the service fee on the ${l.ordersRequired === 5 ? "5th" : "last"} order comes back as credit after the event (up to ${formatCredit(l.maxMinor, program.currency)}).`,
     );
   }
   if (program.organizerRebate) {
@@ -46,12 +46,12 @@ export function rewardsEarnLines(program: RewardsProgram): string[] {
   }
   if (program.placeVisits) {
     lines.push(
-      `Own a verified place? Show your check-in code: every different person who checks in during a month earns you ${formatCredit(program.placeVisits.perVisitorMinor)} of promotion credit (up to ${program.placeVisits.maxVisitors} a month).`,
+      `Own a verified place? Show your check-in code: every different person who checks in during a month earns you ${formatCredit(program.placeVisits.perVisitorMinor, program.currency)} of promotion credit (up to ${program.placeVisits.maxVisitors} a month).`,
     );
   }
   if (program.organizerMilestone) {
     lines.push(
-      `The first time one of your events sells to ${program.organizerMilestone.uniqueBuyers} different people, you get ${formatCredit(program.organizerMilestone.amountMinor)} of promotion credit.`,
+      `The first time one of your events sells to ${program.organizerMilestone.uniqueBuyers} different people, you get ${formatCredit(program.organizerMilestone.amountMinor, program.currency)} of promotion credit.`,
     );
   }
   return lines;
@@ -63,9 +63,11 @@ export function loyaltyProgressCopy(p: LoyaltyProgress): {
   detail: string;
 } {
   const left = Math.max(p.ordersRequired - p.ordersCounted, 0);
-  const cap = formatCredit(p.maxPerRewardMinor);
+  const cap = formatCredit(p.maxPerRewardMinor, p.currency);
   const min =
-    p.minOrderMinor > 0 ? ` of ${formatCredit(p.minOrderMinor)} or more` : "";
+    p.minOrderMinor > 0
+      ? ` of ${formatCredit(p.minOrderMinor, p.currency)} or more`
+      : "";
   if (left === 0) {
     return {
       headline: `${p.ordersCounted} of ${p.ordersRequired} events`,

@@ -61,6 +61,10 @@ export type UserTicketType = {
   event: {
     id: string;
     organizer_id: string;
+    /** The event's IANA zone; ticket times read on the venue's clock. */
+    timezone?: string | null;
+    country_code?: string | null;
+    currency?: string | null;
     event_category: string;
     event_type: string; // Stored as JSON string, consider parsing it
     title: string;

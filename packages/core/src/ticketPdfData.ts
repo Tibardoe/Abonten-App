@@ -30,6 +30,7 @@ export function buildTicketPdfData(
     ticket.event.starts_at,
     ticket.event.ends_at,
     ticket.event.occurrences,
+    ticket.event.timezone,
   );
 
   return {

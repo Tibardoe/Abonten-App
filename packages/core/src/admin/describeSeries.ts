@@ -19,7 +19,7 @@ export type DescribeSeriesOptions = {
   rangeLabel?: string;
 };
 
-const defaultFormat = (v: number) => v.toLocaleString("en-GH");
+const defaultFormat = (v: number) => v.toLocaleString("en-GB");
 const defaultBucket = (iso: string) => iso.slice(0, 10);
 
 export function describeSeries(

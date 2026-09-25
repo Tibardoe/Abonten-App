@@ -1,3 +1,5 @@
+import { formatMoney } from "./formatMoney";
+
 type FilterParams = {
   price?: string;
   rating?: string;
@@ -22,7 +24,8 @@ export function parseFilters(params: FilterParams) {
   let minPrice: number | null = null;
   let maxPrice: number | null = null;
   if (params.price) {
-    // "GHS 0 - GHS 250" -> 0 and 250; "GHS 0 - GHS 999" is the modal's "Any".
+    // "0-250" -> 0 and 250; "0-999" is the modal's "Any". Links written
+    // before prices were currency-neutral ("GHS 0 - GHS 250") parse the same.
     const priceMatch = params.price.match(/(\d+)\D+(\d+|any)/i);
     if (priceMatch) {
       const min = Number(priceMatch[1]);
@@ -70,4 +73,28 @@ export function parseFilters(params: FilterParams) {
     lat,
     lng,
   };
+}
+
+/** The ?price= value the filter modal writes: currency-neutral, "0-250". */
+export function priceParam(min: number, max: number): string {
+  return `${Math.max(0, Math.round(min))}-${Math.max(0, Math.round(max))}`;
+}
+
+/** True when ?price= is absent or the modal's unfiltered "Any" range. */
+export function isAnyPriceParam(raw: string | null | undefined): boolean {
+  if (!raw) return true;
+  const { minPrice, maxPrice } = parseFilters({ price: raw });
+  return minPrice == null && maxPrice == null;
+}
+
+/** "GH₵20 – GH₵250" / "From GH₵20" for a chip, in the market's currency. */
+export function describePriceParam(
+  raw: string | null | undefined,
+  currency: string | null | undefined,
+): string | null {
+  if (isAnyPriceParam(raw)) return null;
+  const { minPrice, maxPrice } = parseFilters({ price: raw ?? "" });
+  const f = (n: number) => formatMoney(currency, n, { trimZeroFraction: true });
+  if (maxPrice == null || maxPrice >= 999999) return `From ${f(minPrice ?? 0)}`;
+  return `${f(minPrice ?? 0)} – ${f(maxPrice)}`;
 }

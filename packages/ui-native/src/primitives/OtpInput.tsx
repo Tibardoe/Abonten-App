@@ -1,4 +1,4 @@
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -38,7 +38,7 @@ export function OtpInput({
   onComplete,
   // Hubtel issues 4-digit codes — keep the visible cell count in step with
   // the real code length (shared with web via @abonten/core/otpConstants).
-  length = HUBTEL_OTP_CODE_LENGTH,
+  length = DEFAULT_PHONE_OTP_CODE_LENGTH,
   disabled = false,
   invalid = false,
   autoFocus = true,

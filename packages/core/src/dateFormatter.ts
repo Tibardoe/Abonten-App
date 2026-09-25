@@ -1,88 +1,212 @@
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { formatDistance } from "date-fns";
+import {
+  isValidTimeZone,
+  viewerTimeZone,
+  zoneAbbreviation,
+  zoneOffsetMinutes,
+} from "./time/timeZone";
 
-export function formatDateWithSuffix(date: string | Date): string {
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  };
-  const formattedDate = new Date(date).toLocaleDateString("en-GB", options);
+// Every formatter here takes an optional IANA time zone. Pass the EVENT's
+// zone (event.timezone) for anything about when an event happens, so a
+// person in London reads a Lagos event at Lagos time with no surprise;
+// leave it out for the viewer's own moments (receipts, activity). An
+// invalid zone falls back to the viewer's, never throws.
 
-  const day = new Date(date).getDate();
-  let suffix = "th";
+const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS_LONG = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+const MONTHS_LONG = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
-  if (day % 10 === 1 && day !== 11) {
-    suffix = "st";
-  } else if (day % 10 === 2 && day !== 12) {
-    suffix = "nd";
-  } else if (day % 10 === 3 && day !== 13) {
-    suffix = "rd";
+type Parts = {
+  year: number;
+  month: number;
+  day: number;
+  weekday: number;
+  hours: number;
+  minutes: number;
+};
+
+const partsFormatterCache = new Map<string, Intl.DateTimeFormat>();
+
+function partsFormatter(timeZone: string | undefined): Intl.DateTimeFormat {
+  const key = timeZone ?? "";
+  const cached = partsFormatterCache.get(key);
+  if (cached) return cached;
+  let f: Intl.DateTimeFormat;
+  try {
+    f = new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      weekday: "short",
+      hour: "numeric",
+      minute: "numeric",
+      hourCycle: "h23",
+    });
+  } catch {
+    f = partsFormatter(undefined);
   }
+  partsFormatterCache.set(key, f);
+  return f;
+}
 
-  // Replace the day number with day + suffix
-  return formattedDate.replace(/\d+/, `${day}${suffix}`);
+/** The wall-clock parts of `date` in `timeZone` (viewer's zone when omitted). */
+export function wallClockParts(
+  date: Date | string,
+  timeZone?: string | null,
+): Parts {
+  const d = date instanceof Date ? date : new Date(date);
+  if (!timeZone) {
+    return {
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      day: d.getDate(),
+      weekday: d.getDay(),
+      hours: d.getHours(),
+      minutes: d.getMinutes(),
+    };
+  }
+  const out: Parts = {
+    year: 0,
+    month: 0,
+    day: 0,
+    weekday: 0,
+    hours: 0,
+    minutes: 0,
+  };
+  for (const part of partsFormatter(timeZone).formatToParts(d)) {
+    switch (part.type) {
+      case "year":
+        out.year = Number(part.value);
+        break;
+      case "month":
+        out.month = Number(part.value) - 1;
+        break;
+      case "day":
+        out.day = Number(part.value);
+        break;
+      case "weekday":
+        out.weekday = Math.max(0, DAYS_SHORT.indexOf(part.value));
+        break;
+      case "hour":
+        out.hours = Number(part.value) % 24;
+        break;
+      case "minute":
+        out.minutes = Number(part.value);
+        break;
+    }
+  }
+  return out;
+}
+
+/**
+ * " WAT" when `timeZone` keeps a different clock from the viewer's at `at`
+ * (a Lagos event seen from London), "" otherwise — so a time is never read
+ * in the wrong zone, and people at home see no clutter.
+ */
+export function zoneHint(
+  at: Date | string,
+  timeZone?: string | null,
+  viewer: string = viewerTimeZone(),
+): string {
+  if (!timeZone || !isValidTimeZone(timeZone)) return "";
+  const d = at instanceof Date ? at : new Date(at);
+  if (Number.isNaN(d.getTime())) return "";
+  if (viewer === timeZone) return "";
+  if (zoneOffsetMinutes(d, viewer) === zoneOffsetMinutes(d, timeZone))
+    return "";
+  return ` ${zoneAbbreviation(d, timeZone)}`;
+}
+
+function ordinal(day: number): string {
+  if (day % 10 === 1 && day !== 11) return "st";
+  if (day % 10 === 2 && day !== 12) return "nd";
+  if (day % 10 === 3 && day !== 13) return "rd";
+  return "th";
+}
+
+function twelveHour(hours: number, minutes: number): string {
+  const h = hours % 12 || 12;
+  return `${String(h).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${hours >= 12 ? "PM" : "AM"}`;
+}
+
+export function formatDateWithSuffix(
+  date: string | Date,
+  timeZone?: string | null,
+): string {
+  const p = wallClockParts(date, timeZone);
+  return `${p.day}${ordinal(p.day)} ${MONTHS_SHORT[p.month]} ${p.year}`;
 }
 
 export function formatFullDateTimeRange(
   from?: Date | null | string,
   to?: Date | null | string,
+  timeZone?: string | null,
 ): { date: string; time: string } {
   const fromObj = from
-    ? formatSingleDateTime(from)
+    ? formatSingleDateTime(from, timeZone)
     : { date: "N/A", time: "N/A" };
-  const toObj = to ? formatSingleDateTime(to) : { date: "N/A", time: "N/A" };
+  const toObj = to
+    ? formatSingleDateTime(to, timeZone)
+    : { date: "N/A", time: "N/A" };
 
   const isSameDate = fromObj.date === toObj.date;
 
+  const hint = from ? zoneHint(from, timeZone) : "";
   return {
     date: isSameDate ? fromObj.date : `${fromObj.date} - ${toObj.date}`,
-    time: `${fromObj.time} - ${toObj.time}`,
+    time: `${fromObj.time} - ${toObj.time}${hint}`,
   };
 }
 
-export function formatSingleDateTime(date: Date | string): {
+export function formatSingleDateTime(
+  date: Date | string,
+  timeZone?: string | null,
+): {
   date: string;
   time: string;
 } {
-  const parsedDate = new Date(date);
-
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-
-  const dayOfWeek = daysOfWeek[parsedDate.getDay()];
-  const month = months[parsedDate.getMonth()];
-  const day = parsedDate.getDate();
-  const year = parsedDate.getFullYear();
-
-  let suffix = "th";
-  if (day % 10 === 1 && day !== 11) suffix = "st";
-  else if (day % 10 === 2 && day !== 12) suffix = "nd";
-  else if (day % 10 === 3 && day !== 13) suffix = "rd";
-
-  const formattedDate = `${dayOfWeek}, ${day}${suffix} ${month} ${year}`;
-
-  const timeStr = parsedDate.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-
-  return { date: formattedDate, time: timeStr };
+  const p = wallClockParts(date, timeZone);
+  return {
+    date: `${DAYS_SHORT[p.weekday]}, ${p.day}${ordinal(p.day)} ${MONTHS_SHORT[p.month]} ${p.year}`,
+    time: twelveHour(p.hours, p.minutes),
+  };
 }
 
 /**
@@ -98,70 +222,26 @@ export function getRelativeTime(date: string | Date, now: Date = new Date()) {
   return formatDistance(past, now, { addSuffix: true }).replace("about ", "");
 }
 
-export function formatSpecificDateWithTimeRange(item: {
-  date: Date;
-  from: Date;
-  to: Date;
-}): string {
-  const dateStr = formatSingleDateTime(item.date).date;
-
-  const fromTime = item.from.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-
-  const toTime = item.to.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-
+export function formatSpecificDateWithTimeRange(
+  item: { date: Date; from: Date; to: Date },
+  timeZone?: string | null,
+): string {
+  const dateStr = formatSingleDateTime(item.date, timeZone).date;
+  const fromTime = formatSingleDateTime(item.from, timeZone).time;
+  const toTime = formatSingleDateTime(item.to, timeZone).time;
   return `${dateStr} ${fromTime} - ${toTime}`;
 }
 
-export function getDateParts(dateInput: string | Date) {
-  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-
-  const daysOfWeek = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const day = daysOfWeek[date.getDay()];
-  const month = months[date.getMonth()];
-  const dateNum = date.getDate();
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-
-  const formattedTime = `${hours % 12 || 12}:${minutes
-    .toString()
-    .padStart(2, "0")} ${hours >= 12 ? "PM" : "AM"}`;
-
+export function getDateParts(
+  dateInput: string | Date,
+  timeZone?: string | null,
+) {
+  const p = wallClockParts(dateInput, timeZone);
   return {
-    day,
-    month,
-    date: dateNum,
-    time: formattedTime,
+    day: DAYS_LONG[p.weekday],
+    month: MONTHS_LONG[p.month],
+    date: p.day,
+    time: twelveHour(p.hours, p.minutes),
   };
 }
 
@@ -243,43 +323,29 @@ export function getEventCardDateTime(
   startsAt: string | Date | null | undefined,
   endsAt: string | Date | null | undefined,
   fallbackOccurrences?: Occurrence[] | null,
+  /** The event's zone (event.timezone): the card reads the venue's clock. */
+  timeZone?: string | null,
 ): { date: string; time: string; extraDates: number } {
   const range = resolveEventDateRange(startsAt, endsAt, fallbackOccurrences);
   if (!range) return { date: "Date TBC", time: "", extraDates: 0 };
 
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
   const s = range.starts;
-  const now = new Date();
-  const sameYear = s.getFullYear() === now.getFullYear();
-  const date = `${daysOfWeek[s.getDay()]}, ${s.getDate()} ${months[s.getMonth()]}${
-    sameYear ? "" : ` ${s.getFullYear()}`
+  const p = wallClockParts(s, timeZone);
+  const nowYear = wallClockParts(new Date(), timeZone).year;
+  const date = `${DAYS_SHORT[p.weekday]}, ${p.day} ${MONTHS_SHORT[p.month]}${
+    p.year === nowYear ? "" : ` ${p.year}`
   }`;
-  const time = s.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const h12 = p.hours % 12 || 12;
+  const time = `${h12}:${String(p.minutes).padStart(2, "0")} ${p.hours >= 12 ? "PM" : "AM"}${zoneHint(s, timeZone)}`;
 
   // How many *other* dates this event has beyond the one shown.
   const occCount = fallbackOccurrences?.length ?? 0;
   let extraDates = occCount > 1 ? occCount - 1 : 0;
   if (extraDates === 0) {
     // A single multi-day range still "has more than one date" to a reader.
-    const spansDays = new Date(range.ends).toDateString() !== s.toDateString();
+    const e = wallClockParts(range.ends, timeZone);
+    const spansDays =
+      e.year !== p.year || e.month !== p.month || e.day !== p.day;
     if (spansDays) extraDates = 1;
   }
 
@@ -290,6 +356,8 @@ export function getFormattedEventDate(
   startsAt: string | Date | null | undefined,
   endsAt: string | Date | null | undefined,
   fallbackOccurrences?: Occurrence[] | null,
+  /** The event's zone (event.timezone). */
+  timeZone?: string | null,
 ): { date: string; time: string } {
   const range = resolveEventDateRange(startsAt, endsAt, fallbackOccurrences);
 
@@ -300,7 +368,7 @@ export function getFormattedEventDate(
     };
   }
 
-  return formatFullDateTimeRange(range.starts, range.ends);
+  return formatFullDateTimeRange(range.starts, range.ends, timeZone);
 }
 
 /**

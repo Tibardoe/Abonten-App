@@ -641,6 +641,10 @@ export type ContentAdminOverview = {
     moderated: number;
   };
   campaigns: {
+    /** The currency the campaign money below is in (one per report). */
+    currency: string;
+    /** Currencies that have campaigns, for switching the report. */
+    currencies: string[];
     created: number;
     advertisers: number;
     pendingReview: number;

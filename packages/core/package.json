@@ -5,6 +5,13 @@
   "description": "Framework-free business logic and helpers shared across the Abonten monorepo (no next/*, react, react-native, or DOM).",
   "type": "module",
   "exports": {
+    "./money": "./src/money/index.ts",
+    "./phone": "./src/phone/phone.ts",
+    "./time": "./src/time/index.ts",
+    "./geo": "./src/geo/index.ts",
+    "./market": "./src/market/index.ts",
+    "./flags": "./src/flags/evaluateFlag.ts",
+    "./units": "./src/units/distance.ts",
     "./*": "./src/*.ts"
   },
   "scripts": {
@@ -13,7 +20,9 @@
   },
   "dependencies": {
     "@abonten/types": "*",
-    "date-fns": "^4.1.0"
+    "@date-fns/tz": "^1.5.0",
+    "date-fns": "^4.1.0",
+    "libphonenumber-js": "^1.13.14"
   },
   "devDependencies": {
     "@abonten/config": "*",
