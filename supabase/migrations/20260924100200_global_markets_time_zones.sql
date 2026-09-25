@@ -315,4 +315,5 @@ $$;
 alter table public.phone_otp_state
   add column provider text not null default 'hubtel'
     check (provider in ('hubtel', 'twilio'));
-alter table public.phone_otp_state alter column provider drop default;
+-- The 'hubtel' default stays until the deploy bridge is removed (part 8):
+-- the code running while this is applied does not name a provider yet.

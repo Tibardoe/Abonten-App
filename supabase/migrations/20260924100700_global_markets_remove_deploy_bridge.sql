@@ -12,6 +12,9 @@ drop trigger if exists payout_account_legacy_writer_bridge on public.payout_acco
 drop function if exists public.payout_account_legacy_writer_bridge();
 alter table public.transaction drop column if exists paystack_reference;
 
+-- Every OTP writer now names its provider.
+alter table public.phone_otp_state alter column provider drop default;
+
 drop function if exists public.cancel_event_and_release_tickets(uuid);
 
 CREATE OR REPLACE FUNCTION public.cancel_event_and_release_tickets(p_event_id uuid)

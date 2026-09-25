@@ -196,8 +196,11 @@ events, list networks/banks, transfer recipient + transfer, probe.
 `feature_flag` rows (Admin › Markets › Feature flags) with rules
 `{countries, platforms, cohorts, percent, minAppVersion, allowSubjects}`;
 `evaluateFlag` is deterministic (FNV-1a bucket of flag + subject) and fails
-closed. Seeded, all off: `currency.display_conversion`, `checkout.stripe`,
-`markets.browse_abroad`.
+closed. Seeded switched on but inert until their prerequisite exists:
+`currency.display_conversion` (shows nothing until exchange rates are
+configured), `checkout.stripe` (no Stripe market is live) and
+`markets.browse_abroad` (only Ghana is open). Switch one off here to keep
+it off after its prerequisite arrives.
 
 ## 8. Security rules that carry the model
 
