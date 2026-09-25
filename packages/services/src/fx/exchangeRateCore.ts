@@ -106,6 +106,14 @@ export async function refreshExchangeRates(): Promise<RefreshResult> {
       message: `Automatic refresh is off (provider: ${config.provider}).`,
     };
   }
+  // The named value is sent to Open Exchange Rates: only its own variable
+  // may be read, however the config row was written.
+  if (!/^OPEN_EXCHANGE_RATES_APP_ID(?:_[A-Z0-9]+)?$/.test(config.appIdEnv)) {
+    return {
+      ok: false,
+      message: `${config.appIdEnv} is not an Open Exchange Rates variable`,
+    };
+  }
   const appId = process.env[config.appIdEnv];
   if (!appId) {
     const message = `${config.appIdEnv} is not set`;
