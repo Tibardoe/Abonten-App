@@ -128,9 +128,9 @@ export default async function SpotlightCampaignsPage({
                     {formatMinor(c.refundedMinor, c.currency)}
                   </Td>
                   <Td className="text-xs tabular-nums text-muted-foreground">
-                    {c.reach.toLocaleString("en-GH")} reached ·{" "}
-                    {c.impressions.toLocaleString("en-GH")} /{" "}
-                    {c.impressionGoal.toLocaleString("en-GH")} impressions
+                    {c.reach.toLocaleString("en-GB")} reached ·{" "}
+                    {c.impressions.toLocaleString("en-GB")} /{" "}
+                    {c.impressionGoal.toLocaleString("en-GB")} impressions
                   </Td>
                   <Td className="text-xs text-muted-foreground">
                     {timeAgo(c.updatedAt)}

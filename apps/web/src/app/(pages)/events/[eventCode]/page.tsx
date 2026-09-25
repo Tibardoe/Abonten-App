@@ -224,6 +224,7 @@ export default async function page({
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
+    event.timezone,
   );
 
   const tags = parseEventTypes(event.event_type);
@@ -442,6 +443,7 @@ export default async function page({
               <EventDateSelector
                 eventDates={event_dates}
                 eventId={event.id}
+                timeZone={event.timezone}
                 time={eventDateAndTime.time}
                 eventTitle={event.title}
                 requireRegistration={event.require_registration}

@@ -153,7 +153,7 @@ export const config = {
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

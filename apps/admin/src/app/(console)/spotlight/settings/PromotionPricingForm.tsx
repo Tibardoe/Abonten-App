@@ -5,6 +5,8 @@ import { formatAccraDateTime } from "@/lib/format";
 import { updatePromotionPricing } from "@/server/actions/content";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
+import { currencyMinorFactor } from "@abonten/core/money/currencies";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
 import type {
   ContentPromotionAudience,
   ContentPromotionEstimate,
@@ -23,7 +25,9 @@ type NumKey = {
     : never;
 }[keyof ContentPromotionPricing];
 
-// Money fields are edited in cedis and stored in pesewas.
+// Money fields are edited in major units of the pricing's currency and
+// stored in minor units; their suffix is that currency's sign.
+const MONEY_SUFFIX = "__currency__";
 const FIELDS: {
   key: Exclude<NumKey, "version">;
   label: string;
@@ -34,20 +38,25 @@ const FIELDS: {
   {
     key: "minBudgetMinor",
     label: "Smallest budget",
-    suffix: "GH₵",
+    suffix: MONEY_SUFFIX,
     cedis: true,
   },
   {
     key: "maxBudgetMinor",
     label: "Largest budget",
-    suffix: "GH₵",
+    suffix: MONEY_SUFFIX,
     cedis: true,
   },
-  { key: "budgetStepMinor", label: "Budget step", suffix: "GH₵", cedis: true },
+  {
+    key: "budgetStepMinor",
+    label: "Budget step",
+    suffix: MONEY_SUFFIX,
+    cedis: true,
+  },
   {
     key: "cpmMinor",
     label: "Cost per 1,000 sponsored impressions",
-    suffix: "GH₵",
+    suffix: MONEY_SUFFIX,
     cedis: true,
     hint: "Sets how many impressions a budget buys, and so where delivery stops.",
   },
@@ -95,8 +104,8 @@ const FIELDS: {
   },
 ];
 
-const list = (v: number[], cedis: boolean) =>
-  v.map((n) => (cedis ? n / 100 : n)).join(", ");
+const list = (v: number[], cedis: boolean, factor: number) =>
+  v.map((n) => (cedis ? n / factor : n)).join(", ");
 
 export function PromotionPricingForm({
   pricing,
@@ -111,6 +120,8 @@ export function PromotionPricingForm({
   examples: ContentPromotionEstimate[];
   editable: boolean;
 }) {
+  const factor = currencyMinorFactor(pricing.currency);
+  const symbol = currencySymbol(pricing.currency);
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -118,15 +129,15 @@ export function PromotionPricingForm({
     Object.fromEntries(
       FIELDS.map((f) => [
         f.key,
-        String(f.cedis ? pricing[f.key] / 100 : pricing[f.key]),
+        String(f.cedis ? pricing[f.key] / factor : pricing[f.key]),
       ]),
     ),
   );
   const [suggested, setSuggested] = useState(
-    list(pricing.suggestedBudgetsMinor, true),
+    list(pricing.suggestedBudgetsMinor, true, factor),
   );
   const [durations, setDurations] = useState(
-    list(pricing.durationOptionsDays, false),
+    list(pricing.durationOptionsDays, false, factor),
   );
   const [radiusShares, setRadiusShares] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -149,13 +160,13 @@ export function PromotionPricingForm({
           setMsg({ ok: false, text: `${f.label} must be a number.` });
           return;
         }
-        patch[f.key] = f.cedis ? Math.round(n * 100) : n;
+        patch[f.key] = f.cedis ? Math.round(n * factor) : n;
       }
       const parseList = (text: string, cedis: boolean) =>
         text
           .split(/[\s,]+/)
           .filter(Boolean)
-          .map((t) => (cedis ? Math.round(Number(t) * 100) : Number(t)));
+          .map((t) => (cedis ? Math.round(Number(t) * factor) : Number(t)));
       patch.suggestedBudgetsMinor = parseList(suggested, true);
       patch.durationOptionsDays = parseList(durations, false);
       const shares: Record<string, number> = {};
@@ -274,7 +285,9 @@ export function PromotionPricingForm({
                 }
                 className={cn(input, "w-28")}
               />
-              <span className="text-xs text-muted-foreground">{f.suffix}</span>
+              <span className="text-xs text-muted-foreground">
+                {f.suffix === MONEY_SUFFIX ? symbol : f.suffix}
+              </span>
             </div>
             {f.hint ? (
               <p className="text-xs text-muted-foreground">{f.hint}</p>
@@ -292,7 +305,9 @@ export function PromotionPricingForm({
             onChange={(e) => setSuggested(e.target.value)}
             className={cn(input, "mt-1")}
           />
-          <p className="text-xs text-muted-foreground">GH₵, comma separated</p>
+          <p className="text-xs text-muted-foreground">
+            {symbol}, comma separated
+          </p>
         </div>
         <div className="text-sm">
           <label htmlFor="pricing-durations" className="block font-medium">

@@ -92,7 +92,6 @@ export async function POST(req: Request) {
       capacity,
       websiteUrl: str(body.websiteUrl),
       requireRegistration: body.requireRegistration === true,
-      currency: str(body.currency) ?? "GHS",
       startsAt: hasSingleRange ? (body.startsAt as string) : null,
       endsAt: hasSingleRange ? (body.endsAt as string) : null,
       specificDates: hasSpecific

@@ -68,7 +68,6 @@ export async function postEvent(
     capacity: formData.capacity ?? null,
     websiteUrl: formData.website_url ?? null,
     requireRegistration: formData.checked,
-    currency: formData.currency,
     startsAt: formData.starts_at ?? null,
     endsAt: formData.ends_at ?? null,
     specificDates: formData.specific_dates ?? null,

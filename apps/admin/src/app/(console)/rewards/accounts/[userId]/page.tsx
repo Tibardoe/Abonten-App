@@ -110,26 +110,31 @@ export default async function CreditAccountDetailPage({
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat
           label="Available"
-          value={formatCredit(a.availableMinor)}
+          value={formatCredit(a.availableMinor, d.currency)}
           tone={a.availableMinor < 0 ? "danger" : undefined}
           hint={a.availableMinor < 0 ? "in debt: spending blocked" : undefined}
         />
-        <Stat label="Pending" value={formatCredit(a.pendingMinor)} />
+        <Stat
+          label="Pending"
+          value={formatCredit(a.pendingMinor, d.currency)}
+        />
         <Stat
           label="On hold"
           value={formatCredit(
             a.reservedMinor + a.frozenMinor + a.withdrawingMinor,
+            d.currency,
           )}
         />
         <Stat
           label="Earned (lifetime)"
-          value={formatCredit(a.lifetimeEarnedMinor)}
-          hint={`spent ${formatCredit(a.lifetimeSpentMinor)} · expired ${formatCredit(a.lifetimeExpiredMinor)} · reversed ${formatCredit(a.lifetimeReversedMinor)}`}
+          value={formatCredit(a.lifetimeEarnedMinor, d.currency)}
+          hint={`spent ${formatCredit(a.lifetimeSpentMinor, d.currency)} · expired ${formatCredit(a.lifetimeExpiredMinor, d.currency)} · reversed ${formatCredit(a.lifetimeReversedMinor, d.currency)}`}
         />
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-3">
         <AdjustmentPanel
+          currency={d.currency}
           userId={userId}
           canAdjust={
             ctx.permissions.includes("finance.adjust") && a.status !== "closed"
@@ -138,6 +143,7 @@ export default async function CreditAccountDetailPage({
           thresholdMinor={d.dualApprovalThresholdMinor}
         />
         <GoodwillPanel
+          currency={d.currency}
           userId={userId}
           canGrant={
             ctx.permissions.includes("rewards.goodwill") &&
@@ -266,13 +272,13 @@ export default async function CreditAccountDetailPage({
                 </Td>
                 <Td>{l.kind}</Td>
                 <Td className="text-right tabular-nums">
-                  {formatCredit(l.originalMinor)}
+                  {formatCredit(l.originalMinor, d.currency)}
                 </Td>
                 <Td className="text-right tabular-nums">
-                  {formatCredit(l.remainingMinor)}
+                  {formatCredit(l.remainingMinor, d.currency)}
                   {l.heldMinor > 0 ? (
                     <div className="text-xs text-muted-foreground">
-                      {formatCredit(l.heldMinor)} on hold
+                      {formatCredit(l.heldMinor, d.currency)} on hold
                     </div>
                   ) : null}
                 </Td>
@@ -333,7 +339,7 @@ export default async function CreditAccountDetailPage({
                   ) : null}
                 </Td>
                 <Td className="text-right tabular-nums">
-                  {formatCreditDelta(j.userDeltaMinor)}
+                  {formatCreditDelta(j.userDeltaMinor, d.currency)}
                 </Td>
                 <Td>
                   <ul className="space-y-0.5 font-mono text-[11px]">
@@ -351,7 +357,7 @@ export default async function CreditAccountDetailPage({
                           {line.ledgerCode}
                         </span>
                         <span className="tabular-nums">
-                          {formatCreditDelta(line.amountMinor)}
+                          {formatCreditDelta(line.amountMinor, d.currency)}
                         </span>
                       </li>
                     ))}
@@ -392,7 +398,7 @@ export default async function CreditAccountDetailPage({
                 </Td>
                 <Td className="tabular-nums">
                   {r.direction === "credit" ? "+" : "−"}
-                  {formatCredit(r.amountMinor)}
+                  {formatCredit(r.amountMinor, d.currency)}
                 </Td>
                 <Td className="max-w-xs text-muted-foreground">
                   {r.reason}

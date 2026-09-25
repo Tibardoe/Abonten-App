@@ -5,7 +5,7 @@ import { initCardVerificationCore } from "@abonten/services/payments/cardVerific
 
 // POST /api/mobile/payment-methods/card/init  (no body)
 //
-// Starts the GHS 1 Paystack card-verification charge. Returns the
+// Starts the small card-verification charge in the person's home market. Returns the
 // authorizationUrl to open in a browser session + the reference to pass
 // back to /card/confirm once the popup closes. Same
 // initCardVerificationCore the web action runs.
@@ -19,8 +19,10 @@ export async function POST(req: Request) {
 
   try {
     const result = await initCardVerificationCore(
+      auth.supabase,
       auth.user.id,
       auth.user.email,
+      "abonten://wallet",
     );
     return apiJson(result);
   } catch (error) {

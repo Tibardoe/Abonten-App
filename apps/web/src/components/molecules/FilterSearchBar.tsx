@@ -17,6 +17,7 @@ import {
   removeRecentSearch,
 } from "@/utils/recentSearches";
 import { generateSlug } from "@abonten/core/geerateSlug";
+import { isAnyPriceParam } from "@abonten/core/parseFilterModalQueries";
 import { parseSearchQuery } from "@abonten/core/search/parseSearchQuery";
 import type {
   SuggestionItem,
@@ -144,13 +145,13 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
     return Number.isFinite(parsed) ? parsed : undefined;
   };
 
-  // "GHS 0 - GHS 250" -> [0, 250], matching the shape FilterModalPopup's
-  // default branch writes into ?price=.
+  // "0-250" -> [0, 250], the shape FilterModalPopup writes into ?price=
+  // (older links carried a currency code: "GHS 0 - GHS 250").
   const parseLegacyPriceRange = (
     raw: string | null,
   ): { min?: number; max?: number } => {
     if (!raw) return {};
-    const match = raw.match(/(\d+(?:\.\d+)?)\s*-\s*GHS\s*(\d+(?:\.\d+)?)/i);
+    const match = raw.match(/(\d+(?:\.\d+)?)\D+?(\d+(?:\.\d+)?)/);
     if (!match) return {};
     return { min: Number(match[1]), max: Number(match[2]) };
   };
@@ -241,7 +242,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
     // /search always sets ?price=, even at the "Any" default -- only count
     // it once the range has actually been narrowed away from [0, 999].
     if (key === "price") {
-      return value !== "GHS 0 - GHS 999";
+      return !isAnyPriceParam(value);
     }
     return true;
   }).length;

@@ -39,7 +39,6 @@ export async function GET(req: Request) {
     const { status, results } = await runHealthChecksCore(
       getSupabaseServiceClient(),
       {
-        paystackSecretKey: process.env.PAYSTACK_SECRET_KEY,
         resendApiKey: process.env.RESEND_API_KEY,
         cloudinaryCloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
         cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,

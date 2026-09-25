@@ -11,6 +11,7 @@ import {
   countActiveEventFilters,
   countActivePlaceFilters,
 } from "@/features/discovery/exploreFilters";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceCategory } from "@abonten/types/placeType";
 import { AppText, Button, Chip, Label, Sheet } from "@abonten/ui-native";
@@ -103,6 +104,7 @@ export function FilterSheet({
 }) {
   const [eDraft, setEDraft] = useState<EventFilters>(eventFilters);
   const [pDraft, setPDraft] = useState<PlaceFilters>(placeFilters);
+  const { market } = useMarket();
 
   // Re-seed the draft whenever the sheet is (re)opened so it reflects the
   // filters currently applied, not a stale edit.
@@ -252,6 +254,7 @@ export function FilterSheet({
             onClear={() => setEDraft((d) => clearEventFilterKey(d, "price"))}
           >
             <PriceRangeField
+              currency={market?.defaultCurrency ?? ""}
               min={eDraft.minPrice}
               max={eDraft.maxPrice}
               onChange={({ min, max }) =>

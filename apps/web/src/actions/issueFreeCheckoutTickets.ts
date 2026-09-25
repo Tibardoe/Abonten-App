@@ -9,7 +9,7 @@ import { logger } from "@abonten/core/logger";
  * checkout session from the basket (PendingCheckoutsBasket "Proceed" on
  * zero-price selections). Paid sessions never reach ticket issuance from the
  * client — they go validateCheckout -> createMultiCheckoutPaymentAttempt ->
- * verifyPaystackPayment -> finalizePaystackPayment, all server-side.
+ * verifyPaystackPayment -> finalizePayment, all server-side.
  *
  * This wrapper exists so `generateTicket` (which trusts its
  * checkout-session-driven pricing and can issue paid tickets when driven by

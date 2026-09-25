@@ -21,6 +21,16 @@ const routeFiles = globSync("**/route.ts", { cwd: ROUTES_DIR }).filter(
   (p) => !p.split(sep).includes("_lib"),
 );
 
+// Paths kept only so app builds already on people's phones keep working
+// after a route moved; the current client deliberately no longer calls them.
+// Each entry says where the route went and when it can be deleted.
+const LEGACY_ROUTES = new Map([
+  [
+    "/api/mobile/paystack/momo-networks",
+    "moved to /api/mobile/payments/momo-networks on 2026-09-24; delete once builds older than that are retired",
+  ],
+]);
+
 const missing = [];
 for (const file of routeFiles) {
   // apps/web/src/app/api/mobile/checkout/validate/route.ts
@@ -33,6 +43,7 @@ for (const file of routeFiles) {
     staticPrefix.push(s);
   }
   const needle = `/api/mobile/${staticPrefix.join("/")}`;
+  if (LEGACY_ROUTES.has(needle)) continue;
   if (!client.includes(needle)) {
     missing.push({ route: `/api/mobile/${segments.join("/")}`, needle });
   }

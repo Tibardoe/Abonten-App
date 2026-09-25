@@ -29,7 +29,10 @@ export async function POST(req: Request) {
     );
 
     if (result.status === 200) {
-      return apiJson({ status: 200, data: { phoneE164: result.phoneE164 } });
+      return apiJson({
+        status: 200,
+        data: { phoneE164: result.phoneE164, codeLength: result.codeLength },
+      });
     }
 
     return apiJson({ status: result.status, message: result.message });

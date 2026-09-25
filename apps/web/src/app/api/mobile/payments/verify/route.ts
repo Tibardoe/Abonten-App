@@ -2,12 +2,12 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
-import { verifyPaystackPaymentCore } from "@abonten/services/payments/verifyPaystackPaymentCore";
+import { verifyPaymentCore } from "@abonten/services/payments/verifyPaymentCore";
 
 // POST /api/mobile/payments/verify  { paymentAttemptId: string }
 //
 // Optimistic client-triggered finalization, racing the Paystack webhook via
-// the same finalizePaystackPayment(). 200 = tickets issued; 202 = still
+// the same finalizePayment(). 200 = tickets issued; 202 = still
 // pending (poll again); 400 = payment failed; 207 = paid but ticket
 // issuance failed.
 export async function POST(req: Request) {
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       return apiJson({ status: 400, message: "paymentAttemptId is required" });
     }
 
-    const result = await verifyPaystackPaymentCore(
+    const result = await verifyPaymentCore(
       auth.supabase,
       auth.user.id,
       body.paymentAttemptId,

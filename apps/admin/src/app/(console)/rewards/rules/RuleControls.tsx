@@ -1,10 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import {
   publishRewardRuleVersion,
   setRewardRuleActive,
 } from "@/server/actions/rewards";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
 import type { RewardRuleSummary } from "@abonten/types/rewards";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -89,8 +91,6 @@ export function ActivateRuleButton({
 }
 
 const pct = (bps: number | null) => (bps === null ? "" : String(bps / 100));
-const cedis = (minor: number | null) =>
-  minor === null ? "" : (minor / 100).toFixed(2);
 
 /**
  * Publishes the next version of a rule, starting from the latest one. It is
@@ -109,8 +109,12 @@ export function NewRuleVersionForm({
   const [open, setOpen] = useState(false);
   const [rate, setRate] = useState(pct(latest.rateBps));
   const [netCap, setNetCap] = useState(pct(latest.netShareCapBps));
-  const [flat, setFlat] = useState(cedis(latest.flatMinor));
-  const [minBasis, setMinBasis] = useState(cedis(latest.minBasisMinor));
+  const [flat, setFlat] = useState(
+    minorToInput(latest.flatMinor, latest.currency),
+  );
+  const [minBasis, setMinBasis] = useState(
+    minorToInput(latest.minBasisMinor, latest.currency),
+  );
   const [expiry, setExpiry] = useState(
     latest.expiryDays === null ? "" : String(latest.expiryDays),
   );
@@ -139,9 +143,9 @@ export function NewRuleVersionForm({
   }
 
   const toBps = (v: string) =>
-    v.trim() === "" ? null : Math.round(Number(v) * 100);
+    v.trim() === "" ? null : majorToMinor(Number(v), latest.currency);
   const toMinor = (v: string) =>
-    v.trim() === "" ? null : Math.round(Number(v) * 100);
+    v.trim() === "" ? null : majorToMinor(Number(v), latest.currency);
 
   const submit = () =>
     start(async () => {
@@ -220,9 +224,16 @@ export function NewRuleVersionForm({
           "Flat amount",
           flat,
           setFlat,
-          latest.ruleKey === "place_visits" ? "GH₵ per visitor" : "GH₵",
+          latest.ruleKey === "place_visits"
+            ? `${currencySymbol(latest.currency)} per visitor`
+            : currencySymbol(latest.currency),
         )}
-        {field("Minimum order", minBasis, setMinBasis, "GH₵")}
+        {field(
+          "Minimum order",
+          minBasis,
+          setMinBasis,
+          currencySymbol(latest.currency),
+        )}
         {field("Credit expires after", expiry, setExpiry, "days")}
       </div>
       <label className="block text-xs">

@@ -80,7 +80,7 @@ export default async function RefundsPage({
                     href={`/finance/transactions/${r.transactionId}`}
                     className="font-medium text-primary hover:underline"
                   >
-                    {r.paystackReference ?? `${r.transactionId.slice(0, 8)}…`}
+                    {r.providerReference ?? `${r.transactionId.slice(0, 8)}…`}
                   </Link>
                 </Td>
                 <Td>{r.payerName ?? "—"}</Td>

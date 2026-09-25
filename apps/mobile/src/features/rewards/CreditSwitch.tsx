@@ -23,11 +23,11 @@ export function CreditSwitch({
       <View className="flex-row items-center justify-between gap-3">
         <View className="flex-1 gap-0.5">
           <AppText className="text-sm font-semibold text-foreground">
-            Use {formatCredit(quote.creditMinor)} Abonten Credit
+            Use {formatCredit(quote.creditMinor, quote.currency)} Abonten Credit
           </AppText>
           <AppText variant="meta">
             {!quote.creditOnly
-              ? `You have ${formatCredit(quote.spendableMinor)} you can use here.`
+              ? `You have ${formatCredit(quote.spendableMinor, quote.currency)} you can use here.`
               : value
                 ? "Your credit covers this. Nothing else is charged."
                 : "Your credit can cover all of this. Turn it on to use it."}
@@ -45,19 +45,19 @@ export function CreditSwitch({
           <View className="flex-row justify-between">
             <AppText variant="meta">Total</AppText>
             <AppText variant="meta" className="tabular-nums">
-              {formatCredit(quote.orderTotalMinor)}
+              {formatCredit(quote.orderTotalMinor, quote.currency)}
             </AppText>
           </View>
           <View className="flex-row justify-between">
             <AppText variant="meta">Credit</AppText>
             <AppText variant="meta" className="tabular-nums">
-              −{formatCredit(quote.creditMinor)}
+              −{formatCredit(quote.creditMinor, quote.currency)}
             </AppText>
           </View>
           <View className="flex-row justify-between">
             <AppText variant="metaStrong">You pay</AppText>
             <AppText variant="metaStrong" className="tabular-nums">
-              {formatCredit(quote.cashMinor)}
+              {formatCredit(quote.cashMinor, quote.currency)}
             </AppText>
           </View>
         </View>

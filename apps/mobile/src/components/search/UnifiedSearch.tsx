@@ -5,6 +5,7 @@ import { SpotlightTileRow } from "@/components/profile/SpotlightGrid";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { useRecentSearches } from "@/features/search/recentSearches";
 import {
   logSearchOpen,
@@ -228,6 +229,8 @@ export function UnifiedSearch() {
   const { program } = useDiscoveryProgram();
   const { program: content } = useContentProgram();
   const { area } = useExploreLocation();
+  const { market } = useMarket();
+  const marketCurrency = market?.defaultCurrency ?? "";
   const params = useLocalSearchParams<Record<string, string>>();
 
   // A link (or a remount) can carry the search: ?q=…&when=weekend&km=10…
@@ -308,8 +311,9 @@ export function UnifiedSearch() {
         filters,
         effectiveMode,
         hasRealLocation ? area?.label : null,
+        marketCurrency,
       ).filter((c) => c.key !== "radiusKm" || hasRealLocation),
-    [filters, effectiveMode, hasRealLocation, area?.label],
+    [filters, effectiveMode, hasRealLocation, area?.label, marketCurrency],
   );
   const activeFilterCount = activeSearchFilters(
     filters,

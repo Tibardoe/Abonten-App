@@ -2,6 +2,7 @@ import { StepUpButton } from "@/components/StepUpButton";
 import { Badge, Card, EmptyState, PageHeader, timeAgo } from "@/components/ui";
 import { loadFieldOpsRules } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { ACTIVITY_LABEL } from "@abonten/services/admin/fieldOps/fieldOpsAdminShared";
 import type {
   FieldOpsActivityKey,
@@ -10,8 +11,7 @@ import type {
 import { FieldOpsTabs } from "../FieldOpsTabs";
 import { ActivateRuleButton, NewRuleVersionForm } from "./RuleControls";
 
-const money = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 function terms(r: FieldOpsCommissionRule): string {
   const e = r.eligibility;

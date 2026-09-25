@@ -65,6 +65,12 @@ const ITEMS: {
     labelKey: "nav.language",
   },
   {
+    key: "region",
+    route: "/(app)/settings/region",
+    icon: "globe-outline",
+    labelKey: "nav.region",
+  },
+  {
     key: "help",
     url: HELP_URL,
     icon: "help-circle-outline",

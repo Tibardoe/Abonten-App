@@ -32,12 +32,12 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
   }
   if (visits) {
     lines.push(
-      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor)} (up to ${visits.maxVisitors} a month).`,
+      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor, credit.currency)} (up to ${visits.maxVisitors} a month).`,
     );
   }
   if (milestone) {
     lines.push(
-      `The first time one of your events sells to ${milestone.uniqueBuyers} different people, you get ${formatCredit(milestone.amountMinor)}.`,
+      `The first time one of your events sells to ${milestone.uniqueBuyers} different people, you get ${formatCredit(milestone.amountMinor, credit.currency)}.`,
     );
   }
 
@@ -46,25 +46,26 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
       <View className="gap-1">
         <Overline>Promotion credit</Overline>
         <AppText variant="hero" className="tabular-nums">
-          {formatCredit(credit.promotionOnlyMinor)}
+          {formatCredit(credit.promotionOnlyMinor, credit.currency)}
         </AppText>
         {credit.pendingMinor > 0 ? (
           <AppText variant="small" tone="muted">
-            {formatCredit(credit.pendingMinor)} pending
+            {formatCredit(credit.pendingMinor, credit.currency)} pending
           </AppText>
         ) : null}
         {credit.last ? (
           <AppText variant="small" tone="muted">
-            +{formatCredit(credit.last.amountMinor)} for events that ended in{" "}
-            {monthOf(credit.last.periodStart)}
+            +{formatCredit(credit.last.amountMinor, credit.currency)} for events
+            that ended in {monthOf(credit.last.periodStart)}
           </AppText>
         ) : null}
       </View>
 
       {credit.canRedeem && credit.spendableMinor > credit.promotionOnlyMinor ? (
         <AppText variant="small">
-          You can put {formatCredit(credit.spendableMinor)} towards featuring an
-          event or place, including your other Abonten Credit.
+          You can put {formatCredit(credit.spendableMinor, credit.currency)}{" "}
+          towards featuring an event or place, including your other Abonten
+          Credit.
         </AppText>
       ) : null}
       {!credit.canRedeem && credit.promotionOnlyMinor > 0 ? (

@@ -110,7 +110,7 @@ export default function BuyTicketsScreen() {
     occurrences.some((o) => o.id === occurrenceId && isOccurrenceSelectable(o))
       ? occurrenceId
       : firstFutureOccurrenceId;
-  const currency = event?.ticket_type[0]?.currency ?? "GHS";
+  const currency = event?.currency ?? event?.ticket_type[0]?.currency ?? "";
 
   const lines = useMemo(
     () =>

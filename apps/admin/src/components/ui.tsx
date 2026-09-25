@@ -1,3 +1,4 @@
+import { formatMoney } from "@abonten/core/formatMoney";
 import { type ClassValue, clsx } from "clsx";
 import type { ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
@@ -220,10 +221,11 @@ export function timeAgo(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString();
 }
 
-export function money(n: number, currency = "GHS"): string {
-  return new Intl.NumberFormat("en-GH", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(n || 0);
+/**
+ * A major-unit amount in its own currency ("GH₵1,250.00", "₦25,000.00"),
+ * via the shared money formatter. Money is never summed across currencies,
+ * so every caller passes the currency of the figure it shows.
+ */
+export function money(n: number, currency: string): string {
+  return formatMoney(currency, n || 0);
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { countryDetails } from "@/data/countryDetails";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import { useRef, useState } from "react";
+import { useMarketContext } from "@/hooks/useMarketContext";
+import { matchCountry, phoneCountries } from "@abonten/core/countries";
+import { useMemo, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 
 type Props = {
@@ -11,20 +12,26 @@ type Props = {
   onChange: (phoneNumber: string) => void;
 };
 
-// Country list is the same small curated set used for currency handling
-// (src/data/countryDetails.ts) rather than a live restcountries.com fetch --
-// that API's v3.1 endpoint (the version this app previously called) has been
-// deprecated by its provider and now returns an error for every request, so
-// useCountries()/fetchCountries() always resolved to an empty list and this
-// dropdown opened onto nothing. A static list also means no external image
-// host is needed for flags -- emoji render natively.
+// Every country (@abonten/core/countries, a static list -- no external API or
+// flag host), with the countries Abonten is open in first and a search box,
+// the same list and order the mobile picker uses.
 export default function PhoneInput({
   selectedCountry,
   onSelectCountry,
   onChange,
 }: Props) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const { markets, context } = useMarketContext();
+  const ordered = useMemo(() => {
+    const open = markets.map((m) => m.countryCode);
+    const viewer = context?.viewerCountry;
+    return phoneCountries(
+      viewer && !open.includes(viewer) ? [...open, viewer] : open,
+    );
+  }, [markets, context?.viewerCountry]);
+  const results = matchCountry(query, ordered);
 
   useClickOutside([containerRef], () => setShowDropdown(false));
 
@@ -47,7 +54,20 @@ export default function PhoneInput({
 
       {showDropdown && (
         <div className="absolute top-12 left-0 w-full z-10 bg-popover text-popover-foreground shadow-md max-h-60 overflow-y-scroll flex flex-col rounded-md border border-border">
-          {countryDetails.map((country) => (
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search country or code"
+            aria-label="Search countries"
+            className="sticky top-0 border-b border-border bg-popover px-3 py-2 text-sm outline-none"
+          />
+          {results.length === 0 ? (
+            <p className="px-3 py-2 text-sm text-muted-foreground">
+              No country matches “{query}”.
+            </p>
+          ) : null}
+          {results.map((country) => (
             <button
               aria-current={country.callingCode === selectedCountry}
               className="px-3 py-2 hover:bg-accent cursor-pointer flex items-center gap-3 text-left"
@@ -56,6 +76,7 @@ export default function PhoneInput({
               onClick={() => {
                 onSelectCountry(country.callingCode);
                 setShowDropdown(false);
+                setQuery("");
               }}
             >
               <span className="text-xl" aria-hidden>

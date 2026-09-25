@@ -54,7 +54,7 @@ type IssueTicketsResultRow = {
  * `revalidatePath` + next/server `after`, so it can only run inside a Server
  * Action or Route Handler — its two callers are `issueFreeCheckoutTickets`
  * (the free-basket "use server" action, gated to 0-price sessions) and
- * `paymentFulfillmentDeps` (injected into `finalizePaystackPayment`).
+ * `paymentFulfillmentDeps` (injected into `finalizePayment`).
  *
  * `authOverride` lets the Paystack webhook (no cookies/session) call this
  * with an already-resolved user + service-role client.

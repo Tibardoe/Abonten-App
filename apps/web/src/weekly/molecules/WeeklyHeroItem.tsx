@@ -2,6 +2,7 @@ import { cn } from "@/components/lib/utils";
 import VerifiedBadge from "@/places/molecules/VerifiedBadge";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { WeeklyItem } from "@abonten/types/weeklyType";
 import Link from "next/link";
@@ -36,7 +37,12 @@ export default function WeeklyHeroItem({
     (event?.address ?? place?.address) as { full_address?: string } | undefined
   )?.full_address;
   const when = event
-    ? getEventCardDateTime(event.starts_at, event.ends_at, event.occurrences)
+    ? getEventCardDateTime(
+        event.starts_at,
+        event.ends_at,
+        event.occurrences,
+        event.timezone,
+      )
     : null;
   const overlay = event
     ? event.status === "canceled"
@@ -48,7 +54,7 @@ export default function WeeklyHeroItem({
   const price = event
     ? event.min_price === 0 || event.min_price == null
       ? "Free entry"
-      : `From ${event.currency ?? "GHS"} ${Number(event.min_price).toLocaleString()}`
+      : `From ${formatMoney(event.currency, event.min_price, { trimZeroFraction: true })}`
     : null;
   const rating =
     place?.avg_rating != null && Number(place.avg_rating) > 0

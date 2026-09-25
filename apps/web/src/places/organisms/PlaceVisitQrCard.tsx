@@ -79,7 +79,7 @@ export default function PlaceVisitQrCard({
             Show this code at your counter or entrance. Visitors scan it with
             their phone while they&apos;re here to check in (once a day).
             {panel.verified
-              ? ` Every different person who checks in during a month earns you ${formatCredit(panel.perVisitorMinor)} of promotion credit (up to ${panel.maxVisitors} a month).`
+              ? ` Every different person who checks in during a month earns you ${formatCredit(panel.perVisitorMinor, panel.currency)} of promotion credit (up to ${panel.maxVisitors} a month).`
               : " Visits are counted now; only verified places earn promotion credit from them."}
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function PlaceVisitQrCard({
           <div>
             <dt className="text-muted-foreground">Credit earned</dt>
             <dd className="text-lg font-semibold tabular-nums">
-              {formatCredit(s.earnedMinor)}
+              {formatCredit(s.earnedMinor, panel.currency)}
             </dd>
           </div>
         </dl>

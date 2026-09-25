@@ -1,3 +1,4 @@
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRef, useState } from "react";
@@ -27,7 +28,10 @@ export function PriceRangeField({
   min,
   max,
   onChange,
+  currency,
 }: {
+  /** The browsed market's currency; the bounds are in its major units. */
+  currency: string;
   /** null = no lower bound (treated as 0). */
   min: number | null;
   /** null = "Any" (no upper bound). */
@@ -35,6 +39,8 @@ export function PriceRangeField({
   onChange: (next: { min: number | null; max: number | null }) => void;
 }) {
   const c = useThemeColors();
+  const amount = (v: number) =>
+    formatMoney(currency, v, { trimZeroFraction: true });
   const [trackWidth, setTrackWidth] = useState(0);
 
   const lo = min ?? 0;
@@ -101,9 +107,9 @@ export function PriceRangeField({
   return (
     <View className="gap-2">
       <View className="flex-row justify-between">
-        <AppText variant="metaStrong">GHS {lo}</AppText>
+        <AppText variant="metaStrong">{amount(lo)}</AppText>
         <AppText variant="metaStrong">
-          {hi >= ANY_THRESHOLD ? "Any" : `GHS ${hi}`}
+          {hi >= ANY_THRESHOLD ? "Any" : amount(hi)}
         </AppText>
       </View>
 
@@ -113,7 +119,7 @@ export function PriceRangeField({
         accessibilityRole="adjustable"
         accessibilityLabel="Price range"
         accessibilityValue={{
-          text: `GHS ${lo} to ${hi >= ANY_THRESHOLD ? "any" : `GHS ${hi}`}`,
+          text: `${amount(lo)} to ${hi >= ANY_THRESHOLD ? "any" : amount(hi)}`,
         }}
       >
         <View

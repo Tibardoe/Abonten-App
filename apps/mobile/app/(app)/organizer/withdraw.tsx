@@ -69,7 +69,7 @@ export default function WithdrawScreen() {
     : !amountValid
       ? "Enter an amount greater than zero."
       : overBalance
-        ? `You can withdraw at most ${fmt(selectedCurrency ?? "GHS", available)}.`
+        ? `You can withdraw at most ${fmt(selectedCurrency ?? "", available)}.`
         : null;
   const canProceed =
     !!selectedCurrency && !!defaultAccountId && amountValid && !overBalance;
@@ -150,7 +150,7 @@ export default function WithdrawScreen() {
           Withdrawal requested
         </AppText>
         <AppText variant="muted" className="text-center">
-          {fmt(selectedCurrency ?? "GHS", value)} to{" "}
+          {fmt(selectedCurrency ?? "", value)} to{" "}
           {selectedAccount?.account_number}. Reference {done.reference} — it's
           reviewed before the funds are sent.
         </AppText>
@@ -187,7 +187,7 @@ export default function WithdrawScreen() {
       <View className="rounded-2xl border border-border bg-card p-4">
         <Overline>Available to withdraw</Overline>
         <AppText variant="pageTitle">
-          {fmt(selectedCurrency ?? "GHS", available)}
+          {fmt(selectedCurrency ?? "", available)}
         </AppText>
       </View>
 
@@ -253,7 +253,7 @@ export default function WithdrawScreen() {
           <View className="flex-row justify-between">
             <AppText variant="caption">You'll receive</AppText>
             <AppText variant="metaStrong">
-              {fmt(selectedCurrency ?? "GHS", amountValid ? value : 0)}
+              {fmt(selectedCurrency ?? "", amountValid ? value : 0)}
             </AppText>
           </View>
         )}
@@ -274,7 +274,7 @@ export default function WithdrawScreen() {
           <View className="flex-row justify-between">
             <AppText variant="muted">Amount</AppText>
             <AppText variant="bodyStrong">
-              {fmt(selectedCurrency ?? "GHS", value)}
+              {fmt(selectedCurrency ?? "", value)}
             </AppText>
           </View>
           <View className="flex-row justify-between">

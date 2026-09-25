@@ -44,7 +44,8 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
     isError: isNetworksError,
   } = useQuery({
     queryKey: ["paystack-momo-networks"],
-    queryFn: getPaystackMobileMoneyNetworks,
+    // The person's home market (the action resolves it when no country is given).
+    queryFn: () => getPaystackMobileMoneyNetworks(),
     staleTime: 24 * 60 * 60 * 1000,
   });
 

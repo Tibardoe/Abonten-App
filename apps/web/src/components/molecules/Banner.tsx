@@ -24,6 +24,7 @@ export default function Banner({ event }: BannerProps) {
     event.starts_at,
     event.ends_at,
     event.occurrences,
+    event.timezone,
   );
 
   return (

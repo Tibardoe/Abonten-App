@@ -478,7 +478,7 @@ function PreviewResult({ preview }: { preview: SearchConceptPreview }) {
             <li key={label}>
               <span className="font-medium">{label}:</span>{" "}
               <span className="tabular-nums">
-                {(r?.count ?? 0).toLocaleString("en-GH")}
+                {(r?.count ?? 0).toLocaleString("en-GB")}
               </span>
               {r && r.samples.length > 0 ? (
                 <span className="block text-xs text-muted-foreground">

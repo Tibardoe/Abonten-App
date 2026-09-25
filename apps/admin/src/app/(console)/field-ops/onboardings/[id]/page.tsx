@@ -1,5 +1,6 @@
 import { Badge, Card, EmptyState, PageHeader, timeAgo } from "@/components/ui";
 import { loadFieldOpsOnboarding } from "@/lib/data";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import Link from "next/link";
 import { onboardingTone } from "../page";
 import { DecisionPanel } from "./DecisionPanel";
@@ -151,7 +152,7 @@ export default async function FieldOpsOnboardingDetailPage({
             </ul>
             <p className="mt-2 text-xs text-muted-foreground">
               {d.rule
-                ? `Live rule: ${(d.rule.amountMinor / 100).toFixed(2)} ${d.rule.currency}, ${d.rule.holdingDays}-day holding.`
+                ? `Live rule: ${formatMinor(d.rule.amountMinor, d.rule.currency)}, ${d.rule.holdingDays}-day holding.`
                 : "No live commission rule for this activity yet."}
             </p>
           </Card>

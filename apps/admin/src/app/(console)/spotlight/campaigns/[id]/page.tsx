@@ -18,6 +18,7 @@ import {
   PROMOTION_END_REASON_LABEL,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
+import { formatMoney } from "@abonten/core/formatMoney";
 import Link from "next/link";
 import { SpotlightTabs } from "../../SpotlightTabs";
 import { campaignTone } from "../campaignTone";
@@ -74,7 +75,7 @@ export default async function SpotlightCampaignDetailPage({
     ["Ended", c.endReason ? PROMOTION_END_REASON_LABEL[c.endReason] : "—"],
   ];
   const m = c.metrics;
-  const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GH");
+  const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GB");
   // Reach = distinct devices shown the promotion; impressions = times shown.
   const delivery: [string, string][] = [
     [
@@ -173,10 +174,11 @@ export default async function SpotlightCampaignDetailPage({
                   >
                     {transaction.id.slice(0, 8)}…
                   </Link>{" "}
-                  · {transaction.status} · GH₵ {transaction.amount.toFixed(2)}
+                  · {transaction.status} ·{" "}
+                  {formatMoney(transaction.currency, transaction.amount)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Paystack reference {transaction.paystackReference ?? "—"}
+                  Provider reference {transaction.providerReference ?? "—"}
                 </p>
               </>
             ) : (

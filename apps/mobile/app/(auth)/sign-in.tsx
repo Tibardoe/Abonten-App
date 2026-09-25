@@ -5,7 +5,7 @@ import { InviteCodeField } from "@/features/rewards/InviteCodeField";
 import { api } from "@/lib/api";
 import { hapticError } from "@/lib/haptics";
 import { LEGAL_URLS, openExternalLink } from "@/lib/legalLinks";
-import { type Country, DEFAULT_COUNTRY } from "@abonten/core/countries";
+import { type Country, countryForCode } from "@abonten/core/countries";
 import {
   AbontenLogo,
   AbontenWordmark,
@@ -17,17 +17,63 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  TextInput,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+// Shown only for the moment before the market context answers (the server
+// always names a market: the visitor's, else the default one).
+const FALLBACK_COUNTRY = countryForCode("GH") as Country;
+
+/**
+ * The phone country to pre-select and the ones to list first, from the
+ * market context (open markets, the request's country). Works signed out.
+ */
+function useSignInCountry(): { country: Country; priority: string[] } {
+  const { data } = useQuery({
+    queryKey: ["mobile", "markets", "context", "sign-in"],
+    queryFn: async () => {
+      const res = await api.markets.context({
+        platform: Platform.OS === "android" ? "android" : "ios",
+      });
+      if (res.status !== 200 || !res.data) throw new Error("unavailable");
+      return res.data;
+    },
+    staleTime: 60 * 60 * 1000,
+  });
+  return useMemo(() => {
+    const open = (data?.markets ?? []).map((m) => m.countryCode);
+    const viewer = data?.context.viewerCountry ?? null;
+    const preferred =
+      (viewer && open.includes(viewer) ? viewer : null) ??
+      data?.context.marketCountry ??
+      null;
+    return {
+      country: countryForCode(preferred) ?? FALLBACK_COUNTRY,
+      priority: viewer && !open.includes(viewer) ? [...open, viewer] : open,
+    };
+  }, [data]);
+}
 
 export default function SignIn() {
   const router = useRouter();
   const toast = useToast();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
-  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
+  const signInMarkets = useSignInCountry();
+  const [picked, setPicked] = useState<Country | null>(null);
+  // Until the person picks one: the country they are in when Abonten is
+  // open there, else the default market's.
+  const country = picked ?? signInMarkets.country;
+  const setCountry = setPicked;
   const [rawPhone, setRawPhone] = useState("");
   const [busy, setBusy] = useState<"phone" | "google" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +105,7 @@ export default function SignIn() {
         pathname: "/(auth)/verify",
         params: {
           phoneE164: res.data.phoneE164,
+          codeLength: String(res.data.codeLength),
           // Carried so the verify screen's "Resend code" can re-request
           // without bouncing the user back here.
           dialCode: country.callingCode,
@@ -177,7 +224,11 @@ export default function SignIn() {
             <KeyboardRevealGroup className="gap-3 rounded-2xl border border-border bg-card p-4">
               <AppText variant="label">Phone number</AppText>
               <View className="flex-row gap-2">
-                <CountryCodeField value={country} onChange={setCountry} />
+                <CountryCodeField
+                  value={country}
+                  onChange={setCountry}
+                  priority={signInMarkets.priority}
+                />
                 <TextInput
                   className={[
                     "h-[52px] flex-1 rounded-xl border bg-background px-3 text-[16px] text-foreground",

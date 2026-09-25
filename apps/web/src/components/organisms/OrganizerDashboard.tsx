@@ -98,7 +98,7 @@ export default function OrganizerDashboard() {
     overview !== null &&
     Number(overview.current[0]?.total_events_count ?? 0) === 0;
 
-  const primaryCurrency = overview?.current?.[0]?.currency ?? "GHS";
+  const primaryCurrency = overview?.current?.[0]?.currency ?? "";
 
   const timelineResult = timelineQuery.data;
   const timelineData: OrganizerSalesTimelinePoint[] =

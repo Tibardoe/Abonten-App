@@ -27,5 +27,10 @@ export default async function initCardVerification(): Promise<
     return { status: 401, message: "User not logged in" };
   }
 
-  return initCardVerificationCore(user.id, user.email);
+  return initCardVerificationCore(
+    supabase,
+    user.id,
+    user.email,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/wallet`,
+  );
 }

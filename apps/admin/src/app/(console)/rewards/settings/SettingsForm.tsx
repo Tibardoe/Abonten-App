@@ -3,7 +3,9 @@
 import { StepUpButton } from "@/components/StepUpButton";
 import { CapNotice } from "@/components/metrics/CapNotice";
 import { Button, Card, cn } from "@/components/ui";
+import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import { updateRewardsSettings } from "@/server/actions/rewards";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
 import type {
   AdminNotificationDeliveryStats,
   RewardsProgramSettings,
@@ -28,8 +30,6 @@ const LOCKED: {
   },
 ];
 
-const cedis = (minor: number) => (minor / 100).toFixed(2);
-const toMinor = (value: string) => Math.round(Number(value) * 100);
 const pct = (bps: number) => (bps / 100).toString();
 const toBps = (value: string) => Math.round(Number(value) * 100);
 
@@ -38,8 +38,11 @@ export function SettingsForm({
   canConfigure,
   stepUpFresh,
   delivery,
+  currency,
 }: {
   settings: RewardsProgramSettings;
+  /** The reward rules' currency; the thresholds below are in it. */
+  currency: string;
   canConfigure: boolean;
   stepUpFresh: boolean;
   delivery: AdminNotificationDeliveryStats | null;
@@ -59,21 +62,23 @@ export function SettingsForm({
   );
   const [audience, setAudience] = useState(settings.audience);
   const [beta, setBeta] = useState(settings.betaUserIds.join("\n"));
-  const [minCash, setMinCash] = useState(cedis(settings.minCashChargeMinor));
+  const [minCash, setMinCash] = useState(
+    minorToInput(settings.minCashChargeMinor, currency),
+  );
   const [maxShare, setMaxShare] = useState(
     pct(settings.maxCreditShareOfTicketOrderBps),
   );
   const [budgetFloor, setBudgetFloor] = useState(
-    cedis(settings.budgetFloorMinor),
+    minorToInput(settings.budgetFloorMinor, currency),
   );
   const [budgetShare, setBudgetShare] = useState(
     pct(settings.budgetNetRevenueShareBps),
   );
   const [dualApproval, setDualApproval] = useState(
-    cedis(settings.dualApprovalThresholdMinor),
+    minorToInput(settings.dualApprovalThresholdMinor, currency),
   );
   const [goodwillCap, setGoodwillCap] = useState(
-    cedis(settings.supportGoodwillMonthlyCapMinor),
+    minorToInput(settings.supportGoodwillMonthlyCapMinor, currency),
   );
   const [payoutHold, setPayoutHold] = useState(
     pct(settings.creditSharePayoutHoldBps),
@@ -106,12 +111,18 @@ export function SettingsForm({
           allowFullCreditTicketOrders: allowFullCredit,
           audience,
           betaUserIds,
-          minCashChargeMinor: toMinor(minCash),
+          minCashChargeMinor: majorToMinor(Number(minCash), currency),
           maxCreditShareOfTicketOrderBps: toBps(maxShare),
-          budgetFloorMinor: toMinor(budgetFloor),
+          budgetFloorMinor: majorToMinor(Number(budgetFloor), currency),
           budgetNetRevenueShareBps: toBps(budgetShare),
-          dualApprovalThresholdMinor: toMinor(dualApproval),
-          supportGoodwillMonthlyCapMinor: toMinor(goodwillCap),
+          dualApprovalThresholdMinor: majorToMinor(
+            Number(dualApproval),
+            currency,
+          ),
+          supportGoodwillMonthlyCapMinor: majorToMinor(
+            Number(goodwillCap),
+            currency,
+          ),
           creditSharePayoutHoldBps: toBps(payoutHold),
           referralCaptureEnabled: capture,
           shadowMode: shadow,
@@ -387,7 +398,7 @@ export function SettingsForm({
             "The reward budget is never lower than this, even in a quiet month.",
             budgetFloor,
             setBudgetFloor,
-            "GH₵",
+            currencySymbol(currency),
           )}
           {field(
             "Budget share of net revenue",
@@ -401,21 +412,21 @@ export function SettingsForm({
             "Manual adjustments at or above this need a different admin to approve.",
             dualApproval,
             setDualApproval,
-            "GH₵",
+            currencySymbol(currency),
           )}
           {field(
             "Goodwill limit per user per month",
             "The most support can give one user in a calendar month.",
             goodwillCap,
             setGoodwillCap,
-            "GH₵",
+            currencySymbol(currency),
           )}
           {field(
             "Minimum cash charge",
             "A part-credit order must still charge at least this much in cash.",
             minCash,
             setMinCash,
-            "GH₵",
+            currencySymbol(currency),
           )}
           {field(
             "Most of a ticket order credit can pay",

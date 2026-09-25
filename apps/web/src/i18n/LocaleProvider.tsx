@@ -47,6 +47,18 @@ export default function LocaleProvider({
   children: React.ReactNode;
 }) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
+  // next-intl formats in this zone. The server render cannot know the
+  // visitor's, so it starts on UTC and switches to theirs after mount
+  // (event times are formatted in the EVENT's zone by @abonten/core anyway).
+  const [timeZone, setTimeZone] = useState("UTC");
+  useEffect(() => {
+    try {
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (zone) setTimeZone(zone);
+    } catch {
+      // Keep UTC.
+    }
+  }, []);
   const [messages, setMessages] = useState<Messages>(defaultMessages);
 
   // Guards against two overlapping setLocale calls (the mount effect's
@@ -94,7 +106,7 @@ export default function LocaleProvider({
       <NextIntlClientProvider
         locale={locale}
         messages={messages}
-        timeZone="Africa/Accra"
+        timeZone={timeZone}
       >
         {children}
       </NextIntlClientProvider>

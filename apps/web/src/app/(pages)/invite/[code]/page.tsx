@@ -29,10 +29,11 @@ const resolve = cache(async (code: string) => {
 function offerLine(
   welcomeMinor: number | null,
   minOrderMinor: number | null,
+  currency: string,
 ): string | null {
   if (!welcomeMinor) return null;
-  return `Get ${formatCredit(welcomeMinor)} off your first ticket${
-    minOrderMinor ? ` of ${formatCredit(minOrderMinor)} or more` : ""
+  return `Get ${formatCredit(welcomeMinor, currency)} off your first ticket${
+    minOrderMinor ? ` of ${formatCredit(minOrderMinor, currency)} or more` : ""
   }.`;
 }
 
@@ -48,7 +49,7 @@ export async function generateMetadata({
   const title = `${data.referrerName ?? "A friend"} invited you to Abonten`;
   const description =
     (data.programOn
-      ? offerLine(data.welcomeMinor, data.minOrderMinor)
+      ? offerLine(data.welcomeMinor, data.minOrderMinor, data.currency)
       : null) ?? "Find events and places near you.";
   return {
     title,
@@ -98,7 +99,7 @@ export default async function InvitePage({
 
   const name = data.referrerName ?? "A friend";
   const offer = data.programOn
-    ? offerLine(data.welcomeMinor, data.minOrderMinor)
+    ? offerLine(data.welcomeMinor, data.minOrderMinor, data.currency)
     : null;
   const avatar = data.referrerAvatar
     ? buildCloudinaryUrl(

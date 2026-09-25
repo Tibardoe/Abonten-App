@@ -16,6 +16,8 @@ type EventForJsonLd = {
   flyer_public_id: string | null;
   flyer_version: string | null;
   address: unknown;
+  /** The event's currency (every tier carries it). */
+  currency?: string | null;
   event_occurrence: { starts_at: string | null; ends_at: string | null }[];
   ticket_type: {
     price: number | null;
@@ -58,7 +60,7 @@ export function eventJsonLd(event: EventForJsonLd): Record<string, unknown> {
   const offers = event.ticket_type.map((t) => ({
     "@type": "Offer",
     price: Number(t.price ?? 0).toFixed(2),
-    priceCurrency: t.currency || "GHS",
+    priceCurrency: t.currency || event.currency || undefined,
     url,
     availability:
       t.quantity !== null && t.quantity <= 0

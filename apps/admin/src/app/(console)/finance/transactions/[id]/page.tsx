@@ -9,6 +9,7 @@ import {
 } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadTransactionDetail } from "@/lib/data";
+import { majorToMinor, minorToMajor } from "@/lib/moneyUnits";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { splitRefundTender } from "@abonten/core/rewards/refundTenderSplit";
 import Link from "next/link";
@@ -49,13 +50,13 @@ export default async function TransactionDetailPage({
     !!ctx.reauthenticatedAt &&
     Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
   // Same split issueRefundCore applies: an order paid with credit gets the
-  // credit share back as credit, the rest via Paystack.
+  // credit share back as credit, the rest back through the payment provider.
   const refundSplit =
     t.creditAmount > 0
       ? splitRefundTender({
-          refundMinor: Math.round(t.refundableAmount * 100),
-          cashMinor: Math.round(t.amount * 100),
-          creditMinor: Math.round(t.creditAmount * 100),
+          refundMinor: majorToMinor(t.refundableAmount, t.currency),
+          cashMinor: majorToMinor(t.amount, t.currency),
+          creditMinor: majorToMinor(t.creditAmount, t.currency),
         })
       : null;
   const canRefund =
@@ -66,7 +67,7 @@ export default async function TransactionDetailPage({
   return (
     <div>
       <PageHeader
-        title={`Transaction · ${t.paystackReference ?? t.id.slice(0, 8)}`}
+        title={`Transaction · ${t.providerReference ?? t.id.slice(0, 8)}`}
         description={
           <Link
             href="/finance/transactions"
@@ -129,7 +130,7 @@ export default async function TransactionDetailPage({
             <dt className="text-muted-foreground">Method</dt>
             <dd>{t.paymentMethod ?? "—"}</dd>
             <dt className="text-muted-foreground">Paystack ref</dt>
-            <dd className="break-all">{t.paystackReference ?? "—"}</dd>
+            <dd className="break-all">{t.providerReference ?? "—"}</dd>
             <dt className="text-muted-foreground">Reason</dt>
             <dd>{t.reason ?? "—"}</dd>
             <dt className="text-muted-foreground">Created</dt>
@@ -146,12 +147,18 @@ export default async function TransactionDetailPage({
             refundableLabel={money(t.refundableAmount, t.currency)}
             creditBackLabel={
               refundSplit
-                ? money(refundSplit.creditBackMinor / 100, t.currency)
+                ? money(
+                    minorToMajor(refundSplit.creditBackMinor, t.currency),
+                    t.currency,
+                  )
                 : null
             }
             cashBackLabel={
               refundSplit && refundSplit.cashBackMinor > 0
-                ? money(refundSplit.cashBackMinor / 100, t.currency)
+                ? money(
+                    minorToMajor(refundSplit.cashBackMinor, t.currency),
+                    t.currency,
+                  )
                 : null
             }
             creditAlreadyReturnedLabel={

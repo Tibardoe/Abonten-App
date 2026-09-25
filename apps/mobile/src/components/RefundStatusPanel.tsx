@@ -1,3 +1,4 @@
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import {
   AppText,
@@ -90,7 +91,7 @@ export function RefundStatusPanel({
         />
         {typeof amount === "number" ? (
           <AppText variant="bodyStrong">
-            {currency ?? "GHS"} {amount.toFixed(2)}
+            {formatMoney(currency, amount)}
           </AppText>
         ) : null}
       </View>

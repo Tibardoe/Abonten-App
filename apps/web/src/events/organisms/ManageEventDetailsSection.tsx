@@ -33,7 +33,7 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
   multipleTickets: Ticket[];
   currency: string;
 } {
-  const currency = ticketTypes[0]?.currency ?? "GHS";
+  const currency = ticketTypes[0]?.currency ?? "";
 
   if (ticketTypes.length === 1 && ticketTypes[0].type === "FREE") {
     return {

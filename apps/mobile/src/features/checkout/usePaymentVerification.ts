@@ -32,8 +32,8 @@ export type PaymentVerifyState =
 export type PaymentVerificationParams = {
   attemptId: string;
   kind: PaymentKind;
-  mode: "popup" | "direct";
-  /** Popup only — the Paystack checkout URL to open in a browser session. */
+  mode: "popup" | "direct" | "redirect";
+  /** Popup/redirect — the provider's payment page to open in a browser session. */
   authorizationUrl?: string;
   /** The `abonten://…` URL the popup redirects back to when it closes. */
   deepLink?: string;
@@ -173,14 +173,14 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     void poll();
   }, [poll, clearTimer]);
 
-  // Mount: open the Paystack popup (if any), then begin polling. Direct
+  // Mount: open the provider's payment page (if any), then begin polling. Direct
   // charges that need an OTP wait on the `otp` state instead. Runs exactly
   // once — every input is a route param fixed for the screen's lifetime.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mount-once by design
   useEffect(() => {
     aliveRef.current = true;
     (async () => {
-      if (mode === "popup" && authorizationUrl) {
+      if ((mode === "popup" || mode === "redirect") && authorizationUrl) {
         try {
           await WebBrowser.openAuthSessionAsync(
             authorizationUrl,

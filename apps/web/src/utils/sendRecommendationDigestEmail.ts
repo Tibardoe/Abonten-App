@@ -3,6 +3,7 @@ import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { SUPPORT_EMAIL } from "@abonten/core/brand/contacts";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { logger } from "@abonten/core/logger";
+import { isValidTimeZone } from "@abonten/core/time/timeZone";
 import type {
   EmailSendResult,
   RecommendationEmail,
@@ -10,16 +11,21 @@ import type {
 } from "@abonten/services/notifications/deliveryCore";
 import { recommendationEmailUnsubscribeLinks } from "@abonten/services/notifications/recommendationEmailPreferenceCore";
 
-// Accra wall-clock time, the same wording as the push ("Sat 20 Sep, 7:30pm").
-const WHEN = new Intl.DateTimeFormat("en-GB", {
-  timeZone: "Africa/Accra",
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  hour: "numeric",
-  minute: "2-digit",
-  hour12: true,
-});
+// The event's own wall-clock time, the same wording as the push
+// ("Sat 20 Sep, 7:30pm"). An event without a zone (none today — every
+// event has one) falls back to UTC rather than the server's zone.
+function when(startsAt: string, timeZone: string | null): string {
+  const zone = timeZone && isValidTimeZone(timeZone) ? timeZone : "UTC";
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: zone,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(startsAt));
+}
 
 function reason(item: RecommendationEmailItem): string {
   switch (item.reason) {
@@ -74,7 +80,7 @@ export async function sendRecommendationDigestEmail(
           title: item.title,
           detail:
             item.subjectType === "event" && item.startsAt
-              ? [WHEN.format(new Date(item.startsAt)), item.subtitle]
+              ? [when(item.startsAt, item.timeZone), item.subtitle]
                   .filter(Boolean)
                   .join(" · ")
               : item.subtitle,

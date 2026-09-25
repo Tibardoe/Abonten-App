@@ -18,6 +18,7 @@ import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds"
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import type { ReviewSubject } from "@/features/reviews/useReviewSubject";
 import { PromoterEarnNote } from "@/features/rewards/PromoterEarnNote";
@@ -39,6 +40,7 @@ import {
 } from "@abonten/core/dateFormatter";
 import { resolveEventCta } from "@abonten/core/eventCta";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
@@ -73,8 +75,8 @@ function priceRange(tickets: { price: number; currency: string }[]): string {
   const prices = tickets.map((t) => t.price);
   const min = Math.min(...prices);
   if (min === 0) return "Free entry";
-  const currency = tickets[0]?.currency ?? "GHS";
-  return `From ${currency} ${min}`;
+  const currency = tickets[0]?.currency ?? "";
+  return `From ${formatMoney(currency, min, { trimZeroFraction: true })}`;
 }
 
 function InfoRow({
@@ -106,6 +108,7 @@ export default function EventDetailScreen() {
   const { data, isError, error, isRefetching, refetch } = detail;
   const detailView = useQueryView(detail);
   const { session } = useSession();
+  const { estimate } = useMarket();
   const messageOrganizer = useOpenConversation();
   // Advances every 30s and on foreground so the "ongoing / ended / next
   // date" state below recomputes while the screen sits open across an
@@ -213,10 +216,17 @@ export default function EventDetailScreen() {
   // formatFullDateTimeRange rendered "N/A" / "N/A - N/A". getFormattedEventDate
   // resolves the representative occurrence (same as the web detail page);
   // the full list is rendered below when there's more than one.
+  // "≈ £12" next to a price in another currency, when estimates are on.
+  const lowest = (event.ticket_type ?? []).reduce<number | null>(
+    (m, t) => (m == null || t.price < m ? t.price : m),
+    null,
+  );
+  const approxPrice = estimate(lowest, event.currency ?? "");
   const when = getFormattedEventDate(
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
+    event.timezone,
   );
   const tags = parseEventTypes(event.event_type);
   const canceled = event.status === "canceled";
@@ -346,6 +356,7 @@ export default function EventDetailScreen() {
                 <Icon name="pricetag" size={13} color="#fff" />
                 <AppText className="text-[12px] font-semibold text-white">
                   {priceRange(event.ticket_type)}
+                  {approxPrice ? ` · ${approxPrice}` : ""}
                 </AppText>
               </View>
               <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
@@ -468,7 +479,11 @@ export default function EventDetailScreen() {
                     {sortedOccurrences.length} dates
                   </AppText>
                   {sortedOccurrences.map((o) => {
-                    const w = formatFullDateTimeRange(o.starts_at, o.ends_at);
+                    const w = formatFullDateTimeRange(
+                      o.starts_at,
+                      o.ends_at,
+                      event.timezone,
+                    );
                     return (
                       <AppText key={o.id} variant="meta">
                         {w.date} · {w.time}
@@ -623,6 +638,7 @@ export default function EventDetailScreen() {
                     <AppText variant="caption">Tickets</AppText>
                     <AppText variant="cardTitle">
                       {priceRange(event.ticket_type)}
+                      {approxPrice ? ` · ${approxPrice}` : ""}
                     </AppText>
                   </View>
                   <Icon name="ticket-outline" size={22} tone="muted" />

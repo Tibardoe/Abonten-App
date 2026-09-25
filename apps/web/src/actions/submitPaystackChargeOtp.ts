@@ -3,8 +3,8 @@
 import { createClient } from "@/config/supabase/server";
 import {
   type SubmitChargeOtpCoreResult,
-  submitPaystackChargeOtpCore,
-} from "@abonten/services/payments/submitPaystackChargeOtpCore";
+  submitChargeOtpCore,
+} from "@abonten/services/payments/submitChargeOtpCore";
 
 /**
  * Submits an OTP for a pending direct charge (mobile money/card charges
@@ -26,5 +26,5 @@ export default async function submitPaystackChargeOtp(
     return { status: 401, message: "User not logged in" };
   }
 
-  return submitPaystackChargeOtpCore(supabase, user.id, paymentAttemptId, otp);
+  return submitChargeOtpCore(supabase, user.id, paymentAttemptId, otp);
 }

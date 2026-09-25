@@ -44,7 +44,7 @@ export function BreakdownBars({
               <div className="flex items-baseline justify-between gap-2 text-xs">
                 <span>{label(b.key)}</span>
                 <span className="tabular-nums text-muted-foreground">
-                  {count.toLocaleString("en-GH")}
+                  {count.toLocaleString("en-GB")}
                   {total > 0 ? ` · ${share}%` : ""}
                 </span>
               </div>

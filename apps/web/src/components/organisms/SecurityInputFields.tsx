@@ -14,7 +14,7 @@ import {
 } from "@abonten/core/emailOtp";
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
@@ -110,6 +110,9 @@ export default function SecurityInputFields({
   const [countryCode, setCountryCode] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneE164, setPhoneE164] = useState("");
+  const [phoneCodeLength, setPhoneCodeLength] = useState(
+    DEFAULT_PHONE_OTP_CODE_LENGTH,
+  );
   const [otp, setOtp] = useState("");
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -292,6 +295,7 @@ export default function SecurityInputFields({
       }
 
       setPhoneE164(result.phoneE164);
+      setPhoneCodeLength(result.codeLength);
       return true;
     } catch (error) {
       logger.error("Phone update send error:", error);
@@ -611,6 +615,7 @@ export default function SecurityInputFields({
               onChange={setOtp}
               disabled={isVerifying}
               error={otpErrorMessage}
+              length={phoneCodeLength}
             />
 
             <div className="flex items-center gap-1">
@@ -624,7 +629,7 @@ export default function SecurityInputFields({
 
               <Button
                 className="w-full rounded-md md:text-lg font-bold py-6"
-                disabled={isVerifying || otp.length !== HUBTEL_OTP_CODE_LENGTH}
+                disabled={isVerifying || otp.length !== phoneCodeLength}
               >
                 {isVerifying ? tAuth("verifying") : tAuth("continue")}
               </Button>

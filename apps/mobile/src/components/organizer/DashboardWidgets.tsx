@@ -9,6 +9,7 @@ import type {
   OrganizerUpcomingRow,
 } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Icon, type IoniconName, Overline } from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -22,9 +23,7 @@ import { Pressable, View } from "react-native";
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null | undefined, amount: number): string {
-  return `${currency ?? "GHS"} ${amount.toLocaleString(undefined, {
-    maximumFractionDigits: 0,
-  })}`;
+  return formatMoney(currency, Math.round(amount), { trimZeroFraction: true });
 }
 
 function FinanceSummary() {

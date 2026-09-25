@@ -199,9 +199,9 @@ export default async function SpotlightPostsPage({
                     )}
                   </Td>
                   <Td className="text-xs tabular-nums text-muted-foreground">
-                    {row.counts.views.toLocaleString("en-GH")} views ·{" "}
-                    {row.counts.likes.toLocaleString("en-GH")} likes ·{" "}
-                    {row.counts.comments.toLocaleString("en-GH")} comments
+                    {row.counts.views.toLocaleString("en-GB")} views ·{" "}
+                    {row.counts.likes.toLocaleString("en-GB")} likes ·{" "}
+                    {row.counts.comments.toLocaleString("en-GB")} comments
                   </Td>
                   <Td className="text-xs text-muted-foreground">
                     {timeAgo(row.publishedAt ?? row.createdAt)}

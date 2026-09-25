@@ -11,7 +11,9 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadFieldOpsCommissions } from "@/lib/data";
+import { minorToMajor } from "@/lib/moneyUnits";
 import { statusLabel } from "@abonten/core/admin/statusLabels";
+import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsCommissionStatus } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "../FieldOpsTabs";
@@ -33,8 +35,7 @@ const STATUSES = STATUS_KEYS.map((key) => ({
 }));
 
 export const commissionMoney = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
-const cedis = (minor: number) => minor / 100;
+  formatMinor(minor, currency);
 
 export default async function FieldOpsCommissionsPage({
   searchParams,
@@ -60,7 +61,7 @@ export default async function FieldOpsCommissionsPage({
     return `/field-ops/commissions?${q.toString()}`;
   };
   const totals = commissions.status === 200 ? commissions.data?.totals : null;
-  const currency = commissions.data?.currency ?? "GHS";
+  const currency = commissions.data?.currency ?? "";
   const otherCurrencies = commissions.data?.otherCurrencies ?? [];
   const scope = sp.campaign ? "this campaign" : "every campaign";
 
@@ -77,7 +78,7 @@ export default async function FieldOpsCommissionsPage({
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <MetricCard
               metric="fieldOps.inHolding"
-              value={cedis(totals.pending)}
+              value={minorToMajor(totals.pending, currency)}
               format="money"
               currency={currency}
               period="Right now"
@@ -85,7 +86,7 @@ export default async function FieldOpsCommissionsPage({
             />
             <MetricCard
               metric="fieldOps.readyToPay"
-              value={cedis(totals.approved)}
+              value={minorToMajor(totals.approved, currency)}
               format="money"
               currency={currency}
               period="Right now"
@@ -93,7 +94,7 @@ export default async function FieldOpsCommissionsPage({
             />
             <MetricCard
               metric="fieldOps.inPayoutBatch"
-              value={cedis(totals.in_payout)}
+              value={minorToMajor(totals.in_payout, currency)}
               format="money"
               currency={currency}
               period="Right now"
@@ -101,7 +102,7 @@ export default async function FieldOpsCommissionsPage({
             />
             <MetricCard
               metric="fieldOps.paid"
-              value={cedis(totals.paid)}
+              value={minorToMajor(totals.paid, currency)}
               format="money"
               currency={currency}
               period="All time"
@@ -114,7 +115,7 @@ export default async function FieldOpsCommissionsPage({
               {otherCurrencies
                 .map(
                   (o) =>
-                    `${o.currency} — in holding ${money(cedis(o.totals.pending), o.currency)}, ready ${money(cedis(o.totals.approved), o.currency)}, in a batch ${money(cedis(o.totals.in_payout), o.currency)}, paid ${money(cedis(o.totals.paid), o.currency)}`,
+                    `${o.currency} — in holding ${formatMinor(o.totals.pending, o.currency)}, ready ${formatMinor(o.totals.approved, o.currency)}, in a batch ${formatMinor(o.totals.in_payout, o.currency)}, paid ${formatMinor(o.totals.paid, o.currency)}`,
                 )
                 .join(" · ")}
             </p>

@@ -1,8 +1,13 @@
 import { SocialMap, type SocialMapItem } from "@/components/map/SocialMap";
+import { useMarket } from "@/features/markets/MarketProvider";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
+import {
+  type DistanceUnit,
+  formatDistance,
+} from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useMemo } from "react";
@@ -27,10 +32,15 @@ function pointOf(row: { location?: string | null }): {
   }
 }
 
-function eventItem(e: UserPostType): SocialMapItem | null {
+function eventItem(e: UserPostType, unit: DistanceUnit): SocialMapItem | null {
   const point = pointOf(e as unknown as { location?: string });
   if (!point) return null;
-  const dt = getEventCardDateTime(e.starts_at, e.ends_at, e.occurrences);
+  const dt = getEventCardDateTime(
+    e.starts_at,
+    e.ends_at,
+    e.occurrences,
+    e.timezone,
+  );
   const venue = e.address?.full_address || "Location not specified";
   const price = e.min_price ?? e.ticket_price;
   const currency = e.currency ?? e.ticket_currency ?? "GHS";
@@ -40,7 +50,7 @@ function eventItem(e: UserPostType): SocialMapItem | null {
   ];
   if (typeof (e as { distance_km?: number }).distance_km === "number") {
     lines.push(
-      `${(e as { distance_km: number }).distance_km.toFixed(1)} km away`,
+      `${formatDistance((e as { distance_km: number }).distance_km * 1000, unit)} away`,
     );
   }
   return {
@@ -102,11 +112,15 @@ export function ExploreMap({
   places: PlaceType[];
   center: { lat: number; lng: number } | null;
 }) {
+  const { context } = useMarket();
+  const unit: DistanceUnit = context?.distanceUnit ?? "km";
   const items = useMemo<SocialMapItem[]>(() => {
     const src =
-      kind === "events" ? events.map(eventItem) : places.map(placeItem);
+      kind === "events"
+        ? events.map((e) => eventItem(e, unit))
+        : places.map(placeItem);
     return src.filter((x): x is SocialMapItem => x != null);
-  }, [kind, events, places]);
+  }, [kind, events, places, unit]);
 
   return (
     <SocialMap

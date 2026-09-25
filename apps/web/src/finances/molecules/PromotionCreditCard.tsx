@@ -28,12 +28,12 @@ function earnLines(credit: PromotionCredit): string[] {
   }
   if (visits) {
     lines.push(
-      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor)} (up to ${visits.maxVisitors} a month).`,
+      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor, credit.currency)} (up to ${visits.maxVisitors} a month).`,
     );
   }
   if (milestone) {
     lines.push(
-      `The first time one of your events sells to ${milestone.uniqueBuyers} different people, you get ${formatCredit(milestone.amountMinor)}.`,
+      `The first time one of your events sells to ${milestone.uniqueBuyers} different people, you get ${formatCredit(milestone.amountMinor, credit.currency)}.`,
     );
   }
   return lines;
@@ -68,17 +68,17 @@ export default function PromotionCreditCard() {
         <div>
           <p className="text-sm text-muted-foreground">Promotion credit</p>
           <p className="font-bold text-2xl md:text-3xl tabular-nums">
-            {formatCredit(credit.promotionOnlyMinor)}
+            {formatCredit(credit.promotionOnlyMinor, credit.currency)}
           </p>
           {credit.pendingMinor > 0 ? (
             <p className="text-sm text-muted-foreground mt-1">
-              {formatCredit(credit.pendingMinor)} pending
+              {formatCredit(credit.pendingMinor, credit.currency)} pending
             </p>
           ) : null}
           {credit.last ? (
             <p className="text-sm text-muted-foreground mt-1">
-              +{formatCredit(credit.last.amountMinor)} for events that ended in{" "}
-              {monthOf(credit.last.periodStart)}
+              +{formatCredit(credit.last.amountMinor, credit.currency)} for
+              events that ended in {monthOf(credit.last.periodStart)}
             </p>
           ) : null}
         </div>
@@ -94,8 +94,9 @@ export default function PromotionCreditCard() {
 
       {credit.canRedeem && credit.spendableMinor > credit.promotionOnlyMinor ? (
         <p className="text-sm">
-          You can put {formatCredit(credit.spendableMinor)} towards featuring an
-          event or place, including your other Abonten Credit.
+          You can put {formatCredit(credit.spendableMinor, credit.currency)}{" "}
+          towards featuring an event or place, including your other Abonten
+          Credit.
         </p>
       ) : null}
       {!credit.canRedeem && credit.promotionOnlyMinor > 0 ? (

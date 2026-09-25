@@ -32,6 +32,7 @@ export default async function RewardsSettingsPage() {
       ) : (
         <SettingsForm
           settings={overview.data.settings}
+          currency={overview.data.currency}
           canConfigure={ctx.permissions.includes("rewards.configure")}
           stepUpFresh={stepUpFresh}
           delivery={delivery.status === 200 ? (delivery.data ?? null) : null}

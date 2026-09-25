@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import {
   publishFieldOpsRuleVersion,
   setFieldOpsRuleActive,
@@ -96,7 +97,9 @@ export function NewRuleVersionForm({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState((latest.amountMinor / 100).toFixed(2));
+  const [amount, setAmount] = useState(
+    minorToInput(latest.amountMinor, latest.currency),
+  );
   const [eligibility, setEligibility] = useState(
     JSON.stringify(latest.eligibility, null, 2),
   );
@@ -126,7 +129,7 @@ export function NewRuleVersionForm({
       const res = await publishFieldOpsRuleVersion({
         campaignId,
         activityKey: latest.activityKey,
-        amountMinor: Math.round(Number(amount) * 100),
+        amountMinor: majorToMinor(Number(amount), latest.currency),
         currency: latest.currency,
         eligibility: parsed,
         note: note.trim(),

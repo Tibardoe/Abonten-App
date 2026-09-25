@@ -74,36 +74,37 @@ function BalanceCard({
         tone={summary.inDebt ? "error" : "primary"}
         className="tabular-nums"
       >
-        {formatCredit(summary.availableMinor)}
+        {formatCredit(summary.availableMinor, summary.currency)}
       </AppText>
       {summary.pendingMinor > 0 ? (
         <AppText variant="small" className="mt-2">
-          {formatCredit(summary.pendingMinor)} pending
+          {formatCredit(summary.pendingMinor, summary.currency)} pending
           {summary.nextRelease
-            ? ` · next ${formatCredit(summary.nextRelease.amountMinor)} unlocks ${formatDateWithSuffix(summary.nextRelease.releaseAt)}`
+            ? ` · next ${formatCredit(summary.nextRelease.amountMinor, summary.currency)} unlocks ${formatDateWithSuffix(summary.nextRelease.releaseAt)}`
             : ""}
         </AppText>
       ) : null}
       {summary.onHoldMinor > 0 ? (
         <AppText variant="meta">
-          {formatCredit(summary.onHoldMinor)} on hold for a checkout in progress
+          {formatCredit(summary.onHoldMinor, summary.currency)} on hold for a
+          checkout in progress
         </AppText>
       ) : null}
       {welcomeMinor > 0 ? (
         <AppText variant="meta">
-          {formatCredit(welcomeMinor)} is welcome credit for your first ticket
-          order
+          {formatCredit(welcomeMinor, summary.currency)} is welcome credit for
+          your first ticket order
           {welcomeMinOrderMinor
-            ? ` of ${formatCredit(welcomeMinOrderMinor)} or more`
+            ? ` of ${formatCredit(welcomeMinOrderMinor, summary.currency)} or more`
             : ""}
           .
         </AppText>
       ) : null}
       {summary.expiringSoon ? (
         <AppText variant="small" tone="warning" className="mt-1">
-          {formatCredit(summary.expiringSoon.amountMinor)} expires on{" "}
-          {formatDateWithSuffix(summary.expiringSoon.expiresAt)}. Use it before
-          then.
+          {formatCredit(summary.expiringSoon.amountMinor, summary.currency)}{" "}
+          expires on {formatDateWithSuffix(summary.expiringSoon.expiresAt)}. Use
+          it before then.
         </AppText>
       ) : null}
       {summary.status === "frozen" ? (
@@ -157,9 +158,9 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
       <AppText variant="cardTitle">Invite friends</AppText>
       <AppText variant="small">
         {invite.referrerMinor
-          ? `You get ${formatCredit(invite.referrerMinor)} when a friend buys their first ticket${
+          ? `You get ${formatCredit(invite.referrerMinor, invite.currency)} when a friend buys their first ticket${
               invite.refereeMinor
-                ? `, and they get ${formatCredit(invite.refereeMinor)} off it`
+                ? `, and they get ${formatCredit(invite.refereeMinor, invite.currency)} off it`
                 : ""
             }.`
           : "Invite friends to Abonten."}
@@ -206,8 +207,8 @@ function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
       </AppText>
       {progress.pendingMinor > 0 ? (
         <AppText variant="small">
-          {formatCredit(progress.pendingMinor)} of service fees is on its way
-          back to you.
+          {formatCredit(progress.pendingMinor, progress.currency)} of service
+          fees is on its way back to you.
         </AppText>
       ) : null}
     </Card>
@@ -294,7 +295,7 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
           tone={item.amountMinor < 0 || struck ? "muted" : "primary"}
           className={struck ? "tabular-nums line-through" : "tabular-nums"}
         >
-          {formatCreditDelta(item.amountMinor)}
+          {formatCreditDelta(item.amountMinor, item.currency)}
         </AppText>
         {badge ? (
           <Badge label={badge.label} tone={badge.tone} uppercase={false} />

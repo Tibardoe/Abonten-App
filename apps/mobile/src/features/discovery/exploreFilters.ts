@@ -4,6 +4,7 @@ import {
   PRICE_ANY_MAX,
   type PlaceFilters,
 } from "@abonten/core/exploreFilters";
+import { formatMoney } from "@abonten/core/formatMoney";
 
 // The Explore Filter modal's field set + predicates now live in
 // @abonten/core/exploreFilters (shared verbatim with the web Explore page).
@@ -41,7 +42,11 @@ export const RATING_OPTIONS: { label: string; value: number }[] = rating.map(
 
 export type FilterChip = { key: string; label: string };
 
-export function describeEventFilters(f: EventFilters): FilterChip[] {
+export function describeEventFilters(
+  f: EventFilters,
+  /** The browsed market's currency, for the price chip. */
+  currency: string,
+): FilterChip[] {
   const chips: FilterChip[] = [];
   if (f.category) chips.push({ key: "category", label: f.category });
   for (const type of f.types) chips.push({ key: `type:${type}`, label: type });
@@ -50,11 +55,13 @@ export function describeEventFilters(f: EventFilters): FilterChip[] {
     (f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX)
   ) {
     const min = f.minPrice ?? 0;
+    const fmt = (v: number) =>
+      formatMoney(currency, v, { trimZeroFraction: true });
     const max =
       f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX
-        ? `${f.maxPrice}`
+        ? fmt(f.maxPrice)
         : "Any";
-    chips.push({ key: "price", label: `GHS ${min} – ${max}` });
+    chips.push({ key: "price", label: `${fmt(min)} – ${max}` });
   }
   if (f.startDate || f.endDate) {
     chips.push({

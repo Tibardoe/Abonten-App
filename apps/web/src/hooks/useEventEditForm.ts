@@ -11,6 +11,7 @@ import {
 } from "@/utils/eventDateValidation";
 import { isImageFile } from "@abonten/core/isImageFile";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { toWallClockString } from "@abonten/core/time/timeZone";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import {
@@ -234,9 +235,9 @@ export function useEventEditForm({
       }
 
       let eventDates: {
-        starts_at?: Date;
-        ends_at?: Date;
-        specific_dates?: DateEntry[];
+        starts_at?: string;
+        ends_at?: string;
+        specific_dates?: { start: string; end: string }[];
       };
       const bufferedNow = getBufferedNow();
 
@@ -248,8 +249,8 @@ export function useEventEditForm({
         }
 
         eventDates = {
-          starts_at: new Date(singleDateRange.from as Date),
-          ends_at: new Date(singleDateRange.to as Date),
+          starts_at: toWallClockString(singleDateRange.from as Date),
+          ends_at: toWallClockString(singleDateRange.to as Date),
         };
       } else if (dateType === "specific") {
         const result = validateSpecificDates(multipleDates, bufferedNow);
@@ -258,7 +259,12 @@ export function useEventEditForm({
           return;
         }
 
-        eventDates = { specific_dates: multipleDates };
+        eventDates = {
+          specific_dates: multipleDates.map((d) => ({
+            start: toWallClockString(d.start),
+            end: toWallClockString(d.end),
+          })),
+        };
       } else {
         toast.error("Invalid date selection");
         return;

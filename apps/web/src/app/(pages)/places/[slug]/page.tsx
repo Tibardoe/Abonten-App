@@ -26,7 +26,9 @@ import { placeJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
+import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -112,6 +114,12 @@ export default async function page({
   if (placeResponse.status !== 200 || !placeResponse.data) notFound();
 
   const place = placeResponse.data;
+  // Service prices are in the place's market currency.
+  const placeCurrency = (
+    await getMarketOrDefault(
+      (place as { country_code?: string | null }).country_code ?? null,
+    )
+  ).defaultCurrency;
 
   // Upcoming events and the reviews block (summary + the three most
   // helpful — "See all" opens /places/<slug>/reviews) only depend on the
@@ -326,7 +334,9 @@ export default async function page({
                         </div>
                         {service.show_price && service.price != null && (
                           <span className="shrink-0 font-medium text-card-foreground">
-                            {service.price}
+                            {formatMoney(placeCurrency, service.price, {
+                              trimZeroFraction: true,
+                            })}
                             {service.price_unit
                               ? ` / ${service.price_unit}`
                               : ""}

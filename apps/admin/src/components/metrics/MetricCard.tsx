@@ -66,7 +66,7 @@ function formatValue(
     case "ms":
       return `${Math.round(value)} ms`;
     default:
-      return value.toLocaleString("en-GH");
+      return value.toLocaleString("en-GB");
   }
 }
 
@@ -94,7 +94,7 @@ export function MetricCard({
   metric,
   value,
   format = "count",
-  currency = "GHS",
+  currency = "",
   definition,
   period,
   trend,

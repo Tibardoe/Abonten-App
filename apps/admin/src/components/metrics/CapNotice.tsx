@@ -36,7 +36,7 @@ export function CapNotice({
       <span>
         <strong className="font-medium">Incomplete figures.</strong> The
         summaries on this page were computed from the first{" "}
-        {fetched.toLocaleString("en-GH")} of {total.toLocaleString("en-GH")}{" "}
+        {fetched.toLocaleString("en-GB")} of {total.toLocaleString("en-GB")}{" "}
         {noun} in this period. Choose a shorter period for exact numbers.
       </span>
     </output>

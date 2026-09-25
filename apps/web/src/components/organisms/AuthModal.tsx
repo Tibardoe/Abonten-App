@@ -15,7 +15,7 @@ import {
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -57,6 +57,9 @@ export default function AuthModal({
   const [countryCode, setCountryCode] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneE164, setPhoneE164] = useState("");
+  const [phoneCodeLength, setPhoneCodeLength] = useState(
+    DEFAULT_PHONE_OTP_CODE_LENGTH,
+  );
 
   const [email, setEmail] = useState("");
   const [submittedEmail, setSubmittedEmail] = useState("");
@@ -122,6 +125,7 @@ export default function AuthModal({
       }
 
       setPhoneE164(result.phoneE164);
+      setPhoneCodeLength(result.codeLength);
       return true;
     } catch (error) {
       logger.error("Phone Sign-In Error:", error);
@@ -426,15 +430,14 @@ export default function AuthModal({
             onChange={setOtp}
             disabled={isVerifying || isRedirecting}
             error={otpErrorMessage}
-            length={isEmail ? EMAIL_OTP_CODE_LENGTH : HUBTEL_OTP_CODE_LENGTH}
+            length={isEmail ? EMAIL_OTP_CODE_LENGTH : phoneCodeLength}
           />
 
           <Button
             disabled={
               isVerifying ||
               isRedirecting ||
-              otp.length !==
-                (isEmail ? EMAIL_OTP_CODE_LENGTH : HUBTEL_OTP_CODE_LENGTH)
+              otp.length !== (isEmail ? EMAIL_OTP_CODE_LENGTH : phoneCodeLength)
             }
             className="w-full rounded-md text-xl font-bold py-7"
           >

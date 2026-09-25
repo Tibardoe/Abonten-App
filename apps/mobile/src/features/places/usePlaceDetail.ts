@@ -12,6 +12,9 @@ import { type QueryClient, useQuery } from "@tanstack/react-query";
 export type PlaceDetail = {
   id: string;
   name: string;
+  /** The place's market (ISO country) and zone. */
+  country_code: string;
+  timezone: string;
   slug: string;
   description: string;
   address: { full_address?: string } | null;

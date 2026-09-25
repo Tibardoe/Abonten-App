@@ -125,12 +125,12 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
         <View className="gap-1 border-t border-border pt-3">
           <AppText variant="small">
             {s.sales} order{s.sales === 1 ? "" : "s"} by {s.promoters} promoter
-            {s.promoters === 1 ? "" : "s"} · {formatCredit(s.revenueMinor)} in
-            ticket sales
+            {s.promoters === 1 ? "" : "s"} ·{" "}
+            {formatCredit(s.revenueMinor, data.currency)} in ticket sales
           </AppText>
           <AppText variant="small" tone="muted">
-            {formatCredit(s.pendingMinor)} commission pending ·{" "}
-            {formatCredit(s.paidMinor)} paid
+            {formatCredit(s.pendingMinor, data.currency)} commission pending ·{" "}
+            {formatCredit(s.paidMinor, data.currency)} paid
           </AppText>
         </View>
       ) : null}

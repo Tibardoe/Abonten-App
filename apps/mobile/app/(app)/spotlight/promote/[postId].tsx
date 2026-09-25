@@ -26,6 +26,8 @@ import {
   budgetProblem,
   formatReachRange,
 } from "@abonten/core/content/promotionEstimate";
+import { currencyMinorFactor } from "@abonten/core/money/currencies";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
 import type {
   ContentCampaignObjective,
   ContentPromotionTargetingInput,
@@ -75,11 +77,17 @@ export default function PromoteSpotlightScreen() {
   const [reserved, setReserved] = useState<Reserved | null>(null);
 
   const opts = options.data;
+  // Minor units per major unit of the campaign's currency (100 for GH₵,
+  // 1 for a zero-decimal currency like CFA francs).
+  const factor = opts ? currencyMinorFactor(opts.currency) : 100;
   useEffect(() => {
     if (!opts) return;
     setBudgetText((b) =>
       b === ""
-        ? String((opts.suggestedBudgetsMinor[1] ?? opts.minBudgetMinor) / 100)
+        ? String(
+            (opts.suggestedBudgetsMinor[1] ?? opts.minBudgetMinor) /
+              currencyMinorFactor(opts.currency),
+          )
         : b,
     );
     setDurationDays((d) => d ?? opts.defaultDurationDays);
@@ -93,7 +101,7 @@ export default function PromoteSpotlightScreen() {
       ? post.data.data.post
       : null;
 
-  const budgetMinor = Math.round(Number(budgetText) * 100);
+  const budgetMinor = Math.round(Number(budgetText) * factor);
   const budgetError =
     opts && budgetText !== "" ? budgetProblem(opts, budgetMinor) : null;
   const targeting: ContentPromotionTargetingInput =
@@ -305,12 +313,14 @@ export default function PromoteSpotlightScreen() {
                     key={b}
                     label={formatMinor(b, opts.currency)}
                     selected={budgetMinor === b}
-                    onPress={() => setBudgetText(String(b / 100))}
+                    onPress={() => setBudgetText(String(b / factor))}
                   />
                 ))}
               </View>
               <View className="flex-row items-center gap-2">
-                <AppText variant="bodyStrong">GH₵</AppText>
+                <AppText variant="bodyStrong">
+                  {currencySymbol(opts.currency)}
+                </AppText>
                 <Input
                   className="flex-1"
                   value={budgetText}

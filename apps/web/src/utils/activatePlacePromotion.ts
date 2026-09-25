@@ -7,7 +7,7 @@ import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
 /**
  * Commit step for a Featured Places purchase — the place equivalent of
- * activateEventPromotion.ts. Called only by finalizePaystackPayment
+ * activateEventPromotion.ts. Called only by finalizePayment
  * (injected as a paymentFulfillmentDeps step) once it has verified payment
  * for the given checkout. Never trusts a client-supplied duration/price —
  * everything comes from the already-priced place_promotion_checkout row and

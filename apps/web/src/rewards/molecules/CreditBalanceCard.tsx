@@ -29,19 +29,19 @@ export default function CreditBalanceCard({
           summary.inDebt && "text-destructive",
         )}
       >
-        {formatCredit(summary.availableMinor)}
+        {formatCredit(summary.availableMinor, summary.currency)}
       </p>
 
       <div className="mt-4 flex flex-col gap-1.5 text-sm">
         {summary.pendingMinor > 0 ? (
           <p>
             <span className="font-medium tabular-nums">
-              {formatCredit(summary.pendingMinor)}
+              {formatCredit(summary.pendingMinor, summary.currency)}
             </span>{" "}
             <span className="text-muted-foreground">
               pending
               {summary.nextRelease
-                ? ` · next ${formatCredit(summary.nextRelease.amountMinor)} unlocks ${formatDateWithSuffix(summary.nextRelease.releaseAt)}`
+                ? ` · next ${formatCredit(summary.nextRelease.amountMinor, summary.currency)} unlocks ${formatDateWithSuffix(summary.nextRelease.releaseAt)}`
                 : ""}
             </span>
           </p>
@@ -49,7 +49,7 @@ export default function CreditBalanceCard({
         {summary.onHoldMinor > 0 ? (
           <p className="text-muted-foreground">
             <span className="font-medium tabular-nums text-foreground">
-              {formatCredit(summary.onHoldMinor)}
+              {formatCredit(summary.onHoldMinor, summary.currency)}
             </span>{" "}
             on hold for a checkout in progress
           </p>
@@ -57,20 +57,20 @@ export default function CreditBalanceCard({
         {welcomeMinor > 0 ? (
           <p className="text-muted-foreground">
             <span className="font-medium tabular-nums text-foreground">
-              {formatCredit(welcomeMinor)}
+              {formatCredit(welcomeMinor, summary.currency)}
             </span>{" "}
             is welcome credit for your first ticket order
             {welcomeMinOrderMinor
-              ? ` of ${formatCredit(welcomeMinOrderMinor)} or more`
+              ? ` of ${formatCredit(welcomeMinOrderMinor, summary.currency)} or more`
               : ""}
             .
           </p>
         ) : null}
         {summary.expiringSoon ? (
           <p className="text-amber-700 dark:text-amber-400">
-            {formatCredit(summary.expiringSoon.amountMinor)} expires on{" "}
-            {formatDateWithSuffix(summary.expiringSoon.expiresAt)}. Use it
-            before then.
+            {formatCredit(summary.expiringSoon.amountMinor, summary.currency)}{" "}
+            expires on {formatDateWithSuffix(summary.expiringSoon.expiresAt)}.
+            Use it before then.
           </p>
         ) : null}
       </div>

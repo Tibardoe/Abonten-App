@@ -13,7 +13,7 @@ type RetryPaymentFulfillmentResult =
 
 /**
  * User-facing recovery action for the "payment succeeded but fulfillment
- * failed" state (see finalizePaystackPayment.ts's "fulfillment_failed"
+ * failed" state (see finalizePayment.ts's "fulfillment_failed"
  * status). Never re-charges the user. Post-auth logic lives in
  * retryPaymentFulfillmentCore so the mobile API route shares it.
  */

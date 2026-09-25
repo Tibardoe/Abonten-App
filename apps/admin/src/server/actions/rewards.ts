@@ -5,7 +5,7 @@ import {
   currentRequestMeta,
   requireAdmin,
 } from "@/lib/adminGuard";
-import { cedisToCreditMinor } from "@abonten/core/rewards/creditAmount";
+import { majorToCreditMinor } from "@abonten/core/rewards/creditAmount";
 import { runMonthlyRebatesCore } from "@abonten/services/admin/rewards/rebateAdminCore";
 import {
   decideHeldRewardCore,
@@ -21,6 +21,7 @@ import {
   setReferralCodeDisabledCore,
   updateRewardsSettingsCore,
 } from "@abonten/services/admin/rewards/rewardsAdminCore";
+import { creditCurrencyFor } from "@abonten/services/rewards/creditCurrency";
 import {
   creditAccountStatusSchema,
   creditAdjustmentDecisionSchema,
@@ -135,7 +136,10 @@ export async function requestCreditAdjustment(input: unknown) {
       {
         userId: d.userId,
         direction: d.direction,
-        amountMinor: cedisToCreditMinor(d.amount),
+        amountMinor: majorToCreditMinor(
+          d.amount,
+          await creditCurrencyFor(d.userId),
+        ),
         reason: d.reason,
         userLabel: d.userLabel || null,
         spendScope: d.spendScope,
@@ -197,7 +201,10 @@ export async function grantGoodwillCredit(input: unknown) {
       ctx,
       {
         userId: parsed.data.userId,
-        amountMinor: cedisToCreditMinor(parsed.data.amount),
+        amountMinor: majorToCreditMinor(
+          parsed.data.amount,
+          await creditCurrencyFor(parsed.data.userId),
+        ),
         reason: parsed.data.reason,
         requestId: parsed.data.requestId,
       },

@@ -12,7 +12,11 @@ import {
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import { api } from "@/lib/api";
 import type { PaymentMethodRow } from "@abonten/api-client";
-import { formatCredit } from "@abonten/core/rewards/creditAmount";
+import { formatMoney } from "@abonten/core/formatMoney";
+import {
+  creditMinorToMajor,
+  formatCredit,
+} from "@abonten/core/rewards/creditAmount";
 import { AppText } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -64,7 +68,10 @@ export function PromotionPaymentSection({
   const [useCreditChoice, setUseCreditChoice] = useState<boolean | null>(null);
   const useCredit = !!quote && (useCreditChoice ?? true);
   const creditCoversAll = useCredit && !!quote?.creditOnly;
-  const payAmount = useCredit && quote ? quote.cashMinor / 100 : amount;
+  const payAmount =
+    useCredit && quote
+      ? creditMinorToMajor(quote.cashMinor, quote.currency)
+      : amount;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +130,7 @@ export function PromotionPaymentSection({
       return;
     }
 
-    const ps = res.data.paystack;
+    const ps = res.data.payment;
     const verification = res.data.verification;
     if (useCredit) invalidateCredit();
 
@@ -172,8 +179,8 @@ export function PromotionPaymentSection({
             ? "Promote your Spotlight"
             : `Feature this ${kind}`,
         amountLabel: ps
-          ? `${currency} ${payAmount.toFixed(2)}`
-          : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0)} credit`,
+          ? formatMoney(currency, payAmount)
+          : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0, currency)} credit`,
         successHref,
         successCtaLabel:
           kind === "spotlight" ? "View promotion" : `View ${kind}`,
@@ -184,10 +191,12 @@ export function PromotionPaymentSection({
             }
           : ps.mode === "popup"
             ? { authorizationUrl: ps.authorizationUrl }
-            : {
-                chargeStatus: ps.chargeStatus,
-                displayMessage: ps.displayMessage,
-              }),
+            : ps.mode === "redirect"
+              ? { authorizationUrl: ps.url }
+              : {
+                  chargeStatus: ps.chargeStatus,
+                  displayMessage: ps.displayMessage,
+                }),
       },
     });
   }
@@ -211,7 +220,7 @@ export function PromotionPaymentSection({
         >
           {creditCoversAll
             ? "Confirm and pay with credit"
-            : `Pay ${currency} ${payAmount.toFixed(2)}`}
+            : `Pay ${formatMoney(currency, payAmount)}`}
         </AppText>
       )}
     </Pressable>

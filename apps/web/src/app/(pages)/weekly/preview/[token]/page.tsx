@@ -18,9 +18,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const formatAccra = (iso: string) =>
+// Staff-only link, stated in UTC: one clock for every market's editors.
+const formatUtc = (iso: string) =>
   new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Africa/Accra",
+    timeZone: "UTC",
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(iso));
@@ -61,7 +62,7 @@ export default async function WeeklyPreviewPage({
           are already left out.
         </span>
         <span className="text-xs text-muted-foreground">
-          Link works until {formatAccra(expiresAt)} (Accra)
+          Link works until {formatUtc(expiresAt)} UTC
         </span>
       </aside>
       <WeeklyEditionView doc={edition} preview />

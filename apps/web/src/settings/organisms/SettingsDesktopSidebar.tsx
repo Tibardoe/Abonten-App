@@ -61,6 +61,13 @@ export default async function SettingsDesktopSideBar() {
         arrowUrl="/assets/images/arrowRight.svg"
         text={t("nav.language")}
       />
+
+      <SettingsNavLinks
+        href="/settings/region"
+        imgUrl="/assets/images/language.svg"
+        arrowUrl="/assets/images/arrowRight.svg"
+        text={t("nav.region")}
+      />
     </div>
   );
 }

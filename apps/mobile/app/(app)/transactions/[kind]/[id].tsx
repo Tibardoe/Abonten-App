@@ -81,7 +81,9 @@ export default function TransactionDetailScreen() {
 
   const statusInfo = resolveStatus(data.status, { fallback: "pending" });
   const currency =
-    data.kind === "ticket" ? (data.ticket_type?.currency ?? "GHS") : "GHS";
+    (data.kind === "ticket"
+      ? data.ticket_type?.currency
+      : (data as { currency?: string | null }).currency) ?? "";
   const amount =
     data.kind === "ticket" && typeof data.totalPaid === "number"
       ? data.totalPaid

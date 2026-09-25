@@ -100,7 +100,7 @@ export default async function TransactionsPage({
                     href={`/finance/transactions/${t.id}`}
                     className="font-medium text-primary hover:underline"
                   >
-                    {t.paystackReference ?? `${t.id.slice(0, 8)}…`}
+                    {t.providerReference ?? `${t.id.slice(0, 8)}…`}
                   </Link>
                 </Td>
                 <Td>

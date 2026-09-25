@@ -49,7 +49,8 @@ export default function FinancesOverview({
 
   const rows = data ?? [];
   const primary = rows[0] ?? {
-    currency: "GHS",
+    // No earnings yet: amounts are zero, so no currency sign is shown.
+    currency: "",
     pending_balance: 0,
     available_balance: 0,
     total_earnings: 0,

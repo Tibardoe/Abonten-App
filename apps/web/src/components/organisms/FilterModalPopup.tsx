@@ -1,13 +1,16 @@
 "use client";
 
-// import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
 import { BottomSheet } from "@/components/atoms/BottomSheet";
 import DateRangePickerSheet from "@/components/molecules/DateRangePickerSheet";
 import PriceRangeSlider from "@/components/molecules/PriceRangeSlider";
 import { Button } from "@/components/ui/button";
 import { distances, rating } from "@/data/distanceAndRating";
+// import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
+import { currencySymbol } from "@abonten/core/money/formatMoney";
+import { priceParam } from "@abonten/core/parseFilterModalQueries";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import { useState } from "react";
@@ -78,6 +81,12 @@ const CLEARED_VALUES: FilterValues = {
   openNowOnly: false,
 };
 
+function usePriceSymbol(): string {
+  const { market } = useMarketContext();
+  const code = market?.defaultCurrency;
+  return code ? currencySymbol(code) : "";
+}
+
 export default function FilterModalPopup({
   handlePopup,
   contentType = "events",
@@ -110,6 +119,7 @@ export default function FilterModalPopup({
   // [0, 999] is "Any price" (999 already renders as "Any" below) -- the true
   // no-filter default, rather than an arbitrary 0-20 cap that would silently
   // exclude every event priced above GHS 20 until the user notices.
+  const priceSymbol = usePriceSymbol();
   const [minMax, setMinMax] = useState<[number, number]>([
     initialMinPrice ?? 0,
     initialMaxPrice ?? 999,
@@ -210,7 +220,7 @@ export default function FilterModalPopup({
     }
 
     const query = new URLSearchParams({
-      price: `GHS ${values.minMax[0]} - GHS ${values.minMax[1]}`,
+      price: priceParam(values.minMax[0], values.minMax[1]),
       category: values.category,
       types: values.types.join(","),
       from: values.date?.from?.toISOString() || "",
@@ -313,7 +323,7 @@ export default function FilterModalPopup({
                 max={999}
                 value={minMax}
                 onChange={setMinMax}
-                currencyPrefix="GHS "
+                currencyPrefix={priceSymbol}
                 formatMax={() => "Any"}
               />
 

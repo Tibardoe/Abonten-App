@@ -119,13 +119,13 @@ export default async function CreditAccountsPage({
                   ) : null}
                 </Td>
                 <Td className="text-right tabular-nums">
-                  {formatCredit(a.availableMinor)}
+                  {formatCredit(a.availableMinor, a.currency)}
                 </Td>
                 <Td className="text-right tabular-nums text-muted-foreground">
-                  {formatCredit(a.pendingMinor)}
+                  {formatCredit(a.pendingMinor, a.currency)}
                 </Td>
                 <Td className="text-right tabular-nums text-muted-foreground">
-                  {formatCredit(a.lifetimeEarnedMinor)}
+                  {formatCredit(a.lifetimeEarnedMinor, a.currency)}
                 </Td>
                 <Td>
                   <Badge

@@ -60,6 +60,11 @@ export default async function OrganizerDetailPage({
         <Stat
           label="Gross (list price)"
           value={money(s.grossSales, s.currency)}
+          hint={
+            s.otherSales.length > 0
+              ? `also ${s.otherSales.map((o) => money(o.grossSales, o.currency)).join(", ")}`
+              : undefined
+          }
         />
         <Stat
           label="Organizer rating"
