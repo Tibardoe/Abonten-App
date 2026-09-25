@@ -3947,5 +3947,5 @@ Report: `docs/audit/08-production-gate-2026-09-25.md`. Branch `audit/production-
 - **Phone codes** (`20260925111200`): `phone_otp_claim_send` checks and records every send under a lock before the provider (1/min per number across purposes, 5/h and 10/day per number, 10/h per address); `phone_otp_take_attempt` spends verify attempts atomically. `sendPhoneOtpCore({ …, ipAddress })`.
 - **Geocoding** (`20260925111300`): public location pages resolve through `@abonten/services/geo/placeNameGeocode` — market regions, then `geocode_cache`, then Google within 20 per address / 10 min and 300 / hour.
 - Promo codes that exist but can't be used answer **409**, never 401.
-- **Rollout**: code first, smoke test, then the 13 migrations `20260925110000` … `20260925111300` in order via MCP, advisors, smoke test.
+- **Rollout — DONE 2026-09-25** (record in the report §7.1): merge `8e0103c2` deployed; `111200`/`111300` applied *before* the code went live (the code calls `111200`'s functions — phone sign-in would otherwise break in between); then `110000`…`111100` in order; advisors led to `20260925111400` (revoke client EXECUTE on the analytics throttle trigger function). 15 migrations in all, live. Two production smoke tests (12/12, 11/11) and Admin › Claims passed; all test rows removed.
 
