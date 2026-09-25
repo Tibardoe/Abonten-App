@@ -36,6 +36,18 @@ describe("applySmallSampleRule", () => {
     expect(r.buckets.find((b) => b.key === "phone")?.suppressed).toBe(true);
   });
 
+  it("never leaves exactly one bucket hidden, even when it is the only non-empty one", () => {
+    // Found by the integration suite: every other answer at zero made the
+    // total equal to the hidden bucket.
+    const r = applySmallSampleRule([
+      { key: "google", count: 0 },
+      { key: "phone", count: 3 },
+      { key: "email", count: 0 },
+    ]);
+    expect(r.suppressedCount).toBe(2);
+    expect(r.buckets.find((b) => b.key === "phone")?.count).toBeNull();
+  });
+
   it("reports when nothing at all can be shown", () => {
     const r = applySmallSampleRule([
       { key: "google", count: 3 },
