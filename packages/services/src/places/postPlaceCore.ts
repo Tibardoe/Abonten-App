@@ -13,6 +13,11 @@ import type {
 } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import {
+  RESTRICTED_ACCOUNT_MESSAGE,
+  isAccountRestricted,
+} from "../security/accountStatus";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth, post-cover-upload body of postPlace, lifted so the
 // `/api/mobile/places` route runs the exact same create flow as the web
@@ -53,7 +58,7 @@ export type PostPlaceCoreInput = {
 };
 
 export type PostPlaceCoreResult =
-  | { status: 400 | 500; message: string }
+  | { status: 400 | 403 | 500; message: string }
   | { status: 200; message: string; placeId: string; slug: string };
 
 export async function postPlaceCore(
@@ -61,6 +66,14 @@ export async function postPlaceCore(
   userId: string,
   input: PostPlaceCoreInput,
 ): Promise<PostPlaceCoreResult> {
+  // create_place runs with the service role (it takes the owner, country, zone
+  // and currency as parameters, so clients may not call it — migration
+  // 20260925110100); the restricted-account check the database applies to
+  // a person's own writes is made here instead.
+  if (await isAccountRestricted(userId)) {
+    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+  }
+
   const locationCheck = validateLocationInput({
     address: input.address,
     latitude: input.latitude,
@@ -104,9 +117,8 @@ export async function postPlaceCore(
         }))
       : null;
 
-  const { data: placeId, error: createPlaceError } = await supabase.rpc(
-    "create_place",
-    {
+  const { data: placeId, error: createPlaceError } =
+    await getSupabaseServiceClient().rpc("create_place", {
       p_client_request_id: input.clientRequestId,
       p_owner_id: userId,
       p_name: input.name,
@@ -130,8 +142,7 @@ export async function postPlaceCore(
       p_cover_version: String(input.coverVersion),
       p_opening_hours: openingHoursPayload,
       p_services: servicesPayload,
-    } as unknown as Database["public"]["Functions"]["create_place"]["Args"],
-  );
+    } as unknown as Database["public"]["Functions"]["create_place"]["Args"]);
 
   if (createPlaceError) {
     // client_request_id collisions are handled inside create_place itself

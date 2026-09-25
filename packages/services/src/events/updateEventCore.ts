@@ -12,6 +12,7 @@ import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
 // Post-auth, post-flyer-upload body of updateEvent, lifted so the
@@ -234,7 +235,6 @@ export async function updateEventCore(
       description,
       address: addressPayload,
       location: `POINT(${longitude} ${latitude})`,
-      timezone: location.timeZone,
       capacity,
       website_url,
       event_category: category,
@@ -259,9 +259,28 @@ export async function updateEventCore(
       // The capacity guard raises with an organizer-facing message.
       return { status: 400, message: updateError.message };
     }
+    logger.error(`updateEventCore: update failed (${updateError.message})`);
     return {
       status: 500,
-      message: `Error updating event: ${updateError.message}`,
+      message: "We couldn't save your event. Please try again.",
+    };
+  }
+
+  // The zone is resolved here from the venue, so the service role writes it:
+  // owners can't set a listing's zone directly (guard_listing_market_columns).
+  const { error: zoneError } = await getSupabaseServiceClient()
+    .from("event")
+    .update({ timezone: location.timeZone })
+    .eq("id", eventId)
+    .eq("organizer_id", userId)
+    .neq("timezone", location.timeZone);
+  if (zoneError) {
+    logger.error(
+      `updateEventCore: time zone update failed (${zoneError.message})`,
+    );
+    return {
+      status: 500,
+      message: "We couldn't save your event. Please try again.",
     };
   }
 

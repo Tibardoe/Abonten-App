@@ -100,7 +100,13 @@ export async function updateSession(request: NextRequest) {
   // ban also revokes their Supabase sessions (setUserStatusCore); this
   // closes the window before the JWT expires and covers server-rendered
   // pages + Server Actions (both pass through this middleware). Fails open.
-  if (user && !isPublicRoute) {
+  // A Server Action can be POSTed to ANY path — an event page, the home
+  // page — not only to the private section it belongs to, so action calls
+  // are checked wherever they land (before 2026-09-25 a restricted account
+  // could reach every action through a public page).
+  const isServerAction =
+    request.method === "POST" && request.headers.has("next-action");
+  if (user && (!isPublicRoute || isServerAction)) {
     const { data: statusRow } = await supabase
       .from("user_info")
       .select("status_id")
@@ -116,6 +122,16 @@ export async function updateSession(request: NextRequest) {
         statusRow.status_id === 3 ||
         statusRow.status_id === 4)
     ) {
+      if (isServerAction) {
+        return NextResponse.json(
+          {
+            status: 403,
+            message:
+              "Your account has been restricted. Contact support if you think this is a mistake.",
+          },
+          { status: 403 },
+        );
+      }
       const url = request.nextUrl.clone();
       url.pathname = "/account-restricted";
       url.search = "";

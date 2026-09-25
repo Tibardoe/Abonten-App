@@ -1,10 +1,13 @@
 import { logger } from "@abonten/core/logger";
-import { uploadImageBuffer } from "@abonten/services/media/cloudinaryClient";
+import {
+  type UploadedImage,
+  uploadImageBuffer,
+} from "@abonten/services/media/cloudinaryClient";
 
 export async function saveEventQrCodeToCloudinary(
   qrCodeBase64: string,
   filename: string,
-) {
+): Promise<Partial<UploadedImage> & { error?: string }> {
   if (!qrCodeBase64) return { error: "No file selected" };
 
   try {
