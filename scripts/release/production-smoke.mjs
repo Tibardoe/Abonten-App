@@ -57,7 +57,9 @@ async function throwaway(label) {
   });
   if (error) throw new Error(`createUser ${label}: ${error.message}`);
   created.users.push(data.user.id);
-  const anon = createClient(SUPABASE_URL, ANON, { auth: { persistSession: false } });
+  const anon = createClient(SUPABASE_URL, ANON, {
+    auth: { persistSession: false },
+  });
   const { data: s, error: e2 } = await anon.auth.signInWithPassword({
     email,
     password,
@@ -97,7 +99,9 @@ async function adminSession() {
     type: "magiclink",
     email: u.user.email,
   });
-  const anon = createClient(SUPABASE_URL, ANON, { auth: { persistSession: false } });
+  const anon = createClient(SUPABASE_URL, ANON, {
+    auth: { persistSession: false },
+  });
   const { data: v, error } = await anon.auth.verifyOtp({
     type: "magiclink",
     token_hash: link.properties.hashed_token,
@@ -281,7 +285,7 @@ async function main() {
     .from("payout_account")
     .select("id, currency, country_code")
     .eq("organizer_id", org.id);
-  (pa ?? []).forEach((p) => created.payout.push(p.id));
+  for (const p of pa ?? []) created.payout.push(p.id);
   record(
     "organizer",
     "add a payout account",
@@ -290,7 +294,9 @@ async function main() {
   );
 
   // ── Customer ───────────────────────────────────────────────────────────
-  const anonDb = createClient(SUPABASE_URL, ANON, { auth: { persistSession: false } });
+  const anonDb = createClient(SUPABASE_URL, ANON, {
+    auth: { persistSession: false },
+  });
   if (paidId) {
     const { data: near } = await anonDb.rpc("get_nearby_events", {
       user_lat: 5.5566,
@@ -305,6 +311,38 @@ async function main() {
       "event appears in signed-out discovery",
       (near ?? []).some((e) => e.id === paidId),
     );
+    const t0 = Date.now();
+    const { data: hits, error: searchError } = await anonDb.rpc(
+      "search_events",
+      { p_query: tag },
+    );
+    record(
+      "customer",
+      "signed-out search finds the event",
+      !searchError && (hits ?? []).some((e) => e.id === paidId),
+      searchError?.message ??
+        `${hits?.length ?? 0} hit(s), ${Date.now() - t0} ms`,
+    );
+  }
+  const { data: anyPlace } = await service
+    .from("place")
+    .select("id")
+    .eq("status", "published")
+    .limit(1)
+    .maybeSingle();
+  if (anyPlace) {
+    const { data: open, error: openError } = await anonDb.rpc(
+      "place_is_open_now",
+      { p_place_id: anyPlace.id },
+    );
+    record(
+      "customer",
+      "signed-out open-now check on a place",
+      !openError && typeof open === "boolean",
+      openError?.message ?? `answered ${open}`,
+    );
+  }
+  if (paidId) {
     const { data: ev } = await service
       .from("event")
       .select("event_code")
@@ -407,8 +445,8 @@ async function main() {
           dText.toLowerCase().includes(tag) &&
           /GH₵|GHS/.test(dText) &&
           /published/i.test(dText) &&
-          /Ghana|GH/.test(dText),
-        `HTTP ${detail.status}; title ${dText.toLowerCase().includes(tag)}, money ${/GH₵|GHS/.test(dText)}, published ${/published/i.test(dText)}, Ghana ${/Ghana|GH/.test(dText)}`,
+          /Ghana \(GH\)/.test(dText),
+        `HTTP ${detail.status}; title ${dText.toLowerCase().includes(tag)}, money ${/GH₵|GHS/.test(dText)}, published ${/published/i.test(dText)}, Ghana ${/Ghana \(GH\)/.test(dText)}`,
       );
     } finally {
       await fetch(`${SUPABASE_URL}/auth/v1/logout?scope=local`, {
@@ -419,6 +457,30 @@ async function main() {
   }
 
   // ── Security probes (Data API, as the organizer / buyer) ──────────────
+  // Push tokens (migration 20260925111600). The rows go with the account.
+  const bad = await org.db.from("device_token").insert({
+    user_id: org.id,
+    token: "not-a-push-token",
+    platform: "android",
+  });
+  for (let i = 0; i < 12; i++) {
+    await org.db.from("device_token").insert({
+      user_id: org.id,
+      token: `ExponentPushToken[${tag}x${i}]`,
+      platform: "android",
+    });
+  }
+  const { count: kept } = await service
+    .from("device_token")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", org.id);
+  record(
+    "security",
+    "a malformed push token is refused; an account keeps at most 10",
+    bad.error?.code === "23514" && kept === 10,
+    `${bad.error?.code ?? "accepted"}, ${kept} kept of 12`,
+  );
+
   if (paidId) {
     for (const [field, value] of [
       ["currency", "USD"],
@@ -462,14 +524,12 @@ async function main() {
       !!capErr && tt2.quantity === tt.quantity,
       capErr?.code ?? "no error",
     );
-    const { error: attErr } = await buyer.db
-      .from("attendance")
-      .insert({
-        user_id: buyer.id,
-        event_id: paidId,
-        number_of_tickets: 25,
-        status: "attending",
-      });
+    const { error: attErr } = await buyer.db.from("attendance").insert({
+      user_id: buyer.id,
+      event_id: paidId,
+      number_of_tickets: 25,
+      status: "attending",
+    });
     record(
       "security",
       "no one can insert attendance to fill an event",
@@ -507,17 +567,15 @@ async function main() {
     !!cp.error && /42501|PGRST202/.test(cp.error.code ?? ""),
     cp.error?.code,
   );
-  const { error: paErr } = await org.db
-    .from("payout_account")
-    .insert({
-      organizer_id: org.id,
-      account_type: "bank",
-      account_holder_name: "X",
-      provider: "x",
-      account_number: "123456789",
-      currency: "NGN",
-      country_code: "NG",
-    });
+  const { error: paErr } = await org.db.from("payout_account").insert({
+    organizer_id: org.id,
+    account_type: "bank",
+    account_holder_name: "X",
+    provider: "x",
+    account_number: "123456789",
+    currency: "NGN",
+    country_code: "NG",
+  });
   record(
     "security",
     "payout accounts cannot be written directly",
