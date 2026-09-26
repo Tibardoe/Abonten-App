@@ -13662,6 +13662,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      calendar_zone: { Args: { p_zone: string }; Returns: string }
       cancel_event_and_release_tickets: {
         Args: { p_event_id: string }
         Returns: {
@@ -14176,7 +14177,9 @@ export type Database = {
           voided_minor: number
         }[]
       }
+      cron_health: { Args: never; Returns: Json }
       currency_minor_units: { Args: { p_currency: string }; Returns: number }
+      currency_scale: { Args: { p_currency: string }; Returns: number }
       default_market_country: { Args: never; Returns: string }
       default_market_currency: { Args: never; Returns: string }
       default_market_timezone: { Args: never; Returns: string }
@@ -15288,6 +15291,7 @@ export type Database = {
           p_prev_end: string | null
           p_prev_start: string | null
           p_start: string | null
+          p_timezone?: string | null
         }
         Returns: Json
       }
@@ -15395,6 +15399,7 @@ export type Database = {
           p_currency?: string
           p_end: string
           p_start: string
+          p_timezone?: string | null
         }
         Returns: {
           bucket_start: string
@@ -15678,6 +15683,10 @@ export type Database = {
       money_round: {
         Args: { p_amount: number; p_currency: string }
         Returns: number
+      }
+      money_text: {
+        Args: { p_currency: string; p_minor: number }
+        Returns: string
       }
       notification_delivery_claim: {
         Args: { p_limit?: number }

@@ -6,6 +6,7 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -81,11 +82,18 @@ export default async function page({
     events,
     "top-rated-organizers",
   );
-  const happeningToday = filterEventsByWindow(events, "happening-today");
-  const happeningThisWeek = filterEventsByWindow(events, "happening-this-week");
+  // "Today" and "this month" on the visitor's calendar, not the server's.
+  const zone = await requestTimeZone();
+  const happeningToday = filterEventsByWindow(events, "happening-today", zone);
+  const happeningThisWeek = filterEventsByWindow(
+    events,
+    "happening-this-week",
+    zone,
+  );
   const happeningThisMonth = filterEventsByWindow(
     events,
     "happening-this-month",
+    zone,
   );
 
   // A paid Event Promotion (see the Promotion tab in Unified Event

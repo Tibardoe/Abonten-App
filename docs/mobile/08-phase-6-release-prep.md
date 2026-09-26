@@ -133,6 +133,37 @@ Real-device iOS testing needs an Apple Developer account and
 `eas device:create` (ad-hoc provisioning). Bundle identifiers are already
 set: `com.abonten.app` (both platforms).
 
+### App Review items handled in code (2026-09-26, audit report 11)
+
+- **Sign in with Apple (Guideline 4.8).** The app offers Google sign-in, so
+  iOS also offers Apple's own button (`apps/mobile/src/auth/appleSignIn.ts`,
+  `app/(auth)/sign-in.tsx`; `ios.usesAppleSignIn` in `app.json`). It needs a
+  new native build, and three founder steps before the build goes to
+  review:
+  1. Supabase dashboard → Authentication → Sign In / Providers → **Apple**:
+     enable it and add `com.abonten.app` under *Client IDs*. The native flow
+     needs no secret key.
+  2. Apple Developer → Certificates, Identifiers & Profiles → the App ID
+     `com.abonten.app` must have **Sign in with Apple** ticked (EAS does
+     this when it manages the credentials; check it after the first build).
+  3. Apple Developer → **Sign in with Apple for Email Communication**:
+     register `abontenhub.com` and the sending addresses
+     (`tickets@abontenhub.com` and the other `@abontenhub.com` senders), so
+     ticket emails reach people who chose *Hide My Email*. Without it those
+     emails bounce.
+  Not built: revoking a person's Apple sign-in token when they delete their
+  account (Apple asks apps to call its revoke API). It needs an Apple
+  private key held server-side; the account itself is deleted either way.
+- **Promotions (Guidelines 3.1.1 / 3.1.3).** The iPhone app does not sell
+  featuring or Spotlight promotions and does not point elsewhere to buy
+  them (`apps/mobile/src/lib/storePolicy.ts`); existing promotions stay
+  visible. Whether to add in-app purchase later is decision D6 in
+  [../OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md).
+- **Privacy manifest.** `app.json` now declares the app-level required-reason
+  APIs (user defaults, file timestamps, system boot time, disk space) and
+  no tracking, on top of each pod's own manifest. Check the first
+  TestFlight upload's email for ITMS-91053 anyway.
+
 ## 6. Replace the placeholder assets
 
 Specs (all PNG, no transparency except where noted):

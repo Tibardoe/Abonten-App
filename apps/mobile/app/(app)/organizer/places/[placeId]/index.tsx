@@ -3,6 +3,7 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
 import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
+import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
 import {
   AppText,
@@ -219,14 +220,16 @@ export default function PlaceManageScreen() {
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
-          <Link href={`/(app)/organizer/places/${id}/promote`} asChild>
-            <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
-              <AppText className="text-base font-semibold text-primary">
-                Feature this place
-              </AppText>
-              <AppText className="text-primary">›</AppText>
-            </Pressable>
-          </Link>
+          {IN_APP_PROMOTION_PURCHASES ? (
+            <Link href={`/(app)/organizer/places/${id}/promote`} asChild>
+              <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
+                <AppText className="text-base font-semibold text-primary">
+                  Feature this place
+                </AppText>
+                <AppText className="text-primary">›</AppText>
+              </Pressable>
+            </Link>
+          ) : null}
           <Link href={`/(app)/place/${id}`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base text-foreground">

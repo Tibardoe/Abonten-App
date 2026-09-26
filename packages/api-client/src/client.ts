@@ -265,6 +265,19 @@ import type {
   VerifyPhoneOtpBody,
 } from "./types";
 
+/**
+ * `&tz=<the device's IANA zone>` for endpoints that count "today" and "this
+ * month": the organizer's day, not UTC's. Empty when the runtime cannot say.
+ */
+function deviceZoneParam(): string {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return zone ? `&tz=${encodeURIComponent(zone)}` : "";
+  } catch {
+    return "";
+  }
+}
+
 export type ApiClientOptions = {
   /** Origin of the web deployment that hosts /api/mobile, no trailing slash. */
   baseUrl: string;
@@ -1129,7 +1142,7 @@ export function createApiClient(options: ApiClientOptions) {
       /** Dashboard KPIs for the period + its comparison window. */
       overview(period: OrganizerDashboardPeriod = "30d") {
         return request<OrganizerOverviewResult>(
-          `/api/mobile/organizer/overview?period=${period}`,
+          `/api/mobile/organizer/overview?period=${period}${deviceZoneParam()}`,
           { method: "GET", auth: true },
         );
       },
@@ -1148,7 +1161,7 @@ export function createApiClient(options: ApiClientOptions) {
        */
       dashboardWidgets(period: OrganizerDashboardPeriod = "30d") {
         return request<OrganizerDashboardWidgetsResult>(
-          `/api/mobile/organizer/dashboard?period=${period}`,
+          `/api/mobile/organizer/dashboard?period=${period}${deviceZoneParam()}`,
           { method: "GET", auth: true },
         );
       },
@@ -1317,7 +1330,7 @@ export function createApiClient(options: ApiClientOptions) {
         return request<EventInsightsResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(
             eventId,
-          )}/analytics?period=${period}`,
+          )}/analytics?period=${period}${deviceZoneParam()}`,
           { method: "GET", auth: true },
         );
       },

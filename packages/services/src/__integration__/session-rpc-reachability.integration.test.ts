@@ -69,6 +69,37 @@ describe("reads the apps make with a person's own session", () => {
     }
   });
 
+  // Audit 2026-09-26: buckets follow the viewer's calendar.
+  it("the dashboard counts days in the viewer's zone", async () => {
+    for (const period of ["today", "7d"] as const) {
+      const dash = await fetchOrganizerDashboard(
+        organizer.client,
+        period,
+        "Africa/Lagos",
+      );
+      expect(dash.status, `dashboard ${period}`).toBe(200);
+    }
+    const week = await fetchOrganizerSalesTimeline(
+      organizer.client,
+      "7d",
+      "Africa/Lagos",
+    );
+    expect(week.status).toBe(200);
+    const rows = week.status === 200 ? week.data : [];
+    expect(rows.length).toBeGreaterThanOrEqual(7);
+    // Lagos is UTC+1 all year: each day starts at 23:00 UTC the day before.
+    for (const row of rows) {
+      expect(new Date(row.bucket_start).getUTCHours()).toBe(23);
+    }
+    // A zone Postgres does not know falls back to the market's, not an error.
+    const odd = await fetchOrganizerSalesTimeline(
+      organizer.client,
+      "7d",
+      "Not/AZone",
+    );
+    expect(odd.status).toBe(200);
+  });
+
   it("the market helpers answer a signed-in person and a visitor", async () => {
     for (const client of [organizer.client, anon]) {
       for (const fn of [

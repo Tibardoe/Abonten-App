@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import {
   type OrganizerDashboardOverviewResult,
@@ -21,5 +22,9 @@ export default async function getOrganizerDashboardOverview(
     return { status: 401, message: "User not logged in" };
   }
 
-  return fetchOrganizerDashboardOverview(supabase, period);
+  return fetchOrganizerDashboardOverview(
+    supabase,
+    period,
+    await requestTimeZone(),
+  );
 }

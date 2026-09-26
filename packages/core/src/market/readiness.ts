@@ -5,7 +5,7 @@
 // activation transition refuses while any critical check fails.
 
 import { isKnownCurrency } from "../money/currencies";
-import { isValidTimeZone, zoneOffsetMinutes } from "../time/timeZone";
+import { isValidTimeZone } from "../time/timeZone";
 import type { MarketConfig } from "./types";
 
 export type ReadinessStatus = "pass" | "warn" | "fail";
@@ -119,34 +119,11 @@ export function evaluateReadiness(
     ),
   );
 
-  // Four places still count days in UTC, written when Ghana (UTC+0 all
-  // year) was the only market: the organizer dashboard periods, the
-  // transactions page periods, promo-code expiry (end of the chosen day) and
-  // the monthly rebate run. Weekly and the recommendation digest already
-  // use each market's own calendar. Until those four do too, a market whose
-  // zone is not UTC+0 all year cannot go live — its organizers would see
-  // "today" and "this month" shifted by their offset.
-  const year = now.getUTCFullYear();
-  const utcAllYear =
-    isValidTimeZone(market.defaultTimeZone) &&
-    zoneOffsetMinutes(
-      new Date(Date.UTC(year, 0, 15)),
-      market.defaultTimeZone,
-    ) === 0 &&
-    zoneOffsetMinutes(
-      new Date(Date.UTC(year, 6, 15)),
-      market.defaultTimeZone,
-    ) === 0;
-  checks.push(
-    check(
-      "utc_calendar",
-      "Day boundaries",
-      utcAllYear,
-      utcAllYear
-        ? `${market.defaultTimeZone} is UTC+0 all year: dashboard, transaction, promo-code and rebate days match the local calendar.`
-        : `${market.defaultTimeZone} is not UTC+0 all year. Organizer dashboard and transaction periods, promo-code expiry and the monthly rebate run still count days in UTC; they must follow the market's calendar before this market can go live.`,
-    ),
-  );
+  // Calendars used to be a check here ("utc_calendar"): the organizer
+  // dashboard, transactions page, promo-code expiry and monthly rebate run
+  // counted days in UTC, so only a UTC+0 market could go live. Since
+  // 2026-09-26 each counts in the viewer's, the event's or the market's own
+  // zone (audit report 11), so a market in any zone can pass.
 
   const enabledProviders = market.paymentProviders.filter((p) => p.enabled);
   const providerProbe = (code: string) =>

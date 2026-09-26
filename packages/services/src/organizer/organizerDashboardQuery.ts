@@ -44,13 +44,20 @@ export type DashboardListResult<T> = Failed | { status: 200; data: T[] };
 export async function fetchOrganizerSalesTimeline(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
+  timeZone?: string,
 ): Promise<SalesTimelineResult> {
-  const { start, end, bucket } = getDashboardPeriodRange(period);
+  const { start, end, bucket } = getDashboardPeriodRange(
+    period,
+    new Date(),
+    timeZone,
+  );
 
   const { data, error } = await supabase.rpc("get_organizer_sales_timeline", {
     p_start: start ? start.toISOString() : null,
     p_end: end ? end.toISOString() : null,
     p_bucket: bucket,
+    // Buckets start at the viewer's local hour / midnight / month.
+    p_timezone: timeZone ?? null,
     // Same generated-type gap as the other RPCs in this file: no DEFAULT
     // NULL declared even though the function accepts an open-ended range.
   } as unknown as Database["public"]["Functions"]["get_organizer_sales_timeline"]["Args"]);
@@ -68,8 +75,9 @@ export async function fetchOrganizerEventPerformance(
   period: DashboardPeriod,
   sort: "revenue" | "tickets" = "revenue",
   limit = 10,
+  timeZone?: string,
 ): Promise<DashboardListResult<OrganizerEventPerformanceRow>> {
-  const { start, end } = getDashboardPeriodRange(period);
+  const { start, end } = getDashboardPeriodRange(period, new Date(), timeZone);
 
   const { data, error } = await supabase.rpc(
     "get_organizer_event_performance",
@@ -194,9 +202,13 @@ function rows<T>(value: unknown): T[] {
 export async function fetchOrganizerDashboard(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
+  timeZone?: string,
 ): Promise<OrganizerDashboardResult> {
-  const { start, end, prevStart, prevEnd, bucket } =
-    getDashboardPeriodRange(period);
+  const { start, end, prevStart, prevEnd, bucket } = getDashboardPeriodRange(
+    period,
+    new Date(),
+    timeZone,
+  );
 
   const { data, error } = await supabase.rpc("get_organizer_dashboard", {
     p_start: start ? start.toISOString() : null,
@@ -204,6 +216,7 @@ export async function fetchOrganizerDashboard(
     p_prev_start: prevStart ? prevStart.toISOString() : null,
     p_prev_end: prevEnd ? prevEnd.toISOString() : null,
     p_bucket: bucket,
+    p_timezone: timeZone ?? null,
   });
 
   if (error) {
@@ -246,11 +259,12 @@ export async function fetchOrganizerDashboard(
 export async function fetchOrganizerDashboardWidgets(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
+  timeZone?: string,
 ): Promise<OrganizerDashboardWidgetsResult> {
   const [timeline, performance, upcoming, attention, activity] =
     await Promise.all([
-      fetchOrganizerSalesTimeline(supabase, period),
-      fetchOrganizerEventPerformance(supabase, period, "revenue", 10),
+      fetchOrganizerSalesTimeline(supabase, period, timeZone),
+      fetchOrganizerEventPerformance(supabase, period, "revenue", 10, timeZone),
       fetchOrganizerUpcomingEvents(supabase, 5),
       fetchOrganizerNeedsAttention(supabase, 7),
       fetchOrganizerRecentActivity(supabase, 8),

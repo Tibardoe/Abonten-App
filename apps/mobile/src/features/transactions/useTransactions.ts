@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
+import { viewerTimeZone } from "@abonten/core/time";
 import {
   type TransactionPeriod,
   getTransactionPeriodRange,
@@ -35,7 +36,12 @@ export function useTransactionSummary(period: TransactionPeriod) {
     queryKey: ["transactions", "summary", period],
     enabled: !!session,
     queryFn: async (): Promise<UserTransactionSummaryRow[]> => {
-      const { start, end } = getTransactionPeriodRange(period);
+      // The person's own calendar day and month (the phone's zone).
+      const { start, end } = getTransactionPeriodRange(
+        period,
+        new Date(),
+        viewerTimeZone(),
+      );
       const { data, error } = await supabase.rpc(
         "get_user_transaction_summary",
         {
@@ -56,7 +62,12 @@ export function useTransactionHistory(period: TransactionPeriod) {
     enabled: !!session,
     initialPageParam: null as { createdAt: string; id: string } | null,
     queryFn: async ({ pageParam }) => {
-      const { start, end } = getTransactionPeriodRange(period);
+      // The person's own calendar day and month (the phone's zone).
+      const { start, end } = getTransactionPeriodRange(
+        period,
+        new Date(),
+        viewerTimeZone(),
+      );
       const { data, error } = await supabase.rpc(
         "get_user_transaction_history",
         {

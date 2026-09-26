@@ -1,6 +1,7 @@
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { useEventInsights } from "@/features/organizer/useEventInsights";
 import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
+import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
 import type {
   EventInsightsDateRow,
@@ -457,13 +458,15 @@ export default function EventInsightsScreen() {
               </AppText>
             </Pressable>
           </Link>
-          <Link href={`/(app)/organizer/events/${eventId}/promote`} asChild>
-            <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
-              <AppText className="text-sm font-semibold text-primary">
-                Promote
-              </AppText>
-            </Pressable>
-          </Link>
+          {IN_APP_PROMOTION_PURCHASES ? (
+            <Link href={`/(app)/organizer/events/${eventId}/promote`} asChild>
+              <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
+                <AppText className="text-sm font-semibold text-primary">
+                  Promote
+                </AppText>
+              </Pressable>
+            </Link>
+          ) : null}
         </View>
       ) : null}
 

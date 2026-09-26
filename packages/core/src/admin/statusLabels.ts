@@ -553,14 +553,16 @@ const HEALTH_CHECK_LABELS: Record<string, string> = {
   auth: "Sign-in",
   storage: "File storage",
   paystack: "Paystack (payments)",
+  stripe: "Stripe (payments)",
   resend: "Resend (email)",
   hubtel: "Hubtel (SMS codes)",
   cloudinary: "Cloudinary (images)",
-  expo: "Expo (push)",
-  rewards_health: "Rewards backlog",
+  push: "Expo (push)",
+  rewards: "Rewards backlog",
   fieldops: "Field Ops backlog",
   discovery: "Discovery backlog",
   weekly: "Abonten Weekly jobs",
+  cron: "Scheduled jobs",
 };
 
 export function healthCheckLabel(key: string): string {

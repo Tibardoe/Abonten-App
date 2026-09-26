@@ -1,3 +1,4 @@
+import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import {
   FREE_EVENT_PROMO_CODES_MESSAGE,
   FREE_TICKET_TYPE,
@@ -116,7 +117,7 @@ export async function updatePromoCodeCore(
 
   const { data: event, error: eventError } = await supabase
     .from("event")
-    .select("id, ticket_type(type)")
+    .select("id, timezone, ticket_type(type)")
     .eq("id", promoCode.event_id)
     .eq("organizer_id", userId)
     .maybeSingle();
@@ -143,10 +144,11 @@ export async function updatePromoCodeCore(
     .update({
       discount_percentage: input.discountPercentage,
       max_uses: input.maxUses,
-      expires_at:
-        input.expiresAt instanceof Date
-          ? input.expiresAt.toISOString()
-          : input.expiresAt,
+      // The day the organizer picked, in the event's own calendar.
+      expires_at: promoExpiryForStorage(
+        input.expiresAt,
+        (event as { timezone?: string }).timezone ?? "UTC",
+      ),
       is_active: input.isActive,
     })
     .eq("id", input.promoCodeId);

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import { logger } from "@abonten/core/logger";
 import {
   type TransactionPeriod,
@@ -21,7 +22,11 @@ export async function getUserTransactionSummary(period: TransactionPeriod) {
     return { status: 401 as const, message: "User not logged in" };
   }
 
-  const { start, end } = getTransactionPeriodRange(period);
+  const { start, end } = getTransactionPeriodRange(
+    period,
+    new Date(),
+    await requestTimeZone(),
+  );
 
   const { data, error } = await supabase.rpc("get_user_transaction_summary", {
     p_start: start ? start.toISOString() : null,

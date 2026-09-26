@@ -44,8 +44,13 @@ export type OrganizerDashboardOverviewResult =
 export async function fetchOrganizerDashboardOverview(
   supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
+  timeZone?: string,
 ): Promise<OrganizerDashboardOverviewResult> {
-  const { start, end, prevStart, prevEnd } = getDashboardPeriodRange(period);
+  const { start, end, prevStart, prevEnd } = getDashboardPeriodRange(
+    period,
+    new Date(),
+    timeZone,
+  );
 
   const [currentResult, previousResult] = await Promise.all([
     supabase.rpc("get_organizer_dashboard_overview", {

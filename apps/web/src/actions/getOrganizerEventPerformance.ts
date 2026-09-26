@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { fetchOrganizerEventPerformance } from "@abonten/services/organizer/organizerDashboardQuery";
 
@@ -20,5 +21,11 @@ export default async function getOrganizerEventPerformance(
     return { status: 401 as const, message: "User not logged in" };
   }
 
-  return fetchOrganizerEventPerformance(supabase, period, sort, limit);
+  return fetchOrganizerEventPerformance(
+    supabase,
+    period,
+    sort,
+    limit,
+    await requestTimeZone(),
+  );
 }

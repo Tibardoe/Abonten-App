@@ -520,13 +520,24 @@ describe("monthly rebates: organizer, venue and milestone", () => {
 
     const { data: notes } = await service
       .from("notification")
-      .select("type")
+      .select("type, body")
       .eq("user_id", organizer.id);
     const types = (notes ?? []).map((n) => n.type);
     expect(types.filter((t) => t === "promotion_credit_earned")).toHaveLength(
       1,
     );
     expect(types.filter((t) => t === "milestone_reached")).toHaveLength(1);
+    // Amounts are written in the reward's currency by money_text (audit
+    // 2026-09-26), not a hard-coded "GH₵" and / 100.
+    const earned = (notes ?? []).find(
+      (n) => n.type === "promotion_credit_earned",
+    );
+    expect(earned?.body).toMatch(
+      /^GH₵ \d+\.\d{2} of promotion credit from events that ended in /,
+    );
+    expect(
+      (notes ?? []).find((n) => n.type === "milestone_reached")?.body,
+    ).toContain("GH₵ 20.00");
 
     // Running the month again changes nothing.
     await run();
@@ -568,6 +579,62 @@ describe("monthly rebates: organizer, venue and milestone", () => {
       "organizer",
       "organizer",
     ]);
+  });
+
+  // Audit 2026-09-26: the month used to be UTC's for every event.
+  it("counts an event in the month it settled in the event's own zone", async () => {
+    await setSettings({ shadow_mode: true });
+    const organizer = await newUser({ ageDays: 60 });
+    const [buyerA, buyerB] = await Promise.all([newUser(), newUser()]);
+    const event = await newEvent(organizer.id);
+    await buy(buyerA, event);
+    await buy(buyerB, event);
+
+    // Settles at 22:00 UTC on the last day of last month — already the 1st
+    // of this month in Auckland (UTC+12 or +13).
+    const now = new Date();
+    const monthStart = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+    const settles = monthStart - 2 * 3_600_000;
+    const endsAt = new Date(settles - 48 * 3_600_000).toISOString();
+    const startsAt = new Date(settles - 49 * 3_600_000).toISOString();
+    const { error } = await service
+      .from("event")
+      .update({
+        starts_at: startsAt,
+        ends_at: endsAt,
+        timezone: "Pacific/Auckland",
+      } as never)
+      .eq("id", event.eventId);
+    expect(error).toBeNull();
+    await service
+      .from("event_occurrence")
+      .update({ starts_at: startsAt, ends_at: endsAt })
+      .eq("event_id", event.eventId);
+
+    const monthOf = (t: number) => {
+      const d = new Date(t);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`;
+    };
+    const lastMonth = monthOf(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
+    );
+    const thisMonth = monthOf(monthStart);
+
+    const before = await service.rpc("rewards_run_monthly_rebates", {
+      p_period_start: lastMonth,
+    });
+    expect(before.error).toBeNull();
+    expect(await decisions(event.eventId, "organizer_rebate")).toEqual([]);
+
+    const after = await service.rpc("rewards_run_monthly_rebates", {
+      p_period_start: thisMonth,
+    });
+    expect(after.error).toBeNull();
+    const rebate = await decisions(event.eventId, "organizer_rebate");
+    expect(rebate.map((r) => r.status)).toEqual(["released"]);
+    expect(rebate[0].basis).toMatchObject({ period_start: thisMonth });
+    // The tests after this one expect live mode, as the one before left it.
+    await setSettings({ shadow_mode: false });
   });
 
   it("refuses young organizer accounts and events with many refunds", async () => {

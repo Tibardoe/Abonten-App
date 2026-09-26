@@ -577,6 +577,9 @@ export const HEALTH_CHECK_KEYS = [
   // Abonten Weekly: scheduled editions running late, or no Ghana-wide
   // edition published by Monday 09:00 Accra while the programme is on.
   "weekly",
+  // pg_cron: a scheduled job whose latest run failed, or a run stuck in
+  // "running" for over 30 minutes (cron_health()).
+  "cron",
   // synthetic: written by the pg_cron job itself from the HTTP status it
   // gets back calling /api/observability/health, so a rejected/unreachable
   // endpoint is visible instead of the dashboard just looking empty.

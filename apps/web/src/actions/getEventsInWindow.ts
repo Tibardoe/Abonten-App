@@ -1,7 +1,9 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import { normalizeEventRow } from "@abonten/core/eventAddress";
+import { windowBoundsInZone } from "@abonten/core/eventDateWindow";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -14,7 +16,7 @@ import type {
   PaginatedResult,
 } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
-import { addDays, endOfDay, endOfMonth, startOfDay } from "date-fns";
+import { addDays } from "date-fns";
 import { getEventAttendanceCounts } from "./getAttendace";
 
 export type EventWindow =
@@ -25,17 +27,23 @@ export type EventWindow =
 // Same boundary rules as the JS filter this replaces
 // (getFilteredEvents.ts's filterEventsByWindow) — "this week" is a literal
 // rolling 7 days from now, not the calendar week; "this month" runs to the
-// end of the current calendar month, not a rolling 30 days.
-function getWindowBounds(window: EventWindow): { start: Date; end: Date } {
+// end of the current calendar month, not a rolling 30 days. "Today" and
+// "this month" are the visitor's (their browser's zone), not the server's
+// UTC clock.
+function getWindowBounds(
+  window: EventWindow,
+  timeZone: string,
+): { start: Date; end: Date } {
   const now = new Date();
+  const bounds = windowBoundsInZone(now, timeZone);
 
   switch (window) {
     case "happening-today":
-      return { start: startOfDay(now), end: endOfDay(now) };
+      return { start: bounds.todayStart, end: bounds.todayEnd };
     case "happening-this-week":
       return { start: now, end: addDays(now, 7) };
     case "happening-this-month":
-      return { start: now, end: endOfMonth(now) };
+      return { start: now, end: bounds.endOfMonth };
   }
 }
 
@@ -55,7 +63,7 @@ export async function getEventsInWindow({
   pageSize?: number;
 }): Promise<PaginatedResult<UserPostType>> {
   const supabase = publicSupabase;
-  const { start, end } = getWindowBounds(window);
+  const { start, end } = getWindowBounds(window, await requestTimeZone());
   const cursor = decodeCursor<EventsInWindowCursor>(rawCursor);
 
   const { data, error } = await supabase.rpc("get_events_in_window", {
