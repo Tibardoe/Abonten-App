@@ -14,6 +14,10 @@ import {
   usePromotionCreditQuote,
 } from "@/features/rewards/useRewards";
 import { api } from "@/lib/api";
+import {
+  IN_APP_PROMOTION_PURCHASES,
+  PROMOTION_PURCHASE_UNAVAILABLE,
+} from "@/lib/storePolicy";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
   creditMinorToMajor,
@@ -31,14 +35,7 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 // the server-quoted amount; if it covers everything there's nothing to pick
 // and the same verification screen simply confirms the result.
 
-export function PromotionPaymentSection({
-  checkoutId,
-  entityId,
-  currency,
-  amount,
-  onFeatured,
-  kind = "event",
-}: {
+type PromotionPaymentSectionProps = {
   checkoutId: string;
   /** The event / place id — used to route back on success. */
   entityId: string;
@@ -48,7 +45,32 @@ export function PromotionPaymentSection({
   /** "spotlight" is a promoted Spotlight campaign: cash only, and on
    *  success it waits for review instead of going live. */
   kind?: "event" | "place" | "spotlight";
-}) {
+};
+
+// The one place a promotion is paid for in the app, so the App Store rule
+// (lib/storePolicy) is enforced here: on iOS the payment step is replaced by
+// a plain notice, whichever screen or deep link led to it.
+export function PromotionPaymentSection(props: PromotionPaymentSectionProps) {
+  if (!IN_APP_PROMOTION_PURCHASES) {
+    return (
+      <View className="rounded-xl border border-border bg-card p-4">
+        <AppText className="text-sm text-muted-foreground">
+          {PROMOTION_PURCHASE_UNAVAILABLE}
+        </AppText>
+      </View>
+    );
+  }
+  return <PromotionPaymentSectionInner {...props} />;
+}
+
+function PromotionPaymentSectionInner({
+  checkoutId,
+  entityId,
+  currency,
+  amount,
+  onFeatured,
+  kind = "event",
+}: PromotionPaymentSectionProps) {
   const router = useRouter();
   const needsEmail = useNeedsEmailToPay();
   const payment = usePaymentChoice({ kind, checkoutId });

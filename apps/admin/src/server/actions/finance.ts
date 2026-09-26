@@ -43,6 +43,7 @@ export async function refundTransaction(input: unknown) {
     );
     if (res.status === 200) {
       revalidatePath(`/finance/transactions/${parsed.data.transactionId}`);
+      revalidatePath("/finance/transactions");
       revalidatePath("/finance/refunds");
     }
     return res;

@@ -1,6 +1,9 @@
-// Shared period definitions for the Organizer Dashboard. Ghana (Africa/Accra)
-// is UTC+0 year-round with no DST, so a UTC calendar-day boundary IS the
-// Ghana local calendar-day boundary — no timezone library needed here.
+// Shared period definitions for the Organizer Dashboard. "Today" starts at
+// midnight in the viewer's zone (their browser or phone, else their market's
+// zone); callers pass it. Without one it is UTC, which is also Ghana's
+// calendar (Africa/Accra is UTC+0 all year).
+
+import { startOfDayInZone } from "./time/timeZone";
 
 export type DashboardPeriod = "today" | "7d" | "30d" | "all";
 export type DashboardBucket = "hour" | "day" | "month";
@@ -33,14 +36,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function getDashboardPeriodRange(
   period: DashboardPeriod,
   now: Date = new Date(),
+  timeZone = "UTC",
 ): DashboardPeriodRange {
   switch (period) {
     case "today": {
-      const startOfToday = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-      );
+      const startOfToday = startOfDayInZone(now, timeZone);
       const elapsed = now.getTime() - startOfToday.getTime();
-      const startOfYesterday = new Date(startOfToday.getTime() - DAY_MS);
+      // The day before may be 23 or 25 hours long where clocks change.
+      const startOfYesterday = startOfDayInZone(
+        new Date(startOfToday.getTime() - 1),
+        timeZone,
+      );
 
       return {
         start: startOfToday,

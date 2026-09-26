@@ -7,7 +7,9 @@ import {
 } from "../platform/cloudinaryCleanupCore";
 import {
   type TestUser,
+  createTestEventWithTicketType,
   createTestUser,
+  deleteTestEvent,
   deleteTestUser,
   getServiceClient,
 } from "./setupClient";
@@ -106,6 +108,71 @@ describe("cloudinary cleanup queue", () => {
       },
     });
     expect(destroyed).toEqual([flaky]);
+  });
+
+  // Audit 2026-09-26: an expired draft whose flyer the published event also
+  // used queued that flyer for destruction, and the drain destroyed it —
+  // production's "The Dog" lost its image this way.
+  it("an expired draft never queues a flyer a live event still uses", async () => {
+    const shared = `event_flyers/${tag}-shared`;
+    const orphan = `event_flyers/${tag}-orphan`;
+    const { eventId } = await createTestEventWithTicketType(
+      svc as never,
+      user.id,
+      {
+        quantity: 5,
+        price: 10,
+      },
+    );
+    try {
+      await svc
+        .from("event")
+        .update({ flyer_public_id: shared } as never)
+        .eq("id", eventId);
+      const past = new Date(Date.now() - 60_000).toISOString();
+      for (const flyer of [shared, orphan]) {
+        const { data: draft, error } = await svc
+          .from("drafts")
+          .insert({
+            user_id: user.id,
+            draft_type: "event",
+            expires_at: past,
+          } as never)
+          .select("id")
+          .single();
+        if (error) throw new Error(error.message);
+        await svc.from("event_drafts").insert({
+          draft_id: (draft as { id: string }).id,
+          flyer_public_id: flyer,
+        } as never);
+      }
+
+      const { error } = await svc.rpc("cleanup_expired_drafts" as never);
+      expect(error).toBeNull();
+      expect(await rowsFor(shared)).toHaveLength(0);
+      expect(await rowsFor(orphan)).toEqual([
+        { status: "queued", attempts: 0 },
+      ]);
+    } finally {
+      await deleteTestEvent(svc as never, eventId);
+    }
+  });
+
+  it("the drain keeps a queued image that became used after it was queued", async () => {
+    const used = `event_flyers/${tag}-used-later`;
+    await enqueueCloudinaryCleanup(svc, used, "image");
+    const destroyed: string[] = [];
+    const summary = await drainCloudinaryCleanupQueueCore({
+      client: svc,
+      inUse: async (publicId) => publicId === used,
+      destroy: async (publicId) => {
+        destroyed.push(publicId);
+        return { result: "ok" };
+      },
+    });
+    expect(destroyed).not.toContain(used);
+    expect(summary.kept).toBeGreaterThanOrEqual(1);
+    expect((await rowsFor(used))[0].status).toBe("done");
   });
 
   it("sweeps only old uploads that were never registered, at most once a day", async () => {

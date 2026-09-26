@@ -10,8 +10,10 @@ import {
   useState,
 } from "react";
 import {
+  LOCALE_COOKIE_MAX_AGE,
   LOCALE_COOKIE_NAME,
   type Locale,
+  TIME_ZONE_COOKIE_NAME,
   defaultLocale,
   isLocale,
 } from "./config";
@@ -54,7 +56,16 @@ export default function LocaleProvider({
   useEffect(() => {
     try {
       const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (zone) setTimeZone(zone);
+      if (zone) {
+        setTimeZone(zone);
+        // Lets Server Actions count days in the visitor's own calendar.
+        const cookie = `${TIME_ZONE_COOKIE_NAME}=${encodeURIComponent(zone)}`;
+        if (!document.cookie.split("; ").includes(cookie)) {
+          document.cookie = `${cookie}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax${
+            window.location.protocol === "https:" ? "; secure" : ""
+          }`;
+        }
+      }
     } catch {
       // Keep UTC.
     }

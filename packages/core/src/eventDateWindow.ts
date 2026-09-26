@@ -1,4 +1,11 @@
 import type { UserPostType } from "@abonten/types/postsType";
+import {
+  addCalendarDays,
+  instantToWallClock,
+  startOfCalendarDay,
+  startOfDayInZone,
+  startOfMonthInZone,
+} from "./time/timeZone";
 
 /**
  * All of an event's session start times — every occurrence's starts_at, or
@@ -45,21 +52,20 @@ export type EventDateFilter =
 export function filterEventsByWindow(
   events: UserPostType[],
   filter: EventDateFilter,
+  /**
+   * The visitor's zone. Server code must pass it (the server's clock is
+   * UTC); on a device the device's own calendar is used when it is omitted.
+   */
+  timeZone?: string,
 ): UserPostType[] {
   // Make sure "now" is fresh each time
   const now = new Date();
+  const { todayStart, todayEnd, endOfMonth } = timeZone
+    ? windowBoundsInZone(now, timeZone)
+    : windowBoundsOnDevice(now);
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
-
-  const oneWeekFromNow = new Date();
+  const oneWeekFromNow = new Date(now);
   oneWeekFromNow.setDate(now.getDate() + 7);
-
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  endOfMonth.setHours(23, 59, 59, 999);
 
   switch (filter) {
     case "happening-today":
@@ -92,6 +98,33 @@ export function filterEventsByWindow(
     default:
       return events;
   }
+}
+
+/** Today and the end of this month on the device's own calendar. */
+function windowBoundsOnDevice(now: Date) {
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  endOfMonth.setHours(23, 59, 59, 999);
+  return { todayStart, todayEnd, endOfMonth };
+}
+
+/** The same bounds on `zone`'s calendar (what server rendering must use). */
+export function windowBoundsInZone(now: Date, zone: string) {
+  const todayStart = startOfDayInZone(now, zone);
+  const tomorrowStart =
+    startOfCalendarDay(
+      addCalendarDays(instantToWallClock(todayStart, zone).date, 1),
+      zone,
+    ) ?? new Date(todayStart.getTime() + 86_400_000);
+  const nextMonthStart = startOfMonthInZone(now, zone, 1);
+  return {
+    todayStart,
+    todayEnd: new Date(tomorrowStart.getTime() - 1),
+    endOfMonth: new Date(nextMonthStart.getTime() - 1),
+  };
 }
 
 function num(value: unknown): number {

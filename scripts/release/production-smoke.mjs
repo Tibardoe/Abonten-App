@@ -1,10 +1,14 @@
 // Production release check (docs/audit/09-incident-recovery-and-release-gate-2026-09-25.md
 // runbook steps 3, 4, 7 and 9). Organizer / customer / admin flows plus
 // direct Data API security probes against https://abontenhub.com and the
-// production database, with throwaway @example.com accounts it creates and
-// deletes (every row it writes is removed and checked). No payment is
-// made. The admin checks sign in as the allowlisted Big_Ceo account with a
-// session minted in memory and signed out afterwards. Prints outcomes
+// production database, with throwaway accounts it creates and deletes. Their
+// addresses are Resend's delivered+<label>@resend.dev test inbox, which
+// accepts mail and delivers nothing: an @example.com address made every
+// ticket email an error-level "Invalid `to` field" in the runtime log, which
+// buried real errors after each run. Every account and row it writes is
+// removed and checked. No payment is made. The admin checks sign in as the
+// allowlisted Big_Ceo account with a session minted in memory and signed
+// out afterwards. Prints outcomes
 // only — never a key, token, e-mail address or phone number.
 //
 //   node scripts/release/production-smoke.mjs apps/web/.env.local
@@ -53,7 +57,7 @@ const created = { users: [], events: [], payout: [], drafts: [] };
 const tag = `gate${Date.now().toString(36)}`;
 
 async function throwaway(label) {
-  const email = `gate-${label}-${Date.now()}@example.com`;
+  const email = `delivered+gate-${label}-${Date.now()}@resend.dev`;
   const password = `Gate-${crypto.randomUUID()}-x1`;
   const { data, error } = await service.auth.admin.createUser({
     email,
@@ -134,6 +138,7 @@ async function main() {
     .from("event")
     .select("flyer_public_id, flyer_version")
     .not("flyer_public_id", "is", null)
+    .order("created_at", { ascending: false })
     .limit(1)
     .single();
   const org = await throwaway("org");

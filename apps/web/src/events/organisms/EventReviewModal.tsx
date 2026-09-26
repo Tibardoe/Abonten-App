@@ -127,6 +127,13 @@ export default function EventReviewModal({
         queryClient.invalidateQueries({
           queryKey: ["event-review-eligibility", eventId],
         });
+        // My Events' To Review / Reviewed tabs and their counts, which
+        // delete already refreshed but posting from the event page did not.
+        queryClient.invalidateQueries({ queryKey: ["events-awaiting-review"] });
+        queryClient.invalidateQueries({ queryKey: ["user-event-reviews"] });
+        queryClient.invalidateQueries({
+          queryKey: ["attending-events-counts"],
+        });
         onReviewSubmitted?.();
       } else if (response.message) {
         toast.error(response.message);

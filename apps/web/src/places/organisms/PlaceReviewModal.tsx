@@ -130,6 +130,10 @@ export default function PlaceReviewModal({
         queryClient.invalidateQueries({
           queryKey: ["own-place-review", placeId],
         });
+        queryClient.invalidateQueries({ queryKey: ["user-place-reviews"] });
+        queryClient.invalidateQueries({
+          queryKey: ["attending-events-counts"],
+        });
         onReviewSubmitted?.();
         if (!existingReview) {
           announcePlaceInteraction({ placeId, trigger: "review" });

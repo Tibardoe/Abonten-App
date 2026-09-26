@@ -1,9 +1,10 @@
-// Shared period definitions for the (attendee) Transactions page. Mirrors
-// organizerDashboardDateRange.ts's UTC-boundary technique: Ghana
-// (Africa/Accra) is UTC+0 year-round with no DST, so a UTC calendar-day/
-// month boundary IS the Ghana local boundary — no timezone library needed.
+// Shared period definitions for the (attendee) Transactions page. Days and
+// months start at midnight in the viewer's zone (their browser or phone,
+// else their market's zone); without one, UTC — Ghana's calendar too.
 // No comparison ("previous period") window here — unlike the organizer
 // dashboard, this page's stat tiles have no trend/vs-previous requirement.
+
+import { startOfDayInZone, startOfMonthInZone } from "./time/timeZone";
 
 export type TransactionPeriod =
   | "today"
@@ -20,35 +21,20 @@ export interface TransactionPeriodRange {
 export function getTransactionPeriodRange(
   period: TransactionPeriod,
   now: Date = new Date(),
+  timeZone = "UTC",
 ): TransactionPeriodRange {
   switch (period) {
-    case "today": {
-      const start = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-      );
-      return { start, end: now };
-    }
-    case "thisMonth": {
-      const start = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-      );
-      return { start, end: now };
-    }
+    case "today":
+      return { start: startOfDayInZone(now, timeZone), end: now };
+    case "thisMonth":
+      return { start: startOfMonthInZone(now, timeZone), end: now };
     case "lastMonth": {
-      const start = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
-      );
-      const end = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) - 1,
-      );
+      const start = startOfMonthInZone(now, timeZone, -1);
+      const end = new Date(startOfMonthInZone(now, timeZone).getTime() - 1);
       return { start, end };
     }
-    case "last3Months": {
-      const start = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1),
-      );
-      return { start, end: now };
-    }
+    case "last3Months":
+      return { start: startOfMonthInZone(now, timeZone, -2), end: now };
     case "all":
       return { start: null, end: null };
   }

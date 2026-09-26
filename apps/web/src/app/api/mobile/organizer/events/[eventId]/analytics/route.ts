@@ -5,11 +5,12 @@ import {
   type DashboardPeriod,
   getDashboardPeriodRange,
 } from "@abonten/core/organizerDashboardDateRange";
+import { calendarZoneOrDefault } from "@abonten/services/markets/calendarZone";
 import { fetchEventInsights } from "@abonten/services/organizer/eventInsightsQuery";
 
 const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];
 
-// GET /api/mobile/organizer/events/:eventId/analytics?period=today|7d|30d|all
+// GET /api/mobile/organizer/events/:eventId/analytics?period=today|7d|30d|all&tz=<IANA zone>
 // The signed-in organizer's full Event Insights payload (overview, finance,
 // ticket-type / promo / per-date breakdowns, returning-attendee stats) for
 // the chosen period, in one call. Mirrors the six lazy per-section Server
@@ -35,7 +36,11 @@ export async function GET(
         ? (raw as DashboardPeriod)
         : "all";
 
-    const { start, end } = getDashboardPeriodRange(period);
+    const { start, end } = getDashboardPeriodRange(
+      period,
+      new Date(),
+      await calendarZoneOrDefault(searchParams.get("tz")),
+    );
     const result = await fetchEventInsights(
       auth.supabase,
       auth.user.id,

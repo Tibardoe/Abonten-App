@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -50,7 +51,11 @@ export async function getUserTransactionHistory(
     };
   }
 
-  const { start, end } = getTransactionPeriodRange(period);
+  const { start, end } = getTransactionPeriodRange(
+    period,
+    new Date(),
+    await requestTimeZone(),
+  );
 
   const { data: rows, error } = await supabase.rpc(
     "get_user_transaction_history",

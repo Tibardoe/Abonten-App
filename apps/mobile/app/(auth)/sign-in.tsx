@@ -1,5 +1,6 @@
 import { CountryCodeField } from "@/auth/CountryCodeField";
 import { GoogleIcon } from "@/auth/GoogleIcon";
+import { isAppleSignInAvailable, signInWithApple } from "@/auth/appleSignIn";
 import { signInWithGoogle } from "@/auth/googleSignIn";
 import { InviteCodeField } from "@/features/rewards/InviteCodeField";
 import { api } from "@/lib/api";
@@ -16,10 +17,11 @@ import {
   KeyboardRevealGroup,
   useToast,
 } from "@abonten/ui-native";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import { useTheme, useThemeColors } from "@abonten/ui-native/theme";
 import { useQuery } from "@tanstack/react-query";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -67,6 +69,7 @@ export default function SignIn() {
   const router = useRouter();
   const toast = useToast();
   const c = useThemeColors();
+  const { scheme } = useTheme();
   const insets = useSafeAreaInsets();
   const signInMarkets = useSignInCountry();
   const [picked, setPicked] = useState<Country | null>(null);
@@ -75,7 +78,17 @@ export default function SignIn() {
   const country = picked ?? signInMarkets.country;
   const setCountry = setPicked;
   const [rawPhone, setRawPhone] = useState("");
-  const [busy, setBusy] = useState<"phone" | "google" | null>(null);
+  const [busy, setBusy] = useState<"phone" | "google" | "apple" | null>(null);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  useEffect(() => {
+    let live = true;
+    isAppleSignInAvailable().then((ok) => {
+      if (live) setAppleAvailable(ok);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
   const [error, setError] = useState<string | null>(null);
   const [phoneFocused, setPhoneFocused] = useState(false);
 
@@ -115,6 +128,23 @@ export default function SignIn() {
     } catch {
       hapticError();
       setError("Network error. Check your connection and try again.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function apple() {
+    setError(null);
+    setBusy("apple");
+    try {
+      const res = await signInWithApple();
+      if (!res.ok && !res.cancelled) {
+        hapticError();
+        toast.error("Couldn't sign in with Apple", {
+          description: res.message,
+        });
+      }
+      // On success SessionProvider's onAuthStateChange routes into the app.
     } finally {
       setBusy(null);
     }
@@ -183,9 +213,34 @@ export default function SignIn() {
                 Log in or sign up
               </AppText>
               <AppText variant="muted" className="text-center">
-                Continue with Google, your email address, or your phone number.
+                {appleAvailable
+                  ? "Continue with Apple, Google, your email address, or your phone number."
+                  : "Continue with Google, your email address, or your phone number."}
               </AppText>
             </View>
+
+            {appleAvailable ? (
+              // Apple's own button, as its Human Interface Guidelines ask,
+              // in the colour that contrasts with the current theme.
+              <View
+                pointerEvents={busy !== null ? "none" : "auto"}
+                style={{ opacity: busy !== null && busy !== "apple" ? 0.5 : 1 }}
+              >
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={
+                    AppleAuthentication.AppleAuthenticationButtonType.CONTINUE
+                  }
+                  buttonStyle={
+                    scheme === "dark"
+                      ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                      : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                  }
+                  cornerRadius={12}
+                  style={{ height: 56, width: "100%" }}
+                  onPress={apple}
+                />
+              </View>
+            ) : null}
 
             <Pressable
               accessibilityRole="button"

@@ -14,6 +14,7 @@ import {
   type DashboardPeriod,
   getDashboardPeriodRange,
 } from "@abonten/core/organizerDashboardDateRange";
+import { viewerTimeZone } from "@abonten/core/time";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -23,7 +24,12 @@ export default function EventAnalyticsDashboard({
   eventId: string;
 }) {
   const [period, setPeriod] = useState<DashboardPeriod>("all");
-  const { start, end } = getDashboardPeriodRange(period);
+  // "Today" is the organizer's own day, in the browser's zone.
+  const { start, end } = getDashboardPeriodRange(
+    period,
+    new Date(),
+    viewerTimeZone(),
+  );
   const startDate = start?.toISOString() ?? null;
   const endDate = end?.toISOString() ?? null;
 

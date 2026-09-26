@@ -5,6 +5,7 @@ import {
   readStructuredAddress,
 } from "@abonten/core/geo/address";
 import { logger } from "@abonten/core/logger";
+import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
   freeEventPromoCodeProblem,
@@ -231,7 +232,11 @@ export async function postEventCore(
       ? input.promoCodes.map((promo) => ({
           promo_code: promo.promoCode,
           discount_percentage: promo.discount,
-          expires_at: promo.expiryDate,
+          // The day the organizer picked, in the event's own calendar.
+          expires_at: promoExpiryForStorage(
+            promo.expiryDate,
+            location.timeZone,
+          ),
           max_uses: promo.maximumUse,
         }))
       : null;

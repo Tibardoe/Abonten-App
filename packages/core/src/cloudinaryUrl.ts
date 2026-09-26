@@ -11,7 +11,22 @@ type CloudinaryImageOptions = {
    * artifacts on the fine pixel pattern risk making it unscannable).
    */
   lossless?: boolean;
+  /**
+   * Image Cloudinary serves instead when this one no longer exists (its
+   * `d_` parameter): a public id with ":" for "/" and a format extension.
+   * Defaults to the neutral branded placeholder; QR codes (`lossless`) get
+   * none, because a placeholder must never stand in for a scannable code.
+   */
+  fallback?: string | null;
 };
+
+/**
+ * The neutral branded placeholder (grey square, logo tile in the middle),
+ * uploaded 2026-09-26. Fourteen past events lost their flyer files before
+ * the draft clean-up was fixed; without this they rendered as broken
+ * images on every card, ticket and receipt that showed them.
+ */
+export const IMAGE_FALLBACK_ID = "branding:image-fallback.png";
 
 /**
  * Builds a Cloudinary delivery URL with a size/quality transformation, so
@@ -23,7 +38,7 @@ type CloudinaryImageOptions = {
 export function buildCloudinaryUrl(
   publicId: string | null | undefined,
   version: string | number | null | undefined,
-  { width, height, lossless = false }: CloudinaryImageOptions,
+  { width, height, lossless = false, fallback }: CloudinaryImageOptions,
 ): string {
   const targetWidth = Math.round(width * 2); // 2x for retina displays
   const transformParts = lossless ? [] : ["q_auto", "f_auto"];
@@ -34,6 +49,10 @@ export function buildCloudinaryUrl(
   } else {
     transformParts.push("c_limit");
   }
+
+  const defaultImage =
+    fallback === undefined ? (lossless ? null : IMAGE_FALLBACK_ID) : fallback;
+  if (defaultImage) transformParts.push(`d_${defaultImage}`);
 
   return `${CLOUDINARY_BASE_URL}${transformParts.join(",")}/v${version}/${publicId}.jpg`;
 }
@@ -53,11 +72,17 @@ export function buildAvatarUrl(
   version: string | number | null | undefined,
   options: CloudinaryImageOptions,
 ): string {
+  // A photo that has since been deleted falls back to the same default
+  // avatar as having none, not to the generic placeholder.
+  const withDefault = {
+    fallback: `${DEFAULT_AVATAR.publicId}.jpg`,
+    ...options,
+  };
   return publicId
-    ? buildCloudinaryUrl(publicId, version ?? 1, options)
+    ? buildCloudinaryUrl(publicId, version ?? 1, withDefault)
     : buildCloudinaryUrl(
         DEFAULT_AVATAR.publicId,
         DEFAULT_AVATAR.version,
-        options,
+        withDefault,
       );
 }

@@ -5,6 +5,7 @@ import {
   destroyAsset,
 } from "@abonten/services/media/cloudinaryClient";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { isAssetInUse } from "../media/assetReferences";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { contentMediaEnvironmentPrefix } from "../uploads/cloudinaryUploadSignature";
 
@@ -43,6 +44,12 @@ export type CloudinaryCleanupDeps = {
   now?: () => number;
   /** Minimum hours between sweeps (tests pass 0). */
   sweepEveryHours?: number;
+  /**
+   * Whether a listing, draft, gallery photo or avatar still uses the asset
+   * (defaults to media/assetReferences). Checked right before destroying:
+   * an expired draft's flyer is usually the live event's flyer too.
+   */
+  inUse?: (publicId: string) => Promise<boolean>;
 };
 
 /** Queue one asset for destruction (idempotent while it is still queued). */
@@ -64,7 +71,12 @@ export async function enqueueCloudinaryCleanup(
 
 export async function drainCloudinaryCleanupQueueCore(
   deps: CloudinaryCleanupDeps = {},
-): Promise<{ claimed: number; destroyed: number; retrying: number }> {
+): Promise<{
+  claimed: number;
+  destroyed: number;
+  retrying: number;
+  kept: number;
+}> {
   const supabase = deps.client ?? getSupabaseServiceClient();
   const destroy =
     deps.destroy ??
@@ -73,7 +85,8 @@ export async function drainCloudinaryCleanupQueueCore(
         resource_type: resourceType,
         invalidate: true,
       }) as Promise<{ result?: string }>);
-  const summary = { claimed: 0, destroyed: 0, retrying: 0 };
+  const inUse = deps.inUse ?? ((publicId: string) => isAssetInUse(publicId));
+  const summary = { claimed: 0, destroyed: 0, retrying: 0, kept: 0 };
 
   const { data: rows, error } = await supabase.rpc("cloudinary_cleanup_claim", {
     p_limit: BATCH,
@@ -90,10 +103,15 @@ export async function drainCloudinaryCleanupQueueCore(
   summary.claimed = claimed.length;
 
   const done: number[] = [];
+  const kept: number[] = [];
   for (const row of claimed) {
     const type: ResourceType =
       row.resource_type === "video" ? "video" : "image";
     try {
+      if (type === "image" && (await inUse(row.public_id))) {
+        kept.push(row.cleanup_id);
+        continue;
+      }
       const res = await destroy(row.public_id, type);
       // "not found" means it is already gone, which is the goal.
       if (res?.result === "ok" || res?.result === "not found") {
@@ -112,6 +130,13 @@ export async function drainCloudinaryCleanupQueueCore(
   if (done.length > 0) {
     await finish(supabase, done, "done");
     summary.destroyed = done.length;
+  }
+  if (kept.length > 0) {
+    logger.warn(
+      `cloudinary cleanup kept ${kept.length} queued asset(s) still in use`,
+    );
+    await finish(supabase, kept, "done", "kept: still in use");
+    summary.kept = kept.length;
   }
   return summary;
 }

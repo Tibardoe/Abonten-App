@@ -10,6 +10,7 @@ import EventCategoryChips from "@/events/molecules/EventCategoryChips";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import NoEventsInLocation from "@/events/molecules/NoEventsInLocation";
 import EventsMapView from "@/events/organisms/EventsMapView";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import {
   type EventFilters,
@@ -131,14 +132,22 @@ export default async function EventsTabContent({
     curatedEvents,
     "top-rated-organizers",
   );
-  const happeningToday = filterEventsByWindow(curatedEvents, "happening-today");
+  // "Today" and "this month" on the visitor's calendar, not the server's.
+  const zone = await requestTimeZone();
+  const happeningToday = filterEventsByWindow(
+    curatedEvents,
+    "happening-today",
+    zone,
+  );
   const happeningThisWeek = filterEventsByWindow(
     curatedEvents,
     "happening-this-week",
+    zone,
   );
   const happeningThisMonth = filterEventsByWindow(
     curatedEvents,
     "happening-this-month",
+    zone,
   );
 
   // Only "All Events" (the primary, filterable listing) honors the category

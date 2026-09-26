@@ -217,3 +217,91 @@ export function wallClockString(date: string, time: string): string | null {
   if (!DATE_RE.test(date) || !TIME_RE.test(time)) return null;
   return `${date}T${time}`;
 }
+
+// ---------------------------------------------------------------------------
+// Calendar boundaries in a zone (audit 2026-09-26). "Today", "this month" and
+// "the last day of a promo code" used to be counted in UTC, which is only
+// right for UTC+0 markets such as Ghana. These give the same answers there
+// and the local answers everywhere else. An invalid zone falls back to UTC.
+
+function safeZone(zone: string | null | undefined): string {
+  return isValidTimeZone(zone) ? zone : "UTC";
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** "yyyy-mm-dd" shifted by whole days (calendar arithmetic, no zone). */
+export function addCalendarDays(date: string, days: number): string {
+  const d = DATE_RE.exec(date);
+  if (!d) return date;
+  const t = new Date(
+    Date.UTC(Number(d[1]), Number(d[2]) - 1, Number(d[3]) + days),
+  );
+  return `${t.getUTCFullYear()}-${pad2(t.getUTCMonth() + 1)}-${pad2(t.getUTCDate())}`;
+}
+
+/** The instant a calendar day ("yyyy-mm-dd") begins in `zone`. */
+export function startOfCalendarDay(date: string, zone: string): Date | null {
+  return wallClockToInstant(date, "00:00", safeZone(zone));
+}
+
+/** The instant the calendar day containing `instant` began in `zone`. */
+export function startOfDayInZone(instant: Date, zone: string): Date {
+  const z = safeZone(zone);
+  return (
+    startOfCalendarDay(instantToWallClock(instant, z).date, z) ??
+    new Date(
+      Date.UTC(
+        instant.getUTCFullYear(),
+        instant.getUTCMonth(),
+        instant.getUTCDate(),
+      ),
+    )
+  );
+}
+
+/**
+ * The instant a month began in `zone`: the month containing `instant`,
+ * shifted by `monthOffset` (-1 = the month before).
+ */
+export function startOfMonthInZone(
+  instant: Date,
+  zone: string,
+  monthOffset = 0,
+): Date {
+  const z = safeZone(zone);
+  const [y, m] = instantToWallClock(instant, z).date.split("-").map(Number);
+  const first = new Date(Date.UTC(y, m - 1 + monthOffset, 1));
+  const date = `${first.getUTCFullYear()}-${pad2(first.getUTCMonth() + 1)}-01`;
+  return startOfCalendarDay(date, z) ?? first;
+}
+
+/**
+ * The calendar day ("yyyy-mm-dd") a stored or submitted value names in
+ * `zone`. A bare date or an offset-less timestamp is already a calendar day
+ * and is taken as written; an instant ("...Z", "...+01:00", a Date) is read
+ * in `zone` — a date picker's local midnight lands on the day the person
+ * picked when they and the event share a zone.
+ */
+export function calendarDayOf(
+  value: string | Date | null | undefined,
+  zone: string,
+): string | null {
+  if (value == null) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime())
+      ? null
+      : instantToWallClock(value, safeZone(zone)).date;
+  }
+  const text = value.trim().replace(" ", "T");
+  const bare = /^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?)?$/.exec(
+    text,
+  );
+  if (bare) return DATE_RE.test(bare[1]) ? bare[1] : null;
+  const d = new Date(text);
+  return Number.isNaN(d.getTime())
+    ? null
+    : instantToWallClock(d, safeZone(zone)).date;
+}

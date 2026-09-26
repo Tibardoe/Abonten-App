@@ -341,6 +341,26 @@ export async function runHealthChecksCore(
     wh ?? undefined,
   );
 
+  // cron: every pg_cron job's latest run succeeded and none is stuck. The
+  // jobs that post to this app (notifications, payment reconcile, storage
+  // purge) report their own outcome elsewhere; this catches the job itself
+  // erroring in the database.
+  const cron = await timed(async () => {
+    const { data, error } = await serviceClient.rpc("cron_health");
+    if (error) throw new Error(error.message);
+    return (data ?? {}) as Record<string, unknown>;
+  });
+  const ch = cron.value;
+  push(
+    "cron",
+    cron,
+    !!ch &&
+      Array.isArray(ch.failing_jobs) &&
+      ch.failing_jobs.length === 0 &&
+      Number(ch.stuck_runs ?? 0) === 0,
+    ch ?? undefined,
+  );
+
   // `self` = "the health endpoint ran to completion". Written here so the
   // Admin Monitor shows Endpoint reachability = ok whenever this function
   // finishes — independent of whether the pg_cron caller's HTTP client

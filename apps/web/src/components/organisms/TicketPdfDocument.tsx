@@ -86,21 +86,44 @@ const styles = StyleSheet.create({
   },
 });
 
+/** An image already fetched on the server (react-pdf reads PNG and JPEG). */
+export type PdfImageData = { data: Buffer; format: "png" | "jpg" };
+
+/**
+ * Pre-fetched images for the server render. Omitted: the document fetches
+ * the URL itself (the browser download). `null`: the image could not be
+ * loaded and is left out — react-pdf would otherwise log "Attempt to access
+ * memory outside buffer bounds" on the empty body and draw nothing anyway.
+ */
+export type TicketPdfImages = {
+  logo?: PdfImageData | null;
+  flyer?: PdfImageData | null;
+  qr?: PdfImageData | null;
+};
+
 export default function TicketPdfDocument({
   ticket,
+  images,
 }: {
   ticket: TicketPdfData;
+  images?: TicketPdfImages;
 }) {
+  const logo =
+    images?.logo === undefined ? ABONTEN_LOGO_EMAIL_LIGHT_URL : images.logo;
+  const flyer =
+    images?.flyer === undefined ? ticket.flyerImageUrl : images.flyer;
+  const qr = images?.qr === undefined ? ticket.qrImageUrl : images.qr;
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Image src={ABONTEN_LOGO_EMAIL_LIGHT_URL} style={styles.logo} />
+        {logo ? <Image src={logo} style={styles.logo} /> : null}
 
         <Text style={styles.heading}>Receipt</Text>
         <Text style={styles.issuedAt}>Issued on: {ticket.issuedAt}</Text>
 
         <View style={styles.card}>
-          <Image src={ticket.flyerImageUrl} style={styles.flyer} />
+          {flyer ? <Image src={flyer} style={styles.flyer} /> : null}
 
           <View style={styles.cardBody}>
             <Text style={styles.title}>{ticket.eventTitle}</Text>
@@ -147,9 +170,11 @@ export default function TicketPdfDocument({
               </Text>
             </View>
 
-            <View style={styles.qrWrap}>
-              <Image src={ticket.qrImageUrl} style={styles.qr} />
-            </View>
+            {qr ? (
+              <View style={styles.qrWrap}>
+                <Image src={qr} style={styles.qr} />
+              </View>
+            ) : null}
 
             <Text style={styles.footer}>www.abontenhub.com</Text>
           </View>

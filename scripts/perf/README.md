@@ -1,6 +1,7 @@
 # Discovery performance harness
 
-Synthetic-data timings for unified search and the recommendation engine.
+Synthetic-data timings for unified search, the date-window feed and the
+recommendation engine.
 **Local test stack only.** Every script runs inside one transaction that ends
 in `ROLLBACK`, and the seed refuses to run on a database with more than 5,000
 events or accounts.
@@ -16,6 +17,9 @@ Start the local stack first (`npm run test:db:up`), then from the repo root:
 # Search: 19 query shapes x 40 runs, p50/p95/max, plus index plans (~1 min)
 cat scripts/perf/discovery-perf-seed.sql scripts/perf/discovery-search-perf.sql \
   | docker exec -i supabase_db_Abonten-App psql -U postgres -v ON_ERROR_STOP=1
+
+# Date-window feed ("Happening today / this week / this month"), 5 cases (~1 min)
+cat scripts/perf/discovery-perf-seed.sql scripts/perf/discovery-window-perf.sql   | docker exec -i supabase_db_Abonten-App psql -U postgres -v ON_ERROR_STOP=1
 
 # Recommendations: 60,000 subscriptions, 50 new events, generate + digest (~1 min)
 cat scripts/perf/discovery-perf-seed.sql scripts/perf/discovery-recommendations-perf.sql \

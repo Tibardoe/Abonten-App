@@ -8,6 +8,7 @@ import {
 } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { api } from "@/lib/api";
+import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
 import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
@@ -170,6 +171,7 @@ export default function ManagePostScreen() {
     (post.moderationState === "visible" ||
       post.moderationState === "restricted");
   const promotable =
+    IN_APP_PROMOTION_PURCHASES &&
     program.spotlightPromotions &&
     post.kind === "spotlight" &&
     post.status === "published" &&

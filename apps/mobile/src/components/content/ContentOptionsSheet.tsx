@@ -9,6 +9,7 @@ import { useContentProgram } from "@/features/content/useContentProgram";
 import { copyText } from "@/features/messaging/clipboardSupport";
 import { api } from "@/lib/api";
 import { hapticSelection } from "@/lib/haptics";
+import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import {
   SPOTLIGHT_SPEEDS,
   type SpotlightSpeed,
@@ -87,6 +88,7 @@ export function ContentOptionsSheet({
     !!session;
   const promotable =
     isAuthor &&
+    IN_APP_PROMOTION_PURCHASES &&
     program.spotlightPromotions &&
     post.kind === "spotlight" &&
     post.status === "published" &&
