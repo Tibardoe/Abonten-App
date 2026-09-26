@@ -1,3 +1,4 @@
+import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { logger } from "@abonten/core/logger";
 import { runHealthChecksCore } from "@abonten/services/admin/observability/runHealthChecksCore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
@@ -48,6 +49,23 @@ export async function GET(req: Request) {
         expoAccessToken: process.env.EXPO_ACCESS_TOKEN,
         paymentsMode: process.env.PAYMENTS_MODE ?? null,
         deploymentEnv: process.env.VERCEL_ENV ?? null,
+        // New incidents are emailed to the super-admins — production only,
+        // so a preview's health runs never page anyone.
+        sendAlertEmail:
+          process.env.VERCEL_ENV === "production" && emailIsConfigured()
+            ? async ({ to, subject, text }) => {
+                const { error } = await sendEmail({
+                  from: "Abonten Monitoring <alerts@abontenhub.com>",
+                  to,
+                  subject,
+                  text,
+                });
+                if (error) {
+                  logger.error(`Incident alert email: ${error.message}`);
+                }
+                return !error;
+              }
+            : undefined,
       },
     );
     return NextResponse.json(
