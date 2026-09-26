@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-26 — Brand identity refresh
+
+- PROJECT.md §48; `mobile/15-production-refinement.md` (WP-1 marked superseded); CLAUDE.md.
+- Behaviour: the redrawn Abonten mark, wordmark and logotype replace the old logo on the web (header, sign-in, landing page, favicons, emails, ticket PDF, web push), in the admin console (favicon, sidebar) and in the mobile app (header, drawer, sign-in screens, JS splash; the app icon, native splash and notification icon ship with the next native build). The homepage carries the sign-off credit line and each Abonten Weekly edition ends with "Compiled by the Entertainment Department, Earth Branch". Slugs keep Ghanaian letters and accented letters as their Latin base ("Abɔnten Night" → `abonten-night`). New brand colours `mintDeep` and `night`. Email and PDF logos are served from the web app instead of Cloudinary.
+- Migrations, env vars, permissions, jobs: none. New scripts: `apps/web/scripts/gen-brand-assets.mjs`; `apps/mobile/scripts/gen-brand-assets.mjs` rewritten.
+
 ## 2026-09-26 — Limitations, risks and deferred items audit
 
 - New `audit/11-audit-2026-09-26.md` 1.0. Updated: `audit/01-limitations-register.md` (dated closures), `OPERATIONAL_DECISIONS_REQUIRED.md` (new D6: promotions in the iPhone app), `architecture/global-platform.md` (day boundaries), `admin/markets.md` (readiness), `admin/monitoring-and-incidents.md` and `architecture/observability.md` (`cron` check), `privacy/cookies-and-storage-inventory.md` and the draft public Cookie Policy (`abn_tz`), `mobile/08-phase-6-release-prep.md` (Sign in with Apple steps, iOS promotions, privacy manifest), `architecture/perf/discovery-2026-09.md` 1.2 and `scripts/perf/README.md` (date-window feed), PROJECT.md §47, CLAUDE.md.

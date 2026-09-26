@@ -12,6 +12,10 @@
 /** Literal brand colours used directly (not via a CSS variable). */
 export const brandColors = {
   mint: "#4FD9C4",
+  /** The mint for brand marks on light grounds (the blade in the logo). */
+  mintDeep: "#147566",
+  /** The brand's dark ground: app icon, splash, dark logo tiles. */
+  night: "#121410",
   iconGray: "#544F4F",
 } as const;
 

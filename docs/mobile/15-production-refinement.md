@@ -11,6 +11,8 @@ Per-WP verification: `tsc --noEmit` (mobile) + `biome check` on touched files +
 
 ## WP-1 — Branded app icon + splash  (`feat/mobile-brand-launch`)
 
+> Superseded 2026-09-26: the generator now builds the icon, splash and notification icon from the vector brand masters in `apps/web/public/assets/images/brand` (PROJECT.md §48). The description below is the original 2026-09 photo-based version.
+
 `apps/mobile/scripts/gen-brand-assets.mjs` composites the launch art from the
 approved web sources: the landing background (`landingpageBackgroound.jpg`, the
 `bg-landing` token) + the white "A" mark (same three fills as `AbontenLogo`) + a

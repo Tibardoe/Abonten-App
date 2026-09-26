@@ -1,6 +1,6 @@
-import { ABONTEN_MARK_PATHS } from "@abonten/ui-native";
+import { BRAND_MARK, BrandArtworkPaths, brandColors } from "@abonten/ui-native";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import Svg from "react-native-svg";
 
 // The JS continuation of the native splash. `app/_layout.tsx` renders this
 // (instead of a bare <View>) while fonts, the saved theme and the persisted
@@ -15,12 +15,13 @@ import Svg, { Path } from "react-native-svg";
 // crisp at any density; the previous photo splash showed the mark at ~24%
 // of the width over a dark crowd, which read as a small logo on black.
 //
-// Drawn from the raw path data rather than <AbontenLogo>: this renders
+// Drawn from the raw path data (the Hero weight, white with the mint blade,
+// same as assets/splash-mark.png) rather than <AbontenLogo>: this renders
 // BEFORE the providers mount (app/_layout.tsx shows it while fonts load),
 // and AbontenLogo reads the theme context, which does not exist yet — that
 // threw "useTheme must be used within <ThemeProvider>" on a cold start.
 
-const SPLASH_BG = "#121410";
+const SPLASH_BG = brandColors.night;
 /** Must match app.json › expo-splash-screen › imageWidth. */
 const SPLASH_MARK_WIDTH = 192;
 
@@ -30,12 +31,14 @@ export function BrandedSplash() {
       <View style={styles.mark}>
         <Svg
           width={SPLASH_MARK_WIDTH}
-          height={Math.round((SPLASH_MARK_WIDTH * 393) / 417)}
-          viewBox="0 0 417 393"
+          height={SPLASH_MARK_WIDTH}
+          viewBox={BRAND_MARK.hero.viewBox}
         >
-          {ABONTEN_MARK_PATHS.map((d) => (
-            <Path key={d.slice(0, 16)} d={d} fill="#ffffff" />
-          ))}
+          <BrandArtworkPaths
+            artwork={BRAND_MARK.hero}
+            fg="#ffffff"
+            cut={brandColors.mint}
+          />
         </Svg>
       </View>
       <View style={styles.spinner}>
@@ -54,7 +57,7 @@ const styles = StyleSheet.create({
   },
   mark: {
     // expo-splash-screen centres the contained image in the full window;
-    // the mark's 417:393 box is centred the same way here.
+    // the mark's square box is centred the same way here.
     alignItems: "center",
     justifyContent: "center",
   },

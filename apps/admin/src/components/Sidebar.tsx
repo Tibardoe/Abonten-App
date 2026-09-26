@@ -9,7 +9,6 @@ import {
   CalendarDays,
   Clapperboard,
   ClipboardCheck,
-  ClipboardList,
   Compass,
   Flag,
   Gift,
@@ -32,6 +31,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { BrandMark } from "./BrandMark";
 import { cn } from "./ui";
 
 type Item = {
@@ -231,7 +231,7 @@ export function Sidebar({
     >
       <div className="mb-3 flex shrink-0 items-center justify-between gap-2 px-5">
         <span className="flex items-center gap-2 font-semibold">
-          <ClipboardList className="h-5 w-5 text-primary" aria-hidden="true" />
+          <BrandMark className="h-6 w-6" />
           Abonten Admin
         </span>
         <button
