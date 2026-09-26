@@ -2,10 +2,10 @@
 title: Discovery performance measurements (September 2026)
 purpose: Record what the search and recommendation functions cost on a large synthetic catalogue, what the measurements changed, and how to repeat them.
 audience: Engineering
-scope: search_suggest, search_events, search_places (including place services), search_organizers, recommendations_generate, recommendations_build_digest, admin_recommendation_metrics. Local Docker Postgres only; not production latency.
+scope: search_suggest, search_events, search_places (including place services), search_organizers, get_events_in_window, recommendations_generate, recommendations_build_digest, admin_recommendation_metrics. Local Docker Postgres only; not production latency.
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-15
+version: 1.2
+lastReviewed: 2026-09-26
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -113,3 +113,30 @@ cat scripts/perf/discovery-perf-seed.sql scripts/perf/discovery-recommendations-
 ```
 
 Re-run after changing a search pool, a scoring weight or the digest builder, and update this page.
+
+## Date-window feed (2026-09-26)
+
+`get_events_in_window` ("Happening today / this week / this month"). Script:
+`scripts/perf/discovery-window-perf.sql`, same seed, 20 runs per case after
+two warm-ups, first page of 20 (plus the has-more row) unless noted. Before:
+the production body. After: migration
+`20260926100400_events_in_window_page_first.sql`.
+
+| Case | Before p50 | Before p95 | After p50 | After p95 |
+|---|---|---|---|---|
+| today, 10 km | 77.0 | 80.7 | 3.6 | 4.2 |
+| next 7 days, 10 km | 85.7 | 98.0 | 21.4 | 27.6 |
+| next 30 days, 10 km | 101.9 | 120.3 | 71.5 | 76.8 |
+| next 30 days, 50 km (the whole seeded city) | 377.7 | 416.9 | 61.5 | 64.9 |
+| next 30 days, 50 km, page 11 | 381.1 | 388.1 | 59.2 | 60.5 |
+
+What changed: each event's earliest start inside the window now comes from
+two start-time indexes (`idx_event_starts_at_discoverable`,
+`idx_event_occurrence_starts_at`) instead of a per-event subquery run for
+every event in the radius, and the lowest price and date list are built only
+for the rows returned. A page-by-page comparison against the old body (24
+pages across four windows, with 400 multi-date events added to the seed)
+found no difference in rows, values or order. The remaining cost grows with
+the number of events that start inside the window across the market, not
+with the radius.
+

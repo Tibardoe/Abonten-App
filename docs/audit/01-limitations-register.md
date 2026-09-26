@@ -108,6 +108,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: High · **Likelihood**: Low (no known missing check beyond the one) but high blast radius.
 - **Recommended solution**: `REVOKE EXECUTE … FROM anon, authenticated` on `get_transaction_refundable_amount` (**Phase 1**). Audit the remaining 12 line-by-line and add a regression test suite that calls each as an unauthorized `authenticated` user and asserts it raises (Phase 6). Consider moving purely-internal ones behind `service_role`.
 - **Dependencies**: test harness (TEST-001).
+- **Update 2026-09-26 (report 11)**: regression tests exist — `function-grants.integration.test.ts` asserts both directions (session-callable functions stay callable; service-only ones stay refused) and `session-rpc-reachability.integration.test.ts` runs the session reads. Closed.
 - **Status**: **Audit complete (Phase 6, 2026-09-04); regression tests still outstanding.** `get_transaction_refundable_amount`'s revoke (Phase 1) confirmed still in effect — it no longer appears in the live advisor's `authenticated_security_definer_function_executable` list at all. Pulled the full `pg_get_functiondef` for every other function the advisor currently flags (15, not 13 — two were added since the original pass by later work in this same audit: `create_ticket_checkout`, `issue_tickets_for_checkout`) and read each body line by line:
   - **13 correctly self-authorize** via `auth.uid()`: `admin_effective_permissions`/`admin_has_permission`/`is_admin`/`is_staff` (return facts about the caller's own identity only — nothing about anyone else, so there's nothing to leak even without a separate check), `cancel_event_and_release_tickets`/`get_event_attendee_contacts`/`get_event_cancellation_impact`/`get_event_refund_breakdown`/`get_organizer_ledger_transactions`/`get_organizer_refund_breakdown`/`request_organizer_payout` (all gate on `organizer_id = auth.uid()` or equivalent before touching another row), and `create_ticket_checkout`/`issue_tickets_for_checkout` (both use the `if v_caller is not null and v_caller <> p_user_id then raise` pattern — deliberately permissive only when `auth.uid()` is null, i.e. a service-role caller with no user JWT, which is already fully trusted; an `authenticated` caller always has a non-null `auth.uid()`, so the check binds for exactly the case that matters).
   - **2 have no check at all and are also callable by `anon`**: `get_event_attendance_count`/`get_event_attendance_counts`. Confirmed this is deliberate, not a gap — their own migration is named `20260902120000_add_public_attendance_count_rpcs.sql`, and both are called from the public, unauthenticated event-detail page on web (`apps/web/src/app/(pages)/events/[eventCode]/page.tsx`) and mobile (`useEventDetail.ts`) to show "N people going" — an aggregate, non-sensitive count on an already-public event, the same visibility class as `ticket_type` price/quantity. No change needed.
@@ -196,6 +197,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: Medium · **Likelihood**: n/a (structural).
 - **Recommended solution**: extract the DB mutations into `@abonten/services` (as the atomic RPCs of FIN-001) + keep only the Next primitives (`revalidatePath`, `after`, email) in the `apps/web` wrapper. This is the holistic fix that also resolves FIN-001/002.
 - **Status**: Planned (Phase 4, delivered alongside Phase 2).
+- **Update 2026-09-26 (report 11)**: **Closed — accepted design.** The DB-mutation core is now atomic SQL (`issue_tickets_for_checkout`, `create_ticket_checkout`, FIN-001/INV-001) and payment settlement is `@abonten/services/payments` `finalizePayment`; what stays in `apps/web/src/utils` is QR upload, email and cache revalidation, injected as `paymentFulfillmentDeps`. Both are covered by the integration suite (`payment-gate`, `idempotency`, `webhook-redelivery`).
 
 ### ARCH-002 — PROJECT.md has decayed as a source of truth
 - **Area**: Maintainability / DX
@@ -203,6 +205,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: Medium · **Likelihood**: n/a.
 - **Recommended solution**: split into a short evergreen `ARCHITECTURE.md` (regenerated/verified each release) + an append-only `CHANGELOG`-style history; delete superseded prose rather than annotating it. Point CLAUDE.md at the new file.
 - **Status**: Planned (Phase 6).
+- **Update 2026-09-26 (report 11)**: **Fixed.** The documentation system (`docs/`, `docs/DOCUMENTATION_STANDARD.md`, `npm run check:docs` in CI, one changelog line per behaviour change) replaced the in-place annotation habit; PROJECT.md is kept as the dated architecture record and every section names its source files, which `check:docs` verifies exist.
 
 ### OBS-001 — `/api/geocode` rate limit is in-memory (per serverless instance)
 - **Area**: Observability / Cost / Security
@@ -217,6 +220,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: Medium · **Likelihood**: Med.
 - **Recommended solution**: type the Supabase clients with `SupabaseClient<Database>` in `@abonten/services` and remove the casts in the payment/checkout/ticket modules; add `supabase gen types` to a CI check so drift fails the build.
 - **Status**: Planned (Phase 6).
+- **Update 2026-09-26 (report 11)**: **Fixed** — superseded by the second TYPE-001 entry below (2026-09-05): `SupabaseClient<Database>` everywhere and the casts removed from the payment/checkout paths.
 
 ### TEST-001 — Zero automated tests in the entire monorepo
 - **Area**: Testing / Reliability
@@ -232,6 +236,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: Medium · **Likelihood**: Med.
 - **Recommended solution**: add a server-side reminder sender (pg_cron scanning `event_reminder` + `event.starts_at`, pushing via the existing `device_token` + Expo push path) as the source of truth; keep the local schedule as an offline fallback.
 - **Status**: Deferred — product call on push volume/UX.
+- **Update 2026-09-26 (report 11)**: **Fixed (2026-09-13).** Reminders are sent by the server: the `event-reminders` pg_cron job, deduplicated by `event_reminder_sent`, pushes through the notification pipeline; the local device schedule is only a fallback (report 03, PROJECT.md §33).
 
 ### BIZ-001 — "One ticket per event per user" rule is inconsistent and undocumented
 - **Area**: Business logic / UX
@@ -241,6 +246,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Fix applied**: removed the `active`/`used`-ticket block from `validateCheckoutCore` (paid checkout creation), `generateTicket` (issuance-time defensive re-check), and the `create_ticket_checkout` RPC's in-transaction copy of the same guard (new migration `20260907095000`, applied live + verified with a rolled-back SQL smoke test against a real user with an existing active ticket). Removed the now-dead `already_purchased` branch from `CheckoutModal.tsx` and the `reason` union in both `ValidateCheckoutResult` types (`@abonten/services` + `@abonten/api-client`). The `pending_checkout` guard (at most one in-flight reservation per user+event) is unrelated — it's a concurrency safeguard, not a purchase-count limit — and was kept as-is.
 - **Deliberately NOT touched — flagged for confirmation**: `registerForFreeEventCore` (the free "RSVP" path) has its own copy of the same `active`/`used` check, but it backs a fundamentally different UI — a binary "I'm Attending" / "Cancel Attendance" toggle (`AttendingButton.tsx` on web, `FreeRsvpCard.tsx` on mobile) with a hard-coded quantity of 1 and no ticket-type/quantity selector. The product decision as stated ("purchase multiple tickets... including multiple ticket types... subject to configured ticket-type quantities") reads as scoped to the paid, quantity-based checkout flow. Removing the free-RSVP guard would let one person accumulate multiple `attendance` rows for a feature whose UI has no concept of "how many" — a separate product call. Left as-is pending explicit confirmation either way.
 - **Status**: **Fixed** (paid path) — verified live (RPC smoke test) + `turbo typecheck` (4/4 affected packages) + `next build` (apps/web) + biome. Free-RSVP path deferred to a separate product decision.
+- **Update 2026-09-26 (report 11)**: the free path is the one-click RSVP toggle by design (one seat per person, quantity 1); since 2026-09-25 it issues through the service-role `issue_free_ticket` RPC, which re-checks the rules in one transaction. No change needed; closed.
 - **Production-safety re-review (2026-09-04, pre-merge)**: re-audited the whole change against 10 specific risk categories before allowing a merge to `main`. Findings, each backed by a live (rolled-back) test or a full code-path read:
   - **Overselling / concurrent-checkout races**: unaffected. The only thing removed was an *existence* check ("does this user already own a ticket"); the atomic per-line `update ticket_type set quantity = quantity - N where quantity >= N` in `create_ticket_checkout` — the actual oversell guard — is byte-for-byte unchanged. Live test: forced a ticket type down to 1 unit inside a transaction, had buyer A take it, then had buyer B (a different real user) try for the same unit — rejected with `"That ticket is no longer available."`, zero rows created for buyer B, final quantity exactly `0` (never negative). Rolled back, no data touched.
   - **Duplicate ticket issuance**: unaffected — `issue_tickets_for_checkout` was never the RPC that had the "already bought" check, and its own idempotency (return existing tickets with `already_issued: true` for an already-`paid` checkout) is untouched. Live test: replayed it against a real paid checkout — returned the existing ticket id with `already_issued: true`, no new row.
@@ -267,6 +273,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: Medium · **Likelihood**: Low (Google OAuth is the main sign-in; passwords are only the internal one-time phone-auth rotation).
 - **Recommended solution**: enable leaked-password protection in Auth settings; schedule the Postgres minor upgrade in a maintenance window.
 - **Status**: Deferred — flagged for owner (dashboard toggle + upgrade window).
+- **Update 2026-09-26 (report 11)**: still open, both dashboard-only. Postgres is still `15.8.1.044`; the upgrade to 17 is eligible since 2026-09-18 (about an hour of downtime, no downgrade). Leaked-password protection is a Pro-plan feature and end users have no passwords, so it is not applicable on the current plan.
 
 ### DB-PERF-001 — Unindexed FKs and a large "unused index" set
 - **Area**: Database / Performance
@@ -274,6 +281,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: Medium (FKs) / Low (unused) · **Likelihood**: Med.
 - **Recommended solution**: add covering indexes for the moderation FKs as **partial** `WHERE moderated_by IS NOT NULL` (they're almost all NULL) and plain btree for the subscription/user_info/wallet ones. **Implemented in Phase 1.** Do **not** drop any "unused" index this pass — re-run the advisor after ~30 days of production traffic and drop only then.
 - **Status**: Fixed (FK indexes, Phase 1). Unused-index review → Deferred (needs traffic).
+- **Update 2026-09-26 (report 11)**: the advisor lists 33 unindexed foreign keys, all staff-id or currency-code columns never used for lookups (kept unindexed on purpose, report 10), and 180 unused indexes. Production has 25 events, so index usage still says nothing; re-run after real traffic.
 
 ### DATA-005 — Orphaned `log_user_changes()` / `audit_log`
 - **Area**: Database / Maintainability
@@ -341,7 +349,7 @@ architecture → performance → observability → maintainability → DX → UX
   4. `cancelEvent.ts` had zero `revalidatePath`/invalidation of its own — the only ticket/checkout-mutating action in the codebase with none.
   5. `activateEventPromotion.ts`/`activatePlacePromotion.ts` were missing `revalidatePath` for the organizer's own promotion-management page, unlike every sibling payment-completion action.
 - **Severity**: Medium (1, 2 — user-visible on the exact screen the action was taken from) / Low-Medium (3, 4, 5 — narrower exposure, mostly session-persistence/back-button edge cases).
-- **Status**: **Fixed (2026-09-05)**, all five. Verified: full `turbo typecheck` (11/11, force), build clean on `apps/web`/`apps/admin`. **Deferred as lower priority** (self-heals on next navigation, or narrow exposure): admin's `/finance/transactions` *list* route not revalidated by the admin refund action (only the detail route and `/finance/refunds` are); web event/place review create-or-edit doesn't refresh the "eligible to review"/My-Events tab counts the way delete already does.
+- **Status**: **Fixed (2026-09-05)**, all five. Verified: full `turbo typecheck` (11/11, force), build clean on `apps/web`/`apps/admin`. **Deferred as lower priority** (self-heals on next navigation, or narrow exposure): admin's `/finance/transactions` *list* route not revalidated by the admin refund action (only the detail route and `/finance/refunds` are); web event/place review create-or-edit doesn't refresh the "eligible to review"/My-Events tab counts the way delete already does. **Both fixed 2026-09-26 (report 11)**: the admin refund action also revalidates `/finance/transactions`; `EventReviewModal` / `PlaceReviewModal` refresh the To Review / Reviewed tabs and their counts themselves, whichever screen opened them.
 
 ---
 

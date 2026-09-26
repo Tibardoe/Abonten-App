@@ -86,12 +86,12 @@ when a critical one now fails.
      than ₦999. Readiness warns while it is 1.
    - Cities: check Lagos and Abuja, add others.
 6. **Run readiness checks.** Every critical row must pass — a failing row
-   says what is missing. Fix and run again. Since 2026-09-25 the **Day
-   boundaries** row fails for any zone that is not UTC+0 all year (Nigeria,
-   Africa/Lagos, is UTC+1): the organizer dashboard and transaction
-   periods, promo-code expiry and the monthly rebate run still count days
-   in UTC. That work must ship before such a market can go live; it is not
-   something to fix from this screen.
+   says what is missing. Fix and run again. (Until 2026-09-26 a **Day
+   boundaries** row refused any zone that is not UTC+0 all year. The four
+   calendars it guarded — organizer dashboard and transaction periods,
+   promo-code expiry and the monthly rebate run — now follow the viewer's,
+   the event's or the market's own zone, so the row is gone and Nigeria's
+   Africa/Lagos can pass.)
 7. **Prepare → Mark ready → Activate** with a reason; each is audited. The
    last needs step-up.
 8. **Watch.** Admin › Monitoring shows the Paystack probe per market; a

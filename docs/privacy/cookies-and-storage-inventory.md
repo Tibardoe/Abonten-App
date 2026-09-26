@@ -26,6 +26,7 @@ Public version: `apps/web/src/content/legal/cookie-policy.md`. **When anything b
 | `abn_ref` | `src/proxy.ts:82-85`, `rememberInviteCode.ts`, `bindReferralCode.ts` | `httpOnly:true`, secure prod, lax | 30 days | HMAC-signed referral/invite map (`e:slug`, `p:slug`, `u`, `i`; purpose `referral-cookie:v1`) | `validateCheckout.ts` (stamp at checkout), `recordReferralTouch.ts` |
 | `abn_inv` | `src/proxy.ts:90-93`, `rememberInviteCode.ts` | `httpOnly:false` | 30 days | "Invite pending" flag for the sign-in UI | `InviteBinder.tsx` |
 | `abn_did` | `src/proxy.ts:103-110` | `httpOnly:true` | 1 year | Random UUID browser id — rewards fraud signal only | `recordReferralTouch`, device-install recording |
+| `abn_tz` | `src/i18n/LocaleProvider.tsx` (`document.cookie`, since 2026-09-26) | `httpOnly:false`, lax, secure on https | 1 year (`LOCALE_COOKIE_MAX_AGE`) | The browser's IANA time zone (e.g. `Africa/Accra`) — the same value any page's JavaScript can read | `src/utils/requestTimeZone.ts` → organizer dashboard, transactions and "Happening today / this month" count days on the visitor's calendar |
 
 ## Admin cookies (`apps/admin`)
 

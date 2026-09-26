@@ -28,6 +28,7 @@ Cookies are small text files a website stores in your browser. Abonten uses a sm
 | `abn_ref` | Records which event, place or invite link brought you here, so a referral or invite can be credited when you buy or sign up. Signed so it cannot be altered. | Attribution (rewards) | 30 days | No |
 | `abn_inv` | A simple "an invite code is waiting" flag so the sign-in screen can show it | Attribution (rewards) | 30 days | Yes |
 | `abn_did` | A random identifier for this browser, used **only** to detect rewards abuse (for example the same browser being used by the person who shared a link and the person who bought from it). It is not used for advertising or analytics and is not linked to your browsing outside Abonten. | Security / abuse prevention | 1 year | No |
+| `abn_tz` | Remembers your device's time zone (for example Africa/Accra) so "today" and "this month" on your dashboard, transactions and event lists match your own calendar | Preference | 1 year | Yes |
 
 The admin console used by Abonten staff sets one additional cookie (`admin_stepup_at`, 10 minutes) to require staff to re-authenticate before sensitive actions. It is never set for ordinary users.
 

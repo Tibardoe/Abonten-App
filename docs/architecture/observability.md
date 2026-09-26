@@ -25,6 +25,7 @@ Two systems run side by side. The **self-hosted pipeline** is primary: it writes
 | Request timing (mobile) | The mobile API client records duration per request | `POST /api/observability/metric` (`apps/web/src/app/api/observability/metric/route.ts`) | `app_request_metric` | Admin › Monitoring › Request telemetry |
 | Incidents | Admins, from an error group or by hand | Admin console actions | `incident` (severity, status, timeline) | Admin › Monitoring › Incidents; `incident-response/README.md` |
 | Domain health | `fieldops_health()`, `weekly_health()` and the rewards health view expose sweep age, queue depth and job timing | Read by the health route as additional keys | `health_check_result` | Same panel |
+| Scheduled jobs | `cron_health()` (2026-09-26): active pg_cron jobs whose latest run failed, runs stuck over 30 minutes; `purge-cron-run-details` keeps 14 days of `cron.job_run_details` | Health route key `cron` | `health_check_result` | Same panel |
 
 Tables were introduced by `supabase/migrations/20260903215825_observability_tables.sql`; the health-check schedule by `supabase/migrations/20260903231047_schedule_health_check.sql`; the synthetic self row by `supabase/migrations/20260904121854_health_check_self_report.sql`.
 
