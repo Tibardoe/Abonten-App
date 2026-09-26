@@ -14179,6 +14179,7 @@ export type Database = {
       }
       cron_health: { Args: never; Returns: Json }
       currency_minor_units: { Args: { p_currency: string }; Returns: number }
+      currency_scale: { Args: { p_currency: string }; Returns: number }
       default_market_country: { Args: never; Returns: string }
       default_market_currency: { Args: never; Returns: string }
       default_market_timezone: { Args: never; Returns: string }
