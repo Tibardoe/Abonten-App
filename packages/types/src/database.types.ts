@@ -5947,6 +5947,7 @@ export type Database = {
       }
       incident: {
         Row: {
+          alerted_at: string | null
           component: string | null
           created_by: string | null
           id: string
@@ -5959,6 +5960,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          alerted_at?: string | null
           component?: string | null
           created_by?: string | null
           id?: string
@@ -5971,6 +5973,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          alerted_at?: string | null
           component?: string | null
           created_by?: string | null
           id?: string
@@ -15537,7 +15540,24 @@ export type Database = {
         Args: { p_actor_id: string; p_role_key: string; p_target_user: string }
         Returns: undefined
       }
+      health_escalate_failing: {
+        Args: { p_keys: string[]; p_runs?: number }
+        Returns: number
+      }
       hidden_listing_countries: { Args: never; Returns: string[] }
+      incident_alert_claim: {
+        Args: { p_limit?: number }
+        Returns: {
+          component: string | null
+          id: string
+          severity: string
+          started_at: string
+          summary: string | null
+          title: string
+        }[]
+      }
+      incident_alert_recipients: { Args: never; Returns: { email: string }[] }
+      incident_alert_release: { Args: { p_ids: string[] }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
       is_conversation_participant: {
         Args: { p_conversation_id: string; p_user_id?: string }

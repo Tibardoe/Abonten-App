@@ -7,6 +7,10 @@ import {
   resolveMarketAccounts,
 } from "../../payments/providers/registry";
 import {
+  type SendAlertEmail,
+  escalateAndAlertCore,
+} from "./incidentAlertsCore";
+import {
   type HealthCheckOutcome,
   recordHealthResultsCore,
 } from "./observabilityCore";
@@ -30,6 +34,8 @@ export type HealthCheckConfig = {
   /** PAYMENTS_MODE and VERCEL_ENV of this deployment, reported as-is. */
   paymentsMode?: string | null;
   deploymentEnv?: string | null;
+  /** Emails new incidents to the super-admins (see incidentAlertsCore). */
+  sendAlertEmail?: SendAlertEmail;
 };
 
 async function timed<T>(
@@ -375,5 +381,18 @@ export async function runHealthChecksCore(
   });
 
   const write = await recordHealthResultsCore(serviceClient, results);
+
+  // Tell someone: a check failing several runs in a row becomes an incident,
+  // and new incidents are emailed. Alerting never fails the health run.
+  try {
+    await escalateAndAlertCore(
+      serviceClient,
+      results.map((r) => r.key),
+      config.sendAlertEmail,
+    );
+  } catch (error) {
+    logger.error("Incident escalation/alert failed", error);
+  }
+
   return { status: write.status === 200 ? 200 : 500, results };
 }
