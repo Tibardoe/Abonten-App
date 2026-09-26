@@ -90,8 +90,8 @@ export function EmailShell({
           <Section style={{ padding: "36px 32px 28px", textAlign: "center" }}>
             <Img
               src={ABONTEN_LOGO_EMAIL_TILE_URL}
-              width="96"
-              alt="Abonten Hub"
+              width="120"
+              alt="Abonten"
               style={{ display: "block", margin: "0 auto 12px" }}
             />
             <Heading

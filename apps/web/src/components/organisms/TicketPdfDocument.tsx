@@ -1,4 +1,4 @@
-import { ABONTEN_LOGO_EMAIL_LIGHT_URL } from "@/config/brandAssets";
+import { ABONTEN_PDF_LOGO_PATH } from "@/config/brandAssets";
 import type { TicketPdfData } from "@abonten/core/ticketPdfData";
 import {
   Document,
@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     color: "#1a1a1a",
   },
   logo: {
-    width: 90,
+    width: 104,
     alignSelf: "center",
     marginBottom: 16,
   },
@@ -108,8 +108,7 @@ export default function TicketPdfDocument({
   ticket: TicketPdfData;
   images?: TicketPdfImages;
 }) {
-  const logo =
-    images?.logo === undefined ? ABONTEN_LOGO_EMAIL_LIGHT_URL : images.logo;
+  const logo = images?.logo === undefined ? ABONTEN_PDF_LOGO_PATH : images.logo;
   const flyer =
     images?.flyer === undefined ? ticket.flyerImageUrl : images.flyer;
   const qr = images?.qr === undefined ? ticket.qrImageUrl : images.qr;

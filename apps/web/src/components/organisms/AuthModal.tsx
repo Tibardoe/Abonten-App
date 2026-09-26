@@ -81,8 +81,8 @@ export default function AuthModal({
   useEffect(() => setMounted(true), []);
   const logoSrc =
     mounted && resolvedTheme === "dark"
-      ? "/assets/images/abonten-logo-white.svg"
-      : "/assets/images/abonten-logo-black.svg";
+      ? "/assets/images/brand/abonten-stacked-night.svg"
+      : "/assets/images/brand/abonten-stacked-light.svg";
 
   useEffect(() => {
     if (callingCode) {
@@ -247,10 +247,10 @@ export default function AuthModal({
         <div className="w-[90%] md:w-[70%] lg:w-[30%] text-foreground">
           <Image
             src={logoSrc}
-            alt="Abonten Logo"
-            width={100}
+            alt="Abonten"
+            width={149}
             height={100}
-            className="object-contain w-20 h-20 md:w-32 md:h-32 mx-auto mb-5 md:mb-10"
+            className="object-contain w-28 h-auto md:w-44 mx-auto mb-5 md:mb-10"
           />
 
           <div className="space-y-5">

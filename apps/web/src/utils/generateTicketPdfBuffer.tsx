@@ -1,7 +1,7 @@
 import TicketPdfDocument, {
   type PdfImageData,
 } from "@/components/organisms/TicketPdfDocument";
-import { ABONTEN_LOGO_EMAIL_LIGHT_URL } from "@/config/brandAssets";
+import { ABONTEN_PDF_LOGO_URL } from "@/config/brandAssets";
 import {
   HTTP_TIMEOUTS,
   fetchWithTimeout,
@@ -65,7 +65,7 @@ export async function generateTicketPdfBuffer(
   ticket: TicketPdfData,
 ): Promise<Buffer> {
   const [logo, flyer, qr] = await Promise.all([
-    loadPdfImage(ABONTEN_LOGO_EMAIL_LIGHT_URL),
+    loadPdfImage(ABONTEN_PDF_LOGO_URL),
     loadPdfImage(ticket.flyerImageUrl),
     loadQr(ticket),
   ]);

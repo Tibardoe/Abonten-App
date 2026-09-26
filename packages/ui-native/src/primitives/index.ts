@@ -1,9 +1,16 @@
 export { Icon, type IconProps, type IconTone, type IoniconName } from "./Icon";
 export {
   AbontenLogo,
-  ABONTEN_MARK_PATHS,
+  BrandArtworkPaths,
+  markForSize,
   type AbontenLogoProps,
 } from "./AbontenLogo";
+export {
+  BRAND_MARK,
+  BRAND_WORDMARK,
+  type BrandArtwork,
+  type BrandPart,
+} from "./brandPaths";
 export {
   AbontenWordmark,
   type AbontenWordmarkProps,

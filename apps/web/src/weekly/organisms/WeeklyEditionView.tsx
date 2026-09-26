@@ -1,3 +1,4 @@
+import { signOff } from "@abonten/core/brand/signOff";
 import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
 import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
@@ -145,6 +146,11 @@ export default function WeeklyEditionView({
           <WeeklySection key={section.id} section={section} index={index} />
         ))}
       </div>
+
+      {/* The brand's sign-off closes the edition (see @abonten/core/brand/signOff). */}
+      <p className="text-center text-xs text-muted-foreground">
+        {signOff("Compiled")}
+      </p>
     </article>
   );
 }

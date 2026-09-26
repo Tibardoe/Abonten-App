@@ -13,6 +13,7 @@ import { hapticLight } from "@/lib/haptics";
 import { weeklyShareUrl } from "@/lib/share";
 import { useQueryView } from "@/lib/useQueryView";
 import { useShareLink } from "@/lib/useShareLink";
+import { signOff } from "@abonten/core/brand/signOff";
 import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import {
   WEEKLY_PRODUCT_NAME,
@@ -204,6 +205,14 @@ export function WeeklyScreen({
               {doc.sections.map((section) => (
                 <WeeklySectionView key={section.id} section={section} />
               ))}
+              {/* The brand's sign-off closes the edition, as on the web. */}
+              <AppText
+                variant="caption"
+                tone="muted"
+                className="px-4 text-center"
+              >
+                {signOff("Compiled")}
+              </AppText>
             </>
           ) : (
             <>

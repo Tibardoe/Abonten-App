@@ -16,8 +16,7 @@ export type { ColorScheme, SemanticColorName };
 
 /** Resolved `hsl(...)` colour map for a scheme, plus the literal brand hues. */
 export type ThemeColors = Record<SemanticColorName, string> & {
-  mint: string;
-  iconGray: string;
+  [K in keyof typeof brandColors]: string;
 };
 
 export function themeColors(scheme: ColorScheme): ThemeColors {

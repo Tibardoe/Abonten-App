@@ -1,11 +1,10 @@
+import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import type { TicketPdfData } from "@abonten/core/ticketPdfData";
 
-// Canonical Abonten logo, PNG via Cloudinary's f_png transform — the same
-// asset the emailed ticket uses. Mirrors
-// apps/web/src/config/brandAssets.ts `ABONTEN_LOGO_EMAIL_LIGHT_URL`; kept in
-// sync by hand (it's a stable branding URL, not a build artefact).
-const ABONTEN_LOGO_URL =
-  "https://res.cloudinary.com/abonten/image/upload/f_png,q_auto,w_480/v1786975388/branding/abonten-logo.png";
+// The stacked Abonten logo as a PNG — the same asset the web ticket PDF uses.
+// Mirrors apps/web/src/config/brandAssets.ts `ABONTEN_PDF_LOGO_URL`; kept in
+// sync by hand (it's a stable branding URL served by the web app).
+const ABONTEN_LOGO_URL = `${PUBLIC_SITE_ORIGIN}/assets/images/brand/abonten-pdf-logo.png`;
 
 function escapeHtml(value: string): string {
   return value

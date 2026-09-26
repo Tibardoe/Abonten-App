@@ -1,137 +1,173 @@
-// Generates the Abonten mobile launch assets from the approved web brand
-// sources so the app icon + splash carry the same visual identity as the web
-// landing page:
-//
-//   apps/web/public/assets/images/landingpageBackgroound.jpg  (the landing bg,
-//     via the Tailwind `bg-landing` token in @abonten/ui-tokens)
-//   + the white "A" mark (three fills, viewBox 0 0 417 393 — identical to
-//     packages/ui-native/src/primitives/AbontenLogo.tsx)
-//   + a dark scrim, matching the landing page's `bg-black/30` hero overlay.
+// Generates the Abonten mobile brand assets from the vector masters in
+// apps/web/public/assets/images/brand (the 2026-09 identity: the A mark cut by
+// a mint blade at 43°, drawn in three weights, plus the ABƆNTEN wordmark).
 //
 // Outputs (committed) — run `node apps/mobile/scripts/gen-brand-assets.mjs`:
-//   assets/icon.png            1024x1024  bg + scrim + centred mark (iOS/Android legacy)
-//   assets/adaptive-icon.png   1024x1024  white mark on transparent (Android foreground)
-//   assets/splash-icon.png     1600x3000  portrait bg + scrim + mark (resizeMode: cover)
+//   assets/icon.png               1024  Night ground + Small mark at 58% (iOS / Android legacy)
+//   assets/adaptive-icon.png      1024  Small mark on transparent, inside the adaptive safe zone
+//   assets/splash-mark.png        1024  Hero mark filling the canvas (expo-splash-screen, imageWidth 192)
+//   assets/notification-icon.png    96  Micro mark, white silhouette on transparent (Android status bar)
+//   assets/favicon.png              48  Small mark on a Night tile (Expo web)
+//   packages/ui-native/src/primitives/brandPaths.ts — the same geometry as path data,
+//     for <AbontenLogo>, <AbontenWordmark> and the JS splash.
 //
-// Re-run whenever the brand background or mark changes.
+// Which mark at which size (the brand's three weights):
+//   Hero  ≥ 64 px · Small 25–63 px · Micro ≤ 24 px
+// Re-run whenever a master changes.
 
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "../../..");
-const BG = path.join(
-  repoRoot,
-  "apps/web/public/assets/images/landingpageBackgroound.jpg",
-);
+const MASTERS = path.join(repoRoot, "apps/web/public/assets/images/brand");
 const OUT = path.join(here, "../assets");
+const NATIVE = path.join(
+  repoRoot,
+  "packages/ui-native/src/primitives/brandPaths.ts",
+);
+const NIGHT = "#121410";
 
-// The "A" mark, verbatim from AbontenLogo.tsx MARK_PATHS.
-const MARK_PATHS = [
-  "M108.961 191.552C54.0285 294.07 9.48504 378.191 10.0045 378.676C11.3031 380.007 43.5095 376.981 58.0543 374.318C91.6892 367.903 126.103 352.531 153.115 331.955C166.361 321.788 178.698 309.442 234.15 251.102C261.552 222.416 284.408 198.814 284.798 198.814C286.486 198.814 366.742 350.716 365.314 351.2C360.379 352.652 333.497 344.906 316.744 337.039C292.589 325.782 275.447 312.952 252.331 288.866L237.657 273.494L233.241 278.214C222.722 289.471 222.073 290.56 224.281 293.707C225.45 295.281 232.982 303.027 241.033 310.774C279.733 348.295 316.095 366.935 366.093 374.923C379.339 376.981 407 379.039 407 377.949C407 376.86 377.91 321.062 339.6 248.802C305.576 184.531 303.108 179.327 304.797 177.027C305.836 175.575 312.459 168.676 319.601 161.534C341.938 139.142 339.99 142.41 349.86 113.846L358.69 88.0646L350.899 95.932C333.497 113.361 240.254 210.433 202.464 250.134C156.751 298.428 142.986 311.5 126.882 322.151C114.675 330.261 89.4815 342.364 76.4951 346.359C66.6254 349.384 52.7299 352.047 51.8208 351.079C51.3014 350.716 86.6245 284.024 130.259 202.929L209.346 55.6265L224.281 83.3441C232.462 98.5948 244.28 121.108 250.513 133.454C256.747 145.799 262.461 156.33 262.98 156.935C264.279 158.266 270.902 152.82 277.265 145.436L281.032 140.958L262.98 106.099C231.683 45.3384 211.164 6.60636 209.996 6.00117C209.346 5.63806 163.894 89.1539 108.961 191.552Z",
-  "M199.476 115.661C159.868 188.284 88.5722 321.183 89.0917 321.667C90.2605 322.756 115.454 307.99 126.363 299.759C135.843 292.618 161.426 267.563 162.725 264.053C162.985 263.327 160.647 263.932 157.66 265.384C151.297 268.41 142.076 271.557 142.076 270.71C142.076 269.742 168.049 221.811 168.569 221.811C168.828 221.811 172.854 226.531 177.399 232.22L185.581 242.508L188.178 239.603C189.607 238.03 192.983 234.157 195.71 231.131C201.554 224.716 201.814 225.805 189.866 209.828C185.711 204.26 182.334 198.814 182.464 197.724C182.464 196.635 188.438 184.773 195.71 171.217L208.957 146.768L220.644 168.554C227.008 180.537 232.592 190.341 232.981 190.341C233.371 190.341 237.397 186.831 242.072 182.474L250.383 174.727L229.995 136.479C218.826 115.54 209.476 98.3527 209.346 98.3527C209.086 98.3527 204.671 106.099 199.476 115.661Z",
-  "M273.629 236.215C270.642 239.24 267.006 243.235 265.578 245.05L262.85 248.197L269.473 259.817C273.11 266.232 275.707 271.436 275.188 271.436C274.798 271.436 270.253 269.742 265.188 267.805C260.123 265.748 255.838 264.295 255.578 264.537C254.799 265.142 278.954 289.955 286.356 296.128C295.966 304.238 327.003 323.361 328.432 322.03C329.081 321.425 280.772 230.284 279.863 230.405C279.473 230.526 276.616 233.068 273.629 236.215Z",
-];
+const master = (name) =>
+  fs.readFileSync(path.join(MASTERS, `${name}.svg`), "utf8");
 
-function markSvg(px, fill = "#ffffff") {
-  const paths = MARK_PATHS.map((d) => `<path d="${d}" fill="${fill}"/>`).join(
-    "",
-  );
-  const h = Math.round((px * 393) / 417);
-  return Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${h}" viewBox="0 0 417 393">${paths}</svg>`,
-  );
+// The masters are outlined and flat: paths, optionally inside a translated
+// group or carrying their own translate. Anything else is a master we don't
+// understand yet — fail loudly instead of drawing it wrong.
+function parse(svg, roles) {
+  const viewBox = svg.match(/viewBox="([^"]+)"/)[1];
+  const parts = [];
+  const translate = (s) => {
+    const m = s?.match(/translate\(([-\d.]+)[ ,]+([-\d.]+)\)/);
+    return m ? [Number(m[1]), Number(m[2])] : [0, 0];
+  };
+  const body = svg.replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+  const tokens = body.match(/<g[^>]*>|<\/g>|<path[^>]*\/>/g) || [];
+  const stack = [{ t: [0, 0], fill: null }];
+  for (const tok of tokens) {
+    if (tok.startsWith("</g")) {
+      stack.pop();
+      continue;
+    }
+    const attr = (n) => (tok.match(new RegExp(`${n}="([^"]+)"`)) || [])[1];
+    if (/scale\(/.test(attr("transform") || ""))
+      throw new Error(`unsupported transform in ${tok.slice(0, 60)}`);
+    const top = stack.at(-1);
+    const t = translate(attr("transform"));
+    if (tok.startsWith("<g")) {
+      stack.push({
+        t: [top.t[0] + t[0], top.t[1] + t[1]],
+        fill: attr("fill") || top.fill,
+      });
+      continue;
+    }
+    const fill = (attr("fill") || top.fill || "").toUpperCase();
+    const role = roles[fill];
+    if (!role)
+      throw new Error(`unexpected fill ${fill} in ${tok.slice(0, 60)}`);
+    parts.push({
+      d: attr("d").replace(/\s+/g, " ").trim(),
+      tx: top.t[0] + t[0],
+      ty: top.t[1] + t[1],
+      evenOdd: attr("fill-rule") === "evenodd",
+      role,
+    });
+  }
+  return { viewBox, parts };
 }
 
-function scrim(width, height, alpha) {
-  return sharp({
-    create: {
-      width,
-      height,
-      channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha },
-    },
+const LIGHT = { "#121410": "fg", "#147566": "cut" };
+const marks = {
+  hero: parse(master("abonten-mark-light"), LIGHT),
+  small: parse(master("abonten-mark-small-light"), LIGHT),
+  micro: parse(master("abonten-mark-micro-light"), LIGHT),
+};
+const wordmark = parse(master("abonten-wordmark-light"), LIGHT);
+
+function writeNativeModule() {
+  const ts = `// Generated by apps/mobile/scripts/gen-brand-assets.mjs from the vector
+// masters in apps/web/public/assets/images/brand. Do not edit by hand.
+
+export type BrandPart = {
+  d: string;
+  /** Translation applied to the path, in viewBox units. */
+  tx: number;
+  ty: number;
+  evenOdd: boolean;
+  /** "fg" takes the foreground colour, "cut" the mint blade. */
+  role: "fg" | "cut";
+};
+
+export type BrandArtwork = { viewBox: string; parts: readonly BrandPart[] };
+
+/** The A mark in its three weights: Hero ≥ 64 px, Small 25–63 px, Micro ≤ 24 px. */
+export const BRAND_MARK = ${JSON.stringify(marks, null, 2)} as const satisfies Record<"hero" | "small" | "micro", BrandArtwork>;
+
+/** The ABƆNTEN wordmark (plain A), set beside or under the mark. */
+export const BRAND_WORDMARK = ${JSON.stringify(wordmark, null, 2)} as const satisfies BrandArtwork;
+`;
+  fs.writeFileSync(NATIVE, ts);
+  // Format it the way the pre-commit hook will, so a re-run leaves no diff.
+  execFileSync(
+    process.execPath,
+    [
+      path.join(repoRoot, "node_modules/@biomejs/biome/bin/biome"),
+      "format",
+      "--write",
+      NATIVE,
+    ],
+    { cwd: repoRoot, stdio: "ignore" },
+  );
+  console.log("wrote", path.relative(repoRoot, NATIVE));
+}
+
+// A mark master, recoloured, placed on a square canvas at `frac` of its width.
+function markCanvas(name, size, frac, { bg = null, lift = 0, colors } = {}) {
+  let svg = master(name);
+  if (colors)
+    for (const [from, to] of Object.entries(colors))
+      svg = svg.replaceAll(from, to);
+  const box = 800 / frac;
+  const off = (box - 800) / 2;
+  svg = svg.replace(
+    /viewBox="[^"]+"/,
+    `viewBox="${100 - off} ${90 - off + box * lift} ${box} ${box}" width="${size}" height="${size}"`,
+  );
+  if (bg)
+    svg = svg.replace(
+      /(<svg[^>]*>)/,
+      `$1<rect x="-5000" y="-5000" width="10000" height="10000" fill="${bg}"/>`,
+    );
+  return sharp(Buffer.from(svg), { density: 300 }).resize(size, size).png();
+}
+
+async function writeAssets() {
+  await markCanvas("abonten-mark-small-night", 1024, 0.58, {
+    bg: NIGHT,
+    lift: 0.015,
   })
-    .png()
-    .toBuffer();
-}
-
-async function coverBg(width, height) {
-  return sharp(BG)
-    .resize(width, height, { fit: "cover", position: "bottom" })
-    .toBuffer();
-}
-
-async function makeIcon() {
-  const S = 1024;
-  const bg = await coverBg(S, S);
-  const markW = 460; // ~45% — clears the iOS squircle + Android circle masks
-  const mark = await sharp(markSvg(markW)).png().toBuffer();
-  const markH = Math.round((markW * 393) / 417);
-  await sharp(bg)
-    .composite([
-      { input: await scrim(S, S, 0.4) },
-      {
-        input: mark,
-        left: Math.round((S - markW) / 2),
-        top: Math.round((S - markH) / 2),
-      },
-    ])
-    .png({ palette: true, colours: 200, compressionLevel: 9, effort: 10 })
+    .flatten({ background: NIGHT })
     .toFile(path.join(OUT, "icon.png"));
-  console.log("wrote assets/icon.png");
+  await markCanvas("abonten-mark-small-night", 1024, 0.5, {
+    lift: 0.01,
+  }).toFile(path.join(OUT, "adaptive-icon.png"));
+  await markCanvas("abonten-mark-night", 1024, 1).toFile(
+    path.join(OUT, "splash-mark.png"),
+  );
+  await markCanvas("abonten-mark-micro-mono-white", 96, 20 / 24).toFile(
+    path.join(OUT, "notification-icon.png"),
+  );
+  await markCanvas("abonten-mark-small-night", 48, 0.8, { bg: NIGHT }).toFile(
+    path.join(OUT, "favicon.png"),
+  );
+  console.log(
+    "wrote assets/{icon,adaptive-icon,splash-mark,notification-icon,favicon}.png",
+  );
 }
 
-async function makeAdaptiveIcon() {
-  const S = 1024;
-  const markW = 430; // Android crops ~25% around the circle — keep well inside
-  const mark = await sharp(markSvg(markW)).png().toBuffer();
-  const markH = Math.round((markW * 393) / 417);
-  await sharp({
-    create: {
-      width: S,
-      height: S,
-      channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    },
-  })
-    .composite([
-      {
-        input: mark,
-        left: Math.round((S - markW) / 2),
-        top: Math.round((S - markH) / 2),
-      },
-    ])
-    .png()
-    .toFile(path.join(OUT, "adaptive-icon.png"));
-  console.log("wrote assets/adaptive-icon.png");
-}
-
-async function makeSplash() {
-  const W = 1242;
-  const H = 2688;
-  const bg = await coverBg(W, H);
-  const markW = 440;
-  const mark = await sharp(markSvg(markW)).png().toBuffer();
-  const markH = Math.round((markW * 393) / 417);
-  await sharp(bg)
-    .composite([
-      { input: await scrim(W, H, 0.42) },
-      {
-        input: mark,
-        left: Math.round((W - markW) / 2),
-        top: Math.round(H * 0.42 - markH / 2),
-      },
-    ])
-    // The scrimmed, low-detail bg palettes tightly — keeps the bundled
-    // splash asset well under ~400KB instead of multiple MB.
-    .png({ palette: true, colours: 128, compressionLevel: 9, effort: 10 })
-    .toFile(path.join(OUT, "splash-icon.png"));
-  console.log("wrote assets/splash-icon.png");
-}
-
-await makeIcon();
-await makeAdaptiveIcon();
-await makeSplash();
+writeNativeModule();
+await writeAssets();
 console.log("done");

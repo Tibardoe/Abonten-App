@@ -40,7 +40,10 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body: typeof data.body === "string" ? data.body : undefined,
-      icon: "/assets/images/abonten-logo.svg",
+      // PNGs: several browsers ignore an SVG notification icon. The badge is
+      // the white Micro mark Android shows in the status bar.
+      icon: "/assets/images/brand/abonten-push-icon.png",
+      badge: "/assets/images/brand/abonten-push-badge.png",
       tag: id || undefined,
       data: { url },
     }),

@@ -54,10 +54,12 @@ export default function Header() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  // The mark alone: at 48-64 px a wordmark would be too small to read. The
+  // Small weight is drawn for exactly this range.
   const logoSrc =
     mounted && resolvedTheme === "dark"
-      ? "/assets/images/abonten-logo-white.svg"
-      : "/assets/images/abonten-logo-black.svg";
+      ? "/assets/images/brand/abonten-mark-small-night.svg"
+      : "/assets/images/brand/abonten-mark-small-light.svg";
 
   // Shared with SideBar/MobileNavBar/etc. — one cached fetch instead of
   // each component independently calling supabase.auth.getUser().
@@ -149,9 +151,9 @@ export default function Header() {
 
             <Link
               href={`/explore/${generateSlug(location ?? "")}`}
-              className="absolute right-4 transform lg:relative lg:translate-x-0 w-12 h-12 md:w-16 md:h-16"
+              className="absolute right-4 transform lg:relative lg:translate-x-0 w-10 h-10 md:w-12 md:h-12"
             >
-              <Image src={logoSrc} alt="Abonten Logo" fill priority />
+              <Image src={logoSrc} alt="Abonten" fill priority />
             </Link>
           </div>
 

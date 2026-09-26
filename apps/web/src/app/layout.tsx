@@ -26,10 +26,14 @@ export const metadata: Metadata = {
   },
   description:
     "Discover events and places around you, buy tickets and find your next experience on Abonten Hub.",
+  // favicon.ico holds hand-tuned 16/24/32 px drawings of the mark (plus
+  // 48 px); browsers that take SVG use the vector Micro mark instead.
   icons: {
-    icon: "/assets/images/abonten-logo-only-white.svg",
-    shortcut: "/assets/images/abonten-logo-only-white.svg",
-    apple: "/assets/images/abonten-logo-only-white.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/assets/images/brand/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/assets/images/brand/apple-touch-icon.png",
   },
 };
 
