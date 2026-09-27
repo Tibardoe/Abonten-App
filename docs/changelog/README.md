@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — Link previews, faster homepage, labelled event forms
+
+- PROJECT.md §49.
+- Behaviour: a shared link to any page without its own image (the homepage, help, legal…) now previews as the ABƆNTEN logotype over the homepage photo (`apps/web/public/assets/images/brand/og-default.jpg`, drawn by `gen-brand-assets.mjs`) instead of a bare link; events, places and Weekly editions keep their own images. The homepage photo is served through next/image (about 0.2 MB on a phone instead of the 2.6 MB original). The create and edit event forms label every field. Manage pages for one event or place name it in the tab; the admin sign-in card shows the mark. On the app (next native build): no empty organizer stars, no "0 going", "Only N left" only when low.
+- Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-27 — No location prompt on page load; area chooser; checkout and footer
 
 - PROJECT.md §49; `privacy/cookies-and-storage-inventory.md` and the draft public Cookie Policy (new `abn_explore_area` key).

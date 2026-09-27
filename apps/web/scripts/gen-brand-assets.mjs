@@ -10,6 +10,7 @@
 //   brand/abonten-image-fallback.png 1600 px Night square, Small mark at 22% (the placeholder
 //                                    Cloudinary serves for a missing image: upload it as
 //                                    branding/image-fallback with scripts/upload-image-fallback.mjs)
+//   brand/og-default.jpg             1200 x 630 link preview: the logotype over the homepage photo
 //
 // Not generated here: favicon.ico, favicon.svg and apple-touch-icon.png. The
 // 16/24/32 px favicon pixels are drawn by hand in the brand workspace, so
@@ -80,6 +81,36 @@ await markOnCanvas("abonten-mark-micro-mono-white", 96, 0.8).toFile(
 await markOnCanvas("abonten-mark-small-night", 1600, 0.22, NIGHT, 0).toFile(
   out("abonten-image-fallback.png"),
 );
+// The default link preview (layout.tsx metadata.openGraph): the white
+// logotype over the homepage crowd photo, darkened towards the foot.
+async function ogDefault() {
+  const W = 1200;
+  const H = 630;
+  const photo = await sharp(
+    path.join(here, "../public/assets/images/landing-hero.jpg"),
+  )
+    .resize(W, H, { fit: "cover", position: "bottom" })
+    .toBuffer();
+  const shade = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${NIGHT}" stop-opacity="0.55"/><stop offset="1" stop-color="${NIGHT}" stop-opacity="0.85"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#g)"/></svg>`,
+  );
+  const logoW = 620;
+  const logo = await raster("abonten-logotype-night", logoW);
+  const { height } = await sharp(logo).metadata();
+  await sharp(photo)
+    .composite([
+      { input: shade },
+      {
+        input: logo,
+        left: Math.round((W - logoW) / 2),
+        top: Math.round((H - height) / 2),
+      },
+    ])
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toFile(out("og-default.jpg"));
+}
+
+await ogDefault();
 console.log(
-  "wrote brand/abonten-{email-tile,pdf-logo,push-icon,push-badge,image-fallback}.png",
+  "wrote brand/abonten-{email-tile,pdf-logo,push-icon,push-badge,image-fallback}.png, brand/og-default.jpg",
 );

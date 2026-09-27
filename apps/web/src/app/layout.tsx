@@ -26,6 +26,27 @@ export const metadata: Metadata = {
   },
   description:
     "Discover events and places around you, buy tickets and find your next experience on Abonten Hub.",
+  // The link preview for any page that doesn't bring its own (events,
+  // places and Weekly editions do): the brand over the homepage photo.
+  openGraph: {
+    siteName: "Abonten Hub",
+    type: "website",
+    title: "Abonten Hub | Connecting people to experiences",
+    description:
+      "Discover events and places around you, buy tickets and find your next experience on Abonten Hub.",
+    images: [
+      {
+        url: "/assets/images/brand/og-default.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Abonten",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/assets/images/brand/og-default.jpg"],
+  },
   // favicon.ico holds hand-tuned 16/24/32 px drawings of the mark (plus
   // 48 px); browsers that take SVG use the vector Micro mark instead.
   icons: {
