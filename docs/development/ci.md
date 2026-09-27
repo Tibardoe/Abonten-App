@@ -41,6 +41,6 @@ Every job uses the Node 24 majors of the GitHub actions (`actions/checkout@v7`, 
 
 ## Local equivalents
 
-Run the same commands before pushing: `npm run typecheck`, `npm run lint:ci`, unit tests, `npm run check:api-parity`, `npm run check:i18n`, `npm run check:docs`, and the integration suite when touching SQL, RLS or services. Lefthook runs Biome on staged files at commit time (web, admin, mobile and package sources) and `npm run lint:ci` before every push, so a push cannot leave the lint job red.
+Run the same commands before pushing: `npm run typecheck`, `npm run lint:ci`, unit tests, `npm run check:api-parity`, `npm run check:i18n`, `npm run check:docs`, and the integration suite when touching SQL, RLS or services. Lefthook runs Biome on staged files at commit time (web, admin, mobile and package sources) and `npm run lint:ci` plus `npm run check:docs` before every push, so a push cannot leave the lint or docs job red.
 
 A red `main` is not ambient noise: after pushing, check the run (`gh run list --workflow checks.yml --limit 3`). Between 2026-09-25 and 2026-09-27 the lint job failed on every push (the regenerated type file) and, from 2026-09-27, the typecheck job too (the first static image import), while both deploys kept succeeding, because Vercel builds do not wait for these checks.
