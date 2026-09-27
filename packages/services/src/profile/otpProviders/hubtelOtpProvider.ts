@@ -56,26 +56,49 @@ export const hubtelOtpProvider: OtpProvider = {
         message: "Something went wrong. Please try again.",
       };
     }
-    const response = await fetchWithTimeout(HUBTEL_OTP_SEND_URL, {
-      timeoutMs: HTTP_TIMEOUTS.hubtelOtp,
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        Authorization: authHeader(creds.clientId, creds.clientSecret),
-      },
-      body: JSON.stringify({
-        senderId: creds.clientId,
-        phoneNumber: phoneE164,
-        countryCode,
-      }),
-    });
-    const data = (await response.json()) as HubtelOtpSendResponse;
-    if (data.code !== "0000" || !data.data?.requestId || !data.data?.prefix) {
-      logger.error(`Hubtel OTP send failed: ${data.message}`);
+    let response: Response;
+    let data: HubtelOtpSendResponse | null;
+    try {
+      response = await fetchWithTimeout(HUBTEL_OTP_SEND_URL, {
+        timeoutMs: HTTP_TIMEOUTS.hubtelOtp,
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          Authorization: authHeader(creds.clientId, creds.clientSecret),
+        },
+        body: JSON.stringify({
+          senderId: creds.clientId,
+          phoneNumber: phoneE164,
+          countryCode,
+        }),
+      });
+      // Account-level refusals are not always JSON.
+      data = (await response
+        .json()
+        .catch(() => null)) as HubtelOtpSendResponse | null;
+    } catch (error) {
+      const detail = `Hubtel OTP send did not complete: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error(detail);
       return {
         ok: false,
         reason: "provider_error",
         message: "Couldn't send the verification code. Please try again.",
+        detail,
+      };
+    }
+    if (
+      !data ||
+      data.code !== "0000" ||
+      !data.data?.requestId ||
+      !data.data?.prefix
+    ) {
+      const detail = `Hubtel OTP send refused (HTTP ${response.status}, code ${data?.code ?? "none"}): ${data?.message ?? "no readable body"}`;
+      logger.error(detail);
+      return {
+        ok: false,
+        reason: "provider_error",
+        message: "Couldn't send the verification code. Please try again.",
+        detail,
       };
     }
     return {

@@ -11,6 +11,8 @@ import {
   parsePhoneWithDialCode,
 } from "@abonten/core/phone/phone";
 import { routeOtpForPhone } from "./otpProviders/otpRouter";
+import type { OtpSendResult } from "./otpProviders/types";
+import { recordOtpSendFailure } from "./otpSendMonitoring";
 import {
   type PhoneOtpPurpose,
   claimOtpSend,
@@ -52,8 +54,28 @@ export async function sendPhoneOtpCore(input: {
   const claim = await claimOtpSend(phoneE164, input.ipAddress);
   if (!claim.ok) return { status: claim.status, message: claim.message };
 
-  const sent = await route.provider.send(phoneE164, route.countryCode);
+  let sent: OtpSendResult;
+  try {
+    sent = await route.provider.send(phoneE164, route.countryCode);
+  } catch (error) {
+    sent = {
+      ok: false,
+      reason: "provider_error",
+      message: "Couldn't send the verification code. Please try again.",
+      detail: `${route.provider.code} OTP send threw: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
   if (!sent.ok) {
+    // A number the provider cannot text is the person's problem, not an
+    // outage; everything else is recorded so the `otp` health check sees it.
+    if (sent.reason !== "unsupported_number") {
+      await recordOtpSendFailure({
+        provider: route.provider.code,
+        countryCode: route.countryCode,
+        reason: sent.reason ?? "provider_error",
+        detail: sent.detail,
+      });
+    }
     return {
       status: sent.reason === "unsupported_number" ? 400 : 500,
       message: sent.message,

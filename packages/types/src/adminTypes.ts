@@ -567,6 +567,10 @@ export const HEALTH_CHECK_KEYS = [
   "stripe",
   "resend",
   "hubtel",
+  // Text-message codes actually going out: down when every send attempted
+  // in the last 30 minutes was refused by the provider (e.g. an unpaid
+  // Hubtel account, which the reachability probe above cannot see).
+  "otp",
   "push",
   "cloudinary",
   // Abonten Rewards engine: outbox lag, settlement backlog, dead letters.

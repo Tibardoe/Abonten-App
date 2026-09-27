@@ -86,19 +86,32 @@ export const twilioVerifyProvider: OtpProvider = {
         message: "Something went wrong. Please try again.",
       };
     }
-    const { ok, status, json } = await twilioPost(
-      "/Verifications",
-      { To: phoneE164, Channel: "sms" },
-      creds,
-    );
+    let sent: Awaited<ReturnType<typeof twilioPost>>;
+    try {
+      sent = await twilioPost(
+        "/Verifications",
+        { To: phoneE164, Channel: "sms" },
+        creds,
+      );
+    } catch (error) {
+      const detail = `Twilio Verify send did not complete: ${error instanceof Error ? error.message : String(error)}`;
+      logger.error(detail);
+      return {
+        ok: false,
+        reason: "provider_error",
+        message: "Couldn't send the verification code. Please try again.",
+        detail,
+      };
+    }
+    const { ok, status, json } = sent;
     const sid = typeof json?.sid === "string" ? json.sid : null;
     if (!ok || !sid) {
       // 60200/60203: invalid or blocked number — a person-facing reason.
       const code = typeof json?.code === "number" ? json.code : null;
-      logger.error(
-        `Twilio Verify send failed (${status} ${code ?? ""}): ${json?.message ?? "unknown"}`,
-      );
+      const detail = `Twilio Verify send refused (HTTP ${status}, code ${code ?? "none"}): ${json?.message ?? "unknown"}`;
+      logger.error(detail);
       return {
+        detail,
         ok: false,
         reason:
           code === 60200 || code === 60203

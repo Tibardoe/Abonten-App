@@ -12,6 +12,8 @@ export type OtpSendResult =
       ok: false;
       message: string;
       reason?: "not_configured" | "provider_error" | "unsupported_number";
+      /** What the provider said, for monitoring (otpSendMonitoring.ts). */
+      detail?: string;
     };
 
 export type OtpVerifyResult = { ok: true } | { ok: false; message: string };
