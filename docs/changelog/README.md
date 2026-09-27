@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — CI's browser suite gets its own database; brand colour contrast
+
+- `development/ci.md`, `development/testing.md` 1.2, `security/secrets-and-environment.md` 1.4.
+- Behaviour: the web browser suite in CI used the production database with the legacy anon key disabled on 2026-09-04, so every data read was refused (38 × 401 per run), the event and place page checks (Open Graph, JSON-LD, reviews pages, accessibility scan of a live listing) skipped themselves and the job stayed green. The job now starts its own local stack, seeds one organizer, event and place (`scripts/test-db/seed-e2e.mjs`), builds against it and requires those checks (`E2E_REQUIRE_CATALOGUE`); the admin build gets fake database values; the three Supabase secrets are deleted from GitHub, so no CI job can reach production. Its first run found white "FEATURED" text on the mint fill at 1.74:1 contrast: the badge, the highlight upload button and four form buttons now use the brand fill with its dark foreground, and brand-coloured status text and check icons (place setup, verification, report sent, profile ring) use the accessible `text-primary`.
+- Migrations, env vars, permissions, jobs: none (GitHub secrets removed: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+
 ## 2026-09-27 — CI green again
 
 - `development/ci.md` 1.1.

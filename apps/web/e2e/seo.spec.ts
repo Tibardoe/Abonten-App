@@ -1,18 +1,16 @@
 import { expect, test } from "@playwright/test";
+import { publicCatalogue } from "./catalogue";
 
 // Share previews and structured data on the listing pages, taken from the
-// live sitemap so the check follows whatever is published.
+// sitemap so the check follows whatever is published (in CI: the seeded
+// event and place, see ./catalogue.ts).
 
 test("event and place pages carry Open Graph tags, a canonical URL and JSON-LD", async ({
   page,
   request,
 }) => {
-  const xml = await (await request.get("/sitemap.xml")).text();
-  const paths = [
-    xml.match(/<loc>[^<]*(\/events\/[A-Z0-9]+)<\/loc>/)?.[1],
-    xml.match(/<loc>[^<]*(\/places\/[a-z0-9-]+)<\/loc>/)?.[1],
-  ].filter((p): p is string => Boolean(p));
-  test.skip(paths.length === 0, "no public event or place in the catalogue");
+  const { event, place } = await publicCatalogue(request);
+  const paths = [event, place].filter((p): p is string => Boolean(p));
 
   for (const path of paths) {
     const response = await page.goto(path);
@@ -41,12 +39,8 @@ test("event and place reviews pages render publicly with their own canonical URL
   page,
   request,
 }) => {
-  const xml = await (await request.get("/sitemap.xml")).text();
-  const paths = [
-    xml.match(/<loc>[^<]*(\/events\/[A-Z0-9]+)<\/loc>/)?.[1],
-    xml.match(/<loc>[^<]*(\/places\/[a-z0-9-]+)<\/loc>/)?.[1],
-  ].filter((p): p is string => Boolean(p));
-  test.skip(paths.length === 0, "no public event or place in the catalogue");
+  const { event, place } = await publicCatalogue(request);
+  const paths = [event, place].filter((p): p is string => Boolean(p));
 
   for (const path of paths) {
     const reviews = `${path}/reviews`;
