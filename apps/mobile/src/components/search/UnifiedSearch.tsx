@@ -1,5 +1,6 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
+import { useTabBarListPadding } from "@/components/app/GlassTabBar";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { SpotlightTileRow } from "@/components/profile/SpotlightGrid";
 import { useContentProgram } from "@/features/content/useContentProgram";
@@ -222,6 +223,7 @@ const thumb = (s: SearchSuggestion) =>
     : null;
 
 export function UnifiedSearch() {
+  const listPadding = useTabBarListPadding();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const c = useThemeColors();
@@ -817,7 +819,8 @@ export function UnifiedSearch() {
           }
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-4 px-4 pb-16 pt-3"
+          contentContainerClassName="gap-4 px-4 pt-3"
+          contentContainerStyle={{ paddingBottom: listPadding }}
           onEndReached={effectiveMode === "all" ? undefined : onEndReached}
           onEndReachedThreshold={0.5}
           ListEmptyComponent={empty}
@@ -837,7 +840,8 @@ export function UnifiedSearch() {
         <ScrollView
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          contentContainerClassName="px-4 pb-16 pt-1"
+          contentContainerClassName="px-4 pt-1"
+          contentContainerStyle={{ paddingBottom: listPadding }}
         >
           {suggest.isLoading &&
           suggest.events.length +
@@ -965,7 +969,8 @@ export function UnifiedSearch() {
       ) : (
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="px-4 pb-16 pt-1"
+          contentContainerClassName="px-4 pt-1"
+          contentContainerStyle={{ paddingBottom: listPadding }}
         >
           {recents.length > 0 ? (
             <>

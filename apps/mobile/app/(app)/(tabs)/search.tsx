@@ -1,4 +1,5 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
+import { useTabBarListPadding } from "@/components/app/GlassTabBar";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { FilterSheet } from "@/components/explore/FilterSheet";
@@ -143,6 +144,7 @@ function SectionHeader({
 function LegacySearch() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const listPadding = useTabBarListPadding();
   const c = useThemeColors();
   const inputRef = useRef<TextInput>(null);
 
@@ -287,7 +289,8 @@ function LegacySearch() {
           renderItem={({ item }) => <EventCard event={item} />}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="gap-4 px-4 pb-16 pt-3"
+          contentContainerClassName="gap-4 px-4 pt-3"
+          contentContainerStyle={{ paddingBottom: listPadding }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           ListHeaderComponent={
@@ -345,7 +348,8 @@ function LegacySearch() {
         <ScrollView
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          contentContainerClassName="px-4 pb-16 pt-1"
+          contentContainerClassName="px-4 pt-1"
+          contentContainerStyle={{ paddingBottom: listPadding }}
         >
           {suggest.isLoading && suggest.events.length === 0 ? (
             <View className="gap-3 pt-3">
@@ -425,7 +429,8 @@ function LegacySearch() {
       ) : (
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="px-4 pb-16 pt-1"
+          contentContainerClassName="px-4 pt-1"
+          contentContainerStyle={{ paddingBottom: listPadding }}
         >
           {recents.length > 0 ? (
             <>

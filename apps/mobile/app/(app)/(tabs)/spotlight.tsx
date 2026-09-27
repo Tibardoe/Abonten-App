@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { useTabBarOverlap } from "@/components/app/GlassTabBar";
 import { MediaStatusBar } from "@/components/app/MediaStatusBar";
 import { SpotlightCard } from "@/components/content/SpotlightCard";
 import {
@@ -76,6 +77,10 @@ const RESTORED_FEED_MAX_AGE_MS = 10 * 60 * 1000;
 // useContentFeed).
 export default function SpotlightFeedScreen() {
   const router = useRouter();
+  // The floating tab bar sits over the bottom of the screen: the feed ends
+  // above it (the black scene shows around the bar), so pages keep their
+  // size and nothing on a card hides behind the bar.
+  const tabBarOverlap = useTabBarOverlap();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const window = useWindowDimensions();
@@ -430,6 +435,7 @@ export default function SpotlightFeedScreen() {
   return (
     <View
       className="flex-1 bg-black"
+      style={{ marginBottom: tabBarOverlap }}
       onLayout={(e) => {
         // Never re-page the feed under an open comments panel.
         if (!commentsOpen) setHeight(e.nativeEvent.layout.height);

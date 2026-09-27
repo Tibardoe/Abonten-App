@@ -2,6 +2,10 @@ import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
 import { AccountSetupCard } from "@/components/account/AccountSetupCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import {
+  useTabBarListPadding,
+  useTabBarOverlap,
+} from "@/components/app/GlassTabBar";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { AreaSuggestionCard } from "@/components/explore/AreaSuggestionCard";
@@ -65,6 +69,8 @@ type Tab = "events" | "places";
 // places" list with filter-aware empty states.
 export default function Explore() {
   const router = useRouter();
+  const listPadding = useTabBarListPadding();
+  const tabBarOverlap = useTabBarOverlap();
   const { area, resolving } = useExploreLocation();
   const { market } = useMarket();
   const coords = area ? { lat: area.lat, lng: area.lng } : null;
@@ -469,20 +475,24 @@ export default function Explore() {
       {view === "map" ? (
         // The map draws whatever the list has; with nothing loaded it says
         // why (loading, offline, failed) rather than "nothing to map".
-        activeView.kind === "content" || activeView.kind === "empty" ? (
-          <ExploreMap
-            kind={tab}
-            events={events}
-            places={places}
-            center={coords}
-          />
-        ) : (
-          <QueryUnavailable
-            view={activeView}
-            subject={tab === "events" ? "events here" : "places here"}
-            onRetry={() => activeQuery.refetch()}
-          />
-        )
+        // It ends above the floating tab bar, so the bar never covers the
+        // map's attribution or the preview card.
+        <View className="flex-1" style={{ marginBottom: tabBarOverlap }}>
+          {activeView.kind === "content" || activeView.kind === "empty" ? (
+            <ExploreMap
+              kind={tab}
+              events={events}
+              places={places}
+              center={coords}
+            />
+          ) : (
+            <QueryUnavailable
+              view={activeView}
+              subject={tab === "events" ? "events here" : "places here"}
+              onRetry={() => activeQuery.refetch()}
+            />
+          )}
+        </View>
       ) : tab === "events" ? (
         <FlatList
           key="events"
@@ -490,7 +500,8 @@ export default function Explore() {
           keyExtractor={(e) => e.id}
           renderItem={({ item }) => <EventCard event={item} />}
           ListHeaderComponent={listHeader}
-          contentContainerClassName="gap-4 pb-16"
+          contentContainerClassName="gap-4"
+          contentContainerStyle={{ paddingBottom: listPadding }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           refreshControl={
@@ -518,7 +529,8 @@ export default function Explore() {
           keyExtractor={(p) => p.id}
           renderItem={({ item }) => <PlaceCard place={item} />}
           ListHeaderComponent={listHeader}
-          contentContainerClassName="gap-4 pb-16"
+          contentContainerClassName="gap-4"
+          contentContainerStyle={{ paddingBottom: listPadding }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           refreshControl={
