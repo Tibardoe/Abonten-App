@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — CI green again
+
+- `development/ci.md` 1.1.
+- Behaviour: none for users. The "Typecheck, lint & build" workflow had failed on every push to `main` since 2026-09-25 while the deploys kept succeeding: Biome flagged the regenerated `database.types.ts` (now excluded as generated code) and, from 2026-09-27, `tsc` could not resolve the homepage's static image import because `next-env.d.ts` is generated and gitignored (web and admin now run `next typegen` before `tsc`). New `npm run lint:ci` is the one lint command for CI and the new Lefthook pre-push hook; the pre-commit hook now also formats `apps/admin/src`. Workflows moved to the Node 24 action majors (`checkout@v7`, `setup-node@v7`, `upload-artifact@v7`, Supabase `setup-cli@v3`).
+- Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-27 — Link previews, faster homepage, labelled event forms
 
 - PROJECT.md §49.
