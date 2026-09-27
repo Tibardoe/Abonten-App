@@ -4,7 +4,7 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.5
+version: 1.6
 lastReviewed: 2026-09-27
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -20,7 +20,7 @@ complianceReviewRequired: no
 
 **Checked at boot (2026-09-19).** Each Next.js app's `src/instrumentation.ts` lists the variables it cannot run without and calls `checkEnv` / `enforceEnv` (`@abonten/core/env/checkEnv`) once per server process. In a production deployment (`VERCEL_ENV=production`) a missing required variable throws, so the deploy fails to start instead of failing at the first payment; in preview, CI and local development the missing names are logged. Web requires the Supabase pair and service-role key, `NEXT_PUBLIC_BASE_URL`, the Cloudinary trio, `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` and `OBSERVABILITY_INGEST_SECRET`; admin requires the Supabase pair and service-role key, `ADMIN_EMAIL_ALLOWLIST` and `OBSERVABILITY_INGEST_SECRET`. Everything else is "recommended" and only produces a warning.
 
-**Preview deployments (2026-09-25).** Vercel Preview and Development builds of both apps use the **Abonten Preview** Supabase project (`qasxtirvfbreygsqwwat`; schema only, no production data): `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist twice (Production → production project; Preview + Development → preview project), `SUPABASE_SERVICE_ROLE_KEY` exists twice as well (Production → the production project's key; Preview + Development → a secret key of the preview project, added on both Vercel projects by 2026-09-27), and the production URL/anon/service-role variables never target Preview again. Both apps refuse to start on a non-production deployment pointed at the production project (`@abonten/core/env/productionProject`). `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are read by no code and were neutralised (sensitive, marker value) — delete them when convenient. `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` were re-entered as *Sensitive* by the founder on 2026-09-25 (23:48 UTC); no variable on either project is flagged readable any more.
+**Preview deployments (2026-09-25).** Vercel Preview and Development builds of both apps use the **Abonten Preview** Supabase project (`qasxtirvfbreygsqwwat`; schema only, no production data): `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist twice (Production → production project; Preview + Development → preview project), `SUPABASE_SERVICE_ROLE_KEY` exists twice as well (Production → the production project's key; Preview + Development → a secret key of the preview project, added on both Vercel projects by 2026-09-27), and the production URL/anon/service-role variables never target Preview again. Both apps refuse to start on a non-production deployment pointed at the production project (`@abonten/core/env/productionProject`). `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` were read by no code; neutralised on 2026-09-25 and deleted from Vercel, GitHub Actions and `turbo.json` on 2026-09-27 (Google sign-in is configured in Supabase Auth). `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` were re-entered as *Sensitive* by the founder on 2026-09-25 (23:48 UTC); no variable on either project is flagged readable any more.
 
 **CI holds no Supabase credentials (2026-09-27).** The GitHub Actions secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` pointed the web e2e and admin build jobs at the production project, the anon one with the legacy key disabled on 2026-09-04 (every read the e2e build made was refused with 401, 38 per run). They are deleted: the `build-and-e2e-web` job starts its own local stack (`npm run test:db:up`, then `scripts/test-db/seed-e2e.mjs`) and builds against it; `build-admin` gets obviously fake values because the console makes no database call at build time. No CI job can reach the production database.
 
@@ -33,7 +33,6 @@ complianceReviewRequired: no
 | `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_SITE_URL` | yes | Absolute links (emails, share, invite) | wrong links |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | yes (restrict by referrer) | Maps JS, geocode proxy | maps/geocoding fail |
 | `GOOGLE_MAPS_API_KEY` | secret | Server geocoding (admin territories) | "Find on the map" fails |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | secret | Used by Supabase Auth Google provider (set in Supabase too); vestigial in build env | OAuth config |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | yes | Cloudinary URLs | media fails |
 | `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | secret | Signed uploads, destroys, health probe | uploads fail |
 | `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` | secret | Ghana's Paystack account: payments, refunds, webhook signature (the names Ghana's `market_payment_provider` row points at). **Both hold the same value** — Paystack signs webhooks with the secret key; a differing webhook value makes the registry refuse the account (2026-09-25) | Ghana payments fail / webhooks rejected |
@@ -59,7 +58,6 @@ complianceReviewRequired: no
 | `WEEKLY_KILL_SWITCH` | flag | Abonten Weekly emergency stop: pages show the fallback, teaser and links hidden, mobile API reports it off | Abonten Weekly follows `weekly_program_setting` |
 | `EXPO_ACCESS_TOKEN` | secret | Expo push API auth (optional) | pushes may be rate-limited |
 | `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_VERCEL_ENV`, `VERCEL*`, `NODE_ENV`, `CI` | platform | Tagging | — |
-| `NEXTAUTH_SECRET`, `NEXTAUTH_URL` | vestigial | No `next-auth` dependency; safe to remove (LOW-008) | — |
 | `TWILIO_*` (history) | — | The unused `twilio` SDK was removed 2026-09-19; since 2026-09-24 Twilio Verify is called over plain HTTPS with the three variables above (no SDK dependency) | — |
 
 ## apps/admin (Vercel project `abonten-app-admin`, CI `build-admin`)

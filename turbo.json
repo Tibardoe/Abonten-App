@@ -8,12 +8,8 @@
       "env": [
         "CLOUDINARY_API_KEY",
         "CLOUDINARY_API_SECRET",
-        "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET",
         "HUBTEL_API_CLIENT_ID",
         "HUBTEL_API_CLIENT_SECRET",
-        "NEXTAUTH_SECRET",
-        "NEXTAUTH_URL",
         "OBSERVABILITY_INGEST_SECRET",
         "PAYSTACK_SECRET_KEY",
         "RESEND_API_KEY",
