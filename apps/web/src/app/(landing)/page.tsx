@@ -1,6 +1,6 @@
 import LandingAuthLinks from "@/landingPage/molecules/LandingAuthLinks";
 import LandingLocationSearch from "@/landingPage/organisms/LandingLocationSearch";
-import { SIGN_OFF_CREDIT } from "@abonten/core/brand/signOff";
+import { SIGN_OFF } from "@abonten/core/brand/signOff";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -46,7 +46,7 @@ export default function Home() {
           {/* The brand's sign-off: one credit line on the homepage, never on
               money, tickets, support, legal pages or errors. */}
           <p className="absolute bottom-6 inset-x-0 px-4 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-white/60 text-balance md:text-[11px] md:tracking-[0.18em]">
-            {SIGN_OFF_CREDIT}
+            {SIGN_OFF}
           </p>
         </div>
       </div>
