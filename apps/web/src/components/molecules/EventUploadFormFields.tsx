@@ -13,6 +13,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
@@ -141,7 +142,10 @@ export default function EventUploadFormFields({
               control={control}
               name="title"
               render={({ field }) => (
-                <FormItem className="space-y-0">
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">
+                    Event name
+                  </FormLabel>
                   <FormControl>
                     <PostInput
                       type="text"
@@ -158,7 +162,10 @@ export default function EventUploadFormFields({
               control={control}
               name="description"
               render={({ field }) => (
-                <FormItem className="space-y-0">
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">
+                    Description
+                  </FormLabel>
                   <FormControl>
                     <PostInput
                       type="text"
@@ -258,7 +265,10 @@ export default function EventUploadFormFields({
               control={control}
               name="capacity"
               render={({ field }) => (
-                <FormItem className="space-y-0">
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">
+                    Capacity
+                  </FormLabel>
                   <FormControl>
                     <PostInput
                       type="number"
@@ -283,7 +293,10 @@ export default function EventUploadFormFields({
               control={control}
               name="website_url"
               render={({ field }) => (
-                <FormItem className="space-y-0">
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">
+                    Website (optional)
+                  </FormLabel>
                   <FormControl>
                     <PostInput
                       type="text"

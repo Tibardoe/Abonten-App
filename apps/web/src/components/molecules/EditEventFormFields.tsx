@@ -10,6 +10,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import type { useEventEditForm } from "@/hooks/useEventEditForm";
@@ -114,7 +115,10 @@ export default function EditEventFormFields({
             control={control}
             name="title"
             render={({ field }) => (
-              <FormItem className="space-y-0">
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-sm font-medium">
+                  Event name
+                </FormLabel>
                 <FormControl>
                   <PostInput type="text" inputPlaceholder="Title" {...field} />
                 </FormControl>
@@ -127,7 +131,10 @@ export default function EditEventFormFields({
             control={control}
             name="description"
             render={({ field }) => (
-              <FormItem className="space-y-0">
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-sm font-medium">
+                  Description
+                </FormLabel>
                 <FormControl>
                   <PostInput
                     type="text"
@@ -201,7 +208,10 @@ export default function EditEventFormFields({
               control={control}
               name="website_url"
               render={({ field }) => (
-                <FormItem className="space-y-0">
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm font-medium">
+                    Website (optional)
+                  </FormLabel>
                   <FormControl>
                     <PostInput
                       type="text"
@@ -218,13 +228,16 @@ export default function EditEventFormFields({
               control={control}
               name="capacity"
               render={({ field }) => (
-                <FormItem className="space-y-0">
+                <FormItem className="space-y-1.5">
                   <fieldset
                     disabled={restrictedLocked}
                     className={
                       restrictedLocked ? "opacity-60 space-y-1" : "space-y-1"
                     }
                   >
+                    <FormLabel className="text-sm font-medium">
+                      Capacity
+                    </FormLabel>
                     <FormControl>
                       <PostInput
                         type="number"
