@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — Root SPF record; Apple private relay
+
+- `operations/notifications-and-email-operations.md` 1.2 (new "Domain email records").
+- Behaviour: `abontenhub.com` had no SPF record at the root, so Google Workspace mail from staff addresses was unauthenticated by SPF and Apple could not verify the domain for Sign in with Apple's private email relay. Added root TXT `v=spf1 include:_spf.google.com ~all` on Vercel DNS (Resend keeps its own record on `send.abontenhub.com`). The domain is to be registered with Apple so ticket and reward emails reach people who hide their address.
+- Migrations, env vars, permissions, jobs: none. DNS: one TXT record added.
+
 ## 2026-09-27 — Unused sign-in variables and test uploads removed
 
 - `security/secrets-and-environment.md` 1.6, `development/ci.md`.
