@@ -3,6 +3,7 @@
 import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
@@ -48,10 +49,12 @@ export default function FinancesOverview({
     staleTime: 20_000,
   });
 
+  const { market } = useMarketContext();
   const rows = data ?? [];
   const primary = rows[0] ?? {
-    // No earnings yet: amounts are zero, so no currency sign is shown.
-    currency: "",
+    // No earnings yet: zero, shown in the market's currency ("GH₵0.00"),
+    // not as a bare "0.00".
+    currency: market?.defaultCurrency ?? "",
     pending_balance: 0,
     available_balance: 0,
     total_earnings: 0,

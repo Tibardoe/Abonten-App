@@ -8,6 +8,9 @@ import { getEventDrafts } from "@/actions/getEventDrafts";
 import { getPlaceDrafts } from "@/actions/getPlaceDrafts";
 import { getReviewDrafts } from "@/actions/getReviewDrafts";
 import DraftsView from "@/components/organisms/DraftsView";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Drafts" };
 
 export default async function DraftsPage() {
   // Best-effort opportunistic sweep of Cloudinary assets queued by expired

@@ -1,5 +1,8 @@
 import { getOrganizerLedgerTransactions } from "@/actions/getOrganizerLedgerTransactions";
 import FinancesTransactionsList from "@/finances/organisms/FinancesTransactionsList";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Finance transactions" };
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

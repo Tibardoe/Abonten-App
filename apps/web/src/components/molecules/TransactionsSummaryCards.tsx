@@ -44,18 +44,19 @@ export default function TransactionsSummaryCards({
     );
   }
 
-  // The RPC always returns at least one (currency, ...) row, even at zero
-  // activity (see get_user_transaction_summary migration comment).
-  const row = data.data[0];
-
-  if (!row) {
-    return (
-      <InlineErrorRetry
-        message="We couldn't load your transaction summary."
-        onRetry={() => refetch()}
-      />
-    );
-  }
+  // The RPC returns at least one (currency, ...) row, even at zero activity
+  // (migration 20260927015944 restored that after a 2026-09-24 regression).
+  // An empty answer still means "nothing yet", never a failure.
+  const row: UserTransactionSummaryRow = data.data[0] ?? {
+    currency: "",
+    amount_spent: 0,
+    total_transactions: 0,
+    successful_count: 0,
+    pending_count: 0,
+    failed_count: 0,
+    tickets_purchased: 0,
+    subscriptions_count: 0,
+  };
 
   const otherCurrencyRows = data.data.slice(1);
 

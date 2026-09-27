@@ -2,7 +2,10 @@ export const dynamic = "force-dynamic";
 
 import getOrganizerEvents from "@/actions/getOrganizerEvents";
 import { PageTitle } from "@/components/ui/typography";
+import type { Metadata } from "next";
 import OrganizerManagedEventsList from "./OrganizerManagedEventsList";
+
+export const metadata: Metadata = { title: "Your events" };
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

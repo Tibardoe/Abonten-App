@@ -1,5 +1,6 @@
 "use client";
 
+import { useMarketContext } from "@/hooks/useMarketContext";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerEventPerformanceRow } from "@abonten/types/eventAnalytics";
@@ -30,6 +31,10 @@ export default function OrganizerEventPerformanceList({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  // An event with no sales yet has no currency in its revenue row; show its
+  // zero in the market's currency rather than as a bare "0.00".
+  const { market } = useMarketContext();
+  const fallbackCurrency = market?.defaultCurrency ?? null;
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -91,7 +96,10 @@ export default function OrganizerEventPerformanceList({
               </div>
               <div className="text-right shrink-0">
                 <p className="font-bold">
-                  {formatMoney(event.currency, Number(event.revenue))}
+                  {formatMoney(
+                    event.currency ?? fallbackCurrency,
+                    Number(event.revenue),
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {Number(event.tickets_sold).toLocaleString()} tickets

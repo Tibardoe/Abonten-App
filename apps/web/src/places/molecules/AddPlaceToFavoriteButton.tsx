@@ -97,7 +97,7 @@ export default function AddPlaceToFavoriteButton({
     },
   });
 
-  const buttonText = isFavorite ? "Remove Favorited" : "Add to Favorite";
+  const buttonText = isFavorite ? "Saved" : "Save";
 
   const handleClick = async () => {
     if (await requireAuth()) mutate(!isFavorite);
@@ -110,6 +110,10 @@ export default function AddPlaceToFavoriteButton({
         className="flex items-center gap-1 p-1"
         onClick={handleClick}
         disabled={isPending}
+        aria-pressed={isFavorite}
+        aria-label={
+          isFavorite ? "Saved to your favourites" : "Save to your favourites"
+        }
       >
         {isFavorite ? (
           <MdFavorite className="text-xl text-red-500" />

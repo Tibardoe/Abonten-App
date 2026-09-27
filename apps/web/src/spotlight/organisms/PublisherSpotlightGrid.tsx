@@ -64,7 +64,9 @@ export default function PublisherSpotlightGrid({
   if (!ready || !program.spotlight) return null;
 
   const posts = query.data?.pages.flatMap((p) => p.posts) ?? [];
-  if (hideWhenEmpty && !query.isLoading && posts.length === 0) return null;
+  // A section that hides when empty also stays hidden while it loads, so
+  // the page does not flash a heading and a spinner that then vanish.
+  if (hideWhenEmpty && (query.isLoading || posts.length === 0)) return null;
 
   return (
     <section className="space-y-3">

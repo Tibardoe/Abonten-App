@@ -1,7 +1,10 @@
+"use client";
+
 import StatTile from "@/components/atoms/StatTile";
 import TrendIndicator from "@/components/atoms/TrendIndicator";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import {
   type TrendResult,
   computeTrend,
@@ -48,6 +51,11 @@ export default function OrganizerOverviewCards({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  // No sales yet means no currency on the overview row; show zero in the
+  // market's currency rather than as a bare "0.00".
+  const { market } = useMarketContext();
+  const fallbackCurrency = market?.defaultCurrency ?? null;
+
   if (isLoading) {
     return <StatTilesSkeleton count={4} />;
   }
@@ -80,7 +88,7 @@ export default function OrganizerOverviewCards({
   const comparisonLabel = DASHBOARD_PERIOD_COMPARISON_LABELS[period];
 
   const money = (amount: number, currency: string | null) =>
-    formatMoney(currency, Number(amount));
+    formatMoney(currency ?? fallbackCurrency, Number(amount));
 
   const ticketsSold = Number(primary.tickets_sold ?? 0);
   const registrations = Number(primary.registrations ?? 0);

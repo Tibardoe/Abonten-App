@@ -6,7 +6,9 @@ import { notFound } from "next/navigation";
 
 // Internal field-team pages: never indexed.
 export const metadata: Metadata = {
-  title: "Field Ops",
+  // A layout that sets its own title must restate the template, or its
+  // pages' titles lose " | Abonten Hub".
+  title: { default: "Field Ops", template: "%s | Abonten Hub" },
   robots: { index: false, follow: false },
 };
 
