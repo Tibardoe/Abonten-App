@@ -4,8 +4,8 @@ purpose: Read health checks, error groups and request telemetry; run the inciden
 audience: operations, engineering, super_admin
 scope: /monitoring, /monitoring/errors/[fingerprint]
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-27
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -18,7 +18,7 @@ Source: `packages/services/src/admin/observability/*`. Incident procedures: `../
 
 ## Health
 
-Real probes run every 2 minutes (pg_cron `abonten-health-check` → `run_scheduled_health_check()` → `GET /api/observability/health` on the web deployment, authenticated by a shared secret): `db`, `auth`, `storage`, `paystack` (`/bank`), `resend` (`/domains`), `hubtel` (auth ping), `cloudinary` (ping), `expo` (push API), plus the programme checks `rewards_health`, `fieldops` and `weekly` ("Abonten Weekly schedule": down when a scheduled edition is over 15 minutes late, or no Ghana edition is out by 09:00 Monday while the programme is on; a failed scheduled publish also opens an incident with component `weekly`), **`cron`** ("Scheduled jobs", since 2026-09-26: down when any active pg_cron job's latest run failed or a run has been "running" for over 30 minutes; the detail names the failing jobs and their error — `cron_health()` reads the newest 5,000 runs, and `purge-cron-run-details` keeps 14 days of history), and the synthetic **`self`** row written from the HTTP status the cron got back. A red `self` means the pipeline itself is broken (unreachable endpoint or a 401 from a mismatched `OBSERVABILITY_INGEST_SECRET`); fix that before trusting anything else.
+Real probes run every 2 minutes (pg_cron `abonten-health-check` → `run_scheduled_health_check()` → `GET /api/observability/health` on the web deployment, authenticated by a shared secret): `db`, `auth`, `storage`, `paystack` (`/bank`), `resend` (`/domains`), `hubtel` (auth ping — reachability only: an account that answers but will not send, such as an unpaid balance, stays green), **`otp`** ("Text-message codes (sending)", since 2026-09-27: down when every code send attempted in the last 30 minutes was refused by the provider; each refusal is also an `OtpSendFailed` error group under Errors with the provider's own words, phone numbers masked — see `packages/services/src/profile/otpSendMonitoring.ts`), `cloudinary` (ping), `expo` (push API), plus the programme checks `rewards_health`, `fieldops` and `weekly` ("Abonten Weekly schedule": down when a scheduled edition is over 15 minutes late, or no Ghana edition is out by 09:00 Monday while the programme is on; a failed scheduled publish also opens an incident with component `weekly`), **`cron`** ("Scheduled jobs", since 2026-09-26: down when any active pg_cron job's latest run failed or a run has been "running" for over 30 minutes; the detail names the failing jobs and their error — `cron_health()` reads the newest 5,000 runs, and `purge-cron-run-details` keeps 14 days of history), and the synthetic **`self`** row written from the HTTP status the cron got back. A red `self` means the pipeline itself is broken (unreachable endpoint or a 401 from a mismatched `OBSERVABILITY_INGEST_SECRET`); fix that before trusting anything else.
 
 
 ### Alerts (since 2026-09-26)

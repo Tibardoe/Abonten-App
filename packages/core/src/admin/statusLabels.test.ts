@@ -78,7 +78,8 @@ describe("statusMeta", () => {
 describe("labels for keys the console renders", () => {
   it("names each dependency the health probes cover", () => {
     expect(healthCheckLabel("self")).toBe("Web endpoint");
-    expect(healthCheckLabel("hubtel")).toBe("Hubtel (SMS codes)");
+    expect(healthCheckLabel("hubtel")).toBe("Hubtel (reachable)");
+    expect(healthCheckLabel("otp")).toBe("Text-message codes (sending)");
     expect(healthCheckLabel("brand_new_probe")).toBe("Brand new probe");
   });
 

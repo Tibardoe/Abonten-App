@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — Monitoring sees text-message codes that are not sent
+
+- `admin/monitoring-and-incidents.md` 1.1, `admin/support-scenarios.md`, `architecture/integrations.md`.
+- Behaviour: when the SMS provider refuses a sign-in, phone-change or field-owner code (for example Hubtel's "Payment required on account" on an unpaid balance), the refusal is recorded as an `OtpSendFailed` error (provider, country, reason and the provider's words, phone numbers masked) and a new health check, **`otp`** ("Text-message codes (sending)"), goes red when every send in the last 30 minutes was refused; three red runs open an incident that is emailed to the super-admins. Before, the only check (`hubtel`, now labelled "Hubtel (reachable)") stayed green while nobody could sign in by phone. A provider request that times out or returns something unreadable now gives the person the usual "Couldn't send the verification code" instead of an unhandled error. What people see is unchanged.
+- Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-27 — CI's browser suite gets its own database; brand colour contrast
 
 - `development/ci.md`, `development/testing.md` 1.2, `security/secrets-and-environment.md` 1.4.

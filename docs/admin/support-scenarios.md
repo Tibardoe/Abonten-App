@@ -61,8 +61,8 @@ Keyword index: *paid no ticket · double charge · refund missing · cancel tick
 - **Steps:** they edit under Manage › Places (help article). Only the owner can edit; admins cannot. If they are not the owner → scenario 8.
 
 ### 10. "I can't sign in" / "No code arrives"
-- **Diagnosis:** which method? Phone: Hubtel health, number format (+233), rate limits (per IP/hour, 60 s cooldown, 5 attempts). Email: Supabase Auth SMTP (Resend) health, spam folder. Google: try another method with the same email.
-- **Steps:** check Monitoring health for `hubtel` / `resend`; advise waiting out the cooldown; suggest an alternative method. Never read codes to a user (staff cannot see them anyway).
+- **Diagnosis:** which method? Phone: the `otp` health check (codes actually going out) and the `OtpSendFailed` errors, number format (+233), rate limits (per IP/hour, 60 s cooldown, 5 attempts). Email: Supabase Auth SMTP (Resend) health, spam folder. Google: try another method with the same email.
+- **Steps:** check Monitoring health for `otp` / `hubtel` / `resend` (a red `otp` with a green `hubtel` means Hubtel answers but refuses to send — usually the account balance; tell the founder); advise waiting out the cooldown; suggest an alternative method. Never read codes to a user (staff cannot see them anyway).
 - **Escalation:** engineering if the provider is down (incident).
 
 ### 11. "Your account is restricted"

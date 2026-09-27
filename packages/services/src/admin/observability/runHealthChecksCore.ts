@@ -7,6 +7,10 @@ import {
   resolveMarketAccounts,
 } from "../../payments/providers/registry";
 import {
+  otpSendHealthy,
+  readOtpSendHealth,
+} from "../../profile/otpSendMonitoring";
+import {
   type SendAlertEmail,
   escalateAndAlertCore,
 } from "./incidentAlertsCore";
@@ -259,6 +263,19 @@ export async function runHealthChecksCore(
     );
     push("hubtel", hb, hb.err === null, { httpStatus: hb.value?.status });
   }
+
+  // otp: codes are actually going out, whichever provider a market uses.
+  // The probe above cannot see an account that answers but will not send
+  // (an unpaid Hubtel balance). Down when every send attempted in the last
+  // 30 minutes was refused by the provider (otpSendMonitoring.ts); no
+  // attempts means nothing to judge, which is healthy.
+  const otp = await timed(() => readOtpSendHealth(serviceClient));
+  push(
+    "otp",
+    otp,
+    !!otp.value && otpSendHealthy(otp.value),
+    otp.value ?? undefined,
+  );
 
   // push (Expo) — reachability of the push endpoint
   const expo = await timed(() =>
