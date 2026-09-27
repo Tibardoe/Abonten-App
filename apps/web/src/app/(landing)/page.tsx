@@ -3,6 +3,7 @@ import LandingLocationSearch from "@/landingPage/organisms/LandingLocationSearch
 import { SIGN_OFF } from "@abonten/core/brand/signOff";
 import Image from "next/image";
 import Link from "next/link";
+import landingHero from "../../../public/assets/images/landing-hero.jpg";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -11,7 +12,21 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="fixed w-full">
-      <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-dvh relative text-white flex flex-col items-center">
+      <div className="bg-night w-full h-dvh relative text-white flex flex-col items-center">
+        {/* The crowd photo through next/image: sized per screen and served as
+            AVIF/WebP (the CSS background shipped the 2.6 MB original to
+            every phone), with a blurred preview while it loads. */}
+        <Image
+          src={landingHero}
+          alt=""
+          fill
+          priority
+          placeholder="blur"
+          // Cropped to cover: on a tall screen the landscape photo is drawn
+          // about 1.5 screen-heights wide, not one screen-width.
+          sizes="(max-aspect-ratio: 3/2) 150vh, 100vw"
+          className="object-cover object-bottom"
+        />
         {/* Header */}
         <nav className="fixed w-full bg-gradient-to-b from-black/60 to-transparent flex justify-center z-10">
           <div className="flex justify-between items-center py-5 w-[90%]">
