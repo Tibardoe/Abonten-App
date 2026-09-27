@@ -1,12 +1,13 @@
 "use client";
 
 import ModalShell from "@/components/atoms/ModalShell";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import MaskIcon from "../atoms/MaskIcon";
 import AutoComplete, {
   type AutoCompleteHandle,
@@ -39,19 +40,21 @@ export default function ChangeLocationModal({
     address: string;
   } | null>(null);
 
-  // Get user's current coordinates on mount
-  useEffect(() => {
+  // The map starts on the visitor's position when they open it and allow
+  // it, else on the centre of the market they're browsing — it no longer
+  // asks for the position as soon as this modal opens, and no longer falls
+  // back to Nairobi.
+  const { market } = useMarketContext();
+  const handleOpenMap = () => {
+    const fallback = market?.centre ?? { lat: 5.6037, lng: -0.187 };
     getCurrentPosition()
       .then((pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       })
       .catch(() => {
-        setCoords({ lat: -1.286389, lng: 36.817223 }); // Fallback to Nairobi
-      });
-  }, []);
-
-  const handleOpenMap = () => {
-    setIsMapOpen(true);
+        setCoords(fallback);
+      })
+      .finally(() => setIsMapOpen(true));
   };
 
   const handleLocationSelect = (location: {

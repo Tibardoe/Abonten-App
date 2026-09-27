@@ -17,11 +17,10 @@ import {
   useIsOrganizer,
   useIsPlaceOwner,
 } from "@/hooks/useCurrentUser";
-import { useGetUserLocation } from "@/hooks/useUserLocation";
+import { useExploreHref } from "@/hooks/useExploreHref";
 import { MessagesNavLink } from "@/messaging/components/MessagesNavLink";
 import { signOut } from "@/services/authService";
 import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
-import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -37,8 +36,7 @@ export default function Header() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const location = useGetUserLocation();
-  const exploreHref = `/explore/${generateSlug(location ?? "")}`;
+  const exploreHref = useExploreHref();
 
   // Shared with SideBar/MobileNavBar/etc. — one cached fetch instead of
   // each component independently calling supabase.auth.getUser().

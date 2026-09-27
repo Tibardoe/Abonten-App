@@ -11,6 +11,8 @@ type MobileNavButtonProp = {
   Icon: IconType;
   /** Small unread count shown on the icon (e.g. Messages). */
   badge?: number;
+  /** Light up for any path under this prefix (Home's href carries an area). */
+  activePrefix?: string;
 };
 
 export default function MobileNavButton({
@@ -18,16 +20,19 @@ export default function MobileNavButton({
   href,
   Icon,
   badge,
+  activePrefix,
 }: MobileNavButtonProp) {
   const pathname = usePathname();
   // Highlight when the tab's own path or any child of it is active, so
   // /messages/<id> still lights the Messages tab.
-  const active = pathname === href || pathname.startsWith(`${href}/`);
+  const active = activePrefix
+    ? pathname.startsWith(activePrefix)
+    : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <Link
       href={href}
-      type="button"
+      aria-current={active ? "page" : undefined}
       className={cn(
         "flex flex-col items-center text-sidebar-foreground opacity-50",
         {

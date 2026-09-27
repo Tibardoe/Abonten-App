@@ -625,7 +625,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
   return (
     <div
       ref={containerRef}
-      className="relative w-full md:w-fit bg-muted rounded-lg flex justify-between p-3 ring-1 ring-transparent transition-shadow focus-within:ring-ring"
+      className="relative w-full md:max-w-2xl bg-muted rounded-lg flex justify-between p-3 ring-1 ring-transparent transition-shadow focus-within:ring-ring"
     >
       <div className="flex items-center gap-2 mr-5 flex-1 min-w-0">
         <Link

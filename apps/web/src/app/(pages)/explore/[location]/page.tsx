@@ -1,3 +1,4 @@
+import RememberExploreArea from "@/components/atoms/RememberExploreArea";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import EventsTabContent from "@/events/organisms/EventsTabContent";
 import { isExploreTab } from "@/places/exploreTab";
@@ -101,6 +102,11 @@ export default async function page({
       <h1 className="text-xl md:text-2xl font-bold">Explore</h1>
 
       <LocationAndFilterSection />
+
+      {/* This becomes the area "Explore" and "Home" return to. */}
+      <Suspense fallback={null}>
+        <RememberExploreArea />
+      </Suspense>
 
       {/* Signed-in, setup unfinished, not put away recently. */}
       <AccountSetupReminder className="my-3" />

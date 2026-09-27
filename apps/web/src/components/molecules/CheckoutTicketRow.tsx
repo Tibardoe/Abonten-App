@@ -70,14 +70,16 @@ export default function CheckoutTicketRow({
 
           <p
             className={
-              ticket.quantity === 0 ? "text-destructive font-bold" : ""
+              ticket.quantity === 0
+                ? "text-destructive font-semibold"
+                : "text-sm text-muted-foreground"
             }
           >
             {ticket.quantity === null
               ? "Unlimited"
               : ticket.quantity === 0
                 ? "Sold out"
-                : `Quantity left: ${ticket.quantity}`}
+                : `${ticket.quantity} left`}
           </p>
         </div>
 

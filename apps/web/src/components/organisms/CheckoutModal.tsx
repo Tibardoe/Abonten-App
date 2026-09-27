@@ -142,7 +142,7 @@ export default function CheckoutModal({
   // Uses the same allocatePromoEligibility function validateCheckout.ts runs
   // server-side (checkoutPricing.ts), fed with lines in ticketList order —
   // this is a live preview only, the server recomputes and persists the
-  // authoritative numbers at "Proceed to Payment".
+  // authoritative numbers at "Continue to payment".
   const promoEligibility = useMemo(() => {
     if (!appliedPromo) return null;
 
@@ -253,13 +253,13 @@ export default function CheckoutModal({
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[90%] lg:w-[40%] md:rounded-xl py-5 space-y-5">
         {/* Header */}
         <div className="space-y-5">
-          <div className="flex justify-between px-5">
-            <div className="text-muted-foreground flex flex-col items-center md:gap-2 w-full">
-              <h1 className="text-xl md:text-2xl">
-                {eventTitle.toUpperCase()}
+          <div className="flex justify-between gap-4 px-5">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <h1 className="text-lg font-semibold text-foreground md:text-xl text-balance">
+                {eventTitle}
               </h1>
-              <p className="text-xs md:text-sm">
-                {date} {time}
+              <p className="text-sm text-muted-foreground">
+                {date} · {time}
               </p>
             </div>
 
@@ -277,19 +277,9 @@ export default function CheckoutModal({
         </div>
 
         <div className="flex flex-col gap-5 overflow-y-scroll h-[80%] px-5">
-          <CheckoutPromoCodeBox
-            promoCodeInput={promoCodeInput}
-            onPromoCodeInputChange={setPromoCodeInput}
-            appliedPromo={appliedPromo}
-            isApplying={promoMutation.isPending}
-            onApply={() => promoMutation.mutate(promoCodeInput)}
-            onRemove={removePromoCode}
-            promoEligibility={promoEligibility}
-          />
-
           {/* Display tickets */}
           {isTicketsLoading ? (
-            <p className="font-bold">Loading Tickets...</p>
+            <p className="text-muted-foreground">Loading tickets…</p>
           ) : isTicketsError ? (
             <div className="flex flex-col items-start gap-2">
               <p className="font-bold text-destructive">
@@ -351,6 +341,18 @@ export default function CheckoutModal({
             </>
           )}
 
+          {/* After the tickets, beside the totals it changes: people pick
+              what they want first, then apply a code. */}
+          <CheckoutPromoCodeBox
+            promoCodeInput={promoCodeInput}
+            onPromoCodeInputChange={setPromoCodeInput}
+            appliedPromo={appliedPromo}
+            isApplying={promoMutation.isPending}
+            onApply={() => promoMutation.mutate(promoCodeInput)}
+            onRemove={removePromoCode}
+            promoEligibility={promoEligibility}
+          />
+
           <CheckoutOrderTotals
             currency={ticketList[0]?.currency ?? undefined}
             subTotal={subTotal}
@@ -369,9 +371,9 @@ export default function CheckoutModal({
               !hasSelectedTickets ||
               hasUnavailableSelection
             }
-            className="rounded-md p-4 font-bold text-primary-foreground bg-primary text-center mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="h-12 rounded-lg font-semibold text-primary-foreground bg-primary text-center mt-2 transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProceeding ? "Loading..." : "Proceed to Payment"}
+            {isProceeding ? "One moment…" : "Continue to payment"}
           </button>
         </div>
       </div>

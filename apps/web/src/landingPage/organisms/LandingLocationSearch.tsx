@@ -14,8 +14,14 @@ import { IoNavigateOutline } from "react-icons/io5";
 
 // The only genuinely interactive part of the landing page — everything
 // else (hero text, nav, background) is static and lives in the Server
-// Component page around this island.
-export default function LandingLocationSearch() {
+// Component page around this island. Also the search on the /explore area
+// chooser, where it sits on the page's own background (`onDark={false}`).
+export default function LandingLocationSearch({
+  onDark = true,
+}: {
+  /** Drawn over the dark landing photo (true) or on a plain page. */
+  onDark?: boolean;
+}) {
   const router = useRouter();
   const autoCompleteRef = useRef<AutoCompleteHandle>(null);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
@@ -86,9 +92,15 @@ export default function LandingLocationSearch() {
   };
 
   return (
-    <div className="flex w-full max-w-xl flex-col items-center gap-4 lg:items-start">
+    <div
+      className={`flex w-full max-w-xl flex-col items-center gap-4 ${onDark ? "lg:items-start" : ""}`}
+    >
       <form
-        className="flex w-full items-center gap-2 rounded-2xl bg-white/95 p-1.5 shadow-2xl shadow-black/30 ring-1 ring-white/20 text-lg md:text-xl"
+        className={`flex w-full items-center gap-2 rounded-2xl p-1.5 text-lg md:text-xl ${
+          onDark
+            ? "bg-white/95 shadow-2xl shadow-black/30 ring-1 ring-white/20"
+            : "bg-white shadow-md ring-1 ring-border"
+        }`}
         onSubmit={(event) => {
           event.preventDefault();
           void handleGoClick();
@@ -123,7 +135,11 @@ export default function LandingLocationSearch() {
         type="button"
         onClick={handleUseMyLocation}
         disabled={isLocating}
-        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-60"
+        className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+          onDark
+            ? "text-white/90 hover:bg-white/10 hover:text-white"
+            : "text-foreground hover:bg-accent"
+        }`}
       >
         {isLocating ? (
           <Loader2 aria-hidden className="h-4 w-4 animate-spin" />

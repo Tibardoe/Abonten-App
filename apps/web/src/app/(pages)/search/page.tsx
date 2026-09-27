@@ -12,6 +12,7 @@ import {
 } from "@abonten/core/parseFilterModalQueries";
 import { parseFilters } from "@abonten/core/parseFilterModalQueries";
 import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SearchResultsList from "./SearchResultsList";
@@ -20,6 +21,21 @@ const MODES: SearchMode[] = ["all", "events", "places", "organizers"];
 
 function one(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+}
+
+// Search results are personal to the query and thin as pages, so they are
+// kept out of the index (robots.txt disallows /search as well); the tab
+// names what was searched for.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  const q = one((await searchParams).q);
+  return {
+    title: q ? `${q.slice(0, 60)} · Search` : "Search",
+    robots: { index: false, follow: true },
+  };
 }
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

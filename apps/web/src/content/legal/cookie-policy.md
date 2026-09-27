@@ -40,6 +40,7 @@ The website also uses your browser's local storage for conveniences that never l
 |---|---|
 | `theme` | Light, dark or system appearance |
 | `abonten:recent-searches` | Your last eight search terms |
+| `abn_explore_area` | The last area you explored, so Explore and Home take you back there |
 | Inbox preferences (per account) | Which filter and view you last used in Messages |
 | Field-programme form draft (session only) | Keeps a half-completed onboarding form if the page reloads |
 | Referral logging flag (session only) | Prevents the same referral link being recorded twice in one visit |
