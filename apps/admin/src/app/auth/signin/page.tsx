@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandMark } from "@/components/BrandMark";
 import { createBrowserClient } from "@supabase/ssr";
 import { useState } from "react";
 
@@ -22,6 +23,7 @@ export default function SignInPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6 text-center">
+        <BrandMark className="mx-auto mb-4 h-12 w-12 text-foreground" />
         <h1 className="text-lg font-semibold">Abonten Admin</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Internal operations console. Staff access only.
