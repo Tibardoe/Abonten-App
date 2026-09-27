@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — Preview database key, Dependabot, Google Play reports
+
+- `security/secrets-and-environment.md`.
+- Behaviour: Vercel Preview and Development deployments of web and admin now have the preview project's own `SUPABASE_SERVICE_ROLE_KEY` (production keeps its own), so server-side features work on preview sites. Dependabot alerts are on; the two raised at switch-on (`uuid` via `xcode`, `decode-uri-component`) are unreachable in anything shipped and were dismissed with the reason recorded. The Google Play Developer Reporting and Android Developer APIs are on in the Google Cloud project `abonten-452216`, and the Firebase service account has read-only access to the app in Play Console, so Android crashes, ANRs and reviews can be read (none at the time).
+- Migrations, permissions, jobs: none. Env vars: `SUPABASE_SERVICE_ROLE_KEY` for Preview/Development (Vercel, both projects).
+
 ## 2026-09-27 — Monitoring sees text-message codes that are not sent
 
 - `admin/monitoring-and-incidents.md` 1.1, `admin/support-scenarios.md`, `architecture/integrations.md`.
