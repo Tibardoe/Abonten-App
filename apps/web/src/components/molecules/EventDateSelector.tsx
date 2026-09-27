@@ -153,7 +153,7 @@ export default function EventDateSelector({
         <button
           type="button"
           disabled
-          className="font-bold rounded-lg w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
+          className="h-12 w-full rounded-lg text-base font-semibold bg-muted text-muted-foreground cursor-not-allowed"
         >
           {blockedLabel}
         </button>

@@ -170,11 +170,11 @@ export default function AttendingButton({
     eventStatusRaw === "canceled"
       ? "Event cancelled"
       : rsvpState.blockReason === "ended"
-        ? "Event Ended"
+        ? "Event ended"
         : rsvpState.blockReason === "ongoing_no_future"
-          ? "Event In Progress"
+          ? "Event in progress"
           : soldOut && !isAttending
-            ? "Sold Out"
+            ? "Sold out"
             : null;
 
   if (ineligibleLabel) {
@@ -182,7 +182,7 @@ export default function AttendingButton({
       <button
         type="button"
         disabled
-        className="font-bold rounded-lg w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
+        className="h-12 w-full rounded-lg text-base font-semibold bg-muted text-muted-foreground cursor-not-allowed"
       >
         {ineligibleLabel}
       </button>
@@ -194,7 +194,7 @@ export default function AttendingButton({
       {isAttending ? (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-success/20 bg-success/10 p-4">
           <span className="flex items-center gap-2 font-bold text-success">
-            <FiCheck className="text-xl" /> I&apos;m Attending
+            <FiCheck className="text-xl" /> You&apos;re going
           </span>
           <button
             type="button"
@@ -202,7 +202,7 @@ export default function AttendingButton({
             disabled={isPending}
             className="text-sm font-semibold text-destructive hover:underline disabled:opacity-50 disabled:no-underline shrink-0"
           >
-            {isPending ? "Cancelling..." : "Cancel Attendance"}
+            {isPending ? "Cancelling…" : "Can't make it"}
           </button>
         </div>
       ) : (
@@ -210,9 +210,9 @@ export default function AttendingButton({
           type="button"
           onClick={handleClick}
           disabled={isPending}
-          className="font-bold rounded-lg w-full p-6 text-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-70"
+          className="h-12 w-full rounded-lg text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-70"
         >
-          {isPending ? "Registering..." : "I'm Attending"}
+          {isPending ? "Registering…" : "Register for free"}
         </button>
       )}
 
@@ -220,10 +220,10 @@ export default function AttendingButton({
         <RecommendationPromptCard context={{ context: "rsvp", eventId }} />
       ) : null}
 
-      {attendanceCount !== null && (
+      {attendanceCount !== null && attendanceCount > 0 && (
         <p className="text-sm text-muted-foreground text-center">
           {attendanceCount} {attendanceCount === 1 ? "person is" : "people are"}{" "}
-          attending
+          going
         </p>
       )}
     </div>
