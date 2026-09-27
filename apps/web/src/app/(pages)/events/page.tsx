@@ -1,9 +1,10 @@
-import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
+import ExploreAreaChooser from "@/events/organisms/ExploreAreaChooser";
 import type { Metadata } from "next";
 
 // Reached only by a typed URL or a stale bookmark (every in-app link carries
 // the visitor's location). Thin by design, so it is kept out of the index;
-// the location pages are the ones search engines should show.
+// the location pages are the ones search engines should show. Same area
+// chooser as /explore.
 export const metadata: Metadata = {
   title: "Explore events and places",
   robots: { index: false, follow: true },
@@ -14,14 +15,5 @@ export const metadata: Metadata = {
 // export const instant = false;
 
 export default function page() {
-  return (
-    <div>
-      <LocationAndFilterSection />
-      <div className="min-h-[50vh] flex justify-center items-center">
-        <p className="text-center text-muted-foreground px-4">
-          Choose a location above to see what's happening near it.
-        </p>
-      </div>
-    </div>
-  );
+  return <ExploreAreaChooser />;
 }

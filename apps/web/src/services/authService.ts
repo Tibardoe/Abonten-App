@@ -6,10 +6,9 @@ export const signInWithGoogle = async (
   location: string | null,
   next?: string | null,
 ) => {
-  // `location` here is already slugified by the caller (GoogleAuthButton.tsx
-  // passes generateSlug(location ?? "")) -- matches the /explore/[location]
-  // landing pattern used by Header.tsx/SideBar.tsx/MobileNavBar.tsx, not the
-  // old /events/location/[location] route.
+  // Callers pass the full return address as `next` (GoogleAuthButton sends
+  // the page to come back to, or the visitor's last explored area);
+  // `location` is only a slug fallback for /explore/<area>.
   const target = next || `/explore/${location || ""}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({

@@ -41,6 +41,7 @@ Public version: `apps/web/src/content/legal/cookie-policy.md`. **When anything b
 |---|---|---|---|
 | `theme` | localStorage (next-themes default key) | `src/providers/ThemeProvider.tsx` | light/dark/system |
 | `abonten:recent-searches` | localStorage | `src/utils/recentSearches.ts` | last 8 search strings |
+| `abn_explore_area` | localStorage | `src/utils/exploreArea.ts` (since 2026-09-27) | the last `/explore/<area>` address visited, with its lat/lng when the visitor used their own position — where Explore, Home and the post-sign-in redirect go. Replaced the header's position request on every page load |
 | `<storageKey(userId)>` inbox prefs | localStorage | `src/messaging/hooks/useInboxPrefs.ts` | mode + filter chips |
 | `fieldops-onboarding:<id>` | sessionStorage | `src/fieldOps/lib/wizardStorage.ts` | wizard draft incl. business phone/WhatsApp, coordinates |
 | `abn-ref-logged:<path>:<code>` | sessionStorage | `src/rewards/atoms/ReferralTouchLogger.tsx` | dedupe flag |

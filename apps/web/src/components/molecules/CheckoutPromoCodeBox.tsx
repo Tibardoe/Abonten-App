@@ -33,7 +33,7 @@ export default function CheckoutPromoCodeBox({
 }: CheckoutPromoCodeBoxProps) {
   return (
     <div className="flex flex-col text-sm gap-2">
-      <span>Promo Code</span>
+      <span>Promo code</span>
 
       <div className="space-y-2 flex flex-col">
         <div className="flex h-10 items-center justify-between gap-3 rounded-md border border-input bg-background pr-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">

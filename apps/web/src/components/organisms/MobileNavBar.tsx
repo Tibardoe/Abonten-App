@@ -1,9 +1,8 @@
 "use client";
 
 import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
-import { useGetUserLocation } from "@/hooks/useUserLocation";
+import { useExploreHref } from "@/hooks/useExploreHref";
 import { useUnreadMessageCount } from "@/messaging/hooks/useUnreadMessageCount";
-import { generateSlug } from "@abonten/core/geerateSlug";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -20,7 +19,7 @@ import MobileAuthPopup from "./AuthModal";
 export default function MobileNavBar() {
   const t = useTranslations("navigation");
 
-  const location = useGetUserLocation();
+  const exploreHref = useExploreHref();
 
   const pathname = usePathname();
 
@@ -56,7 +55,8 @@ export default function MobileNavBar() {
       <div className="flex lg:hidden justify-center w-full fixed z-10 bottom-0 border-t border-sidebar-border pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85">
         <div className="flex justify-between w-[90%]">
           <MobileNavButton
-            href={`/explore/${generateSlug(location || "default-location")}`}
+            href={exploreHref}
+            activePrefix="/explore"
             text={t("home")}
             Icon={GoHome}
           />

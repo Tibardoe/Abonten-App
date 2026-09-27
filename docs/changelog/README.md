@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — No location prompt on page load; area chooser; checkout and footer
+
+- PROJECT.md §49; `privacy/cookies-and-storage-inventory.md` and the draft public Cookie Policy (new `abn_explore_area` key).
+- Behaviour: the website no longer asks for the visitor's position as soon as any page opens (the header, bottom bar and sign-in screen did, then reverse-geocoded it with Google). Explore, Home and the redirect after signing in go to the area the visitor last explored, remembered in this browser; with none yet they go to `/explore`, now an area chooser ("Where do you want to go out?") with a search, "Use my current location" and the cities of the visitor's market (linked with their coordinates, so no lookup). `/events` shows the same chooser. The Change location map asks for the position only when opened and otherwise starts on the market's centre (it fell back to Nairobi). Checkout lists tickets before the promo code, shows "N left", and ends in "Continue to payment". The search field is wide on desktop and the search tab names the query (search stays out of the index). Wide screens get a full footer (brand, Discover, Host on Abonten, Help and legal, support address).
+- Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-27 — Transaction summary fix, profiles, titles
 
 - PROJECT.md §49.

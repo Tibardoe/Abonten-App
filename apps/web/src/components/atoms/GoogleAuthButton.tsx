@@ -1,17 +1,16 @@
 import { useToast } from "@/hooks/useToast";
 import { signInWithGoogle } from "@/services/authService";
-import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 
 type GoogleTextProp = {
-  location: string | null;
+  /** Where to land after signing in. */
   next?: string | null;
 };
 
-export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
+export default function GoogleAuthButton({ next }: GoogleTextProp) {
   const t = useTranslations("auth");
   const toast = useToast();
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -20,7 +19,7 @@ export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
     setIsSigningIn(true);
 
     try {
-      await signInWithGoogle(generateSlug(location ?? ""), next);
+      await signInWithGoogle(null, next);
       // No need to reset isSigningIn on success -- signInWithOAuth navigates
       // the browser away to Google before this function returns.
     } catch (error) {

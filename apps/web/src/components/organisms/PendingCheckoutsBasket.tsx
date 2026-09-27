@@ -653,7 +653,7 @@ export default function PendingCheckoutsBasket({
             onClick={handleProceed}
             className="w-full rounded-md p-4 font-bold text-primary-foreground bg-primary text-center mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProceeding ? "Processing..." : "Proceed to Payment"}
+            {isProceeding ? "One moment…" : "Continue to payment"}
           </button>
         )}
       </CollapsiblePaymentPanel>

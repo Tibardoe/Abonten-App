@@ -4,7 +4,7 @@ import requestEmailOtp from "@/actions/requestEmailOtp";
 import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import verifyEmailSignIn from "@/actions/verifyEmailSignIn";
 import verifyPhoneSignIn from "@/actions/verifyPhoneSignIn";
-import { useGetUserLocation } from "@/hooks/useUserLocation";
+import { useExploreHref } from "@/hooks/useExploreHref";
 import InviteCodeField from "@/rewards/molecules/InviteCodeField";
 import { LEGAL_PATHS } from "@abonten/core/brand/socialLinks";
 import {
@@ -12,7 +12,6 @@ import {
   isLikelyEmail,
   maskEmail,
 } from "@abonten/core/emailOtp";
-import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
@@ -50,7 +49,7 @@ export default function AuthModal({
 }: PopupProp) {
   const t = useTranslations("auth");
 
-  const location = useGetUserLocation();
+  const exploreHref = useExploreHref();
 
   const [view, setView] = useState<View>("choose");
 
@@ -103,7 +102,7 @@ export default function AuthModal({
     // client-side transition would leave every already-fetched React Query
     // cache holding its stale pre-sign-in state. Google avoids this trap
     // because /auth/callback issues a real HTTP redirect.
-    window.location.href = next || `/explore/${generateSlug(location ?? "")}`;
+    window.location.href = next || exploreHref;
   };
 
   // ---- phone ----------------------------------------------------------------
@@ -254,7 +253,7 @@ export default function AuthModal({
           />
 
           <div className="space-y-5">
-            <GoogleAuthButton location={location} next={next} />
+            <GoogleAuthButton next={next || exploreHref} />
 
             <button
               type="button"
