@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — Unused sign-in variables and test uploads removed
+
+- `security/secrets-and-environment.md` 1.6, `development/ci.md`.
+- Behaviour: none. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` (read by no code; Google sign-in lives in Supabase Auth) are deleted from the Vercel web project, the GitHub Actions secrets, the CI workflow and `turbo.json`. The 11 Spotlight/Stories test uploads of 2026-09-16 (a deleted QA account, referenced by no row) are deleted from Cloudinary; the 6 real posts under `content_media/production/` are untouched.
+- Migrations, permissions, jobs: none. Env vars: the four above removed.
+
 ## 2026-09-27 — Preview database key, Dependabot, Google Play reports
 
 - `security/secrets-and-environment.md`.
