@@ -6,6 +6,25 @@ import { createClient } from "@/config/supabase/server";
 import ManageEventView from "@/events/organisms/ManageEventView";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import type { Metadata } from "next";
+
+// The tab names what is being managed. RLS limits the read to rows this
+// person may see; anyone else just gets the section's own title.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}): Promise<Metadata> {
+  const { eventId } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("event")
+    .select("title")
+    .eq("id", eventId)
+    .maybeSingle();
+  const name = data?.title;
+  return { title: name ? `Manage · ${name}` : "Manage event" };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

@@ -8,6 +8,25 @@ import { getSubjectVerification } from "@/actions/verification/getSubjectVerific
 import { createClient } from "@/config/supabase/server";
 import ManagePlaceView from "@/places/organisms/ManagePlaceView";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
+import type { Metadata } from "next";
+
+// The tab names what is being managed. RLS limits the read to rows this
+// person may see; anyone else just gets the section's own title.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ placeId: string }>;
+}): Promise<Metadata> {
+  const { placeId } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("place")
+    .select("name")
+    .eq("id", placeId)
+    .maybeSingle();
+  const name = data?.name;
+  return { title: name ? `Manage · ${name}` : "Manage place" };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
