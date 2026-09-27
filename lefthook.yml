@@ -13,3 +13,7 @@ pre-push:
   commands:
     lint-ci:
       run: npm run lint:ci
+    # Same reasoning: a docs-only change pushed straight to main once
+    # failed CI's docs job (a mailbox the contacts rule forbids).
+    docs:
+      run: npm run check:docs
