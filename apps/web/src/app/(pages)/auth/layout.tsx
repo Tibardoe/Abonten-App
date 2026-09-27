@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 
 // Sign-in and OAuth callback: never indexed.
 export const metadata: Metadata = {
-  title: "Sign in",
+  // A layout that sets its own title must restate the template, or its
+  // pages' titles lose " | Abonten Hub".
+  title: { default: "Sign in", template: "%s | Abonten Hub" },
   robots: { index: false, follow: false },
 };
 

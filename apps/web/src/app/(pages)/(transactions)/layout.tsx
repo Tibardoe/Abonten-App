@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 
 // Personal purchase history: never indexed.
 export const metadata: Metadata = {
-  title: "Transactions",
+  // A layout that sets its own title must restate the template, or its
+  // pages' titles lose " | Abonten Hub".
+  title: { default: "Transactions", template: "%s | Abonten Hub" },
   robots: { index: false, follow: false },
 };
 

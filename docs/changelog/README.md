@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — Transaction summary fix, profiles, titles
+
+- PROJECT.md §49.
+- Behaviour: the Transactions page (web and app) no longer says "We couldn't load your transaction summary" to anyone without a paid purchase in the period — the summary function returned no row at all after the 2026-09-24 per-currency rewrite; it returns a zero row again. Profiles lead with the person's name, then @handle, bio, followers, events and rating ("No reviews yet" until someone rates), and Follow / Write a review / Report, or Edit profile for the owner; the Highlights row is hidden from visitors when empty. Places show "New" instead of "0.0 (0)", keep their actions in the photo's corner on phones, and favourites read Save / Saved. Zero money shows its currency ("GH₵0.00") on the organizer dashboard and Finances. The organizer dashboard greets by first name. Management, settings, finances, messages, wallet, rewards and plans pages have their own tab titles, all ending "| Abonten Hub".
+- Migration `20260927015944_transaction_summary_zero_row` (function `get_user_transaction_summary`, guarded by the previous definition's fingerprint). Env vars, permissions, jobs: none.
+
 ## 2026-09-27 — Web navigation, event page and translations
 
 - PROJECT.md §49.

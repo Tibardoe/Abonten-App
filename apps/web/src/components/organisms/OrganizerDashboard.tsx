@@ -136,6 +136,10 @@ export default function OrganizerDashboard() {
     return "Good evening";
   })();
 
+  // First name when the person has given one, else their handle.
+  const greetingName =
+    userDetails?.full_name?.trim().split(/s+/)[0] || userDetails?.username;
+
   if (hasNoEvents) {
     return (
       <div className="flex flex-col items-center text-center gap-4 py-16">
@@ -155,7 +159,7 @@ export default function OrganizerDashboard() {
       <div>
         <PageTitle>
           {greeting}
-          {userDetails?.username ? `, ${userDetails.username}` : ""}
+          {greetingName ? `, ${greetingName}` : ""}
         </PageTitle>
       </div>
 

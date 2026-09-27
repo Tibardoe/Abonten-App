@@ -1,6 +1,9 @@
 import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import WalletManager from "@/wallet/organisms/WalletManager";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Payment methods" };
 
 // Per-user, request-time data (this user's saved payment methods) — same
 // force-dynamic precedent as manage/my-events/page.tsx. Independent of any

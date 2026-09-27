@@ -5,7 +5,9 @@ import type { Metadata } from "next";
 
 // Organizer money pages: never indexed.
 export const metadata: Metadata = {
-  title: "Finances",
+  // A layout that sets its own title must restate the template, or its
+  // pages' titles lose " | Abonten Hub".
+  title: { default: "Finances", template: "%s | Abonten Hub" },
   robots: { index: false, follow: false },
 };
 

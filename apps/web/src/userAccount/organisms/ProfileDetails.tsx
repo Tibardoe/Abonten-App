@@ -2,13 +2,12 @@ import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import { getUserRating } from "@/actions/getUserRating";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
 import ReportButton from "@/components/atoms/ReportButton";
-import UserHighlights from "@/components/molecules/UserHighlights";
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
-import { Button } from "@/components/ui/button";
-import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
 import Link from "next/link";
-import SettingsButton from "../atoms/SettingsButton";
-import Higlight from "../molecules/Highlight";
+import { MdOutlineSettings } from "react-icons/md";
+import ProfileFollowerCount from "../molecules/ProfileFollowerCount";
+import ProfileHighlightsSection from "../molecules/ProfileHighlightsSection";
 import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
 import { getOrganizerVerified } from "@/actions/verification/getOrganizerVerified";
@@ -20,6 +19,10 @@ type LayoutUserProp = {
   userDetails?: Awaited<ReturnType<typeof getUserProfileDetails>>;
 };
 
+// The header of a public profile: one layout for every screen size (it
+// used to be two copies, one per breakpoint, that had drifted apart). Name
+// first, then the handle, bio, a stats row and the actions: Follow for a
+// visitor, Edit profile for the owner.
 export default async function ProfileDetails({
   username,
   userDetails: prefetchedUserDetails,
@@ -38,252 +41,169 @@ export default async function ProfileDetails({
   const isCurrentUser = userDetails.ownUsername === username;
 
   const { data } = userDetails;
+  const userId = userDetails.data.user_id;
+  const handle = data.username ?? username;
+  const displayName = data.full_name?.trim() || `@${handle}`;
 
-  const defaultPublicId = "AnonymousProfile_rn6qez";
-
-  const defaulfVersion = "1743533914";
-
-  const avatarUrl = data?.avatar_public_id
-    ? buildCloudinaryUrl(data.avatar_public_id, data.avatar_version, {
-        width: 150,
-        height: 150,
-      })
-    : buildCloudinaryUrl(defaultPublicId, defaulfVersion, {
-        width: 150,
-        height: 150,
-      });
+  const avatarUrl = buildAvatarUrl(data.avatar_public_id, data.avatar_version, {
+    width: 112,
+    height: 112,
+  });
 
   // Larger, aspect-ratio-preserving transform (no `height`, so Cloudinary
   // uses c_limit rather than the cropped c_fill above) for the full-image
   // viewer — avoids both re-fetching the tiny avatar thumbnail and
   // downloading the raw original.
-  const fullAvatarUrl = data?.avatar_public_id
-    ? buildCloudinaryUrl(data.avatar_public_id, data.avatar_version, {
-        width: 1080,
-      })
-    : buildCloudinaryUrl(defaultPublicId, defaulfVersion, { width: 1080 });
+  const fullAvatarUrl = buildAvatarUrl(
+    data.avatar_public_id,
+    data.avatar_version,
+    { width: 1080 },
+  );
 
-  const hasCustomAvatar = !!data?.avatar_public_id;
+  const hasCustomAvatar = !!data.avatar_public_id;
 
   const avatarAlt = isCurrentUser
     ? "View your profile picture"
-    : `View ${data?.username}'s profile picture`;
+    : `View ${handle}'s profile picture`;
 
-  const [averageRating, organizerVerifiedRes] = await Promise.all([
-    getUserRating(userDetails.data.user_id),
-    getOrganizerVerified(userDetails.data.user_id),
+  const [rating, organizerVerifiedRes] = await Promise.all([
+    getUserRating(userId),
+    getOrganizerVerified(userId),
   ]);
   const organizerVerified = organizerVerifiedRes.data.verified;
+  const events = Number(data.total_posts ?? 0);
 
   return (
-    <>
-      {/* On mobile */}
-      <div className="md:hidden flex flex-col gap-7">
-        <div className="flex w-full justify-between">
-          <span className="flex items-center gap-1.5">
-            <h2 className="font-medium">{data?.username}</h2>
-            {organizerVerified ? (
-              <VerifiedBadgePopover subjectType="organizer" compact />
-            ) : null}
-          </span>
-
-          {isCurrentUser ? (
-            <div className="flex items-center gap-3">
-              <SettingsButton />
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              {Number(data?.total_posts ?? 0) > 0 ? (
-                <SubscribeBell
-                  kind="organizer"
-                  targetId={userDetails.data.user_id}
-                  ownerId={userDetails.data.user_id}
-                  label={`@${data?.username ?? username}`}
-                />
-              ) : null}
-              <FollowButton
-                kind="organizer"
-                targetId={userDetails.data.user_id}
-                ownerId={userDetails.data.user_id}
-                label={`@${data?.username ?? username}`}
-              />
-              <AddReviewButton username={username} />
-              <ReportButton
-                targetType="user"
-                targetId={userDetails.data.user_id}
-                targetLabel={data?.username ?? username}
-              />
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-start gap-4">
-            <ViewableAvatar
-              avatarUrl={avatarUrl}
-              fullImageUrl={fullAvatarUrl}
-              width={110}
-              height={110}
-              alt={avatarAlt}
-              viewable={hasCustomAvatar}
-            />
-
-            <div className="flex flex-col justify-start w-full gap-2">
-              <h2 className="font-medium">{data?.full_name}</h2>
-
-              <div className="flex justify-between">
-                <span>
-                  <h2>
-                    <span className="font-bold">{data.total_posts}</span> Posts
-                  </h2>
-                </span>
-
-                <span>
-                  <h2>
-                    <span className="font-bold">{data.total_favorites}</span>{" "}
-                    Favorites
-                  </h2>
-                </span>
-
-                <span>
-                  <h2>
-                    <span className="font-bold">
-                      {averageRating.averageRating}
-                    </span>{" "}
-                    Ratings
-                  </h2>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="w-full">
-            <p>{userDetails.data.bio}</p>
-          </div>
-        </div>
-
-        {isCurrentUser && (
-          <Button className="hover:bg-primary/90 font-medium">
-            <Link href="/settings/edit-profile">Edit Profile</Link>
-          </Button>
-        )}
-
-        <div className="flex flex-col gap-3">
-          <h2 className="font-semibold">Highlights</h2>
-
-          <div className="flex items-center gap-2 overflow-hidden">
-            {isCurrentUser && <Higlight username={username} />}
-
-            <UserHighlights
-              avatarUrl={avatarUrl}
-              username={username}
-              isOwner={isCurrentUser}
-            />
-          </div>
-        </div>
-
-        <UserAccountTabsNavigation
-          ownUsername={userDetails.ownUsername ?? ""}
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-8">
+        <ViewableAvatar
+          avatarUrl={avatarUrl}
+          fullImageUrl={fullAvatarUrl}
+          width={112}
+          height={112}
+          alt={avatarAlt}
+          viewable={hasCustomAvatar}
         />
-      </div>
 
-      {/* On tablet and desktop */}
-      <div className="hidden md:flex flex-col gap-7">
-        <div className="hidden md:flex gap-10 items-start w-[50%]">
-          <ViewableAvatar
-            avatarUrl={avatarUrl}
-            fullImageUrl={fullAvatarUrl}
-            width={150}
-            height={150}
-            alt={avatarAlt}
-            viewable={hasCustomAvatar}
-          />
-          <div className="grid grid-cols-3 gap-3 justify-start items-center">
-            <span className="flex items-center gap-1.5">
-              <h2 className="font-medium">{data?.username}</h2>
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h1 className="truncate text-2xl font-bold md:text-3xl">
+                {displayName}
+              </h1>
               {organizerVerified ? (
                 <VerifiedBadgePopover subjectType="organizer" compact />
               ) : null}
-            </span>
+            </div>
+            {data.full_name?.trim() ? (
+              <p className="text-muted-foreground">@{handle}</p>
+            ) : null}
+          </div>
 
-            {isCurrentUser && (
-              <Button className="font-medium hover:bg-primary/90">
-                <Link href="/settings/edit-profile">Edit Profile</Link>
-              </Button>
-            )}
+          {data.bio ? (
+            <p className="max-w-prose whitespace-pre-line text-sm md:text-base">
+              {data.bio}
+            </p>
+          ) : null}
+
+          <dl className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground [&_dd]:text-foreground/80">
+            <ProfileFollowerCount userId={userId} />
+
+            <div>
+              <dt className="sr-only">Events</dt>
+              <dd>
+                <span className="font-semibold tabular-nums text-foreground">
+                  {events.toLocaleString()}
+                </span>{" "}
+                {events === 1 ? "event" : "events"}
+              </dd>
+            </div>
+
+            <div>
+              <dt className="sr-only">Rating</dt>
+              <dd>
+                {rating.totalRatings > 0 ? (
+                  <>
+                    <span className="text-warning">★</span>{" "}
+                    <span className="font-semibold tabular-nums text-foreground">
+                      {rating.averageRating.toFixed(1)}
+                    </span>{" "}
+                    · {rating.totalRatings}{" "}
+                    {rating.totalRatings === 1 ? "review" : "reviews"}
+                  </>
+                ) : (
+                  "No reviews yet"
+                )}
+              </dd>
+            </div>
 
             {isCurrentUser ? (
-              <div className="flex items-center gap-3">
-                <SettingsButton />
+              <div>
+                <dt className="sr-only">Saved</dt>
+                <dd>
+                  <span className="font-semibold tabular-nums text-foreground">
+                    {Number(data.total_favorites ?? 0).toLocaleString()}
+                  </span>{" "}
+                  saved
+                </dd>
               </div>
+            ) : null}
+          </dl>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {isCurrentUser ? (
+              <>
+                <Link
+                  href="/settings/edit-profile"
+                  className="inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Edit profile
+                </Link>
+                <Link
+                  href="/settings"
+                  aria-label="Settings"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition-colors hover:bg-accent"
+                >
+                  <MdOutlineSettings className="text-xl text-muted-foreground" />
+                </Link>
+              </>
             ) : (
-              <div className="col-span-2 flex items-center gap-3 font-bold">
-                {Number(data?.total_posts ?? 0) > 0 ? (
-                  <SubscribeBell
-                    kind="organizer"
-                    targetId={userDetails.data.user_id}
-                    ownerId={userDetails.data.user_id}
-                    label={`@${data?.username ?? username}`}
-                  />
-                ) : null}
+              <>
                 <FollowButton
                   kind="organizer"
-                  targetId={userDetails.data.user_id}
-                  ownerId={userDetails.data.user_id}
-                  label={`@${data?.username ?? username}`}
+                  targetId={userId}
+                  ownerId={userId}
+                  label={`@${handle}`}
+                  className="h-9 px-4"
                 />
+                {events > 0 ? (
+                  <SubscribeBell
+                    kind="organizer"
+                    targetId={userId}
+                    ownerId={userId}
+                    label={`@${handle}`}
+                  />
+                ) : null}
                 <AddReviewButton username={username} />
                 <ReportButton
                   targetType="user"
-                  targetId={userDetails.data.user_id}
-                  targetLabel={data?.username ?? username}
+                  targetId={userId}
+                  targetLabel={handle}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
                 />
-              </div>
+              </>
             )}
-
-            <span>
-              <h2>
-                <span className="font-bold">{data.total_posts}</span> Posts
-              </h2>
-            </span>
-
-            <span>
-              <h2>
-                <span className="font-bold">{data.total_favorites}</span>{" "}
-                Favorites
-              </h2>
-            </span>
-
-            <span>
-              <h2>
-                <span className="font-bold">{averageRating.averageRating}</span>{" "}
-                Ratings
-              </h2>
-            </span>
-
-            <div className="col-span-3">
-              <p>{userDetails.data.bio}</p>
-            </div>
           </div>
         </div>
-
-        <div className="flex flex-col gap-3">
-          <h2 className="font-semibold">Highlights</h2>
-
-          <div className="flex items-center gap-2">
-            {isCurrentUser && <Higlight username={username} />}
-
-            <UserHighlights
-              avatarUrl={avatarUrl}
-              username={username}
-              isOwner={isCurrentUser}
-            />
-          </div>
-        </div>
-
-        <UserAccountTabsNavigation
-          ownUsername={userDetails.ownUsername ?? ""}
-        />
       </div>
-    </>
+
+      <ProfileHighlightsSection
+        username={username}
+        avatarUrl={avatarUrl}
+        isOwner={isCurrentUser}
+      />
+
+      <UserAccountTabsNavigation ownUsername={userDetails.ownUsername ?? ""} />
+    </div>
   );
 }

@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { createClient } from "@/config/supabase/server";
 import VerificationSection from "@/verification/organisms/VerificationSection";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = { title: "Verification" };
 
 // Organizer verification (PROJECT.md §30). There is no organizer entity in
 // this schema — an organizer is a user_info row that has created events —

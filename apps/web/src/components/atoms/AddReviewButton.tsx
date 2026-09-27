@@ -28,10 +28,11 @@ export default function AddReviewButton({ username }: { username: string }) {
       )}
 
       <Button
-        className="p-3 rounded-md font-semibold"
+        variant="outline"
+        className="h-9 rounded-full px-4 font-semibold"
         onClick={() => handleShowReviewModal(true)}
       >
-        Add Review
+        Write a review
       </Button>
 
       {/* <button

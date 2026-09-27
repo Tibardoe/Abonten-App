@@ -189,7 +189,9 @@ export default async function page({
             <h1 className="text-xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl line-clamp-2">
               {place.name}
             </h1>
-            <div className="text-white shrink-0 mt-1 md:mt-2 flex items-center gap-1 md:gap-2">
+            {/* On phones the actions sit in the photo's top corner, away
+                from the name, so a long name keeps the full width. */}
+            <div className="text-white shrink-0 flex items-center gap-1 md:gap-2 absolute right-3 top-3 md:static md:mt-2">
               <ClaimPlaceButton
                 placeId={place.id}
                 placeName={place.name}
@@ -240,18 +242,25 @@ export default async function page({
             <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
               <PlaceOpenStatusBadge status={openStatus} />
             </span>
-            <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center gap-1 md:gap-1.5 text-xs md:text-base">
-              <IoIosStar
-                aria-hidden
-                className="text-primary text-sm md:hidden"
-              />
-              <span className="hidden md:flex">
-                <StarRatingDisplay rating={place.avgRating} />
+            {/* Until someone reviews it the place is "New", not "0.0". */}
+            {place.reviewCount > 0 ? (
+              <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center gap-1 md:gap-1.5 text-xs md:text-base">
+                <IoIosStar
+                  aria-hidden
+                  className="text-primary text-sm md:hidden"
+                />
+                <span className="hidden md:flex">
+                  <StarRatingDisplay rating={place.avgRating} />
+                </span>
+                <span className="tabular-nums">
+                  {place.avgRating.toFixed(1)} ({place.reviewCount})
+                </span>
               </span>
-              <span className="tabular-nums">
-                {place.avgRating.toFixed(1)} ({place.reviewCount})
+            ) : (
+              <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-base">
+                New
               </span>
-            </span>
+            )}
           </div>
 
           <div className="flex items-start gap-1.5 md:gap-2 text-white/90 text-xs md:text-base max-w-2xl">
@@ -291,7 +300,7 @@ export default async function page({
 
             {/* About */}
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-card-foreground">
+              <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
                 About
               </h2>
               <p className="text-muted-foreground leading-relaxed text-sm md:text-base whitespace-pre-line">
@@ -301,8 +310,8 @@ export default async function page({
 
             {/* Opening Hours */}
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-card-foreground">
-                Opening Hours
+              <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
+                Opening hours
               </h2>
               <PlaceOpeningHoursTable
                 openingHours={place.openingHours}
@@ -318,7 +327,7 @@ export default async function page({
             {/* Services */}
             {services.length > 0 && (
               <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-                <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-card-foreground">
+                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
                   Services
                 </h2>
                 <div className="space-y-4">
@@ -365,7 +374,7 @@ export default async function page({
             {/* Photos */}
             {galleryPhotos.length > 0 && (
               <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-                <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-card-foreground">
+                <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
                   Photos
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
@@ -481,7 +490,7 @@ export default async function page({
 
         {/* Upcoming Events */}
         <div className="mb-10">
-          <h2 className="font-medium text-lg mb-3">Upcoming Events</h2>
+          <h2 className="font-semibold text-lg mb-3">Upcoming events</h2>
           {upcomingEvents.length > 0 ? (
             <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
               {upcomingEvents.map((event, index) => (
@@ -498,7 +507,7 @@ export default async function page({
         {/* Similar Places */}
         {similarPlaces.length > 0 && (
           <div>
-            <h2 className="font-medium text-lg mb-3">Similar Places</h2>
+            <h2 className="font-semibold text-lg mb-3">Similar places</h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-3">
               {similarPlaces.map((similarPlace, index) => (
                 <PlaceCard

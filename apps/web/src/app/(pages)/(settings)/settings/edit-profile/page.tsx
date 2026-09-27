@@ -6,7 +6,10 @@ import ProfileCompletionIndicator from "@/components/molecules/ProfileCompletion
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+
+export const metadata: Metadata = { title: "Edit profile" };
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

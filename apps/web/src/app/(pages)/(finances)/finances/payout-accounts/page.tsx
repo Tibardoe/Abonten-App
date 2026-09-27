@@ -1,5 +1,8 @@
 import getOrganizerPayoutAccounts from "@/actions/getOrganizerPayoutAccounts";
 import PayoutAccountManager from "@/finances/organisms/PayoutAccountManager";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Payout accounts" };
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

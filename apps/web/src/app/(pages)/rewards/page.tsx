@@ -17,7 +17,10 @@ import RewardEmailToggle from "@/rewards/molecules/RewardEmailToggle";
 import CreditActivityList from "@/rewards/organisms/CreditActivityList";
 import InvitePanel from "@/rewards/organisms/InvitePanel";
 import RewardsHowItWorks from "@/rewards/organisms/RewardsHowItWorks";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+export const metadata: Metadata = { title: "Rewards" };
 
 // Per-user, request-time data -- same force-dynamic precedent as /wallet.
 export const dynamic = "force-dynamic";

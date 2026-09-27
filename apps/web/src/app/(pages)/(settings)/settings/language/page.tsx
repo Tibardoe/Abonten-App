@@ -1,7 +1,10 @@
 import PageHeader from "@/components/molecules/PageHeader";
 import { getUserLocale } from "@/i18n/locale";
 import Language from "@/settings/organisms/Language";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+
+export const metadata: Metadata = { title: "Language" };
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

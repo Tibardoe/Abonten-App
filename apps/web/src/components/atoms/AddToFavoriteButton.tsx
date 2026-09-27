@@ -85,7 +85,7 @@ export default function AddToFavoriteButton({
     },
   });
 
-  const buttonText = isFavorite ? "Remove Favorited" : "Add to Favorite";
+  const buttonText = isFavorite ? "Saved" : "Save";
 
   const handleClick = async () => {
     if (await requireAuth()) mutate();
@@ -116,6 +116,7 @@ export default function AddToFavoriteButton({
       className="flex items-center gap-1 p-1"
       onClick={handleClick}
       disabled={isPending}
+      aria-pressed={isFavorite}
     >
       {icon}
       {buttonText}

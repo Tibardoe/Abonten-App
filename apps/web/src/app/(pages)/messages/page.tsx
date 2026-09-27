@@ -1,7 +1,10 @@
 import { createClient } from "@/config/supabase/server";
 import { MessagingWorkspace } from "@/messaging/components/MessagingWorkspace";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = { title: "Messages" };
 
 // Per-user, request-time data (this user's inbox) — same force-dynamic
 // precedent as wallet/page.tsx.
