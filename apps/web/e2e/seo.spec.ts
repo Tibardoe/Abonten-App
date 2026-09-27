@@ -77,3 +77,22 @@ test("page titles carry the brand exactly once", async ({ page }) => {
     expect(title, path).not.toMatch(/Abonten Hub.*Abonten Hub/);
   }
 });
+
+// Sharing the homepage (or any page without its own image) shows the brand
+// preview instead of a bare link.
+test("pages without their own preview image fall back to the brand card", async ({
+  page,
+}) => {
+  for (const path of ["/", "/help"]) {
+    await page.goto(path);
+    const image = await page
+      .locator('meta[property="og:image"]')
+      .first()
+      .getAttribute("content");
+    expect(image, path).toContain("/assets/images/brand/og-default.jpg");
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+      "content",
+      "summary_large_image",
+    );
+  }
+});
