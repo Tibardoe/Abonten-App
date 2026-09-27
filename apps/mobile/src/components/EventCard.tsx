@@ -251,25 +251,31 @@ export function EventCard({ event }: { event: UserPostType }) {
           </AppText>
         </View>
 
-        <View className="flex-row items-center gap-1.5">
-          <Icon name="people-outline" size={14} tone="muted" />
-          <AppText variant="meta" numberOfLines={1}>
-            {attendees.toLocaleString()} going
-          </AppText>
-          {remaining != null ? (
-            <>
+        {/* Turnout and scarcity only when they say something: "0 going"
+            and "300 spots left" on a new event are noise. */}
+        {attendees > 0 || fewLeft ? (
+          <View className="flex-row items-center gap-1.5">
+            <Icon name="people-outline" size={14} tone="muted" />
+            {attendees > 0 ? (
+              <AppText variant="meta" numberOfLines={1}>
+                {attendees.toLocaleString()} going
+              </AppText>
+            ) : null}
+            {attendees > 0 && fewLeft ? (
               <AppText variant="meta">·</AppText>
+            ) : null}
+            {fewLeft && remaining != null ? (
               <AppText
                 variant="meta"
-                tone={fewLeft ? "warning" : "muted"}
-                className={`shrink ${fewLeft ? "font-semibold" : ""}`}
+                tone="warning"
+                className="shrink font-semibold"
                 numberOfLines={1}
               >
-                {remaining.toLocaleString()} spots left
+                Only {remaining.toLocaleString()} left
               </AppText>
-            </>
-          ) : null}
-        </View>
+            ) : null}
+          </View>
+        ) : null}
       </View>
 
       <EventCardMenu

@@ -359,12 +359,14 @@ export default function EventDetailScreen() {
                   {approxPrice ? ` · ${approxPrice}` : ""}
                 </AppText>
               </View>
-              <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
-                <Icon name="people" size={13} color="#fff" />
-                <AppText className="text-[12px] font-semibold text-white">
-                  {attendanceCount} going
-                </AppText>
-              </View>
+              {attendanceCount > 0 ? (
+                <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
+                  <Icon name="people" size={13} color="#fff" />
+                  <AppText className="text-[12px] font-semibold text-white">
+                    {attendanceCount.toLocaleString()} going
+                  </AppText>
+                </View>
+              ) : null}
             </View>
           </View>
         </View>
@@ -414,12 +416,17 @@ export default function EventDetailScreen() {
                     <VerifiedPill subjectType="organizer" />
                   ) : null}
                 </View>
-                <View className="mt-0.5 flex-row items-center gap-1">
-                  <Stars rating={organizerRating.average} size={12} />
-                  <AppText variant="caption">
-                    ({organizerRating.average.toFixed(1)})
-                  </AppText>
-                </View>
+                {/* No stars until someone has rated them: five grey stars
+                    and "(0.0)" read as a bad rating. */}
+                {organizerRating.count > 0 ? (
+                  <View className="mt-0.5 flex-row items-center gap-1">
+                    <Stars rating={organizerRating.average} size={12} />
+                    <AppText variant="caption">
+                      {organizerRating.average.toFixed(1)} (
+                      {organizerRating.count})
+                    </AppText>
+                  </View>
+                ) : null}
               </View>
               <View className="items-end gap-1">
                 <AppText variant="caption">
@@ -504,11 +511,20 @@ export default function EventDetailScreen() {
               label={address ?? "Location unavailable"}
               sub={event.place ? `At ${event.place.name}` : undefined}
             />
-            <InfoRow
-              icon="people-outline"
-              label={`${attendanceCount} attending`}
-              sub={event.capacity ? `Capacity ${event.capacity}` : undefined}
-            />
+            {/* Turnout once someone is going; before that, just the
+                capacity ("0 attending" reads as a warning sign). */}
+            {attendanceCount > 0 ? (
+              <InfoRow
+                icon="people-outline"
+                label={`${attendanceCount.toLocaleString()} going`}
+                sub={event.capacity ? `Capacity ${event.capacity}` : undefined}
+              />
+            ) : event.capacity ? (
+              <InfoRow
+                icon="people-outline"
+                label={`Capacity ${event.capacity}`}
+              />
+            ) : null}
 
             {coords ? (
               <StaticMapPreview
