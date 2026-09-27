@@ -4,7 +4,7 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.4
+version: 1.5
 lastReviewed: 2026-09-27
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -20,7 +20,7 @@ complianceReviewRequired: no
 
 **Checked at boot (2026-09-19).** Each Next.js app's `src/instrumentation.ts` lists the variables it cannot run without and calls `checkEnv` / `enforceEnv` (`@abonten/core/env/checkEnv`) once per server process. In a production deployment (`VERCEL_ENV=production`) a missing required variable throws, so the deploy fails to start instead of failing at the first payment; in preview, CI and local development the missing names are logged. Web requires the Supabase pair and service-role key, `NEXT_PUBLIC_BASE_URL`, the Cloudinary trio, `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` and `OBSERVABILITY_INGEST_SECRET`; admin requires the Supabase pair and service-role key, `ADMIN_EMAIL_ALLOWLIST` and `OBSERVABILITY_INGEST_SECRET`. Everything else is "recommended" and only produces a warning.
 
-**Preview deployments (2026-09-25).** Vercel Preview and Development builds of both apps use the **Abonten Preview** Supabase project (`qasxtirvfbreygsqwwat`; schema only, no production data): `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist twice (Production → production project; Preview + Development → preview project), `SUPABASE_SERVICE_ROLE_KEY` is Production-only until the preview project's own key is added for Preview, and the production URL/anon/service-role variables never target Preview again. Both apps refuse to start on a non-production deployment pointed at the production project (`@abonten/core/env/productionProject`). `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are read by no code and were neutralised (sensitive, marker value) — delete them when convenient. `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` were re-entered as *Sensitive* by the founder on 2026-09-25 (23:48 UTC); no variable on either project is flagged readable any more.
+**Preview deployments (2026-09-25).** Vercel Preview and Development builds of both apps use the **Abonten Preview** Supabase project (`qasxtirvfbreygsqwwat`; schema only, no production data): `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist twice (Production → production project; Preview + Development → preview project), `SUPABASE_SERVICE_ROLE_KEY` exists twice as well (Production → the production project's key; Preview + Development → a secret key of the preview project, added on both Vercel projects by 2026-09-27), and the production URL/anon/service-role variables never target Preview again. Both apps refuse to start on a non-production deployment pointed at the production project (`@abonten/core/env/productionProject`). `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are read by no code and were neutralised (sensitive, marker value) — delete them when convenient. `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` were re-entered as *Sensitive* by the founder on 2026-09-25 (23:48 UTC); no variable on either project is flagged readable any more.
 
 **CI holds no Supabase credentials (2026-09-27).** The GitHub Actions secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` pointed the web e2e and admin build jobs at the production project, the anon one with the legacy key disabled on 2026-09-04 (every read the e2e build made was refused with 401, 38 per run). They are deleted: the `build-and-e2e-web` job starts its own local stack (`npm run test:db:up`, then `scripts/test-db/seed-e2e.mjs`) and builds against it; `build-admin` gets obviously fake values because the console makes no database call at build time. No CI job can reach the production database.
 
@@ -77,6 +77,10 @@ complianceReviewRequired: no
 ## Test-only
 
 `SUPABASE_TEST_URL`, `SUPABASE_TEST_ANON_KEY`, `SUPABASE_TEST_SERVICE_ROLE_KEY` written to `.env.test.local` by `scripts/test-db/setup-local-test-db.mjs` (local Docker stack; gitignored).
+
+## Dependency alerts
+
+GitHub Dependabot alerts are on for the repository (2026-09-27). The two alerts raised at switch-on were dismissed as tolerable risk with the reason recorded on each: `uuid` < 11.1.1 (only `xcode`, used when generating the iOS project, depends on it and calls `v4()` without a buffer; the flaw is in v3/v5/v6 with one) and `decode-uri-component` ≤ 0.4.2 (replaced in the app bundle by `apps/mobile/vendor/decode-uri-component.js`, checked in CI by `npm run check:deep-link-decoder`). Both leave with Expo's own dependency updates. A new alert is triaged the same way: is the vulnerable code reachable in something we ship; fix it if so, otherwise dismiss with the reason.
 
 ## Rotation procedure
 
