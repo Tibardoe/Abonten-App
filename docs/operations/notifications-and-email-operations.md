@@ -57,7 +57,7 @@ DNS for `abontenhub.com` is hosted on Vercel (`ns1/ns2.vercel-dns.com`; `vercel 
 | Resend (every app email: `tickets@`, `rewards@`, `picks@`, `alerts@`, sign-in codes through Supabase SMTP) | `send.abontenhub.com` | `send` TXT `v=spf1 include:amazonses.com ~all`, `send` MX to Amazon SES, `resend._domainkey` DKIM |
 | Google Workspace (staff mailboxes, `support@` / `privacy@` / `security@`) | `abontenhub.com` | root MX `smtp.google.com`, `google._domainkey` DKIM, root TXT `v=spf1 include:_spf.google.com ~all` (added 2026-09-27; the root had no SPF before) |
 
-DMARC: `_dmarc` `v=DMARC1; p=none; rua=mailto:dmarc-reports@abontenhub.com`. Never add Resend/SES to the root SPF: Resend's mail leaves from the `send` subdomain.
+DMARC: `_dmarc` with `p=none` (reports only, to an internal mailbox). Never add Resend/SES to the root SPF: Resend's mail leaves from the `send` subdomain.
 
 **Sign in with Apple private relay.** People who choose "Hide My Email" get an `@privaterelay.appleid.com` address, which only forwards mail from sources registered in Apple Developer → Certificates, Identifiers & Profiles → Services → Sign in with Apple for Email Communication. `abontenhub.com` is registered as a domain there (covers every address on it); registration needs the root SPF record above. If ticket emails stop reaching Apple-relay addresses, check that registration first.
 
