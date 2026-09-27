@@ -249,7 +249,7 @@ export default function VerificationEvidenceUploader({
                 {s.status === "done" ? (
                   <IoCheckmarkCircle
                     aria-hidden
-                    className="text-lg text-mint"
+                    className="text-lg text-primary"
                   />
                 ) : null}
                 {s.status === "error" ? (

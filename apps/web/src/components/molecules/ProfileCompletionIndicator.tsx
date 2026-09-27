@@ -44,7 +44,7 @@ export default function ProfileCompletionIndicator() {
           strokeDashoffset={circumference * (1 - fraction)}
           strokeLinecap="round"
           transform="rotate(-90 10 10)"
-          className="text-mint"
+          className="text-primary"
         />
       </svg>
       <span>

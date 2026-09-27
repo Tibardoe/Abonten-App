@@ -171,7 +171,7 @@ export default function EditProfileInputFields({
             </span>
           )}
           <Button
-            className="font-bold bg-mint"
+            className="font-bold"
             disabled={isPending || !isDirty || !isValid}
           >
             {isPending ? "Submitting..." : "Submit"}

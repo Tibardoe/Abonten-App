@@ -18,7 +18,7 @@ const CHIP_TONE: Record<VerificationStatus, string> = {
   draft: "bg-muted text-muted-foreground",
   pending_review: "bg-muted text-muted-foreground",
   needs_info: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  approved: "bg-mint/15 text-mint",
+  approved: "bg-primary/15 text-primary",
   rejected: "bg-destructive/10 text-destructive",
   withdrawn: "bg-muted text-muted-foreground",
   revoked: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
@@ -55,7 +55,7 @@ export default function PlaceSetupChecklist({
                 <IoCheckmarkCircle
                   aria-hidden
                   className={`shrink-0 text-lg ${
-                    item.complete ? "text-mint" : "text-border"
+                    item.complete ? "text-primary" : "text-border"
                   }`}
                 />
                 <span
