@@ -1,8 +1,10 @@
 name: Typecheck, lint & build
 
 # Typecheck and lint need no secrets. The two build jobs below do -- they
-# run `next build` for apps/web and apps/admin against real repo secrets
-# (added 2026-09-05). Split into separate jobs (rather than one `turbo run
+# run `next build` for apps/web and apps/admin with repo secrets for the
+# third-party services (added 2026-09-05). No job uses the production
+# Supabase project: web's e2e job has its own local stack, admin's build
+# needs no database. Split into separate jobs (rather than one `turbo run
 # build` job) because web and admin are different Sentry projects with
 # different DSNs, so NEXT_PUBLIC_SENTRY_DSN needs a different secret mapped
 # in per app -- one job's env block can't hold two values for that name.
@@ -19,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -34,16 +36,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
 
       - run: npm ci
 
-      - run: npx biome check apps/web/src apps/admin/src apps/mobile/app apps/mobile/src packages
+      - run: npm run lint:ci
 
   # Unit tests (pure functions in packages/core + packages/services) and the
   # mobile API parity guard need no secrets either. Added 2026-09-11 with the
@@ -54,9 +56,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
@@ -84,9 +86,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
@@ -96,13 +98,19 @@ jobs:
   # `next start`: pages, headers, redirects, 404s, SEO tags and an axe
   # accessibility scan of the public surface. One job rather than a build
   # job plus a test job so the build is done once.
+  #
+  # The database is the job's own: a local Supabase stack replayed from
+  # supabase/migrations/ (the integration suite's setup script) and seeded
+  # with one event and one place, so the listing-page checks have something
+  # to open and fail if they cannot. Until 2026-09-27 this job used the
+  # production project with the legacy anon key disabled on 2026-09-04:
+  # every data read was refused, the listing checks skipped themselves, and
+  # the job stayed green. CI never touches the production database.
   build-and-e2e-web:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_REQUIRE_CATALOGUE: "1"
       OBSERVABILITY_INGEST_SECRET: ${{ secrets.OBSERVABILITY_INGEST_SECRET }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.WEB_SENTRY_DSN }}
@@ -121,14 +129,34 @@ jobs:
       PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
       PAYSTACK_WEBHOOK_SECRET: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm
 
       - run: npm ci
+
+      # Same pin as integration-tests.yml.
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.116.0
+
+      - run: npm run test:db:up
+
+      - run: node scripts/test-db/seed-e2e.mjs
+
+      # The local stack's URL and keys (fixed, public development values
+      # printed by `supabase status`) become the build's Supabase config.
+      - name: Point the build at the local stack
+        run: |
+          set -a; . ./.env.test.local; set +a
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_TEST_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_TEST_ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_TEST_SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
 
       - run: npx playwright install --with-deps chromium
 
@@ -139,29 +167,35 @@ jobs:
         env:
           CI: "true"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
           path: apps/web/test-results
           retention-days: 7
 
+      - if: always()
+        run: npm run test:db:down
+
+  # The console makes no database call at build time (every page is
+  # dynamic), so the build gets obviously fake Supabase values instead of
+  # production credentials.
   build-admin:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-has-no-database
+      SUPABASE_SERVICE_ROLE_KEY: ci-build-has-no-database
       OBSERVABILITY_INGEST_SECRET: ${{ secrets.OBSERVABILITY_INGEST_SECRET }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.ADMIN_SENTRY_DSN }}
       ADMIN_EMAIL_ALLOWLIST: ${{ secrets.ADMIN_EMAIL_ALLOWLIST }}
       NEXT_PUBLIC_ADMIN_URL: ${{ secrets.NEXT_PUBLIC_ADMIN_URL }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: npm

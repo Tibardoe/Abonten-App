@@ -4,8 +4,8 @@ purpose: What automated tests exist, how to run them, what they cover, and what 
 audience: Engineers
 scope: Vitest unit tests, the Supabase integration suite, parity and documentation checks
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-25
+version: 1.2
+lastReviewed: 2026-09-27
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -58,7 +58,7 @@ wallet in live mode is still the launch check.
 
 `apps/web/e2e/` runs against a production server (`next start`), so what is tested is what is deployed: the CSP and security headers, `/robots.txt` and `/sitemap.xml`, the sign-in redirect for private sections, the 404 page for unknown URLs and missing listings, the mobile API's 401 without a bearer token, the webhook's 401 without a signature, canonical URLs and titles, Open Graph and JSON-LD on a live event and place page (taken from the sitemap), and an axe-core accessibility scan of the public surface that fails on serious or critical violations. It also asserts route protection directly (`route-protection.spec.ts`: every private prefix redirects to sign-in, public paths do not, and `/api/geocode` answers 401 JSON) and that the Content-Security-Policy actually reports (`csp-reporting.spec.ts`: the configured `report-uri` is intercepted, a script from a disallowed origin is injected, and the browser's real `csp-report` is inspected; it skips where no Sentry DSN is configured, and also asserts the policy refuses nothing of the app's own).
 
-Locally: `npm run build -w @abonten/web`, then `npx playwright test` in `apps/web` (first time: `npx playwright install chromium`; the app's `.env.local` must be present). In CI it is the `build-and-e2e-web` job.
+Locally: `npm run build -w @abonten/web`, then `npx playwright test` in `apps/web` (first time: `npx playwright install chromium`; the app's `.env.local` must be present). The event and place checks skip when the database has no public listing; set `E2E_REQUIRE_CATALOGUE=1` to make that a failure. In CI it is the `build-and-e2e-web` job, which does what the integration suite does first — `npm run test:db:up` — then seeds one organizer, a published upcoming event and a published place (`scripts/test-db/seed-e2e.mjs`, refuses any non-local database), builds the web app against that stack and runs the suite with the catalogue required. To reproduce CI locally: `npm run test:db:up`, `node scripts/test-db/seed-e2e.mjs`, export `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` from the `SUPABASE_TEST_*` values in `.env.test.local`, build, and run with `E2E_REQUIRE_CATALOGUE=1`. The first such run (2026-09-27) found white text on the mint fill ("FEATURED" badge, 1.74:1) that the empty-catalogue runs had never rendered.
 
 ## Database grants
 

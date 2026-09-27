@@ -140,7 +140,7 @@ export function ReportDialog({
       <DialogContent className="max-w-md">
         {done ? (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <CheckCircle2 className="h-11 w-11 text-mint" />
+            <CheckCircle2 className="h-11 w-11 text-primary" />
             <DialogTitle>Report submitted</DialogTitle>
             <DialogDescription>
               Thank you — our team will review this {targetWord}.

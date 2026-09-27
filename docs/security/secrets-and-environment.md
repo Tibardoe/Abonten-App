@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.3
-lastReviewed: 2026-09-25
+version: 1.4
+lastReviewed: 2026-09-27
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -22,7 +22,9 @@ complianceReviewRequired: no
 
 **Preview deployments (2026-09-25).** Vercel Preview and Development builds of both apps use the **Abonten Preview** Supabase project (`qasxtirvfbreygsqwwat`; schema only, no production data): `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` exist twice (Production → production project; Preview + Development → preview project), `SUPABASE_SERVICE_ROLE_KEY` is Production-only until the preview project's own key is added for Preview, and the production URL/anon/service-role variables never target Preview again. Both apps refuse to start on a non-production deployment pointed at the production project (`@abonten/core/env/productionProject`). `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are read by no code and were neutralised (sensitive, marker value) — delete them when convenient. `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` were re-entered as *Sensitive* by the founder on 2026-09-25 (23:48 UTC); no variable on either project is flagged readable any more.
 
-## apps/web (Vercel project `abonten`, also GitHub Actions `build-web`)
+**CI holds no Supabase credentials (2026-09-27).** The GitHub Actions secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` pointed the web e2e and admin build jobs at the production project, the anon one with the legacy key disabled on 2026-09-04 (every read the e2e build made was refused with 401, 38 per run). They are deleted: the `build-and-e2e-web` job starts its own local stack (`npm run test:db:up`, then `scripts/test-db/seed-e2e.mjs`) and builds against it; `build-admin` gets obviously fake values because the console makes no database call at build time. No CI job can reach the production database.
+
+## apps/web (Vercel project `abonten`, also GitHub Actions `build-and-e2e-web`)
 
 | Variable | Public? | Purpose | Without it |
 |---|---|---|---|
@@ -79,7 +81,7 @@ complianceReviewRequired: no
 ## Rotation procedure
 
 1. Generate the new secret at the provider (Supabase keys, Paystack, Cloudinary, Resend, Hubtel, Sentry token, Google).
-2. Update Vercel env (web **and** admin where shared) and, for `EXPO_PUBLIC_*`, EAS env; update GitHub Actions secrets.
+2. Update Vercel env (web **and** admin where shared) and, for `EXPO_PUBLIC_*`, EAS env; update GitHub Actions secrets (third-party keys only — CI holds no Supabase key).
 3. For `OBSERVABILITY_INGEST_SECRET`, also update the `observability_config` row; for the Supabase service-role key, also update the cron command (SEC-004) and any EAS/CI usage.
 4. Redeploy web and admin; `eas update` if a public value changed (rare).
 5. Revoke the old secret at the provider; confirm health probes green; check Sentry for auth errors.

@@ -25,7 +25,7 @@ export default function VerificationExplainer({
             <li key={line} className="flex items-start gap-2 text-sm">
               <IoCheckmarkCircle
                 aria-hidden
-                className="mt-0.5 shrink-0 text-base text-mint"
+                className="mt-0.5 shrink-0 text-base text-primary"
               />
               <span className="text-muted-foreground">{line}</span>
             </li>

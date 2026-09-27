@@ -231,7 +231,7 @@ export default function ManagePromoCodesModal({
                       <div className="flex gap-2">
                         <Button
                           type="button"
-                          className="flex-1 bg-mint"
+                          className="flex-1"
                           disabled={
                             updateMutation.isPending || !editState.expiresAt
                           }

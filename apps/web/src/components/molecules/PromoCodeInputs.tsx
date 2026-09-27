@@ -185,7 +185,7 @@ export default function PromoCodeInputs({
 
         <Button
           type="button"
-          className="w-full bg-mint"
+          className="w-full"
           onClick={handleClick}
           disabled={
             !promoCode ||

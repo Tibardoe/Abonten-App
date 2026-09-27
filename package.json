@@ -9,6 +9,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
+    "lint:ci": "biome check apps/web/src apps/admin/src apps/mobile/app apps/mobile/src packages",
     "check:api-parity": "node scripts/check-mobile-api-parity.mjs",
     "check:docs": "node scripts/check-docs.mjs",
     "check:mobile-a11y": "node scripts/check-mobile-a11y.mjs",

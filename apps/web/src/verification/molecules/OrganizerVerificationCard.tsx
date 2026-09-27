@@ -59,7 +59,7 @@ export default function OrganizerVerificationCard() {
   if (status === "approved") {
     return (
       <section className="flex items-center gap-3 rounded-xl border border-mint/40 bg-mint/10 p-4">
-        <IoCheckmarkCircle aria-hidden className="text-xl text-mint" />
+        <IoCheckmarkCircle aria-hidden className="text-xl text-primary" />
         <div className="min-w-0">
           <h3 className="font-semibold">Verified organizer</h3>
           <p className="text-sm text-muted-foreground">

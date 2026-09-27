@@ -44,7 +44,7 @@ export default function AvatarUploadButton() {
         onChange={handleFileChange}
       />
 
-      <Button className="font-bold bg-mint" onClick={openFilePicker}>
+      <Button className="font-bold" onClick={openFilePicker}>
         Change Photo
       </Button>
     </>

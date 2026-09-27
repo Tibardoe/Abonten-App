@@ -1,6 +1,15 @@
 pre-commit:
   commands:
     check:
-      glob: "{apps/web/src,apps/mobile/app,apps/mobile/src,packages/*/src}/**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      glob: "{apps/web/src,apps/admin/src,apps/mobile/app,apps/mobile/src,packages/*/src}/**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: npx @biomejs/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
       stage_fixed: true
+
+# The exact Biome command CI runs (npm run lint:ci). The pre-commit hook only
+# sees staged files, so a file committed some other way (a regenerated type
+# file, a merge, a folder the glob above missed) could leave main red for days
+# without anyone noticing; this stops the push instead.
+pre-push:
+  commands:
+    lint-ci:
+      run: npm run lint:ci

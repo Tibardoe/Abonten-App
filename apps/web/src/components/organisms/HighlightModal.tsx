@@ -312,7 +312,7 @@ export default function HighlightModal({
               type="button"
               onClick={handleHighlightUpload}
               disabled={!isPreviewReady}
-              className={`text-white font-medium backdrop-blur-md bg-mint p-2 rounded-md ${
+              className={`text-primary-foreground font-medium backdrop-blur-md bg-primary p-2 rounded-md ${
                 isPreviewReady ? "" : "opacity-50 cursor-not-allowed"
               }`}
             >
@@ -356,7 +356,7 @@ export default function HighlightModal({
                 onChange={handleFileChange}
               />
               <Button
-                className="px-8 py-6 md:text-lg rounded-md bg-mint font-medium hover:bg-white hover:bg-opacity-50"
+                className="px-8 py-6 md:text-lg rounded-md font-medium hover:bg-white hover:bg-opacity-50"
                 onClick={() => fileInputRef.current?.click()}
               >
                 Select from Gallery

@@ -38,7 +38,7 @@ const ICON_TONE: Record<VerificationStatus, string> = {
   draft: "text-muted-foreground",
   pending_review: "text-muted-foreground",
   needs_info: "text-amber-600",
-  approved: "text-mint",
+  approved: "text-primary",
   rejected: "text-destructive",
   withdrawn: "text-muted-foreground",
   revoked: "text-amber-600",

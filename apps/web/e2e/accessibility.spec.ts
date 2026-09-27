@@ -1,10 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type Page, expect, test } from "@playwright/test";
+import { publicCatalogue } from "./catalogue";
 
 // axe-core over the public surface. Serious and critical violations fail
 // the build; moderate ones are reported so they are visible without
 // blocking. Pages that need real data (an event, a place) are taken from
-// the live sitemap so the scan follows the catalogue instead of a fixture.
+// the sitemap so the scan follows the catalogue (in CI: the seeded event
+// and place, see ./catalogue.ts).
 
 const STATIC_PAGES = [
   "/",
@@ -48,10 +50,7 @@ test("no serious accessibility violations on a live event and place page", async
   page,
   request,
 }) => {
-  const xml = await (await request.get("/sitemap.xml")).text();
-  const event = xml.match(/<loc>[^<]*(\/events\/[A-Z0-9]+)<\/loc>/)?.[1];
-  const place = xml.match(/<loc>[^<]*(\/places\/[a-z0-9-]+)<\/loc>/)?.[1];
-  test.skip(!event && !place, "no public event or place in the catalogue");
+  const { event, place } = await publicCatalogue(request);
   if (event) await scan(page, event);
   if (place) await scan(page, place);
   // Their full reviews pages (breakdown, filters, sort, review rows).
