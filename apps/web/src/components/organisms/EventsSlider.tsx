@@ -98,7 +98,7 @@ export default function EventsSlider({
           listing, not another equally-weighted section (Phase 7: avoid
           every section competing equally). */}
       <div className="flex justify-between items-center mb-1">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-base font-semibold text-foreground md:text-lg">
           {heading}
         </h2>
 

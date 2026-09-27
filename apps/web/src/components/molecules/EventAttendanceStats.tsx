@@ -49,7 +49,8 @@ function useLiveAttendanceCount(eventId: string, initialCount: number) {
   return hasAttendanceCount(data) ? data.count : initialCount;
 }
 
-/** Hero "🎉 N Attendees" + "Sold Out" badges. */
+/** Hero "N going" + "Sold out" badges. The count shows once someone is
+ * going: "0 going" on a new event reads as a warning, not information. */
 export function EventAttendanceHeroBadges({
   eventId,
   capacity,
@@ -65,19 +66,21 @@ export function EventAttendanceHeroBadges({
 
   return (
     <>
-      <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-sm md:text-base">
-        🎉 {attendanceCount} Attendees
-      </span>
+      {attendanceCount > 0 && (
+        <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/30 backdrop-blur-sm rounded-full text-white text-sm md:text-base">
+          {attendanceCount} going
+        </span>
+      )}
       {soldOut && (
         <span className="px-3 py-1.5 md:px-4 md:py-2 bg-destructive rounded-full text-destructive-foreground font-bold text-sm md:text-base">
-          Sold Out
+          Sold out
         </span>
       )}
     </>
   );
 }
 
-/** Sidebar "Event Capacity" remaining/progress-bar card. */
+/** "N spots left" + progress bar, drawn inside the ticket panel. */
 export function EventCapacityCard({
   eventId,
   capacity,
@@ -89,14 +92,11 @@ export function EventCapacityCard({
   if (capacity == null || capacity <= 0) return null;
 
   return (
-    <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-      <h3 className="text-lg font-medium mb-3 md:mb-4 text-card-foreground">
-        Event Capacity
-      </h3>
+    <div>
       <div className="space-y-2">
         <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Available</span>
-          <span>{Math.max(capacity - attendanceCount, 0)} remaining</span>
+          <span>Capacity {capacity}</span>
+          <span>{Math.max(capacity - attendanceCount, 0)} spots left</span>
         </div>
         <div className="relative pt-1">
           <div className="overflow-hidden h-2 bg-muted rounded-full">

@@ -168,7 +168,7 @@ export default function AttendingButton({
 
   const ineligibleLabel =
     eventStatusRaw === "canceled"
-      ? "Event Canceled"
+      ? "Event cancelled"
       : rsvpState.blockReason === "ended"
         ? "Event Ended"
         : rsvpState.blockReason === "ongoing_no_future"

@@ -51,6 +51,16 @@ export default function EventCard({
     attendeeCount: attendees,
   });
   const eventHref = `/events/${event_code.toLowerCase()}`;
+  // Scarcity and turnout are shown only when they say something: "300 spots
+  // left" on a new event and "0 attending" read as noise (or as a warning
+  // sign), so the chips appear once places are running low or people are
+  // actually going.
+  const spotsLeft =
+    capacity && capacity > 0 ? Math.max(capacity - attendees, 0) : null;
+  const fewSpotsLeft =
+    spotsLeft !== null &&
+    spotsLeft > 0 &&
+    (spotsLeft <= 20 || spotsLeft <= (capacity ?? 0) * 0.1);
 
   // "You're Going" only makes sense while the event is still actually
   // attendable: not cancelled, and not already over. `getEventStatus` is the
@@ -79,7 +89,7 @@ export default function EventCard({
           showAttendingBadge && (
             <span className="inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-success-foreground shadow-md">
               <MdConfirmationNumber className="text-sm" />
-              You're Going
+              You're going
             </span>
           )
         }
@@ -95,9 +105,9 @@ export default function EventCard({
               backdrop-blur-sm text-mint font-bold text-lg md:text-xl p-4 text-center`}
             >
               {status === "canceled"
-                ? "Event Canceled"
+                ? "Cancelled"
                 : soldOut
-                  ? "Sold Out"
+                  ? "Sold out"
                   : overlayMessage}
             </div>
           )
@@ -149,22 +159,24 @@ export default function EventCard({
           </div>
 
           {/* Capacity & Attendance */}
-          <div className="flex flex-wrap justify-between gap-2 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="px-2 py-1 bg-muted rounded-full">
-                {capacity && capacity > 0
-                  ? `${Math.max(capacity - attendees, 0)} spots left`
-                  : "Unlimited"}
-              </span>
-              <span className="px-2 py-1 bg-muted rounded-full">
-                {attendees} attending
-              </span>
+              {fewSpotsLeft && (
+                <span className="px-2 py-1 rounded-full bg-warning/15 font-medium text-warning-foreground dark:text-warning">
+                  Only {spotsLeft} left
+                </span>
+              )}
+              {attendees > 0 && (
+                <span className="px-2 py-1 bg-muted rounded-full">
+                  {attendees} going
+                </span>
+              )}
             </div>
 
             {/* Price Badge */}
             <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground">
               {min_price === 0 || min_price === null
-                ? "Free Entry"
+                ? "Free"
                 : `${formatMoney(currency, min_price, { trimZeroFraction: true })}${
                     approx ? ` · ${approx}` : ""
                   }`}

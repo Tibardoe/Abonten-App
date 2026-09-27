@@ -46,6 +46,34 @@ describe("event times on the venue's clock", () => {
     expect(range.date).toBe("Sat, 3rd Oct 2026");
   });
 
+  it("keeps a night that runs past midnight on the date it started", () => {
+    // 19:00 Saturday to 02:00 Sunday in Accra.
+    const night = formatFullDateTimeRange(
+      "2026-10-03T19:00:00Z",
+      "2026-10-04T02:00:00Z",
+      "Africa/Accra",
+    );
+    expect(night.date).toBe("Sat, 3rd Oct 2026");
+    expect(night.time.startsWith("07:00 PM - 02:00 AM")).toBe(true);
+
+    // Ending after the small hours, or lasting a day or more, is a real
+    // two-day range.
+    expect(
+      formatFullDateTimeRange(
+        "2026-10-03T19:00:00Z",
+        "2026-10-04T11:00:00Z",
+        "Africa/Accra",
+      ).date,
+    ).toBe("Sat, 3rd Oct 2026 - Sun, 4th Oct 2026");
+    expect(
+      formatFullDateTimeRange(
+        "2026-10-03T01:00:00Z",
+        "2026-10-04T02:00:00Z",
+        "Africa/Accra",
+      ).date,
+    ).toBe("Sat, 3rd Oct 2026 - Sun, 4th Oct 2026");
+  });
+
   it("adds a zone hint only when the viewer keeps a different clock", () => {
     // October: London is on BST (UTC+1), the same clock as Lagos.
     expect(zoneHint(AT, "Africa/Lagos", "Europe/London")).toBe("");

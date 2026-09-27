@@ -12,6 +12,8 @@ type DateBtnProp = {
   onClick: () => void;
 };
 
+// One date of an event, as a compact calendar tile: weekday, day of the
+// month, month and start time. The selected date takes the brand tint.
 export default function DateBtn({
   day,
   month,
@@ -22,38 +24,28 @@ export default function DateBtn({
   onClick,
   isActive,
 }: DateBtnProp) {
-  const now = new Date();
-
   return (
     <button
       type="button"
       key={dateString}
       disabled={is_past}
       onClick={onClick}
+      aria-pressed={isActive}
+      aria-label={`${day} ${date} ${month}, ${start_at}`}
       className={cn(
-        "rounded-md border px-4 py-2 flex-shrink-0 space-y-2 shadow-md text-sm min-w-32",
-        {
-          "border-primary": isActive,
-          "cursor-not-allowed text-muted-foreground": is_past,
-        },
+        "flex min-w-[76px] flex-shrink-0 flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 text-sm transition-colors",
+        isActive
+          ? "border-primary bg-primary/10"
+          : "border-border hover:border-primary/60",
+        is_past && "cursor-not-allowed opacity-50 hover:border-border",
       )}
     >
-      <p className="font-bold">{day}</p>
-
-      <hr />
-
-      <p>{month}</p>
-
-      <p
-        className={cn(
-          "rounded-full w-16 h-16 grid place-items-center text-2xl bg-muted mx-auto",
-          { "bg-primary text-primary-foreground": isActive },
-        )}
-      >
-        {date}
-      </p>
-
-      <p>{start_at}</p>
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {day.slice(0, 3)}
+      </span>
+      <span className="text-2xl font-bold leading-tight">{date}</span>
+      <span className="text-xs text-muted-foreground">{month.slice(0, 3)}</span>
+      <span className="mt-1 text-xs font-medium">{start_at}</span>
     </button>
   );
 }

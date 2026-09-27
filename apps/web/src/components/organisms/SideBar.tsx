@@ -1,5 +1,6 @@
 "use client";
 
+import UserAvatar from "@/components/atoms/UserAvatar";
 import ManageMenu from "@/components/molecules/ManageMenu";
 import { Skeleton } from "@/components/ui/skeleton";
 import FieldOpsNavLink from "@/fieldOps/atoms/FieldOpsNavLink";
@@ -16,12 +17,15 @@ import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
 import SpotlightNavLink from "@/spotlight/atoms/SpotlightNavLink";
 import WeeklyNavLink from "@/weekly/atoms/WeeklyNavLink";
+import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
 import { logger } from "@abonten/core/logger";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { HiOutlineLogin } from "react-icons/hi";
+import { IoSettingsOutline } from "react-icons/io5";
 import EventUploadModal from "./EventUploadModal";
 import MobileFooter from "./MobileFooter";
 
@@ -29,6 +33,11 @@ type SideBarProps = {
   onPostSuccess?: () => void;
   onNavigate?: () => void;
 };
+
+// One row style for every entry, so links, menus and buttons line up and
+// each is a comfortable touch target.
+const ROW =
+  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-accent hover:text-sidebar-foreground";
 
 // Rendered as the content of the mobile navigation Sheet (see Header.tsx) --
 // positioning, the overlay, slide animation, focus trap, and Escape/outside-
@@ -46,15 +55,19 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
   const handleSignOut = async () => {
     try {
       await signOut();
+      onNavigate?.();
       router.push("/");
     } catch (error) {
       logger.error("Error signing out:", error);
     }
   };
 
+  // Same size limit as the wide-screen Create button (EventUploadButton), so
+  // an oversized flyer is refused here too, before the upload form opens.
   const { imagePreview, selectedFile, fileInputRef, handleFileChange } =
     useImageSelection({
       invalidFileMessage: "Please select an image file for your event flyer.",
+      maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
       onInvalidFile: (message) => toast.error(message),
       onSelect: () => setShowPostModal(true),
     });
@@ -72,6 +85,7 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
   // profile details (not just useCurrentUser()) so the Manage menu below has
   // a username for its Bookings link.
   const { user, userLoading, data: userDetails } = useCurrentUserDetails();
+  const username = userDetails?.username ?? "";
 
   // Gates the Organizer Dashboard link specifically — My Events below keeps
   // its existing "any signed-in user" visibility.
@@ -102,38 +116,69 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
           footer is pushed to the bottom (mt-auto) instead of being
           absolutely positioned, so there's no dead space beneath it. pt-14
           clears the Sheet's close button before the first action. */}
-      <div className="flex h-full flex-col overflow-y-auto pt-14 pb-6">
+      <div className="flex h-full flex-col overflow-y-auto px-3 pt-14 pb-6">
         {userLoading ? (
-          <div className="pl-[5%] md:pl-[10%] flex flex-col gap-5">
+          <div className="flex flex-col gap-5 px-3">
             {Array.from({ length: 4 }, (_, i) => (
               <Skeleton key={i.toLocaleString()} className="h-5 w-28" />
             ))}
           </div>
         ) : user ? (
-          <div className="pl-[5%] md:pl-[10%] flex flex-col gap-5">
+          <div className="flex flex-col gap-1">
+            {username && (
+              <Link
+                href={`/user/${username}/posts`}
+                onClick={onNavigate}
+                className="mb-3 flex items-center gap-3 rounded-xl border border-sidebar-border p-3 transition-colors hover:bg-accent"
+              >
+                <UserAvatar
+                  avatarUrl={buildAvatarUrl(
+                    userDetails?.avatar_public_id,
+                    userDetails?.avatar_version,
+                    { width: 44, height: 44 },
+                  )}
+                  width={44}
+                  height={44}
+                />
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">
+                    {userDetails?.full_name || `@${username}`}
+                  </span>
+                  <span className="block truncate text-sm text-muted-foreground">
+                    {t("viewProfile")}
+                  </span>
+                </span>
+              </Link>
+            )}
+
             <CreateMenu
               label={t("create")}
               onSelectEvent={() => fileInputRef.current?.click()}
               onSelectPlace={() => setShowPlaceModal(true)}
-              triggerClassName="hover:text-primary transition-colors"
-              iconClassName="text-xl"
+              triggerClassName={ROW}
+              iconClassName="text-2xl opacity-70"
             />
 
             <ManageMenu
-              username={userDetails?.username ?? ""}
+              username={username}
               isOrganizer={isOrganizer}
               isPlaceOwner={isPlaceOwner}
               onNavigate={onNavigate}
-              triggerClassName="hover:text-primary transition-colors"
+              triggerClassName={ROW}
             />
 
-            <WeeklyNavLink onNavigate={onNavigate} />
+            <WeeklyNavLink onNavigate={onNavigate} className={ROW} />
 
-            <SpotlightNavLink onNavigate={onNavigate} />
+            <SpotlightNavLink onNavigate={onNavigate} className={ROW} />
 
-            <RewardsNavLink onNavigate={onNavigate} />
+            <RewardsNavLink onNavigate={onNavigate} className={ROW} />
 
-            <FieldOpsNavLink onNavigate={onNavigate} />
+            <FieldOpsNavLink onNavigate={onNavigate} className={ROW} />
+
+            <Link href="/settings" onClick={onNavigate} className={ROW}>
+              <IoSettingsOutline aria-hidden className="text-2xl opacity-70" />
+              {t("settings")}
+            </Link>
 
             <input
               type="file"
@@ -143,38 +188,38 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
               onChange={handleFileChange}
             />
 
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="flex gap-1 items-center hover:text-primary transition-colors"
-            >
-              <HiOutlineLogin className="text-2xl opacity-70" />
+            <button type="button" onClick={handleSignOut} className={ROW}>
+              <HiOutlineLogin aria-hidden className="text-2xl opacity-70" />
               {t("signOut")}
             </button>
           </div>
         ) : (
-          <div className="pl-[5%] md:pl-[10%] flex flex-col items-start gap-2 font-bold">
-            <Link href="/auth/signin" onClick={onNavigate}>
-              {t("signIn")}
-            </Link>
+          <div className="flex flex-col gap-1">
+            <div className="mb-4 flex flex-col gap-2 px-1">
+              <Link
+                href="/auth/signin"
+                onClick={onNavigate}
+                className="flex h-11 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                {t("signUp")}
+              </Link>
 
-            <Link href="/auth/signin" onClick={onNavigate}>
-              {t("signUp")}
-            </Link>
+              <Link
+                href="/auth/signin"
+                onClick={onNavigate}
+                className="flex h-11 items-center justify-center rounded-full border border-sidebar-border font-semibold transition-colors hover:bg-accent"
+              >
+                {t("signIn")}
+              </Link>
+            </div>
 
-            <WeeklyNavLink
-              onNavigate={onNavigate}
-              className="flex items-center gap-1 font-normal transition-colors hover:text-primary"
-            />
+            <WeeklyNavLink onNavigate={onNavigate} className={ROW} />
 
-            <SpotlightNavLink
-              onNavigate={onNavigate}
-              className="flex items-center gap-1 font-normal transition-colors hover:text-primary"
-            />
+            <SpotlightNavLink onNavigate={onNavigate} className={ROW} />
           </div>
         )}
 
-        <MobileFooter />
+        <MobileFooter onNavigate={onNavigate} />
       </div>
     </>
   );

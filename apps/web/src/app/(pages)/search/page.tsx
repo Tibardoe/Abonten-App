@@ -179,8 +179,8 @@ export default async function page({
     />
   ) : (
     <NoEventsFound
-      heading="No events found"
-      description="We couldn't find any events to show here yet. Check back soon."
+      heading="No upcoming events yet"
+      description="Nothing is listed right now. Search above for places and people, or check back soon."
     />
   );
 

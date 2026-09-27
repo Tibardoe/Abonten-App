@@ -15,7 +15,7 @@ export function MessagingWorkspace({ activeId }: { activeId?: string }) {
   useInboxRealtime(activeId);
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-13rem)] max-w-5xl overflow-hidden rounded-xl border bg-background md:h-[calc(100dvh-11rem)]">
+    <div className="mx-auto flex h-[calc(100dvh-13rem)] max-w-5xl overflow-hidden rounded-xl border bg-background lg:h-[calc(100dvh-11rem)]">
       <div
         className={cn(
           "w-full shrink-0 border-r md:w-80",

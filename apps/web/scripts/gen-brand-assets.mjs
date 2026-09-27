@@ -7,6 +7,9 @@
 //   brand/abonten-pdf-logo.png     stacked lockup, transparent (ticket PDF, printed on white)
 //   brand/abonten-push-icon.png    192 px Small mark on a Night tile (web push icon)
 //   brand/abonten-push-badge.png    96 px Micro mark, white on transparent (web push badge)
+//   brand/abonten-image-fallback.png 1600 px Night square, Small mark at 22% (the placeholder
+//                                    Cloudinary serves for a missing image: upload it as
+//                                    branding/image-fallback with scripts/upload-image-fallback.mjs)
 //
 // Not generated here: favicon.ico, favicon.svg and apple-touch-icon.png. The
 // 16/24/32 px favicon pixels are drawn by hand in the brand workspace, so
@@ -31,7 +34,7 @@ const raster = (name, width) =>
     .toBuffer();
 
 // A square mark master placed on a canvas at `frac` of its width.
-function markOnCanvas(name, size, frac, bg) {
+function markOnCanvas(name, size, frac, bg, radius = 0.19) {
   const box = 800 / frac;
   const off = (box - 800) / 2;
   let svg = read(name).replace(
@@ -41,7 +44,7 @@ function markOnCanvas(name, size, frac, bg) {
   if (bg)
     svg = svg.replace(
       /(<svg[^>]*>)/,
-      `$1<rect x="${100 - off}" y="${90 - off}" width="${box}" height="${box}" rx="${box * 0.19}" fill="${bg}"/>`,
+      `$1<rect x="${100 - off}" y="${90 - off}" width="${box}" height="${box}" rx="${box * radius}" fill="${bg}"/>`,
     );
   return sharp(Buffer.from(svg), { density: 300 }).resize(size, size).png();
 }
@@ -72,6 +75,11 @@ await markOnCanvas("abonten-mark-small-night", 192, 0.62, NIGHT).toFile(
 await markOnCanvas("abonten-mark-micro-mono-white", 96, 0.8).toFile(
   out("abonten-push-badge.png"),
 );
+// Square, with the mark small and centred, so it survives every crop the
+// app asks Cloudinary for (wide event heroes, square cards, avatars).
+await markOnCanvas("abonten-mark-small-night", 1600, 0.22, NIGHT, 0).toFile(
+  out("abonten-image-fallback.png"),
+);
 console.log(
-  "wrote brand/abonten-{email-tile,pdf-logo,push-icon,push-badge}.png",
+  "wrote brand/abonten-{email-tile,pdf-logo,push-icon,push-badge,image-fallback}.png",
 );

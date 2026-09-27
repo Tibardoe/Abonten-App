@@ -11,18 +11,18 @@ export default function LandingAuthLinks() {
   const t = useTranslations("navigation");
 
   return (
-    <div className="space-x-3">
+    <div className="flex items-center gap-2">
       <Link
         href="/auth/signin"
-        className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
+        className="hidden h-10 items-center rounded-full px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:inline-flex"
       >
-        {t("signUp")}
+        {t("signIn")}
       </Link>
       <Link
         href="/auth/signin"
-        className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
+        className="inline-flex h-10 items-center rounded-full bg-mint px-5 text-sm font-semibold text-neutral-950 transition-colors hover:bg-mint/90"
       >
-        {t("signIn")}
+        {t("signUp")}
       </Link>
     </div>
   );

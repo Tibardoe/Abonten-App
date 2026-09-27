@@ -10,7 +10,7 @@ import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { forwardRef, useCallback, useImperativeHandle } from "react";
-import { IoLocationOutline } from "react-icons/io5";
+import { IoLocationOutline, IoNavigateOutline } from "react-icons/io5";
 import {
   searchFieldInputClassName,
   searchFieldWrapperClassName,
@@ -222,6 +222,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
           onChange={handleInputChange}
           value={inputValue}
           placeholder={placeholderText.text}
+          aria-label={placeholderText.text}
           aria-busy={isEnhancing}
           className={searchFieldInputClassName}
         />
@@ -237,13 +238,14 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
         )}
 
         {searchResults.length > 0 && (
-          <ul className="absolute top-full left-0 w-full max-h-60 bg-popover text-popover-foreground text-lg border border-border rounded shadow-md mt-1 z-10 overflow-y-auto">
+          <div className="absolute top-full left-0 w-full max-h-60 bg-popover text-popover-foreground text-base border border-border rounded-lg shadow-lg mt-2 z-10 overflow-y-auto">
             <button
               type="button"
               onClick={handleSelectCurrentLocation}
-              className="p-2 w-full text-start font-semibold hover:bg-accent border-b border-border"
+              className="flex items-center gap-2 p-3 w-full text-start font-semibold hover:bg-accent border-b border-border"
             >
-              📍 Use my current location
+              <IoNavigateOutline aria-hidden className="shrink-0 text-lg" />
+              Use my current location
             </button>
 
             {searchResults.map((result) => (
@@ -257,7 +259,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
                     result.place_id,
                   )
                 }
-                className="p-2 w-full text-start hover:bg-accent cursor-pointer border-b border-border"
+                className="p-3 w-full text-start hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
               >
                 <div className="font-semibold text-popover-foreground">
                   {result.structured_formatting.main_text}
@@ -267,7 +269,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
                 </div>
               </button>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     );

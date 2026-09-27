@@ -631,7 +631,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
         <Link
           href={searchHref}
           onClick={() => recordRecentSearch(searchText)}
-          aria-label="Search"
+          aria-label="Show results"
         >
           <IoSearch className="text-2xl text-muted-foreground" />
         </Link>
@@ -644,10 +644,11 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
           aria-activedescendant={highlightedKey ?? undefined}
           aria-autocomplete="list"
           autoComplete="off"
+          aria-label="Search"
           placeholder={
             unified
-              ? "Search events, places, organizers or @handle"
-              : "Search events, places, restaurants, activities..."
+              ? "Search events, places or @handle"
+              : "Search events and places"
           }
           value={searchText}
           onChange={(e) => {

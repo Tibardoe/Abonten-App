@@ -27,5 +27,19 @@
     "notAuthenticated": "Usuario no autenticado",
     "fetchUserFailed": "Error al obtener el usuario",
     "updateFailed": "Error al actualizar los datos del usuario"
+  },
+  "security": {
+    "phone": {
+      "label": "Teléfono",
+      "noPhoneAdded": "No has añadido ningún número de teléfono",
+      "unverified": "(sin verificar)",
+      "change": "Cambiar",
+      "add": "Añadir",
+      "updateTitle": "Actualizar número de teléfono",
+      "updateDescription": "Te enviaremos un código por SMS para verificarlo",
+      "enterCodeTitle": "Introduce el código",
+      "codeExpiry": "El código caduca en 5 minutos.",
+      "editNumber": "Editar número"
+    }
   }
 }

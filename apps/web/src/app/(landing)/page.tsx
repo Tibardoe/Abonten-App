@@ -13,7 +13,7 @@ export default function Home() {
     <div className="fixed w-full">
       <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-dvh relative text-white flex flex-col items-center">
         {/* Header */}
-        <nav className="fixed w-full bg-black bg-opacity-30 flex justify-center z-10">
+        <nav className="fixed w-full bg-gradient-to-b from-black/60 to-transparent flex justify-center z-10">
           <div className="flex justify-between items-center py-5 w-[90%]">
             <Link href="/" aria-label="Abonten home">
               {/* The ABƆNTEN logotype: the landing page is the one place
@@ -32,13 +32,19 @@ export default function Home() {
           </div>
         </nav>
 
-        {/* overlay */}
-        <div className="absolute flex justify-center items-center w-full h-dvh bg-black bg-opacity-30">
+        {/* overlay: darker at the foot, where the search and sign-off sit */}
+        <div className="absolute flex justify-center items-center w-full h-dvh bg-gradient-to-b from-black/40 via-black/35 to-black/70">
           {/* Hero */}
-          <div className="w-[90%] space-y-12">
-            <h1 className="font-bold text-4xl text-center lg:text-6xl lg:text-left">
-              Connecting people to <br /> experiences
-            </h1>
+          <div className="w-[90%] flex flex-col items-center gap-8 lg:items-start lg:gap-10">
+            <div className="flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
+              <h1 className="max-w-[16ch] font-bold text-[2.5rem] leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-7xl">
+                Connecting people to experiences
+              </h1>
+              <p className="max-w-md text-base text-white/80 text-pretty md:text-lg">
+                Find events and places near you, get your tickets, and see
+                what&apos;s on this week.
+              </p>
+            </div>
 
             <LandingLocationSearch />
           </div>

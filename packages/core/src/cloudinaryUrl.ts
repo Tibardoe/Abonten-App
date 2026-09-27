@@ -21,10 +21,13 @@ type CloudinaryImageOptions = {
 };
 
 /**
- * The neutral branded placeholder (grey square, logo tile in the middle),
- * uploaded 2026-09-26. Fourteen past events lost their flyer files before
- * the draft clean-up was fixed; without this they rendered as broken
- * images on every card, ticket and receipt that showed them.
+ * The neutral branded placeholder, uploaded 2026-09-26. Fourteen past events
+ * lost their flyer files before the draft clean-up was fixed; without this
+ * they rendered as broken images on every card, ticket and receipt that
+ * showed them. The file is drawn by apps/web/scripts/gen-brand-assets.mjs
+ * (the new mark on a Night square) and replaced in place with
+ * apps/web/scripts/upload-image-fallback.mjs — the id never changes, so apps
+ * already installed pick up a new placeholder without a release.
  */
 export const IMAGE_FALLBACK_ID = "branding:image-fallback.png";
 

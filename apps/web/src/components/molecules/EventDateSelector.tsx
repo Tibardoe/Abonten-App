@@ -80,11 +80,11 @@ export default function EventDateSelector({
 
   const isCanceled = eventStatus === "canceled";
   const blockedLabel = isCanceled
-    ? "Event Canceled"
+    ? "Event cancelled"
     : occurrenceState.blockReason === "ended"
-      ? "Event Ended"
+      ? "Event ended"
       : occurrenceState.blockReason === "ongoing_no_future"
-        ? "Event In Progress"
+        ? "Event in progress"
         : null;
 
   const selectedDateTime = selectedOccurrence
@@ -98,9 +98,11 @@ export default function EventDateSelector({
   return (
     <div className="flex flex-col gap-3">
       {sortedEventDates.length > 0 && (
-        <div className="mb-3 p-2">
-          <h2 className="font-bold mb-2">Dates</h2>
-          <div className="flex overflow-x-auto gap-3">
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
+            {sortedEventDates.length > 1 ? "Choose a date" : "Date"}
+          </h3>
+          <div className="flex overflow-x-auto gap-3 pb-1">
             {sortedEventDates.map((occurrence, index) => {
               const dateValue = occurrence.starts_at;
 
@@ -172,7 +174,7 @@ export default function EventDateSelector({
           <CheckoutBtn
             eventId={eventId}
             occurrenceId={selectedOccurrence.id ?? null}
-            btnText="Buy Ticket"
+            btnText="Get tickets"
             eventTitle={eventTitle}
             date={selectedDateTime.date}
             time={selectedDateTime.time}

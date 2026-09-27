@@ -53,7 +53,7 @@ export default function MobileNavBar() {
 
   return (
     <>
-      <div className="flex md:hidden justify-center w-full fixed z-10 bottom-0 border-t border-sidebar-border py-4 bg-sidebar">
+      <div className="flex lg:hidden justify-center w-full fixed z-10 bottom-0 border-t border-sidebar-border pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85">
         <div className="flex justify-between w-[90%]">
           <MobileNavButton
             href={`/explore/${generateSlug(location || "default-location")}`}

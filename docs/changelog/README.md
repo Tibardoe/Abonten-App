@@ -16,6 +16,13 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-27 — Web navigation, event page and translations
+
+- PROJECT.md §49.
+- Behaviour: wide screens get a real top navigation — the ABƆNTEN logotype, Explore, Abonten Weekly and Spotlight (each still behind its programme switch), a search field, and for signed-in people Manage, Create, Messages, notifications and an account menu (profile, tickets, transactions, rewards, field work, settings, help, sign out); signed-out visitors see Sign in and a filled Sign up. Tablets (768–1023 px) now get the phone navigation (bottom bar and menu) instead of neither. The menu sheet closes when a footer link is followed and refuses an oversized flyer like the desktop Create button. The event page puts tickets first: a ticket panel straight after the organizer on phones and a sticky right-hand column on wide screens, with the price, dates, the ticket button, spots left, Share and Website; the organizer's stars appear only once someone has rated them, "0 going" is no longer shown anywhere, and a night that runs past midnight reads as one date. Explore hides empty curated rows, uses sentence-case section titles, and a quiet area offers "Change location" and "See places instead"; event cards show "Only N left" and "N going" only when true. The landing page has a clearer headline, a filled Sign up, an Explore button and "Use my current location". The Weekly pages' tab title no longer repeats the brand. An event website typed with `https://` is no longer linked as `https://https://…`.
+- Translations: the Create menu item and ten phone-security strings were missing from French, Spanish, German, Portuguese and Twi (people saw raw keys); all catalogs now match English, and `npm run check:i18n` (new, in CI) keeps them that way. English navigation is sentence case.
+- New files: `apps/web/public/assets/images/brand/abonten-image-fallback.png` (new-brand placeholder) and `apps/web/scripts/upload-image-fallback.mjs` (founder step: replaces Cloudinary's `branding/image-fallback`, which still shows the old logo). Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-26 — Brand identity refresh
 
 - PROJECT.md §48; `mobile/15-production-refinement.md` (WP-1 marked superseded); CLAUDE.md.

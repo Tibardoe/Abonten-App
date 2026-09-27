@@ -27,8 +27,7 @@ export default function OutlinedShareBtn({
       <button
         type="button"
         onClick={share}
-        // className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
-        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90 transition-colors"
+        className="w-full flex items-center justify-center gap-2 border border-border bg-background py-2.5 rounded-lg text-sm font-medium hover:bg-accent transition-colors"
       >
         <FiShare2 className="md:text-lg" />
         Share

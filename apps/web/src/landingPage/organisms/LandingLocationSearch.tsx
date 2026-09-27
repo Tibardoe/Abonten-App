@@ -9,7 +9,8 @@ import { logger } from "@abonten/core/logger";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { FiArrowRightCircle } from "react-icons/fi";
+import { FiArrowRight } from "react-icons/fi";
+import { IoNavigateOutline } from "react-icons/io5";
 
 // The only genuinely interactive part of the landing page — everything
 // else (hero text, nav, background) is static and lives in the Server
@@ -18,6 +19,19 @@ export default function LandingLocationSearch() {
   const router = useRouter();
   const autoCompleteRef = useRef<AutoCompleteHandle>(null);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+
+  // The visitor's own position, or the general explore page when the browser
+  // can't or won't say where they are.
+  const exploreFromCurrentPosition = async () => {
+    if (!navigator.geolocation) {
+      router.push("/explore");
+      return;
+    }
+    const position = await getCurrentPosition();
+    const { latitude, longitude } = position.coords;
+    router.push(`/explore/current-location?lat=${latitude}&lng=${longitude}`);
+  };
 
   const handleGoClick = async () => {
     if (isResolvingLocation) return;
@@ -49,14 +63,7 @@ export default function LandingLocationSearch() {
       }
 
       // Nothing was typed: try the user's current location instead.
-      if (!navigator.geolocation) {
-        router.push("/explore");
-        return;
-      }
-
-      const position = await getCurrentPosition();
-      const { latitude, longitude } = position.coords;
-      router.push(`/explore/current-location?lat=${latitude}&lng=${longitude}`);
+      await exploreFromCurrentPosition();
     } catch (error) {
       logger.error("Unable to resolve location:", error);
       router.push("/explore");
@@ -65,29 +72,65 @@ export default function LandingLocationSearch() {
     }
   };
 
+  const handleUseMyLocation = async () => {
+    if (isLocating) return;
+    setIsLocating(true);
+    try {
+      await exploreFromCurrentPosition();
+    } catch (error) {
+      logger.error("Unable to read the current position:", error);
+      router.push("/explore");
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
   return (
-    <div className="flex md:w-[40%] gap-2 items-center justify-center lg:justify-start text-lg md:text-xl">
-      <AutoComplete
-        ref={autoCompleteRef}
-        placeholderText={{
-          text: "Enter your address",
-          svgUrl: "assets/images/location.svg",
+    <div className="flex w-full max-w-xl flex-col items-center gap-4 lg:items-start">
+      <form
+        className="flex w-full items-center gap-2 rounded-2xl bg-white/95 p-1.5 shadow-2xl shadow-black/30 ring-1 ring-white/20 text-lg md:text-xl"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleGoClick();
         }}
-        address={{ address: () => {} }}
-      />
+      >
+        <AutoComplete
+          ref={autoCompleteRef}
+          placeholderText={{
+            text: "Enter a city or address",
+            svgUrl: "assets/images/location.svg",
+          }}
+          address={{ address: () => {} }}
+          classname="bg-transparent text-neutral-900 [&_input]:text-neutral-900 [&_input]:placeholder:text-neutral-500 [&_svg]:text-neutral-700 focus-within:ring-0"
+        />
+
+        <button
+          type="submit"
+          disabled={isResolvingLocation}
+          aria-label="Explore events and places here"
+          className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 md:px-5"
+        >
+          {isResolvingLocation ? (
+            <Loader2 aria-hidden className="h-5 w-5 animate-spin" />
+          ) : (
+            <FiArrowRight aria-hidden className="h-5 w-5" />
+          )}
+          <span className="hidden sm:inline">Explore</span>
+        </button>
+      </form>
 
       <button
         type="button"
-        onClick={handleGoClick}
-        disabled={isResolvingLocation}
-        aria-label="Search events by location"
-        className="disabled:opacity-50"
+        onClick={handleUseMyLocation}
+        disabled={isLocating}
+        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-60"
       >
-        {isResolvingLocation ? (
-          <Loader2 className="text-5xl text-mint animate-spin" />
+        {isLocating ? (
+          <Loader2 aria-hidden className="h-4 w-4 animate-spin" />
         ) : (
-          <FiArrowRightCircle className="text-5xl text-mint" />
+          <IoNavigateOutline aria-hidden className="h-4 w-4" />
         )}
+        Use my current location
       </button>
     </div>
   );

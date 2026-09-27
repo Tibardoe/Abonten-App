@@ -237,21 +237,38 @@ export default async function page({
 
   const tags = parseEventTypes(event.event_type);
 
-  // Mirrors EventDateSelector's own isCanceled/hasEnded computation (which
-  // only gates the ticket CTA at the bottom of the page) -- this is a
-  // separate, page-level banner so a canceled/ended event is obvious above
-  // the fold instead of only surfacing once a visitor scrolls all the way
-  // down to the buy button.
-
   // Free registration = the FREE tier, the same test issue_free_ticket
   // applies (@abonten/core/ticketTiers).
   const isAbsolutelyFreeEvent = hasFreeRegistration(event.ticket_type);
+
+  // "From" only when there is more than one price to choose from.
+  const prices = (event.ticket_type ?? []).map((t: { price: number | null }) =>
+    Number(t.price ?? 0),
+  );
+  const hasPriceRange = new Set(prices).size > 1;
+  const priceLabel =
+    minTicket?.price === 0 || minTicket === null
+      ? "Free"
+      : `${hasPriceRange ? "From " : ""}${formatMoney(
+          minTicket?.currency,
+          minTicket?.price,
+          { trimZeroFraction: true },
+        )}`;
+
+  // Organizers type the address with or without the scheme.
+  const websiteHref = event.website_url
+    ? /^https?:\/\//i.test(event.website_url)
+      ? event.website_url
+      : `https://${event.website_url}`
+    : null;
+
+  const hasOrganizerRating = averageRating.totalRatings > 0;
 
   return (
     <div className="bg-background">
       <JsonLd data={eventJsonLd(event)} />
       {/* Hero Section */}
-      <div className="relative h-72 md:h-[500px] bg-muted">
+      <div className="relative h-72 md:h-[500px] bg-muted overflow-hidden md:rounded-2xl">
         <Image
           src={buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
             width: 1280,
@@ -263,25 +280,20 @@ export default async function page({
           priority
           sizes="(max-width: 768px) 100vw, 80vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-overlay/80 via-overlay/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-overlay/85 via-overlay/40 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 space-y-2 md:space-y-4">
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl text-balance">
             {event.title}
           </h1>
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center gap-2 text-sm md:text-base">
+            <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/30 backdrop-blur-sm rounded-full text-white flex items-center gap-2 text-sm md:text-base">
               <PiTicketBold className="text-white/80" />
-              {minTicket?.price === 0 || minTicket === null ? (
-                <span>Free Entry</span>
-              ) : (
-                <span>
-                  From{" "}
-                  {formatMoney(minTicket?.currency, minTicket?.price, {
-                    trimZeroFraction: true,
-                  })}
-                </span>
-              )}
+              <span>{priceLabel}</span>
+            </span>
+            <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/30 backdrop-blur-sm rounded-full text-white flex items-center gap-2 text-sm md:text-base">
+              <MdOutlineDateRange className="text-white/80" />
+              <span>{eventDateAndTime.date}</span>
             </span>
             <EventAttendanceHeroBadges
               eventId={event.id}
@@ -293,53 +305,62 @@ export default async function page({
         </div>
       </div>
 
+      {/* A cancelled, ended or started event says so above the fold, not
+          only on the ticket button. */}
       <EventStatusBanner eventDates={event_dates} eventStatus={event.status} />
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-2 lg:px-8 py-8 md:py-12">
-        <div className="md:grid lg:grid-cols-3 gap-6 md:gap-8 flex flex-col mb-5">
-          {/* Event Details */}
-          <div className="lg:col-span-2 space-y-6 md:space-y-8">
-            {/* Organizer Card */}
-            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <div className="flex items-center gap-3 md:gap-4">
-                <Link
-                  href={`/user/${event.user_info.username}/posts`}
-                  className="shrink-0 hover:scale-105 transition-transform"
-                >
-                  <Image
-                    src={buildAvatarUrl(
-                      event.user_info.avatar_public_id,
-                      event.user_info.avatar_version,
-                      { width: 56, height: 56 },
-                    )}
-                    alt={event.user_info.username ?? "Organizer"}
-                    width={56}
-                    height={56}
-                    className="rounded-full border-2 border-border"
-                  />
-                </Link>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <Link
-                      href={`/user/${event.user_info.username}/posts`}
-                      className="text-lg font-medium text-card-foreground truncate"
-                    >
-                      {event.user_info.username}
-                    </Link>
-                    {event.user_info.organizer_verified &&
-                    event.user_info.status_id === 1 ? (
-                      <VerifiedBadgePopover subjectType="organizer" compact />
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex items-center gap-1">
+      {/* Main Content. One grid: on phones everything stacks with the ticket
+          panel straight after the organizer, so buying never needs a long
+          scroll; on wide screens the panel is a sticky right-hand column
+          beside the details. */}
+      <div className="max-w-7xl mx-auto px-2 lg:px-8 py-6 md:py-10">
+        <div className="grid items-start gap-4 md:gap-6 lg:grid-cols-3 lg:gap-8">
+          {/* Organizer Card */}
+          <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
+            <div className="flex items-center gap-3 md:gap-4">
+              <Link
+                href={`/user/${event.user_info.username}/posts`}
+                className="shrink-0 hover:scale-105 transition-transform"
+              >
+                <Image
+                  src={buildAvatarUrl(
+                    event.user_info.avatar_public_id,
+                    event.user_info.avatar_version,
+                    { width: 56, height: 56 },
+                  )}
+                  alt={event.user_info.username ?? "Organizer"}
+                  width={56}
+                  height={56}
+                  className="rounded-full border-2 border-border"
+                />
+              </Link>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Hosted by
+                </p>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Link
+                    href={`/user/${event.user_info.username}/posts`}
+                    className="text-lg font-semibold text-card-foreground truncate hover:underline"
+                  >
+                    {event.user_info.username}
+                  </Link>
+                  {event.user_info.organizer_verified &&
+                  event.user_info.status_id === 1 ? (
+                    <VerifiedBadgePopover subjectType="organizer" compact />
+                  ) : null}
+                </div>
+                {/* No stars at all until someone has rated them: five grey
+                    stars and "(0.0)" read as a bad rating. */}
+                {hasOrganizerRating && (
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-0.5" aria-hidden>
                       {[...Array(5)].map((_, i) => (
                         <span
                           key={`star-${i.toLocaleString()}`}
                           className={`text-sm ${
                             i < Math.floor(averageRating.averageRating)
-                              ? "text-foreground"
+                              ? "text-warning"
                               : "text-muted-foreground/40"
                           }`}
                         >
@@ -348,109 +369,41 @@ export default async function page({
                       ))}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      ({averageRating.averageRating.toFixed(1)})
+                      {averageRating.averageRating.toFixed(1)} (
+                      {averageRating.totalRatings})
                     </span>
                   </div>
-                </div>
-                <span className="text-sm text-muted-foreground shrink-0">
-                  Posted {postedAt}
-                </span>
-              </div>
-              <MessageSubjectButton
-                input={{ type: "event", eventId: event.id }}
-                ownerId={event.organizer_id}
-                label="Message organizer"
-                className="mt-4 w-full sm:w-auto"
-              />
-            </div>
-
-            {/* Action Buttons - Mobile Top */}
-            <div className="lg:hidden flex items-center gap-4">
-              <OutlinedShareBtn
-                title={event.title}
-                address={address.full_address}
-                eventCode={event.event_code}
-                eventId={event.id}
-              />
-              <ReportButton
-                targetType="event"
-                targetId={event.id}
-                targetLabel={event.title}
-                ownerId={event.organizer_id}
-              />
-            </div>
-
-            {/* Event Info Grid */}
-            <div className="grid md:grid-cols-2 gap-3 md:gap-4">
-              <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
-                <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
-                  <IoLocationOutline className="text-xl md:text-2xl text-foreground" />
-                  <CardTitle>Location</CardTitle>
-                </div>
-                <p className="text-muted-foreground mb-4 text-sm md:text-base">
-                  {address.full_address}
-                </p>
-                <LocationMapPreview location={locationWkb} className="mb-4" />
-                {event.place && (
-                  <Link
-                    href={`/places/${event.place.slug}`}
-                    className="inline-block text-sm text-primary hover:underline mb-4"
-                  >
-                    📍 At: {event.place.name}
-                  </Link>
                 )}
-                <GetDirectionBtn location={locationWkb} />
               </div>
+              <span className="hidden sm:block text-sm text-muted-foreground shrink-0">
+                Posted {postedAt}
+              </span>
+            </div>
+            <MessageSubjectButton
+              input={{ type: "event", eventId: event.id }}
+              ownerId={event.organizer_id}
+              label="Message organizer"
+              className="mt-4 w-full sm:w-auto"
+            />
+          </section>
 
-              <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
-                <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
-                  <MdOutlineDateRange className="text-xl md:text-2xl text-foreground" />
-                  <CardTitle>Date & Time</CardTitle>
-                </div>
-                <p className="text-muted-foreground text-sm md:text-base">
+          {/* Ticket panel */}
+          <aside
+            id="tickets"
+            aria-label="Tickets"
+            className="lg:col-start-3 lg:row-start-1 lg:row-span-4 lg:sticky lg:top-28"
+          >
+            <div className="bg-card text-card-foreground rounded-xl border border-border p-4 md:p-6 shadow-sm space-y-5">
+              <div>
+                <p className="text-sm text-muted-foreground">Tickets</p>
+                <p className="text-2xl font-bold">{priceLabel}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   {eventDateAndTime.date}
-                </p>
-                <p className="text-muted-foreground text-sm md:text-base">
+                  <br />
                   {eventDateAndTime.time}
                 </p>
               </div>
-            </div>
 
-            {/* Description */}
-            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <SectionTitle className="mb-3 md:mb-4 text-card-foreground">
-                About the Event
-              </SectionTitle>
-              <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
-                {event.description}
-              </p>
-            </div>
-
-            {/* Action Buttons - Desktop */}
-            <div className="hidden lg:flex gap-4">
-              <div className="flex-1">
-                <OutlinedShareBtn
-                  title={event.title}
-                  address={address.full_address}
-                  eventCode={event.event_code}
-                  eventId={event.id}
-                />
-              </div>
-
-              {event.website_url && (
-                <a
-                  href={`https://${event.website_url}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Website <FiArrowUpRight className="text-lg" />
-                </a>
-              )}
-            </div>
-
-            {/* Ticket CTA */}
-            <div className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all">
               <EventDateSelector
                 eventDates={event_dates}
                 eventId={event.id}
@@ -462,69 +415,123 @@ export default async function page({
                 isAbsolutelyFreeEvent={isAbsolutelyFreeEvent}
                 eventStatus={event.status}
               />
-            </div>
-          </div>
 
-          {/* Sidebar */}
-          <div className="space-y-4 md:space-y-6">
-            {/* Event Category */}
-            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <CardTitle className="mb-3 md:mb-4 text-card-foreground">
-                Event Category
-              </CardTitle>
-              <div className="flex">
-                <span className="p-2 text-center border border-border w-full bg-muted text-muted-foreground rounded-full text-xs md:text-sm">
-                  {event.event_category}
-                </span>
-              </div>
-            </div>
-
-            {/* Event Tags */}
-            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <h3 className="text-lg font-medium mb-3 md:mb-4 text-card-foreground">
-                Event Tags
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs md:text-sm"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons - Mobile Bottom */}
-            <div className="lg:hidden space-y-2">
-              {event.website_url && (
-                <a
-                  href={`https://${event.website_url}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90"
-                >
-                  Visit Website <FiArrowUpRight />
-                </a>
+              {isAbsolutelyFreeEvent && !event.require_registration && (
+                <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+                  Free entry. No ticket or registration needed.
+                </p>
               )}
 
-              <OutlinedShareBtn
-                title={event.title}
-                address={address.full_address}
-                eventCode={event.event_code}
+              <EventCapacityCard
                 eventId={event.id}
+                capacity={event.capacity}
+                ticketTypes={event.ticket_type}
+                initialCount={attendanceCount}
               />
+
+              <div className="flex flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
+                <OutlinedShareBtn
+                  title={event.title}
+                  address={address.full_address}
+                  eventCode={event.event_code}
+                  eventId={event.id}
+                />
+                {websiteHref && (
+                  <a
+                    href={websiteHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 border border-border bg-background py-2.5 rounded-lg text-sm font-medium hover:bg-accent transition-colors"
+                  >
+                    Website <FiArrowUpRight className="text-base" />
+                  </a>
+                )}
+              </div>
+
+              <div className="flex justify-center">
+                <ReportButton
+                  targetType="event"
+                  targetId={event.id}
+                  targetLabel={event.title}
+                  ownerId={event.organizer_id}
+                />
+              </div>
+            </div>
+          </aside>
+
+          {/* Description */}
+          <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
+            <SectionTitle className="mb-3 md:mb-4 text-card-foreground">
+              About this event
+            </SectionTitle>
+            <p className="text-muted-foreground leading-relaxed text-sm md:text-base whitespace-pre-line">
+              {event.description}
+            </p>
+          </section>
+
+          {/* When and where */}
+          <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm space-y-5">
+            <SectionTitle className="text-card-foreground">
+              When and where
+            </SectionTitle>
+
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <MdOutlineDateRange className="text-xl text-foreground" />
+              </span>
+              <div>
+                <CardTitle>{eventDateAndTime.date}</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {eventDateAndTime.time}
+                </p>
+              </div>
             </div>
 
-            {/* Capacity */}
-            <EventCapacityCard
-              eventId={event.id}
-              capacity={event.capacity}
-              ticketTypes={event.ticket_type}
-              initialCount={attendanceCount}
-            />
-          </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <IoLocationOutline className="text-xl text-foreground" />
+              </span>
+              <div className="min-w-0">
+                <CardTitle>{event.place?.name ?? "Location"}</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {address.full_address}
+                </p>
+                {event.place && (
+                  <Link
+                    href={`/places/${event.place.slug}`}
+                    className="mt-1 inline-block text-sm font-medium text-primary hover:underline"
+                  >
+                    See the venue
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <LocationMapPreview location={locationWkb} />
+            <GetDirectionBtn location={locationWkb} />
+          </section>
+
+          {/* Category and tags */}
+          <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
+            <SectionTitle className="mb-3 text-card-foreground">
+              Good to know
+            </SectionTitle>
+            <div className="flex flex-wrap gap-2">
+              {event.event_category && (
+                <span className="px-3 py-1 rounded-full bg-primary/10 text-sm font-medium text-foreground">
+                  {event.event_category}
+                </span>
+              )}
+              {tags.map((tag: string) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </section>
         </div>
 
         <div className="mt-6 md:mt-8">
@@ -551,11 +558,13 @@ export default async function page({
           />
         </div>
 
-        <EventsSlider
-          heading="Similar Events"
-          events={similarEvents ?? []}
-          eventCategory={event.event_category}
-        />
+        <div className="mt-6 md:mt-8">
+          <EventsSlider
+            heading="Similar events"
+            events={similarEvents ?? []}
+            eventCategory={event.event_category}
+          />
+        </div>
       </div>
     </div>
   );

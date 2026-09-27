@@ -11,10 +11,17 @@
   "signIn": "Kɔ Mu",
   "signUp": "Kyerɛw Wo Din",
   "home": "Fie",
-  "post": "Twerɛ",
   "search": "Hwehwɛ",
   "transactions": "Sika Nsesa",
   "wallets": "Sikaboto",
   "messages": "Nkrasɛm",
-  "account": "Akontabu"
+  "account": "Akontabu",
+  "create": "Create",
+  "explore": "Explore",
+  "profile": "Wo profile",
+  "viewProfile": "Hwɛ wo profile",
+  "settings": "Settings",
+  "help": "Help centre",
+  "searchPlaceholder": "Hwehwɛ events, mmeae ne nnipa",
+  "accountMenu": "Account menu"
 }

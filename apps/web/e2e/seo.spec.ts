@@ -64,3 +64,16 @@ test("event and place reviews pages render publicly with their own canonical URL
     await expect(page.getByRole("heading", { name: "Reviews" })).toBeVisible();
   }
 });
+
+// The root layout's title template appends " | Abonten Hub" once; a page
+// that also writes it into its own title shows the brand twice in the tab
+// (the Weekly pages did until 2026-09-27).
+test("page titles carry the brand exactly once", async ({ page }) => {
+  for (const path of ["/", "/weekly", "/spotlight", "/help", "/legal"]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBeLessThan(400);
+    const title = await page.title();
+    expect(title, path).toContain("Abonten Hub");
+    expect(title, path).not.toMatch(/Abonten Hub.*Abonten Hub/);
+  }
+});

@@ -2,13 +2,14 @@
 
 import ChangeLocationModal from "@/components/organisms/ChangeLocationModal";
 import { useState } from "react";
+import { IoStorefrontOutline } from "react-icons/io5";
 
-// "All Places" empty state for the Explore page's Places tab (spec: "No
-// places found in this location." + a "Change location" action). Owns its
-// own modal state the same way
+// "All Places" empty state for the Explore page's Places tab. Owns its own
+// modal state the same way
 // src/components/organisms/LocationAndFilterSection.tsx does, rather than
 // threading a shared open/close handler down through InfiniteList's
-// emptyState prop.
+// emptyState prop. Drawn like the Events tab's empty state (NoEventsFound)
+// so the two tabs look like one page.
 export default function NoPlacesEmptyState() {
   const [showChangeLocationModal, setShowChangeLocationModal] = useState(false);
 
@@ -17,19 +18,33 @@ export default function NoPlacesEmptyState() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[40vh] py-10 px-4 text-center gap-3">
+    <div className="flex flex-col items-center justify-center min-h-[40vh] py-10 px-4 text-center gap-4">
       {showChangeLocationModal && (
         <ChangeLocationModal
           handleShowChangeLocationModal={handleShowChangeLocationModal}
         />
       )}
 
-      <p className="text-muted-foreground">No places found in this location.</p>
+      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted">
+        <IoStorefrontOutline
+          aria-hidden
+          className="text-3xl text-muted-foreground"
+        />
+      </div>
+
+      <div className="max-w-sm space-y-1.5">
+        <h2 className="text-lg font-semibold text-foreground">
+          No places found
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Nothing listed here matches yet. Try another area, or clear a filter.
+        </p>
+      </div>
 
       <button
         type="button"
         onClick={() => setShowChangeLocationModal(true)}
-        className="text-sm font-semibold text-primary underline"
+        className="h-10 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
         Change location
       </button>

@@ -51,7 +51,7 @@ export async function weeklyMetadata(
   if (!doc) {
     // Nothing public to describe: never index an empty or staff-only page.
     return {
-      title: `${WEEKLY_PRODUCT_NAME} | Abonten Hub`,
+      title: WEEKLY_PRODUCT_NAME,
       description: WEEKLY_TAGLINE,
       robots: { index: false, follow: true },
     };
@@ -59,7 +59,10 @@ export async function weeklyMetadata(
 
   const e = doc.edition;
   const canonicalPath = weeklyEditionPath(e.scopeSlug, e.weekStart);
-  const title = `${e.title} · ${WEEKLY_PRODUCT_NAME} ${e.scopeName} | Abonten Hub`;
+  // The page title gets " | Abonten Hub" from the root layout's template;
+  // the social cards are not templated, so they carry the brand themselves.
+  const title = `${e.title} · ${WEEKLY_PRODUCT_NAME} ${e.scopeName}`;
+  const socialTitle = `${title} | Abonten Hub`;
   const description = (e.subtitle ?? e.intro ?? WEEKLY_TAGLINE).slice(0, 155);
   const firstImage = doc.sections
     .flatMap((s) => s.items)
@@ -83,7 +86,7 @@ export async function weeklyMetadata(
     description,
     alternates: { canonical: `${siteOrigin()}${canonicalPath}` },
     openGraph: {
-      title,
+      title: socialTitle,
       description,
       type: "article",
       url: `${siteOrigin()}${canonicalPath}`,
@@ -91,7 +94,7 @@ export async function weeklyMetadata(
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title,
+      title: socialTitle,
       description,
       images: image ? [image] : undefined,
     },
