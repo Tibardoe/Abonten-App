@@ -1,8 +1,10 @@
 "use client";
 
+import AccountMenu from "@/components/molecules/AccountMenu";
+import DesktopPrimaryNav from "@/components/molecules/DesktopPrimaryNav";
+import HeaderSearchLink from "@/components/molecules/HeaderSearchLink";
 import ManageMenu from "@/components/molecules/ManageMenu";
 import NotificationBell from "@/components/organisms/NotificationBell";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -10,7 +12,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import FieldOpsNavLink from "@/fieldOps/atoms/FieldOpsNavLink";
 import {
   useCurrentUserDetails,
   useIsOrganizer,
@@ -18,48 +19,26 @@ import {
 } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { MessagesNavLink } from "@/messaging/components/MessagesNavLink";
-import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
-import SpotlightNavLink from "@/spotlight/atoms/SpotlightNavLink";
-import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { HiOutlineLogin } from "react-icons/hi";
+import { useState } from "react";
 import { IoMenuOutline } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
 import EventUploadButton from "../atoms/EventUploadButton";
-import UserAvatar from "../atoms/UserAvatar";
-import { cn } from "../lib/utils";
 import SideBar from "./SideBar";
-
-const defaultPublicId = "AnonymousProfile_rn6qez";
-
-const defaulfVersion = "1743533914";
 
 export default function Header() {
   const t = useTranslations("navigation");
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const pathname = usePathname();
-
   const location = useGetUserLocation();
-
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  // The mark alone: at 48-64 px a wordmark would be too small to read. The
-  // Small weight is drawn for exactly this range.
-  const logoSrc =
-    mounted && resolvedTheme === "dark"
-      ? "/assets/images/brand/abonten-mark-small-night.svg"
-      : "/assets/images/brand/abonten-mark-small-light.svg";
+  const exploreHref = `/explore/${generateSlug(location ?? "")}`;
 
   // Shared with SideBar/MobileNavBar/etc. — one cached fetch instead of
   // each component independently calling supabase.auth.getUser().
@@ -76,23 +55,12 @@ export default function Header() {
   // users who actually own at least one place.
   const isPlaceOwner = useIsPlaceOwner();
 
-  const profile = {
-    username: userDetails?.username ?? "",
-    avatar_public_id: userDetails?.avatar_public_id ?? "",
-    avatar_version: userDetails?.avatar_version ?? "",
-  };
-
-  const avatarUrl = profile.avatar_public_id
-    ? buildCloudinaryUrl(profile.avatar_public_id, profile.avatar_version, {
-        width: 60,
-        height: 60,
-      })
-    : buildCloudinaryUrl(defaultPublicId, defaulfVersion, {
-        width: 60,
-        height: 60,
-      });
-
-  const isUserAccount = pathname === `/user/${profile.username}/posts`;
+  const username = userDetails?.username ?? "";
+  const avatarUrl = buildAvatarUrl(
+    userDetails?.avatar_public_id,
+    userDetails?.avatar_version,
+    { width: 40, height: 40 },
+  );
 
   const handleSignOut = async () => {
     try {
@@ -105,134 +73,141 @@ export default function Header() {
   const closeSidebar = () => setIsMenuOpen(false);
 
   return (
-    <>
-      <header className="w-full flex justify-center fixed bg-sidebar z-20">
-        <div className="flex justify-between py-5 w-[95%] border-b border-sidebar-border items-center">
-          <div className="mx-auto lg:mx-0 flex items-center w-full">
-            <div className="flex items-center gap-3">
-              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-                <SheetTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-                    className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px] text-sidebar-foreground"
-                  >
-                    {isMenuOpen ? (
-                      <LiaTimesSolid className="text-2xl" />
-                    ) : (
-                      <IoMenuOutline className="text-2xl" />
-                    )}
-                  </button>
-                </SheetTrigger>
+    <header className="w-full flex justify-center fixed bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 z-20">
+      <div className="flex items-center justify-between gap-4 lg:gap-6 py-5 w-[95%] border-b border-sidebar-border">
+        {/* Left: menu (narrow screens), brand, and on wide screens the
+            public destinations. */}
+        <div className="flex min-w-0 items-center gap-3 lg:gap-6">
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                className="lg:hidden -ml-1 flex h-10 w-10 items-center justify-center rounded-full text-sidebar-foreground transition-colors hover:bg-accent"
+              >
+                {isMenuOpen ? (
+                  <LiaTimesSolid className="text-2xl" />
+                ) : (
+                  <IoMenuOutline className="text-2xl" />
+                )}
+              </button>
+            </SheetTrigger>
 
-                <SheetContent
-                  side="left"
-                  className="w-[80%] sm:max-w-none p-0 bg-sidebar text-sidebar-foreground border-sidebar-border"
-                >
-                  <SheetTitle className="sr-only">Navigation menu</SheetTitle>
-                  <SideBar
-                    onPostSuccess={closeSidebar}
-                    onNavigate={closeSidebar}
-                  />
-                </SheetContent>
-              </Sheet>
-
-              {/* Desktop nav (below) hides the whole signed-in block under
-              `lg`, and neither MobileNavBar nor SideBar surface
-              notifications -- this is the only place mobile/tablet users
-              can reach them, right next to the menu button. */}
-              {!sessionLoading && userSession && (
-                <div className="lg:hidden flex items-center gap-3 text-sidebar-foreground">
-                  <NotificationBell align="left" />
-                  <MessagesNavLink />
-                </div>
-              )}
-            </div>
-
-            <Link
-              href={`/explore/${generateSlug(location ?? "")}`}
-              className="absolute right-4 transform lg:relative lg:translate-x-0 w-10 h-10 md:w-12 md:h-12"
+            <SheetContent
+              side="left"
+              className="w-[80%] sm:max-w-sm p-0 bg-sidebar text-sidebar-foreground border-sidebar-border"
             >
-              <Image src={logoSrc} alt="Abonten" fill priority />
-            </Link>
-          </div>
+              <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+              <SideBar onPostSuccess={closeSidebar} onNavigate={closeSidebar} />
+            </SheetContent>
+          </Sheet>
 
-          {sessionLoading ? (
-            <div className="hidden lg:flex items-center gap-7 min-w-fit">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-6 w-20" />
-              <Skeleton className="h-9 w-9 rounded-full" />
-              <Skeleton className="h-[60px] w-[60px] rounded-full" />
-            </div>
-          ) : userSession ? (
-            <div className="hidden lg:flex items-center gap-7 min-w-fit text-sidebar-foreground">
+          <Link
+            href={exploreHref}
+            aria-label="Abonten home"
+            className="flex shrink-0 items-center"
+          >
+            {/* The mark alone on narrow screens (the Small weight is drawn
+                for 25-63 px); the ABƆNTEN logotype where there is room.
+                Both colourways are in the HTML and CSS picks one, so the
+                logo never flashes the wrong colour while the theme loads. */}
+            <Image
+              src="/assets/images/brand/abonten-mark-small-light.svg"
+              alt="Abonten"
+              width={40}
+              height={40}
+              priority
+              className="h-10 w-10 lg:hidden dark:hidden"
+            />
+            <Image
+              src="/assets/images/brand/abonten-mark-small-night.svg"
+              alt="Abonten"
+              width={40}
+              height={40}
+              priority
+              className="hidden h-10 w-10 dark:block lg:dark:hidden"
+            />
+            <Image
+              src="/assets/images/brand/abonten-logotype-light.svg"
+              alt="Abonten"
+              width={160}
+              height={30}
+              priority
+              className="hidden h-[30px] w-auto lg:block dark:lg:hidden"
+            />
+            <Image
+              src="/assets/images/brand/abonten-logotype-night.svg"
+              alt="Abonten"
+              width={160}
+              height={30}
+              priority
+              className="hidden h-[30px] w-auto dark:lg:block"
+            />
+          </Link>
+
+          <div className="hidden lg:block">
+            <DesktopPrimaryNav exploreHref={exploreHref} />
+          </div>
+        </div>
+
+        <div className="hidden lg:flex flex-1 justify-end xl:justify-center">
+          <HeaderSearchLink />
+        </div>
+
+        {/* Right: what the visitor can do. */}
+        {sessionLoading ? (
+          <div className="flex items-center gap-4">
+            <Skeleton className="hidden lg:block h-6 w-20" />
+            <Skeleton className="h-9 w-9 rounded-full" />
+            <Skeleton className="hidden lg:block h-10 w-10 rounded-full" />
+          </div>
+        ) : userSession ? (
+          <div className="flex items-center gap-4 lg:gap-6 text-sidebar-foreground">
+            <div className="hidden lg:flex items-center gap-6">
               <ManageMenu
-                username={profile.username}
+                username={username}
                 isOrganizer={isOrganizer}
                 isPlaceOwner={isPlaceOwner}
                 triggerClassName="hover:text-primary transition-colors"
               />
 
               <EventUploadButton />
-
-              <SpotlightNavLink />
-
-              <RewardsNavLink />
-
-              <FieldOpsNavLink />
-
-              {/* Not gated on isOrganizer/isPlaceOwner like the links above --
-              every signed-in user can have messages/notifications, regardless
-              of role. */}
-              <MessagesNavLink />
-
-              <NotificationBell />
-
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <HiOutlineLogin className="text-3xl opacity-70" />
-                {t("signOut")}
-              </button>
-
-              {profile.username && (
-                <Link
-                  href={`/user/${profile.username}/posts`}
-                  aria-label="Your profile"
-                  className={cn(
-                    "bg-transparent rounded-full font-bold border-border",
-                    { hidden: isUserAccount },
-                  )}
-                >
-                  <UserAvatar avatarUrl={avatarUrl} width={60} height={60} />
-                </Link>
-              )}
             </div>
-          ) : (
-            <div className="space-x-3 hidden lg:flex">
-              <Link href="/auth/signin">
-                <Button
-                  variant="outline"
-                  className="bg-transparent rounded-md font-bold"
-                >
-                  {t("signUp")}
-                </Button>
-              </Link>
 
-              <Link href="/auth/signin">
-                <Button
-                  variant="outline"
-                  className="bg-transparent rounded-md font-bold"
-                >
-                  {t("signIn")}
-                </Button>
-              </Link>
+            {/* Not gated on isOrganizer/isPlaceOwner like the Manage menu --
+                every signed-in user can have messages/notifications. On
+                narrow screens this is the only way to reach notifications. */}
+            <MessagesNavLink />
+
+            <NotificationBell />
+
+            <div className="hidden lg:block">
+              <AccountMenu
+                avatarUrl={avatarUrl}
+                username={username}
+                fullName={userDetails?.full_name ?? null}
+                onSignOut={handleSignOut}
+              />
             </div>
-          )}
-        </div>
-      </header>
-    </>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Link
+              href="/auth/signin"
+              className="hidden sm:inline-flex h-10 items-center rounded-full px-4 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-accent"
+            >
+              {t("signIn")}
+            </Link>
+
+            <Link
+              href="/auth/signin"
+              className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              {t("signUp")}
+            </Link>
+          </div>
+        )}
+      </div>
+    </header>
   );
 }

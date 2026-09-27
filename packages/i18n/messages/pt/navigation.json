@@ -11,10 +11,17 @@
   "signIn": "Entrar",
   "signUp": "Cadastrar-se",
   "home": "Início",
-  "post": "Publicar",
   "search": "Pesquisar",
   "transactions": "Transações",
   "wallets": "Carteiras",
   "messages": "Mensagens",
-  "account": "Conta"
+  "account": "Conta",
+  "create": "Criar",
+  "explore": "Explorar",
+  "profile": "O seu perfil",
+  "viewProfile": "Ver o seu perfil",
+  "settings": "Definições",
+  "help": "Central de ajuda",
+  "searchPlaceholder": "Pesquisar eventos, lugares e pessoas",
+  "accountMenu": "Menu da conta"
 }

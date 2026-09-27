@@ -74,6 +74,8 @@ jobs:
 
       - run: npm run check:deep-link-decoder
 
+      - run: npm run check:i18n
+
   # Documentation validation (docs/** and the public legal/help content):
   # required files, metadata, internal links, code references, placeholder
   # and social links, secret patterns, public/internal separation. No

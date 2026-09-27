@@ -174,6 +174,23 @@ export function formatDateWithSuffix(
   return `${p.day}${ordinal(p.day)} ${MONTHS_SHORT[p.month]} ${p.year}`;
 }
 
+/** A night out that runs past midnight still belongs to the evening it
+ * started: "Tue 29 Sep, 7:00 PM - 2:00 AM", not a two-day range. */
+const OVERNIGHT_END_MINUTES = 6 * 60;
+
+function endsOvernight(
+  from: Date | null | string | undefined,
+  to: Date | null | string | undefined,
+  timeZone?: string | null,
+): boolean {
+  if (!from || !to) return false;
+  const duration = new Date(to).getTime() - new Date(from).getTime();
+  if (!(duration > 0) || duration >= 24 * 60 * 60 * 1000) return false;
+  const end = wallClockParts(to, timeZone);
+  // Under a day long, so an end before 6 am is the morning after the start.
+  return end.hours * 60 + end.minutes <= OVERNIGHT_END_MINUTES;
+}
+
 export function formatFullDateTimeRange(
   from?: Date | null | string,
   to?: Date | null | string,
@@ -186,7 +203,8 @@ export function formatFullDateTimeRange(
     ? formatSingleDateTime(to, timeZone)
     : { date: "N/A", time: "N/A" };
 
-  const isSameDate = fromObj.date === toObj.date;
+  const isSameDate =
+    fromObj.date === toObj.date || endsOvernight(from, to, timeZone);
 
   const hint = from ? zoneHint(from, timeZone) : "";
   return {
@@ -342,11 +360,13 @@ export function getEventCardDateTime(
   const occCount = fallbackOccurrences?.length ?? 0;
   let extraDates = occCount > 1 ? occCount - 1 : 0;
   if (extraDates === 0) {
-    // A single multi-day range still "has more than one date" to a reader.
+    // A single multi-day range still "has more than one date" to a reader
+    // (a night that runs past midnight does not).
     const e = wallClockParts(range.ends, timeZone);
     const spansDays =
       e.year !== p.year || e.month !== p.month || e.day !== p.day;
-    if (spansDays) extraDates = 1;
+    if (spansDays && !endsOvernight(range.starts, range.ends, timeZone))
+      extraDates = 1;
   }
 
   return { date, time, extraDates };

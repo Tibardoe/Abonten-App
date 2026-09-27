@@ -27,7 +27,7 @@ export default function PlacePromptHost({ placeId }: { placeId: string }) {
   if (!program.prompts || !interaction) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-24 z-40 mx-auto max-w-md md:bottom-6">
+    <div className="fixed inset-x-3 bottom-24 z-40 mx-auto max-w-md lg:bottom-6">
       <RecommendationPromptCard
         key={interaction.trigger}
         context={{ context: "place", placeId, trigger: interaction.trigger }}

@@ -26,7 +26,7 @@ export default function HighlightUploadStatus({
   if (items.length === 0) return null;
 
   return (
-    <div className="fixed bottom-24 md:bottom-10 right-[5%] z-30 md:right-[10%] flex flex-col gap-2 w-80">
+    <div className="fixed bottom-24 lg:bottom-10 right-[5%] z-30 md:right-[10%] flex flex-col gap-2 w-80">
       {items.map((item) => (
         <div
           key={item.id}

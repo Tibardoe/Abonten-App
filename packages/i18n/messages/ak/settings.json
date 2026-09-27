@@ -27,5 +27,19 @@
     "notAuthenticated": "Wonhyɛɛ wo din.",
     "fetchUserFailed": "Yɛantumi annya wo nsɛm",
     "updateFailed": "Sesa no anyɛ yie"
+  },
+  "security": {
+    "phone": {
+      "label": "Phone",
+      "noPhoneAdded": "Wonnii phone nɔma biara",
+      "unverified": "(wɔnhwɛɛ no mu)",
+      "change": "Sesa",
+      "add": "Fa ka ho",
+      "updateTitle": "Sesa wo phone nɔma",
+      "updateDescription": "Yɛbɛsoma code wɔ SMS so de ahwɛ mu",
+      "enterCodeTitle": "Hyɛ code no",
+      "codeExpiry": "Code no bɛtwam wɔ simma 5 mu.",
+      "editNumber": "Sesa nɔma no"
+    }
   }
 }

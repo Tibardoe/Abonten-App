@@ -57,7 +57,7 @@ export default function Notification({ toasts, onDismiss }: NotificationProps) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div className="fixed bottom-24 right-[5%] z-30 flex w-80 flex-col gap-2 md:right-[10%] md:bottom-10">
+    <div className="fixed bottom-24 right-[5%] z-30 flex w-80 flex-col gap-2 md:right-[10%] lg:bottom-10">
       <AnimatePresence>
         {toasts.map((toast) => {
           const { icon, role, live } = VARIANT_STYLES[toast.variant];

@@ -6,7 +6,7 @@ import SocialLinks from "../molecules/SocialLinks";
 
 export default function DesktopFooter() {
   return (
-    <footer className="hidden md:flex w-[80%] mx-auto gap-5 flex-col mb-5">
+    <footer className="hidden lg:flex w-[80%] mx-auto gap-5 flex-col mb-5">
       <SocialLinks large />
 
       <hr />

@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <div className="flex flex-col min-h-dvh">
       <Header />
-      <main className="w-[95%] mx-auto pt-24 md:pt-28 pb-24 md:pb-8 flex-1">
+      <main className="w-[95%] mx-auto pt-24 md:pt-28 pb-24 lg:pb-8 flex-1">
         {children}
       </main>
       <DesktopFooter />

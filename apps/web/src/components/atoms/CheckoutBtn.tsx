@@ -49,15 +49,15 @@ export default function CheckoutBtn({
 
   return soldOut ? (
     <Button
-      className="font-bold rounded-lg w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
+      className="h-12 w-full rounded-lg text-base font-semibold bg-muted text-muted-foreground cursor-not-allowed"
       disabled
     >
-      Sold Out
+      Sold out
     </Button>
   ) : (
     <>
       <Button
-        className="font-bold rounded-lg w-full p-6 text-lg"
+        className="h-12 w-full rounded-lg text-base font-semibold"
         onClick={async () => {
           if (await requireAuth()) handleCheckoutModal(true);
         }}

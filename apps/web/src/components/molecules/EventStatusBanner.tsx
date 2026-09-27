@@ -26,7 +26,7 @@ export default function EventStatusBanner({
   const state = resolveOccurrenceState(undefined, undefined, eventDates);
 
   const message = isCanceled
-    ? "This event has been canceled."
+    ? "This event has been cancelled."
     : state.blockReason === "ended"
       ? "This event has ended."
       : state.blockReason === "ongoing_no_future"
@@ -37,7 +37,15 @@ export default function EventStatusBanner({
 
   return (
     <div className="max-w-7xl mx-auto px-2 lg:px-8 pt-6">
-      <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm md:text-base font-medium text-destructive text-center">
+      {/* Red only for a cancellation; an event that has ended or started
+          is not an error, so it reads as a calm notice. */}
+      <div
+        className={
+          isCanceled
+            ? "rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm md:text-base font-medium text-destructive text-center"
+            : "rounded-xl border border-border bg-muted px-4 py-3 text-sm md:text-base font-medium text-muted-foreground text-center"
+        }
+      >
         {message}
       </div>
     </div>

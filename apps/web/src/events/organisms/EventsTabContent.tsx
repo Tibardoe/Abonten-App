@@ -179,20 +179,10 @@ export default async function EventsTabContent({
     minRating != null ||
     maxDistanceKm != null;
 
-  // When any filter that the curated sliders can actually honour is set,
-  // hide (rather than show a "nothing here" row for) whichever windows come
-  // back empty — several can be empty at once under a category filter, and
-  // the stacked placeholder rows read as noise. `minRating` is excluded: it
-  // can't narrow the curated payload, so it never empties those windows.
-  const curatedFilterActive =
-    !!eventCategory ||
-    !!eventTypes?.length ||
-    minPrice != null ||
-    maxPrice != null ||
-    !!startDate ||
-    !!endDate ||
-    maxDistanceKm != null;
-
+  // Curated windows that come back empty are hidden rather than shown as a
+  // "nothing here" row: several are often empty at once (a quiet area, or a
+  // category filter), the stacked placeholder rows read as noise, and the
+  // "All Events" list below always answers what is on.
   const allEventsInitialPage = await getQueriedEvents({
     ...allEventsFilters,
     pageSize: view === "map" ? MAP_VIEW_PAGE_SIZE : undefined,
@@ -239,38 +229,38 @@ export default async function EventsTabContent({
       <FeaturedEventsCarousel events={featuredEvents} />
 
       <EventsSlider
-        heading="Around-You"
+        heading="Around you"
         events={curatedAroundYou}
         urlPath={`location/${location}/explore/around-you`}
-        hideWhenEmpty={curatedFilterActive}
+        hideWhenEmpty
       />
 
       <EventsSlider
-        heading="Top-rated Organizers"
+        heading="From top-rated organizers"
         events={topRatedOrganizers}
         urlPath={`location/${location}/explore/top-rated-organizers`}
-        hideWhenEmpty={curatedFilterActive}
+        hideWhenEmpty
       />
 
       <EventsSlider
-        heading="Happening Today"
+        heading="Happening today"
         events={happeningToday}
         urlPath={`location/${location}/explore/happening-today`}
-        hideWhenEmpty={curatedFilterActive}
+        hideWhenEmpty
       />
 
       <EventsSlider
-        heading="Happening This Week"
+        heading="Happening this week"
         events={happeningThisWeek}
         urlPath={`location/${location}/explore/happening-this-week`}
-        hideWhenEmpty={curatedFilterActive}
+        hideWhenEmpty
       />
 
       <EventsSlider
-        heading="Happening This Month"
+        heading="Happening this month"
         events={happeningThisMonth}
         urlPath={`location/${location}/explore/happening-this-month`}
-        hideWhenEmpty={curatedFilterActive}
+        hideWhenEmpty
       />
 
       <div>

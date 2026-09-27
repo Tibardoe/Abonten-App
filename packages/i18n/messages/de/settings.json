@@ -27,5 +27,19 @@
     "notAuthenticated": "Benutzer nicht authentifiziert",
     "fetchUserFailed": "Fehler beim Abrufen des Benutzers",
     "updateFailed": "Aktualisierung der Benutzerdaten fehlgeschlagen"
+  },
+  "security": {
+    "phone": {
+      "label": "Telefon",
+      "noPhoneAdded": "Keine Telefonnummer hinzugefügt",
+      "unverified": "(nicht bestätigt)",
+      "change": "Ändern",
+      "add": "Hinzufügen",
+      "updateTitle": "Telefonnummer ändern",
+      "updateDescription": "Wir senden dir zur Bestätigung einen Code per SMS",
+      "enterCodeTitle": "Code eingeben",
+      "codeExpiry": "Der Code läuft in 5 Minuten ab.",
+      "editNumber": "Nummer bearbeiten"
+    }
   }
 }
