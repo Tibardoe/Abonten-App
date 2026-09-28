@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { QR_LINKS, qrLinkDestination, qrLinkUrl } from "./qrLinks";
+import {
+  QR_LINKS,
+  qrLinkDestination,
+  qrLinkTarget,
+  qrLinkUrl,
+} from "./qrLinks";
 
 describe("QR short links", () => {
   it("sends every printed code to a site path", () => {
@@ -14,6 +19,7 @@ describe("QR short links", () => {
     expect(Object.keys(QR_LINKS).sort()).toEqual(
       [
         "akwaaba",
+        "app",
         "discover",
         "organizers",
         "owner",
@@ -43,5 +49,38 @@ describe("QR short links", () => {
     expect(qrLinkUrl("owner", "http://localhost:3000/")).toBe(
       "http://localhost:3000/go/owner",
     );
+  });
+
+  describe("Get the app", () => {
+    const iphone =
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15";
+    const android =
+      "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 Chrome/131.0 Mobile";
+    const desktop =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0";
+    const listed = {
+      ios: "https://apps.apple.com/app/id000000000",
+      android: "https://play.google.com/store/apps/details?id=com.abonten.app",
+    };
+
+    it("opens the website while no store lists the app", () => {
+      const none = { ios: null, android: null };
+      expect(qrLinkTarget("app", iphone, none)).toBe("/");
+      expect(qrLinkTarget("app", android, none)).toBe("/");
+    });
+
+    it("sends each phone to its own store once listed", () => {
+      expect(qrLinkTarget("app", iphone, listed)).toBe(listed.ios);
+      expect(qrLinkTarget("APP", android, listed)).toBe(listed.android);
+      expect(qrLinkTarget("app", desktop, listed)).toBe("/");
+      expect(qrLinkTarget("app", null, listed)).toBe("/");
+    });
+
+    it("leaves every other code alone", () => {
+      expect(qrLinkTarget("discover", iphone, listed)).toBe("/");
+      expect(qrLinkTarget("tickets", android, listed)).toBe(
+        "/help/customers/your-tickets",
+      );
+    });
   });
 });

@@ -1,3 +1,4 @@
+import { ANDROID_APP_LISTED, playStoreUrl } from "../rewards/invite";
 import { PUBLIC_SITE_ORIGIN } from "./socialLinks";
 
 // Short links for printed QR codes: abontenhub.com/go/<code>.
@@ -21,7 +22,8 @@ export type QrLinkCode =
   | "organizers"
   | "places"
   | "owner"
-  | "tickets";
+  | "tickets"
+  | "app";
 
 export type QrLink = {
   /** Site path the code sends people to. */
@@ -59,6 +61,25 @@ export const QR_LINKS: Readonly<Record<QrLinkCode, QrLink>> = {
     destination: "/help/customers/your-tickets",
     audience: "Ticket holders at an event entrance",
   },
+  // "Get the app": the phone's own store once that listing is public
+  // (APP_STORE_LISTINGS); until then, and on anything else, the website.
+  app: {
+    destination: "/",
+    audience: "Anyone who scanned a Get-the-app code",
+  },
+};
+
+/**
+ * The app's public store listings, or null while it is not listed there.
+ * Filling one in switches every printed "Get the app" code on that platform
+ * to the store, with no reprint. Android follows ANDROID_APP_LISTED.
+ */
+export const APP_STORE_LISTINGS: Readonly<{
+  ios: string | null;
+  android: string | null;
+}> = {
+  ios: null,
+  android: ANDROID_APP_LISTED ? playStoreUrl() : null,
 };
 
 export const QR_LINK_PREFIX = "/go";
@@ -77,4 +98,22 @@ export function qrLinkUrl(
   origin: string = PUBLIC_SITE_ORIGIN,
 ): string {
   return `${origin.replace(/\/$/, "")}${QR_LINK_PREFIX}/${code}`;
+}
+
+/**
+ * Where a scan of `code` should go: for `app`, the scanning phone's store
+ * when that listing is public; otherwise the code's site path.
+ */
+export function qrLinkTarget(
+  code: string,
+  userAgent: string | null,
+  listings: { ios: string | null; android: string | null } = APP_STORE_LISTINGS,
+): string {
+  const key = code.trim().toLowerCase();
+  if (key === "app" && userAgent) {
+    if (/iPhone|iPad|iPod/i.test(userAgent) && listings.ios)
+      return listings.ios;
+    if (/Android/i.test(userAgent) && listings.android) return listings.android;
+  }
+  return qrLinkDestination(key);
 }
