@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-28 — QR short links for printed marketing; floating glass tab bar
+
+- `operations/marketing-collateral-and-qr-links.md` 1.0 (new), `INDEX.md`, `PROJECT.md` §51.
+- Behaviour: new public route `/go/<code>` (307, no-store) behind every printed QR code, with a table of seven codes in `@abonten/core/brand/qrLinks`; `/go/app` sends iPhones to the App Store and Android phones to Google Play once each listing is public, otherwise the website. The mobile bottom navigation is now a floating glass bar (Liquid Glass on iOS 26, a real blur on Android 12+), with a new icon set; tab screens pad their content by the bar.
+- Migrations, env vars, permissions, jobs: none. Dependencies: `expo-blur` 57.0.3 added to the mobile app (needs a native build to take effect; older builds fall back to a tint); `expo-glass-effect` declared (already installed through expo-router).
+
 ## 2026-09-27 — Root SPF record; Apple private relay
 
 - `operations/notifications-and-email-operations.md` 1.2 (new "Domain email records").
