@@ -1,65 +1,26 @@
+import {
+  GlassTabBar,
+  TAB_BLUR_TARGETS,
+  TabBarOverlapContext,
+  TabBlurTarget,
+  type TabBlurTargets,
+  tabBarOverlapFor,
+} from "@/components/app/GlassTabBar";
+import {
+  AccountTabIcon,
+  HomeTabIcon,
+  MessagesTabIcon,
+  SearchTabIcon,
+  SpotlightTabIcon,
+} from "@/components/app/TabBarIcons";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { useInboxRealtime } from "@/features/messaging/useInboxRealtime";
 import { useUnreadMessageCount } from "@/features/messaging/useUnreadMessageCount";
 import { useTranslations } from "@abonten/ui-native/i18n";
-import { family, useThemeColors } from "@abonten/ui-native/theme";
-import { Ionicons } from "@expo/vector-icons";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { Tabs } from "expo-router";
-import { type ColorValue, Text, View } from "react-native";
-
-// The Messages tab icon with its own unread badge. Hand-rolled rather than
-// react-navigation's `tabBarBadge`: that <Badge> pushes `backgroundColor`
-// through its bundled `color` lib (fragile — see the hsl-token crash) and
-// sizes/positions itself in a way that reads as a stretched pill next to a
-// labelled tab. This is a real 16px circle (a pill only past one digit),
-// number centred, matching the header bell badge.
-function MessagesTabIcon({
-  color,
-  size,
-  count,
-}: {
-  color: ColorValue;
-  size: number;
-  count: number;
-}) {
-  const label = count > 99 ? "99+" : String(count);
-  return (
-    <View style={{ width: size, height: size }}>
-      <Ionicons name="chatbubble-ellipses-outline" color={color} size={size} />
-      {count > 0 ? (
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            top: -5,
-            right: label.length > 1 ? -12 : -8,
-            minWidth: 16,
-            height: 16,
-            borderRadius: 8,
-            paddingHorizontal: label.length > 1 ? 4 : 0,
-            backgroundColor: "#0F9D8F",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            allowFontScaling={false}
-            style={{
-              color: "#ffffff",
-              fontSize: 10,
-              lineHeight: 16,
-              fontWeight: "700",
-              textAlign: "center",
-              includeFontPadding: false,
-            }}
-          >
-            {label}
-          </Text>
-        </View>
-      ) : null}
-    </View>
-  );
-}
+import { useRef } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // The bottom tabs — Home · Search · Spotlight · Messages · Account.
 // Spotlight took the middle slot from Tickets (now a pushed screen reached
@@ -72,97 +33,95 @@ function MessagesTabIcon({
 // Wallets moved off the bottom bar into Account › Wallets when Messages took
 // its slot — the wallet screen itself is unchanged, only its route location
 // (now /(app)/wallet, a pushed screen).
+//
+// The bar itself is GlassTabBar: a floating capsule (Liquid Glass on iOS 26)
+// that the screens scroll behind — each tab screen keeps its last rows
+// clear with useTabBarOverlap().
 export default function TabsLayout() {
   const c = useThemeColors();
   const t = useTranslations("navigation");
   const { data: unread = 0 } = useUnreadMessageCount();
   const { program } = useContentProgram();
+  const insets = useSafeAreaInsets();
+  const blurTargets = useRef<TabBlurTargets>(new Map()).current;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        // Subtle content shift on tab change — fast, interruptible, and the
-        // OS reduce-motion setting disables it automatically.
-        animation: "shift",
-        // The scene behind each tab's screen. Without it the tab-switch
-        // shift reveals the container's default (white) between scenes.
-        sceneStyle: { backgroundColor: c.background },
-        tabBarActiveTintColor: c.primary,
-        tabBarInactiveTintColor: c["muted-foreground"],
-        // Brand font + a legible weight on the bottom nav; 11px is the
-        // iOS/Android norm for a tab label.
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
-          fontFamily: family.byWeight["600"],
-        },
-        tabBarStyle: {
-          backgroundColor: c.sidebar,
-          borderTopColor: c["sidebar-border"],
-        } as never,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Explore",
-          tabBarLabel: t("home"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
-          ),
+    <TabBarOverlapContext.Provider value={tabBarOverlapFor(insets.bottom)}>
+      <Tabs
+        tabBar={(props) => (
+          <GlassTabBar
+            {...props}
+            darkRoutes={["spotlight"]}
+            blurTargets={blurTargets}
+          />
+        )}
+        // Android blurs the screen behind the bar only through a target view
+        // around it. Spotlight is left out: its video feed ends above the
+        // bar, which sits over plain black there.
+        screenLayout={
+          TAB_BLUR_TARGETS
+            ? ({ children, route }) =>
+                route.name === "spotlight" ? (
+                  children
+                ) : (
+                  <TabBlurTarget targets={blurTargets} routeKey={route.key}>
+                    {children}
+                  </TabBlurTarget>
+                )
+            : undefined
+        }
+        screenOptions={{
+          headerShown: false,
+          // Subtle content shift on tab change — fast, interruptible, and the
+          // OS reduce-motion setting disables it automatically.
+          animation: "shift",
+          // The scene behind each tab's screen. Without it the tab-switch
+          // shift reveals the container's default (white) between scenes.
+          sceneStyle: { backgroundColor: c.background },
         }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: t("search"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search-outline" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="spotlight"
-        options={{
-          title: "Spotlight",
-          href: program.spotlight ? undefined : null,
-          // Full-bleed video: the bar goes dark with the screen instead of
-          // a light strip cutting under the feed.
-          sceneStyle: { backgroundColor: "#000" },
-          tabBarActiveTintColor: "#ffffff",
-          tabBarInactiveTintColor: "rgba(255,255,255,0.62)",
-          tabBarStyle: {
-            backgroundColor: "#000",
-            borderTopColor: "rgba(255,255,255,0.12)",
-          } as never,
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "play-circle" : "play-circle-outline"}
-              color={color}
-              size={size}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: t("messages"),
-          tabBarIcon: ({ color, size }) => (
-            <MessagesTabIcon color={color} size={size} count={unread} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: t("account"),
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color={color} size={size} />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Explore",
+            tabBarLabel: t("home"),
+            tabBarIcon: HomeTabIcon,
+          }}
+        />
+        <Tabs.Screen
+          name="search"
+          options={{
+            title: t("search"),
+            tabBarIcon: SearchTabIcon,
+          }}
+        />
+        <Tabs.Screen
+          name="spotlight"
+          options={{
+            title: "Spotlight",
+            href: program.spotlight ? undefined : null,
+            // Full-bleed video: the scene is black and the bar turns dark
+            // with it (GlassTabBar's darkRoutes).
+            sceneStyle: { backgroundColor: "#000" },
+            tabBarIcon: SpotlightTabIcon,
+          }}
+        />
+        <Tabs.Screen
+          name="messages"
+          options={{
+            title: t("messages"),
+            tabBarBadge: unread > 0 ? unread : undefined,
+            tabBarIcon: MessagesTabIcon,
+          }}
+        />
+        <Tabs.Screen
+          name="account"
+          options={{
+            title: t("account"),
+            tabBarIcon: AccountTabIcon,
+          }}
+        />
+      </Tabs>
+    </TabBarOverlapContext.Provider>
   );
 }

@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { AccountSetupCard } from "@/components/account/AccountSetupCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import { AppearanceToggle } from "@/components/app/AppearanceToggle";
+import { useTabBarListPadding } from "@/components/app/GlassTabBar";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
@@ -53,6 +54,7 @@ export default function Account() {
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
+  const listPadding = useTabBarListPadding();
   const openSupport = useOpenConversation();
   // Rewards rolls out by audience; the row appears once it's on for them.
   const rewards = useRewardsProgram({ enabled: !!session });
@@ -70,7 +72,8 @@ export default function Account() {
         <AppHeader variant="branded" />
         <ScrollView
           className="flex-1 bg-background"
-          contentContainerClassName="gap-6 px-6 py-10"
+          contentContainerClassName="gap-6 px-6 pt-10"
+          contentContainerStyle={{ paddingBottom: listPadding }}
         >
           <View className="items-center gap-2">
             <Icon name="person-circle-outline" size={48} tone="muted" />
@@ -98,7 +101,8 @@ export default function Account() {
       <AppHeader variant="branded" />
       <ScrollView
         className="flex-1 bg-background"
-        contentContainerClassName="gap-5 px-4 py-6"
+        contentContainerClassName="gap-5 px-4 pt-6"
+        contentContainerStyle={{ paddingBottom: listPadding }}
       >
         <PressableCard
           className="flex-row items-center gap-3"

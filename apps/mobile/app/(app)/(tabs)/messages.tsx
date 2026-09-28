@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import { useTabBarListPadding } from "@/components/app/GlassTabBar";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { StoriesRow } from "@/components/content/StoriesRow";
 import { AddFilterSheet } from "@/components/messaging/AddFilterSheet";
@@ -47,6 +48,7 @@ const MODE_SUBTITLE = {
 
 export default function Messages() {
   const router = useRouter();
+  const listPadding = useTabBarListPadding();
   const { session } = useSession();
   const userId = session?.user.id;
 
@@ -224,7 +226,7 @@ export default function Messages() {
             )}
           </>
         }
-        contentContainerClassName="pb-16"
+        contentContainerStyle={{ paddingBottom: listPadding }}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         keyboardShouldPersistTaps="handled"
