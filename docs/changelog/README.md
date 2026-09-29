@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-29 — Continue with Apple button matches the other sign-in buttons
+
+- `mobile/08-phase-6-release-prep.md` (Sign in with Apple item).
+- Behaviour: the iOS sign-in screen's Continue with Apple button is now a custom button built to Apple's custom-button rules (Apple's own logo artwork, the exact title, black or white fill) with the same height, corner radius and 15 px title as the Google and email buttons. The system button sized its title at 43% of its height, 24 pt on the 56 pt row. Sign-in itself is unchanged.
+- Migrations, env vars, permissions, jobs: none. Reaches phones with the next update or build.
+
 ## 2026-09-29 — App Review sign-in
 
 - `deployment/mobile-eas.md` 1.4 (new "App Review sign-in"; Stores updated), `security/secrets-and-environment.md` 1.7, `PROJECT.md` §52.

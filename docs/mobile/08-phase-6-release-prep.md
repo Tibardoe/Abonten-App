@@ -136,8 +136,12 @@ set: `com.abonten.app` (both platforms).
 ### App Review items handled in code (2026-09-26, audit report 11)
 
 - **Sign in with Apple (Guideline 4.8).** The app offers Google sign-in, so
-  iOS also offers Apple's own button (`apps/mobile/src/auth/appleSignIn.ts`,
-  `app/(auth)/sign-in.tsx`; `ios.usesAppleSignIn` in `app.json`). It needs a
+  iOS also offers Continue with Apple (`apps/mobile/src/auth/appleSignIn.ts`,
+  `app/(auth)/sign-in.tsx`; `ios.usesAppleSignIn` in `app.json`). Since
+  2026-09-29 it is a custom button built to the HIG's custom-button rules
+  (Apple's logo artwork from Apple Design Resources in `AppleLogo.tsx`, the
+  exact title, black or white fill), because the system button's 24 pt
+  title on a 56 pt row dwarfed the Google and email titles. It needs a
   new native build, and three founder steps before the build goes to
   review:
   1. Supabase dashboard → Authentication → Sign In / Providers → **Apple**:
