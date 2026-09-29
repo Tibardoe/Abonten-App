@@ -21,6 +21,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - `deployment/mobile-eas.md` 1.4 (new "App Review sign-in"; Stores updated), `security/secrets-and-environment.md` 1.7, `PROJECT.md` §52.
 - Behaviour: one configured phone number signs in with a fixed six-digit code and no text message, so app store reviewers have a demo account (Apple rejected TestFlight build 0.2.0 (6) under Guideline 2.1(a)). Sign-in only; every other number, and every other way of signing in, is unchanged.
 - Migrations: `20260929095305_phone_otp_state_app_review_provider` (the pending-code provider check allows `app_review`). Env vars: `APP_REVIEW_PHONE_E164`, `APP_REVIEW_OTP_CODE` (Production only; off when unset). Permissions, jobs: none.
+- Operations: eight sample events for App Review (organizer "Abonten Events", marked as samples in their descriptions); `finance/paystack-live-cutover.md` 1.3 now requires removing them before live keys.
 
 ## 2026-09-28 — QR short links for printed marketing; floating glass tab bar
 
