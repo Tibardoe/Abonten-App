@@ -11,7 +11,7 @@ type Props = {
   error?: string | null;
 };
 
-// Shared OTP box UI (defaults to Hubtel's 4-digit code length) --
+// Shared OTP box UI (defaults to DEFAULT_PHONE_OTP_CODE_LENGTH, 6) --
 // previously duplicated almost identically between AuthModal.tsx (phone
 // sign-in) and SecurityInputFields.tsx (Settings phone update). Auto-advances
 // between digits, supports backspace-to-previous and full-code paste/autofill.
