@@ -7,15 +7,17 @@ import { usePlacesAutocomplete } from "@/features/discovery/usePlacesAutocomplet
 import {
   AppText,
   Button,
-  Divider,
   Icon,
-  Input,
   Sheet,
   SheetOption,
   useModalHandoff,
 } from "@abonten/ui-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
+import {
+  type LocationSearchError,
+  LocationSearchOverlay,
+} from "./LocationSearchOverlay";
 import { MapPickerSheet } from "./MapPickerSheet";
 import { describeArea } from "./areaCopy";
 
@@ -27,6 +29,11 @@ import { describeArea } from "./areaCopy";
 //   * "show me this place" — an address or city (Google Places
 //     autocomplete, with a raw-text forward-geocode fallback) or a point on
 //     the map; the area then stays put wherever the phone goes.
+//
+// Searching happens full screen (LocationSearchOverlay): the sheet shows a
+// field-shaped button, and tapping it opens the search with the keyboard up,
+// the field at the top and the suggestions below it. Typed into the sheet
+// itself, the keyboard covered the field's lower half and every suggestion.
 //
 // It opens on a plain statement of what is being shown and why (near you /
 // chosen / location off), so nobody has to guess what the list below the
@@ -65,11 +72,10 @@ export function ChangeLocationSheet({
     area ? { lat: area.lat, lng: area.lng } : null,
   );
   const [busy, setBusy] = useState<"typed" | "current" | "pick" | null>(null);
-  const [error, setError] = useState<{
-    message: string;
-    settings?: boolean;
-  } | null>(null);
+  const [pickingId, setPickingId] = useState<string | null>(null);
+  const [error, setError] = useState<LocationSearchError | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const handoff = useModalHandoff();
   const shown = describeArea(area, devicePermission);
 
@@ -77,15 +83,23 @@ export function ChangeLocationSheet({
     auto.setQuery("");
     auto.clear();
     setError(null);
+    setSearchOpen(false);
     onClose();
   }
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setError(null);
+  }, []);
 
   async function pickPrediction(placeId: string) {
     if (busy) return;
     setBusy("pick");
+    setPickingId(placeId);
     setError(null);
     const resolved = await auto.resolvePlace(placeId);
     setBusy(null);
+    setPickingId(null);
     if (resolved) {
       await chooseArea(resolved.lat, resolved.lng, resolved.address);
       finish();
@@ -119,6 +133,7 @@ export function ChangeLocationSheet({
   }
 
   function chooseOnMap() {
+    setSearchOpen(false);
     handoff.after(() => setMapOpen(true));
     onClose();
   }
@@ -134,7 +149,7 @@ export function ChangeLocationSheet({
         }}
         onDismiss={handoff.onDismiss}
         title="Set your location"
-        minHeightRatio={0.62}
+        minHeightRatio={0.45}
       >
         <View className="gap-4">
           <View className="flex-row items-start gap-2">
@@ -147,6 +162,27 @@ export function ChangeLocationSheet({
               {shown.sentence}
             </AppText>
           </View>
+
+          {/* Opens the full-screen search; shaped like the field it opens. */}
+          <Pressable
+            accessibilityRole="search"
+            accessibilityLabel="Search a city, town or address"
+            onPress={() => {
+              setError(null);
+              setSearchOpen(true);
+            }}
+            className="h-12 flex-row items-center gap-2 rounded-xl border border-input bg-card px-3 active:opacity-80"
+          >
+            <Icon name="search-outline" size={18} tone="muted" />
+            <AppText
+              variant="body"
+              tone={auto.query ? "primary" : "muted"}
+              numberOfLines={1}
+              className="flex-1"
+            >
+              {auto.query || "Search a city, town or address"}
+            </AppText>
+          </Pressable>
 
           <SheetOption
             icon="navigate"
@@ -162,64 +198,15 @@ export function ChangeLocationSheet({
             disabled={busy !== null && busy !== "current"}
           />
 
-          <Divider />
-
-          <View className="flex-row items-end gap-2">
-            <View className="flex-1">
-              <Input
-                placeholder="Search a city, town or address"
-                autoCapitalize="words"
-                value={auto.query}
-                onChangeText={auto.setQuery}
-                onSubmitEditing={submitTyped}
-                returnKeyType="search"
-              />
-            </View>
-            <Button
-              title="Set"
-              onPress={submitTyped}
-              loading={busy === "typed"}
-              disabled={!auto.query.trim()}
-            />
-          </View>
-
-          {auto.predictions.length > 0 ? (
-            <View className="overflow-hidden rounded-lg border border-border">
-              {auto.predictions.map((p, i) => (
-                <Pressable
-                  accessibilityRole="button"
-                  key={p.placeId}
-                  onPress={() => pickPrediction(p.placeId)}
-                  className={`flex-row items-center gap-2 px-3 py-2.5 active:opacity-70 ${
-                    i > 0 ? "border-t border-border" : ""
-                  }`}
-                >
-                  <Icon name="location-outline" size={16} tone="muted" />
-                  <View className="flex-1">
-                    <AppText variant="small" numberOfLines={1}>
-                      {p.primary}
-                    </AppText>
-                    {p.secondary ? (
-                      <AppText variant="caption" numberOfLines={1}>
-                        {p.secondary}
-                      </AppText>
-                    ) : null}
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-
-          <Pressable
-            accessibilityRole="button"
+          <SheetOption
+            icon="map-outline"
+            title="Choose on map"
+            subtitle="Move the map under the pin"
             onPress={chooseOnMap}
-            className="min-h-[44px] flex-row items-center gap-2 py-1 active:opacity-70"
-          >
-            <Icon name="map-outline" size={20} tone="primary" />
-            <AppText variant="bodyStrong">Choose on map</AppText>
-          </Pressable>
+            disabled={busy !== null}
+          />
 
-          {error ? (
+          {error && !searchOpen ? (
             <View className="gap-2">
               <AppText variant="small" tone="error">
                 {error.message}
@@ -238,6 +225,23 @@ export function ChangeLocationSheet({
           ) : null}
         </View>
       </Sheet>
+
+      <LocationSearchOverlay
+        open={searchOpen}
+        onClose={closeSearch}
+        query={auto.query}
+        onQueryChange={auto.setQuery}
+        predictions={auto.predictions}
+        loading={auto.loading}
+        pickingId={pickingId}
+        busy={busy}
+        error={error}
+        followingNow={shown.status === "near_you"}
+        onPick={pickPrediction}
+        onSubmitTyped={submitTyped}
+        onUseCurrent={submitCurrent}
+        onChooseOnMap={chooseOnMap}
+      />
 
       <MapPickerSheet
         open={mapOpen}

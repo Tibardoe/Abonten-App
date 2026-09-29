@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-29 — Explore map: smooth selection, photo pins, full-screen location search
+
+- `mobile/guide/navigation-and-screens.md` 1.4 (new "Explore map" and "Choosing a location").
+- Behaviour (mobile app): map pins on Android now show the event flyer or place cover (they had shown only a mint disc, and the ring of a selected pin was clipped). Closing the card by any route now slides it away and fades the pin's halo, instead of both vanishing at once; tapping another pin swaps the card in place. Overlapping pins cluster by distance on screen, the camera keeps a tapped pin clear of the card, a button returns to the browsed area, choosing a new area moves the map, Google's own business pins are hidden and the map has a dark style. Fixed ghost pins left on the map by a react-native-maps list bug. The location sheet's search opens full screen, so the keyboard no longer covers the field and suggestions. Migrations, env vars, permissions, jobs: none. Reaches phones with the next update or build.
+
 ## 2026-09-29 — Explore filter sheet matches the Search one
 
 - `mobile/guide/navigation-and-screens.md` 1.3 (new "Explore filters").

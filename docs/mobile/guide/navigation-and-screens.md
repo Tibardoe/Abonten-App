@@ -4,7 +4,7 @@ purpose: Every screen in the Android app, how it is reached, and what it does.
 audience: Support, QA, product
 scope: apps/mobile/app (Expo Router)
 status: Approved
-version: 1.3
+version: 1.4
 lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -80,6 +80,16 @@ The Abonten Weekly banner (`WeeklyTeaserCard`) when an edition is out for the ar
 ## Explore filters
 
 The Filters button on the Events and Places tabs opens "Filter events" / "Filter places", built from the same parts as the Search screen's "Filter results" sheet (`components/filters/FilterSheetParts`), so the two look and behave alike: each section starts with its "any" choice, a set section shows a dot and "Clear", and the footer reads "Show results · N filters" with "Reset filters". Events: When (Any time, Today, Tomorrow, This weekend, Next 7 days, Next 30 days, Pick dates), Distance from the browsed area (Any distance, 1, 2, 5 km), Price (Any price, Free, and the Search sheet's two caps in the market's currency, plus Custom range), Category, Type, Rating (Any, 3+, 4+, 4.5+ stars). Places: Distance (also 10 km), Category, Open now (switch), Rating. The calendar and the price slider appear only under Pick dates and Custom range. The chips under the tabs read the same way ("This weekend", "Within 2 km", "Free", "4+ stars"). Explore still stores plain dates and amounts, so the web Explore page and the server filters are unchanged.
+
+## Explore map
+
+The Map button on the Events and Places tabs shows the list as a map (`components/map/SocialMap.tsx`, markers in `SocialMapPins.tsx`, card in `SocialMapCard.tsx`). Each event or place is its flyer or cover in a white ring; pins that would overlap become a small photo stack with a count, which splits as you zoom (tapping it zooms to its pins, or lists them when they share one spot). Tapping a pin fades a mint halo in around it and raises a card (photo, title, when/where or open status, price or rating, "View event" / "View place"); the map pans only if the pin would sit under the card or an edge. Tapping the map, the X, swiping the card down, or the pin dropping out of the filters all play the same exit: the card slides away and the halo fades. Tapping another pin swaps the card's details in place. A round button top right returns to the browsed area once the map has moved away from it; choosing a new area moves the map there. Google's own shop and transit pins are hidden, and the map follows the app's dark theme.
+
+Android draws every marker as a bitmap, and react-native-maps 1.27 has two traps the map works around (both explained in the source): a marker inserted anywhere but the end of the map's children overwrites another marker's slot and leaves a pin nothing can remove (`useAppendOnlyOrder.ts`), and a marker's bitmap does not reliably follow later changes to its children, so the halo is its own marker faded with the map's alpha and a cluster whose count changes is a new marker. Coming back to the map from a detail screen redraws its markers.
+
+## Choosing a location
+
+"Set your location" (the area name under Explore, also on Places) leads with a search field, then "Use my current location" and "Choose on map". Tapping the field opens the search full screen with the keyboard up (`components/explore/LocationSearchOverlay.tsx`): suggestions fill the space between the field and the keyboard, with skeleton rows while they load and a "Search for “…”" row that uses the text as typed; with nothing typed it shows the two quick actions. Back closes the keyboard first, then returns to the sheet. Picking a place sets the area and closes both.
 
 ## Chat
 

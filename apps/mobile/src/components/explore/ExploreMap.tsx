@@ -1,4 +1,8 @@
-import { SocialMap, type SocialMapItem } from "@/components/map/SocialMap";
+import {
+  SocialMap,
+  type SocialMapItem,
+  type SocialMapLine,
+} from "@/components/map/SocialMap";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -15,7 +19,10 @@ import { useMemo } from "react";
 
 // Adapter: the current Explore tab's filtered rows -> SocialMap markers.
 // Same WKB-hex location parsing the old pin map used; the visual treatment
-// (photo markers, preview card, clustering) lives in SocialMap.
+// (photo markers, preview card, clustering) lives in SocialMap. Each row
+// becomes two card lines with an icon: events say when, then where (with
+// the distance first when it is known); places say whether they are open
+// and what they are, then where.
 
 type Kind = "events" | "places";
 
@@ -45,15 +52,20 @@ function eventItem(e: UserPostType, unit: DistanceUnit): SocialMapItem | null {
   const venue = e.address?.full_address || "Location not specified";
   const price = e.min_price ?? e.ticket_price;
   const currency = e.currency ?? e.ticket_currency ?? null;
-  const lines = [
-    [dt.date, dt.time].filter(Boolean).join("  ·  ") || "Date TBC",
-    venue,
+  const distanceKm = (e as { distance_km?: number }).distance_km;
+  const lines: SocialMapLine[] = [
+    {
+      icon: "calendar-outline",
+      text: [dt.date, dt.time].filter(Boolean).join(" · ") || "Date TBC",
+    },
+    {
+      icon: "location-outline",
+      text:
+        typeof distanceKm === "number"
+          ? `${formatDistance(distanceKm * 1000, unit)} · ${venue}`
+          : venue,
+    },
   ];
-  if (typeof (e as { distance_km?: number }).distance_km === "number") {
-    lines.push(
-      `${formatDistance((e as { distance_km: number }).distance_km * 1000, unit)} away`,
-    );
-  }
   return {
     id: e.id,
     kind: "event",
@@ -82,8 +94,14 @@ function placeItem(p: PlaceType): SocialMapItem | null {
     p.address && typeof p.address === "object" && "full_address" in p.address
       ? String((p.address as { full_address: string }).full_address ?? "")
       : "";
-  const lines = [p.category_name || "Place", open.label];
-  if (address) lines.push(address);
+  const lines: SocialMapLine[] = [
+    {
+      icon: open.isOpen ? "time" : "time-outline",
+      text: [open.label, p.category_name].filter(Boolean).join(" · "),
+      tone: open.isOpen ? "success" : undefined,
+    },
+  ];
+  if (address) lines.push({ icon: "location-outline", text: address });
   const rating = p.avg_rating ?? 0;
   return {
     id: p.id,
