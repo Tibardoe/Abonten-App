@@ -4,8 +4,8 @@ purpose: Every screen in the Android app, how it is reached, and what it does.
 audience: Support, QA, product
 scope: apps/mobile/app (Expo Router)
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-16
+version: 1.3
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -76,6 +76,10 @@ Since 2026-09-16 (iOS TestFlight QA round 2):
 ## Explore hero and status badges
 
 The Abonten Weekly banner (`WeeklyTeaserCard`) when an edition is out for the area, then a **Featured banner** (`FeaturedBanner`, built on the same `WeeklyBanner`) for the current tab's paid events or places: listings rotate behind the text with story segments and a caption card, pausable, with a "Featured" / "Sponsored" disclosure chip; tapping opens the listing on show. A sponsored place logs a `promotion_impression` when its slide is shown, like the web slider. Featured (paid placement) is never removed by the filter sheet, and active filter chips sit a fixed gap below it. Event cards carry one bottom-left status pill (Cancelled / Sold out / Ongoing / Ended) instead of a full-image wash. Map clusters that share one spot open a "N at this spot" list on tap.
+
+## Explore filters
+
+The Filters button on the Events and Places tabs opens "Filter events" / "Filter places", built from the same parts as the Search screen's "Filter results" sheet (`components/filters/FilterSheetParts`), so the two look and behave alike: each section starts with its "any" choice, a set section shows a dot and "Clear", and the footer reads "Show results · N filters" with "Reset filters". Events: When (Any time, Today, Tomorrow, This weekend, Next 7 days, Next 30 days, Pick dates), Distance from the browsed area (Any distance, 1, 2, 5 km), Price (Any price, Free, and the Search sheet's two caps in the market's currency, plus Custom range), Category, Type, Rating (Any, 3+, 4+, 4.5+ stars). Places: Distance (also 10 km), Category, Open now (switch), Rating. The calendar and the price slider appear only under Pick dates and Custom range. The chips under the tabs read the same way ("This weekend", "Within 2 km", "Free", "4+ stars"). Explore still stores plain dates and amounts, so the web Explore page and the server filters are unchanged.
 
 ## Chat
 
