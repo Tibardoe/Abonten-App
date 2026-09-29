@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-29 — Field Ops owner codes checked with real texts
+
+- `architecture/field-ops.md` (SMS leg now run for real), `PROJECT.md` §53.
+- Behaviour: the event wizard's organiser step now reads "Organiser's full name" (the label began with a lowercase letter). The three owner code screens were checked end to end with Hubtel texts. Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-29 — Phone sign-in codes over Hubtel's SMS API
 
 - `architecture/integrations.md` 1.2, `security/secrets-and-environment.md` 1.8, `security/infrastructure-and-provider-responsibilities.md` 1.1, `architecture/global-platform.md` 1.5, `architecture/feature-inventory.md` 1.2, `development/testing.md` 1.3, `architecture/email-auth.md`, `architecture/field-ops.md`, `PROJECT.md` §53.

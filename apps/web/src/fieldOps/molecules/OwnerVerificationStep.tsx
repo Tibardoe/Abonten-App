@@ -105,7 +105,10 @@ export default function OwnerVerificationStep({
       </p>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="ov-name">{noun}&apos;s full name</Label>
+          <Label htmlFor="ov-name">
+            {noun[0].toUpperCase()}
+            {noun.slice(1)}&apos;s full name
+          </Label>
           <Input
             id="ov-name"
             value={fullName}
