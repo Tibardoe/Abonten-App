@@ -2,9 +2,10 @@
 // import from a "use client" file, a Server Action, an /api/mobile route, or
 // the native app — no server-only code, no DOM.
 //
-// Email OTP differs from the phone (Hubtel) OTP in two ways that matter here:
-//   1. Supabase issues 6-digit codes for email (auth.email.otp_length), not
-//      Hubtel's 4 — so this has its own length constant. Do NOT reuse
+// Email OTP differs from the phone OTP in two ways that matter here:
+//   1. Supabase sets the email code's length (auth.email.otp_length, 6);
+//      the phone code's length is the SMS provider's. They are equal today
+//      by coincidence, so this has its own constant. Do NOT reuse
 //      DEFAULT_PHONE_OTP_CODE_LENGTH for email.
 //   2. Supabase owns the entire token lifecycle (generation, hashing,
 //      expiry, single-use, per-IP verification cap). The app never sees or

@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-29 — Phone sign-in codes over Hubtel's SMS API
+
+- `architecture/integrations.md` 1.2, `security/secrets-and-environment.md` 1.8, `security/infrastructure-and-provider-responsibilities.md` 1.1, `architecture/global-platform.md` 1.5, `architecture/feature-inventory.md` 1.2, `development/testing.md` 1.3, `architecture/email-auth.md`, `architecture/field-ops.md`, `PROJECT.md` §53.
+- Behaviour: Ghana's text-message codes (sign-in, phone change, field owner consent) are now six digits made by Abonten and sent through Hubtel's SMS API, from the sender "Abontenhub". Hubtel's separate OTP product had been accepting sends and delivering nothing, so phone sign-in was down. Only an HMAC of each code is stored; expiry (5 minutes), 5 guesses, the 60-second resend wait and the send caps are unchanged. A four-digit code requested before the change is refused as expired. Field Ops owner-code screens take six digits.
+- Migrations, permissions, jobs: none. Env vars: `HUBTEL_SMS_SENDER_ID` (new; web project, Production and Preview). Health: the `hubtel` reachability probe now pings `sms.hubtel.com`.
+
 ## 2026-09-29 — Continue with Apple button matches the other sign-in buttons
 
 - `mobile/08-phase-6-release-prep.md` (Sign in with Apple item).

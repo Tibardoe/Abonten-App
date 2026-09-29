@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-22
+version: 1.2
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -21,7 +21,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Feature | App | Role | Entry point | Workflow / preconditions | Tables | Service / action / API | Notifications / email | Failure states | Admin / audit | Docs |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Google sign-in | W A | all | AuthModal / sign-in screen | Supabase OAuth; callback exchanges code | `auth.users`, `user_info` (trigger) | `auth/callback/route.ts`; mobile native | — | redirect not allow-listed | — | help getting-started |
-| Phone OTP sign-in | W A | all | same | request → Hubtel SMS → verify → find-or-create → one-time password → session | `phone_otp_state`, `phone_otp_send_log` | `profile/phoneAuthCore`, `hubtelOtpClient`, `phoneOtpStore`; actions `requestPhoneVerification`, `verifyPhoneSignIn`; API `auth/phone/{request,verify}` | SMS | rate limits (10/h IP, 60 s, 5 attempts), Hubtel down | health `hubtel` | security/application-security |
+| Phone OTP sign-in | W A | all | same | request → Abonten-made code by Hubtel SMS → verify → find-or-create → one-time password → session | `phone_otp_state`, `phone_otp_send_log` | `profile/phoneAuthCore`, `otpProviders/hubtelOtpProvider`, `phoneOtpStore`; actions `requestPhoneVerification`, `verifyPhoneSignIn`; API `auth/phone/{request,verify}` | SMS | rate limits (10/h IP, 60 s, 5 attempts), Hubtel down | health `hubtel` | security/application-security |
 | Email OTP sign-in | W A | all | same | Supabase `signInWithOtp` + app caps → verify | — (Supabase) | `profile/emailAuthCore`; actions `requestEmailOtp`, `verifyEmailSignIn`; API `auth/email/request` | email (Supabase SMTP via Resend) | caps, SMTP misconfig | — | architecture/email-auth |
 | Profile edit / avatar | W A | all | Settings › Edit profile | crop → signed Cloudinary upload → save | `user_info`, `user_image_history` | actions `updateUserDetails`, `getAvatarUploadSignature`, `saveAvatarToSupabase`; API `profile`, `uploads/signature` | — | upload limits | — | help account/profile |
 | Change phone / email | W A | all | Settings › Security | OTP to new contact | `phone_otp_state`; Supabase `email_change` | `profile/updateVerifiedPhoneCore`; API `account/phone/*` | SMS / email | limits | — | help account/profile |

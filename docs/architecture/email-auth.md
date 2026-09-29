@@ -21,7 +21,7 @@ profile-completion notification (idempotent) → app
 
 - **No magic link.** Only the numeric code. See §4 for why.
 - **No `emailRedirectTo`.** Nothing in this flow puts a token or a redirect target in a URL. The link Supabase still includes in the email points at the Site URL and is inert for us.
-- **The app never generates an auth token and never stores email-OTP state.** (Phone auth needs `phone_otp_state` because Hubtel owns that lifecycle; Supabase owns the email one.)
+- **The app never generates an auth token and never stores email-OTP state.** (Phone auth needs `phone_otp_state` because Abonten owns that lifecycle — the pending code's HMAC or the provider's handle, expiry and attempts; Supabase owns the email one.)
 
 ## 2. Code map
 

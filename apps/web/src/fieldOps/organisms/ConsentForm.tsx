@@ -3,6 +3,7 @@
 import { verifyFieldOpsConsent } from "@/actions/fieldOps/verifyFieldOpsConsent";
 import OtpInput from "@/components/molecules/OtpInput";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useState, useTransition } from "react";
 
 /** The owner enters the code on their own phone (online onboarding). */
@@ -37,7 +38,10 @@ export default function ConsentForm({ token }: { token: string }) {
         error={error}
       />
       <div>
-        <Button onClick={submit} disabled={pending || code.length < 4}>
+        <Button
+          onClick={submit}
+          disabled={pending || code.length < DEFAULT_PHONE_OTP_CODE_LENGTH}
+        >
           {pending ? "Checking…" : "I agree, list my business"}
         </Button>
       </div>

@@ -4,8 +4,8 @@ purpose: State, per provider, what Abonten relies on them for, what they secure,
 audience: Engineering, founder
 scope: Vercel, Supabase, Cloudinary, Paystack, Hubtel, Resend, Google, Expo/EAS, Firebase, Sentry, GitHub
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -20,7 +20,7 @@ complianceReviewRequired: yes
 | **Supabase** (Postgres 17, Auth, Storage, pg_cron, Realtime; EU Paris) | Managed Postgres, Auth service, storage encryption at rest, backups per plan | RLS policies and grants, function privileges, Auth settings (redirect URLs, SMTP, rate limits, leaked-password protection — currently off, SEC-003), bucket policies, service-role key custody, Vault for cron secrets (SEC-004 pending), Postgres patch level | Supabase dashboard; `supabase/migrations/`; `supabase/config.toml` (local) |
 | **Cloudinary** | Storage, CDN, transformation | Signed uploads per user folder, API secret custody, cleanup of orphaned/deleted media | `CLOUDINARY_*` env; `cloudinaryUploadSignature.ts` |
 | **Paystack** | Card data, PCI DSS, payment network, dispute handling | Secret key custody, webhook secret, verify-before-fulfil, transfer flag, dashboard access | Vercel env; Paystack dashboard |
-| **Hubtel** | SMS delivery, OTP code lifecycle | Client id/secret custody, attempt budgets, never exposing codes | `HUBTEL_API_CLIENT_ID/SECRET` |
+| **Hubtel** | SMS delivery | The one-time code itself (made by Abonten, only its HMAC stored), expiry, attempt budgets, client id/secret custody, an approved sender ID, keeping the account funded, never exposing codes | `HUBTEL_API_CLIENT_ID/SECRET`, `HUBTEL_SMS_SENDER_ID` |
 | **Resend** | Email delivery, DKIM/SPF signing | API key custody, domain DNS records, suppression handling, unsubscribe headers (implemented for rewards) | `RESEND_API_KEY`; Supabase Auth SMTP setting |
 | **Google** | OAuth, Maps/Geocoding APIs | OAuth client secret custody (used by Supabase), Maps key restrictions (HTTP referrers / Android package), quota | `GOOGLE_CLIENT_*`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_API_KEY` (admin geocoding) |
 | **Expo / EAS** | Build infrastructure, push relay, OTA distribution | EAS account access, `EXPO_PUBLIC_*` env (no secrets), signing keystore (`*.jks` gitignored), update channel discipline, `EXPO_ACCESS_TOKEN` custody | EAS project `c0a45056-…`; `eas.json` |

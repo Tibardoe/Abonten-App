@@ -16,7 +16,11 @@ import {
 import { sendPhoneOtpCore } from "../profile/phoneOtpSendCore";
 import { getServiceClient } from "./setupClient";
 
-const HUBTEL_ENV = ["HUBTEL_API_CLIENT_ID", "HUBTEL_API_CLIENT_SECRET"];
+const HUBTEL_ENV = [
+  "HUBTEL_API_CLIENT_ID",
+  "HUBTEL_API_CLIENT_SECRET",
+  "HUBTEL_SMS_SENDER_ID",
+];
 // A Ghana number nobody else in the suite uses.
 const LOCAL_PART = `24${String(Date.now()).slice(-7)}`;
 const E164 = `+233${LOCAL_PART}`;
@@ -30,7 +34,10 @@ describe("OTP send monitoring", () => {
     service = getServiceClient();
     for (const name of HUBTEL_ENV) {
       savedEnv[name] = process.env[name];
-      process.env[name] = `test-${name.toLowerCase()}`;
+      process.env[name] =
+        name === "HUBTEL_SMS_SENDER_ID"
+          ? "Abontenhub"
+          : `test-${name.toLowerCase()}`;
     }
     invalidateMarketCache();
   });
@@ -64,11 +71,17 @@ describe("OTP send monitoring", () => {
             : input instanceof URL
               ? input.href
               : input.url;
-        if (url.startsWith("https://api-otp.hubtel.com/")) {
+        // The shape the live SMS API gave an unfunded account on 2026-09-20,
+        // plus the number, to prove it is masked.
+        if (url.startsWith("https://sms.hubtel.com/")) {
           return new Response(
             JSON.stringify({
-              code: "4101",
-              message: `Payment required on account for ${E164}`,
+              rate: 0,
+              messageId: null,
+              status: 12,
+              networkId: null,
+              clientReference: null,
+              statusDescription: `Payment required on account for ${E164}`,
             }),
             { status: 400, headers: { "content-type": "application/json" } },
           );

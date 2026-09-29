@@ -1,7 +1,8 @@
 // Server-only, durable pending-OTP store, backed by the phone_otp_state
 // Postgres table (see supabase/migrations/20260902100000_durable_phone_otp_state.sql).
-// Holds the provider's request handle (Hubtel requestId/prefix, Twilio
-// Verification SID) returned by a successful send, keyed by phone number +
+// Holds the provider's request handle (for Hubtel a random handle and an
+// HMAC of the code Abonten texted; for Twilio the Verification SID)
+// returned by a successful send, keyed by phone number +
 // purpose, so the client never receives it (it only ever sends {phone,
 // code} to verify) and so a resend/replay can't reuse an already-consumed
 // code. The provider that sent the code is recorded with it, so the check
@@ -28,7 +29,8 @@ export type PendingOtp = {
   attempts: number;
 };
 
-const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes
+/** How long a code is good for (also the wording of the text message). */
+export const PENDING_OTP_TTL_MS = 5 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
 const MAX_VERIFY_ATTEMPTS = 5;
 // Text-message codes per number and per caller address. Checked and
@@ -160,7 +162,7 @@ export async function getPendingOtp(
 
   const createdAt = new Date(data.created_at).getTime();
 
-  if (Date.now() - createdAt > PENDING_TTL_MS) {
+  if (Date.now() - createdAt > PENDING_OTP_TTL_MS) {
     await clearPendingOtp(purpose, phoneE164);
     return null;
   }
