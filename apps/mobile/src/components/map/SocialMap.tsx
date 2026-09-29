@@ -5,338 +5,77 @@ import {
   Marker,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
-import { AppText, EmptyState, Icon, Sheet } from "@abonten/ui-native";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import { hapticLight, hapticSelection } from "@/lib/haptics";
+import {
+  AppText,
+  EmptyState,
+  Icon,
+  PressableScale,
+  Sheet,
+} from "@abonten/ui-native";
+import { useTheme } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// react-native's Image (not expo-image) inside a <Marker> child: the native
-// map rasterises the marker view to a bitmap, and RN Image is the reliable
-// source for that snapshot on Android — an expo-image often snapshots empty,
-// which is why photo markers were falling back to the default red pin.
-import { Platform, Pressable, Image as RNImage, View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { Platform, Pressable, View } from "react-native";
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SocialMapCard, type SocialMapItem } from "./SocialMapCard";
+import { ClusterMarker, PhotoMarker, SelectionHalo } from "./SocialMapPins";
+import {
+  type Cluster,
+  MIN_DELTA,
+  type MapRegion,
+  clusterize,
+  gridLevel,
+  latitudeScale,
+  regionAround,
+  spansOneSpot,
+} from "./socialMapClusters";
+import { DARK_MAP_STYLE, LIGHT_MAP_STYLE } from "./socialMapStyle";
+import { useAppendOnlyOrder } from "./useAppendOnlyOrder";
+
+export type { SocialMapItem, SocialMapLine } from "./SocialMapCard";
 
 // A Snapchat-style social map (Abonten's own look): the event flyer / place
-// cover IS the marker, rendered as a circular photo with a ring + shadow;
-// nearby markers collapse into a count bubble that splits as you zoom in;
-// tapping a marker raises a preview card from the bottom that opens the
-// detail screen. Falls back to the shared "map needs the latest app"
-// message when the native Maps module / API key isn't in the binary.
+// cover IS the marker, a round photo in a white ring; pins close together
+// become a small photo stack with a count that splits as you zoom in; tapping
+// a pin fades a mint halo in around it and raises a card from the bottom that
+// opens the detail screen. Every change animates both ways — the card leaves
+// the way it came and the halo fades out. Falls back to the shared "map needs
+// the latest app" message when the native Maps module / API key isn't in the
+// binary.
 
-export type SocialMapItem = {
-  id: string;
-  kind: "event" | "place";
-  title: string;
-  imageUrl: string | null;
-  point: { lat: number; lng: number };
-  /** Pre-formatted preview lines, most-important first (max ~3 shown). */
-  lines: string[];
-  /** Small trailing tag, e.g. a price or "Open". */
-  tag?: string | null;
-};
+const DEFAULT_CENTER = { lat: 5.6037, lng: -0.187 }; // Accra
+const START_DELTA = 0.12;
+const CARD_GAP = 12;
+// Estimate until the card has been measured once.
+const CARD_HEIGHT_GUESS = 150;
+// Keep a focused pin at least this far inside the visible map.
+const EDGE_MARGIN = 56;
 
-type Region = {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-};
-
-type Cluster =
-  | { kind: "point"; item: SocialMapItem; lat: number; lng: number }
-  | {
-      kind: "cluster";
-      count: number;
-      lat: number;
-      lng: number;
-      items: SocialMapItem[];
-    };
-
-const GRID = 5; // cells per axis — bounds rendered markers to <=25
-// Zooming into a cluster stops at this span (~1 km). A cluster still intact
-// here is a set of pins at (nearly) the same spot — the same venue, a
-// place and its events — and no amount of zoom will split it, so a tap
-// opens the list instead. Before this, three places sharing one point
-// clustered forever and could never be opened from the map.
-const MIN_DELTA = 0.01;
-// Points closer than this are "the same spot" regardless of zoom.
-const SAME_SPOT_DEG = 0.0004; // ~45 m
-
-function clusterize(items: SocialMapItem[], region: Region): Cluster[] {
-  if (items.length <= 1) {
-    return items.map((item) => ({
-      kind: "point" as const,
-      item,
-      lat: item.point.lat,
-      lng: item.point.lng,
-    }));
-  }
-  const cellLat = region.latitudeDelta / GRID;
-  const cellLng = region.longitudeDelta / GRID;
-  const buckets = new Map<string, SocialMapItem[]>();
-  for (const item of items) {
-    const gx = Math.round(item.point.lng / cellLng);
-    const gy = Math.round(item.point.lat / cellLat);
-    const key = `${gx}:${gy}`;
-    const list = buckets.get(key);
-    if (list) list.push(item);
-    else buckets.set(key, [item]);
-  }
-  const out: Cluster[] = [];
-  for (const list of buckets.values()) {
-    if (list.length === 1) {
-      const item = list[0];
-      out.push({
-        kind: "point",
-        item,
-        lat: item.point.lat,
-        lng: item.point.lng,
-      });
-    } else {
-      const lat = list.reduce((s, i) => s + i.point.lat, 0) / list.length;
-      const lng = list.reduce((s, i) => s + i.point.lng, 0) / list.length;
-      out.push({ kind: "cluster", count: list.length, lat, lng, items: list });
-    }
-  }
-  return out;
+function startRegion(
+  center: { lat: number; lng: number } | null,
+  fallback: SocialMapItem | undefined,
+): MapRegion {
+  return {
+    latitude: center?.lat ?? fallback?.point.lat ?? DEFAULT_CENTER.lat,
+    longitude: center?.lng ?? fallback?.point.lng ?? DEFAULT_CENTER.lng,
+    latitudeDelta: START_DELTA,
+    longitudeDelta: START_DELTA,
+  };
 }
 
-function PhotoMarker({
-  url,
-  kind,
-  selected,
-  onImageSettled,
-}: {
-  url: string | null;
-  kind: "event" | "place";
-  selected: boolean;
-  /** The photo finished loading OR failed — rasterising can stop either way. */
-  onImageSettled?: () => void;
-}) {
-  const c = useThemeColors();
-  const size = selected ? 56 : 44;
-  const [failed, setFailed] = useState(false);
+/** Moved far enough from where it started that "back" is worth offering. */
+function awayFrom(r: MapRegion, start: MapRegion): boolean {
   return (
-    <View
-      style={{
-        width: size + 10,
-        height: size + 10,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <View
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          borderWidth: 3,
-          borderColor: selected ? c.primary : "#fff",
-          // The brand fill + icon sit UNDER the photo. They used to be the
-          // fallback for "no photo" only, so while a photo was still loading
-          // (or when it failed) the marker was a blank white disc — the
-          // card background inside a white ring.
-          backgroundColor: c.primary,
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          shadowColor: "#000",
-          shadowOpacity: 0.35,
-          shadowRadius: 4,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 6,
-        }}
-      >
-        <Icon
-          name={kind === "event" ? "ticket" : "location"}
-          size={20}
-          color="#fff"
-        />
-        {url && !failed ? (
-          <RNImage
-            source={{ uri: url }}
-            style={{ position: "absolute", width: "100%", height: "100%" }}
-            resizeMode="cover"
-            onLoad={onImageSettled}
-            onError={() => {
-              setFailed(true);
-              onImageSettled?.();
-            }}
-          />
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
-function ClusterMarker({ count }: { count: number }) {
-  const c = useThemeColors();
-  return (
-    <View
-      style={{
-        minWidth: 40,
-        height: 40,
-        paddingHorizontal: 8,
-        borderRadius: 20,
-        borderWidth: 3,
-        borderColor: "#fff",
-        backgroundColor: c.primary,
-        alignItems: "center",
-        justifyContent: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 5,
-      }}
-    >
-      <AppText
-        style={{
-          color: c["primary-foreground"],
-          fontWeight: "800",
-          fontSize: 15,
-        }}
-      >
-        {count > 99 ? "99+" : count}
-      </AppText>
-    </View>
-  );
-}
-
-function PreviewCard({
-  item,
-  onClose,
-  bottomInset,
-}: {
-  item: SocialMapItem;
-  onClose: () => void;
-  bottomInset: number;
-}) {
-  const router = useRouter();
-  const ty = useSharedValue(240);
-
-  useEffect(() => {
-    ty.value = withTiming(0, { duration: 220 });
-  }, [ty]);
-
-  const close = useCallback(() => {
-    ty.value = withTiming(240, { duration: 180 }, (done) => {
-      if (done) runOnJS(onClose)();
-    });
-  }, [onClose, ty]);
-
-  const pan = Gesture.Pan()
-    .activeOffsetY(12)
-    .failOffsetY(-12)
-    .onUpdate((e) => {
-      ty.value = Math.max(0, e.translationY);
-    })
-    .onEnd((e) => {
-      if (e.translationY > 80 || e.velocityY > 700) {
-        ty.value = withTiming(240, { duration: 160 }, (done) => {
-          if (done) runOnJS(onClose)();
-        });
-      } else {
-        ty.value = withTiming(0, { duration: 160 });
-      }
-    });
-
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: ty.value }],
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        {
-          position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: bottomInset + 12,
-        },
-        style,
-      ]}
-    >
-      <GestureDetector gesture={pan}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Open ${item.title}`}
-          onPress={() =>
-            router.push(
-              item.kind === "event"
-                ? `/(app)/event/${item.id}`
-                : `/(app)/place/${item.id}`,
-            )
-          }
-          className="flex-row gap-3 rounded-2xl border border-border bg-card p-3"
-          style={{
-            shadowColor: "#000",
-            shadowOpacity: 0.18,
-            shadowRadius: 12,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 8,
-          }}
-        >
-          <View className="h-[72px] w-[72px] overflow-hidden rounded-xl bg-muted">
-            {item.imageUrl ? (
-              <Image
-                source={{ uri: item.imageUrl }}
-                style={{ width: "100%", height: "100%" }}
-                contentFit="cover"
-              />
-            ) : (
-              <View className="flex-1 items-center justify-center">
-                <Icon name="image-outline" size={20} tone="muted" />
-              </View>
-            )}
-          </View>
-
-          <View className="flex-1 justify-center gap-0.5">
-            <AppText variant="bodyStrong" numberOfLines={1}>
-              {item.title}
-            </AppText>
-            {item.lines.slice(0, 3).map((line, i) => (
-              <AppText
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed preview lines
-                key={i}
-                variant={i === 0 ? "metaStrong" : "meta"}
-                numberOfLines={1}
-              >
-                {line}
-              </AppText>
-            ))}
-          </View>
-
-          <View className="items-end justify-between">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Dismiss"
-              hitSlop={10}
-              onPress={close}
-            >
-              <Icon name="close" size={18} tone="muted" />
-            </Pressable>
-            {item.tag ? (
-              <View className="rounded-full bg-muted px-2 py-0.5">
-                <AppText variant="caption" className="font-semibold">
-                  {item.tag}
-                </AppText>
-              </View>
-            ) : (
-              <Icon name="chevron-forward" size={18} tone="muted" />
-            )}
-          </View>
-        </Pressable>
-      </GestureDetector>
-    </Animated.View>
+    Math.abs(r.latitude - start.latitude) > start.latitudeDelta * 0.3 ||
+    Math.abs(r.longitude - start.longitude) > start.longitudeDelta * 0.3 ||
+    r.longitudeDelta > start.longitudeDelta * 2.5 ||
+    r.longitudeDelta < start.longitudeDelta / 4
   );
 }
 
@@ -358,9 +97,8 @@ function StackedItemsSheet({
     >
       <View className="gap-2">
         {(items ?? []).map((item) => (
-          <Pressable
+          <PressableScale
             key={item.id}
-            accessibilityRole="button"
             accessibilityLabel={`Open ${item.title}`}
             onPress={() => {
               onClose();
@@ -370,7 +108,7 @@ function StackedItemsSheet({
                   : `/(app)/place/${item.id}`,
               );
             }}
-            className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-3 active:opacity-80"
+            className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-3"
           >
             <View className="h-14 w-14 overflow-hidden rounded-xl bg-muted">
               {item.imageUrl ? (
@@ -382,7 +120,11 @@ function StackedItemsSheet({
               ) : (
                 <View className="flex-1 items-center justify-center">
                   <Icon
-                    name={item.kind === "event" ? "ticket" : "location"}
+                    name={
+                      item.kind === "event"
+                        ? "ticket-outline"
+                        : "storefront-outline"
+                    }
                     size={18}
                     tone="muted"
                   />
@@ -393,19 +135,19 @@ function StackedItemsSheet({
               <AppText variant="bodyStrong" numberOfLines={1}>
                 {item.title}
               </AppText>
-              {item.lines.slice(0, 2).map((line, i) => (
+              {item.lines.slice(0, 2).map((line) => (
                 <AppText
-                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed preview lines
-                  key={i}
-                  variant={i === 0 ? "metaStrong" : "meta"}
+                  key={`${line.icon}:${line.text}`}
+                  variant="meta"
+                  tone={line.tone === "success" ? "success" : "muted"}
                   numberOfLines={1}
                 >
-                  {line}
+                  {line.text}
                 </AppText>
               ))}
             </View>
             <Icon name="chevron-forward" size={18} tone="muted" />
-          </Pressable>
+          </PressableScale>
         ))}
       </View>
     </Sheet>
@@ -416,15 +158,21 @@ export function SocialMap({
   items,
   center,
   emptyLabel = "Nothing to map here",
+  bottomInset = 0,
 }: {
   items: SocialMapItem[];
   center: { lat: number; lng: number } | null;
   emptyLabel?: string;
+  /** Extra room under the card, when something overlaps the map's bottom. */
+  bottomInset?: number;
 }) {
-  const insets = useSafeAreaInsets();
+  const { scheme } = useTheme();
   // biome-ignore lint/suspicious/noExplicitAny: react-native-maps ref has no types through the shim
   const mapRef = useRef<any>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The item on the card. It outlives the selection by the length of the
+  // card's exit, so the card can slide away showing what it showed.
+  const [cardItem, setCardItem] = useState<SocialMapItem | null>(null);
   // Items of a cluster that cannot be split by zooming (see MIN_DELTA).
   const [stackedItems, setStackedItems] = useState<SocialMapItem[] | null>(
     null,
@@ -433,41 +181,160 @@ export function SocialMap({
   // without this guard the map's "tap empty space to dismiss" handler fires
   // immediately and the preview card never appears.
   const markerTapAt = useRef(0);
-  // Which photo markers have finished loading their image — once loaded a
-  // marker no longer needs re-rasterising, so tracksViewChanges can go off.
-  const [loaded, setLoaded] = useState<Set<string>>(new Set());
-  const markLoaded = useCallback((id: string) => {
-    setLoaded((prev) => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-  }, []);
+  const mapSize = useRef({ width: 0, height: 0 });
+  const cardHeight = useRef(0);
 
   const withPoint = useMemo(
-    () => items.filter((i) => Number.isFinite(i.point.lat)),
+    () =>
+      items.filter(
+        (i) => Number.isFinite(i.point.lat) && Number.isFinite(i.point.lng),
+      ),
     [items],
   );
+  const selected = selectedId
+    ? (withPoint.find((i) => i.id === selectedId) ?? null)
+    : null;
 
-  const initialRegion = useMemo<Region>(() => {
-    const lat = center?.lat ?? withPoint[0]?.point.lat ?? 5.6037;
-    const lng = center?.lng ?? withPoint[0]?.point.lng ?? -0.187;
-    return {
-      latitude: lat,
-      longitude: lng,
-      latitudeDelta: 0.12,
-      longitudeDelta: 0.12,
-    };
-  }, [center, withPoint]);
-
-  const [region, setRegion] = useState<Region>(initialRegion);
-
-  const clusters = useMemo(
-    () => clusterize(withPoint, region),
-    [withPoint, region],
+  // The first item only matters when there is no centre, and is read once:
+  // following every list change would move "start" under the person's feet.
+  const firstItem = useRef(withPoint[0]);
+  const centerLat = center?.lat;
+  const centerLng = center?.lng;
+  const start = useMemo(
+    () =>
+      startRegion(
+        centerLat != null && centerLng != null
+          ? { lat: centerLat, lng: centerLng }
+          : null,
+        firstItem.current,
+      ),
+    [centerLat, centerLng],
   );
-  const selected = withPoint.find((i) => i.id === selectedId) ?? null;
+  const region = useRef<MapRegion>(start);
+  const [level, setLevel] = useState(() => gridLevel(start));
+  const [away, setAway] = useState(false);
+
+  const latScale = useMemo(() => latitudeScale(withPoint), [withPoint]);
+  // The selected pin never disappears into a bubble.
+  const clusters = useMemo(
+    () => clusterize(withPoint, level, latScale, selectedId),
+    [withPoint, level, latScale, selectedId],
+  );
+
+  // A new browsing area moves the map there (initialRegion only applies once).
+  const firstStart = useRef(true);
+  useEffect(() => {
+    if (firstStart.current) {
+      firstStart.current = false;
+      return;
+    }
+    setSelectedId(null);
+    mapRef.current?.animateToRegion(start, 450);
+  }, [start]);
+
+  // Bring a tapped pin clear of the card and the edges; leave the map
+  // alone when it is already comfortably in view.
+  const focusOn = useCallback(
+    (item: SocialMapItem) => {
+      const { width, height } = mapSize.current;
+      const r = region.current;
+      if (!width || !height) return;
+      const x =
+        ((item.point.lng - (r.longitude - r.longitudeDelta / 2)) /
+          r.longitudeDelta) *
+        width;
+      const y =
+        ((r.latitude + r.latitudeDelta / 2 - item.point.lat) /
+          r.latitudeDelta) *
+        height;
+      const visibleBottom =
+        height -
+        (cardHeight.current || CARD_HEIGHT_GUESS) -
+        CARD_GAP -
+        bottomInset;
+      const inView =
+        x > EDGE_MARGIN &&
+        x < width - EDGE_MARGIN &&
+        y > EDGE_MARGIN &&
+        y < visibleBottom - EDGE_MARGIN / 2;
+      if (inView) return;
+      // Centre it in the part of the map the card leaves visible.
+      const targetY = visibleBottom / 2;
+      mapRef.current?.animateCamera(
+        {
+          center: {
+            latitude:
+              item.point.lat +
+              (targetY - height / 2) * (r.latitudeDelta / height),
+            longitude: item.point.lng,
+          },
+        },
+        { duration: 380 },
+      );
+    },
+    [bottomInset],
+  );
+
+  const inAppendOrder = useAppendOnlyOrder();
+
+  // Coming back to the map (from an event it opened, another tab) redraws
+  // every marker from scratch. Android takes the map's views off the window
+  // while it is hidden and puts its markers back on return, and they came
+  // back wrong: the selected pin's photo was missing under its halo.
+  const [generation, setGeneration] = useState(0);
+  const focusedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (focusedOnce.current) setGeneration((g) => g + 1);
+      focusedOnce.current = true;
+    }, []),
+  );
+
+  // Halos still fading out after their pin was deselected.
+  const [leavingHalos, setLeavingHalos] = useState<SocialMapItem[]>([]);
+  const letHaloGo = useCallback((item: SocialMapItem | null) => {
+    if (!item) return;
+    setLeavingHalos((list) =>
+      list.some((h) => h.id === item.id) ? list : [...list, item],
+    );
+  }, []);
+  const dropHalo = useCallback((id: string) => {
+    setLeavingHalos((list) => list.filter((h) => h.id !== id));
+  }, []);
+
+  const select = useCallback(
+    (item: SocialMapItem) => {
+      markerTapAt.current = Date.now();
+      if (item.id === selectedId) return;
+      hapticSelection();
+      letHaloGo(selected);
+      setLeavingHalos((list) => list.filter((h) => h.id !== item.id));
+      setSelectedId(item.id);
+      setCardItem(item);
+      focusOn(item);
+    },
+    [selectedId, selected, letHaloGo, focusOn],
+  );
+
+  const deselect = useCallback(() => {
+    if (!selectedId) return;
+    letHaloGo(selected);
+    setSelectedId(null);
+  }, [selectedId, selected, letHaloGo]);
+
+  const onCardExited = useCallback(() => setCardItem(null), []);
+  const onCardHeight = useCallback((h: number) => {
+    cardHeight.current = h;
+  }, []);
+
+  const recenterOpacity = useSharedValue(0);
+  useEffect(() => {
+    recenterOpacity.value = withTiming(away ? 1 : 0, { duration: 180 });
+  }, [away, recenterOpacity]);
+  const recenterStyle = useAnimatedStyle(() => ({
+    opacity: recenterOpacity.value,
+    transform: [{ scale: 0.85 + recenterOpacity.value * 0.15 }],
+  }));
 
   if (!MapConfigured || !MapView || !Marker) {
     return (
@@ -489,103 +356,146 @@ export function SocialMap({
     );
   }
 
-  function spansOneSpot(items: SocialMapItem[]): boolean {
-    let minLat = Number.POSITIVE_INFINITY;
-    let maxLat = Number.NEGATIVE_INFINITY;
-    let minLng = Number.POSITIVE_INFINITY;
-    let maxLng = Number.NEGATIVE_INFINITY;
-    for (const i of items) {
-      minLat = Math.min(minLat, i.point.lat);
-      maxLat = Math.max(maxLat, i.point.lat);
-      minLng = Math.min(minLng, i.point.lng);
-      maxLng = Math.max(maxLng, i.point.lng);
-    }
-    return maxLat - minLat < SAME_SPOT_DEG && maxLng - minLng < SAME_SPOT_DEG;
-  }
-
-  function openCluster(cl: Extract<Cluster, { kind: "cluster" }>) {
-    setSelectedId(null);
-    if (region.latitudeDelta <= MIN_DELTA * 1.05 || spansOneSpot(cl.items)) {
+  function openCluster(
+    cl: Extract<Cluster<SocialMapItem>, { kind: "cluster" }>,
+  ) {
+    markerTapAt.current = Date.now();
+    hapticLight();
+    deselect();
+    if (
+      region.current.latitudeDelta <= MIN_DELTA * 1.05 ||
+      spansOneSpot(cl.items)
+    ) {
       setStackedItems(cl.items);
       return;
     }
-    mapRef.current?.animateToRegion(
-      {
-        latitude: cl.lat,
-        longitude: cl.lng,
-        latitudeDelta: Math.max(region.latitudeDelta / 2.5, MIN_DELTA),
-        longitudeDelta: Math.max(region.longitudeDelta / 2.5, MIN_DELTA),
-      },
-      280,
-    );
+    mapRef.current?.animateToRegion(regionAround(cl.items), 400);
   }
+
+  const android = Platform.OS === "android";
 
   return (
     <MapErrorBoundary>
-      <View style={{ flex: 1 }}>
+      <View
+        style={{ flex: 1, overflow: "hidden" }}
+        onLayout={(e) => {
+          mapSize.current = {
+            width: e.nativeEvent.layout.width,
+            height: e.nativeEvent.layout.height,
+          };
+        }}
+      >
         <MapView
           ref={mapRef}
           style={{ flex: 1 }}
-          provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
-          initialRegion={initialRegion}
-          onRegionChangeComplete={(r: Region) => setRegion(r)}
+          provider={android ? PROVIDER_GOOGLE : undefined}
+          initialRegion={start}
+          customMapStyle={
+            android
+              ? scheme === "dark"
+                ? DARK_MAP_STYLE
+                : LIGHT_MAP_STYLE
+              : undefined
+          }
+          {...(android
+            ? {}
+            : { userInterfaceStyle: scheme, showsPointsOfInterests: false })}
+          // Pins are photos and the card is ours: no Google camera jump or
+          // "Directions / Open in Maps" toolbar on tap, and a plain north-up
+          // map (the focus maths above assumes one).
+          moveOnMarkerPress={false}
+          toolbarEnabled={false}
+          rotateEnabled={false}
+          pitchEnabled={false}
+          showsCompass={false}
+          onRegionChangeComplete={(r: MapRegion) => {
+            region.current = r;
+            setLevel(gridLevel(r));
+            setAway(awayFrom(r, start));
+          }}
           onPress={() => {
             // Ignore the onPress that immediately follows a marker tap.
             if (Date.now() - markerTapAt.current < 350) return;
-            setSelectedId(null);
+            deselect();
           }}
           showsUserLocation
           showsMyLocationButton={false}
         >
-          {clusters.map((cl) =>
-            cl.kind === "point" ? (
-              <Marker
-                key={cl.item.id}
-                coordinate={{ latitude: cl.lat, longitude: cl.lng }}
-                // Keep re-rasterising until the photo has loaded or failed
-                // (or forever if there's no photo — that view is cheap). A
-                // selected marker also re-tracks so its ring updates.
-                tracksViewChanges={
-                  !loaded.has(cl.item.id) || cl.item.id === selectedId
-                }
-                onPress={() => {
-                  markerTapAt.current = Date.now();
-                  setSelectedId(cl.item.id);
-                }}
-                anchor={{ x: 0.5, y: 0.5 }}
-              >
+          {inAppendOrder([
+            ...clusters.map((cl) =>
+              cl.kind === "point" ? (
                 <PhotoMarker
+                  key={`${generation}:${cl.key}`}
+                  lat={cl.lat}
+                  lng={cl.lng}
                   url={cl.item.imageUrl}
                   kind={cl.item.kind}
-                  selected={cl.item.id === selectedId}
-                  onImageSettled={() => markLoaded(cl.item.id)}
+                  raised={cl.item.id === selectedId}
+                  onPress={() => select(cl.item)}
                 />
-              </Marker>
-            ) : (
-              <Marker
-                key={`c:${cl.lat.toFixed(4)}:${cl.lng.toFixed(4)}:${cl.count}`}
-                coordinate={{ latitude: cl.lat, longitude: cl.lng }}
-                tracksViewChanges={false}
-                onPress={() => {
-                  markerTapAt.current = Date.now();
-                  openCluster(cl);
-                }}
-                anchor={{ x: 0.5, y: 0.5 }}
-              >
-                <ClusterMarker count={cl.count} />
-              </Marker>
+              ) : (
+                <ClusterMarker
+                  // A marker's look is fixed once drawn (SocialMapPins rule
+                  // 3), so a new count is a new marker.
+                  key={`${generation}:${cl.key}:${cl.count}`}
+                  lat={cl.lat}
+                  lng={cl.lng}
+                  count={cl.count}
+                  url={cl.items.find((i) => i.imageUrl)?.imageUrl ?? null}
+                  kind={cl.items[0].kind}
+                  onPress={() => openCluster(cl)}
+                />
+              ),
             ),
-          )}
+            // The selected pin's halo, and any still fading out.
+            ...[
+              ...leavingHalos.filter((h) => h.id !== selectedId),
+              ...(selected ? [selected] : []),
+            ].map((h) => (
+              <SelectionHalo
+                key={`${generation}:halo:${h.id}`}
+                id={h.id}
+                lat={h.point.lat}
+                lng={h.point.lng}
+                visible={h.id === selectedId}
+                onHidden={dropHalo}
+              />
+            )),
+          ])}
         </MapView>
 
-        {selected ? (
-          <PreviewCard
-            key={selected.id}
-            item={selected}
-            onClose={() => setSelectedId(null)}
-            bottomInset={insets.bottom}
-          />
-        ) : null}
+        <Animated.View
+          pointerEvents={away ? "auto" : "none"}
+          style={[{ position: "absolute", top: 12, right: 12 }, recenterStyle]}
+        >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back to the area you're browsing"
+            onPress={() => {
+              hapticLight();
+              mapRef.current?.animateToRegion(start, 450);
+            }}
+            className="h-11 w-11 items-center justify-center rounded-full border border-border bg-card active:opacity-80"
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.16,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 3 },
+              elevation: 5,
+            }}
+          >
+            <Icon name="locate" size={20} tone="foreground" />
+          </Pressable>
+        </Animated.View>
+
+        <SocialMapCard
+          item={selected ?? cardItem}
+          open={!!selected}
+          bottom={CARD_GAP + bottomInset}
+          onRequestClose={deselect}
+          onExited={onCardExited}
+          onHeight={onCardHeight}
+        />
 
         <StackedItemsSheet
           items={stackedItems}

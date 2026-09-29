@@ -39,6 +39,8 @@ export function usePlacesAutocomplete(
 ) {
   const [query, setQuery] = useState("");
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
+  // A request for the current text is on its way (debounce included).
+  const [loading, setLoading] = useState(false);
   const nearLat = near?.lat;
   const nearLng = near?.lng;
   const sessionRef = useRef(newSessionToken());
@@ -48,10 +50,12 @@ export function usePlacesAutocomplete(
   useEffect(() => {
     if (!KEY || query.trim().length < 3) {
       setPredictions([]);
+      setLoading(false);
       return;
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const id = ++reqIdRef.current;
+    setLoading(true);
     debounceRef.current = setTimeout(async () => {
       try {
         const bias =
@@ -74,6 +78,7 @@ export function usePlacesAutocomplete(
           }[];
         };
         if (id !== reqIdRef.current) return;
+        setLoading(false);
         if (json.status !== "OK" || !json.predictions) {
           setPredictions([]);
           return;
@@ -86,7 +91,10 @@ export function usePlacesAutocomplete(
           })),
         );
       } catch {
-        if (id === reqIdRef.current) setPredictions([]);
+        if (id === reqIdRef.current) {
+          setPredictions([]);
+          setLoading(false);
+        }
       }
     }, 300);
 
@@ -131,6 +139,7 @@ export function usePlacesAutocomplete(
     query,
     setQuery,
     predictions,
+    loading,
     clear: () => setPredictions([]),
     resolvePlace,
   };
