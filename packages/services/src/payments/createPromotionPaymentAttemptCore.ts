@@ -210,7 +210,11 @@ export async function createPromotionPaymentAttemptCore(
       description: order.label,
     });
 
-    if (chargeResult.status === 409 && pass === 0) continue;
+    // Retry only a retired (stale) attempt. "busy" means another request is
+    // still opening this charge; retrying would retire it from under them.
+    if (chargeResult.status === 409 && "stale" in chargeResult && pass === 0) {
+      continue;
+    }
     if (chargeResult.status !== 200) {
       return { status: chargeResult.status, message: chargeResult.message };
     }

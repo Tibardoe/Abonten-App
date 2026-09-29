@@ -14,7 +14,14 @@
 //     reconcileClosedAttempt).
 //   * The attempt is CLAIMED before the provider is called (our reference
 //     written where none was), so two concurrent requests can't both start a
-//     charge on it; the loser is told to try again.
+//     charge on it. The loser (a double-tapped Pay) waits for the winner's
+//     provider page and hands back that same page; it never retires the
+//     attempt, because that would cancel the charge the winner is opening
+//     and send the buyer to a second one (2026-09-29, caught by the
+//     payment-attempt-reuse suite). A claim still without a page after
+//     CLAIM_IN_FLIGHT_MS is treated as abandoned and retired as before.
+//   * A provider error after the claim retires the attempt (reference kept),
+//     so the next try starts clean instead of finding a claim with no page.
 //   * A `direct` charge IS a charge attempt; an existing direct reference is
 //     always reused, never re-initiated, on pain of double-charging.
 //
@@ -53,10 +60,29 @@ export type ChargeInitResult =
    * refunded — and the caller should start again on a fresh attempt.
    */
   | { status: 409; message: string; stale: true }
+  /**
+   * Another request is opening this very charge and did not finish within
+   * CLAIM_WAIT_MS. The attempt is untouched: the caller must NOT cancel it
+   * (that would kill the other request's charge); the buyer tries again.
+   */
+  | { status: 409; message: string; busy: true }
   | { status: 200; data: CheckoutInit };
 
 const STALE_MESSAGE =
   "This order changed since its payment was started. Please try again.";
+const BUSY_MESSAGE =
+  "This payment is already being started. Please wait a moment.";
+
+// A claim whose provider page isn't recorded yet counts as another request
+// still opening it for this long (the provider call's own deadline is 20 s,
+// HTTP_TIMEOUTS.paystackWrite); after that it was abandoned.
+const CLAIM_IN_FLIGHT_MS = 45_000;
+// How long a request that lost the claim waits for the winner's page.
+const CLAIM_WAIT_MS = 12_000;
+const CLAIM_POLL_MS = 250;
+
+const ATTEMPT_ROW_SELECT =
+  "id, provider, country_code, status, amount, currency, payment_method_id, provider_reference, metadata";
 
 /** The charge an attempt was started for, when it recorded one. */
 function startedCharge(attempt: PaymentAttemptRow): Money | null {
@@ -74,12 +100,13 @@ function startedCharge(attempt: PaymentAttemptRow): Money | null {
  */
 async function retireAttempt(
   attempt: PaymentAttemptRow,
+  reason = "Replaced: the order changed after payment started",
 ): Promise<ChargeInitResult> {
   const { error } = await getSupabaseServiceClient()
     .from("payment_attempt")
     .update({
       status: "cancelled",
-      failure_reason: "Replaced: the order changed after payment started",
+      failure_reason: reason,
       updated_at: new Date().toISOString(),
     })
     .eq("id", attempt.id)
@@ -91,6 +118,49 @@ async function retireAttempt(
     return { status: 500, message: "Something went wrong!" };
   }
   return { status: 409, message: STALE_MESSAGE, stale: true };
+}
+
+/** Claimed by a request that may still be opening its provider page. */
+function claimInFlight(attempt: PaymentAttemptRow): boolean {
+  const claimedAt = attempt.metadata?.claimed_at;
+  if (typeof claimedAt !== "string") return false;
+  const age = Date.now() - new Date(claimedAt).getTime();
+  return Number.isFinite(age) && age < CLAIM_IN_FLIGHT_MS;
+}
+
+/**
+ * The request that lost the claim waits for the winner to record its
+ * provider page and returns that page, so a double-tapped Pay ends on one
+ * charge. Closed meanwhile (the winner failed, or the order changed):
+ * stale, start again. Still no page after CLAIM_WAIT_MS: busy, and the
+ * attempt is left alone.
+ */
+async function awaitClaimedCharge(
+  attemptId: string,
+  provider: string,
+): Promise<ChargeInitResult> {
+  const deadline = Date.now() + CLAIM_WAIT_MS;
+  while (Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, CLAIM_POLL_MS));
+    const { data, error } = await getSupabaseServiceClient()
+      .from("payment_attempt")
+      .select(ATTEMPT_ROW_SELECT)
+      .eq("id", attemptId)
+      .maybeSingle();
+    if (error) {
+      logger.error(
+        `chargeInit: failed re-reading attempt ${attemptId}: ${error.message}`,
+      );
+      return { status: 500, message: "Something went wrong!" };
+    }
+    const row = data as PaymentAttemptRow | null;
+    if (!row || (row.status !== "initiated" && row.status !== "pending")) {
+      return { status: 409, message: STALE_MESSAGE, stale: true };
+    }
+    const cached = cachedInit(row, provider);
+    if (cached) return { status: 200, data: cached };
+  }
+  return { status: 409, message: BUSY_MESSAGE, busy: true };
 }
 
 function referenceFor(provider: string): string {
@@ -154,7 +224,12 @@ async function claimAttempt(
       provider,
       country_code: countryCode,
       provider_reference: reference,
-      metadata: initMetadata(attempt, methodCode, charge, null) as Json,
+      // claimed_at: how another request tells an in-flight claim from an
+      // abandoned one (claimInFlight). recordInit's metadata drops it.
+      metadata: {
+        ...initMetadata(attempt, methodCode, charge, null),
+        claimed_at: new Date().toISOString(),
+      } as Json,
       updated_at: new Date().toISOString(),
     })
     .eq("id", attempt.id)
@@ -179,7 +254,7 @@ async function recordInit(
   methodCode: PaymentMethodCode,
   charge: Money,
 ): Promise<ChargeInitResult> {
-  const { error } = await getSupabaseServiceClient()
+  const { data, error } = await getSupabaseServiceClient()
     .from("payment_attempt")
     .update({
       provider_reference: init.reference,
@@ -187,7 +262,10 @@ async function recordInit(
       updated_at: new Date().toISOString(),
     })
     .eq("id", attempt.id)
-    .eq("provider_reference", claimedReference);
+    .eq("provider_reference", claimedReference)
+    .in("status", ["initiated", "pending"])
+    .select("id")
+    .maybeSingle();
   if (error) {
     logger.error(
       `Failed storing provider reference on payment_attempt: ${error.message}`,
@@ -195,6 +273,10 @@ async function recordInit(
     );
     return { status: 500, message: "Something went wrong!" };
   }
+  // Closed while the page was being opened (the buyer changed the order or
+  // the method): that page must not be handed out. Its reference stays on
+  // the closed attempt, so a payment on it would still be refunded.
+  if (!data) return { status: 409, message: STALE_MESSAGE, stale: true };
   return { status: 200, data: init };
 }
 
@@ -327,6 +409,11 @@ export async function initiateChargeForAttempt(input: {
   if (cached && !canChargeCardDirect && !canChargeMomoDirect) {
     return { status: 200, data: cached };
   }
+  // Claimed by another request that is still opening its page: wait for
+  // that page rather than retiring the attempt from under it.
+  if (attempt.provider_reference && !cached && claimInFlight(attempt)) {
+    return awaitClaimedCharge(attempt.id, account.provider);
+  }
   // Starting a new charge on an attempt that already handed one out would
   // orphan the first reference; retire it and let the caller start fresh.
   if (attempt.provider_reference) {
@@ -346,11 +433,7 @@ export async function initiateChargeForAttempt(input: {
     return { status: 500, message: "Something went wrong!" };
   }
   if (claim === "taken") {
-    return {
-      status: 409,
-      message: "This payment is already being started. Please wait a moment.",
-      stale: true,
-    };
+    return awaitClaimedCharge(attempt.id, account.provider);
   }
 
   try {
@@ -383,6 +466,10 @@ export async function initiateChargeForAttempt(input: {
     }
     return recordInit(attempt, reference, init, methodCode, amount);
   } catch (error) {
+    // The claim would otherwise sit with no page, and every retry within
+    // CLAIM_IN_FLIGHT_MS would wait for one. The reference stays on the
+    // retired attempt in case the provider did open something.
+    await retireAttempt(attempt, "Payment could not be started");
     return describeFailure(
       error,
       methodCode === "mobile_money"

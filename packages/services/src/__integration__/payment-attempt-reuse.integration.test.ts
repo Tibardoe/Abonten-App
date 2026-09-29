@@ -40,13 +40,18 @@ import {
 type Args<F extends keyof Database["public"]["Functions"]> =
   Database["public"]["Functions"][F]["Args"];
 
-/** An in-memory Paystack: remembers every checkout it opened and its amount. */
-function fakePaystack() {
+/**
+ * An in-memory Paystack: remembers every checkout it opened and its amount.
+ * `delayMs` holds each page open that long, the way a real provider call
+ * does, so concurrent requests overlap while one is in flight.
+ */
+function fakePaystack({ delayMs = 0 }: { delayMs?: number } = {}) {
   const opened = new Map<string, number>();
   const paid = new Set<string>();
   const refunds: string[] = [];
   vi.spyOn(paystackProvider, "initializeCheckout").mockImplementation(
     async (_account, input): Promise<CheckoutInit> => {
+      if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
       opened.set(input.reference, input.amount.amountMinor);
       return {
         mode: "popup",
@@ -238,6 +243,97 @@ describe("payment attempt reuse is bound to one charge", () => {
       .eq("checkout_session_id", sessionA)
       .in("status", ["initiated", "pending", "processing"]);
     expect(open?.length).toBe(1);
+  });
+
+  // Before 2026-09-29 the requests that lost the claim cancelled the
+  // attempt while the winner's page was still opening, then opened a second
+  // page: two checkouts, the first on a cancelled attempt. A slow provider
+  // makes that overlap certain instead of occasional.
+  it("a double-tapped Pay while the provider is slow still opens one charge", async () => {
+    const provider = fakePaystack({ delayMs: 1500 });
+    const sessionA = await openSession(0);
+    const start = () =>
+      createMultiCheckoutPaymentAttemptCore(
+        buyer.client,
+        buyer.id,
+        "buyer@example.com",
+        { checkoutSessionIds: [sessionA], method: "card", platform: "web" },
+        (id) => `https://example.test/checkout/${id}`,
+        deps,
+      );
+    // The later taps arrive while the first one's page is still opening.
+    const first = start();
+    await new Promise((r) => setTimeout(r, 700));
+    const results = await Promise.all([first, start(), start()]);
+    expect(provider.opened.size).toBe(1);
+    const refs = new Set(
+      results.flatMap((r) =>
+        r.status === 200 && r.data.payment ? [r.data.payment.reference] : [],
+      ),
+    );
+    expect(refs.size).toBe(1);
+    // The one page belongs to an attempt that is still open.
+    const [ref] = [...provider.opened.keys()];
+    const { data: owner } = await service
+      .from("payment_attempt")
+      .select("status")
+      .eq("provider_reference", ref)
+      .single();
+    expect(["initiated", "pending"]).toContain(owner?.status);
+  });
+
+  it("a double-tapped Pay for two events keeps both in one group and one charge", async () => {
+    const provider = fakePaystack({ delayMs: 300 });
+    const sessionA = await openSession(0);
+    const sessionB = await openSession(1);
+    const start = (ids: string[]) =>
+      createMultiCheckoutPaymentAttemptCore(
+        buyer.client,
+        buyer.id,
+        "buyer@example.com",
+        { checkoutSessionIds: ids, method: "card", platform: "web" },
+        (id) => `https://example.test/checkout/${id}`,
+        deps,
+      );
+    // The second tap even lists the events the other way round.
+    const results = await Promise.all([
+      start([sessionA, sessionB]),
+      start([sessionB, sessionA]),
+      start([sessionA, sessionB]),
+    ]);
+    expect(provider.opened.size).toBe(1);
+    expect([...provider.opened.values()]).toEqual([10500]);
+    const { data: open } = await service
+      .from("payment_attempt")
+      .select("id, payment_group_id")
+      .in("checkout_session_id", [sessionA, sessionB])
+      .in("status", ["initiated", "pending"]);
+    expect(open).toHaveLength(2);
+    expect(new Set(open?.map((a) => a.payment_group_id)).size).toBe(1);
+    for (const r of results) {
+      if (r.status === 200) {
+        expect(r.data.paymentGroupId).toBe(open?.[0].payment_group_id);
+      }
+    }
+  });
+
+  it("a provider error leaves nothing half-started: the next Pay opens a page", async () => {
+    const provider = fakePaystack();
+    const sessionA = await openSession(0);
+    vi.spyOn(paystackProvider, "initializeCheckout").mockRejectedValueOnce(
+      new Error("provider unavailable"),
+    );
+    const failed = await createMultiCheckoutPaymentAttemptCore(
+      buyer.client,
+      buyer.id,
+      "buyer@example.com",
+      { checkoutSessionIds: [sessionA], method: "card", platform: "web" },
+      (id) => `https://example.test/checkout/${id}`,
+      deps,
+    );
+    expect(failed.status).toBe(500);
+    const again = await pay([sessionA]);
+    expect(provider.opened.get(again.payment?.reference as string)).toBe(5250);
   });
 
   it("changing the basket retires the old checkout instead of reusing it", async () => {
