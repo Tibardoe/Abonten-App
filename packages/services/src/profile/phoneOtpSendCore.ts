@@ -36,7 +36,7 @@ export async function sendPhoneOtpCore(input: {
   }
   const phoneE164 = parsed.e164;
 
-  const route = await routeOtpForPhone(phoneE164);
+  const route = await routeOtpForPhone(phoneE164, { purpose: input.purpose });
   if (!route.ok) {
     return {
       status:

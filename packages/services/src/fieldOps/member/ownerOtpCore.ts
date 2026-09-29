@@ -8,6 +8,7 @@ import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { routeOtpForPhone } from "../../profile/otpProviders/otpRouter";
 import type {
   OtpSendResult,
+  OtpSenderCode,
   OtpVerifyResult,
 } from "../../profile/otpProviders/types";
 import { findOrCreateUserByPhone } from "../../profile/phoneAuthCore";
@@ -201,7 +202,7 @@ export async function requestOwnerOtpCore(
     };
   }
   // Tests inject a fake sender; production routes by the number's market.
-  let providerCode: "hubtel" | "twilio" = "hubtel";
+  let providerCode: OtpSenderCode = "hubtel";
   let send = deps.sendOtp;
   if (!send) {
     const route = await routeOtpForPhone(phone);

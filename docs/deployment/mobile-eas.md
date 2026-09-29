@@ -4,8 +4,8 @@ purpose: How the Android app is built, updated over the air and (eventually) sub
 audience: Engineers
 scope: apps/mobile, eas.json, EAS project @abonten-hub/abonten
 status: Approved
-version: 1.3
-lastReviewed: 2026-09-17
+version: 1.4
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -51,7 +51,17 @@ iOS specifics (2026-09-15): `ios.appleTeamId` is `KDDBR5P4D6` (Abonten Hub Ltd's
 
 ## Stores
 
-Android: Play listing not yet live (`ANDROID_APP_LISTED` false hides the store link on the invite page) — Data safety form must match the Privacy Policy (legal F2). iOS: Apple Developer enrolment complete (2026-09-15, team `KDDBR5P4D6`); the first production build needs one interactive `eas build --platform ios --profile production` from a terminal so EAS can sign in to Apple (two-factor), register the App ID `com.abonten.app` with Push Notifications + Associated Domains and create the EAS-managed distribution certificate, provisioning profile and push key — after that non-interactive builds work. Apple sign-in needs eas-cli ≥ 24.5.0 (older versions fail with "iTunes service key is empty"). Nothing submitted yet. Store submission steps: `../mobile/08-phase-6-release-prep.md` §9.
+Android: Play listing not yet live (`ANDROID_APP_LISTED` false hides the store link on the invite page) — Data safety form must match the Privacy Policy (legal F2). iOS: Apple Developer enrolment complete (2026-09-15, team `KDDBR5P4D6`); the first production build needs one interactive `eas build --platform ios --profile production` from a terminal so EAS can sign in to Apple (two-factor), register the App ID `com.abonten.app` with Push Notifications + Associated Domains and create the EAS-managed distribution certificate, provisioning profile and push key — after that non-interactive builds work. Apple sign-in needs eas-cli ≥ 24.5.0 (older versions fail with "iTunes service key is empty"). Builds go to TestFlight (internal testing); the first external beta review (0.2.0 (6), 2026-09-15) was rejected under Guideline 2.1(a) because no demo account was given, which "App Review sign-in" below answers. Not yet submitted to the App Store. Store submission steps: `../mobile/08-phase-6-release-prep.md` §9.
+
+## App Review sign-in
+
+App Review (TestFlight external testing and the App Store) needs a demo account it can sign in with. Abonten signs people in only with one-time codes, which a reviewer cannot receive, so one phone number gets a fixed code instead of a text message (`packages/services/src/profile/otpProviders/appReviewOtpProvider.ts`, 2026-09-29):
+
+- **Settings** — `APP_REVIEW_PHONE_E164` (the number, E.164) and `APP_REVIEW_OTP_CODE` (exactly six digits, random) on the web project's **Production** environment only. Both missing or malformed: off, and the number is an ordinary one again. The number must never belong to anyone's real Abonten account: whoever holds the number and code signs in to that account.
+- **Scope** — only a sign-in routes there (`routeOtpForPhone(…, { purpose: "sign-in" })`); a phone change or a Field Ops owner's consent for the same number goes to the market's provider as usual. The usual limits still hold: five guesses a code, ten codes a day for the number. Each request and check is logged (`app_review_code_requested` / `app_review_code_checked`, never the code).
+- **App Store Connect** — TestFlight › Test Information › Beta App Review Information (and the App Store version's App Review Information): "Sign-in required" on, user name = the number, password = the code, and notes saying to choose "Continue with phone", pick Ghana (+233) and enter the six-digit code. While production Paystack runs on test keys the notes also give Paystack's public test card, and must change when live keys go in. `asc testflight review edit` sets these from a terminal.
+- **Rotation** — change the code in Vercel and in App Store Connect together. Remove both settings when no review is pending if you prefer; a pending review then fails to sign in.
+- A phone sign-in on a second device signs the first out (every phone sign-in sets a new one-time password), so two reviewers at once can bump each other. Reviewers act in production: remove any test listing they create.
 
 ## After an update
 

@@ -9,6 +9,8 @@ import { logger } from "@abonten/core/logger";
 import type { OtpProviderCode } from "@abonten/core/market/types";
 import { getDefaultMarket, marketForPhone } from "../../markets/marketConfig";
 import { getSupabaseServiceClient } from "../../supabase/serviceClient";
+import type { PhoneOtpPurpose } from "../phoneOtpStore";
+import { appReviewOtpProvider, isAppReviewPhone } from "./appReviewOtpProvider";
 import { hubtelOtpProvider } from "./hubtelOtpProvider";
 import { twilioVerifyProvider } from "./twilioVerifyProvider";
 import type { OtpProvider } from "./types";
@@ -18,7 +20,9 @@ const PROVIDERS: Record<OtpProviderCode, OtpProvider> = {
   twilio: twilioVerifyProvider,
 };
 
+/** The provider that issued a pending code (market providers + App Review). */
 export function getOtpProvider(code: string): OtpProvider | null {
+  if (code === appReviewOtpProvider.code) return appReviewOtpProvider;
   return PROVIDERS[code as OtpProviderCode] ?? null;
 }
 
@@ -35,7 +39,10 @@ export type OtpRoute =
         | "busy";
     };
 
-export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
+export async function routeOtpForPhone(
+  phoneE164: string,
+  options: { purpose?: PhoneOtpPurpose } = {},
+): Promise<OtpRoute> {
   const { market, numberCountry: countryCode } =
     await marketForPhone(phoneE164);
   if (!countryCode) {
@@ -54,6 +61,15 @@ export async function routeOtpForPhone(phoneE164: string): Promise<OtpRoute> {
       ok: false,
       reason: "no_market",
       message: `Phone sign-in isn't available for ${countryName} numbers yet. Sign in with Google or email instead.`,
+    };
+  }
+  // App store reviewers' demo number: a fixed code, no text message, so
+  // neither the market's provider nor the SMS ceiling applies. Sign-in only.
+  if (options.purpose === "sign-in" && isAppReviewPhone(phoneE164)) {
+    return {
+      ok: true,
+      provider: appReviewOtpProvider,
+      countryCode: market.countryCode,
     };
   }
   const provider = market.otpProvider ? PROVIDERS[market.otpProvider] : null;
