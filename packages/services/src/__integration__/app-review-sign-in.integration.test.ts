@@ -32,6 +32,7 @@ const ENV = [
   "APP_REVIEW_OTP_CODE",
   "HUBTEL_API_CLIENT_ID",
   "HUBTEL_API_CLIENT_SECRET",
+  "HUBTEL_SMS_SENDER_ID",
 ];
 
 // Assigning undefined would store the string "undefined" in process.env.
@@ -70,6 +71,7 @@ describe("App Review sign-in", () => {
     // Hubtel "configured", so choosing App Review is a real routing decision.
     process.env.HUBTEL_API_CLIENT_ID = "test-hubtel-id";
     process.env.HUBTEL_API_CLIENT_SECRET = "test-hubtel-secret";
+    process.env.HUBTEL_SMS_SENDER_ID = "Abontenhub";
     hubtelSend.mockImplementation(async () => ({
       ok: true,
       requestId: crypto.randomUUID(),

@@ -4,8 +4,8 @@ purpose: How Abonten runs in more than one country — the market model and its 
 audience: Engineers, operations, finance
 scope: supabase/migrations/20260924100000..20260925100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.4
-lastReviewed: 2026-09-25
+version: 1.5
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -23,8 +23,8 @@ refuses to go live until its readiness checks pass. Ghana is the first,
 default and only live market; every other seeded country is a draft.
 
 Nothing about Ghana changed for people using it: same prices, same
-Paystack account and keys, same mobile money, same 4-digit Hubtel codes,
-same times. What changed is that none of it is assumed any more.
+Paystack account and keys, same mobile money, same Hubtel text-message
+codes (four digits then; six, made by Abonten, since 2026-09-29), same times. What changed is that none of it is assumed any more.
 
 ## 1. The market
 
@@ -265,8 +265,8 @@ events, list networks/banks, transfer recipient + transfer, probe.
   Guernsey, +1 876 … Jamaica — belongs to the code's main country's market);
   no codes for draft or preparing markets; an hourly send ceiling per
   country (5,000 default market, 300 elsewhere) stops SMS pumping.
-  Providers: Hubtel (Ghana, 4 digits) or
-  Twilio Verify (6 digits); the pending code remembers its provider; the
+  Providers: Hubtel (Ghana: Abonten-made 6-digit codes over Hubtel's SMS
+  API since 2026-09-29) or Twilio Verify (6 digits); the pending code remembers its provider; the
   code length travels to the client.
 - **Home market** — `user_info.country_code`, set from a new phone
   account's number when that market is open, changeable only through the

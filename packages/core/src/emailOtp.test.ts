@@ -7,7 +7,7 @@ import {
 } from "./emailOtp";
 
 describe("emailOtp helpers", () => {
-  it("email OTP is 6 digits (Supabase), distinct from Hubtel's 4", () => {
+  it("email OTP is 6 digits (Supabase's auth.email.otp_length)", () => {
     expect(EMAIL_OTP_CODE_LENGTH).toBe(6);
   });
 

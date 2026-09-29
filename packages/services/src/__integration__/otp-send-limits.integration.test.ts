@@ -42,9 +42,16 @@ describe("text-message code limits", () => {
 
   beforeAll(async () => {
     service = getServiceClient();
-    for (const name of ["HUBTEL_API_CLIENT_ID", "HUBTEL_API_CLIENT_SECRET"]) {
+    for (const name of [
+      "HUBTEL_API_CLIENT_ID",
+      "HUBTEL_API_CLIENT_SECRET",
+      "HUBTEL_SMS_SENDER_ID",
+    ]) {
       saved[name] = process.env[name];
-      process.env[name] = `test-${name.toLowerCase()}`;
+      process.env[name] =
+        name === "HUBTEL_SMS_SENDER_ID"
+          ? "Abontenhub"
+          : `test-${name.toLowerCase()}`;
     }
     invalidateMarketCache();
     send.mockImplementation(async () => ({

@@ -30,6 +30,7 @@ import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import PlaceOpeningHoursEditor from "@/places/molecules/PlaceOpeningHoursEditor";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type {
   FieldOpsOnboardingDraft,
@@ -714,7 +715,9 @@ export default function OnboardingWizard({
                     <Button
                       type="button"
                       onClick={verifyCode}
-                      disabled={pending || code.length < 4}
+                      disabled={
+                        pending || code.length < DEFAULT_PHONE_OTP_CODE_LENGTH
+                      }
                     >
                       Verify
                     </Button>

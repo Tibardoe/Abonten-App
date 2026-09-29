@@ -245,8 +245,9 @@ export async function runHealthChecksCore(
     });
   }
 
-  // hubtel (OTP/SMS) — auth ping only. The gateway can be slow to answer a
-  // bare root GET, so give it a longer ceiling than the other probes and
+  // hubtel (the SMS API that carries sign-in codes) — auth ping only. The
+  // gateway can be slow to answer a bare root request, so give it a longer
+  // ceiling than the other probes and
   // treat "reachable (any HTTP response) = ok; only a network failure is
   // down" — a single slow response should not page anyone.
   if (config.hubtelClientId && config.hubtelClientSecret) {
@@ -255,7 +256,7 @@ export async function runHealthChecksCore(
     ).toString("base64");
     const hb = await timed(() =>
       httpProbe(
-        "https://api-otp.hubtel.com/",
+        "https://sms.hubtel.com/",
         { method: "HEAD", headers: { Authorization: `Basic ${basic}` } },
         [200, 401, 403, 404, 405],
         10_000,

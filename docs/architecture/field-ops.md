@@ -442,10 +442,12 @@ payout destination saved by the member → admin builds a batch → a
 clean, and the commission timeline reads
 `pending → approved → in_payout → paid` with the right actor on each step.
 
-The SMS leg is the one part not exercised end to end: Hubtel generates and
-holds the code, so a real message to a real handset is the only way to
-complete it. The integration suite covers that path with the Hubtel client
-faked; the browser run used the same cores with the same fake.
+The SMS leg is the one part not exercised end to end: only a real message
+to a real handset completes it. The integration suite covers that path with
+the sender faked; the browser run used the same cores with the same fake.
+(Since 2026-09-29 Abonten makes the 6-digit code and Hubtel's SMS API only
+carries it; the owner code screens read the length from
+`DEFAULT_PHONE_OTP_CODE_LENGTH`.)
 
 **What the run fixed.** A worker typing a phone number the normal Ghanaian
 way (`024…`) had it turned into `+024…` and the submission was refused at

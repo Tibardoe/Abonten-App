@@ -4,8 +4,8 @@ purpose: What automated tests exist, how to run them, what they cover, and what 
 audience: Engineers
 scope: Vitest unit tests, the Supabase integration suite, parity and documentation checks
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-27
+version: 1.3
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -29,7 +29,7 @@ npm run test:integration
 npm run test:db:down
 ```
 
-Covers: authz and RLS (`authz`, `sec001-*`, `money-path-lockdown`, `promo-subscription-lockdown`, `review-response-authz`), checkout concurrency/idempotency/time guards, discovery filters, ratings, email auth, messaging (service, moderation, reactions, realtime), support admin, credits (ledger, authz, concurrency, admin ops, redemption, ticket redemption), rewards (event referral, friend referral, rebates, P8, notification delivery), field ops (rbac, lifecycle, assignments, onboarding, sweep, payouts, events/claims, content, analytics). Hubtel is faked via injected `sendOtp`/`verifyOtp` deps; Paystack is not called.
+Covers: authz and RLS (`authz`, `sec001-*`, `money-path-lockdown`, `promo-subscription-lockdown`, `review-response-authz`), checkout concurrency/idempotency/time guards, discovery filters, ratings, email auth, messaging (service, moderation, reactions, realtime), support admin, credits (ledger, authz, concurrency, admin ops, redemption, ticket redemption), rewards (event referral, friend referral, rebates, P8, notification delivery), field ops (rbac, lifecycle, assignments, onboarding, sweep, payouts, events/claims, content, analytics). Field ops fakes Hubtel via injected `sendOtp`/`verifyOtp` deps; phone sign-in (`hubtel-sms-sign-in`, `otp-send-*`) runs the real send path with Hubtel's SMS API stubbed at `fetch`; Paystack is not called.
 
 The setup script copies migrations to a temp dir and neutralises a few documented statements that cannot replay by timestamp alone; production is never touched. A from-scratch replay is fingerprint-compared to production after schema work.
 

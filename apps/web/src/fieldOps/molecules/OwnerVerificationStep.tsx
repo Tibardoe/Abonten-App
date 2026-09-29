@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toE164 } from "@/fieldOps/lib/wizardStorage";
 import { useToast } from "@/hooks/useToast";
+import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useState, useTransition } from "react";
 
 /**
@@ -149,9 +150,9 @@ export default function OwnerVerificationStep({
             value={code}
             onChange={(v) => {
               setCode(v);
-              if (v.length === 4) verify(v);
+              if (v.length === DEFAULT_PHONE_OTP_CODE_LENGTH) verify(v);
             }}
-            length={4}
+            length={DEFAULT_PHONE_OTP_CODE_LENGTH}
           />
         </div>
       ) : null}
