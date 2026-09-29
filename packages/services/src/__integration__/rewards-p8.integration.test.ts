@@ -827,13 +827,17 @@ describe("Rewards Phase 8: loyalty, promoter commissions, place visits", () => {
     const period = lastMonth.toISOString().slice(0, 10);
     const visitedAt = new Date(`${period}T12:00:00Z`).toISOString();
 
+    // A visitor's account must be a day older than the visit (the rule's
+    // min_visitor_account_age_hours) and the visits are dated the 1st of
+    // last month, up to 62 days ago. 60 days failed late in the month
+    // (from 12:00 UTC on 29 September 2026).
     const counted = await Promise.all([
-      newUser({ ageDays: 60 }),
-      newUser({ ageDays: 60 }),
-      newUser({ ageDays: 60 }),
+      newUser({ ageDays: 90 }),
+      newUser({ ageDays: 90 }),
+      newUser({ ageDays: 90 }),
     ]);
-    const noPhone = await newUser({ phone: false, ageDays: 60 });
-    const twin = await newUser({ ageDays: 60 });
+    const noPhone = await newUser({ phone: false, ageDays: 90 });
+    const twin = await newUser({ ageDays: 90 });
     await service.from("device_install").insert([
       {
         install_id: `inst-${owner.id}`,
