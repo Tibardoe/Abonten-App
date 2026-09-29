@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
 import type { ClientPlatform } from "@abonten/core/market/types";
 import { money, toMajor } from "@abonten/core/money/money";
@@ -133,6 +133,27 @@ async function dropOpenAttempts(
   return "ok";
 }
 
+/**
+ * The payment group for a set of attempts, derived from their ids. Two
+ * requests for the same order (a double-tapped Pay) reuse the same open
+ * attempts, so they arrive at the same group whatever order their writes
+ * land in; a random id per request could leave one member in each group,
+ * and finalizePayment fans a payment out by the primary's group only.
+ */
+function groupIdForAttempts(attemptIds: string[]): string {
+  const hex = createHash("sha256")
+    .update(`payment-group:${[...attemptIds].sort().join(",")}`)
+    .digest("hex");
+  // Shaped as a version-5-style UUID so it reads like the others.
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    `5${hex.slice(13, 16)}`,
+    `${((Number.parseInt(hex[16], 16) & 0x3) | 0x8).toString(16)}${hex.slice(17, 20)}`,
+    hex.slice(20, 32),
+  ].join("-");
+}
+
 function withNoInvalidSessions(result: {
   status: 409 | 500;
   message: string;
@@ -248,7 +269,6 @@ export async function createMultiCheckoutPaymentAttemptCore(
   // another charge (the basket or price changed since); chargeInit retires
   // it and the second pass starts everything fresh.
   for (let pass = 0; pass < 2; pass++) {
-    const paymentGroupId = randomUUID();
     const insertedAttempts: PaymentAttemptRow[] = [];
 
     for (const session of prepared.validSessions) {
@@ -259,23 +279,46 @@ export async function createMultiCheckoutPaymentAttemptCore(
         session.total,
         prepared.currency,
         choice.paymentMethodId,
-        paymentGroupId,
+        undefined,
         { countryCode: prepared.countryCode, provider: providerCode },
         { taxMinor: session.taxMinor, method: choice.methodCode },
       );
 
+      // 409: another request is starting this same payment right now (a
+      // double-tapped Pay). Its attempts are shared with this one, so
+      // nothing is cancelled; the buyer is told to wait.
+      if (result.status === 409) {
+        return { status: 409, message: result.message, invalidSessionIds: [] };
+      }
       if (result.status !== 200) {
         // Roll back everything already created in this group so a failed
         // multi-pay attempt never leaves a half-formed group behind.
         if (insertedAttempts.length > 0) {
           await cancel(insertedAttempts.map((a) => a.id));
         }
-        return result.status === 409
-          ? { status: 409, message: result.message, invalidSessionIds: [] }
-          : { status: 500, message: "Something went wrong!" };
+        return { status: 500, message: "Something went wrong!" };
       }
 
       insertedAttempts.push(result.data);
+    }
+
+    const paymentGroupId = groupIdForAttempts(
+      insertedAttempts.map((a) => a.id),
+    );
+    const { error: groupError } = await service
+      .from("payment_attempt")
+      .update({
+        payment_group_id: paymentGroupId,
+        updated_at: new Date().toISOString(),
+      })
+      .in(
+        "id",
+        insertedAttempts.map((a) => a.id),
+      )
+      .eq("user_id", userId);
+    if (groupError) {
+      logger.error(`Failed grouping payment attempts: ${groupError.message}`);
+      return { status: 500, message: "Something went wrong!" };
     }
 
     // Only the group's primary attempt is charged — one charge covers the
@@ -290,7 +333,12 @@ export async function createMultiCheckoutPaymentAttemptCore(
       await cancel(insertedAttempts.map((a) => a.id));
       continue;
     }
-    const primary = started[0] ?? insertedAttempts[0];
+    // With nothing started yet, the primary is picked by id rather than by
+    // the order the sessions were sent in, so two requests for the same
+    // order both claim the same attempt and only one can open a charge.
+    const primary =
+      started[0] ??
+      [...insertedAttempts].sort((a, b) => a.id.localeCompare(b.id))[0];
     const attempts = [
       primary,
       ...insertedAttempts.filter((a) => a.id !== primary.id),
@@ -314,6 +362,14 @@ export async function createMultiCheckoutPaymentAttemptCore(
           : `Tickets for ${prepared.validSessions.length} events`,
     });
 
+    // Another request is still opening this charge: leave its attempts be.
+    if (chargeResult.status === 409 && "busy" in chargeResult) {
+      return {
+        status: 409,
+        message: chargeResult.message,
+        invalidSessionIds: [],
+      };
+    }
     if (chargeResult.status !== 200) {
       await cancel(insertedAttempts.map((a) => a.id));
       if (chargeResult.status === 409 && pass === 0) continue;

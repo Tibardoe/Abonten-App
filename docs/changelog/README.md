@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-29 — A double-tapped Pay opens one charge
+
+- `architecture/global-platform.md` 1.6 ("One attempt, one charge"), `PROJECT.md` §54.
+- Behaviour: when Pay is tapped twice quickly (tickets or promotions), the second request now waits for the first one's payment page and shows that same page, instead of cancelling it and opening a second one. A provider error no longer leaves the order stuck for a retry. Ticket orders for several events always keep their tickets in one payment group. Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-29 — Field Ops owner codes checked with real texts
 
 - `architecture/field-ops.md` (SMS leg now run for real), `PROJECT.md` §53.

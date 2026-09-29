@@ -4,7 +4,7 @@ purpose: How Abonten runs in more than one country — the market model and its 
 audience: Engineers, operations, finance
 scope: supabase/migrations/20260924100000..20260925100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.5
+version: 1.6
 lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -172,7 +172,15 @@ events, list networks/banks, transfer recipient + transfer, probe.
   charge another amount it is retired — cancelled with its reference kept,
   so a late payment on it is refunded — and a fresh attempt starts. A
   reference is never overwritten, only a group's primary carries one, and
-  the database allows one open attempt per checkout.
+  the database allows one open attempt per checkout. A request that loses
+  the claim (a double-tapped Pay) waits up to 12 s for the winner's page and
+  returns that same page; it never retires the attempt (before 2026-09-29
+  it did, which cancelled the winner's charge and opened a second page). A
+  claim with no page after 45 s counts as abandoned and is retired; a
+  provider error after the claim retires the attempt at once. Ticket
+  payment groups are derived from the member attempts' ids, so concurrent
+  requests for one order land in one group, and the primary is chosen by
+  id, not by the order the sessions were sent in.
 - **Charging** — `initiateChargeForAttempt` (hosted page, popup or direct
   charge; direct references are reused, never re-initiated);
   `finalizePayment` verifies with the same provider/market/currency that
