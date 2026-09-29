@@ -1,3 +1,8 @@
+import {
+  FilterChipRow,
+  FilterChoices,
+  FilterSection,
+} from "@/components/filters/FilterSheetParts";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
@@ -14,16 +19,9 @@ import {
   searchPriceOptions,
 } from "@abonten/core/search/searchFilters";
 import type { SearchMode } from "@abonten/types/searchType";
-import {
-  AppText,
-  Button,
-  Chip,
-  Label,
-  Sheet,
-  Skeleton,
-} from "@abonten/ui-native";
+import { AppText, Button, Chip, Sheet, Skeleton } from "@abonten/ui-native";
 import { useEffect, useState } from "react";
-import { Pressable, Switch, View } from "react-native";
+import { Switch, View } from "react-native";
 
 // Filters for global search — its own sheet, not the Explore one. It shows
 // only the filters that narrow the tab you are on (Events: when, distance,
@@ -33,84 +31,6 @@ import { Pressable, Switch, View } from "react-native";
 // the model and what each filter sends.
 
 const EVENT_CATEGORIES = eventCategoriesAndTypes.map((c) => c.category);
-
-function Section({
-  label,
-  hint,
-  active,
-  onClear,
-  first,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  active: boolean;
-  onClear: () => void;
-  first?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <View className={first ? "gap-2.5" : "gap-2.5 border-t border-border pt-5"}>
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
-          <Label>{label}</Label>
-          {active ? (
-            <View className="h-1.5 w-1.5 rounded-full bg-primary" />
-          ) : null}
-        </View>
-        {active ? (
-          <Pressable
-            onPress={onClear}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel={`Clear ${label}`}
-            className="min-h-[32px] justify-center"
-          >
-            <AppText variant="caption" tone="brand" className="font-semibold">
-              Clear
-            </AppText>
-          </Pressable>
-        ) : null}
-      </View>
-      {hint ? (
-        <AppText variant="caption" className="-mt-1">
-          {hint}
-        </AppText>
-      ) : null}
-      {children}
-    </View>
-  );
-}
-
-function Choices<T>({
-  options,
-  value,
-  onChange,
-  disabled,
-}: {
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <View
-      className="flex-row flex-wrap gap-2"
-      style={disabled ? { opacity: 0.45 } : undefined}
-      pointerEvents={disabled ? "none" : "auto"}
-      accessibilityState={{ disabled: !!disabled }}
-    >
-      {options.map((o) => (
-        <Chip
-          key={String(o.value)}
-          label={o.label}
-          selected={o.value === value}
-          onPress={() => onChange(o.value)}
-        />
-      ))}
-    </View>
-  );
-}
 
 export function SearchFilterSheet({
   open,
@@ -161,23 +81,23 @@ export function SearchFilterSheet({
   };
 
   push("when", (first) => (
-    <Section
+    <FilterSection
       key="when"
       label="When"
       first={first}
       active={isActive("when")}
       onClear={() => clear("when")}
     >
-      <Choices
+      <FilterChoices
         options={SEARCH_WHEN_OPTIONS}
         value={draft.when}
         onChange={(v) => set("when", v)}
       />
-    </Section>
+    </FilterSection>
   ));
 
   push("radiusKm", (first) => (
-    <Section
+    <FilterSection
       key="radius"
       label="Distance"
       hint={
@@ -189,40 +109,40 @@ export function SearchFilterSheet({
       active={isActive("radiusKm")}
       onClear={() => clear("radiusKm")}
     >
-      <Choices
+      <FilterChoices
         options={SEARCH_RADIUS_OPTIONS}
         value={draft.radiusKm}
         onChange={(v) => set("radiusKm", v)}
         disabled={!hasLocation}
       />
-    </Section>
+    </FilterSection>
   ));
 
   push("price", (first) => (
-    <Section
+    <FilterSection
       key="price"
       label="Price"
       first={first}
       active={isActive("price")}
       onClear={() => clear("price")}
     >
-      <Choices
+      <FilterChoices
         options={priceOptions}
         value={draft.price}
         onChange={(v) => set("price", v)}
       />
-    </Section>
+    </FilterSection>
   ));
 
   push("eventCategory", (first) => (
-    <Section
+    <FilterSection
       key="eventCategory"
       label={mode === "all" ? "Event category" : "Category"}
       first={first}
       active={isActive("eventCategory")}
       onClear={() => clear("eventCategory")}
     >
-      <View className="flex-row flex-wrap gap-2">
+      <FilterChipRow>
         {EVENT_CATEGORIES.map((name) => (
           <Chip
             key={name}
@@ -233,12 +153,12 @@ export function SearchFilterSheet({
             }
           />
         ))}
-      </View>
-    </Section>
+      </FilterChipRow>
+    </FilterSection>
   ));
 
   push("placeCategoryId", (first) => (
-    <Section
+    <FilterSection
       key="placeCategory"
       label={mode === "all" ? "Place category" : "Category"}
       first={first}
@@ -277,11 +197,11 @@ export function SearchFilterSheet({
           ))}
         </View>
       )}
-    </Section>
+    </FilterSection>
   ));
 
   push("openNow", (first) => (
-    <Section
+    <FilterSection
       key="openNow"
       label="Open now"
       first={first}
@@ -298,23 +218,23 @@ export function SearchFilterSheet({
           accessibilityLabel="Only places open right now"
         />
       </View>
-    </Section>
+    </FilterSection>
   ));
 
   push("minRating", (first) => (
-    <Section
+    <FilterSection
       key="rating"
       label="Rating"
       first={first}
       active={isActive("minRating")}
       onClear={() => clear("minRating")}
     >
-      <Choices
+      <FilterChoices
         options={SEARCH_RATING_OPTIONS}
         value={draft.minRating}
         onChange={(v) => set("minRating", v)}
       />
-    </Section>
+    </FilterSection>
   ));
 
   return (

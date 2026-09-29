@@ -106,7 +106,11 @@ export default function ExploreSectionScreen() {
         null)
       : null;
   const activeChips = isEvent
-    ? describeEventFilters(eventFilters, market?.defaultCurrency ?? "")
+    ? describeEventFilters(
+        eventFilters,
+        market?.defaultCurrency ?? "",
+        market?.priceScale ?? 1,
+      )
     : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
 
   const header = (

@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-29 — Explore filter sheet matches the Search one
+
+- `mobile/guide/navigation-and-screens.md` 1.3 (new "Explore filters").
+- Behaviour (mobile app): the Events and Places filter sheets now use the Search sheet's layout and choices: one-tap When, Distance, Price and Rating choices with an "any" option first, the calendar and price slider only behind "Pick dates" / "Custom range", "Open now" as a switch, and "Reset filters". Distances stay inside the browsed area (1–5 km for events, up to 10 km for places); rating choices are 3+, 4+, 4.5+ stars. Filter chips read "This weekend", "Within 2 km", "Free". Date pickers now open on the month of the chosen date. Migrations, env vars, permissions, jobs: none. Reaches phones with the next update or build.
+
 ## 2026-09-29 — A double-tapped Pay opens one charge
 
 - `architecture/global-platform.md` 1.6 ("One attempt, one charge"), `PROJECT.md` §54.

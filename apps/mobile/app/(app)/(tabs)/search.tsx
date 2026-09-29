@@ -162,8 +162,13 @@ function LegacySearch() {
   const typing = trimmed.length >= 2;
   const activeFilterCount = countActiveEventFilters(filters);
   const filterChips = useMemo(
-    () => describeEventFilters(filters, market?.defaultCurrency ?? ""),
-    [filters, market?.defaultCurrency],
+    () =>
+      describeEventFilters(
+        filters,
+        market?.defaultCurrency ?? "",
+        market?.priceScale ?? 1,
+      ),
+    [filters, market?.defaultCurrency, market?.priceScale],
   );
 
   const showResults =

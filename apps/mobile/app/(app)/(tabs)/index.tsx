@@ -189,7 +189,11 @@ export default function Explore() {
 
   const activeChips =
     tab === "events"
-      ? describeEventFilters(eventFilters, market?.defaultCurrency ?? "")
+      ? describeEventFilters(
+          eventFilters,
+          market?.defaultCurrency ?? "",
+          market?.priceScale ?? 1,
+        )
       : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
 
   const activeCount = tab === "events" ? eventFilterCount : placeFilterCount;
@@ -566,6 +570,7 @@ export default function Explore() {
         placeCategories={placeCategories}
         onApplyEvents={setEventFilters}
         onApplyPlaces={setPlaceFilters}
+        areaLabel={area?.label ?? null}
       />
     </View>
   );

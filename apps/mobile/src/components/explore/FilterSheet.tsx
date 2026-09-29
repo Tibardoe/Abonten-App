@@ -1,86 +1,50 @@
 import {
-  DISTANCE_OPTIONS,
+  FilterChipRow,
+  FilterChoices,
+  FilterSection,
+} from "@/components/filters/FilterSheetParts";
+import {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
+  EXPLORE_EVENT_DISTANCE_OPTIONS,
+  EXPLORE_PLACE_DISTANCE_OPTIONS,
+  EXPLORE_RATING_OPTIONS,
+  EXPLORE_WHEN_OPTIONS,
   type EventFilters,
+  type ExplorePrice,
+  type ExploreWhen,
   type PlaceFilters,
-  RATING_OPTIONS,
   clearEventFilterKey,
   clearPlaceFilterKey,
   countActiveEventFilters,
   countActivePlaceFilters,
+  explorePriceFor,
+  explorePriceOptions,
+  explorePriceRange,
+  exploreWhenFor,
+  exploreWhenRange,
+  withCurrentDistance,
 } from "@/features/discovery/exploreFilters";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceCategory } from "@abonten/types/placeType";
-import { AppText, Button, Chip, Label, Sheet } from "@abonten/ui-native";
+import { AppText, Button, Chip, Sheet } from "@abonten/ui-native";
 import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Switch, View } from "react-native";
 import { DateRangeField } from "./DateRangeField";
 import { PriceRangeField } from "./PriceRangeField";
 
-// Native echo of apps/web/src/components/organisms/FilterModalPopup.tsx.
-// Tab-aware: Category / Types / Price / Date / Rating / Distance for Events;
-// Category / Open now / Rating / Distance for Places. Edits a local draft;
-// "Apply" lifts it, "Clear all" resets to the EMPTY_* defaults.
+// Explore's filters, in the same sheet style as Search's (SearchFilterSheet,
+// shared parts in components/filters/FilterSheetParts): each section starts
+// with its "any" choice, the common answers are one tap ("This weekend",
+// "Free", "Within 2 km", "4+ stars"), and the precise controls (the
+// calendar, the price slider) open only behind "Pick dates" / "Custom
+// range". Events: When, Distance, Price, Category, Type, Rating. Places:
+// Distance, Category, Open now, Rating. Edits a draft; "Show results"
+// applies it, "Reset filters" empties it.
 //
-// Layout notes: the sheet floats up to ~70% of the screen so the sections
-// aren't buried; each group is a card-less block separated by a hairline
-// with an active dot + inline "Clear"; the price slider owns its own
-// horizontal pan (activeOffsetX / failOffsetY in PriceRangeField) so the
-// parent sheet never scrolls while a thumb is dragged, and the chip groups
-// wrap rather than scroll horizontally so there's no gesture contention.
-
-function Section({
-  label,
-  hint,
-  active,
-  onClear,
-  children,
-  first,
-}: {
-  label: string;
-  hint?: string;
-  active?: boolean;
-  onClear?: () => void;
-  children: React.ReactNode;
-  first?: boolean;
-}) {
-  return (
-    <View className={first ? "gap-2.5" : "gap-2.5 border-t border-border pt-5"}>
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
-          <Label>{label}</Label>
-          {active ? (
-            <View className="h-1.5 w-1.5 rounded-full bg-primary" />
-          ) : null}
-        </View>
-        {active && onClear ? (
-          <Pressable
-            onPress={onClear}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel={`Clear ${label} filter`}
-          >
-            <AppText variant="caption" tone="brand" className="font-semibold">
-              Clear
-            </AppText>
-          </Pressable>
-        ) : null}
-      </View>
-      {hint ? (
-        <AppText variant="caption" className="-mt-1">
-          {hint}
-        </AppText>
-      ) : null}
-      {children}
-    </View>
-  );
-}
-
-function Wrap({ children }: { children: React.ReactNode }) {
-  return <View className="flex-row flex-wrap gap-2">{children}</View>;
-}
+// The price slider owns its horizontal pan (activeOffsetX / failOffsetY in
+// PriceRangeField) so the sheet never scrolls while a thumb is dragged.
 
 export function FilterSheet({
   open,
@@ -91,6 +55,7 @@ export function FilterSheet({
   placeCategories,
   onApplyEvents,
   onApplyPlaces,
+  areaLabel,
 }: {
   open: boolean;
   onClose: () => void;
@@ -100,17 +65,28 @@ export function FilterSheet({
   placeCategories: PlaceCategory[];
   onApplyEvents: (next: EventFilters) => void;
   onApplyPlaces: (next: PlaceFilters) => void;
+  /** The area being browsed, for the distance hint ("From Osu"). */
+  areaLabel?: string | null;
 }) {
   const [eDraft, setEDraft] = useState<EventFilters>(eventFilters);
   const [pDraft, setPDraft] = useState<PlaceFilters>(placeFilters);
+  // The When chip tapped in this sheet: dates alone can't tell "Today"
+  // from "This weekend" on a Sunday, or show "Pick dates" before a day is
+  // picked. Null = read it from the dates.
+  const [whenChoice, setWhenChoice] = useState<ExploreWhen | null>(null);
+  // "Custom range" chosen, possibly before the slider has moved.
+  const [customPrice, setCustomPrice] = useState(false);
   const { market } = useMarket();
+  const currency = market?.defaultCurrency ?? "";
+  const priceScale = market?.priceScale ?? 1;
 
-  // Re-seed the draft whenever the sheet is (re)opened so it reflects the
-  // filters currently applied, not a stale edit.
+  // Every opening starts from what is applied, not from an abandoned draft.
   useEffect(() => {
     if (open) {
       setEDraft(eventFilters);
       setPDraft(placeFilters);
+      setWhenChoice(null);
+      setCustomPrice(false);
     }
   }, [open, eventFilters, placeFilters]);
 
@@ -118,14 +94,35 @@ export function FilterSheet({
   const activeCount = isEvents
     ? countActiveEventFilters(eDraft)
     : countActivePlaceFilters(pDraft);
-  const dirty = isEvents
-    ? JSON.stringify(eDraft) !== JSON.stringify(eventFilters)
-    : JSON.stringify(pDraft) !== JSON.stringify(placeFilters);
 
-  const selectedCategoryTypes = isEvents
-    ? (eventCategoriesAndTypes.find((c) => c.category === eDraft.category)
-        ?.types ?? [])
-    : [];
+  const when: ExploreWhen = whenChoice ?? exploreWhenFor(eDraft);
+  const price: ExplorePrice = customPrice
+    ? "custom"
+    : explorePriceFor(eDraft, priceScale);
+  const selectedCategoryTypes =
+    eventCategoriesAndTypes.find((c) => c.category === eDraft.category)
+      ?.types ?? [];
+  const distanceHint = areaLabel ? `From ${areaLabel}` : undefined;
+
+  function chooseWhen(next: ExploreWhen) {
+    setWhenChoice(next);
+    if (next === "dates") return;
+    const range = exploreWhenRange(next);
+    setEDraft((d) => ({
+      ...d,
+      startDate: range?.startDate ?? null,
+      endDate: range?.endDate ?? null,
+    }));
+  }
+
+  function choosePrice(next: ExplorePrice) {
+    if (next === "custom") {
+      setCustomPrice(true);
+      return;
+    }
+    setCustomPrice(false);
+    setEDraft((d) => ({ ...d, ...explorePriceRange(next, priceScale) }));
+  }
 
   function apply() {
     if (isEvents) onApplyEvents(eDraft);
@@ -133,17 +130,246 @@ export function FilterSheet({
     onClose();
   }
 
-  function clearAll() {
+  function reset() {
+    setWhenChoice(null);
+    setCustomPrice(false);
     if (isEvents) setEDraft(EMPTY_EVENT_FILTERS);
     else setPDraft(EMPTY_PLACE_FILTERS);
   }
+
+  const events = (
+    <>
+      <FilterSection
+        first
+        label="When"
+        active={!!(eDraft.startDate || eDraft.endDate) || when === "dates"}
+        onClear={() => {
+          setWhenChoice(null);
+          setEDraft((d) => clearEventFilterKey(d, "date"));
+        }}
+      >
+        <FilterChoices
+          options={EXPLORE_WHEN_OPTIONS}
+          value={when}
+          onChange={chooseWhen}
+        />
+        {when === "dates" ? (
+          <View className="pt-1">
+            <DateRangeField
+              start={eDraft.startDate}
+              end={eDraft.endDate}
+              onChange={({ start, end }) =>
+                setEDraft((d) => ({ ...d, startDate: start, endDate: end }))
+              }
+            />
+          </View>
+        ) : null}
+      </FilterSection>
+
+      <FilterSection
+        label="Distance"
+        hint={distanceHint}
+        active={eDraft.maxDistanceKm != null}
+        onClear={() => setEDraft((d) => clearEventFilterKey(d, "distance"))}
+      >
+        <FilterChoices
+          options={withCurrentDistance(
+            EXPLORE_EVENT_DISTANCE_OPTIONS,
+            eDraft.maxDistanceKm,
+          )}
+          value={eDraft.maxDistanceKm}
+          onChange={(v) => setEDraft((d) => ({ ...d, maxDistanceKm: v }))}
+        />
+      </FilterSection>
+
+      <FilterSection
+        label="Price"
+        active={
+          eDraft.minPrice != null ||
+          eDraft.maxPrice != null ||
+          price === "custom"
+        }
+        onClear={() => {
+          setCustomPrice(false);
+          setEDraft((d) => clearEventFilterKey(d, "price"));
+        }}
+      >
+        <FilterChoices
+          options={explorePriceOptions(currency, priceScale)}
+          value={price}
+          onChange={choosePrice}
+        />
+        {price === "custom" ? (
+          <View className="pt-1">
+            <PriceRangeField
+              currency={currency}
+              scale={priceScale}
+              min={eDraft.minPrice}
+              max={eDraft.maxPrice}
+              onChange={({ min, max }) =>
+                setEDraft((d) => ({ ...d, minPrice: min, maxPrice: max }))
+              }
+            />
+          </View>
+        ) : null}
+      </FilterSection>
+
+      <FilterSection
+        label="Category"
+        active={eDraft.category != null}
+        onClear={() =>
+          setEDraft((d) => ({
+            ...clearEventFilterKey(d, "category"),
+            types: [],
+          }))
+        }
+      >
+        <FilterChipRow>
+          {eventCategoriesAndTypes.map((c) => (
+            <Chip
+              key={c.category}
+              label={c.category}
+              selected={eDraft.category === c.category}
+              onPress={() =>
+                setEDraft((d) => ({
+                  ...d,
+                  category: d.category === c.category ? null : c.category,
+                  types: [],
+                }))
+              }
+            />
+          ))}
+        </FilterChipRow>
+      </FilterSection>
+
+      {eDraft.category && selectedCategoryTypes.length > 0 ? (
+        <FilterSection
+          label="Type"
+          hint={`Any number within ${eDraft.category}`}
+          active={eDraft.types.length > 0}
+          onClear={() => setEDraft((d) => ({ ...d, types: [] }))}
+        >
+          <FilterChipRow>
+            {selectedCategoryTypes.map((type) => {
+              const on = eDraft.types.includes(type);
+              return (
+                <Chip
+                  key={type}
+                  label={type}
+                  selected={on}
+                  onPress={() =>
+                    setEDraft((d) => ({
+                      ...d,
+                      types: on
+                        ? d.types.filter((t) => t !== type)
+                        : [...d.types, type],
+                    }))
+                  }
+                />
+              );
+            })}
+          </FilterChipRow>
+        </FilterSection>
+      ) : null}
+
+      <FilterSection
+        label="Rating"
+        active={eDraft.minRating != null}
+        onClear={() => setEDraft((d) => clearEventFilterKey(d, "rating"))}
+      >
+        <FilterChoices
+          options={EXPLORE_RATING_OPTIONS}
+          value={eDraft.minRating}
+          onChange={(v) => setEDraft((d) => ({ ...d, minRating: v }))}
+        />
+      </FilterSection>
+    </>
+  );
+
+  const places = (
+    <>
+      <FilterSection
+        first
+        label="Distance"
+        hint={distanceHint}
+        active={pDraft.maxDistanceKm != null}
+        onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "distance"))}
+      >
+        <FilterChoices
+          options={withCurrentDistance(
+            EXPLORE_PLACE_DISTANCE_OPTIONS,
+            pDraft.maxDistanceKm,
+          )}
+          value={pDraft.maxDistanceKm}
+          onChange={(v) => setPDraft((d) => ({ ...d, maxDistanceKm: v }))}
+        />
+      </FilterSection>
+
+      <FilterSection
+        label="Category"
+        active={pDraft.categoryId != null}
+        onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "category"))}
+      >
+        {placeCategories.length === 0 ? (
+          <AppText variant="caption">
+            Categories will load when you're online.
+          </AppText>
+        ) : (
+          <FilterChipRow>
+            {placeCategories.map((c) => (
+              <Chip
+                key={c.id}
+                label={c.name}
+                selected={pDraft.categoryId === c.id}
+                onPress={() =>
+                  setPDraft((d) => ({
+                    ...d,
+                    categoryId: d.categoryId === c.id ? null : c.id,
+                  }))
+                }
+              />
+            ))}
+          </FilterChipRow>
+        )}
+      </FilterSection>
+
+      <FilterSection
+        label="Open now"
+        active={pDraft.openNow}
+        onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "openNow"))}
+      >
+        <View className="min-h-[44px] flex-row items-center justify-between">
+          <AppText variant="body" className="flex-1">
+            Only places open right now
+          </AppText>
+          <Switch
+            value={pDraft.openNow}
+            onValueChange={(v) => setPDraft((d) => ({ ...d, openNow: v }))}
+            accessibilityLabel="Only places open right now"
+          />
+        </View>
+      </FilterSection>
+
+      <FilterSection
+        label="Rating"
+        active={pDraft.minRating != null}
+        onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "rating"))}
+      >
+        <FilterChoices
+          options={EXPLORE_RATING_OPTIONS}
+          value={pDraft.minRating}
+          onChange={(v) => setPDraft((d) => ({ ...d, minRating: v }))}
+        />
+      </FilterSection>
+    </>
+  );
 
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title="Filters"
-      minHeightRatio={0.7}
+      title={isEvents ? "Filter events" : "Filter places"}
+      minHeightRatio={0.6}
       maxHeightRatio={0.92}
       footer={
         <View className="gap-2">
@@ -156,265 +382,12 @@ export function FilterSheet({
             onPress={apply}
           />
           {activeCount > 0 ? (
-            <Button
-              title="Clear all filters"
-              variant="ghost"
-              onPress={clearAll}
-            />
+            <Button title="Reset filters" variant="ghost" onPress={reset} />
           ) : null}
         </View>
       }
     >
-      <View className="flex-row items-center gap-2 pb-4">
-        {activeCount > 0 ? (
-          <View className="min-w-[20px] items-center rounded-full bg-primary px-1.5 py-0.5">
-            <AppText className="text-[12px] font-bold text-primary-foreground">
-              {activeCount}
-            </AppText>
-          </View>
-        ) : null}
-        <AppText variant="meta" className="flex-1">
-          {activeCount === 0
-            ? "No filters applied"
-            : `${activeCount} filter${activeCount === 1 ? "" : "s"} selected`}
-        </AppText>
-        {dirty ? (
-          <AppText variant="caption" tone="brand" className="font-semibold">
-            Not applied yet
-          </AppText>
-        ) : null}
-      </View>
-
-      {isEvents ? (
-        <View className="gap-5">
-          <Section
-            first
-            label="Category"
-            active={eDraft.category != null}
-            onClear={() => setEDraft((d) => clearEventFilterKey(d, "category"))}
-          >
-            <Wrap>
-              {eventCategoriesAndTypes.map((c) => (
-                <Chip
-                  key={c.category}
-                  showCheck
-                  label={c.category}
-                  selected={eDraft.category === c.category}
-                  onPress={() =>
-                    setEDraft((d) => ({
-                      ...d,
-                      category: d.category === c.category ? null : c.category,
-                      types: d.category === c.category ? [] : d.types,
-                    }))
-                  }
-                />
-              ))}
-            </Wrap>
-          </Section>
-
-          {eDraft.category ? (
-            <Section
-              label="Type"
-              hint={`Types within ${eDraft.category}`}
-              active={eDraft.types.length > 0}
-              onClear={() => setEDraft((d) => ({ ...d, types: [] }))}
-            >
-              <Wrap>
-                {selectedCategoryTypes.map((type) => {
-                  const on = eDraft.types.includes(type);
-                  return (
-                    <Chip
-                      key={type}
-                      showCheck
-                      label={type}
-                      selected={on}
-                      onPress={() =>
-                        setEDraft((d) => ({
-                          ...d,
-                          types: on
-                            ? d.types.filter((t) => t !== type)
-                            : [...d.types, type],
-                        }))
-                      }
-                    />
-                  );
-                })}
-              </Wrap>
-            </Section>
-          ) : null}
-
-          <Section
-            label="Price"
-            hint={
-              market?.defaultCurrency
-                ? `Ticket price in ${market.defaultCurrency}`
-                : "Ticket price"
-            }
-            active={eDraft.minPrice != null || eDraft.maxPrice != null}
-            onClear={() => setEDraft((d) => clearEventFilterKey(d, "price"))}
-          >
-            <PriceRangeField
-              currency={market?.defaultCurrency ?? ""}
-              scale={market?.priceScale ?? 1}
-              min={eDraft.minPrice}
-              max={eDraft.maxPrice}
-              onChange={({ min, max }) =>
-                setEDraft((d) => ({ ...d, minPrice: min, maxPrice: max }))
-              }
-            />
-          </Section>
-
-          <Section
-            label="Dates"
-            hint="Events with a session in this range"
-            active={!!(eDraft.startDate || eDraft.endDate)}
-            onClear={() => setEDraft((d) => clearEventFilterKey(d, "date"))}
-          >
-            <DateRangeField
-              start={eDraft.startDate}
-              end={eDraft.endDate}
-              onChange={({ start, end }) =>
-                setEDraft((d) => ({ ...d, startDate: start, endDate: end }))
-              }
-            />
-          </Section>
-
-          <Section
-            label="Minimum rating"
-            active={eDraft.minRating != null}
-            onClear={() => setEDraft((d) => clearEventFilterKey(d, "rating"))}
-          >
-            <Wrap>
-              {RATING_OPTIONS.map((r) => (
-                <Chip
-                  key={r.value}
-                  showCheck
-                  label={r.label}
-                  selected={eDraft.minRating === r.value}
-                  onPress={() =>
-                    setEDraft((d) => ({
-                      ...d,
-                      minRating: d.minRating === r.value ? null : r.value,
-                    }))
-                  }
-                />
-              ))}
-            </Wrap>
-          </Section>
-
-          <Section
-            label="Distance"
-            active={eDraft.maxDistanceKm != null}
-            onClear={() => setEDraft((d) => clearEventFilterKey(d, "distance"))}
-          >
-            <Wrap>
-              {DISTANCE_OPTIONS.map((opt) => (
-                <Chip
-                  key={opt.km}
-                  showCheck
-                  label={opt.label}
-                  selected={eDraft.maxDistanceKm === opt.km}
-                  onPress={() =>
-                    setEDraft((d) => ({
-                      ...d,
-                      maxDistanceKm: d.maxDistanceKm === opt.km ? null : opt.km,
-                    }))
-                  }
-                />
-              ))}
-            </Wrap>
-          </Section>
-        </View>
-      ) : (
-        <View className="gap-5">
-          <Section
-            first
-            label="Category"
-            active={pDraft.categoryId != null}
-            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "category"))}
-          >
-            <Wrap>
-              {placeCategories.map((c) => (
-                <Chip
-                  key={c.id}
-                  showCheck
-                  label={c.name}
-                  selected={pDraft.categoryId === c.id}
-                  onPress={() =>
-                    setPDraft((d) => ({
-                      ...d,
-                      categoryId: d.categoryId === c.id ? null : c.id,
-                    }))
-                  }
-                />
-              ))}
-            </Wrap>
-          </Section>
-
-          <Section
-            label="Availability"
-            active={pDraft.openNow}
-            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "openNow"))}
-          >
-            <Wrap>
-              <Chip
-                showCheck
-                label="Open now"
-                selected={pDraft.openNow}
-                onPress={() =>
-                  setPDraft((d) => ({ ...d, openNow: !d.openNow }))
-                }
-              />
-            </Wrap>
-          </Section>
-
-          <Section
-            label="Minimum rating"
-            active={pDraft.minRating != null}
-            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "rating"))}
-          >
-            <Wrap>
-              {RATING_OPTIONS.map((r) => (
-                <Chip
-                  key={r.value}
-                  showCheck
-                  label={r.label}
-                  selected={pDraft.minRating === r.value}
-                  onPress={() =>
-                    setPDraft((d) => ({
-                      ...d,
-                      minRating: d.minRating === r.value ? null : r.value,
-                    }))
-                  }
-                />
-              ))}
-            </Wrap>
-          </Section>
-
-          <Section
-            label="Distance"
-            active={pDraft.maxDistanceKm != null}
-            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "distance"))}
-          >
-            <Wrap>
-              {DISTANCE_OPTIONS.map((opt) => (
-                <Chip
-                  key={opt.km}
-                  showCheck
-                  label={opt.label}
-                  selected={pDraft.maxDistanceKm === opt.km}
-                  onPress={() =>
-                    setPDraft((d) => ({
-                      ...d,
-                      maxDistanceKm: d.maxDistanceKm === opt.km ? null : opt.km,
-                    }))
-                  }
-                />
-              ))}
-            </Wrap>
-          </Section>
-        </View>
-      )}
+      <View className="gap-5 pb-2">{isEvents ? events : places}</View>
     </Sheet>
   );
 }

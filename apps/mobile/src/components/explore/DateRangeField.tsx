@@ -54,7 +54,15 @@ export function DateRangeField({
     t.setHours(0, 0, 0, 0);
     return t;
   }, []);
-  const [view, setView] = useState(() => new Date(today));
+  // Open on the month of the chosen start (a "This weekend" that falls in
+  // next month), else this month.
+  const [view, setView] = useState(() => {
+    if (start) {
+      const [y, m] = start.split("-").map(Number);
+      if (y && m) return new Date(y, m - 1, 1);
+    }
+    return new Date(today);
+  });
 
   const cells = useMemo(() => {
     const year = view.getFullYear();
