@@ -1,3 +1,4 @@
+import { AppleLogo } from "@/auth/AppleLogo";
 import { CountryCodeField } from "@/auth/CountryCodeField";
 import { GoogleIcon } from "@/auth/GoogleIcon";
 import { isAppleSignInAvailable, signInWithApple } from "@/auth/appleSignIn";
@@ -19,7 +20,6 @@ import {
 } from "@abonten/ui-native";
 import { useTheme, useThemeColors } from "@abonten/ui-native/theme";
 import { useQuery } from "@tanstack/react-query";
-import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -220,26 +220,45 @@ export default function SignIn() {
             </View>
 
             {appleAvailable ? (
-              // Apple's own button, as its Human Interface Guidelines ask,
-              // in the colour that contrasts with the current theme.
-              <View
-                pointerEvents={busy !== null ? "none" : "auto"}
-                style={{ opacity: busy !== null && busy !== "apple" ? 0.5 : 1 }}
+              // A custom Sign in with Apple button (HIG: "Creating a custom
+              // Sign in with Apple button"). Apple's system button sizes its
+              // title at 43% of the button height — 24 pt on this 56 pt row,
+              // far larger than the Google and email titles below. The HIG
+              // lets a custom button change the title font and size to match
+              // the other buttons; the rest stays Apple's: the exact title,
+              // Apple's logo artwork at the button's height, and a black or
+              // white fill whose logo and title share one colour.
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Continue with Apple"
+                disabled={busy !== null}
+                onPress={apple}
+                style={{
+                  backgroundColor: scheme === "dark" ? "#FFFFFF" : "#000000",
+                }}
+                className="h-14 flex-row items-center justify-center gap-1 rounded-xl active:opacity-80 disabled:opacity-50"
               >
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={
-                    AppleAuthentication.AppleAuthenticationButtonType.CONTINUE
-                  }
-                  buttonStyle={
-                    scheme === "dark"
-                      ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                      : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                  }
-                  cornerRadius={12}
-                  style={{ height: 56, width: "100%" }}
-                  onPress={apple}
-                />
-              </View>
+                {busy === "apple" ? (
+                  <ActivityIndicator
+                    color={scheme === "dark" ? "#000000" : "#FFFFFF"}
+                  />
+                ) : (
+                  <>
+                    <AppleLogo
+                      height={56}
+                      color={scheme === "dark" ? "#000000" : "#FFFFFF"}
+                    />
+                    <AppText
+                      variant="bodyStrong"
+                      className={
+                        scheme === "dark" ? "text-black" : "text-white"
+                      }
+                    >
+                      Continue with Apple
+                    </AppText>
+                  </>
+                )}
+              </Pressable>
             ) : null}
 
             <Pressable
