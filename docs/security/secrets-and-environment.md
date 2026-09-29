@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.6
-lastReviewed: 2026-09-27
+version: 1.7
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -43,6 +43,7 @@ complianceReviewRequired: no
 | Other markets' provider keys — `PAYSTACK_<CC>_SECRET_KEY`, `PAYSTACK_<CC>_WEBHOOK_SECRET`, `NEXT_PUBLIC_PAYSTACK_<CC>_PUBLIC_KEY` (NG, KE, ZA, CI); `STRIPE_SECRET_KEY_<GB|US|EU>`, `STRIPE_WEBHOOK_SECRET_<…>`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_<…>` | secret (public keys public) | **Names, not values, are stored** on each market's provider row (Admin › Markets); set a market's variables only when that market is being prepared. A market cannot be activated while its readiness check reports them missing | that market cannot activate; nothing else is affected |
 | `HUBTEL_API_CLIENT_ID`, `HUBTEL_API_CLIENT_SECRET` | secret | Ghana SMS OTP (4-digit codes) | Ghana phone sign-in fails |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` | secret | Phone OTP for markets whose `otp_provider` is `twilio` (6-digit codes) | phone sign-in refused there; Ghana unaffected |
+| `APP_REVIEW_PHONE_E164`, `APP_REVIEW_OTP_CODE` | number: config; code: **secret** | App store reviewers' sign-in (Guideline 2.1(a) demo account): that one number signs in with the fixed 6-digit code, no text message is sent. Sign-in only; never a phone change or a Field Ops owner's consent. **Production only**; the code is also typed into App Store Connect's review form. Runbook: [../deployment/mobile-eas.md](../deployment/mobile-eas.md#app-review-sign-in) | off: the number is an ordinary one again (a pending review code stops working) |
 | `OPEN_EXCHANGE_RATES_APP_ID` (name configurable in Admin › Markets › Exchange rates) | secret | Hourly display rates for “≈” estimates | estimates hidden; prices and charges unaffected |
 | `RESEND_API_KEY` | secret | Transactional email | emails skipped (code is env-gated) |
 | `OBSERVABILITY_INGEST_SECRET` | secret | `/api/observability/*` auth; must equal `observability_config.secret` in the DB | health/error ingest 401 |

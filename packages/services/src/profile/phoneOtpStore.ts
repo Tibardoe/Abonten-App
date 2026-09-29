@@ -13,15 +13,15 @@
 // and authoritative regardless of which instance handles a given request.
 
 import { logger } from "@abonten/core/logger";
-import type { OtpProviderCode } from "@abonten/core/market/types";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import type { OtpSenderCode } from "./otpProviders/types";
 
 // "fieldops-owner": the business owner's consent code in a Field Ops
 // onboarding (migration fieldops_onboarding widened the CHECK).
 export type PhoneOtpPurpose = "sign-in" | "phone-update" | "fieldops-owner";
 
 export type PendingOtp = {
-  provider: OtpProviderCode;
+  provider: OtpSenderCode;
   requestId: string;
   prefix: string;
   createdAt: number;
@@ -123,7 +123,7 @@ export async function recordOtpSent(
   phoneE164: string,
   requestId: string,
   prefix: string,
-  provider: OtpProviderCode,
+  provider: OtpSenderCode,
 ): Promise<void> {
   const supabase = getSupabaseServiceClient();
   const now = new Date().toISOString();
@@ -166,7 +166,7 @@ export async function getPendingOtp(
   }
 
   return {
-    provider: data.provider as OtpProviderCode,
+    provider: data.provider as OtpSenderCode,
     requestId: data.request_id,
     prefix: data.prefix,
     createdAt,

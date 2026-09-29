@@ -18,8 +18,15 @@ export type OtpSendResult =
 
 export type OtpVerifyResult = { ok: true } | { ok: false; message: string };
 
+/**
+ * Who issued a pending code: a market's provider, or the fixed-code
+ * sign-in for app store reviewers (appReviewOtpProvider), which no market
+ * can select.
+ */
+export type OtpSenderCode = OtpProviderCode | "app_review";
+
 export interface OtpProvider {
-  readonly code: OtpProviderCode;
+  readonly code: OtpSenderCode;
   /** Credentials present in the environment (never the values). */
   isConfigured(): boolean;
   /** Which env variables it needs — for readiness reports. */
