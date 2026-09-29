@@ -4,8 +4,8 @@ purpose: The exact, ordered steps that move production from Paystack test mode t
 audience: Founder (holds the Paystack dashboard and Vercel), engineering
 scope: Ghana's Paystack account on the web and admin deployments; preview deployments; the Paystack dashboards' webhook settings; the mobile app (no key); the integration suites
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-25
+version: 1.3
+lastReviewed: 2026-09-29
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -95,6 +95,13 @@ function, and there is no other read of a Paystack variable in the code.
 
 Prerequisite: the Paystack business is activated for live payments
 (Paystack dashboard shows Live mode available with a live secret key).
+
+Prerequisite: the eight **sample events** made for App Review on
+2026-09-29 (organizer "Abonten Events", the App Review demo account) are
+removed first — three of them sell paid tickets, which live keys would
+turn into real charges for events that are not happening — and the App
+Review notes' "Paystack test mode" line is updated. See
+[../deployment/mobile-eas.md](../deployment/mobile-eas.md#app-review-sign-in).
 Keys are pasted **only** into Vercel — never into chat, email, a ticket, a
 file or a terminal.
 
