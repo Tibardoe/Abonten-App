@@ -1,6 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
-import { useMarket } from "@/features/markets/MarketProvider";
 import {
   rememberJoinAfterSignIn,
   useAreaWaitlist,
@@ -14,8 +13,6 @@ import {
   JOIN_WAITLIST_LABEL,
   LEAVE_WAITLIST_LABEL,
   NOT_LAUNCHED_BODY,
-  browseNearestLabel,
-  nearestDistanceText,
   notLaunchedTitle,
   supplyPrompt,
   waitingText,
@@ -24,14 +21,17 @@ import { AppText, Button, Icon } from "@abonten/ui-native";
 import { usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
+import { BrowseElsewhereList } from "./BrowseElsewhereList";
 
 // "Abonten isn't in Kumasi yet" — shown under the location switcher when the
 // browsing area is a city that's coming soon, or (in a market set to
 // launched areas only) somewhere outside every launched city. It never
 // hides anything: whatever is listed nearby still shows below it. It offers
-// what the person can do now — get a notice when the city launches, browse
-// the nearest launched city, or list their own events and places there —
-// and says nothing about when.
+// what the person can do now — get a notice when the city launches, explore
+// a launched city (BrowseElsewhereList, per the market's browse fallback),
+// or list their own events and places there — and says nothing about when.
+// While Explore's list is empty the cities move down into its empty state
+// (`showBrowse` false), so they appear once, where the person is looking.
 //
 // The cross folds it to one line for as long as the app is open; after
 // joining the list it is folded to "We'll tell you…" on its own.
@@ -44,15 +44,16 @@ const folded = new Set<string>();
 export function AreaCoverageCard({
   coverage,
   areaName,
+  showBrowse = true,
 }: {
   coverage: NotLaunched;
   areaName: string | null;
+  showBrowse?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const { session } = useSession();
-  const { area, chooseArea } = useExploreLocation();
-  const { context } = useMarket();
+  const { area } = useExploreLocation();
   const lat = area?.lat;
   const lng = area?.lng;
   const point = useMemo(
@@ -66,8 +67,6 @@ export function AreaCoverageCard({
   const [choice, setChoice] = useState<boolean | null>(null);
   const compact = choice ?? (folded.has(areaKey) || waitlist.waiting);
 
-  const nearest = coverage.nearest;
-  const unit = context?.distanceUnit ?? "km";
   const title = notLaunchedTitle(areaName);
 
   function fold(next: boolean) {
@@ -87,15 +86,6 @@ export function AreaCoverageCard({
     // Fold on its own once the server confirms.
     setChoice(null);
     waitlist.join(areaName);
-  }
-
-  function browseNearest() {
-    if (!nearest) return;
-    void chooseArea(
-      nearest.region.lat,
-      nearest.region.lng,
-      nearest.region.name,
-    );
   }
 
   if (compact) {
@@ -162,21 +152,13 @@ export function AreaCoverageCard({
             loadingTitle="Adding you…"
           />
         )}
-        {nearest ? (
-          <Button
-            title={browseNearestLabel(nearest)}
-            size="sm"
-            variant="outline"
-            onPress={browseNearest}
-            accessibilityHint={`${nearest.region.name} is ${nearestDistanceText(nearest, unit)}`}
-          />
-        ) : null}
       </View>
-      {nearest ? (
-        <AppText variant="caption">
-          Nearest city on Abonten: {nearest.region.name},{" "}
-          {nearestDistanceText(nearest, unit)}
-        </AppText>
+
+      {showBrowse && coverage.browse.cities.length > 0 ? (
+        <BrowseElsewhereList
+          browse={coverage.browse}
+          className="border-t border-border pt-2.5"
+        />
       ) : null}
 
       <View className="gap-1 border-t border-border pt-2.5">

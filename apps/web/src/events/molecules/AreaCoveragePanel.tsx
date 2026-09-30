@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
-import type { NearestLaunched } from "@abonten/core/market/coverage";
+import type { BrowseSuggestions } from "@abonten/core/market/coverage";
 import {
+  BROWSE_ELSEWHERE_TITLE,
   JOIN_WAITLIST_LABEL,
   LEAVE_WAITLIST_LABEL,
   NOT_LAUNCHED_BODY,
-  browseNearestLabel,
-  nearestDistanceText,
+  browseReasonLabel,
+  cityDistanceText,
   notLaunchedTitle,
   supplyPrompt,
   waitingText,
@@ -21,23 +22,25 @@ import type { DistanceUnit } from "@abonten/core/units/distance";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { FiBell, FiClock } from "react-icons/fi";
+import { FiBell, FiChevronRight, FiClock, FiMapPin } from "react-icons/fi";
 
 const JOIN_PARAM = "joinWaitlist";
 
-// The interactive half of AreaCoverageNotice: the waiting list, the nearest
-// launched city and the way to list events or a place here. Signed out,
-// "Tell me when it launches" goes through sign-in and comes back with
+// The interactive half of AreaCoverageNotice: the waiting list, the
+// launched cities to explore instead (as the market's browse fallback picked
+// them — a list to choose from, or one city marked with why it is
+// suggested) and the way to list events or a place here. Signed out, "Tell
+// me when it launches" goes through sign-in and comes back with
 // ?joinWaitlist=1, which finishes the join here once.
 export default function AreaCoveragePanel({
-  nearest,
+  browse,
   areaName,
   point,
   waiting: initiallyWaiting,
   distanceUnit,
   autoJoin,
 }: {
-  nearest: NearestLaunched | null;
+  browse: BrowseSuggestions;
   areaName: string | null;
   point: { lat: number; lng: number };
   waiting: boolean;
@@ -99,6 +102,7 @@ export default function AreaCoveragePanel({
   }, [autoJoin]);
 
   const title = notLaunchedTitle(areaName);
+  const reason = browseReasonLabel(browse.reason);
 
   return (
     <section
@@ -134,22 +138,43 @@ export default function AreaCoveragePanel({
             {pending ? "Adding you…" : JOIN_WAITLIST_LABEL}
           </Button>
         )}
-        {nearest ? (
-          <Button asChild variant="outline" size="sm">
-            <Link
-              href={`/explore/${nearest.region.slug}?lat=${nearest.region.lat}&lng=${nearest.region.lng}`}
-            >
-              {browseNearestLabel(nearest)}
-            </Link>
-          </Button>
-        ) : null}
-        {nearest ? (
-          <span className="text-xs text-muted-foreground">
-            {nearest.region.name} is{" "}
-            {nearestDistanceText(nearest, distanceUnit)}
-          </span>
-        ) : null}
       </div>
+
+      {browse.cities.length > 0 ? (
+        <div className="mt-4 border-t border-border pt-3 md:pl-8">
+          <h3 className="text-sm font-medium">{BROWSE_ELSEWHERE_TITLE}</h3>
+          <ul className="mt-1">
+            {browse.cities.map((city) => (
+              <li key={city.region.id}>
+                <Link
+                  href={`/explore/${city.region.slug}?lat=${city.region.lat}&lng=${city.region.lng}`}
+                  className="flex min-h-11 items-center gap-2 rounded-md px-1 text-sm hover:bg-accent"
+                >
+                  <FiMapPin
+                    aria-hidden
+                    className="h-4 w-4 shrink-0 text-primary"
+                  />
+                  <span className="flex-1 truncate font-medium">
+                    {city.region.name}
+                  </span>
+                  {reason ? (
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                      {reason}
+                    </span>
+                  ) : null}
+                  <span className="text-xs text-muted-foreground">
+                    {cityDistanceText(city, distanceUnit)}
+                  </span>
+                  <FiChevronRight
+                    aria-hidden
+                    className="h-4 w-4 text-muted-foreground"
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <p className="mt-4 border-t border-border pt-3 text-sm text-muted-foreground md:pl-8">
         {supplyPrompt(areaName)}{" "}

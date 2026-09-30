@@ -4,6 +4,7 @@ import { Badge, Button, Card, cn } from "@/components/ui";
 import {
   notifyRegionWaitlist,
   runMarketReadiness,
+  setMarketBrowseFallback,
   setMarketCoverageMode,
   setRegionLaunch,
   transitionMarket,
@@ -13,7 +14,14 @@ import {
   upsertMarketProvider,
   upsertMarketRegion,
 } from "@/server/actions/markets";
-import type { LaunchStatus } from "@abonten/core/market/coverage";
+import {
+  BROWSE_LIMIT_MAX,
+  BROWSE_LIMIT_MIN,
+  BROWSE_STRATEGIES,
+  type BrowseStrategy,
+  type LaunchStatus,
+} from "@abonten/core/market/coverage";
+import { BROWSE_STRATEGY_COPY } from "@abonten/core/market/coverageCopy";
 import type { ReadinessReport } from "@abonten/core/market/readiness";
 import {
   MARKET_TRANSITIONS,
@@ -1137,6 +1145,8 @@ function RegionsSection({
         ) : null}
       </div>
 
+      <BrowseFallbackForm market={market} canManage={canManage} />
+
       <ul className="mb-3 space-y-2 text-xs">
         {market.regions.map((r) => {
           const stat = stats.get(r.id);
@@ -1367,6 +1377,141 @@ function RegionsSection({
         </form>
       ) : null}
     </Section>
+  );
+}
+
+// ── Browse fallback ────────────────────────────────────────
+
+function BrowseFallbackForm({
+  market,
+  canManage,
+}: { market: MarketConfig; canManage: boolean }) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [msg, setMsg] = useState<Msg>(null);
+  const current = market.browseFallback;
+  const [strategy, setStrategy] = useState<BrowseStrategy>(current.strategy);
+  const [regionId, setRegionId] = useState(current.regionId ?? "");
+  const [limit, setLimit] = useState(current.limit);
+  const launched = market.regions.filter(
+    (r) => r.status === "active" && r.launchStatus === "launched",
+  );
+  const fixedCity = market.regions.find((r) => r.id === current.regionId);
+  const fixedStale =
+    current.strategy === "fixed" &&
+    (!fixedCity ||
+      fixedCity.status !== "active" ||
+      fixedCity.launchStatus !== "launched");
+
+  const currentText =
+    current.strategy === "choose"
+      ? `people choose from up to ${current.limit} launched cities, nearest first`
+      : current.strategy === "fixed"
+        ? fixedStale
+          ? "the nearest launched city (the city you chose isn't launched any more)"
+          : `${fixedCity?.name} is suggested`
+        : current.strategy === "most_active"
+          ? "the most active launched city is suggested"
+          : "the nearest launched city is suggested";
+
+  return (
+    <div className="mb-3 rounded border border-border p-2 text-xs">
+      <p className="font-medium">Browse fallback</p>
+      <p className="mb-2 text-muted-foreground">
+        What &ldquo;Explore what&rsquo;s happening elsewhere&rdquo; offers
+        someone in a city that&rsquo;s coming soon (or outside the launched
+        cities). Only launched cities are ever offered. Now:{" "}
+        <span className="font-medium text-foreground">{currentText}</span>.
+      </p>
+      <fieldset disabled={!canManage || pending} className="space-y-2">
+        <legend className="sr-only">Browse fallback</legend>
+        {BROWSE_STRATEGIES.map((key) => (
+          <label key={key} className="flex items-start gap-2">
+            <input
+              type="radio"
+              name={`browse-fallback-${market.countryCode}`}
+              value={key}
+              checked={strategy === key}
+              onChange={() => setStrategy(key)}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-medium">
+                {BROWSE_STRATEGY_COPY[key].label}
+              </span>
+              <span className="block text-muted-foreground">
+                {BROWSE_STRATEGY_COPY[key].help}
+              </span>
+              {key === "choose" && strategy === "choose" ? (
+                <span className="mt-1 flex items-center gap-2">
+                  Cities to show
+                  <select
+                    className="rounded border border-border bg-background px-1.5 py-1 text-xs"
+                    value={limit}
+                    onChange={(e) => setLimit(Number(e.target.value))}
+                  >
+                    {Array.from(
+                      { length: BROWSE_LIMIT_MAX - BROWSE_LIMIT_MIN + 1 },
+                      (_, i) => BROWSE_LIMIT_MIN + i,
+                    ).map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              ) : null}
+              {key === "fixed" && strategy === "fixed" ? (
+                <span className="mt-1 flex items-center gap-2">
+                  City
+                  <select
+                    className="rounded border border-border bg-background px-1.5 py-1 text-xs"
+                    value={regionId}
+                    onChange={(e) => setRegionId(e.target.value)}
+                  >
+                    <option value="">Choose a launched city</option>
+                    {launched.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              ) : null}
+            </span>
+          </label>
+        ))}
+        {canManage ? (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              type="button"
+              disabled={pending || (strategy === "fixed" && !regionId)}
+              onClick={() => {
+                setMsg(null);
+                start(async () => {
+                  const res = await setMarketBrowseFallback({
+                    countryCode: market.countryCode,
+                    strategy,
+                    regionId: strategy === "fixed" ? regionId : null,
+                    limit,
+                  });
+                  setMsg({
+                    ok: res.status === 200,
+                    text:
+                      res.message ?? (res.status === 200 ? "Saved." : "Failed"),
+                  });
+                  if (res.status === 200) router.refresh();
+                });
+              }}
+            >
+              {pending ? "Saving…" : "Save browse fallback"}
+            </Button>
+          </div>
+        ) : null}
+      </fieldset>
+      <Msg msg={msg} />
+    </div>
   );
 }
 

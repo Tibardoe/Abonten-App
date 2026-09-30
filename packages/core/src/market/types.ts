@@ -13,7 +13,12 @@
 
 import type { AddressSchema } from "../geo/addressSchema";
 import type { DistanceUnit } from "../units/distance";
-import type { CoverageMode, LaunchStatus } from "./coverage";
+import type {
+  BrowseFallback,
+  CityActivity,
+  CoverageMode,
+  LaunchStatus,
+} from "./coverage";
 
 export type MarketStatus =
   | "draft"
@@ -195,6 +200,11 @@ export type MarketRegion = {
   /** Whether Abonten is open here or coming soon (coverage.ts). */
   launchStatus: LaunchStatus;
   position: number;
+  /**
+   * Upcoming events and places inside the radius, for "most active". Set
+   * on the public market context for launched cities; absent elsewhere.
+   */
+  activity?: CityActivity | null;
 };
 
 export type MarketConfig = {
@@ -224,6 +234,8 @@ export type MarketConfig = {
   launchedAt: string | null;
   /** What a point outside every listed city is (coverage.ts). */
   coverageMode: CoverageMode;
+  /** Which launched cities Explore offers from a not-launched area. */
+  browseFallback: BrowseFallback;
   version: number;
   paymentProviders: MarketPaymentProvider[];
   paymentMethods: MarketPaymentMethod[];
@@ -259,6 +271,8 @@ export type PublicMarket = {
   priceScale: number;
   /** What a point outside every listed city is (coverage.ts). */
   coverageMode: CoverageMode;
+  /** Which launched cities Explore offers from a not-launched area. */
+  browseFallback: BrowseFallback;
   paymentMethods: Pick<
     MarketPaymentMethod,
     "method" | "provider" | "currencies" | "platforms" | "recommended" | "label"
@@ -287,6 +301,7 @@ export function toPublicMarket(m: MarketConfig): PublicMarket {
     centre: m.centre,
     priceScale: m.priceScale,
     coverageMode: m.coverageMode,
+    browseFallback: m.browseFallback,
     paymentMethods: m.paymentMethods
       .filter((pm) => pm.enabled)
       .map((pm) => ({

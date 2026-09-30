@@ -11,6 +11,7 @@ import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { AreaCoverageCard } from "@/components/explore/AreaCoverageCard";
 import { AreaSuggestionCard } from "@/components/explore/AreaSuggestionCard";
 import { AreaSwitcher } from "@/components/explore/AreaSwitcher";
+import { BrowseElsewhereList } from "@/components/explore/BrowseElsewhereList";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
 import { DiscoveryHero } from "@/components/explore/DiscoveryHero";
@@ -50,7 +51,6 @@ import { useQueryView } from "@/lib/useQueryView";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import { distanceMetres } from "@abonten/core/fieldOps/territory";
 import { waitlistAreaKey } from "@abonten/core/market/coverage";
-import { browseNearestLabel } from "@abonten/core/market/coverageCopy";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import {
@@ -431,28 +431,32 @@ export default function Explore() {
 
   // Loading, offline and failed are resolved by useQueryView; "no events
   // here" is only ever said for an answer the server actually gave.
-  // In an area Abonten hasn't launched in, the empty list says so and
-  // offers the nearest launched city (the card above has the rest).
-  const nearest = notLaunched?.nearest ?? null;
+  // In an area Abonten hasn't launched in, the empty list says so and holds
+  // the launched cities to explore instead (moved here from the card above,
+  // so they appear once, where the person is looking).
+  const emptyNotLaunched =
+    view === "list" &&
+    activeView.kind === "empty" &&
+    activeCount === 0 &&
+    notLaunched !== null;
   const emptyState =
     activeView.kind === "empty" ? (
-      activeCount === 0 && notLaunched ? (
-        <EmptyState
-          icon={tab === "events" ? "calendar-outline" : "location-outline"}
-          title={`Nothing listed ${whereText(area)} yet`}
-          description="Abonten hasn't launched here yet. Browse a city that's open, or check back soon."
-          actionLabel={nearest ? browseNearestLabel(nearest) : undefined}
-          onAction={
-            nearest
-              ? () =>
-                  void chooseArea(
-                    nearest.region.lat,
-                    nearest.region.lng,
-                    nearest.region.name,
-                  )
-              : undefined
-          }
-        />
+      emptyNotLaunched && notLaunched ? (
+        <View>
+          <EmptyState
+            icon={tab === "events" ? "calendar-outline" : "location-outline"}
+            title={`Nothing listed ${areaName ? `in ${areaName}` : whereText(area)} yet`}
+            description={
+              notLaunched.browse.cities.length > 0
+                ? "Abonten hasn't launched here yet. Explore a city that's open, or check back soon."
+                : "Abonten hasn't launched here yet. Check back soon."
+            }
+          />
+          <BrowseElsewhereList
+            browse={notLaunched.browse}
+            className="mx-6 -mt-2"
+          />
+        </View>
       ) : (
         <EmptyState
           icon={tab === "events" ? "calendar-outline" : "location-outline"}
@@ -530,6 +534,7 @@ export default function Explore() {
           key={waitlistAreaKey(notLaunched.region, area)}
           coverage={notLaunched}
           areaName={areaName}
+          showBrowse={!emptyNotLaunched}
         />
       ) : null}
 
