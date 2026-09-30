@@ -57,6 +57,7 @@ Every change to a file in `apps/web/src/content/legal/` is versioned by git. In 
 | Terms and Conditions | 1.3-draft | — | Minor: §19 support hours (Mon–Fri 09:00–17:00 Ghana time, public holidays excluded) and two-working-day reply goal, stated as a goal not a commitment (decision O1, 2026-09-12) | — (draft) |
 | Privacy Policy | 1.3-draft | — | Minor: §15 two-working-day acknowledgement goal for privacy requests; statutory limits unaffected (O1, 2026-09-12) | — (draft) |
 | Privacy Policy | 1.4-draft | — | Minor: §1 Data Protection Commission registration inserted (certificate PROV2609522, registered 16 Sep 2026, valid to 15 Sep 2028) and the "status to be confirmed" wording removed from the draft banner (legal A2, 2026-09-17) | — (draft) |
+| Privacy Policy | 1.5-draft | — | Minor: §1 Location row adds the city or ~1 km area a person asks to be told about when Abonten launches there, kept until the notice is sent or they cancel, and "launch notices you asked for" as a purpose (2026-09-30) | — (draft) |
 | Security overview | 1.3-draft | — | Minor: "What happens next" states the two-working-day acknowledgement goal for security reports (O1, 2026-09-12) | — (draft) |
 | Privacy Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Cookie Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |

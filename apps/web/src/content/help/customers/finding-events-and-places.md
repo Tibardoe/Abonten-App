@@ -2,7 +2,7 @@
 title: Finding events and places
 summary: Explore what's on near you, search, filter, use the map, and save the things you like.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-09-30
 status: Draft
 owner: Abonten Hub
 ---
@@ -17,6 +17,14 @@ Abonten shows you events and places for a location. On the web, the location app
 - type a town or area and pick it from the suggestions.
 
 The app remembers the last location you chose.
+
+## When Abonten isn't in your area yet
+
+Abonten opens city by city. If you are exploring somewhere it hasn't launched yet, the top of Explore says so, for example "Abonten isn't in Kumasi yet". Anything already listed nearby still shows below it, and you can still search, open links and buy tickets anywhere. From there you can:
+
+- tap **Tell me when it launches** to get one notice (in the app, and as a push notification if you allow them) when Abonten launches there. You need to be signed in. You can undo it with **Stop waiting**, and we keep only the city or rough area you asked about, never your exact position;
+- **browse** the nearest city Abonten is open in; or
+- list your own events or place there, if you run them.
 
 ## Browse
 

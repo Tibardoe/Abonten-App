@@ -25,7 +25,8 @@ export type NotificationEntityKind =
   | "spotlight"
   | "story"
   | "follow"
-  | "content_campaign";
+  | "content_campaign"
+  | "area";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -50,6 +51,13 @@ export type NotificationData = {
   campaignId?: string;
   /** Aggregated notices ("X and 3 others liked…"): who, newest first. */
   actorIds?: string[];
+  /** With kind "area" ("Abonten is now in Kumasi"): the launched city. */
+  regionId?: string;
+  regionSlug?: string;
+  areaLabel?: string;
+  lat?: number;
+  lng?: number;
+  radiusKm?: number;
 };
 
 export type NotificationType = {

@@ -78,6 +78,7 @@ const market: MarketConfig = {
   regions: [],
   priceScale: 1,
   launchedAt: null,
+  coverageMode: "everywhere",
   version: 1,
 };
 

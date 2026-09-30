@@ -4,8 +4,8 @@ purpose: State, for every data category, how long it is kept, what deletes or ex
 audience: Privacy reviewer, engineering, operations
 scope: Production data in Supabase, Supabase Storage, Cloudinary and provider systems
 status: Review required
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -34,6 +34,7 @@ complianceReviewRequired: yes
 | Dead push tokens | Pruned when Expo returns `DeviceNotRegistered` in the send ticket or the receipt; removed on sign-out via `/api/mobile/devices/unregister` | event-driven | `sendPushNotification.ts`, `pushReceiptsCore.ts`, `deviceTokenCore.ts` |
 | Push receipts waiting to be read | Deleted once read; unread rows dropped after one day | every minute | `run_notification_delivery()`, `pushReceiptsCore.ts` |
 | Browser push subscriptions | Removed on sign-out and opt-out; deleted on a 404/410 from the push service | event-driven | `webPushCore.ts`, `useWebPush.ts` |
+| "Tell me when it launches" waiting list (`area_waitlist`: account, city or ~1 km cell, area name) | Deleted by `area_waitlist_notify` when the launch notice goes out, when the person taps "Stop waiting", or on account deletion; kept while the area has not launched | until launch or leave | `20260930100000_area_launch_waitlist.sql`, `areaWaitlistCore.ts` |
 | Phone OTP pending state | Cleared on success, after 5 attempts, or after the 5-minute TTL | 5 minutes | `phoneOtpStore.ts` |
 | Field-programme reviews left open | `fieldops_run_housekeeping()` cron 02:25 closes reviews past `review_grace_days` (14) | 14 days after campaign completion | `20260911223818_fieldops_commissions.sql` |
 
@@ -51,7 +52,7 @@ Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`)
 | Effect | Tables |
 |---|---|
 | **Anonymised** | `user_info`: name "Deleted user", username `deleted_<id prefix>`, avatar, bio, website and organizer-verified flags cleared, `status_id` 4 (Deleted) |
-| **Deleted** | `device_token`, `web_push_subscription`, `favorite`, `favorite_place`, `event_reminder`, `notification` (+ `notification_delivery`), `notification_preference`, `notification_subscription`, `user_image_history`, `receiving_account`, `highlight`, `drafts` (+ `event_drafts`/`place_drafts`/`review_drafts`), pending `place_claim_request` (+ documents; the bucket objects go to `storage_purge_queue`), draft events |
+| **Deleted** | `device_token`, `web_push_subscription`, `favorite`, `favorite_place`, `event_reminder`, `notification` (+ `notification_delivery`), `notification_preference`, `notification_subscription`, `area_waitlist`, `user_image_history`, `receiving_account`, `highlight`, `drafts` (+ `event_drafts`/`place_drafts`/`review_drafts`), pending `place_claim_request` (+ documents; the bucket objects go to `storage_purge_queue`), draft events |
 | **Scrubbed shells** (rows are referenced by payment attempts / payouts) | `payment_method` → `removed`, details reduced to brand/last4/network/bank (the Paystack authorization code is gone); `payout_account` → `removed`, holder name and number replaced |
 | **Events** | Upcoming published events with no active tickets → `canceled`; everything else `archived_at` set (leaves discovery and search; direct links still open, organizer shown as "Deleted user") |
 | **Places** | Kept published, `claimed = false`, verification cleared — the next owner can claim the listing |

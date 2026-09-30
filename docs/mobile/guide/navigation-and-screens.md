@@ -4,8 +4,8 @@ purpose: Every screen in the Android app, how it is reached, and what it does.
 audience: Support, QA, product
 scope: apps/mobile/app (Expo Router)
 status: Approved
-version: 1.4
-lastReviewed: 2026-09-29
+version: 1.5
+lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -90,6 +90,10 @@ Android draws every marker as a bitmap, and react-native-maps 1.27 has two traps
 ## Choosing a location
 
 "Set your location" (the area name under Explore, also on Places) leads with a search field, then "Use my current location" and "Choose on map". Tapping the field opens the search full screen with the keyboard up (`components/explore/LocationSearchOverlay.tsx`): suggestions fill the space between the field and the keyboard, with skeleton rows while they load and a "Search for “…”" row that uses the text as typed; with nothing typed it shows the two quick actions. Back closes the keyboard first, then returns to the sheet. Picking a place sets the area and closes both.
+
+## Areas Abonten hasn't launched in
+
+When the browsing area is a coming-soon city, or (in a country set to launched cities only) anywhere outside them, `components/explore/AreaCoverageCard.tsx` sits under the location switcher: "Abonten isn't in Kumasi yet", **Tell me when it launches** (`features/markets/useAreaWaitlist.ts`; signed out it opens sign-in and finishes the join when Explore is back, for the same area), **Browse <nearest launched city>** (chooses that city) with its distance, and **List an event / Add a place**. The cross folds it to one line for the rest of the session; once the person is waiting it is folded to "We'll tell you…" and opening it shows **Stop waiting**. The empty list says "Nothing listed in Kumasi yet" with the same Browse button. The rule is `@abonten/core/market/coverage`, read from the persisted market context (`features/markets/useAreaCoverage.ts`). The "Abonten is now in Kumasi" notice opens Explore with `areaLat/areaLng/areaLabel/areaRadiusKm`: Explore keeps an area already inside that city, follows the phone if the phone is there, otherwise chooses the city, and refetches the market context. See [../../architecture/global-platform.md](../../architecture/global-platform.md) §1a.
 
 ## Chat
 

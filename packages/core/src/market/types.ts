@@ -13,6 +13,7 @@
 
 import type { AddressSchema } from "../geo/addressSchema";
 import type { DistanceUnit } from "../units/distance";
+import type { CoverageMode, LaunchStatus } from "./coverage";
 
 export type MarketStatus =
   | "draft"
@@ -191,6 +192,8 @@ export type MarketRegion = {
   lng: number;
   radiusKm: number;
   status: "active" | "inactive";
+  /** Whether Abonten is open here or coming soon (coverage.ts). */
+  launchStatus: LaunchStatus;
   position: number;
 };
 
@@ -219,6 +222,8 @@ export type MarketConfig = {
    */
   priceScale: number;
   launchedAt: string | null;
+  /** What a point outside every listed city is (coverage.ts). */
+  coverageMode: CoverageMode;
   version: number;
   paymentProviders: MarketPaymentProvider[];
   paymentMethods: MarketPaymentMethod[];
@@ -252,6 +257,8 @@ export type PublicMarket = {
   centre: { lat: number; lng: number } | null;
   /** Sizes the price filters for this currency (1 = cedi-sized). */
   priceScale: number;
+  /** What a point outside every listed city is (coverage.ts). */
+  coverageMode: CoverageMode;
   paymentMethods: Pick<
     MarketPaymentMethod,
     "method" | "provider" | "currencies" | "platforms" | "recommended" | "label"
@@ -279,6 +286,7 @@ export function toPublicMarket(m: MarketConfig): PublicMarket {
     tax: { mode: m.tax.mode, rateBps: m.tax.rateBps, label: m.tax.label },
     centre: m.centre,
     priceScale: m.priceScale,
+    coverageMode: m.coverageMode,
     paymentMethods: m.paymentMethods
       .filter((pm) => pm.enabled)
       .map((pm) => ({

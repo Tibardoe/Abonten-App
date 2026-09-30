@@ -113,7 +113,8 @@ function fallbackArea(): BrowsingArea {
 }
 /** The label of a following area whose town could not be named. */
 export const UNNAMED_AREA_LABEL = "Your location";
-const UNNAMED_CHOICE_LABEL = "Selected location";
+/** The label of a chosen point whose place could not be named. */
+export const UNNAMED_CHOICE_LABEL = "Selected location";
 
 // v3: `{ area, anchor }`. v2 (`{ …, source }`) is read once and migrated so
 // an area chosen before the upgrade is kept; v1 is deleted — it could have

@@ -12,6 +12,8 @@ import type {
   SubscriptionTarget,
 } from "@abonten/types/discoveryType";
 import type {
+  AreaWaitlistJoinBody,
+  AreaWaitlistStatus,
   ListingMarket,
   LocalePreferences,
   LocalePreferencesPatch,
@@ -1084,6 +1086,37 @@ export function createApiClient(options: ApiClientOptions) {
         return request<ApiEnvelope<ListingMarket>>(
           `/api/mobile/markets/at?${q.toString()}`,
           { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Whether the signed-in person asked to be told when Abonten launches
+       * in the area at this point ("Tell me when it launches").
+       */
+      waitlistStatus(params: { lat: number; lng: number }) {
+        const q = new URLSearchParams({
+          lat: params.lat.toFixed(3),
+          lng: params.lng.toFixed(3),
+        });
+        return request<ApiEnvelope<AreaWaitlistStatus>>(
+          `/api/mobile/markets/waitlist?${q.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Joins the waiting list; 409 when Abonten is already open there. */
+      joinWaitlist(body: AreaWaitlistJoinBody) {
+        return request<ApiEnvelope<AreaWaitlistStatus>>(
+          "/api/mobile/markets/waitlist",
+          { method: "POST", body, auth: true },
+        );
+      },
+      leaveWaitlist(params: { lat: number; lng: number }) {
+        const q = new URLSearchParams({
+          lat: params.lat.toFixed(3),
+          lng: params.lng.toFixed(3),
+        });
+        return request<ApiEnvelope<AreaWaitlistStatus>>(
+          `/api/mobile/markets/waitlist?${q.toString()}`,
+          { method: "DELETE", auth: true },
         );
       },
     },

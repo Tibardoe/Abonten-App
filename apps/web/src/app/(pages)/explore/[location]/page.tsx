@@ -1,5 +1,6 @@
 import RememberExploreArea from "@/components/atoms/RememberExploreArea";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
+import AreaCoverageNotice from "@/events/organisms/AreaCoverageNotice";
 import EventsTabContent from "@/events/organisms/EventsTabContent";
 import { isExploreTab } from "@/places/exploreTab";
 import ExploreTabs from "@/places/organisms/ExploreTabs";
@@ -55,6 +56,7 @@ export default async function page({
     distance?: string;
     q?: string;
     view?: string;
+    joinWaitlist?: string;
   }>;
 }) {
   const { location } = await params;
@@ -77,6 +79,7 @@ export default async function page({
     distance,
     q,
     view,
+    joinWaitlist,
   } = await searchParams;
 
   const exploreView = view === "map" ? "map" : "list";
@@ -102,6 +105,17 @@ export default async function page({
       <h1 className="text-xl md:text-2xl font-bold">Explore</h1>
 
       <LocationAndFilterSection />
+
+      {/* "Abonten isn't in Kumasi yet", where it hasn't launched. Streams in
+          without holding up the page; nothing below it is hidden. */}
+      <Suspense fallback={null}>
+        <AreaCoverageNotice
+          lat={lat ?? null}
+          lng={lng ?? null}
+          location={safeLocation}
+          autoJoin={joinWaitlist === "1"}
+        />
+      </Suspense>
 
       {/* This becomes the area "Explore" and "Home" return to. */}
       <Suspense fallback={null}>

@@ -147,6 +147,8 @@ function buildMarket(
         ? { lat: m.centre_lat, lng: m.centre_lng }
         : null,
     launchedAt: m.launched_at,
+    coverageMode:
+      m.coverage_mode === "launched_areas" ? "launched_areas" : "everywhere",
     version: m.version,
     paymentProviders: providers
       .filter((p) => p.country_code === m.country_code)
@@ -207,6 +209,8 @@ function buildMarket(
         lng: r.centre_lng,
         radiusKm: Number(r.radius_km),
         status: r.status as MarketRegion["status"],
+        launchStatus:
+          r.launch_status === "coming_soon" ? "coming_soon" : "launched",
         position: r.position,
       }))
       .sort((a, b) => a.position - b.position),
