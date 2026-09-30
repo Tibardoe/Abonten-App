@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-30 — Event codes no longer collide
+
+- `architecture/feature-inventory.md` (Create / edit / draft event row), `PROJECT.md` §56.
+- Behaviour: a new event's public code (the part of `/events/<code>` links) is up to two letters from the title plus six random characters, instead of four random digits. With four digits two events whose titles start with the same letters shared only 9,000 codes, and a clash made the post fail with "We couldn't post your event". The six characters avoid look-alikes (0/O, 1/I/L), and if a code is ever taken the post quietly tries a new one. Titles with two spaces between the first words, or with no Latin letters, no longer break code generation. Existing events keep their codes and links. Migrations, env vars, permissions, jobs: none.
+
 ## 2026-09-30 — "Explore what's happening elsewhere": a configurable browse fallback
 
 - `architecture/global-platform.md` 1.8 (§1a "Browse fallback"), `admin/markets.md` 1.4, `mobile/guide/navigation-and-screens.md` 1.6, help `customers/finding-events-and-places.md`, `architecture/feature-inventory.md`, `PROJECT.md` §55.1.

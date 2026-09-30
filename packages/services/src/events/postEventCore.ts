@@ -35,6 +35,10 @@ import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 const UNIQUE_VIOLATION = "23505";
 const CHECK_VIOLATION = "23514";
+// A generated code (and the slug built from it) that is already taken is
+// drawn again. With six random characters this should never be needed more
+// than once; the cap only stops a runaway loop.
+const EVENT_CODE_ATTEMPTS = 3;
 
 type DateInput = string | Date;
 
@@ -155,14 +159,7 @@ export async function postEventCore(
     if (capacityProblem) return { status: 400, message: capacityProblem };
   }
 
-  const eventCode = generateEventCode(input.title);
-
   const formattedTitle = formatTitle(input.title);
-
-  // generateSlug(title) alone collides for same-titled events; eventCode
-  // carries a random suffix, so appending it keeps the slug unique without
-  // touching the unique constraint (slug is search-only, not routing).
-  const slug = `${generateSlug(input.title)}-${generateSlug(eventCode)}`;
 
   const isSpecificEvent =
     !!input.specificDates && input.specificDates.length > 0;
@@ -241,8 +238,17 @@ export async function postEventCore(
         }))
       : null;
 
-  const { data: eventId, error: createEventError } =
-    await getSupabaseServiceClient().rpc(
+  // create_event is idempotent on client_request_id, and a unique violation
+  // rolls the whole insert back, so a retry with a new code is safe.
+  let eventId: unknown = null;
+  let createEventError: { code: string; message: string } | null = null;
+  for (let attempt = 1; attempt <= EVENT_CODE_ATTEMPTS; attempt++) {
+    const eventCode = generateEventCode(input.title);
+    // generateSlug(title) alone collides for same-titled events; eventCode
+    // carries a random suffix, so appending it keeps the slug unique without
+    // touching the unique constraint (slug is search-only, not routing).
+    const slug = `${generateSlug(input.title)}-${generateSlug(eventCode)}`;
+    const result = await getSupabaseServiceClient().rpc(
       "create_event",
       // create_event's SQL signature has no DEFAULT on several of these
       // params even though the function genuinely accepts (and this app has
@@ -281,6 +287,17 @@ export async function postEventCore(
         p_currency: currency,
       } as unknown as Database["public"]["Functions"]["create_event"]["Args"],
     );
+    eventId = result.data;
+    createEventError = result.error;
+    const codeTaken =
+      result.error?.code === UNIQUE_VIOLATION &&
+      (result.error.message.includes("event_event_code_key") ||
+        result.error.message.includes("event_slug_key"));
+    if (!codeTaken) break;
+    logger.warn(
+      `create_event: generated event code already taken (attempt ${attempt})`,
+    );
+  }
 
   if (createEventError) {
     if (createEventError.code === CHECK_VIOLATION) {
