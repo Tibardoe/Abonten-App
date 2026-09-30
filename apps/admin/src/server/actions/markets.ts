@@ -6,11 +6,16 @@ import {
   requireAdmin,
 } from "@/lib/adminGuard";
 import type { FlagRules } from "@abonten/core/flags/evaluateFlag";
-import type { CoverageMode, LaunchStatus } from "@abonten/core/market/coverage";
+import type {
+  BrowseStrategy,
+  CoverageMode,
+  LaunchStatus,
+} from "@abonten/core/market/coverage";
 import type { MarketTransition } from "@abonten/core/market/transitions";
 import { MARKET_TRANSITIONS } from "@abonten/core/market/transitions";
 import {
   notifyRegionWaitlistAdminCore,
+  setBrowseFallbackAdminCore,
   setCoverageModeAdminCore,
   setRegionLaunchAdminCore,
 } from "@abonten/services/admin/markets/areaLaunchAdminCore";
@@ -203,6 +208,27 @@ export async function setMarketCoverageMode(input: {
     return res;
   } catch (e) {
     return adminError(e, "markets.coverage_mode");
+  }
+}
+
+export async function setMarketBrowseFallback(input: {
+  countryCode: string;
+  strategy: BrowseStrategy;
+  regionId?: string | null;
+  limit?: number;
+}) {
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await setBrowseFallbackAdminCore(
+      svc(),
+      ctx,
+      input,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath(`/markets/${input.countryCode}`);
+    return res;
+  } catch (e) {
+    return adminError(e, "markets.browse_fallback");
   }
 }
 

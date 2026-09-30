@@ -6,6 +6,7 @@
 
 import type { AddressSchema } from "@abonten/core/geo/addressSchema";
 import { logger } from "@abonten/core/logger";
+import { normalizeBrowseFallback } from "@abonten/core/market/coverage";
 import type {
   ClientPlatform,
   MarketConfig,
@@ -149,6 +150,11 @@ function buildMarket(
     launchedAt: m.launched_at,
     coverageMode:
       m.coverage_mode === "launched_areas" ? "launched_areas" : "everywhere",
+    browseFallback: normalizeBrowseFallback({
+      strategy: m.browse_fallback as never,
+      regionId: m.browse_fallback_region_id,
+      limit: m.browse_fallback_limit,
+    }),
     version: m.version,
     paymentProviders: providers
       .filter((p) => p.country_code === m.country_code)

@@ -79,6 +79,7 @@ const market: MarketConfig = {
   priceScale: 1,
   launchedAt: null,
   coverageMode: "everywhere",
+  browseFallback: { strategy: "choose", regionId: null, limit: 3 },
   version: 1,
 };
 

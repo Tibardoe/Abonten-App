@@ -4,7 +4,7 @@ purpose: How to prepare, check, open, pause and maintain a country (market), tar
 audience: Operations, finance, engineering
 scope: Admin › Markets (Countries, market editor, Feature flags, Exchange rates), the markets.view / markets.manage / markets.activate permissions
 status: Approved
-version: 1.3
+version: 1.4
 lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -130,6 +130,16 @@ launch; there is no automatic threshold.
   "Abonten isn't here yet". **Treat outside as open** turns it back. New
   countries and Ghana ship with outside open and every city launched, so
   nothing changes until you use these.
+- **Browse fallback** — what "Explore what's happening elsewhere" offers
+  someone in a city that's coming soon. **Let people choose** (the
+  default) lists up to 3 launched cities, nearest first (choose 2–5).
+  **Nearest launched city** and **Most active launched city** suggest one
+  city, marked "Nearest" or "Most listings" — most active means the most
+  upcoming events plus places, the counts shown under each city. **A city
+  you choose** always suggests that city, marked "Suggested"; only
+  launched cities can be picked, and if you later mark it coming soon the
+  nearest is suggested instead (the card says so). A city that isn't
+  launched is never offered, whatever you choose.
 - **Waiting outside every listed city** — where people asked from, by
   area name. Add a city there (the add form has a Launch choice) to reach
   them; if you add it as launched, press **Notify N waiting** on its row.

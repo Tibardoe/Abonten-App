@@ -117,7 +117,10 @@ describe("launched areas", () => {
     expect(coverage.kind).toBe("not_launched");
     if (coverage.kind === "not_launched") {
       expect(coverage.region?.slug).toBe("kumasi");
-      expect(coverage.nearest?.region.slug).not.toBe("kumasi");
+      expect(coverage.browse.cities.length).toBeGreaterThan(0);
+      expect(coverage.browse.cities.map((c) => c.region.slug)).not.toContain(
+        "kumasi",
+      );
     }
 
     const first = await joinAreaWaitlistCore(fan.id, {
@@ -260,7 +263,17 @@ describe("launched areas", () => {
       },
     );
     expect(launched.status).toBe(200);
-    expect(launched.data?.notified).toBe(2);
+    // At least our two (a reused local stack may hold other people waiting
+    // in Kumasi); each of ours is told exactly once, checked below.
+    expect(launched.data?.notified).toBeGreaterThanOrEqual(2);
+    for (const person of [fan, friend]) {
+      const { count } = await service
+        .from("notification")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", person.id)
+        .eq("type", "area_launched");
+      expect(count).toBe(1);
+    }
 
     const { data: notices } = await service
       .from("notification")

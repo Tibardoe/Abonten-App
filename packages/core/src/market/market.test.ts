@@ -29,6 +29,7 @@ const ghana: MarketConfig = {
   priceScale: 1,
   launchedAt: "2026-01-01T00:00:00Z",
   coverageMode: "everywhere",
+  browseFallback: { strategy: "choose", regionId: null, limit: 3 },
   version: 1,
   paymentProviders: [
     {

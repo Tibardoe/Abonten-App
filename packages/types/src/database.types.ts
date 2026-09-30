@@ -6051,6 +6051,9 @@ export type Database = {
       market: {
         Row: {
           address_schema: Json | null
+          browse_fallback: string
+          browse_fallback_limit: number
+          browse_fallback_region_id: string | null
           centre_lat: number | null
           centre_lng: number | null
           country_code: string
@@ -6078,6 +6081,9 @@ export type Database = {
         }
         Insert: {
           address_schema?: Json | null
+          browse_fallback?: string
+          browse_fallback_limit?: number
+          browse_fallback_region_id?: string | null
           centre_lat?: number | null
           centre_lng?: number | null
           country_code: string
@@ -6105,6 +6111,9 @@ export type Database = {
         }
         Update: {
           address_schema?: Json | null
+          browse_fallback?: string
+          browse_fallback_limit?: number
+          browse_fallback_region_id?: string | null
           centre_lat?: number | null
           centre_lng?: number | null
           country_code?: string
@@ -6131,6 +6140,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "market_browse_fallback_region_id_fkey"
+            columns: ["browse_fallback_region_id"]
+            isOneToOne: false
+            referencedRelation: "market_region"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "market_default_currency_fkey"
             columns: ["default_currency"]
@@ -15741,6 +15757,14 @@ export type Database = {
         Args: { p_country_code: string }
         Returns: string
       }
+      market_region_activity: {
+        Args: { p_country_code?: string }
+        Returns: {
+          places: number
+          region_id: string
+          upcoming_events: number
+        }[]
+      }
       market_timezone_at: { Args: { p_origin: unknown }; Returns: string }
       market_timezone_for_country: {
         Args: { p_country_code: string }
@@ -15757,6 +15781,9 @@ export type Database = {
         }
         Returns: {
           address_schema: Json | null
+          browse_fallback: string
+          browse_fallback_limit: number
+          browse_fallback_region_id: string | null
           centre_lat: number | null
           centre_lng: number | null
           country_code: string

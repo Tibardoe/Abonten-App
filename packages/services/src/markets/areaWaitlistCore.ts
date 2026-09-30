@@ -20,6 +20,7 @@ import {
   containingRegion,
   waitlistAreaKey,
 } from "@abonten/core/market/coverage";
+import type { MarketConfig } from "@abonten/core/market/types";
 import type { AreaWaitlistStatus } from "@abonten/types/marketType";
 import { resolveLocation } from "../geo/locationResolution";
 import { checkRateLimit } from "../security/rateLimit";
@@ -118,6 +119,28 @@ async function myRows(userId: string): Promise<WaitlistRow[]> {
   return data ?? [];
 }
 
+/**
+ * Which of the person's rows stand for the area at `point` — the same rule
+ * area_waitlist_notify uses to decide who a launch tells. Inside a listed
+ * city: the rows for that city, and rows taken outside every city at a spot
+ * the city now covers. Outside every city: rows taken outside every city
+ * within WAITLIST_SAME_AREA_KM. Used for "am I waiting here?", for leaving,
+ * and to refuse a second row for the same area (so joining again from
+ * across town, or from the other app, adds nothing).
+ */
+export function rowsForPoint<
+  T extends { region_id: string | null; lat: number; lng: number },
+>(rows: readonly T[], point: Point, markets: readonly MarketConfig[]): T[] {
+  const inside = containingRegion(markets, point)?.region ?? null;
+  return rows.filter((row) => {
+    if (row.region_id !== null)
+      return inside !== null && row.region_id === inside.id;
+    if (inside && distanceMetres(row, inside) <= inside.radiusKm * 1000)
+      return true;
+    return distanceMetres(row, point) <= WAITLIST_SAME_AREA_KM * 1000;
+  });
+}
+
 /** The person's rows that stand for the area at `point`. */
 async function rowsForArea(
   userId: string,
@@ -127,13 +150,7 @@ async function rowsForArea(
     myRows(userId),
     listOpenMarkets(),
   ]);
-  const regionId = containingRegion(markets, point)?.region.id ?? null;
-  return rows.filter((row) =>
-    regionId
-      ? row.region_id === regionId
-      : row.region_id === null &&
-        distanceMetres(row, point) <= WAITLIST_SAME_AREA_KM * 1000,
-  );
+  return rowsForPoint(rows, point, markets);
 }
 
 export async function getAreaWaitlistStatusCore(
@@ -181,9 +198,16 @@ export async function joinAreaWaitlistCore(
         message: "Abonten is already open here — have a look around.",
       };
 
-    const existing = await myRows(userId);
+    const [existing, markets] = await Promise.all([
+      myRows(userId),
+      listOpenMarkets(),
+    ]);
     const key = waitlistAreaKey(coverage.region, point);
-    const already = existing.find((row) => row.area_key === key);
+    // Already waiting for this area (same city, or a spot near this one):
+    // answer as if joined, without a second row.
+    const already =
+      existing.find((row) => row.area_key === key) ??
+      rowsForPoint(existing, point, markets)[0];
     if (already)
       return { status: 200, data: { waiting: true, areaName: already.label } };
     const coarse = coarsePoint(point);

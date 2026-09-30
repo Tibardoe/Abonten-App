@@ -5,13 +5,21 @@
 //
 //   markets.view    the overview (people waiting, upcoming events, places)
 //   markets.manage  launch a city / mark it coming soon, notify the people
-//                   waiting, set the market's coverage mode
+//                   waiting, set the market's coverage mode and its browse
+//                   fallback (which launched cities Explore offers instead)
 //
 // Nothing here blocks a listing, a search or a payment: "not launched" only
 // changes what Explore says. Every write is audited and drops the market
 // cache so the apps see it within a minute.
 
-import type { CoverageMode, LaunchStatus } from "@abonten/core/market/coverage";
+import {
+  BROWSE_LIMIT_MAX,
+  BROWSE_LIMIT_MIN,
+  BROWSE_STRATEGIES,
+  type BrowseStrategy,
+  type CoverageMode,
+  type LaunchStatus,
+} from "@abonten/core/market/coverage";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { getMarket, invalidateMarketCache } from "../../markets/marketConfig";
@@ -278,6 +286,101 @@ export async function setCoverageModeAdminCore(
         input.mode === "launched_areas"
           ? "Places outside the listed cities now show as not launched yet."
           : "Places outside the listed cities now show as open.",
+    };
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+/**
+ * Which launched cities Explore offers someone in an area Abonten hasn't
+ * launched in (@abonten/core/market/coverage `browseSuggestions`). A fixed
+ * city must be an active, launched city of this market when it is chosen;
+ * if it stops being one later, Explore suggests the nearest instead.
+ */
+export async function setBrowseFallbackAdminCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: {
+    countryCode: string;
+    strategy: BrowseStrategy;
+    regionId?: string | null;
+    limit?: number;
+  },
+  requestMeta?: Meta,
+): Promise<AdminEnvelope> {
+  try {
+    assertPermission(ctx, "markets.manage");
+    const code = input.countryCode.toUpperCase();
+    if (!BROWSE_STRATEGIES.includes(input.strategy))
+      return { status: 400, message: "Unknown browse fallback." };
+    const limit = input.limit ?? 3;
+    if (
+      !Number.isInteger(limit) ||
+      limit < BROWSE_LIMIT_MIN ||
+      limit > BROWSE_LIMIT_MAX
+    )
+      return {
+        status: 400,
+        message: `Show between ${BROWSE_LIMIT_MIN} and ${BROWSE_LIMIT_MAX} cities.`,
+      };
+    invalidateMarketCache();
+    const market = await getMarket(code);
+    if (!market) return { status: 404, message: "Market not found" };
+
+    let regionId: string | null = null;
+    if (input.strategy === "fixed") {
+      const city = market.regions.find((r) => r.id === input.regionId);
+      if (!city) return { status: 400, message: "Choose a city." };
+      if (city.status !== "active" || city.launchStatus !== "launched")
+        return {
+          status: 400,
+          message: `${city.name} isn't launched. Choose a launched city, or launch ${city.name} first.`,
+        };
+      regionId = city.id;
+    }
+
+    const { error } = await supabase
+      .from("market")
+      .update({
+        browse_fallback: input.strategy,
+        browse_fallback_region_id: regionId,
+        browse_fallback_limit: limit,
+        updated_by: ctx.userId,
+      })
+      .eq("country_code", code);
+    if (error) return { status: 500, message: error.message };
+    invalidateMarketCache();
+
+    const city = regionId
+      ? market.regions.find((r) => r.id === regionId)?.name
+      : null;
+    const summary =
+      input.strategy === "choose"
+        ? `let people choose from up to ${limit} cities`
+        : input.strategy === "fixed"
+          ? `suggest ${city}`
+          : input.strategy === "most_active"
+            ? "suggest the most active launched city"
+            : "suggest the nearest launched city";
+    await recordAdminAudit(supabase, {
+      actorId: ctx.userId,
+      actorRoles: ctx.roles,
+      action: "markets.browse_fallback",
+      targetType: "market",
+      targetId: code,
+      summary: `Browse fallback in ${market.name}: ${summary}`,
+      after: {
+        strategy: input.strategy,
+        regionId,
+        limit,
+        previous: market.browseFallback,
+      },
+      requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+    });
+    return {
+      status: 200,
+      message: `Saved. Explore will ${summary}.`,
     };
   } catch (e) {
     return adminError(e);

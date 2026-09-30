@@ -50,6 +50,8 @@ export type PublicMarketRegion = {
    */
   launchStatus?: "launched" | "coming_soon";
   position: number;
+  /** Upcoming events and places in the radius (launched cities only). */
+  activity?: { upcomingEvents: number; places: number } | null;
 };
 
 export type PublicMarket = {
@@ -87,6 +89,15 @@ export type PublicMarket = {
    * launched yet. Absent in answers cached before 2026-09-30: everywhere.
    */
   coverageMode?: "everywhere" | "launched_areas";
+  /**
+   * Which launched cities Explore offers from a not-launched area. Absent
+   * in answers cached before the setting existed: let people choose.
+   */
+  browseFallback?: {
+    strategy: "choose" | "nearest" | "most_active" | "fixed";
+    regionId: string | null;
+    limit: number;
+  };
   paymentMethods: PublicMarketPaymentMethod[];
   payoutMethods: PublicMarketPayoutMethod[];
   regions: PublicMarketRegion[];

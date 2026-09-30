@@ -2,9 +2,9 @@
 title: Global platform — markets, money, payments, time and locale
 purpose: How Abonten runs in more than one country — the market model and its activation checks, money as integer minor units, providers per market, time zones, phones, addresses, locale, reporting per currency, and the feature flags that roll it out.
 audience: Engineers, operations, finance
-scope: supabase/migrations/20260924100000..20260925100500 and 20260930100000 (launched cities), @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
+scope: supabase/migrations/20260924100000..20260925100500 and 20260930100000 + 20260930120000 (launched cities, browse fallback), @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.7
+version: 1.8
 lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -100,8 +100,10 @@ launched" only changes what Explore says.
 |---|---|
 | `market_region.launch_status` | `launched` (default) or `coming_soon`; `launched_at` set when staff launch it |
 | `market.coverage_mode` | what a point **outside every listed city** is: `everywhere` (default, open) or `launched_areas` (not launched yet) |
-| `@abonten/core/market/coverage` | the one rule (`areaCoverage`): inside a city its launch status decides; outside, the market's mode decides. Also the nearest launched city, and the waiting-list key |
-| `@abonten/core/market/coverageCopy` | every sentence: "Abonten isn't in Kumasi yet", "Tell me when it launches", "Browse Accra", the distance |
+| `@abonten/core/market/coverage` | the one rule (`areaCoverage`): inside a city its launch status decides; outside, the market's mode decides. Also which launched cities to offer instead (`browseSuggestions`, below) and the waiting-list key |
+| `@abonten/core/market/coverageCopy` | every sentence: "Abonten isn't in Kumasi yet", "Tell me when it launches", "Explore what's happening elsewhere", the reason labels, the distance, and the Admin wording of each browse strategy |
+| `market.browse_fallback` / `browse_fallback_region_id` / `browse_fallback_limit` | how Explore picks the launched cities it offers instead (strategies below); default `choose`, 3 cities |
+| `market_region_activity(country?)` | upcoming published events + published places inside each city's radius (the discovery visibility rules); with no country, only active launched cities of live markets. Feeds "most active" and the counts Admin shows under each city (`area_launch_overview` reads it, so the two cannot disagree) |
 | `area_waitlist` | who asked to be told, for which city (`region_id`) or ~1 km cell (`lat`/`lng` rounded to two decimals), with the area's name. No client privileges; unique per person per area |
 | `@abonten/services/markets/areaWaitlistCore` | status / join / leave for the signed-in person; the server recomputes coverage before recording anyone (409 when the area is open) |
 | `area_waitlist_notify(region)` | on launch: one `area_launched` notice per person (data `kind: "area"`) plus a queued push (`notification_delivery`, source `app`, daytime only), then deletes their rows. The delete is the claim, so nobody is told twice |
@@ -111,16 +113,43 @@ launched" only changes what Explore says.
 `/explore/<area>` and `/events/location/<area>`) shows a card for a
 not-launched area: the title, "Tell me when it launches" (signed out it
 goes through sign-in and finishes the join on return — web
-`?joinWaitlist=1`, app an in-memory pending join), "Browse <nearest
-launched city>" with its distance, and "List an event / Add a place"
+`?joinWaitlist=1`, app an in-memory pending join), **"Explore what's
+happening elsewhere"** with the launched cities the market's browse
+fallback picks, each with its distance, and "List an event / Add a place"
 (app) or the help articles (web). Anything listed nearby still shows under
-it. When the list is empty, the app's empty state says "Nothing listed in
-Kumasi yet" and offers the nearest launched city. After joining, the app
+it. When the app's list is empty, its empty state says "Nothing listed in
+Kumasi yet" and the cities move down into it (shown once, where the person
+is looking). After joining, the app
 folds the card to "We'll tell you when Abonten launches in Kumasi". The
 web area chooser lists launched cities first and tags the others "Coming
 soon". Tapping the launch notice opens Explore on that city (the app
 follows the phone when it is already there, and refetches the market
 context).
+
+**Browse fallback** (2026-09-30, migration `20260930120000`). Each market
+chooses, in Admin › Markets › Cities and launch, how the cities under
+"Explore what's happening elsewhere" are picked:
+
+| Strategy | Shows | Marked |
+|---|---|---|
+| `choose` (default) | up to `browse_fallback_limit` (2–5, default 3) launched cities, nearest first; the person picks | nothing (a list) |
+| `nearest` | the nearest launched city | "Nearest" |
+| `most_active` | the launched city with the most **upcoming published events + published places** inside its radius (`market_region_activity`; each listing counts once, an event with several dates once). A tie goes to the nearer city; if no candidate has any listing, or the counts are unavailable, the nearest is shown | "Most listings" |
+| `fixed` | the city staff chose | "Suggested" |
+
+Rules every strategy obeys (`browseSuggestions`): only **active,
+launched** cities of a **live** market are ever offered, never the city
+the person is in; candidates come from the person's own country, and only
+when it has no launched city is the single nearest launched city of
+another live market offered; two city rows with the same name are offered
+once; with one launched city it is shown without a label; with none, the
+section is not shown at all (no empty or broken link). A fixed city that is
+later made coming soon or deactivated falls back to the nearest (Admin
+says so), and a deleted one clears itself (`on delete set null`). Distance
+is great-circle from the browsing point to the city centre. The counts are
+cached for five minutes per server, separately from the market settings,
+so a slow count never delays anything else. The app reads it all from the
+persisted market context, so it works offline.
 
 **Which market decides a point outside every city:** the one the client
 already resolved (`context.marketCountry`: browsing country, then
@@ -429,9 +458,9 @@ live Ghana purchase and refund on the new build is still owed.
 - A ticket-level cancellation refunds once every ticket on the order is
   cancelled (existing product rule); there is no partially-refunded
   transaction state.
-- "Browse <city>" offers the geographically nearest launched city, not the
-  one with the most listings (Kumasi → Cape Coast, 180 km, before Accra,
-  200 km).
+- The app refreshes the market context about every ten minutes, so a
+  browse-fallback or launch change can take that long to reach an open app
+  (the website: about a minute).
 - Only Explore speaks about launch status; Search, Weekly and Spotlight ›
   Nearby show what exists without the card.
 - Mobile money for field-ops payouts is paid by hand from the CSV; numbers

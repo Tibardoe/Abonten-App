@@ -23,7 +23,7 @@ The app remembers the last location you chose.
 Abonten opens city by city. If you are exploring somewhere it hasn't launched yet, the top of Explore says so, for example "Abonten isn't in Kumasi yet". Anything already listed nearby still shows below it, and you can still search, open links and buy tickets anywhere. From there you can:
 
 - tap **Tell me when it launches** to get one notice (in the app, and as a push notification if you allow them) when Abonten launches there. You need to be signed in. You can undo it with **Stop waiting**, and we keep only the city or rough area you asked about, never your exact position;
-- **browse** the nearest city Abonten is open in; or
+- explore a city Abonten is open in, under **Explore what's happening elsewhere** (a short list you can choose from, or one city we suggest); or
 - list your own events or place there, if you run them.
 
 ## Browse

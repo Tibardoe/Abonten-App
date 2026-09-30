@@ -37,7 +37,7 @@ export default async function AreaCoverageNotice({
 
   return (
     <AreaCoveragePanel
-      nearest={coverage.nearest}
+      browse={coverage.browse}
       areaName={areaName}
       point={{ lat, lng }}
       waiting={status.data?.waiting === true}

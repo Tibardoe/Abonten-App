@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-30 — "Explore what's happening elsewhere": a configurable browse fallback
+
+- `architecture/global-platform.md` 1.8 (§1a "Browse fallback"), `admin/markets.md` 1.4, `mobile/guide/navigation-and-screens.md` 1.6, help `customers/finding-events-and-places.md`, `architecture/feature-inventory.md`, `PROJECT.md` §55.1.
+- Behaviour: in an area Abonten hasn't launched in, Explore (app and website) now offers launched cities under "Explore what's happening elsewhere" instead of a single "Browse <nearest city>" button. Each country chooses how in Admin › Markets › Cities and launch: let people choose from up to 2–5 cities, nearest first (the default, 3); suggest the nearest; suggest the most active (most upcoming events plus places); or suggest a city staff pick. A single suggestion is labelled "Nearest", "Most listings" or "Suggested". Only launched cities of a live country are ever offered; with none, the section is hidden. Also fixed: the app no longer opens on a coming-soon city when location is unavailable, and joining the waiting list again from a nearby spot no longer adds a second entry.
+- Migration `20260930120000_browse_fallback`: columns `market.browse_fallback`, `browse_fallback_region_id`, `browse_fallback_limit`; function `market_region_activity`; `area_launch_overview` reads its counts from it. Env vars, permissions, jobs: none. The app part reaches phones with the next update or build.
+
 ## 2026-09-30 — "Abonten isn't in Kumasi yet": launched cities and a waiting list
 
 - `architecture/global-platform.md` 1.7 (new §1a "Launched cities and the waiting list", two known limits), `admin/markets.md` 1.3 (new "Launch a city"), `mobile/guide/navigation-and-screens.md` 1.5 (new "Areas Abonten hasn't launched in"), `privacy/data-retention-and-deletion.md`, `architecture/feature-inventory.md`, help `customers/finding-events-and-places.md`, public draft `legal/privacy-policy.md` 1.5-draft (Location row: the area of a launch notice you asked for; still "Review required"), `PROJECT.md` §55.

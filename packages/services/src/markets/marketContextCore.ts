@@ -21,6 +21,7 @@ import { resolveLocation } from "../geo/locationResolution";
 import { serviceFeeRateFor } from "../platform/platformFee";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getDefaultMarket, listPublicMarkets } from "./marketConfig";
+import { getRegionActivity } from "./regionActivity";
 
 export type MarketContextResult = {
   markets: PublicMarket[];
@@ -43,14 +44,20 @@ export async function getMarketContextCore(input: {
   installId?: string | null;
   cohorts?: string[];
 }): Promise<MarketContextResult> {
-  const [publicMarkets, defaultMarket] = await Promise.all([
+  const [publicMarkets, defaultMarket, activity] = await Promise.all([
     listPublicMarkets(),
     getDefaultMarket(),
+    getRegionActivity(),
   ]);
   const feeClient = input.supabase ?? getSupabaseServiceClient();
   const markets = await Promise.all(
     publicMarkets.map(async (m) => ({
       ...m,
+      // Listings per launched city, for the "most active" browse fallback.
+      regions: m.regions.map((r) => {
+        const a = activity.get(r.id);
+        return a ? { ...r, activity: a } : r;
+      }),
       serviceFeeRate: await serviceFeeRateFor(
         feeClient,
         { currency: m.defaultCurrency, countryCode: m.countryCode },

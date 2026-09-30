@@ -23,7 +23,12 @@ export function cachedMarketCentre(): {
       (m) => m.countryCode === data.context.marketCountry,
     );
     if (!market) continue;
-    const city = market.regions.find((r) => r.status === "active");
+    // A launched city first: with no location, the app should open where
+    // Abonten is, never on "Abonten isn't here yet" for a place the person
+    // may not even be in.
+    const active = market.regions.filter((r) => r.status === "active");
+    const city =
+      active.find((r) => r.launchStatus !== "coming_soon") ?? active[0];
     if (city) return { lat: city.lat, lng: city.lng, label: city.name };
     if (market.centre) return { ...market.centre, label: market.name };
   }
