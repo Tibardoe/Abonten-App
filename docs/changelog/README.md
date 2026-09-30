@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-30 — "Abonten isn't in Kumasi yet": launched cities and a waiting list
+
+- `architecture/global-platform.md` 1.7 (new §1a "Launched cities and the waiting list", two known limits), `admin/markets.md` 1.3 (new "Launch a city"), `mobile/guide/navigation-and-screens.md` 1.5 (new "Areas Abonten hasn't launched in"), `privacy/data-retention-and-deletion.md`, `architecture/feature-inventory.md`, help `customers/finding-events-and-places.md`, public draft `legal/privacy-policy.md` 1.5-draft (Location row: the area of a launch notice you asked for; still "Review required"), `PROJECT.md` §55.
+- Behaviour: a city can be **launched** or **coming soon**, and a country can treat places outside its listed cities as open (default) or not launched yet. In an area Abonten hasn't launched in, Explore on the app and website says so, offers the nearest launched city, "Tell me when it launches" (signed-out people sign in first and are added on return) and a way to list events or a place there; anything already listed still shows and nothing is blocked. Launching a city in Admin › Markets can send everyone waiting there one notice ("Abonten is now in Kumasi", in the app and as a push). Ships with every city launched and outside areas open, so nothing changes until staff use it.
+- Migration `20260930100000_area_launch_waitlist`: table `area_waitlist`; columns `market.coverage_mode`, `market_region.launch_status` / `launched_at`; functions `area_waitlist_notify`, `area_launch_overview`, `area_waitlist_outside`, `_area_distance_km`; `anonymize_deleted_account` also clears waiting rows. Env vars, permissions, jobs: none (uses `markets.view` / `markets.manage`). New API route `/api/mobile/markets/waitlist`. The app card reaches phones with the next update or build.
+
 ## 2026-09-30 — Checkout: Pay stays at the bottom, wallets added in place
 
 - `architecture/mobile-offline-media-and-sync.md` 1.5 (§13 "Sticky ticket, booking and pay CTAs").

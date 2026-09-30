@@ -115,6 +115,20 @@ function targetFromData(
       if (data.eventId) return `/(app)/event/${data.eventId}`;
       if (data.placeId) return `/(app)/place/${data.placeId}`;
       return "/(app)/for-you";
+    case "area": {
+      // "Abonten is now in Kumasi": Explore, moved to that city unless the
+      // app is already showing it (Explore reads these parameters once).
+      if (typeof data.lat !== "number" || typeof data.lng !== "number")
+        return "/(app)/(tabs)";
+      const q = new URLSearchParams({
+        areaLat: String(data.lat),
+        areaLng: String(data.lng),
+      });
+      if (data.areaLabel) q.set("areaLabel", data.areaLabel);
+      if (typeof data.radiusKm === "number")
+        q.set("areaRadiusKm", String(data.radiusKm));
+      return `/(app)/(tabs)?${q.toString()}`;
+    }
     default:
       return null;
   }

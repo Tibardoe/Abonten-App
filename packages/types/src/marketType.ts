@@ -44,6 +44,11 @@ export type PublicMarketRegion = {
   lng: number;
   radiusKm: number;
   status: "active" | "inactive";
+  /**
+   * Open here, or coming soon (Explore says so and offers the waiting
+   * list). Absent in answers cached before 2026-09-30: launched.
+   */
+  launchStatus?: "launched" | "coming_soon";
   position: number;
 };
 
@@ -77,6 +82,11 @@ export type PublicMarket = {
   centre: { lat: number; lng: number } | null;
   /** Sizes the price filters for this currency (1 = cedi-sized). */
   priceScale?: number;
+  /**
+   * What a point outside every listed city is: open (`everywhere`) or not
+   * launched yet. Absent in answers cached before 2026-09-30: everywhere.
+   */
+  coverageMode?: "everywhere" | "launched_areas";
   paymentMethods: PublicMarketPaymentMethod[];
   payoutMethods: PublicMarketPayoutMethod[];
   regions: PublicMarketRegion[];
@@ -127,4 +137,18 @@ export type LocalePreferences = {
   displayCurrency: string | null;
   distanceUnit: DistanceUnit | null;
   locale: string | null;
+};
+
+/** Whether the signed-in person is on the waiting list for an area. */
+export type AreaWaitlistStatus = {
+  waiting: boolean;
+  /** The area's name as the list records it ("Kumasi"), when waiting. */
+  areaName: string | null;
+};
+
+export type AreaWaitlistJoinBody = {
+  lat: number;
+  lng: number;
+  /** What the person sees as the area's name, for areas outside every city. */
+  label?: string | null;
 };

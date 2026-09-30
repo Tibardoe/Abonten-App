@@ -429,6 +429,67 @@ export type Database = {
         }
         Relationships: []
       }
+      area_waitlist: {
+        Row: {
+          area_key: string
+          country_code: string
+          created_at: string
+          id: string
+          label: string
+          lat: number
+          lng: number
+          region_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          area_key: string
+          country_code: string
+          created_at?: string
+          id?: string
+          label: string
+          lat: number
+          lng: number
+          region_id?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          area_key?: string
+          country_code?: string
+          created_at?: string
+          id?: string
+          label?: string
+          lat?: number
+          lng?: number
+          region_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "area_waitlist_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "market_region"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "area_waitlist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "area_waitlist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profile_details"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           created_at: string | null
@@ -5993,6 +6054,7 @@ export type Database = {
           centre_lat: number | null
           centre_lng: number | null
           country_code: string
+          coverage_mode: string
           created_at: string
           default_currency: string
           default_locale: string
@@ -6019,6 +6081,7 @@ export type Database = {
           centre_lat?: number | null
           centre_lng?: number | null
           country_code: string
+          coverage_mode?: string
           created_at?: string
           default_currency: string
           default_locale: string
@@ -6045,6 +6108,7 @@ export type Database = {
           centre_lat?: number | null
           centre_lng?: number | null
           country_code?: string
+          coverage_mode?: string
           created_at?: string
           default_currency?: string
           default_locale?: string
@@ -6349,6 +6413,8 @@ export type Database = {
           created_at: string
           id: string
           kind: string
+          launch_status: string
+          launched_at: string | null
           name: string
           position: number
           radius_km: number
@@ -6364,6 +6430,8 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
+          launch_status?: string
+          launched_at?: string | null
           name: string
           position?: number
           radius_km?: number
@@ -6379,6 +6447,8 @@ export type Database = {
           created_at?: string
           id?: string
           kind?: string
+          launch_status?: string
+          launched_at?: string | null
           name?: string
           position?: number
           radius_km?: number
@@ -13241,6 +13311,10 @@ export type Database = {
       }
     }
     Functions: {
+      _area_distance_km: {
+        Args: { p_lat1: number; p_lat2: number; p_lng1: number; p_lng2: number }
+        Returns: number
+      }
       _content_hashtags_text: { Args: { p_tags: string[] }; Returns: string }
       _credit_draw_lots: {
         Args: {
@@ -13656,6 +13730,25 @@ export type Database = {
       archive_or_delete_expired_event: {
         Args: { p_event_id: string }
         Returns: Json
+      }
+      area_launch_overview: {
+        Args: { p_country_code: string }
+        Returns: {
+          places: number
+          region_id: string
+          upcoming_events: number
+          waiting: number
+        }[]
+      }
+      area_waitlist_notify: { Args: { p_region_id: string }; Returns: number }
+      area_waitlist_outside: {
+        Args: { p_country_code: string; p_limit?: number }
+        Returns: {
+          label: string
+          lat: number
+          lng: number
+          waiting: number
+        }[]
       }
       block_participant: {
         Args: {
@@ -15667,6 +15760,7 @@ export type Database = {
           centre_lat: number | null
           centre_lng: number | null
           country_code: string
+          coverage_mode: string
           created_at: string
           default_currency: string
           default_locale: string

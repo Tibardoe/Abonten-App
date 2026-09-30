@@ -1,9 +1,9 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.4-draft
+version: 1.5-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-09-17
+lastUpdated: 2026-09-30
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -29,7 +29,7 @@ We collect only what the service needs to work. The table below lists every cate
 | Account | Your Google account email or the phone number / email you sign in with; a unique account id; when you signed up and last signed in | You, via sign-in | To create and secure your account |
 | Profile | Username, full name, bio, website, avatar image; whether your profile is complete | You | To show who you are to other users |
 | Contact details | Phone number (verified by SMS code), email address | You | Sign-in codes, ticket emails, contact for bookings and claims |
-| Location | The town or area you choose to explore; your device location when you allow it (to show what's near you); the approximate country from your network address; for field-team members, GPS position when checking in and submitting work | You / your device / network | Discovery, distance sorting, field-work verification |
+| Location | The town or area you choose to explore; your device location when you allow it (to show what's near you); the approximate country from your network address; the city or rough area (about 1 km) you ask us to tell you about when Abonten launches there, kept until the notice is sent or you cancel it; for field-team members, GPS position when checking in and submitting work | You / your device / network | Discovery, distance sorting, launch notices you asked for, field-work verification |
 | Events, places and content | Events you create, places you list, photos, videos, highlights, reviews, responses to reviews, opening hours, services | You | To publish your listings and content |
 | Tickets and attendance | Tickets bought or registered, their status (active, used, cancelled), check-in, refunds | Your purchases | To issue and validate tickets and handle refunds |
 | Payments | Payment attempts and transactions (amounts, currency, status, a Paystack reference, the payment channel); for saved methods, only the last four digits, brand, expiry, label and a Paystack authorization reference; for organizers, payout account details (bank or mobile-money) | You, Paystack | To take payment, issue refunds, pay organizers |

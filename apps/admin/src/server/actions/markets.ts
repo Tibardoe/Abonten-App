@@ -6,8 +6,14 @@ import {
   requireAdmin,
 } from "@/lib/adminGuard";
 import type { FlagRules } from "@abonten/core/flags/evaluateFlag";
+import type { CoverageMode, LaunchStatus } from "@abonten/core/market/coverage";
 import type { MarketTransition } from "@abonten/core/market/transitions";
 import { MARKET_TRANSITIONS } from "@abonten/core/market/transitions";
+import {
+  notifyRegionWaitlistAdminCore,
+  setCoverageModeAdminCore,
+  setRegionLaunchAdminCore,
+} from "@abonten/services/admin/markets/areaLaunchAdminCore";
 import {
   type CreateMarketInput,
   type UpdateMarketInput,
@@ -134,6 +140,69 @@ export async function upsertMarketRegion(input: UpsertRegionInput) {
     return res;
   } catch (e) {
     return adminError(e, "markets.region");
+  }
+}
+
+// ── Launched cities ────────────────────────────────────────
+// markets.manage. Launching can tell the people waiting in the city; it
+// never blocks or unblocks a listing, search or payment.
+
+export async function setRegionLaunch(input: {
+  countryCode: string;
+  regionId: string;
+  launchStatus: LaunchStatus;
+  notifyWaiting?: boolean;
+}) {
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await setRegionLaunchAdminCore(
+      svc(),
+      ctx,
+      input,
+      await currentRequestMeta(),
+    );
+    revalidatePath(`/markets/${input.countryCode}`);
+    return res;
+  } catch (e) {
+    return adminError(e, "markets.region.launch");
+  }
+}
+
+export async function notifyRegionWaitlist(input: {
+  countryCode: string;
+  regionId: string;
+}) {
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await notifyRegionWaitlistAdminCore(
+      svc(),
+      ctx,
+      input,
+      await currentRequestMeta(),
+    );
+    revalidatePath(`/markets/${input.countryCode}`);
+    return res;
+  } catch (e) {
+    return adminError(e, "markets.region.notify_waitlist");
+  }
+}
+
+export async function setMarketCoverageMode(input: {
+  countryCode: string;
+  mode: CoverageMode;
+}) {
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await setCoverageModeAdminCore(
+      svc(),
+      ctx,
+      input,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath(`/markets/${input.countryCode}`);
+    return res;
+  } catch (e) {
+    return adminError(e, "markets.coverage_mode");
   }
 }
 

@@ -4,8 +4,8 @@ purpose: How to prepare, check, open, pause and maintain a country (market), tar
 audience: Operations, finance, engineering
 scope: Admin › Markets (Countries, market editor, Feature flags, Exchange rates), the markets.view / markets.manage / markets.activate permissions
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-25
+version: 1.3
+lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -100,6 +100,42 @@ when a critical one now fails.
 
 To take it back down: **Pause** (invisible, no payments) or **Enter
 maintenance** (browsable, no payments). Existing tickets stay valid.
+
+## Launch a city — "Abonten isn't in Kumasi yet"
+
+Inside a live country, supply arrives city by city. A city that is
+**coming soon** is never blocked — listings, links, search and tickets
+keep working — but Explore there says "Abonten isn't in Kumasi yet",
+offers the nearest launched city and "Tell me when it launches". The card
+lives in Admin › Markets › a country › **Cities and launch**
+(`markets.view` to see it, `markets.manage` to change it; every change is
+in the audit log).
+
+Each city shows **upcoming events · places · waiting**: published,
+visible upcoming events and published places inside its radius, and the
+people who asked to be told. Use these to decide when a city has enough to
+launch; there is no automatic threshold.
+
+- **Mark coming soon** — Explore in that city starts saying it isn't
+  launched. Nothing is hidden.
+- **Launch** / **Launch and notify N** — the city is open. With people
+  waiting, each gets one notice, "Abonten is now in Kumasi", in the app
+  and as a push (pushes wait for daytime), and their places on the list
+  are removed. Nobody is told twice.
+- **Notify N waiting** (launched city) — tells people who joined from a
+  spot this city now covers, for example after you widen its radius or add
+  a city where people were already waiting.
+- **Outside these cities: Treat outside as not launched** — the Bolt-style
+  switch. Anywhere in the country outside the launched cities then says
+  "Abonten isn't here yet". **Treat outside as open** turns it back. New
+  countries and Ghana ship with outside open and every city launched, so
+  nothing changes until you use these.
+- **Waiting outside every listed city** — where people asked from, by
+  area name. Add a city there (the add form has a Launch choice) to reach
+  them; if you add it as launched, press **Notify N waiting** on its row.
+
+Changes reach the website within about a minute and the app within about
+ten minutes (the app refreshes the country settings in the background).
 
 ## Feature flags
 

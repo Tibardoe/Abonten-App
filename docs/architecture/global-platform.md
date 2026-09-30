@@ -2,10 +2,10 @@
 title: Global platform — markets, money, payments, time and locale
 purpose: How Abonten runs in more than one country — the market model and its activation checks, money as integer minor units, providers per market, time zones, phones, addresses, locale, reporting per currency, and the feature flags that roll it out.
 audience: Engineers, operations, finance
-scope: supabase/migrations/20260924100000..20260925100500, @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
+scope: supabase/migrations/20260924100000..20260925100500 and 20260930100000 (launched cities), @abonten/core/{money,market,phone,geo,time,units,flags}, @abonten/services/{markets,payments/providers,fx,flags,geo,profile/otpProviders}, Admin › Markets, the markets API, both apps' market context
 status: Approved
-version: 1.6
-lastReviewed: 2026-09-29
+version: 1.7
+lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -85,6 +85,62 @@ method, a payout rail, refunds supported, phone rules, tax acknowledged,
 fee rate resolves, an admin can manage it, legal acknowledged.
 Advisory: address schema, OTP provider, email, notifications, exchange
 rates, monitoring, support contact.
+
+## 1a. Launched cities and the waiting list
+
+(2026-09-30, migration `20260930100000_area_launch_waitlist`.) A market
+is live or it is not. Inside a live market, supply arrives city by city,
+so someone who sees an advert in Kumasi and opens Abonten before anything
+is listed there is told so honestly instead of landing on an empty screen.
+**Nothing is ever blocked:** search, shared links, event pages, tickets,
+payments and creating listings work everywhere in a live market. "Not
+launched" only changes what Explore says.
+
+| Piece | What it is |
+|---|---|
+| `market_region.launch_status` | `launched` (default) or `coming_soon`; `launched_at` set when staff launch it |
+| `market.coverage_mode` | what a point **outside every listed city** is: `everywhere` (default, open) or `launched_areas` (not launched yet) |
+| `@abonten/core/market/coverage` | the one rule (`areaCoverage`): inside a city its launch status decides; outside, the market's mode decides. Also the nearest launched city, and the waiting-list key |
+| `@abonten/core/market/coverageCopy` | every sentence: "Abonten isn't in Kumasi yet", "Tell me when it launches", "Browse Accra", the distance |
+| `area_waitlist` | who asked to be told, for which city (`region_id`) or ~1 km cell (`lat`/`lng` rounded to two decimals), with the area's name. No client privileges; unique per person per area |
+| `@abonten/services/markets/areaWaitlistCore` | status / join / leave for the signed-in person; the server recomputes coverage before recording anyone (409 when the area is open) |
+| `area_waitlist_notify(region)` | on launch: one `area_launched` notice per person (data `kind: "area"`) plus a queued push (`notification_delivery`, source `app`, daytime only), then deletes their rows. The delete is the claim, so nobody is told twice |
+| `area_launch_overview(country)` / `area_waitlist_outside(country)` | per city: people waiting, upcoming published events and published places in its radius; people waiting outside every city, by area name |
+
+**Who sees what.** Explore (app: under the location switcher; web:
+`/explore/<area>` and `/events/location/<area>`) shows a card for a
+not-launched area: the title, "Tell me when it launches" (signed out it
+goes through sign-in and finishes the join on return — web
+`?joinWaitlist=1`, app an in-memory pending join), "Browse <nearest
+launched city>" with its distance, and "List an event / Add a place"
+(app) or the help articles (web). Anything listed nearby still shows under
+it. When the list is empty, the app's empty state says "Nothing listed in
+Kumasi yet" and offers the nearest launched city. After joining, the app
+folds the card to "We'll tell you when Abonten launches in Kumasi". The
+web area chooser lists launched cities first and tags the others "Coming
+soon". Tapping the launch notice opens Explore on that city (the app
+follows the phone when it is already there, and refetches the market
+context).
+
+**Which market decides a point outside every city:** the one the client
+already resolved (`context.marketCountry`: browsing country, then
+preference, request country, default). The server does the same when it
+records someone: the point's own country when that market is open, else
+the default market; the row stores the point's country even when that
+country has no open market, so demand from a country Abonten isn't in is
+kept.
+
+**Rolling it out.** Everything ships as today: every city launched, every
+market `everywhere`. Staff switch it in Admin › Markets › a market ›
+Cities and launch (runbook: [../admin/markets.md](../admin/markets.md)).
+The market context is cached for a minute on the server and ten minutes in
+the app (persisted), so a change reaches people within minutes.
+
+**Privacy.** A row holds the account, the city or a ~1 km cell and the
+area's name — never a precise position. It is deleted when the notice goes
+out, when the person taps "Stop waiting", or by `anonymize_deleted_account`
+when the account is deleted. Rows for an area that never launches are kept
+until one of those happens.
 
 ## 2. Money
 
@@ -373,5 +429,10 @@ live Ghana purchase and refund on the new build is still owed.
 - A ticket-level cancellation refunds once every ticket on the order is
   cancelled (existing product rule); there is no partially-refunded
   transaction state.
+- "Browse <city>" offers the geographically nearest launched city, not the
+  one with the most listings (Kumasi → Cape Coast, 180 km, before Accra,
+  200 km).
+- Only Explore speaks about launch status; Search, Weekly and Spotlight ›
+  Nearby show what exists without the card.
 - Mobile money for field-ops payouts is paid by hand from the CSV; numbers
   are E.164 since 2026-09-25 and exported in the national form.

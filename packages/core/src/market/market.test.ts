@@ -28,6 +28,7 @@ const ghana: MarketConfig = {
   centre: { lat: 5.6037, lng: -0.187 },
   priceScale: 1,
   launchedAt: "2026-01-01T00:00:00Z",
+  coverageMode: "everywhere",
   version: 1,
   paymentProviders: [
     {

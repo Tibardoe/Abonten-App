@@ -29,6 +29,7 @@ const KIND_ICON: Record<NotificationEntityKind, IoniconName> = {
   story: "aperture-outline",
   follow: "person-add-outline",
   content_campaign: "megaphone-outline",
+  area: "map-outline",
 };
 
 function fallbackIcon(kind?: NotificationEntityKind): IoniconName {

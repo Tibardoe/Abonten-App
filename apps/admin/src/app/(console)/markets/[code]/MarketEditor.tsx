@@ -2,7 +2,10 @@
 
 import { Badge, Button, Card, cn } from "@/components/ui";
 import {
+  notifyRegionWaitlist,
   runMarketReadiness,
+  setMarketCoverageMode,
+  setRegionLaunch,
   transitionMarket,
   updateMarket,
   upsertMarketPaymentMethod,
@@ -10,6 +13,7 @@ import {
   upsertMarketProvider,
   upsertMarketRegion,
 } from "@/server/actions/markets";
+import type { LaunchStatus } from "@abonten/core/market/coverage";
 import type { ReadinessReport } from "@abonten/core/market/readiness";
 import {
   MARKET_TRANSITIONS,
@@ -25,6 +29,7 @@ import {
   type PaymentProviderCode,
 } from "@abonten/core/market/types";
 import { CURRENCIES } from "@abonten/core/money/currencies";
+import type { AreaLaunchOverview } from "@abonten/services/admin/markets/areaLaunchAdminCore";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState, useTransition } from "react";
 
@@ -71,12 +76,14 @@ export function MarketEditor({
   canManage,
   canActivate,
   stepUpFresh,
+  launchOverview,
   lastReadiness,
 }: {
   market: MarketConfig;
   canManage: boolean;
   canActivate: boolean;
   stepUpFresh: boolean;
+  launchOverview: AreaLaunchOverview | null;
   lastReadiness: {
     ranAt: string;
     canActivate: boolean;
@@ -88,7 +95,11 @@ export function MarketEditor({
       <div className="space-y-4">
         <OverviewForm market={market} canManage={canManage} />
         <TaxFeesLegalForm market={market} canManage={canManage} />
-        <RegionsSection market={market} canManage={canManage} />
+        <RegionsSection
+          market={market}
+          canManage={canManage}
+          overview={launchOverview}
+        />
       </div>
       <div className="space-y-4">
         <ReadinessSection
@@ -1053,7 +1064,12 @@ function PayoutMethodsSection({
 function RegionsSection({
   market,
   canManage,
-}: { market: MarketConfig; canManage: boolean }) {
+  overview,
+}: {
+  market: MarketConfig;
+  canManage: boolean;
+  overview: AreaLaunchOverview | null;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<Msg>(null);
@@ -1063,29 +1079,183 @@ function RegionsSection({
   const [lng, setLng] = useState("");
   const [radius, setRadius] = useState("25");
   const [tz, setTz] = useState("");
+  const [launchStatus, setLaunchStatus] = useState<LaunchStatus>("launched");
+  const [launchMsg, setLaunchMsg] = useState<Msg>(null);
+  const stats = new Map(overview?.regions.map((r) => [r.regionId, r]) ?? []);
+  const outsideOpen = market.coverageMode !== "launched_areas";
+
+  function run(
+    work: () => Promise<{ status: number; message?: string }>,
+    confirmText: string,
+  ) {
+    if (!window.confirm(confirmText)) return;
+    setLaunchMsg(null);
+    start(async () => {
+      const res = await work();
+      setLaunchMsg({
+        ok: res.status === 200,
+        text: res.message ?? (res.status === 200 ? "Saved." : "Failed"),
+      });
+      router.refresh();
+    });
+  }
 
   return (
     <Section
-      title="Cities and regions"
-      hint="Where discovery centres when a person's location is unknown, and the areas offered in the location picker. Give a region its own time zone only in multi-zone countries."
+      title="Cities and launch"
+      hint="Where discovery centres when a person's location is unknown, the areas offered in the location picker, and where Abonten has launched. Coming soon never blocks anything: Explore there says Abonten isn't launched yet, offers the nearest launched city and a notice when it launches. Give a city its own time zone only in multi-zone countries."
     >
-      <ul className="mb-3 space-y-1 text-xs">
-        {market.regions.map((r) => (
-          <li key={r.id} className="flex items-center gap-2">
-            <Badge tone={r.status === "active" ? "success" : "neutral"}>
-              {r.status}
-            </Badge>
-            <span className="font-medium">{r.name}</span>
-            <span className="text-muted-foreground">
-              {r.slug} · {r.lat.toFixed(3)}, {r.lng.toFixed(3)} · {r.radiusKm}{" "}
-              km
-            </span>
-          </li>
-        ))}
+      <div className="mb-3 rounded border border-border p-2 text-xs">
+        <p className="font-medium">Outside these cities</p>
+        <p className="mb-2 text-muted-foreground">
+          {outsideOpen
+            ? "Open: anywhere outside the listed cities shows as normal. Only a coming-soon city says Abonten isn't there yet."
+            : "Not launched yet: anywhere outside the launched cities says Abonten isn't there yet and offers the waiting list."}
+        </p>
+        {canManage ? (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={pending}
+            onClick={() =>
+              run(
+                () =>
+                  setMarketCoverageMode({
+                    countryCode: market.countryCode,
+                    mode: outsideOpen ? "launched_areas" : "everywhere",
+                  }),
+                outsideOpen
+                  ? `Show everywhere outside the launched cities in ${market.name} as not launched yet? Nothing is hidden or blocked; Explore says so and offers the waiting list.`
+                  : `Show everywhere outside the listed cities in ${market.name} as open?`,
+              )
+            }
+          >
+            {outsideOpen
+              ? "Treat outside as not launched"
+              : "Treat outside as open"}
+          </Button>
+        ) : null}
+      </div>
+
+      <ul className="mb-3 space-y-2 text-xs">
+        {market.regions.map((r) => {
+          const stat = stats.get(r.id);
+          const waiting = stat?.waiting ?? 0;
+          const launched = r.launchStatus === "launched";
+          const people = waiting === 1 ? "person" : "people";
+          return (
+            <li
+              key={r.id}
+              className="flex flex-wrap items-center gap-2 border-b border-border pb-2 last:border-0"
+            >
+              <Badge tone={r.status === "active" ? "success" : "neutral"}>
+                {r.status}
+              </Badge>
+              <Badge tone={launched ? "info" : "warning"}>
+                {launched ? "launched" : "coming soon"}
+              </Badge>
+              <span className="font-medium">{r.name}</span>
+              <span className="text-muted-foreground">
+                {r.slug} · {r.lat.toFixed(3)}, {r.lng.toFixed(3)} · {r.radiusKm}{" "}
+                km
+              </span>
+              {stat ? (
+                <span className="w-full text-muted-foreground">
+                  {stat.upcomingEvents} upcoming events · {stat.places} places ·{" "}
+                  {waiting} waiting
+                </span>
+              ) : null}
+              {canManage ? (
+                <span className="flex w-full flex-wrap gap-2">
+                  {launched ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={pending}
+                      onClick={() =>
+                        run(
+                          () =>
+                            setRegionLaunch({
+                              countryCode: market.countryCode,
+                              regionId: r.id,
+                              launchStatus: "coming_soon",
+                            }),
+                          `Mark ${r.name} coming soon? Explore there will say Abonten isn't launched yet. Nothing is hidden or blocked.`,
+                        )
+                      }
+                    >
+                      Mark coming soon
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      disabled={pending || r.status !== "active"}
+                      onClick={() =>
+                        run(
+                          () =>
+                            setRegionLaunch({
+                              countryCode: market.countryCode,
+                              regionId: r.id,
+                              launchStatus: "launched",
+                              notifyWaiting: true,
+                            }),
+                          waiting > 0
+                            ? `Launch ${r.name} and send "Abonten is now in ${r.name}" to the ${waiting} ${people} waiting?`
+                            : `Launch ${r.name}?`,
+                        )
+                      }
+                    >
+                      {waiting > 0 ? `Launch and notify ${waiting}` : "Launch"}
+                    </Button>
+                  )}
+                  {launched && waiting > 0 ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={pending || r.status !== "active"}
+                      onClick={() =>
+                        run(
+                          () =>
+                            notifyRegionWaitlist({
+                              countryCode: market.countryCode,
+                              regionId: r.id,
+                            }),
+                          `Send "Abonten is now in ${r.name}" to the ${waiting} ${people} waiting?`,
+                        )
+                      }
+                    >
+                      Notify {waiting} waiting
+                    </Button>
+                  ) : null}
+                </span>
+              ) : null}
+            </li>
+          );
+        })}
         {market.regions.length === 0 ? (
-          <li className="text-muted-foreground">No regions yet.</li>
+          <li className="text-muted-foreground">No cities yet.</li>
         ) : null}
       </ul>
+
+      {overview && overview.outside.length > 0 ? (
+        <div className="mb-3 text-xs">
+          <p className="font-medium">Waiting outside every listed city</p>
+          <p className="mb-1 text-muted-foreground">
+            Where people asked for Abonten. Add a city here to reach them.
+          </p>
+          <ul className="space-y-0.5">
+            {overview.outside.map((o) => (
+              <li key={o.label}>
+                {o.label} · {o.waiting} waiting ·{" "}
+                <span className="text-muted-foreground">
+                  {o.lat.toFixed(2)}, {o.lng.toFixed(2)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      <Msg msg={launchMsg} />
       {canManage ? (
         <form
           className="grid grid-cols-3 gap-2"
@@ -1109,6 +1279,7 @@ function RegionsSection({
                 radiusKm: Number(radius) || 25,
                 timezone: tz.trim() || null,
                 status: "active",
+                launchStatus,
               });
               setMsg({
                 ok: res.status === 200,
@@ -1175,6 +1346,17 @@ function RegionsSection({
               onChange={(e) => setTz(e.target.value)}
               placeholder="America/Chicago"
             />
+          </label>
+          <label className={label}>
+            Launch
+            <select
+              className={input}
+              value={launchStatus}
+              onChange={(e) => setLaunchStatus(e.target.value as LaunchStatus)}
+            >
+              <option value="launched">Launched</option>
+              <option value="coming_soon">Coming soon</option>
+            </select>
           </label>
           <div className="col-span-3 flex items-center gap-2">
             <Button type="submit" size="sm" disabled={pending}>

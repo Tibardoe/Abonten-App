@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-29
+version: 1.3
+lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -34,6 +34,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Feature | App | Role | Entry | Workflow | Tables / RPCs | Service / action / API | Failure | Docs |
 |---|---|---|---|---|---|---|---|---|
 | Explore by location, featured, nearby | W A | all | Home/Explore | location → RPCs with moderation filter | `event`, `place`, `event_promotion`, `place_promotion`; `get_filtered_events`, `get_nearby_events`, `get_filtered_places`, `get_nearby_places`, `get_active_place_promotions`, `get_events_in_window` | actions `getFilteredEvents`, `getNearByEvents`, `getQueriedPlaces`, `getActivePlacePromotions`…; API `events`, `places` | hidden content | help finding-events |
+| "Abonten isn't in <city> yet" + waiting list | W A | all | Explore card under the location | `areaCoverage` (city launch status / market coverage mode) → card; join → `area_waitlist`; staff launch → `area_waitlist_notify` notice + push | `market_region.launch_status`, `market.coverage_mode`, `area_waitlist`; `area_waitlist_notify`, `area_launch_overview`, `area_waitlist_outside` | actions `getAreaWaitlistStatus`, `joinAreaWaitlist`, `leaveAreaWaitlist`; API `markets/waitlist`; admin `setRegionLaunch`, `notifyRegionWaitlist`, `setMarketCoverageMode` | area already open (409), signed out (sign in, then joined), 20-area cap | architecture/global-platform §1a, admin/markets |
 | Unified search + suggestions (events, places, organizers, `@handle`) | W A | all | Search | ranked RPCs over `search_tsv` and trigram indexes; old events-only search when the programme is off for the visitor | `search_suggest`, `search_events`, `search_places`, `search_organizers`, `search_query_log` | actions `searchDiscovery`, `suggestDiscovery`, `logSearchClick`; API `search`, `search/click` | programme off (old search), hidden content, rate limit | architecture/discovery-search-and-recommendations |
 | Alerts, opt-in prompts, For you, notification preferences | W A | signed in | Organizer/place bell, post-RSVP/ticket/favorite prompt, Settings › Notifications, For you | explicit opt-in → `recommendations_generate` / `recommendations_build_digest` → delivery queue | `notification_subscription`, `notification_prompt_state`, `recommendation`, `recommendation_digest`, `notification_preference` | actions in `actions/discovery/`; API `notifications/preferences`, `notifications/subscriptions`, `notifications/prompt`, `recommendations` | programme off or shadow, caps, paused | admin/discovery |
 | Abonten Weekly editions (ships switched off) | W A | all when the audience is Everyone; staff / beta before | `/weekly`, `/weekly/<area>`, `/weekly/<area>/<Monday>`, Explore teaser, sidebar / drawer | staff curate in Admin › Abonten Weekly → publish or schedule (`weekly-publish-due`) → read-time validity per listing | `weekly_program_setting`, `weekly_scope`, `weekly_edition`, `weekly_section`, `weekly_item`; `weekly_edition_view`, `weekly_resolve_scope`, `weekly_edition_transition` | actions `getWeeklyEdition`, `getWeeklyTeaser`, `getWeeklyProgram`; API `weekly`, `weekly/teaser`, `weekly/program` | programme off or not in audience (upcoming-events fallback), no edition this week (Ghana or last week, labelled), listing dropped | architecture/weekly-highlights |

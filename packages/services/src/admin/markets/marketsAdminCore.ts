@@ -818,6 +818,12 @@ export type UpsertRegionInput = {
   timezone?: string | null;
   status: "active" | "inactive";
   position?: number;
+  /**
+   * New cities only; omitted keeps the stored value (launched by default).
+   * Launching an existing city goes through setRegionLaunchAdminCore, which
+   * can also tell the people waiting.
+   */
+  launchStatus?: "launched" | "coming_soon";
 };
 
 export async function upsertRegionAdminCore(
@@ -849,6 +855,7 @@ export async function upsertRegionAdminCore(
       timezone: input.timezone ?? null,
       status: input.status,
       position: input.position ?? 100,
+      ...(input.launchStatus ? { launch_status: input.launchStatus } : {}),
     };
     const { error } = input.id
       ? await supabase

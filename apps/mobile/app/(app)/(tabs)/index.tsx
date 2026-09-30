@@ -8,6 +8,7 @@ import {
 } from "@/components/app/GlassTabBar";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
+import { AreaCoverageCard } from "@/components/explore/AreaCoverageCard";
 import { AreaSuggestionCard } from "@/components/explore/AreaSuggestionCard";
 import { AreaSwitcher } from "@/components/explore/AreaSwitcher";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
@@ -40,9 +41,16 @@ import { useFilteredEvents } from "@/features/discovery/useFilteredEvents";
 import { useFilteredPlaces } from "@/features/discovery/useFilteredPlaces";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import { useWarmDetails } from "@/features/discovery/useWarmDetails";
-import { useMarket } from "@/features/markets/MarketProvider";
+import {
+  MARKET_CONTEXT_KEY,
+  useMarket,
+} from "@/features/markets/MarketProvider";
+import { useAreaCoverage } from "@/features/markets/useAreaCoverage";
 import { useQueryView } from "@/lib/useQueryView";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
+import { distanceMetres } from "@abonten/core/fieldOps/territory";
+import { waitlistAreaKey } from "@abonten/core/market/coverage";
+import { browseNearestLabel } from "@abonten/core/market/coverageCopy";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import {
@@ -55,8 +63,9 @@ import {
   SectionTitle,
   SegmentedTabs,
 } from "@abonten/ui-native";
-import { useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, View } from "react-native";
 
 type Tab = "events" | "places";
@@ -71,9 +80,62 @@ export default function Explore() {
   const router = useRouter();
   const listPadding = useTabBarListPadding();
   const tabBarOverlap = useTabBarOverlap();
-  const { area, resolving } = useExploreLocation();
+  const { area, resolving, devicePosition, chooseArea, followDevice } =
+    useExploreLocation();
   const { market } = useMarket();
   const coords = area ? { lat: area.lat, lng: area.lng } : null;
+  const { coverage, areaName } = useAreaCoverage();
+  const notLaunched = coverage?.kind === "not_launched" ? coverage : null;
+
+  // Opened from "Abonten is now in Kumasi": show that city, unless the app
+  // already is. Following the phone when the phone is there keeps the area
+  // live instead of pinning it.
+  const launch = useLocalSearchParams<{
+    areaLat?: string;
+    areaLng?: string;
+    areaLabel?: string;
+    areaRadiusKm?: string;
+  }>();
+  const queryClient = useQueryClient();
+  const handledLaunch = useRef<string | null>(null);
+  useEffect(() => {
+    const lat = Number(launch.areaLat);
+    const lng = Number(launch.areaLng);
+    if (!launch.areaLat || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      handledLaunch.current = null;
+      return;
+    }
+    // Once per tap: the area and position change while this settles.
+    const tap = `${launch.areaLat},${launch.areaLng}`;
+    if (handledLaunch.current === tap) return;
+    handledLaunch.current = tap;
+    // The persisted market context still says "coming soon".
+    queryClient.invalidateQueries({ queryKey: MARKET_CONTEXT_KEY });
+    router.setParams({
+      areaLat: undefined,
+      areaLng: undefined,
+      areaLabel: undefined,
+      areaRadiusKm: undefined,
+    });
+    const city = { lat, lng };
+    const radiusM = (Number(launch.areaRadiusKm) || 25) * 1000;
+    if (area && !area.isFallback && distanceMetres(area, city) <= radiusM)
+      return;
+    if (devicePosition && distanceMetres(devicePosition, city) <= radiusM)
+      void followDevice();
+    else void chooseArea(lat, lng, launch.areaLabel || undefined);
+  }, [
+    launch.areaLat,
+    launch.areaLng,
+    launch.areaLabel,
+    launch.areaRadiusKm,
+    area,
+    devicePosition,
+    chooseArea,
+    followDevice,
+    router,
+    queryClient,
+  ]);
 
   const openSection = useCallback(
     (kind: "event" | "place", sliderKey: string, title: string) => {
@@ -369,23 +431,45 @@ export default function Explore() {
 
   // Loading, offline and failed are resolved by useQueryView; "no events
   // here" is only ever said for an answer the server actually gave.
+  // In an area Abonten hasn't launched in, the empty list says so and
+  // offers the nearest launched city (the card above has the rest).
+  const nearest = notLaunched?.nearest ?? null;
   const emptyState =
     activeView.kind === "empty" ? (
-      <EmptyState
-        icon={tab === "events" ? "calendar-outline" : "location-outline"}
-        title={
-          activeCount > 0
-            ? `No ${tab} match your filters`
-            : `No ${tab} ${whereText(area)}`
-        }
-        description={
-          activeCount > 0
-            ? "Try widening or clearing your filters."
-            : "Check back soon, or change your location."
-        }
-        actionLabel={activeCount > 0 ? "Clear filters" : undefined}
-        onAction={activeCount > 0 ? clearAllChips : undefined}
-      />
+      activeCount === 0 && notLaunched ? (
+        <EmptyState
+          icon={tab === "events" ? "calendar-outline" : "location-outline"}
+          title={`Nothing listed ${whereText(area)} yet`}
+          description="Abonten hasn't launched here yet. Browse a city that's open, or check back soon."
+          actionLabel={nearest ? browseNearestLabel(nearest) : undefined}
+          onAction={
+            nearest
+              ? () =>
+                  void chooseArea(
+                    nearest.region.lat,
+                    nearest.region.lng,
+                    nearest.region.name,
+                  )
+              : undefined
+          }
+        />
+      ) : (
+        <EmptyState
+          icon={tab === "events" ? "calendar-outline" : "location-outline"}
+          title={
+            activeCount > 0
+              ? `No ${tab} match your filters`
+              : `No ${tab} ${whereText(area)}`
+          }
+          description={
+            activeCount > 0
+              ? "Try widening or clearing your filters."
+              : "Check back soon, or change your location."
+          }
+          actionLabel={activeCount > 0 ? "Clear filters" : undefined}
+          onAction={activeCount > 0 ? clearAllChips : undefined}
+        />
+      )
     ) : (
       <QueryUnavailable
         view={activeView}
@@ -438,6 +522,16 @@ export default function Explore() {
       </View>
 
       <AreaSuggestionCard />
+
+      {/* "Abonten isn't in Kumasi yet": a coming-soon city, or outside every
+          launched city in a market that opens city by city. */}
+      {notLaunched && area ? (
+        <AreaCoverageCard
+          key={waitlistAreaKey(notLaunched.region, area)}
+          coverage={notLaunched}
+          areaName={areaName}
+        />
+      ) : null}
 
       {/* Events / Places tabs — same segmented control as the web
           ExploreTabs (shadcn Tabs): full-width track, active segment lifted

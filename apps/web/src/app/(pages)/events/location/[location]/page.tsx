@@ -5,12 +5,14 @@ import LocationUnavailable from "@/components/molecules/LocationUnavailable";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
+import AreaCoverageNotice from "@/events/organisms/AreaCoverageNotice";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { requestTimeZone } from "@/utils/requestTimeZone";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import AllEventsList from "./AllEventsList";
 
 export async function generateMetadata({
@@ -36,10 +38,10 @@ export default async function page({
   searchParams,
 }: {
   params: Promise<{ location: string }>;
-  searchParams: Promise<{ lat?: string; lng?: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string; joinWaitlist?: string }>;
 }) {
   const { location } = await params;
-  const { lat: latParam, lng: lngParam } = await searchParams;
+  const { lat: latParam, lng: lngParam, joinWaitlist } = await searchParams;
 
   const safeLocation = location ?? "";
 
@@ -147,6 +149,15 @@ export default async function page({
   return (
     <section className="space-y-2">
       <LocationAndFilterSection />
+      {/* "Abonten isn't in Kumasi yet", where it hasn't launched. */}
+      <Suspense fallback={null}>
+        <AreaCoverageNotice
+          lat={lat}
+          lng={lng}
+          location={safeLocation}
+          autoJoin={joinWaitlist === "1"}
+        />
+      </Suspense>
 
       {eventsWithinLocation.data?.length ? (
         <>

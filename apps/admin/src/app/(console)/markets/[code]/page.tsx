@@ -3,6 +3,7 @@ import { Badge, EmptyState, PageHeader } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { getServiceClient } from "@/lib/serviceClient";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
+import { getAreaLaunchOverviewAdminCore } from "@abonten/services/admin/markets/areaLaunchAdminCore";
 import { getMarketAdminCore } from "@abonten/services/admin/markets/marketsAdminCore";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -19,13 +20,16 @@ export default async function MarketDetailPage({
   const market = await getMarketAdminCore(svc, ctx, code.toUpperCase());
   if (market.status === 404) notFound();
 
-  const { data: lastRun } = await svc
-    .from("market_readiness_run")
-    .select("ran_at, can_activate, report")
-    .eq("country_code", code.toUpperCase())
-    .order("ran_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [launchOverview, { data: lastRun }] = await Promise.all([
+    getAreaLaunchOverviewAdminCore(svc, ctx, code),
+    svc
+      .from("market_readiness_run")
+      .select("ran_at, can_activate, report")
+      .eq("country_code", code.toUpperCase())
+      .order("ran_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
@@ -74,6 +78,9 @@ export default async function MarketDetailPage({
         canManage={ctx.permissions.includes("markets.manage")}
         canActivate={ctx.permissions.includes("markets.activate")}
         stepUpFresh={stepUpFresh}
+        launchOverview={
+          launchOverview.status === 200 ? (launchOverview.data ?? null) : null
+        }
         lastReadiness={
           lastRun
             ? {
