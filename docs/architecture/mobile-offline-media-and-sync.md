@@ -2,10 +2,10 @@
 title: Mobile offline cache, Spotlight playback, live comments, search relevance and follower counts
 purpose: How the mobile app keeps previously loaded data across restarts and offline, how Spotlight video players are created, owned and torn down, how comments and likes stay in step across screens and devices, how search widens a query with related terms and dates, and how follower counts are maintained.
 audience: Engineering, QA, security reviewers
-scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView, settleEnvelope in every /api/mobile query hook), the browsing area (ExploreLocationProvider, AreaSwitcher, AreaSuggestionCard, ChangeLocationSheet, useCoarseLocation, @abonten/core/location/browsingArea), the side menu lifecycle (AppDrawer), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail CTAs (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
+scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView, settleEnvelope in every /api/mobile query hook), the browsing area (ExploreLocationProvider, AreaSwitcher, AreaSuggestionCard, ChangeLocationSheet, useCoarseLocation, @abonten/core/location/browsingArea), the side menu lifecycle (AppDrawer), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail and checkout CTAs and the in-checkout wallet add (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow, PayBar, PaymentChoiceList, AddWalletSheet), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
 status: Approved
-version: 1.4
-lastReviewed: 2026-09-22
+version: 1.5
+lastReviewed: 2026-09-30
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -476,7 +476,7 @@ that state and upstream react-navigation has removed the code, so
 `+native-intent.ts` to work around it; the patch is the fix, and it must be
 regenerated when expo-router is upgraded.
 
-## 13. Sticky ticket and booking CTAs
+## 13. Sticky ticket, booking and pay CTAs
 
 The primary action on an event or place no longer sits mid-page. Both detail
 screens end with a `BottomBar` (the shared sticky footer: safe-area padding
@@ -494,6 +494,25 @@ tiers edited (`paidTierProblem`, on the server and in the mobile wizards). The f
 and the sticky button are the same action; the in-page duplicate button is
 gone. A place shows "Book" (or "Sign in to book", which returns to the place
 after signing in) to anyone but its owner.
+
+Checkout (`checkout/[sessionId]`) ends the same way (2026-09-30): the amount
+to be charged on the left ("Total", "To pay after credit", or "Paid with
+credit") and "Pay now" / "Pay with credit" on the right. The payment state
+lives in `useTicketPayment` (`features/checkout/PaymentSection.tsx`), so the
+method picker (`PaymentSection`) scrolls while the button (`PayBar`) stays
+put. A failed start shows its reason just above the button. While the picker
+still needs an email or a payment method, Pay stays disabled and the picker's
+own button is the way forward.
+
+The picker (`PaymentChoiceList` in `features/checkout/usePaymentChoice.tsx`,
+shared by ticket checkout and promotion payments) lists saved wallets, then
+"Add a wallet" / "Add another wallet", then the ways to pay once without
+saving. "Add a wallet" opens `AddWalletSheet` (`features/wallet/`, the same
+sheet as the Wallets screen) over the order instead of leaving it. When the
+wallet is saved (or matches one already on file), the payment options are
+fetched again and the wallet is selected, but only if the server says it
+can pay for this order. Otherwise a toast gives the reason and the previous
+choice stays.
 
 ## 14. The browsing area (2026-09-22)
 

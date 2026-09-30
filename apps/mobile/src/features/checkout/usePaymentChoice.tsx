@@ -1,8 +1,12 @@
-import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
+import { AddWalletSheet } from "@/features/wallet/AddWalletSheet";
+import {
+  PAYMENT_METHODS_KEY,
+  usePaymentMethods,
+} from "@/features/wallet/usePaymentMethods";
 import { api } from "@/lib/api";
 import type { PaymentMethodRow } from "@abonten/api-client";
-import { AppText } from "@abonten/ui-native";
-import { useQuery } from "@tanstack/react-query";
+import { AppText, Icon, useToast } from "@abonten/ui-native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -13,6 +17,8 @@ import { Pressable, View } from "react-native";
 // Paystack Nigeria can take and a London one what Stripe can, without the
 // app knowing either. Saved entries that can't pay there (a Ghanaian wallet
 // for a Kenyan event) stay visible but can't be picked, with the reason.
+// A wallet can be added from the list itself; it is then picked for this
+// order, once the server says it can pay here.
 
 export type PaymentTarget =
   | { kind: "ticket"; checkoutSessionIds: string[] }
@@ -31,6 +37,7 @@ function savedLabel(m: PaymentMethodRow): string {
 }
 
 export function usePaymentChoice(target: PaymentTarget | null) {
+  const queryClient = useQueryClient();
   const { data: methodsRes } = usePaymentMethods();
   const saved = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
 
@@ -73,6 +80,24 @@ export function usePaymentChoice(target: PaymentTarget | null) {
     if (recommended) setMethod(recommended.method);
   }, [saved.length, data]);
 
+  // A wallet just added is unknown to the options answer until it is asked
+  // again, so refresh both lists before picking it. Returns why it can't
+  // pay for this order, or null once it is chosen.
+  async function adoptSaved(id: string): Promise<string | null> {
+    const [, refreshed] = await Promise.all([
+      queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_KEY }),
+      options.refetch(),
+    ]);
+    const answer = refreshed.data?.status === 200 ? refreshed.data.data : null;
+    const entry = answer?.saved.find((s) => s.id === id);
+    if (answer && !entry?.usable) {
+      return entry?.reason ?? "It can't pay for this order.";
+    }
+    setSavedId(id);
+    setMethod(null);
+    return null;
+  }
+
   const choice: PaymentChoice = savedId
     ? { paymentMethodId: savedId, method: null }
     : method
@@ -95,6 +120,7 @@ export function usePaymentChoice(target: PaymentTarget | null) {
       setMethod(code);
       setSavedId(null);
     },
+    adoptSaved,
   };
 }
 
@@ -104,6 +130,20 @@ export function PaymentChoiceList({
   state: ReturnType<typeof usePaymentChoice>;
 }) {
   const { saved, hosted, choice, isUsable, reasonFor } = state;
+  const toast = useToast();
+  const [adding, setAdding] = useState(false);
+
+  async function onAdded(method: PaymentMethodRow) {
+    const problem = await state.adoptSaved(method.id);
+    if (problem) {
+      toast.info("Wallet saved", { description: problem });
+      return;
+    }
+    toast.success("Wallet added", {
+      description: "It's selected for this payment.",
+    });
+  }
+
   return (
     <View className="gap-2">
       {saved.map((m) => {
@@ -139,9 +179,25 @@ export function PaymentChoiceList({
           </Pressable>
         );
       })}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityHint="Saves a mobile money wallet or card and selects it"
+        onPress={() => setAdding(true)}
+        className="flex-row items-center gap-3 rounded-xl border border-dashed border-border bg-card p-3 active:opacity-80"
+      >
+        <Icon name="add-circle-outline" size={20} tone="primary" />
+        <View className="flex-1">
+          <AppText className="text-sm font-semibold text-foreground">
+            {saved.length > 0 ? "Add another wallet" : "Add a wallet"}
+          </AppText>
+          <AppText variant="small" tone="muted">
+            Mobile money or card, saved for next time
+          </AppText>
+        </View>
+      </Pressable>
       {hosted.length > 0 ? (
         <AppText variant="small" tone="muted" className="mt-1">
-          {saved.length > 0 ? "Or pay another way" : "Ways to pay"}
+          Or pay once, without saving
         </AppText>
       ) : null}
       {hosted.map((m) => {
@@ -174,6 +230,12 @@ export function PaymentChoiceList({
           Sales are paused in {state.marketName} right now.
         </AppText>
       ) : null}
+      <AddWalletSheet
+        open={adding}
+        onClose={() => setAdding(false)}
+        onAdded={onAdded}
+        showConfirmation={false}
+      />
     </View>
   );
 }
