@@ -10,15 +10,19 @@ import {
   formatCredit,
 } from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
-import { AppText } from "@abonten/ui-native";
+import { AppText, BottomBar, Button } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { View } from "react-native";
 import { useCreateAttempt } from "./usePayment";
 import { PaymentChoiceList, usePaymentChoice } from "./usePaymentChoice";
 
-// Method picker + "Pay". Once the attempt is created this hands off to
-// <PaymentVerificationScreen> (app/(app)/payment/[attemptId]) — this component
+// Method picker + "Pay", in three parts so the Pay button can sit in the
+// screen's sticky bottom bar (like Buy on the event screen) while the picker
+// scrolls: useTicketPayment() holds the state and starts the attempt,
+// <PaymentSection> is the picker (inside the ScrollView), <PayBar> the Pay
+// button (in the column under it). Once the attempt is created this hands
+// off to <PaymentVerificationScreen> (app/(app)/payment/[attemptId]) — this
 // never shows payment status, so there's no second Pay button beside a live
 // payment. api.checkout.attempt is idempotent server-side (an open attempt is
 // reused, a failed one is replaced), so re-tapping "Pay" is safe. With
@@ -26,7 +30,7 @@ import { PaymentChoiceList, usePaymentChoice } from "./usePaymentChoice";
 // it; if it covers everything, there's nothing to pick and the same
 // verification screen confirms the already-finalized order.
 
-export function PaymentSection({
+export function useTicketPayment({
   sessionId,
   currency,
   total,
@@ -68,7 +72,9 @@ export function PaymentSection({
   const createAttempt = useCreateAttempt();
 
   const chosen = payment.choice;
-  const canPay = creditCoversAll || !!chosen;
+  // No email on the account (a phone sign-up): every payment is refused
+  // without one, so the picker asks for it and Pay waits.
+  const canPay = !needsEmail && (creditCoversAll || !!chosen);
 
   async function onPay() {
     if (!canPay || createAttempt.isPending) return;
@@ -150,104 +156,102 @@ export function PaymentSection({
     });
   }
 
-  const creditSwitch = quote ? (
-    <CreditSwitch
-      quote={quote}
-      value={useCredit}
-      onChange={setUseCreditChoice}
-      disabled={createAttempt.isPending}
-    />
-  ) : null;
+  return {
+    currency,
+    total,
+    quote,
+    useCredit,
+    setUseCreditChoice,
+    creditCoversAll,
+    payAmount,
+    needsEmail,
+    payment,
+    canPay,
+    pending: createAttempt.isPending,
+    error,
+    onPay,
+  };
+}
 
-  const errorBox = error ? (
-    <View className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-      <AppText className="text-sm text-destructive">{error}</AppText>
-    </View>
-  ) : null;
+export type TicketPayment = ReturnType<typeof useTicketPayment>;
 
-  // No email on the account (a phone sign-up): every payment is refused
-  // without one, so ask for it here instead of failing on "Pay".
-  if (needsEmail) {
+// With no wallet yet the list still offers "Add a wallet" (added in place
+// and selected) and the ways to pay once, so there is no separate empty card.
+export function PaymentSection({ state }: { state: TicketPayment }) {
+  if (state.needsEmail) {
     return <EmailRequiredCard purpose="tickets" />;
   }
 
-  if (creditCoversAll) {
-    return (
-      <View className="gap-3">
-        {creditSwitch}
-        {errorBox}
-        <Pressable
-          accessibilityRole="button"
-          disabled={createAttempt.isPending}
-          onPress={onPay}
-          className={`items-center rounded-xl px-4 py-3 ${
-            createAttempt.isPending ? "bg-muted" : "bg-primary"
-          }`}
-        >
-          {createAttempt.isPending ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <AppText className="text-sm font-semibold text-primary-foreground">
-              Confirm and pay with credit
-            </AppText>
-          )}
-        </Pressable>
-      </View>
-    );
-  }
+  const creditSwitch = state.quote ? (
+    <CreditSwitch
+      quote={state.quote}
+      value={state.useCredit}
+      onChange={state.setUseCreditChoice}
+      disabled={state.pending}
+    />
+  ) : null;
 
-  if (payment.saved.length === 0 && payment.hosted.length === 0) {
-    return (
-      <View className="gap-3 rounded-xl border border-border bg-card p-4">
-        {creditSwitch}
-        <AppText className="text-sm text-muted-foreground">
-          {useCredit
-            ? "Add a mobile money wallet or card to pay the rest."
-            : "Add a mobile money wallet or card to pay."}
-        </AppText>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push("/(app)/wallet")}
-          className="items-center rounded-lg bg-primary px-4 py-2.5"
-        >
-          <AppText className="text-sm font-semibold text-primary-foreground">
-            Add payment method
-          </AppText>
-        </Pressable>
-      </View>
-    );
-  }
+  if (state.creditCoversAll) return creditSwitch;
 
   return (
     <View className="gap-3">
       {creditSwitch}
       <AppText className="text-sm font-semibold text-foreground">
-        {useCredit ? "Pay the rest with" : "Pay with"}
+        {state.useCredit ? "Pay the rest with" : "Pay with"}
       </AppText>
-      <PaymentChoiceList state={payment} />
-
-      {errorBox}
-
-      <Pressable
-        accessibilityRole="button"
-        disabled={!chosen || createAttempt.isPending}
-        onPress={onPay}
-        className={`items-center rounded-xl px-4 py-3 ${
-          !chosen || createAttempt.isPending ? "bg-muted" : "bg-primary"
-        }`}
-      >
-        {createAttempt.isPending ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <AppText
-            className={`text-sm font-semibold ${
-              !chosen ? "text-muted-foreground" : "text-primary-foreground"
-            }`}
-          >
-            Pay {formatMoney(currency, payAmount)}
-          </AppText>
-        )}
-      </Pressable>
+      <PaymentChoiceList state={state.payment} />
     </View>
+  );
+}
+
+// The sticky footer: what will be charged on the left, Pay on the right —
+// the event screen's Buy bar. A failed start shows its reason just above
+// the button, where the tap was, not up in the scrolled picker. While the
+// picker still needs something (an email, a way to pay) Pay stays disabled
+// and the picker's own "Add email" / "Add a wallet" is the way forward.
+export function PayBar({ state }: { state: TicketPayment }) {
+  const { quote, creditCoversAll } = state;
+
+  const caption = creditCoversAll
+    ? "Paid with credit"
+    : state.useCredit
+      ? "To pay after credit"
+      : "Total";
+  const amount =
+    creditCoversAll && quote
+      ? formatCredit(quote.creditMinor, quote.currency)
+      : formatMoney(state.currency, state.payAmount);
+
+  return (
+    <BottomBar>
+      {state.error ? (
+        <View className="mb-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+          <AppText className="text-sm text-destructive">{state.error}</AppText>
+        </View>
+      ) : null}
+      <View className="flex-row items-center gap-3">
+        <View className="flex-1">
+          <AppText variant="caption" numberOfLines={1}>
+            {caption}
+          </AppText>
+          <AppText variant="cardTitle" numberOfLines={1}>
+            {amount}
+          </AppText>
+        </View>
+        <Button
+          title={creditCoversAll ? "Pay with credit" : "Pay now"}
+          disabled={!state.canPay}
+          loading={state.pending}
+          onPress={state.onPay}
+          accessibilityHint={
+            state.needsEmail
+              ? "Add your email above to pay"
+              : !state.canPay
+                ? "Choose a way to pay above"
+                : "Starts the payment"
+          }
+        />
+      </View>
+    </BottomBar>
   );
 }

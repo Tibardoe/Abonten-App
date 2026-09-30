@@ -1,6 +1,10 @@
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
-import { PaymentSection } from "@/features/checkout/PaymentSection";
+import {
+  PayBar,
+  PaymentSection,
+  useTicketPayment,
+} from "@/features/checkout/PaymentSection";
 import {
   useCancelCheckout,
   useCheckoutPrepare,
@@ -11,12 +15,13 @@ import {
   useCheckoutCountdown,
 } from "@/features/checkout/useCheckoutCountdown";
 import { useQueryView } from "@/lib/useQueryView";
+import type { PreparedCheckoutSession } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function CheckoutExpiryBanner({
   expiresAt,
@@ -96,7 +101,6 @@ export default function CheckoutReviewScreen() {
   const toast = useToast();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const prepareQuery = useCheckoutPrepare(sessionId);
   const { data, refetch } = prepareQuery;
   // Loading, offline and failed are told apart from the server's own
@@ -191,20 +195,70 @@ export default function CheckoutReviewScreen() {
   }
 
   return (
+    <CheckoutReady
+      sessionId={sessionId ?? ""}
+      session={session}
+      grandTotal={grandTotal}
+      currency={currency}
+      credit={credit}
+      expiresAt={expiresAt}
+      onExpired={() => {
+        refetch();
+        sessionQuery.refetch();
+      }}
+      onCreditRefused={() => refetch()}
+      onCancel={onCancel}
+      cancelling={cancel.isPending}
+    />
+  );
+}
+
+// The loaded checkout. Its own component so the payment state hook runs
+// only once there is a session to pay for (the screen above returns early
+// while loading or expired). Pay is the sticky bar under the ScrollView,
+// like Buy on the event screen; BottomBar pads it clear of the home
+// indicator, so the scroll content needs no inset of its own.
+function CheckoutReady({
+  sessionId,
+  session,
+  grandTotal,
+  currency,
+  credit,
+  expiresAt,
+  onExpired,
+  onCreditRefused,
+  onCancel,
+  cancelling,
+}: {
+  sessionId: string;
+  session: PreparedCheckoutSession;
+  grandTotal: number;
+  currency: string;
+  credit: CreditQuote | null;
+  expiresAt: string | null;
+  onExpired: () => void;
+  onCreditRefused: () => void;
+  onCancel: () => void;
+  cancelling: boolean;
+}) {
+  const payment = useTicketPayment({
+    sessionId,
+    currency,
+    total: session.total,
+    eventTitle: session.eventTitle,
+    eventId: session.eventId,
+    creditQuote: credit,
+    onCreditRefused,
+  });
+
+  return (
     <View className="flex-1 bg-background">
       <AppHeader variant="title" title="Checkout" backFallback="/(app)" />
       <ScrollView
         className="flex-1 bg-background"
-        contentContainerClassName="gap-5 p-4"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        contentContainerClassName="gap-5 p-4 pb-6"
       >
-        <CheckoutExpiryBanner
-          expiresAt={expiresAt}
-          onExpired={() => {
-            refetch();
-            sessionQuery.refetch();
-          }}
-        />
+        <CheckoutExpiryBanner expiresAt={expiresAt} onExpired={onExpired} />
 
         <View>
           <AppText variant="caption">Order summary</AppText>
@@ -243,23 +297,15 @@ export default function CheckoutReviewScreen() {
         <AppText variant="caption" className="-mb-2">
           Payment
         </AppText>
-        <PaymentSection
-          sessionId={sessionId ?? ""}
-          currency={currency}
-          total={session.total}
-          eventTitle={session.eventTitle}
-          eventId={session.eventId}
-          creditQuote={credit}
-          onCreditRefused={() => refetch()}
-        />
+        <PaymentSection state={payment} />
 
         <Pressable
           accessibilityRole="button"
-          disabled={cancel.isPending}
+          disabled={cancelling || payment.pending}
           onPress={onCancel}
           className="items-center rounded-xl border border-destructive/40 bg-destructive/10 py-3 active:opacity-80"
         >
-          {cancel.isPending ? (
+          {cancelling ? (
             <ActivityIndicator />
           ) : (
             <AppText className="text-sm font-semibold text-destructive">
@@ -272,6 +318,8 @@ export default function CheckoutReviewScreen() {
           Your seats are held for a limited time.
         </AppText>
       </ScrollView>
+
+      <PayBar state={payment} />
     </View>
   );
 }

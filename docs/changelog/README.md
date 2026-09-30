@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-30 — Checkout: Pay stays at the bottom, wallets added in place
+
+- `architecture/mobile-offline-media-and-sync.md` 1.5 (§13 "Sticky ticket, booking and pay CTAs").
+- Behaviour (mobile app): on the checkout screen, Pay now sits in a bar fixed to the bottom of the screen, like Buy on the event screen: the amount to be charged on the left and the button on the right, so it no longer has to be found by scrolling. A payment that can't start shows its reason just above the button. The button is disabled until an email and a way to pay are set. "Cancel checkout" can't be pressed while a payment is starting. Under the saved wallets there is now "Add another wallet" ("Add a wallet" when there are none). It opens the Wallets screen's add sheet over the order instead of leaving checkout, and the new wallet is selected for the payment once the server confirms it can pay for this order. The pay-without-saving choices are now headed "Or pay once, without saving". Promotion payments get the same list. Migrations, env vars, permissions, jobs: none. Reaches phones with the next update or build.
+
 ## 2026-09-29 — Explore map: smooth selection, photo pins, full-screen location search
 
 - `mobile/guide/navigation-and-screens.md` 1.4 (new "Explore map" and "Choosing a location").

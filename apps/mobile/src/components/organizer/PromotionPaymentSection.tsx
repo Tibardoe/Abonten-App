@@ -278,28 +278,6 @@ function PromotionPaymentSectionInner({
     );
   }
 
-  if (payment.saved.length === 0 && payment.hosted.length === 0) {
-    return (
-      <View className="gap-3">
-        {creditSwitch}
-        <View className="gap-3 rounded-xl border border-border bg-card p-4">
-          <AppText className="text-sm text-muted-foreground">
-            Add a payment method to pay for a promotion.
-          </AppText>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.push("/(app)/wallet")}
-            className="items-center rounded-lg bg-primary px-4 py-2.5"
-          >
-            <AppText className="text-sm font-semibold text-primary-foreground">
-              Add payment method
-            </AppText>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View className="gap-3">
       {creditSwitch}

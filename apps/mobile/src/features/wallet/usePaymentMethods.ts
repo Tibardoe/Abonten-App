@@ -1,12 +1,18 @@
 import { api } from "@/lib/api";
 import { settleEnvelope } from "@/lib/envelope";
-import type { AddMomoWalletBody } from "@abonten/api-client";
+import type { AddMomoWalletBody, PaymentMethodRow } from "@abonten/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as WebBrowser from "expo-web-browser";
 
-const KEY = ["mobile", "payment-methods"] as const;
+export const PAYMENT_METHODS_KEY = ["mobile", "payment-methods"] as const;
+const KEY = PAYMENT_METHODS_KEY;
 
-type AddCardResult = { status: number; message?: string };
+type AddCardResult = {
+  status: number;
+  message?: string;
+  /** The saved card (or the matching one already on file). */
+  data?: PaymentMethodRow;
+};
 
 export function usePaymentMethods() {
   return useQuery({
@@ -62,7 +68,9 @@ export function useAddCard() {
         init.data.reference,
         label,
       );
-      return { status: confirm.status, message: confirm.message };
+      return confirm.status === 200
+        ? { status: 200, data: confirm.data }
+        : { status: confirm.status, message: confirm.message };
     },
     onSuccess: (res) => {
       if (res.status === 200) qc.invalidateQueries({ queryKey: KEY });
