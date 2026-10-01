@@ -24,7 +24,7 @@
     },
     "refunds": {
       "description": "Refunds for cancelled paid tickets will appear here when applicable.",
-      "title": "No refunds yet"
+      "title": "Aucun remboursement pour l'instant"
     }
   },
   "keepTicket": "Garder le billet",

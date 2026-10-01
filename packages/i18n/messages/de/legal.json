@@ -1,13 +1,13 @@
 {
-  "abontenHubSTermsAndConditions": "Abonten Hub's Terms and Conditions, Privacy Policy, Cookie Policy and security overview.",
-  "effective": "· Effective {effectiveDate}",
-  "effective2": " · Effective {effectiveDate}",
-  "lastUpdated": "· Last updated {lastUpdated}",
-  "legal": "Legal",
-  "onThisPage": "On this page",
-  "otherDocuments": "Other documents",
-  "sections": "Sections",
+  "abontenHubSTermsAndConditions": "Allgemeine Geschäftsbedingungen, Datenschutzerklärung, Cookie-Richtlinie und Sicherheitsübersicht von Abonten Hub.",
+  "effective": "· Gültig ab {effectiveDate}",
+  "effective2": " · Gültig ab {effectiveDate}",
+  "lastUpdated": "· Zuletzt aktualisiert: {lastUpdated}",
+  "legal": "Rechtliches",
+  "onThisPage": "Auf dieser Seite",
+  "otherDocuments": "Weitere Dokumente",
+  "sections": "Abschnitte",
   "status": "· Status: {status}",
-  "theDocumentsThatGovernYourUse": "The documents that govern your use of Abonten Hub on the web and in the mobile app.",
+  "theDocumentsThatGovernYourUse": "Die Dokumente, die deine Nutzung von Abonten Hub im Web und in der mobilen App regeln.",
   "version": "Version {version}"
 }

@@ -1,10 +1,10 @@
 {
   "abonten": "Abonten",
-  "abontenHome": "Abonten home",
-  "connectingPeopleToExperiences": "Connecting people to experiences",
-  "enterACityOrAddress": "Enter a city or address",
+  "abontenHome": "Abonten-Startseite",
+  "connectingPeopleToExperiences": "Wir verbinden Menschen mit Erlebnissen",
+  "enterACityOrAddress": "Stadt oder Adresse eingeben",
   "explore": "Entdecken",
-  "exploreEventsAndPlacesHere": "Explore events and places here",
-  "findEventsAndPlacesNearYou": "Find events and places near you, get your tickets, and see what's on this week.",
+  "exploreEventsAndPlacesHere": "Events und Orte hier entdecken",
+  "findEventsAndPlacesNearYou": "Finde Events und Orte in deiner Nähe, hol dir deine Tickets und sieh, was diese Woche los ist.",
   "useMyCurrentLocation": "Meinen aktuellen Standort verwenden"
 }

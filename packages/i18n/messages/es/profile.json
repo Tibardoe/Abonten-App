@@ -2,11 +2,11 @@
   "aHighlightCanHoldUpTo": "A highlight can hold up to {MAX_COMPOSER_ITEMS} photos and videos.",
   "addHighlight": "Add highlight",
   "addPhotosAndVideosToYour": "Add photos and videos to your highlights. Trim clips and crop photos before you post.",
-  "addPlace": "Add place",
+  "addPlace": "Añadir lugar",
   "allowPhotoAccessToAddHighlights": "Allow photo access to add highlights.",
   "cancel": "Cancelar",
   "closeMenu": "Close menu",
-  "couldnTDelete": "Couldn't delete",
+  "couldnTDelete": "No se pudo eliminar",
   "couldnTDeleteHighlight": "Couldn't delete highlight",
   "couldnTPostYourHighlight": "Couldn't post your highlight.",
   "create": "Crear",
@@ -17,7 +17,7 @@
   "dismiss": "Descartar",
   "done": "Listo",
   "doubleTap": "{label}. Double tap {value}",
-  "drafts": "Drafts",
+  "drafts": "Borradores",
   "editProfile": "Editar perfil",
   "empty": {
     "drafts": {
