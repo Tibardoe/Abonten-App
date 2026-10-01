@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   type PlaceTemporaryStatus,
   setPlaceTemporaryStatusCore,
 } from "@abonten/services/places/placeHoursStatusCore";
@@ -20,6 +24,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -34,8 +39,7 @@ export async function POST(
     if (!VALID.includes(status)) {
       return apiJson({
         status: 400,
-        message:
-          "status must be null, 'temporarily_closed' or 'permanently_closed'",
+        message: tr("statusMustBeNullTemporarilyClosed"),
       });
     }
 
@@ -52,6 +56,9 @@ export async function POST(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/places/:id/status failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

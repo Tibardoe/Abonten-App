@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import type { PlaceType } from "@abonten/types/placeType";
 
@@ -18,26 +19,28 @@ const FEATURED_PLACES_LIMIT = 10;
 // placement is deliberately called with none of them from
 // PlacesTabContent.tsx, so a Featured Places purchase buys real reach
 // instead of being invisible to anyone outside a narrow radius.
-export async function getActivePlacePromotions(
-  lat?: number | null,
-  lng?: number | null,
-  maxDistanceKm?: number | null,
-) {
-  const supabase = publicSupabase;
+export const getActivePlacePromotions = withActionLocale(
+  async function getActivePlacePromotions(
+    lat?: number | null,
+    lng?: number | null,
+    maxDistanceKm?: number | null,
+  ) {
+    const supabase = publicSupabase;
 
-  // Every optional parameter is DEFAULT NULL in SQL, so omitting a key is
-  // the same call as sending null.
-  const { data, error } = await supabase.rpc("get_active_place_promotions", {
-    p_user_lat: lat ?? undefined,
-    p_user_lng: lng ?? undefined,
-    p_max_distance_km: maxDistanceKm ?? undefined,
-    p_limit: FEATURED_PLACES_LIMIT,
-  });
+    // Every optional parameter is DEFAULT NULL in SQL, so omitting a key is
+    // the same call as sending null.
+    const { data, error } = await supabase.rpc("get_active_place_promotions", {
+      p_user_lat: lat ?? undefined,
+      p_user_lng: lng ?? undefined,
+      p_max_distance_km: maxDistanceKm ?? undefined,
+      p_limit: FEATURED_PLACES_LIMIT,
+    });
 
-  if (error) {
-    logger.error(`Error fetching active place promotions: ${error.message}`);
-    return { status: 500, data: [] as PlaceType[] };
-  }
+    if (error) {
+      logger.error(`Error fetching active place promotions: ${error.message}`);
+      return { status: 500, data: [] as PlaceType[] };
+    }
 
-  return { status: 200, data: (data ?? []) as PlaceType[] };
-}
+    return { status: 200, data: (data ?? []) as PlaceType[] };
+  },
+);

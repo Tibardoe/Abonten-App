@@ -18,12 +18,7 @@
 // in a dev-only screen) goes in scripts/i18n/literal-allowlist.json with
 // the reason it is not translated.
 
-import {
-  existsSync,
-  readFileSync,
-  readdirSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
@@ -122,22 +117,35 @@ const ONE_CAPITALISED = /^[A-Z][a-z]{2,}[.!?…]?$/;
 function looksLikeClassList(text) {
   const tokens = text.trim().split(/\s+/);
   if (tokens.length === 0) return false;
-  return tokens.every((t) => /^[!a-z0-9:\-[\]/.%#()_,&>*+=@']+$/.test(t)) &&
-    tokens.some((t) => /[-:[\]/]|^(flex|grid|block|hidden|absolute|relative|fixed|sticky|uppercase|lowercase|capitalize|truncate|italic|underline|grow|shrink|group|peer|container|static|inline|contents|invisible|visible|rounded|border|shadow|transition|transform|outline|ring|sr-only)$/.test(t));
+  return (
+    tokens.every((t) => /^[!a-z0-9:\-[\]/.%#()_,&>*+=@']+$/.test(t)) &&
+    tokens.some((t) =>
+      /[-:[\]/]|^(flex|grid|block|hidden|absolute|relative|fixed|sticky|uppercase|lowercase|capitalize|truncate|italic|underline|grow|shrink|group|peer|container|static|inline|contents|invisible|visible|rounded|border|shadow|transition|transform|outline|ring|sr-only)$/.test(
+        t,
+      ),
+    )
+  );
 }
 
 function looksLikeCode(text) {
   const t = text.trim();
   if (t.startsWith("<")) return true; // markup: its words are handled inside
-  if (/^(https?:|mailto:|tel:|\/|\.\/|\.\.\/|#|@\/|~\/|data:)/.test(t)) return true;
+  if (/^(https?:|mailto:|tel:|\/|\.\/|\.\.\/|#|@\/|~\/|data:)/.test(t))
+    return true;
   // one token: code unless it is a plain Capitalised word ("Free", "Closed")
-  if (/^[a-z0-9_.\-:/\[\]*]+$/i.test(t) && !/\s/.test(t) && !/^[A-Z][a-z]{2,}$/.test(t))
+  if (
+    /^[a-z0-9_.\-:/\[\]*]+$/i.test(t) &&
+    !/\s/.test(t) &&
+    !/^[A-Z][a-z]{2,}$/.test(t)
+  )
     return true;
   // column lists, selectors, formats
   if (/^[a-z0-9_*.,:()\s!>\-"]+$/.test(t) && /[,_()]/.test(t)) return true;
   if (/^[YMDHhmsaAEdyz\s:./,\-']+$/.test(t)) return true; // date format
-  if (/^(rgba?|hsla?|var|calc|translate|scale|rotate|cubic-bezier)\(/.test(t)) return true;
-  if (/^\d+(px|rem|em|%|ms|s|vh|vw)(\s+\d+(px|rem|em|%|ms|s|vh|vw))*$/.test(t)) return true;
+  if (/^(rgba?|hsla?|var|calc|translate|scale|rotate|cubic-bezier)\(/.test(t))
+    return true;
+  if (/^\d+(px|rem|em|%|ms|s|vh|vw)(\s+\d+(px|rem|em|%|ms|s|vh|vw))*$/.test(t))
+    return true;
   return false;
 }
 
@@ -195,28 +203,144 @@ const SAFE_CALLS = [
 // matches when it IS one of these or ends with one in camelCase
 // (`containerClassName`, `eventId`): "paid" must not match "id".
 const NON_TEXT_WORDS = [
-  "class", "className", "style", "id", "key", "type", "kind", "variant",
-  "size", "tone", "role", "testID", "icon", "mode", "rel", "target",
-  "method", "href", "src", "url", "uri", "path", "route", "slug", "code",
-  "status", "state", "event", "action", "field", "column", "table",
-  "query", "param", "header", "locale", "currency", "format", "align",
-  "justify", "direction", "color", "fill", "stroke", "viewBox", "points",
-  "transform", "width", "height", "keyboardType", "autoComplete",
-  "autoCapitalize", "inputMode", "returnKeyType", "textContentType",
-  "resizeMode", "contentFit", "pointerEvents", "behavior", "presentation",
-  "animation", "edges", "namespace", "ns", "tag", "scope", "provider",
-  "platform", "channel", "bucket", "folder", "ext", "mime", "accept",
-  "encoding", "charset", "lang", "dir", "as", "htmlFor", "sizes",
-  "loading", "decoding", "priority", "fetchPriority", "crossOrigin",
-  "referrerPolicy", "sandbox", "allow", "enterKeyHint", "easing", "origin",
-  "position", "display", "overflow", "cursor", "visibility", "opacity",
-  "zIndex", "gap", "top", "left", "right", "bottom", "inset", "objectFit",
-  "whiteSpace", "wordBreak", "lineHeight", "letterSpacing", "fontFamily",
-  "fontWeight", "fontStyle", "fontSize", "textAlign", "textTransform",
-  "textDecorationLine", "flexDirection", "flexWrap", "alignItems",
-  "alignSelf", "justifyContent", "backgroundColor", "borderColor",
-  "borderStyle", "shadowColor", "d", "x", "y", "displayName", "@type",
-  "@context", "@id", "screen", "pathname", "name", "family", "weight",
+  "class",
+  "className",
+  "style",
+  "id",
+  "key",
+  "type",
+  "kind",
+  "variant",
+  "size",
+  "tone",
+  "role",
+  "testID",
+  "icon",
+  "mode",
+  "rel",
+  "target",
+  "method",
+  "href",
+  "src",
+  "url",
+  "uri",
+  "path",
+  "route",
+  "slug",
+  "code",
+  "status",
+  "state",
+  "event",
+  "action",
+  "field",
+  "column",
+  "table",
+  "query",
+  "param",
+  "header",
+  "locale",
+  "currency",
+  "format",
+  "align",
+  "justify",
+  "direction",
+  "color",
+  "fill",
+  "stroke",
+  "viewBox",
+  "points",
+  "transform",
+  "width",
+  "height",
+  "keyboardType",
+  "autoComplete",
+  "autoCapitalize",
+  "inputMode",
+  "returnKeyType",
+  "textContentType",
+  "resizeMode",
+  "contentFit",
+  "pointerEvents",
+  "behavior",
+  "presentation",
+  "animation",
+  "edges",
+  "namespace",
+  "ns",
+  "tag",
+  "scope",
+  "provider",
+  "platform",
+  "channel",
+  "bucket",
+  "folder",
+  "ext",
+  "mime",
+  "accept",
+  "encoding",
+  "charset",
+  "lang",
+  "dir",
+  "as",
+  "htmlFor",
+  "sizes",
+  "loading",
+  "decoding",
+  "priority",
+  "fetchPriority",
+  "crossOrigin",
+  "referrerPolicy",
+  "sandbox",
+  "allow",
+  "enterKeyHint",
+  "easing",
+  "origin",
+  "position",
+  "display",
+  "overflow",
+  "cursor",
+  "visibility",
+  "opacity",
+  "zIndex",
+  "gap",
+  "top",
+  "left",
+  "right",
+  "bottom",
+  "inset",
+  "objectFit",
+  "whiteSpace",
+  "wordBreak",
+  "lineHeight",
+  "letterSpacing",
+  "fontFamily",
+  "fontWeight",
+  "fontStyle",
+  "fontSize",
+  "textAlign",
+  "textTransform",
+  "textDecorationLine",
+  "flexDirection",
+  "flexWrap",
+  "alignItems",
+  "alignSelf",
+  "justifyContent",
+  "backgroundColor",
+  "borderColor",
+  "borderStyle",
+  "shadowColor",
+  "d",
+  "x",
+  "y",
+  "displayName",
+  "@type",
+  "@context",
+  "@id",
+  "screen",
+  "pathname",
+  "name",
+  "family",
+  "weight",
 ];
 const NON_TEXT_EXACT = new Set(NON_TEXT_WORDS);
 const NON_TEXT_SUFFIX = NON_TEXT_WORDS.filter((w) => w.length > 2).map(
@@ -268,7 +392,10 @@ function isSafeCall(node, sf) {
     if (cur.expression === child) return false;
     const text = calleeText(cur, sf).replace(/\s+/g, "");
     // array.push("words") is not a router push
-    if (/\.push$/.test(text) && !/(router|navigation|nav|history)\.push$/.test(text)) {
+    if (
+      /\.push$/.test(text) &&
+      !/(router|navigation|nav|history)\.push$/.test(text)
+    ) {
       return false;
     }
     return SAFE_CALLS.some((re) => re.test(text));
@@ -360,9 +487,18 @@ function inNonTextPosition(node, sf) {
     const name = holder.name.getText(sf).replace(/["']/g, "");
     if (nameExcuses && NON_TEXT_NAME.test(name)) return true;
   }
-  if (holder && ts.isVariableDeclaration(holder) && ts.isIdentifier(holder.name)) {
+  if (
+    holder &&
+    ts.isVariableDeclaration(holder) &&
+    ts.isIdentifier(holder.name)
+  ) {
     const name = holder.name.text;
-    if (/^[A-Z0-9_]+$/.test(name) && /(KEY|ID|PATH|URL|ROUTE|TAG|NAME|PREFIX|SUFFIX|CHANNEL|EVENT|QUERY|TABLE|BUCKET|COOKIE|HEADER|REGEX|FORMAT|FONT|CLASS|STYLE|COLOR|TYPE|KIND|STATUS|CODE|VALUE|SLUG|SCHEME)S?$/.test(name)) {
+    if (
+      /^[A-Z0-9_]+$/.test(name) &&
+      /(KEY|ID|PATH|URL|ROUTE|TAG|NAME|PREFIX|SUFFIX|CHANNEL|EVENT|QUERY|TABLE|BUCKET|COOKIE|HEADER|REGEX|FORMAT|FONT|CLASS|STYLE|COLOR|TYPE|KIND|STATUS|CODE|VALUE|SLUG|SCHEME)S?$/.test(
+        name,
+      )
+    ) {
       return true;
     }
     if (nameExcuses && NON_TEXT_NAME.test(name)) return true;
@@ -411,7 +547,8 @@ for (const file of files) {
         !allowTexts.has(text) &&
         !allowEntries.has(`${file}::${text}`)
       ) {
-        const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+        const line =
+          sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
         findings.push({ file, line, text });
       }
     }

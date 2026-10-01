@@ -7,6 +7,7 @@ import {
   type SubscriptionSource,
 } from "@abonten/types/discoveryType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import {
   type DiscoverySettingRow,
   resolveDiscoveryAccess,
@@ -259,7 +260,7 @@ export async function getPromptOfferCore(
   userId: string,
   context: PromptContext,
 ): Promise<Envelope<PromptOffer>> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   const { program, settings } = await resolveDiscoveryAccess(service, userId);
   if (!program.prompts || !settings) {
     return { status: 200, data: EMPTY_PROMPT_OFFER };
@@ -400,7 +401,7 @@ export async function markPromptShownCore(
     }));
     return { status: 200, data: { recorded: true } };
   } catch {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 }
 
@@ -409,7 +410,7 @@ export async function respondToPromptCore(
   userId: string,
   input: PromptResponse,
 ): Promise<Envelope<{ subscribed: string[] }>> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   const offerRes = await getPromptOfferCore(service, userId, input.context);
   if (offerRes.status !== 200 || !offerRes.data)
     return offerRes as Envelope<never>;
@@ -424,11 +425,11 @@ export async function respondToPromptCore(
     try {
       await writeStates(service, userId, keys, () => ({ dismissed_at: now }));
     } catch {
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
     return {
       status: 200,
-      message: "Okay, we won't ask about this for a while.",
+      message: tr("okayWeWonTAskAbout"),
       data: { subscribed: [] },
     };
   }
@@ -526,20 +527,19 @@ export async function respondToPromptCore(
   if (subscribed.length === 0 && accepted.length === 0 && declined.length > 0) {
     return {
       status: 200,
-      message: "Okay, we won't ask about this for a while.",
+      message: tr("okayWeWonTAskAbout"),
       data: { subscribed },
     };
   }
   if (subscribed.length === 0) {
     return {
       status: 500,
-      message: "Couldn't turn on these alerts. Please try again.",
+      message: tr("couldnTTurnOnTheseAlerts"),
     };
   }
   return {
     status: 200,
-    message:
-      "Alerts on. You can change this any time in Settings › Notifications.",
+    message: tr("alertsOnYouCanChangeThis"),
     data: { subscribed },
   };
 }

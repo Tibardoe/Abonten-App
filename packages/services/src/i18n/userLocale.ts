@@ -13,6 +13,30 @@ import {
 } from "@abonten/i18n/server";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
+/** The language saved on the account, or null when none was ever saved. */
+export async function userLocaleRaw(
+  userId: string | null | undefined,
+): Promise<I18nLocale | null> {
+  if (!userId) return null;
+  try {
+    const { data, error } = await getSupabaseServiceClient()
+      .from("user_info")
+      .select("locale")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error) {
+      logger.warn(`userLocaleRaw(${userId}): ${error.message}`);
+      return null;
+    }
+    return data?.locale ? toLocale(data.locale) : null;
+  } catch (error) {
+    logger.warn(
+      `userLocaleRaw(${userId}): ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return null;
+  }
+}
+
 export async function userLocale(
   userId: string | null | undefined,
 ): Promise<I18nLocale> {

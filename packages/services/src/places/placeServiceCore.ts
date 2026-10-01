@@ -1,6 +1,7 @@
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of addPlaceService / updatePlaceService /
 // removePlaceService, lifted so the mobile per-place Services routes run the
@@ -48,7 +49,10 @@ export async function addPlaceServiceCore(
     .maybeSingle();
 
   if (fetchError || !place) {
-    return { status: 404, message: "Place not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("placeNotFoundOrUnauthorized"),
+    };
   }
 
   const { count } = await supabase
@@ -77,7 +81,11 @@ export async function addPlaceServiceCore(
     };
   }
 
-  return { status: 200, message: "Service added successfully!", data: service };
+  return {
+    status: 200,
+    message: tr("serviceAddedSuccessfully"),
+    data: service,
+  };
 }
 
 async function serviceOwnerId(
@@ -104,9 +112,12 @@ export async function updatePlaceServiceCore(
   const { serviceId, name, description, price, priceUnit, showPrice } = input;
 
   const { found, ownerId } = await serviceOwnerId(supabase, serviceId);
-  if (!found) return { status: 404, message: "Service not found" };
+  if (!found) return { status: 404, message: tr("serviceNotFound") };
   if (ownerId !== userId) {
-    return { status: 403, message: "Not authorized to edit this service" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToEditThisService"),
+    };
   }
 
   const { error: updateError } = await supabase
@@ -127,7 +138,7 @@ export async function updatePlaceServiceCore(
     };
   }
 
-  return { status: 200, message: "Service updated successfully!" };
+  return { status: 200, message: tr("serviceUpdatedSuccessfully") };
 }
 
 export async function removePlaceServiceCore(
@@ -136,9 +147,12 @@ export async function removePlaceServiceCore(
   serviceId: string,
 ): Promise<PlaceServiceCoreResult> {
   const { found, ownerId } = await serviceOwnerId(supabase, serviceId);
-  if (!found) return { status: 404, message: "Service not found" };
+  if (!found) return { status: 404, message: tr("serviceNotFound") };
   if (ownerId !== userId) {
-    return { status: 403, message: "Not authorized to remove this service" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToRemoveThisService"),
+    };
   }
 
   const { error: deleteError } = await supabase
@@ -153,5 +167,5 @@ export async function removePlaceServiceCore(
     };
   }
 
-  return { status: 200, message: "Service removed successfully!" };
+  return { status: 200, message: tr("serviceRemovedSuccessfully") };
 }

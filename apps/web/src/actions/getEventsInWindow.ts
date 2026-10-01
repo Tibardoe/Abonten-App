@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { requestTimeZone } from "@/utils/requestTimeZone";
 import { normalizeEventRow } from "@abonten/core/eventAddress";
 import { windowBoundsInZone } from "@abonten/core/eventDateWindow";
@@ -47,69 +48,71 @@ function getWindowBounds(
   }
 }
 
-export async function getEventsInWindow({
-  lat,
-  lng,
-  radius = 10,
-  window,
-  cursor: rawCursor = null,
-  pageSize = DEFAULT_EVENTS_PAGE_SIZE,
-}: {
-  lat: number;
-  lng: number;
-  radius?: number;
-  window: EventWindow;
-  cursor?: string | null;
-  pageSize?: number;
-}): Promise<PaginatedResult<UserPostType>> {
-  const supabase = publicSupabase;
-  const { start, end } = getWindowBounds(window, await requestTimeZone());
-  const cursor = decodeCursor<EventsInWindowCursor>(rawCursor);
+export const getEventsInWindow = withActionLocale(
+  async function getEventsInWindow({
+    lat,
+    lng,
+    radius = 10,
+    window,
+    cursor: rawCursor = null,
+    pageSize = DEFAULT_EVENTS_PAGE_SIZE,
+  }: {
+    lat: number;
+    lng: number;
+    radius?: number;
+    window: EventWindow;
+    cursor?: string | null;
+    pageSize?: number;
+  }): Promise<PaginatedResult<UserPostType>> {
+    const supabase = publicSupabase;
+    const { start, end } = getWindowBounds(window, await requestTimeZone());
+    const cursor = decodeCursor<EventsInWindowCursor>(rawCursor);
 
-  const { data, error } = await supabase.rpc("get_events_in_window", {
-    p_user_lat: lat,
-    p_user_lng: lng,
-    p_radius_km: radius,
-    p_window_start: start.toISOString(),
-    p_window_end: end.toISOString(),
-    p_cursor_starts_at: cursor?.startsAt ?? undefined,
-    p_cursor_id: cursor?.id ?? undefined,
-    p_page_size: pageSize,
-  });
+    const { data, error } = await supabase.rpc("get_events_in_window", {
+      p_user_lat: lat,
+      p_user_lng: lng,
+      p_radius_km: radius,
+      p_window_start: start.toISOString(),
+      p_window_end: end.toISOString(),
+      p_cursor_starts_at: cursor?.startsAt ?? undefined,
+      p_cursor_id: cursor?.id ?? undefined,
+      p_page_size: pageSize,
+    });
 
-  if (error) {
-    logger.error(`Error fetching events in window "${window}":`, error);
-    return { status: 500, data: [], nextCursor: null, hasNextPage: false };
-  }
+    if (error) {
+      logger.error(`Error fetching events in window "${window}":`, error);
+      return { status: 500, data: [], nextCursor: null, hasNextPage: false };
+    }
 
-  const { page, hasNextPage } = splitPage<UserPostType>(
-    (data ?? []).map(normalizeEventRow),
-    pageSize,
-  );
+    const { page, hasNextPage } = splitPage<UserPostType>(
+      (data ?? []).map(normalizeEventRow),
+      pageSize,
+    );
 
-  const attendanceCounts = await getEventAttendanceCounts(
-    page.map((event: UserPostType) => event.id),
-  );
+    const attendanceCounts = await getEventAttendanceCounts(
+      page.map((event: UserPostType) => event.id),
+    );
 
-  const eventsWithAttendance = page.map((event: UserPostType) => ({
-    ...event,
-    attendanceCount: attendanceCounts[event.id] ?? 0,
-  }));
+    const eventsWithAttendance = page.map((event: UserPostType) => ({
+      ...event,
+      attendanceCount: attendanceCounts[event.id] ?? 0,
+    }));
 
-  const last = page[page.length - 1] as UserPostType | undefined;
+    const last = page[page.length - 1] as UserPostType | undefined;
 
-  const nextCursor =
-    hasNextPage && last
-      ? encodeCursor<EventsInWindowCursor>({
-          startsAt: String(last.starts_at),
-          id: last.id,
-        })
-      : null;
+    const nextCursor =
+      hasNextPage && last
+        ? encodeCursor<EventsInWindowCursor>({
+            startsAt: String(last.starts_at),
+            id: last.id,
+          })
+        : null;
 
-  return {
-    status: 200,
-    data: eventsWithAttendance,
-    nextCursor,
-    hasNextPage,
-  };
-}
+    return {
+      status: 200,
+      data: eventsWithAttendance,
+      nextCursor,
+      hasNextPage,
+    };
+  },
+);

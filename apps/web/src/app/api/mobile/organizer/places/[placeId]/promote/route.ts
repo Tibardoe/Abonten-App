@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { insertPlacePromotionCheckoutCore } from "@abonten/services/places/placePromotionCore";
 
 // POST /api/mobile/organizer/places/:placeId/promote  { tierId: number }
@@ -11,13 +15,14 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
   try {
     const { placeId } = await params;
     if (!placeId) {
-      return apiJson({ status: 400, message: "Missing place id" });
+      return apiJson({ status: 400, message: tr("missingPlaceId") });
     }
 
     const body = (await req.json().catch(() => null)) as {
@@ -29,7 +34,10 @@ export async function POST(
         ? body.tierId
         : null;
     if (tierId === null) {
-      return apiJson({ status: 400, message: "tierId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("tieridIsRequired"),
+      });
     }
 
     const result = await insertPlacePromotionCheckoutCore(
@@ -57,6 +65,9 @@ export async function POST(
       "mobile POST /organizer/places/:placeId/promote failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

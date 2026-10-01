@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { markNotificationReadFor } from "@abonten/services/notifications/notificationsQuery";
 
 /**
@@ -12,17 +14,19 @@ import { markNotificationReadFor } from "@abonten/services/notifications/notific
  * Shares its query body with the mobile HTTP route via
  * src/utils/notificationsQuery.ts.
  */
-export async function markNotificationRead(notificationId: string) {
-  const supabase = await createClient();
+export const markNotificationRead = withActionLocale(
+  async function markNotificationRead(notificationId: string) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return markNotificationReadFor(supabase, user.id, notificationId);
-}
+    return markNotificationReadFor(supabase, user.id, notificationId);
+  },
+);

@@ -4,6 +4,7 @@ import type {
   RecommendationReason,
 } from "@abonten/types/discoveryType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import { resolveDiscoveryAccess } from "../search/discoveryProgram";
 
 // The person-facing side of the recommendation engine: the "For you" list
@@ -42,7 +43,7 @@ export async function listRecommendationsCore(
   service: ServiceRoleClient,
   userId: string,
 ): Promise<Envelope<RecommendationItem[]>> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   const { program } = await resolveDiscoveryAccess(service, userId);
   if (!program.personalization) return { status: 200, data: [] };
 
@@ -52,7 +53,7 @@ export async function listRecommendationsCore(
   });
   if (error) {
     logger.error(`recommendations_for_user failed: ${error.message}`);
-    return { status: 500, message: "Couldn't load your picks." };
+    return { status: 500, message: tr("couldnTLoadYourPicks") };
   }
   const rows = data ?? [];
   const eventIds = rows
@@ -84,7 +85,7 @@ export async function listRecommendationsCore(
     logger.error(
       `recommendations hydrate failed: ${events.error?.message ?? places.error?.message}`,
     );
-    return { status: 500, message: "Couldn't load your picks." };
+    return { status: 500, message: tr("couldnTLoadYourPicks") };
   }
 
   type EventRow = {
@@ -182,7 +183,7 @@ export async function dismissRecommendationCore(
   userId: string,
   input: { subjectType: "event" | "place"; subjectId: string },
 ): Promise<Envelope<{ dismissed: boolean; paused: boolean }>> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   const { data, error } = await service.rpc("recommendation_dismiss", {
     p_user: userId,
     p_subject_type: input.subjectType,
@@ -190,14 +191,14 @@ export async function dismissRecommendationCore(
   });
   if (error) {
     logger.error(`recommendation_dismiss failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   const result = (data ?? {}) as { dismissed?: boolean; paused?: boolean };
   return {
     status: 200,
     message: result.paused
-      ? "Got it. We've paused these picks for a while."
-      : "Got it. We'll show fewer picks like this.",
+      ? tr("gotItWeVePausedThese")
+      : tr("gotItWeLlShowFewer"),
     data: { dismissed: !!result.dismissed, paused: !!result.paused },
   };
 }

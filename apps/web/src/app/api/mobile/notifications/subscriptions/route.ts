@@ -1,4 +1,5 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   listSubscriptionsCore,
   subscribeCore,
@@ -9,6 +10,7 @@ import { z } from "zod";
 // GET  /api/mobile/notifications/subscriptions            what the caller follows
 // POST /api/mobile/notifications/subscriptions { target, source }  "Notify me"
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {
@@ -20,6 +22,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: subscribeSchema, label: "POST /notifications/subscriptions" },

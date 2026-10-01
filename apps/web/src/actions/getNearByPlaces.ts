@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -11,7 +12,7 @@ import {
 import type { PaginatedResult, PlacesCursor } from "@abonten/types/pagination";
 import type { PlaceType } from "@abonten/types/placeType";
 
-export async function getNearByPlaces(
+export const getNearByPlaces = withActionLocale(async function getNearByPlaces(
   lat: number,
   lng: number,
   radius: number,
@@ -59,4 +60,4 @@ export async function getNearByPlaces(
     nextCursor,
     hasNextPage,
   };
-}
+});

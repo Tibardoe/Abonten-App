@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,6 +11,7 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import { TICKET_REFUND_SELECT } from "@abonten/core/ticketSelect";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 
@@ -22,7 +24,7 @@ import type { UserTicketType } from "@abonten/types/ticketType";
  * is what makes both the "must have a transaction" and "amount > 0" filters
  * apply as row filters rather than embedding an empty/null relation.
  */
-export default async function getUserTicketRefunds(options?: {
+export default withActionLocale(async function getUserTicketRefunds(options?: {
   cursor?: string | null;
   pageSize?: number;
 }): Promise<PaginatedResult<UserTicketType>> {
@@ -42,7 +44,7 @@ export default async function getUserTicketRefunds(options?: {
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "User not logged in",
+      message: tr("userNotLoggedIn"),
     };
   }
 
@@ -70,7 +72,7 @@ export default async function getUserTicketRefunds(options?: {
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong",
+      message: tr("somethingWentWrong2"),
     };
   }
 
@@ -103,4 +105,4 @@ export default async function getUserTicketRefunds(options?: {
     nextCursor,
     hasNextPage,
   };
-}
+});

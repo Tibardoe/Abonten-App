@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { createNotificationCore } from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -51,15 +52,15 @@ export async function requestPlaceBookingCore(
   const parsedTime = new Date(requestedTime);
 
   if (Number.isNaN(parsedTime.getTime())) {
-    return { status: 400, message: "Please choose a valid date and time." };
+    return { status: 400, message: tr("pleaseChooseAValidDateAnd") };
   }
 
   if (parsedTime.getTime() <= Date.now()) {
-    return { status: 400, message: "Please choose a time in the future." };
+    return { status: 400, message: tr("pleaseChooseATimeInThe") };
   }
 
   if (partySize != null && (!Number.isFinite(partySize) || partySize < 1)) {
-    return { status: 400, message: "Party size must be at least 1." };
+    return { status: 400, message: tr("partySizeMustBeAtLeast") };
   }
 
   const { data: place, error: placeError } = await supabase
@@ -82,11 +83,11 @@ export async function requestPlaceBookingCore(
     place.moderation_state === "hidden" ||
     place.moderation_state === "removed"
   ) {
-    return { status: 404, message: "Place not found" };
+    return { status: 404, message: tr("placeNotFound") };
   }
 
   if (place.owner_id === userId) {
-    return { status: 400, message: "You cannot book your own place" };
+    return { status: 400, message: tr("youCannotBookYourOwnPlace") };
   }
 
   // Only a live, published place accepts booking requests — a draft,
@@ -95,14 +96,14 @@ export async function requestPlaceBookingCore(
   if (place.status !== "published") {
     return {
       status: 400,
-      message: "This place isn't accepting bookings right now.",
+      message: tr("thisPlaceIsnTAcceptingBookings"),
     };
   }
 
   if (place.temporary_status === "permanently_closed") {
     return {
       status: 400,
-      message: "This place is permanently closed.",
+      message: tr("thisPlaceIsPermanentlyClosed"),
     };
   }
 
@@ -126,7 +127,7 @@ export async function requestPlaceBookingCore(
     if (!service) {
       return {
         status: 400,
-        message: "That service isn't offered by this place.",
+        message: tr("thatServiceIsnTOfferedBy"),
       };
     }
   }
@@ -143,7 +144,7 @@ export async function requestPlaceBookingCore(
 
   if (insertError) {
     logger.error(`Error inserting place booking: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   await notifyOwner(place.owner_id, {
@@ -153,7 +154,7 @@ export async function requestPlaceBookingCore(
     link: `/manage/places/${placeId}`,
   });
 
-  return { status: 200, message: "Booking request sent!" };
+  return { status: 200, message: tr("bookingRequestSent") };
 }
 
 export type CancelPlaceBookingCoreResult = {
@@ -186,17 +187,20 @@ export async function cancelPlaceBookingCore(
   }
 
   if (!booking) {
-    return { status: 404, message: "Booking not found" };
+    return { status: 404, message: tr("bookingNotFound") };
   }
 
   if (booking.customer_id !== userId) {
-    return { status: 403, message: "Not authorized to cancel this booking" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToCancelThisBooking"),
+    };
   }
 
   if (booking.status !== "pending" && booking.status !== "accepted") {
     return {
       status: 409,
-      message: "This booking can no longer be cancelled.",
+      message: tr("thisBookingCanNoLongerBe"),
     };
   }
 
@@ -209,13 +213,13 @@ export async function cancelPlaceBookingCore(
 
   if (updateError) {
     logger.error(`Error cancelling booking: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!updatedRows || updatedRows.length === 0) {
     return {
       status: 409,
-      message: "This booking can no longer be cancelled.",
+      message: tr("thisBookingCanNoLongerBe"),
     };
   }
 
@@ -230,7 +234,7 @@ export async function cancelPlaceBookingCore(
     });
   }
 
-  return { status: 200, message: "Booking cancelled." };
+  return { status: 200, message: tr("bookingCancelled") };
 }
 
 async function notifyOwner(

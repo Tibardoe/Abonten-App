@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { FieldOpsOnboarding } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -60,7 +61,7 @@ export async function submitClaimAssistCore(
   if (!SUBMITTING.has(campaignStatus)) {
     return {
       status: 409,
-      message: "The campaign isn't taking submissions right now.",
+      message: tr("theCampaignIsnTTakingSubmissions"),
     };
   }
 
@@ -72,15 +73,17 @@ export async function submitClaimAssistCore(
     .eq("member_user_id", userId)
     .maybeSingle();
   const row = data as unknown as OnboardingRow | null;
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "draft" && row.status !== "needs_changes") {
-    return { status: 409, message: "This onboarding has already been sent." };
+    return {
+      status: 409,
+      message: tr("thisOnboardingHasAlreadyBeenSent"),
+    };
   }
   if (!row.owner_user_id) {
     return {
       status: 409,
-      message:
-        "The owner has to verify their phone before you can file the claim.",
+      message: tr("theOwnerHasToVerifyTheir"),
     };
   }
 
@@ -90,21 +93,20 @@ export async function submitClaimAssistCore(
     .eq("id", input.placeId)
     .maybeSingle();
   if (!place || place.status !== "published") {
-    return { status: 404, message: "That listing isn't available to claim." };
+    return { status: 404, message: tr("thatListingIsnTAvailableTo") };
   }
   // Nothing to assist with if the owner already holds it.
   if (place.owner_id === row.owner_user_id) {
     return {
       status: 409,
-      message:
-        "This owner already holds that listing, so there is nothing to claim.",
+      message: tr("thisOwnerAlreadyHoldsThatListing"),
     };
   }
   // The member must never end up owning what they onboarded.
   if (place.owner_id === userId) {
     return {
       status: 403,
-      message: "You can't file a claim against your own listing.",
+      message: tr("youCanTFileAClaim"),
     };
   }
 
@@ -129,8 +131,7 @@ export async function submitClaimAssistCore(
       if (claimErr.code === "23505") {
         return {
           status: 409,
-          message:
-            "Someone has already filed a claim on this listing. It is waiting for an admin.",
+          message: tr("someoneHasAlreadyFiledAClaim"),
         };
       }
       return dbErr(claimErr, "Could not file the claim");
@@ -162,7 +163,7 @@ export async function submitClaimAssistCore(
     if (updErr.code === "23505") {
       return {
         status: 409,
-        message: "This listing is already part of another onboarding.",
+        message: tr("thisListingIsAlreadyPartOf"),
       };
     }
     return dbErr(updErr, "Could not save the claim");
@@ -219,8 +220,7 @@ export async function submitClaimAssistCore(
     .maybeSingle();
   return {
     status: 200,
-    message:
-      "Claim filed. You'll be paid once an admin approves it for the owner.",
+    message: tr("claimFiledYouLlBePaid"),
     data: mapOnboarding((fresh ?? row) as unknown as OnboardingRow),
   };
 }

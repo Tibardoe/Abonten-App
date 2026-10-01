@@ -1,5 +1,7 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type PhoneOtpSendResult,
   sendPhoneOtpCore,
@@ -25,7 +27,7 @@ export type RequestPhoneVerificationResult = PhoneOtpSendResult;
 // elsewhere); the provider's request handle is kept server-side and never
 // sent to the client. `codeLength` tells the client how many digits to ask
 // for.
-export default async function requestPhoneVerification(
+export default withActionLocale(async function requestPhoneVerification(
   dialCode: string,
   rawPhone: string,
   purpose: PhoneOtpPurpose,
@@ -34,7 +36,7 @@ export default async function requestPhoneVerification(
   // code has its own signed-in flow; sent from here it would replace the
   // code a Field Ops member just sent that owner.
   if (purpose !== "sign-in" && purpose !== "phone-update") {
-    return { status: 400, message: "Enter a valid phone number." };
+    return { status: 400, message: tr("enterAValidPhoneNumber") };
   }
   return sendPhoneOtpCore({
     dialCode,
@@ -42,4 +44,4 @@ export default async function requestPhoneVerification(
     purpose,
     ipAddress: await getCallerIp(),
   });
-}
+});

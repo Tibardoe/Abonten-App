@@ -4,6 +4,7 @@ import type {
   ActivePromotionSummary,
 } from "@abonten/types/promotionSummaryType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 
 export type { ActivePromotionState, ActivePromotionSummary };
 
@@ -98,7 +99,7 @@ export async function listActivePromotionsCore(
   const failed = events.error ?? places.error ?? campaigns.error;
   if (failed) {
     logger.error(`listActivePromotionsCore failed: ${failed.message}`);
-    return { status: 500, message: "Couldn't load your promotions." };
+    return { status: 500, message: tr("couldnTLoadYourPromotions") };
   }
 
   type EventRow = {

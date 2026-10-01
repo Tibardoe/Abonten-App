@@ -1,12 +1,17 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerPlacesPage } from "@abonten/services/organizer/organizerReadQuery";
 
 // GET /api/mobile/organizer/places?cursor=<opaque>&pageSize=<n>
 // Cursor-paginated list of the caller's own places, newest first (any
 // status) — same body as getOrganizerPlaces' authed branch.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -29,7 +34,7 @@ export async function GET(req: Request) {
     logger.error("mobile GET /organizer/places failed", error);
     return apiJson({
       status: 500,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
       data: [],
     });
   }

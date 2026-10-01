@@ -1,10 +1,12 @@
 import { discoveryRoute } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { getWeeklyProgramCore } from "@abonten/services/weekly/weeklyProgram";
 import { z } from "zod";
 
 // GET /api/mobile/weekly/program
 // Whether Abonten Weekly is on for this caller (signed in or not). Fails closed.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const res = await discoveryRoute(
     req,
     {

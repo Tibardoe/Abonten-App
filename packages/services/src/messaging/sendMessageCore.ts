@@ -6,6 +6,7 @@ import type {
   SendMessageInput,
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import {
   type NotificationWords,
   createNotificationCore,
@@ -57,7 +58,10 @@ export async function sendMessageCore(
   }
   if (!messageId) {
     logger.error("sendMessageCore: RPC returned no message id");
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
 
   return deliverSentMessage(supabase, userId, {

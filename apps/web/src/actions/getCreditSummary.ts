@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { getCreditSummaryCore } from "@abonten/services/rewards/creditsQuery";
 import type { CreditSummary } from "@abonten/types/rewards";
 
@@ -9,21 +11,23 @@ import type { CreditSummary } from "@abonten/types/rewards";
  * lifetime totals) and whether the Rewards program is switched on for them.
  * Same service as GET /api/mobile/rewards/summary.
  */
-export async function getCreditSummary(): Promise<{
-  status: number;
-  message?: string;
-  data?: CreditSummary;
-}> {
-  const supabase = await createClient();
+export const getCreditSummary = withActionLocale(
+  async function getCreditSummary(): Promise<{
+    status: number;
+    message?: string;
+    data?: CreditSummary;
+  }> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return getCreditSummaryCore(supabase, user.id);
-}
+    return getCreditSummaryCore(supabase, user.id);
+  },
+);

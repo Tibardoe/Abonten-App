@@ -1,3 +1,4 @@
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { startVerificationCaseCore } from "@abonten/services/verification/verificationCaseCore";
 import { startVerificationSchema } from "@abonten/validation/verificationSchemas";
 import { verificationRoute } from "../_lib/handler";
@@ -7,6 +8,7 @@ import { verificationRoute } from "../_lib/handler";
 // their own organizer profile. Same service as the web
 // startVerificationCase Server Action.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return verificationRoute(
     req,
     { schema: startVerificationSchema, label: "POST /verification/cases" },

@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { deleteMessageCore } from "@abonten/services/messaging/messageMutationsCore";
 import { z } from "zod";
 
@@ -13,26 +15,31 @@ const schema = z.object({ messageId: z.string().uuid() });
  * UI renders a "message deleted" placeholder. Shares its body with
  * DELETE /api/mobile/messages/:messageId.
  */
-export async function deleteMessage(input: { messageId: string }) {
-  const supabase = await createClient();
+export const deleteMessage = withActionLocale(
+  async function deleteMessage(input: { messageId: string }) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  const parsed = schema.safeParse(input);
-  if (!parsed.success) {
-    return { status: 400, message: "Invalid request." };
-  }
+    const parsed = schema.safeParse(input);
+    if (!parsed.success) {
+      return { status: 400, message: tr("invalidRequest") };
+    }
 
-  try {
-    return await deleteMessageCore(supabase, user.id, parsed.data);
-  } catch (error) {
-    logger.error("deleteMessage failed", error);
-    return { status: 500, message: "Something went wrong. Please try again." };
-  }
-}
+    try {
+      return await deleteMessageCore(supabase, user.id, parsed.data);
+    } catch (error) {
+      logger.error("deleteMessage failed", error);
+      return {
+        status: 500,
+        message: tr("somethingWentWrongPleaseTryAgain"),
+      };
+    }
+  },
+);

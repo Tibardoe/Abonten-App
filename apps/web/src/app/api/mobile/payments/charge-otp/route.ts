@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { submitChargeOtpCore } from "@abonten/services/payments/submitChargeOtpCore";
 
 // POST /api/mobile/payments/charge-otp  { paymentAttemptId: string, otp: string }
@@ -8,6 +12,7 @@ import { submitChargeOtpCore } from "@abonten/services/payments/submitChargeOtpC
 // Completes a direct charge that returned Paystack's "send_otp" status
 // (some Ghana mobile money charges). After a 200 here, poll /payments/verify.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -21,10 +26,13 @@ export async function POST(req: Request) {
       typeof body?.paymentAttemptId !== "string" ||
       body.paymentAttemptId.length === 0
     ) {
-      return apiJson({ status: 400, message: "paymentAttemptId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("paymentattemptidIsRequired"),
+      });
     }
     if (typeof body?.otp !== "string" || body.otp.trim().length === 0) {
-      return apiJson({ status: 400, message: "otp is required" });
+      return apiJson({ status: 400, message: tr("otpIsRequired") });
     }
 
     const result = await submitChargeOtpCore(
@@ -37,6 +45,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /payments/charge-otp failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

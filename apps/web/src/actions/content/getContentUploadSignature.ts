@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { canUploadContentMedia } from "@abonten/services/content/contentMediaCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import {
   type UploadSignatureResult,
@@ -12,20 +14,22 @@ import {
 // scoped to content_media/<environment>/<user id>. registerContentMedia later re-reads the
 // asset from Cloudinary and refuses anything outside that folder. Mobile uses
 // POST /api/mobile/uploads/signature with kind "content".
-export default async function getContentUploadSignature(): Promise<UploadSignatureResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (!user || error) {
-    return { status: 401, message: "Sign in to upload." };
-  }
-  if (!(await canUploadContentMedia(getSupabaseServiceClient(), user.id))) {
-    return {
-      status: 401,
-      message: "Posting isn't available for your account.",
-    };
-  }
-  return buildCloudinaryUploadSignature(user.id, "content");
-}
+export default withActionLocale(
+  async function getContentUploadSignature(): Promise<UploadSignatureResult> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (!user || error) {
+      return { status: 401, message: tr("signInToUpload") };
+    }
+    if (!(await canUploadContentMedia(getSupabaseServiceClient(), user.id))) {
+      return {
+        status: 401,
+        message: tr("postingIsnTAvailableForYour"),
+      };
+    }
+    return buildCloudinaryUploadSignature(user.id, "content");
+  },
+);

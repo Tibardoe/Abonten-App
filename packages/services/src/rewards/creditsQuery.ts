@@ -18,7 +18,7 @@ import type {
   CreditSummary,
 } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import { creditCurrencyFor } from "./creditCurrency";
 import { getRewardsProgramCore } from "./rewardsProgramQuery";
 
@@ -109,7 +109,7 @@ export async function getCreditSummaryCore(
   data?: CreditSummary;
 }> {
   if (!userId) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const [summary, program] = await Promise.all([
@@ -121,7 +121,7 @@ export async function getCreditSummaryCore(
     logger.error(
       `getCreditSummaryCore failed for ${userId}: ${summary.error.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return {
@@ -145,7 +145,7 @@ export async function getCreditActivityCore(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "User not logged in",
+      message: tr("userNotLoggedIn"),
     };
   }
 
@@ -167,7 +167,7 @@ export async function getCreditActivityCore(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 

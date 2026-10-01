@@ -4,6 +4,7 @@ import type {
   FieldOpsAssignmentStatus,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -104,8 +105,8 @@ export async function startAssignmentCore(
       status: 409,
       message:
         campaignStatus === "paused"
-          ? "The campaign is paused. Wait for your team lead."
-          : "The campaign isn't taking new work right now.",
+          ? tr("theCampaignIsPausedWaitFor")
+          : tr("theCampaignIsnTTakingNew3"),
     };
   }
   const row = await ownAssignment(
@@ -114,25 +115,30 @@ export async function startAssignmentCore(
     input.campaignId,
     input.assignmentId,
   );
-  if (!row) return { status: 404, message: "Assignment not found" };
+  if (!row) return { status: 404, message: tr("assignmentNotFound") };
   if (row.status !== "assigned") {
     return {
       status: 409,
       message:
         row.status === "started"
-          ? "You've already started this assignment."
-          : "This assignment is no longer open.",
+          ? tr("youVeAlreadyStartedThisAssignment")
+          : tr("thisAssignmentIsNoLongerOpen"),
     };
   }
   const today = todayIso();
   if (today < row.starts_on) {
     return {
       status: 409,
-      message: `This assignment starts on ${row.starts_on}.`,
+      message: tr("thisAssignmentStartsOn", {
+        starts_on: row.starts_on,
+      }),
     };
   }
   if (today > row.ends_on) {
-    return { status: 409, message: "This assignment's dates have passed." };
+    return {
+      status: 409,
+      message: tr("thisAssignmentSDatesHavePassed"),
+    };
   }
 
   let startDistanceM: number | null = null;
@@ -140,8 +146,7 @@ export async function startAssignmentCore(
     if (!input.location) {
       return {
         status: 400,
-        message:
-          "Turn on location so we can record where you started, then try again.",
+        message: tr("turnOnLocationSoWeCan"),
       };
     }
     const { data: territory } = await supabase
@@ -177,10 +182,17 @@ export async function startAssignmentCore(
     .maybeSingle();
   if (error) return dbErr(error, "Could not start the assignment");
   if (!data) {
-    return { status: 409, message: "This assignment was just changed." };
+    return {
+      status: 409,
+      message: tr("thisAssignmentWasJustChanged"),
+    };
   }
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
-  return { status: 200, message: "Assignment started.", data: mapped };
+  return {
+    status: 200,
+    message: tr("assignmentStarted"),
+    data: mapped,
+  };
 }
 
 export async function completeAssignmentCore(
@@ -200,7 +212,7 @@ export async function completeAssignmentCore(
     return fieldOpsError(e);
   }
   if (!["active", "paused", "winding_down"].includes(campaignStatus)) {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
   const row = await ownAssignment(
     supabase,
@@ -208,14 +220,14 @@ export async function completeAssignmentCore(
     input.campaignId,
     input.assignmentId,
   );
-  if (!row) return { status: 404, message: "Assignment not found" };
+  if (!row) return { status: 404, message: tr("assignmentNotFound") };
   if (row.status !== "started") {
     return {
       status: 409,
       message:
         row.status === "assigned"
-          ? "Start the assignment before completing it."
-          : "This assignment is no longer open.",
+          ? tr("startTheAssignmentBeforeCompletingIt")
+          : tr("thisAssignmentIsNoLongerOpen"),
     };
   }
   const { data, error } = await supabase
@@ -230,8 +242,15 @@ export async function completeAssignmentCore(
     .maybeSingle();
   if (error) return dbErr(error, "Could not complete the assignment");
   if (!data) {
-    return { status: 409, message: "This assignment was just changed." };
+    return {
+      status: 409,
+      message: tr("thisAssignmentWasJustChanged"),
+    };
   }
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
-  return { status: 200, message: "Assignment completed.", data: mapped };
+  return {
+    status: 200,
+    message: tr("assignmentCompleted"),
+    data: mapped,
+  };
 }

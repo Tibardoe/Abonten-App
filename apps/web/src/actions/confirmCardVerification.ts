@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ConfirmCardVerificationCoreResult,
   confirmCardVerificationCore,
@@ -15,7 +17,7 @@ import {
  * non-sensitive display fields + the authorization token. Post-auth logic
  * lives in cardVerificationCore so the mobile API route shares it.
  */
-export default async function confirmCardVerification(
+export default withActionLocale(async function confirmCardVerification(
   reference: string,
   label?: string,
 ): Promise<
@@ -29,7 +31,7 @@ export default async function confirmCardVerification(
   } = await supabase.auth.getUser();
 
   if (userError || !user || !user.email) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return confirmCardVerificationCore(
@@ -39,4 +41,4 @@ export default async function confirmCardVerification(
     reference,
     label,
   );
-}
+});

@@ -1,12 +1,17 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { unreadNotificationCountFor } from "@abonten/services/notifications/notificationsQuery";
 
 // GET /api/mobile/notifications/unread-count
 // Count of the caller's unread notifications — backs the header bell badge.
 // Same query body as the web getUnreadNotificationCount Server Action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -21,6 +26,9 @@ export async function GET(req: Request) {
     return apiJson({ status: 200, data: { count: result.count } });
   } catch (error) {
     logger.error("mobile GET /notifications/unread-count failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

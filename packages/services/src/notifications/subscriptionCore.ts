@@ -8,6 +8,7 @@ import type {
   SubscriptionTarget,
 } from "@abonten/types/discoveryType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import { resolveDiscoveryAccess } from "../search/discoveryProgram";
 import { checkRateLimit } from "../security/rateLimit";
 
@@ -73,10 +74,10 @@ async function guard(
   service: ServiceRoleClient,
   userId: string,
 ): Promise<Envelope<never> | null> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   const { program } = await resolveDiscoveryAccess(service, userId);
   if (!program.personalization) {
-    return { status: 403, message: "Alerts aren't available yet." };
+    return { status: 403, message: tr("alertsArenTAvailableYet") };
   }
   return null;
 }
@@ -98,7 +99,7 @@ async function resolveTarget(
   switch (target.kind) {
     case "organizer": {
       if (target.organizerId === userId) {
-        return { status: 400, message: "You can't follow yourself." };
+        return { status: 400, message: tr("youCanTFollowYourself") };
       }
       const { data: organizer } = await service
         .from("user_info")
@@ -106,7 +107,7 @@ async function resolveTarget(
         .eq("id", target.organizerId)
         .maybeSingle();
       if (!organizer || organizer.status_id !== 1) {
-        return { status: 404, message: "Organizer not found." };
+        return { status: 404, message: tr("organizerNotFound") };
       }
       const [events, places] = await Promise.all([
         service
@@ -126,7 +127,7 @@ async function resolveTarget(
       if ((events.count ?? 0) === 0 && (places.count ?? 0) === 0) {
         return {
           status: 404,
-          message: "This account has nothing to follow yet.",
+          message: tr("thisAccountHasNothingToFollow"),
         };
       }
       return {
@@ -156,10 +157,10 @@ async function resolveTarget(
         place.moderation_state === "hidden" ||
         place.moderation_state === "removed"
       ) {
-        return { status: 404, message: "Place not found." };
+        return { status: 404, message: tr("placeNotFound2") };
       }
       if (place.owner_id === userId) {
-        return { status: 400, message: "This is your own place." };
+        return { status: 400, message: tr("thisIsYourOwnPlace") };
       }
       if (target.kind === "place") {
         return {
@@ -179,7 +180,7 @@ async function resolveTarget(
       if (!point || !category) {
         return {
           status: 400,
-          message: "This place has no location to compare with.",
+          message: tr("thisPlaceHasNoLocationTo"),
         };
       }
       return {
@@ -209,13 +210,13 @@ async function resolveTarget(
         event.moderation_state === "hidden" ||
         event.moderation_state === "removed"
       ) {
-        return { status: 404, message: "Event not found." };
+        return { status: 404, message: tr("eventNotFound2") };
       }
       const point = pointFrom(event.location);
       if (!point || !event.event_category) {
         return {
           status: 400,
-          message: "This event has no location to compare with.",
+          message: tr("thisEventHasNoLocationTo"),
         };
       }
       return {
@@ -231,7 +232,7 @@ async function resolveTarget(
       };
     }
     default:
-      return { status: 400, message: "Unknown subscription." };
+      return { status: 400, message: tr("unknownSubscription") };
   }
 }
 
@@ -256,7 +257,7 @@ export async function subscribeCore(
   ) {
     return {
       status: 429,
-      message: "Too many changes. Try again in a little while.",
+      message: tr("tooManyChangesTryAgainIn"),
     };
   }
 
@@ -298,11 +299,11 @@ export async function subscribeCore(
     .single();
   if (error || !data) {
     logger.error(`subscribeCore failed: ${error?.message}`);
-    return { status: 500, message: "Couldn't turn on these alerts." };
+    return { status: 500, message: tr("couldnTTurnOnTheseAlerts2") };
   }
   return {
     status: 200,
-    message: "You'll get alerts for this.",
+    message: tr("youLlGetAlertsForThis"),
     data: { subscriptionId: data.id },
   };
 }
@@ -312,7 +313,7 @@ export async function unsubscribeCore(
   userId: string,
   subscriptionId: string,
 ): Promise<Envelope<{ subscriptionId: string }>> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   if (
     !(await checkRateLimit(
       `subscription:${userId}`,
@@ -322,7 +323,7 @@ export async function unsubscribeCore(
   ) {
     return {
       status: 429,
-      message: "Too many changes. Try again in a little while.",
+      message: tr("tooManyChangesTryAgainIn"),
     };
   }
   const now = new Date().toISOString();
@@ -335,12 +336,12 @@ export async function unsubscribeCore(
     .maybeSingle();
   if (error) {
     logger.error(`unsubscribeCore failed: ${error.message}`);
-    return { status: 500, message: "Couldn't turn off these alerts." };
+    return { status: 500, message: tr("couldnTTurnOffTheseAlerts") };
   }
-  if (!data) return { status: 404, message: "Subscription not found." };
+  if (!data) return { status: 404, message: tr("subscriptionNotFound") };
   return {
     status: 200,
-    message: "Alerts turned off.",
+    message: tr("alertsTurnedOff"),
     data: { subscriptionId: data.id },
   };
 }
@@ -352,7 +353,7 @@ export async function getSubscriptionStatusCore(
   kind: "organizer" | "place",
   targetId: string,
 ): Promise<Envelope<SubscriptionStatusResult>> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   const { data, error } = await service
     .from("notification_subscription")
     .select("id")
@@ -363,7 +364,7 @@ export async function getSubscriptionStatusCore(
     .maybeSingle();
   if (error) {
     logger.error(`getSubscriptionStatusCore failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return {
     status: 200,
@@ -376,7 +377,7 @@ export async function listSubscriptionsCore(
   service: ServiceRoleClient,
   userId: string,
 ): Promise<Envelope<NotificationSubscription[]>> {
-  if (!userId) return { status: 401, message: "Please sign in first." };
+  if (!userId) return { status: 401, message: tr("pleaseSignInFirst") };
   const { data, error } = await service
     .from("notification_subscription")
     .select(
@@ -388,7 +389,7 @@ export async function listSubscriptionsCore(
     .limit(200);
   if (error) {
     logger.error(`listSubscriptionsCore failed: ${error.message}`);
-    return { status: 500, message: "Couldn't load your alerts." };
+    return { status: 500, message: tr("couldnTLoadYourAlerts") };
   }
   const rows = data ?? [];
 

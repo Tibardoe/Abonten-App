@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { confirmCardVerificationCore } from "@abonten/services/payments/cardVerificationCore";
 
 // POST /api/mobile/payment-methods/card/confirm  { reference: string, label?: string }
@@ -10,11 +14,15 @@ import { confirmCardVerificationCore } from "@abonten/services/payments/cardVeri
 // refunds the GHS 1, saves the card. Same confirmCardVerificationCore the
 // web action runs. 200 = card saved (returns the PaymentMethodRow).
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
   if (!auth.user.email) {
-    return apiJson({ status: 401, message: "No email on this account" });
+    return apiJson({
+      status: 401,
+      message: tr("noEmailOnThisAccount"),
+    });
   }
 
   try {
@@ -24,7 +32,10 @@ export async function POST(req: Request) {
     } | null;
 
     if (typeof body?.reference !== "string" || body.reference.length === 0) {
-      return apiJson({ status: 400, message: "reference is required" });
+      return apiJson({
+        status: 400,
+        message: tr("referenceIsRequired"),
+      });
     }
 
     const label =
@@ -42,6 +53,9 @@ export async function POST(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile POST /payment-methods/card/confirm failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

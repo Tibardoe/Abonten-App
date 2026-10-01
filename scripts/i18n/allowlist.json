@@ -8,7 +8,5 @@
     "field ops context resolved",
     "EuclidCircularB-Regular"
   ],
-  "files": [
-    "apps/web/src/app/global-error.tsx"
-  ]
+  "files": ["apps/web/src/app/global-error.tsx"]
 }

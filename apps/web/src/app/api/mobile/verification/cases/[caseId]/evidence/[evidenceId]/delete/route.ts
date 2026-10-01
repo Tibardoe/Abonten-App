@@ -1,3 +1,4 @@
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { removeVerificationEvidenceCore } from "@abonten/services/verification/verificationCaseCore";
 import { removeEvidenceSchema } from "@abonten/validation/verificationSchemas";
 import { routeParams, verificationRoute } from "../../../../../_lib/handler";
@@ -9,6 +10,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ caseId: string; evidenceId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { caseId, evidenceId } = await routeParams(params);
   return verificationRoute(
     req,

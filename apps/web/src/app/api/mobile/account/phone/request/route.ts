@@ -2,6 +2,10 @@ import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // POST /api/mobile/account/phone/request  { dialCode, rawPhone }
 // Sends a Hubtel OTP for an already-signed-in user changing/adding their
@@ -10,6 +14,7 @@ import { logger } from "@abonten/core/logger";
 // cooldown + per-IP send cap live inside the action; the requestId/prefix
 // Hubtel returns stay server-side.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -25,7 +30,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message: "dialCode and rawPhone are required",
+        message: tr("dialcodeAndRawphoneAreRequired"),
       });
     }
 
@@ -44,6 +49,9 @@ export async function POST(req: Request) {
     return apiJson({ status: result.status, message: result.message });
   } catch (error) {
     logger.error("mobile POST /account/phone/request failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

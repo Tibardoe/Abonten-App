@@ -6,7 +6,7 @@ import {
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of getEventPromoCodes / updatePromoCode / deletePromoCode,
 // lifted so the mobile organizer promo-code routes run the exact same logic
@@ -48,7 +48,7 @@ export async function fetchEventPromoCodes(
   if (!event) {
     return {
       status: 403,
-      message: "Not authorized to view this event's promo codes",
+      message: tr("notAuthorizedToViewThisEvent2"),
       data: [],
     };
   }
@@ -113,7 +113,7 @@ export async function updatePromoCodeCore(
   }
 
   if (!promoCode || promoCode.event_id === null) {
-    return { status: 404, message: "Promo code not found" };
+    return { status: 404, message: tr("promoCodeNotFound") };
   }
 
   const { data: event, error: eventError } = await supabase
@@ -128,7 +128,10 @@ export async function updatePromoCodeCore(
   }
 
   if (!event) {
-    return { status: 403, message: "Not authorized to edit this promo code" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToEditThisPromo"),
+    };
   }
 
   // A code retired when the event went free can be edited but not switched
@@ -164,7 +167,7 @@ export async function updatePromoCodeCore(
     };
   }
 
-  return { status: 200, message: "Promo code updated successfully" };
+  return { status: 200, message: tr("promoCodeUpdatedSuccessfully") };
 }
 
 export type DeletePromoCodeCoreResult = {
@@ -189,7 +192,7 @@ export async function deletePromoCodeCore(
   }
 
   if (!promoCode || promoCode.event_id === null) {
-    return { status: 404, message: "Promo code not found" };
+    return { status: 404, message: tr("promoCodeNotFound") };
   }
 
   const { data: event, error: eventError } = await supabase
@@ -204,7 +207,10 @@ export async function deletePromoCodeCore(
   }
 
   if (!event) {
-    return { status: 403, message: "Not authorized to delete this promo code" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToDeleteThisPromo"),
+    };
   }
 
   // promo_code_usage rows reference this code with ON DELETE CASCADE, so a
@@ -231,8 +237,7 @@ export async function deletePromoCodeCore(
 
     return {
       status: 200,
-      message:
-        "This promo code has already been used, so it was deactivated instead of deleted.",
+      message: tr("thisPromoCodeHasAlreadyBeen"),
       deactivatedOnly: true,
     };
   }
@@ -251,7 +256,7 @@ export async function deletePromoCodeCore(
 
   return {
     status: 200,
-    message: "Promo code deleted successfully",
+    message: tr("promoCodeDeletedSuccessfully"),
     deactivatedOnly: false,
   };
 }

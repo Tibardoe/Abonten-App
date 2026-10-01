@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsProspectCreateSchema } from "@abonten/validation/fieldOpsSchema
  * Logs a business/organizer the member found in their assigned territory.
  * Same service as POST /api/mobile/field-ops/prospects.
  */
-export async function createFieldOpsProspect(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsProspect;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsProspectCreateSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return createProspectCore(svc, userId, data);
-}
+export const createFieldOpsProspect = withActionLocale(
+  async function createFieldOpsProspect(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsProspect;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsProspectCreateSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return createProspectCore(svc, userId, data);
+  },
+);

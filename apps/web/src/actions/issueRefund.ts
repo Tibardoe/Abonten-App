@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
 
 /**
@@ -15,7 +17,9 @@ import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
  * ownership-verified by the cancellation RPC) can drive the same flow via a
  * service-role client. See src/utils/issueRefundCore.ts.
  */
-export default async function issueRefund(transactionId: string) {
+export default withActionLocale(async function issueRefund(
+  transactionId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -24,8 +28,8 @@ export default async function issueRefund(transactionId: string) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return issueRefundCore(supabase, transactionId, { expectedUserId: user.id });
-}
+});

@@ -8,7 +8,7 @@ import {
   registerVerifyAttempt,
 } from "@abonten/services/profile/phoneOtpStore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import { adoptHomeCountryFromPhone } from "../markets/localePreferencesCore";
 
 // Transport-neutral core of phone sign-in verification, shared by the web
@@ -88,7 +88,7 @@ export async function verifyPhoneOtpAndResolveUser(
     return {
       ok: false,
       status: 500,
-      message: "Something went wrong signing you in.",
+      message: tr("somethingWentWrongSigningYouIn"),
     };
   }
 

@@ -3,6 +3,7 @@ import { userFacingError } from "@abonten/core/userFacingError";
 import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of addPlacePhoto / removePlacePhoto / reorderPlacePhotos,
 // lifted so the mobile per-place gallery routes run the same logic. The
@@ -32,13 +33,16 @@ export async function addPlacePhotoCore(
     .maybeSingle();
 
   if (fetchError || !place) {
-    return { status: 404, message: "Place not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("placeNotFoundOrUnauthorized"),
+    };
   }
 
   // The public_id's folder was bound to this user's id when the signature
   // was issued — a publicId outside that folder means tampered metadata.
   if (!publicId.startsWith(`place_photos/${userId}/`)) {
-    return { status: 403, message: "Not authorized for this photo" };
+    return { status: 403, message: tr("notAuthorizedForThisPhoto") };
   }
 
   const { count } = await supabase
@@ -64,7 +68,11 @@ export async function addPlacePhotoCore(
     };
   }
 
-  return { status: 200, message: "Photo added successfully!", data: photo };
+  return {
+    status: 200,
+    message: tr("photoAddedSuccessfully"),
+    data: photo,
+  };
 }
 
 export async function removePlacePhotoCore(
@@ -80,11 +88,14 @@ export async function removePlacePhotoCore(
     .maybeSingle();
 
   if (fetchError || !photo) {
-    return { status: 404, message: "Photo not found" };
+    return { status: 404, message: tr("photoNotFound") };
   }
 
   if (photo.place?.owner_id !== userId) {
-    return { status: 403, message: "Not authorized to remove this photo" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToRemoveThisPhoto"),
+    };
   }
 
   const { error: deleteError } = await supabase
@@ -107,7 +118,7 @@ export async function removePlacePhotoCore(
     // Not failing the whole removal if Cloudinary cleanup fails.
   }
 
-  return { status: 200, message: "Photo removed successfully!" };
+  return { status: 200, message: tr("photoRemovedSuccessfully") };
 }
 
 // Promote an existing gallery photo to the place's cover
@@ -129,11 +140,11 @@ export async function setPlaceCoverFromPhotoCore(
     .maybeSingle();
 
   if (fetchError || !photo) {
-    return { status: 404, message: "Photo not found" };
+    return { status: 404, message: tr("photoNotFound") };
   }
 
   if (photo.place?.owner_id !== userId) {
-    return { status: 403, message: "Not authorized for this place" };
+    return { status: 403, message: tr("notAuthorizedForThisPlace") };
   }
 
   const { error: updateError } = await supabase
@@ -152,7 +163,7 @@ export async function setPlaceCoverFromPhotoCore(
     };
   }
 
-  return { status: 200, message: "Cover photo updated!" };
+  return { status: 200, message: tr("coverPhotoUpdated") };
 }
 
 export async function reorderPlacePhotosCore(
@@ -169,7 +180,10 @@ export async function reorderPlacePhotosCore(
     .maybeSingle();
 
   if (fetchError || !place) {
-    return { status: 404, message: "Place not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("placeNotFoundOrUnauthorized"),
+    };
   }
 
   const results = await Promise.all(
@@ -187,9 +201,11 @@ export async function reorderPlacePhotosCore(
   if (failed?.error) {
     return {
       status: 500,
-      message: `Error reordering photos: ${failed.error.message}`,
+      message: tr("errorReorderingPhotos", {
+        message: failed.error.message,
+      }),
     };
   }
 
-  return { status: 200, message: "Photos reordered successfully!" };
+  return { status: 200, message: tr("photosReorderedSuccessfully") };
 }

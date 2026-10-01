@@ -5,6 +5,7 @@ import type {
   FieldOpsTeamMember,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -131,16 +132,16 @@ export async function inviteTeamMemberCore(
     return fieldOpsError(e);
   }
   if (!TEAM_STATUSES.has(campaignStatus)) {
-    return { status: 409, message: "The campaign isn't taking new members." };
+    return { status: 409, message: tr("theCampaignIsnTTakingNew2") };
   }
   if (input.role === ("team_lead" as string)) {
-    return { status: 403, message: "Only an admin can appoint a team lead." };
+    return { status: 403, message: tr("onlyAnAdminCanAppointA") };
   }
   const e164 = `+${input.invitedPhoneE164.replace(/\D/g, "")}`;
   if (!/^\+[1-9][0-9]{6,14}$/.test(e164)) {
     return {
       status: 400,
-      message: "Use the international format, e.g. +233241234567",
+      message: tr("useTheInternationalFormatEG"),
     };
   }
 
@@ -151,7 +152,7 @@ export async function inviteTeamMemberCore(
   if (existingId) {
     const uid = existingId as string;
     if (uid === userId) {
-      return { status: 400, message: "That's your own phone number." };
+      return { status: 400, message: tr("thatSYourOwnPhoneNumber") };
     }
     const [{ data: auth }, { data: admin }] = await Promise.all([
       supabase.auth.admin.getUserById(uid),
@@ -162,7 +163,7 @@ export async function inviteTeamMemberCore(
         .maybeSingle(),
     ]);
     if (admin) {
-      return { status: 409, message: "Platform admins can't be team members." };
+      return { status: 409, message: tr("platformAdminsCanTBeTeam") };
     }
     const { data: settings } = await supabase
       .from("fieldops_program_setting")
@@ -217,11 +218,11 @@ export async function inviteTeamMemberCore(
     if (error?.code === "23505") {
       return {
         status: 409,
-        message: "This person is already on the team (or already invited).",
+        message: tr("thisPersonIsAlreadyOnThe"),
       };
     }
     return dbErr(
-      error ?? { message: "insert failed" },
+      error ?? { message: tr("insertFailed") },
       "Could not invite the member",
     );
   }
@@ -238,8 +239,8 @@ export async function inviteTeamMemberCore(
     status: 200,
     message:
       mapped.status === "invited"
-        ? "Invitation recorded. It activates when they sign in with that phone."
-        : "Member added.",
+        ? tr("invitationRecordedItActivatesWhenThey")
+        : tr("memberAdded"),
     data: mapped,
   };
 }
@@ -267,22 +268,21 @@ export async function setLeadMemberStatusCore(
     .eq("id", input.memberId)
     .eq("team_id", teamId)
     .maybeSingle();
-  if (!current)
-    return { status: 404, message: "Member not found on your team" };
+  if (!current) return { status: 404, message: tr("memberNotFoundOnYourTeam") };
   if (current.role === "team_lead") {
-    return { status: 403, message: "Team leads are managed by an admin." };
+    return { status: 403, message: tr("teamLeadsAreManagedByAn") };
   }
   if (current.status === "left") {
-    return { status: 409, message: "This person has left the team." };
+    return { status: 409, message: tr("thisPersonHasLeftTheTeam") };
   }
   if (current.status === "invited" && input.status !== "left") {
     return {
       status: 409,
-      message: "An invitation can only be withdrawn (remove).",
+      message: tr("anInvitationCanOnlyBeWithdrawn"),
     };
   }
   if (current.status === input.status) {
-    return { status: 400, message: "Nothing changed." };
+    return { status: 400, message: tr("nothingChanged") };
   }
   const update: Record<string, unknown> = { status: input.status };
   if (input.status === "suspended") update.suspended_reason = input.reason;
@@ -309,7 +309,7 @@ export async function setLeadMemberStatusCore(
   }
   return {
     status: 200,
-    message: "Member updated.",
+    message: tr("memberUpdated"),
     data: { status: input.status },
   };
 }

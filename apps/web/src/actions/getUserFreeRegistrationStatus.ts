@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 
 /**
@@ -11,7 +12,9 @@ import { logger } from "@abonten/core/logger";
  * ever one ticket_type ("FREE"), so any attending attendance row for this
  * event + user is necessarily that registration.
  */
-export default async function getUserFreeRegistrationStatus(eventId: string) {
+export default withActionLocale(async function getUserFreeRegistrationStatus(
+  eventId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -43,4 +46,4 @@ export default async function getUserFreeRegistrationStatus(eventId: string) {
     isAttending: !!data,
     ticketId: data?.ticket_id ?? null,
   };
-}
+});

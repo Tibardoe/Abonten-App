@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { getStorySequenceCore } from "@abonten/services/content/storiesCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { storySequenceRequestSchema } from "@abonten/validation/contentSchemas";
 
 // GET /api/mobile/content/stories/sequence — one publisher's active Stories
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {

@@ -19,6 +19,7 @@ import {
 import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import {
   releaseOpenReservations,
   releaseReservation,
@@ -89,7 +90,7 @@ async function dropOpenAttempts(
 
   if (error) {
     logger.error(`Failed checking open attempts: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const affected = (open ?? []).filter(
@@ -98,8 +99,7 @@ async function dropOpenAttempts(
   if (affected.some((a) => a.status === "processing")) {
     return {
       status: 409,
-      message:
-        "A payment for this order is being confirmed. Wait a moment, then check its status.",
+      message: tr("aPaymentForThisOrderIs"),
     };
   }
   if (affected.length === 0) return "ok";
@@ -115,7 +115,7 @@ async function dropOpenAttempts(
     .in("status", ["initiated", "pending"]);
   if (cancelError) {
     logger.error(`Failed cancelling open attempts: ${cancelError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const groups = Array.from(
@@ -128,7 +128,7 @@ async function dropOpenAttempts(
       await releaseOpenReservations("ticket_payment_group", group, "replaced");
     }
   } catch {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return "ok";
 }
@@ -180,13 +180,13 @@ export async function createMultiCheckoutPaymentAttemptCore(
   fulfillmentDeps?: PaymentFulfillmentDeps,
 ): Promise<CreateMultiCheckoutPaymentAttemptCoreResult> {
   if (input.checkoutSessionIds.length === 0) {
-    return { status: 400, message: "No checkouts selected" };
+    return { status: 400, message: tr("noCheckoutsSelected") };
   }
 
   if (!userEmail) {
     return {
       status: 400,
-      message: "Your account needs a verified email to pay",
+      message: tr("yourAccountNeedsAVerifiedEmail"),
     };
   }
 
@@ -201,20 +201,18 @@ export async function createMultiCheckoutPaymentAttemptCore(
     if (error instanceof MixedMarketCheckoutError) {
       return {
         status: 409,
-        message:
-          "These tickets are sold in different countries or currencies. Pay for them separately.",
+        message: tr("theseTicketsAreSoldInDifferent"),
         invalidSessionIds: [],
       };
     }
     logger.error(`Failed preparing checkout payment: ${error}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (prepared.invalidSessionIds.length > 0) {
     return {
       status: 409,
-      message:
-        "One of your selected checkouts has expired. Please review your order.",
+      message: tr("oneOfYourSelectedCheckoutsHas"),
       invalidSessionIds: prepared.invalidSessionIds,
     };
   }
@@ -296,7 +294,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
         if (insertedAttempts.length > 0) {
           await cancel(insertedAttempts.map((a) => a.id));
         }
-        return { status: 500, message: "Something went wrong!" };
+        return { status: 500, message: tr("somethingWentWrong") };
       }
 
       insertedAttempts.push(result.data);
@@ -318,7 +316,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
       .eq("user_id", userId);
     if (groupError) {
       logger.error(`Failed grouping payment attempts: ${groupError.message}`);
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
 
     // Only the group's primary attempt is charged — one charge covers the
@@ -395,8 +393,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
   }
   return {
     status: 409,
-    message:
-      "This order changed since its payment was started. Please try again.",
+    message: tr("thisOrderChangedSinceItsPayment"),
     invalidSessionIds: [],
   };
 }
@@ -418,7 +415,7 @@ async function startCreditPayment(
   try {
     quoted = await quoteTicketCredit(supabase, userId, prepared);
   } catch {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   const { quote, order } = quoted;
 
@@ -427,8 +424,8 @@ async function startCreditPayment(
       status: 409,
       message:
         quote.blockedReason === "own_event"
-          ? "Credit can't be used on tickets to your own event."
-          : "You don't have credit you can use on these tickets.",
+          ? tr("creditCanTBeUsedOn")
+          : tr("youDonTHaveCreditYou"),
       invalidSessionIds: [],
     };
   }
@@ -446,7 +443,7 @@ async function startCreditPayment(
     if (!input.paymentMethodId && !input.method) {
       return {
         status: 400,
-        message: "Choose a payment method for the rest of the amount",
+        message: tr("chooseAPaymentMethodForThe"),
       };
     }
     const resolvedChoice = await resolvePaymentChoice(supabase, userId, input, {
@@ -472,7 +469,7 @@ async function startCreditPayment(
     logger.error(
       "createMultiCheckoutPaymentAttemptCore: missing fulfillmentDeps",
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const dropped = await dropOpenAttempts(
@@ -520,7 +517,7 @@ async function startCreditPayment(
     logger.error(
       `Failed creating credit ticket attempts: ${insertError?.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // Keep the attempts in session order so the first is the primary.

@@ -4,6 +4,7 @@ import type {
   FieldOpsReviewDecision,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import { recordPendingCommission } from "../shared/commissionRows";
 import {
   fieldOpsError,
@@ -91,7 +92,7 @@ export async function reviewOnboardingCore(
     return fieldOpsError(e);
   }
   if (!REVIEWING_STATUSES.has(campaignStatus)) {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
   const { data } = await supabase
     .from("fieldops_onboarding")
@@ -101,15 +102,15 @@ export async function reviewOnboardingCore(
     .eq("team_id", teamId)
     .maybeSingle();
   const row = data as unknown as OnboardingRow | null;
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "submitted") {
     return {
       status: 409,
-      message: "This onboarding isn't waiting for review.",
+      message: tr("thisOnboardingIsnTWaitingFor"),
     };
   }
   if (row.member_user_id === userId) {
-    return { status: 403, message: "You can't review your own onboarding." };
+    return { status: 403, message: tr("youCanTReviewYourOwn2") };
   }
   if (
     input.decision !== "verified" &&
@@ -117,7 +118,7 @@ export async function reviewOnboardingCore(
   ) {
     return {
       status: 400,
-      message: "Tell the member what to change, or why it was rejected.",
+      message: tr("tellTheMemberWhatToChange"),
     };
   }
 
@@ -202,10 +203,10 @@ export async function reviewOnboardingCore(
     status: 200,
     message:
       input.decision === "verified"
-        ? "Verified. The holding period has started."
+        ? tr("verifiedTheHoldingPeriodHasStarted")
         : input.decision === "needs_changes"
-          ? "Returned to the member."
-          : "Rejected.",
+          ? tr("returnedToTheMember")
+          : tr("rejected"),
     data: mapOnboarding((fresh ?? row) as unknown as OnboardingRow),
   };
 }

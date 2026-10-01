@@ -1,5 +1,6 @@
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of getEventForEdit, lifted so the mobile
 // GET /api/mobile/organizer/events/:id/edit route prefills its edit form
@@ -74,7 +75,10 @@ export async function getEventForEditCore(
     .single();
 
   if (error || !event) {
-    return { status: 404, message: "Event not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("eventNotFoundOrUnauthorized"),
+    };
   }
 
   return { status: 200, data: event as unknown as EventForEditData };

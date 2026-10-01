@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Everything the native per-place management screens need to prefill their
 // forms, in one owner-scoped read — the mobile echo of what
@@ -65,11 +66,14 @@ export async function fetchPlaceManageContext(
     .maybeSingle();
 
   if (placeError || !place) {
-    return { status: 404, message: "Place not found" };
+    return { status: 404, message: tr("placeNotFound") };
   }
 
   if (place.owner_id !== userId) {
-    return { status: 403, message: "Not authorized to manage this place" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToManageThisPlace"),
+    };
   }
 
   const [
@@ -100,7 +104,7 @@ export async function fetchPlaceManageContext(
         hoursError?.message ?? servicesError?.message ?? photosError?.message
       }`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return {

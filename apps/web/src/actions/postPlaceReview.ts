@@ -1,9 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -36,7 +38,9 @@ type PostPlaceReviewInput = {
  * (place_review_unique_reviewer) is what actually enforces "one review per
  * user per place"; a duplicate attempt surfaces here as a friendly 409.
  */
-export async function postPlaceReview(formData: PostPlaceReviewInput) {
+export const postPlaceReview = withActionLocale(async function postPlaceReview(
+  formData: PostPlaceReviewInput,
+) {
   const supabase = await createClient();
 
   const {
@@ -52,7 +56,7 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
   }
 
   if (!user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   const allowed = await checkRateLimit(
@@ -64,7 +68,7 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many reviews posted recently. Please try again later.",
+      message: tr("tooManyReviewsPostedRecentlyPlease"),
     };
   }
 
@@ -84,11 +88,14 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
   }
 
   if (!place) {
-    return { status: 404, message: "Place not found" };
+    return { status: 404, message: tr("placeNotFound") };
   }
 
   if (place.owner_id === user.id) {
-    return { status: 400, message: "You cannot review your own place" };
+    return {
+      status: 400,
+      message: tr("youCannotReviewYourOwnPlace"),
+    };
   }
 
   const formattedTitle = title ? formatTitle(title) : null;
@@ -108,11 +115,14 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
 
   if (insertError) {
     if (insertError.code === UNIQUE_VIOLATION) {
-      return { status: 409, message: "You've already reviewed this place." };
+      return {
+        status: 409,
+        message: tr("youVeAlreadyReviewedThisPlace"),
+      };
     }
 
     logger.error(`Error inserting place review: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   await insertReviewPhotos(
@@ -124,5 +134,5 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
     photos,
   );
 
-  return { status: 200, message: "Review posted successfully!" };
-}
+  return { status: 200, message: tr("reviewPostedSuccessfully") };
+});

@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { retryPaymentFulfillmentCore } from "@abonten/services/payments/retryPaymentFulfillmentCore";
 
 // POST /api/mobile/payments/retry  { paymentAttemptId: string }
@@ -12,6 +16,7 @@ import { retryPaymentFulfillmentCore } from "@abonten/services/payments/retryPay
 // working (retry shortly); 207 = issuance still failing; 400 = payment
 // failed.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -24,7 +29,10 @@ export async function POST(req: Request) {
       typeof body?.paymentAttemptId !== "string" ||
       body.paymentAttemptId.length === 0
     ) {
-      return apiJson({ status: 400, message: "paymentAttemptId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("paymentattemptidIsRequired"),
+      });
     }
 
     const result = await retryPaymentFulfillmentCore(
@@ -37,6 +45,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /payments/retry failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

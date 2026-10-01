@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { logger } from "@abonten/core/logger";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { type PushResult, sendPushToUser } from "./sendPushNotification";
 
@@ -169,7 +170,7 @@ export async function deliverQueuedNotificationsCore(
   });
   if (error) {
     logger.error(`notification_delivery_claim failed: ${error.message}`);
-    return { status: 500, message: "Couldn't claim deliveries" };
+    return { status: 500, message: tr("couldnTClaimDeliveries") };
   }
   const rows = (data ?? []) as ClaimedRow[];
   const summary: DeliverySummary = {

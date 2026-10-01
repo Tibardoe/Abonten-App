@@ -10,6 +10,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { markRecommendationOpenedCore } from "./recommendationsCore";
 
@@ -50,7 +51,7 @@ export async function fetchNotificationsPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -86,7 +87,11 @@ export async function unreadNotificationCountFor(
 
   if (error) {
     logger.error(`Failed fetching unread notification count: ${error.message}`);
-    return { status: 500, count: 0, message: "Something went wrong!" };
+    return {
+      status: 500,
+      count: 0,
+      message: tr("somethingWentWrong"),
+    };
   }
 
   return { status: 200, count: count ?? 0 };
@@ -107,7 +112,7 @@ export async function markNotificationReadFor(
 
   if (error) {
     logger.error(`Failed marking notification read: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // Opening a recommendation notice is the signal the digest caps and the
@@ -136,7 +141,7 @@ export async function markAllNotificationsReadFor(
 
   if (error) {
     logger.error(`Failed marking all notifications read: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200 };

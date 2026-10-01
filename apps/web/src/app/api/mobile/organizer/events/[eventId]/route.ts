@@ -5,6 +5,10 @@ import {
   type UpdateEventCoreInput,
   updateEventCore,
 } from "@abonten/services/events/updateEventCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // PATCH /api/mobile/organizer/events/:eventId
 //   { title, description, address, latitude, longitude, category, types[],
@@ -20,13 +24,14 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ eventId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
   try {
     const { eventId } = await params;
     if (!eventId) {
-      return apiJson({ status: 400, message: "Missing event id" });
+      return apiJson({ status: 400, message: tr("missingEventId") });
     }
 
     const body = (await req.json().catch(() => null)) as Record<
@@ -35,7 +40,10 @@ export async function PATCH(
     > | null;
 
     if (!body) {
-      return apiJson({ status: 400, message: "Invalid request body" });
+      return apiJson({
+        status: 400,
+        message: tr("invalidRequestBody"),
+      });
     }
 
     const str = (v: unknown): string | null =>
@@ -63,8 +71,7 @@ export async function PATCH(
     ) {
       return apiJson({
         status: 400,
-        message:
-          "title, description, address, category, types, latitude and longitude are required",
+        message: tr("titleDescriptionAddressCategoryTypesLatitude"),
       });
     }
 
@@ -74,7 +81,7 @@ export async function PATCH(
     if (!hasSingleRange && !hasSpecific) {
       return apiJson({
         status: 400,
-        message: "Provide either startsAt + endsAt, or specificDates",
+        message: tr("provideEitherStartsatEndsatOrSpecificdates"),
       });
     }
 
@@ -111,6 +118,9 @@ export async function PATCH(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile PATCH /organizer/events/:eventId failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

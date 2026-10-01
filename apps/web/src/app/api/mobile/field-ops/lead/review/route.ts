@@ -1,10 +1,12 @@
 import { fieldOpsRoute } from "@/app/api/mobile/field-ops/_lib/handler";
 import { listReviewQueueCore } from "@abonten/services/fieldOps/lead/reviewCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsOnboardingListSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // GET /api/mobile/field-ops/lead/review?campaignId=&status= -- the lead's review
 // queue. Same service as listFieldOpsReviewQueue.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

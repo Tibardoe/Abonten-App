@@ -2,6 +2,7 @@ import createNotification from "@/actions/createNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
@@ -42,11 +43,11 @@ export default async function activateEventPromotion(
     logger.error(
       `Failed fetching event promotion checkout: ${existingCheckoutError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!existingCheckout) {
-    return { status: 404, message: "Checkout not found" };
+    return { status: 404, message: tr("checkoutNotFound") };
   }
 
   if (
@@ -59,7 +60,7 @@ export default async function activateEventPromotion(
     logger.error(
       `activateEventPromotion: no verified payment for checkout ${checkoutId}`,
     );
-    return { status: 402, message: "Payment not verified for this checkout" };
+    return { status: 402, message: tr("paymentNotVerifiedForThisCheckout") };
   }
 
   await supabase.rpc("expire_stale_event_promotion_checkouts");
@@ -76,20 +77,20 @@ export default async function activateEventPromotion(
     logger.error(
       `Failed fetching event promotion checkout: ${checkoutError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!checkout) {
     return {
       status: 410,
-      message: "This checkout has expired. Please start again.",
+      message: tr("thisCheckoutHasExpiredPleaseStart"),
     };
   }
 
   const tier = checkout.event_promotion_tier;
 
   if (!tier) {
-    return { status: 404, message: "Promotion tier not found" };
+    return { status: 404, message: tr("promotionTierNotFound") };
   }
 
   const startsAt = new Date();
@@ -106,7 +107,7 @@ export default async function activateEventPromotion(
     logger.error(
       `Failed computing promotion end date: ${endsAtError?.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const { error: insertError } = await supabase.from("event_promotion").insert({
@@ -123,7 +124,7 @@ export default async function activateEventPromotion(
   // than a failure, so a retry can never create a second featured record.
   if (insertError && insertError.code !== "23505") {
     logger.error(`Failed activating event promotion: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   await supabase
@@ -166,7 +167,7 @@ export default async function activateEventPromotion(
 
   return {
     status: 200,
-    message: "Event is now featured",
+    message: tr("eventIsNowFeatured"),
     data: { endsAt: computedEndsAt },
   };
 }

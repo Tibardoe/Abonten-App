@@ -5,6 +5,7 @@ import type {
   OpenConversationInput,
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { mapMessagingRpcError } from "./messagingError";
 
 // Post-auth body of the "Chat with organizer" / "Chat with place" action.
@@ -33,7 +34,10 @@ export async function openConversationCore(
 
   if (!data) {
     logger.error("openConversationCore: RPC returned no conversation id");
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
 
   return { status: 200, data: { conversationId: data as string } };

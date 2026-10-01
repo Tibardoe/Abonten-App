@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseDiscoveryInput,
   requestIp,
@@ -27,30 +28,32 @@ function fallback(status: number, message: string): SearchSuggestionsResponse {
 }
 
 /** Type-ahead suggestions for the search bar (events, places, organizers, "@" mode). */
-export async function suggestDiscovery(
-  input: unknown,
-): Promise<SearchSuggestionsResponse> {
-  const parsed = parseDiscoveryInput(searchSuggestSchema, input);
-  if (parsed.error) return fallback(400, parsed.error.message);
+export const suggestDiscovery = withActionLocale(
+  async function suggestDiscovery(
+    input: unknown,
+  ): Promise<SearchSuggestionsResponse> {
+    const parsed = parseDiscoveryInput(searchSuggestSchema, input);
+    if (parsed.error) return fallback(400, parsed.error.message);
 
-  try {
-    const caller = await resolveDiscoveryCaller();
-    const key = caller.userId
-      ? `search-suggest:user:${caller.userId}`
-      : `search-suggest:ip:${await requestIp()}`;
-    if (!(await checkRateLimit(key, 180, 60))) {
-      return fallback(429, "Slow down a little.");
+    try {
+      const caller = await resolveDiscoveryCaller();
+      const key = caller.userId
+        ? `search-suggest:user:${caller.userId}`
+        : `search-suggest:ip:${await requestIp()}`;
+      if (!(await checkRateLimit(key, 180, 60))) {
+        return fallback(429, "Slow down a little.");
+      }
+      const { program, settings } = await resolveDiscoveryAccess(
+        caller.svc,
+        caller.userId,
+      );
+      return await suggestCore(publicSupabase, parsed.data, program, {
+        platform: "web",
+        loggingEnabled: settings?.search_logging_enabled ?? false,
+      });
+    } catch (error) {
+      logger.error("suggestDiscovery failed", error);
+      return fallback(500, "Suggestions are unavailable right now.");
     }
-    const { program, settings } = await resolveDiscoveryAccess(
-      caller.svc,
-      caller.userId,
-    );
-    return await suggestCore(publicSupabase, parsed.data, program, {
-      platform: "web",
-      loggingEnabled: settings?.search_logging_enabled ?? false,
-    });
-  } catch (error) {
-    logger.error("suggestDiscovery failed", error);
-    return fallback(500, "Suggestions are unavailable right now.");
-  }
-}
+  },
+);

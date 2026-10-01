@@ -8,6 +8,7 @@ import type {
   VerificationStatus,
   VerificationSubjectType,
 } from "@abonten/types/verificationType";
+import { tr } from "../i18n/requestLocale";
 
 // Column lists, row shapes and row -> DTO mappers for Trust & Verification,
 // shared by the owner-facing cores and the admin cores so one column is
@@ -106,40 +107,41 @@ export function transitionError(
 ): VerificationEnvelope {
   const msg = error.message ?? "";
   if (msg.includes("verification_case_not_found")) {
-    return { status: 404, message: "Verification request not found" };
+    return {
+      status: 404,
+      message: tr("verificationRequestNotFound"),
+    };
   }
   if (msg.includes("verification_status_changed")) {
     return {
       status: 409,
-      message:
-        "This request changed since you opened it. Reload and try again.",
+      message: tr("thisRequestChangedSinceYouOpened"),
     };
   }
   if (msg.includes("verification_invalid_transition")) {
     return {
       status: 409,
-      message: "That can no longer be done to this request.",
+      message: tr("thatCanNoLongerBeDone"),
     };
   }
   if (msg.includes("verification_reason_required")) {
-    return { status: 400, message: "A reason is required." };
+    return { status: 400, message: tr("aReasonIsRequired") };
   }
   if (msg.includes("verification_no_evidence")) {
     return {
       status: 422,
-      message: "Add at least one document before sending your request.",
+      message: tr("addAtLeastOneDocumentBefore"),
     };
   }
   if (msg.includes("verification_subject_ineligible")) {
     return {
       status: 409,
-      message:
-        "This can't be verified right now. Check that the listing is published and still belongs to you.",
+      message: tr("thisCanTBeVerifiedRight"),
     };
   }
   // 40P01 is a deadlock: two writers touched the same subject. Retryable.
   if (error.code === "40P01") {
-    return { status: 409, message: "Busy — please try again." };
+    return { status: 409, message: tr("busyPleaseTryAgain") };
   }
   logger.error(`verification_transition failed: ${msg}`);
   return { status: 500, message: fallback };

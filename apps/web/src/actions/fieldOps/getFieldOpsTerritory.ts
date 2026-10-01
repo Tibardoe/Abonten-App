@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsTerritoryLookupSchema } from "@abonten/validation/fieldOpsSchem
  * A territory with the caller's assignments and prospects there. Same
  * service as GET /api/mobile/field-ops/territories/[id].
  */
-export async function getFieldOpsTerritory(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsTerritoryView;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsTerritoryLookupSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return getTerritoryViewCore(svc, userId, data);
-}
+export const getFieldOpsTerritory = withActionLocale(
+  async function getFieldOpsTerritory(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsTerritoryView;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsTerritoryLookupSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return getTerritoryViewCore(svc, userId, data);
+  },
+);

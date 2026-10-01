@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type MyEventsTabCounts = {
   active: number;
@@ -48,7 +50,7 @@ type HeldTicketRow = {
  * here -- it shares getEventsAwaitingReview.ts's own query result for its
  * badge instead.
  */
-export default async function getMyEventsTabCounts(): Promise<{
+export default withActionLocale(async function getMyEventsTabCounts(): Promise<{
   status: number;
   data: MyEventsTabCounts;
   message?: string;
@@ -61,7 +63,11 @@ export default async function getMyEventsTabCounts(): Promise<{
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 500, data: EMPTY_COUNTS, message: "User not logged in" };
+    return {
+      status: 500,
+      data: EMPTY_COUNTS,
+      message: tr("userNotLoggedIn"),
+    };
   }
 
   const [
@@ -128,7 +134,11 @@ export default async function getMyEventsTabCounts(): Promise<{
       }`,
     );
 
-    return { status: 500, data: EMPTY_COUNTS, message: "Something went wrong" };
+    return {
+      status: 500,
+      data: EMPTY_COUNTS,
+      message: tr("somethingWentWrong2"),
+    };
   }
 
   let active = 0;
@@ -156,4 +166,4 @@ export default async function getMyEventsTabCounts(): Promise<{
       reviewedPlaces: reviewedPlacesResult.count ?? 0,
     },
   };
-}
+});

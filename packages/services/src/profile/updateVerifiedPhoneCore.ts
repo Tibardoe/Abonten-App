@@ -7,7 +7,7 @@ import {
   registerVerifyAttempt,
 } from "@abonten/services/profile/phoneOtpStore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 
 export type UpdateVerifiedPhoneResult =
   | { status: 200; message: string }
@@ -73,12 +73,18 @@ export async function updateVerifiedPhoneCore(
       /already.*(registered|exists)/i.test(updateError.message);
 
     if (isConflict) {
-      return { status: 409, message: "That phone number can't be used." };
+      return { status: 409, message: tr("thatPhoneNumberCanTBe") };
     }
 
     logger.error(`updateVerifiedPhone: update failed: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
 
-  return { status: 200, message: "Phone number updated successfully." };
+  return {
+    status: 200,
+    message: tr("phoneNumberUpdatedSuccessfully"),
+  };
 }

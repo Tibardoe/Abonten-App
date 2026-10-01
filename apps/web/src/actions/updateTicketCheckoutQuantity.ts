@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { computeLineAmount } from "@abonten/core/checkoutPricing";
 import { logger } from "@abonten/core/logger";
 import { adjustPromoUsageUnits } from "@abonten/services/checkout/promoUsage";
@@ -9,6 +10,7 @@ import {
   releaseTicketQuantity,
   reserveTicketQuantity,
 } from "@abonten/services/checkout/ticketInventory";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 type CheckoutRow = {
   id: string;
@@ -38,14 +40,14 @@ type CheckoutRow = {
  * doesn't exist (ticket_checkout.id is a random UUID and a session's rows
  * share one created_at from their batch insert).
  */
-export default async function updateTicketCheckoutQuantity(
+export default withActionLocale(async function updateTicketCheckoutQuantity(
   ticketCheckoutId: string,
   newQuantity: number,
 ) {
   if (!Number.isInteger(newQuantity) || newQuantity < 1) {
     return {
       status: 400,
-      message: "Quantity must be at least 1 — remove the item to take it out.",
+      message: tr("quantityMustBeAtLeast1"),
     };
   }
 
@@ -57,7 +59,7 @@ export default async function updateTicketCheckoutQuantity(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   await supabase.rpc("expire_stale_ticket_checkouts");
@@ -74,13 +76,13 @@ export default async function updateTicketCheckoutQuantity(
 
   if (checkoutError) {
     logger.error(`Failed fetching checkout line: ${checkoutError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!rawCheckout) {
     return {
       status: 404,
-      message: "This checkout item is no longer editable.",
+      message: tr("thisCheckoutItemIsNoLonger"),
     };
   }
 
@@ -121,7 +123,7 @@ export default async function updateTicketCheckoutQuantity(
       promoCode.times_used === null ||
       promoCode.discount_percentage === null
     ) {
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
 
     promoCodeRowId = promoCode.id;
@@ -214,7 +216,7 @@ export default async function updateTicketCheckoutQuantity(
     logger.error(`Failed updating checkout quantity: ${updateError.message}`);
     await rollbackPromo();
     await rollbackInventory();
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!updated || updated.length === 0) {
@@ -226,9 +228,9 @@ export default async function updateTicketCheckoutQuantity(
 
     return {
       status: 409,
-      message: "This checkout was just updated — please try again.",
+      message: tr("thisCheckoutWasJustUpdatedPlease"),
     };
   }
 
   return { status: 200, quantity: newQuantity, discount, amount };
-}
+});

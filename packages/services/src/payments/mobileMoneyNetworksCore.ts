@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { NoProviderError, resolveProviderAccount } from "./providers/registry";
 import type { MobileMoneyNetwork } from "./providers/types";
@@ -29,7 +30,7 @@ export async function listMobileMoneyNetworksCore(
   if (!offered) {
     return {
       status: 404,
-      message: "Mobile money isn't available in this market.",
+      message: tr("mobileMoneyIsnTAvailableIn"),
     };
   }
   try {
@@ -54,10 +55,13 @@ export async function listMobileMoneyNetworksCore(
     if (error instanceof NoProviderError) {
       return {
         status: 404,
-        message: "Mobile money isn't available in this market.",
+        message: tr("mobileMoneyIsnTAvailableIn"),
       };
     }
     logger.error(`Failed listing mobile money networks: ${error}`);
-    return { status: 500, message: "Couldn't load mobile money networks" };
+    return {
+      status: 500,
+      message: tr("couldnTLoadMobileMoneyNetworks"),
+    };
   }
 }

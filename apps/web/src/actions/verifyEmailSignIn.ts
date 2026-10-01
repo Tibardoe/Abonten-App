@@ -3,6 +3,7 @@
 import ensureProfileCompletionNotification from "@/actions/ensureProfileCompletionNotification";
 import { createClient } from "@/config/supabase/server";
 import { getUserLocale } from "@/i18n/locale";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import { verifyEmailOtpCore } from "@abonten/services/profile/emailAuthCore";
@@ -17,7 +18,7 @@ export type VerifyEmailSignInResult =
 // signInWithPassword does for phone. Supabase owns the code lifecycle
 // (single-use, expiry, per-IP verification cap); this only maps the result
 // and fires the idempotent profile-completion nudge.
-export default async function verifyEmailSignIn(
+export default withActionLocale(async function verifyEmailSignIn(
   email: string,
   token: string,
 ): Promise<VerifyEmailSignInResult> {
@@ -43,4 +44,4 @@ export default async function verifyEmailSignIn(
   });
 
   return { status: 200 };
-}
+});

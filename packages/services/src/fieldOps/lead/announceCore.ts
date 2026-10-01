@@ -1,4 +1,5 @@
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -26,7 +27,7 @@ export async function sendAnnouncementCore(
     return fieldOpsError(e);
   }
   if (campaignStatus === "completed" || campaignStatus === "archived") {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
   const { data: members } = await supabase
     .from("fieldops_team_member")
@@ -47,8 +48,10 @@ export async function sendAnnouncementCore(
     status: 200,
     message:
       recipients.length === 0
-        ? "No active members to notify yet."
-        : `Sent to ${recipients.length} member${recipients.length === 1 ? "" : "s"}.`,
+        ? tr("noActiveMembersToNotifyYet")
+        : tr("sentToMember", {
+            count: recipients.length,
+          }),
     data: { recipients: recipients.length },
   };
 }

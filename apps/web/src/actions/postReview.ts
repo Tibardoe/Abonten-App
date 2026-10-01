@@ -1,9 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 type FormDataType = {
   title: string;
@@ -16,7 +18,9 @@ type FormDataType = {
   draftId?: string;
 };
 
-export async function postReview(formData: FormDataType) {
+export const postReview = withActionLocale(async function postReview(
+  formData: FormDataType,
+) {
   const supabase = await createClient();
 
   const {
@@ -32,7 +36,7 @@ export async function postReview(formData: FormDataType) {
   }
 
   if (!user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   const { data: userDetails, error: userDetailsError } = await supabase
@@ -49,13 +53,13 @@ export async function postReview(formData: FormDataType) {
   }
 
   if (!userDetails) {
-    return { status: 401, message: "User not found" };
+    return { status: 401, message: tr("userNotFound") };
   }
 
   const { title, review, rating, reviewedId, draftId } = formData;
 
   if (reviewedId === user.id) {
-    return { status: 400, message: "You cannot review yourself" };
+    return { status: 400, message: tr("youCannotReviewYourself") };
   }
 
   // Reviews are of organizers — only someone who actually attended one of
@@ -93,7 +97,7 @@ export async function postReview(formData: FormDataType) {
   if (!hasAttended) {
     return {
       status: 403,
-      message: "You can only review organizers of events you've attended",
+      message: tr("youCanOnlyReviewOrganizersOf"),
     };
   }
 
@@ -112,7 +116,7 @@ export async function postReview(formData: FormDataType) {
   if (insertEror) {
     logger.error(`Error inserting review: ${insertEror.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // Only remove the source draft after the review has actually been
@@ -132,5 +136,5 @@ export async function postReview(formData: FormDataType) {
     }
   }
 
-  return { status: 200, message: "Review posted successfully!" };
-}
+  return { status: 200, message: tr("reviewPostedSuccessfully") };
+});

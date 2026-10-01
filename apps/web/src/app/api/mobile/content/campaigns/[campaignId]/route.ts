@@ -4,6 +4,7 @@ import {
   getContentCampaignCore,
   getContentCampaignHistoryCore,
 } from "@abonten/services/content/campaigns/contentCampaignCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
   advertiserCampaignActionSchema,
@@ -29,6 +30,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ campaignId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { campaignId } = await params;
   return discoveryRoute(
     req,
@@ -47,6 +49,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ campaignId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { campaignId } = await params;
   return discoveryRoute(
     req,

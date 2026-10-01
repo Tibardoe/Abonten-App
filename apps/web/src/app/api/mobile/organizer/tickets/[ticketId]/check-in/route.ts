@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { checkInTicketCore } from "@abonten/services/tickets/checkInTicketCore";
 
 // POST /api/mobile/organizer/tickets/:ticketId/check-in
@@ -13,6 +17,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ ticketId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -26,7 +31,7 @@ export async function POST(
     if (typeof body?.checkedIn !== "boolean") {
       return apiJson({
         status: 400,
-        message: "checkedIn (boolean) is required",
+        message: tr("checkedinBooleanIsRequired"),
       });
     }
 
@@ -43,6 +48,9 @@ export async function POST(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/tickets/:id/check-in failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

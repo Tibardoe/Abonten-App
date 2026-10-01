@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { getEventForEditCore } from "@abonten/services/events/getEventForEditCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 /**
  * Fetches a single event scoped to the current user, for prefilling the
@@ -9,7 +11,9 @@ import { getEventForEditCore } from "@abonten/services/events/getEventForEditCor
  * user.id)`), the same pattern used by deleteEvent.ts/cancelEvent.ts. Query
  * body shared with the mobile edit route via @/utils/getEventForEditCore.
  */
-export async function getEventForEdit(eventId: string) {
+export const getEventForEdit = withActionLocale(async function getEventForEdit(
+  eventId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -18,8 +22,11 @@ export async function getEventForEdit(eventId: string) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401 as const, message: "User not authenticated" };
+    return {
+      status: 401 as const,
+      message: tr("userNotAuthenticated"),
+    };
   }
 
   return getEventForEditCore(supabase, user.id, eventId);
-}
+});

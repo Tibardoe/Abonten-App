@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import webpush from "web-push";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Web push (the browser Push API) for signed-in web users. The web app's
@@ -105,13 +106,19 @@ export async function registerWebPushSubscriptionCore(
   input: WebPushSubscriptionInput,
   service: ServiceRoleClient = getSupabaseServiceClient(),
 ): Promise<Envelope> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   if (!readVapid()) {
-    return { status: 503, message: "Browser notifications aren't available." };
+    return {
+      status: 503,
+      message: tr("browserNotificationsArenTAvailable"),
+    };
   }
   const sub = parseSubscription(input ?? {});
   if (!sub) {
-    return { status: 400, message: "This browser's subscription isn't valid." };
+    return {
+      status: 400,
+      message: tr("thisBrowserSSubscriptionIsnT"),
+    };
   }
 
   // Upsert on the unique endpoint: a browser re-subscribes on every visit to
@@ -129,7 +136,7 @@ export async function registerWebPushSubscriptionCore(
   );
   if (error) {
     logger.error(`web_push_subscription upsert failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // Keep the most recent few browsers per person.
@@ -149,7 +156,7 @@ export async function registerWebPushSubscriptionCore(
       );
   }
 
-  return { status: 200, message: "Browser notifications are on." };
+  return { status: 200, message: tr("browserNotificationsAreOn") };
 }
 
 export async function unregisterWebPushSubscriptionCore(
@@ -157,9 +164,9 @@ export async function unregisterWebPushSubscriptionCore(
   input: { endpoint?: unknown },
   service: ServiceRoleClient = getSupabaseServiceClient(),
 ): Promise<Envelope> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   const endpoint = typeof input?.endpoint === "string" ? input.endpoint : "";
-  if (!endpoint) return { status: 400, message: "A subscription is required" };
+  if (!endpoint) return { status: 400, message: tr("aSubscriptionIsRequired") };
   const { error } = await service
     .from("web_push_subscription")
     .delete()
@@ -167,9 +174,9 @@ export async function unregisterWebPushSubscriptionCore(
     .eq("user_id", userId);
   if (error) {
     logger.error(`web_push_subscription delete failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
-  return { status: 200, message: "Browser notifications are off." };
+  return { status: 200, message: tr("browserNotificationsAreOff") };
 }
 
 /** Whether this browser's endpoint is registered to this person. */
@@ -178,7 +185,7 @@ export async function getWebPushStatusCore(
   input: { endpoint?: unknown },
   service: ServiceRoleClient = getSupabaseServiceClient(),
 ): Promise<Envelope<{ subscribed: boolean }>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   const endpoint = typeof input?.endpoint === "string" ? input.endpoint : "";
   if (!endpoint) return { status: 200, data: { subscribed: false } };
   const { data, error } = await service
@@ -189,7 +196,7 @@ export async function getWebPushStatusCore(
     .maybeSingle();
   if (error) {
     logger.error(`web_push_subscription read failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return { status: 200, data: { subscribed: !!data } };
 }

@@ -24,6 +24,7 @@ import {
 import type { ContentMediaItem } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { RegisterContentMediaInput } from "@abonten/validation/contentSchemas";
+import { tr } from "../i18n/requestLocale";
 import { enqueueCloudinaryCleanup } from "../platform/cloudinaryCleanupCore";
 import { checkRateLimit } from "../security/rateLimit";
 import { contentMediaEnvironmentPrefix } from "../uploads/cloudinaryUploadSignature";
@@ -207,11 +208,14 @@ export async function registerContentMediaCore(
   if (!allowed) {
     return {
       status: 403,
-      message: "Posting isn't available for your account yet.",
+      message: tr("postingIsnTAvailableForYour2"),
     };
   }
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   if (
     !(await checkRateLimit(
@@ -222,13 +226,13 @@ export async function registerContentMediaCore(
   ) {
     return {
       status: 429,
-      message: "Too many uploads. Please try again later.",
+      message: tr("tooManyUploadsPleaseTryAgain"),
     };
   }
 
   const expectedPrefix = `${contentMediaEnvironmentPrefix()}${userId}/`;
   if (!input.publicId.startsWith(expectedPrefix)) {
-    return { status: 403, message: "Not authorized for this media." };
+    return { status: 403, message: tr("notAuthorizedForThisMedia2") };
   }
 
   // Idempotent: the same upload registered twice returns the same row.
@@ -239,7 +243,10 @@ export async function registerContentMediaCore(
     .maybeSingle();
   if (existing) {
     if (existing.owner_id !== userId) {
-      return { status: 403, message: "Not authorized for this media." };
+      return {
+        status: 403,
+        message: tr("notAuthorizedForThisMedia2"),
+      };
     }
     return { status: 200, data: mapMediaRow(existing) };
   }
@@ -248,7 +255,7 @@ export async function registerContentMediaCore(
   if (!resource) {
     return {
       status: 400,
-      message: "We couldn't find that upload. Please try uploading again.",
+      message: tr("weCouldnTFindThatUpload"),
     };
   }
   const isVideo = resource.resource_type === "video";
@@ -425,12 +432,12 @@ export async function deleteContentMediaCore(
     .eq("id", mediaId)
     .maybeSingle();
   if (!row || row.owner_id !== userId) {
-    return { status: 404, message: "Media not found." };
+    return { status: 404, message: tr("mediaNotFound") };
   }
   if (row.post_id) {
     return {
       status: 409,
-      message: "This media belongs to a post. Delete the post instead.",
+      message: tr("thisMediaBelongsToAPost"),
     };
   }
   try {
@@ -446,7 +453,7 @@ export async function deleteContentMediaCore(
     );
   }
   await supabase.from("content_media").delete().eq("id", mediaId);
-  return { status: 200, message: "Removed." };
+  return { status: 200, message: tr("removed") };
 }
 
 /**
@@ -464,10 +471,10 @@ export async function retryContentMediaProcessingCore(
     .eq("id", mediaId)
     .maybeSingle();
   if (!row || (!actor.staff && row.owner_id !== actor.userId)) {
-    return { status: 404, message: "Media not found." };
+    return { status: 404, message: tr("mediaNotFound") };
   }
   if (row.media_type !== "video" || row.status === "deleted") {
-    return { status: 400, message: "Nothing to process." };
+    return { status: 400, message: tr("nothingToProcess") };
   }
   const trim =
     row.trim_start_seconds !== null && row.trim_end_seconds !== null

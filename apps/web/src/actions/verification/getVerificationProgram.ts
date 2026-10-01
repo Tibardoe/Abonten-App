@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { resolveVerificationCaller } from "@/utils/verificationAction";
 import { getVerificationProgramForUser } from "@abonten/services/verification/verificationCaseCore";
 import {
@@ -12,14 +13,16 @@ import {
  * signed-out caller gets the disabled programme rather than a 401, so a
  * public page can call it without special-casing.
  */
-export async function getVerificationProgram(): Promise<{
-  status: number;
-  data: VerificationProgram;
-}> {
-  const caller = await resolveVerificationCaller();
-  if (caller.error) {
-    return { status: 200, data: DISABLED_VERIFICATION_PROGRAM };
-  }
-  const res = await getVerificationProgramForUser(caller.svc, caller.userId);
-  return { status: 200, data: res.data ?? DISABLED_VERIFICATION_PROGRAM };
-}
+export const getVerificationProgram = withActionLocale(
+  async function getVerificationProgram(): Promise<{
+    status: number;
+    data: VerificationProgram;
+  }> {
+    const caller = await resolveVerificationCaller();
+    if (caller.error) {
+      return { status: 200, data: DISABLED_VERIFICATION_PROGRAM };
+    }
+    const res = await getVerificationProgramForUser(caller.svc, caller.userId);
+    return { status: 200, data: res.data ?? DISABLED_VERIFICATION_PROGRAM };
+  },
+);

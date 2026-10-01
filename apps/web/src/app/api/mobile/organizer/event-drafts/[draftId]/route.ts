@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { fetchEventDraftDetail } from "@abonten/services/events/eventDraftCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // GET /api/mobile/organizer/event-drafts/:draftId
 // The full jsonb payload + flyer ids for one of the caller's event drafts,
@@ -10,6 +14,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ draftId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -23,6 +28,9 @@ export async function GET(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile GET /organizer/event-drafts/:draftId failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -10,7 +10,7 @@ import type {
 } from "@abonten/types/organizerFinance";
 import { addPayoutAccountSchema } from "@abonten/validation/payoutAccountSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import {
   RESTRICTED_ACCOUNT_MESSAGE,
@@ -59,7 +59,7 @@ export async function listPayoutAccountsCore(
 
   if (error) {
     logger.error(`Failed fetching payout accounts: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: (data ?? []) as PayoutAccountRow[] };
@@ -81,7 +81,7 @@ export async function addPayoutAccountCore(
   if (!parsed.success) {
     return {
       status: 400,
-      message: parsed.error.issues[0]?.message ?? "Invalid payout account",
+      message: parsed.error.issues[0]?.message ?? tr("invalidPayoutAccount"),
     };
   }
 
@@ -93,7 +93,7 @@ export async function addPayoutAccountCore(
 
   if (countError) {
     logger.error(`Failed counting payout accounts: ${countError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const data = parsed.data;
@@ -119,8 +119,10 @@ export async function addPayoutAccountCore(
       status: 400,
       message:
         data.accountType === "mobile_money"
-          ? `Mobile money payouts aren't available in ${market.name} yet.`
-          : `Bank payouts aren't available in ${market.name} yet.`,
+          ? tr("mobileMoneyPayoutsArenTAvailable", {
+              name: market.name,
+            })
+          : tr("bankPayoutsArenTAvailableIn", { name: market.name }),
     };
   }
 
@@ -139,7 +141,10 @@ export async function addPayoutAccountCore(
     const value = (data.details?.[field.key] ?? "").trim();
     if (!value) {
       if (field.required) {
-        return { status: 400, message: `${field.label} is required.` };
+        return {
+          status: 400,
+          message: tr("isRequired", { label: field.label }),
+        };
       }
       continue;
     }
@@ -150,8 +155,13 @@ export async function addPayoutAccountCore(
       return {
         status: 400,
         message: field.example
-          ? `Enter a valid ${field.label.toLowerCase()} (e.g. ${field.example}).`
-          : `Enter a valid ${field.label.toLowerCase()}.`,
+          ? tr("enterAValidEG", {
+              field: field.label.toLowerCase(),
+              example: field.example,
+            })
+          : tr("enterAValid", {
+              field: field.label.toLowerCase(),
+            }),
       };
     }
     details[field.key] = value;
@@ -180,8 +190,13 @@ export async function addPayoutAccountCore(
       return {
         status: 400,
         message: rule.example
-          ? `Enter a valid ${rule.label.toLowerCase()} (e.g. ${rule.example}).`
-          : `Enter a valid ${rule.label.toLowerCase()}.`,
+          ? tr("enterAValidEG", {
+              field: rule.label.toLowerCase(),
+              example: rule.example,
+            })
+          : tr("enterAValid", {
+              field: rule.label.toLowerCase(),
+            }),
       };
     }
   }
@@ -206,7 +221,7 @@ export async function addPayoutAccountCore(
 
   if (error) {
     logger.error(`Failed saving payout account: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: inserted as PayoutAccountRow };
@@ -227,11 +242,11 @@ export async function removePayoutAccountCore(
 
   if (fetchError) {
     logger.error(`Failed fetching payout account: ${fetchError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!account) {
-    return { status: 404, message: "Payout account not found" };
+    return { status: 404, message: tr("payoutAccountNotFound") };
   }
 
   const { count: activeCount, error: countError } = await supabase
@@ -242,13 +257,13 @@ export async function removePayoutAccountCore(
 
   if (countError) {
     logger.error(`Failed counting payout accounts: ${countError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if ((activeCount ?? 0) <= 1) {
     return {
       status: 400,
-      message: "You must keep at least one payout account",
+      message: tr("youMustKeepAtLeastOne"),
     };
   }
 
@@ -262,13 +277,13 @@ export async function removePayoutAccountCore(
     logger.error(
       `Failed checking in-flight payouts: ${processingError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if ((processingCount ?? 0) > 0) {
     return {
       status: 400,
-      message: "This account has a payout in progress and can't be removed yet",
+      message: tr("thisAccountHasAPayoutIn"),
     };
   }
 
@@ -284,7 +299,7 @@ export async function removePayoutAccountCore(
 
   if (removeError) {
     logger.error(`Failed removing payout account: ${removeError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (account.is_default) {
@@ -306,7 +321,7 @@ export async function removePayoutAccountCore(
     }
   }
 
-  return { status: 200, message: "Payout account removed" };
+  return { status: 200, message: tr("payoutAccountRemoved") };
 }
 
 export async function setDefaultPayoutAccountCore(
@@ -324,11 +339,11 @@ export async function setDefaultPayoutAccountCore(
 
   if (fetchError) {
     logger.error(`Failed fetching payout account: ${fetchError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!account) {
-    return { status: 404, message: "Payout account not found" };
+    return { status: 404, message: tr("payoutAccountNotFound") };
   }
 
   const { error: unsetError } = await getSupabaseServiceClient()
@@ -340,7 +355,7 @@ export async function setDefaultPayoutAccountCore(
 
   if (unsetError) {
     logger.error(`Failed clearing previous default: ${unsetError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const { error: setError } = await getSupabaseServiceClient()
@@ -352,10 +367,10 @@ export async function setDefaultPayoutAccountCore(
 
   if (setError) {
     logger.error(`Failed setting default payout account: ${setError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  return { status: 200, message: "Default payout account updated" };
+  return { status: 200, message: tr("defaultPayoutAccountUpdated") };
 }
 
 export async function listPayoutsCore(
@@ -375,7 +390,7 @@ export async function listPayoutsCore(
 
   if (error) {
     logger.error(`Failed fetching payouts: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: (data ?? []) as OrganizerPayoutRow[] };

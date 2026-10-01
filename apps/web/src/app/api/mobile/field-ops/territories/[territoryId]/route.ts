@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { getTerritoryViewCore } from "@abonten/services/fieldOps/member/prospectsCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsTerritoryLookupSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // GET /api/mobile/field-ops/territories/:territoryId?campaignId= -- the territory
@@ -12,6 +13,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ territoryId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { territoryId } = await routeParams(params);
   return fieldOpsRoute(
     req,

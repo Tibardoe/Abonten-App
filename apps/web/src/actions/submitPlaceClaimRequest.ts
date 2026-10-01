@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 
 // Postgres error code for a unique-constraint violation.
@@ -33,85 +35,92 @@ type SubmitPlaceClaimRequestInput = {
  * here as a friendly 409, same translation pattern postPlaceReview.ts uses
  * for its own unique-constraint violation.
  */
-export async function submitPlaceClaimRequest(
-  formData: SubmitPlaceClaimRequestInput,
-) {
-  const supabase = await createClient();
+export const submitPlaceClaimRequest = withActionLocale(
+  async function submitPlaceClaimRequest(
+    formData: SubmitPlaceClaimRequestInput,
+  ) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError) {
-    return {
-      status: 500,
-      message: userFacingError("Error fetching user", userError),
-    };
-  }
-
-  if (!user) {
-    return { status: 401, message: "User not authenticated" };
-  }
-
-  const allowed = await checkRateLimit(
-    `place-claim:${user.id}`,
-    MAX_CLAIM_REQUESTS_PER_HOUR,
-    3600,
-  );
-
-  if (!allowed) {
-    return {
-      status: 429,
-      message: "Too many claim requests recently. Please try again later.",
-    };
-  }
-
-  const { placeId, note, contactPhone, contactEmail } = formData;
-
-  const { data: existingPlace, error: fetchError } = await supabase
-    .from("place")
-    .select("id, owner_id")
-    .eq("id", placeId)
-    .maybeSingle();
-
-  if (fetchError) {
-    return {
-      status: 500,
-      message: userFacingError("Error fetching place", fetchError),
-    };
-  }
-
-  if (!existingPlace) {
-    return { status: 404, message: "Place not found" };
-  }
-
-  if (existingPlace.owner_id === user.id) {
-    return { status: 400, message: "You already own this place" };
-  }
-
-  const { error: insertError } = await supabase
-    .from("place_claim_request")
-    .insert({
-      place_id: placeId,
-      claimant_id: user.id,
-      note: note ?? null,
-      contact_phone: contactPhone ?? null,
-      contact_email: contactEmail ?? null,
-      status: "pending",
-    });
-
-  if (insertError) {
-    if (insertError.code === UNIQUE_VIOLATION) {
+    if (userError) {
       return {
-        status: 409,
-        message: "You already have a pending claim request for this place.",
+        status: 500,
+        message: userFacingError("Error fetching user", userError),
       };
     }
 
-    logger.error(`Error inserting place claim request: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
+    if (!user) {
+      return { status: 401, message: tr("userNotAuthenticated") };
+    }
 
-  return { status: 200, message: "Claim request submitted successfully!" };
-}
+    const allowed = await checkRateLimit(
+      `place-claim:${user.id}`,
+      MAX_CLAIM_REQUESTS_PER_HOUR,
+      3600,
+    );
+
+    if (!allowed) {
+      return {
+        status: 429,
+        message: tr("tooManyClaimRequestsRecentlyPlease"),
+      };
+    }
+
+    const { placeId, note, contactPhone, contactEmail } = formData;
+
+    const { data: existingPlace, error: fetchError } = await supabase
+      .from("place")
+      .select("id, owner_id")
+      .eq("id", placeId)
+      .maybeSingle();
+
+    if (fetchError) {
+      return {
+        status: 500,
+        message: userFacingError("Error fetching place", fetchError),
+      };
+    }
+
+    if (!existingPlace) {
+      return { status: 404, message: tr("placeNotFound") };
+    }
+
+    if (existingPlace.owner_id === user.id) {
+      return { status: 400, message: tr("youAlreadyOwnThisPlace") };
+    }
+
+    const { error: insertError } = await supabase
+      .from("place_claim_request")
+      .insert({
+        place_id: placeId,
+        claimant_id: user.id,
+        note: note ?? null,
+        contact_phone: contactPhone ?? null,
+        contact_email: contactEmail ?? null,
+        status: "pending",
+      });
+
+    if (insertError) {
+      if (insertError.code === UNIQUE_VIOLATION) {
+        return {
+          status: 409,
+          message: tr("youAlreadyHaveAPendingClaim"),
+        };
+      }
+
+      logger.error(
+        `Error inserting place claim request: ${insertError.message}`,
+      );
+      return { status: 500, message: tr("somethingWentWrong") };
+    }
+
+    return {
+      status: 200,
+      message: tr("claimRequestSubmittedSuccessfully"),
+    };
+  },
+);

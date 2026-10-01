@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getPlaceVisitPanelCore } from "@abonten/services/places/placeVisitCore";
 
 // GET /api/mobile/organizer/places/:placeId/visit-code
@@ -10,6 +14,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -23,6 +28,9 @@ export async function GET(
       "mobile GET /organizer/places/:placeId/visit-code failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

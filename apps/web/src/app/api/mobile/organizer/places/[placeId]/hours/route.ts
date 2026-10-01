@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { updatePlaceOpeningHoursCore } from "@abonten/services/places/placeHoursStatusCore";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 
@@ -14,6 +18,7 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -27,7 +32,7 @@ export async function PUT(
     if (!raw) {
       return apiJson({
         status: 400,
-        message: "openingHours (array) is required",
+        message: tr("openinghoursArrayIsRequired"),
       });
     }
 
@@ -40,12 +45,15 @@ export async function PUT(
       const closeTime = typeof e.closeTime === "string" ? e.closeTime : "";
 
       if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
-        return apiJson({ status: 400, message: "Invalid dayOfWeek" });
+        return apiJson({
+          status: 400,
+          message: tr("invalidDayofweek"),
+        });
       }
       if (!isClosed && (!TIME_RE.test(openTime) || !TIME_RE.test(closeTime))) {
         return apiJson({
           status: 400,
-          message: "Open days need openTime and closeTime as HH:MM",
+          message: tr("openDaysNeedOpentimeAndClosetime"),
         });
       }
 
@@ -70,6 +78,9 @@ export async function PUT(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile PUT /organizer/places/:id/hours failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

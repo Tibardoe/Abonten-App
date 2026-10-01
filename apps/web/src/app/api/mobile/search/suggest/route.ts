@@ -1,4 +1,8 @@
 import { discoveryRoute } from "@/app/api/mobile/_lib/discoveryRoute";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { resolveDiscoveryAccess } from "@abonten/services/search/discoveryProgram";
 import { suggestCore } from "@abonten/services/search/searchCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
@@ -10,6 +14,7 @@ import { searchSuggestSchema } from "@abonten/validation/discoverySchemas";
 // with the programme's switches and the same identity-free logging. Older
 // app builds still call the search_suggest RPC directly until they update.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {
@@ -22,7 +27,7 @@ export async function GET(req: Request) {
         ? `search-suggest:user:${userId}`
         : `search-suggest:ip:${ip}`;
       if (!(await checkRateLimit(key, 180, 60))) {
-        return { status: 429, message: "Slow down a little." };
+        return { status: 429, message: tr("slowDownALittle") };
       }
       const { program, settings } = await resolveDiscoveryAccess(svc, userId);
       return suggestCore(svc, data, program, {

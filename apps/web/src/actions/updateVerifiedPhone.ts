@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type UpdateVerifiedPhoneResult,
   updateVerifiedPhoneCore,
@@ -16,7 +18,7 @@ export type { UpdateVerifiedPhoneResult };
 //
 // Thin wrapper: auth, then delegate to updateVerifiedPhoneCore (also used by
 // the mobile /api/mobile/account/phone/verify route).
-export default async function updateVerifiedPhone(
+export default withActionLocale(async function updateVerifiedPhone(
   phoneE164: string,
   code: string,
 ): Promise<UpdateVerifiedPhoneResult> {
@@ -24,8 +26,8 @@ export default async function updateVerifiedPhone(
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   if (userError || !userData.user) {
-    return { status: 401, message: "You need to be signed in to do that." };
+    return { status: 401, message: tr("youNeedToBeSignedIn") };
   }
 
   return updateVerifiedPhoneCore(userData.user.id, phoneE164, code);
-}
+});

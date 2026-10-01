@@ -7,6 +7,7 @@ import {
   eventDraftPayloadSchema,
 } from "@abonten/validation/eventDraftSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of saveEventDraft / getEventDrafts / getEventDraft /
 // deleteEventDraft, lifted so the mobile event-drafts routes run the same
@@ -59,7 +60,7 @@ export async function saveEventDraftCore(
 
   const parsed = eventDraftPayloadSchema.safeParse(input.payload);
   if (!parsed.success) {
-    return { status: 400, message: "Invalid draft data." };
+    return { status: 400, message: tr("invalidDraftData") };
   }
 
   let previousFlyerPublicId: string | null = null;
@@ -79,13 +80,12 @@ export async function saveEventDraftCore(
       };
     }
     if (!existingDraft || existingDraft.user_id !== userId) {
-      return { status: 404, message: "Draft not found." };
+      return { status: 404, message: tr("draftNotFound") };
     }
     if (expectedUpdatedAt && existingDraft.updated_at !== expectedUpdatedAt) {
       return {
         status: 409,
-        message:
-          "This draft was updated elsewhere — reload to see the latest version.",
+        message: tr("thisDraftWasUpdatedElsewhereReload"),
       };
     }
 
@@ -161,7 +161,7 @@ export async function saveEventDraftCore(
 
     return {
       status: 200,
-      message: "Draft saved.",
+      message: tr("draftSaved"),
       data: { draftId, updatedAt: refreshedDraft?.updated_at },
     };
   }
@@ -175,9 +175,9 @@ export async function saveEventDraftCore(
   if (insertDraftError || !newDraft) {
     return {
       status: 500,
-      message: `Failed to save draft: ${
-        insertDraftError?.message ?? "unknown error"
-      }`,
+      message: tr("failedToSaveDraft", {
+        reason: insertDraftError?.message ?? tr("unknownError"),
+      }),
     };
   }
 
@@ -202,7 +202,7 @@ export async function saveEventDraftCore(
 
   return {
     status: 200,
-    message: "Draft saved.",
+    message: tr("draftSaved"),
     data: { draftId: newDraft.id, updatedAt: newDraft.updated_at },
   };
 }
@@ -277,10 +277,10 @@ export async function fetchEventDraftDetail(
     return { status: 500, message: draftError.message };
   }
   if (!draft || draft.user_id !== userId) {
-    return { status: 404, message: "Draft not found." };
+    return { status: 404, message: tr("draftNotFound") };
   }
   if (new Date(draft.expires_at) <= new Date()) {
-    return { status: 410, message: "This draft has expired." };
+    return { status: 410, message: tr("thisDraftHasExpired") };
   }
 
   const { data: eventDraft, error: eventDraftError } = await supabase
@@ -292,7 +292,7 @@ export async function fetchEventDraftDetail(
   if (eventDraftError || !eventDraft) {
     return {
       status: 500,
-      message: eventDraftError?.message ?? "Draft data not found.",
+      message: eventDraftError?.message ?? tr("draftDataNotFound"),
     };
   }
 
@@ -334,7 +334,7 @@ export async function deleteEventDraftCore(
     return { status: 500, message: draftError.message };
   }
   if (!draft || draft.user_id !== userId) {
-    return { status: 404, message: "Draft not found." };
+    return { status: 404, message: tr("draftNotFound") };
   }
 
   const { data: eventDraft } = await supabase
@@ -356,14 +356,14 @@ export async function deleteEventDraftCore(
       if (result.result !== "ok" && result.result !== "not found") {
         return {
           status: 500,
-          message: "Failed to delete draft image. Please try again.",
+          message: tr("failedToDeleteDraftImagePlease"),
         };
       }
     } catch (cloudError) {
       logger.error("Cloudinary deletion failed:", cloudError);
       return {
         status: 500,
-        message: "Failed to delete draft image. Please try again.",
+        message: tr("failedToDeleteDraftImagePlease"),
       };
     }
   }
@@ -381,5 +381,5 @@ export async function deleteEventDraftCore(
     };
   }
 
-  return { status: 200, message: "Draft deleted." };
+  return { status: 200, message: tr("draftDeleted") };
 }

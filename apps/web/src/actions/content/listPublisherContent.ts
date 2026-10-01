@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -9,9 +10,11 @@ import { listPublisherPostsCore } from "@abonten/services/content/contentPostCor
 import { publisherPostsRequestSchema } from "@abonten/validation/contentSchemas";
 
 /** Public posts of one organizer or place. */
-export async function listPublisherContent(input: unknown) {
-  const caller = await resolveContentCaller();
-  const parsed = parseContentInput(publisherPostsRequestSchema, input);
-  if (parsed.error) return parsed.error;
-  return listPublisherPostsCore(caller.svc, caller.userId, parsed.data);
-}
+export const listPublisherContent = withActionLocale(
+  async function listPublisherContent(input: unknown) {
+    const caller = await resolveContentCaller();
+    const parsed = parseContentInput(publisherPostsRequestSchema, input);
+    if (parsed.error) return parsed.error;
+    return listPublisherPostsCore(caller.svc, caller.userId, parsed.data);
+  },
+);

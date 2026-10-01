@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   cloudinary,
   destroyAsset,
@@ -111,7 +113,7 @@ function resolveTrimWindow(
 // getHighlightUploadSignature.ts). This only ever receives small JSON
 // metadata about an upload that already completed, which is what fixes the
 // "Body exceeded 5mb limit" Server Action error for videos.
-export default async function uploadHighlight(
+export default withActionLocale(async function uploadHighlight(
   items: HighlightUploadMetadataItem[],
   groupId: string,
 ) {
@@ -123,15 +125,15 @@ export default async function uploadHighlight(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "Sign in to upload highlight!" };
+    return { status: 401, message: tr("signInToUploadHighlight") };
   }
 
   if (items.length === 0) {
-    return { status: 400, message: "No media to upload" };
+    return { status: 400, message: tr("noMediaToUpload") };
   }
 
   if (!UUID_PATTERN.test(groupId)) {
-    return { status: 400, message: "Invalid upload batch" };
+    return { status: 400, message: tr("invalidUploadBatch") };
   }
 
   // The public_id's folder was bound to this user's id when the signature
@@ -142,18 +144,24 @@ export default async function uploadHighlight(
 
   for (const item of items) {
     if (item.resourceType !== "image" && item.resourceType !== "video") {
-      return { status: 400, message: "Unsupported media type" };
+      return { status: 400, message: tr("unsupportedMediaType") };
     }
 
     if (!item.publicId.startsWith(expectedFolderPrefix)) {
-      return { status: 403, message: "Not authorized for this media" };
+      return {
+        status: 403,
+        message: tr("notAuthorizedForThisMedia"),
+      };
     }
 
     const maxBytes =
       item.resourceType === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
 
     if (item.bytes > maxBytes) {
-      return { status: 400, message: "Media exceeds the maximum allowed size" };
+      return {
+        status: 400,
+        message: tr("mediaExceedsTheMaximumAllowedSize"),
+      };
     }
   }
 
@@ -223,12 +231,18 @@ export default async function uploadHighlight(
 
     return {
       status: 500,
-      message: `Uploaded ${items.length - failed.length}, failed ${failed.length}.`,
+      message: tr("uploadedFailed", {
+        uploaded: items.length - failed.length,
+        failed: failed.length,
+      }),
     };
   }
 
-  return { status: 200, message: "Highlight uploaded successfully." };
-}
+  return {
+    status: 200,
+    message: tr("highlightUploadedSuccessfully"),
+  };
+});
 
 // Called when a highlight's Cloudinary upload succeeded but the matching DB
 // insert failed -- destroys the now-orphaned asset immediately (we're

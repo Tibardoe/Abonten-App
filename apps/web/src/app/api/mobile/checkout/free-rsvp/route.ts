@@ -3,6 +3,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { registerForFreeEventCore } from "@abonten/services/checkout/registerForFreeEventCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { after } from "next/server";
 
 // POST /api/mobile/checkout/free-rsvp  { eventId: string, occurrenceId?: string }
@@ -12,6 +16,7 @@ import { after } from "next/server";
 // the web action runs. 200 = registered; 300 = already have a ticket;
 // 404 = no free registration; 409 = not accepting / ended.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -22,7 +27,10 @@ export async function POST(req: Request) {
     } | null;
 
     if (typeof body?.eventId !== "string" || body.eventId.length === 0) {
-      return apiJson({ status: 400, message: "eventId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("eventidIsRequired"),
+      });
     }
 
     const occurrenceId =
@@ -50,6 +58,9 @@ export async function POST(req: Request) {
     return apiJson({ status: result.status, message: result.message });
   } catch (error) {
     logger.error("mobile POST /checkout/free-rsvp failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

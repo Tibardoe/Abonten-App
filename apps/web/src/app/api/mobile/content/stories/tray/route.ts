@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { getStoryTrayCore } from "@abonten/services/content/storiesCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { z } from "zod";
 
 // GET /api/mobile/content/stories/tray — the Stories row
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {

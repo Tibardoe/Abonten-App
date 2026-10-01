@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { setRewardEmailsByTokenCore } from "@abonten/services/notifications/rewardEmailPreferenceCore";
 
 /**
@@ -8,18 +9,20 @@ import { setRewardEmailsByTokenCore } from "@abonten/services/notifications/rewa
  * signed token is the proof, checked by the service. Web-only: the link
  * only exists in emails, so there's no app twin.
  */
-export async function setRewardEmailsByLink(input: {
-  userId: string;
-  token: string;
-  enabled: boolean;
-}): Promise<{
-  status: number;
-  message?: string;
-  data?: { rewardEmails: boolean };
-}> {
-  return setRewardEmailsByTokenCore({
-    userId: input?.userId,
-    token: input?.token,
-    enabled: input?.enabled === true,
-  });
-}
+export const setRewardEmailsByLink = withActionLocale(
+  async function setRewardEmailsByLink(input: {
+    userId: string;
+    token: string;
+    enabled: boolean;
+  }): Promise<{
+    status: number;
+    message?: string;
+    data?: { rewardEmails: boolean };
+  }> {
+    return setRewardEmailsByTokenCore({
+      userId: input?.userId,
+      token: input?.token,
+      enabled: input?.enabled === true,
+    });
+  },
+);

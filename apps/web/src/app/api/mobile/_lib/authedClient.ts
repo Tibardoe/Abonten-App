@@ -1,3 +1,4 @@
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { recordDeviceInstallCore } from "@abonten/services/rewards/referralCore";
 import type { Database } from "@abonten/types/database.types";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
@@ -126,7 +127,7 @@ export async function getMobileAuth(req: Request): Promise<MobileAuth> {
       supabase: null,
       user: null,
       response: NextResponse.json(
-        { status: 401, message: "Missing bearer token" },
+        { status: 401, message: tr("missingBearerToken") },
         { status: 401 },
       ),
     };
@@ -157,7 +158,7 @@ export async function getMobileAuth(req: Request): Promise<MobileAuth> {
       supabase: null,
       user: null,
       response: NextResponse.json(
-        { status: 401, message: "Invalid or expired session" },
+        { status: 401, message: tr("invalidOrExpiredSession") },
         { status: 401 },
       ),
     };
@@ -191,8 +192,7 @@ export async function getMobileAuth(req: Request): Promise<MobileAuth> {
       response: NextResponse.json(
         {
           status: 403,
-          message:
-            "Your account has been restricted. Contact support if you think this is a mistake.",
+          message: tr("yourAccountHasBeenRestrictedContact"),
         },
         { status: 403 },
       ),

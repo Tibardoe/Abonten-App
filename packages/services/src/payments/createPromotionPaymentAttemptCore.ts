@@ -15,6 +15,7 @@ import {
 import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import {
   PROMOTION_TARGETS,
   type PromotionKind,
@@ -115,7 +116,7 @@ export async function createPromotionPaymentAttemptCore(
   if (!userEmail) {
     return {
       status: 400,
-      message: "Your account needs a verified email to pay",
+      message: tr("yourAccountNeedsAVerifiedEmail"),
     };
   }
 
@@ -124,7 +125,7 @@ export async function createPromotionPaymentAttemptCore(
   if (input.useCredit && !cfg.creditAllowed) {
     return {
       status: 400,
-      message: "Abonten Credit can't be used on this purchase.",
+      message: tr("abontenCreditCanTBeUsed"),
     };
   }
 
@@ -140,7 +141,7 @@ export async function createPromotionPaymentAttemptCore(
   }
 
   if (!input.paymentMethodId && !input.method) {
-    return { status: 400, message: "Choose a payment method" };
+    return { status: 400, message: tr("chooseAPaymentMethod") };
   }
 
   // Priced from the tier, the same way the credit path is, so cash and
@@ -154,12 +155,12 @@ export async function createPromotionPaymentAttemptCore(
       input.checkoutId,
     );
   } catch {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   if (!order || order.status !== "pending") {
     return {
       status: 410,
-      message: "This checkout has expired. Please start again.",
+      message: tr("thisCheckoutHasExpiredPleaseStart"),
     };
   }
 
@@ -253,7 +254,7 @@ async function dropOpenCreditAttempts(
 
   if (error) {
     logger.error(`Failed checking open attempts: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const affected = (open ?? []).filter(
@@ -262,8 +263,7 @@ async function dropOpenCreditAttempts(
   if (affected.some((a) => a.status === "processing")) {
     return {
       status: 409,
-      message:
-        "A payment for this checkout is being confirmed. Wait a moment, then check its status.",
+      message: tr("aPaymentForThisCheckoutIs"),
     };
   }
 
@@ -279,14 +279,14 @@ async function dropOpenCreditAttempts(
       .in("status", ["initiated", "pending"]);
     if (cancelError) {
       logger.error(`Failed cancelling open attempts: ${cancelError.message}`);
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
   }
 
   try {
     await releaseOpenReservations(cfg.targetType, checkoutId, "replaced");
   } catch {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return "ok";
 }
@@ -313,22 +313,22 @@ async function startCreditPayment(
       input.kind,
       input.checkoutId,
     );
-    if (!order) return { status: 404, message: "Checkout not found" };
+    if (!order) return { status: 404, message: tr("checkoutNotFound") };
     if (order.status !== "pending") {
       return {
         status: 410,
-        message: "This checkout has expired. Please start again.",
+        message: tr("thisCheckoutHasExpiredPleaseStart"),
       };
     }
     quote = await computePromotionCredit(order, userId);
   } catch {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!quote.offered || quote.creditMinor === 0) {
     return {
       status: 409,
-      message: "You don't have credit you can use on this promotion.",
+      message: tr("youDonTHaveCreditYou2"),
     };
   }
 
@@ -337,7 +337,7 @@ async function startCreditPayment(
     if (!input.paymentMethodId && !input.method) {
       return {
         status: 400,
-        message: "Choose a payment method for the rest of the amount",
+        message: tr("chooseAPaymentMethodForThe"),
       };
     }
     const resolved = await cashChoiceFor(supabase, userId, input, order);
@@ -350,7 +350,7 @@ async function startCreditPayment(
   if (quote.creditOnly && !fulfillmentDeps) {
     // Programming error: a credit-only order is finalized right here.
     logger.error("createPromotionPaymentAttemptCore: missing fulfillmentDeps");
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const dropped = await dropOpenCreditAttempts(
@@ -391,7 +391,7 @@ async function startCreditPayment(
     logger.error(
       `Failed creating credit payment attempt: ${insertError?.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   const attempt = inserted as PaymentAttemptRow;
 

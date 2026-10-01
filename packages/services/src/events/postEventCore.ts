@@ -19,7 +19,7 @@ import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import {
   RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
@@ -181,7 +181,7 @@ export async function postEventCore(
   const eventStartDate = isSpecificEvent ? null : toInstant(input.startsAt);
   const eventEndDate = isSpecificEvent ? null : toInstant(input.endsAt);
   if (!isSpecificEvent && (!eventStartDate || !eventEndDate)) {
-    return { status: 400, message: "Enter a valid start and end time." };
+    return { status: 400, message: tr("enterAValidStartAndEnd") };
   }
 
   const specificDatesPayload = isSpecificEvent
@@ -194,7 +194,7 @@ export async function postEventCore(
   if (specificDatesPayload?.some((d) => !d.start || !d.end)) {
     return {
       status: 400,
-      message: "Enter a valid start and end time for every date.",
+      message: tr("enterAValidStartAndEnd2"),
     };
   }
 
@@ -327,20 +327,19 @@ export async function postEventCore(
       ) {
         return {
           status: 409,
-          message:
-            "One of your promo codes is already used for this event. Please use a different code.",
+          message: tr("oneOfYourPromoCodesIs"),
         };
       }
       return {
         status: 500,
-        message: "We couldn't post your event. Please try again.",
+        message: tr("weCouldnTPostYourEvent"),
       };
     }
 
     logger.error(`Error creating event: ${createEventError.message}`);
     return {
       status: 500,
-      message: "We couldn't post your event. Please try again.",
+      message: tr("weCouldnTPostYourEvent"),
     };
   }
 
@@ -360,7 +359,7 @@ export async function postEventCore(
 
   return {
     status: 200,
-    message: "Event posted successfully!",
+    message: tr("eventPostedSuccessfully"),
     eventId: eventId as string,
   };
 }

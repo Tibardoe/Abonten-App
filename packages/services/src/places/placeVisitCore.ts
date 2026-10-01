@@ -7,6 +7,7 @@ import type {
   PlaceVisitResult,
 } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getRewardsProgramCore } from "../rewards/rewardsProgramQuery";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -64,8 +65,8 @@ export async function getPlaceVisitPanelCore(
   placeId: string,
   origin?: string,
 ): Promise<Envelope<PlaceVisitPanel>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
-  if (!placeId) return { status: 400, message: "Place is required." };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
+  if (!placeId) return { status: 400, message: tr("placeIsRequired") };
 
   const service = getSupabaseServiceClient();
   const { data: place, error } = await service
@@ -75,13 +76,13 @@ export async function getPlaceVisitPanelCore(
     .maybeSingle();
   if (error) {
     logger.error(`getPlaceVisitPanelCore place read failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
-  if (!place) return { status: 404, message: "Place not found." };
+  if (!place) return { status: 404, message: tr("placeNotFound2") };
   if (place.owner_id !== userId) {
     return {
       status: 403,
-      message: "Only the place's owner can show its check-in code.",
+      message: tr("onlyThePlaceSOwnerCan"),
     };
   }
 
@@ -115,7 +116,7 @@ export async function getPlaceVisitPanelCore(
         code.error?.message ?? stats.error?.message
       }`,
     );
-    return { status: 500, message: "Couldn't load the check-in code." };
+    return { status: 500, message: tr("couldnTLoadTheCheckIn") };
   }
 
   const c = code.data as {
@@ -193,7 +194,7 @@ export async function recordPlaceVisitCore(
   userId: string,
   input: RecordPlaceVisitInput,
 ): Promise<Envelope<PlaceVisitResult>> {
-  if (!userId) return { status: 401, message: "Sign in to check in." };
+  if (!userId) return { status: 401, message: tr("signInToCheckIn") };
 
   const code = String(input?.code ?? "")
     .trim()
@@ -201,7 +202,7 @@ export async function recordPlaceVisitCore(
   if (!/^[0-9A-F]{10}$/.test(code)) {
     return {
       status: 400,
-      message: "That isn't a check-in code. Scan the code the place shows.",
+      message: tr("thatIsnTACheckIn"),
     };
   }
   const lat = input.lat === null ? null : Number(input.lat);
@@ -215,14 +216,14 @@ export async function recordPlaceVisitCore(
     return { status: 400, message: OUTCOME_MESSAGE.no_location(null) };
   }
   if (!["android", "ios", "web"].includes(input.platform)) {
-    return { status: 400, message: "Unknown platform." };
+    return { status: 400, message: tr("unknownPlatform") };
   }
 
   const allowed = await checkRateLimit(`place-visit:${userId}`, 10, 300);
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many check-in attempts. Try again in a few minutes.",
+      message: tr("tooManyCheckInAttemptsTry"),
     };
   }
 
@@ -237,7 +238,7 @@ export async function recordPlaceVisitCore(
       .maybeSingle();
     placeId = data?.id ?? null;
   }
-  if (!placeId) return { status: 404, message: "Place not found." };
+  if (!placeId) return { status: 404, message: tr("placeNotFound2") };
 
   const accuracy =
     input.accuracyM === null || input.accuracyM === undefined
@@ -257,7 +258,7 @@ export async function recordPlaceVisitCore(
   } as unknown as Database["public"]["Functions"]["place_visit_record"]["Args"]);
   if (error) {
     logger.error(`place_visit_record failed: ${error.message}`);
-    return { status: 500, message: "Couldn't check you in. Try again." };
+    return { status: 500, message: tr("couldnTCheckYouInTry") };
   }
 
   const raw = (data ?? {}) as {

@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { submitClaimAssistCore } from "@abonten/services/fieldOps/member/claimAssistCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsClaimAssistSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // POST /api/mobile/field-ops/onboardings/[onboardingId]/claim-assist -- file
@@ -12,6 +13,7 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ onboardingId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

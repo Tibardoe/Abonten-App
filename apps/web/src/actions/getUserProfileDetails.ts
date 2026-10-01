@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { Database } from "@abonten/types/database.types";
 
 type UserProfileDetailsRow =
@@ -22,43 +24,45 @@ export type GetUserProfileDetailsResult =
       message?: undefined;
     };
 
-export async function getUserProfileDetails(
-  username: string,
-): Promise<GetUserProfileDetailsResult> {
-  try {
-    const supabase = await createClient();
+export const getUserProfileDetails = withActionLocale(
+  async function getUserProfileDetails(
+    username: string,
+  ): Promise<GetUserProfileDetailsResult> {
+    try {
+      const supabase = await createClient();
 
-    const [{ data, error }, { data: authData }] = await Promise.all([
-      supabase
-        .from("user_profile_details")
-        .select("*")
-        .eq("username", username)
-        .single(),
-      supabase.auth.getUser(),
-    ]);
+      const [{ data, error }, { data: authData }] = await Promise.all([
+        supabase
+          .from("user_profile_details")
+          .select("*")
+          .eq("username", username)
+          .single(),
+        supabase.auth.getUser(),
+      ]);
 
-    let ownUsername = null;
+      let ownUsername = null;
 
-    if (authData?.user) {
-      const { data: ownInfo } = await supabase
-        .from("user_info")
-        .select("username")
-        .eq("id", authData.user.id)
-        .single();
-      ownUsername = ownInfo?.username;
+      if (authData?.user) {
+        const { data: ownInfo } = await supabase
+          .from("user_info")
+          .select("username")
+          .eq("id", authData.user.id)
+          .single();
+        ownUsername = ownInfo?.username;
+      }
+
+      if (error || !data) {
+        return {
+          status: 404,
+          message: tr("userProfileNotFound"),
+          error: error?.message,
+        };
+      }
+
+      return { status: 200, data, ownUsername };
+    } catch (error) {
+      logger.error("Error fetching user profile", error);
+      return { status: 500, message: tr("internalServerError") };
     }
-
-    if (error || !data) {
-      return {
-        status: 404,
-        message: "User profile not found",
-        error: error?.message,
-      };
-    }
-
-    return { status: 200, data, ownUsername };
-  } catch (error) {
-    logger.error("Error fetching user profile", error);
-    return { status: 500, message: "Internal server error" };
-  }
-}
+  },
+);

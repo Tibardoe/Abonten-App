@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -9,11 +10,13 @@ import { recordContentClickCore } from "@abonten/services/content/contentTelemet
 import { contentClickSchema } from "@abonten/validation/contentSchemas";
 
 /** A click on a post's profile / event / place / ticket call to action. */
-export async function recordContentClick(input: unknown) {
-  const caller = await resolveContentCaller();
-  const parsed = parseContentInput(contentClickSchema, input);
-  if (parsed.error) return parsed.error;
-  return recordContentClickCore(caller.svc, caller.userId, parsed.data, {
-    ip: await contentRequestIp(),
-  });
-}
+export const recordContentClick = withActionLocale(
+  async function recordContentClick(input: unknown) {
+    const caller = await resolveContentCaller();
+    const parsed = parseContentInput(contentClickSchema, input);
+    if (parsed.error) return parsed.error;
+    return recordContentClickCore(caller.svc, caller.userId, parsed.data, {
+      ip: await contentRequestIp(),
+    });
+  },
+);

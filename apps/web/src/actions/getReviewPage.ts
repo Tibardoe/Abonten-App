@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import type {
   ReviewCursor,
   ReviewPage,
@@ -14,21 +15,23 @@ import { fetchReviewPage } from "@abonten/services/reviews/reviewListQuery";
 // helpful" / "most recent", keyset cursor. Uses the visitor's own session
 // (when there is one) so the page knows which reviews they marked helpful
 // and leaves out people they blocked; signed out, it's the public list.
-export async function getReviewPage(input: {
-  kind: ReviewSubjectKind;
-  subjectId: string;
-  rating?: ReviewRatingFilter;
-  sort?: ReviewSort;
-  cursor?: ReviewCursor | null;
-  limit?: number;
-}): Promise<{ status: number; message?: string; data?: ReviewPage }> {
-  const supabase = await createClient();
-  return fetchReviewPage(supabase, {
-    kind: input.kind,
-    subjectId: input.subjectId,
-    rating: input.rating ?? null,
-    sort: input.sort ?? "helpful",
-    cursor: input.cursor ?? null,
-    limit: input.limit,
-  });
-}
+export const getReviewPage = withActionLocale(
+  async function getReviewPage(input: {
+    kind: ReviewSubjectKind;
+    subjectId: string;
+    rating?: ReviewRatingFilter;
+    sort?: ReviewSort;
+    cursor?: ReviewCursor | null;
+    limit?: number;
+  }): Promise<{ status: number; message?: string; data?: ReviewPage }> {
+    const supabase = await createClient();
+    return fetchReviewPage(supabase, {
+      kind: input.kind,
+      subjectId: input.subjectId,
+      rating: input.rating ?? null,
+      sort: input.sort ?? "helpful",
+      cursor: input.cursor ?? null,
+      limit: input.limit,
+    });
+  },
+);

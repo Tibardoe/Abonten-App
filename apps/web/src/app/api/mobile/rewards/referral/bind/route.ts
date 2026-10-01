@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import type { InviteSource } from "@abonten/core/rewards/invite";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { bindReferralCodeCore } from "@abonten/services/rewards/inviteCore";
 import { recordDeviceInstallCore } from "@abonten/services/rewards/referralCore";
 
@@ -12,6 +16,7 @@ import { recordDeviceInstallCore } from "@abonten/services/rewards/referralCore"
 // Always 200 with { result } for a decided answer; 400 for a malformed
 // code, 429 when rate-limited.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -21,7 +26,7 @@ export async function POST(req: Request) {
       source?: unknown;
     } | null;
     if (typeof body?.code !== "string") {
-      return apiJson({ status: 400, message: "code is required" });
+      return apiJson({ status: 400, message: tr("codeIsRequired") });
     }
     const source: InviteSource =
       body.source === "typed" || body.source === "install_referrer"
@@ -42,6 +47,9 @@ export async function POST(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile POST /rewards/referral/bind failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

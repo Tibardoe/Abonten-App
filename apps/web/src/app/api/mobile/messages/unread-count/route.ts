@@ -1,11 +1,16 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getUnreadMessageCount } from "@abonten/services/messaging/conversationsQuery";
 
 // GET /api/mobile/messages/unread-count
 // Global unread-conversation count for the Messages tab badge.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -18,6 +23,9 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     logger.error("mobile GET /messages/unread-count failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -6,7 +6,8 @@
     "Facebook": "Brand name.",
     "%s | Abonten Hub": "Next.js title template: the page title followed by the brand.",
     "{} | Abonten Hub": "The page title followed by the brand.",
-    "field ops context resolved": "A Sentry breadcrumb for engineers, never shown to a person."
+    "field ops context resolved": "A Sentry breadcrumb for engineers, never shown to a person.",
+    "'Courier New', Courier, monospace": "A CSS font stack."
   },
   "texts": [
     "Compiled",
@@ -15,7 +16,8 @@
     "Facebook",
     "%s | Abonten Hub",
     "{} | Abonten Hub",
-    "field ops context resolved"
+    "field ops context resolved",
+    "'Courier New', Courier, monospace"
   ],
   "files": [],
   "entries": [

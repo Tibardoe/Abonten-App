@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { listMobileMoneyNetworksCore } from "@abonten/services/payments/mobileMoneyNetworksCore";
 
 // GET /api/mobile/payments/momo-networks?country=GH
@@ -9,6 +13,7 @@ import { listMobileMoneyNetworksCore } from "@abonten/services/payments/mobileMo
 // the web getPaystackMobileMoneyNetworks action. Without `country` the
 // signed-in person's home market applies.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -35,7 +40,7 @@ export async function GET(req: Request) {
     logger.error("mobile GET /payments/momo-networks failed", error);
     return apiJson({
       status: 500,
-      message: "Couldn't load mobile money networks",
+      message: tr("couldnTLoadMobileMoneyNetworks"),
     });
   }
 }

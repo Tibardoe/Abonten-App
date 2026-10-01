@@ -4,6 +4,7 @@ import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventor
 import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of cancelUserTicket, lifted so the mobile API route
@@ -52,7 +53,7 @@ export async function cancelUserTicketCore(
 
   if (ticketError || !rawTicket) {
     logger.error(`Failed fetching ticket: ${ticketError?.message}`);
-    return { status: 404, message: "Ticket not found" };
+    return { status: 404, message: tr("ticketNotFound") };
   }
 
   const ticket = rawTicket as unknown as TicketRow;
@@ -70,8 +71,7 @@ export async function cancelUserTicketCore(
   if (ticket.status === "used") {
     return {
       status: 409,
-      message:
-        "This ticket has already been checked in and can no longer be cancelled.",
+      message: tr("thisTicketHasAlreadyBeenChecked"),
       eventId: eventId ?? undefined,
       eventCode: eventCode ?? undefined,
     };
@@ -87,7 +87,7 @@ export async function cancelUserTicketCore(
   if (ticket.status === "cancelled") {
     return {
       status: 200,
-      message: "Ticket cancelled successfully",
+      message: tr("ticketCancelledSuccessfully"),
       eventId: eventId ?? undefined,
       eventCode: eventCode ?? undefined,
     };
@@ -112,7 +112,7 @@ export async function cancelUserTicketCore(
 
   if (updateStatusError) {
     logger.error(`Error updating ticket status:${updateStatusError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!flipped || flipped.length === 0) {
@@ -130,8 +130,7 @@ export async function cancelUserTicketCore(
     if (settled?.status === "used") {
       return {
         status: 409,
-        message:
-          "This ticket has already been checked in and can no longer be cancelled.",
+        message: tr("thisTicketHasAlreadyBeenChecked"),
         eventId: eventId ?? undefined,
         eventCode: eventCode ?? undefined,
       };
@@ -139,7 +138,7 @@ export async function cancelUserTicketCore(
 
     return {
       status: 200,
-      message: "Ticket cancelled successfully",
+      message: tr("ticketCancelledSuccessfully"),
       eventId: eventId ?? undefined,
       eventCode: eventCode ?? undefined,
     };
@@ -158,7 +157,7 @@ export async function cancelUserTicketCore(
 
     if (transactionError || !transaction) {
       logger.error(`Failed fetching transaction: ${transactionError?.message}`);
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
 
     // Paid with cash, Abonten Credit, or both: an order paid entirely with
@@ -208,7 +207,7 @@ export async function cancelUserTicketCore(
     logger.error(
       `Error updating user attendance: ${updateAttendanceError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (ticket.ticket_checkout_id) {
@@ -230,10 +229,10 @@ export async function cancelUserTicketCore(
   return {
     status: 200,
     message: refundMessage
-      ? `Ticket cancelled. ${refundMessage}.`
+      ? tr("ticketCancelled", { refundMessage: refundMessage })
       : refundDeferred
-        ? "Ticket cancelled. The refund for this order will be requested once every ticket in it is cancelled."
-        : "Ticket cancelled successfully",
+        ? tr("ticketCancelledTheRefundForThis")
+        : tr("ticketCancelledSuccessfully"),
     eventId: eventId ?? undefined,
     eventCode: eventCode ?? undefined,
   };

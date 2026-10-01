@@ -5,6 +5,7 @@ import type {
 } from "@abonten/types/contentType";
 import type { Json } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 
 // Helpers every content service shares: the envelope, loading post
 // documents, a publisher summary and the "restricted account" check.
@@ -17,7 +18,7 @@ export type Envelope<T = undefined> = {
 
 export const FAIL: Envelope<never> = {
   status: 500,
-  message: "Something went wrong. Please try again.",
+  message: tr("somethingWentWrongPleaseTryAgain"),
 };
 
 export async function loadPostDocuments(

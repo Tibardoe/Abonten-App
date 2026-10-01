@@ -145,3 +145,74 @@ export function serverTranslator(
 export function coreTranslator(locale?: string | null): ServerTranslator {
   return serverTranslator(locale, "core");
 }
+
+// ── Text the database wrote ──────────────────────────────────────────
+// Abonten's own SQL functions `raise exception 'Only % tickets left'` for
+// people to read, and the services pass that text on. SQL cannot read the
+// catalogs, so the English sentence is the key: the `db` group of the
+// `server` catalog holds every one (scripts/i18n/extract-sql-messages.mjs),
+// with % as {0}, {1}, …, and translateServerText() swaps a message for its
+// translation at the edge of a response. Anything it does not know is
+// returned as it came.
+
+type DbIndex = {
+  exact: Map<string, string>;
+  patterns: { re: RegExp; key: string; count: number }[];
+};
+
+let dbIndex: DbIndex | null = null;
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function buildDbIndex(): DbIndex {
+  const db = (SERVER_CATALOG[DEFAULT_LOCALE].server as Messages).db as
+    | Record<string, string>
+    | undefined;
+  const exact = new Map<string, string>();
+  const patterns: DbIndex["patterns"] = [];
+  for (const [key, english] of Object.entries(db ?? {})) {
+    if (!/\{\d+\}/.test(english)) {
+      exact.set(english, key);
+      continue;
+    }
+    const parts = english.split(/\{\d+\}/);
+    const count = parts.length - 1;
+    patterns.push({
+      re: new RegExp(`^${parts.map(escapeRegExp).join("([\\s\\S]*?)")}$`),
+      key,
+      count,
+    });
+  }
+  // Longer fixed text first: "{0} cannot move to {1}" must not swallow a
+  // more specific pattern.
+  patterns.sort((a, b) => b.re.source.length - a.re.source.length);
+  return { exact, patterns };
+}
+
+/**
+ * Translates a message a database function raised (or any other English
+ * sentence the catalog's `db` group lists). Unknown text comes back as is,
+ * and English asks for nothing.
+ */
+export function translateServerText(
+  locale: string | null | undefined,
+  text: string | null | undefined,
+): string | null | undefined {
+  if (!text) return text;
+  const lang = toLocale(locale);
+  if (lang === DEFAULT_LOCALE) return text;
+  if (!dbIndex) dbIndex = buildDbIndex();
+  const t = serverTranslator(lang, "server");
+  const exactKey = dbIndex.exact.get(text);
+  if (exactKey) return t(`db.${exactKey}`);
+  for (const { re, key, count } of dbIndex.patterns) {
+    const m = text.match(re);
+    if (!m) continue;
+    const values: TranslationValues = {};
+    for (let i = 0; i < count; i++) values[String(i)] = m[i + 1] ?? "";
+    return t(`db.${key}`, values);
+  }
+  return text;
+}

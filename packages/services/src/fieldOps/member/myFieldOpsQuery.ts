@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { FieldOpsMe, FieldOpsMembership } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import { resolveFieldOpsContext } from "../shared/fieldOpsContext";
 import {
   ASSIGNMENT_COLUMNS,
@@ -99,7 +100,7 @@ export async function getMyFieldOpsCore(
         .eq("campaign_id", membership.campaignId)
         .eq("member_user_id", userId),
     ]);
-  if (!campaign) return { status: 404, message: "Campaign not found" };
+  if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
 
   const rank: Record<string, number> = {
     started: 0,

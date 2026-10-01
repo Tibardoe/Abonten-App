@@ -3,6 +3,7 @@ import {
   getMyContentCore,
   submitContentCore,
 } from "@abonten/services/fieldOps/member/contentCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   fieldOpsContentListSchema,
   fieldOpsContentSubmitSchema,
@@ -11,6 +12,7 @@ import {
 // GET /api/mobile/field-ops/content?campaignId= -- the campaign's briefs and
 // the caller's own deliverables. Same service as getMyFieldOpsContent.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     { schema: fieldOpsContentListSchema, label: "GET /field-ops/content" },
@@ -21,6 +23,7 @@ export async function GET(req: Request) {
 // POST /api/mobile/field-ops/content -- send in a posted deliverable. Same
 // service as submitFieldOpsContent.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     { schema: fieldOpsContentSubmitSchema, label: "POST /field-ops/content" },

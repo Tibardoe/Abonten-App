@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   type PostPlaceCoreInput,
   postPlaceCore,
 } from "@abonten/services/places/postPlaceCore";
@@ -19,6 +23,7 @@ import type {
 // (signed direct upload, kind "place_photo"); its public_id/version come in
 // here. Runs the same postPlaceCore the web postPlace action runs.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -29,7 +34,10 @@ export async function POST(req: Request) {
     > | null;
 
     if (!body) {
-      return apiJson({ status: 400, message: "Invalid request body" });
+      return apiJson({
+        status: 400,
+        message: tr("invalidRequestBody"),
+      });
     }
 
     const str = (v: unknown): string | null =>
@@ -60,13 +68,15 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message:
-          "name, categoryId, description, address, latitude, longitude, coverPublicId, coverVersion and clientRequestId are required",
+        message: tr("nameCategoryidDescriptionAddressLatitudeLongitud"),
       });
     }
 
     if (!Array.isArray(body.openingHours)) {
-      return apiJson({ status: 400, message: "openingHours must be an array" });
+      return apiJson({
+        status: 400,
+        message: tr("openinghoursMustBeAnArray"),
+      });
     }
 
     const input: PostPlaceCoreInput = {
@@ -97,6 +107,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /places failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,19 +13,21 @@ import { fieldOpsAssignmentListSchema } from "@abonten/validation/fieldOpsSchema
  * The signed-in member's own assignments in a campaign. Same service as
  * GET /api/mobile/field-ops/assignments.
  */
-export async function listMyFieldOpsAssignments(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsAssignment[];
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsAssignmentListSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return listMyAssignmentsCore(svc, userId, {
-    campaignId: data.campaignId,
-    status: data.status,
-  });
-}
+export const listMyFieldOpsAssignments = withActionLocale(
+  async function listMyFieldOpsAssignments(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsAssignment[];
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsAssignmentListSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return listMyAssignmentsCore(svc, userId, {
+      campaignId: data.campaignId,
+      status: data.status,
+    });
+  },
+);

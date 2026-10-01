@@ -91,7 +91,10 @@ const TARGETS = {
     asyncImport: { name: "getTranslations", from: "next-intl/server" },
     // Browser-only helpers (a click handler in a .ts module) cannot call a
     // hook: they ask the provider's translator at call time.
-    moduleTranslator: { name: "translatorFor", from: "@/i18n/clientTranslator" },
+    moduleTranslator: {
+      name: "translatorFor",
+      from: "@/i18n/clientTranslator",
+    },
     namespaceFor(file) {
       const rel = file.replace(/\\/g, "/").replace(/^apps\/web\/src\//, "");
       const seg = rel.split("/").filter((s) => s !== "[locale]");
@@ -164,6 +167,58 @@ const TARGETS = {
       }
       return "common";
     },
+  },
+};
+
+// Code that answers requests: the services, the Server Actions and the
+// mobile API routes. No React, so every message is worded by tr() from
+// @abonten/services/i18n/requestLocale, which reads the request's language
+// (bound by withActionLocale / bindLocaleFromRequest) and falls back to
+// English outside a request. Only `message:` values are text here; a
+// notification's title and body go through the notice registry instead.
+TARGETS.server = {
+  roots: [
+    "packages/services/src",
+    "apps/web/src/actions",
+    "apps/web/src/app/api",
+    "apps/web/src/utils",
+    "apps/web/src/lib",
+  ],
+  // Under these roots only modules that run on the server belong here; the
+  // browser-side helpers beside them are the web target's.
+  serverModulesOnlyUnder: ["apps/web/src/utils", "apps/web/src/lib"],
+  exclude: [
+    "__integration__",
+    ".test.",
+    ".d.ts",
+    "packages/services/src/i18n/",
+    "packages/services/src/admin/",
+    "apps/web/src/app/api/observability/",
+    "apps/web/src/app/api/jobs/",
+    "apps/web/src/app/api/maintenance/",
+  ],
+  extensions: [".ts"],
+  hookImport: null,
+  asyncImport: null,
+  // Every string lives in a plain function: the call-time translator.
+  moduleTranslator: {
+    name: "tr",
+    direct: true,
+    from: (file) =>
+      file.startsWith("packages/services/")
+        ? relative(
+            dirname(join(ROOT, file)),
+            join(ROOT, "packages/services/src/i18n/requestLocale"),
+          )
+            .split(sep)
+            .join("/")
+            .replace(/^(?!\.)/, "./")
+        : "@abonten/services/i18n/requestLocale",
+  },
+  moduleOnly: true,
+  textKeys: new Set(["message"]),
+  namespaceFor() {
+    return "server";
   },
 };
 
@@ -577,7 +632,12 @@ const files = cfg.roots
   .filter((f) => cfg.extensions.some((e) => f.endsWith(e)))
   .filter((f) => !cfg.exclude.some((x) => f.includes(x)))
   .filter((f) => !ONLY || f.includes(ONLY))
-  .filter((f) => !isServerModule(f))
+  .filter((f) => cfg.moduleOnly || !isServerModule(f))
+  .filter(
+    (f) =>
+      !cfg.serverModulesOnlyUnder?.some((r) => f.startsWith(r)) ||
+      isServerModule(f),
+  )
   .sort();
 
 const allowlist = existsSync(ALLOWLIST_PATH)
@@ -797,7 +857,7 @@ for (const file of files) {
     source,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX,
+    file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
   const ns = cfg.namespaceFor(file);
   const isClient = fileIsClient(sf);
@@ -848,6 +908,10 @@ for (const file of files) {
   }
 
   function tFor(node, flagInfo) {
+    if (cfg.moduleOnly) {
+      needs.moduleTranslator = true;
+      return { tName: null, ns, moduleFn: true };
+    }
     const meta = metadataHostFor(node);
     if (meta) return meta;
     const anc = findComponentAncestor(node);
@@ -875,7 +939,12 @@ for (const file of files) {
       const isAsync = !!anc.fn.modifiers?.some(
         (m) => m.kind === ts.SyntaxKind.AsyncKeyword,
       );
-      if (isAsync && !cfg.asyncImport && cfg.moduleTranslator && flagInfo.forced) {
+      if (
+        isAsync &&
+        !cfg.asyncImport &&
+        cfg.moduleTranslator &&
+        flagInfo.forced
+      ) {
         needs.moduleTranslator = true;
         return { tName: null, ns, moduleFn: true };
       }
@@ -919,7 +988,10 @@ for (const file of files) {
     const nsPrefix = "";
     if (h.moduleFn) {
       const { file: nsFile, prefix } = splitNamespace(h.ns);
-      const call = `${cfg.moduleTranslator.name}("${nsFile}")`;
+      // tr("key") is bound to one namespace; translatorFor("ns")("key") picks it.
+      const call = cfg.moduleTranslator.direct
+        ? cfg.moduleTranslator.name
+        : `${cfg.moduleTranslator.name}("${nsFile}")`;
       return params?.length
         ? `${call}("${prefix}${key}", { ${params.join(", ")} })`
         : `${call}("${prefix}${key}")`;
@@ -1185,6 +1257,7 @@ for (const file of files) {
       p = p.parent;
     }
     if (!p) return null;
+    if (cfg.textKeys && !ts.isPropertyAssignment(p)) return null;
     if (ts.isJsxExpression(p)) {
       const gp = p.parent;
       if (ts.isJsxAttribute(gp)) {
@@ -1219,6 +1292,9 @@ for (const file of files) {
       ts.isIdentifier(p.name)
     ) {
       const key = p.name.text;
+      if (cfg.textKeys) {
+        return cfg.textKeys.has(key) ? { kind: "object", key } : null;
+      }
       if (TEXT_OBJECT_KEYS.has(key) && !NEVER_KEYS.has(key))
         return { kind: "object", key };
       return null;
@@ -1303,7 +1379,8 @@ for (const file of files) {
   function processTemplate(node) {
     if (handled.has(node)) return;
     const isForced = forced.has(templateShape(node));
-    const pos = displayPositionOf(node) ?? (isForced ? { kind: "forced" } : null);
+    const pos =
+      displayPositionOf(node) ?? (isForced ? { kind: "forced" } : null);
     if (!pos) return;
     const used = new Set();
     const params = [];
@@ -1331,7 +1408,8 @@ for (const file of files) {
   function processString(node) {
     if (handled.has(node) || handled.has(node.parent)) return;
     const isForced = forced.has(node.text);
-    const pos = displayPositionOf(node) ?? (isForced ? { kind: "forced" } : null);
+    const pos =
+      displayPositionOf(node) ?? (isForced ? { kind: "forced" } : null);
     if (!pos) return;
     const text = node.text;
     if (!isForced && isNoiseText(text, { attribute: pos.attribute })) return;
@@ -1339,8 +1417,7 @@ for (const file of files) {
     // Values that are really code: variants, keys, ids, enum props such as
     // next/image's placeholder="blur" or loading="lazy".
     // A lowercase single token is a code ("completed", "blur"), not text.
-    if (!isForced && pos.kind !== "child" && /^[a-z0-9_-]+$/.test(text))
-      return;
+    if (!isForced && pos.kind !== "child" && /^[a-z0-9_-]+$/.test(text)) return;
     const h = tFor(node, { text, forced: isForced });
     if (!h) {
       if (
@@ -1511,7 +1588,7 @@ for (const file of files) {
       text: `\nimport { ${name} } from "${from}";`,
     });
   }
-  if (importNeeded.sync) {
+  if (importNeeded.sync && cfg.hookImport) {
     const from =
       target === "mobile" && file.startsWith("packages/ui-native/")
         ? relative(dirname(abs), join(ROOT, "packages/ui-native/src/i18n"))
@@ -1521,16 +1598,18 @@ for (const file of files) {
         : cfg.hookImport.from;
     ensureImport(cfg.hookImport.name, from);
   }
-  if (importNeeded.async)
+  if (importNeeded.async && cfg.asyncImport)
     ensureImport(cfg.asyncImport.name, cfg.asyncImport.from);
   if (needs.moduleTranslator) {
     const from =
-      target === "mobile" && file.startsWith("packages/ui-native/")
-        ? relative(dirname(abs), join(ROOT, "packages/ui-native/src/i18n"))
-            .split(sep)
-            .join("/")
-            .replace(/^(?!\.)/, "./")
-        : cfg.moduleTranslator.from;
+      typeof cfg.moduleTranslator.from === "function"
+        ? cfg.moduleTranslator.from(file)
+        : target === "mobile" && file.startsWith("packages/ui-native/")
+          ? relative(dirname(abs), join(ROOT, "packages/ui-native/src/i18n"))
+              .split(sep)
+              .join("/")
+              .replace(/^(?!\.)/, "./")
+          : cfg.moduleTranslator.from;
     ensureImport(cfg.moduleTranslator.name, from);
   }
 
@@ -1609,8 +1688,7 @@ if (MODULE_KEYS_PATH) {
     resolve(MODULE_KEYS_PATH),
     `${JSON.stringify(moduleKeys, null, 2)}\n`,
   );
-}
-else console.log(text);
+} else console.log(text);
 
 if (CHECK) {
   const left = report.remaining.length + report.rewritten;

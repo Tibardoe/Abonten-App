@@ -2,10 +2,13 @@
 
 import EventCancellationEmailTemplate from "@/components/organisms/EventCancellationEmailTemplate";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { emailWordsFor } from "@/lib/email/emailWords";
 import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { logger } from "@abonten/core/logger";
 import type { CancelledAttendeeRefund } from "@abonten/services/events/cancelEventCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type { CancelledAttendeeRefund };
 
@@ -25,7 +28,7 @@ export type { CancelledAttendeeRefund };
  * this ever runs — the same "identity already proven before using this
  * client" precedent serviceClient.ts documents for its other callers.
  */
-export default async function eventCancellationNotification(
+export default withActionLocale(async function eventCancellationNotification(
   eventTitle: string,
   attendees: CancelledAttendeeRefund[],
 ) {
@@ -33,7 +36,7 @@ export default async function eventCancellationNotification(
     logger.warn(
       "RESEND_API_KEY is not set; skipping event cancellation emails",
     );
-    return { status: 500, message: "Email service not configured" };
+    return { status: 500, message: tr("emailServiceNotConfigured") };
   }
 
   if (attendees.length === 0) {
@@ -66,13 +69,14 @@ export default async function eventCancellationNotification(
           .maybeSingle();
 
         const username = userInfo?.full_name ?? userInfo?.username ?? null;
+        const words = await emailWordsFor(attendee.userId, username);
 
         const { error } = await sendEmail({
           from: "Abonten Hub <tickets@abontenhub.com>",
           to: [adminUser.user.email],
-          subject: `Event cancelled — ${eventTitle}`,
+          subject: words.t("cancellation.subject", { eventTitle }),
           react: EventCancellationEmailTemplate({
-            username,
+            words,
             eventTitle,
             amountLabel: formatMoney(attendee.currency, attendee.amount),
             currency: attendee.currency,
@@ -94,4 +98,4 @@ export default async function eventCancellationNotification(
   );
 
   return { status: 200, data: { sent, failed } };
-}
+});

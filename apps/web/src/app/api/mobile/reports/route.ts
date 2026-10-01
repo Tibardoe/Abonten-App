@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { submitReportCore } from "@abonten/services/reports/submitReportCore";
 import { submitReportSchema } from "@abonten/validation/reportSchema";
 
@@ -11,6 +15,7 @@ import { submitReportSchema } from "@abonten/validation/reportSchema";
 // web submitReport action runs; reporter_id is taken from the Bearer
 // identity, not the body.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -19,7 +24,11 @@ export async function POST(req: Request) {
       string,
       unknown
     > | null;
-    if (!body) return apiJson({ status: 400, message: "Invalid request body" });
+    if (!body)
+      return apiJson({
+        status: 400,
+        message: tr("invalidRequestBody"),
+      });
 
     const parsed = submitReportSchema.safeParse({
       targetType: body.targetType,
@@ -31,7 +40,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return apiJson({
         status: 400,
-        message: parsed.error.issues[0]?.message ?? "Please check your report.",
+        message: parsed.error.issues[0]?.message ?? tr("pleaseCheckYourReport"),
       });
     }
 
@@ -47,6 +56,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /reports failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

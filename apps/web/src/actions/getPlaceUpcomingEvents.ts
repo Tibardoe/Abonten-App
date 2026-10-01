@@ -1,8 +1,10 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { normalizeEventRow } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { UserPostType } from "@abonten/types/postsType";
 import { getEventAttendanceCounts } from "./getAttendace";
 
@@ -12,62 +14,68 @@ import { getEventAttendanceCounts } from "./getAttendace";
 // (see postEvent.ts), so it won't appear even if a future occurrence
 // exists -- same known gap getFilteredEvents.ts's date-window filters call
 // out for other event lists, not something new introduced here.
-export async function getPlaceUpcomingEvents(placeId: string) {
-  const supabase = publicSupabase;
+export const getPlaceUpcomingEvents = withActionLocale(
+  async function getPlaceUpcomingEvents(placeId: string) {
+    const supabase = publicSupabase;
 
-  const { data, error } = await supabase
-    .from("event")
-    .select(
-      "*, ticket_type(id, type, price, currency), occurrences:event_occurrence(*)",
-    )
-    .eq("place_id", placeId)
-    .eq("status", "published")
-    .gte("starts_at", new Date().toISOString())
-    .order("starts_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("event")
+      .select(
+        "*, ticket_type(id, type, price, currency), occurrences:event_occurrence(*)",
+      )
+      .eq("place_id", placeId)
+      .eq("status", "published")
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true });
 
-  if (error) {
-    logger.error(`Error fetching place's upcoming events: ${error.message}`);
-    return { status: 500, data: [], message: "Something went wrong!" };
-  }
+    if (error) {
+      logger.error(`Error fetching place's upcoming events: ${error.message}`);
+      return {
+        status: 500,
+        data: [],
+        message: tr("somethingWentWrong"),
+      };
+    }
 
-  const events = data ?? [];
+    const events = data ?? [];
 
-  // EventCard needs min_price/currency/attendanceCount, same as every other
-  // event list in the app (see getNearByEvents.ts) -- without these, price
-  // shows as undefined and attendance as 0 regardless of real sales.
-  const attendanceCounts = await getEventAttendanceCounts(
-    events.map((event) => event.id),
-  );
+    // EventCard needs min_price/currency/attendanceCount, same as every other
+    // event list in the app (see getNearByEvents.ts) -- without these, price
+    // shows as undefined and attendance as 0 regardless of real sales.
+    const attendanceCounts = await getEventAttendanceCounts(
+      events.map((event) => event.id),
+    );
 
-  const eventsWithDerivedFields: UserPostType[] = events.map((event) => {
-    const ticketTypes = (event.ticket_type ?? []) as {
-      price: number | null;
-      currency: string | null;
-    }[];
-    const cheapest = ticketTypes.reduce<
-      (typeof ticketTypes)[number] | undefined
-    >((min, ticket) => {
-      if (ticket.price == null) return min;
-      if (!min || (min.price ?? Number.POSITIVE_INFINITY) > ticket.price) {
-        return ticket;
-      }
-      return min;
-    }, undefined);
+    const eventsWithDerivedFields: UserPostType[] = events.map((event) => {
+      const ticketTypes = (event.ticket_type ?? []) as {
+        price: number | null;
+        currency: string | null;
+      }[];
+      const cheapest = ticketTypes.reduce<
+        (typeof ticketTypes)[number] | undefined
+      >((min, ticket) => {
+        if (ticket.price == null) return min;
+        if (!min || (min.price ?? Number.POSITIVE_INFINITY) > ticket.price) {
+          return ticket;
+        }
+        return min;
+      }, undefined);
 
-    return {
-      ...normalizeEventRow(event),
-      // A tier with no price or currency is unpriced data, not a free tier:
-      // it is left out rather than shown as GHS 0.
-      ticket_type: ticketTypes.flatMap((t) =>
-        t.price != null && t.currency
-          ? [{ price: t.price, currency: t.currency }]
-          : [],
-      ),
-      min_price: cheapest?.price ?? undefined,
-      currency: cheapest?.currency ?? "",
-      attendanceCount: attendanceCounts[event.id] ?? 0,
-    };
-  });
+      return {
+        ...normalizeEventRow(event),
+        // A tier with no price or currency is unpriced data, not a free tier:
+        // it is left out rather than shown as GHS 0.
+        ticket_type: ticketTypes.flatMap((t) =>
+          t.price != null && t.currency
+            ? [{ price: t.price, currency: t.currency }]
+            : [],
+        ),
+        min_price: cheapest?.price ?? undefined,
+        currency: cheapest?.currency ?? "",
+        attendanceCount: attendanceCounts[event.id] ?? 0,
+      };
+    });
 
-  return { status: 200, data: eventsWithDerivedFields };
-}
+    return { status: 200, data: eventsWithDerivedFields };
+  },
+);

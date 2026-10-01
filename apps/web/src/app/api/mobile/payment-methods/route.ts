@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   addPaymentMethodCore,
   listPaymentMethodsCore,
 } from "@abonten/services/payments/paymentMethodCore";
@@ -14,6 +18,7 @@ import type { AddPaymentMethodInput } from "@abonten/validation/paymentMethodSch
 //   the verification flow instead: /payment-methods/card/{init,confirm}.
 
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -22,11 +27,15 @@ export async function GET(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /payment-methods failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -38,7 +47,7 @@ export async function POST(req: Request) {
     if (body?.type !== "momo") {
       return apiJson({
         status: 400,
-        message: "Only mobile money wallets can be added from the app.",
+        message: tr("onlyMobileMoneyWalletsCanBe"),
       });
     }
 
@@ -50,6 +59,9 @@ export async function POST(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile POST /payment-methods failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

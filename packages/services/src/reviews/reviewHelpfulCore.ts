@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import type { ReviewSubjectKind } from "@abonten/core/reviews/reviewList";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Marks (or un-marks) a review as helpful for the signed-in caller.
 //
@@ -25,7 +26,7 @@ export async function setReviewHelpfulCore(
   input: { kind: ReviewSubjectKind; reviewId: string; helpful: boolean },
 ): Promise<ReviewHelpfulResult> {
   if (input.kind !== "event" && input.kind !== "place") {
-    return { status: 400, message: "Unknown review." };
+    return { status: 400, message: tr("unknownReview") };
   }
   const { data, error } = await supabase
     .rpc("review_set_helpful", {
@@ -47,7 +48,10 @@ export async function setReviewHelpfulCore(
         return { status: 400, message: error.message };
       default:
         logger.error(`review_set_helpful failed: ${error.message}`);
-        return { status: 500, message: "Couldn't save that. Try again." };
+        return {
+          status: 500,
+          message: tr("couldnTSaveThatTryAgain"),
+        };
     }
   }
 

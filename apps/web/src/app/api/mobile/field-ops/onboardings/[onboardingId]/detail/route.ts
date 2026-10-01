@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { getOnboardingDetailCore } from "@abonten/services/fieldOps/member/onboardingCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsOnboardingRefSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // GET /api/mobile/field-ops/onboardings/:onboardingId/detail?campaignId= -- full
@@ -11,6 +12,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ onboardingId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { onboardingId } = await routeParams(params);
   return fieldOpsRoute(
     req,

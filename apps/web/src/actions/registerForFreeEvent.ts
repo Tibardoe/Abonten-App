@@ -2,9 +2,11 @@
 
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
 import { registerForFreeEventCore } from "@abonten/services/checkout/registerForFreeEventCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { after } from "next/server";
 
 /**
@@ -13,7 +15,7 @@ import { after } from "next/server";
  * Quantity is always exactly 1 and is never taken from the client. Post-auth
  * logic lives in registerForFreeEventCore so the mobile API route shares it.
  */
-export default async function registerForFreeEvent(
+export default withActionLocale(async function registerForFreeEvent(
   eventId: string,
   occurrenceId?: string | null,
 ) {
@@ -25,7 +27,7 @@ export default async function registerForFreeEvent(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await registerForFreeEventCore(
@@ -58,4 +60,4 @@ export default async function registerForFreeEvent(
   }
 
   return { status: result.status, message: result.message };
-}
+});

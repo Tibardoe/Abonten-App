@@ -36,6 +36,7 @@ import { logger } from "@abonten/core/logger";
 import type { PaymentMethodCode } from "@abonten/core/market/types";
 import type { Money } from "@abonten/core/money/money";
 import type { Json } from "@abonten/types/database.types";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import type { PaymentAttemptRow } from "./paymentAttempt";
 import { NoProviderError, resolveProviderAccount } from "./providers/registry";
@@ -115,7 +116,7 @@ async function retireAttempt(
     logger.error(
       `chargeInit: failed retiring attempt ${attempt.id}: ${error.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return { status: 409, message: STALE_MESSAGE, stale: true };
 }
@@ -151,7 +152,7 @@ async function awaitClaimedCharge(
       logger.error(
         `chargeInit: failed re-reading attempt ${attemptId}: ${error.message}`,
       );
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
     const row = data as PaymentAttemptRow | null;
     if (!row || (row.status !== "initiated" && row.status !== "pending")) {
@@ -271,7 +272,7 @@ async function recordInit(
       `Failed storing provider reference on payment_attempt: ${error.message}`,
       { payment: { attemptId: attempt.id, reference: init.reference } },
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   // Closed while the page was being opened (the buyer changed the order or
   // the method): that page must not be handed out. Its reference stays on
@@ -324,8 +325,7 @@ function describeFailure(error: unknown, fallback: string): ChargeInitResult {
     logger.error(`chargeInit: ${error.message}`);
     return {
       status: 503,
-      message:
-        "Payments aren't available for this market yet. Please try again later.",
+      message: tr("paymentsArenTAvailableForThis"),
     };
   }
   logger.error(
@@ -430,7 +430,7 @@ export async function initiateChargeForAttempt(input: {
     amount,
   );
   if (claim === "error") {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   if (claim === "taken") {
     return awaitClaimedCharge(attempt.id, account.provider);

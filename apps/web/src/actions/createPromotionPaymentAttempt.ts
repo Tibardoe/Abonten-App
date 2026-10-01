@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type CreatePromotionPaymentAttemptResult,
   createPromotionPaymentAttemptCore,
@@ -13,46 +15,48 @@ import {
  * the promotion is activated before this returns). Same service as the
  * mobile POST /api/mobile/checkout/{promotion,place-promotion}-attempt.
  */
-export async function createPromotionPaymentAttempt(input: {
-  kind: "event" | "place" | "spotlight";
-  checkoutId: string;
-  paymentMethodId?: string | null;
-  method?: string | null;
-  useCredit?: boolean;
-}): Promise<
-  CreatePromotionPaymentAttemptResult | { status: 401; message: string }
-> {
-  const supabase = await createClient();
+export const createPromotionPaymentAttempt = withActionLocale(
+  async function createPromotionPaymentAttempt(input: {
+    kind: "event" | "place" | "spotlight";
+    checkoutId: string;
+    paymentMethodId?: string | null;
+    method?: string | null;
+    useCredit?: boolean;
+  }): Promise<
+    CreatePromotionPaymentAttemptResult | { status: 401; message: string }
+  > {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  const type =
-    input.kind === "event"
-      ? "event-promotion"
-      : input.kind === "spotlight"
-        ? "spotlight-promotion"
-        : "promotion";
+    const type =
+      input.kind === "event"
+        ? "event-promotion"
+        : input.kind === "spotlight"
+          ? "spotlight-promotion"
+          : "promotion";
 
-  return createPromotionPaymentAttemptCore(
-    supabase,
-    user.id,
-    user.email,
-    {
-      kind: input.kind,
-      checkoutId: input.checkoutId,
-      paymentMethodId: input.paymentMethodId ?? null,
-      method: input.method ?? null,
-      platform: "web",
-      useCredit: input.useCredit === true,
-    },
-    (id) => `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${id}?type=${type}`,
-    paymentFulfillmentDeps,
-  );
-}
+    return createPromotionPaymentAttemptCore(
+      supabase,
+      user.id,
+      user.email,
+      {
+        kind: input.kind,
+        checkoutId: input.checkoutId,
+        paymentMethodId: input.paymentMethodId ?? null,
+        method: input.method ?? null,
+        platform: "web",
+        useCredit: input.useCredit === true,
+      },
+      (id) => `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${id}?type=${type}`,
+      paymentFulfillmentDeps,
+    );
+  },
+);

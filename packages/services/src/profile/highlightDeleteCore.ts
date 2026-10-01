@@ -3,6 +3,7 @@ import { userFacingError } from "@abonten/core/userFacingError";
 import { destroyAsset } from "@abonten/services/media/cloudinaryClient";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of deleteHighlight.ts / deleteHighlightSlide.ts, lifted
 // so the mobile highlight-delete routes run the same Cloudinary-first
@@ -35,7 +36,10 @@ export async function deleteHighlightGroupCore(
     .eq("user_id", userId);
 
   if (fetchError || !rows || rows.length === 0) {
-    return { status: 404, message: "Highlight not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("highlightNotFoundOrUnauthorized"),
+    };
   }
 
   // Clean up Cloudinary before touching the database: a slide's row is only
@@ -69,7 +73,7 @@ export async function deleteHighlightGroupCore(
   if (deletableIds.length === 0) {
     return {
       status: 500,
-      message: "Failed to delete highlight media. Please try again.",
+      message: tr("failedToDeleteHighlightMediaPlease"),
     };
   }
 
@@ -89,11 +93,14 @@ export async function deleteHighlightGroupCore(
   if (failedCount > 0) {
     return {
       status: 500,
-      message: `Deleted ${deletableIds.length} slide(s), but ${failedCount} could not be removed. Try again.`,
+      message: tr("deletedSlideSButCouldNot", {
+        deleted: deletableIds.length,
+        failed: failedCount,
+      }),
     };
   }
 
-  return { status: 200, message: "Highlight deleted successfully" };
+  return { status: 200, message: tr("highlightDeletedSuccessfully") };
 }
 
 export async function deleteHighlightSlideCore(
@@ -109,7 +116,10 @@ export async function deleteHighlightSlideCore(
     .single();
 
   if (fetchError || !row) {
-    return { status: 404, message: "Slide not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("slideNotFoundOrUnauthorized"),
+    };
   }
 
   if (row.public_id) {
@@ -121,14 +131,14 @@ export async function deleteHighlightSlideCore(
         logger.error("Cloudinary destroy returned unexpected result:", result);
         return {
           status: 500,
-          message: "Failed to delete slide media. Please try again.",
+          message: tr("failedToDeleteSlideMediaPlease"),
         };
       }
     } catch (cloudError) {
       logger.error("Cloudinary deletion failed:", cloudError);
       return {
         status: 500,
-        message: "Failed to delete slide media. Please try again.",
+        message: tr("failedToDeleteSlideMediaPlease"),
       };
     }
   }
@@ -146,5 +156,5 @@ export async function deleteHighlightSlideCore(
     };
   }
 
-  return { status: 200, message: "Slide deleted successfully" };
+  return { status: 200, message: tr("slideDeletedSuccessfully") };
 }

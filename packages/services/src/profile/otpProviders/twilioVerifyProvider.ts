@@ -13,6 +13,7 @@ import {
   fetchWithTimeout,
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
+import { tr } from "../../i18n/requestLocale";
 import type { OtpProvider, OtpSendResult, OtpVerifyResult } from "./types";
 
 const TWILIO_CODE_LENGTH = 6;
@@ -83,7 +84,7 @@ export const twilioVerifyProvider: OtpProvider = {
       return {
         ok: false,
         reason: "not_configured",
-        message: "Something went wrong. Please try again.",
+        message: tr("somethingWentWrongPleaseTryAgain"),
       };
     }
     let sent: Awaited<ReturnType<typeof twilioPost>>;
@@ -99,7 +100,7 @@ export const twilioVerifyProvider: OtpProvider = {
       return {
         ok: false,
         reason: "provider_error",
-        message: "Couldn't send the verification code. Please try again.",
+        message: tr("couldnTSendTheVerificationCode"),
         detail,
       };
     }
@@ -119,8 +120,8 @@ export const twilioVerifyProvider: OtpProvider = {
             : "provider_error",
         message:
           code === 60200
-            ? "That phone number can't receive verification codes."
-            : "Couldn't send the verification code. Please try again.",
+            ? tr("thatPhoneNumberCanTReceive")
+            : tr("couldnTSendTheVerificationCode"),
       };
     }
     // Twilio has no prefix; the SID is the request handle.
@@ -133,7 +134,10 @@ export const twilioVerifyProvider: OtpProvider = {
     const creds = credentials();
     if (!creds) {
       logger.error("Twilio Verify credentials are not configured.");
-      return { ok: false, message: "Something went wrong. Please try again." };
+      return {
+        ok: false,
+        message: tr("somethingWentWrongPleaseTryAgain"),
+      };
     }
     const { ok, json } = await twilioPost(
       "/VerificationCheck",
@@ -141,7 +145,7 @@ export const twilioVerifyProvider: OtpProvider = {
       creds,
     );
     if (!ok || json?.status !== "approved") {
-      return { ok: false, message: "That code is incorrect." };
+      return { ok: false, message: tr("thatCodeIsIncorrect") };
     }
     return { ok: true };
   },

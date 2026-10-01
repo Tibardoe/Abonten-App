@@ -24,6 +24,7 @@ import {
   localeFromAcceptLanguage,
   serverTranslator,
   toLocale,
+  translateServerText,
 } from "@abonten/i18n/server";
 
 const store = new AsyncLocalStorage<I18nLocale>();
@@ -92,4 +93,21 @@ export function coreTFor(locale: string | null | undefined): ServerTranslator {
 /** Email wording (`emails` namespace) in a named language. */
 export function emailT(locale: string | null | undefined): ServerTranslator {
   return serverTranslator(locale, "emails");
+}
+
+/**
+ * The last step before an answer leaves the server: a `message` the
+ * database wrote (or any English the services could not word themselves)
+ * is swapped for its translation in the requester's language. Everything
+ * else in the envelope is untouched.
+ */
+export function localizeEnvelope<T>(result: T): T {
+  if (!result || typeof result !== "object") return result;
+  const locale = requestLocale();
+  if (locale === DEFAULT_LOCALE) return result;
+  const message = (result as { message?: unknown }).message;
+  if (typeof message !== "string" || !message) return result;
+  const translated = translateServerText(locale, message);
+  if (translated === message) return result;
+  return { ...result, message: translated };
 }

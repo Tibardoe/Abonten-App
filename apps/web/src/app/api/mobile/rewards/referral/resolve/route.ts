@@ -1,6 +1,10 @@
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   invitesLiveCore,
   resolveReferralCodeCore,
 } from "@abonten/services/rewards/inviteCore";
@@ -11,6 +15,7 @@ import {
 // up yet); rate-limited per IP so codes can't be enumerated. With no code it
 // only says whether invites are live (the sign-in screen's invite field).
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   try {
     const code = new URL(req.url).searchParams.get("code") ?? "";
     if (!code) {
@@ -35,10 +40,13 @@ export async function GET(req: Request) {
     return apiJson({
       status: result.status,
       data: result.data,
-      message: result.status === 429 ? "Too many requests" : undefined,
+      message: result.status === 429 ? tr("tooManyRequests") : undefined,
     });
   } catch (error) {
     logger.error("mobile GET /rewards/referral/resolve failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,5 +1,6 @@
 import type { FieldOpsAnalytics } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   loadCampaignStats,
   loadDailySeries,
@@ -36,7 +37,7 @@ export async function getLeadPerformanceCore(
     loadDailySeries(supabase, input.campaignId, input.days ?? 30),
   ]);
   if (!campaign || !stats) {
-    return { status: 404, message: "Campaign not found" };
+    return { status: 404, message: tr("campaignNotFound2") };
   }
   return {
     status: 200,

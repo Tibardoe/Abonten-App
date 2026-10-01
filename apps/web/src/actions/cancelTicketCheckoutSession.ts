@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { cancelTicketCheckoutSessionCore } from "@abonten/services/checkout/cancelTicketCheckoutSessionCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 /**
  * Removes an entire pending checkout session (the "Remove this checkout"
@@ -13,7 +15,7 @@ import { cancelTicketCheckoutSessionCore } from "@abonten/services/checkout/canc
  * pending session is always that user's only claim on that event+promo, so
  * cancelling the whole session really is "fully cancelled."
  */
-export default async function cancelTicketCheckoutSession(
+export default withActionLocale(async function cancelTicketCheckoutSession(
   checkoutSessionId: string,
 ) {
   const supabase = await createClient();
@@ -21,7 +23,7 @@ export default async function cancelTicketCheckoutSession(
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   if (userError || !userData?.user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return cancelTicketCheckoutSessionCore(
@@ -29,4 +31,4 @@ export default async function cancelTicketCheckoutSession(
     userData.user.id,
     checkoutSessionId,
   );
-}
+});

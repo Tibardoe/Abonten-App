@@ -4,6 +4,7 @@ import type {
   WeeklyEditionDocument,
   WeeklyEditionStatus,
 } from "@abonten/types/weeklyType";
+import { tr } from "../i18n/requestLocale";
 import {
   deriveSigningKey,
   hmacBase64Url,
@@ -64,7 +65,7 @@ export async function getWeeklyPreviewCore(
 }> {
   const editionId = readWeeklyPreviewToken(token);
   if (!editionId) {
-    return { status: 403, message: "This preview link has expired." };
+    return { status: 403, message: tr("thisPreviewLinkHasExpired") };
   }
   try {
     const [{ data: doc, error }, { data: row }] = await Promise.all([
@@ -80,11 +81,14 @@ export async function getWeeklyPreviewCore(
     ]);
     if (error) {
       logger.error(`weekly preview failed: ${error.message}`);
-      return { status: 500, message: "Couldn't load the preview." };
+      return { status: 500, message: tr("couldnTLoadThePreview") };
     }
     const edition = mapWeeklyDocument(doc);
     if (!edition || !row) {
-      return { status: 404, message: "This edition no longer exists." };
+      return {
+        status: 404,
+        message: tr("thisEditionNoLongerExists"),
+      };
     }
     return {
       status: 200,
@@ -96,6 +100,6 @@ export async function getWeeklyPreviewCore(
     };
   } catch (error) {
     logger.error("getWeeklyPreviewCore failed", error);
-    return { status: 500, message: "Couldn't load the preview." };
+    return { status: 500, message: tr("couldnTLoadThePreview") };
   }
 }

@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type PostPlaceCoreResult,
   postPlaceCore,
@@ -9,7 +11,7 @@ import {
 import type { PlaceFormType } from "@abonten/types/placeType";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 
-export async function postPlace(
+export const postPlace = withActionLocale(async function postPlace(
   formData: PlaceFormType,
 ): Promise<PostPlaceCoreResult | { status: 400 | 401 | 500; message: string }> {
   const supabase = await createClient();
@@ -27,13 +29,13 @@ export async function postPlace(
   }
 
   if (!user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   const { selectedFile, existingCoverPhoto } = formData;
 
   if (!selectedFile && !existingCoverPhoto) {
-    return { status: 400, message: "A cover photo is required." };
+    return { status: 400, message: tr("aCoverPhotoIsRequired") };
   }
 
   let coverPublicId: string;
@@ -50,7 +52,7 @@ export async function postPlace(
         status: 500,
         message:
           (coverUpload as { error?: string })?.error ??
-          "Cover photo upload to Cloudinary failed.",
+          tr("coverPhotoUploadToCloudinaryFailed"),
       };
     }
 
@@ -59,7 +61,7 @@ export async function postPlace(
   } else {
     // Unreachable given the guard above, but keeps the cover vars
     // definitely-assigned for TypeScript.
-    return { status: 400, message: "A cover photo is required." };
+    return { status: 400, message: tr("aCoverPhotoIsRequired") };
   }
 
   return postPlaceCore(supabase, user.id, {
@@ -80,4 +82,4 @@ export async function postPlace(
     clientRequestId: formData.clientRequestId,
     draftId: formData.draftId,
   });
-}
+});

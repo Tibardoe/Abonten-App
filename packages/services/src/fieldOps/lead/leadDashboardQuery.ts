@@ -4,6 +4,7 @@ import type {
   FieldOpsTerritoryBoardRow,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -80,7 +81,7 @@ export async function getLeadDashboardCore(
       .select("id, role, status, full_name_snapshot, user_id")
       .eq("team_id", teamId),
   ]);
-  if (!campaign) return { status: 404, message: "Campaign not found" };
+  if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
   if (tErr) return dbErr(tErr, "Could not load territories");
 
   const openAssignments = await mapAssignments(

@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -13,16 +14,18 @@ import { fieldOpsEventSubmitSchema } from "@abonten/validation/fieldOpsSchemas";
  * verified their phone. Same service as
  * POST /api/mobile/field-ops/onboardings/[id]/submit-event.
  */
-export async function submitFieldOpsEventOnboarding(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsOnboarding;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsEventSubmitSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return submitEventOnboardingCore(svc, userId, data);
-}
+export const submitFieldOpsEventOnboarding = withActionLocale(
+  async function submitFieldOpsEventOnboarding(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsOnboarding;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsEventSubmitSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return submitEventOnboardingCore(svc, userId, data);
+  },
+);

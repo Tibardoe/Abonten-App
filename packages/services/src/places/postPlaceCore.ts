@@ -13,7 +13,7 @@ import type {
 } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import {
   RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
@@ -155,7 +155,7 @@ export async function postPlaceCore(
     }
     return {
       status: 500,
-      message: "We couldn't publish your place. Please try again.",
+      message: tr("weCouldnTPublishYourPlace"),
     };
   }
 
@@ -178,7 +178,7 @@ export async function postPlaceCore(
 
   return {
     status: 200,
-    message: "Place published successfully!",
+    message: tr("placePublishedSuccessfully"),
     placeId: placeId as string,
     slug,
   };

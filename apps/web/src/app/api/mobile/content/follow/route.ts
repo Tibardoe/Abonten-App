@@ -3,6 +3,7 @@ import {
   getFollowStatusCore,
   setFollowCore,
 } from "@abonten/services/content/followCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   followSchema,
   followStatusSchema,
@@ -10,6 +11,7 @@ import {
 
 // GET /api/mobile/content/follow — follow status + follower count
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {
@@ -23,6 +25,7 @@ export async function GET(req: Request) {
 
 // POST /api/mobile/content/follow — follow / unfollow
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: followSchema, label: "POST /content/follow" },

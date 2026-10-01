@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { setNotInterestedCore } from "@abonten/services/content/contentEngagementCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { contentNotInterestedSchema } from "@abonten/validation/contentSchemas";
 
 // POST /api/mobile/content/not-interested — hide a post from the viewer's feeds
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {

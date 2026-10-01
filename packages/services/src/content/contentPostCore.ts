@@ -19,6 +19,7 @@ import type {
   CreateContentPostInput,
   UpdateContentPostInput,
 } from "@abonten/validation/contentSchemas";
+import { tr } from "../i18n/requestLocale";
 import { hasOpenPaymentAttempt } from "../payments/paymentAttempt";
 import { confirmPendingRenditionsCore } from "./contentMediaCore";
 import { resolveContentAccess } from "./contentProgram";
@@ -62,26 +63,31 @@ export async function createContentPostCore(
   if (!allowed) {
     return {
       status: 403,
-      message: "Posting isn't available for your account yet.",
+      message: tr("postingIsnTAvailableForYour2"),
     };
   }
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   if (input.kind === "spotlight" && input.mediaIds.length !== 1) {
-    return { status: 400, message: "A Spotlight holds one video or photo." };
+    return { status: 400, message: tr("aSpotlightHoldsOneVideoOr") };
   }
   if (input.kind === "story" && input.mediaIds.length > program.maxStoryItems) {
     return {
       status: 400,
-      message: `A Story holds at most ${program.maxStoryItems} items.`,
+      message: tr("aStoryHoldsAtMostItems", {
+        maxStoryItems: program.maxStoryItems,
+      }),
     };
   }
   if (
     input.publisher.kind === "place" &&
     !program.publisherPlaces.some((p) => p.id === input.publisher.placeId)
   ) {
-    return { status: 403, message: "You can only post as a place you own." };
+    return { status: 403, message: tr("youCanOnlyPostAsA") };
   }
 
   // Idempotent create: a retry with the same clientRequestId returns the
@@ -115,16 +121,16 @@ export async function createContentPostCore(
   for (const id of input.mediaIds) {
     const m = byId.get(id);
     if (!m || m.owner_id !== userId) {
-      return { status: 404, message: "Some media could not be found." };
+      return { status: 404, message: tr("someMediaCouldNotBeFound") };
     }
     if (m.post_id) {
       return {
         status: 409,
-        message: "Some media already belongs to another post.",
+        message: tr("someMediaAlreadyBelongsToAnother"),
       };
     }
     if (!["uploaded", "processing", "ready"].includes(m.status)) {
-      return { status: 400, message: "Some media is not ready yet." };
+      return { status: 400, message: tr("someMediaIsNotReadyYet") };
     }
   }
 
@@ -209,13 +215,16 @@ export async function updateContentPostCore(
     .eq("id", input.postId)
     .maybeSingle();
   if (!post || post.author_id !== userId) {
-    return { status: 404, message: "Post not found." };
+    return { status: 404, message: tr("postNotFound") };
   }
   if (post.status === "deleted") {
-    return { status: 410, message: "This post was deleted." };
+    return { status: 410, message: tr("thisPostWasDeleted") };
   }
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   const patch: Record<string, unknown> = {};
   const p = input.patch;
@@ -237,7 +246,7 @@ export async function updateContentPostCore(
   } else if (p.eventId !== undefined || p.placeId !== undefined) {
     return {
       status: 400,
-      message: "Attachments can't change once a post is published.",
+      message: tr("attachmentsCanTChangeOnceA"),
     };
   }
   if (Object.keys(patch).length === 0) {
@@ -266,9 +275,9 @@ export async function deleteContentPostCore(
     .eq("id", postId)
     .maybeSingle();
   if (!post || post.author_id !== userId) {
-    return { status: 404, message: "Post not found." };
+    return { status: 404, message: tr("postNotFound") };
   }
-  if (post.status === "deleted") return { status: 200, message: "Deleted." };
+  if (post.status === "deleted") return { status: 200, message: tr("deleted") };
 
   // A live campaign on this post stops now; the advertiser can ask for the
   // unspent remainder from support.
@@ -328,7 +337,7 @@ export async function deleteContentPostCore(
     .eq("id", postId)
     .eq("author_id", userId);
   if (error) return sqlError(error);
-  return { status: 200, message: "Deleted." };
+  return { status: 200, message: tr("deleted") };
 }
 
 export type GetContentPostResult =
@@ -358,7 +367,10 @@ export async function getContentPostCore(
     .eq("id", postId)
     .maybeSingle();
   if (!row || row.status === "deleted") {
-    return { status: 404, message: "This post is no longer available." };
+    return {
+      status: 404,
+      message: tr("thisPostIsNoLongerAvailable"),
+    };
   }
   const { program } = await resolveContentAccess(supabase, userId);
   const isAuthor = userId === row.author_id;
@@ -366,7 +378,7 @@ export async function getContentPostCore(
     !isAuthor &&
     !(row.kind === "story" ? program.stories : program.spotlight)
   ) {
-    return { status: 403, message: "Not available yet." };
+    return { status: 403, message: tr("notAvailableYet") };
   }
   if (
     row.kind === "story" &&
@@ -384,13 +396,16 @@ export async function getContentPostCore(
     );
     return {
       status: 410,
-      message: "This Story has ended.",
+      message: tr("thisStoryHasEnded"),
       data: { expired: true, publisher },
     };
   }
   const doc = await loadPostDocument(supabase, userId, postId);
   if (!doc)
-    return { status: 404, message: "This post is no longer available." };
+    return {
+      status: 404,
+      message: tr("thisPostIsNoLongerAvailable"),
+    };
   void confirmPendingRenditionsCore(
     supabase,
     doc.media.filter((m) => m.playbackStatus === "pending").map((m) => m.id),
@@ -591,7 +606,10 @@ export async function getContentDownloadUrlCore(
     post.status !== "published" ||
     post.moderation_state !== "visible"
   ) {
-    return { status: 404, message: "This post is no longer available." };
+    return {
+      status: 404,
+      message: tr("thisPostIsNoLongerAvailable"),
+    };
   }
   const isAuthor = userId === post.author_id;
   if (
@@ -600,12 +618,15 @@ export async function getContentDownloadUrlCore(
       !post.allow_download ||
       post.kind !== "spotlight")
   ) {
-    return { status: 403, message: "Downloads aren't allowed for this post." };
+    return {
+      status: 403,
+      message: tr("downloadsArenTAllowedForThis"),
+    };
   }
   const media = (post.content_media ?? [])
     .filter((m) => m.status !== "deleted")
     .sort((a, b) => a.position - b.position)[0];
-  if (!media) return { status: 404, message: "No media to download." };
+  if (!media) return { status: 404, message: tr("noMediaToDownload") };
   const url = cloudinary.url(media.public_id, {
     resource_type: media.media_type as "image" | "video",
     secure: true,

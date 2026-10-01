@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   getAreaWaitlistStatusCore,
   joinAreaWaitlistCore,
   leaveAreaWaitlistCore,
@@ -17,6 +21,7 @@ function pointFrom(url: URL) {
 
 // GET /api/mobile/markets/waitlist?lat=6.69&lng=-1.62
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
   try {
@@ -28,12 +33,16 @@ export async function GET(req: Request) {
     );
   } catch (error) {
     logger.error("mobile GET /markets/waitlist failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 
 // POST /api/mobile/markets/waitlist   body: { lat, lng, label? }
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
   try {
@@ -52,12 +61,16 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     logger.error("mobile POST /markets/waitlist failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 
 // DELETE /api/mobile/markets/waitlist?lat=6.69&lng=-1.62
 export async function DELETE(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
   try {
@@ -66,6 +79,9 @@ export async function DELETE(req: Request) {
     );
   } catch (error) {
     logger.error("mobile DELETE /markets/waitlist failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { requestPlaceBookingCore } from "@abonten/services/places/requestPlaceBookingCore";
 
 // POST /api/mobile/places/:placeId/bookings
@@ -13,6 +17,7 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -34,7 +39,7 @@ export async function POST(
     if (!requestedTime) {
       return apiJson({
         status: 400,
-        message: "requestedTime (ISO string) is required",
+        message: tr("requestedtimeIsoStringIsRequired"),
       });
     }
 
@@ -60,6 +65,9 @@ export async function POST(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /places/:id/bookings failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

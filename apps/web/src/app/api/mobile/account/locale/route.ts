@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   getLocalePreferencesCore,
   updateLocalePreferencesCore,
 } from "@abonten/services/markets/localePreferencesCore";
@@ -15,17 +19,22 @@ import type { LocalePreferencesPatch } from "@abonten/types/marketType";
 // actions. The home market must be an open market; it is written with the
 // service role (clients cannot write user_info.country_code directly).
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
   try {
     return apiJson(await getLocalePreferencesCore(auth.user.id));
   } catch (error) {
     logger.error("mobile GET /account/locale failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 
 export async function PATCH(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
   try {
@@ -34,7 +43,7 @@ export async function PATCH(req: Request) {
       unknown
     > | null;
     if (!body || typeof body !== "object") {
-      return apiJson({ status: 400, message: "Nothing to update." });
+      return apiJson({ status: 400, message: tr("nothingToUpdate") });
     }
     const str = (v: unknown) =>
       typeof v === "string" ? v : v === null ? null : undefined;
@@ -50,6 +59,9 @@ export async function PATCH(req: Request) {
     return apiJson(await updateLocalePreferencesCore(auth.user.id, patch));
   } catch (error) {
     logger.error("mobile PATCH /account/locale failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

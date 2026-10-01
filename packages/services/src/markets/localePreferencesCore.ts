@@ -13,6 +13,7 @@ import type {
   LocalePreferences,
   LocalePreferencesPatch,
 } from "@abonten/types/marketType";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getMarket, listMarkets, marketForPhone } from "./marketConfig";
 
@@ -23,7 +24,7 @@ type Envelope<T> = { status: number; message?: string; data?: T };
 export async function getLocalePreferencesCore(
   userId: string,
 ): Promise<Envelope<LocalePreferences>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   const { data, error } = await getSupabaseServiceClient()
     .from("user_info")
     .select("country_code, display_currency, distance_unit, locale")
@@ -31,7 +32,7 @@ export async function getLocalePreferencesCore(
     .maybeSingle();
   if (error) {
     logger.error(`getLocalePreferencesCore(${userId}): ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return {
     status: 200,
@@ -51,7 +52,7 @@ export async function updateLocalePreferencesCore(
   userId: string,
   patch: LocalePreferencesPatch,
 ): Promise<Envelope<LocalePreferences>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
 
   const update: {
     country_code?: string;
@@ -63,13 +64,13 @@ export async function updateLocalePreferencesCore(
   if (patch.countryCode !== undefined) {
     const code = patch.countryCode?.trim().toUpperCase() ?? null;
     if (!code) {
-      return { status: 400, message: "Choose your country." };
+      return { status: 400, message: tr("chooseYourCountry") };
     }
     const market = await getMarket(code);
     if (!market || !isMarketOpen(market.status)) {
       return {
         status: 400,
-        message: "Abonten isn't available in that country yet.",
+        message: tr("abontenIsnTAvailableInThat"),
       };
     }
     update.country_code = code;
@@ -78,7 +79,10 @@ export async function updateLocalePreferencesCore(
   if (patch.displayCurrency !== undefined) {
     const code = patch.displayCurrency?.trim().toUpperCase() || null;
     if (code && !isKnownCurrency(code)) {
-      return { status: 400, message: "Choose a currency from the list." };
+      return {
+        status: 400,
+        message: tr("chooseACurrencyFromTheList"),
+      };
     }
     update.display_currency = code;
   }
@@ -86,7 +90,7 @@ export async function updateLocalePreferencesCore(
   if (patch.distanceUnit !== undefined) {
     const unit = patch.distanceUnit;
     if (unit !== null && unit !== "km" && unit !== "mi") {
-      return { status: 400, message: "Choose kilometres or miles." };
+      return { status: 400, message: tr("chooseKilometresOrMiles") };
     }
     update.distance_unit = unit;
   }
@@ -94,7 +98,10 @@ export async function updateLocalePreferencesCore(
   if (patch.locale !== undefined) {
     const locale = patch.locale?.trim() || null;
     if (locale && !/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(locale)) {
-      return { status: 400, message: "That language code isn't valid." };
+      return {
+        status: 400,
+        message: tr("thatLanguageCodeIsnTValid"),
+      };
     }
     update.locale = locale;
   }
@@ -106,7 +113,10 @@ export async function updateLocalePreferencesCore(
       .eq("id", userId);
     if (error) {
       logger.error(`updateLocalePreferencesCore(${userId}): ${error.message}`);
-      return { status: 500, message: "Couldn't save your preferences." };
+      return {
+        status: 500,
+        message: tr("couldnTSaveYourPreferences"),
+      };
     }
   }
   return getLocalePreferencesCore(userId);

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { removePaymentMethodCore } from "@abonten/services/payments/paymentMethodCore";
 
 /**
@@ -10,7 +12,9 @@ import { removePaymentMethodCore } from "@abonten/services/payments/paymentMetho
  * recently added remaining active method is promoted to default so the user
  * is never left with zero defaults while other methods still exist.
  */
-export default async function removePaymentMethod(paymentMethodId: string) {
+export default withActionLocale(async function removePaymentMethod(
+  paymentMethodId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -19,8 +23,8 @@ export default async function removePaymentMethod(paymentMethodId: string) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return removePaymentMethodCore(supabase, user.id, paymentMethodId);
-}
+});

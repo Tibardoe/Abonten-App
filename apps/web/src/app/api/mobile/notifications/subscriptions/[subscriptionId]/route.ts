@@ -1,4 +1,5 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { unsubscribeCore } from "@abonten/services/notifications/subscriptionCore";
 import { unsubscribeSchema } from "@abonten/validation/discoverySchemas";
 
@@ -8,6 +9,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ subscriptionId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { subscriptionId } = await params;
   return discoveryRoute(
     req,

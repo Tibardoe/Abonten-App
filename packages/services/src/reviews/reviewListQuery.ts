@@ -17,6 +17,7 @@ import {
 } from "@abonten/core/reviews/reviewList";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Web's read path for event and place reviews: the rating breakdown and the
 // paged list (review_summary / review_list, migration 20260923090000).
@@ -45,7 +46,7 @@ export async function fetchReviewSummary(
     logger.error(`review_summary failed: ${error.message}`);
     return {
       status: 500,
-      message: "Couldn't load ratings.",
+      message: tr("couldnTLoadRatings"),
       data: EMPTY_REVIEW_SUMMARY,
     };
   }
@@ -70,7 +71,7 @@ export async function fetchReviewPage(
       return { status: 400, message: error.message };
     }
     logger.error(`review_list failed: ${error.message}`);
-    return { status: 500, message: "Couldn't load reviews." };
+    return { status: 500, message: tr("couldnTLoadReviews") };
   }
   return {
     status: 200,

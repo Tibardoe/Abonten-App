@@ -4,6 +4,7 @@ import type {
   ToggleMessageReactionInput,
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { mapMessagingRpcError } from "./messagingError";
 
 // Thin wrapper over toggle_message_reaction (SECURITY DEFINER, self-authorizes
@@ -29,7 +30,7 @@ export async function toggleReactionCore(
   const added = Array.isArray(data) ? (data[0]?.added ?? true) : true;
   return {
     status: 200,
-    message: added ? "Reaction added." : "Reaction removed.",
+    message: added ? tr("reactionAdded") : tr("reactionRemoved"),
     data: { added },
   };
 }

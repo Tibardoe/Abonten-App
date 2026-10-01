@@ -4,6 +4,7 @@ import {
   getContentPostCore,
   updateContentPostCore,
 } from "@abonten/services/content/contentPostCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   contentPostIdSchema,
   updateContentPostSchema,
@@ -14,6 +15,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ postId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { postId } = await params;
   return discoveryRoute(
     req,
@@ -32,6 +34,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ postId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { postId } = await params;
   return discoveryRoute(
     req,
@@ -50,6 +53,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ postId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { postId } = await params;
   return discoveryRoute(
     req,

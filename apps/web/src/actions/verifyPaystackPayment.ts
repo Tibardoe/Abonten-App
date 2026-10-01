@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type VerifyPaymentCoreResult,
   verifyPaymentCore,
@@ -14,7 +16,7 @@ import {
  * finalizePayment() the webhook calls, so whichever of the two
  * "wins" the race does the real work, and the other is a no-op.
  */
-export default async function verifyPaystackPayment(
+export default withActionLocale(async function verifyPaystackPayment(
   paymentAttemptId: string,
 ): Promise<VerifyPaymentCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
@@ -25,7 +27,7 @@ export default async function verifyPaystackPayment(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return verifyPaymentCore(
@@ -34,4 +36,4 @@ export default async function verifyPaystackPayment(
     paymentAttemptId,
     paymentFulfillmentDeps,
   );
-}
+});

@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
 
 /**
@@ -11,7 +13,7 @@ import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicket
  * Post-auth logic lives in cancelUserTicketCore so the mobile API route
  * shares it.
  */
-export default async function cancelUserTicket(
+export default withActionLocale(async function cancelUserTicket(
   ticketId: string,
   transactionId: string | null,
 ) {
@@ -23,7 +25,7 @@ export default async function cancelUserTicket(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await cancelUserTicketCore(
@@ -48,4 +50,4 @@ export default async function cancelUserTicket(
   }
 
   return { status: result.status, message: result.message };
-}
+});

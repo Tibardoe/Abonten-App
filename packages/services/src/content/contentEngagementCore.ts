@@ -12,6 +12,7 @@ import type {
   ContentShareChannel,
 } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import {
   notifyContentComment,
@@ -74,17 +75,23 @@ async function guard(
   postId: string,
 ): Promise<{ post: PostRow } | Envelope<never>> {
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   const post = await livePost(supabase, postId);
   if (!post)
-    return { status: 404, message: "This post is no longer available." };
+    return {
+      status: 404,
+      message: tr("thisPostIsNoLongerAvailable"),
+    };
   const { program } = await resolveContentAccess(supabase, userId);
   if (!(post.kind === "story" ? program.stories : program.spotlight)) {
-    return { status: 403, message: "Not available yet." };
+    return { status: 403, message: tr("notAvailableYet") };
   }
   if (await usersBlocked(supabase, userId, post.author_id)) {
-    return { status: 403, message: "You can't interact with this post." };
+    return { status: 403, message: tr("youCanTInteractWithThis") };
   }
   return { post };
 }
@@ -118,7 +125,7 @@ export async function setContentLikeCore(
   const g = await guard(supabase, userId, input.postId);
   if (!("post" in g)) return g;
   if (!(await checkRateLimit(`content-like:${userId}`, 300, 3600))) {
-    return { status: 429, message: "Slow down a little." };
+    return { status: 429, message: tr("slowDownALittle") };
   }
   if (input.liked) {
     const { error } = await supabase
@@ -196,10 +203,13 @@ export async function setContentReactionCore(
   if (!("post" in g)) return g;
   const { program } = await resolveContentAccess(supabase, userId);
   if (g.post.kind === "story" && !program.storiesReactions) {
-    return { status: 403, message: "Reactions are turned off right now." };
+    return {
+      status: 403,
+      message: tr("reactionsAreTurnedOffRightNow"),
+    };
   }
   if (!(await checkRateLimit(`content-react:${userId}`, 300, 3600))) {
-    return { status: 429, message: "Slow down a little." };
+    return { status: 429, message: tr("slowDownALittle") };
   }
   if (input.emoji === null) {
     const { error } = await supabase
@@ -257,10 +267,13 @@ export async function recordContentShareCore(
 ): Promise<Envelope<{ counts: ContentCounts }>> {
   const post = await livePost(supabase, input.postId);
   if (!post)
-    return { status: 404, message: "This post is no longer available." };
+    return {
+      status: 404,
+      message: tr("thisPostIsNoLongerAvailable"),
+    };
   const { program } = await resolveContentAccess(supabase, userId);
   if (post.kind === "story" && !program.storiesSharing) {
-    return { status: 403, message: "Sharing is turned off right now." };
+    return { status: 403, message: tr("sharingIsTurnedOffRightNow") };
   }
   const { program: shareProgram } = await resolveContentAccess(
     supabase,
@@ -269,7 +282,7 @@ export async function recordContentShareCore(
   if (
     !(post.kind === "story" ? shareProgram.stories : shareProgram.spotlight)
   ) {
-    return { status: 403, message: "Not available yet." };
+    return { status: 403, message: tr("notAvailableYet") };
   }
   // Signed-out shares are limited per network address as well as per post,
   // so share counts (which feed Trending) can't be pumped from one place.
@@ -277,7 +290,7 @@ export async function recordContentShareCore(
     ? `content-share:${userId}`
     : `content-share:anon:${context.ip ?? "unknown"}:${input.postId}`;
   if (!(await checkRateLimit(key, userId ? 60 : 10, 3600))) {
-    return { status: 429, message: "Slow down a little." };
+    return { status: 429, message: tr("slowDownALittle") };
   }
   const { error } = await supabase
     .from("content_share")
@@ -390,13 +403,19 @@ export async function listContentCommentsCore(
 ): Promise<Envelope<ContentCommentsPage>> {
   const post = await livePost(supabase, input.postId);
   if (!post)
-    return { status: 404, message: "This post is no longer available." };
+    return {
+      status: 404,
+      message: tr("thisPostIsNoLongerAvailable"),
+    };
   const { program } = await resolveContentAccess(supabase, userId);
   if (!(post.kind === "story" ? program.stories : program.spotlight)) {
-    return { status: 403, message: "Not available yet." };
+    return { status: 403, message: tr("notAvailableYet") };
   }
   if (userId && (await usersBlocked(supabase, userId, post.author_id))) {
-    return { status: 404, message: "This post is no longer available." };
+    return {
+      status: 404,
+      message: tr("thisPostIsNoLongerAvailable"),
+    };
   }
   const cursor = decodeCursor<{ createdAt: string; id: string }>(input.cursor);
   let query = supabase
@@ -480,10 +499,13 @@ export async function createContentCommentCore(
       ? !program.storiesComments
       : !program.spotlightComments
   ) {
-    return { status: 403, message: "Comments are turned off right now." };
+    return {
+      status: 403,
+      message: tr("commentsAreTurnedOffRightNow"),
+    };
   }
   if (!g.post.allow_comments) {
-    return { status: 403, message: "Comments are off for this post." };
+    return { status: 403, message: tr("commentsAreOffForThisPost") };
   }
   const settings = await readContentSettings(supabase);
   if (
@@ -495,7 +517,7 @@ export async function createContentCommentCore(
   ) {
     return {
       status: 429,
-      message: "You're commenting very fast. Please wait a moment.",
+      message: tr("youReCommentingVeryFastPlease"),
     };
   }
   let parentAuthorId: string | null = null;
@@ -510,10 +532,16 @@ export async function createContentCommentCore(
       parent.post_id !== input.postId ||
       parent.status !== "visible"
     ) {
-      return { status: 404, message: "That comment is no longer available." };
+      return {
+        status: 404,
+        message: tr("thatCommentIsNoLongerAvailable"),
+      };
     }
     if (parent.parent_id) {
-      return { status: 400, message: "Replies can't be nested further." };
+      return {
+        status: 400,
+        message: tr("repliesCanTBeNestedFurther"),
+      };
     }
     parentAuthorId = parent.author_id;
   }
@@ -556,14 +584,15 @@ export async function deleteContentCommentCore(
     .select("id, author_id, post_id, status, content_post!inner(author_id)")
     .eq("id", commentId)
     .maybeSingle();
-  if (!comment) return { status: 404, message: "Comment not found." };
+  if (!comment) return { status: 404, message: tr("commentNotFound") };
   const postAuthor = (
     comment.content_post as unknown as { author_id: string } | null
   )?.author_id;
   if (comment.author_id !== userId && postAuthor !== userId) {
-    return { status: 403, message: "You can't remove this comment." };
+    return { status: 403, message: tr("youCanTRemoveThisComment") };
   }
-  if (comment.status === "deleted") return { status: 200, message: "Removed." };
+  if (comment.status === "deleted")
+    return { status: 200, message: tr("removed") };
   const { error } = await supabase
     .from("content_comment")
     .update({ status: "deleted", deleted_at: new Date().toISOString() })
@@ -572,7 +601,7 @@ export async function deleteContentCommentCore(
     logger.error(`deleteContentCommentCore failed: ${error.message}`);
     return FAIL;
   }
-  return { status: 200, message: "Removed." };
+  return { status: 200, message: tr("removed") };
 }
 
 export async function setContentCommentLikeCore(
@@ -581,7 +610,10 @@ export async function setContentCommentLikeCore(
   input: { commentId: string; liked: boolean },
 ): Promise<Envelope<{ liked: boolean; likeCount: number }>> {
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   const { data: comment } = await supabase
     .from("content_comment")
@@ -593,7 +625,7 @@ export async function setContentCommentLikeCore(
     comment.status !== "visible" ||
     !["visible", "restricted"].includes(comment.moderation_state)
   ) {
-    return { status: 404, message: "Comment not found." };
+    return { status: 404, message: tr("commentNotFound") };
   }
   // Same rules as liking the post: live, available, nobody blocked.
   const g = await guard(supabase, userId, comment.post_id);
@@ -602,10 +634,10 @@ export async function setContentCommentLikeCore(
     comment.author_id !== userId &&
     (await usersBlocked(supabase, userId, comment.author_id))
   ) {
-    return { status: 403, message: "You can't interact with this comment." };
+    return { status: 403, message: tr("youCanTInteractWithThis2") };
   }
   if (!(await checkRateLimit(`content-comment-like:${userId}`, 300, 3600))) {
-    return { status: 429, message: "Slow down a little." };
+    return { status: 429, message: tr("slowDownALittle") };
   }
   if (input.liked) {
     const { error } = await supabase

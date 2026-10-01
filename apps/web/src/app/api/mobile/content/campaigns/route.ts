@@ -3,11 +3,13 @@ import {
   createContentCampaignCore,
   listOwnContentCampaignsCore,
 } from "@abonten/services/content/campaigns/contentCampaignCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { createContentCampaignSchema } from "@abonten/validation/contentSchemas";
 import { z } from "zod";
 
 // GET /api/mobile/content/campaigns — own campaigns
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: z.object({}).passthrough(), label: "GET /content/campaigns" },
@@ -18,6 +20,7 @@ export async function GET(req: Request) {
 
 // POST /api/mobile/content/campaigns — start a campaign + checkout
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: createContentCampaignSchema, label: "POST /content/campaigns" },

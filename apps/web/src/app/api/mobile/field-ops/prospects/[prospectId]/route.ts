@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { updateProspectCore } from "@abonten/services/fieldOps/member/prospectsCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsProspectUpdateSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // PATCH /api/mobile/field-ops/prospects/:prospectId -- status, a contact
@@ -12,6 +13,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ prospectId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { prospectId } = await routeParams(params);
   return fieldOpsRoute(
     req,

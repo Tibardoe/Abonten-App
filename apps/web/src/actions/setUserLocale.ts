@@ -7,12 +7,16 @@ import {
   type Locale,
   isLocale,
 } from "@/i18n/config";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import { cookies } from "next/headers";
 
-export async function setUserLocale(locale: Locale) {
+export const setUserLocale = withActionLocale(async function setUserLocale(
+  locale: Locale,
+) {
   if (!isLocale(locale)) {
-    return { status: 400, message: "Unsupported locale" };
+    return { status: 400, message: tr("unsupportedLocale") };
   }
 
   (await cookies()).set(LOCALE_COOKIE_NAME, locale, {
@@ -33,5 +37,5 @@ export async function setUserLocale(locale: Locale) {
     // The cookie is set; the account copy is best effort.
   }
 
-  return { status: 200, message: "Locale updated" };
-}
+  return { status: 200, message: tr("localeUpdated") };
+});

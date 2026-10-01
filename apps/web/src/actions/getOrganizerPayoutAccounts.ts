@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ListPayoutAccountsResult,
   listPayoutAccountsCore,
@@ -12,17 +14,19 @@ import {
  * receiving_account rows, per this feature's explicit "don't mix the two
  * concepts" requirement.
  */
-export default async function getOrganizerPayoutAccounts(): Promise<ListPayoutAccountsResult> {
-  const supabase = await createClient();
+export default withActionLocale(
+  async function getOrganizerPayoutAccounts(): Promise<ListPayoutAccountsResult> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (!user || userError) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return listPayoutAccountsCore(supabase, user.id);
-}
+    return listPayoutAccountsCore(supabase, user.id);
+  },
+);

@@ -1,14 +1,18 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { fetchEventDraftDetail } from "@abonten/services/events/eventDraftCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type { EventDraftDetail } from "@abonten/services/events/eventDraftCore";
 
 // Full-payload fetch, used only when the user chooses "Continue" on a
 // specific draft. Ownership and expiry are both re-checked in the core.
 // Body shared with GET /api/mobile/organizer/event-drafts/[draftId].
-export async function getEventDraft(draftId: string) {
+export const getEventDraft = withActionLocale(async function getEventDraft(
+  draftId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -22,7 +26,7 @@ export async function getEventDraft(draftId: string) {
   if (!user) {
     return {
       status: 401 as const,
-      message: "User not authenticated",
+      message: tr("userNotAuthenticated"),
       data: null,
     };
   }
@@ -34,4 +38,4 @@ export async function getEventDraft(draftId: string) {
   }
 
   return { status: 200 as const, message: "OK", data: result.data };
-}
+});

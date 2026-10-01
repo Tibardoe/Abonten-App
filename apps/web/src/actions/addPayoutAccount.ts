@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type AddPayoutAccountResult,
   addPayoutAccountCore,
@@ -13,7 +15,7 @@ import type { AddPayoutAccountInput } from "@abonten/validation/payoutAccountSch
  * adds is automatically their default, matching addPaymentMethod.ts's exact
  * precedent for the equivalent buyer-side flow.
  */
-export default async function addPayoutAccount(
+export default withActionLocale(async function addPayoutAccount(
   input: AddPayoutAccountInput,
 ): Promise<AddPayoutAccountResult> {
   const supabase = await createClient();
@@ -24,7 +26,7 @@ export default async function addPayoutAccount(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await addPayoutAccountCore(supabase, user.id, input);
@@ -34,4 +36,4 @@ export default async function addPayoutAccount(
   }
 
   return result;
-}
+});

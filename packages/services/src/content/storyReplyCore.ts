@@ -8,6 +8,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { MessageRow } from "@abonten/types/messagingType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { mapMessagingRpcError } from "../messaging/messagingError";
 import { deliverSentMessage } from "../messaging/sendMessageCore";
 import { setContentReactionCore } from "./contentEngagementCore";
@@ -43,12 +44,18 @@ export async function sendStoryReplyCore(
   },
 ): Promise<StoryReplyResult> {
   const { program } = await resolveContentAccess(svc, userId);
-  if (!program.stories) return { status: 403, message: "Not available yet." };
+  if (!program.stories) return { status: 403, message: tr("notAvailableYet") };
   if (input.kind === "text" && !program.storiesComments) {
-    return { status: 403, message: "Story replies are turned off right now." };
+    return {
+      status: 403,
+      message: tr("storyRepliesAreTurnedOffRight"),
+    };
   }
   if (input.kind === "reaction" && !program.storiesReactions) {
-    return { status: 403, message: "Reactions are turned off right now." };
+    return {
+      status: 403,
+      message: tr("reactionsAreTurnedOffRightNow"),
+    };
   }
 
   if (input.kind === "reaction") {
@@ -75,7 +82,10 @@ export async function sendStoryReplyCore(
   };
   if (!ids.conversation_id || !ids.message_id) {
     logger.error("sendStoryReplyCore: RPC returned no ids");
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
 
   const sent = await deliverSentMessage(caller, userId, {
@@ -93,7 +103,7 @@ export async function sendStoryReplyCore(
     // deliverSentMessage only fails when the send itself did not happen.
     return {
       status: 500,
-      message: sent.message ?? "Something went wrong. Please try again.",
+      message: sent.message ?? tr("somethingWentWrongPleaseTryAgain"),
     };
   }
   return {

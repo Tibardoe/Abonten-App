@@ -1,4 +1,5 @@
 import { discoveryRoute } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { getWeeklyTeaserCore } from "@abonten/services/weekly/weeklyEditionCore";
 import { weeklyTeaserRequestSchema } from "@abonten/validation/weeklySchemas";
 
@@ -6,6 +7,7 @@ import { weeklyTeaserRequestSchema } from "@abonten/validation/weeklySchemas";
 // The Explore teaser card for the app, or data: null when there is nothing to
 // show this visitor. Never cached: it depends on the caller and location.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const res = await discoveryRoute(
     req,
     {

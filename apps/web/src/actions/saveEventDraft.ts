@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type SaveEventDraftCoreResult,
   saveEventDraftCore,
 } from "@abonten/services/events/eventDraftCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
@@ -23,7 +25,7 @@ type SaveEventDraftInput = {
 // eventDraftPayloadSchema validation + the drafts/event_drafts writes +
 // replaced-flyer cleanup in saveEventDraftCore (shared with /api/mobile,
 // which passes an already-uploaded flyer instead of a File).
-export async function saveEventDraft({
+export const saveEventDraft = withActionLocale(async function saveEventDraft({
   draftId,
   payload,
   expectedUpdatedAt,
@@ -45,7 +47,10 @@ export async function saveEventDraft({
     };
   }
   if (!user) {
-    return { status: 401 as const, message: "User not authenticated" };
+    return {
+      status: 401 as const,
+      message: tr("userNotAuthenticated"),
+    };
   }
 
   let flyerPublicId: string | undefined;
@@ -57,7 +62,7 @@ export async function saveEventDraft({
       return {
         status: 500 as const,
         message:
-          (upload as { error?: string })?.error ?? "Flyer upload failed.",
+          (upload as { error?: string })?.error ?? tr("flyerUploadFailed"),
       };
     }
     flyerPublicId = upload.public_id;
@@ -71,4 +76,4 @@ export async function saveEventDraft({
     flyerPublicId,
     flyerVersion,
   });
-}
+});

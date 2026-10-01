@@ -3,6 +3,7 @@ import {
   inviteTeamMemberCore,
   listLeadTeamCore,
 } from "@abonten/services/fieldOps/lead/leadTeamCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   fieldOpsCampaignIdSchema,
   fieldOpsLeadInviteSchema,
@@ -11,6 +12,7 @@ import {
 // GET /api/mobile/field-ops/lead/team?campaignId= -- the lead's team, no
 // payout details. Same service as listFieldOpsLeadTeam.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     { schema: fieldOpsCampaignIdSchema, label: "GET /field-ops/lead/team" },
@@ -21,6 +23,7 @@ export async function GET(req: Request) {
 // POST /api/mobile/field-ops/lead/team -- invite a field member by phone.
 // Same service as inviteFieldOpsTeamMember.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     { schema: fieldOpsLeadInviteSchema, label: "POST /field-ops/lead/team" },

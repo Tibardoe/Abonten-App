@@ -1,6 +1,7 @@
 import type { Database } from "@abonten/types/database.types";
 import type { MessagingEnvelope } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { mapMessagingRpcError } from "./messagingError";
 
 // Thin wrappers over edit_message / delete_message (SECURITY DEFINER,
@@ -17,7 +18,7 @@ export async function editMessageCore(
     p_content: input.content,
   });
   if (error) return mapMessagingRpcError(error, "editMessageCore");
-  return { status: 200, message: "Message updated." };
+  return { status: 200, message: tr("messageUpdated") };
 }
 
 export async function deleteMessageCore(
@@ -29,5 +30,5 @@ export async function deleteMessageCore(
     p_message_id: input.messageId,
   });
   if (error) return mapMessagingRpcError(error, "deleteMessageCore");
-  return { status: 200, message: "Message deleted." };
+  return { status: 200, message: tr("messageDeleted") };
 }

@@ -4,6 +4,7 @@ import type {
   FollowTargetKind,
 } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { notifyFollow } from "./contentNotifyCore";
 import { readContentSettings } from "./contentProgram";
@@ -86,17 +87,20 @@ export async function setFollowCore(
   input: { targetKind: FollowTargetKind; targetId: string; following: boolean },
 ): Promise<Envelope<FollowStatus>> {
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   if (input.targetKind === "organizer" && input.targetId === userId) {
-    return { status: 400, message: "You can't follow yourself." };
+    return { status: 400, message: tr("youCanTFollowYourself") };
   }
   const settings = await readContentSettings(supabase);
   const perHour = settings?.follows_per_hour ?? 100;
   if (!(await checkRateLimit(`follow:${userId}`, perHour, 3600))) {
     return {
       status: 429,
-      message: "Too many changes. Please try again later.",
+      message: tr("tooManyChangesPleaseTryAgain"),
     };
   }
 
@@ -120,15 +124,15 @@ export async function setFollowCore(
       status: 404,
       message:
         input.targetKind === "place"
-          ? "Place not found."
-          : "Organizer not found.",
+          ? tr("placeNotFound2")
+          : tr("organizerNotFound"),
     };
   }
   if (target.ownerId === userId) {
-    return { status: 400, message: "This is your own place." };
+    return { status: 400, message: tr("thisIsYourOwnPlace") };
   }
   if (await usersBlocked(supabase, userId, target.ownerId)) {
-    return { status: 403, message: "You can't follow this account." };
+    return { status: 403, message: tr("youCanTFollowThisAccount") };
   }
 
   const { error } = await supabase.from("follow").insert({

@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { sendStoryReplyCore } from "@abonten/services/content/storyReplyCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { storyReplySchema } from "@abonten/validation/contentSchemas";
 
@@ -12,6 +16,7 @@ import { storyReplySchema } from "@abonten/validation/contentSchemas";
 // session so auth.uid() is the sender); the programme check and the Story's
 // own reaction use the service role, like the other content routes.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -21,7 +26,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return apiJson({
         status: 400,
-        message: parsed.error.issues[0]?.message ?? "Invalid reply.",
+        message: parsed.error.issues[0]?.message ?? tr("invalidReply"),
       });
     }
     return apiJson(
@@ -39,6 +44,9 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     logger.error("mobile POST /content/stories/reply failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

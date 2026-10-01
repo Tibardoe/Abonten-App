@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { resolveProviderAccount } from "./providers/registry";
 
 // Post-auth body of submitChargeOtp — shared with
@@ -26,19 +27,19 @@ export async function submitChargeOtpCore(
 
   if (attemptError) {
     logger.error(`Failed fetching payment attempt: ${attemptError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!attempt) {
-    return { status: 404, message: "Payment attempt not found" };
+    return { status: 404, message: tr("paymentAttemptNotFound") };
   }
 
   if (attempt.user_id !== userId) {
-    return { status: 403, message: "Not authorized" };
+    return { status: 403, message: tr("notAuthorized") };
   }
 
   if (!attempt.provider_reference) {
-    return { status: 400, message: "This payment was never started" };
+    return { status: 400, message: tr("thisPaymentWasNeverStarted") };
   }
 
   try {
@@ -63,7 +64,7 @@ export async function submitChargeOtpCore(
     logger.error(`Failed submitting charge OTP: ${error}`);
     return {
       status: 400,
-      message: "That code didn't work. Please check and try again.",
+      message: tr("thatCodeDidnTWorkPlease"),
     };
   }
 }

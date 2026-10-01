@@ -5,6 +5,7 @@ import type {
   SetConversationStateInput,
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { mapMessagingRpcError } from "./messagingError";
 
 // mark_conversation_read / set_conversation_state / block_participant are
@@ -64,6 +65,6 @@ export async function blockParticipantCore(
   if (error) return mapMessagingRpcError(error, "blockParticipantCore");
   return {
     status: 200,
-    message: input.block ? "User blocked." : "User unblocked.",
+    message: input.block ? tr("userBlocked") : tr("userUnblocked"),
   };
 }

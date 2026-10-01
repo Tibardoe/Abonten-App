@@ -1,12 +1,17 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getCreditActivityCore } from "@abonten/services/rewards/creditsQuery";
 
 // GET /api/mobile/rewards/activity?cursor=<opaque>&pageSize=<n>
 // The caller's credit activity, newest first. Same service as the
 // getCreditActivity Server Action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -27,6 +32,9 @@ export async function GET(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /rewards/activity failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

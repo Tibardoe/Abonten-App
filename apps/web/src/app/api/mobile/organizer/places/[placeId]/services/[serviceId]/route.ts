@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { updatePlaceServiceCore } from "@abonten/services/places/placeServiceCore";
 
 // PATCH /api/mobile/organizer/places/:placeId/services/:serviceId
@@ -12,6 +16,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ placeId: string; serviceId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -23,7 +28,10 @@ export async function PATCH(
     > | null;
 
     if (!body) {
-      return apiJson({ status: 400, message: "A JSON body is required" });
+      return apiJson({
+        status: 400,
+        message: tr("aJsonBodyIsRequired"),
+      });
     }
 
     const patch: {
@@ -49,7 +57,10 @@ export async function PATCH(
       } else {
         const n = Number(p);
         if (!Number.isFinite(n)) {
-          return apiJson({ status: 400, message: "price must be a number" });
+          return apiJson({
+            status: 400,
+            message: tr("priceMustBeANumber"),
+          });
         }
         patch.price = n;
       }
@@ -74,6 +85,9 @@ export async function PATCH(
       "mobile PATCH /organizer/places/:id/services/:serviceId failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { getTicketCheckoutCore } from "@abonten/services/checkout/getTicketCheckoutCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // GET /api/mobile/checkout/session/<checkoutSessionId>
 //
@@ -12,6 +16,7 @@ export async function GET(
   req: Request,
   ctx: { params: Promise<{ sessionId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -19,7 +24,10 @@ export async function GET(
     const { sessionId } = await ctx.params;
 
     if (!sessionId) {
-      return apiJson({ status: 400, message: "sessionId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("sessionidIsRequired"),
+      });
     }
 
     const result = await getTicketCheckoutCore(
@@ -31,6 +39,9 @@ export async function GET(
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /checkout/session failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseVerificationInput,
   resolveVerificationCaller,
@@ -8,12 +9,14 @@ import { updateVerificationCaseCore } from "@abonten/services/verification/verif
 import { updateVerificationCaseSchema } from "@abonten/validation/verificationSchemas";
 
 /** Edits the business name, note and contact details on a draft request. */
-export async function updateVerificationCase(
-  input: unknown,
-): Promise<{ status: number; message?: string }> {
-  const caller = await resolveVerificationCaller();
-  if (caller.error) return caller.error;
-  const parsed = parseVerificationInput(updateVerificationCaseSchema, input);
-  if (parsed.error) return parsed.error;
-  return updateVerificationCaseCore(caller.svc, caller.userId, parsed.data);
-}
+export const updateVerificationCase = withActionLocale(
+  async function updateVerificationCase(
+    input: unknown,
+  ): Promise<{ status: number; message?: string }> {
+    const caller = await resolveVerificationCaller();
+    if (caller.error) return caller.error;
+    const parsed = parseVerificationInput(updateVerificationCaseSchema, input);
+    if (parsed.error) return parsed.error;
+    return updateVerificationCaseCore(caller.svc, caller.userId, parsed.data);
+  },
+);

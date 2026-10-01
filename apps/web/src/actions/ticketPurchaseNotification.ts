@@ -4,6 +4,8 @@ import TicketPurchaseEmailTemplate, {
   type EmailTicketLine,
 } from "@/components/organisms/TicketPurchaseEmailTemplate";
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { emailWords } from "@/lib/email/emailWords";
 import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
@@ -13,6 +15,8 @@ import {
   buildTicketPdfData,
   buildTicketPdfFilename,
 } from "@abonten/core/ticketPdfData";
+import { tr } from "@abonten/services/i18n/requestLocale";
+import { userLocaleRaw } from "@abonten/services/i18n/userLocale";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { getLocale } from "next-intl/server";
 import React from "react";
@@ -33,7 +37,7 @@ import getTicketsByIds from "./getTicketsByIds";
  * admin API (the equivalent of what supabase.auth.getUser() would have
  * returned in the cookie-based path).
  */
-export default async function ticketPurchaseNotification(
+export default withActionLocale(async function ticketPurchaseNotification(
   ticketIds: string[],
   orderAmount?: number | null,
   authOverride?: AuthOverride,
@@ -43,7 +47,10 @@ export default async function ticketPurchaseNotification(
   try {
     if (!emailIsConfigured()) {
       logger.warn("RESEND_API_KEY is not set; skipping ticket purchase email");
-      return { status: 500, message: "Email service not configured" };
+      return {
+        status: 500,
+        message: tr("emailServiceNotConfigured"),
+      };
     }
 
     const supabase = authOverride?.supabase ?? (await createClient());
@@ -62,7 +69,10 @@ export default async function ticketPurchaseNotification(
           logger.error(
             `Failed resolving user email: ${adminUserError?.message}`,
           );
-          return { status: 500, message: "Could not resolve user email" };
+          return {
+            status: 500,
+            message: tr("couldNotResolveUserEmail"),
+          };
         }
         email = adminUser.user.email ?? "";
       }
@@ -74,7 +84,7 @@ export default async function ticketPurchaseNotification(
 
       if (!user || userError) {
         logger.error(`Error fetching user: ${userError?.message}`);
-        return { status: 401, message: "User not logged in!" };
+        return { status: 401, message: tr("userNotLoggedIn3") };
       }
 
       userId = user.id;
@@ -87,7 +97,7 @@ export default async function ticketPurchaseNotification(
       logger.error(
         `Could not load tickets for purchase email: ${ticketsResponse.message}`,
       );
-      return { status: 404, message: "Tickets not found" };
+      return { status: 404, message: tr("ticketsNotFound") };
     }
 
     const tickets = ticketsResponse.data;
@@ -100,11 +110,23 @@ export default async function ticketPurchaseNotification(
 
     if (infoError) {
       logger.error(`Error fetching user info: ${infoError.message}`);
-      return { status: 500, message: "Error fetching user info" };
+      return { status: 500, message: tr("errorFetchingUserInfo") };
     }
 
     const username = userInfo?.username ?? null;
     const attendeeName = userInfo?.full_name ?? username;
+    // The buyer's language: the one saved on their account, else the one
+    // they are buying in. The webhook path has no request language.
+    const saved = await userLocaleRaw(userId);
+    let locale: string | null = saved;
+    if (!locale) {
+      try {
+        locale = await getLocale();
+      } catch {
+        locale = "en";
+      }
+    }
+    const words = emailWords(locale, username);
 
     const ticketPdfDatas = tickets.map((ticket) =>
       buildTicketPdfData(ticket, attendeeName),
@@ -123,7 +145,7 @@ export default async function ticketPurchaseNotification(
     const amountLabel =
       orderAmount && orderAmount > 0
         ? formatMoney(currency, orderAmount)
-        : "Free";
+        : words.t("ticket.free");
 
     const ticketLines: EmailTicketLine[] = tickets.map((ticket) => ({
       ticketCode: ticket.ticket_code,
@@ -133,9 +155,11 @@ export default async function ticketPurchaseNotification(
     const { data, error } = await sendEmail({
       from: "Abonten Hub <tickets@abontenhub.com>",
       to: [email],
-      subject: `Your Abonten Ticket Is Ready 🎟️ — ${firstTicket.event.title}`,
+      subject: words.t("ticket.subject", {
+        eventTitle: firstTicket.event.title,
+      }),
       react: TicketPurchaseEmailTemplate({
-        username,
+        words,
         eventTitle: firstTicket.event.title,
         eventDate: firstPdfData.eventDate,
         eventTime: firstPdfData.eventTime,
@@ -160,6 +184,9 @@ export default async function ticketPurchaseNotification(
     return { status: 200, data };
   } catch (error) {
     logger.error(`Unexpected error sending ticket purchase email: ${error}`);
-    return { status: 500, message: "Something went wrong sending the email" };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongSendingTheEmail"),
+    };
   }
-}
+});

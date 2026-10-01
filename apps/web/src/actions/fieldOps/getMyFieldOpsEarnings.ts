@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsEarningsSchema } from "@abonten/validation/fieldOpsSchemas";
  * The member's own commission lines and money totals. Same service as
  * GET /api/mobile/field-ops/earnings.
  */
-export async function getMyFieldOpsEarnings(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsMyEarnings | null;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsEarningsSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return getMyEarningsCore(svc, userId, data);
-}
+export const getMyFieldOpsEarnings = withActionLocale(
+  async function getMyFieldOpsEarnings(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsMyEarnings | null;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsEarningsSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return getMyEarningsCore(svc, userId, data);
+  },
+);

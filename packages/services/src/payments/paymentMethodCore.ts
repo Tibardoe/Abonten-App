@@ -9,7 +9,7 @@ import {
   addPaymentMethodSchema,
 } from "@abonten/validation/paymentMethodSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import { getDefaultMarket, getMarketOrDefault } from "../markets/marketConfig";
 
 // Post-auth bodies of the four payment-method Server Actions, lifted so the
@@ -63,7 +63,7 @@ export async function listPaymentMethodsCore(
 
   if (error) {
     logger.error(`Failed fetching payment methods: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: (data ?? []) as unknown as PaymentMethodRow[] };
@@ -111,7 +111,7 @@ export async function addPaymentMethodCore(
   if (!parsed.success) {
     return {
       status: 400,
-      message: parsed.error.issues[0]?.message ?? "Invalid payment method",
+      message: parsed.error.issues[0]?.message ?? tr("invalidPaymentMethod"),
     };
   }
 
@@ -123,7 +123,7 @@ export async function addPaymentMethodCore(
 
   if (countError) {
     logger.error(`Failed counting payment methods: ${countError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const parsedInput = parsed.data;
@@ -147,7 +147,7 @@ export async function addPaymentMethodCore(
     logger.error(
       `Failed fetching existing payment methods: ${existingError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const active = (existingMethods ?? []) as unknown as PaymentMethodRow[];
@@ -172,7 +172,9 @@ export async function addPaymentMethodCore(
     ) {
       return {
         status: 400,
-        message: `Mobile money isn't available in ${market.name} yet.`,
+        message: tr("mobileMoneyIsnTAvailableIn2", {
+          name: market.name,
+        }),
       };
     }
     const normalized = parsePhoneWithDialCode(market.dialCode, momo.phone);
@@ -230,7 +232,7 @@ export async function addPaymentMethodCore(
 
   if (error) {
     logger.error(`Failed saving payment method: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: data as unknown as PaymentMethodRow };
@@ -256,11 +258,11 @@ export async function removePaymentMethodCore(
 
   if (fetchError) {
     logger.error(`Failed fetching payment method: ${fetchError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!method) {
-    return { status: 404, message: "Payment method not found" };
+    return { status: 404, message: tr("paymentMethodNotFound") };
   }
 
   const { error: removeError } = await supabase
@@ -275,7 +277,7 @@ export async function removePaymentMethodCore(
 
   if (removeError) {
     logger.error(`Failed removing payment method: ${removeError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (method.is_default) {
@@ -297,7 +299,7 @@ export async function removePaymentMethodCore(
     }
   }
 
-  return { status: 200, message: "Payment method removed" };
+  return { status: 200, message: tr("paymentMethodRemoved") };
 }
 
 export async function setDefaultPaymentMethodCore(
@@ -315,11 +317,11 @@ export async function setDefaultPaymentMethodCore(
 
   if (fetchError) {
     logger.error(`Failed fetching payment method: ${fetchError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!method) {
-    return { status: 404, message: "Payment method not found" };
+    return { status: 404, message: tr("paymentMethodNotFound") };
   }
 
   const { error: unsetError } = await supabase
@@ -331,7 +333,7 @@ export async function setDefaultPaymentMethodCore(
 
   if (unsetError) {
     logger.error(`Failed clearing previous default: ${unsetError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const { error: setError } = await supabase
@@ -343,8 +345,8 @@ export async function setDefaultPaymentMethodCore(
 
   if (setError) {
     logger.error(`Failed setting default payment method: ${setError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  return { status: 200, message: "Default payment method updated" };
+  return { status: 200, message: tr("defaultPaymentMethodUpdated") };
 }

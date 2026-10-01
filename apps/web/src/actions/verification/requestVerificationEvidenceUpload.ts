@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseVerificationInput,
   resolveVerificationCaller,
@@ -14,20 +15,20 @@ import { evidenceUploadRequestSchema } from "@abonten/validation/verificationSch
  * authorization, and it is minted only after the service confirmed the
  * caller owns this case and may still edit it.
  */
-export async function requestVerificationEvidenceUpload(
-  input: unknown,
-): Promise<{
-  status: number;
-  message?: string;
-  data?: VerificationUploadTicket;
-}> {
-  const caller = await resolveVerificationCaller();
-  if (caller.error) return caller.error;
-  const parsed = parseVerificationInput(evidenceUploadRequestSchema, input);
-  if (parsed.error) return parsed.error;
-  return requestVerificationEvidenceUploadCore(
-    caller.svc,
-    caller.userId,
-    parsed.data,
-  );
-}
+export const requestVerificationEvidenceUpload = withActionLocale(
+  async function requestVerificationEvidenceUpload(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: VerificationUploadTicket;
+  }> {
+    const caller = await resolveVerificationCaller();
+    if (caller.error) return caller.error;
+    const parsed = parseVerificationInput(evidenceUploadRequestSchema, input);
+    if (parsed.error) return parsed.error;
+    return requestVerificationEvidenceUploadCore(
+      caller.svc,
+      caller.userId,
+      parsed.data,
+    );
+  },
+);

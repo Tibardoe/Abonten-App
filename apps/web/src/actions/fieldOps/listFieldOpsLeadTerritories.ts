@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsCampaignIdSchema } from "@abonten/validation/fieldOpsSchemas";
  * Every territory in the lead's campaign region. Same service as
  * GET /api/mobile/field-ops/lead/territories.
  */
-export async function listFieldOpsLeadTerritories(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsTerritory[];
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsCampaignIdSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return listLeadTerritoriesCore(svc, userId, data.campaignId);
-}
+export const listFieldOpsLeadTerritories = withActionLocale(
+  async function listFieldOpsLeadTerritories(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsTerritory[];
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsCampaignIdSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return listLeadTerritoriesCore(svc, userId, data.campaignId);
+  },
+);

@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { setLeadMemberStatusCore } from "@abonten/services/fieldOps/lead/leadTeamCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsLeadMemberStatusSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // PATCH /api/mobile/field-ops/lead/team/:memberId { campaignId, status, reason }
@@ -11,6 +12,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ memberId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { memberId } = await routeParams(params);
   return fieldOpsRoute(
     req,

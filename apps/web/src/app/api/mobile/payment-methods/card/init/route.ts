@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { initCardVerificationCore } from "@abonten/services/payments/cardVerificationCore";
 
 // POST /api/mobile/payment-methods/card/init  (no body)
@@ -10,11 +14,15 @@ import { initCardVerificationCore } from "@abonten/services/payments/cardVerific
 // back to /card/confirm once the popup closes. Same
 // initCardVerificationCore the web action runs.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
   if (!auth.user.email) {
-    return apiJson({ status: 401, message: "No email on this account" });
+    return apiJson({
+      status: 401,
+      message: tr("noEmailOnThisAccount"),
+    });
   }
 
   try {
@@ -27,6 +35,9 @@ export async function POST(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile POST /payment-methods/card/init failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

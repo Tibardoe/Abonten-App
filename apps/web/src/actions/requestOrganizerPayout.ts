@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type RequestOrganizerPayoutResult,
   requestOrganizerPayoutCore,
@@ -17,7 +19,7 @@ import {
  * (see the migration's header comment on payout fulfillment scope) — that
  * connection is intentionally left for a later task.
  */
-export default async function requestOrganizerPayout(
+export default withActionLocale(async function requestOrganizerPayout(
   payoutAccountId: string,
   amount: number,
   currency: string,
@@ -30,7 +32,7 @@ export default async function requestOrganizerPayout(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await requestOrganizerPayoutCore(supabase, {
@@ -47,4 +49,4 @@ export default async function requestOrganizerPayout(
   }
 
   return result;
-}
+});

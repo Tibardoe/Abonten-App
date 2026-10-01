@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { prepareCheckoutPayment } from "@abonten/services/checkout/checkoutPaymentPreparation";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { safeQuoteTicketCredit } from "@abonten/services/rewards/ticketCreditCore";
 
 // POST /api/mobile/checkout/prepare  { checkoutSessionIds: string[] }
@@ -12,6 +16,7 @@ import { safeQuoteTicketCredit } from "@abonten/services/rewards/ticketCreditCor
 // prepareMultiCheckoutPayment action calls. `credit` is what the "Use
 // credit" switch offers (null when Rewards is off for this user).
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -28,7 +33,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message: "checkoutSessionIds must be a non-empty array of strings",
+        message: tr("checkoutsessionidsMustBeANonEmpty"),
       });
     }
 
@@ -47,6 +52,9 @@ export async function POST(req: Request) {
     return apiJson({ status: 200, data: { ...prepared, credit } });
   } catch (error) {
     logger.error("mobile POST /checkout/prepare failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

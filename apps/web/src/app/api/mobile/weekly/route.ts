@@ -1,4 +1,5 @@
 import { discoveryRoute } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { getWeeklyEditionCore } from "@abonten/services/weekly/weeklyEditionCore";
 import { weeklyEditionRequestSchema } from "@abonten/validation/weeklySchemas";
 
@@ -8,6 +9,7 @@ import { weeklyEditionRequestSchema } from "@abonten/validation/weeklySchemas";
 // open to all or closed to all); while it is open to staff or beta testers it
 // depends on the Bearer token and is marked private.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const seen: { visibility: "public" | "personal" } = {
     visibility: "personal",
   };

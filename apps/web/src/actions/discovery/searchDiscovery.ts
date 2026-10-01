@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseDiscoveryInput,
   requestIp,
@@ -26,7 +27,9 @@ const emptyResults = (status: number, message: string): SearchResults => ({
 });
 
 /** Unified search results for /search (events, places, organizers). */
-export async function searchDiscovery(input: unknown): Promise<SearchResults> {
+export const searchDiscovery = withActionLocale(async function searchDiscovery(
+  input: unknown,
+): Promise<SearchResults> {
   const parsed = parseDiscoveryInput(searchRequestSchema, input);
   if (parsed.error) return emptyResults(400, parsed.error.message);
 
@@ -55,4 +58,4 @@ export async function searchDiscovery(input: unknown): Promise<SearchResults> {
     logger.error("searchDiscovery failed", error);
     return emptyResults(500, "Search is unavailable right now.");
   }
-}
+});

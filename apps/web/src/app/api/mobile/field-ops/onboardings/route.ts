@@ -3,6 +3,7 @@ import {
   listMyOnboardingsCore,
   startOnboardingCore,
 } from "@abonten/services/fieldOps/member/onboardingCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   fieldOpsOnboardingListSchema,
   fieldOpsOnboardingStartSchema,
@@ -11,6 +12,7 @@ import {
 // GET /api/mobile/field-ops/onboardings?campaignId=&status= -- the caller's own
 // onboardings. Same service as listMyFieldOpsOnboardings.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {
@@ -25,6 +27,7 @@ export async function GET(req: Request) {
 // clientRequestId? } -- open or resume a draft. Same service as
 // startFieldOpsOnboarding.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

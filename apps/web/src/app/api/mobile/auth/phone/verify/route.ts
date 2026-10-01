@@ -2,7 +2,11 @@ import ensureProfileCompletionNotification from "@/actions/ensureProfileCompleti
 import { createAnonClient } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
-import { localeOfRequest } from "@abonten/services/i18n/requestLocale";
+import {
+  bindLocaleFromRequest,
+  localeOfRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import {
   issueOneTimePassword,
@@ -18,6 +22,7 @@ import {
 // tokens in the body for expo-secure-store. Same session-minting technique,
 // same security properties; only the transport differs.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   try {
     const body = (await req.json().catch(() => null)) as {
       phoneE164?: unknown;
@@ -30,7 +35,7 @@ export async function POST(req: Request) {
     if (typeof phoneE164 !== "string" || typeof code !== "string") {
       return apiJson({
         status: 400,
-        message: "phoneE164 and code are required",
+        message: tr("phonee164AndCodeAreRequired"),
       });
     }
 
@@ -48,7 +53,7 @@ export async function POST(req: Request) {
       );
       return apiJson({
         status: 500,
-        message: "Something went wrong signing you in.",
+        message: tr("somethingWentWrongSigningYouIn"),
       });
     }
 
@@ -62,7 +67,7 @@ export async function POST(req: Request) {
       logger.error(`mobile phone verify: sign-in failed: ${error?.message}`);
       return apiJson({
         status: 500,
-        message: "Something went wrong signing you in.",
+        message: tr("somethingWentWrongSigningYouIn"),
       });
     }
 
@@ -93,6 +98,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     logger.error("mobile POST /auth/phone/verify failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,12 +1,14 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type GetPromoCodeCoreResult,
   getPromoCodeCore,
 } from "@abonten/services/promo-codes/getPromoCodeCore";
 
-export default async function getPromoCode(
+export default withActionLocale(async function getPromoCode(
   code: string,
   eventId: string,
 ): Promise<GetPromoCodeCoreResult | { status: 401; message: string }> {
@@ -18,8 +20,8 @@ export default async function getPromoCode(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return getPromoCodeCore(supabase, user.id, code, eventId);
-}
+});

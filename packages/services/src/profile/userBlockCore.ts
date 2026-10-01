@@ -8,6 +8,7 @@ import {
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Account-wide blocking: a conversation_block row with no conversation.
 // Messaging (send_message), Spotlight, comments, follows and notifications
@@ -46,7 +47,10 @@ export async function setUserBlockCore(
         return { status: 400, message: error.message };
       default:
         logger.error(`user_block_set failed: ${error.message}`);
-        return { status: 500, message: "Couldn't update that. Try again." };
+        return {
+          status: 500,
+          message: tr("couldnTUpdateThatTryAgain"),
+        };
     }
   }
   return { status: 200, data: { blocked: data === true } };
@@ -65,7 +69,7 @@ export async function listBlockedAccountsCore(
     .limit(BLOCKED_ACCOUNTS_LIMIT);
   if (error) {
     logger.error(`listBlockedAccountsCore failed: ${error.message}`);
-    return { status: 500, message: "Couldn't load blocked accounts." };
+    return { status: 500, message: tr("couldnTLoadBlockedAccounts") };
   }
   return {
     status: 200,

@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { canUploadContentMedia } from "@abonten/services/content/contentMediaCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import {
   buildCloudinaryUploadSignature,
@@ -12,6 +16,7 @@ import {
 // Returns a short-lived Cloudinary signature scoped to `<prefix>/<user id>`.
 // Same helper the web get*UploadSignature Server Actions use.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -23,8 +28,7 @@ export async function POST(req: Request) {
     if (!isUploadSignatureKind(body?.kind)) {
       return apiJson({
         status: 400,
-        message:
-          "kind must be one of: avatar, highlight, content, place_photo, event_flyer, event_review_photo, place_review_photo",
+        message: tr("kindMustBeOneOfAvatar"),
       });
     }
 
@@ -35,7 +39,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 403,
-        message: "Posting isn't available for your account.",
+        message: tr("postingIsnTAvailableForYour"),
       });
     }
 
@@ -44,6 +48,9 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     logger.error("mobile POST /uploads/signature failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

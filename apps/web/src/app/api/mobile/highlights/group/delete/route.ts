@@ -1,12 +1,17 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { deleteHighlightGroupCore } from "@abonten/services/profile/highlightDeleteCore";
 
 // POST /api/mobile/highlights/group/delete   { groupId }
 // Deletes every slide in a highlight group the caller owns, Cloudinary
 // asset first (highlight_owner_delete RLS + the core's own ownership scope).
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -16,7 +21,10 @@ export async function POST(req: Request) {
     } | null;
 
     if (typeof body?.groupId !== "string" || body.groupId.length === 0) {
-      return apiJson({ status: 400, message: "groupId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("groupidIsRequired"),
+      });
     }
 
     const result = await deleteHighlightGroupCore(
@@ -27,6 +35,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /highlights/group/delete failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

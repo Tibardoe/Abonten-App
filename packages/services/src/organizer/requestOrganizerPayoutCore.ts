@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of requestOrganizerPayout, shared by the Server Action
 // (cookie session) and the mobile HTTP route (Bearer session). All
@@ -21,7 +22,10 @@ export async function requestOrganizerPayoutCore(
   const { payoutAccountId, amount, currency } = input;
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    return { status: 400, message: "Enter an amount greater than zero" };
+    return {
+      status: 400,
+      message: tr("enterAnAmountGreaterThanZero"),
+    };
   }
 
   const { data, error } = await supabase

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchPlaceDraftDetail } from "@abonten/services/places/placeDraftCore";
 
 export type { PlaceDraftDetail } from "@abonten/services/places/placeDraftCore";
@@ -9,7 +11,9 @@ export type { PlaceDraftDetail } from "@abonten/services/places/placeDraftCore";
 // specific draft. Ownership and expiry are re-checked in the core. Body
 // shared with GET /api/mobile/organizer/place-drafts/[draftId]. Mirrors
 // getEventDraft.ts.
-export async function getPlaceDraft(draftId: string) {
+export const getPlaceDraft = withActionLocale(async function getPlaceDraft(
+  draftId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -23,7 +27,7 @@ export async function getPlaceDraft(draftId: string) {
   if (!user) {
     return {
       status: 401 as const,
-      message: "User not authenticated",
+      message: tr("userNotAuthenticated"),
       data: null,
     };
   }
@@ -35,4 +39,4 @@ export async function getPlaceDraft(draftId: string) {
   }
 
   return { status: 200 as const, message: "OK", data: result.data };
-}
+});

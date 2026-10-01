@@ -11,7 +11,7 @@ import type {
   ReferralCodeInfo,
   ReferralInvite,
 } from "@abonten/types/rewards";
-import { coreT } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { creditCurrencyFor, rewardRulesCurrency } from "./creditCurrency";
@@ -181,7 +181,7 @@ export async function getReferralInviteCore(
         settings.error?.message ?? rules.error?.message ?? stats.error?.message
       }`,
     );
-    return { status: 500, message: "Couldn't load your invites." };
+    return { status: 500, message: tr("couldnTLoadYourInvites") };
   }
 
   const referrerRule = rules.data?.find(
@@ -204,7 +204,7 @@ export async function getReferralInviteCore(
       logger.error(
         `referral_ensure_code failed for ${userId}: ${error?.message}`,
       );
-      return { status: 500, message: "Couldn't load your invites." };
+      return { status: 500, message: tr("couldnTLoadYourInvites") };
     }
     code = data;
   }

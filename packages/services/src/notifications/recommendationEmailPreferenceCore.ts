@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import {
   deriveSigningKey,
   hmacBase64Url,
@@ -124,8 +125,7 @@ export async function setRecommendationEmailsByTokenCore(input: {
   if (!isRecommendationEmailLinkValid(input.userId, input.token)) {
     return {
       status: 400,
-      message:
-        "This link isn't valid. Open the link from your latest email, or change it in Settings › Notifications.",
+      message: tr("thisLinkIsnTValidOpen"),
     };
   }
   const res = await writeRecommendationEmailConsent(
@@ -135,11 +135,14 @@ export async function setRecommendationEmailsByTokenCore(input: {
     input.source,
   );
   if (!res.ok) {
-    return { status: 500, message: "Couldn't save your email settings." };
+    return {
+      status: 500,
+      message: tr("couldnTSaveYourEmailSettings"),
+    };
   }
   return {
     status: 200,
-    message: "You won't get emails about picks and alerts.",
+    message: tr("youWonTGetEmailsAbout"),
     data: { recommendationEmails: false },
   };
 }

@@ -3,6 +3,7 @@ import {
   withDeadline,
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { type CreateEmailOptions, Resend } from "resend";
 
 // The one place the web app talks to Resend. Every transactional email
@@ -57,7 +58,7 @@ export async function sendEmail(
     if (!result.data) {
       return {
         data: null,
-        error: { name: "empty_response", message: "Resend returned no id" },
+        error: { name: "empty_response", message: tr("resendReturnedNoId") },
       };
     }
     return { data: { id: result.data.id }, error: null };

@@ -28,6 +28,7 @@ import type { MarketConfig } from "@abonten/core/market/types";
 import { isMarketTransacting } from "@abonten/core/market/types";
 import { isValidTimeZone } from "@abonten/core/time/timeZone";
 import tzlookup from "@photostructure/tz-lookup";
+import { tr } from "../i18n/requestLocale";
 import { listMarkets } from "../markets/marketConfig";
 
 export type ResolvedLocation = {
@@ -190,8 +191,7 @@ export async function resolveListingLocation(input: {
     return {
       ok: false,
       reason: "unknown_country",
-      message:
-        "We couldn't tell which country this location is in. Try a more specific address.",
+      message: tr("weCouldnTTellWhichCountry"),
     };
   }
   if (!location.market) {
@@ -200,7 +200,7 @@ export async function resolveListingLocation(input: {
     return {
       ok: false,
       reason: "no_market",
-      message: `Abonten isn't available in ${name} yet.`,
+      message: tr("abontenIsnTAvailableInYet", { name: name }),
     };
   }
   // New listings need a market that is taking business: not paused, and
@@ -209,7 +209,9 @@ export async function resolveListingLocation(input: {
     return {
       ok: false,
       reason: "market_closed",
-      message: `Abonten isn't taking new listings in ${location.market.name} right now.`,
+      message: tr("abontenIsnTTakingNewListings", {
+        name: location.market.name,
+      }),
     };
   }
   return { ok: true, location };

@@ -8,6 +8,7 @@ import { normalizeReferralCode } from "@abonten/core/rewards/referralCode";
 import type { Database } from "@abonten/types/database.types";
 import type { ReferralHint, ReferralLink } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { deriveSigningKey, hmacBase64Url } from "../security/signing";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -66,7 +67,10 @@ export async function getReferralLinkCore(userId: string): Promise<{
     logger.error(
       `referral_ensure_code failed for ${userId}: ${error?.message}`,
     );
-    return { status: 500, message: "Couldn't load your referral link." };
+    return {
+      status: 500,
+      message: tr("couldnTLoadYourReferralLink"),
+    };
   }
   return {
     status: 200,

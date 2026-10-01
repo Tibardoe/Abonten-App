@@ -7,6 +7,7 @@
 import { findCountry } from "@abonten/core/geo/countries";
 import { logger } from "@abonten/core/logger";
 import type { OtpProviderCode } from "@abonten/core/market/types";
+import { tr } from "../../i18n/requestLocale";
 import { getDefaultMarket, marketForPhone } from "../../markets/marketConfig";
 import { getSupabaseServiceClient } from "../../supabase/serviceClient";
 import type { PhoneOtpPurpose } from "../phoneOtpStore";
@@ -49,7 +50,7 @@ export async function routeOtpForPhone(
     return {
       ok: false,
       reason: "unknown_country",
-      message: "Enter a valid phone number.",
+      message: tr("enterAValidPhoneNumber"),
     };
   }
   const countryName =
@@ -60,7 +61,9 @@ export async function routeOtpForPhone(
     return {
       ok: false,
       reason: "no_market",
-      message: `Phone sign-in isn't available for ${countryName} numbers yet. Sign in with Google or email instead.`,
+      message: tr("phoneSignInIsnTAvailable", {
+        countryName: countryName,
+      }),
     };
   }
   // App store reviewers' demo number: a fixed code, no text message, so
@@ -77,15 +80,16 @@ export async function routeOtpForPhone(
     return {
       ok: false,
       reason: "no_provider",
-      message: `Phone sign-in isn't available for ${countryName} numbers yet. Sign in with Google or email instead.`,
+      message: tr("phoneSignInIsnTAvailable", {
+        countryName: countryName,
+      }),
     };
   }
   if (!provider.isConfigured()) {
     return {
       ok: false,
       reason: "not_configured",
-      message:
-        "Text-message codes aren't available right now. Sign in with Google or email instead.",
+      message: tr("textMessageCodesArenTAvailable"),
     };
   }
   // Circuit breaker against SMS pumping (bots requesting codes to premium
@@ -117,8 +121,7 @@ export async function routeOtpForPhone(
     return {
       ok: false,
       reason: "busy",
-      message:
-        "We're sending a lot of codes right now. Please try again shortly, or sign in with Google or email.",
+      message: tr("weReSendingALotOf"),
     };
   }
   return { ok: true, provider, countryCode: market.countryCode };

@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import {
   type PreparedCheckoutPayment,
   prepareCheckoutPayment,
 } from "@abonten/services/checkout/checkoutPaymentPreparation";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { safeQuoteTicketCredit } from "@abonten/services/rewards/ticketCreditCore";
 import type { CreditQuote } from "@abonten/types/rewards";
 
@@ -22,11 +24,11 @@ type PrepareMultiCheckoutPaymentResult =
  * `credit` is what the "Use credit" switch offers (null when the program is
  * off for this user or nothing can be quoted).
  */
-export default async function prepareMultiCheckoutPayment(
+export default withActionLocale(async function prepareMultiCheckoutPayment(
   checkoutSessionIds: string[],
 ): Promise<PrepareMultiCheckoutPaymentResult> {
   if (checkoutSessionIds.length === 0) {
-    return { status: 400, message: "No checkouts selected" };
+    return { status: 400, message: tr("noCheckoutsSelected") };
   }
 
   const supabase = await createClient();
@@ -37,7 +39,7 @@ export default async function prepareMultiCheckoutPayment(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   try {
@@ -50,6 +52,6 @@ export default async function prepareMultiCheckoutPayment(
     return { status: 200, ...prepared, credit };
   } catch (error) {
     logger.error(`Failed preparing checkout payment: ${error}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
-}
+});

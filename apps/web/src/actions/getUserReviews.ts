@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -9,10 +10,11 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { OrganizerReviewListItem } from "@abonten/types/reviewType";
 
-export async function getUserReviews(
+export const getUserReviews = withActionLocale(async function getUserReviews(
   username: string,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<OrganizerReviewListItem>> {
@@ -34,7 +36,7 @@ export async function getUserReviews(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -60,7 +62,7 @@ export async function getUserReviews(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -79,4 +81,4 @@ export async function getUserReviews(
       : null;
 
   return { status: 200, data: page, nextCursor, hasNextPage };
-}
+});

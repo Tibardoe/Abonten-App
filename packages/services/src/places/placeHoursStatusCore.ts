@@ -2,6 +2,7 @@ import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of updatePlaceOpeningHours / setPlaceTemporaryStatus,
 // lifted so the mobile per-place Hours & Status routes run the same logic.
@@ -30,7 +31,10 @@ async function assertOwnsPlace(
     .maybeSingle();
 
   if (error || !place) {
-    return { status: 404, message: "Place not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("placeNotFoundOrUnauthorized"),
+    };
   }
   return null;
 }
@@ -79,7 +83,10 @@ export async function updatePlaceOpeningHoursCore(
     }
   }
 
-  return { status: 200, message: "Opening hours updated successfully!" };
+  return {
+    status: 200,
+    message: tr("openingHoursUpdatedSuccessfully"),
+  };
 }
 
 export async function setPlaceTemporaryStatusCore(
@@ -113,5 +120,8 @@ export async function setPlaceTemporaryStatusCore(
     };
   }
 
-  return { status: 200, message: "Place status updated successfully!" };
+  return {
+    status: 200,
+    message: tr("placeStatusUpdatedSuccessfully"),
+  };
 }

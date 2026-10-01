@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { fetchMessagesPage } from "@abonten/services/messaging/messagesQuery";
 
 // GET /api/mobile/messages/<conversationId>/messages?cursor=<opaque>&pageSize=<n>
@@ -12,13 +16,17 @@ export async function GET(
   req: Request,
   ctx: { params: Promise<{ conversationId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
   try {
     const { conversationId } = await ctx.params;
     if (!conversationId) {
-      return apiJson({ status: 400, message: "conversationId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("conversationidIsRequired"),
+      });
     }
 
     const { searchParams } = new URL(req.url);
@@ -37,6 +45,9 @@ export async function GET(
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /messages/:id/messages failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

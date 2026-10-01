@@ -1,3 +1,5 @@
+import type { EmailWords } from "@/lib/email/emailWords";
+import { richEmailText } from "@/lib/email/emailWords";
 import {
   EmailButton,
   EmailDetailRow,
@@ -10,7 +12,7 @@ import {
 } from "./EmailParts";
 
 interface EmailTemplateProp {
-  username: string | null;
+  words: EmailWords;
   eventTitle: string;
   amountLabel: string;
   currency: string;
@@ -24,48 +26,51 @@ interface EmailTemplateProp {
  * email. Never claims the refund is complete -- only that it's being
  * processed, matching the actual authoritative state (transaction.status
  * starts at 'refund_pending', not 'refunded', the moment this email is
- * sent). Built from EmailParts, which keeps it readable in Gmail, Outlook
- * and dark mode.
+ * sent). Written in the ticket holder's language. Built from EmailParts,
+ * which keeps it readable in Gmail, Outlook and dark mode.
  */
 export default function EventCancellationEmailTemplate({
-  username,
+  words,
   eventTitle,
   amountLabel,
-  currency,
   myTicketsUrl,
 }: EmailTemplateProp) {
+  const { t, locale, greeting } = words;
   return (
     <EmailShell
-      preview={`${eventTitle} has been cancelled — here's what happens to your ticket`}
-      heading="Event cancelled"
+      locale={locale}
+      preview={t("cancellation.preview", { eventTitle })}
+      heading={t("cancellation.heading")}
       intro={
         <>
           <EmailIntro>
-            Hi {username ?? "there"}, the organizer has cancelled{" "}
-            <strong>{eventTitle}</strong>. Your ticket is no longer valid.
+            {richEmailText(t("cancellation.intro", { greeting, eventTitle }), {
+              strong: (chunk) => <strong>{chunk}</strong>,
+            })}
           </EmailIntro>
-          <EmailIntro spaced>
-            A refund will be issued to the payment method used for your ticket.
-            This can take a few days to complete — you can check its status
-            anytime from My Tickets.
-          </EmailIntro>
+          <EmailIntro spaced>{t("cancellation.refund")}</EmailIntro>
         </>
       }
     >
       <EmailDivider />
       <EmailSection>
-        <EmailDetailRow label="Event" value={eventTitle} />
-        <EmailDetailRow label="Refund amount" value={amountLabel} />
-        <EmailDetailRow label="Refund status" value="Processing" />
+        <EmailDetailRow label={t("cancellation.event")} value={eventTitle} />
+        <EmailDetailRow
+          label={t("cancellation.refundAmount")}
+          value={amountLabel}
+        />
+        <EmailDetailRow
+          label={t("cancellation.refundStatus")}
+          value={t("cancellation.processing")}
+        />
       </EmailSection>
 
-      <EmailButton href={myTicketsUrl}>View Refund Status</EmailButton>
+      <EmailButton href={myTicketsUrl}>
+        {t("cancellation.viewRefundStatus")}
+      </EmailButton>
 
-      <EmailFooter>
-        <EmailFinePrint>
-          If you have any questions about this cancellation or your refund,
-          contact us through the Abonten app.
-        </EmailFinePrint>
+      <EmailFooter words={words}>
+        <EmailFinePrint>{t("cancellation.questions")}</EmailFinePrint>
       </EmailFooter>
     </EmailShell>
   );

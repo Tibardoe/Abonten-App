@@ -7,7 +7,7 @@ import {
 } from "@abonten/core/phone/phone";
 import type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { coreT } from "../../i18n/requestLocale";
+import { coreT, tr } from "../../i18n/requestLocale";
 import { getMarketOrDefault } from "../../markets/marketConfig";
 import { listMobileMoneyNetworksCore } from "../../payments/mobileMoneyNetworksCore";
 import {
@@ -162,14 +162,16 @@ export async function setPayoutDestinationCore(
   if (phone.country && phone.country !== country.countryCode) {
     return {
       status: 400,
-      message: "Use a mobile money number from the campaign's country.",
+      message: tr("useAMobileMoneyNumberFrom"),
     };
   }
   const listedNetwork = matchListedNetwork(country.networks, input.momoNetwork);
   if (country.networks.length > 0 && !listedNetwork) {
     return {
       status: 400,
-      message: `Choose one of: ${country.networks.map((n) => n.name).join(", ")}.`,
+      message: tr("chooseOneOf", {
+        join: country.networks.map((n) => n.name).join(", "),
+      }),
     };
   }
   const networkName = listedNetwork?.name ?? input.momoNetwork.trim();
@@ -187,8 +189,7 @@ export async function setPayoutDestinationCore(
   if ((pending ?? []).length > 0) {
     return {
       status: 409,
-      message:
-        "A payment to your current number is already being prepared. You can change this once it has been sent.",
+      message: tr("aPaymentToYourCurrentNumber"),
     };
   }
 
@@ -212,7 +213,7 @@ export async function setPayoutDestinationCore(
 
   return {
     status: 200,
-    message: "Saved. Your earnings will be sent to this number.",
+    message: tr("savedYourEarningsWillBeSent"),
     data: {
       numberMasked: data?.payout_momo_number
         ? maskAccountNumber(data.payout_momo_number)

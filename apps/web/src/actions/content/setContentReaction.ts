@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -10,13 +11,15 @@ import type { ContentReactionEmoji } from "@abonten/types/contentType";
 import { contentReactSchema } from "@abonten/validation/contentSchemas";
 
 /** Set, change or remove the viewer's reaction on a Story. */
-export async function setContentReaction(input: unknown) {
-  const caller = await requireContentUser();
-  if (caller.error) return caller.error;
-  const parsed = parseContentInput(contentReactSchema, input);
-  if (parsed.error) return parsed.error;
-  return setContentReactionCore(caller.svc, caller.userId, {
-    postId: parsed.data.postId,
-    emoji: parsed.data.emoji as ContentReactionEmoji | null,
-  });
-}
+export const setContentReaction = withActionLocale(
+  async function setContentReaction(input: unknown) {
+    const caller = await requireContentUser();
+    if (caller.error) return caller.error;
+    const parsed = parseContentInput(contentReactSchema, input);
+    if (parsed.error) return parsed.error;
+    return setContentReactionCore(caller.svc, caller.userId, {
+      postId: parsed.data.postId,
+      emoji: parsed.data.emoji as ContentReactionEmoji | null,
+    });
+  },
+);

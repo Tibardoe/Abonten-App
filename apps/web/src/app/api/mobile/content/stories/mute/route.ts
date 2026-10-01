@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { setStoryMuteCore } from "@abonten/services/content/storiesCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { contentMuteSchema } from "@abonten/validation/contentSchemas";
 
 // POST /api/mobile/content/stories/mute — mute / unmute a publisher's Stories
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: contentMuteSchema, label: "POST /content/stories/mute" },

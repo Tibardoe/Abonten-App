@@ -1,17 +1,21 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 
-export async function deleteEvent(eventId: string) {
+export const deleteEvent = withActionLocale(async function deleteEvent(
+  eventId: string,
+) {
   const supabase = await createClient();
 
   const { data: user, error: userError } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not Logged in" };
+    return { status: 401, message: tr("userNotLoggedIn2") };
   }
 
   const { data: event, error: fetchError } = await supabase
@@ -24,7 +28,7 @@ export async function deleteEvent(eventId: string) {
   if (fetchError || !event) {
     return {
       status: 404,
-      message: "Event not found or unauthorized",
+      message: tr("eventNotFoundOrUnauthorized"),
     };
   }
 
@@ -35,8 +39,7 @@ export async function deleteEvent(eventId: string) {
   if (hasHistory) {
     return {
       status: 409,
-      message:
-        "This event has ticket sales, attendance, or reviews and can't be permanently deleted. Cancel it instead to remove it from discovery while keeping its history.",
+      message: tr("thisEventHasTicketSalesAttendance"),
     };
   }
 
@@ -63,8 +66,8 @@ export async function deleteEvent(eventId: string) {
     // Not failing the whole function if cloudinary deletion fails
   }
 
-  return { status: 200, message: "Event deleted successfully" };
-}
+  return { status: 200, message: tr("eventDeletedSuccessfully") };
+});
 
 // Hard delete cascades to ticket_checkout/attendance/event_review (and,
 // transitively, ticket) via their existing FKs -- fine for an event nobody

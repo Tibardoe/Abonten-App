@@ -13,6 +13,7 @@ import type {
   WeeklyEditionRequest,
   WeeklyTeaserRequest,
 } from "@abonten/validation/weeklySchemas";
+import { tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { mapWeeklyDocument } from "./weeklyDocument";
 import { resolveWeeklyAccess } from "./weeklyProgram";
@@ -166,7 +167,7 @@ export async function getWeeklyEditionCore(
     });
     if (error) {
       logger.error(`weekly_edition_view failed: ${error.message}`);
-      return { status: 500, message: "Couldn't load Abonten Weekly." };
+      return { status: 500, message: tr("couldnTLoadAbontenWeekly") };
     }
 
     const edition = mapWeeklyDocument(data);
@@ -180,7 +181,7 @@ export async function getWeeklyEditionCore(
     if (input.week) {
       return {
         status: 404,
-        message: "This edition of Abonten Weekly is not available.",
+        message: tr("thisEditionOfAbontenWeeklyIs"),
         data: {
           available: true,
           edition: null,
@@ -194,7 +195,7 @@ export async function getWeeklyEditionCore(
     if (!fallback.scopeFound) {
       return {
         status: 404,
-        message: "Abonten Weekly is not available for this area.",
+        message: tr("abontenWeeklyIsNotAvailableFor"),
         data: {
           available: true,
           edition: null,
@@ -214,7 +215,7 @@ export async function getWeeklyEditionCore(
     };
   } catch (error) {
     logger.error("getWeeklyEditionCore failed", error);
-    return { status: 500, message: "Couldn't load Abonten Weekly." };
+    return { status: 500, message: tr("couldnTLoadAbontenWeekly") };
   }
 }
 

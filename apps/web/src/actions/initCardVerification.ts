@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type InitCardVerificationCoreResult,
   initCardVerificationCore,
@@ -13,7 +15,7 @@ import {
  * after the authorization is captured. Post-auth logic lives in
  * cardVerificationCore so the mobile API route shares it.
  */
-export default async function initCardVerification(): Promise<
+export default withActionLocale(async function initCardVerification(): Promise<
   InitCardVerificationCoreResult | { status: 401; message: string }
 > {
   const supabase = await createClient();
@@ -24,7 +26,7 @@ export default async function initCardVerification(): Promise<
   } = await supabase.auth.getUser();
 
   if (userError || !user || !user.email) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return initCardVerificationCore(
@@ -33,4 +35,4 @@ export default async function initCardVerification(): Promise<
     user.email,
     `${process.env.NEXT_PUBLIC_BASE_URL}/wallet`,
   );
-}
+});

@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { recordPlaceVisitCore } from "@abonten/services/places/placeVisitCore";
 
 // POST /api/mobile/places/visits
@@ -8,6 +12,7 @@ import { recordPlaceVisitCore } from "@abonten/services/places/placeVisitCore";
 // Checks the caller in at a place with the code its owner shows (once a
 // day). The code and the distance are checked server-side.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -16,7 +21,7 @@ export async function POST(req: Request) {
       string,
       unknown
     > | null;
-    if (!body) return apiJson({ status: 400, message: "Invalid request" });
+    if (!body) return apiJson({ status: 400, message: tr("invalidRequest2") });
     const num = (v: unknown) => (typeof v === "number" ? v : null);
     return fromActionResult(
       await recordPlaceVisitCore(auth.user.id, {
@@ -34,6 +39,9 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     logger.error("mobile POST /places/visits failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -5,6 +5,7 @@ import type {
   FieldOpsMembership,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import { isFieldOpsKillSwitchOn } from "./killSwitch";
 
 // The authorization primitive for every member / team-lead Field Ops
@@ -118,5 +119,5 @@ export function fieldOpsError(err: unknown): {
     return { status: err.status, message: err.message };
   }
   logger.error("Unhandled Field Ops service error", err);
-  return { status: 500, message: "Something went wrong" };
+  return { status: 500, message: tr("somethingWentWrong2") };
 }

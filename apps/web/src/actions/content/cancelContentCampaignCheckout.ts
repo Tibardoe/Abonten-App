@@ -1,20 +1,24 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { cancelPromotionCheckout } from "@abonten/services/checkout/checkoutCancellation";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 /** Cancels a pending, unpaid campaign checkout (the campaign goes back to draft on the next sweep). */
-export async function cancelContentCampaignCheckout(checkoutId: string) {
-  const supabase = await createClient();
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData?.user) {
-    return { status: 401, message: "User not logged in" };
-  }
-  return cancelPromotionCheckout(
-    supabase,
-    "content_campaign_checkout",
-    "content_campaign_checkout_id",
-    checkoutId,
-    userData.user.id,
-  );
-}
+export const cancelContentCampaignCheckout = withActionLocale(
+  async function cancelContentCampaignCheckout(checkoutId: string) {
+    const supabase = await createClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
+    return cancelPromotionCheckout(
+      supabase,
+      "content_campaign_checkout",
+      "content_campaign_checkout_id",
+      checkoutId,
+      userData.user.id,
+    );
+  },
+);

@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { completeAssignmentCore } from "@abonten/services/fieldOps/member/assignmentsCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsAssignmentCompleteSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // POST /api/mobile/field-ops/assignments/:assignmentId/complete { campaignId }
@@ -11,6 +12,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ assignmentId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { assignmentId } = await routeParams(params);
   return fieldOpsRoute(
     req,

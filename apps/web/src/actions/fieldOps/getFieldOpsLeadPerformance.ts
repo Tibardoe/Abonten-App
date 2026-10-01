@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsCampaignIdSchema } from "@abonten/validation/fieldOpsSchemas";
  * The lead's team and territory figures. Same service as
  * GET /api/mobile/field-ops/lead/performance.
  */
-export async function getFieldOpsLeadPerformance(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsAnalytics;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsCampaignIdSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return getLeadPerformanceCore(svc, userId, data);
-}
+export const getFieldOpsLeadPerformance = withActionLocale(
+  async function getFieldOpsLeadPerformance(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsAnalytics;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsCampaignIdSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return getLeadPerformanceCore(svc, userId, data);
+  },
+);

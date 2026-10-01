@@ -4,6 +4,7 @@ import type {
   NotificationPreferencesPatch,
 } from "@abonten/types/discoveryType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import { resolveDiscoveryAccess } from "../search/discoveryProgram";
 import { writeRecommendationEmailConsent } from "./recommendationEmailPreferenceCore";
 
@@ -45,7 +46,7 @@ export async function getNotificationPreferencesCore(
   service: ServiceRoleClient,
   userId: string,
 ): Promise<Envelope<NotificationPreferences>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   const [pref, authUser] = await Promise.all([
     service
       .from("notification_preference")
@@ -60,7 +61,7 @@ export async function getNotificationPreferencesCore(
     logger.error(`notification_preference read failed: ${pref.error.message}`);
     return {
       status: 500,
-      message: "Couldn't load your notification settings.",
+      message: tr("couldnTLoadYourNotificationSettings"),
     };
   }
   const row = pref.data;
@@ -94,11 +95,11 @@ export async function updateNotificationPreferencesCore(
   /** Where the change was made, for the email consent record. */
   surface: "web" | "app" = "web",
 ): Promise<Envelope<NotificationPreferences>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
 
   const emailChoice = patch.recommendationEmails;
   if (emailChoice !== undefined && typeof emailChoice !== "boolean") {
-    return { status: 400, message: "Choose on or off." };
+    return { status: 400, message: tr("chooseOnOrOff") };
   }
   if (emailChoice === true) {
     const [{ program }, authUser] = await Promise.all([
@@ -108,13 +109,13 @@ export async function updateNotificationPreferencesCore(
     if (!program.recommendationEmail) {
       return {
         status: 403,
-        message: "Emails about picks aren't available yet.",
+        message: tr("emailsAboutPicksArenTAvailable"),
       };
     }
     if (!authUser.data.user?.email) {
       return {
         status: 400,
-        message: "Add an email address to your account first.",
+        message: tr("addAnEmailAddressToYour"),
       };
     }
   }
@@ -124,7 +125,7 @@ export async function updateNotificationPreferencesCore(
     const value = patch[key as keyof typeof COLUMN];
     if (value === undefined) continue;
     if (typeof value !== "boolean") {
-      return { status: 400, message: "Choose on or off." };
+      return { status: 400, message: tr("chooseOnOrOff") };
     }
     update[column] = value;
   }
@@ -135,10 +136,10 @@ export async function updateNotificationPreferencesCore(
   } else if (patch.pause === "resume") {
     update.paused_until = null;
   } else if (patch.pause !== undefined) {
-    return { status: 400, message: "Unknown pause option." };
+    return { status: 400, message: tr("unknownPauseOption") };
   }
   if (Object.keys(update).length === 0 && emailChoice === undefined) {
-    return { status: 400, message: "Nothing to change." };
+    return { status: 400, message: tr("nothingToChange") };
   }
 
   if (Object.keys(update).length > 0) {
@@ -154,7 +155,7 @@ export async function updateNotificationPreferencesCore(
       logger.error(`notification_preference write failed: ${error.message}`);
       return {
         status: 500,
-        message: "Couldn't save your notification settings.",
+        message: tr("couldnTSaveYourNotificationSettings"),
       };
     }
   }
@@ -168,7 +169,7 @@ export async function updateNotificationPreferencesCore(
     if (!res.ok) {
       return {
         status: 500,
-        message: "Couldn't save your notification settings.",
+        message: tr("couldnTSaveYourNotificationSettings"),
       };
     }
   }
@@ -179,9 +180,9 @@ export async function updateNotificationPreferencesCore(
     ...fresh,
     message:
       patch.pause === "two_weeks"
-        ? "Alerts and picks paused for two weeks."
+        ? tr("alertsAndPicksPausedForTwo")
         : patch.pause === "resume"
-          ? "Alerts and picks resumed."
-          : "Saved.",
+          ? tr("alertsAndPicksResumed")
+          : tr("saved"),
   };
 }

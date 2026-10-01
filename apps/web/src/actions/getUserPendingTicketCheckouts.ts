@@ -1,10 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   type GetUserPendingTicketCheckoutsCoreResult,
   getUserPendingTicketCheckoutsCore,
 } from "@abonten/services/checkout/getUserPendingTicketCheckoutsCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type {
   PendingCheckoutSession,
@@ -22,17 +24,19 @@ type GetUserPendingTicketCheckoutsResult =
  * checkout read does. Post-auth logic lives in
  * getUserPendingTicketCheckoutsCore so the mobile API route shares it.
  */
-export default async function getUserPendingTicketCheckouts(): Promise<GetUserPendingTicketCheckoutsResult> {
-  const supabase = await createClient();
+export default withActionLocale(
+  async function getUserPendingTicketCheckouts(): Promise<GetUserPendingTicketCheckoutsResult> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return await getUserPendingTicketCheckoutsCore(supabase, user.id);
-}
+    return await getUserPendingTicketCheckoutsCore(supabase, user.id);
+  },
+);

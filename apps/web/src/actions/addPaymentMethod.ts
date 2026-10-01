@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type AddPaymentMethodResult,
   addPaymentMethodCore,
@@ -14,7 +16,7 @@ import type { AddPaymentMethodInput } from "@abonten/validation/paymentMethodSch
  * `authorizationCode` is captured server-side by a real GHS 1 verification
  * charge (confirmCardVerification.ts), never typed in.
  */
-export default async function addPaymentMethod(
+export default withActionLocale(async function addPaymentMethod(
   input: AddPaymentMethodInput,
 ): Promise<AddPaymentMethodResult | { status: 401; message: string }> {
   const supabase = await createClient();
@@ -25,8 +27,8 @@ export default async function addPaymentMethod(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return addPaymentMethodCore(supabase, user.id, input);
-}
+});

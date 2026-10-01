@@ -1,4 +1,5 @@
 import { createClient } from "@/config/supabase/server";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { ZodSchema } from "zod";
@@ -23,7 +24,7 @@ export async function resolveFieldOpsCaller(): Promise<FieldOpsCaller> {
     return {
       userId: null,
       svc: null,
-      error: { status: 401, message: "User not logged in" },
+      error: { status: 401, message: tr("userNotLoggedIn") },
     };
   }
   return { userId: user.id, svc: getSupabaseServiceClient(), error: null };
@@ -41,7 +42,7 @@ export function parseFieldOpsInput<T>(
       data: null,
       error: {
         status: 400,
-        message: parsed.error.issues[0]?.message ?? "Invalid input",
+        message: parsed.error.issues[0]?.message ?? tr("invalidInput"),
       },
     };
   }

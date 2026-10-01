@@ -5,7 +5,7 @@ import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClie
 import type { Database } from "@abonten/types/database.types";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { coreTFor, trFor } from "../i18n/requestLocale";
+import { coreTFor, tr, trFor } from "../i18n/requestLocale";
 import { userLocale } from "../i18n/userLocale";
 import { sendPushToUser } from "./sendPushNotification";
 
@@ -96,7 +96,7 @@ export async function createNotificationCore(
 
   if (error) {
     logger.error(`Failed creating notification: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // Social notices (messages, reviews, booking updates) respect the

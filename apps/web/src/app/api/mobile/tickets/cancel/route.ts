@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
 
 // POST /api/mobile/tickets/cancel  { ticketId: string, transactionId?: string | null }
@@ -10,6 +14,7 @@ import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicket
 // the ticket revenue (fee retained) is requested. Same cancelUserTicketCore
 // the web action runs.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -20,7 +25,10 @@ export async function POST(req: Request) {
     } | null;
 
     if (typeof body?.ticketId !== "string" || body.ticketId.length === 0) {
-      return apiJson({ status: 400, message: "ticketId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("ticketidIsRequired"),
+      });
     }
 
     const transactionId =
@@ -38,6 +46,9 @@ export async function POST(req: Request) {
     return apiJson({ status: result.status, message: result.message });
   } catch (error) {
     logger.error("mobile POST /tickets/cancel failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

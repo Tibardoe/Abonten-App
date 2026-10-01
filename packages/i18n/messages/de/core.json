@@ -496,6 +496,284 @@
     "former": "Former Abonten member",
     "generic": "Abonten member"
   },
+  "notices": {
+    "area_launched": {
+      "body": "Events and places in {area} are on Abonten. Take a look.",
+      "title": "Abonten is now in {area}"
+    },
+    "commission_pending": {
+      "body": "{amount} in commission is pending from {orders, plural, one {# ticket order} other {# ticket orders}} sold through your link. The organizer pays it as credit after the {orders, plural, one {event} other {events}}.",
+      "title": "You sold tickets as a promoter"
+    },
+    "content_campaign": {
+      "title": "{status, select, pending_review {Your Spotlight promotion is in review} scheduled {Your Spotlight promotion is approved and scheduled} active {Your Spotlight promotion is live} rejected {Your Spotlight promotion was not approved} paused {Your Spotlight promotion is paused} completed {Your Spotlight promotion has finished} refunded {Your Spotlight promotion refund is on its way} other {Your Spotlight promotion is {status}}}"
+    },
+    "content_comment": {
+      "title": "{name} commented on your {kind, select, story {Story} other {Spotlight}}"
+    },
+    "content_follow": {
+      "title": "{others, plural, =0 {{name} started following {target}} one {{name} and # other started following {target}} other {{name} and # others started following {target}}}"
+    },
+    "content_like": {
+      "title": "{others, plural, =0 {{name} liked your {kind, select, story {Story} other {Spotlight}}} one {{name} and # other liked your {kind, select, story {Story} other {Spotlight}}} other {{name} and # others liked your {kind, select, story {Story} other {Spotlight}}}}"
+    },
+    "content_moderation": {
+      "body": "It no longer appears in feeds. Contact support if you think this is a mistake.",
+      "title": "Your {kind, select, story {Story} other {Spotlight}} has been {state, select, restricted {restricted} hidden {hidden} other {removed}}"
+    },
+    "content_moderation_visible": {
+      "title": "Your {kind, select, story {Story} other {Spotlight}} is visible again"
+    },
+    "content_reaction": {
+      "title": "{others, plural, =0 {{name} reacted to your {kind, select, story {Story} other {Spotlight}}} one {{name} and # other reacted to your {kind, select, story {Story} other {Spotlight}}} other {{name} and # others reacted to your {kind, select, story {Story} other {Spotlight}}}}"
+    },
+    "content_reply": {
+      "title": "{name} replied to your comment"
+    },
+    "digest_event": {
+      "body": "{title} · {when}",
+      "title": "An event you might like"
+    },
+    "digest_many": {
+      "body": "{first} and {more, plural, one {# more} other {# more}}",
+      "title": "{count} picks for you"
+    },
+    "digest_organizer": {
+      "body": "{title} · {when}",
+      "title": "New event from @{username}"
+    },
+    "digest_organizer_unknown": {
+      "body": "{title} · {when}",
+      "title": "New event from an organizer you follow"
+    },
+    "digest_place": {
+      "body": "{title} · {when}",
+      "title": "New event at {place}"
+    },
+    "digest_place_pick": {
+      "body": "{name}{category, select, other { · {category}}}",
+      "title": "A place you might like"
+    },
+    "digest_place_unknown": {
+      "body": "{title} · {when}",
+      "title": "New event at a place you follow"
+    },
+    "event_cancelled_free": {
+      "body": "The organizer has cancelled {title}. Your registration has been cancelled.",
+      "title": "Event cancelled"
+    },
+    "event_cancelled_paid": {
+      "body": "The organizer has cancelled {title}. Your ticket is no longer valid. A refund will be issued to the payment method used for your ticket.",
+      "title": "Event cancelled"
+    },
+    "event_reminder": {
+      "body": "{address, select, other {Starts {dayTime} at {address}. Your ticket is in My Events.}}",
+      "title": "Tomorrow: {title}"
+    },
+    "fieldops_assignment_changed": {
+      "body": "Your lead cancelled this assignment. Open Field work to see what is still yours.",
+      "title": "Assignment cancelled: {territory}"
+    },
+    "fieldops_assignment_created": {
+      "body": "Open Field work to see your assignments.",
+      "title": "New assignment: {territory}"
+    },
+    "fieldops_claim_received": {
+      "body": "A member helped an owner claim a listing that was already on Abonten.",
+      "title": "Claim help: {place}"
+    },
+    "fieldops_confirmed": {
+      "body": "Your commission is confirmed and waiting for the next payout.",
+      "title": "Confirmed: {name}"
+    },
+    "fieldops_content_approved": {
+      "body": "Your post was approved. The commission is confirmed after the holding period.",
+      "title": "Content approved"
+    },
+    "fieldops_content_brief": {
+      "body": "Open Field work to see what the lead is asking for.",
+      "title": "New brief: {title}"
+    },
+    "fieldops_content_commission_confirmed": {
+      "body": "Your approved post is confirmed and waiting for the next payout.",
+      "title": "Content commission confirmed"
+    },
+    "fieldops_content_received": {
+      "body": "The content creator sent in a deliverable.",
+      "title": "New content to review"
+    },
+    "fieldops_content_rejected": {
+      "title": "Content not accepted"
+    },
+    "fieldops_event_received": {
+      "body": "A member onboarded an event. It pays once the event has run.",
+      "title": "Event: {title}"
+    },
+    "fieldops_flag_raised": {
+      "body": "An automatic check flagged this submission for an admin.",
+      "title": "Needs a look: {name}"
+    },
+    "fieldops_membership_added": {
+      "body": "Open Field work to see your assignments.",
+      "title": "You've joined {campaign}"
+    },
+    "fieldops_not_eligible": {
+      "body": "An automatic check after the holding period did not pass. Open it to see why.",
+      "title": "Not eligible: {name}"
+    },
+    "fieldops_onboarding_received": {
+      "body": "A member onboarded a place. Open it to review the submission.",
+      "title": "Review: {place}"
+    },
+    "fieldops_paid": {
+      "body": "Your Field Ops earnings have been sent to your mobile money number.",
+      "title": "You have been paid"
+    },
+    "fieldops_stipend": {
+      "body": "Your stipend for {monthYear} is ready for the next payout.",
+      "title": "Monthly stipend added"
+    },
+    "loyalty_reward": {
+      "body": "You've bought tickets to {required} different events. The {amount} service fee on this order comes back as credit after {event}.",
+      "title": "Your service fee is coming back"
+    },
+    "milestone_reached": {
+      "body": "Here's {amount} of promotion credit to feature your next event.",
+      "title": "{buyers} people bought tickets to your event"
+    },
+    "orphan_refund": {
+      "body": "Your payment of {amount} arrived after the order had closed, so nothing was issued for it. We've asked for the full amount to go back to your payment method.",
+      "title": "We're refunding a payment"
+    },
+    "place_booking_accepted": {
+      "body": "Your booking request for {place} was accepted.",
+      "title": "Your booking was accepted"
+    },
+    "place_booking_cancelled": {
+      "body": "A customer cancelled their booking for {place}.",
+      "title": "A booking was cancelled"
+    },
+    "place_booking_declined": {
+      "body": "Your booking request for {place} was declined.",
+      "title": "Your booking was declined"
+    },
+    "place_booking_requested": {
+      "body": "You have a new booking request for {place}.",
+      "title": "New booking request"
+    },
+    "place_claim_approved": {
+      "body": "You now manage {place}.",
+      "title": "Your claim was approved"
+    },
+    "place_claim_rejected": {
+      "body": "Your request to claim {place} was rejected.",
+      "title": "Your claim request was not approved"
+    },
+    "promotion_credit_earned": {
+      "body": "{amount} of promotion credit from events that ended in {month}. Use it to feature an event or place.",
+      "title": "You earned promotion credit"
+    },
+    "promotion_credit_visits": {
+      "body": "{visitors, plural, one {# verified visitor} other {# verified visitors}} checked in at your place in {month}. Here's {amount} of promotion credit to feature it.",
+      "title": "Visitors earned you promotion credit"
+    },
+    "promotion_started_event": {
+      "body": "{title} is now featured ({duration}).",
+      "title": "Your event is now featured"
+    },
+    "promotion_started_generic": {
+      "body": "Your promotion is now active ({duration}).",
+      "title": "Your listing is now featured"
+    },
+    "promotion_started_place": {
+      "body": "{title} is now featured ({duration}).",
+      "title": "Your place is now featured"
+    },
+    "referral_joined": {
+      "body": "{name} joined Abonten with your invite. You'll get {amount} once they buy a ticket of {min} or more.",
+      "title": "A friend joined with your invite"
+    },
+    "referral_qualified": {
+      "body": "{name} qualified. {amount} is pending for you and unlocks {unlocks}.",
+      "title": "{path, select, first_order {Your friend bought a ticket} organizer_sales {Your friend's event is selling} other {Your friend claimed their place}}"
+    },
+    "refund_completed": {
+      "body": "Your refund has been sent back to your payment method.",
+      "title": "Refund completed"
+    },
+    "refund_completed_credit": {
+      "body": "{credit} is back in your Abonten Credit.",
+      "title": "Refund completed"
+    },
+    "refund_failed": {
+      "body": "We couldn't process your refund automatically. Our team will follow up.",
+      "title": "Refund couldn't be completed"
+    },
+    "refund_failed_credit": {
+      "body": "Your {credit} of Abonten Credit is back, but we couldn't return the rest to your payment method automatically. Our team will follow up.",
+      "title": "Refund couldn't be completed"
+    },
+    "refund_requested": {
+      "body": "We've requested a refund for your cancelled ticket. You'll be notified once it's completed.",
+      "title": "Refund requested"
+    },
+    "refund_requested_credit": {
+      "body": "{credit} is back in your Abonten Credit. We've requested the rest back to your payment method — you'll be notified once it's completed.",
+      "title": "Refund requested"
+    },
+    "review_received_event": {
+      "body": "Someone left a {rating}-star review on {title}.",
+      "title": "New review"
+    },
+    "review_received_place": {
+      "body": "Someone left a {rating}-star review on {name}.",
+      "title": "New review"
+    },
+    "review_reply_event": {
+      "body": "{name, select, other {See the reply on your review of {name}.}}",
+      "title": "The organizer replied to your review"
+    },
+    "review_reply_place": {
+      "body": "{name, select, other {See the reply on your review of {name}.}}",
+      "title": "The owner replied to your review"
+    },
+    "reward_available": {
+      "body": "{amount} in Abonten Credit is ready to use.",
+      "title": "Your credit is ready"
+    },
+    "reward_pending": {
+      "body": "{amount} is pending from {tickets, plural, one {# referred ticket} other {# referred tickets}}. It unlocks after the {tickets, plural, one {event} other {events}}.",
+      "title": "You have a reward on the way"
+    },
+    "ticket_confirmed": {
+      "body": "{title, select, other {Your ticket for {title} is confirmed.}}",
+      "title": "Ticket confirmed"
+    },
+    "verification_approved": {
+      "body": "{subject} is now verified on Abonten.",
+      "title": "Verified"
+    },
+    "verification_info_requested": {
+      "body": "To verify {subject}, we need: {reason}",
+      "title": "More information needed"
+    },
+    "verification_rejected": {
+      "body": "Your verification request for {subject} was not approved. {reason}",
+      "title": "Verification not approved"
+    },
+    "verification_revoked": {
+      "body": "The verified badge for {subject} was removed. {reason}",
+      "title": "Verification removed"
+    },
+    "verification_submitted": {
+      "body": "We have your verification request for {subject}. We will notify you when it has been reviewed.",
+      "title": "Verification request received"
+    },
+    "welcome_credit": {
+      "body": "{amount} off your first ticket order of {min} or more. Use it within {days} days.",
+      "title": "You have welcome credit"
+    }
+  },
   "openStatus": {
     "closed": "Closed",
     "closedOpensAt": "Closed · Opens at {time}",

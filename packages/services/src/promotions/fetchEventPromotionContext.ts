@@ -4,6 +4,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { EventPromotionTier } from "@abonten/types/postsType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Everything the Promotion tab of the per-event management screen needs, in
 // one owner-scoped read — mirrors what manage/events/[eventId]/page.tsx
@@ -40,10 +41,13 @@ export async function fetchEventPromotionContext(
     .maybeSingle();
 
   if (eventError || !event) {
-    return { status: 404, message: "Event not found" };
+    return { status: 404, message: tr("eventNotFound") };
   }
   if (event.organizer_id !== userId) {
-    return { status: 403, message: "Not authorized to promote this event" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToPromoteThisEvent"),
+    };
   }
 
   const nowIso = new Date().toISOString();
@@ -75,7 +79,7 @@ export async function fetchEventPromotionContext(
 
   if (tierError) {
     logger.error(`Error fetching event promotion tiers: ${tierError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // postgrest-js infers the embed as an array here although the relationship is many-to-one; it's a

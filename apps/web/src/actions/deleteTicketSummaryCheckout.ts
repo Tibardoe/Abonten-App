@@ -2,12 +2,14 @@
 
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import {
   adjustPromoUsageUnits,
   forgetPromoUsage,
 } from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 
 /**
@@ -23,13 +25,15 @@ import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt
  * client (clients can't write ticket_checkout or promo usage), scoped to the
  * row the caller's own session just read.
  */
-export default async function deleteTicketSummaryCheckout(checkoutId: string) {
+export default withActionLocale(async function deleteTicketSummaryCheckout(
+  checkoutId: string,
+) {
   const supabase = await createClient();
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   if (userError || !userData?.user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const { data: checkout, error: checkoutError } = await supabase
@@ -43,7 +47,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
 
   if (checkoutError) {
     logger.error(`Failed fetching ticket checkout: ${checkoutError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (
@@ -52,13 +56,16 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     checkout.ticket_type_id === null ||
     checkout.event_id === null
   ) {
-    return { status: 404, message: "Checkout not found" };
+    return { status: 404, message: tr("checkoutNotFound") };
   }
 
   if (checkout.status !== "pending") {
     // Already paid/expired/cancelled — nothing reserved to release, and
     // flipping a paid row's status here would corrupt a real purchase.
-    return { status: 200, message: "Checkout deleted successfully!" };
+    return {
+      status: 200,
+      message: tr("checkoutDeletedSuccessfully"),
+    };
   }
 
   // Phase 12 race guard: a payment_attempt is scoped to the whole
@@ -73,8 +80,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
   ) {
     return {
       status: 409,
-      message:
-        "Payment is currently being processed for this order. Please wait a moment and try again.",
+      message: tr("paymentIsCurrentlyBeingProcessedFor"),
     };
   }
 
@@ -87,7 +93,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
 
   if (updateError) {
     logger.error(`Failed cancelling ticket checkout: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   await releaseTicketQuantity(checkout.ticket_type_id, checkout.quantity);
@@ -137,5 +143,5 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     }
   }
 
-  return { status: 200, message: "Checkout deleted successfully!" };
-}
+  return { status: 200, message: tr("checkoutDeletedSuccessfully") };
+});

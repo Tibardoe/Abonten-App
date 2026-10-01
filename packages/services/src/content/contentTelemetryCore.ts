@@ -5,6 +5,7 @@ import type {
 } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { ContentViewBatchInput } from "@abonten/validation/contentSchemas";
+import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { hashViewerKey } from "./contentFeedCore";
 import { resolveContentAccess } from "./contentProgram";
@@ -27,7 +28,7 @@ export async function ingestContentViewsCore(
   }
   const viewerKey = hashViewerKey(input.viewerKey, `ip:${context.ip}`);
   if (!(await checkRateLimit(`content-views:${viewerKey}`, 20, 60))) {
-    return { status: 429, message: "Too many requests." };
+    return { status: 429, message: tr("tooManyRequests2") };
   }
   const { data, error } = await supabase.rpc("content_view_ingest", {
     p_viewer: userId as unknown as string,
@@ -64,7 +65,7 @@ export async function recordContentClickCore(
 ): Promise<Envelope<{ accepted: boolean }>> {
   const viewerKey = hashViewerKey(input.viewerKey, `ip:${context.ip}`);
   if (!(await checkRateLimit(`content-clicks:${viewerKey}`, 120, 60))) {
-    return { status: 429, message: "Too many requests." };
+    return { status: 429, message: tr("tooManyRequests2") };
   }
   const { data, error } = await supabase.rpc("content_click_ingest", {
     p_viewer: userId as unknown as string,
@@ -93,7 +94,7 @@ export async function getContentInsightsCore(
     .eq("id", input.postId)
     .maybeSingle();
   if (!post || post.author_id !== userId) {
-    return { status: 404, message: "Post not found." };
+    return { status: 404, message: tr("postNotFound") };
   }
   const { data, error } = await supabase.rpc("content_post_insights", {
     p_post_id: input.postId,

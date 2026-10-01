@@ -3,6 +3,7 @@ import {
   createContentCommentCore,
   listContentCommentsCore,
 } from "@abonten/services/content/contentEngagementCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   contentCommentsRequestSchema,
   createContentCommentSchema,
@@ -13,6 +14,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ postId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { postId } = await params;
   return discoveryRoute(
     req,
@@ -31,6 +33,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ postId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { postId } = await params;
   return discoveryRoute(
     req,

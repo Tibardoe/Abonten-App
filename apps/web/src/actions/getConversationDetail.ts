@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { getConversationContext } from "@abonten/services/messaging/conversationsQuery";
 
 /**
@@ -9,16 +11,18 @@ import { getConversationContext } from "@abonten/services/messaging/conversation
  * 404 (not 403) when the caller isn't a participant, since RLS hides the
  * row entirely. Shares its body with GET /api/mobile/messages/:id.
  */
-export async function getConversationDetail(conversationId: string) {
-  const supabase = await createClient();
+export const getConversationDetail = withActionLocale(
+  async function getConversationDetail(conversationId: string) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return getConversationContext(supabase, user.id, conversationId);
-}
+    return getConversationContext(supabase, user.id, conversationId);
+  },
+);

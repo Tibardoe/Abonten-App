@@ -2,6 +2,7 @@ import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of insertEventPromotionCheckout, lifted so the mobile
@@ -36,11 +37,14 @@ export async function insertEventPromotionCheckoutCore(
     .maybeSingle();
 
   if (eventError || !event) {
-    return { status: 404, message: "Event not found" };
+    return { status: 404, message: tr("eventNotFound") };
   }
 
   if (event.organizer_id !== userId) {
-    return { status: 403, message: "Not authorized to promote this event" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToPromoteThisEvent"),
+    };
   }
 
   const { data: tier, error: tierError } = await supabase
@@ -51,7 +55,7 @@ export async function insertEventPromotionCheckoutCore(
     .maybeSingle();
 
   if (tierError || !tier) {
-    return { status: 404, message: "Promotion tier not found" };
+    return { status: 404, message: tr("promotionTierNotFound") };
   }
 
   const { data: checkout, error: insertError } =
@@ -74,7 +78,7 @@ export async function insertEventPromotionCheckoutCore(
     logger.error(
       `Error inserting event promotion checkout: ${insertError?.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return {

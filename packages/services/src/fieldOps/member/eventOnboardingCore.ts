@@ -3,6 +3,7 @@ import { logger } from "@abonten/core/logger";
 import type { FieldOpsOnboarding } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { postEventCore } from "../../events/postEventCore";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -80,7 +81,7 @@ export async function submitEventOnboardingCore(
   if (!SUBMITTING.has(campaignStatus)) {
     return {
       status: 409,
-      message: "The campaign isn't taking submissions right now.",
+      message: tr("theCampaignIsnTTakingSubmissions"),
     };
   }
 
@@ -92,17 +93,23 @@ export async function submitEventOnboardingCore(
     .eq("member_user_id", userId)
     .maybeSingle();
   const row = data as unknown as OnboardingRow | null;
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.kind !== "event") {
-    return { status: 409, message: "This onboarding is for a business." };
+    return {
+      status: 409,
+      message: tr("thisOnboardingIsForABusiness"),
+    };
   }
   if (row.status !== "draft" && row.status !== "needs_changes") {
-    return { status: 409, message: "This onboarding has already been sent." };
+    return {
+      status: 409,
+      message: tr("thisOnboardingHasAlreadyBeenSent"),
+    };
   }
   if (!row.owner_user_id) {
     return {
       status: 409,
-      message: "The organiser has to verify their phone before you submit.",
+      message: tr("theOrganiserHasToVerifyTheir"),
     };
   }
 
@@ -117,7 +124,7 @@ export async function submitEventOnboardingCore(
   if ((submittedToday ?? 0) >= Number(settings.daily_submission_cap)) {
     return {
       status: 429,
-      message: "You've reached today's submission limit. Continue tomorrow.",
+      message: tr("youVeReachedTodaySSubmission"),
     };
   }
 
@@ -125,7 +132,7 @@ export async function submitEventOnboardingCore(
   if (!input.event.flyer.publicId.startsWith(`event_flyers/${userId}/`)) {
     return {
       status: 403,
-      message: "The flyer wasn't uploaded from this account.",
+      message: tr("theFlyerWasnTUploadedFrom"),
     };
   }
 
@@ -133,14 +140,14 @@ export async function submitEventOnboardingCore(
   if (Number.isNaN(startsAt.getTime()) || startsAt.getTime() <= Date.now()) {
     return {
       status: 400,
-      message: "An event has to start in the future.",
+      message: tr("anEventHasToStartIn"),
     };
   }
 
   if (mode === "offline" && !input.submissionLocation) {
     return {
       status: 400,
-      message: "Turn on location so we can record that you met the organiser.",
+      message: tr("turnOnLocationSoWeCan2"),
     };
   }
   const evidence = await confirmEvidenceUploads(
@@ -228,7 +235,10 @@ export async function submitEventOnboardingCore(
     .eq("id", row.id);
   if (updErr) {
     if (updErr.code === "23505") {
-      return { status: 409, message: "This event has already been onboarded." };
+      return {
+        status: 409,
+        message: tr("thisEventHasAlreadyBeenOnboarded"),
+      };
     }
     return dbErr(updErr, "Could not save the submission");
   }
@@ -287,8 +297,7 @@ export async function submitEventOnboardingCore(
     .maybeSingle();
   return {
     status: 200,
-    message:
-      "Submitted. Your commission is confirmed after the event has taken place.",
+    message: tr("submittedYourCommissionIsConfirmedAfter"),
     data: mapOnboarding((fresh ?? row) as unknown as OnboardingRow),
   };
 }

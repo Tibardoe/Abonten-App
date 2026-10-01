@@ -8,6 +8,7 @@ import type {
   FieldOpsTerritoryView,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -89,7 +90,7 @@ export async function getTerritoryViewCore(
     regionId,
     input.territoryId,
   );
-  if (!territory) return { status: 404, message: "Territory not found" };
+  if (!territory) return { status: 404, message: tr("territoryNotFound") };
   const isLead = role === "team_lead";
 
   const [campaign, { data: assignments }, { data: prospects }] =
@@ -118,7 +119,7 @@ export async function getTerritoryViewCore(
         .order("updated_at", { ascending: false })
         .limit(300),
     ]);
-  if (!campaign) return { status: 404, message: "Campaign not found" };
+  if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
 
   const myAssignments = await mapAssignments(
     supabase,
@@ -174,14 +175,17 @@ export async function createProspectCore(
     return fieldOpsError(e);
   }
   if (!PROSPECTING_STATUSES.has(campaignStatus)) {
-    return { status: 409, message: "The campaign isn't running right now." };
+    return {
+      status: 409,
+      message: tr("theCampaignIsnTRunningRight"),
+    };
   }
   const territory = await territoryInCampaign(
     supabase,
     regionId,
     input.territoryId,
   );
-  if (!territory) return { status: 404, message: "Territory not found" };
+  if (!territory) return { status: 404, message: tr("territoryNotFound") };
   if (
     !(await hasOpenAssignment(
       supabase,
@@ -192,8 +196,7 @@ export async function createProspectCore(
   ) {
     return {
       status: 409,
-      message:
-        "You can only log businesses in a territory you're currently assigned to.",
+      message: tr("youCanOnlyLogBusinessesIn"),
     };
   }
   const { data, error } = await supabase
@@ -215,12 +218,12 @@ export async function createProspectCore(
     .single();
   if (error || !data) {
     return dbErr(
-      error ?? { message: "insert failed" },
+      error ?? { message: tr("insertFailed") },
       "Could not save the business",
     );
   }
   const [mapped] = mapProspects([data as ProspectRow], userId);
-  return { status: 200, message: "Business logged.", data: mapped };
+  return { status: 200, message: tr("businessLogged"), data: mapped };
 }
 
 export type UpdateProspectInput = {
@@ -259,7 +262,10 @@ export async function updateProspectCore(
     return fieldOpsError(e);
   }
   if (!PROSPECTING_STATUSES.has(campaignStatus)) {
-    return { status: 409, message: "The campaign isn't running right now." };
+    return {
+      status: 409,
+      message: tr("theCampaignIsnTRunningRight"),
+    };
   }
   const { data: current } = await supabase
     .from("fieldops_prospect")
@@ -268,12 +274,12 @@ export async function updateProspectCore(
     .eq("campaign_id", input.campaignId)
     .eq("member_user_id", userId)
     .maybeSingle();
-  if (!current) return { status: 404, message: "Business not found" };
+  if (!current) return { status: 404, message: tr("businessNotFound") };
   const row = current as ProspectRow;
   if (row.status === "converted") {
     return {
       status: 409,
-      message: "This business has been onboarded; nothing more to log.",
+      message: tr("thisBusinessHasBeenOnboardedNothing"),
     };
   }
 
@@ -284,7 +290,10 @@ export async function updateProspectCore(
       ? (row.contact_attempts as FieldOpsContactAttempt[])
       : [];
     if (attempts.length >= 50) {
-      return { status: 409, message: "Too many contact attempts logged." };
+      return {
+        status: 409,
+        message: tr("tooManyContactAttemptsLogged"),
+      };
     }
     update.contact_attempts = [
       ...attempts,
@@ -313,7 +322,7 @@ export async function updateProspectCore(
   }
   if (input.notes !== undefined) update.notes = input.notes;
   if (Object.keys(update).length === 0) {
-    return { status: 400, message: "Nothing changed." };
+    return { status: 400, message: tr("nothingChanged") };
   }
 
   const { data, error } = await supabase
@@ -324,10 +333,10 @@ export async function updateProspectCore(
     .single();
   if (error || !data) {
     return dbErr(
-      error ?? { message: "update failed" },
+      error ?? { message: tr("updateFailed") },
       "Could not update the business",
     );
   }
   const [mapped] = mapProspects([data as ProspectRow], userId);
-  return { status: 200, message: "Saved.", data: mapped };
+  return { status: 200, message: tr("saved"), data: mapped };
 }

@@ -1,9 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { parseContentInput, requireContentUser } from "@/utils/contentAction";
 import { logger } from "@abonten/core/logger";
 import { sendStoryReplyCore } from "@abonten/services/content/storyReplyCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { storyReplySchema } from "@abonten/validation/contentSchemas";
 
 /**
@@ -13,7 +15,9 @@ import { storyReplySchema } from "@abonten/validation/contentSchemas";
  * through send_story_reply on the caller's session (auth.uid() is the
  * sender). Shares its body with POST /api/mobile/content/stories/reply.
  */
-export async function sendStoryReply(input: unknown) {
+export const sendStoryReply = withActionLocale(async function sendStoryReply(
+  input: unknown,
+) {
   const caller = await requireContentUser();
   if (caller.error) return caller.error;
   const parsed = parseContentInput(storyReplySchema, input);
@@ -28,6 +32,9 @@ export async function sendStoryReply(input: unknown) {
     });
   } catch (error) {
     logger.error("sendStoryReply failed", error);
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
-}
+});

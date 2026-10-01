@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ListPaymentMethodsResult,
   listPaymentMethodsCore,
@@ -18,7 +20,7 @@ export type {
  * method selector shown inside ticket/subscription checkout; it must never
  * be gated on a pending checkout existing.
  */
-export default async function getUserPaymentMethods(): Promise<
+export default withActionLocale(async function getUserPaymentMethods(): Promise<
   ListPaymentMethodsResult | { status: 401; message: string }
 > {
   const supabase = await createClient();
@@ -29,8 +31,8 @@ export default async function getUserPaymentMethods(): Promise<
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return listPaymentMethodsCore(supabase, user.id);
-}
+});

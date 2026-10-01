@@ -1,12 +1,17 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getPromotionCreditQuoteCore } from "@abonten/services/rewards/creditRedemptionCore";
 
 // GET /api/mobile/checkout/promotion-credit-quote?kind=event|place|spotlight&checkoutId=…
 // How much Abonten Credit the "Use credit" switch can apply to a pending
 // promotion checkout. Same service as the getPromotionCreditQuote action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -21,7 +26,7 @@ export async function GET(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message: "kind (event | place | spotlight) and checkoutId are required",
+        message: tr("kindEventPlaceSpotlightAndCheckoutid"),
       });
     }
 
@@ -33,6 +38,9 @@ export async function GET(req: Request) {
     );
   } catch (error) {
     logger.error("mobile GET /checkout/promotion-credit-quote failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

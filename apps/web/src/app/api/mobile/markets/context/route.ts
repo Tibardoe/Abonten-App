@@ -1,5 +1,9 @@
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getMarketContextCore } from "@abonten/services/markets/marketContextCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
@@ -16,6 +20,7 @@ import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 const MARKET_CONTEXT_POINT_LOOKUPS_PER_MINUTE = 30;
 
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   try {
     const url = new URL(req.url);
     const platform =
@@ -94,6 +99,9 @@ export async function GET(req: Request) {
     return apiJson({ status: 200, data: result });
   } catch (error) {
     logger.error("mobile GET /markets/context failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

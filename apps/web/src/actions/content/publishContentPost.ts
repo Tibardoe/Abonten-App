@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -9,10 +10,16 @@ import { publishContentPostCore } from "@abonten/services/content/contentPostCor
 import { contentPostIdSchema } from "@abonten/validation/contentSchemas";
 
 /** Publishes an own draft. */
-export async function publishContentPost(input: unknown) {
-  const caller = await requireContentUser();
-  if (caller.error) return caller.error;
-  const parsed = parseContentInput(contentPostIdSchema, input);
-  if (parsed.error) return parsed.error;
-  return publishContentPostCore(caller.svc, caller.userId, parsed.data.postId);
-}
+export const publishContentPost = withActionLocale(
+  async function publishContentPost(input: unknown) {
+    const caller = await requireContentUser();
+    if (caller.error) return caller.error;
+    const parsed = parseContentInput(contentPostIdSchema, input);
+    if (parsed.error) return parsed.error;
+    return publishContentPostCore(
+      caller.svc,
+      caller.userId,
+      parsed.data.postId,
+    );
+  },
+);

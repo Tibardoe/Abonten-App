@@ -3,6 +3,7 @@ import {
   getPayoutDestinationCore,
   setPayoutDestinationCore,
 } from "@abonten/services/fieldOps/member/payoutDestinationCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   fieldOpsCampaignIdSchema,
   fieldOpsPayoutDestinationSchema,
@@ -11,6 +12,7 @@ import {
 // GET /api/mobile/field-ops/payout-destination?campaignId= -- the caller's
 // own payout details, masked. Same service as getFieldOpsPayoutDestination.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {
@@ -24,6 +26,7 @@ export async function GET(req: Request) {
 // PUT /api/mobile/field-ops/payout-destination { campaignId, momoNumber,
 // momoNetwork, holderName }. Same service as setFieldOpsPayoutDestination.
 export async function PUT(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

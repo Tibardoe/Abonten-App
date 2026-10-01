@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   LISTING_MARKET_LOOKUPS_PER_MINUTE,
   getListingMarketCore,
 } from "@abonten/services/markets/marketContextCore";
@@ -13,6 +17,7 @@ import { checkRateLimit } from "@abonten/services/security/rateLimit";
 // prices are in and which zone the times are read in — for the create/edit
 // event and place forms. Same resolver the save path uses.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
   try {
@@ -24,14 +29,17 @@ export async function GET(req: Request) {
     if (!allowed) {
       return apiJson({
         status: 429,
-        message: "Too many location checks. Please wait a moment.",
+        message: tr("tooManyLocationChecksPleaseWait"),
       });
     }
     const url = new URL(req.url);
     const lat = Number(url.searchParams.get("lat"));
     const lng = Number(url.searchParams.get("lng"));
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      return apiJson({ status: 400, message: "lat and lng are required" });
+      return apiJson({
+        status: 400,
+        message: tr("latAndLngAreRequired"),
+      });
     }
     const result = await getListingMarketCore({
       lat,
@@ -42,6 +50,9 @@ export async function GET(req: Request) {
     return apiJson({ status: 200, data: result });
   } catch (error) {
     logger.error("mobile GET /markets/at failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

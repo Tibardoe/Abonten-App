@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsAssignmentCancelSchema } from "@abonten/validation/fieldOpsSche
  * A team lead cancels an open assignment (reassign = cancel + create).
  * Same service as POST /api/mobile/field-ops/lead/assignments/[id]/cancel.
  */
-export async function cancelFieldOpsAssignment(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsAssignment;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsAssignmentCancelSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return cancelAssignmentCore(svc, userId, data);
-}
+export const cancelFieldOpsAssignment = withActionLocale(
+  async function cancelFieldOpsAssignment(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsAssignment;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsAssignmentCancelSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return cancelAssignmentCore(svc, userId, data);
+  },
+);

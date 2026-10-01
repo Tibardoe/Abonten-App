@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { registerContentMediaCore } from "@abonten/services/content/contentMediaCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { registerContentMediaSchema } from "@abonten/validation/contentSchemas";
 
 // POST /api/mobile/content/media — register a direct Cloudinary upload
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: registerContentMediaSchema, label: "POST /content/media" },
