@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { NOTIFICATION_COPY } from "@abonten/core/verification/copy";
+import { verificationNotificationCopy } from "@abonten/core/verification/copy";
 import {
   canStartNewCase,
   isEditable,
@@ -666,12 +666,19 @@ export async function submitVerificationCaseCore(
   );
   if (error) return transitionError(error);
 
-  const copy = NOTIFICATION_COPY.submitted(facts.name ?? "your listing");
   await createNotificationCore(supabase, {
     userId,
     type: "verification_submitted",
-    title: copy.title,
-    body: copy.body,
+    text: ({ core }) =>
+      verificationNotificationCopy(core, "submitted", {
+        subject:
+          facts.name ??
+          core(
+            row.subject_type === "place"
+              ? "verification.owner.thisPlace"
+              : "verification.owner.yourOrganizerProfile",
+          ),
+      }),
     link: verificationLink(row),
     data: verificationNotificationData(row),
   });

@@ -7,7 +7,7 @@ import {
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { hapticSelection } from "@/lib/haptics";
 import { useIsOnline } from "@/lib/network";
-import { YOUR_STORY_LABEL } from "@abonten/core/content/copy";
+import { YOUR_STORY_LABEL_KEY } from "@abonten/core/content/copy";
 import type {
   ContentPublisherKind,
   StoryTrayEntry,
@@ -35,6 +35,7 @@ const ITEM_WIDTH = 76;
 // so the viewer moves on to the next publisher by itself.
 export function StoriesRow() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const { session } = useSession();
@@ -109,7 +110,7 @@ export function StoriesRow() {
       {self ? (
         <Bubble
           entry={self}
-          label={YOUR_STORY_LABEL}
+          label={tc(YOUR_STORY_LABEL_KEY)}
           onPress={() => openQueue([self], 0)}
           onAdd={canPublish ? compose : undefined}
         />
@@ -128,7 +129,7 @@ export function StoriesRow() {
             <Icon name="add" size={28} tone="muted" />
           </View>
           <AppText variant="caption" numberOfLines={1}>
-            {YOUR_STORY_LABEL}
+            {tc(YOUR_STORY_LABEL_KEY)}
           </AppText>
         </Pressable>
       ) : null}
@@ -156,6 +157,7 @@ const Bubble = memo(function Bubble({
   onAdd?: () => void;
 }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   return (
     <View className="items-center gap-1.5" style={{ width: ITEM_WIDTH }}>

@@ -49,11 +49,11 @@ export function ConversationHeader({
 
   const contextLine =
     context?.type === "event"
-      ? "Event"
+      ? t("event")
       : context?.type === "place"
-        ? "Place"
+        ? t("place")
         : context?.type === "support"
-          ? "Support"
+          ? t("support")
           : "";
 
   const other = context?.participants.find(
@@ -117,7 +117,7 @@ export function ConversationHeader({
           accessibilityRole={subjectTappable ? "button" : "header"}
           accessibilityLabel={[
             title,
-            typing ? "typing" : present ? "in this chat" : about,
+            typing ? "typing" : present ? t("inThisChat2") : about,
           ]
             .filter(Boolean)
             .join(", ")}

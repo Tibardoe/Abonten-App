@@ -30,6 +30,7 @@ import { ScrollView, View } from "react-native";
 // applied right after sign-up. Signed in: it's applied here.
 export default function InviteScreen() {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const { code } = useLocalSearchParams<{ code: string }>();
   const { session } = useSession();
@@ -74,11 +75,14 @@ export default function InviteScreen() {
   const name = data?.referrerName ?? "A friend";
   const offer =
     data?.programOn && data.welcomeMinor
-      ? `Get ${formatCredit(data.welcomeMinor, data.currency)} off your first ticket${
-          data.minOrderMinor
-            ? ` of ${formatCredit(data.minOrderMinor, data.currency)} or more`
-            : ""
-        }.`
+      ? t("getOffYourFirstTicket", {
+          formatCredit: formatCredit(data.welcomeMinor, data.currency),
+          value: data.minOrderMinor
+            ? t("ofOrMore", {
+                formatCredit: formatCredit(data.minOrderMinor, data.currency),
+              })
+            : "",
+        })
       : null;
 
   return (
@@ -91,7 +95,7 @@ export default function InviteScreen() {
       {infoView.kind !== "content" && infoView.kind !== "empty" ? (
         <QueryUnavailable
           view={infoView}
-          subject="this invite"
+          subject={t("thisInvite")}
           onRetry={() => info.refetch()}
           loading={
             <View className="gap-4 p-4">
@@ -141,12 +145,12 @@ export default function InviteScreen() {
                 <AppText
                   variant="body"
                   tone={
-                    bindResultMessage(outcome).tone === "error"
+                    bindResultMessage(tc, outcome).tone === "error"
                       ? "error"
                       : undefined
                   }
                 >
-                  {bindResultMessage(outcome).text}
+                  {bindResultMessage(tc, outcome).text}
                 </AppText>
                 <Button
                   title={t("goToRewards")}

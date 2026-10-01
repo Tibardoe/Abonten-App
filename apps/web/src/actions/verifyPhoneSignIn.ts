@@ -2,7 +2,9 @@
 
 import ensureProfileCompletionNotification from "@/actions/ensureProfileCompletionNotification";
 import { createClient } from "@/config/supabase/server";
+import { getUserLocale } from "@/i18n/locale";
 import { logger } from "@abonten/core/logger";
+import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import {
   issueOneTimePassword,
   verifyPhoneOtpAndResolveUser,
@@ -38,6 +40,11 @@ export default async function verifyPhoneSignIn(
     );
     return { status: 500, message: "Something went wrong signing you in." };
   }
+
+  // The language they signed in with, before anything is written for them.
+  await saveUserLocale(resolved.userId, await getUserLocale(), {
+    onlyIfUnset: true,
+  });
 
   if (resolved.isNewUser) {
     await ensureProfileCompletionNotification(resolved.userId);

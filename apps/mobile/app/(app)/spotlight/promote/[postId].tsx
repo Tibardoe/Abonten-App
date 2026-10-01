@@ -14,13 +14,13 @@ import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   CAMPAIGN_OBJECTIVES,
-  CAMPAIGN_OBJECTIVE_LABEL,
-  PROMOTION_BILLING_NOTE,
-  PROMOTION_CASH_NOTE,
-  PROMOTION_ESTIMATE_BASIS_LABEL,
-  PROMOTION_ESTIMATE_NOTE,
-  PROMOTION_INTRO,
-  PROMOTION_REVIEW_NOTE,
+  PROMOTION_BILLING_NOTE_KEY,
+  PROMOTION_CASH_NOTE_KEY,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  PROMOTION_INTRO_KEY,
+  PROMOTION_REVIEW_NOTE_KEY,
+  campaignObjectiveLabel,
+  promotionEstimateBasisLabel,
 } from "@abonten/core/content/copy";
 import {
   budgetProblem,
@@ -62,6 +62,7 @@ type Reserved = {
 // and the promotion passes review.
 export default function PromoteSpotlightScreen() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const toast = useToast();
@@ -106,7 +107,7 @@ export default function PromoteSpotlightScreen() {
 
   const budgetMinor = Math.round(Number(budgetText) * factor);
   const budgetError =
-    opts && budgetText !== "" ? budgetProblem(opts, budgetMinor) : null;
+    opts && budgetText !== "" ? budgetProblem(tc, opts, budgetMinor) : null;
   const targeting: ContentPromotionTargetingInput =
     area === "near_post" ? { area, radiusKm } : { area: "everywhere" };
   // Debounce a string: a new object every render would never settle.
@@ -119,9 +120,9 @@ export default function PromoteSpotlightScreen() {
       targeting: ContentPromotionTargetingInput;
     };
     if (!postId || !opts || r.durationDays === null) return null;
-    if (budgetProblem(opts, r.budgetMinor)) return null;
+    if (budgetProblem(tc, opts, r.budgetMinor)) return null;
     return { postId, ...r, durationDays: r.durationDays };
-  }, [requestKey, postId, opts]);
+  }, [requestKey, postId, opts, tc]);
   const estimate = usePromotionEstimate(request);
   const est = estimate.data;
   const stale = estimate.isFetching || requestKey !== liveKey;
@@ -160,7 +161,7 @@ export default function PromoteSpotlightScreen() {
         {header}
         <QueryUnavailable
           view={blocked}
-          subject="this Spotlight"
+          subject={t("thisSpotlight")}
           onRetry={() => {
             post.refetch();
             options.refetch();
@@ -226,7 +227,7 @@ export default function PromoteSpotlightScreen() {
     <View className="flex-1 bg-background">
       {header}
       <KeyboardAwareScrollView contentContainerClassName="gap-5 p-4 pb-16">
-        <AppText variant="muted">{PROMOTION_INTRO}</AppText>
+        <AppText variant="muted">{tc(PROMOTION_INTRO_KEY)}</AppText>
 
         {reserved ? (
           <View className="gap-3">
@@ -234,13 +235,13 @@ export default function PromoteSpotlightScreen() {
               <AppText variant="bodyStrong">{reserved.summary}</AppText>
               <AppText variant="meta">
                 {t("estimatedReach2", {
-                  item: CAMPAIGN_OBJECTIVE_LABEL[objective],
+                  item: campaignObjectiveLabel(tc, objective),
                   reach: reserved.reach,
                 })}
               </AppText>
             </View>
             <AppText variant="caption" tone="muted">
-              {PROMOTION_CASH_NOTE}
+              {tc(PROMOTION_CASH_NOTE_KEY)}
             </AppText>
             <PromotionPaymentSection
               kind="spotlight"
@@ -265,7 +266,7 @@ export default function PromoteSpotlightScreen() {
                 {objectives.map((o) => (
                   <Chip
                     key={o}
-                    label={CAMPAIGN_OBJECTIVE_LABEL[o]}
+                    label={campaignObjectiveLabel(tc, o)}
                     selected={objective === o}
                     onPress={() => setObjective(o)}
                   />
@@ -393,10 +394,10 @@ export default function PromoteSpotlightScreen() {
                       ? t("aboutSponsoredImpressions2", {
                           toLocaleString:
                             est.estimatedImpressions.toLocaleString("en-GB"),
-                          item: PROMOTION_ESTIMATE_BASIS_LABEL[est.basis],
+                          item: promotionEstimateBasisLabel(tc, est.basis),
                         })
                       : est.basis === "no_data"
-                        ? PROMOTION_ESTIMATE_BASIS_LABEL.no_data
+                        ? promotionEstimateBasisLabel(tc, "no_data")
                         : t("thisAudienceIsTooSmallFor")}
                   </AppText>
                 </View>
@@ -405,13 +406,13 @@ export default function PromoteSpotlightScreen() {
 
             <View className="gap-2">
               <AppText variant="caption" tone="muted">
-                {PROMOTION_ESTIMATE_NOTE}
+                {tc(PROMOTION_ESTIMATE_NOTE_KEY)}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {PROMOTION_BILLING_NOTE}
+                {tc(PROMOTION_BILLING_NOTE_KEY)}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {PROMOTION_REVIEW_NOTE} {PROMOTION_CASH_NOTE}
+                {tc(PROMOTION_REVIEW_NOTE_KEY)} {tc(PROMOTION_CASH_NOTE_KEY)}
               </AppText>
             </View>
 

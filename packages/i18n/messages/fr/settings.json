@@ -214,6 +214,7 @@
   "updateSuccess": "Profil mis à jour avec succès.",
   "updatesFromPlacesYouFollow": "Updates from places you follow",
   "updatesFromThisPlace": "Updates from this place",
+  "uploading": "Uploading…",
   "username": "Username",
   "verified": "Verified",
   "verifyEmail": "Verify email",
@@ -238,8 +239,12 @@
   "youReOfflineYourPromotionsWill": "You're offline. Your promotions will load when you reconnect.",
   "yourAccountHasNoEmailAddress": "Your account has no email address, so you'll get these in the app only.",
   "yourAccountHasNoEmailAddress2": "Your account has no email address, so you'll get picks in the app only.",
+  "yourAccountSetup": "your account setup",
+  "yourBlockedAccounts": "your blocked accounts",
   "yourEmail": "Your email",
   "yourPhoneNumber": "Your phone number",
+  "yourProfile": "your profile",
   "yourProfileFavouritesAndSavedPayment": "Your profile, favourites and saved payment details are removed and you are signed out everywhere. Tickets you bought and payment records are kept for accounting. Places you own stay listed, unclaimed.",
-  "yourProfileIsCompleteAndYou": "Your profile is complete and you have two ways to sign in."
+  "yourProfileIsCompleteAndYou": "Your profile is complete and you have two ways to sign in.",
+  "yourSettings": "your settings"
 }

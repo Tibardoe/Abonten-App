@@ -61,9 +61,13 @@ export default function VerificationStatusCard({
   verifiedAt?: string | null;
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
-  const copy = ownerStatusCopy(status, subjectType, { subjectName, reason });
+  const copy = ownerStatusCopy(tc, status, subjectType, {
+    subjectName,
+    reason,
+  });
   const Icon = ICON[status];
   const stamp = status === "approved" ? verifiedAt : submittedAt;
 

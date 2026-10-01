@@ -34,14 +34,14 @@ const ICONS: Record<Exclude<ProfileTab, "listings">, IoniconName> = {
 };
 
 const LABELS: Record<Exclude<ProfileTab, "listings">, string> = {
-  spotlights: "Spotlights",
-  favorites: "Favorites",
-  reviews: "Reviews",
+  spotlights: "spotlights",
+  favorites: "favorites",
+  reviews: "reviews",
 };
 
 export const LISTING_LABEL: Record<ListingKind, string> = {
-  events: "Events",
-  places: "Places",
+  events: "events",
+  places: "places",
 };
 export const LISTING_ICON: Record<ListingKind, IoniconName> = {
   events: "calendar-outline",
@@ -117,7 +117,7 @@ export function ProfileTabBar({
         {tabs.map((key) => {
           const active = key === value;
           if (key === "listings") {
-            const label = LISTING_LABEL[listingKind];
+            const label = t(LISTING_LABEL[listingKind]);
             return (
               <Pressable
                 key={key}
@@ -178,7 +178,7 @@ export function ProfileTabBar({
               key={key}
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
-              accessibilityLabel={LABELS[key]}
+              accessibilityLabel={t(LABELS[key])}
               onPress={() => onChange(key)}
               className="min-h-[52px] flex-1 items-center justify-center gap-1 py-2 active:opacity-70"
             >
@@ -194,7 +194,7 @@ export function ProfileTabBar({
                     : "font-medium text-muted-foreground"
                 }`}
               >
-                {LABELS[key]}
+                {t(LABELS[key])}
               </AppText>
             </Pressable>
           );

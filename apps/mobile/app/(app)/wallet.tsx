@@ -74,7 +74,7 @@ export default function WalletScreen() {
         />
         <QueryUnavailable
           view={view}
-          subject="your payment methods"
+          subject={t("yourPaymentMethods")}
           onRetry={() => refetch()}
           loading={<WalletSkeleton />}
         />

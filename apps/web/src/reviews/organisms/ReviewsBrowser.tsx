@@ -7,12 +7,12 @@ import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import {
-  REVIEW_SORTS,
   type ReviewListRow,
   type ReviewPage,
   type ReviewRatingFilter,
   type ReviewSort,
   type ReviewSummary,
+  reviewSortOptions,
 } from "@abonten/core/reviews/reviewList";
 import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
@@ -60,6 +60,7 @@ export default function ReviewsBrowser({
   addReviewButton: ReactNode;
 }) {
   const t = useTranslations("reviews");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
   const { data: user } = useCurrentUser();
@@ -200,7 +201,7 @@ export default function ReviewsBrowser({
               onChange={(e) => setSort(e.target.value as ReviewSort)}
               className="rounded-md border border-input bg-background px-2 py-1.5"
             >
-              {REVIEW_SORTS.map((s) => (
+              {reviewSortOptions(tc).map((s) => (
                 <option key={s.value} value={s.value}>
                   {s.label}
                 </option>

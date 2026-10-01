@@ -262,7 +262,7 @@ export default function OrganizerDashboard() {
       {kpiView.kind !== "content" && kpiView.kind !== "empty" ? (
         <QueryUnavailable
           view={kpiView}
-          subject="your dashboard"
+          subject={t("yourDashboard")}
           onRetry={() => q.refetch()}
           loading={<DashboardSkeleton />}
         />

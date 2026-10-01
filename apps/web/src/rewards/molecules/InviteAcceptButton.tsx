@@ -11,6 +11,7 @@ import { useState } from "react";
 // tap (the server decides whether this account can still use one).
 export default function InviteAcceptButton({ code }: { code: string }) {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{
@@ -24,7 +25,7 @@ export default function InviteAcceptButton({ code }: { code: string }) {
       const res = await bindReferralCode({ code });
       setMessage(
         res.data
-          ? bindResultMessage(res.data)
+          ? bindResultMessage(tc, res.data)
           : { tone: "error", text: t("signInFirstThenOpenThe") },
       );
     } catch {

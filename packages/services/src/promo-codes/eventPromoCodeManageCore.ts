@@ -1,11 +1,12 @@
 import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import {
-  FREE_EVENT_PROMO_CODES_MESSAGE,
   FREE_TICKET_TYPE,
+  freeEventPromoCodesMessage,
 } from "@abonten/core/ticketTiers";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT } from "../i18n/requestLocale";
 
 // Post-auth bodies of getEventPromoCodes / updatePromoCode / deletePromoCode,
 // lifted so the mobile organizer promo-code routes run the exact same logic
@@ -136,7 +137,7 @@ export async function updatePromoCodeCore(
     (t) => t.type === FREE_TICKET_TYPE,
   );
   if (input.isActive && isFree) {
-    return { status: 400, message: FREE_EVENT_PROMO_CODES_MESSAGE };
+    return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
   }
 
   const { error: updateError } = await supabase

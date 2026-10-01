@@ -1,9 +1,10 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import { removeWeeklyItem, updateWeeklyItem } from "@/server/actions/weekly";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { WEEKLY_VALIDITY_LABEL } from "@abonten/core/weekly/copy";
+import { weeklyValidityLabel } from "@abonten/core/weekly/copy";
 import { sectionAccepts } from "@abonten/core/weekly/sectionKinds";
 import type {
   WeeklyAdminItem,
@@ -151,7 +152,7 @@ export function ItemRow({
             {item.validity ? (
               <Badge tone="danger">
                 Not shown:{" "}
-                {WEEKLY_VALIDITY_LABEL[item.validity] ?? item.validity}
+                {weeklyValidityLabel(tc, item.validity) ?? item.validity}
               </Badge>
             ) : null}
           </p>

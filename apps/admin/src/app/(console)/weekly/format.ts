@@ -1,5 +1,6 @@
+import { tc } from "@/lib/coreT";
 import { OPS_TIME_ZONE } from "@/lib/format";
-import { WEEKLY_EDITION_STATUS_LABEL } from "@abonten/core/weekly/copy";
+import { weeklyEditionStatusLabel } from "@abonten/core/weekly/copy";
 import type { WeeklyEditionStatus } from "@abonten/types/weeklyType";
 
 // Same text on the server render and in the browser (a locale-dependent
@@ -38,4 +39,4 @@ export function editionStatusTone(
 }
 
 export const editionStatusLabel = (status: WeeklyEditionStatus) =>
-  WEEKLY_EDITION_STATUS_LABEL[status];
+  weeklyEditionStatusLabel(tc, status);

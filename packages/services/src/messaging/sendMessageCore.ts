@@ -6,7 +6,10 @@ import type {
   SendMessageInput,
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createNotificationCore } from "../notifications/createNotification";
+import {
+  type NotificationWords,
+  createNotificationCore,
+} from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { mapMessagingRpcError } from "./messagingError";
 
@@ -77,7 +80,7 @@ export async function deliverSentMessage(
     messageId: string;
     fallback: SendMessageInput;
     /** Overrides the notification body (default: the message preview). */
-    notificationBody?: string;
+    notificationBody?: (words: NotificationWords) => string;
   },
 ): Promise<SendResult> {
   const { messageId, fallback: input } = args;
@@ -175,7 +178,7 @@ async function notifyOtherParticipants(
     conversationId: string;
     senderId: string;
     message: MessageRow;
-    body?: string;
+    body?: (words: NotificationWords) => string;
   },
 ): Promise<void> {
   const { conversationId, senderId, message } = args;
@@ -207,9 +210,7 @@ async function notifyOtherParticipants(
     .eq("id", senderId)
     .maybeSingle();
 
-  const senderName =
-    sender?.full_name || sender?.username || conv?.title || "New message";
-  const preview = args.body ?? messagePreview(message);
+  const senderName = sender?.full_name || sender?.username || conv?.title;
 
   let service: SupabaseClient<Database>;
   try {
@@ -225,8 +226,10 @@ async function notifyOtherParticipants(
       createNotificationCore(service, {
         userId: r.user_id,
         type: "message",
-        title: senderName,
-        body: preview,
+        text: (words) => ({
+          title: senderName || words.t("notifications.message.newMessage"),
+          body: args.body ? args.body(words) : messagePreview(words, message),
+        }),
         link: `/messages/${conversationId}`,
         data: { kind: "message", conversationId },
       }),
@@ -234,12 +237,18 @@ async function notifyOtherParticipants(
   );
 }
 
-function messagePreview(message: MessageRow): string {
+function messagePreview({ t }: NotificationWords, message: MessageRow): string {
   if (message.content && message.content.trim().length > 0) {
     return message.content.trim().slice(0, 140);
   }
-  if (message.message_type === "image") return "📷 Photo";
-  if (message.message_type === "audio") return "🎤 Voice message";
-  if (message.message_type === "file") return "📎 Attachment";
-  return "New message";
+  if (message.message_type === "image") {
+    return t("notifications.message.photo");
+  }
+  if (message.message_type === "audio") {
+    return t("notifications.message.voice");
+  }
+  if (message.message_type === "file") {
+    return t("notifications.message.attachment");
+  }
+  return t("notifications.message.newMessage");
 }

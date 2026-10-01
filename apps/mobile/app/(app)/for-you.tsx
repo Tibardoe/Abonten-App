@@ -162,7 +162,7 @@ export default function ForYou() {
           ) : (
             <QueryUnavailable
               view={view}
-              subject="your picks"
+              subject={t("yourPicks")}
               onRetry={() => recs.refetch()}
               loading={
                 <View className="gap-3">

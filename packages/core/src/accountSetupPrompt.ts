@@ -1,3 +1,4 @@
+import type { CoreTranslator } from "./i18n/translator";
 import {
   type ProfileCompletion,
   leadingIncompleteItem,
@@ -47,35 +48,35 @@ export function accountSetupPromptVisible(
   );
 }
 
-/** The card's one line — about the step that matters most right now. */
-export function accountSetupPromptMessage(completion: ProfileCompletion): {
+/**
+ * The card's one line — about the step that matters most right now. Words
+ * live under `accountSetup.*` of the core namespace.
+ */
+export function accountSetupPromptMessage(
+  t: CoreTranslator,
+  completion: ProfileCompletion,
+): {
   title: string;
   body: string;
 } {
   const lead = leadingIncompleteItem(completion);
-  const title = "Finish setting up your account";
+  const title = t("accountSetup.title");
   switch (lead?.key) {
     case "email":
       return {
         title,
         body:
           lead.state === "unverified"
-            ? "Confirm your email so you can pay for tickets and get them by email."
-            : "Add your email so you can pay for tickets and get them by email.",
+            ? t("accountSetup.confirmEmail")
+            : t("accountSetup.addEmail"),
       };
     case "phone":
-      return {
-        title,
-        body: "Add a phone number as a second way to sign in if you can't get into your email or Google account.",
-      };
+      return { title, body: t("accountSetup.phone") };
     case "username":
     case "name":
     case "avatar":
-      return {
-        title,
-        body: "Add your name, a username and a photo so people recognise you on your profile and reviews.",
-      };
+      return { title, body: t("accountSetup.profile") };
     default:
-      return { title, body: "A few quick steps left." };
+      return { title, body: t("accountSetup.generic") };
   }
 }

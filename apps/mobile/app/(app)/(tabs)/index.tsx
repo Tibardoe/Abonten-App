@@ -42,12 +42,17 @@ import { useFilteredEvents } from "@/features/discovery/useFilteredEvents";
 import { useFilteredPlaces } from "@/features/discovery/useFilteredPlaces";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import { useWarmDetails } from "@/features/discovery/useWarmDetails";
+import { useCoreI18n } from "@/features/i18n/useCoreI18n";
 import {
   MARKET_CONTEXT_KEY,
   useMarket,
 } from "@/features/markets/MarketProvider";
 import { useAreaCoverage } from "@/features/markets/useAreaCoverage";
 import { useQueryView } from "@/lib/useQueryView";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import { distanceMetres } from "@abonten/core/fieldOps/territory";
 import { waitlistAreaKey } from "@abonten/core/market/coverage";
@@ -79,6 +84,7 @@ type Tab = "events" | "places";
 // places" list with filter-aware empty states.
 export default function Explore() {
   const t = useTranslations("explore");
+  const i18n = useCoreI18n();
 
   const router = useRouter();
   const listPadding = useTabBarListPadding();
@@ -237,29 +243,36 @@ export default function Explore() {
     () =>
       eventCategoriesAndTypes.map((c) => ({
         key: c.category,
-        label: c.category,
+        label: eventCategoryLabel(i18n.t, c.category),
       })),
-    [],
+    [i18n],
   );
   const placeCategoryChips = useMemo(
-    () => placeCategories.map((c) => ({ key: String(c.id), label: c.name })),
-    [placeCategories],
+    () =>
+      placeCategories.map((c) => ({
+        key: String(c.id),
+        label: placeCategoryLabel(i18n.t, c),
+      })),
+    [placeCategories, i18n],
   );
 
-  const selectedPlaceCategoryName =
+  const selectedPlaceCategory =
     placeFilters.categoryId != null
-      ? (placeCategories.find((c) => c.id === placeFilters.categoryId)?.name ??
-        null)
-      : null;
+      ? placeCategories.find((c) => c.id === placeFilters.categoryId)
+      : undefined;
+  const selectedPlaceCategoryName = selectedPlaceCategory
+    ? placeCategoryLabel(i18n.t, selectedPlaceCategory)
+    : null;
 
   const activeChips =
     tab === "events"
       ? describeEventFilters(
+          i18n,
           eventFilters,
           market?.defaultCurrency ?? "",
           market?.priceScale ?? 1,
         )
-      : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
+      : describePlaceFilters(i18n, placeFilters, selectedPlaceCategoryName);
 
   const activeCount = tab === "events" ? eventFilterCount : placeFilterCount;
 
@@ -313,34 +326,42 @@ export default function Explore() {
           <EventSliderRow
             title={t("aroundYou")}
             events={eventSlidersFiltered.aroundYou}
-            onViewAll={() => openSection("event", "aroundYou", "Around you")}
+            onViewAll={() => openSection("event", "aroundYou", t("aroundYou"))}
           />
           <EventSliderRow
             title={t("topRatedOrganizers")}
             events={eventSlidersFiltered.topRatedOrganizers}
             onViewAll={() =>
-              openSection("event", "topRatedOrganizers", "Top-rated organizers")
+              openSection(
+                "event",
+                "topRatedOrganizers",
+                t("topRatedOrganizers"),
+              )
             }
           />
           <EventSliderRow
             title={t("happeningToday")}
             events={eventSlidersFiltered.happeningToday}
             onViewAll={() =>
-              openSection("event", "happeningToday", "Happening today")
+              openSection("event", "happeningToday", t("happeningToday"))
             }
           />
           <EventSliderRow
             title={t("happeningThisWeek")}
             events={eventSlidersFiltered.happeningThisWeek}
             onViewAll={() =>
-              openSection("event", "happeningThisWeek", "Happening this week")
+              openSection("event", "happeningThisWeek", t("happeningThisWeek"))
             }
           />
           <EventSliderRow
             title={t("happeningThisMonth")}
             events={eventSlidersFiltered.happeningThisMonth}
             onViewAll={() =>
-              openSection("event", "happeningThisMonth", "Happening this month")
+              openSection(
+                "event",
+                "happeningThisMonth",
+                t("happeningThisMonth"),
+              )
             }
           />
         </View>
@@ -350,17 +371,17 @@ export default function Explore() {
         <PlaceSliderRow
           title={t("aroundYou")}
           places={placeSlidersFiltered.aroundYou}
-          onViewAll={() => openSection("place", "aroundYou", "Around you")}
+          onViewAll={() => openSection("place", "aroundYou", t("aroundYou"))}
         />
         <PlaceSliderRow
           title={t("openNow")}
           places={placeSlidersFiltered.openNow}
-          onViewAll={() => openSection("place", "openNow", "Open now")}
+          onViewAll={() => openSection("place", "openNow", t("openNow"))}
         />
         <PlaceSliderRow
           title={t("topRated")}
           places={placeSlidersFiltered.topRated}
-          onViewAll={() => openSection("place", "topRated", "Top rated")}
+          onViewAll={() => openSection("place", "topRated", t("topRated"))}
         />
       </View>
     );
@@ -482,7 +503,7 @@ export default function Explore() {
     ) : (
       <QueryUnavailable
         view={activeView}
-        subject={tab === "events" ? "events here" : "places here"}
+        subject={tab === "events" ? t("eventsHere") : t("placesHere")}
         onRetry={() => activeQuery.refetch()}
         loading={
           <View className="gap-4 px-4 pt-2">
@@ -598,7 +619,7 @@ export default function Explore() {
           ) : (
             <QueryUnavailable
               view={activeView}
-              subject={tab === "events" ? "events here" : "places here"}
+              subject={tab === "events" ? t("eventsHere") : t("placesHere")}
               onRetry={() => activeQuery.refetch()}
             />
           )}

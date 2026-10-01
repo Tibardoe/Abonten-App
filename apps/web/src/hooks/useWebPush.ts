@@ -4,6 +4,7 @@ import { getWebPushConfig } from "@/actions/webPush/getWebPushConfig";
 import { getWebPushStatus } from "@/actions/webPush/getWebPushStatus";
 import { registerWebPushSubscription } from "@/actions/webPush/registerWebPushSubscription";
 import { unregisterWebPushSubscription } from "@/actions/webPush/unregisterWebPushSubscription";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 // Browser push for Settings › Notifications. Registers /push-sw.js only when
@@ -80,6 +81,8 @@ export async function releaseWebPushOnSignOut(): Promise<void> {
 }
 
 export function useWebPush() {
+  const t = useTranslations("common");
+
   const [state, setState] = useState<WebPushState>("loading");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,14 +155,14 @@ export function useWebPush() {
       if (res.status === 200) {
         setState("on");
       } else {
-        setError(res.message ?? "Couldn't turn on browser notifications.");
+        setError(res.message ?? t("couldnTTurnOnBrowserNotifications"));
       }
     } catch {
-      setError("Couldn't turn on browser notifications in this browser.");
+      setError(t("couldnTTurnOnBrowserNotifications2"));
     } finally {
       setPending(false);
     }
-  }, []);
+  }, [t]);
 
   const disable = useCallback(async () => {
     setError(null);
@@ -172,11 +175,11 @@ export function useWebPush() {
       }
       setState("off");
     } catch {
-      setError("Couldn't turn off browser notifications.");
+      setError(t("couldnTTurnOffBrowserNotifications"));
     } finally {
       setPending(false);
     }
-  }, []);
+  }, [t]);
 
   return { state, pending, error, enable, disable };
 }

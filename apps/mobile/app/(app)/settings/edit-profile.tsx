@@ -154,7 +154,7 @@ export default function EditProfile() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={profileView}
-          subject="your profile"
+          subject={t("yourProfile")}
           onRetry={() => refetchProfile()}
           loading={<FormSkeleton fields={5} />}
         />
@@ -192,7 +192,7 @@ export default function EditProfile() {
             <AppText variant="bodyStrong">{profile.username}</AppText>
             <Button
               title={t("changePhoto")}
-              loadingTitle="Uploading…"
+              loadingTitle={t("uploading")}
               variant="outline"
               size="sm"
               onPress={onChangePhoto}

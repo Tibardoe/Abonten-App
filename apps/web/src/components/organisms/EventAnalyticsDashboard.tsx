@@ -84,7 +84,7 @@ export default function EventAnalyticsDashboard({
       <DashboardPeriodFilter
         value={period}
         onChange={setPeriod}
-        ariaLabel="Event insights time period"
+        ariaLabel={t("eventInsightsTimePeriod")}
       />
 
       <section className="flex flex-col gap-3">

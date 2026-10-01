@@ -12,6 +12,7 @@ import type {
   SubscriptionStatusResult,
 } from "@abonten/types/discoveryType";
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDiscoveryProgram } from "../discovery/useDiscoveryProgram";
 
@@ -84,6 +85,8 @@ export function useToggleSubscription(
   label: string,
   source: "profile" | "search" = "profile",
 ) {
+  const t = useTranslations("notifications");
+
   const qc = useQueryClient();
   const toast = useToast();
   const { session } = useSession();
@@ -123,8 +126,8 @@ export function useToggleSubscription(
     onSuccess: (res, vars, context) => {
       if (res.status !== 200) {
         qc.setQueryData(key, context?.previous);
-        toast.error("Couldn't change these alerts", {
-          description: res.message ?? "Please try again.",
+        toast.error(t("couldnTChangeTheseAlerts"), {
+          description: res.message ?? t("pleaseTryAgain"),
         });
         return;
       }
@@ -133,16 +136,16 @@ export function useToggleSubscription(
         subscriptionId: vars.next ? (res.data?.subscriptionId ?? null) : null,
       });
       qc.invalidateQueries({ queryKey: SUBS_KEY });
-      toast.success(vars.next ? "Alerts on" : "Alerts off", {
+      toast.success(vars.next ? t("alertsOn") : t("alertsOff"), {
         description: vars.next
-          ? `You'll hear when ${label} posts something new.`
-          : `No more new-event alerts from ${label}.`,
+          ? t("youLlHearWhenPostsSomething", { label: label })
+          : t("noMoreNewEventAlertsFrom", { label: label }),
       });
     },
     onError: (_e, _vars, context) => {
       qc.setQueryData(key, context?.previous);
-      toast.error("Couldn't change these alerts", {
-        description: "Please try again.",
+      toast.error(t("couldnTChangeTheseAlerts"), {
+        description: t("pleaseTryAgain"),
       });
     },
   });
@@ -162,6 +165,8 @@ export function useNotificationPreferences() {
 }
 
 export function useUpdateNotificationPreferences() {
+  const t = useTranslations("notifications");
+
   const qc = useQueryClient();
   const toast = useToast();
   return useMutation({
@@ -178,17 +183,17 @@ export function useUpdateNotificationPreferences() {
     onSuccess: (res, _patch, context) => {
       if (res.status === 200 && res.data) {
         qc.setQueryData(PREFS_KEY, res.data);
-        toast.success(res.message ?? "Saved");
+        toast.success(res.message ?? t("saved"));
       } else {
         qc.setQueryData(PREFS_KEY, context?.previous);
-        toast.error("Couldn't save that", {
-          description: res.message ?? "Please try again.",
+        toast.error(t("couldnTSaveThat"), {
+          description: res.message ?? t("pleaseTryAgain"),
         });
       }
     },
     onError: (_e, _patch, context) => {
       qc.setQueryData(PREFS_KEY, context?.previous);
-      toast.error("Couldn't save that", { description: "Please try again." });
+      toast.error(t("couldnTSaveThat"), { description: t("pleaseTryAgain") });
     },
   });
 }
@@ -206,6 +211,8 @@ export function useSubscriptions(enabled: boolean) {
 }
 
 export function useStopSubscription() {
+  const t = useTranslations("notifications");
+
   const qc = useQueryClient();
   const toast = useToast();
   return useMutation({
@@ -217,14 +224,14 @@ export function useStopSubscription() {
           (list ?? []).filter((s) => s.id !== subscriptionId),
         );
         qc.invalidateQueries({ queryKey: ["mobile", "alerts", "status"] });
-        toast.success("Alerts off");
+        toast.success(t("alertsOff"));
       } else {
-        toast.error("Couldn't turn these alerts off", {
+        toast.error(t("couldnTTurnTheseAlertsOff"), {
           description: res.message ?? undefined,
         });
       }
     },
-    onError: () => toast.error("Couldn't turn these alerts off"),
+    onError: () => toast.error(t("couldnTTurnTheseAlertsOff")),
   });
 }
 
@@ -244,6 +251,8 @@ export function useRecommendations() {
 }
 
 export function useDismissRecommendation() {
+  const t = useTranslations("notifications");
+
   const qc = useQueryClient();
   const toast = useToast();
   return useMutation({
@@ -258,15 +267,15 @@ export function useDismissRecommendation() {
     },
     onSuccess: (res, _item, context) => {
       if (res.status === 200) {
-        toast.success("Got it", { description: res.message ?? undefined });
+        toast.success(t("gotIt"), { description: res.message ?? undefined });
       } else {
         qc.setQueryData(RECS_KEY, context?.previous);
-        toast.error("Couldn't save that");
+        toast.error(t("couldnTSaveThat"));
       }
     },
     onError: (_e, _item, context) => {
       qc.setQueryData(RECS_KEY, context?.previous);
-      toast.error("Couldn't save that");
+      toast.error(t("couldnTSaveThat"));
     },
   });
 }

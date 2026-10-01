@@ -15,7 +15,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import {
   EMAIL_OTP_CODE_LENGTH,
-  EMAIL_OTP_MESSAGES,
+  emailOtpMessage,
   isLikelyEmail,
   maskEmail,
 } from "@abonten/core/emailOtp";
@@ -79,6 +79,7 @@ export default function EmailRequiredToPay({
 
 function AddEmailForm({ onDone }: { onDone: () => void }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -129,7 +130,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
         type: "email_change",
       });
       if (e) {
-        setError(EMAIL_OTP_MESSAGES.invalidOrExpired);
+        setError(emailOtpMessage(tc, "invalidOrExpired"));
         return;
       }
       await supabase.auth.refreshSession();

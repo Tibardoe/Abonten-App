@@ -51,7 +51,6 @@ export default async function ensureProfileCompletionNotification(
   });
 
   if (completion.isComplete) return;
-  const message = accountSetupPromptMessage(completion);
 
   const { data: existing } = await supabase
     .from("notification")
@@ -68,8 +67,7 @@ export default async function ensureProfileCompletionNotification(
       type: "profile_completion",
       // Same words as the in-app reminder card: leads with the step that
       // matters most for this account, never one it has already done.
-      title: message.title,
-      body: message.body,
+      text: ({ core }) => accountSetupPromptMessage(core, completion),
       link: "/settings/account-setup",
     },
     supabase,

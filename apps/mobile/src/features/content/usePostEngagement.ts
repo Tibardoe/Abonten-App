@@ -9,6 +9,7 @@ import type {
   ContentViewerState,
 } from "@abonten/types/contentType";
 import { type ToastApi, useToast } from "@abonten/ui-native";
+import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
 import { onlineManager, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { patchPostEverywhere } from "./postCacheSync";
@@ -38,6 +39,7 @@ function makeSwitch(
   field: "liked" | "saved",
   countField: "likes" | "saves",
   send: (postId: string, value: boolean) => Promise<Envelope<CountsResult>>,
+  /** A key in the `spotlight` namespace, worded when it is shown. */
   failure: string,
   afterSettle?: () => void,
 ) {
@@ -45,7 +47,9 @@ function makeSwitch(
   const toggle = createLatestIntentToggle<CountsResult | undefined>({
     send: async (postId, value) => {
       const res = await send(postId, value);
-      if (res.status !== 200) throw new Error(res.message ?? failure);
+      if (res.status !== 200) {
+        throw new Error(res.message ?? translatorFor("spotlight")(failure));
+      }
       return res.data;
     },
     onSettled: (postId, value, result) => {
@@ -69,7 +73,7 @@ function makeSwitch(
           counts: { ...p.counts, [countField]: Math.max(0, count) },
         }));
       }
-      toastHost?.error(failure);
+      toastHost?.error(translatorFor("spotlight")(failure));
     },
   });
 
@@ -102,13 +106,13 @@ const likeSwitch = makeSwitch(
   "liked",
   "likes",
   (id, v) => api.content.like(id, v),
-  "Couldn't update that like.",
+  "couldnTUpdateThatLike",
 );
 const saveSwitch = makeSwitch(
   "saved",
   "saves",
   (id, v) => api.content.save(id, v),
-  "Couldn't update your saved Spotlights.",
+  "couldnTUpdateYourSavedSpotlights",
   () => queryClient.invalidateQueries({ queryKey: [...CONTENT_KEY, "saved"] }),
 );
 
@@ -121,6 +125,8 @@ export function usePostEngagement(
   post: ContentPostDocument,
   requireSignIn: () => boolean,
 ) {
+  const t = useTranslations("spotlight");
+
   const qc = useQueryClient();
   const toast = useToast();
   toastHost = toast;
@@ -147,11 +153,11 @@ export function usePostEngagement(
   const canWrite = useCallback(() => {
     if (!requireSignIn()) return false;
     if (!onlineManager.isOnline()) {
-      toast.info("You're offline. Try again when you're connected.");
+      toast.info(t("youReOfflineTryAgainWhen"));
       return false;
     }
     return true;
-  }, [requireSignIn, toast]);
+  }, [requireSignIn, toast, t]);
 
   const patch = useCallback(
     (
@@ -219,7 +225,7 @@ export function usePostEngagement(
         viewer: { ...o?.viewer, saved: desired },
         counts: { ...o?.counts, saves: count },
       }));
-      toast.success(desired ? "Saved" : "Removed from saved");
+      toast.success(desired ? t("saved2") : t("removedFromSaved"));
     },
     react: (emoji: ContentReactionEmoji) => {
       const previous = viewer.reaction;
@@ -230,7 +236,7 @@ export function usePostEngagement(
           return () => patch({ reaction: previous });
         },
         () => api.content.react(post.id, next),
-        "Couldn't send that reaction.",
+        t("couldnTSendThatReaction"),
       );
     },
     markNotInterested: (value = true) =>
@@ -240,7 +246,7 @@ export function usePostEngagement(
           return () => patch({ notInterested: !value });
         },
         () => api.content.notInterested(post.id, value),
-        "Something went wrong.",
+        t("somethingWentWrong"),
       ),
     recordShare: async (channel: ContentShareChannel) => {
       patch({}, { shares: counts.shares + 1 });

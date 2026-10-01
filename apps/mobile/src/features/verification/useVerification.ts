@@ -6,6 +6,7 @@ import {
   VERIFICATION_EVIDENCE_MIME_TYPES,
   type VerificationSubjectType,
 } from "@abonten/types/verificationType";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -41,12 +42,12 @@ export function validateDoc(
   maxBytes: number,
 ): string | null {
   if (!VERIFICATION_EVIDENCE_MIME_TYPES.includes(file.mimeType as never)) {
-    return "Send a photo (JPG, PNG, WebP, HEIC) or a PDF.";
+    return translatorFor("verification")("sendAPhotoJpgPngWebp");
   }
   if (file.sizeBytes > maxBytes) {
-    return `That file is larger than ${Math.round(
-      maxBytes / (1024 * 1024),
-    )} MB. Try a smaller photo or scan.`;
+    return translatorFor("verification")("thatFileIsLargerThanMb", {
+      round: Math.round(maxBytes / (1024 * 1024)),
+    });
   }
   return null;
 }
@@ -168,7 +169,9 @@ export async function uploadVerificationDoc(
     fileName: doc.name,
   });
   if (ticket.status !== 200 || !ticket.data) {
-    return ticket.message ?? "Could not start the upload.";
+    return (
+      ticket.message ?? translatorFor("verification")("couldNotStartTheUpload")
+    );
   }
 
   let bytes: ArrayBuffer;
@@ -176,7 +179,7 @@ export async function uploadVerificationDoc(
     const res = await fetch(doc.uri);
     bytes = await res.arrayBuffer();
   } catch {
-    return "Could not read that file.";
+    return translatorFor("verification")("couldNotReadThatFile");
   }
 
   const { error } = await supabase.storage
@@ -184,7 +187,7 @@ export async function uploadVerificationDoc(
     .uploadToSignedUrl(ticket.data.path, ticket.data.token, bytes, {
       contentType: doc.mimeType,
     });
-  if (error) return "Upload failed. Try again.";
+  if (error) return translatorFor("verification")("uploadFailedTryAgain");
   return null;
 }
 

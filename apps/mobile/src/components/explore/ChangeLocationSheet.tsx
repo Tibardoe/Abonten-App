@@ -48,16 +48,14 @@ import { describeArea } from "./areaCopy";
 // own open state so it can be up while the parent's `open` is false.
 
 const FOLLOW_MESSAGES: Record<Exclude<FollowOutcome, "ok">, string> = {
-  denied: "Allow location for Abonten to follow where you are.",
-  blocked:
-    "Location is turned off for Abonten. Turn it on in Settings to follow where you are.",
-  unavailable:
-    "We couldn't get your location. Check that location is on and try again.",
+  denied: "allowLocationForAbontenToFollow",
+  blocked: "locationIsTurnedOffForAbonten",
+  unavailable: "weCouldnTGetYourLocation",
 };
 
 const CHOOSE_MESSAGES: Record<Exclude<ChooseOutcome, "ok">, string> = {
-  not_found: "We couldn't find that address. Try another.",
-  offline: "You're offline. Try again when you're back online.",
+  not_found: "weCouldnTFindThatAddress",
+  offline: "youReOfflineTryAgainWhen",
 };
 
 export function ChangeLocationSheet({
@@ -107,7 +105,7 @@ export function ChangeLocationSheet({
       await chooseArea(resolved.lat, resolved.lng, resolved.address);
       finish();
     } else {
-      setError({ message: CHOOSE_MESSAGES.not_found });
+      setError({ message: t(CHOOSE_MESSAGES.not_found) });
     }
   }
 
@@ -118,7 +116,7 @@ export function ChangeLocationSheet({
     const outcome = await chooseTypedArea(auto.query);
     setBusy(null);
     if (outcome === "ok") finish();
-    else setError({ message: CHOOSE_MESSAGES[outcome] });
+    else setError({ message: t(CHOOSE_MESSAGES[outcome]) });
   }
 
   async function submitCurrent() {
@@ -130,7 +128,7 @@ export function ChangeLocationSheet({
     if (outcome === "ok") finish();
     else
       setError({
-        message: FOLLOW_MESSAGES[outcome],
+        message: t(FOLLOW_MESSAGES[outcome]),
         settings: outcome === "blocked",
       });
   }

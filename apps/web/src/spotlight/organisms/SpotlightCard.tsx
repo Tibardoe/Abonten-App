@@ -191,7 +191,7 @@ export default function SpotlightCard({
     const channel = await shareContent(
       post.kind,
       post.id,
-      post.caption?.slice(0, 80) || "Spotlight on Abonten",
+      post.caption?.slice(0, 80) || t("spotlightOnAbonten"),
     );
     if (!channel) return;
     if (channel === "copy_link") toast.success(t("linkCopied"));

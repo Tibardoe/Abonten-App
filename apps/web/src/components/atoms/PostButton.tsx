@@ -27,7 +27,7 @@ export default function PostButton() {
     openFilePicker,
     handleFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your event flyer.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
     // A brief inline error rather than the native alert() this used to
     // call -- consistent with ContinueEventDraftButton's existing pattern

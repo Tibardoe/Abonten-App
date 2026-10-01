@@ -24,7 +24,10 @@ import {
   ticketCapacityHint,
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
-import { paidTierProblem } from "@abonten/core/ticketTiers";
+import {
+  paidTierProblem,
+  ticketTierProblemMessage,
+} from "@abonten/core/ticketTiers";
 import { wallClockString } from "@abonten/core/time/timeZone";
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import { useQuery } from "@tanstack/react-query";
@@ -33,6 +36,7 @@ import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 
 // All state, validation and submit logic for the native event-creation
 // wizard — the mobile echo of the web useEventUploadForm hook. Publishes an
@@ -56,15 +60,15 @@ const splitIso = (iso: string): { date: string; time: string } => {
 };
 
 const EVENT_MESSAGES = {
-  titleRequired: "Give your event a title.",
-  titleTooLong: "That title is too long (max 150 characters).",
-  descriptionRequired: "Add a description.",
-  invalidUrl: "Enter a valid website URL.",
-  priceNotNumber: "Price must be a number.",
-  priceNegative: "Price can't be negative.",
-  capacityNotNumber: "Capacity must be a number.",
-  capacityNotWhole: "Capacity must be a whole number.",
-  capacityMustBePositive: "Capacity must be greater than zero.",
+  titleRequired: "giveYourEventATitle",
+  titleTooLong: "thatTitleIsTooLongMax",
+  descriptionRequired: "addADescription",
+  invalidUrl: "enterAValidWebsiteUrl",
+  priceNotNumber: "priceMustBeANumber",
+  priceNegative: "priceCanTBeNegative",
+  capacityNotNumber: "capacityMustBeANumber",
+  capacityNotWhole: "capacityMustBeAWholeNumber",
+  capacityMustBePositive: "capacityMustBeGreaterThanZero",
 };
 
 export type ScheduleMode = "single" | "specific";
@@ -108,6 +112,9 @@ export function useEventWizard(
   resumeDraftId?: string,
   options: { preselectedPlace?: VenuePlace | null } = {},
 ) {
+  const t = useTranslations("events");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const autocomplete = usePlacesAutocomplete();
   const create = useEventCreate();
@@ -119,7 +126,15 @@ export function useEventWizard(
   const uploadProgress = useUploadProgress();
 
   const clientRequestId = useRef(uuidv4()).current;
-  const eventSchema = useMemo(() => getEventSchema(EVENT_MESSAGES), []);
+  const eventSchema = useMemo(
+    () =>
+      getEventSchema(
+        Object.fromEntries(
+          Object.entries(EVENT_MESSAGES).map(([name, key]) => [name, t(key)]),
+        ) as typeof EVENT_MESSAGES,
+      ),
+    [t],
+  );
 
   // Draft tracking: `currentDraftId` becomes set after the first save (or is
   // seeded when resuming); `draftUpdatedAt` feeds the optimistic-concurrency
@@ -260,14 +275,14 @@ export function useEventWizard(
   function validateBasics(): boolean {
     if (!validateText()) return false;
     if (!category) {
-      toast.error("Pick a category", {
-        description: "Choose the category that fits best.",
+      toast.error(t("pickACategory"), {
+        description: t("chooseTheCategoryThatFitsBest"),
       });
       return false;
     }
     if (types.length === 0) {
-      toast.error("Pick at least one type", {
-        description: "Add one or more event types.",
+      toast.error(t("pickAtLeastOneType"), {
+        description: t("addOneOrMoreEventTypes"),
       });
       return false;
     }
@@ -288,8 +303,8 @@ export function useEventWizard(
     const resolved = await autocomplete.resolvePlace(placeId);
     setResolvingLocation(false);
     if (!resolved) {
-      toast.error("Couldn't use that location", {
-        description: "Please try another suggestion or type the address.",
+      toast.error(t("couldnTUseThatLocation"), {
+        description: t("pleaseTryAnotherSuggestionOrType"),
       });
       return;
     }
@@ -302,8 +317,8 @@ export function useEventWizard(
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) {
-        toast.error("Location access needed", {
-          description: "Allow location access to use your current position.",
+        toast.error(t("locationAccessNeeded"), {
+          description: t("allowLocationAccessToUseYour"),
         });
         return;
       }
@@ -319,8 +334,8 @@ export function useEventWizard(
         : `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
       applyLocation(pos.coords.latitude, pos.coords.longitude, label);
     } catch {
-      toast.error("Couldn't get your location", {
-        description: "Please try again or type the address.",
+      toast.error(t("couldnTGetYourLocation"), {
+        description: t("pleaseTryAgainOrTypeThe"),
       });
     } finally {
       setResolvingLocation(false);
@@ -362,8 +377,8 @@ export function useEventWizard(
   } | null> {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to pick an event flyer.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToPickAn"),
       });
       return null;
     }
@@ -609,7 +624,7 @@ export function useEventWizard(
     if (scheduleMode === "single") {
       const start = combineDateAndTime(rangeStart, rangeStartTime);
       const end = combineDateAndTime(rangeEnd ?? rangeStart, rangeEndTime);
-      const check = validateSingleDateRange({ from: start, to: end });
+      const check = validateSingleDateRange(tc, { from: start, to: end });
       if (!check.ok) return { ok: false, message: check.message };
       return {
         ok: true,
@@ -630,10 +645,11 @@ export function useEventWizard(
     if (entries.some((e) => !e.start || !e.end)) {
       return {
         ok: false,
-        message: "Every date needs a valid start and end time.",
+        message: t("everyDateNeedsAValidStart"),
       };
     }
     const check = validateSpecificDates(
+      tc,
       entries.map((e) => ({ start: e.start as Date, end: e.end as Date })),
     );
     if (!check.ok) return { ok: false, message: check.message };
@@ -668,11 +684,11 @@ export function useEventWizard(
   const capacityProblem =
     ticketMode === "free"
       ? null
-      : ticketCapacityProblem(capacityNumber, tiersForCapacity);
+      : ticketCapacityProblem(tc, capacityNumber, tiersForCapacity);
   const capacityHint =
     ticketMode === "free"
       ? null
-      : ticketCapacityHint(capacityNumber, tiersForCapacity);
+      : ticketCapacityHint(tc, capacityNumber, tiersForCapacity);
 
   // A free event has nothing to discount: switching to it drops any promo
   // codes drafted so far, and the wizard skips the promo step.
@@ -699,13 +715,13 @@ export function useEventWizard(
       if (!Number.isFinite(price) || price <= 0) {
         return {
           ok: false,
-          message: "Enter a ticket price greater than zero.",
+          message: t("enterATicketPriceGreaterThan"),
         };
       }
       if (qty != null && (!Number.isFinite(qty) || qty <= 0)) {
         return {
           ok: false,
-          message: "Quantity must be a whole number above zero.",
+          message: t("quantityMustBeAWholeNumber"),
         };
       }
       if (capacityProblem) return { ok: false, message: capacityProblem };
@@ -720,7 +736,7 @@ export function useEventWizard(
       quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
     }));
     if (parsed.length === 0) {
-      return { ok: false, message: "Add at least one ticket type." };
+      return { ok: false, message: t("addAtLeastOneTicketType") };
     }
     if (
       parsed.some(
@@ -734,11 +750,16 @@ export function useEventWizard(
     ) {
       return {
         ok: false,
-        message: "Each ticket type needs a name, a price and a valid quantity.",
+        message: t("eachTicketTypeNeedsAName"),
       };
     }
     const tierProblem = parsed.map(paidTierProblem).find(Boolean);
-    if (tierProblem) return { ok: false, message: tierProblem };
+    if (tierProblem) {
+      return {
+        ok: false,
+        message: ticketTierProblemMessage(tc, tierProblem),
+      };
+    }
     if (capacityProblem) return { ok: false, message: capacityProblem };
     return { ok: true, body: { multipleTickets: parsed } };
   }
@@ -771,24 +792,23 @@ export function useEventWizard(
     // idea which of seven steps was incomplete. Now each gap names itself
     // and sends them back to the step that owns it.
     if (!flyerUri) {
-      toast.error("Your event needs a flyer.", {
-        description: "Add one on the first step.",
-        action: { label: "Go there", onPress: () => setStep(0) },
+      toast.error(t("yourEventNeedsAFlyer"), {
+        description: t("addOneOnTheFirstStep"),
+        action: { label: t("goThere"), onPress: () => setStep(0) },
       });
       return null;
     }
     if (!category) {
-      toast.error("Pick a category.", {
-        description: "It is on the Basic info step.",
-        action: { label: "Go there", onPress: () => setStep(1) },
+      toast.error(t("pickACategory2"), {
+        description: t("itIsOnTheBasicInfo"),
+        action: { label: t("goThere"), onPress: () => setStep(1) },
       });
       return null;
     }
     if (!coords) {
-      toast.error("Confirm the location.", {
-        description:
-          "Pick the address from a suggestion, the map, or your current location.",
-        action: { label: "Go there", onPress: () => setStep(3) },
+      toast.error(t("confirmTheLocation2"), {
+        description: t("pickTheAddressFromASuggestion"),
+        action: { label: t("goThere"), onPress: () => setStep(3) },
       });
       return null;
     }
@@ -796,16 +816,16 @@ export function useEventWizard(
     const schedule = buildSchedule();
     if (!schedule.ok) {
       toast.error(schedule.message, {
-        description: "Check the date and time step.",
-        action: { label: "Go there", onPress: () => setStep(2) },
+        description: t("checkTheDateAndTimeStep"),
+        action: { label: t("goThere"), onPress: () => setStep(2) },
       });
       return null;
     }
     const tickets = buildTickets();
     if (!tickets.ok) {
       toast.error(tickets.message, {
-        description: "Check the tickets and pricing step.",
-        action: { label: "Go there", onPress: () => setStep(4) },
+        description: t("checkTheTicketsAndPricingStep"),
+        action: { label: t("goThere"), onPress: () => setStep(4) },
       });
       return null;
     }
@@ -879,7 +899,7 @@ export function useEventWizard(
     const end = combineDateAndTime(rangeEnd ?? rangeStart, rangeEndTime);
     if (!start || !end) return null;
 
-    return start >= end ? "Start time must be earlier than end time" : null;
+    return start >= end ? t("startTimeMustBeEarlierThan") : null;
   }, [
     scheduleMode,
     dateMode,
@@ -887,6 +907,7 @@ export function useEventWizard(
     rangeEnd,
     rangeStartTime,
     rangeEndTime,
+    t,
   ]);
 
   const scheduleValid =

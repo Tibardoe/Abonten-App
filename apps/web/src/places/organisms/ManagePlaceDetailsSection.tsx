@@ -126,7 +126,11 @@ export default function ManagePlaceDetailsSection({
             render={({ field }) => (
               <FormItem className="space-y-0">
                 <FormControl>
-                  <PostInput type="text" inputPlaceholder="Name" {...field} />
+                  <PostInput
+                    type="text"
+                    inputPlaceholder={t("name")}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage className="text-sm" />
               </FormItem>
@@ -146,7 +150,7 @@ export default function ManagePlaceDetailsSection({
                 <FormControl>
                   <PostInput
                     type="text"
-                    inputPlaceholder="Description"
+                    inputPlaceholder={t("description")}
                     {...field}
                   />
                 </FormControl>

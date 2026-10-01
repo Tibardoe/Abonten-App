@@ -77,7 +77,7 @@ export default function PlaceUploadModal({
     openFilePicker,
     handleFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your cover photo.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor"),
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
     onInvalidFile: (message) => alert(message),
   });

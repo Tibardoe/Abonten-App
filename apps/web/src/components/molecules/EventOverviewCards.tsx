@@ -64,7 +64,7 @@ export default function EventOverviewCards({
           <StatTile
             label={t("remaining")}
             value={String(overview.capacity_remaining)}
-            sublabel={`of ${overview.capacity} capacity`}
+            sublabel={t("ofCapacity", { capacity: overview.capacity })}
           />
         )}
         {overview.gross_sales > 0 && (
@@ -106,7 +106,7 @@ export default function EventOverviewCards({
         <StatTile
           label={t("remaining")}
           value={String(overview.capacity_remaining)}
-          sublabel={`of ${overview.capacity} capacity`}
+          sublabel={t("ofCapacity", { capacity: overview.capacity })}
         />
       )}
     </div>

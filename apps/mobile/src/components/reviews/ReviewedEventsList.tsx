@@ -68,7 +68,7 @@ export function ReviewedEventsList() {
     return (
       <QueryUnavailable
         view={view}
-        subject="your reviews"
+        subject={t("yourReviews")}
         onRetry={() => q.refetch()}
         loading={<RowListSkeleton count={4} />}
       />

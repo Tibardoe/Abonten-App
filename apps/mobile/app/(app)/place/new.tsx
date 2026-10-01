@@ -129,12 +129,12 @@ export default function CreatePlaceScreen() {
       onNext={goNext}
       nextLabel={
         w.step !== LAST_STEP
-          ? "Next"
+          ? t("next")
           : w.uploadingPhotos
-            ? "Adding photos…"
+            ? t("addingPhotos")
             : w.isSubmitting
-              ? "Publishing…"
-              : "Publish"
+              ? t("publishing2")
+              : t("publish")
       }
       nextLoading={w.isSubmitting || w.uploadingPhotos}
       nextDisabled={w.step !== BASICS_STEP && !w.canAdvance}

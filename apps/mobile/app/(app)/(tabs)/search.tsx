@@ -13,11 +13,13 @@ import {
   describeEventFilters,
 } from "@/features/discovery/exploreFilters";
 import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
+import { useCoreI18n } from "@/features/i18n/useCoreI18n";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useRecentSearches } from "@/features/search/recentSearches";
 import { useEventSearch } from "@/features/search/useEventSearch";
 import { useSearchSuggestions } from "@/features/search/useSearchSuggestions";
 import { useQueryView } from "@/lib/useQueryView";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
@@ -148,6 +150,7 @@ function LegacySearch() {
   const { locale } = useLocale();
 
   const t = useTranslations("search");
+  const i18n = useCoreI18n();
 
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -171,11 +174,12 @@ function LegacySearch() {
   const filterChips = useMemo(
     () =>
       describeEventFilters(
+        i18n,
         filters,
         market?.defaultCurrency ?? "",
         market?.priceScale ?? 1,
       ),
-    [filters, market?.defaultCurrency, market?.priceScale],
+    [i18n, filters, market?.defaultCurrency, market?.priceScale],
   );
 
   const showResults =
@@ -190,11 +194,15 @@ function LegacySearch() {
   const categoryMatches = useMemo(
     () =>
       typing
-        ? ALL_CATEGORY_NAMES.filter((n) =>
-            n.toLowerCase().includes(trimmed.toLowerCase()),
-          ).slice(0, 4)
+        ? ALL_CATEGORY_NAMES.filter((n) => {
+            const needle = trimmed.toLowerCase();
+            return (
+              n.toLowerCase().includes(needle) ||
+              eventCategoryLabel(i18n.t, n).toLowerCase().includes(needle)
+            );
+          }).slice(0, 4)
         : [],
-    [typing, trimmed],
+    [typing, trimmed, i18n],
   );
 
   const runSearch = useCallback(
@@ -467,7 +475,7 @@ function LegacySearch() {
                 {BROWSE_CATEGORIES.map((name) => (
                   <Chip
                     key={name}
-                    label={name}
+                    label={eventCategoryLabel(i18n.t, name)}
                     onPress={() => runSearch(name)}
                   />
                 ))}

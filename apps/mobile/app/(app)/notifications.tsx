@@ -12,7 +12,7 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import type { NotificationType } from "@abonten/types/notificationType";
 import { AppText, EmptyState, ListFooter, Refresher } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Pressable, SectionList, View } from "react-native";
@@ -39,7 +39,13 @@ function groupByDay(items: NotificationType[]): Section[] {
     else if (day >= yesterday) buckets.Yesterday.push(n);
     else buckets.Earlier.push(n);
   }
-  return (["Today", "Yesterday", "Earlier"] as const)
+  return (
+    [
+      translatorFor("notifications")("today"),
+      translatorFor("notifications")("yesterday"),
+      translatorFor("notifications")("earlier"),
+    ] as const
+  )
     .filter((k) => buckets[k].length > 0)
     .map((k) => ({ title: k, data: buckets[k] }));
 }
@@ -130,7 +136,7 @@ export default function Notifications() {
             ) : (
               <QueryUnavailable
                 view={view}
-                subject="your notifications"
+                subject={t("yourNotifications")}
                 onRetry={() => q.refetch()}
               />
             )

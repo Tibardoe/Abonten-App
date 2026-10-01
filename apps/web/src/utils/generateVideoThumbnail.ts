@@ -1,3 +1,4 @@
+import { translatorFor } from "@/i18n/clientTranslator";
 export const generateVideoThumbnail = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
@@ -12,7 +13,9 @@ export const generateVideoThumbnail = (file: File): Promise<string> => {
     // Handle error loading video
     video.onerror = () => {
       URL.revokeObjectURL(url);
-      reject("Error loading video for thumbnail generation.");
+      reject(
+        translatorFor("common")("errorLoadingVideoForThumbnailGeneration"),
+      );
     };
 
     // When metadata is loaded, we can seek
@@ -21,7 +24,7 @@ export const generateVideoThumbnail = (file: File): Promise<string> => {
 
       if (!duration || Number.isNaN(duration)) {
         URL.revokeObjectURL(url);
-        reject("Invalid video duration.");
+        reject(translatorFor("common")("invalidVideoDuration"));
         return;
       }
 
@@ -43,7 +46,7 @@ export const generateVideoThumbnail = (file: File): Promise<string> => {
 
           resolve(thumbnail);
         } catch (err) {
-          reject("Thumbnail generation failed.");
+          reject(translatorFor("common")("thumbnailGenerationFailed"));
         } finally {
           URL.revokeObjectURL(url);
         }

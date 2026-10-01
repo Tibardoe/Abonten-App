@@ -1,4 +1,7 @@
-import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
+import {
+  WEEKLY_PRODUCT_NAME,
+  WEEKLY_TAGLINE_KEY,
+} from "@abonten/core/weekly/copy";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import { formatWeekRange } from "@abonten/core/weekly/week";
 import type { WeeklyTeaser } from "@abonten/types/weeklyType";
@@ -14,6 +17,7 @@ export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
   const locale = useLocale();
 
   const t = useTranslations("weekly");
+  const tc = useTranslations("core");
 
   // A fallback edition is the country-wide one; its scope name is the country.
   const area = teaser.scopeName;
@@ -26,7 +30,13 @@ export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
       slides={teaser.slides ?? []}
       href={teaser.href}
       label={`${WEEKLY_PRODUCT_NAME}, ${area}`}
-      linkLabel={`Open ${WEEKLY_PRODUCT_NAME} for ${area}: ${teaser.title}, ${week}, ${picks}`}
+      linkLabel={t("openFor", {
+        WEEKLY_PRODUCT_NAME: WEEKLY_PRODUCT_NAME,
+        area: area,
+        title: teaser.title,
+        week: week,
+        picks: picks,
+      })}
       priority
       eyebrow={
         <>
@@ -58,7 +68,7 @@ export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
         {teaser.title}
       </h2>
       <p className="mt-3 line-clamp-2 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
-        {teaser.subtitle ?? WEEKLY_TAGLINE}
+        {teaser.subtitle ?? tc(WEEKLY_TAGLINE_KEY)}
       </p>
       <span
         aria-hidden

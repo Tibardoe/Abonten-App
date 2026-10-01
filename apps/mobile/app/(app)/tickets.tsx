@@ -95,7 +95,7 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
           // money), so offline this is honest about why they aren't here.
           <QueryUnavailable
             view={view}
-            subject="your tickets"
+            subject={t("yourTickets")}
             onRetry={() => q.refetch()}
           />
         )

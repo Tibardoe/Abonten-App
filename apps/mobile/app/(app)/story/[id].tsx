@@ -6,7 +6,7 @@ import { StoryViewer } from "@/components/content/StoryViewer";
 import { publisherRoute } from "@/features/content/contentLinks";
 import { useContentPost } from "@/features/content/useContent";
 import { useQueryView } from "@/lib/useQueryView";
-import { STORY_EXPIRED_MESSAGE } from "@abonten/core/content/copy";
+import { STORY_EXPIRED_MESSAGE_KEY } from "@abonten/core/content/copy";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { AppText, Avatar, Button, Spinner } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -19,6 +19,7 @@ import { View } from "react-native";
 // the publisher instead.
 export default function StoryLinkScreen() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -53,7 +54,7 @@ export default function StoryLinkScreen() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="this Story"
+            subject={t("thisStory")}
             onRetry={() => q.refetch()}
             onMedia
           />
@@ -101,7 +102,7 @@ export default function StoryLinkScreen() {
       <View className="flex-1 items-center justify-center gap-4 px-8">
         <AppText variant="sectionTitle" className="text-center">
           {res?.status === 410
-            ? STORY_EXPIRED_MESSAGE
+            ? tc(STORY_EXPIRED_MESSAGE_KEY)
             : t("thisStoryIsnTAvailable")}
         </AppText>
         <AppText variant="muted" className="text-center">

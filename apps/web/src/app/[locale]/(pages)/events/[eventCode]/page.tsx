@@ -17,6 +17,7 @@ import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import { loadReviewPreview } from "@/reviews/loadReviews";
 import ReviewsPreview from "@/reviews/organisms/ReviewsPreview";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import {
   buildAvatarUrl,
   buildCloudinaryUrl,
@@ -114,6 +115,7 @@ export default async function page({
   const locale = await getLocale();
 
   const t = await getTranslations("events");
+  const tc = await getTranslations("core");
 
   const supabase = publicSupabase;
 
@@ -531,7 +533,7 @@ export default async function page({
             <div className="flex flex-wrap gap-2">
               {event.event_category && (
                 <span className="px-3 py-1 rounded-full bg-primary/10 text-sm font-medium text-foreground">
-                  {event.event_category}
+                  {eventCategoryLabel(tc, event.event_category)}
                 </span>
               )}
               {tags.map((tag: string) => (

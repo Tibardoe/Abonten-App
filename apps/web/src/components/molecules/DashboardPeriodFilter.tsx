@@ -1,7 +1,7 @@
 "use client";
 
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
-import { DASHBOARD_PERIOD_LABELS } from "@abonten/core/organizerDashboardDateRange";
+import { dashboardPeriodLabel } from "@abonten/core/organizerDashboardDateRange";
 import { useTranslations } from "next-intl";
 import { cn } from "../lib/utils";
 
@@ -17,6 +17,7 @@ export default function DashboardPeriodFilter({
   ariaLabel?: string;
 }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
   const ariaLabel = ariaLabelProp ?? t("dashboardTimePeriod");
   return (
     <div
@@ -38,7 +39,7 @@ export default function DashboardPeriodFilter({
               : "border-border text-muted-foreground hover:text-foreground",
           )}
         >
-          {DASHBOARD_PERIOD_LABELS[period]}
+          {dashboardPeriodLabel(tc, period)}
         </button>
       ))}
     </div>

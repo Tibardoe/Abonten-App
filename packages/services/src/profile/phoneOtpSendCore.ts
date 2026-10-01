@@ -7,9 +7,10 @@
 // address. Deliberately NOT a "use server" file.
 
 import {
-  PHONE_ERROR_MESSAGE,
   parsePhoneWithDialCode,
+  phoneErrorMessage,
 } from "@abonten/core/phone/phone";
+import { coreT } from "../i18n/requestLocale";
 import { routeOtpForPhone } from "./otpProviders/otpRouter";
 import type { OtpSendResult } from "./otpProviders/types";
 import { recordOtpSendFailure } from "./otpSendMonitoring";
@@ -32,7 +33,7 @@ export async function sendPhoneOtpCore(input: {
 }): Promise<PhoneOtpSendResult> {
   const parsed = parsePhoneWithDialCode(input.dialCode, input.rawPhone);
   if (!parsed.ok) {
-    return { status: 400, message: PHONE_ERROR_MESSAGE[parsed.error] };
+    return { status: 400, message: phoneErrorMessage(coreT(), parsed.error) };
   }
   const phoneE164 = parsed.e164;
 

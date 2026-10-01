@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { settleEnvelope } from "@/lib/envelope";
 import type { AddMomoWalletBody, PaymentMethodRow } from "@abonten/api-client";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as WebBrowser from "expo-web-browser";
 
@@ -48,6 +49,8 @@ export function useAddMomoWallet() {
 // Paystack callback is a web URL, not the app scheme), so the user closes
 // it manually and confirmCard is the source of truth either way.
 export function useAddCard() {
+  const t = useTranslations("wallet");
+
   const qc = useQueryClient();
   return useMutation<AddCardResult, Error, string | undefined>({
     mutationFn: async (label) => {
@@ -55,7 +58,7 @@ export function useAddCard() {
       if (init.status !== 200 || !init.data) {
         return {
           status: init.status,
-          message: init.message ?? "Couldn't start card verification.",
+          message: init.message ?? t("couldnTStartCardVerification"),
         };
       }
 

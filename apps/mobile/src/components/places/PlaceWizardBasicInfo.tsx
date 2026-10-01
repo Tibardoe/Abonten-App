@@ -1,5 +1,6 @@
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import type { PlaceWizard } from "@/features/places/usePlaceWizard";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { AppText, Chip, Field, Icon, Input } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
@@ -11,6 +12,7 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 // PlaceCreateStepBasicInfo.
 export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
   const t = useTranslations("places");
+  const tc = useTranslations("core");
 
   const [mapOpen, setMapOpen] = useState(false);
 
@@ -29,7 +31,7 @@ export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
           {w.categories.map((cat) => (
             <Chip
               key={cat.id}
-              label={cat.name}
+              label={placeCategoryLabel(tc, cat)}
               selected={cat.id === w.categoryId}
               onPress={() => w.setCategoryId(cat.id)}
             />

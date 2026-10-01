@@ -11,8 +11,8 @@ import {
 } from "@abonten/core/admin/computeTrend";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
-  DASHBOARD_PERIOD_COMPARISON_LABELS,
   type DashboardPeriod,
+  dashboardPeriodComparisonLabel,
 } from "@abonten/core/organizerDashboardDateRange";
 import type { OrganizerOverviewRow } from "@abonten/types/eventAnalytics";
 import { useTranslations } from "next-intl";
@@ -59,6 +59,7 @@ export default function OrganizerOverviewCards({
   onRetry?: () => void;
 }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   // No sales yet means no currency on the overview row; show zero in the
   // market's currency rather than as a bare "0.00".
@@ -94,7 +95,7 @@ export default function OrganizerOverviewCards({
 
   const primary = current[0];
   const primaryPrev = previous?.[0] ?? null;
-  const comparisonLabel = DASHBOARD_PERIOD_COMPARISON_LABELS[period];
+  const comparisonLabel = dashboardPeriodComparisonLabel(tc, period);
 
   const money = (amount: number, currency: string | null) =>
     formatMoney(currency ?? fallbackCurrency, Number(amount));
@@ -159,7 +160,9 @@ export default function OrganizerOverviewCards({
         <StatTile
           label={t("activeEvents")}
           value={String(primary.active_events_count ?? 0)}
-          sublabel={`of ${primary.total_events_count ?? 0} published`}
+          sublabel={t("ofPublished", {
+            value: primary.total_events_count ?? 0,
+          })}
         />
 
         <StatTile

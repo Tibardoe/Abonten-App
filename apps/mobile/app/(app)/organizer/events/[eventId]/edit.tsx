@@ -45,7 +45,7 @@ export default function EditEventScreen() {
         <View className="flex-1 bg-background">
           <QueryUnavailable
             view={w.loadView}
-            subject="this event"
+            subject={t("thisEvent")}
             onRetry={() => w.reload()}
           />
         </View>

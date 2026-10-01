@@ -1,18 +1,10 @@
 import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import ImagePreviewPane from "@/components/molecules/ImagePreviewPane";
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
+import { dayName } from "@abonten/core/dateFormatter";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
-
-const DAY_LABELS: Record<number, string> = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-};
+import { useLocale, useTranslations } from "next-intl";
 
 // Monday-first display order, same convention as PlaceOpeningHoursEditor.
 const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -34,6 +26,8 @@ export default function PlaceCreateStepReview({
   className,
 }: PlaceCreateStepReviewProps) {
   const t = useTranslations("places");
+  const locale = useLocale();
+  const tc = useTranslations("core");
 
   const values = getValues();
 
@@ -48,7 +42,8 @@ export default function PlaceCreateStepReview({
     staleTime: Number.POSITIVE_INFINITY,
   });
 
-  const categoryName = categories?.find((cat) => cat.id === categoryId)?.name;
+  const category = categories?.find((cat) => cat.id === categoryId);
+  const categoryName = category ? placeCategoryLabel(tc, category) : undefined;
 
   return (
     <div className={className}>
@@ -99,7 +94,7 @@ export default function PlaceCreateStepReview({
 
             return (
               <li key={dayOfWeek} className="flex justify-between">
-                <span>{DAY_LABELS[dayOfWeek]}</span>
+                <span>{dayName(dayOfWeek, "long", locale)}</span>
                 <span className="text-muted-foreground">
                   {hour.isClosed
                     ? t("closed")

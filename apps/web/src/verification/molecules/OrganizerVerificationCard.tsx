@@ -3,8 +3,8 @@
 import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { supabase } from "@/config/supabase/client";
 import {
-  VERIFICATION_CHIP_LABEL,
   ownerStatusCopy,
+  verificationChipLabel,
 } from "@abonten/core/verification/copy";
 import type {
   SubjectVerificationView,
@@ -22,6 +22,7 @@ import { IoCheckmarkCircle, IoShieldCheckmarkOutline } from "react-icons/io5";
 
 export default function OrganizerVerificationCard() {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   const [view, setView] = useState<SubjectVerificationView | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -80,7 +81,7 @@ export default function OrganizerVerificationCard() {
   }
 
   const copy = status
-    ? ownerStatusCopy(status, "organizer", {
+    ? ownerStatusCopy(tc, status, "organizer", {
         reason: current?.decisionReason,
       })
     : {
@@ -99,7 +100,7 @@ export default function OrganizerVerificationCard() {
           <h3 className="font-semibold">{copy.title}</h3>
           {status ? (
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {VERIFICATION_CHIP_LABEL[status]}
+              {verificationChipLabel(tc, status)}
             </span>
           ) : null}
         </div>

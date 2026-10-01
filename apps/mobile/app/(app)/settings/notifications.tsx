@@ -62,10 +62,10 @@ function Row({
 }
 
 const KIND_LABEL: Record<NotificationSubscription["kind"], string> = {
-  organizer: "New events",
-  place: "Updates from this place",
-  similar_events: "Similar events",
-  similar_places: "Similar places",
+  organizer: "newEvents",
+  place: "updatesFromThisPlace",
+  similar_events: "similarEvents",
+  similar_places: "similarPlaces",
 };
 
 export default function NotificationSettings() {
@@ -127,7 +127,7 @@ export default function NotificationSettings() {
         {!p ? (
           <QueryUnavailable
             view={prefsView}
-            subject="your settings"
+            subject={t("yourSettings")}
             onRetry={() => prefs.refetch()}
             loading={
               <View className="gap-3">
@@ -249,7 +249,7 @@ export default function NotificationSettings() {
                           {sub.label}
                         </AppText>
                         <AppText variant="caption" tone="muted">
-                          {KIND_LABEL[sub.kind]}
+                          {t(KIND_LABEL[sub.kind])}
                           {sub.status === "paused" ? t("paused") : ""}
                         </AppText>
                       </View>

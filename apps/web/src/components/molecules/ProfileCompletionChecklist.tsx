@@ -1,6 +1,7 @@
 "use client";
 
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { profileCompletionItemCopy } from "@abonten/core/profileCompletion";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { IoEllipseOutline } from "react-icons/io5";
@@ -11,6 +12,7 @@ import { IoEllipseOutline } from "react-icons/io5";
 // setup, linked underneath. Gone once the profile steps are done.
 export default function ProfileCompletionChecklist() {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const { data: completion } = useProfileCompletion();
   if (!completion) return null;
@@ -24,20 +26,23 @@ export default function ProfileCompletionChecklist() {
     <div className="rounded-xl border border-border bg-muted p-4 space-y-3">
       <h2 className="font-semibold">{t("finishYourProfile")}</h2>
       <ul className="space-y-2">
-        {missing.map((item) => (
-          <li key={item.key} className="flex gap-2">
-            <IoEllipseOutline
-              className="mt-0.5 shrink-0 text-lg text-muted-foreground"
-              aria-hidden
-            />
-            <span>
-              <span className="block text-sm font-medium">{item.label}</span>
-              <span className="block text-xs text-muted-foreground">
-                {item.description}
+        {missing.map((item) => {
+          const copy = profileCompletionItemCopy(tc, item);
+          return (
+            <li key={item.key} className="flex gap-2">
+              <IoEllipseOutline
+                className="mt-0.5 shrink-0 text-lg text-muted-foreground"
+                aria-hidden
+              />
+              <span>
+                <span className="block text-sm font-medium">{copy.label}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {copy.description}
+                </span>
               </span>
-            </span>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
       <Link
         href="/settings/account-setup"

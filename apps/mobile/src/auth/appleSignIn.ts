@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { Platform } from "react-native";
 
@@ -41,11 +42,17 @@ export async function signInWithApple(): Promise<
     if ((e as { code?: string }).code === "ERR_REQUEST_CANCELED") {
       return { ok: false, cancelled: true };
     }
-    return { ok: false, message: "Apple sign-in didn't finish. Try again." };
+    return {
+      ok: false,
+      message: translatorFor("auth")("appleSignInDidnTFinish"),
+    };
   }
 
   if (!credential.identityToken) {
-    return { ok: false, message: "Apple didn't return a sign-in token." };
+    return {
+      ok: false,
+      message: translatorFor("auth")("appleDidnTReturnASign"),
+    };
   }
 
   const { data, error } = await supabase.auth.signInWithIdToken({
@@ -55,7 +62,8 @@ export async function signInWithApple(): Promise<
   if (error || !data.user) {
     return {
       ok: false,
-      message: error?.message ?? "Couldn't finish signing in with Apple.",
+      message:
+        error?.message ?? translatorFor("auth")("couldnTFinishSigningInWith"),
     };
   }
 

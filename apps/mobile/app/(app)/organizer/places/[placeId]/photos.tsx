@@ -27,7 +27,7 @@ export default function PlacePhotosScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={view}
-          subject="this place's photos"
+          subject={t("thisPlaceSPhotos")}
           onRetry={() => q.refetch()}
           loading={
             <View className="flex-1 items-center justify-center">

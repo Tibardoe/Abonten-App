@@ -6,10 +6,6 @@ import {
 import {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
-  EXPLORE_EVENT_DISTANCE_OPTIONS,
-  EXPLORE_PLACE_DISTANCE_OPTIONS,
-  EXPLORE_RATING_OPTIONS,
-  EXPLORE_WHEN_OPTIONS,
   type EventFilters,
   type ExplorePrice,
   type ExploreWhen,
@@ -18,14 +14,24 @@ import {
   clearPlaceFilterKey,
   countActiveEventFilters,
   countActivePlaceFilters,
+  exploreEventDistanceOptions,
+  explorePlaceDistanceOptions,
   explorePriceFor,
   explorePriceOptions,
   explorePriceRange,
+  exploreRatingOptions,
   exploreWhenFor,
+  exploreWhenOptions,
   exploreWhenRange,
   withCurrentDistance,
 } from "@/features/discovery/exploreFilters";
+import { useCoreI18n } from "@/features/i18n/useCoreI18n";
 import { useMarket } from "@/features/markets/MarketProvider";
+import {
+  eventCategoryLabel,
+  eventTypeLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceCategory } from "@abonten/types/placeType";
 import { AppText, Button, Chip, Sheet } from "@abonten/ui-native";
@@ -70,6 +76,7 @@ export function FilterSheet({
   areaLabel?: string | null;
 }) {
   const t = useTranslations("explore");
+  const i18n = useCoreI18n();
 
   const [eDraft, setEDraft] = useState<EventFilters>(eventFilters);
   const [pDraft, setPDraft] = useState<PlaceFilters>(placeFilters);
@@ -154,7 +161,7 @@ export function FilterSheet({
         }}
       >
         <FilterChoices
-          options={EXPLORE_WHEN_OPTIONS}
+          options={exploreWhenOptions(i18n.t)}
           value={when}
           onChange={chooseWhen}
         />
@@ -179,7 +186,8 @@ export function FilterSheet({
       >
         <FilterChoices
           options={withCurrentDistance(
-            EXPLORE_EVENT_DISTANCE_OPTIONS,
+            i18n,
+            exploreEventDistanceOptions(i18n),
             eDraft.maxDistanceKm,
           )}
           value={eDraft.maxDistanceKm}
@@ -200,7 +208,7 @@ export function FilterSheet({
         }}
       >
         <FilterChoices
-          options={explorePriceOptions(currency, priceScale)}
+          options={explorePriceOptions(i18n.t, currency, priceScale)}
           value={price}
           onChange={choosePrice}
         />
@@ -233,7 +241,7 @@ export function FilterSheet({
           {eventCategoriesAndTypes.map((c) => (
             <Chip
               key={c.category}
-              label={c.category}
+              label={eventCategoryLabel(i18n.t, c.category)}
               selected={eDraft.category === c.category}
               onPress={() =>
                 setEDraft((d) => ({
@@ -250,7 +258,9 @@ export function FilterSheet({
       {eDraft.category && selectedCategoryTypes.length > 0 ? (
         <FilterSection
           label={t("type")}
-          hint={t("anyNumberWithin", { category: eDraft.category })}
+          hint={t("anyNumberWithin", {
+            category: eventCategoryLabel(i18n.t, eDraft.category),
+          })}
           active={eDraft.types.length > 0}
           onClear={() => setEDraft((d) => ({ ...d, types: [] }))}
         >
@@ -260,7 +270,7 @@ export function FilterSheet({
               return (
                 <Chip
                   key={type}
-                  label={type}
+                  label={eventTypeLabel(i18n.t, type)}
                   selected={on}
                   onPress={() =>
                     setEDraft((d) => ({
@@ -283,7 +293,7 @@ export function FilterSheet({
         onClear={() => setEDraft((d) => clearEventFilterKey(d, "rating"))}
       >
         <FilterChoices
-          options={EXPLORE_RATING_OPTIONS}
+          options={exploreRatingOptions(i18n)}
           value={eDraft.minRating}
           onChange={(v) => setEDraft((d) => ({ ...d, minRating: v }))}
         />
@@ -302,7 +312,8 @@ export function FilterSheet({
       >
         <FilterChoices
           options={withCurrentDistance(
-            EXPLORE_PLACE_DISTANCE_OPTIONS,
+            i18n,
+            explorePlaceDistanceOptions(i18n),
             pDraft.maxDistanceKm,
           )}
           value={pDraft.maxDistanceKm}
@@ -324,7 +335,7 @@ export function FilterSheet({
             {placeCategories.map((c) => (
               <Chip
                 key={c.id}
-                label={c.name}
+                label={placeCategoryLabel(i18n.t, c)}
                 selected={pDraft.categoryId === c.id}
                 onPress={() =>
                   setPDraft((d) => ({
@@ -361,7 +372,7 @@ export function FilterSheet({
         onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "rating"))}
       >
         <FilterChoices
-          options={EXPLORE_RATING_OPTIONS}
+          options={exploreRatingOptions(i18n)}
           value={pDraft.minRating}
           onChange={(v) => setPDraft((d) => ({ ...d, minRating: v }))}
         />

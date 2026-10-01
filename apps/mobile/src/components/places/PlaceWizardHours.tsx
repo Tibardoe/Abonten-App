@@ -1,11 +1,11 @@
 import { TimeField } from "@/components/datetime/TimeField";
 import {
-  DAY_LABELS,
   type PlaceWizard,
   TIME_RE,
+  dayLabel,
 } from "@/features/places/usePlaceWizard";
 import { AppText } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // Step 3 of the place wizard — the 7-day open/close editor. Mirrors the web
@@ -14,6 +14,7 @@ import { Pressable, View } from "react-native";
 // expects). "Copy to every day" fills the rest from the first open day.
 export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
   const t = useTranslations("places");
+  const { locale } = useLocale();
 
   const firstOpen = w.openingHours.find((h) => !h.isClosed);
 
@@ -52,7 +53,9 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
           className="gap-2 rounded-xl border border-border bg-card p-3"
         >
           <View className="flex-row items-center justify-between">
-            <AppText variant="bodyStrong">{DAY_LABELS[h.dayOfWeek]}</AppText>
+            <AppText variant="bodyStrong">
+              {dayLabel(h.dayOfWeek, locale)}
+            </AppText>
             <Pressable
               accessibilityRole="switch"
               accessibilityState={{ checked: !h.isClosed }}
@@ -78,7 +81,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
             <View className="flex-row items-center gap-2">
               <View className="flex-1">
                 <TimeField
-                  label={t("opens", { item: DAY_LABELS[h.dayOfWeek] })}
+                  label={t("opens", { item: dayLabel(h.dayOfWeek, locale) })}
                   value={h.openTime ?? null}
                   onChange={(v) => w.setHours(h.dayOfWeek, { openTime: v })}
                   invalid={!!h.openTime && !TIME_RE.test(h.openTime)}
@@ -87,7 +90,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
               <AppText variant="muted">{t("to")}</AppText>
               <View className="flex-1">
                 <TimeField
-                  label={t("closes", { item: DAY_LABELS[h.dayOfWeek] })}
+                  label={t("closes", { item: dayLabel(h.dayOfWeek, locale) })}
                   value={h.closeTime ?? null}
                   onChange={(v) => w.setHours(h.dayOfWeek, { closeTime: v })}
                   invalid={!!h.closeTime && !TIME_RE.test(h.closeTime)}

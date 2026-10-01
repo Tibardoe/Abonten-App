@@ -122,7 +122,7 @@ export default function EditProfileInputFields({
         <div className="space-y-1.5">
           <Input
             title={t("username")}
-            inputPlaceholder="Username"
+            inputPlaceholder={t("username")}
             {...register("username")}
           />
           {errors.username && (
@@ -135,7 +135,7 @@ export default function EditProfileInputFields({
         <div className="space-y-1.5">
           <Input
             title={t("name")}
-            inputPlaceholder="Name"
+            inputPlaceholder={t("name")}
             {...register("full_name")}
           />
           {errors.full_name && (
@@ -148,7 +148,7 @@ export default function EditProfileInputFields({
         <div className="space-y-1.5">
           <Input
             title={t("website")}
-            inputPlaceholder="Website"
+            inputPlaceholder={t("website")}
             {...register("website")}
           />
           {errors.website && (
@@ -159,7 +159,11 @@ export default function EditProfileInputFields({
         </div>
 
         <div className="space-y-1.5">
-          <Input title={t("bio")} inputPlaceholder="Bio" {...register("bio")} />
+          <Input
+            title={t("bio")}
+            inputPlaceholder={t("bio")}
+            {...register("bio")}
+          />
           {errors.bio && (
             <p className="text-[0.8rem] font-medium text-destructive">
               {errors.bio.message}

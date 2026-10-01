@@ -7,6 +7,7 @@
   "cancelling": "Cancelling…",
   "checkedIn": "Checked in",
   "couldnTCancel": "Couldn't cancel",
+  "couldnTCreateTheReceipt": "Couldn't create the receipt",
   "downloadReceiptPdf": "Download receipt (PDF)",
   "empty": {
     "active": {
@@ -31,11 +32,16 @@
   "noQrCode": "No QR code",
   "pleaseTryAgainInAMoment": "Please try again in a moment.",
   "preparingReceipt": "Preparing receipt…",
+  "receiptReady": "Receipt ready",
   "seat": "Seat {seat_number}",
+  "sharingIsnTAvailableOnThis": "Sharing isn't available on this device, but the receipt PDF was generated.",
   "showThisAtEntry": "Show this at entry",
+  "somethingWentWrongGeneratingThePdf": "Something went wrong generating the PDF. Please try again.",
+  "thisTicket": "this ticket",
   "thisTicketCouldNotBeFound": "This ticket could not be found.",
   "ticket": "Ticket",
   "ticketCancelled": "Ticket cancelled",
   "ticketReference": "Ticket reference",
-  "viewEvent": "View event"
+  "viewEvent": "View event",
+  "yourTickets": "your tickets"
 }

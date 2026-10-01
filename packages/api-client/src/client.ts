@@ -311,6 +311,12 @@ export type ApiClientOptions = {
   getInstallId?: () => string | null | Promise<string | null>;
   /** "android" | "ios", sent as `x-abonten-platform` with the install id. */
   platform?: "android" | "ios";
+  /**
+   * The language the app is showing (its Language setting), sent as
+   * `x-abonten-locale` with every request so the server words its answer
+   * in it. Without it the server falls back to Accept-Language, then English.
+   */
+  getLocale?: () => string | null | undefined;
 };
 
 // The internal telemetry sink. Referenced here as a literal so the
@@ -403,6 +409,9 @@ export function createApiClient(options: ApiClientOptions) {
       headers["x-abonten-install-id"] = installId;
       if (options.platform) headers["x-abonten-platform"] = options.platform;
     }
+
+    const locale = options.getLocale?.();
+    if (locale) headers["x-abonten-locale"] = locale;
 
     const startedAt = Date.now();
     const controller = new AbortController();

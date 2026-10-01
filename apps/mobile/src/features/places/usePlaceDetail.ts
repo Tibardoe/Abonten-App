@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { isUuid } from "@/lib/uuid";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
 import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { type QueryClient, useQuery } from "@tanstack/react-query";
 
 // Mirrors getPlaceBySlug.ts (the web place detail fetch) but keyed by id —
@@ -46,7 +47,7 @@ export type PlaceDetail = {
 };
 
 async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
-  if (!isUuid(id)) throw new NotFoundError("Place");
+  if (!isUuid(id)) throw new NotFoundError(translatorFor("places")("place"));
 
   // Every part is keyed by the id alone, so all five reads are one parallel
   // round trip; the child rows are only used once the place itself exists.
@@ -86,7 +87,7 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
   ]);
 
   if (error) throw error;
-  if (!place) throw new NotFoundError("Place");
+  if (!place) throw new NotFoundError(translatorFor("places")("place"));
 
   const rating = parseRatingAggregate(ratingRow);
   const reviewCount = rating.count;

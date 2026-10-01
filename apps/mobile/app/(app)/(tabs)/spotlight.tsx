@@ -19,7 +19,7 @@ import { flushContentViews } from "@/features/content/useContentTelemetry";
 import { useVolumeKeys } from "@/features/content/useVolumeKeys";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useIsOnline } from "@/lib/network";
-import { FEED_SURFACES, FEED_SURFACE_LABEL } from "@abonten/core/content/copy";
+import { FEED_SURFACES, feedSurfaceLabel } from "@abonten/core/content/copy";
 import {
   feedPlaybackMode,
   reconcileActiveIndex,
@@ -78,6 +78,7 @@ const RESTORED_FEED_MAX_AGE_MS = 10 * 60 * 1000;
 // useContentFeed).
 export default function SpotlightFeedScreen() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   // The floating tab bar sits over the bottom of the screen: the feed ends
@@ -578,7 +579,7 @@ export default function SpotlightFeedScreen() {
                       surface === s ? "text-black" : "text-white",
                     ].join(" ")}
                   >
-                    {FEED_SURFACE_LABEL[s]}
+                    {feedSurfaceLabel(tc, s)}
                   </AppText>
                 </Pressable>
               ))}

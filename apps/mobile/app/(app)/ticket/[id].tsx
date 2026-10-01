@@ -70,7 +70,7 @@ export default function TicketDetailScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={view}
-          subject="this ticket"
+          subject={t("thisTicket")}
           onRetry={() => refetch()}
         />
       </View>

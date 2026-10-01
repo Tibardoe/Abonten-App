@@ -111,7 +111,7 @@ export default function Header() {
                 logo never flashes the wrong colour while the theme loads. */}
             <Image
               src="/assets/images/brand/abonten-mark-small-light.svg"
-              alt="Abonten"
+              alt={t("abonten")}
               width={40}
               height={40}
               priority
@@ -119,7 +119,7 @@ export default function Header() {
             />
             <Image
               src="/assets/images/brand/abonten-mark-small-night.svg"
-              alt="Abonten"
+              alt={t("abonten")}
               width={40}
               height={40}
               priority
@@ -127,7 +127,7 @@ export default function Header() {
             />
             <Image
               src="/assets/images/brand/abonten-logotype-light.svg"
-              alt="Abonten"
+              alt={t("abonten")}
               width={160}
               height={30}
               priority
@@ -135,7 +135,7 @@ export default function Header() {
             />
             <Image
               src="/assets/images/brand/abonten-logotype-night.svg"
-              alt="Abonten"
+              alt={t("abonten")}
               width={160}
               height={30}
               priority

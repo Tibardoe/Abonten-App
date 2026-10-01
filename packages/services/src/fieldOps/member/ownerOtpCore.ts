@@ -1,10 +1,11 @@
-import { OTP_MESSAGES } from "@abonten/core/otpMessages";
+import { otpMessage } from "@abonten/core/otpMessages";
 import { maskPhoneNumber } from "@abonten/core/phone/phone";
 import type {
   FieldOpsConsentView,
   FieldOpsOnboarding,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { coreT } from "../../i18n/requestLocale";
 import { routeOtpForPhone } from "../../profile/otpProviders/otpRouter";
 import type {
   OtpSendResult,
@@ -266,17 +267,25 @@ async function confirmCode(
   },
 ): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
   if (!/^\d{4,8}$/.test(code)) {
-    return { ok: false, status: 400, message: OTP_MESSAGES.invalidFormat };
+    return {
+      ok: false,
+      status: 400,
+      message: otpMessage(coreT(), "invalidFormat"),
+    };
   }
   if (!(await getPendingOtp(OTP_PURPOSE, phone))) {
-    return { ok: false, status: 401, message: OTP_MESSAGES.expired };
+    return { ok: false, status: 401, message: otpMessage(coreT(), "expired") };
   }
   if (!(await registerVerifyAttempt(OTP_PURPOSE, phone))) {
-    return { ok: false, status: 429, message: OTP_MESSAGES.tooManyAttempts };
+    return {
+      ok: false,
+      status: 429,
+      message: otpMessage(coreT(), "tooManyAttempts"),
+    };
   }
   const pending = await getPendingOtp(OTP_PURPOSE, phone);
   if (!pending)
-    return { ok: false, status: 401, message: OTP_MESSAGES.expired };
+    return { ok: false, status: 401, message: otpMessage(coreT(), "expired") };
   const result = deps.verifyOtp
     ? await deps.verifyOtp(pending.requestId, pending.prefix, code)
     : await verifyPendingOtp(pending, code);

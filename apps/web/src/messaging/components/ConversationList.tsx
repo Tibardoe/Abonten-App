@@ -179,11 +179,11 @@ export function ConversationList({ activeId }: { activeId?: string }) {
                 type="button"
                 onClick={() => toggleCustomFilter(key)}
                 aria-label={t("filterActiveClickToRemove", {
-                  item: CUSTOM_FILTER_LABEL[key],
+                  item: t(CUSTOM_FILTER_LABEL[key]),
                 })}
                 className="flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
               >
-                {CUSTOM_FILTER_LABEL[key]}
+                {t(CUSTOM_FILTER_LABEL[key])}
                 <X className="h-3 w-3" />
               </button>
             ))}
@@ -219,10 +219,10 @@ export function ConversationList({ activeId }: { activeId?: string }) {
                       </span>
                       <span className="min-w-0">
                         <span className="block text-sm font-medium">
-                          {CUSTOM_FILTER_LABEL[key]}
+                          {t(CUSTOM_FILTER_LABEL[key])}
                         </span>
                         <span className="block text-xs text-muted-foreground">
-                          {CUSTOM_FILTER_HELP[key]}
+                          {t(CUSTOM_FILTER_HELP[key])}
                         </span>
                       </span>
                     </button>

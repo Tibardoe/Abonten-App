@@ -53,7 +53,7 @@ export default function PayoutsScreen() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="your payouts"
+            subject={t("yourPayouts")}
             onRetry={() => q.refetch()}
             loading={<ActivityIndicator className="mt-10" />}
           />

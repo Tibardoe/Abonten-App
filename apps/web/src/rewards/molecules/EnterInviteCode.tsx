@@ -11,6 +11,7 @@ import { useId, useState } from "react";
 // friend's code joins their invite (first week only; the server decides).
 export default function EnterInviteCode() {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const inputId = useId();
@@ -35,7 +36,7 @@ export default function EnterInviteCode() {
         setMessage({ tone: "error", text: res.message ?? t("pleaseSignIn") });
         return;
       }
-      setMessage(bindResultMessage(res.data));
+      setMessage(bindResultMessage(tc, res.data));
       if (res.data.result === "bound") router.refresh();
     } catch {
       setMessage({

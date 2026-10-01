@@ -7,6 +7,7 @@ import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { logger } from "@abonten/core/logger";
 import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -21,6 +22,8 @@ type UseAvatarUploadOptions = {
 // a Server Action, so real progress events are available -- the same
 // pipeline useReviewPhotoUpload.ts already uses.
 export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -32,12 +35,12 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
       setProgress(0);
 
       if (!file) {
-        toast.error("Please select a photo!");
+        toast.error(t("pleaseSelectAPhoto"));
         return;
       }
 
       if (file.size > MAX_AVATAR_UPLOAD_SIZE_BYTES) {
-        toast.error("File is too large. Please upload an image under 5MB.");
+        toast.error(t("fileIsTooLargePleaseUpload"));
         return;
       }
 
@@ -45,7 +48,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         const signatureResponse = await getAvatarUploadSignature();
 
         if (signatureResponse.status !== 200 || !signatureResponse.data) {
-          toast.error(signatureResponse.message ?? "Failed to start upload.");
+          toast.error(signatureResponse.message ?? t("failedToStartUpload"));
           return;
         }
 
@@ -77,7 +80,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
 
         await saveToSupabase(result.public_id, result.version, transformation);
 
-        toast.success("Upload successful!");
+        toast.success(t("uploadSuccessful"));
         router.refresh();
         // No user id is threaded into this hook, so invalidate every
         // ["user-details", ...] / ["profile-completion", ...] entry rather
@@ -93,14 +96,14 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
       } catch (error) {
         // A user-initiated cancel already rejects via xhr.onabort with this
         // message (see uploadToCloudinary.ts) — no error toast for that case.
-        if (error instanceof Error && error.message === "Upload cancelled.") {
+        if (error instanceof Error && error.message === t("uploadCancelled")) {
           return;
         }
         logger.error("Error uploading image:", error);
         toast.error(
           error instanceof Error
             ? error.message
-            : "Upload failed. Please try again.",
+            : t("uploadFailedPleaseTryAgain"),
         );
       } finally {
         xhrRef.current = null;

@@ -35,10 +35,12 @@ function TicketCard({
   queryKey: unknown[];
 }) {
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   const refundBadge =
     showRefundInfo && event.status === "cancelled" && event.transaction
       ? getRefundStatusLabel(
+          tc,
           event.transaction.status,
           event.transaction.refund_requested_at,
         )
@@ -62,7 +64,7 @@ function TicketCard({
       event.event.occurrences,
     ) === "ended";
   const canRetryRefund =
-    refundBadge?.label === "Refund failed" && event.transaction_id;
+    refundBadge?.label === t("refundFailed") && event.transaction_id;
   return (
     <div className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border">
       <div className="relative h-36 w-full">

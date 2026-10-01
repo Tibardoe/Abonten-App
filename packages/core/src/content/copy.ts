@@ -1,48 +1,30 @@
 // Fixed product words for Spotlight + Stories, shared by web, mobile and the
-// admin console. Never promise reach, review times or outcomes here.
+// admin console. Never promise reach, review times or outcomes here. The
+// words themselves live under `content.*` in packages/i18n (core namespace);
+// this module only knows which key says what.
 
 import type {
   ContentCampaignObjective,
   ContentCampaignStatus,
   ContentFeedSurface,
 } from "@abonten/types/contentType";
-import { intlLocale } from "../i18n/coreStrings";
+import type { CoreTranslator } from "../i18n/translator";
 
 export const SPOTLIGHT_PRODUCT_NAME = "Spotlight";
-
-/** "1 like", "2 likes", "1,204 views". */
-export function countLabel(
-  n: number,
-  singular: string,
-  plural = `${singular}s`,
-  locale?: string | null,
-) {
-  return `${n.toLocaleString(intlLocale(locale))} ${n === 1 ? singular : plural}`;
-}
 export const STORIES_PRODUCT_NAME = "Stories";
 
-export const SPOTLIGHT_TAGLINE =
-  "Short videos from the events and places around you.";
-export const STORIES_TAGLINE =
-  "What the organizers and places you follow are up to right now.";
+export const SPOTLIGHT_TAGLINE_KEY = "content.spotlightTagline";
+export const STORIES_TAGLINE_KEY = "content.storiesTagline";
 
 /** The paid-placement disclosure every promoted Spotlight must show. */
-export const SPONSORED_LABEL = "Sponsored";
+export const SPONSORED_LABEL_KEY = "content.sponsored";
 
-export const YOUR_STORY_LABEL = "Your Story";
+export const YOUR_STORY_LABEL_KEY = "content.yourStory";
 
-export const STORY_EXPIRED_MESSAGE = "This Story has ended.";
+export const STORY_EXPIRED_MESSAGE_KEY = "content.storyExpired";
 
-export const CONTENT_RIGHTS_ACKNOWLEDGEMENT =
-  "I own this content or have permission to share it, and it follows Abonten's content rules.";
-
-export const FEED_SURFACE_LABEL: Record<ContentFeedSurface, string> = {
-  for_you: "For you",
-  following: "Following",
-  nearby: "Nearby",
-  happening_soon: "Happening soon",
-  trending: "Trending",
-};
+export const CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY =
+  "content.rightsAcknowledgement";
 
 export const FEED_SURFACES: readonly ContentFeedSurface[] = [
   "for_you",
@@ -52,67 +34,40 @@ export const FEED_SURFACES: readonly ContentFeedSurface[] = [
   "trending",
 ] as const;
 
-export const CAMPAIGN_STATUS_LABEL: Record<ContentCampaignStatus, string> = {
-  draft: "Draft",
-  pending_payment: "Awaiting payment",
-  payment_confirmed: "Paid",
-  pending_review: "In review",
-  scheduled: "Scheduled",
-  active: "Active",
-  paused: "Paused",
-  completed: "Completed",
-  rejected: "Rejected",
-  cancelled: "Cancelled",
-  refunded: "Refunded",
-};
+export function feedSurfaceLabel(
+  t: CoreTranslator,
+  surface: ContentFeedSurface,
+): string {
+  return t(`content.feedSurface.${surface}`);
+}
 
-export const CAMPAIGN_OBJECTIVE_LABEL: Record<
-  ContentCampaignObjective,
-  string
-> = {
-  views: "More views",
-  profile_visits: "More profile visits",
-  event_views: "More event views",
-  place_views: "More place views",
-  ticket_sales: "More ticket sales",
-  reservations: "More reservations",
-};
+export const CAMPAIGN_STATUSES: readonly ContentCampaignStatus[] = [
+  "draft",
+  "pending_payment",
+  "payment_confirmed",
+  "pending_review",
+  "scheduled",
+  "active",
+  "paused",
+  "completed",
+  "rejected",
+  "cancelled",
+  "refunded",
+] as const;
 
-// ── Promotions (reach-based) ─────────────────────────────────────────
-// A promotion buys extra distribution, never a number of views. Every
-// number shown to an advertiser before or during a run is an estimate.
+/** Narrows a status read from a history row (stored as text). */
+export function isCampaignStatus(
+  value: string | null | undefined,
+): value is ContentCampaignStatus {
+  return (CAMPAIGN_STATUSES as readonly string[]).includes(value ?? "");
+}
 
-export const PROMOTION_INTRO =
-  "Promoting shows your Spotlight to more people in their feeds, marked “Sponsored”. You choose a budget and who should see it; we estimate how many people it could reach.";
-
-export const PROMOTION_ESTIMATE_NOTE =
-  "This is an estimate, not a guarantee. Actual reach depends on how many people in your audience open Spotlight, how often, and what else is being promoted at the same time.";
-
-export const PROMOTION_BILLING_NOTE =
-  "You pay the budget up front. It is used only as your Spotlight is shown as sponsored, and the promotion stops when the budget is used or the run ends, whichever comes first. If it ends before the budget is used, the unused amount is shown on the promotion page.";
-
-export const PROMOTION_REVIEW_NOTE =
-  "Every promotion is reviewed before it runs. If it isn't approved, you're refunded in full.";
-
-export const PROMOTION_CASH_NOTE =
-  "Paid by card or mobile money. Abonten Credit can't be used for promotions.";
-
-export const PROMOTION_ESTIMATE_BASIS_LABEL: Record<
-  "observed" | "assumed" | "no_data",
-  string
-> = {
-  observed: "Based on recent Spotlight activity.",
-  assumed: "Based on our planning figures while Spotlight is new.",
-  no_data: "We can't estimate reach yet.",
-};
-
-export const PROMOTION_END_REASON_LABEL: Record<
-  "budget_delivered" | "run_ended",
-  string
-> = {
-  budget_delivered: "Budget fully used",
-  run_ended: "Run ended before the budget was used",
-};
+export function campaignStatusLabel(
+  t: CoreTranslator,
+  status: ContentCampaignStatus,
+): string {
+  return t(`content.campaignStatus.${status}`);
+}
 
 export const CAMPAIGN_OBJECTIVES: readonly ContentCampaignObjective[] = [
   "views",
@@ -123,8 +78,42 @@ export const CAMPAIGN_OBJECTIVES: readonly ContentCampaignObjective[] = [
   "reservations",
 ] as const;
 
-/** The CTA a post's attachment earns, based only on live entity state. */
-export function contentCtaLabel(post: {
+export function campaignObjectiveLabel(
+  t: CoreTranslator,
+  objective: ContentCampaignObjective,
+): string {
+  return t(`content.campaignObjective.${objective}`);
+}
+
+// ── Promotions (reach-based) ─────────────────────────────────────────
+// A promotion buys extra distribution, never a number of views. Every
+// number shown to an advertiser before or during a run is an estimate.
+
+export const PROMOTION_INTRO_KEY = "content.promotion.intro";
+export const PROMOTION_ESTIMATE_NOTE_KEY = "content.promotion.estimateNote";
+export const PROMOTION_BILLING_NOTE_KEY = "content.promotion.billingNote";
+export const PROMOTION_REVIEW_NOTE_KEY = "content.promotion.reviewNote";
+export const PROMOTION_CASH_NOTE_KEY = "content.promotion.cashNote";
+
+export type PromotionEstimateBasis = "observed" | "assumed" | "no_data";
+
+export function promotionEstimateBasisLabel(
+  t: CoreTranslator,
+  basis: PromotionEstimateBasis,
+): string {
+  return t(`content.promotion.estimateBasis.${basis}`);
+}
+
+export type PromotionEndReason = "budget_delivered" | "run_ended";
+
+export function promotionEndReasonLabel(
+  t: CoreTranslator,
+  reason: PromotionEndReason,
+): string {
+  return t(`content.promotion.endReason.${reason}`);
+}
+
+export type ContentCtaInput = {
   event: {
     available: boolean;
     status: string;
@@ -134,46 +123,57 @@ export function contentCtaLabel(post: {
   } | null;
   place: { available: boolean; temporaryStatus: string | null } | null;
   publisher: { kind: "organizer" | "place" | "abonten" };
-}): { label: string; target: "event" | "place" | "profile" | null } {
+};
+
+export type ContentCta = {
+  label: string;
+  target: "event" | "place" | "profile" | null;
+};
+
+/** The CTA a post's attachment earns, based only on live entity state. */
+export function contentCtaLabel(
+  t: CoreTranslator,
+  post: ContentCtaInput,
+): ContentCta {
   if (post.event) {
     if (post.event.status === "canceled") {
-      return { label: "Event cancelled", target: null };
+      return { label: t("content.cta.eventCancelled"), target: null };
     }
     if (post.event.ended) {
-      return { label: "Event has ended", target: null };
+      return { label: t("content.cta.eventEnded"), target: null };
     }
     if (!post.event.available) {
       // Older documents carry no `ended`; unavailable then meant ended.
       return {
         label:
           post.event.ended === undefined
-            ? "Event has ended"
-            : "Event unavailable",
+            ? t("content.cta.eventEnded")
+            : t("content.cta.eventUnavailable"),
         target: null,
       };
     }
     if (post.event.soldOut) {
-      return { label: "Sold out", target: "event" };
+      return { label: t("content.cta.soldOut"), target: "event" };
     }
-    return { label: "View event", target: "event" };
+    return { label: t("content.cta.viewEvent"), target: "event" };
   }
   if (post.place) {
     if (!post.place.available) {
       return {
         label:
           post.place.temporaryStatus === "permanently_closed"
-            ? "Permanently closed"
-            : "Place unavailable",
+            ? t("content.cta.permanentlyClosed")
+            : t("content.cta.placeUnavailable"),
         target: null,
       };
     }
-    return { label: "View place", target: "place" };
+    return { label: t("content.cta.viewPlace"), target: "place" };
   }
   if (post.publisher.kind === "place") {
-    return { label: "View place", target: "place" };
+    return { label: t("content.cta.viewPlace"), target: "place" };
   }
   if (post.publisher.kind === "organizer") {
-    return { label: "View profile", target: "profile" };
+    return { label: t("content.cta.viewProfile"), target: "profile" };
   }
   return { label: "", target: null };
 }
@@ -186,8 +186,9 @@ export function contentCtaLabel(post: {
  * tappable identity, so they return no label.
  */
 export function contentDestinationCta(
-  post: Parameters<typeof contentCtaLabel>[0],
-): ReturnType<typeof contentCtaLabel> {
+  t: CoreTranslator,
+  post: ContentCtaInput,
+): ContentCta {
   if (!post.event && !post.place) return { label: "", target: null };
-  return contentCtaLabel(post);
+  return contentCtaLabel(t, post);
 }

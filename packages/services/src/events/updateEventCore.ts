@@ -13,6 +13,7 @@ import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { coreT } from "../i18n/requestLocale";
 import {
   RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
@@ -99,7 +100,11 @@ export async function updateEventCore(
     return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
   }
 
-  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  const locationCheck = validateLocationInput(coreT(), {
+    address,
+    latitude,
+    longitude,
+  });
   if (!locationCheck.valid) {
     return { status: 400, message: locationCheck.message };
   }
@@ -187,7 +192,11 @@ export async function updateEventCore(
   const capacityChanged = nextCapacity !== (existingEvent.capacity ?? null);
   const freeTier = ticketTypes.find((t) => t.type === FREE_TICKET_TYPE);
   if (capacityChanged && !freeTier) {
-    const capacityProblem = ticketCapacityProblem(nextCapacity, ticketTypes);
+    const capacityProblem = ticketCapacityProblem(
+      coreT(),
+      nextCapacity,
+      ticketTypes,
+    );
     if (capacityProblem) return { status: 400, message: capacityProblem };
   }
 

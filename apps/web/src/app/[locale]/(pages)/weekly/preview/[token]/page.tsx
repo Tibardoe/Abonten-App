@@ -1,6 +1,6 @@
 import { getWeeklyPreview } from "@/utils/weeklyPublic";
 import WeeklyEditionView from "@/weekly/organisms/WeeklyEditionView";
-import { WEEKLY_EDITION_STATUS_LABEL } from "@abonten/core/weekly/copy";
+import { weeklyEditionStatusLabel } from "@abonten/core/weekly/copy";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -36,6 +36,7 @@ export default async function WeeklyPreviewPage({
   params: Promise<{ token: string }>;
 }) {
   const t = await getTranslations("weekly");
+  const tc = await getTranslations("core");
 
   const { token } = await params;
   const result = await getWeeklyPreview(decodeURIComponent(token));
@@ -65,7 +66,7 @@ export default async function WeeklyPreviewPage({
         <span>
           <strong>{t("preview")}</strong>{" "}
           {t("notVisibleToThePublicUnless", {
-            item: WEEKLY_EDITION_STATUS_LABEL[status],
+            item: weeklyEditionStatusLabel(tc, status),
           })}
         </span>
         <span className="text-xs text-muted-foreground">

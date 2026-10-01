@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     "@abonten/types",
     "@abonten/validation",
     "@abonten/services",
+    "@abonten/i18n",
     "@abonten/ui-tokens",
   ],
 

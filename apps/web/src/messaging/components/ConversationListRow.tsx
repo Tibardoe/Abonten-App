@@ -83,7 +83,7 @@ export function ConversationListRow({
     item.other_display_name ||
     item.subject_title ||
     item.title ||
-    "Conversation";
+    t("conversation");
   const context =
     (item.type === "event" || item.type === "place") &&
     item.subject_title &&
@@ -91,7 +91,7 @@ export function ConversationListRow({
       ? item.subject_title
       : null;
   const preview = !item.last_message_preview
-    ? "No messages yet"
+    ? t("noMessagesYet")
     : lastFromMe
       ? `You: ${item.last_message_preview}`
       : item.last_message_preview;

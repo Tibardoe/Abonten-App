@@ -10,9 +10,9 @@ import {
   waitlistAreaKey,
 } from "@abonten/core/market/coverage";
 import {
-  JOIN_WAITLIST_LABEL,
-  LEAVE_WAITLIST_LABEL,
-  NOT_LAUNCHED_BODY,
+  JOIN_WAITLIST_LABEL_KEY,
+  LEAVE_WAITLIST_LABEL_KEY,
+  NOT_LAUNCHED_BODY_KEY,
   notLaunchedTitle,
   supplyPrompt,
   waitingText,
@@ -52,6 +52,7 @@ export function AreaCoverageCard({
   showBrowse?: boolean;
 }) {
   const t = useTranslations("explore");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const pathname = usePathname();
@@ -70,7 +71,7 @@ export function AreaCoverageCard({
   const [choice, setChoice] = useState<boolean | null>(null);
   const compact = choice ?? (folded.has(areaKey) || waitlist.waiting);
 
-  const title = notLaunchedTitle(areaName);
+  const title = notLaunchedTitle(tc, areaName);
 
   function fold(next: boolean) {
     if (next) folded.add(areaKey);
@@ -96,7 +97,7 @@ export function AreaCoverageCard({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("showMore", {
-          value: waitlist.waiting ? waitingText(areaName) : title,
+          value: waitlist.waiting ? waitingText(tc, areaName) : title,
         })}
         onPress={() => fold(false)}
         className="mx-4 mb-2 flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 active:opacity-70"
@@ -107,7 +108,7 @@ export function AreaCoverageCard({
           tone="primary"
         />
         <AppText variant="small" className="flex-1" numberOfLines={1}>
-          {waitlist.waiting ? waitingText(areaName) : title}
+          {waitlist.waiting ? waitingText(tc, areaName) : title}
         </AppText>
         <Icon name="chevron-down" size={16} tone="muted" />
       </Pressable>
@@ -123,7 +124,9 @@ export function AreaCoverageCard({
             {title}
           </AppText>
           <AppText variant="meta">
-            {waitlist.waiting ? waitingText(areaName) : NOT_LAUNCHED_BODY}
+            {waitlist.waiting
+              ? waitingText(tc, areaName)
+              : tc(NOT_LAUNCHED_BODY_KEY)}
           </AppText>
         </View>
         <Pressable
@@ -140,21 +143,21 @@ export function AreaCoverageCard({
       <View className="flex-row flex-wrap gap-2">
         {waitlist.waiting ? (
           <Button
-            title={LEAVE_WAITLIST_LABEL}
+            title={tc(LEAVE_WAITLIST_LABEL_KEY)}
             size="sm"
             variant="outline"
             onPress={waitlist.leave}
             loading={waitlist.leaving}
-            loadingTitle="Removing you…"
+            loadingTitle={t("removingYou")}
           />
         ) : (
           <Button
-            title={JOIN_WAITLIST_LABEL}
+            title={tc(JOIN_WAITLIST_LABEL_KEY)}
             size="sm"
             leftIcon="notifications-outline"
             onPress={onJoin}
             loading={waitlist.joining}
-            loadingTitle="Adding you…"
+            loadingTitle={t("addingYou")}
           />
         )}
       </View>
@@ -167,7 +170,7 @@ export function AreaCoverageCard({
       ) : null}
 
       <View className="gap-1 border-t border-border pt-2.5">
-        <AppText variant="small">{supplyPrompt(areaName)}</AppText>
+        <AppText variant="small">{supplyPrompt(tc, areaName)}</AppText>
         <View className="flex-row gap-4">
           <Pressable
             accessibilityRole="link"

@@ -5,7 +5,9 @@ import {
 } from "@/components/weekly/weeklyBannerParts";
 import { logPlacePromotionImpression } from "@/features/places/placeEngagement";
 import { hapticLight } from "@/lib/haptics";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import type { CoreTranslator } from "@abonten/core/i18n/translator";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { WeeklyBannerSlide } from "@abonten/types/weeklyType";
@@ -56,10 +58,19 @@ function eventSlide(
   };
 }
 
-function placeSlide(p: PlaceType, t: Translate): WeeklyBannerSlide {
+function placeSlide(
+  p: PlaceType,
+  t: Translate,
+  tc: CoreTranslator,
+): WeeklyBannerSlide {
   const rating =
     (p.review_count ?? 0) > 0 ? `${(p.avg_rating ?? 0).toFixed(1)} ★` : null;
-  const meta = [p.category_name, rating].filter(Boolean).join(" · ");
+  const meta = [
+    placeCategoryLabel(tc, { slug: p.category_slug, name: p.category_name }),
+    rating,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return {
     key: `place:${p.id}`,
     subjectType: "place",
@@ -83,6 +94,7 @@ export function FeaturedBanner({
   places: PlaceType[];
 }) {
   const t = useTranslations("explore");
+  const tc = useTranslations("core");
   const { locale } = useLocale();
 
   const router = useRouter();
@@ -92,8 +104,8 @@ export function FeaturedBanner({
     () =>
       kind === "events"
         ? events.map((e) => eventSlide(e, locale, t))
-        : places.map((p) => placeSlide(p, t)),
-    [kind, events, places, locale, t],
+        : places.map((p) => placeSlide(p, t, tc)),
+    [kind, events, places, locale, t, tc],
   );
 
   // A sponsored place counts one impression when its slide is actually on

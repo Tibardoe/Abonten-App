@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 
@@ -23,7 +24,8 @@ export async function signInWithGoogle(): Promise<
   if (error || !data?.url) {
     return {
       ok: false,
-      message: error?.message ?? "Couldn't start Google sign-in.",
+      message:
+        error?.message ?? translatorFor("auth")("couldnTStartGoogleSignIn"),
     };
   }
 
@@ -34,13 +36,19 @@ export async function signInWithGoogle(): Promise<
     return { ok: false, cancelled: true };
   }
   if (result.type !== "success") {
-    return { ok: false, message: "Google sign-in didn't finish. Try again." };
+    return {
+      ok: false,
+      message: translatorFor("auth")("googleSignInDidnTFinish"),
+    };
   }
 
   const code = new URL(result.url).searchParams.get("code");
 
   if (!code) {
-    return { ok: false, message: "Google sign-in returned no code." };
+    return {
+      ok: false,
+      message: translatorFor("auth")("googleSignInReturnedNoCode"),
+    };
   }
 
   const { error: exchangeError } =

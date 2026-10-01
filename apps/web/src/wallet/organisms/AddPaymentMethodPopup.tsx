@@ -14,8 +14,8 @@ type PopupCloseProp = {
 };
 
 const STEP_TITLES: Record<string, string> = {
-  "Mobile Money": "Add Mobile Money Wallet",
-  "Bank Card": "Add Bank Card",
+  "Mobile Money": "addMobileMoneyWallet",
+  "Bank Card": "addBankCard",
 };
 
 export default function AddPaymentMethodPopup({
@@ -40,7 +40,9 @@ export default function AddPaymentMethodPopup({
       title={
         step === 1
           ? t("addAPaymentMethod")
-          : (STEP_TITLES[title] ?? t("addWallet"))
+          : STEP_TITLES[title]
+            ? t(STEP_TITLES[title])
+            : t("addWallet")
       }
       className="md:w-[30rem]"
     >
@@ -48,24 +50,26 @@ export default function AddPaymentMethodPopup({
         <div className="space-y-3">
           <PaymentOptionCard
             imgUrl="/assets/images/phone.svg"
-            optionTitle="Mobile Money"
-            optionDetails="MTN, Telecel, AT Money, G-Money"
+            optionTitle={t("mobileMoney2")}
+            optionDetails={t("mtnTelecelAtMoneyGMoney")}
             handleStep={increaseStep}
           />
 
           <PaymentOptionCard
             imgUrl="/assets/images/bankCard.svg"
-            optionTitle="Bank Card"
+            optionTitle={t("bankCard")}
             optionDetails="Visa, Mastercard"
             handleStep={increaseStep}
           />
         </div>
       )}
 
-      {step === 2 && title === "Mobile Money" && (
+      {step === 2 && title === t("mobileMoney2") && (
         <AddMomoWallet onSaved={onAdded} />
       )}
-      {step === 2 && title === "Bank Card" && <AddBankCard onSaved={onAdded} />}
+      {step === 2 && title === t("bankCard") && (
+        <AddBankCard onSaved={onAdded} />
+      )}
     </BottomSheet>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { setUserLocale } from "@/actions/setUserLocale";
-import { useLocale } from "next-intl";
+import { useLocale, useMessages } from "next-intl";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -11,6 +11,7 @@ import {
   useMemo,
   useTransition,
 } from "react";
+import { setClientTranslations } from "./clientTranslator";
 import {
   LOCALE_COOKIE_MAX_AGE,
   type Locale,
@@ -37,6 +38,10 @@ export default function LocaleProvider({
   children: React.ReactNode;
 }) {
   const locale = useLocale() as Locale;
+  // Plain browser helpers (share, upload) word their toasts from the same
+  // catalogs the page was rendered with: see i18n/clientTranslator.ts.
+  const messages = useMessages();
+  setClientTranslations(locale, messages);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

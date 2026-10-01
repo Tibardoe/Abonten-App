@@ -86,7 +86,8 @@ export async function sendStoryReplyCore(
       content: input.content,
       clientGeneratedId: input.clientGeneratedId ?? null,
     },
-    notificationBody: storyReplyNotificationBody(input.kind, input.content),
+    notificationBody: ({ core }) =>
+      storyReplyNotificationBody(core, input.kind, input.content),
   });
   if (sent.status !== 200 || !sent.data) {
     // deliverSentMessage only fails when the send itself did not happen.

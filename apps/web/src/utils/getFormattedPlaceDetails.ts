@@ -1,3 +1,4 @@
+import { translatorFor } from "@/i18n/clientTranslator";
 export const getFormattedPlaceDetails = (placeId: string) => {
   return new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
     const service = new google.maps.places.PlacesService(
@@ -13,7 +14,7 @@ export const getFormattedPlaceDetails = (placeId: string) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && place) {
           resolve(place);
         } else {
-          reject("Failed to fetch place details");
+          reject(translatorFor("common")("failedToFetchPlaceDetails2"));
         }
       },
     );

@@ -1,6 +1,9 @@
+import type { PhoneError } from "./phone/phone";
+
+// `error` is a code; the words come from phoneErrorMessage(t, error).
 export type NormalizePhoneNumberResult =
   | { ok: true; e164: string }
-  | { ok: false; error: string };
+  | { ok: false; error: PhoneError };
 
 const MIN_E164_DIGITS = 8;
 const MAX_E164_DIGITS = 15;
@@ -20,11 +23,11 @@ export function normalizePhoneNumber(
   let localDigits = rawInput.replace(/\D/g, "");
 
   if (!dialDigits) {
-    return { ok: false, error: "Select a country code." };
+    return { ok: false, error: "invalid_country" };
   }
 
   if (!localDigits) {
-    return { ok: false, error: "Enter a phone number." };
+    return { ok: false, error: "empty" };
   }
 
   // Already includes the country code (pasted "+233241234567" or
@@ -39,13 +42,13 @@ export function normalizePhoneNumber(
   }
 
   if (!localDigits) {
-    return { ok: false, error: "Enter a phone number." };
+    return { ok: false, error: "empty" };
   }
 
   const combined = `${dialDigits}${localDigits}`;
 
   if (combined.length < MIN_E164_DIGITS || combined.length > MAX_E164_DIGITS) {
-    return { ok: false, error: "Enter a valid phone number." };
+    return { ok: false, error: "invalid" };
   }
 
   return { ok: true, e164: `+${combined}` };

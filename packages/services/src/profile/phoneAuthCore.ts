@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { OTP_MESSAGES } from "@abonten/core/otpMessages";
+import { otpMessage } from "@abonten/core/otpMessages";
 import { verifyPendingOtp } from "@abonten/services/profile/phoneOtpSendCore";
 import {
   clearPendingOtp,
@@ -8,6 +8,7 @@ import {
   registerVerifyAttempt,
 } from "@abonten/services/profile/phoneOtpStore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { coreT } from "../i18n/requestLocale";
 import { adoptHomeCountryFromPhone } from "../markets/localePreferencesCore";
 
 // Transport-neutral core of phone sign-in verification, shared by the web
@@ -43,23 +44,31 @@ export async function verifyPhoneOtpAndResolveUser(
   code: string,
 ): Promise<ResolvePhoneUserResult> {
   if (!/^\d{4,8}$/.test(code)) {
-    return { ok: false, status: 400, message: OTP_MESSAGES.invalidFormat };
+    return {
+      ok: false,
+      status: 400,
+      message: otpMessage(coreT(), "invalidFormat"),
+    };
   }
 
   if (!(await getPendingOtp("sign-in", phoneE164))) {
-    return { ok: false, status: 401, message: OTP_MESSAGES.expired };
+    return { ok: false, status: 401, message: otpMessage(coreT(), "expired") };
   }
 
   const attemptAllowed = await registerVerifyAttempt("sign-in", phoneE164);
 
   if (!attemptAllowed) {
-    return { ok: false, status: 429, message: OTP_MESSAGES.tooManyAttempts };
+    return {
+      ok: false,
+      status: 429,
+      message: otpMessage(coreT(), "tooManyAttempts"),
+    };
   }
 
   const pending = await getPendingOtp("sign-in", phoneE164);
 
   if (!pending) {
-    return { ok: false, status: 401, message: OTP_MESSAGES.expired };
+    return { ok: false, status: 401, message: otpMessage(coreT(), "expired") };
   }
 
   const verifyResult = await verifyPendingOtp(pending, code);

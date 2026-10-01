@@ -21,12 +21,12 @@ import { isNotFoundError } from "@/lib/queryErrors";
 import { useQueryView } from "@/lib/useQueryView";
 import type { QueryView } from "@abonten/core/query/queryView";
 import {
-  REVIEW_SORTS,
   type ReviewListRow,
   type ReviewRatingFilter,
   type ReviewSort,
   type ReviewSubjectKind,
   parseSharedReviewId,
+  reviewSortOptions,
 } from "@abonten/core/reviews/reviewList";
 import {
   AppText,
@@ -119,6 +119,7 @@ function useSubject(
 
 export default function ReviewsScreen() {
   const t = useTranslations("reviews");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
   const params = useLocalSearchParams<{
@@ -300,7 +301,7 @@ export default function ReviewsScreen() {
             ))}
           </ScrollView>
           <SegmentedTabs
-            options={REVIEW_SORTS.map((s) => ({
+            options={reviewSortOptions(tc).map((s) => ({
               key: s.value,
               label: s.label,
             }))}

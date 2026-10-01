@@ -546,7 +546,7 @@ export function AppDrawer() {
                   onPress={() => openExternal(url)}
                   className="active:opacity-60"
                 >
-                  <AppText variant="muted">{label}</AppText>
+                  <AppText variant="muted">{t(label)}</AppText>
                 </Pressable>
               ))}
               <Pressable

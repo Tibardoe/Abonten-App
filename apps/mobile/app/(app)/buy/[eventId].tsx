@@ -205,7 +205,7 @@ export default function BuyTicketsScreen() {
         ) : (
           <QueryUnavailable
             view={detailView}
-            subject="this event"
+            subject={t("thisEvent")}
             onRetry={() => refetch()}
             loading={
               <View className="flex-1 items-center justify-center">
@@ -385,11 +385,43 @@ export default function BuyTicketsScreen() {
                   <View
                     key={o.id}
                     className="opacity-40"
-                    accessibilityLabel={`${formatDateWithSuffix(o.starts_at, undefined, locale)} — ${inProgress ? "in progress" : "this date has passed"}`}
+                    accessibilityLabel={
+                      inProgress
+                        ? t("dateInProgress", {
+                            date: formatDateWithSuffix(
+                              o.starts_at,
+                              undefined,
+                              locale,
+                            ),
+                          })
+                        : t("dateHasPassed", {
+                            date: formatDateWithSuffix(
+                              o.starts_at,
+                              undefined,
+                              locale,
+                            ),
+                          })
+                    }
                     accessibilityState={{ disabled: true }}
                   >
                     <Chip
-                      label={`${formatDateWithSuffix(o.starts_at, undefined, locale)} · ${inProgress ? "in progress" : "past"}`}
+                      label={
+                        inProgress
+                          ? t("dateChipInProgress", {
+                              date: formatDateWithSuffix(
+                                o.starts_at,
+                                undefined,
+                                locale,
+                              ),
+                            })
+                          : t("dateChipPast", {
+                              date: formatDateWithSuffix(
+                                o.starts_at,
+                                undefined,
+                                locale,
+                              ),
+                            })
+                      }
                     />
                   </View>
                 ) : (

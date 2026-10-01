@@ -7,6 +7,7 @@ import {
   INVITE_FLAG_COOKIE_NAME,
   bindResultMessage,
 } from "@abonten/core/rewards/invite";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
 // Applies a friend's invite (an /invite/CODE link, or a code typed on the
@@ -23,6 +24,9 @@ export default function InviteBinder() {
   // one run per page load.
   const toastRef = useRef(toast);
   toastRef.current = toast;
+  const tc = useTranslations("core");
+  const tcRef = useRef(tc);
+  tcRef.current = tc;
 
   useEffect(() => {
     const hasInvite = document.cookie
@@ -42,7 +46,7 @@ export default function InviteBinder() {
       const { result } = res.data;
       if (result === "already_bound" || result === "capture_off") return;
       if (result === "program_off" || result === "error") return;
-      const { tone, text } = bindResultMessage(res.data);
+      const { tone, text } = bindResultMessage(tcRef.current, res.data);
       const show = toastRef.current;
       if (tone === "success") show.success(text, { durationMs: 8000 });
       else if (tone === "info") show.info(text);

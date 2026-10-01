@@ -5,12 +5,15 @@ import type {
   CreditLotKind,
   CreditLotStatus,
 } from "@abonten/types/rewards";
+import type { CoreTranslator } from "../i18n/translator";
 
 // Turns one row of get_my_credit_activity into the line a user sees. Pure and
 // shared, so web and mobile show exactly the same wording and states. Grant
 // lines (a reward, a bonus, an adjustment, credit returned by a refund) carry
 // the CURRENT status of their lot, so one line moves from "pending" to
-// "available" instead of a second line appearing.
+// "available" instead of a second line appearing. Words live under
+// `creditActivity.*` of the core namespace; the server renders them in the
+// requester's language.
 
 export type CreditActivityRow = {
   id: string;
@@ -52,34 +55,40 @@ function grantState(status: CreditLotStatus | null): CreditActivityState {
 }
 
 function grantTitle(
+  t: CoreTranslator,
   type: CreditJournalType,
   kind: CreditLotKind | null,
 ): string {
-  if (type === "redeem.refund") return "Credit returned";
-  if (type === "adjust.credit") return "Credit added by Abonten";
+  if (type === "redeem.refund") return t("creditActivity.creditReturned");
+  if (type === "adjust.credit") return t("creditActivity.creditAddedByAbonten");
   switch (kind) {
     case "reward":
-      return "Reward";
+      return t("creditActivity.reward");
     case "promotion":
-      return "Promotion credit";
+      return t("creditActivity.promotionCredit");
     case "welcome":
-      return "Welcome credit";
+      return t("creditActivity.welcomeCredit");
     default:
-      return "Bonus credit";
+      return t("creditActivity.bonusCredit");
   }
 }
 
 function grantSubtitle(
+  t: CoreTranslator,
   state: CreditActivityState,
   label: string | null,
 ): string | null {
   switch (state) {
     case "pending":
-      return label ? `From ${label} · pending` : "Pending";
+      return label
+        ? t("creditActivity.fromPending", { label })
+        : t("creditActivity.pending");
     case "reversed":
-      return "Removed because the order was refunded or cancelled";
+      return t("creditActivity.reversed");
     case "expired":
-      return label ? `${label} · expired` : "Expired";
+      return label
+        ? t("creditActivity.labelExpired", { label })
+        : t("creditActivity.expired");
     default:
       return label;
   }
@@ -88,6 +97,7 @@ function grantSubtitle(
 const TARGET_KINDS = new Set(["event", "place", "ticket", "promotion"]);
 
 export function toCreditActivityItem(
+  t: CoreTranslator,
   row: CreditActivityRow,
   /** The person's credit currency (every row of one person shares it). */
   currency: string,
@@ -102,32 +112,34 @@ export function toCreditActivityItem(
 
   if (GRANT_TYPES.has(type)) {
     state = grantState(lotStatus);
-    title = grantTitle(type, lotKind);
-    subtitle = grantSubtitle(state, row.label);
+    title = grantTitle(t, type, lotKind);
+    subtitle = grantSubtitle(t, state, row.label);
   } else {
     switch (type) {
       case "redeem.capture":
-        title = row.label ? `Used on ${row.label}` : "Used at checkout";
+        title = row.label
+          ? t("creditActivity.usedOn", { label: row.label })
+          : t("creditActivity.usedAtCheckout");
         state = "used";
         break;
       case "expire":
-        title = "Credit expired";
+        title = t("creditActivity.creditExpired");
         state = "expired";
         break;
       case "reward.clawback":
-        title = "Reward reversed";
+        title = t("creditActivity.rewardReversed");
         state = "reversed";
         break;
       case "adjust.debit":
-        title = "Credit removed by Abonten";
+        title = t("creditActivity.creditRemovedByAbonten");
         state = "completed";
         break;
       case "withdraw.request":
-        title = "Withdrawal";
+        title = t("creditActivity.withdrawal");
         state = "completed";
         break;
       default:
-        title = "Credit update";
+        title = t("creditActivity.creditUpdate");
         state = "completed";
     }
     subtitle =

@@ -1,12 +1,13 @@
 import { logger } from "@abonten/core/logger";
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
 import {
-  PHONE_ERROR_MESSAGE,
   dialCodeFor,
   parsePhoneWithDialCode,
+  phoneErrorMessage,
 } from "@abonten/core/phone/phone";
 import type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { coreT } from "../../i18n/requestLocale";
 import { getMarketOrDefault } from "../../markets/marketConfig";
 import { listMobileMoneyNetworksCore } from "../../payments/mobileMoneyNetworksCore";
 import {
@@ -156,7 +157,7 @@ export async function setPayoutDestinationCore(
   const country = await campaignCountry(supabase, regionId);
   const phone = parsePhoneWithDialCode(country.dialCode, input.momoNumber);
   if (!phone.ok) {
-    return { status: 400, message: PHONE_ERROR_MESSAGE[phone.error] };
+    return { status: 400, message: phoneErrorMessage(coreT(), phone.error) };
   }
   if (phone.country && phone.country !== country.countryCode) {
     return {

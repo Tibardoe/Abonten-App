@@ -1,0 +1,805 @@
+{
+  "accountSetup": {
+    "addEmail": "Add your email so you can pay for tickets and get them by email.",
+    "confirmEmail": "Confirm your email so you can pay for tickets and get them by email.",
+    "generic": "A few quick steps left.",
+    "phone": "Add a phone number as a second way to sign in if you can't get into your email or Google account.",
+    "profile": "Add your name, a username and a photo so people recognise you on your profile and reviews.",
+    "title": "Finish setting up your account"
+  },
+  "checkoutLimits": {
+    "maxPerOrder": "You can buy at most {max} tickets in one order.",
+    "maxPerType": "You can buy at most {max} of the same ticket type in one order.",
+    "selectOne": "Please select at least one ticket."
+  },
+  "content": {
+    "campaignObjective": {
+      "event_views": "More event views",
+      "place_views": "More place views",
+      "profile_visits": "More profile visits",
+      "reservations": "More reservations",
+      "ticket_sales": "More ticket sales",
+      "views": "More views"
+    },
+    "campaignStatus": {
+      "active": "Active",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "draft": "Draft",
+      "paused": "Paused",
+      "payment_confirmed": "Paid",
+      "pending_payment": "Awaiting payment",
+      "pending_review": "In review",
+      "refunded": "Refunded",
+      "rejected": "Rejected",
+      "scheduled": "Scheduled"
+    },
+    "cta": {
+      "eventCancelled": "Event cancelled",
+      "eventEnded": "Event has ended",
+      "eventUnavailable": "Event unavailable",
+      "permanentlyClosed": "Permanently closed",
+      "placeUnavailable": "Place unavailable",
+      "soldOut": "Sold out",
+      "viewEvent": "View event",
+      "viewPlace": "View place",
+      "viewProfile": "View profile"
+    },
+    "feedSurface": {
+      "following": "Following",
+      "for_you": "For you",
+      "happening_soon": "Happening soon",
+      "nearby": "Nearby",
+      "trending": "Trending"
+    },
+    "promotion": {
+      "billingNote": "You pay the budget up front. It is used only as your Spotlight is shown as sponsored, and the promotion stops when the budget is used or the run ends, whichever comes first. If it ends before the budget is used, the unused amount is shown on the promotion page.",
+      "cashNote": "Paid by card or mobile money. Abonten Credit can't be used for promotions.",
+      "endReason": {
+        "budget_delivered": "Budget fully used",
+        "run_ended": "Run ended before the budget was used"
+      },
+      "estimateBasis": {
+        "assumed": "Based on our planning figures while Spotlight is new.",
+        "no_data": "We can't estimate reach yet.",
+        "observed": "Based on recent Spotlight activity."
+      },
+      "estimateNote": "This is an estimate, not a guarantee. Actual reach depends on how many people in your audience open Spotlight, how often, and what else is being promoted at the same time.",
+      "intro": "Promoting shows your Spotlight to more people in their feeds, marked “Sponsored”. You choose a budget and who should see it; we estimate how many people it could reach.",
+      "reviewNote": "Every promotion is reviewed before it runs. If it isn't approved, you're refunded in full."
+    },
+    "rightsAcknowledgement": "I own this content or have permission to share it, and it follows Abonten's content rules.",
+    "sponsored": "Sponsored",
+    "spotlightTagline": "Short videos from the events and places around you.",
+    "storiesTagline": "What the organizers and places you follow are up to right now.",
+    "storyExpired": "This Story has ended.",
+    "yourStory": "Your Story"
+  },
+  "coverage": {
+    "body": "We're still bringing events and places here. Anything already listed nearby still shows.",
+    "browseElsewhere": "Explore what's happening elsewhere",
+    "distanceAway": "{distance} away",
+    "exploreCity": "Explore {city}",
+    "joinWaitlist": "Tell me when it launches",
+    "leaveWaitlist": "Stop waiting",
+    "notLaunchedHere": "Abonten isn't here yet",
+    "notLaunchedIn": "Abonten isn't in {area} yet",
+    "reason": {
+      "most_active": "Most listings",
+      "nearest": "Nearest",
+      "recommended": "Suggested"
+    },
+    "strategy": {
+      "choose": {
+        "help": "Show a short list of launched cities, nearest first, and let the person pick.",
+        "label": "Let people choose"
+      },
+      "fixed": {
+        "help": "Always suggest the city you pick, marked “Suggested”. If it is later made coming soon, deactivated or removed, the nearest launched city is suggested instead.",
+        "label": "A city you choose"
+      },
+      "most_active": {
+        "help": "Suggest the launched city with the most upcoming events and places listed in its area (the counts under each city below), marked “Most listings”. A tie goes to the nearer city; if no city has any listings, the nearest is suggested.",
+        "label": "Most active launched city"
+      },
+      "nearest": {
+        "help": "Suggest the closest launched city, marked “Nearest”.",
+        "label": "Nearest launched city"
+      }
+    },
+    "supplyPromptHere": "Run events or a place here? List them on Abonten.",
+    "supplyPromptIn": "Run events or a place in {area}? List them on Abonten.",
+    "waitingHere": "We'll tell you when Abonten launches here.",
+    "waitingIn": "We'll tell you when Abonten launches in {area}."
+  },
+  "creditActivity": {
+    "bonusCredit": "Bonus credit",
+    "creditAddedByAbonten": "Credit added by Abonten",
+    "creditExpired": "Credit expired",
+    "creditRemovedByAbonten": "Credit removed by Abonten",
+    "creditReturned": "Credit returned",
+    "creditUpdate": "Credit update",
+    "expired": "Expired",
+    "fromPending": "From {label} · pending",
+    "labelExpired": "{label} · expired",
+    "pending": "Pending",
+    "promotionCredit": "Promotion credit",
+    "reversed": "Removed because the order was refunded or cancelled",
+    "reward": "Reward",
+    "rewardReversed": "Reward reversed",
+    "usedAtCheckout": "Used at checkout",
+    "usedOn": "Used on {label}",
+    "welcomeCredit": "Welcome credit",
+    "withdrawal": "Withdrawal"
+  },
+  "earn": {
+    "eventReferral": "Share an event. When someone buys a ticket with your link, you earn {percent} of the ticket price in credit after the event.",
+    "friendReferral": "Invite a friend. When they buy their first ticket, you get {amount}.",
+    "friendReferralBoth": "Invite a friend. When they buy their first ticket, you get {amount} and they get {friendAmount} off.",
+    "loyalty": "Keep going out. Buy tickets to {orders} different events within {days} days and the service fee on the last order comes back as credit after the event (up to {cap}).",
+    "organizerMilestone": "The first time one of your events sells to {buyers} different people, you get {amount} of promotion credit.",
+    "organizerRebate": "Organize events. Each month you get {percent} of what Abonten earned on your events that ended the month before, as promotion credit to feature your next one.",
+    "placeVisits": "Own a verified place? Show your check-in code: every different person who checks in during a month earns you {amount} of promotion credit (up to {max} a month).",
+    "promoterCommission": "Promote events. When an organizer offers a commission, every ticket sold through your share link earns you that share of the price, paid by the organizer as credit after the event.",
+    "venueRebate": "Own a verified place? When other organizers hold ticketed events there, you get {percent} of what Abonten earned on them, as promotion credit."
+  },
+  "emailOtp": {
+    "codeSent": "If that email can receive mail, we've sent a {length}-digit code.",
+    "generic": "Something went wrong. Please try again.",
+    "invalidEmail": "Enter a valid email address.",
+    "invalidFormat": "Enter the {length}-digit code we emailed you.",
+    "invalidOrExpired": "That code is incorrect or has expired. Try again, or request a new one.",
+    "rateLimited": "Too many requests. Please wait a moment and try again."
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again."
+  },
+  "eventCategories": {
+    "artsCultureAndTheatre": "Arts, Culture & Theatre",
+    "businessAndProfessional": "Business & Professional",
+    "charityAndCauses": "Charity & Causes",
+    "civicAndGovernment": "Civic & Government",
+    "educationAndTraining": "Education & Training",
+    "entertainmentAndShows": "Entertainment & Shows",
+    "familyAndKids": "Family & Kids",
+    "fashionAndBeauty": "Fashion & Beauty",
+    "foodAndDrink": "Food & Drink",
+    "lifeEventsAndCeremonies": "Life Events & Ceremonies",
+    "lifestyleAndHobbies": "Lifestyle & Hobbies",
+    "loveDatingAndRelationships": "Love, Dating & Relationships",
+    "musicAndConcerts": "Music & Concerts",
+    "natureTravelAndAdventure": "Nature, Travel & Adventure",
+    "partiesAndSocialEvents": "Parties & Social Events",
+    "personalDevelopment": "Personal Development",
+    "spiritualityAndReligion": "Spirituality & Religion",
+    "sportsAndFitness": "Sports & Fitness",
+    "techAndInnovation": "Tech & Innovation"
+  },
+  "eventCta": {
+    "buy": "Buy tickets",
+    "canceled": "Event canceled",
+    "ended": "Event ended",
+    "going": "View my ticket",
+    "in_progress": "Ticket sales closed",
+    "no_tickets": "Tickets not available yet",
+    "rsvp": "Reserve spot",
+    "sold_out": "Sold out"
+  },
+  "eventDates": {
+    "notice": "Start or end time must be at least {hours} hours from now",
+    "nthNotice": "Date {n} must be at least {hours} hours from now",
+    "nthStartBeforeEnd": "Date {n}: start time must be earlier than end time",
+    "oneNotice": "The selected date must be at least {hours} hours from now",
+    "selectBoth": "Please select both start and end date",
+    "selectOne": "Please select at least one date",
+    "startBeforeEnd": "Start time must be earlier than end time"
+  },
+  "eventStatus": {
+    "ended": "Event ended",
+    "ongoing": "Ongoing"
+  },
+  "eventTypes": {
+    "academicSeminars": "Academic Seminars",
+    "aiAndMlConferences": "AI & ML Conferences",
+    "albumLaunches": "Album Launches",
+    "animalRescueFundraisers": "Animal Rescue Fundraisers",
+    "anniversaryCelebrations": "Anniversary Celebrations",
+    "antiqueMarkets": "Antique Markets",
+    "appProductDemos": "App/Product Demos",
+    "artExhibitions": "Art Exhibitions",
+    "artistTours": "Artist Tours",
+    "babyShowers": "Baby Showers",
+    "bachelorBacheloretteParties": "Bachelor/Bachelorette Parties",
+    "backpackingMeetups": "Backpacking Meetups",
+    "bakingEvents": "Baking Events",
+    "battleOfTheBands": "Battle of the Bands",
+    "bbqEvents": "BBQ Events",
+    "beachParties": "Beach Parties",
+    "beautyMasterclasses": "Beauty Masterclasses",
+    "bibleStudyCamps": "Bible Study Camps",
+    "bikeRaces": "Bike Races",
+    "birdwatchingTours": "Birdwatching Tours",
+    "birthdayParties": "Birthday Parties",
+    "blockchainConferences": "Blockchain Conferences",
+    "bloodDonationDrives": "Blood Donation Drives",
+    "boardGameNights": "Board Game Nights",
+    "boatCruises": "Boat Cruises",
+    "bodybuildingCompetitions": "Bodybuilding Competitions",
+    "bookClubs": "Book Clubs",
+    "bookReadings": "Book Readings",
+    "boutiqueOpenings": "Boutique Openings",
+    "brewTastings": "Brew Tastings",
+    "bridalShowers": "Bridal Showers",
+    "buddhistTeachings": "Buddhist Teachings",
+    "businessExpos": "Business Expos",
+    "calligraphyEvents": "Calligraphy Events",
+    "campingTrips": "Camping Trips",
+    "campusEvents": "Campus Events",
+    "carShows": "Car Shows",
+    "careerFairs": "Career Fairs",
+    "charityWalksAndRuns": "Charity Walks & Runs",
+    "chefCompetitions": "Chef Competitions",
+    "childrenSShows": "Children’s Shows",
+    "childrenSWorkshops": "Children's Workshops",
+    "choirPerformances": "Choir Performances",
+    "christeningEvents": "Christening Events",
+    "churchConferences": "Church Conferences",
+    "circusActs": "Circus Acts",
+    "citizenshipDrives": "Citizenship Drives",
+    "cleanUpCampaigns": "Clean-up Campaigns",
+    "climbingEvents": "Climbing Events",
+    "clothingPopUps": "Clothing Pop-Ups",
+    "clubNights": "Club Nights",
+    "coWorkingMeetups": "Co-working Meetups",
+    "cocktailParties": "Cocktail Parties",
+    "codingCompetitions": "Coding Competitions",
+    "comedyShows": "Comedy Shows",
+    "communityOutreach": "Community Outreach",
+    "companyAnniversaryParties": "Company Anniversary Parties",
+    "conferencesAndSummits": "Conferences & Summits",
+    "confidenceBuildingWorkshops": "Confidence Building Workshops",
+    "continuingEducationCourses": "Continuing Education Courses",
+    "cookingClasses": "Cooking Classes",
+    "corporateRetreats": "Corporate Retreats",
+    "cosmeticsExpos": "Cosmetics Expos",
+    "coupleRetreats": "Couple Retreats",
+    "craftFairs": "Craft Fairs",
+    "crossfitChallenges": "CrossFit Challenges",
+    "culturalFestivals": "Cultural Festivals",
+    "dancePerformances": "Dance Performances",
+    "danceWorkouts": "Dance Workouts",
+    "dedications": "Dedications",
+    "developerBootcamps": "Developer Bootcamps",
+    "disasterReliefAppeals": "Disaster Relief Appeals",
+    "diyCraftEvents": "DIY Craft Events",
+    "djParties": "DJ Parties",
+    "dramaAndTheatreShows": "Drama & Theatre Shows",
+    "ecoTourismEvents": "Eco-Tourism Events",
+    "educationalWebinars": "Educational Webinars",
+    "engagementCeremonies": "Engagement Ceremonies",
+    "engagementParties": "Engagement Parties",
+    "entrepreneurshipBootcamps": "Entrepreneurship Bootcamps",
+    "esportsTournaments": "Esports Tournaments",
+    "familyCampingEvents": "Family Camping Events",
+    "familyFunDays": "Family Fun Days",
+    "fanMeetups": "Fan Meetups",
+    "fashionDesignTalks": "Fashion Design Talks",
+    "fashionShows": "Fashion Shows",
+    "fastingPrayerCamps": "Fasting/Prayer Camps",
+    "financialLiteracyEvents": "Financial Literacy Events",
+    "fitnessBootcamps": "Fitness Bootcamps",
+    "folkloreEvents": "Folklore Events",
+    "foodDrives": "Food Drives",
+    "foodFestivals": "Food Festivals",
+    "franchiseShows": "Franchise Shows",
+    "fundraisingEvents": "Fundraising Events",
+    "funeralsAndMemorials": "Funerals & Memorials",
+    "gadgetLaunches": "Gadget Launches",
+    "galleryTours": "Gallery Tours",
+    "gameShowsLive": "Game Shows (Live)",
+    "gamingEvents": "Gaming Events",
+    "gardeningWorkshops": "Gardening Workshops",
+    "glampingEvents": "Glamping Events",
+    "gospelConcerts": "Gospel Concerts",
+    "gospelMusicEvents": "Gospel Music Events",
+    "governmentTrainings": "Government Trainings",
+    "graduationEvents": "Graduation Events",
+    "graduationParties": "Graduation Parties",
+    "groomingWorkshops": "Grooming Workshops",
+    "hackathons": "Hackathons",
+    "hairStylingWorkshops": "Hair Styling Workshops",
+    "healingServices": "Healing Services",
+    "hikingTours": "Hiking Tours",
+    "hinduFestivals": "Hindu Festivals",
+    "homeCookingWorkshops": "Home Cooking Workshops",
+    "homeDCorEvents": "Home Décor Events",
+    "houseParties": "House Parties",
+    "housewarmingEvents": "Housewarming Events",
+    "illusionShows": "Illusion Shows",
+    "improvNights": "Improv Nights",
+    "indieMusicShows": "Indie Music Shows",
+    "instrumentalPerformances": "Instrumental Performances",
+    "interfaithDialogues": "Interfaith Dialogues",
+    "investorMeetups": "Investor Meetups",
+    "jobFairs": "Job Fairs",
+    "journalingRetreats": "Journaling Retreats",
+    "karaokeEvents": "Karaoke Events",
+    "kidsTalentShows": "Kids Talent Shows",
+    "knittingCircles": "Knitting Circles",
+    "languageLearningEvents": "Language Learning Events",
+    "leadershipWorkshops": "Leadership Workshops",
+    "legalAidEvents": "Legal Aid Events",
+    "lifeCoachingSessions": "Life Coaching Sessions",
+    "listeningParties": "Listening Parties",
+    "liveConcerts": "Live Concerts",
+    "loveLanguageWorkshops": "Love Language Workshops",
+    "magicShows": "Magic Shows",
+    "makeupTutorials": "Makeup Tutorials",
+    "marathonsAndRuns": "Marathons & Runs",
+    "martialArtsEvents": "Martial Arts Events",
+    "matchmakingEvents": "Matchmaking Events",
+    "meditationRetreats": "Meditation Retreats",
+    "meetAndGreets": "Meet & Greets",
+    "mentalHealthAwareness": "Mental Health Awareness",
+    "mindfulnessSessions": "Mindfulness Sessions",
+    "minimalismWorkshops": "Minimalism Workshops",
+    "modelingAuditions": "Modeling Auditions",
+    "motivationalTalks": "Motivational Talks",
+    "mountaineeringEvents": "Mountaineering Events",
+    "musicFestivals": "Music Festivals",
+    "musicalTheatre": "Musical Theatre",
+    "namingCeremonies": "Naming Ceremonies",
+    "natureRetreats": "Nature Retreats",
+    "networkingEvents": "Networking Events",
+    "nonprofitGalas": "Nonprofit Galas",
+    "openMicNights": "Open Mic Nights",
+    "parentingSeminars": "Parenting Seminars",
+    "pettingZooEvents": "Petting Zoo Events",
+    "photographyMeetups": "Photography Meetups",
+    "pilgrimageInfoEvents": "Pilgrimage Info Events",
+    "playdatesAndPlaygroups": "Playdates & Playgroups",
+    "poetrySlams": "Poetry Slams",
+    "policyDiscussionForums": "Policy Discussion Forums",
+    "politicalRallies": "Political Rallies",
+    "poolParties": "Pool Parties",
+    "productLaunches": "Product Launches",
+    "publicLectures": "Public Lectures",
+    "publicSafetyEvents": "Public Safety Events",
+    "publicSpeakingClasses": "Public Speaking Classes",
+    "puppetShows": "Puppet Shows",
+    "puppetryShows": "Puppetry Shows",
+    "quranRecitationEvents": "Quran Recitation Events",
+    "relationshipSeminars": "Relationship Seminars",
+    "restaurantLaunches": "Restaurant Launches",
+    "retirementCelebrations": "Retirement Celebrations",
+    "revivalMeetings": "Revival Meetings",
+    "roboticsFairs": "Robotics Fairs",
+    "safariAdventures": "Safari Adventures",
+    "salesAndMarketingSummits": "Sales & Marketing Summits",
+    "schoolEvents": "School Events",
+    "selfHelpRetreats": "Self-Help Retreats",
+    "singlesMixers": "Singles Mixers",
+    "skatingEvents": "Skating Events",
+    "soccerFootballMatches": "Soccer/Football Matches",
+    "socialJusticeRallies": "Social Justice Rallies",
+    "socialMixers": "Social Mixers",
+    "speedDating": "Speed Dating",
+    "spiritualCounselingSessions": "Spiritual Counseling Sessions",
+    "spiritualWorkshops": "Spiritual Workshops",
+    "startupPitches": "Startup Pitches",
+    "startupShowcases": "Startup Showcases",
+    "stemEvents": "STEM Events",
+    "storytellingNights": "Storytelling Nights",
+    "streetFoodEvents": "Street Food Events",
+    "streetPerformances": "Street Performances",
+    "studyAbroadInfoSessions": "Study Abroad Info Sessions",
+    "sunsetSessions": "Sunset Sessions",
+    "swimmingCompetitions": "Swimming Competitions",
+    "talentShows": "Talent Shows",
+    "techExpos": "Tech Expos",
+    "techMeetups": "Tech Meetups",
+    "themedCostumeParties": "Themed Costume Parties",
+    "thesisPresentations": "Thesis Presentations",
+    "timeManagementTraining": "Time Management Training",
+    "townHallMeetings": "Town Hall Meetings",
+    "toyAndBookFairs": "Toy & Book Fairs",
+    "traditionalDances": "Traditional Dances",
+    "travelExpos": "Travel Expos",
+    "tvShowRecordings": "TV Show Recordings",
+    "varietyShows": "Variety Shows",
+    "veganVegetarianEvents": "Vegan/Vegetarian Events",
+    "visionBoardWorkshops": "Vision Board Workshops",
+    "volunteeringEvents": "Volunteering Events",
+    "voterRegistrationCampaigns": "Voter Registration Campaigns",
+    "web3Events": "Web3 Events",
+    "weddingExpos": "Wedding Expos",
+    "weddings": "Weddings",
+    "wineTastings": "Wine Tastings",
+    "workshopsAndBootcamps": "Workshops & Bootcamps",
+    "worshipNights": "Worship Nights",
+    "yogaSessions": "Yoga Sessions",
+    "zenRetreats": "Zen Retreats",
+    "zumbaClasses": "Zumba Classes"
+  },
+  "expires": {
+    "days": "Expires in {days}d",
+    "daysHours": "Expires in {days}d {hours}h",
+    "expired": "Expired",
+    "hours": "Expires in {hours}h",
+    "minutes": "Expires in {minutes}m"
+  },
+  "fieldOpsCampaign": {
+    "action": {
+      "activate": "Activate",
+      "archive": "Archive",
+      "complete": "Complete",
+      "pause": "Pause",
+      "resume": "Resume",
+      "wind_down": "Start winding down"
+    },
+    "status": {
+      "active": "Active",
+      "archived": "Archived",
+      "completed": "Completed",
+      "draft": "Draft",
+      "paused": "Paused",
+      "winding_down": "Winding down"
+    }
+  },
+  "filters": {
+    "anyDistance": "Any distance",
+    "customRange": "Custom range",
+    "pickDates": "Pick dates",
+    "priceFrom": "From {amount}",
+    "range": "{from} – {to}",
+    "ratingFrom": "From {rating}",
+    "upTo": "Up to {distance}"
+  },
+  "fulfillment": {
+    "promotion": "Payment successful. Activating your promotion…",
+    "spotlightPromotion": "Payment successful. Sending your Spotlight promotion for review…",
+    "ticket": "Payment successful. Preparing your tickets…"
+  },
+  "invite": {
+    "alreadyBound": "You already joined with an invite.",
+    "alreadyBoundWith": "You already joined with {name}'s invite.",
+    "circular": "You can't join with the invite of someone you invited.",
+    "failed": "We couldn't apply the invite. Please try again.",
+    "invalid": "Enter the 7-character invite code.",
+    "joinedWith": "You joined with {name}'s invite.",
+    "joinedWithFriend": "You joined with a friend's invite.",
+    "notNew": "Invite codes are only for new accounts.",
+    "ownCode": "That's your own invite code.",
+    "rateLimited": "Too many tries. Wait a few minutes and try again.",
+    "referrerRestricted": "This invite code can't be used right now.",
+    "share": "Join me on Abonten to find events and places near you: {url}",
+    "shareWithOffer": "Join me on Abonten to find events and places near you and get {amount} off your first ticket: {url}",
+    "shareWithOfferMin": "Join me on Abonten to find events and places near you and get {amount} off your first ticket of {min} or more: {url}",
+    "tooLate": "Invite codes can only be used in your first week on Abonten.",
+    "unavailable": "Invites aren't available right now.",
+    "unknownCode": "We couldn't find that invite code. Check it and try again.",
+    "welcomeNeedsPhone": "{joined} Verify your phone number to get {amount} off your first ticket.",
+    "welcomeReady": "{joined} {amount} welcome credit is ready for your first ticket."
+  },
+  "location": {
+    "invalid": "Location details are missing or invalid. Please try again."
+  },
+  "loyalty": {
+    "done": "Your service fee on the last order comes back as credit after that event (up to {cap}).",
+    "headline": "{counted} of {required} events",
+    "more": "{left} more ticket orders to different events within {days} days and we give you back the service fee on the last one as credit (up to {cap}).",
+    "moreMin": "{left} more ticket orders of {min} or more to different events within {days} days and we give you back the service fee on the last one as credit (up to {cap}).",
+    "oneMore": "One more ticket order to a different event within {days} days and we give you back its service fee as credit (up to {cap}).",
+    "oneMoreMin": "One more ticket order of {min} or more to a different event within {days} days and we give you back its service fee as credit (up to {cap})."
+  },
+  "member": {
+    "former": "Former Abonten member",
+    "generic": "Abonten member"
+  },
+  "openStatus": {
+    "closed": "Closed",
+    "closedOpensAt": "Closed · Opens at {time}",
+    "closedToday": "Closed today",
+    "openClosesAt": "Open now · Closes at {time}",
+    "openNow": "Open now",
+    "permanentlyClosed": "Permanently closed",
+    "temporarilyClosed": "Temporarily closed"
+  },
+  "otp": {
+    "expired": "That code has expired. Please request a new one.",
+    "invalidFormat": "Enter the code we sent you.",
+    "tooManyAttempts": "Too many incorrect attempts. Please request a new code."
+  },
+  "paymentMethods": {
+    "apple_pay": "Apple Pay",
+    "bank_redirect": "Pay by bank",
+    "bank_transfer": "Bank transfer",
+    "card": "Card",
+    "eft": "Instant EFT",
+    "google_pay": "Google Pay",
+    "mobile_money": "Mobile Money",
+    "qr": "QR code",
+    "ussd": "USSD",
+    "wallet": "Wallet"
+  },
+  "periods": {
+    "comparison": {
+      "30d": "vs previous 30 days",
+      "7d": "vs previous 7 days",
+      "today": "vs yesterday"
+    },
+    "dashboard": {
+      "30d": "Last 30 days",
+      "7d": "Last 7 days",
+      "all": "All time",
+      "today": "Today"
+    },
+    "transactions": {
+      "all": "All time",
+      "last3Months": "Last 3 months",
+      "lastMonth": "Last month",
+      "thisMonth": "This month",
+      "today": "Today"
+    }
+  },
+  "phone": {
+    "empty": "Enter a phone number.",
+    "invalid": "Enter a valid phone number.",
+    "invalid_country": "Select a country code.",
+    "too_long": "That phone number is too long.",
+    "too_short": "That phone number is too short."
+  },
+  "placeCategories": {
+    "cinema": "Cinema",
+    "entertainment": "Entertainment",
+    "food-spot": "Food spot",
+    "gaming-center": "Gaming centre",
+    "go-karting": "Go-karting",
+    "gym-fitness": "Gym / Fitness",
+    "hotel": "Hotel",
+    "nightclub": "Nightclub",
+    "other": "Other",
+    "pub": "Pub",
+    "recreation": "Recreation",
+    "restaurant": "Restaurant",
+    "skating": "Skating",
+    "supermarket": "Supermarket"
+  },
+  "placeSetup": {
+    "contact": "Add a phone number or website",
+    "hours": "Set your opening hours",
+    "photos": "Add at least {count} photos",
+    "services": "List what you offer",
+    "verification": "Verify your place"
+  },
+  "profileCompletion": {
+    "avatar": {
+      "description": "Shown on your profile and next to your reviews and messages.",
+      "done": "Profile photo added",
+      "label": "Add a profile photo"
+    },
+    "email": {
+      "confirm": "Confirm your email",
+      "description": "Needed to pay for tickets and promotions — your tickets and receipts are emailed to you. You can also sign in with a code sent there.",
+      "done": "Email verified",
+      "label": "Add your email",
+      "verify": "Verify your email"
+    },
+    "group": {
+      "account": "Sign-in & contact",
+      "profile": "Your profile"
+    },
+    "name": {
+      "description": "Shown on your profile so people know who you are.",
+      "done": "Name added",
+      "label": "Add your name"
+    },
+    "phone": {
+      "description": "Lets you sign in with a code sent by text — a way back in if you can't get into your email or Google account.",
+      "done": "Phone number verified",
+      "label": "Add your phone number",
+      "verify": "Verify your phone number"
+    },
+    "username": {
+      "description": "Your @handle — it's shown on your reviews and in your profile link. The one you have now was made up for you.",
+      "done": "Username chosen",
+      "label": "Choose a username"
+    }
+  },
+  "promotionBudget": {
+    "choose": "Choose a budget.",
+    "chooseDuration": "Choose how long the promotion can run.",
+    "largest": "The largest budget is {amount}.",
+    "smallest": "The smallest budget is {amount}.",
+    "step": "Budgets go up in steps of {amount}."
+  },
+  "promotionSummary": {
+    "kind": {
+      "event": "Featured event",
+      "place": "Featured place",
+      "spotlight": "Promoted Spotlight"
+    },
+    "state": {
+      "active": "Active",
+      "in_review": "In review",
+      "paused": "Paused",
+      "scheduled": "Starts soon"
+    },
+    "statusLine": "{tier} package · {state}"
+  },
+  "refundStatus": {
+    "failed": "Refund failed",
+    "issued": "Refund issued",
+    "none": "No refund yet",
+    "noneDescription": "Issued once every ticket in this order is cancelled.",
+    "pending": "Refund pending"
+  },
+  "reviewSort": {
+    "helpful": "Most helpful",
+    "recent": "Most recent"
+  },
+  "searchFilters": {
+    "anyRating": "Any rating",
+    "anywhere": "Anywhere",
+    "category": "Category",
+    "minStars": "{rating}+ stars",
+    "openNow": "Open now",
+    "price": {
+      "any": "Any price",
+      "free": "Free",
+      "under": "Under {amount}"
+    },
+    "when": {
+      "any": "Any time",
+      "month": "Next 30 days",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "week": "Next 7 days",
+      "weekend": "This weekend"
+    },
+    "within": "Within {distance}",
+    "withinOf": "Within {distance} of {location}"
+  },
+  "storyReply": {
+    "nameReacted": "{name} reacted to your story",
+    "nameReplied": "{name} replied to your story",
+    "notifReacted": "Reacted {text} to your story",
+    "notifReplied": "Replied to your story: {text}",
+    "reacted": "Reacted to your story",
+    "replied": "Replied to your story",
+    "youReacted": "You reacted to their story",
+    "youReplied": "You replied to their story"
+  },
+  "ticketCapacity": {
+    "allShared": "{capacity, plural, one {The one seat is shared across your ticket types.} other {All # seats are shared across your ticket types.}}",
+    "exceeds": "Ticket quantities total {reserved}, which exceeds the event capacity of {capacity}.",
+    "reservedShared": "{reserved, plural, one {# seat} other {# seats}} reserved by the quantities you set; the remaining {pool, plural, one {# seat is} other {# seats are}} shared by the {types, plural, one {type} other {# types}} without a quantity.",
+    "usesAll": "{capacity, plural, one {Ticket quantities use the one seat.} other {Ticket quantities use all # seats.}}",
+    "usesSome": "Ticket quantities use {reserved} of {capacity, plural, one {# seat} other {# seats}}; {left} will stay unsold unless you raise a quantity."
+  },
+  "ticketTiers": {
+    "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid.",
+    "freeReserved": "“{name}” is reserved for free events. Give this ticket type another name.",
+    "paidNeedsPrice": "Paid tickets need a price greater than zero. To let people in for free, make the event free."
+  },
+  "verification": {
+    "badgeExplanation": {
+      "organizer": "Abonten reviewed documents supporting this organizer's identity or registration and their link to this account. Verification is not a guarantee of any event, its delivery, safety or quality.",
+      "place": "Abonten reviewed documents supporting this business's registration and its link to the account that manages this listing. Verification is not a guarantee of the business, its service, safety or quality."
+    },
+    "badgeLabel": {
+      "organizer": "Verified organizer",
+      "place": "Verified place"
+    },
+    "chip": {
+      "approved": "Verified",
+      "draft": "Draft",
+      "needs_info": "Action needed",
+      "pending_review": "In review",
+      "rejected": "Not approved",
+      "revoked": "Removed",
+      "withdrawn": "Withdrawn"
+    },
+    "howReviewWorks": {
+      "1": "Submitting documents does not verify you on its own. An Abonten reviewer looks at what you send.",
+      "2": "We may come back and ask for something else before deciding.",
+      "3": "You will get a notification when a decision is made, and the reason if it is not approved.",
+      "4": "Your documents are private. Only Abonten reviewers can open them, and they are deleted once they are no longer needed."
+    },
+    "notification": {
+      "approvedBody": "{subject} is now verified on Abonten.",
+      "approvedTitle": "Verified",
+      "infoRequestedBody": "To verify {subject}, we need: {reason}",
+      "infoRequestedTitle": "More information needed",
+      "rejectedBody": "Your verification request for {subject} was not approved. {reason}",
+      "rejectedTitle": "Verification not approved",
+      "revokedBody": "The verified badge for {subject} was removed. {reason}",
+      "revokedTitle": "Verification removed",
+      "submittedBody": "We have your verification request for {subject}. We will notify you when it has been reviewed.",
+      "submittedTitle": "Verification request received"
+    },
+    "organizerType": {
+      "business": "Registered business",
+      "individual": "Individual or informal organizer",
+      "organisation": "Organisation, church, school or association"
+    },
+    "organizerTypeDescription": {
+      "business": "You run events through a registered company or business name. Send your business registration certificate, and an operating permit or licence if you have one.",
+      "individual": "You organise events in your own name and have no registered company. Send anything that shows the events are really yours, such as a venue booking, an event permit, or flyers and tickets from events you ran.",
+      "organisation": "You organise on behalf of a church, school, NGO, association or similar. Send the body's registration document, plus a letter on its letterhead if you are not the person named on it."
+    },
+    "owner": {
+      "approvedOrganizerBody": "Your Verified badge is showing on your events and profile.",
+      "approvedOrganizerTitle": "Verified organizer",
+      "approvedPlaceBody": "Your Verified badge is showing on your listing.",
+      "approvedPlaceTitle": "Verified place",
+      "draftBody": "Add at least one document, then send it for review.",
+      "draftTitle": "Finish your request",
+      "needsInfoBody": "A reviewer has asked for something else before they can decide.",
+      "needsInfoTitle": "We need more information",
+      "pendingBody": "We have your request for {name}. We will notify you when it has been reviewed.",
+      "pendingTitle": "In review",
+      "rejectedBody": "Your request was not approved. You can send a new one with different documents.",
+      "rejectedTitle": "Not approved",
+      "revokedBody": "This verification was removed. You can send a new request.",
+      "revokedTitle": "Verification removed",
+      "thisPlace": "this place",
+      "withdrawnBody": "This request was cancelled. You can start a new one any time.",
+      "withdrawnTitle": "Request withdrawn",
+      "yourOrganizerProfile": "your organizer profile"
+    },
+    "status": {
+      "approved": "Verified",
+      "draft": "Not submitted",
+      "needs_info": "More information needed",
+      "pending_review": "In review",
+      "rejected": "Not approved",
+      "revoked": "Verification removed",
+      "withdrawn": "Withdrawn"
+    },
+    "whyVerify": {
+      "organizer": {
+        "1": "A Verified badge shows next to your name on your events and your profile.",
+        "2": "Ticket buyers can see that Abonten has checked who is behind the event.",
+        "3": "Verification is optional. You can create and publish events without it."
+      },
+      "place": {
+        "1": "A Verified badge shows on your listing, in search results and on the map.",
+        "2": "People are more willing to book and visit a business Abonten has checked.",
+        "3": "Some Abonten programmes, such as promotion credit for visits, are open only to verified places."
+      }
+    }
+  },
+  "weekly": {
+    "defaultTitle": "This week on Abonten",
+    "editionStatus": {
+      "archived": "Archived",
+      "draft": "Draft",
+      "published": "Published",
+      "scheduled": "Scheduled"
+    },
+    "issue": {
+      "duplicate_subjects": "Some listings appear in more than one section.",
+      "empty_sections": "Some sections have no listings and will be hidden.",
+      "invalid_items": "Some listings will not be shown.",
+      "no_valid_items": "Add at least one listing that can be shown.",
+      "organizer_concentration": "One organizer has several events in the same section.",
+      "recently_featured": "Some listings were in recent editions for this area.",
+      "scope_retired": "This edition's area has been retired.",
+      "week_over": "This week has already ended."
+    },
+    "tagline": "The events, places and experiences worth discovering this week.",
+    "validity": {
+      "archived": "Archived",
+      "canceled": "Event cancelled",
+      "ended": "Event has ended",
+      "hidden": "Hidden by moderation",
+      "missing": "Listing no longer exists",
+      "not_published": "Not published",
+      "permanently_closed": "Permanently closed",
+      "removed": "Removed by moderation",
+      "restricted": "Restricted by moderation",
+      "unsupported": "Not supported yet"
+    }
+  }
+}

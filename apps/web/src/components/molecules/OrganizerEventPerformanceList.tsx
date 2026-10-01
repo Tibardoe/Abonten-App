@@ -12,9 +12,9 @@ import InlineErrorRetry from "./InlineErrorRetry";
 type Row = OrganizerEventPerformanceRow;
 
 const STATUS_LABEL: Record<string, string> = {
-  upcoming: "Upcoming",
-  ongoing: "Ongoing",
-  ended: "Ended",
+  upcoming: "upcoming",
+  ongoing: "ongoing",
+  ended: "ended",
 };
 
 export default function OrganizerEventPerformanceList({
@@ -96,7 +96,10 @@ export default function OrganizerEventPerformanceList({
                   {event.starts_at
                     ? formatDateWithSuffix(event.starts_at, undefined, locale)
                     : t("dateNotSet")}{" "}
-                  &middot; {STATUS_LABEL[event.status] ?? event.status}
+                  &middot;{" "}
+                  {STATUS_LABEL[event.status]
+                    ? t(STATUS_LABEL[event.status])
+                    : event.status}
                 </p>
               </div>
               <div className="text-right shrink-0">

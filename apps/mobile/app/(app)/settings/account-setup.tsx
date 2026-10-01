@@ -104,7 +104,7 @@ export default function AccountSetupScreen() {
       ) : (
         <QueryUnavailable
           view={view}
-          subject="your account setup"
+          subject={t("yourAccountSetup")}
           onRetry={() => completion.refetch()}
           loading={<FormSkeleton fields={5} />}
           className="flex-1 justify-center"

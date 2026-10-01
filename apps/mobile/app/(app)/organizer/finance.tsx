@@ -41,14 +41,14 @@ function NavRow({ href, label }: { href: string; label: string }) {
 }
 
 const LINE_LABEL: Record<OrganizerLedgerTransactionRow["line"], string> = {
-  ticket_sale: "Ticket sale",
-  platform_fee: "Service fee",
-  refund: "Refund",
-  refund_release: "Refund released",
-  payout: "Payout",
-  payout_release: "Payout released",
-  promoter_commission: "Promoter commission",
-  promoter_commission_reversal: "Promoter commission returned",
+  ticket_sale: "ticketSale",
+  platform_fee: "serviceFee",
+  refund: "refund",
+  refund_release: "refundReleased",
+  payout: "payout",
+  payout_release: "payoutReleased",
+  promoter_commission: "promoterCommission",
+  promoter_commission_reversal: "promoterCommissionReturned",
 };
 
 type LedgerFilter = "all" | "sales" | "fees" | "refunds" | "payouts";
@@ -128,13 +128,14 @@ function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
 
 function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
   const { locale } = useLocale();
+  const t = useTranslations("manage");
 
   return (
     <View className="gap-2 rounded-2xl border border-border bg-card p-3">
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1 gap-0.5">
           <AppText variant="bodyStrong" numberOfLines={1}>
-            {LINE_LABEL[row.line] ?? row.line}
+            {LINE_LABEL[row.line] ? t(LINE_LABEL[row.line]) : row.line}
           </AppText>
           <AppText variant="caption" numberOfLines={1}>
             {row.event_title ?? row.reference ?? "—"}
@@ -213,7 +214,7 @@ export default function OrganizerFinanceScreen() {
       ) : (
         <QueryUnavailable
           view={financeView}
-          subject="your balance"
+          subject={t("yourBalance")}
           onRetry={() => finance.refetch()}
           loading={
             <View className="items-center py-8">
@@ -283,7 +284,7 @@ export default function OrganizerFinanceScreen() {
         ) : (
           <QueryUnavailable
             view={ledgerView}
-            subject="your transactions"
+            subject={t("yourTransactions")}
             onRetry={() => ledger.refetch()}
             loading={<ActivityIndicator className="my-4" />}
           />

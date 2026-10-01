@@ -145,7 +145,7 @@ export default function ArchivedMessages() {
           ) : (
             <QueryUnavailable
               view={view}
-              subject="your archived chats"
+              subject={t("yourArchivedChats")}
               onRetry={() => q.refetch()}
               loading={
                 <View className="items-center py-16">

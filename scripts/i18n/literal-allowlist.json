@@ -1,0 +1,48 @@
+{
+  "notes": {
+    "Compiled": "Verb of the brand sign-off (@abonten/core/brand/signOff): fixed English brand wording, like the logo.",
+    "Abonten": "The product name.",
+    "Instagram": "Brand name.",
+    "Facebook": "Brand name.",
+    "%s | Abonten Hub": "Next.js title template: the page title followed by the brand.",
+    "{} | Abonten Hub": "The page title followed by the brand.",
+    "field ops context resolved": "A Sentry breadcrumb for engineers, never shown to a person."
+  },
+  "texts": [
+    "Compiled",
+    "Abonten",
+    "Instagram",
+    "Facebook",
+    "%s | Abonten Hub",
+    "{} | Abonten Hub",
+    "field ops context resolved"
+  ],
+  "files": [],
+  "entries": [
+    {
+      "file": "apps/mobile/src/features/discovery/ExploreLocationProvider.tsx",
+      "text": "Accra",
+      "reason": "The default market's first city: a place name, shown as stored."
+    },
+    {
+      "file": "apps/mobile/src/features/discovery/ExploreLocationProvider.tsx",
+      "text": "Your location",
+      "reason": "A stored sentinel (older installs persisted it); displayAreaLabel() shows the translated words."
+    },
+    {
+      "file": "apps/mobile/src/features/discovery/ExploreLocationProvider.tsx",
+      "text": "Selected location",
+      "reason": "A stored sentinel; displayAreaLabel() shows the translated words."
+    },
+    {
+      "file": "apps/mobile/src/lib/queryErrors.ts",
+      "text": "{} not found",
+      "reason": "An Error message for logs only; screens show their own not-found state."
+    },
+    {
+      "file": "apps/web/src/events/organisms/ManageEventDetailsSection.tsx",
+      "text": "SINGLE TICKET",
+      "reason": "A value stored in ticket_type.type, compared, never shown."
+    }
+  ]
+}

@@ -112,16 +112,16 @@ function ReplyPreview({
   const thumb = useAttachmentUrl(isImage ? att?.storage_path : undefined);
 
   const line = message.deleted_at
-    ? "Deleted message"
+    ? t("deletedMessage")
     : isImage
-      ? "Photo"
+      ? t("photo")
       : isVideo
-        ? `Video${durLabel}`
+        ? t("video3", { durLabel: durLabel })
         : isAudio
-          ? `Voice message${durLabel}`
+          ? t("voiceMessage3", { durLabel: durLabel })
           : isFile
-            ? (att?.file_name ?? "Attachment")
-            : (message.content ?? "Message");
+            ? (att?.file_name ?? t("attachment"))
+            : (message.content ?? t("message"));
 
   const glyph = isVideo ? "videocam" : isAudio ? "mic" : "document";
 

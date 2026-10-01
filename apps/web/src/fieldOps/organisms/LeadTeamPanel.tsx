@@ -14,10 +14,10 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 const ROLE_LABEL: Record<FieldOpsTeamMember["role"], string> = {
-  team_lead: "Team lead",
-  content_creator: "Content creator",
-  offline_member: "Field member",
-  online_member: "Online member",
+  team_lead: "teamLead",
+  content_creator: "contentCreator",
+  offline_member: "fieldMember",
+  online_member: "onlineMember",
 };
 
 /** The lead's team: invite by phone; suspend / reactivate / remove. */
@@ -100,7 +100,7 @@ export default function LeadTeamPanel({
                     m.invitedPhoneMasked ??
                     t("member")}
                 </span>{" "}
-                · {ROLE_LABEL[m.role]}
+                · {t(ROLE_LABEL[m.role])}
                 {m.status === "invited" && m.invitedPhoneMasked
                   ? ` · ${m.invitedPhoneMasked}`
                   : ""}

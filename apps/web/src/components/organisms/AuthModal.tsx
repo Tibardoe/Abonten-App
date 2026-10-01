@@ -246,7 +246,7 @@ export default function AuthModal({
         <div className="w-[90%] md:w-[70%] lg:w-[30%] text-foreground">
           <Image
             src={logoSrc}
-            alt="Abonten"
+            alt={t("abonten")}
             width={149}
             height={100}
             className="object-contain w-28 h-auto md:w-44 mx-auto mb-5 md:mb-10"

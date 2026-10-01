@@ -13,6 +13,8 @@
 // event/ticket-type config, not here — see docs/audit/01-limitations-register.md
 // (DOS-001, BIZ-001).
 
+import type { CoreTranslator } from "./i18n/translator";
+
 /** Max units of one ticket type in a single checkout. */
 export const MAX_TICKETS_PER_TICKET_TYPE = 50;
 
@@ -29,9 +31,12 @@ export type CheckoutQuantityError =
  * checks that); this only enforces the upper bounds and that at least one
  * unit was requested.
  */
-export function validateCheckoutQuantities(quantities: {
-  [ticketTypeId: string]: number;
-}): CheckoutQuantityError {
+export function validateCheckoutQuantities(
+  t: CoreTranslator,
+  quantities: {
+    [ticketTypeId: string]: number;
+  },
+): CheckoutQuantityError {
   let total = 0;
 
   for (const [ticketTypeId, quantity] of Object.entries(quantities)) {
@@ -40,7 +45,9 @@ export function validateCheckoutQuantities(quantities: {
     if (quantity > MAX_TICKETS_PER_TICKET_TYPE) {
       return {
         ok: false,
-        message: `You can buy at most ${MAX_TICKETS_PER_TICKET_TYPE} of the same ticket type in one order.`,
+        message: t("checkoutLimits.maxPerType", {
+          max: MAX_TICKETS_PER_TICKET_TYPE,
+        }),
       };
     }
 
@@ -48,13 +55,13 @@ export function validateCheckoutQuantities(quantities: {
   }
 
   if (total === 0) {
-    return { ok: false, message: "Please select at least one ticket." };
+    return { ok: false, message: t("checkoutLimits.selectOne") };
   }
 
   if (total > MAX_TICKETS_PER_ORDER) {
     return {
       ok: false,
-      message: `You can buy at most ${MAX_TICKETS_PER_ORDER} tickets in one order.`,
+      message: t("checkoutLimits.maxPerOrder", { max: MAX_TICKETS_PER_ORDER }),
     };
   }
 

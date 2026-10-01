@@ -1,4 +1,5 @@
 import { useProfileCompletion } from "@/features/profile/useProfileCompletion";
+import { profileCompletionItemCopy } from "@abonten/core/profileCompletion";
 import { AppText, Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
@@ -11,6 +12,7 @@ import { Pressable, View } from "react-native";
 
 export function ProfileCompletionCard() {
   const t = useTranslations("profile");
+  const tc = useTranslations("core");
 
   const { data: completion } = useProfileCompletion();
   const router = useRouter();
@@ -25,22 +27,25 @@ export function ProfileCompletionCard() {
     <View className="gap-3 rounded-xl border border-border bg-muted p-4">
       <AppText variant="bodyStrong">{t("finishYourProfile")}</AppText>
       <View className="gap-2">
-        {missing.map((item) => (
-          <View key={item.key} className="flex-row gap-2">
-            <Icon
-              name="ellipse-outline"
-              size={18}
-              tone="muted"
-              style={{ marginTop: 1 }}
-            />
-            <View className="flex-1">
-              <AppText variant="small" className="font-semibold">
-                {item.label}
-              </AppText>
-              <AppText variant="caption">{item.description}</AppText>
+        {missing.map((item) => {
+          const copy = profileCompletionItemCopy(tc, item);
+          return (
+            <View key={item.key} className="flex-row gap-2">
+              <Icon
+                name="ellipse-outline"
+                size={18}
+                tone="muted"
+                style={{ marginTop: 1 }}
+              />
+              <View className="flex-1">
+                <AppText variant="small" className="font-semibold">
+                  {copy.label}
+                </AppText>
+                <AppText variant="caption">{copy.description}</AppText>
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
       {!completion.isComplete ? (
         <Pressable

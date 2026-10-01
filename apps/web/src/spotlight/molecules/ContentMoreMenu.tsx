@@ -60,7 +60,7 @@ export default function ContentMoreMenu({
   }, [holding]);
 
   const isAuthor = post.viewer.isAuthor;
-  const noun = post.kind === "story" ? "Story" : "Spotlight";
+  const noun = post.kind === "story" ? t("story") : t("spotlight");
   const canDownload =
     post.kind === "spotlight" &&
     post.allowDownload &&

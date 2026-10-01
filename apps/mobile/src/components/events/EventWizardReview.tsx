@@ -30,7 +30,7 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
 
   const ticketing =
     w.ticketMode === "free"
-      ? "Free"
+      ? t("free")
       : w.ticketMode === "single"
         ? `${formatMoney(w.currency, Number(w.ticketPrice || 0))}${
             w.ticketQuantity ? ` · ${w.ticketQuantity} available` : ""
@@ -69,7 +69,7 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
         ) : null}
         <Row
           label={t("registration")}
-          value={w.requireRegistration ? "Required" : "Not required"}
+          value={w.requireRegistration ? t("required") : t("notRequired")}
         />
       </View>
 

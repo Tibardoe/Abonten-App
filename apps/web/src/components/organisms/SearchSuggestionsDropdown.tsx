@@ -1,7 +1,12 @@
 "use client";
 
 import SearchSuggestionRow from "@/components/atoms/SearchSuggestionRow";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import type { CoreTranslator } from "@abonten/core/i18n/translator";
 import type {
   SuggestionItem,
   SuggestionSection,
@@ -43,7 +48,7 @@ type Translate = (
   values?: Record<string, string | number>,
 ) => string;
 
-function rowContent(item: SuggestionItem, t: Translate) {
+function rowContent(item: SuggestionItem, t: Translate, tc: CoreTranslator) {
   switch (item.kind) {
     case "hit": {
       const { hit } = item;
@@ -79,7 +84,9 @@ function rowContent(item: SuggestionItem, t: Translate) {
     case "event":
       return {
         title: item.event.title,
-        subtitle: item.event.event_category,
+        subtitle: item.event.event_category
+          ? eventCategoryLabel(tc, item.event.event_category)
+          : undefined,
         imageSrc: item.event.flyer_public_id
           ? buildCloudinaryUrl(
               item.event.flyer_public_id,
@@ -109,9 +116,15 @@ function rowContent(item: SuggestionItem, t: Translate) {
         icon: <IoStorefrontOutline />,
       };
     case "eventCategory":
-      return { title: item.category, icon: <IoPricetagOutline /> };
+      return {
+        title: eventCategoryLabel(tc, item.category),
+        icon: <IoPricetagOutline />,
+      };
     case "placeCategory":
-      return { title: item.category.name, icon: <IoPricetagOutline /> };
+      return {
+        title: placeCategoryLabel(tc, item.category),
+        icon: <IoPricetagOutline />,
+      };
     case "recent":
       return { title: item.text, icon: <IoTimeOutline /> };
     case "literal":
@@ -140,6 +153,7 @@ export default function SearchSuggestionsDropdown({
   noMatches,
 }: SearchSuggestionsDropdownProps) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   return (
     // A listbox of grouped, heterogeneous rows (thumbnails, remove buttons)
@@ -181,7 +195,7 @@ export default function SearchSuggestionsDropdown({
           )}
           <ul>
             {section.items.map((item) => {
-              const content = rowContent(item, t);
+              const content = rowContent(item, t, tc);
               const { title, subtitle, imageSrc, icon } = content;
               const badge = "badge" in content ? content.badge : undefined;
               return (

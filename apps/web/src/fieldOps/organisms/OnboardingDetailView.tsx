@@ -1,4 +1,5 @@
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsOnboardingDetail } from "@abonten/types/fieldOps";
 import { useFormatter, useTranslations } from "next-intl";
@@ -13,6 +14,7 @@ export default function OnboardingDetailView({
   viewer: "member" | "lead";
 }) {
   const t = useTranslations("fieldOps");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
   const o = detail.onboarding;
@@ -197,8 +199,9 @@ export default function OnboardingDetailView({
         <section className="rounded-xl border p-4 text-sm">
           <p className="font-medium">{t("listingDetails")}</p>
           <p className="mt-1 text-muted-foreground">
-            {detail.place.categoryName ?? t("noCategory")} ·{" "}
-            {detail.place.address ?? t("noAddress")}
+            {placeCategoryLabel(tc, { name: detail.place.categoryName }) ||
+              t("noCategory")}{" "}
+            · {detail.place.address ?? t("noAddress")}
           </p>
           <p className="mt-2 whitespace-pre-wrap">{detail.place.description}</p>
         </section>

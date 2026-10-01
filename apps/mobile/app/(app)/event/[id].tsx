@@ -31,6 +31,7 @@ import { isNotFoundError } from "@/lib/queryErrors";
 import { eventShareUrl } from "@/lib/share";
 import { useNowTick } from "@/lib/useNowTick";
 import { useQueryView } from "@/lib/useQueryView";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   formatDateWithSuffix,
@@ -57,7 +58,11 @@ import {
   Stars,
   useToast,
 } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -72,12 +77,14 @@ import {
 } from "react-native";
 
 function priceRange(tickets: { price: number; currency: string }[]): string {
-  if (tickets.length === 0) return "Free";
+  if (tickets.length === 0) return translatorFor("events")("free");
   const prices = tickets.map((t) => t.price);
   const min = Math.min(...prices);
-  if (min === 0) return "Free entry";
+  if (min === 0) return translatorFor("events")("freeEntry");
   const currency = tickets[0]?.currency ?? "";
-  return `From ${formatMoney(currency, min, { trimZeroFraction: true })}`;
+  return translatorFor("events")("from", {
+    formatMoney: formatMoney(currency, min, { trimZeroFraction: true }),
+  });
 }
 
 function InfoRow({
@@ -104,6 +111,7 @@ export default function EventDetailScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("events");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -149,7 +157,7 @@ export default function EventDetailScreen() {
         <DetailHeaderActions
           kind="event"
           id={id}
-          shareTitle={eventTitle ?? "Event"}
+          shareTitle={eventTitle ?? t("event")}
           shareUrl={eventCode ? eventShareUrl(eventCode, referralCode) : null}
           onShared={() => {
             if (session && data?.event.id) {
@@ -190,7 +198,7 @@ export default function EventDetailScreen() {
         {header}
         <QueryUnavailable
           view={detailView}
-          subject="this event"
+          subject={t("thisEvent")}
           onRetry={() => refetch()}
           loading={<EventDetailSkeleton />}
           className="flex-1 justify-center"
@@ -282,7 +290,7 @@ export default function EventDetailScreen() {
     },
   };
   // The page's one primary action, pinned to its foot (resolveEventCta).
-  const cta = resolveEventCta({
+  const cta = resolveEventCta(tc, {
     canceled,
     ended: hasEnded,
     inProgressNoFuture,
@@ -528,7 +536,11 @@ export default function EventDetailScreen() {
                 label={t("going", {
                   toLocaleString: attendanceCount.toLocaleString(),
                 })}
-                sub={event.capacity ? `Capacity ${event.capacity}` : undefined}
+                sub={
+                  event.capacity
+                    ? t("capacity", { capacity: event.capacity })
+                    : undefined
+                }
               />
             ) : event.capacity ? (
               <InfoRow
@@ -619,7 +631,9 @@ export default function EventDetailScreen() {
             <SectionTitle>{t("categoryTags")}</SectionTitle>
             <View className="flex-row flex-wrap gap-2">
               <View className="rounded-full bg-muted px-3 py-1">
-                <AppText variant="meta">{event.event_category}</AppText>
+                <AppText variant="meta">
+                  {eventCategoryLabel(tc, event.event_category)}
+                </AppText>
               </View>
               {tags.map((t) => (
                 <View key={t} className="rounded-full bg-muted px-3 py-1">

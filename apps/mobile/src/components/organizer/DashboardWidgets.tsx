@@ -11,7 +11,11 @@ import type {
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Icon, type IoniconName, Overline } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -183,9 +187,10 @@ const ACTIVITY_ICON: Record<string, IoniconName> = {
 };
 
 function activityVerb(type: string): string {
-  if (type === "ticket_sold") return "Ticket sold for";
-  if (type === "ticket_cancelled") return "Ticket cancelled for";
-  return "New registration for";
+  if (type === "ticket_sold") return translatorFor("manage")("ticketSoldFor");
+  if (type === "ticket_cancelled")
+    return translatorFor("manage")("ticketCancelledFor");
+  return translatorFor("manage")("newRegistrationFor");
 }
 
 function RecentActivity({ items }: { items: OrganizerActivityRow[] }) {

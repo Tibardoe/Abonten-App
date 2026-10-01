@@ -6,20 +6,18 @@ import type {
 import { useTranslations } from "next-intl";
 
 const ROLE_LABEL: Record<FieldOpsMembership["role"], string> = {
-  team_lead: "Team lead",
-  content_creator: "Content creator",
-  offline_member: "Field member",
-  online_member: "Online member",
+  team_lead: "teamLead",
+  content_creator: "contentCreator",
+  offline_member: "fieldMember",
+  online_member: "onlineMember",
 };
 
 const STATUS_NOTE: Partial<Record<FieldOpsCampaignSummary["status"], string>> =
   {
-    draft: "The campaign hasn't started yet. Your team lead is planning.",
-    paused:
-      "The campaign is paused. Nothing new can be started until it resumes.",
-    winding_down:
-      "The campaign is winding down: finish what's open, no new work.",
-    completed: "This campaign is over. Everything here is read-only.",
+    draft: "theCampaignHasnTStartedYet",
+    paused: "theCampaignIsPausedNothingNew",
+    winding_down: "theCampaignIsWindingDownFinish",
+    completed: "thisCampaignIsOverEverythingHere",
   };
 
 /** The campaign the caller is working on, their role, and any status warning. */
@@ -35,14 +33,16 @@ export default function CampaignBanner({
   const note =
     membership.status === "suspended"
       ? t("yourMembershipIsSuspendedTalkTo")
-      : STATUS_NOTE[campaign.status];
+      : STATUS_NOTE[campaign.status]
+        ? t(STATUS_NOTE[campaign.status] as string)
+        : undefined;
   return (
     <section className="rounded-xl border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="font-medium">{campaign.name}</p>
           <p className="text-sm text-muted-foreground">
-            {campaign.regionName} · {ROLE_LABEL[membership.role]}
+            {campaign.regionName} · {t(ROLE_LABEL[membership.role])}
           </p>
         </div>
         <StatusChip status={campaign.status} />

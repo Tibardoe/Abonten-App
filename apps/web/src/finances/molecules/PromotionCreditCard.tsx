@@ -14,27 +14,40 @@ const monthOf = (period: string, locale: string) =>
     timeZone: "UTC",
   });
 
-function earnLines(credit: PromotionCredit): string[] {
+function earnLines(
+  t: ReturnType<typeof useTranslations>,
+  credit: PromotionCredit,
+): string[] {
   const lines: string[] = [];
   const { organizerShareBps, venueShareBps, milestone, visits } = credit.rates;
   if (organizerShareBps) {
     lines.push(
-      `Each month you get ${organizerShareBps / 100}% of what Abonten earned on your events that ended the month before (the service fee, after payment costs).`,
+      t("eachMonthYouGetOfWhat", {
+        value: organizerShareBps / 100,
+      }),
     );
   }
   if (venueShareBps) {
     lines.push(
-      `Own a verified place? You get ${venueShareBps / 100}% when other organizers hold ticketed events there.`,
+      t("ownAVerifiedPlaceYouGet", {
+        value: venueShareBps / 100,
+      }),
     );
   }
   if (visits) {
     lines.push(
-      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor, credit.currency)} (up to ${visits.maxVisitors} a month).`,
+      t("ownAVerifiedPlaceEveryDifferent", {
+        formatCredit: formatCredit(visits.perVisitorMinor, credit.currency),
+        maxVisitors: visits.maxVisitors,
+      }),
     );
   }
   if (milestone) {
     lines.push(
-      `The first time one of your events sells to ${milestone.uniqueBuyers} different people, you get ${formatCredit(milestone.amountMinor, credit.currency)}.`,
+      t("theFirstTimeOneOfYour", {
+        uniqueBuyers: milestone.uniqueBuyers,
+        formatCredit: formatCredit(milestone.amountMinor, credit.currency),
+      }),
     );
   }
   return lines;
@@ -59,7 +72,7 @@ export default function PromotionCreditCard() {
   const credit = data?.status === 200 ? data.data : undefined;
   if (isError || !credit || !credit.enabled) return null;
 
-  const lines = earnLines(credit);
+  const lines = earnLines(t, credit);
   const hasActivity =
     credit.promotionOnlyMinor > 0 ||
     credit.pendingMinor > 0 ||

@@ -9,6 +9,7 @@ import * as Sharing from "expo-sharing";
 import { useState } from "react";
 
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { buildTicketReceiptHtml } from "./ticketReceiptHtml";
 
 /**
@@ -19,6 +20,8 @@ import { buildTicketReceiptHtml } from "./ticketReceiptHtml";
  * (Save to Files, WhatsApp, …).
  */
 export function useTicketReceipt() {
+  const t = useTranslations("tickets");
+
   const toast = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -55,15 +58,13 @@ export function useTicketReceipt() {
           dialogTitle: "Abonten ticket receipt",
         });
       } else {
-        toast.success("Receipt ready", {
-          description:
-            "Sharing isn't available on this device, but the receipt PDF was generated.",
+        toast.success(t("receiptReady"), {
+          description: t("sharingIsnTAvailableOnThis"),
         });
       }
     } catch {
-      toast.error("Couldn't create the receipt", {
-        description:
-          "Something went wrong generating the PDF. Please try again.",
+      toast.error(t("couldnTCreateTheReceipt"), {
+        description: t("somethingWentWrongGeneratingThePdf"),
       });
     } finally {
       setIsGenerating(false);

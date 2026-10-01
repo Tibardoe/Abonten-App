@@ -382,7 +382,7 @@ function StorySlide({
   };
 
   const share = async () => {
-    const channel = await shareContent("story", story.id, "Story on Abonten");
+    const channel = await shareContent("story", story.id, t("storyOnAbonten"));
     if (!channel) return;
     if (channel === "copy_link") toast.success(t("linkCopied"));
     engagement.recordShare(channel);

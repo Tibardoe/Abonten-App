@@ -32,8 +32,8 @@ export default async function page({
       publisherId={profile.data.user_id}
       emptyText={
         profile.ownUsername === username
-          ? "You haven't posted a Spotlight yet."
-          : "No Spotlights yet."
+          ? t("youHavenTPostedASpotlight")
+          : t("noSpotlightsYet")
       }
     />
   );

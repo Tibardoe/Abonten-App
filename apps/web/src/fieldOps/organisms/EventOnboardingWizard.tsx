@@ -10,6 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import OwnerVerificationStep from "@/fieldOps/molecules/OwnerVerificationStep";
 import { useToast } from "@/hooks/useToast";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import {
+  eventCategoryLabel,
+  eventTypeLabel,
+} from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
@@ -25,7 +29,7 @@ import { useState, useTransition } from "react";
 // The money waits until the event has actually run, which the submit
 // confirmation says plainly so nobody expects it sooner.
 
-const STEPS = ["Organiser", "The event", "Flyer"] as const;
+const STEPS = ["organiser", "theEvent", "flyer"] as const;
 
 type Position = { lat: number; lng: number; accuracyM: number };
 
@@ -61,6 +65,7 @@ export default function EventOnboardingWizard({
   isOffline: boolean;
 }) {
   const t = useTranslations("fieldOps");
+  const tc = useTranslations("core");
 
   const o = draft.onboarding;
   const toast = useToast();
@@ -137,7 +142,7 @@ export default function EventOnboardingWizard({
       const res = await withdrawFieldOpsOnboarding({
         campaignId,
         onboardingId: o.id,
-        reason: "Not going ahead",
+        reason: t("notGoingAhead"),
       });
       if (res.status === 200) {
         toast.success(t("withdrawn"));
@@ -215,7 +220,7 @@ export default function EventOnboardingWizard({
                 : "border text-muted-foreground"
             }`}
           >
-            {i + 1}. {label}
+            {i + 1}. {t(label)}
           </li>
         ))}
       </ol>
@@ -296,7 +301,7 @@ export default function EventOnboardingWizard({
               >
                 {eventCategoriesAndTypes.map((c) => (
                   <option key={c.category} value={c.category}>
-                    {c.category}
+                    {eventCategoryLabel(tc, c.category)}
                   </option>
                 ))}
               </select>
@@ -312,9 +317,9 @@ export default function EventOnboardingWizard({
                 {(
                   eventCategoriesAndTypes.find((c) => c.category === category)
                     ?.types ?? []
-                ).map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                ).map((eventType) => (
+                  <option key={eventType} value={eventType}>
+                    {eventTypeLabel(tc, eventType)}
                   </option>
                 ))}
               </select>

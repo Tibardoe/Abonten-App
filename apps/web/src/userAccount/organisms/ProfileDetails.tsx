@@ -68,8 +68,8 @@ export default async function ProfileDetails({
   const hasCustomAvatar = !!data.avatar_public_id;
 
   const avatarAlt = isCurrentUser
-    ? "View your profile picture"
-    : `View ${handle}'s profile picture`;
+    ? t("viewYourProfilePicture")
+    : t("viewSProfilePicture", { handle: handle });
 
   const [rating, organizerVerifiedRes] = await Promise.all([
     getUserRating(userId),

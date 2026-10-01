@@ -3,7 +3,7 @@ import { hapticError, hapticSuccess } from "@/lib/haptics";
 import { supabase } from "@/lib/supabase";
 import {
   EMAIL_OTP_CODE_LENGTH,
-  EMAIL_OTP_MESSAGES,
+  emailOtpMessage,
   maskEmail,
 } from "@abonten/core/emailOtp";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
@@ -17,7 +17,7 @@ import {
   KeyboardRevealGroup,
   OtpInput,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -37,7 +37,7 @@ const RESEND_SECONDS = 60;
 // Mask all but the last two digits of a phone number so the screen confirms
 // which number was used without printing it in full.
 function maskPhone(e164: string | undefined) {
-  if (!e164) return "your phone";
+  if (!e164) return translatorFor("auth")("yourPhone");
   const tail = e164.slice(-2);
   const head = e164.slice(0, Math.max(0, e164.length - 6));
   return `${head}••••${tail}`;
@@ -52,6 +52,7 @@ function maskPhone(e164: string | undefined) {
 //     secure-store itself. No server round-trip on verify.
 export default function Verify() {
   const t = useTranslations("auth");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -76,7 +77,7 @@ export default function Verify() {
     channel === "email"
       ? email
         ? maskEmail(email)
-        : "your email"
+        : t("yourEmail")
       : maskPhone(phoneE164);
 
   const [code, setCode] = useState("");
@@ -131,7 +132,7 @@ export default function Verify() {
           });
           if (verifyErr) {
             hapticError();
-            setError(EMAIL_OTP_MESSAGES.invalidOrExpired);
+            setError(emailOtpMessage(tc, "invalidOrExpired"));
             setCode("");
             return;
           }
@@ -170,7 +171,7 @@ export default function Verify() {
         setBusy(false);
       }
     },
-    [channel, phoneE164, email, codeLength, t],
+    [channel, phoneE164, email, codeLength, t, tc],
   );
 
   async function resend() {

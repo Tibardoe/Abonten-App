@@ -94,7 +94,7 @@ export function ListingKindMenu({
               key={kind}
               accessibilityRole="menuitem"
               accessibilityState={{ selected }}
-              accessibilityLabel={t("show", { item: LISTING_LABEL[kind] })}
+              accessibilityLabel={t("show", { item: t(LISTING_LABEL[kind]) })}
               onPress={() => {
                 hapticSelection();
                 onSelect(kind);
@@ -110,7 +110,7 @@ export function ListingKindMenu({
                 variant="bodyStrong"
                 className={`flex-1 ${selected ? "text-primary" : ""}`}
               >
-                {LISTING_LABEL[kind]}
+                {t(LISTING_LABEL[kind])}
               </AppText>
               {selected ? (
                 <Icon name="checkmark" size={18} tone="primary" />

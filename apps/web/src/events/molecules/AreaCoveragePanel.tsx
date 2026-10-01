@@ -8,10 +8,10 @@ import { useToast } from "@/hooks/useToast";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import type { BrowseSuggestions } from "@abonten/core/market/coverage";
 import {
-  BROWSE_ELSEWHERE_TITLE,
-  JOIN_WAITLIST_LABEL,
-  LEAVE_WAITLIST_LABEL,
-  NOT_LAUNCHED_BODY,
+  BROWSE_ELSEWHERE_TITLE_KEY,
+  JOIN_WAITLIST_LABEL_KEY,
+  LEAVE_WAITLIST_LABEL_KEY,
+  NOT_LAUNCHED_BODY_KEY,
   browseReasonLabel,
   cityDistanceText,
   notLaunchedTitle,
@@ -49,6 +49,7 @@ export default function AreaCoveragePanel({
   autoJoin: boolean;
 }) {
   const t = useTranslations("events");
+  const tc = useTranslations("core");
 
   const [waiting, setWaiting] = useState(initiallyWaiting);
   const [pending, startTransition] = useTransition();
@@ -77,7 +78,7 @@ export default function AreaCoveragePanel({
       const res = await joinAreaWaitlist({ ...point, label: areaName });
       if (res.status === 200) {
         setWaiting(true);
-        toast.success(waitingText(res.data?.areaName ?? areaName));
+        toast.success(waitingText(tc, res.data?.areaName ?? areaName));
       } else if (res.status === 409) {
         toast.success(t("abontenIsAlreadyOpenHereHave"));
         router.refresh();
@@ -104,8 +105,8 @@ export default function AreaCoveragePanel({
     if (!initiallyWaiting) join();
   }, [autoJoin]);
 
-  const title = notLaunchedTitle(areaName);
-  const reason = browseReasonLabel(browse.reason);
+  const title = notLaunchedTitle(tc, areaName);
+  const reason = browseReasonLabel(tc, browse.reason);
 
   return (
     <section
@@ -119,7 +120,7 @@ export default function AreaCoveragePanel({
             {title}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {waiting ? waitingText(areaName) : NOT_LAUNCHED_BODY}
+            {waiting ? waitingText(tc, areaName) : tc(NOT_LAUNCHED_BODY_KEY)}
           </p>
         </div>
       </div>
@@ -133,19 +134,21 @@ export default function AreaCoveragePanel({
             onClick={leave}
             disabled={pending}
           >
-            {pending ? t("removingYou") : LEAVE_WAITLIST_LABEL}
+            {pending ? t("removingYou") : tc(LEAVE_WAITLIST_LABEL_KEY)}
           </Button>
         ) : (
           <Button type="button" size="sm" onClick={join} disabled={pending}>
             <FiBell aria-hidden className="h-4 w-4" />
-            {pending ? t("addingYou") : JOIN_WAITLIST_LABEL}
+            {pending ? t("addingYou") : tc(JOIN_WAITLIST_LABEL_KEY)}
           </Button>
         )}
       </div>
 
       {browse.cities.length > 0 ? (
         <div className="mt-4 border-t border-border pt-3 md:pl-8">
-          <h3 className="text-sm font-medium">{BROWSE_ELSEWHERE_TITLE}</h3>
+          <h3 className="text-sm font-medium">
+            {tc(BROWSE_ELSEWHERE_TITLE_KEY)}
+          </h3>
           <ul className="mt-1">
             {browse.cities.map((city) => (
               <li key={city.region.id}>
@@ -166,7 +169,7 @@ export default function AreaCoveragePanel({
                     </span>
                   ) : null}
                   <span className="text-xs text-muted-foreground">
-                    {cityDistanceText(city, distanceUnit)}
+                    {cityDistanceText(tc, city, distanceUnit)}
                   </span>
                   <FiChevronRight
                     aria-hidden
@@ -180,7 +183,7 @@ export default function AreaCoveragePanel({
       ) : null}
 
       <p className="mt-4 border-t border-border pt-3 text-sm text-muted-foreground md:pl-8">
-        {supplyPrompt(areaName)}{" "}
+        {supplyPrompt(tc, areaName)}{" "}
         <Link
           href="/help/organizers/creating-and-publishing-events"
           className="font-medium text-primary underline-offset-4 hover:underline"

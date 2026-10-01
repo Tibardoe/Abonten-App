@@ -16,6 +16,10 @@ import {
   getRecentSearches,
   removeRecentSearch,
 } from "@/utils/recentSearches";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { isAnyPriceParam } from "@abonten/core/parseFilterModalQueries";
 import { parseSearchQuery } from "@abonten/core/search/parseSearchQuery";
@@ -46,14 +50,21 @@ const BROWSE_SHORTCUT_LIMIT = 6;
 
 const EVENT_CATEGORY_NAMES = eventCategoriesAndTypes.map((c) => c.category);
 
+// A category matches on the name the reader sees (their language) as well
+// as on the stored English name, so "musique" and "music" both find it.
 function matchCategoryNames(
   query: string,
   names: string[],
   limit: number,
+  label: (name: string) => string,
 ): string[] {
   const lower = query.toLowerCase();
   return names
-    .filter((name) => name.toLowerCase().includes(lower))
+    .filter(
+      (name) =>
+        name.toLowerCase().includes(lower) ||
+        label(name).toLowerCase().includes(lower),
+    )
     .slice(0, limit);
 }
 
@@ -107,6 +118,7 @@ function FilterSearchBarFallback({ filterOnly }: { filterOnly?: boolean }) {
 
 function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const [showPopup, setShowPopup] = useState(false);
 
@@ -357,6 +369,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
           rawTrimmedQuery,
           EVENT_CATEGORY_NAMES,
           EVENT_CATEGORY_SUGGESTION_LIMIT,
+          (name) => eventCategoryLabel(tc, name),
         ).map((category) => ({
           kind: "eventCategory" as const,
           key: `cat:event:${encodeURIComponent(category)}`,
@@ -411,12 +424,17 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
       rawTrimmedQuery,
       EVENT_CATEGORY_NAMES,
       EVENT_CATEGORY_SUGGESTION_LIMIT,
+      (name) => eventCategoryLabel(tc, name),
     );
     const matchedPlaceCategories = includePlaces
       ? placeCategories
-          .filter((category) =>
-            category.name.toLowerCase().includes(rawTrimmedQuery.toLowerCase()),
-          )
+          .filter((category) => {
+            const needle = rawTrimmedQuery.toLowerCase();
+            return (
+              category.name.toLowerCase().includes(needle) ||
+              placeCategoryLabel(tc, category).toLowerCase().includes(needle)
+            );
+          })
           .slice(0, PLACE_CATEGORY_SUGGESTION_LIMIT)
       : [];
     const categoryItems: SuggestionItem[] = [
@@ -518,12 +536,12 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
         router.push(`/places/${item.place.slug}`);
         return;
       case "eventCategory":
-        setSearchText(item.category);
+        setSearchText(eventCategoryLabel(tc, item.category));
         setIsOpen(false);
         router.push(`/search?category=${encodeURIComponent(item.category)}`);
         return;
       case "placeCategory":
-        setSearchText(item.category.name);
+        setSearchText(placeCategoryLabel(tc, item.category));
         setIsOpen(false);
         router.push(
           `/explore/${locationSlug}?tab=places&categoryId=${item.category.id}`,

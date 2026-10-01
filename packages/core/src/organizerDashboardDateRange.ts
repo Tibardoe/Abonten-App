@@ -3,6 +3,7 @@
 // zone); callers pass it. Without one it is UTC, which is also Ghana's
 // calendar (Africa/Accra is UTC+0 all year).
 
+import type { CoreTranslator } from "./i18n/translator";
 import { startOfDayInZone } from "./time/timeZone";
 
 export type DashboardPeriod = "today" | "7d" | "30d" | "all";
@@ -87,19 +88,25 @@ export function getDashboardPeriodRange(
   }
 }
 
-export const DASHBOARD_PERIOD_LABELS: Record<DashboardPeriod, string> = {
-  today: "Today",
-  "7d": "Last 7 Days",
-  "30d": "Last 30 Days",
-  all: "All Time",
-};
+export const DASHBOARD_PERIODS: readonly DashboardPeriod[] = [
+  "today",
+  "7d",
+  "30d",
+  "all",
+] as const;
 
-export const DASHBOARD_PERIOD_COMPARISON_LABELS: Record<
-  DashboardPeriod,
-  string | null
-> = {
-  today: "vs yesterday",
-  "7d": "vs previous 7 days",
-  "30d": "vs previous 30 days",
-  all: null,
-};
+/** Words live under `periods.*` of the core namespace. */
+export function dashboardPeriodLabel(
+  t: CoreTranslator,
+  period: DashboardPeriod,
+): string {
+  return t(`periods.dashboard.${period}`);
+}
+
+/** "vs yesterday" … — null for All time, which has no prior equivalent. */
+export function dashboardPeriodComparisonLabel(
+  t: CoreTranslator,
+  period: DashboardPeriod,
+): string | null {
+  return period === "all" ? null : t(`periods.comparison.${period}`);
+}

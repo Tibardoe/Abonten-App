@@ -4,7 +4,6 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { generateSlug } from "@abonten/core/geerateSlug";
-// import { allEvents } from "@/data/allEvents";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";

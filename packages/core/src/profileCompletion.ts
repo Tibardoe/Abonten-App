@@ -23,6 +23,8 @@
 //
 // A bio and a website are optional extras and deliberately not listed.
 
+import type { CoreTranslator } from "./i18n/translator";
+
 export type ProfileCompletionItemKey =
   | "name"
   | "username"
@@ -38,12 +40,14 @@ export type ProfileCompletionItemState = "done" | "missing" | "unverified";
 export type ProfileCompletionItem = {
   key: ProfileCompletionItemKey;
   group: ProfileCompletionGroup;
-  /** What to do, e.g. "Add your email". */
-  label: string;
-  /** What it is once done, e.g. "Email verified". */
-  doneLabel: string;
-  /** Why it helps — only what the product really does with it. */
-  description: string;
+  /**
+   * Keys under the core namespace (render with profileCompletionItemCopy):
+   * what to do ("Add your email"), what it is once done ("Email verified"),
+   * and why it helps — only what the product really does with it.
+   */
+  labelKey: string;
+  doneLabelKey: string;
+  descriptionKey: string;
   state: ProfileCompletionItemState;
   complete: boolean;
   /** Web settings route that completes it; mobile maps it to its own screen. */
@@ -69,13 +73,32 @@ export type ProfileCompletionInput = {
   phoneConfirmedAt?: string | null | undefined;
 };
 
-export const PROFILE_COMPLETION_GROUP_TITLES: Record<
-  ProfileCompletionGroup,
-  string
-> = {
-  profile: "Your profile",
-  account: "Sign-in & contact",
-};
+export const PROFILE_COMPLETION_GROUPS: readonly ProfileCompletionGroup[] = [
+  "profile",
+  "account",
+] as const;
+
+export function profileCompletionGroupTitle(
+  t: CoreTranslator,
+  group: ProfileCompletionGroup,
+): string {
+  return t(`profileCompletion.group.${group}`);
+}
+
+/** The words of one step, in the reader's language. */
+export function profileCompletionItemCopy(
+  t: CoreTranslator,
+  item: Pick<
+    ProfileCompletionItem,
+    "labelKey" | "doneLabelKey" | "descriptionKey"
+  >,
+): { label: string; doneLabel: string; description: string } {
+  return {
+    label: t(item.labelKey),
+    doneLabel: t(item.doneLabelKey),
+    description: t(item.descriptionKey),
+  };
+}
 
 function emailState(input: ProfileCompletionInput): ProfileCompletionItemState {
   if (input.email && input.emailConfirmedAt && !input.pendingEmail)
@@ -103,9 +126,9 @@ export function computeProfileCompletion(
     {
       key: "name",
       group: "profile",
-      label: "Add your name",
-      doneLabel: "Name added",
-      description: "Shown on your profile so people know who you are.",
+      labelKey: "profileCompletion.name.label",
+      doneLabelKey: "profileCompletion.name.done",
+      descriptionKey: "profileCompletion.name.description",
       state: input.fullName?.trim() ? "done" : "missing",
       complete: !!input.fullName?.trim(),
       href: "/settings/edit-profile",
@@ -113,10 +136,9 @@ export function computeProfileCompletion(
     {
       key: "username",
       group: "profile",
-      label: "Choose a username",
-      doneLabel: "Username chosen",
-      description:
-        "Your @handle — it's shown on your reviews and in your profile link. The one you have now was made up for you.",
+      labelKey: "profileCompletion.username.label",
+      doneLabelKey: "profileCompletion.username.done",
+      descriptionKey: "profileCompletion.username.description",
       state: input.usernameIsGenerated === false ? "done" : "missing",
       complete: input.usernameIsGenerated === false,
       href: "/settings/edit-profile",
@@ -124,10 +146,9 @@ export function computeProfileCompletion(
     {
       key: "avatar",
       group: "profile",
-      label: "Add a profile photo",
-      doneLabel: "Profile photo added",
-      description:
-        "Shown on your profile and next to your reviews and messages.",
+      labelKey: "profileCompletion.avatar.label",
+      doneLabelKey: "profileCompletion.avatar.done",
+      descriptionKey: "profileCompletion.avatar.description",
       state: input.avatarPublicId ? "done" : "missing",
       complete: !!input.avatarPublicId,
       href: "/settings/edit-profile",
@@ -135,15 +156,14 @@ export function computeProfileCompletion(
     {
       key: "email",
       group: "account",
-      label:
+      labelKey:
         email === "unverified" && !emailUsable
           ? input.email
-            ? "Verify your email"
-            : "Confirm your email"
-          : "Add your email",
-      doneLabel: "Email verified",
-      description:
-        "Needed to pay for tickets and promotions — your tickets and receipts are emailed to you. You can also sign in with a code sent there.",
+            ? "profileCompletion.email.verify"
+            : "profileCompletion.email.confirm"
+          : "profileCompletion.email.label",
+      doneLabelKey: "profileCompletion.email.done",
+      descriptionKey: "profileCompletion.email.description",
       state: emailUsable ? "done" : email,
       complete: emailUsable,
       href: "/settings/security",
@@ -151,13 +171,12 @@ export function computeProfileCompletion(
     {
       key: "phone",
       group: "account",
-      label:
+      labelKey:
         phone === "unverified"
-          ? "Verify your phone number"
-          : "Add your phone number",
-      doneLabel: "Phone number verified",
-      description:
-        "Lets you sign in with a code sent by text — a way back in if you can't get into your email or Google account.",
+          ? "profileCompletion.phone.verify"
+          : "profileCompletion.phone.label",
+      doneLabelKey: "profileCompletion.phone.done",
+      descriptionKey: "profileCompletion.phone.description",
       state: phone,
       complete: phone === "done",
       href: "/settings/security",

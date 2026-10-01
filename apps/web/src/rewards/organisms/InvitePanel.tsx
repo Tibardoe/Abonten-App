@@ -12,10 +12,10 @@ import { useEffect, useState } from "react";
 
 const STATUS_LABEL: Record<ReferralInvite["recent"][number]["status"], string> =
   {
-    joined: "Joined",
-    qualified: "Bought a ticket · reward pending",
-    rewarded: "Reward earned",
-    expired: "Didn't buy in time",
+    joined: "joined",
+    qualified: "boughtATicketRewardPending",
+    rewarded: "rewardEarned",
+    expired: "didnTBuyInTime",
   };
 
 // Rewards › Invite friends: the personal invite link (WhatsApp first -- it's
@@ -25,6 +25,7 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
   const locale = useLocale();
 
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   // Known only in the browser; rendering it on the server would mismatch.
@@ -32,7 +33,7 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
   useEffect(() => setCanShare(typeof navigator.share === "function"), []);
   const url = invite.inviteUrl;
   const message = url
-    ? inviteShareMessage({
+    ? inviteShareMessage(tc, {
         url,
         refereeMinor: invite.refereeMinor,
         minOrderMinor: invite.minOrderMinor,
@@ -162,7 +163,7 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
             >
               <span className="font-medium">{friend.name}</span>
               <span className="text-right text-muted-foreground">
-                {STATUS_LABEL[friend.status]} ·{" "}
+                {t(STATUS_LABEL[friend.status])} ·{" "}
                 {formatDateWithSuffix(friend.at, undefined, locale)}
               </span>
             </li>

@@ -5,8 +5,8 @@ import { useIsOnline } from "@/lib/network";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import {
-  PROMOTION_KIND_LABEL,
-  PROMOTION_STATE_LABEL,
+  promotionKindLabel,
+  promotionStateLabel,
 } from "@abonten/core/promotionSummary";
 import type { ActivePromotionSummary } from "@abonten/types/promotionSummaryType";
 import {
@@ -53,6 +53,7 @@ function PromotionRow({ promotion }: { promotion: ActivePromotionSummary }) {
   const { locale } = useLocale();
 
   const t = useTranslations("settings");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const upcoming = promotion.state === "scheduled";
@@ -64,13 +65,13 @@ function PromotionRow({ promotion }: { promotion: ActivePromotionSummary }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${PROMOTION_KIND_LABEL[promotion.resourceType]}: ${promotion.resourceName}, ${PROMOTION_STATE_LABEL[promotion.state]}`}
+      accessibilityLabel={`${promotionKindLabel(tc, promotion.resourceType)}: ${promotion.resourceName}, ${promotionStateLabel(tc, promotion.state)}`}
       onPress={() => router.push(promotionHref(promotion))}
       className="min-h-[64px] flex-row items-center gap-3 py-3 active:opacity-70"
     >
       <View className="flex-1 gap-1">
         <AppText variant="caption" tone="muted">
-          {PROMOTION_KIND_LABEL[promotion.resourceType]}
+          {promotionKindLabel(tc, promotion.resourceType)}
         </AppText>
         <AppText variant="bodyStrong" numberOfLines={1}>
           {promotion.resourceName}
@@ -78,7 +79,7 @@ function PromotionRow({ promotion }: { promotion: ActivePromotionSummary }) {
         <View className="flex-row flex-wrap items-center gap-2">
           <StatusPill
             status={STATUS_KEY[promotion.state]}
-            options={{ label: PROMOTION_STATE_LABEL[promotion.state] }}
+            options={{ label: promotionStateLabel(tc, promotion.state) }}
             size="sm"
             hideIcon
           />
@@ -108,6 +109,7 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
 
 export default function SettingsOverview() {
   const t = useTranslations("settings");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const online = useIsOnline();

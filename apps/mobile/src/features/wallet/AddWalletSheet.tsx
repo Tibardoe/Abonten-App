@@ -112,7 +112,7 @@ export function AddWalletSheet({
       phone: phone.trim(),
     });
     if (res.status === 200) {
-      await added(res.data, "Mobile money wallet added.");
+      await added(res.data, t("mobileMoneyWalletAdded"));
       return;
     }
     // Covers duplicate-wallet and any server-side validation failure.
@@ -123,7 +123,7 @@ export function AddWalletSheet({
     setFormError(null);
     const res = await addCard.mutateAsync(undefined);
     if (res.status === 200) {
-      await added(res.data, "Card added.");
+      await added(res.data, t("cardAdded"));
       return;
     }
     setFormError(res.message ?? t("weCouldnTVerifyThatCard"));

@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/useToast";
 import { linkGoogleIdentity } from "@/services/authService";
 import {
   EMAIL_OTP_CODE_LENGTH,
-  EMAIL_OTP_MESSAGES,
+  emailOtpMessage,
   isLikelyEmail,
   maskEmail,
 } from "@abonten/core/emailOtp";
@@ -44,6 +44,7 @@ export default function SecurityInputFields({
   initialCallingCode,
 }: Props) {
   const t = useTranslations("settings.security.phone");
+  const tc = useTranslations("core");
   const tAuth = useTranslations("auth");
   const searchParams = useSearchParams();
   const toast = useToast();
@@ -206,8 +207,8 @@ export default function SecurityInputFields({
   };
 
   // Supabase answers a wrong code and an expired one identically, so there
-  // is nothing to branch on here — see EMAIL_OTP_MESSAGES.invalidOrExpired.
-  const mapOtpError = () => EMAIL_OTP_MESSAGES.invalidOrExpired;
+  // is nothing to branch on here — see emailOtpMessage(tc, "invalidOrExpired").
+  const mapOtpError = () => emailOtpMessage(tc, "invalidOrExpired");
 
   // Step 1: the code sent to the NEW address.
   const handleEmailOtpSubmit = async (event: React.FormEvent) => {

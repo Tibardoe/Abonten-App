@@ -9,9 +9,10 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
+import { tc } from "@/lib/coreT";
 import { loadContentCampaigns } from "@/lib/data";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
+import { campaignStatusLabel } from "@abonten/core/content/copy";
 import type { ContentCampaignStatus } from "@abonten/types/contentType";
 import Link from "next/link";
 import { SpotlightTabs } from "../SpotlightTabs";
@@ -66,7 +67,7 @@ export default async function SpotlightCampaignsPage({
                 : "border border-border hover:bg-muted",
             )}
           >
-            {s === "any" ? "Everything" : CAMPAIGN_STATUS_LABEL[s]}
+            {s === "any" ? "Everything" : campaignStatusLabel(tc, s)}
           </Link>
         ))}
       </div>
@@ -115,7 +116,7 @@ export default async function SpotlightCampaignsPage({
                   </Td>
                   <Td>
                     <Badge tone={campaignTone(c.status)}>
-                      {CAMPAIGN_STATUS_LABEL[c.status]}
+                      {campaignStatusLabel(tc, c.status)}
                     </Badge>
                   </Td>
                   <Td className="text-xs">

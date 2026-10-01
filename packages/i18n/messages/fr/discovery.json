@@ -12,6 +12,7 @@
   "couldnTSaveThatPleaseTry": "Couldn't save that. Please try again.",
   "dismiss": "Dismiss",
   "enjoyEventsLikeThis": "Enjoy events like this?",
+  "event": "Event",
   "events": "Events",
   "eventsBy": "Events by {organizerLabel}",
   "exploreEventsNearYou": "Explore events near you",
@@ -48,6 +49,7 @@
   "searchIsUnavailableRightNow": "Search is unavailable right now.",
   "seeAll": "See all {toLowerCase}",
   "seeTheirEvents": "See their events",
+  "selected": "Selected",
   "showAllResults": "Show all results",
   "stopEmailsAboutPicksAndAlerts": "Stop emails about picks and alerts?",
   "tabs": {
@@ -67,5 +69,6 @@
   "weLlOnlySendWhatYou2": "We'll only send what you asked for, and never more than one pick a day.",
   "weWonTEmailYouPicks": "We won't email you picks or alerts any more. Push notifications and your For you page aren't affected.",
   "youLlHearWhenPostsSomething": "You'll hear when {label} posts something new.",
-  "youReUnsubscribed": "You're unsubscribed"
+  "youReUnsubscribed": "You're unsubscribed",
+  "yourPicks": "your picks"
 }

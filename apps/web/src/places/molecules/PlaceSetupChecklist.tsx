@@ -1,7 +1,8 @@
 "use client";
 
 import type { PlaceSetup } from "@abonten/core/placeSetup";
-import { VERIFICATION_CHIP_LABEL } from "@abonten/core/verification/copy";
+import { placeSetupItemLabel } from "@abonten/core/placeSetup";
+import { verificationChipLabel } from "@abonten/core/verification/copy";
 import type { VerificationStatus } from "@abonten/types/verificationType";
 import { useTranslations } from "next-intl";
 import { IoCheckmarkCircle } from "react-icons/io5";
@@ -33,6 +34,7 @@ export default function PlaceSetupChecklist({
   onGoToTab: (tab: string) => void;
 }) {
   const t = useTranslations("places");
+  const tc = useTranslations("core");
 
   if (setup.isComplete) return null;
 
@@ -66,13 +68,13 @@ export default function PlaceSetupChecklist({
                     item.complete ? "text-muted-foreground line-through" : ""
                   }
                 >
-                  {item.label}
+                  {placeSetupItemLabel(tc, item)}
                 </span>
                 {item.key === "verification" && status && !item.complete ? (
                   <span
                     className={`ml-auto rounded-full px-2 py-0.5 text-xs ${CHIP_TONE[status]}`}
                   >
-                    {VERIFICATION_CHIP_LABEL[status]}
+                    {verificationChipLabel(tc, status)}
                   </span>
                 ) : null}
               </button>

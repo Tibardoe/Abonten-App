@@ -2,6 +2,7 @@
 
 import StarRatingDisplay from "@/components/atoms/Rating";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
@@ -191,14 +192,16 @@ function PlacePreviewPanel({
   onClose: () => void;
 }) {
   const t = useTranslations("places");
+  const tc = useTranslations("core");
 
   const openStatus = derivePlaceCardOpenStatus(
+    tc,
     place.is_open,
     place.temporary_status,
   );
   const fullAddress =
     (place.address as { full_address?: string })?.full_address ??
-    "Location not specified";
+    t("locationNotSpecified");
 
   return (
     <div
@@ -240,7 +243,10 @@ function PlacePreviewPanel({
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded-full text-xs">
-              {place.category_name}
+              {placeCategoryLabel(tc, {
+                slug: place.category_slug,
+                name: place.category_name,
+              })}
             </span>
             <PlaceOpenStatusBadge status={openStatus} className="text-xs" />
           </div>

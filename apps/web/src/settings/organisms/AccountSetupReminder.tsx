@@ -19,10 +19,11 @@ export default function AccountSetupReminder({
   className?: string;
 }) {
   const t = useTranslations("settings");
+  const tc = useTranslations("core");
 
   const { completion, visible, dismiss } = useAccountSetupPrompt();
   if (!visible || !completion) return null;
-  const message = accountSetupPromptMessage(completion);
+  const message = accountSetupPromptMessage(tc, completion);
   const fraction = completion.completedCount / completion.total;
 
   return (

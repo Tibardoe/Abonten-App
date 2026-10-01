@@ -10,8 +10,8 @@ import VerificationExplainer from "@/verification/molecules/VerificationExplaine
 import VerificationStatusCard from "@/verification/molecules/VerificationStatusCard";
 import VerificationEvidenceUploader from "@/verification/organisms/VerificationEvidenceUploader";
 import {
-  ORGANIZER_TYPE_DESCRIPTION,
-  ORGANIZER_TYPE_LABEL,
+  organizerTypeDescription,
+  organizerTypeLabel,
 } from "@abonten/core/verification/copy";
 import { isEditable } from "@abonten/core/verification/stateMachine";
 import type {
@@ -379,6 +379,7 @@ function OrganizerTypePicker({
   allowed: OrganizerType[];
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   if (allowed.length === 0) return null;
   return (
@@ -403,10 +404,10 @@ function OrganizerTypePicker({
           />
           <span>
             <span className="block text-sm font-medium">
-              {ORGANIZER_TYPE_LABEL[t]}
+              {organizerTypeLabel(tc, t)}
             </span>
             <span className="block text-sm text-muted-foreground">
-              {ORGANIZER_TYPE_DESCRIPTION[t]}
+              {organizerTypeDescription(tc, t)}
             </span>
           </span>
         </label>

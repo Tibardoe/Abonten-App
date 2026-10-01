@@ -110,7 +110,7 @@ export default function EventUploadModal({
     openFilePicker: openReplaceFilePicker,
     handleFileChange: handleReplaceFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your event flyer.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
     onInvalidFile: (message) => toast.error(message),
     onSelect: () => {

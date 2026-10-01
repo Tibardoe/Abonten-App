@@ -2,7 +2,7 @@
 
 import { getContentPost } from "@/actions/content/getContentPost";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { STORY_EXPIRED_MESSAGE } from "@abonten/core/content/copy";
+import { STORY_EXPIRED_MESSAGE_KEY } from "@abonten/core/content/copy";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,6 +16,7 @@ import StoryViewer from "./StoryViewer";
 // ended one says so and offers the publisher's page instead.
 export default function StoryLinkLanding({ postId }: { postId: string }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const { isLoading: userLoading, data: user } = useCurrentUser();
@@ -61,7 +62,7 @@ export default function StoryLinkLanding({ postId }: { postId: string }) {
     <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-20 text-center">
       <h1 className="text-xl font-bold">
         {res?.status === 410
-          ? STORY_EXPIRED_MESSAGE
+          ? tc(STORY_EXPIRED_MESSAGE_KEY)
           : t("thisStoryIsnTAvailable")}
       </h1>
       <p className="text-sm text-muted-foreground">

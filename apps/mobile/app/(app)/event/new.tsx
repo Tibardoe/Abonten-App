@@ -162,10 +162,10 @@ export default function CreateEventScreen() {
       onNext={goNext}
       nextLabel={
         w.step !== LAST_STEP
-          ? "Next"
+          ? t("next")
           : w.isSubmitting
-            ? "Publishing…"
-            : "Publish"
+            ? t("publishing")
+            : t("publish")
       }
       nextLoading={w.isSubmitting}
       nextDisabled={w.step !== BASICS_STEP && !w.canAdvance}

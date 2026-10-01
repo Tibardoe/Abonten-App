@@ -1,4 +1,5 @@
 import { supabase } from "@/config/supabase/client";
+import { translatorFor } from "@/i18n/clientTranslator";
 import {
   MESSAGE_ATTACHMENTS_BUCKET,
   MESSAGE_ATTACHMENT_MAX_BYTES,
@@ -21,10 +22,10 @@ export function isAcceptableChatImage(file: File): string | null {
   if (
     !(MESSAGE_ATTACHMENT_MIME_TYPES as readonly string[]).includes(file.type)
   ) {
-    return "Choose a JPG, PNG or WebP image.";
+    return translatorFor("messaging")("chooseAJpgPngOrWebp");
   }
   if (file.size > MESSAGE_ATTACHMENT_MAX_BYTES) {
-    return "That image is over 10 MB. Choose a smaller one.";
+    return translatorFor("messaging")("thatImageIsOver10Mb");
   }
   return null;
 }

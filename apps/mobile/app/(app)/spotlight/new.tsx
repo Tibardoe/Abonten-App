@@ -15,7 +15,7 @@ import {
   type EditableMedia,
   useHighlightComposer,
 } from "@/features/profile/useHighlightComposer";
-import { CONTENT_RIGHTS_ACKNOWLEDGEMENT } from "@abonten/core/content/copy";
+import { CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import type { ContentKind } from "@abonten/types/contentType";
 import {
@@ -50,6 +50,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // every limit again.
 export default function NewContentScreen() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -727,7 +728,7 @@ export default function NewContentScreen() {
             tone={rights ? "primary" : "muted"}
           />
           <AppText variant="small" className="flex-1">
-            {CONTENT_RIGHTS_ACKNOWLEDGEMENT}
+            {tc(CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY)}
           </AppText>
         </Pressable>
 
@@ -737,7 +738,7 @@ export default function NewContentScreen() {
               publish.state.phase === "error" ? t("tryAgain") : t("publish")
             }
             loading={busy}
-            loadingTitle="Publishing…"
+            loadingTitle={t("publishing")}
             disabled={!rights || busy}
             onPress={() => submit(false)}
           />
@@ -769,6 +770,7 @@ function PublishPreview({
   state: PublishState;
 }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const first = items[0];
   if (!first) return null;
@@ -781,16 +783,16 @@ function PublishPreview({
   if (state.phase === "uploading") {
     label =
       state.total > 1
-        ? `Uploading ${state.index + 1} of ${state.total}`
-        : "Uploading";
+        ? t("uploadingOf", { value: state.index + 1, total: state.total })
+        : t("uploading");
     value = (state.index + state.fraction) / state.total;
     // Bytes are all sent; the server is checking the file.
     if (state.fraction >= 1) {
-      label = "Checking your file…";
+      label = t("checkingYourFile");
       indeterminate = true;
     }
   } else if (state.phase === "saving") {
-    label = "Publishing…";
+    label = t("publishing");
     indeterminate = true;
   }
 

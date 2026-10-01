@@ -85,7 +85,17 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
       {data.available ? (
         <View className="gap-2">
           <Field
-            label={`${data.rateBps !== null ? "Change to" : "Commission"} (${pct(data.minRateBps)}–${pct(data.maxRateBps)}%)`}
+            label={
+              data.rateBps !== null
+                ? t("changeToRange", {
+                    min: pct(data.minRateBps),
+                    max: pct(data.maxRateBps),
+                  })
+                : t("commissionRange", {
+                    min: pct(data.minRateBps),
+                    max: pct(data.maxRateBps),
+                  })
+            }
           >
             <Input
               value={rate}

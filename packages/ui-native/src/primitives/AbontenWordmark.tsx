@@ -1,4 +1,5 @@
 import Svg from "react-native-svg";
+import { useTranslations } from "../i18n";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { BrandArtworkPaths } from "./AbontenLogo";
 import { BRAND_WORDMARK } from "./brandPaths";
@@ -21,6 +22,8 @@ const VB_W = viewBox[2] ?? 1184;
 const VB_H = viewBox[3] ?? 210;
 
 export function AbontenWordmark({ size = 20, color }: AbontenWordmarkProps) {
+  const t = useTranslations("common");
+
   const c = useThemeColors();
   const height = size * 0.8 * (VB_H / 200);
   const fill = color ?? c.foreground;
@@ -30,7 +33,7 @@ export function AbontenWordmark({ size = 20, color }: AbontenWordmarkProps) {
       height={height}
       viewBox={BRAND_WORDMARK.viewBox}
       accessibilityRole="header"
-      accessibilityLabel="Abonten"
+      accessibilityLabel={t("abonten")}
     >
       <BrandArtworkPaths artwork={BRAND_WORDMARK} fg={fill} cut={fill} />
     </Svg>

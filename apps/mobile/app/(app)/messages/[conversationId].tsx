@@ -233,22 +233,25 @@ export default function ConversationScreen() {
           // The optimistic pill is applied/reverted in the mutation hook; the
           // screen just surfaces a lightweight failure note (spec §16).
           onSettled: (res) => {
-            if (!res || res.status !== 200) setToast("Couldn't add reaction");
+            if (!res || res.status !== 200) setToast(t("couldnTAddReaction"));
           },
         },
       ),
-    [toggleReaction],
+    [toggleReaction, t],
   );
 
-  const handleCopy = useCallback(async (text: string) => {
-    const ok = await copyText(text);
-    if (ok) {
-      hapticSelection();
-      setToast("Copied");
-    } else {
-      setToast("Couldn't copy");
-    }
-  }, []);
+  const handleCopy = useCallback(
+    async (text: string) => {
+      const ok = await copyText(text);
+      if (ok) {
+        hapticSelection();
+        setToast(t("copied"));
+      } else {
+        setToast(t("couldnTCopy"));
+      }
+    },
+    [t],
+  );
 
   // Jump to a message referenced by a reply quote (spec §11). If it isn't in
   // the loaded pages yet, page older messages in until it is (capped).
@@ -277,10 +280,10 @@ export default function ConversationScreen() {
         pendingScrollRef.current = { id: messageId, tries: 0 };
         messagesQ.fetchNextPage();
       } else {
-        setToast("Original message isn't loaded");
+        setToast(t("originalMessageIsnTLoaded"));
       }
     },
-    [scrollToLoaded, messagesQ],
+    [scrollToLoaded, messagesQ, t],
   );
 
   // Resolve a pending "scroll to reply target" as older pages arrive.
@@ -295,14 +298,14 @@ export default function ConversationScreen() {
     }
     if (pending.tries >= 6 || !messagesQ.hasNextPage) {
       pendingScrollRef.current = null;
-      setToast("Couldn't find that message");
+      setToast(t("couldnTFindThatMessage"));
       return;
     }
     if (!messagesQ.isFetchingNextPage) {
       pending.tries += 1;
       messagesQ.fetchNextPage();
     }
-  }, [scrollToLoaded, messagesQ]);
+  }, [scrollToLoaded, messagesQ, t]);
 
   useEffect(() => {
     if (!toast) return;
@@ -380,7 +383,7 @@ export default function ConversationScreen() {
       {
         onSettled: (res) => {
           if (res && res.status !== 200) {
-            setToast(res.message ?? "Couldn't edit that message");
+            setToast(res.message ?? t("couldnTEditThatMessage2"));
           }
           setEditing(null);
         },
@@ -398,7 +401,7 @@ export default function ConversationScreen() {
           deleteMsg.mutate(m.id, {
             onSettled: (res) => {
               if (res && res.status !== 200) {
-                setToast(res.message ?? "Couldn't delete that message");
+                setToast(res.message ?? t("couldnTDeleteThatMessage2"));
               }
             },
           }),
@@ -470,7 +473,7 @@ export default function ConversationScreen() {
             <View className="flex-1 justify-center">
               <QueryUnavailable
                 view={threadView}
-                subject="this conversation"
+                subject={t("thisConversation")}
                 onRetry={() => messagesQ.refetch()}
               />
             </View>
@@ -561,9 +564,9 @@ export default function ConversationScreen() {
           disabled={closed || iBlockedThem}
           disabledReason={
             closed
-              ? "This conversation is closed."
+              ? t("thisConversationIsClosed")
               : iBlockedThem
-                ? "You've blocked this person. Unblock them to send a message."
+                ? t("youVeBlockedThisPersonUnblock")
                 : undefined
           }
         />

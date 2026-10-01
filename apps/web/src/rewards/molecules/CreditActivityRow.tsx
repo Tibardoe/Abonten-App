@@ -5,14 +5,14 @@ import type {
   CreditActivityItem,
   CreditActivityState,
 } from "@abonten/types/rewards";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const STATE_LABEL: Record<CreditActivityState, string> = {
-  pending: "Pending",
-  available: "Available",
-  used: "Used",
-  expired: "Expired",
-  reversed: "Reversed",
+  pending: "pending2",
+  available: "available",
+  used: "used",
+  expired: "expired",
+  reversed: "reversed",
   completed: "",
 };
 
@@ -32,12 +32,17 @@ export default function CreditActivityRow({
   item: CreditActivityItem;
 }) {
   const locale = useLocale();
+  const t = useTranslations("rewards");
 
   const detail =
     item.state === "pending" && item.releaseAt
-      ? `Unlocks ${formatDateWithSuffix(item.releaseAt, undefined, locale)}`
+      ? t("unlocksOn", {
+          date: formatDateWithSuffix(item.releaseAt, undefined, locale),
+        })
       : item.state === "available" && item.expiresAt
-        ? `Expires ${formatDateWithSuffix(item.expiresAt, undefined, locale)}`
+        ? t("expiresOn", {
+            date: formatDateWithSuffix(item.expiresAt, undefined, locale),
+          })
         : null;
   // A voided/expired grant never reached the user's balance as spendable
   // credit, so its amount is shown struck through rather than as income.
@@ -76,7 +81,7 @@ export default function CreditActivityRow({
               STATE_CLASS[item.state],
             )}
           >
-            {STATE_LABEL[item.state]}
+            {t(STATE_LABEL[item.state])}
           </span>
         ) : null}
       </div>

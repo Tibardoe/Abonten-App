@@ -36,14 +36,15 @@ import { Linking, ScrollView, Share, TextInput, View } from "react-native";
 
 const STATUS_LABEL: Record<ReferralInvite["recent"][number]["status"], string> =
   {
-    joined: "Joined",
-    qualified: "Bought a ticket · reward pending",
-    rewarded: "Reward earned",
-    expired: "Didn't buy in time",
+    joined: "joined",
+    qualified: "boughtATicketRewardPending",
+    rewarded: "rewardEarned",
+    expired: "didnTBuyInTime",
   };
 
 function EnterInviteCode() {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const c = useThemeColors();
   const qc = useQueryClient();
@@ -67,7 +68,7 @@ function EnterInviteCode() {
         source: "typed",
       });
       if (res.data) {
-        setMessage(bindResultMessage(res.data));
+        setMessage(bindResultMessage(tc, res.data));
         if (res.data.result === "bound") {
           qc.invalidateQueries({ queryKey: ["mobile", "rewards"] });
         }
@@ -107,7 +108,7 @@ function EnterInviteCode() {
         <Button
           title={t("apply")}
           loading={busy}
-          loadingTitle="Applying…"
+          loadingTitle={t("applying")}
           disabled={code.trim().length === 0}
           onPress={apply}
         />
@@ -128,6 +129,7 @@ export default function InviteFriends() {
   const { locale } = useLocale();
 
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const invite = useReferralInvite();
   const toast = useToast();
@@ -138,7 +140,7 @@ export default function InviteFriends() {
 
   const message =
     data?.inviteUrl != null
-      ? inviteShareMessage({
+      ? inviteShareMessage(tc, {
           currency: data.currency,
           url: data.inviteUrl,
           refereeMinor: data.refereeMinor,
@@ -183,7 +185,7 @@ export default function InviteFriends() {
       {view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="your invites"
+          subject={t("yourInvites")}
           onRetry={() => invite.refetch()}
           loading={
             <View className="gap-4 p-4">
@@ -281,11 +283,14 @@ export default function InviteFriends() {
           <Card className="gap-3">
             <View className="flex-row flex-wrap gap-y-3">
               {[
-                ["Friends joined", String(data.stats.joined)],
-                ["Bought a ticket", String(data.stats.qualified)],
-                ["Earned", formatCredit(data.stats.earnedMinor, data.currency)],
+                [t("friendsJoined"), String(data.stats.joined)],
+                [t("boughtATicket"), String(data.stats.qualified)],
                 [
-                  "Pending",
+                  t("earned"),
+                  formatCredit(data.stats.earnedMinor, data.currency),
+                ],
+                [
+                  t("pending2"),
                   formatCredit(data.stats.pendingMinor, data.currency),
                 ],
               ].map(([label, value]) => (
@@ -306,7 +311,7 @@ export default function InviteFriends() {
                   >
                     <AppText variant="bodyStrong">{friend.name}</AppText>
                     <AppText variant="meta" className="flex-1 text-right">
-                      {STATUS_LABEL[friend.status]} ·{" "}
+                      {t(STATUS_LABEL[friend.status])} ·{" "}
                       {formatDateWithSuffix(friend.at, undefined, locale)}
                     </AppText>
                   </View>

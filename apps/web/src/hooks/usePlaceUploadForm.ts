@@ -231,23 +231,19 @@ export function usePlaceUploadForm({
     setIsResolvingLocation(false);
 
     if (!resolution || resolution.status === "empty") {
-      toast.error("Please enter an address");
+      toast.error(t("pleaseEnterAnAddress"));
       return false;
     }
     if (resolution.status === "unresolved") {
-      toast.error(
-        "Could not find that location — please check the spelling or pick a suggestion.",
-      );
+      toast.error(t("couldNotFindThatLocationPlease"));
       return false;
     }
     if (resolution.status === "error") {
-      toast.error(
-        "We couldn't verify this location right now. Please try again.",
-      );
+      toast.error(t("weCouldnTVerifyThisLocation"));
       return false;
     }
     if (!coordsRef.current) {
-      toast.error("Could not fetch coordinates");
+      toast.error(t("couldNotFetchCoordinates"));
       return false;
     }
 
@@ -262,12 +258,12 @@ export function usePlaceUploadForm({
       setIsUploading(true);
 
       if (!file && !existingCoverPhoto) {
-        toast.error("Please select a cover photo first!");
+        toast.error(t("pleaseSelectACoverPhotoFirst"));
         return;
       }
 
       if (categoryId === null) {
-        toast.error("Please select a category");
+        toast.error(t("pleaseSelectACategory"));
         return;
       }
 
@@ -275,7 +271,7 @@ export function usePlaceUploadForm({
         (hour) => !hour.isClosed && (!hour.openTime || !hour.closeTime),
       );
       if (hasIncompleteHours) {
-        toast.error("Please set open and close times for every open day");
+        toast.error(t("pleaseSetOpenAndCloseTimes2"));
         return;
       }
 
@@ -284,7 +280,7 @@ export function usePlaceUploadForm({
       // by now, so resolveTypedInput() can't be called again here.
       const coords = coordsRef.current;
       if (!selectedAddress || !coords) {
-        toast.error("Please enter an address");
+        toast.error(t("pleaseEnterAnAddress"));
         return;
       }
 
@@ -322,13 +318,13 @@ export function usePlaceUploadForm({
       const response = await postPlace(finalData);
 
       if (response.status === 200) {
-        toast.success("✅ Place published successfully!");
+        toast.success(t("placePublishedSuccessfully"));
         onSuccess();
       } else {
         toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain3"));
     } finally {
       setIsUploading(false);
       setIsResolvingLocation(false);

@@ -212,7 +212,7 @@ export default function MyBookingsScreen() {
           ) : (
             <QueryUnavailable
               view={view}
-              subject="your bookings"
+              subject={t("yourBookings")}
               onRetry={() => q.refetch()}
             />
           )

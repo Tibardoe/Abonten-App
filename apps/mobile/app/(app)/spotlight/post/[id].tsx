@@ -10,7 +10,7 @@ import { useContentProgram } from "@/features/content/useContentProgram";
 import { api } from "@/lib/api";
 import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
+import { campaignStatusLabel } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import {
   AppText,
@@ -43,6 +43,7 @@ function formatWatchTime(ms: number): string {
 // Spotlight & Stories in the menu.
 export default function ManagePostScreen() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -89,7 +90,7 @@ export default function ManagePostScreen() {
         {header}
         <QueryUnavailable
           view={postView}
-          subject="this post"
+          subject={t("thisPost")}
           onRetry={() => query.refetch()}
           loading={<Spinner />}
         />
@@ -272,7 +273,7 @@ export default function ManagePostScreen() {
             }
             accessibilityRole="button"
             accessibilityLabel={t("promotionOpen", {
-              item: CAMPAIGN_STATUS_LABEL[campaign.status],
+              item: campaignStatusLabel(tc, campaign.status),
             })}
             className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
           >
@@ -282,7 +283,7 @@ export default function ManagePostScreen() {
             <View className="flex-1">
               <AppText variant="bodyStrong">{t("promotion")}</AppText>
               <AppText variant="meta">
-                {CAMPAIGN_STATUS_LABEL[campaign.status]}
+                {campaignStatusLabel(tc, campaign.status)}
               </AppText>
             </View>
             <Icon name="chevron-forward" size={16} tone="muted" />

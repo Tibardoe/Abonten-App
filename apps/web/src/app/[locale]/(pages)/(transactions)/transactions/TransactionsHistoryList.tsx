@@ -17,7 +17,11 @@ import Link from "next/link";
 // summarizes "N of M cancelled" plus the refund outcome for those, without
 // implying the whole purchase is cancelled when quantity>1 and only some
 // units were.
-function getRefundSummary(item: UserTransactionRow) {
+function getRefundSummary(
+  item: UserTransactionRow,
+  t: ReturnType<typeof useTranslations>,
+  tc: ReturnType<typeof useTranslations>,
+) {
   if (
     item.kind !== "ticket" ||
     !item.cancelled_quantity ||
@@ -28,12 +32,15 @@ function getRefundSummary(item: UserTransactionRow) {
 
   const isFullyCancelled = item.cancelled_quantity === item.quantity;
   const badge = item.refund_status
-    ? getRefundStatusLabel(item.refund_status, item.refund_requested_at)
+    ? getRefundStatusLabel(tc, item.refund_status, item.refund_requested_at)
     : null;
 
   const parts = [
     !isFullyCancelled && item.quantity
-      ? `${item.cancelled_quantity} of ${item.quantity} cancelled`
+      ? t("cancelledOfQuantity", {
+          cancelled: item.cancelled_quantity,
+          quantity: item.quantity,
+        })
       : null,
     badge?.label ?? null,
   ].filter(Boolean);
@@ -73,7 +80,8 @@ export default function TransactionsHistoryList({
   const locale = useLocale();
 
   const t = useTranslations("transactions");
-  const tc = useTranslations("common");
+  const tCommon = useTranslations("common");
+  const tc = useTranslations("core");
 
   return (
     <InfiniteList
@@ -89,13 +97,15 @@ export default function TransactionsHistoryList({
           undefined,
           locale,
         );
-        const statusLabel = tc(getTransactionStatusMeta(item.status).labelKey);
+        const statusLabel = tCommon(
+          getTransactionStatusMeta(item.status).labelKey,
+        );
         const title =
           item.title ??
           (item.kind === "subscription"
             ? t("subscription")
             : t("ticketPurchase"));
-        const refundSummary = getRefundSummary(item);
+        const refundSummary = getRefundSummary(item, t, tc);
 
         return (
           <Link

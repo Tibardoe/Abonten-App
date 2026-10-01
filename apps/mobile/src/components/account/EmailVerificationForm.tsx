@@ -2,7 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import {
   EMAIL_OTP_CODE_LENGTH,
-  EMAIL_OTP_MESSAGES,
+  emailOtpMessage,
   isLikelyEmail,
   maskEmail,
 } from "@abonten/core/emailOtp";
@@ -39,6 +39,7 @@ export function EmailVerificationForm({
   onCancel?: () => void;
 }) {
   const t = useTranslations("account");
+  const tc = useTranslations("core");
 
   const { session } = useSession();
   const user = session?.user;
@@ -131,7 +132,7 @@ export function EmailVerificationForm({
       } else if (!(await sendChange(phase.target))) {
         return;
       }
-      setSentNote(`A new code is on its way to ${maskEmail(phase.target)}.`);
+      setSentNote(t("aNewCodeIsOnIts", { maskEmail: maskEmail(phase.target) }));
     } catch {
       setError(t("networkErrorPleaseTryAgain"));
     } finally {
@@ -154,7 +155,7 @@ export function EmailVerificationForm({
         type: phase.mode === "confirm" ? "email" : "email_change",
       });
       if (e) {
-        setError(EMAIL_OTP_MESSAGES.invalidOrExpired);
+        setError(emailOtpMessage(tc, "invalidOrExpired"));
         return;
       }
       if (phase.mode === "change-new" && !data.user?.email_confirmed_at) {
@@ -171,7 +172,7 @@ export function EmailVerificationForm({
         }
       }
       await supabase.auth.refreshSession();
-      onDone(phase.mode === "confirm" ? "Email verified." : "Email updated.");
+      onDone(phase.mode === "confirm" ? t("emailVerified") : t("emailUpdated"));
     } catch {
       setError(t("networkErrorPleaseTryAgain"));
     } finally {

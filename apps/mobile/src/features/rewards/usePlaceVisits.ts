@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import type { PlaceVisitResult } from "@abonten/types/rewards";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 
@@ -53,6 +54,8 @@ export type CheckInOutcome = {
  * throws for an expected problem: the outcome carries the message to show.
  */
 export function useCheckIn() {
+  const t = useTranslations("rewards");
+
   return useMutation({
     mutationFn: async (input: {
       placeId?: string;
@@ -63,8 +66,7 @@ export function useCheckIn() {
       if (status !== "granted") {
         return {
           ok: false,
-          message:
-            "Allow location for Abonten so we can confirm you're at the place.",
+          message: t("allowLocationForAbontenSoWe"),
         };
       }
       let pos: Location.LocationObject;
@@ -75,8 +77,7 @@ export function useCheckIn() {
       } catch {
         return {
           ok: false,
-          message:
-            "We couldn't get your location. Check that location is on and try again.",
+          message: t("weCouldnTGetYourLocation"),
         };
       }
       const res = await api.places.recordVisit({
@@ -90,7 +91,7 @@ export function useCheckIn() {
       });
       return {
         ok: res.status === 200,
-        message: res.message ?? "Couldn't check you in. Try again.",
+        message: res.message ?? t("couldnTCheckYouInTry"),
         result: res.data,
       };
     },

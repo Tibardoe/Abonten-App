@@ -1,4 +1,5 @@
 {
+  "abonten": "Abonten",
   "abontenHome": "Abonten home",
   "abontenOn": "Abonten on {label}",
   "abontenWeekly": "Abonten Weekly",
@@ -32,6 +33,7 @@
   "organizer": "Organizer",
   "past": "Past",
   "places": "Lieux",
+  "pleaseSelectAnImageFileFor": "Please select an image file for your event flyer.",
   "primary": "Primary",
   "profile": "Votre profil",
   "refunds": "Refunds",

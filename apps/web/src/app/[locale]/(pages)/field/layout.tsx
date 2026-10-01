@@ -2,15 +2,19 @@ import FieldOpsTabs from "@/fieldOps/atoms/FieldOpsTabs";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import { tagFieldOpsRequest } from "@/fieldOps/lib/tagFieldOpsRequest";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 // Internal field-team pages: never indexed.
-export const metadata: Metadata = {
-  // A layout that sets its own title must restate the template, or its
-  // pages' titles lose " | Abonten Hub".
-  title: { default: "Field Ops", template: "%s | Abonten Hub" },
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("fieldOps");
+  return {
+    // A layout that sets its own title must restate the template, or its
+    // pages' titles lose " | Abonten Hub".
+    title: { default: t("fieldOps"), template: "%s | Abonten Hub" },
+    robots: { index: false, follow: false },
+  };
+}
 
 // The Field Ops area for team leads and members. It doesn't exist for
 // anyone else: the programme must be on and the visitor must be on a team

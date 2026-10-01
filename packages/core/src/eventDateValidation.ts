@@ -4,6 +4,8 @@
 // platforms. Framework-free (no react-day-picker import — the range shape
 // is inlined).
 
+import type { CoreTranslator } from "./i18n/translator";
+
 export type DateEntry = { start: Date; end: Date };
 
 /** The `{ from, to }` shape react-day-picker uses on web; inlined so this
@@ -15,7 +17,8 @@ export type DateRangeInput = {
 
 // Organizers must give attendees enough notice — events can't be posted to
 // start (or end) less than 5 hours from the moment they submit.
-const BUFFER_MS = 5 * 60 * 60 * 1000;
+export const EVENT_NOTICE_HOURS = 5;
+const BUFFER_MS = EVENT_NOTICE_HOURS * 60 * 60 * 1000;
 
 export function getBufferedNow(): Date {
   return new Date(Date.now() + BUFFER_MS);
@@ -25,7 +28,9 @@ export type DateValidationResult =
   | { ok: true }
   | { ok: false; message: string };
 
+// The words live under `eventDates.*` of the core namespace.
 export function validateSingleDateRange(
+  t: CoreTranslator,
   range: DateRangeInput | undefined,
   bufferedNow: Date = getBufferedNow(),
 ): DateValidationResult {
@@ -33,27 +38,28 @@ export function validateSingleDateRange(
   const end = range?.to ? new Date(range.to) : undefined;
 
   if (!start || !end) {
-    return { ok: false, message: "Please select both start and end date" };
+    return { ok: false, message: t("eventDates.selectBoth") };
   }
   if (start <= bufferedNow || end <= bufferedNow) {
     return {
       ok: false,
-      message: "Start or end time must be at least 5 hours from now",
+      message: t("eventDates.notice", { hours: EVENT_NOTICE_HOURS }),
     };
   }
   if (start >= end) {
-    return { ok: false, message: "Start time must be earlier than end time" };
+    return { ok: false, message: t("eventDates.startBeforeEnd") };
   }
 
   return { ok: true };
 }
 
 export function validateSpecificDates(
+  t: CoreTranslator,
   entries: DateEntry[] | undefined,
   bufferedNow: Date = getBufferedNow(),
 ): DateValidationResult {
   if (!entries || entries.length === 0) {
-    return { ok: false, message: "Please select at least one date" };
+    return { ok: false, message: t("eventDates.selectOne") };
   }
 
   // Names the offending entry ("Date 2 must be at least 5 hours from now")
@@ -68,8 +74,11 @@ export function validateSpecificDates(
       ok: false,
       message:
         entries.length === 1
-          ? "The selected date must be at least 5 hours from now"
-          : `Date ${invalidIndex + 1} must be at least 5 hours from now`,
+          ? t("eventDates.oneNotice", { hours: EVENT_NOTICE_HOURS })
+          : t("eventDates.nthNotice", {
+              n: invalidIndex + 1,
+              hours: EVENT_NOTICE_HOURS,
+            }),
     };
   }
 
@@ -86,8 +95,8 @@ export function validateSpecificDates(
       ok: false,
       message:
         entries.length === 1
-          ? "Start time must be earlier than end time"
-          : `Date ${invertedIndex + 1}: start time must be earlier than end time`,
+          ? t("eventDates.startBeforeEnd")
+          : t("eventDates.nthStartBeforeEnd", { n: invertedIndex + 1 }),
     };
   }
 

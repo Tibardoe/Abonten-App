@@ -3,7 +3,7 @@
 import { getStoryTray } from "@/actions/content/getStoryTray";
 import { cn } from "@/components/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { YOUR_STORY_LABEL } from "@abonten/core/content/copy";
+import { YOUR_STORY_LABEL_KEY } from "@abonten/core/content/copy";
 import type { StoryTrayEntry } from "@abonten/types/contentType";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -21,6 +21,7 @@ import StoryViewer, { type StoryQueueEntry } from "./StoryViewer";
 // first. Renders nothing while Stories is off for this visitor.
 export default function StoriesRow({ className }: { className?: string }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { program } = useContentProgram();
   const { data: user } = useCurrentUser();
@@ -76,7 +77,7 @@ export default function StoriesRow({ className }: { className?: string }) {
         {self ? (
           <StoryBubble
             entry={self}
-            label={YOUR_STORY_LABEL}
+            label={tc(YOUR_STORY_LABEL_KEY)}
             onOpen={() =>
               setOpen({
                 queue: [
@@ -100,7 +101,7 @@ export default function StoriesRow({ className }: { className?: string }) {
                 <IoAdd className="text-2xl" />
               </span>
               <span className="w-full truncate text-center text-[11px]">
-                {YOUR_STORY_LABEL}
+                {tc(YOUR_STORY_LABEL_KEY)}
               </span>
             </Link>
           </li>

@@ -93,13 +93,13 @@ export function useManagePlaceDetailsForm({
     }
 
     if (!isImageFile(file)) {
-      toast.error("Please select an image file for your cover photo.");
+      toast.error(t("pleaseSelectAnImageFileFor"));
       return;
     }
 
     if (file.size > MAX_EVENT_FLYER_SIZE_BYTES) {
       const maxMb = Math.round(MAX_EVENT_FLYER_SIZE_BYTES / (1024 * 1024));
-      toast.error(`Image is too large. Maximum size is ${maxMb}MB.`);
+      toast.error(t("imageIsTooLargeMaximumSize", { maxMb: maxMb }));
       return;
     }
 
@@ -115,25 +115,21 @@ export function useManagePlaceDetailsForm({
       setIsResolvingLocation(false);
 
       if (!resolution || resolution.status === "empty") {
-        toast.error("Please enter an address");
+        toast.error(t("pleaseEnterAnAddress"));
         return;
       }
       if (resolution.status === "unresolved") {
-        toast.error(
-          "Could not find that location — please check the spelling or pick a suggestion.",
-        );
+        toast.error(t("couldNotFindThatLocationPlease"));
         return;
       }
       if (resolution.status === "error") {
-        toast.error(
-          "We couldn't verify this location right now. Please try again.",
-        );
+        toast.error(t("weCouldnTVerifyThisLocation"));
         return;
       }
 
       const coords = coordsRef.current;
       if (!coords) {
-        toast.error("Could not fetch coordinates");
+        toast.error(t("couldNotFetchCoordinates"));
         return;
       }
 
@@ -153,14 +149,14 @@ export function useManagePlaceDetailsForm({
       });
 
       if (response.status === 200) {
-        toast.success("✅ Place updated successfully!");
+        toast.success(t("placeUpdatedSuccessfully"));
         setNewCoverFile(null);
         onSuccess();
       } else {
         toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain3"));
     } finally {
       setIsSaving(false);
       setIsResolvingLocation(false);

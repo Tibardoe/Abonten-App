@@ -39,6 +39,7 @@ export default function EventCard({
   const locale = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   // "≈ £12" beside a price in another currency, when estimates are on.
   const { estimate } = useMarketContext();
@@ -50,7 +51,12 @@ export default function EventCard({
     timezone,
     locale,
   );
-  const overlayMessage = getEventStatusOverlay(starts_at, ends_at, occurrences);
+  const overlayMessage = getEventStatusOverlay(
+    tc,
+    starts_at,
+    ends_at,
+    occurrences,
+  );
   const attendees = attendanceCount ?? attendance_count ?? 0;
   const soldOut = getEventSoldOutStatus({
     capacity,

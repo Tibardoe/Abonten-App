@@ -30,11 +30,12 @@ function BlockedRow({ account }: { account: BlockedAccount }) {
   const locale = useLocale();
 
   const t = useTranslations("settings");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const queryClient = useQueryClient();
   const [done, setDone] = useState(false);
-  const name = blockedAccountName(account);
+  const name = blockedAccountName(tc, account);
   const unblock = useMutation({
     mutationFn: () => setUserBlock({ userId: account.userId, block: false }),
     onSuccess: (res) => {

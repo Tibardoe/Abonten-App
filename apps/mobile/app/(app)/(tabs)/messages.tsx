@@ -42,9 +42,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, View } from "react-native";
 
 const MODE_SUBTITLE = {
-  all: "All your conversations",
-  member: "Chats about events and places you're attending",
-  business: "Messages from people interested in your events and places",
+  all: "allYourConversations",
+  member: "chatsAboutEventsAndPlacesYou",
+  business: "messagesFromPeopleInterestedInYour",
 } as const;
 
 export default function Messages() {
@@ -218,7 +218,7 @@ export default function Messages() {
             </View>
             {!searching ? (
               <AppText variant="meta" className="px-4 pb-1">
-                {MODE_SUBTITLE[roleScope]}
+                {t(MODE_SUBTITLE[roleScope])}
               </AppText>
             ) : null}
             {searching || filtered ? null : (
@@ -270,7 +270,9 @@ export default function Messages() {
             <QueryUnavailable
               view={view}
               subject={
-                searching || filtered ? "these conversations" : "your messages"
+                searching || filtered
+                  ? "these conversations"
+                  : t("yourMessages")
               }
               onRetry={() => q.refetch()}
               loading={<ConversationListSkeleton />}

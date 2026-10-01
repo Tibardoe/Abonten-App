@@ -1,6 +1,7 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PlaceType } from "@abonten/types/placeType";
 import { useTranslations } from "next-intl";
@@ -21,10 +22,11 @@ type PlaceBannerProps = {
 // (no carousel) and as each slide's content when there are 2+ places.
 export default function PlaceBanner({ place }: PlaceBannerProps) {
   const t = useTranslations("places");
+  const tc = useTranslations("core");
 
   const fullAddress =
     (place.address as { full_address?: string })?.full_address ??
-    "Location not specified";
+    t("locationNotSpecified");
 
   return (
     <div className="group relative w-full h-[250px] md:h-[350px] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
@@ -52,7 +54,10 @@ export default function PlaceBanner({ place }: PlaceBannerProps) {
         <div className="w-fit space-y-1 xs:space-y-1.5 sm:space-y-2 md:space-y-3 lg:space-y-4">
           <div className="mb-1 xs:mb-1.5 sm:mb-2">
             <span className="inline-block px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs xs:text-sm font-medium">
-              {place.category_name}
+              {placeCategoryLabel(tc, {
+                slug: place.category_slug,
+                name: place.category_name,
+              })}
             </span>
           </div>
 

@@ -82,7 +82,7 @@ export function ContentOptionsSheet({
   const invalidate = useInvalidateContent();
   const handoff = useModalHandoff();
   const [reportOpen, setReportOpen] = useState(false);
-  const noun = post.kind === "story" ? "Story" : "Spotlight";
+  const noun = post.kind === "story" ? t("story") : t("spotlight");
   const isAuthor = post.viewer.isAuthor;
   const canDownload =
     post.kind === "spotlight" &&

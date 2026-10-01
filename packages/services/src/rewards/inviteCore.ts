@@ -11,6 +11,7 @@ import type {
   ReferralCodeInfo,
   ReferralInvite,
 } from "@abonten/types/rewards";
+import { coreT } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { creditCurrencyFor, rewardRulesCurrency } from "./creditCurrency";
@@ -65,7 +66,7 @@ function envelope(
   status: BindEnvelope["status"],
   data: ReferralBindOutcome,
 ): BindEnvelope {
-  return { status, message: bindResultMessage(data).text, data };
+  return { status, message: bindResultMessage(coreT(), data).text, data };
 }
 
 /**

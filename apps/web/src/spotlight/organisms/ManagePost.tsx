@@ -335,7 +335,7 @@ function EditPost({
                 (post.publisher.kind === "place"
                   ? post.publisher.name
                   : null) ??
-                "this Spotlight's location")
+                t("thisSpotlightSLocation"))
               : null
           }
           onClose={() => setPromoting(false)}

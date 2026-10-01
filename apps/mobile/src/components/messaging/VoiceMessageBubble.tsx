@@ -66,10 +66,11 @@ export default function VoiceMessageBubble({
       : player.durationSeconds;
 
   const a11y = player.loadFailed
-    ? "Voice message failed to load"
-    : `Voice message, ${clock(player.durationSeconds)}. ${
-        player.playing ? "Pause" : "Play"
-      }`;
+    ? t("voiceMessageFailedToLoad")
+    : t("voiceMessage4", {
+        clock: clock(player.durationSeconds),
+        value: player.playing ? t("pause") : t("play"),
+      });
 
   return (
     <View className="flex-row items-center gap-2.5 py-0.5">

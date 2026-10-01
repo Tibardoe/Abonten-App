@@ -4,6 +4,7 @@ import {
   computePlaceOpenStatus,
   placeLocalNow,
 } from "./computePlaceOpenStatus";
+import { t } from "./i18n/testTranslator";
 
 // Opening hours are the place's own wall-clock times: a café in London that
 // opens at 09:00 is open at 08:30 UTC in summer (09:30 BST).
@@ -20,13 +21,14 @@ describe("computePlaceOpenStatus on the place's clock", () => {
 
   it("reads a London place's hours in BST", () => {
     expect(
-      computePlaceOpenStatus(weekdays9to17, null, now, "Europe/London").isOpen,
+      computePlaceOpenStatus({ t }, weekdays9to17, null, now, "Europe/London")
+        .isOpen,
     ).toBe(true);
   });
 
   it("reads an Accra place's hours in Accra time (UTC+0)", () => {
     expect(
-      computePlaceOpenStatus(weekdays9to17, null, now, "Africa/Accra"),
+      computePlaceOpenStatus({ t }, weekdays9to17, null, now, "Africa/Accra"),
     ).toEqual({ isOpen: false, label: "Closed · Opens at 9:00 AM" });
   });
 
@@ -38,8 +40,13 @@ describe("computePlaceOpenStatus on the place's clock", () => {
       minutes: 5 * 60 + 30,
     });
     expect(
-      computePlaceOpenStatus(weekdays9to17, null, fridayEvening, "Asia/Tokyo")
-        .label,
+      computePlaceOpenStatus(
+        { t },
+        weekdays9to17,
+        null,
+        fridayEvening,
+        "Asia/Tokyo",
+      ).label,
     ).toBe("Closed today");
   });
 });

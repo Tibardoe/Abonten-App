@@ -163,7 +163,7 @@ export function StoryViewer({
         <View className="flex-1 pb-16">
           <QueryUnavailable
             view={sequenceView}
-            subject="these Stories"
+            subject={t("theseStories")}
             onRetry={() => sequence.refetch()}
             onMedia
           />

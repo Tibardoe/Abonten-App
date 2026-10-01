@@ -5,10 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  BADGE_EXPLANATION,
-  BADGE_LABEL,
-} from "@abonten/core/verification/copy";
+import { badgeExplanation, badgeLabel } from "@abonten/core/verification/copy";
 import type { VerificationSubjectType } from "@abonten/types/verificationType";
 import { useTranslations } from "next-intl";
 import { IoCheckmarkCircle } from "react-icons/io5";
@@ -28,13 +25,14 @@ export default function VerifiedBadgePopover({
   compact?: boolean;
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={t("whatThisMeans", { item: BADGE_LABEL[subjectType] })}
+          aria-label={t("whatThisMeans", { item: badgeLabel(tc, subjectType) })}
           className={`inline-flex items-center gap-1 text-sm font-medium text-primary transition-opacity hover:opacity-80 ${
             className ?? ""
           }`}
@@ -44,9 +42,9 @@ export default function VerifiedBadgePopover({
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-72 text-sm" align="start">
-        <p className="font-semibold">{BADGE_LABEL[subjectType]}</p>
+        <p className="font-semibold">{badgeLabel(tc, subjectType)}</p>
         <p className="mt-1 text-muted-foreground">
-          {BADGE_EXPLANATION[subjectType]}
+          {badgeExplanation(tc, subjectType)}
         </p>
       </PopoverContent>
     </Popover>

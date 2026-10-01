@@ -78,6 +78,7 @@ export function useEventUploadForm({
   preselectedPlaceName,
 }: UseEventUploadFormOptions) {
   const t = useTranslations("events");
+  const tc = useTranslations("core");
   const eventSchema = useMemo(
     () =>
       getEventSchema({
@@ -343,18 +344,18 @@ export function useEventUploadForm({
   // rather than as a toast at the end.
   const watchedCapacity = form.watch("capacity");
   const tiersForCapacity =
-    ticket === "Single Ticket Type"
+    ticket === t("singleTicketType")
       ? [{ quantity: singleTicketQuantity }]
-      : ticket === "Multiple Ticket Types"
+      : ticket === t("multipleTicketTypes")
         ? multipleTickets.map((t) => ({ quantity: t.quantity }))
         : [];
   const capacityProblem =
     ticket && ticket !== "Free"
-      ? ticketCapacityProblem(watchedCapacity, tiersForCapacity)
+      ? ticketCapacityProblem(tc, watchedCapacity, tiersForCapacity)
       : null;
   const capacityHint =
     ticket && ticket !== "Free"
-      ? ticketCapacityHint(watchedCapacity, tiersForCapacity)
+      ? ticketCapacityHint(tc, watchedCapacity, tiersForCapacity)
       : null;
 
   const handleMultipleTicketsWithTouch = (tickets: Ticket[]) => {
@@ -435,7 +436,7 @@ export function useEventUploadForm({
       setIsUploading(true);
 
       if (!file && !existingFlyer) {
-        toast.error("Please select a file first!");
+        toast.error(t("pleaseSelectAFileFirst"));
         return;
       }
 
@@ -448,28 +449,24 @@ export function useEventUploadForm({
       setIsResolvingLocation(false);
 
       if (!resolution || resolution.status === "empty") {
-        toast.error("Please enter a location");
+        toast.error(t("pleaseEnterALocation"));
         setInvalidSection("location");
         return;
       }
       if (resolution.status === "unresolved") {
-        toast.error(
-          "Could not find that location — please check the spelling or pick a suggestion.",
-        );
+        toast.error(t("couldNotFindThatLocationPlease"));
         setInvalidSection("location");
         return;
       }
       if (resolution.status === "error") {
-        toast.error(
-          "We couldn't verify this location right now. Please try again.",
-        );
+        toast.error(t("weCouldnTVerifyThisLocation"));
         setInvalidSection("location");
         return;
       }
 
       const coords = coordsRef.current;
       if (!coords) {
-        toast.error("Could not fetch coordinates");
+        toast.error(t("couldNotFetchCoordinates"));
         setInvalidSection("location");
         return;
       }
@@ -478,7 +475,11 @@ export function useEventUploadForm({
       const bufferedNow = getBufferedNow();
 
       if (dateType === "single") {
-        const result = validateSingleDateRange(singleDateRange, bufferedNow);
+        const result = validateSingleDateRange(
+          tc,
+          singleDateRange,
+          bufferedNow,
+        );
         if (!result.ok) {
           toast.error(result.message);
           setInvalidSection("date");
@@ -490,7 +491,7 @@ export function useEventUploadForm({
           ends_at: toWallClockString(singleDateRange.to as Date),
         };
       } else if (dateType === "specific") {
-        const result = validateSpecificDates(multipleDates, bufferedNow);
+        const result = validateSpecificDates(tc, multipleDates, bufferedNow);
         if (!result.ok) {
           toast.error(result.message);
           setInvalidSection("date");
@@ -504,13 +505,13 @@ export function useEventUploadForm({
           })),
         };
       } else {
-        toast.error("Invalid date selection");
+        toast.error(t("invalidDateSelection"));
         setInvalidSection("date");
         return;
       }
 
       if (!category || !types) {
-        toast.error("Categories and types must be set");
+        toast.error(t("categoriesAndTypesMustBeSet"));
         return;
       }
 
@@ -519,11 +520,11 @@ export function useEventUploadForm({
       // re-checks every tier (paidTierProblem) before writing.
       const noTicketingSet =
         !ticket ||
-        (ticket === "Single Ticket Type" && !singleTicket) ||
-        (ticket === "Multiple Ticket Types" && multipleTickets.length === 0);
+        (ticket === t("singleTicketType") && !singleTicket) ||
+        (ticket === t("multipleTicketTypes") && multipleTickets.length === 0);
 
       if (noTicketingSet) {
-        toast.error("Event ticketing must be set");
+        toast.error(t("eventTicketingMustBeSet"));
         setInvalidSection("tickets");
         return;
       }
@@ -559,13 +560,13 @@ export function useEventUploadForm({
       const response = await postEvent(finalData);
 
       if (response.status === 200) {
-        toast.success("✅ Event posted successfully!");
+        toast.success(t("eventPostedSuccessfully"));
         onSuccess();
       } else {
         toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
     } finally {
       setIsUploading(false);
       setIsResolvingLocation(false);

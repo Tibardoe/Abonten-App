@@ -7,15 +7,27 @@
 // SECURITY INVOKER). Everything either side needs to turn a row into what
 // the screen shows lives here so the two can't drift.
 
+import type { CoreTranslator } from "../i18n/translator";
+
 export type ReviewSubjectKind = "event" | "place";
 
 /** "Most helpful" ties fall back to newest first, so with no votes yet it reads as "most recent". */
 export type ReviewSort = "helpful" | "recent";
 
-export const REVIEW_SORTS: { value: ReviewSort; label: string }[] = [
-  { value: "helpful", label: "Most helpful" },
-  { value: "recent", label: "Most recent" },
-];
+export const REVIEW_SORT_VALUES: readonly ReviewSort[] = [
+  "helpful",
+  "recent",
+] as const;
+
+/** Words live under `reviewSort.*` of the core namespace. */
+export function reviewSortOptions(
+  t: CoreTranslator,
+): { value: ReviewSort; label: string }[] {
+  return REVIEW_SORT_VALUES.map((value) => ({
+    value,
+    label: t(`reviewSort.${value}`),
+  }));
+}
 
 export type ReviewRatingFilter = 1 | 2 | 3 | 4 | 5 | null;
 

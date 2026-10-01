@@ -66,10 +66,10 @@ export default function OrganizerRecentActivity({
           const Icon = ACTIVITY_ICON[item.activity_type] ?? TbTicket;
           const verb =
             item.activity_type === "ticket_sold"
-              ? "Ticket sold for"
+              ? t("ticketSoldFor")
               : item.activity_type === "ticket_cancelled"
-                ? "Ticket cancelled for"
-                : "New registration for";
+                ? t("ticketCancelledFor")
+                : t("newRegistrationFor");
 
           return (
             <div

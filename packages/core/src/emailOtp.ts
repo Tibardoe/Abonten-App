@@ -11,6 +11,8 @@
 //      expiry, single-use, per-IP verification cap). The app never sees or
 //      stores an email code, so there is no phone_otp_state equivalent.
 
+import type { CoreTranslator } from "./i18n/translator";
+
 export const EMAIL_OTP_CODE_LENGTH = 6;
 
 // Deliberately permissive. This is a pre-send sanity check to avoid firing a
@@ -49,23 +51,32 @@ export function maskEmail(email: string): string {
   return `${firstChar}${masked}@${domain}`;
 }
 
-// User-facing copy. Every message is intentionally generic about whether an
-// account exists (account-enumeration guard — see the task's FLOW 8/9 and
-// §14). Shared so web and mobile never drift.
-export const EMAIL_OTP_MESSAGES = {
-  invalidEmail: "Enter a valid email address.",
-  // Shown after a successful send request regardless of whether the address
-  // is registered.
-  codeSent: "If that email can receive mail, we've sent a 6-digit code.",
-  invalidFormat: "Enter the 6-digit code we emailed you.",
-  // Supabase deliberately answers a wrong code and an expired one
-  // identically — 403 `otp_expired`, "Token has expired or is invalid" — so
-  // that a caller can't use the error as an oracle. The app therefore
-  // cannot tell them apart and must not claim to: telling someone who
-  // mistyped one digit that the code "has expired" sends them to Resend,
-  // which burns one of their three sends per 15 minutes for nothing.
-  invalidOrExpired:
-    "That code is incorrect or has expired. Try again, or request a new one.",
-  rateLimited: "Too many requests. Please wait a moment and try again.",
-  generic: "Something went wrong. Please try again.",
-} as const;
+// User-facing copy, under `emailOtp.*` of the core namespace. Every message
+// is intentionally generic about whether an account exists
+// (account-enumeration guard — see the task's FLOW 8/9 and §14). Shared so
+// web and mobile never drift.
+//
+//   codeSent          shown after a successful send request regardless of
+//                     whether the address is registered.
+//   invalidOrExpired  Supabase deliberately answers a wrong code and an
+//                     expired one identically — 403 `otp_expired`, "Token
+//                     has expired or is invalid" — so that a caller can't
+//                     use the error as an oracle. The app therefore cannot
+//                     tell them apart and must not claim to: telling someone
+//                     who mistyped one digit that the code "has expired"
+//                     sends them to Resend, which burns one of their three
+//                     sends per 15 minutes for nothing.
+export type EmailOtpMessage =
+  | "invalidEmail"
+  | "codeSent"
+  | "invalidFormat"
+  | "invalidOrExpired"
+  | "rateLimited"
+  | "generic";
+
+export function emailOtpMessage(
+  t: CoreTranslator,
+  message: EmailOtpMessage,
+): string {
+  return t(`emailOtp.${message}`, { length: EMAIL_OTP_CODE_LENGTH });
+}

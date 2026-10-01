@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCallback, useEffect, useState } from "react";
 import {
   clearEventReminders,
@@ -28,6 +29,8 @@ export function useEventReminder(
   liveStatus?: string | null,
   liveTitle?: string,
 ) {
+  const t = useTranslations("events");
+
   const { session } = useSession();
   const userId = session?.user.id;
   const [offsets, setOffsets] = useState<number[]>([]);
@@ -66,7 +69,7 @@ export function useEventReminder(
       const server = userId
         ? await pullServerReminder(eventId).catch(() => undefined)
         : undefined;
-      const title = local?.eventTitle ?? liveTitle ?? "Your event";
+      const title = local?.eventTitle ?? liveTitle ?? t("yourEvent");
 
       // server === undefined → not signed in or the pull failed: fall back
       // to the local-only reconcile (time change).
@@ -135,7 +138,7 @@ export function useEventReminder(
     return () => {
       cancelled = true;
     };
-  }, [eventId, liveStartsAtIso, liveStatus, liveTitle, userId]);
+  }, [eventId, liveStartsAtIso, liveStatus, liveTitle, userId, t]);
 
   const save = useCallback(
     async (

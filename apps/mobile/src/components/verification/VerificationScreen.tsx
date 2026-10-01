@@ -12,12 +12,12 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import { uuidv4 } from "@/lib/uuid";
 import {
-  HOW_REVIEW_WORKS,
-  ORGANIZER_TYPE_DESCRIPTION,
-  ORGANIZER_TYPE_LABEL,
-  VERIFICATION_CHIP_LABEL,
-  WHY_VERIFY,
+  howReviewWorks,
+  organizerTypeDescription,
+  organizerTypeLabel,
   ownerStatusCopy,
+  verificationChipLabel,
+  whyVerify,
 } from "@abonten/core/verification/copy";
 import { isEditable } from "@abonten/core/verification/stateMachine";
 import type {
@@ -78,6 +78,7 @@ function DocRow({
   onRetry: () => void;
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   return (
     <View className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-2.5">
@@ -136,7 +137,11 @@ function StatusCard({
   subjectName: string | null;
   reason: string | null;
 }) {
-  const copy = ownerStatusCopy(status, subjectType, { subjectName, reason });
+  const tc = useTranslations("core");
+  const copy = ownerStatusCopy(tc, status, subjectType, {
+    subjectName,
+    reason,
+  });
   const tone = STATUS_TONE[status];
   return (
     <View
@@ -179,6 +184,7 @@ export default function VerificationScreen({
   subjectId: string;
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const q = useSubjectVerification(subjectType, subjectId);
@@ -631,7 +637,7 @@ export default function VerificationScreen({
           <>
             <View className="gap-2 rounded-xl border border-border bg-card p-4">
               <AppText variant="sectionHeading">{t("whyVerify")}</AppText>
-              {WHY_VERIFY[subjectType].map((line) => (
+              {whyVerify(tc, subjectType).map((line) => (
                 <View key={line} className="flex-row gap-2">
                   <Icon name="checkmark-circle" size={16} tone="primary" />
                   <AppText variant="small" tone="muted" className="flex-1">
@@ -662,7 +668,7 @@ export default function VerificationScreen({
 
             <View className="gap-2 rounded-xl border border-border bg-muted p-4">
               <AppText variant="sectionHeading">{t("howReviewWorks")}</AppText>
-              {HOW_REVIEW_WORKS.map((line) => (
+              {howReviewWorks(tc).map((line) => (
                 <AppText key={line} variant="small" tone="muted">
                   {line}
                 </AppText>
@@ -711,6 +717,7 @@ function EvidenceTypePicker({
   onChange: (v: string) => void;
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   if (types.length === 0) return null;
   const selected = types.find((t) => t.key === value);
@@ -755,6 +762,7 @@ function OrganizerTypePicker({
   allowed: OrganizerType[];
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   if (allowed.length === 0) return null;
   return (
@@ -775,10 +783,10 @@ function OrganizerTypePicker({
           }`}
         >
           <AppText variant="small" className="font-medium">
-            {ORGANIZER_TYPE_LABEL[t]}
+            {organizerTypeLabel(tc, t)}
           </AppText>
           <AppText variant="caption" tone="muted">
-            {ORGANIZER_TYPE_DESCRIPTION[t]}
+            {organizerTypeDescription(tc, t)}
           </AppText>
         </Pressable>
       ))}
@@ -788,6 +796,7 @@ function OrganizerTypePicker({
 
 /** Status pill reused by the places list and the organizer nav row. */
 export function VerificationChip({ status }: { status: VerificationStatus }) {
+  const tc = useTranslations("core");
   return (
     <View
       className={`rounded-full px-2 py-0.5 ${
@@ -798,7 +807,7 @@ export function VerificationChip({ status }: { status: VerificationStatus }) {
         variant="caption"
         tone={status === "approved" ? "brand" : "muted"}
       >
-        {VERIFICATION_CHIP_LABEL[status]}
+        {verificationChipLabel(tc, status)}
       </AppText>
     </View>
   );

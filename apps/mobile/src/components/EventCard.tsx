@@ -12,7 +12,6 @@ import {
   getEventSoldOutStatus,
   getEventSpotsLeft,
 } from "@abonten/core/getEventSoldOutStatus";
-import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
 import {
   AppText,
@@ -111,13 +110,13 @@ function statusFor(event: UserPostType): CardStatus {
     ticketTypes: event.ticket_type,
   });
   if (soldOut) return { status: "sold_out", inactive: false };
-  const lifecycle = getEventStatusOverlay(
+  const lifecycle = getEventStatus(
     event.starts_at,
     event.ends_at,
     event.occurrences,
   );
-  if (lifecycle === "Ongoing") return { status: "ongoing", inactive: false };
-  if (lifecycle) return { status: "ended", inactive: true };
+  if (lifecycle === "ongoing") return { status: "ongoing", inactive: false };
+  if (lifecycle === "ended") return { status: "ended", inactive: true };
   return null;
 }
 
@@ -125,6 +124,7 @@ export function EventCard({ event }: { event: UserPostType }) {
   const { locale } = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const qc = useQueryClient();
@@ -166,7 +166,7 @@ export function EventCard({ event }: { event: UserPostType }) {
     attendingIds.has(event.id) &&
     event.status !== "canceled" &&
     lifecycle !== "ended";
-  const venue = event.address?.full_address || "Location not specified";
+  const venue = event.address?.full_address || t("locationNotSpecified");
 
   return (
     <PressableScale

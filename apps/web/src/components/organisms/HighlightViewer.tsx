@@ -561,7 +561,7 @@ export default function HighlightViewer({
         onOpenChange={setShowReport}
         targetType="highlight"
         targetId={currentSlide.id}
-        targetLabel={`highlight by ${username}`}
+        targetLabel={t("highlightBy", { username: username })}
       />
     </ModalShell>
   );

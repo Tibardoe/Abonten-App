@@ -218,7 +218,9 @@ export function useReviewInteractions(
         }}
         onDismiss={handoff.onDismiss}
         actions={actions}
-        blockLabel={blockName ? `Block ${blockName}` : undefined}
+        blockLabel={
+          blockName ? t("block4", { blockName: blockName }) : undefined
+        }
         onAction={onAction}
       />
       <ReviewComposerSheet

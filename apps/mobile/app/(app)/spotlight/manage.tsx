@@ -4,7 +4,7 @@ import { useOwnCampaigns, useOwnContent } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { CAMPAIGN_STATUS_LABEL, countLabel } from "@abonten/core/content/copy";
+import { campaignStatusLabel } from "@abonten/core/content/copy";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type {
   ContentCampaign,
@@ -53,6 +53,7 @@ function postStatus(post: ContentOwnPost): {
 // Creator tools: your Spotlights, Stories and promotions.
 export default function ManageContentScreen() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -134,6 +135,7 @@ function Posts({ kind }: { kind: ContentKind }) {
   const { locale } = useLocale();
 
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const q = useOwnContent(kind);
@@ -160,7 +162,7 @@ function Posts({ kind }: { kind: ContentKind }) {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="your posts"
+            subject={t("yourPosts")}
             onRetry={() => q.refetch()}
           />
         )
@@ -197,7 +199,7 @@ function Posts({ kind }: { kind: ContentKind }) {
                 </AppText>
                 {item.campaign ? (
                   <AppText variant="caption" tone="brand">
-                    {CAMPAIGN_STATUS_LABEL[item.campaign.status]}
+                    {campaignStatusLabel(tc, item.campaign.status)}
                   </AppText>
                 ) : null}
                 <AppText variant="caption" tone="muted">
@@ -208,9 +210,11 @@ function Posts({ kind }: { kind: ContentKind }) {
                 {item.caption?.trim() || t("noCaption")}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {countLabel(item.counts.views, "view", undefined, locale)} ·{" "}
-                {countLabel(item.counts.likes, "like", undefined, locale)} ·{" "}
-                {countLabel(item.counts.comments, "comment", undefined, locale)}
+                {t("postCounts", {
+                  views: item.counts.views,
+                  likes: item.counts.likes,
+                  comments: item.counts.comments,
+                })}
               </AppText>
             </View>
             <Icon name="chevron-forward" size={16} tone="muted" />
@@ -225,6 +229,7 @@ function Campaigns() {
   const { locale } = useLocale();
 
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const q = useOwnCampaigns();
@@ -246,7 +251,7 @@ function Campaigns() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="your promotions"
+            subject={t("yourPromotions")}
             onRetry={() => q.refetch()}
           />
         )
@@ -268,21 +273,16 @@ function Campaigns() {
           </View>
           <View className="flex-1 gap-1">
             <AppText variant="caption" tone="brand" className="font-semibold">
-              {CAMPAIGN_STATUS_LABEL[item.status]}
+              {campaignStatusLabel(tc, item.status)}
             </AppText>
             <AppText numberOfLines={1}>
               {item.post?.caption?.trim() || t("spotlight")}
             </AppText>
             <AppText variant="caption" tone="muted">
-              {t("reached2", {
-                countLabel: countLabel(item.reach, "person", "people", locale),
-                countLabel2: countLabel(
-                  item.impressions,
-                  "impression",
-                  undefined,
-                  locale,
-                ),
-                countLabel3: countLabel(item.clicks, "tap", undefined, locale),
+              {t("reachSummary", {
+                reach: item.reach,
+                impressions: item.impressions,
+                clicks: item.clicks,
               })}
             </AppText>
           </View>

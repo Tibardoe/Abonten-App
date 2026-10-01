@@ -1,3 +1,4 @@
+import { translatorFor } from "@/i18n/clientTranslator";
 import type { CloudinaryDirectUploadResult } from "@abonten/types/highlightUploadType";
 
 type UploadToCloudinaryParams = {
@@ -75,7 +76,7 @@ export function uploadToCloudinary({
         } else {
           const message =
             (parsed as { error?: { message?: string } })?.error?.message ??
-            "Upload failed.";
+            translatorFor("common")("uploadFailed2");
           reject(new Error(message));
         }
       };

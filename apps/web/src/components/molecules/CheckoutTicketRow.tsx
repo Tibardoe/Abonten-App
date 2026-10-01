@@ -94,7 +94,7 @@ export default function CheckoutTicketRow({
           </p>
         </div>
 
-        {ticket.type !== "SINGLE TICKET" && ticket.available_until && (
+        {ticket.type !== t("singleTicket") && ticket.available_until && (
           <p className="text-sm">
             {t("salesEndOn", {
               date: formatSingleDateTime(

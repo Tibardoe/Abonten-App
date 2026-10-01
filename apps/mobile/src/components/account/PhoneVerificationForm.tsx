@@ -54,7 +54,8 @@ export function PhoneVerificationForm({
         setError(res.message ?? t("couldnTSendACodeTry"));
         return;
       }
-      if (phoneE164) setSentNote(`A new code is on its way to ${phoneE164}.`);
+      if (phoneE164)
+        setSentNote(t("aNewCodeIsOnIts2", { phoneE164: phoneE164 }));
       setPhoneE164(res.data.phoneE164);
       setCodeLength(res.data.codeLength);
     } catch {
@@ -83,7 +84,7 @@ export function PhoneVerificationForm({
       }
       // Pull the new phone claim into the local session.
       await supabase.auth.refreshSession();
-      onDone("Phone number verified.");
+      onDone(t("phoneNumberVerified"));
     } catch {
       setError(t("networkErrorPleaseTryAgain"));
     } finally {

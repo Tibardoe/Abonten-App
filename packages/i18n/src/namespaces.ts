@@ -8,6 +8,7 @@ export const I18N_NAMESPACES = [
   "auth",
   "checkout",
   "common",
+  "core",
   "discovery",
   "events",
   "explore",

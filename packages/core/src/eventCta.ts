@@ -2,6 +2,9 @@
 // place so the sticky bar can never offer something the rest of the page
 // says is impossible. The inputs are the facts the page already computes
 // (resolveOccurrenceState, getEventSoldOutStatus, the viewer's tickets).
+// The label for each kind lives under `eventCta.*` of the core namespace.
+
+import type { CoreTranslator } from "./i18n/translator";
 
 export type EventCtaKind =
   | "buy" // paid tickets on sale
@@ -21,7 +24,7 @@ export type EventCta = {
   actionable: boolean;
 };
 
-export function resolveEventCta(input: {
+export type EventCtaInput = {
   canceled: boolean;
   ended: boolean;
   inProgressNoFuture: boolean;
@@ -30,36 +33,40 @@ export function resolveEventCta(input: {
   isFree: boolean;
   /** The viewer holds a live ticket for this event. */
   attending: boolean;
-}): EventCta {
-  if (input.canceled) {
-    return { kind: "canceled", label: "Event canceled", actionable: false };
-  }
+};
+
+/** Which action applies, before any words are attached. */
+export function resolveEventCtaKind(input: EventCtaInput): EventCtaKind {
+  if (input.canceled) return "canceled";
   // A ticket already held stays reachable even once sales have closed —
   // that is exactly when someone at the door needs it.
-  if (input.attending) {
-    return { kind: "going", label: "View my ticket", actionable: true };
-  }
-  if (input.ended) {
-    return { kind: "ended", label: "Event ended", actionable: false };
-  }
-  if (input.inProgressNoFuture) {
-    return {
-      kind: "in_progress",
-      label: "Ticket sales closed",
-      actionable: false,
-    };
-  }
-  if (input.soldOut) {
-    return { kind: "sold_out", label: "Sold out", actionable: false };
-  }
-  if (input.ticketTypeCount === 0) {
-    return {
-      kind: "no_tickets",
-      label: "Tickets not available yet",
-      actionable: false,
-    };
-  }
-  return input.isFree
-    ? { kind: "rsvp", label: "Reserve spot", actionable: true }
-    : { kind: "buy", label: "Buy tickets", actionable: true };
+  if (input.attending) return "going";
+  if (input.ended) return "ended";
+  if (input.inProgressNoFuture) return "in_progress";
+  if (input.soldOut) return "sold_out";
+  if (input.ticketTypeCount === 0) return "no_tickets";
+  return input.isFree ? "rsvp" : "buy";
+}
+
+const ACTIONABLE: Record<EventCtaKind, boolean> = {
+  buy: true,
+  rsvp: true,
+  going: true,
+  canceled: false,
+  ended: false,
+  in_progress: false,
+  sold_out: false,
+  no_tickets: false,
+};
+
+export function eventCtaLabel(t: CoreTranslator, kind: EventCtaKind): string {
+  return t(`eventCta.${kind}`);
+}
+
+export function resolveEventCta(
+  t: CoreTranslator,
+  input: EventCtaInput,
+): EventCta {
+  const kind = resolveEventCtaKind(input);
+  return { kind, label: eventCtaLabel(t, kind), actionable: ACTIONABLE[kind] };
 }

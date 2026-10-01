@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import {
   type BrowseFallback,
   type CoverageMarket,
@@ -401,18 +402,18 @@ describe("waiting-list keys", () => {
 
 describe("copy", () => {
   it("names the area when it can, never 'Your location'", () => {
-    expect(notLaunchedTitle("Kumasi")).toBe("Abonten isn't in Kumasi yet");
-    expect(notLaunchedTitle(null)).toBe("Abonten isn't here yet");
-    expect(waitingText(null)).toBe(
+    expect(notLaunchedTitle(t, "Kumasi")).toBe("Abonten isn't in Kumasi yet");
+    expect(notLaunchedTitle(t, null)).toBe("Abonten isn't here yet");
+    expect(waitingText(t, null)).toBe(
       "We'll tell you when Abonten launches here.",
     );
   });
 
   it("labels a single recommendation by why it was picked", () => {
-    expect(browseReasonLabel("nearest")).toBe("Nearest");
-    expect(browseReasonLabel("most_active")).toBe("Most listings");
-    expect(browseReasonLabel("recommended")).toBe("Suggested");
-    expect(browseReasonLabel(null)).toBeNull();
+    expect(browseReasonLabel(t, "nearest")).toBe("Nearest");
+    expect(browseReasonLabel(t, "most_active")).toBe("Most listings");
+    expect(browseReasonLabel(t, "recommended")).toBe("Suggested");
+    expect(browseReasonLabel(t, null)).toBeNull();
   });
 
   it("rounds distances to what a person would say", () => {
@@ -421,6 +422,6 @@ describe("copy", () => {
     expect(roundedDistanceKm(42)).toBe(40);
     expect(roundedDistanceKm(183)).toBe(180);
     const b = browseFromKumasi(withFallback({ strategy: "nearest" }));
-    expect(cityDistanceText(b.cities[0])).toBe("180 km away");
+    expect(cityDistanceText(t, b.cities[0])).toBe("180 km away");
   });
 });

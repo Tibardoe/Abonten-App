@@ -88,7 +88,7 @@ export default function Places() {
           ) : (
             <QueryUnavailable
               view={view}
-              subject="places here"
+              subject={t("placesHere")}
               onRetry={() => q.refetch()}
             />
           )

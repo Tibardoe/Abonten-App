@@ -13,8 +13,9 @@ export default function LoyaltyProgressCard({
   progress: LoyaltyProgress;
 }) {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
-  const copy = loyaltyProgressCopy(progress);
+  const copy = loyaltyProgressCopy(tc, progress);
   return (
     <section className="rounded-xl border p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">

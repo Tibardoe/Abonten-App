@@ -15,12 +15,12 @@ export const dynamic = "force-dynamic";
 const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 const STATUS_COPY: Record<string, string> = {
-  pending: "In holding",
-  approved: "Ready to pay",
-  in_payout: "In a payout",
-  paid: "Paid",
-  rejected: "Not eligible",
-  reversed: "Taken back",
+  pending: "inHolding",
+  approved: "readyToPay",
+  in_payout: "inAPayout",
+  paid: "paid",
+  rejected: "notEligible",
+  reversed: "takenBack2",
 };
 
 export default async function FieldEarningsPage() {
@@ -66,7 +66,7 @@ export default async function FieldEarningsPage() {
               </span>
             )}
             <p className="text-sm text-muted-foreground">
-              {STATUS_COPY[c.status] ?? c.status} ·{" "}
+              {STATUS_COPY[c.status] ? t(STATUS_COPY[c.status]) : c.status} ·{" "}
               {format.dateTime(new Date(c.earnedAt), { dateStyle: "medium" })}
             </p>
           </div>

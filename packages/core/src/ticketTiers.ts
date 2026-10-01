@@ -10,6 +10,12 @@
 // An earlier client-side test ("every tier costs 0") disagreed with the RPC:
 // a 0-priced tier under another name showed "Reserve spot", and the server
 // then refused it (and checkout could not have charged it either).
+//
+// The reasons a tier or a promo code is refused are reported as codes; the
+// words come from `ticketTiers.*` of the core namespace through
+// ticketTierProblemMessage, in the requester's language.
+
+import type { CoreTranslator } from "./i18n/translator";
 
 export const FREE_TICKET_TYPE = "FREE";
 
@@ -20,6 +26,8 @@ export function hasFreeRegistration(
   return ticketTypes.some((t) => t.type === FREE_TICKET_TYPE);
 }
 
+export type TicketTierProblem = "paid_needs_price" | "free_reserved";
+
 /**
  * Why a paid tier cannot be saved, or null when it can. Used by every
  * create/update path before anything is written.
@@ -27,14 +35,23 @@ export function hasFreeRegistration(
 export function paidTierProblem(tier: {
   type?: string | null;
   price: number;
-}): string | null {
+}): TicketTierProblem | null {
   if (!Number.isFinite(tier.price) || tier.price <= 0) {
-    return "Paid tickets need a price greater than zero. To let people in for free, make the event free.";
+    return "paid_needs_price";
   }
   if (tier.type?.trim().toUpperCase() === FREE_TICKET_TYPE) {
-    return `"${FREE_TICKET_TYPE}" is reserved for free events. Give this ticket type another name.`;
+    return "free_reserved";
   }
   return null;
+}
+
+export function ticketTierProblemMessage(
+  t: CoreTranslator,
+  problem: TicketTierProblem,
+): string {
+  return problem === "paid_needs_price"
+    ? t("ticketTiers.paidNeedsPrice")
+    : t("ticketTiers.freeReserved", { name: FREE_TICKET_TYPE });
 }
 
 /**
@@ -44,16 +61,17 @@ export function paidTierProblem(tier: {
  * an event with the FREE tier (migration
  * 20260922120000_event_capacity_and_free_event_promo_guards.sql).
  */
-export const FREE_EVENT_PROMO_CODES_MESSAGE =
-  "Promo codes aren't available on a free event. Remove them, or make the event paid.";
+export const FREE_EVENT_PROMO_CODES_KEY = "ticketTiers.freeEventPromoCodes";
 
-/** Why these promo codes cannot be saved with this ticketing, or null. */
+export function freeEventPromoCodesMessage(t: CoreTranslator): string {
+  return t(FREE_EVENT_PROMO_CODES_KEY);
+}
+
+/** True when these promo codes cannot be saved with this ticketing. */
 export function freeEventPromoCodeProblem(
   freeEvent: boolean,
   promoCodes: readonly unknown[] | null | undefined,
-): string | null {
-  if (!freeEvent) return null;
-  return promoCodes && promoCodes.length > 0
-    ? FREE_EVENT_PROMO_CODES_MESSAGE
-    : null;
+): boolean {
+  if (!freeEvent) return false;
+  return !!promoCodes && promoCodes.length > 0;
 }

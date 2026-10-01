@@ -9,7 +9,9 @@ import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
   freeEventPromoCodeProblem,
+  freeEventPromoCodesMessage,
   paidTierProblem,
+  ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
@@ -17,6 +19,7 @@ import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { coreT } from "../i18n/requestLocale";
 import {
   RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
@@ -108,7 +111,7 @@ export async function postEventCore(
     return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
   }
 
-  const locationCheck = validateLocationInput({
+  const locationCheck = validateLocationInput(coreT(), {
     address: input.address,
     latitude: input.latitude,
     longitude: input.longitude,
@@ -144,7 +147,9 @@ export async function postEventCore(
     !!input.freeEvent,
     input.promoCodes,
   );
-  if (promoProblem) return { status: 400, message: promoProblem };
+  if (promoProblem) {
+    return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
+  }
 
   if (!input.freeEvent) {
     const tiers = [
@@ -153,9 +158,18 @@ export async function postEventCore(
     ];
     for (const tier of tiers) {
       const problem = paidTierProblem(tier);
-      if (problem) return { status: 400, message: problem };
+      if (problem) {
+        return {
+          status: 400,
+          message: ticketTierProblemMessage(coreT(), problem),
+        };
+      }
     }
-    const capacityProblem = ticketCapacityProblem(input.capacity, tiers);
+    const capacityProblem = ticketCapacityProblem(
+      coreT(),
+      input.capacity,
+      tiers,
+    );
     if (capacityProblem) return { status: 400, message: capacityProblem };
   }
 

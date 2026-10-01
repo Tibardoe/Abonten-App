@@ -17,17 +17,17 @@ export const CUSTOM_FILTER_KEYS = [
 export type CustomFilterKey = (typeof CUSTOM_FILTER_KEYS)[number];
 
 export const CUSTOM_FILTER_LABEL: Record<CustomFilterKey, string> = {
-  unread: "Unread",
-  events: "Events",
-  places: "Places",
-  muted: "Muted",
+  unread: "unread",
+  events: "events",
+  places: "places",
+  muted: "muted",
 };
 
 export const CUSTOM_FILTER_HELP: Record<CustomFilterKey, string> = {
-  unread: "Only conversations with new messages",
-  events: "Conversations about events",
-  places: "Conversations about places",
-  muted: "Conversations you've muted",
+  unread: "onlyConversationsWithNewMessages",
+  events: "conversationsAboutEvents",
+  places: "conversationsAboutPlaces",
+  muted: "conversationsYouVeMuted",
 };
 
 type InboxPrefs = {

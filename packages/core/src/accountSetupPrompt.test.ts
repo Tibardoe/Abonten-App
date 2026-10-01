@@ -4,10 +4,12 @@ import {
   accountSetupPromptVisible,
   accountSetupQuietDays,
 } from "./accountSetupPrompt";
+import { t } from "./i18n/testTranslator";
 import {
   type ProfileCompletionInput,
   computeProfileCompletion,
   leadingIncompleteItem,
+  profileCompletionItemCopy,
 } from "./profileCompletion";
 
 const DAY = 86_400_000;
@@ -48,7 +50,8 @@ describe("computeProfileCompletion", () => {
     });
     expect(c.completedCount).toBe(1);
     expect(leadingIncompleteItem(c)?.key).toBe("email");
-    expect(c.items.find((i) => i.key === "email")?.label).toBe(
+    const email = c.items.find((i) => i.key === "email");
+    expect(email && profileCompletionItemCopy(t, email).label).toBe(
       "Add your email",
     );
   });
@@ -62,7 +65,9 @@ describe("computeProfileCompletion", () => {
     const email = c.items.find((i) => i.key === "email");
     const phone = c.items.find((i) => i.key === "phone");
     expect(email).toMatchObject({ state: "unverified", complete: false });
-    expect(email?.label).toBe("Verify your email");
+    expect(email && profileCompletionItemCopy(t, email).label).toBe(
+      "Verify your email",
+    );
     expect(phone).toMatchObject({ state: "unverified", complete: false });
   });
 
@@ -150,12 +155,12 @@ describe("accountSetupPromptVisible", () => {
   });
 
   it("leads the message with the step that matters most", () => {
-    expect(accountSetupPromptMessage(incomplete).body).toMatch(/phone/);
+    expect(accountSetupPromptMessage(t, incomplete).body).toMatch(/phone/);
     const noEmail = computeProfileCompletion({
       ...complete,
       email: null,
       emailConfirmedAt: null,
     });
-    expect(accountSetupPromptMessage(noEmail).body).toMatch(/email/);
+    expect(accountSetupPromptMessage(t, noEmail).body).toMatch(/email/);
   });
 });

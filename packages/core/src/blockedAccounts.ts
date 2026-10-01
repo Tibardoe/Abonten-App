@@ -1,3 +1,5 @@
+import type { CoreTranslator } from "./i18n/translator";
+
 // The "Blocked accounts" list: the account-wide blocks a person made
 // (conversation_block rows with no conversation). Web reads it through
 // @abonten/services/profile/userBlockCore and mobile straight from Supabase
@@ -45,7 +47,11 @@ export function toBlockedAccount(row: BlockedAccountRow): BlockedAccount {
   };
 }
 
-export function blockedAccountName(account: BlockedAccount): string {
-  if (account.deleted) return "Former Abonten member";
-  return account.fullName || account.username || "Abonten member";
+/** Words live under `member.*` of the core namespace. */
+export function blockedAccountName(
+  t: CoreTranslator,
+  account: BlockedAccount,
+): string {
+  if (account.deleted) return t("member.former");
+  return account.fullName || account.username || t("member.generic");
 }

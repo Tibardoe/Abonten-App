@@ -334,7 +334,7 @@ export default function EventPromoCodesScreen() {
       ) : view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="this event's promo codes"
+          subject={t("thisEventSPromoCodes")}
           onRetry={() => q.refetch()}
           loading={
             <View className="items-center py-12">

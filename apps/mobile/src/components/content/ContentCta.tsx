@@ -3,6 +3,7 @@ import { hapticLight } from "@/lib/haptics";
 import { contentDestinationCta } from "@abonten/core/content/copy";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -21,7 +22,8 @@ export function ContentCta({
   onNavigate?: () => void;
 }) {
   const router = useRouter();
-  const cta = contentDestinationCta(post);
+  const tc = useTranslations("core");
+  const cta = contentDestinationCta(tc, post);
   if (!cta.label) return null;
 
   let href: string | null = null;

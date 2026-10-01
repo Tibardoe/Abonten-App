@@ -81,7 +81,7 @@ export default function PlaceManageScreen() {
       {!definiteFailure && view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="this place's insights"
+          subject={t("thisPlaceSInsights")}
           onRetry={() => q.refetch()}
           loading={
             <View className="items-center py-12">

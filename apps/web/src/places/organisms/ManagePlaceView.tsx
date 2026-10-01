@@ -148,7 +148,7 @@ export default function ManagePlaceView({
   // rather than changing EventUploadModal's own step-1 assumptions.
   const { imagePreview, selectedFile, fileInputRef, handleFileChange } =
     useImageSelection({
-      invalidFileMessage: "Please select an image file for your event flyer.",
+      invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
       onInvalidFile: (message) => alert(message),
       onSelect: () => setShowEventModal(true),
     });

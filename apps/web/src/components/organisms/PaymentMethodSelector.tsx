@@ -137,6 +137,7 @@ export default function PaymentMethodSelector(
   props: PaymentMethodSelectorProps,
 ) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -654,7 +655,9 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-center">
-          <p className="font-semibold">{getFulfillmentMessage(props.kind)}</p>
+          <p className="font-semibold">
+            {getFulfillmentMessage(tc, props.kind)}
+          </p>
         </div>
       </>
     );

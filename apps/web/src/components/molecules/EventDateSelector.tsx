@@ -181,7 +181,7 @@ export default function EventDateSelector({
           <CheckoutBtn
             eventId={eventId}
             occurrenceId={selectedOccurrence.id ?? null}
-            btnText="Get tickets"
+            btnText={t("getTickets")}
             eventTitle={eventTitle}
             date={selectedDateTime.date}
             time={selectedDateTime.time}

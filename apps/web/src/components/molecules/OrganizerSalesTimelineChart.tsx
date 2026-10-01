@@ -46,7 +46,6 @@ function TimelineTooltip({
   currency: string;
 }) {
   const t = useTranslations("common");
-  const locale = useLocale();
 
   if (!active || !payload || payload.length === 0) return null;
   const row = payload[0].payload;

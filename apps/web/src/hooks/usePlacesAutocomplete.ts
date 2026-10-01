@@ -6,6 +6,7 @@ import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddress
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const libraries: "places"[] = ["places"];
@@ -30,6 +31,8 @@ export function usePlacesAutocomplete({
   value,
   onSelectCoordinates,
 }: UsePlacesAutocompleteOptions = {}) {
+  const t = useTranslations("common");
+
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState<
     google.maps.places.AutocompletePrediction[]
@@ -166,12 +169,12 @@ export function usePlacesAutocomplete({
           if (status === google.maps.places.PlacesServiceStatus.OK && place) {
             resolve(place);
           } else {
-            reject("Failed to get place details.");
+            reject(t("failedToGetPlaceDetails"));
           }
         });
       });
     },
-    [],
+    [t],
   );
 
   // Resolves a chosen prediction and updates local input/result state.
@@ -198,11 +201,11 @@ export function usePlacesAutocomplete({
         return true;
       } catch (error) {
         logger.error(error);
-        alert("Failed to fetch place details.");
+        alert(t("failedToFetchPlaceDetails"));
         return false;
       }
     },
-    [address, onSelectCoordinates, getFormattedPlaceDetails],
+    [address, onSelectCoordinates, getFormattedPlaceDetails, t],
   );
 
   // Reverse-geocodes a lat/lng pair into a formatted address and commits it
@@ -264,7 +267,7 @@ export function usePlacesAutocomplete({
 
   const handleSelectCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported.");
+      alert(t("geolocationIsNotSupported"));
       return;
     }
 
@@ -275,14 +278,14 @@ export function usePlacesAutocomplete({
           lat: latitude,
           lng: longitude,
         });
-        if (!resolvedAddress) alert("No address found.");
+        if (!resolvedAddress) alert(t("noAddressFound"));
       },
       (error) => {
         logger.error("Error getting location:", error);
-        alert("Unable to retrieve location.");
+        alert(t("unableToRetrieveLocation"));
       },
     );
-  }, [resolveCoordinates]);
+  }, [resolveCoordinates, t]);
 
   useEffect(() => {
     if (value) setInputValue(value);

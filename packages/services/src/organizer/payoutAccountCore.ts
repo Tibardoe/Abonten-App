@@ -1,7 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import {
-  PHONE_ERROR_MESSAGE,
   parsePhoneWithDialCode,
+  phoneErrorMessage,
 } from "@abonten/core/phone/phone";
 import type { Database } from "@abonten/types/database.types";
 import type {
@@ -10,6 +10,7 @@ import type {
 } from "@abonten/types/organizerFinance";
 import { addPayoutAccountSchema } from "@abonten/validation/payoutAccountSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import {
   RESTRICTED_ACCOUNT_MESSAGE,
@@ -169,7 +170,7 @@ export async function addPayoutAccountCore(
   if (data.accountType === "mobile_money") {
     const phone = parsePhoneWithDialCode(market.dialCode, data.phone);
     if (!phone.ok) {
-      return { status: 400, message: PHONE_ERROR_MESSAGE[phone.error] };
+      return { status: 400, message: phoneErrorMessage(coreT(), phone.error) };
     }
     accountNumber = phone.e164;
   } else {

@@ -38,7 +38,7 @@ export default function Home() {
                   with room for the full word at a readable size. */}
               <Image
                 src="/assets/images/brand/abonten-logotype-night.svg"
-                alt="Abonten"
+                alt={t("abonten")}
                 width={213}
                 height={40}
                 priority

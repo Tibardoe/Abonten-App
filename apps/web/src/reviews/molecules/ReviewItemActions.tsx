@@ -168,7 +168,7 @@ export default function ReviewItemActions({
         onOpenChange={setReportOpen}
         targetType={kind === "event" ? "event_review" : "place_review"}
         targetId={review.id}
-        targetLabel={`review by ${name}`}
+        targetLabel={t("reviewBy2", { name: name })}
       />
 
       <AlertDialog open={blockOpen} onOpenChange={setBlockOpen}>

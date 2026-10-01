@@ -1,5 +1,8 @@
 import EventCard from "@/components/molecules/EventCard";
-import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
+import {
+  WEEKLY_PRODUCT_NAME,
+  WEEKLY_TAGLINE_KEY,
+} from "@abonten/core/weekly/copy";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -16,6 +19,7 @@ export default function WeeklyFallback({
   unavailable?: boolean;
 }) {
   const t = useTranslations("weekly");
+  const tc = useTranslations("core");
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
@@ -29,7 +33,7 @@ export default function WeeklyFallback({
             : t("thisWeekSEditionIsOn")}
         </h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          {unavailable ? t("itMayHaveBeenTakenDown") : WEEKLY_TAGLINE}
+          {unavailable ? t("itMayHaveBeenTakenDown") : tc(WEEKLY_TAGLINE_KEY)}
         </p>
         <Link
           href="/explore"

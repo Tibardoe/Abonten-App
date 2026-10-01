@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, Card, cn } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import {
   notifyRegionWaitlist,
   runMarketReadiness,
@@ -21,7 +22,7 @@ import {
   type BrowseStrategy,
   type LaunchStatus,
 } from "@abonten/core/market/coverage";
-import { BROWSE_STRATEGY_COPY } from "@abonten/core/market/coverageCopy";
+import { browseStrategyCopy } from "@abonten/core/market/coverageCopy";
 import type { ReadinessReport } from "@abonten/core/market/readiness";
 import {
   MARKET_TRANSITIONS,
@@ -1437,10 +1438,10 @@ function BrowseFallbackForm({
             />
             <span>
               <span className="font-medium">
-                {BROWSE_STRATEGY_COPY[key].label}
+                {browseStrategyCopy(tc, key).label}
               </span>
               <span className="block text-muted-foreground">
-                {BROWSE_STRATEGY_COPY[key].help}
+                {browseStrategyCopy(tc, key).help}
               </span>
               {key === "choose" && strategy === "choose" ? (
                 <span className="mt-1 flex items-center gap-2">

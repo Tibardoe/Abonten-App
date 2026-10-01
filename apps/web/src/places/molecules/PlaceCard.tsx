@@ -4,6 +4,7 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import DiscoveryCardCoverImage from "@/components/molecules/DiscoveryCardCoverImage";
 import DiscoveryCardTitleRow from "@/components/molecules/DiscoveryCardTitleRow";
 import { useMarketContext } from "@/hooks/useMarketContext";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { formatDistance } from "@abonten/core/units/distance";
@@ -33,12 +34,13 @@ export default function PlaceCard({
   const locale = useLocale();
 
   const t = useTranslations("places");
+  const tc = useTranslations("core");
 
   const { context } = useMarketContext();
-  const openStatus = derivePlaceCardOpenStatus(is_open, temporary_status);
+  const openStatus = derivePlaceCardOpenStatus(tc, is_open, temporary_status);
   const fullAddress =
     (address as { full_address?: string })?.full_address ??
-    "Location not specified";
+    t("locationNotSpecified");
   const placeHref = `/places/${slug}`;
 
   return (
@@ -66,7 +68,7 @@ export default function PlaceCard({
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs">
-              {category_name}
+              {placeCategoryLabel(tc, { name: category_name })}
             </span>
             {verified && <VerifiedBadge />}
             <PlaceOpenStatusBadge status={openStatus} />

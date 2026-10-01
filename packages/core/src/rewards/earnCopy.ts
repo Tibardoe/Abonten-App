@@ -1,84 +1,132 @@
 import type { LoyaltyProgress, RewardsProgram } from "@abonten/types/rewards";
+import { intlLocale } from "../i18n/coreStrings";
+import type { CoreI18n, CoreTranslator } from "../i18n/translator";
 import { formatCredit } from "./creditAmount";
 
 // The "How to earn" wording for the Rewards pages, built only from the LIVE
 // program terms so a page can never promise something the reward engine
-// doesn't pay. Shared by web and mobile so the two say the same thing.
+// doesn't pay. Shared by web and mobile so the two say the same thing. The
+// words live under `earn.*` and `loyalty.*` of the core namespace.
 
-const pct = (bps: number) => `${Number((bps / 100).toFixed(2))}%`;
+function percent(bps: number, locale?: string | null): string {
+  return new Intl.NumberFormat(intlLocale(locale), {
+    style: "percent",
+    maximumFractionDigits: 2,
+  }).format(bps / 10000);
+}
 
-export function rewardsEarnLines(program: RewardsProgram): string[] {
+export function rewardsEarnLines(
+  { t, locale }: CoreI18n,
+  program: RewardsProgram,
+): string[] {
   const lines: string[] = [];
   if (program.eventReferral) {
     lines.push(
-      `Share an event. When someone buys a ticket with your link, you earn ${pct(program.eventReferral.rateBps)} of the ticket price in credit after the event.`,
+      t("earn.eventReferral", {
+        percent: percent(program.eventReferral.rateBps, locale),
+      }),
     );
   }
   if (program.promoterCommission) {
-    lines.push(
-      "Promote events. When an organizer offers a commission, every ticket sold through your share link earns you that share of the price, paid by the organizer as credit after the event.",
-    );
+    lines.push(t("earn.promoterCommission"));
   }
   if (program.friendReferral?.referrerMinor) {
+    const amount = formatCredit(
+      program.friendReferral.referrerMinor,
+      program.currency,
+    );
     lines.push(
-      `Invite a friend. When they buy their first ticket, you get ${formatCredit(program.friendReferral.referrerMinor, program.currency)}${
-        program.friendReferral.refereeMinor
-          ? ` and they get ${formatCredit(program.friendReferral.refereeMinor, program.currency)} off`
-          : ""
-      }.`,
+      program.friendReferral.refereeMinor
+        ? t("earn.friendReferralBoth", {
+            amount,
+            friendAmount: formatCredit(
+              program.friendReferral.refereeMinor,
+              program.currency,
+            ),
+          })
+        : t("earn.friendReferral", { amount }),
     );
   }
   if (program.loyaltyFeeRebate) {
     const l = program.loyaltyFeeRebate;
     lines.push(
-      `Keep going out. Buy tickets to ${l.ordersRequired} different events within ${l.windowDays} days and the service fee on the ${l.ordersRequired === 5 ? "5th" : "last"} order comes back as credit after the event (up to ${formatCredit(l.maxMinor, program.currency)}).`,
+      t("earn.loyalty", {
+        orders: l.ordersRequired,
+        days: l.windowDays,
+        cap: formatCredit(l.maxMinor, program.currency),
+      }),
     );
   }
   if (program.organizerRebate) {
     lines.push(
-      `Organize events. Each month you get ${pct(program.organizerRebate.netShareBps)} of what Abonten earned on your events that ended the month before, as promotion credit to feature your next one.`,
+      t("earn.organizerRebate", {
+        percent: percent(program.organizerRebate.netShareBps, locale),
+      }),
     );
   }
   if (program.venueRebate) {
     lines.push(
-      `Own a verified place? When other organizers hold ticketed events there, you get ${pct(program.venueRebate.netShareBps)} of what Abonten earned on them, as promotion credit.`,
+      t("earn.venueRebate", {
+        percent: percent(program.venueRebate.netShareBps, locale),
+      }),
     );
   }
   if (program.placeVisits) {
     lines.push(
-      `Own a verified place? Show your check-in code: every different person who checks in during a month earns you ${formatCredit(program.placeVisits.perVisitorMinor, program.currency)} of promotion credit (up to ${program.placeVisits.maxVisitors} a month).`,
+      t("earn.placeVisits", {
+        amount: formatCredit(
+          program.placeVisits.perVisitorMinor,
+          program.currency,
+        ),
+        max: program.placeVisits.maxVisitors,
+      }),
     );
   }
   if (program.organizerMilestone) {
     lines.push(
-      `The first time one of your events sells to ${program.organizerMilestone.uniqueBuyers} different people, you get ${formatCredit(program.organizerMilestone.amountMinor, program.currency)} of promotion credit.`,
+      t("earn.organizerMilestone", {
+        buyers: program.organizerMilestone.uniqueBuyers,
+        amount: formatCredit(
+          program.organizerMilestone.amountMinor,
+          program.currency,
+        ),
+      }),
     );
   }
   return lines;
 }
 
 /** The loyalty card: how far along the caller is. */
-export function loyaltyProgressCopy(p: LoyaltyProgress): {
+export function loyaltyProgressCopy(
+  t: CoreTranslator,
+  p: LoyaltyProgress,
+): {
   headline: string;
   detail: string;
 } {
   const left = Math.max(p.ordersRequired - p.ordersCounted, 0);
   const cap = formatCredit(p.maxPerRewardMinor, p.currency);
   const min =
-    p.minOrderMinor > 0
-      ? ` of ${formatCredit(p.minOrderMinor, p.currency)} or more`
-      : "";
+    p.minOrderMinor > 0 ? formatCredit(p.minOrderMinor, p.currency) : null;
+  const headline = t("loyalty.headline", {
+    counted: p.ordersCounted,
+    required: p.ordersRequired,
+  });
   if (left === 0) {
+    return { headline, detail: t("loyalty.done", { cap }) };
+  }
+  if (left === 1) {
     return {
-      headline: `${p.ordersCounted} of ${p.ordersRequired} events`,
-      detail: `Your service fee on the last order comes back as credit after that event (up to ${cap}).`,
+      headline,
+      detail: min
+        ? t("loyalty.oneMoreMin", { min, days: p.windowDays, cap })
+        : t("loyalty.oneMore", { days: p.windowDays, cap }),
     };
   }
   return {
-    headline: `${p.ordersCounted} of ${p.ordersRequired} events`,
-    detail:
-      left === 1
-        ? `One more ticket order${min} to a different event within ${p.windowDays} days and we give you back its service fee as credit (up to ${cap}).`
-        : `${left} more ticket orders${min} to different events within ${p.windowDays} days and we give you back the service fee on the last one as credit (up to ${cap}).`,
+    headline,
+    detail: min
+      ? t("loyalty.moreMin", { left, min, days: p.windowDays, cap })
+      : t("loyalty.more", { left, days: p.windowDays, cap }),
   };
 }

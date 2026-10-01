@@ -8,9 +8,9 @@ import { View } from "react-native";
 // fake percentage while the server works, and never a stalled 100%.
 
 const LABEL: Record<string, string> = {
-  preparing: "Preparing your file…",
-  uploading: "Uploading",
-  saving: "Almost there — saving…",
+  preparing: "preparingYourFile",
+  uploading: "uploading5",
+  saving: "almostThereSaving",
 };
 
 export function UploadProgress({
@@ -27,7 +27,7 @@ export function UploadProgress({
 
   if (!state.busy) return null;
 
-  const base = LABEL[state.phase] ?? "Working…";
+  const base = LABEL[state.phase] ? t(LABEL[state.phase]) : t("working");
   const label =
     state.phase === "uploading" && what
       ? t("uploading4", { what: what })

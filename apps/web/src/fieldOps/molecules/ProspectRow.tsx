@@ -13,9 +13,9 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 const KIND_LABEL: Record<FieldOpsProspect["kind"], string> = {
-  place: "Business",
+  place: "business",
   event: "Event",
-  organizer: "Organizer",
+  organizer: "organizer",
 };
 
 /**
@@ -66,7 +66,7 @@ export default function ProspectRow({
         <div>
           <p className="font-medium">{p.name}</p>
           <p className="text-sm text-muted-foreground">
-            {KIND_LABEL[p.kind]}
+            {t(KIND_LABEL[p.kind])}
             {p.contactName ? ` · ${p.contactName}` : ""}
             {p.contactPhoneMasked ? ` · ${p.contactPhoneMasked}` : ""}
             {p.memberName ? t("loggedBy", { memberName: p.memberName }) : ""}

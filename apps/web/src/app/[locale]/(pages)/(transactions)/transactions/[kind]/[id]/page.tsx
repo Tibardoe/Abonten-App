@@ -37,7 +37,8 @@ export default async function Page({
   const locale = await getLocale();
 
   const t = await getTranslations("transactions");
-  const tc = await getTranslations("common");
+  const tCommon = await getTranslations("common");
+  const tc = await getTranslations("core");
 
   const { kind, id } = await params;
 
@@ -101,11 +102,12 @@ export default async function Page({
   const refundBadge =
     cancelledTickets.length > 0 && cancelledTickets[0].transaction
       ? getRefundStatusLabel(
+          tc,
           cancelledTickets[0].transaction.status,
           cancelledTickets[0].transaction.refund_requested_at,
         )
       : null;
-  const statusLabel = tc(getTransactionStatusMeta(row.status).labelKey);
+  const statusLabel = tCommon(getTransactionStatusMeta(row.status).labelKey);
   const contextualDate =
     row.status === "paid"
       ? row.completed_at

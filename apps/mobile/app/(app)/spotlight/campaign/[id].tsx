@@ -10,11 +10,12 @@ import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachine";
 import {
-  CAMPAIGN_OBJECTIVE_LABEL,
-  CAMPAIGN_STATUS_LABEL,
-  PROMOTION_CASH_NOTE,
-  PROMOTION_END_REASON_LABEL,
-  PROMOTION_ESTIMATE_NOTE,
+  PROMOTION_CASH_NOTE_KEY,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  campaignObjectiveLabel,
+  campaignStatusLabel,
+  isCampaignStatus,
+  promotionEndReasonLabel,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import { currencyMinorFactor } from "@abonten/core/money/currencies";
@@ -35,6 +36,7 @@ import { Alert, ScrollView, View } from "react-native";
 // with pause, resume and cancel.
 export default function CampaignScreen() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { id } = useLocalSearchParams<{ id: string }>();
   const toast = useToast();
@@ -57,7 +59,7 @@ export default function CampaignScreen() {
         {header}
         <QueryUnavailable
           view={view}
-          subject="this promotion"
+          subject={t("thisPromotion")}
           onRetry={() => q.refetch()}
           loading={<Spinner />}
         />
@@ -109,33 +111,33 @@ export default function CampaignScreen() {
   const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GB");
   const unused = Math.max(0, c.paidMinor - c.spentMinor - c.refundedMinor);
   const rows: [string, string][] = [
-    ["Status", CAMPAIGN_STATUS_LABEL[c.status]],
-    ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
-    ["Budget", formatMinor(c.budgetMinor, c.currency)],
-    ["Runs for up to", `${c.durationDays} days`],
-    ["Used so far", formatMinor(c.spentMinor, c.currency)],
-    ["Unused", formatMinor(unused, c.currency)],
-    ["Refunded", formatMinor(c.refundedMinor, c.currency)],
+    [t("status"), campaignStatusLabel(tc, c.status)],
+    [t("goal"), campaignObjectiveLabel(tc, c.objective)],
+    [t("budget"), formatMinor(c.budgetMinor, c.currency)],
+    [t("runsForUpTo"), `${c.durationDays} days`],
+    [t("usedSoFar"), formatMinor(c.spentMinor, c.currency)],
+    [t("unused"), formatMinor(unused, c.currency)],
+    [t("refunded"), formatMinor(c.refundedMinor, c.currency)],
   ];
   // Reach is people; impressions are times shown.
   const delivery: [string, string][] = [
     [
-      "Estimated reach",
+      t("estimatedReach"),
       formatReachRange({
         reachLow: c.estimatedReachLow,
         reachHigh: c.estimatedReachHigh,
       }),
     ],
-    ["People reached", n(m?.reach ?? c.reach)],
+    [t("peopleReached"), n(m?.reach ?? c.reach)],
     [
-      "Sponsored impressions",
+      t("sponsoredImpressions"),
       `${n(m?.impressions ?? c.impressions)} of ${n(c.impressionGoal)}`,
     ],
-    ["Meaningful views", n(m?.meaningfulViews ?? c.views)],
-    ["Completed views", n(m?.completions ?? c.completions)],
-    ["Profile visits", n(m?.clicks.profile)],
-    ["Event / place taps", `${n(m?.clicks.event)} / ${n(m?.clicks.place)}`],
-    ["New followers", n(m?.follows)],
+    [t("meaningfulViews"), n(m?.meaningfulViews ?? c.views)],
+    [t("completedViews"), n(m?.completions ?? c.completions)],
+    [t("profileVisits"), n(m?.clicks.profile)],
+    [t("eventPlaceTaps"), `${n(m?.clicks.event)} / ${n(m?.clicks.place)}`],
+    [t("newFollowers"), n(m?.follows)],
     [
       "Tickets / reservations",
       `${n(m?.conversions.ticketPurchases)} / ${n(m?.conversions.reservations)}`,
@@ -159,7 +161,7 @@ export default function CampaignScreen() {
           <View className="gap-2">
             <AppText variant="muted">
               {t("waitingForPayment2", {
-                PROMOTION_CASH_NOTE: PROMOTION_CASH_NOTE,
+                cashNote: tc(PROMOTION_CASH_NOTE_KEY),
               })}
             </AppText>
             <PromotionPaymentSection
@@ -194,7 +196,7 @@ export default function CampaignScreen() {
 
         {c.status === "completed" && c.endReason ? (
           <AppText variant="muted">
-            {PROMOTION_END_REASON_LABEL[c.endReason]}.
+            {promotionEndReasonLabel(tc, c.endReason)}.
             {unused > 0
               ? t("ofTheBudgetWasnTUsed2", {
                   formatMinor: formatMinor(unused, c.currency),
@@ -228,7 +230,7 @@ export default function CampaignScreen() {
           </View>
         ))}
         <AppText variant="caption" tone="muted">
-          {PROMOTION_ESTIMATE_NOTE}
+          {tc(PROMOTION_ESTIMATE_NOTE_KEY)}
         </AppText>
 
         <View className="gap-2">
@@ -278,9 +280,9 @@ export default function CampaignScreen() {
           {events.map((e) => (
             <View key={e.id} className="gap-0.5">
               <AppText variant="small" className="font-semibold">
-                {CAMPAIGN_STATUS_LABEL[
-                  e.toStatus as keyof typeof CAMPAIGN_STATUS_LABEL
-                ] ?? e.toStatus}
+                {isCampaignStatus(e.toStatus)
+                  ? campaignStatusLabel(tc, e.toStatus)
+                  : e.toStatus}
               </AppText>
               <AppText variant="caption" tone="muted">
                 {new Date(e.createdAt).toLocaleString()}

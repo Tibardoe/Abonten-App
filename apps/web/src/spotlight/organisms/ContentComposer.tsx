@@ -12,7 +12,7 @@ import {
 import { Select } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/useToast";
-import { CONTENT_RIGHTS_ACKNOWLEDGEMENT } from "@abonten/core/content/copy";
+import { CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY } from "@abonten/core/content/copy";
 import {
   MAX_CAPTION_LENGTH,
   MAX_CONTENT_IMAGE_BYTES,
@@ -50,6 +50,7 @@ export default function ContentComposer({
   onClose: () => void;
 }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { program } = useContentProgram();
   const toast = useToast();
@@ -388,7 +389,7 @@ export default function ContentComposer({
                 disabled={busy}
                 onChange={(e) => setRights(e.target.checked)}
               />
-              <span>{CONTENT_RIGHTS_ACKNOWLEDGEMENT}</span>
+              <span>{tc(CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY)}</span>
             </label>
           </div>
 

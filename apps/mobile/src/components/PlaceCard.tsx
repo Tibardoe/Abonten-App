@@ -2,6 +2,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { prefetchPlaceDetail } from "@/features/places/usePlaceDetail";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { formatDistance } from "@abonten/core/units/distance";
@@ -50,6 +51,7 @@ export function PlaceCard({
   const { locale } = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const qc = useQueryClient();
@@ -68,6 +70,7 @@ export function PlaceCard({
   // Same derivation as the web PlaceCard / PlaceOpenStatusBadge:
   // temporary_status wins over the SQL-computed is_open boolean.
   const openStatus = derivePlaceCardOpenStatus(
+    tc,
     place.is_open,
     place.temporary_status ?? null,
   );
@@ -137,7 +140,10 @@ export function PlaceCard({
 
         {place.category_name ? (
           <AppText variant="meta" numberOfLines={1}>
-            {place.category_name}
+            {placeCategoryLabel(tc, {
+              slug: place.category_slug,
+              name: place.category_name,
+            })}
           </AppText>
         ) : null}
 

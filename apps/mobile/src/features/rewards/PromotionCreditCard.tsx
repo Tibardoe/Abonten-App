@@ -24,23 +24,25 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
 
   const lines: string[] = [];
   if (organizerShareBps) {
-    lines.push(
-      `Each month you get ${organizerShareBps / 100}% of what Abonten earned on your events that ended the month before.`,
-    );
+    lines.push(t("eachMonthYouGetOfWhat", { value: organizerShareBps / 100 }));
   }
   if (venueShareBps) {
-    lines.push(
-      `Own a verified place? You get ${venueShareBps / 100}% when other organizers hold ticketed events there.`,
-    );
+    lines.push(t("ownAVerifiedPlaceYouGet", { value: venueShareBps / 100 }));
   }
   if (visits) {
     lines.push(
-      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor, credit.currency)} (up to ${visits.maxVisitors} a month).`,
+      t("ownAVerifiedPlaceEveryDifferent", {
+        formatCredit: formatCredit(visits.perVisitorMinor, credit.currency),
+        maxVisitors: visits.maxVisitors,
+      }),
     );
   }
   if (milestone) {
     lines.push(
-      `The first time one of your events sells to ${milestone.uniqueBuyers} different people, you get ${formatCredit(milestone.amountMinor, credit.currency)}.`,
+      t("theFirstTimeOneOfYour", {
+        uniqueBuyers: milestone.uniqueBuyers,
+        formatCredit: formatCredit(milestone.amountMinor, credit.currency),
+      }),
     );
   }
 

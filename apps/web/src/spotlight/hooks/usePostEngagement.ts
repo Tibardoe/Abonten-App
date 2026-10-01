@@ -14,6 +14,7 @@ import type {
   ContentShareChannel,
 } from "@abonten/types/contentType";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
 
@@ -22,6 +23,8 @@ import { dataOf, messageOf } from "../lib/result";
 // idempotent on the server; a failure puts the previous state back.
 
 export function usePostEngagement(post: ContentPostDocument) {
+  const t = useTranslations("spotlight");
+
   const requireAuth = useRequireAuth();
   const toast = useToast();
   const qc = useQueryClient();
@@ -62,7 +65,7 @@ export function usePostEngagement(post: ContentPostDocument) {
       onData?.(res);
     } catch {
       undo();
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
     } finally {
       pending.current -= 1;
     }
@@ -105,7 +108,7 @@ export function usePostEngagement(post: ContentPostDocument) {
         const data = dataOf(res as Awaited<ReturnType<typeof setContentSave>>);
         if (data) setCounts(data.counts);
         qc.invalidateQueries({ queryKey: ["content", "saved"] });
-        toast.success(next ? "Saved." : "Removed from saved.");
+        toast.success(next ? t("saved") : t("removedFromSaved2"));
       },
     );
   };
@@ -131,7 +134,7 @@ export function usePostEngagement(post: ContentPostDocument) {
       () => setContentNotInterested({ postId: post.id, notInterested: value }),
       () => {
         if (value) {
-          toast.success("Got it. You'll see fewer posts like this.");
+          toast.success(t("gotItYouLlSeeFewer"));
         }
       },
     );

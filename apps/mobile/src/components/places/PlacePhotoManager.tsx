@@ -177,7 +177,7 @@ export function PlacePhotoManager({
     <View className="gap-3">
       <Button
         title={t("addPhotos")}
-        loadingTitle="Uploading…"
+        loadingTitle={t("uploading")}
         variant="outline"
         loading={addPhoto.isPending}
         disabled={busy}

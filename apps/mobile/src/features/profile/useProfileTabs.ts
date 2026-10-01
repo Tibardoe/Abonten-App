@@ -4,7 +4,7 @@ import { withEventAvailability } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import {
   type PlaceOpeningHourRow,
-  computePlaceOpenStatus,
+  isPlaceOpenNow,
 } from "@abonten/core/computePlaceOpenStatus";
 import {
   EMPTY_RATING,
@@ -27,7 +27,7 @@ function enrichPlaceRow(
   },
   rating: RatingAggregate = EMPTY_RATING,
 ): ProfilePlace {
-  const open = computePlaceOpenStatus(
+  const isOpen = isPlaceOpenNow(
     row.place_opening_hours ?? [],
     row.temporary_status ?? null,
     new Date(),
@@ -38,7 +38,7 @@ function enrichPlaceRow(
     category_name: row.place_category?.name ?? row.category_name ?? null,
     avg_rating: rating.average,
     review_count: rating.count,
-    is_open: open.isOpen,
+    is_open: isOpen,
   } as ProfilePlace;
 }
 

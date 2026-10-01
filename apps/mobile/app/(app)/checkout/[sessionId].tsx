@@ -134,7 +134,7 @@ export default function CheckoutReviewScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={prepareView}
-          subject="this checkout"
+          subject={t("thisCheckout")}
           onRetry={() => refetch()}
           loading={
             <View className="flex-1 items-center justify-center">

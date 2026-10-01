@@ -1,4 +1,4 @@
-import { HOW_REVIEW_WORKS, WHY_VERIFY } from "@abonten/core/verification/copy";
+import { howReviewWorks, whyVerify } from "@abonten/core/verification/copy";
 import type {
   VerificationEvidenceType,
   VerificationSubjectType,
@@ -18,13 +18,14 @@ export default function VerificationExplainer({
   evidenceTypes: VerificationEvidenceType[];
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   return (
     <div className="space-y-5">
       <section className="space-y-2">
         <h3 className="font-semibold">{t("whyVerify")}</h3>
         <ul className="space-y-1.5">
-          {WHY_VERIFY[subjectType].map((line) => (
+          {whyVerify(tc, subjectType).map((line) => (
             <li key={line} className="flex items-start gap-2 text-sm">
               <IoCheckmarkCircle
                 aria-hidden
@@ -61,7 +62,7 @@ export default function VerificationExplainer({
           {t("howReviewWorks")}
         </h3>
         <ul className="space-y-1.5">
-          {HOW_REVIEW_WORKS.map((line) => (
+          {howReviewWorks(tc).map((line) => (
             <li key={line} className="text-sm text-muted-foreground">
               {line}
             </li>

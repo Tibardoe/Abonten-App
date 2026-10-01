@@ -15,11 +15,11 @@ import { useCallback } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 
 const STATUS_LABEL: Record<string, string> = {
-  published: "Published",
-  draft: "Draft",
-  canceled: "Canceled",
-  cancelled: "Canceled",
-  ended: "Ended",
+  published: "published",
+  draft: "draft",
+  canceled: "canceled",
+  cancelled: "canceled",
+  ended: "ended",
 };
 
 // Only draft/published events can be cancelled (the RPC rejects anything
@@ -75,7 +75,9 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           <View className="mt-0.5 flex-row items-center gap-2">
             <View className="self-start rounded-full bg-muted px-2 py-0.5">
               <AppText variant="overline">
-                {STATUS_LABEL[status] ?? status ?? "—"}
+                {STATUS_LABEL[status]
+                  ? t(STATUS_LABEL[status])
+                  : (status ?? "—")}
               </AppText>
             </View>
             {event.event_code ? (
@@ -134,7 +136,7 @@ export default function OrganizerEventsScreen() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="your events"
+            subject={t("yourEvents3")}
             onRetry={() => q.refetch()}
             loading={<ActivityIndicator className="mt-10" />}
           />

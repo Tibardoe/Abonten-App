@@ -7,6 +7,7 @@ import type {
   ContentPostDocument,
   ContentPublisher,
 } from "@abonten/types/contentType";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
 import { useCallback } from "react";
 
@@ -19,9 +20,15 @@ export function contentShareUrl(kind: ContentKind, postId: string): string {
 export function shareContent(
   post: Pick<ContentPostDocument, "id" | "kind" | "publisher">,
 ): Promise<ShareOutcome> {
-  const noun = post.kind === "story" ? "Story" : "Spotlight";
+  const noun =
+    post.kind === "story"
+      ? translatorFor("spotlight")("story")
+      : translatorFor("spotlight")("spotlight");
   return shareLink(
-    `${noun} from ${post.publisher.name} on Abonten`,
+    translatorFor("spotlight")("fromOnAbonten", {
+      noun: noun,
+      name: post.publisher.name,
+    }),
     contentShareUrl(post.kind, post.id),
   );
 }

@@ -7,10 +7,14 @@
   "exports": {
     "./catalog": "./src/catalog.ts",
     "./namespaces": "./src/namespaces.ts",
+    "./server": "./src/server.ts",
     "./messages/*": "./messages/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "use-intl": "^4.14.5"
   },
   "devDependencies": {
     "@abonten/config": "*",

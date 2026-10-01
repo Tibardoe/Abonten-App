@@ -1,6 +1,9 @@
-import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
-import { DISPLAY_DAYS } from "@abonten/core/dayOfWeek";
-import { useTranslations } from "next-intl";
+import {
+  type PlaceOpeningHourRow,
+  formatClockTime,
+} from "@abonten/core/computePlaceOpenStatus";
+import { displayDays } from "@abonten/core/dayOfWeek";
+import { useLocale, useTranslations } from "next-intl";
 
 type PlaceOpeningHoursTableProps = {
   openingHours: PlaceOpeningHourRow[];
@@ -9,24 +12,16 @@ type PlaceOpeningHoursTableProps = {
   today?: number;
 };
 
-function formatTime(time: string): string {
-  const [hoursStr, minutesStr] = time.split(":");
-  const hours24 = Number(hoursStr);
-  const minutes = Number(minutesStr ?? 0);
-  const period = hours24 >= 12 ? "PM" : "AM";
-  const hours12 = hours24 % 12 || 12;
-  return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
-}
-
 export default function PlaceOpeningHoursTable({
   openingHours,
   today = new Date().getDay(),
 }: PlaceOpeningHoursTableProps) {
   const t = useTranslations("places");
+  const locale = useLocale();
 
   return (
     <div className="divide-y divide-border">
-      {DISPLAY_DAYS.map(({ dayOfWeek, label }) => {
+      {displayDays(locale).map(({ dayOfWeek, label }) => {
         const hour = openingHours.find((h) => h.day_of_week === dayOfWeek);
         const isToday = dayOfWeek === today;
 
@@ -43,7 +38,7 @@ export default function PlaceOpeningHoursTable({
             <span>
               {!hour || hour.is_closed || !hour.open_time || !hour.close_time
                 ? t("closed")
-                : `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)}`}
+                : `${formatClockTime(hour.open_time, locale)} – ${formatClockTime(hour.close_time, locale)}`}
             </span>
           </div>
         );

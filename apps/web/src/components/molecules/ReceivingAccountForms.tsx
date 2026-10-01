@@ -92,7 +92,7 @@ export default function ReceivingAccountForms({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {["Mobile Money", "Bank"].map((option) => (
+            {[t("mobileMoney"), t("bank")].map((option) => (
               <button
                 key={option}
                 type="button"
@@ -109,7 +109,7 @@ export default function ReceivingAccountForms({
             ))}
           </div>
 
-          {paymentOption === "Mobile Money" && (
+          {paymentOption === t("mobileMoney") && (
             <div className="space-y-3">
               <button
                 type="button"
@@ -164,7 +164,7 @@ export default function ReceivingAccountForms({
             </div>
           )}
 
-          {paymentOption === "Bank" && (
+          {paymentOption === t("bank") && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField

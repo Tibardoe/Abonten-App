@@ -3,7 +3,7 @@ import MaskIcon from "@/components/atoms/MaskIcon";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import {
-  PROMOTION_KIND_LABEL,
+  promotionKindLabel,
   promotionStatusLine,
 } from "@abonten/core/promotionSummary";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -20,6 +20,7 @@ export default async function PromotionDetails() {
   const locale = await getLocale();
 
   const t = await getTranslations("settings");
+  const tc = await getTranslations("core");
 
   const promotions = await getUserActivePromotions();
   const activePromotions =
@@ -37,14 +38,14 @@ export default async function PromotionDetails() {
               >
                 {index > 0 && <hr className="mb-4" />}
                 <p className="text-sm text-muted-foreground">
-                  {PROMOTION_KIND_LABEL[promotion.resourceType]}
+                  {promotionKindLabel(tc, promotion.resourceType)}
                 </p>
                 <h2 className="font-medium text-lg md:text-xl">
                   {promotion.resourceName}
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {t("text", {
-                    promotionStatusLine: promotionStatusLine(promotion),
+                    promotionStatusLine: promotionStatusLine(tc, promotion),
                   })}
                   {promotion.state === "scheduled" ? t("starts") : t("ends")}{" "}
                   {formatDateWithSuffix(

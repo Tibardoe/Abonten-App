@@ -1,7 +1,10 @@
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useWeeklyProgram, useWeeklyTeaser } from "@/features/weekly/useWeekly";
 import { hapticLight } from "@/lib/haptics";
-import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
+import {
+  WEEKLY_PRODUCT_NAME,
+  WEEKLY_TAGLINE_KEY,
+} from "@abonten/core/weekly/copy";
 import { formatWeekRange } from "@abonten/core/weekly/week";
 import type { WeeklyBannerSlide } from "@abonten/types/weeklyType";
 import { AppText, Icon } from "@abonten/ui-native";
@@ -20,6 +23,7 @@ export function WeeklyTeaserCard() {
   const { locale } = useLocale();
 
   const t = useTranslations("weekly");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -91,7 +95,7 @@ export function WeeklyTeaserCard() {
           style={{ color: "rgba(255,255,255,0.85)" }}
           numberOfLines={2}
         >
-          {teaser.subtitle ?? WEEKLY_TAGLINE}
+          {teaser.subtitle ?? tc(WEEKLY_TAGLINE_KEY)}
         </AppText>
         <View className="mt-4 flex-row">
           <View className="flex-row items-center gap-2.5 rounded-full bg-white py-1.5 pl-4 pr-1.5">

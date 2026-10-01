@@ -3,7 +3,11 @@ import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { type ReactElement, memo, useCallback, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -63,12 +67,13 @@ function identityFor(item: ConversationListItem): string {
     item.other_display_name ||
     item.subject_title ||
     item.title ||
-    "Conversation"
+    translatorFor("messaging")("conversation")
   );
 }
 
 function previewFor(item: ConversationListItem, mine: boolean): string {
-  if (!item.last_message_preview) return "No messages yet";
+  if (!item.last_message_preview)
+    return translatorFor("messaging")("noMessagesYet");
   return mine ? `You: ${item.last_message_preview}` : item.last_message_preview;
 }
 

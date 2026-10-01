@@ -18,10 +18,10 @@ export const CUSTOM_FILTER_KEYS = [
 export type CustomFilterKey = (typeof CUSTOM_FILTER_KEYS)[number];
 
 export const CUSTOM_FILTER_LABEL: Record<CustomFilterKey, string> = {
-  unread: "Unread",
-  events: "Events",
-  places: "Places",
-  muted: "Muted",
+  unread: "unread",
+  events: "events",
+  places: "places",
+  muted: "muted",
 };
 
 export const CUSTOM_FILTER_ICON: Record<CustomFilterKey, string> = {

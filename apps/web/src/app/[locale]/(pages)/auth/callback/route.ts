@@ -1,5 +1,7 @@
 import { createClient } from "@/config/supabase/server";
+import { getUserLocale } from "@/i18n/locale";
 import { getSafeRedirectPath } from "@abonten/core/getSafeRedirectPath";
+import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import { type NextRequest, NextResponse } from "next/server";
 
 // Exchanges the Google OAuth code for a session *server-side* before
@@ -17,9 +19,15 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: exchanged, error } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      // The language they signed in with, so what Abonten writes for them
+      // (notifications, emails) is in it. Never overrides a later choice.
+      await saveUserLocale(exchanged.user?.id, await getUserLocale(), {
+        onlyIfUnset: true,
+      });
       return NextResponse.redirect(`${origin}${next}`);
     }
 

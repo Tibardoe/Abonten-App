@@ -15,7 +15,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -236,8 +236,6 @@ function OwnPosts({ kind }: { kind: ContentKind }) {
 }
 
 function OwnPostRow({ post }: { post: ContentOwnPost }) {
-  const locale = useLocale();
-
   const t = useTranslations("spotlight");
 
   const toast = useToast();
@@ -324,8 +322,6 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
 }
 
 function OwnCampaigns() {
-  const locale = useLocale();
-
   const t = useTranslations("spotlight");
 
   const query = useQuery({

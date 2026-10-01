@@ -1,7 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import {
-  PHONE_ERROR_MESSAGE,
   parsePhoneWithDialCode,
+  phoneErrorMessage,
 } from "@abonten/core/phone/phone";
 import type { Database } from "@abonten/types/database.types";
 import {
@@ -9,6 +9,7 @@ import {
   addPaymentMethodSchema,
 } from "@abonten/validation/paymentMethodSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT } from "../i18n/requestLocale";
 import { getDefaultMarket, getMarketOrDefault } from "../markets/marketConfig";
 
 // Post-auth bodies of the four payment-method Server Actions, lifted so the
@@ -176,7 +177,10 @@ export async function addPaymentMethodCore(
     }
     const normalized = parsePhoneWithDialCode(market.dialCode, momo.phone);
     if (!normalized.ok) {
-      return { status: 400, message: PHONE_ERROR_MESSAGE[normalized.error] };
+      return {
+        status: 400,
+        message: phoneErrorMessage(coreT(), normalized.error),
+      };
     }
 
     // The same wallet saved twice is the same instrument, whatever label the

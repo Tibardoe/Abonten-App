@@ -12,6 +12,7 @@ import type {
   FollowTargetKind,
 } from "@abonten/types/contentType";
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   type InfiniteData,
   type QueryClient,
@@ -192,6 +193,8 @@ export function useFollow(
   /** Already known from a post document: skip the status request. */
   known?: boolean,
 ) {
+  const t = useTranslations("spotlight");
+
   const { session } = useSession();
   const qc = useQueryClient();
   const toast = useToast();
@@ -254,7 +257,7 @@ export function useFollow(
     onSuccess: (res, following, context) => {
       if (res.status !== 200 || !res.data) {
         rollback(following, context);
-        toast.error(res.message ?? "Couldn't update this follow.");
+        toast.error(res.message ?? t("couldnTUpdateThisFollow"));
         return;
       }
       qc.setQueryData<FollowStatus>(key, res.data);
@@ -268,7 +271,7 @@ export function useFollow(
     },
     onError: (_e, following, context) => {
       rollback(following, context);
-      toast.error("Couldn't update this follow.");
+      toast.error(t("couldnTUpdateThisFollow"));
     },
   });
 

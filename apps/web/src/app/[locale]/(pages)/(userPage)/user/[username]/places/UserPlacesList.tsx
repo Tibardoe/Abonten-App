@@ -3,6 +3,7 @@
 import InfiniteList from "@/components/organisms/InfiniteList";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
 import PlaceCardSkeleton from "@/places/molecules/PlaceCardSkeleton";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { OrganizerPlaceRow } from "@abonten/types/placeRows";
@@ -36,6 +37,7 @@ export default function UserPlacesList({
   emptyState: React.ReactNode;
 }) {
   const t = useTranslations("account");
+  const tc = useTranslations("core");
 
   return (
     <InfiniteList<OwnedPlaceRow>
@@ -54,7 +56,7 @@ export default function UserPlacesList({
       renderItem={(place, index) => {
         const fullAddress =
           (place.address as { full_address?: string })?.full_address ??
-          "Location not specified";
+          t("locationNotSpecified");
 
         return (
           <li
@@ -96,7 +98,8 @@ export default function UserPlacesList({
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs">
-                  {place.place_category?.name ?? t("uncategorized")}
+                  {placeCategoryLabel(tc, place.place_category ?? {}) ||
+                    t("uncategorized")}
                 </span>
 
                 {place.temporary_status && (

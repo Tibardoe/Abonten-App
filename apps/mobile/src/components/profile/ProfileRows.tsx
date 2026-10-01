@@ -2,6 +2,7 @@ import type {
   ProfilePlace,
   ProfileReview,
 } from "@/features/profile/useProfileTabs";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { AppText, Icon, Stars } from "@abonten/ui-native";
@@ -24,7 +25,12 @@ export function ProfilePlaceRow({ place }: { place: ProfilePlace }) {
           height: 200,
         })
       : null;
-  const category = place.place_category?.name ?? place.category_name ?? "Place";
+  const tc = useTranslations("core");
+  const category =
+    placeCategoryLabel(tc, {
+      slug: place.place_category?.slug ?? place.category_slug,
+      name: place.place_category?.name ?? place.category_name,
+    }) || tc("placeCategories.other");
 
   return (
     <Pressable

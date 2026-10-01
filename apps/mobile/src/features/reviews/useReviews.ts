@@ -23,6 +23,7 @@ import {
   toReviewPage,
 } from "@abonten/core/reviews/reviewList";
 import { hapticSelection, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   useInfiniteQuery,
   useMutation,
@@ -157,6 +158,8 @@ export function useSharedReview(
  * retry can never count twice.
  */
 export function useSetReviewHelpful(kind: ReviewSubjectKind) {
+  const t = useTranslations("reviews");
+
   const qc = useQueryClient();
   const toast = useToast();
   const prefix = ["mobile", "reviews", kind] as const;
@@ -204,11 +207,11 @@ export function useSetReviewHelpful(kind: ReviewSubjectKind) {
       for (const [key, data] of context?.snapshot ?? []) {
         qc.setQueryData(key, data);
       }
-      toast.error("Couldn't save that", {
+      toast.error(t("couldnTSaveThat"), {
         description:
           error instanceof Error && error.message
             ? error.message
-            : "Check your connection and try again.",
+            : t("checkYourConnectionAndTryAgain"),
       });
     },
   });

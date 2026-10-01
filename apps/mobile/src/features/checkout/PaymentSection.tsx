@@ -145,7 +145,7 @@ export function useTicketPayment({
         ...(ps === null
           ? {
               chargeStatus: "success",
-              displayMessage: "Confirming your credit payment…",
+              displayMessage: t("confirmingYourCreditPayment"),
             }
           : ps.mode === "popup"
             ? { authorizationUrl: ps.authorizationUrl }

@@ -197,9 +197,7 @@ export default function ImageCropper({
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
                 onLoad={onImageLoad}
                 onError={() => {
-                  alert(
-                    "This image couldn't be loaded. Please try a different photo.",
-                  );
+                  alert(t("thisImageCouldnTBeLoaded"));
                   handleCancel();
                 }}
               />

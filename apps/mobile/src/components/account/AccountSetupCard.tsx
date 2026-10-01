@@ -31,6 +31,7 @@ export function AccountSetupCard({
   className?: string;
 }) {
   const t = useTranslations("account");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const prompt = useAccountSetupPrompt();
@@ -66,7 +67,7 @@ export function AccountSetupCard({
 
   if (!prompt.visible || !prompt.completion) return null;
   const c = prompt.completion;
-  const message = accountSetupPromptMessage(c);
+  const message = accountSetupPromptMessage(tc, c);
 
   return (
     <View

@@ -1,5 +1,6 @@
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import {
   deliveredSpendMinor,
   formatMinor,
@@ -264,7 +265,7 @@ describe("cta", () => {
   it("never shows a stale ticket call to action", () => {
     const base = post("x");
     expect(
-      contentCtaLabel({
+      contentCtaLabel(t, {
         ...base,
         event: {
           available: false,
@@ -274,12 +275,12 @@ describe("cta", () => {
       }),
     ).toEqual({ label: "Event has ended", target: null });
     expect(
-      contentCtaLabel({
+      contentCtaLabel(t, {
         ...base,
         event: { available: true, status: "canceled", archived: false },
       }),
     ).toEqual({ label: "Event cancelled", target: null });
-    expect(contentCtaLabel({ ...base, place: null, event: null })).toEqual({
+    expect(contentCtaLabel(t, { ...base, place: null, event: null })).toEqual({
       label: "View profile",
       target: "profile",
     });
@@ -293,24 +294,24 @@ describe("cta", () => {
       ended: false,
       soldOut: false,
     };
-    expect(contentCtaLabel({ ...base, event })).toEqual({
+    expect(contentCtaLabel(t, { ...base, event })).toEqual({
       label: "View event",
       target: "event",
     });
     expect(
-      contentCtaLabel({ ...base, event: { ...event, soldOut: true } }),
+      contentCtaLabel(t, { ...base, event: { ...event, soldOut: true } }),
     ).toEqual({ label: "Sold out", target: "event" });
     expect(
-      contentCtaLabel({
+      contentCtaLabel(t, {
         ...base,
         event: { ...event, available: false, ended: true, soldOut: true },
       }),
     ).toEqual({ label: "Event has ended", target: null });
     expect(
-      contentCtaLabel({ ...base, event: { ...event, available: false } }),
+      contentCtaLabel(t, { ...base, event: { ...event, available: false } }),
     ).toEqual({ label: "Event unavailable", target: null });
     expect(
-      contentCtaLabel({
+      contentCtaLabel(t, {
         ...base,
         event: { ...event, status: "canceled", available: false },
       }),

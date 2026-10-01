@@ -14,8 +14,8 @@ type PopupCloseProp = {
 };
 
 const STEP_TITLES: Record<string, string> = {
-  "Mobile Money": "Add Mobile Money Account",
-  "Bank Account": "Add Bank Account",
+  "Mobile Money": "addMobileMoneyAccount",
+  "Bank Account": "addBankAccount",
 };
 
 // Mirrors AddPaymentMethodPopup.tsx's exact two-step shell (choose type,
@@ -42,7 +42,9 @@ export default function AddPayoutAccountPopup({
       title={
         step === 1
           ? t("addAPayoutAccount")
-          : (STEP_TITLES[title] ?? t("addPayoutAccount"))
+          : STEP_TITLES[title]
+            ? t(STEP_TITLES[title])
+            : t("addPayoutAccount")
       }
       className="md:w-[30rem]"
     >
@@ -50,24 +52,24 @@ export default function AddPayoutAccountPopup({
         <div className="space-y-3">
           <PaymentOptionCard
             imgUrl="/assets/images/phone.svg"
-            optionTitle="Mobile Money"
-            optionDetails="MTN, Telecel, AT Money, G-Money"
+            optionTitle={t("mobileMoney")}
+            optionDetails={t("mtnTelecelAtMoneyGMoney")}
             handleStep={increaseStep}
           />
 
           <PaymentOptionCard
             imgUrl="/assets/images/bankCard.svg"
-            optionTitle="Bank Account"
-            optionDetails="Receive earnings directly into your bank"
+            optionTitle={t("bankAccount")}
+            optionDetails={t("receiveEarningsDirectlyIntoYourBank")}
             handleStep={increaseStep}
           />
         </div>
       )}
 
-      {step === 2 && title === "Mobile Money" && (
+      {step === 2 && title === t("mobileMoney") && (
         <AddMobileMoneyPayoutForm onSaved={onAdded} />
       )}
-      {step === 2 && title === "Bank Account" && (
+      {step === 2 && title === t("bankAccount") && (
         <AddBankPayoutForm onSaved={onAdded} />
       )}
     </BottomSheet>

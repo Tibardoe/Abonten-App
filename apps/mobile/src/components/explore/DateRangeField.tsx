@@ -1,5 +1,6 @@
+import { dayName, monthName } from "@abonten/core/dateFormatter";
 import { AppText, Icon } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -9,22 +10,6 @@ import { Pressable, View } from "react-native";
 // grid the user taps twice (start, then end). Values are ISO date strings
 // (yyyy-mm-dd), the shape get_filtered_events' p_start_date / p_end_date
 // expect.
-
-const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 function iso(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -50,6 +35,7 @@ export function DateRangeField({
   mode?: "single" | "range";
 }) {
   const t = useTranslations("explore");
+  const { locale } = useLocale();
 
   const c = useThemeColors();
   const today = useMemo(() => {
@@ -115,7 +101,7 @@ export function DateRangeField({
           <Icon name="chevron-back" size={18} tone="foreground" />
         </Pressable>
         <AppText variant="bodyStrong">
-          {MONTHS[view.getMonth()]} {view.getFullYear()}
+          {monthName(view.getMonth(), "long", locale)} {view.getFullYear()}
         </AppText>
         <Pressable
           accessibilityRole="button"
@@ -130,15 +116,15 @@ export function DateRangeField({
       </View>
 
       <View className="flex-row">
-        {WEEKDAYS.map((w, i) => (
-          <View
-            // biome-ignore lint/suspicious/noArrayIndexKey: fixed weekday header
-            key={`${w}-${i}`}
-            className="flex-1 items-center py-1"
-          >
-            <AppText variant="caption">{w}</AppText>
-          </View>
-        ))}
+        {[0, 1, 2, 3, 4, 5, 6].map((day) => {
+          const w = dayName(day, "short", locale).slice(0, 1).toUpperCase();
+          const i = day;
+          return (
+            <View key={i} className="flex-1 items-center py-1">
+              <AppText variant="caption">{w}</AppText>
+            </View>
+          );
+        })}
       </View>
 
       <View className="flex-row flex-wrap">

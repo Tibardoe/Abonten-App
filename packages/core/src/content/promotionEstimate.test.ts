@@ -3,6 +3,7 @@ import type {
   ContentPromotionPricing,
 } from "@abonten/types/contentType";
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import {
   budgetProblem,
   durationProblem,
@@ -65,19 +66,19 @@ const estimate = (
 
 describe("promotion budget rules", () => {
   it("accepts budgets in range and on the step", () => {
-    expect(budgetProblem(pricing, 5000)).toBeNull();
-    expect(budgetProblem(pricing, 2000)).toBeNull();
+    expect(budgetProblem(t, pricing, 5000)).toBeNull();
+    expect(budgetProblem(t, pricing, 2000)).toBeNull();
   });
   it("refuses budgets out of range, off the step or not whole pesewas", () => {
-    expect(budgetProblem(pricing, 1500)).toMatch(/smallest/);
-    expect(budgetProblem(pricing, 600000)).toMatch(/largest/);
-    expect(budgetProblem(pricing, 5250)).toMatch(/steps/);
-    expect(budgetProblem(pricing, 50.5)).toMatch(/Choose/);
-    expect(budgetProblem(pricing, 0)).toMatch(/Choose/);
+    expect(budgetProblem(t, pricing, 1500)).toMatch(/smallest/);
+    expect(budgetProblem(t, pricing, 600000)).toMatch(/largest/);
+    expect(budgetProblem(t, pricing, 5250)).toMatch(/steps/);
+    expect(budgetProblem(t, pricing, 50.5)).toMatch(/Choose/);
+    expect(budgetProblem(t, pricing, 0)).toMatch(/Choose/);
   });
   it("only allows the configured run lengths", () => {
-    expect(durationProblem(pricing, 7)).toBeNull();
-    expect(durationProblem(pricing, 5)).not.toBeNull();
+    expect(durationProblem(t, pricing, 7)).toBeNull();
+    expect(durationProblem(t, pricing, 5)).not.toBeNull();
   });
 });
 

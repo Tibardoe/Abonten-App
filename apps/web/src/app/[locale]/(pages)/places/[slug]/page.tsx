@@ -24,6 +24,7 @@ import FollowButton from "@/spotlight/molecules/FollowButton";
 import PublisherSpotlightGrid from "@/spotlight/organisms/PublisherSpotlightGrid";
 import { placeJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   computePlaceOpenStatus,
@@ -33,7 +34,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -65,6 +66,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const t = await getTranslations("places");
+  const tc = await getTranslations("core");
 
   const { slug } = await params;
   const response = await getPlaceBySlug(slug);
@@ -75,7 +77,8 @@ export async function generateMetadata({
   }
 
   const place = response.data;
-  const categoryName = place.place_category?.name as string | undefined;
+  const categoryName =
+    placeCategoryLabel(tc, place.place_category ?? {}) || undefined;
   const addressText = (place.address as PlaceAddress)?.full_address;
   const location = [categoryName, addressText].filter(Boolean).join(" · ");
   const title = categoryName ? `${place.name} - ${categoryName}` : place.name;
@@ -114,6 +117,8 @@ export default async function page({
   params: Promise<{ slug: string }>;
 }) {
   const t = await getTranslations("places");
+  const tc = await getTranslations("core");
+  const locale = await getLocale();
 
   const { slug } = await params;
 
@@ -154,10 +159,12 @@ export default async function page({
     .filter((p) => p.id !== place.id && p.category_id === place.category_id)
     .slice(0, SIMILAR_PLACES_LIMIT);
 
-  const categoryName = place.place_category?.name ?? "Place";
+  const categoryName =
+    placeCategoryLabel(tc, place.place_category ?? {}) || t("placeKind");
   const fullAddress =
-    (place.address as PlaceAddress)?.full_address ?? "Address not specified";
+    (place.address as PlaceAddress)?.full_address ?? t("addressNotSpecified");
   const openStatus = computePlaceOpenStatus(
+    { t: tc, locale },
     place.openingHours,
     place.temporary_status,
     new Date(),

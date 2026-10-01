@@ -4,6 +4,7 @@ import getContentUploadSignature from "@/actions/content/getContentUploadSignatu
 import { registerContentMedia } from "@/actions/content/registerContentMedia";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import type { ContentKind, ContentMediaItem } from "@abonten/types/contentType";
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
 
@@ -28,6 +29,8 @@ export type ComposerFile = {
  * error so one failure never loses the others.
  */
 export function useContentUpload(kind: ContentKind) {
+  const t = useTranslations("spotlight");
+
   const [files, setFiles] = useState<ComposerFile[]>([]);
   const xhrs = useRef(new Map<string, XMLHttpRequest>());
 
@@ -100,7 +103,7 @@ export function useContentUpload(kind: ContentKind) {
       if (signature.status !== 200 || !signature.data) {
         patch(item.id, {
           status: "error",
-          error: signature.message ?? "Couldn't start the upload.",
+          error: signature.message ?? t("couldnTStartTheUpload"),
         });
         return null;
       }
@@ -122,12 +125,12 @@ export function useContentUpload(kind: ContentKind) {
         xhrs.current.set(item.id, xhr);
         uploaded = await promise;
       } catch (error) {
-        if (error instanceof Error && error.message === "Upload cancelled.") {
+        if (error instanceof Error && error.message === t("uploadCancelled")) {
           return null;
         }
         patch(item.id, {
           status: "error",
-          error: error instanceof Error ? error.message : "Upload failed.",
+          error: error instanceof Error ? error.message : t("uploadFailed"),
         });
         return null;
       } finally {
@@ -152,14 +155,14 @@ export function useContentUpload(kind: ContentKind) {
       if (!media) {
         patch(item.id, {
           status: "error",
-          error: messageOf(res, "We couldn't process this file."),
+          error: messageOf(res, t("weCouldnTProcessThisFile")),
         });
         return null;
       }
       patch(item.id, { status: "done", media });
       return media;
     },
-    [kind, patch],
+    [kind, patch, t],
   );
 
   /** Uploads every file not yet uploaded, in order. Null if any failed. */

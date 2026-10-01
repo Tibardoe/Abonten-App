@@ -52,11 +52,12 @@ type PromotionPaymentSectionProps = {
 // (lib/storePolicy) is enforced here: on iOS the payment step is replaced by
 // a plain notice, whichever screen or deep link led to it.
 export function PromotionPaymentSection(props: PromotionPaymentSectionProps) {
+  const tCommon = useTranslations("common");
   if (!IN_APP_PROMOTION_PURCHASES) {
     return (
       <View className="rounded-xl border border-border bg-card p-4">
         <AppText className="text-sm text-muted-foreground">
-          {PROMOTION_PURCHASE_UNAVAILABLE}
+          {tCommon(PROMOTION_PURCHASE_UNAVAILABLE)}
         </AppText>
       </View>
     );
@@ -211,7 +212,7 @@ function PromotionPaymentSectionInner({
         ...(ps === null
           ? {
               chargeStatus: "success",
-              displayMessage: "Confirming your credit payment…",
+              displayMessage: t("confirmingYourCreditPayment"),
             }
           : ps.mode === "popup"
             ? { authorizationUrl: ps.authorizationUrl }

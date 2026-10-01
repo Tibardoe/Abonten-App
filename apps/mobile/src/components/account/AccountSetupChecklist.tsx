@@ -1,8 +1,9 @@
 import {
-  PROFILE_COMPLETION_GROUP_TITLES,
   type ProfileCompletion,
   type ProfileCompletionGroup,
   type ProfileCompletionItem,
+  profileCompletionGroupTitle,
+  profileCompletionItemCopy,
 } from "@abonten/core/profileCompletion";
 import { AppText, Icon, type IoniconName, Label } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -28,15 +29,17 @@ function Row({
   onPress: () => void;
 }) {
   const t = useTranslations("account");
+  const tc = useTranslations("core");
 
+  const copy = profileCompletionItemCopy(tc, item);
   const done = item.complete;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
         done
-          ? t("tapToChange", { doneLabel: item.doneLabel })
-          : `${item.label}. ${item.description}`
+          ? t("tapToChange", { doneLabel: copy.doneLabel })
+          : `${copy.label}. ${copy.description}`
       }
       onPress={onPress}
       className="min-h-[56px] flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
@@ -54,9 +57,9 @@ function Row({
       </View>
       <View className="flex-1 gap-0.5">
         <AppText variant="bodyStrong">
-          {done ? item.doneLabel : item.label}
+          {done ? copy.doneLabel : copy.label}
         </AppText>
-        {!done ? <AppText variant="meta">{item.description}</AppText> : null}
+        {!done ? <AppText variant="meta">{copy.description}</AppText> : null}
         {item.state === "unverified" ? (
           <AppText variant="caption" tone="warning">
             {t("waitingForACode")}
@@ -78,6 +81,7 @@ export function AccountSetupChecklist({
   onItemPress: (item: ProfileCompletionItem) => void;
 }) {
   const t = useTranslations("account");
+  const tc = useTranslations("core");
 
   return (
     <View className="gap-5">
@@ -87,7 +91,7 @@ export function AccountSetupChecklist({
         return (
           <View key={group} className="gap-2">
             <View className="flex-row items-center justify-between">
-              <Label>{PROFILE_COMPLETION_GROUP_TITLES[group]}</Label>
+              <Label>{profileCompletionGroupTitle(tc, group)}</Label>
               <AppText variant="caption">
                 {t("ofDone", { done: done, length: items.length })}
               </AppText>

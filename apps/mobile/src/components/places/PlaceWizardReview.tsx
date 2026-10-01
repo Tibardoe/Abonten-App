@@ -1,6 +1,8 @@
-import { DAY_LABELS, type PlaceWizard } from "@/features/places/usePlaceWizard";
+import type { PlaceWizard } from "@/features/places/usePlaceWizard";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
+import { dayName } from "@abonten/core/dateFormatter";
 import { AppText } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
@@ -9,12 +11,14 @@ import { View } from "react-native";
 // (app/(app)/place/new.tsx).
 export function PlaceWizardReview({ w }: { w: PlaceWizard }) {
   const t = useTranslations("places");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
 
-  const categoryName =
-    w.categories.find((c) => c.id === w.categoryId)?.name ?? "—";
+  const category = w.categories.find((c) => c.id === w.categoryId);
+  const categoryName = category ? placeCategoryLabel(tc, category) : "—";
   const openDays = w.openingHours
     .filter((h) => !h.isClosed)
-    .map((h) => DAY_LABELS[h.dayOfWeek].slice(0, 3))
+    .map((h) => dayName(h.dayOfWeek, "short", locale))
     .join(", ");
 
   return (

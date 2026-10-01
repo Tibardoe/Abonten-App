@@ -17,6 +17,7 @@ import {
   type EstimateContentPromotionInput,
   RADIUS_OPTIONS_KM,
 } from "@abonten/validation/contentSchemas";
+import { coreT } from "../../i18n/requestLocale";
 import { resolveContentAccess } from "../contentProgram";
 import { type Envelope, FAIL, accountIsRestricted } from "../contentShared";
 
@@ -166,9 +167,9 @@ export async function quotePromotion(
   const pricing = await readPromotionPricing(supabase);
   if (!pricing) return FAIL;
 
-  const budgetError = budgetProblem(pricing, input.budgetMinor);
+  const budgetError = budgetProblem(coreT(), pricing, input.budgetMinor);
   if (budgetError) return { status: 400, message: budgetError };
-  const durationError = durationProblem(pricing, input.durationDays);
+  const durationError = durationProblem(coreT(), pricing, input.durationDays);
   if (durationError) return { status: 400, message: durationError };
 
   let targetingLocation: string | null = null;

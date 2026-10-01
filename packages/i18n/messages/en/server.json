@@ -1,0 +1,10 @@
+{
+  "notifications": {
+    "message": {
+      "newMessage": "New message",
+      "photo": "📷 Photo",
+      "voice": "🎤 Voice message",
+      "attachment": "📎 Attachment"
+    }
+  }
+}

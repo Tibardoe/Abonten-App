@@ -2,7 +2,9 @@
 
 import ensureProfileCompletionNotification from "@/actions/ensureProfileCompletionNotification";
 import { createClient } from "@/config/supabase/server";
+import { getUserLocale } from "@/i18n/locale";
 import { logger } from "@abonten/core/logger";
+import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import { verifyEmailOtpCore } from "@abonten/services/profile/emailAuthCore";
 
 export type VerifyEmailSignInResult =
@@ -26,6 +28,11 @@ export default async function verifyEmailSignIn(
   if (!result.ok) {
     return { status: result.status, message: result.message };
   }
+
+  // The language they signed in with, before anything is written for them.
+  await saveUserLocale(result.userId, await getUserLocale(), {
+    onlyIfUnset: true,
+  });
 
   // Safe on every sign-in: the helper checks completion + existing state and
   // never duplicates. Covers both a brand-new email user and an existing

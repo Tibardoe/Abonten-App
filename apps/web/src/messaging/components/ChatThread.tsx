@@ -402,9 +402,9 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
         disabled={closed || iBlockedThem}
         disabledReason={
           closed
-            ? "This conversation is closed."
+            ? t("thisConversationIsClosed")
             : iBlockedThem
-              ? "You've blocked this person. Unblock them to send a message."
+              ? t("youVeBlockedThisPersonUnblock")
               : undefined
         }
       />

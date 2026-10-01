@@ -5,9 +5,10 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import {
-  PROFILE_COMPLETION_GROUP_TITLES,
   type ProfileCompletionGroup,
   type ProfileCompletionItem,
+  profileCompletionGroupTitle,
+  profileCompletionItemCopy,
 } from "@abonten/core/profileCompletion";
 import {
   AtSign,
@@ -39,7 +40,9 @@ const SKELETON_KEYS = ["a", "b", "c", "d", "e"];
 
 function Row({ item }: { item: ProfileCompletionItem }) {
   const t = useTranslations("settings");
+  const tc = useTranslations("core");
 
+  const copy = profileCompletionItemCopy(tc, item);
   const Icon = item.complete ? Check : ICONS[item.key];
   return (
     <li>
@@ -58,11 +61,11 @@ function Row({ item }: { item: ProfileCompletionItem }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block font-medium text-card-foreground">
-            {item.complete ? item.doneLabel : item.label}
+            {item.complete ? copy.doneLabel : copy.label}
           </span>
           {!item.complete ? (
             <span className="block text-sm text-muted-foreground">
-              {item.description}
+              {copy.description}
             </span>
           ) : null}
           {item.state === "unverified" ? (
@@ -79,6 +82,7 @@ function Row({ item }: { item: ProfileCompletionItem }) {
 
 export default function AccountSetupPanel() {
   const t = useTranslations("settings");
+  const tc = useTranslations("core");
 
   const {
     data: completion,
@@ -150,7 +154,7 @@ export default function AccountSetupPanel() {
           <section key={group} className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                {PROFILE_COMPLETION_GROUP_TITLES[group]}
+                {profileCompletionGroupTitle(tc, group)}
               </h2>
               <span className="text-xs text-muted-foreground">
                 {t("ofDone", { done: done, length: items.length })}

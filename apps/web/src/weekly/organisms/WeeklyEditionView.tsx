@@ -1,6 +1,9 @@
 import { signOff } from "@abonten/core/brand/signOff";
 import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
-import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
+import {
+  WEEKLY_PRODUCT_NAME,
+  WEEKLY_TAGLINE_KEY,
+} from "@abonten/core/weekly/copy";
 import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import { formatWeekRange } from "@abonten/core/weekly/week";
@@ -26,6 +29,7 @@ export default function WeeklyEditionView({
   const locale = useLocale();
 
   const t = useTranslations("weekly");
+  const tc = useTranslations("core");
 
   const e = doc.edition;
   const intro = weeklyParagraphs(e.intro);
@@ -34,13 +38,11 @@ export default function WeeklyEditionView({
 
   const notices = [
     doc.isFallbackScope
-      ? `There is no edition for your area this week, so these are ${e.scopeName}-wide picks.`
+      ? t("thereIsNoEditionForYour", { scopeName: e.scopeName })
       : null,
-    doc.isPreviousWeek
-      ? "This week's edition is on its way. Here is last week's."
-      : null,
+    doc.isPreviousWeek ? t("thisWeekSEditionIsOn2") : null,
     e.weekIsOver && !doc.isPreviousWeek
-      ? "A past edition. Some events have already happened."
+      ? t("aPastEditionSomeEventsHave")
       : null,
   ].filter((n): n is string => !!n);
 
@@ -74,7 +76,7 @@ export default function WeeklyEditionView({
           {e.title}
         </h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85 md:text-lg">
-          {e.subtitle ?? WEEKLY_TAGLINE}
+          {e.subtitle ?? tc(WEEKLY_TAGLINE_KEY)}
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <a

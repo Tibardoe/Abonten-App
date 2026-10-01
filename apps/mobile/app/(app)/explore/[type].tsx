@@ -25,8 +25,10 @@ import {
   useExplorePlaceSliders,
 } from "@/features/discovery/useExplorePlaceSliders";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
+import { useCoreI18n } from "@/features/i18n/useCoreI18n";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useQueryView } from "@/lib/useQueryView";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { EmptyState, Refresher } from "@abonten/ui-native";
@@ -46,6 +48,7 @@ type PlaceKey = keyof PlaceSliders;
 
 export default function ExploreSectionScreen() {
   const t = useTranslations("explore");
+  const i18n = useCoreI18n();
 
   // `type` is the dynamic route segment and doubles as the slider key
   // (e.g. "happeningToday"); `kind` + `title` ride along as query params.
@@ -103,18 +106,21 @@ export default function ExploreSectionScreen() {
   const filterCount = isEvent
     ? countActiveEventFilters(eventFilters)
     : countActivePlaceFilters(placeFilters);
-  const selectedPlaceCategoryName =
+  const selectedPlaceCategory =
     placeFilters.categoryId != null
-      ? (placeCategories.find((c) => c.id === placeFilters.categoryId)?.name ??
-        null)
-      : null;
+      ? placeCategories.find((c) => c.id === placeFilters.categoryId)
+      : undefined;
+  const selectedPlaceCategoryName = selectedPlaceCategory
+    ? placeCategoryLabel(i18n.t, selectedPlaceCategory)
+    : null;
   const activeChips = isEvent
     ? describeEventFilters(
+        i18n,
         eventFilters,
         market?.defaultCurrency ?? "",
         market?.priceScale ?? 1,
       )
-    : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
+    : describePlaceFilters(i18n, placeFilters, selectedPlaceCategoryName);
 
   const header = (
     <View>

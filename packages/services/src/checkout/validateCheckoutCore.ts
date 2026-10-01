@@ -15,6 +15,7 @@ import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { ReferralHint } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // A checkout retried right as its reservation expires re-runs this whole
@@ -84,7 +85,7 @@ export async function validateCheckoutCore(
   // transports (web action + /api/mobile/checkout/validate) reach this
   // shared core, so this one guard covers them both — see
   // @abonten/core/checkoutLimits (limitation DOS-001).
-  const quantityCheck = validateCheckoutQuantities(quantities);
+  const quantityCheck = validateCheckoutQuantities(coreT(), quantities);
 
   if (!quantityCheck.ok) {
     return { status: 400, message: quantityCheck.message };

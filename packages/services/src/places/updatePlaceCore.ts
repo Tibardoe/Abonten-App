@@ -8,6 +8,7 @@ import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { coreT } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of updatePlace, lifted so the mobile
@@ -62,7 +63,11 @@ export async function updatePlaceCore(
     coverVersion,
   } = input;
 
-  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  const locationCheck = validateLocationInput(coreT(), {
+    address,
+    latitude,
+    longitude,
+  });
   if (!locationCheck.valid) {
     return { status: 400, message: locationCheck.message };
   }

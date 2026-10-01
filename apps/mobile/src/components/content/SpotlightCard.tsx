@@ -19,7 +19,7 @@ import {
 } from "@/features/content/useContentTelemetry";
 import { hapticLight } from "@/lib/haptics";
 import { useAppActive } from "@/lib/useAppActive";
-import { SPONSORED_LABEL } from "@abonten/core/content/copy";
+import { SPONSORED_LABEL_KEY } from "@abonten/core/content/copy";
 import {
   type FeedPlaybackMode,
   feedPosterUrl,
@@ -127,6 +127,7 @@ export const SpotlightCard = memo(function SpotlightCard({
   onGestureLockChange?: (locked: boolean) => void;
 }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { post, sponsored } = item;
   const campaignId = sponsored?.campaignId ?? null;
@@ -468,7 +469,7 @@ export const SpotlightCard = memo(function SpotlightCard({
           {sponsored ? (
             <View className="rounded bg-white/90 px-1.5 py-0.5">
               <AppText className="text-[11px] font-bold uppercase text-black">
-                {SPONSORED_LABEL}
+                {tc(SPONSORED_LABEL_KEY)}
               </AppText>
             </View>
           ) : (

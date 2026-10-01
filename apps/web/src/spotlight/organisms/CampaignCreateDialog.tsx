@@ -15,13 +15,13 @@ import { useToast } from "@/hooks/useToast";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   CAMPAIGN_OBJECTIVES,
-  CAMPAIGN_OBJECTIVE_LABEL,
-  PROMOTION_BILLING_NOTE,
-  PROMOTION_CASH_NOTE,
-  PROMOTION_ESTIMATE_BASIS_LABEL,
-  PROMOTION_ESTIMATE_NOTE,
-  PROMOTION_INTRO,
-  PROMOTION_REVIEW_NOTE,
+  PROMOTION_BILLING_NOTE_KEY,
+  PROMOTION_CASH_NOTE_KEY,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  PROMOTION_INTRO_KEY,
+  PROMOTION_REVIEW_NOTE_KEY,
+  campaignObjectiveLabel,
+  promotionEstimateBasisLabel,
 } from "@abonten/core/content/copy";
 import {
   budgetProblem,
@@ -75,6 +75,7 @@ export default function CampaignCreateDialog({
   onClose: () => void;
 }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
   const router = useRouter();
@@ -123,7 +124,7 @@ export default function CampaignCreateDialog({
 
   const budgetMinor = Math.round(Number(budgetCedis) * factor);
   const budgetError =
-    opts && budgetCedis !== "" ? budgetProblem(opts, budgetMinor) : null;
+    opts && budgetCedis !== "" ? budgetProblem(tc, opts, budgetMinor) : null;
   const targeting: ContentPromotionTargetingInput =
     area === "near_post" ? { area, radiusKm } : { area: "everywhere" };
   // Debounce a string, not an object: a fresh object every render would
@@ -195,7 +196,7 @@ export default function CampaignCreateDialog({
     <Dialog open onOpenChange={(open) => !open && !submitting && onClose()}>
       <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto">
         <DialogTitle>{t("promoteThisSpotlight")}</DialogTitle>
-        <DialogDescription>{PROMOTION_INTRO}</DialogDescription>
+        <DialogDescription>{tc(PROMOTION_INTRO_KEY)}</DialogDescription>
 
         {options.isLoading ? (
           <div className="flex justify-center py-6">
@@ -220,7 +221,7 @@ export default function CampaignCreateDialog({
               >
                 {objectives.map((o) => (
                   <option key={o} value={o}>
-                    {CAMPAIGN_OBJECTIVE_LABEL[o]}
+                    {campaignObjectiveLabel(tc, o)}
                   </option>
                 ))}
               </Select>
@@ -394,10 +395,10 @@ export default function CampaignCreateDialog({
                     {est.deliverable
                       ? t("aboutSponsoredImpressions", {
                           impressions: format.number(est.estimatedImpressions),
-                          item: PROMOTION_ESTIMATE_BASIS_LABEL[est.basis],
+                          item: promotionEstimateBasisLabel(tc, est.basis),
                         })
                       : est.basis === "no_data"
-                        ? PROMOTION_ESTIMATE_BASIS_LABEL.no_data
+                        ? promotionEstimateBasisLabel(tc, "no_data")
                         : t("thisAudienceIsTooSmallFor")}
                   </p>
                 </div>
@@ -416,10 +417,10 @@ export default function CampaignCreateDialog({
             </label>
 
             <div className="space-y-2 text-xs text-muted-foreground">
-              <p>{PROMOTION_ESTIMATE_NOTE}</p>
-              <p>{PROMOTION_BILLING_NOTE}</p>
-              <p>{PROMOTION_REVIEW_NOTE}</p>
-              <p>{PROMOTION_CASH_NOTE}</p>
+              <p>{tc(PROMOTION_ESTIMATE_NOTE_KEY)}</p>
+              <p>{tc(PROMOTION_BILLING_NOTE_KEY)}</p>
+              <p>{tc(PROMOTION_REVIEW_NOTE_KEY)}</p>
+              <p>{tc(PROMOTION_CASH_NOTE_KEY)}</p>
             </div>
 
             <div className="flex justify-end gap-2">

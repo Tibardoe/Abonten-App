@@ -69,6 +69,7 @@ function BalanceCard({
   const { locale } = useLocale();
 
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const welcomeMinor = summary.bySpendScope.first_order ?? 0;
   return (
@@ -160,6 +161,7 @@ function ReferralCodeCard({
   rateBps,
 }: { code: string; rateBps: number }) {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   return (
     <Card className="gap-1">
@@ -177,6 +179,7 @@ function ReferralCodeCard({
 // Invites have their own screen (code, QR, share sheet, friends list).
 function InviteCard({ invite }: { invite: ReferralInvite }) {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   return (
@@ -210,8 +213,9 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
 // the same shared wording as web (@abonten/core/rewards/earnCopy).
 function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
-  const copy = loyaltyProgressCopy(progress);
+  const copy = loyaltyProgressCopy(tc, progress);
   return (
     <Card className="gap-2">
       <View className="flex-row items-baseline justify-between">
@@ -250,12 +254,13 @@ function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
 
 function HowItWorks({ program }: { program: RewardsProgram }) {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
 
-  const earn = rewardsEarnLines(program);
+  const earn = rewardsEarnLines({ t: tc, locale }, program);
   const use: string[] = [];
-  if (program.redemption.promotions)
-    use.push("Feature your events and places.");
-  if (program.redemption.tickets) use.push("Pay for tickets at checkout.");
+  if (program.redemption.promotions) use.push(t("featureYourEventsAndPlaces"));
+  if (program.redemption.tickets) use.push(t("payForTicketsAtCheckout"));
 
   return (
     <Card className="gap-3">
@@ -291,6 +296,7 @@ function HowItWorks({ program }: { program: RewardsProgram }) {
 function ActivityRow({ item }: { item: CreditActivityItem }) {
   const { locale } = useLocale();
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const badge = STATE_BADGE[item.state];
   const detail =
@@ -299,7 +305,13 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
           date: formatDateWithSuffix(item.releaseAt, undefined, locale),
         })
       : item.state === "available" && item.expiresAt
-        ? `Expires ${formatDateWithSuffix(item.expiresAt, undefined, locale)}`
+        ? t("expires", {
+            formatDateWithSuffix: formatDateWithSuffix(
+              item.expiresAt,
+              undefined,
+              locale,
+            ),
+          })
         : null;
   // A voided/expired grant never became spendable credit, so its amount is
   // struck through rather than shown as income (same rule as web).
@@ -338,6 +350,7 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
 
 export default function Rewards() {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
 
   const program = useRewardsProgram();
   const enabled = program.data?.enabled === true;
@@ -379,7 +392,7 @@ export default function Rewards() {
         />
         <QueryUnavailable
           view={programView}
-          subject="Rewards"
+          subject={t("rewards")}
           onRetry={() => program.refetch()}
           loading={
             <View className="gap-4 p-4">
@@ -469,7 +482,7 @@ export default function Rewards() {
           ) : (
             <QueryUnavailable
               view={activityView}
-              subject="your credit activity"
+              subject={t("yourCreditActivity")}
               onRetry={() => activity.refetch()}
               loading={<Skeleton height={64} radius={12} />}
             />

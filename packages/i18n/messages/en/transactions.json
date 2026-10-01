@@ -1,6 +1,7 @@
 {
   "amount": "Amount",
   "cancelled": "Cancelled",
+  "cancelledOfQuantity": "{cancelled} of {quantity} cancelled",
   "completed": "Completed",
   "date": "Date",
   "dateTime": "Date/Time",
@@ -26,10 +27,11 @@
   "spent": "Spent",
   "subscription": "Subscription",
   "successful": "Successful",
+  "thisTransaction": "this transaction",
   "thisTransactionCouldNotBeFound": "This transaction could not be found.",
   "ticketPrice": "Ticket Price",
   "ticketPrice2": "Ticket price",
-  "ticketPurchase": "Ticket Purchase",
+  "ticketPurchase": "Ticket purchase",
   "ticketPurchase2": "Ticket purchase",
   "ticketType": "Ticket Type",
   "ticketType2": "Ticket type",
@@ -43,5 +45,6 @@
   "unitPrice": "Unit Price",
   "unitPrice2": "Unit price",
   "unknownTransactionType": "Unknown transaction type.",
-  "youHaveNoTransactionsYetPurchases": "You have no transactions yet. Purchases and promotions you pay for will show up here."
+  "youHaveNoTransactionsYetPurchases": "You have no transactions yet. Purchases and promotions you pay for will show up here.",
+  "yourTransactions": "your transactions"
 }

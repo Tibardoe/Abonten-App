@@ -1,6 +1,9 @@
 // Distance display in the unit the viewer expects. The database and every
 // service keep metres; only the last step chooses kilometres or miles.
 
+import { intlLocale } from "../i18n/coreStrings";
+import type { CoreTranslator } from "../i18n/translator";
+
 export type DistanceUnit = "km" | "mi";
 
 const METRES_PER_MILE = 1609.344;
@@ -52,12 +55,15 @@ export function formatDistance(
 
 /** The radius chips for filters, in the viewer's unit: 1..10 km or 1..6 mi. */
 export function radiusOptions(
+  t: CoreTranslator,
   unit: DistanceUnit,
+  locale?: string | null,
 ): { label: string; metres: number }[] {
   const steps =
     unit === "km" ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] : [1, 2, 3, 4, 5, 6];
+  const number = new Intl.NumberFormat(intlLocale(locale));
   return steps.map((n) => ({
-    label: `Up to ${n} ${unit}`,
+    label: t("filters.upTo", { distance: `${number.format(n)} ${unit}` }),
     metres: Math.round(unitToMetres(n, unit)),
   }));
 }

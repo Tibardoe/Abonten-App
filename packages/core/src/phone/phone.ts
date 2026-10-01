@@ -13,6 +13,7 @@ import {
   getCountryCallingCode,
   parsePhoneNumberFromString,
 } from "libphonenumber-js/max";
+import type { CoreTranslator } from "../i18n/translator";
 
 export type PhoneParseResult =
   | {
@@ -33,13 +34,13 @@ export type PhoneError =
   | "too_long"
   | "invalid";
 
-export const PHONE_ERROR_MESSAGE: Record<PhoneError, string> = {
-  empty: "Enter a phone number.",
-  invalid_country: "Select a country code.",
-  too_short: "That phone number is too short.",
-  too_long: "That phone number is too long.",
-  invalid: "Enter a valid phone number.",
-};
+/** Words live under `phone.*` of the core namespace. */
+export function phoneErrorMessage(
+  t: CoreTranslator,
+  error: PhoneError,
+): string {
+  return t(`phone.${error}`);
+}
 
 function isLibCountry(code: string | null | undefined): code is LibCountryCode {
   return !!code && (getCountries() as string[]).includes(code.toUpperCase());

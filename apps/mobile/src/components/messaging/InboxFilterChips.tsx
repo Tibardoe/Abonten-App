@@ -68,14 +68,14 @@ export function InboxFilterChips({
           key={key}
           accessibilityRole="button"
           accessibilityLabel={t("filterActive", {
-            item: CUSTOM_FILTER_LABEL[key],
+            item: t(CUSTOM_FILTER_LABEL[key]),
           })}
           accessibilityHint={t("removesThisFilter")}
           onPress={() => onRemoveCustomFilter(key)}
           className="flex-row items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 active:opacity-80"
         >
           <AppText className="text-[13px] font-semibold text-primary-foreground">
-            {CUSTOM_FILTER_LABEL[key]}
+            {t(CUSTOM_FILTER_LABEL[key])}
           </AppText>
           <Icon name="close" size={13} tone="inverse" />
         </Pressable>

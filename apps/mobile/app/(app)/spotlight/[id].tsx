@@ -63,7 +63,7 @@ export default function SpotlightPostScreen() {
       ) : unanswered ? (
         <QueryUnavailable
           view={view}
-          subject="this Spotlight"
+          subject={t("thisSpotlight")}
           onRetry={() => query.refetch()}
           onMedia
         />

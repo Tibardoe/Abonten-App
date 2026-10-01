@@ -27,7 +27,7 @@ export default function GetDirectionBtn({ location }: EventDetailsType) {
     } catch (error) {
       logger.error("Failed to get directions:", error);
 
-      alert("Could not get directions. Please enable location services.");
+      alert(t("couldNotGetDirectionsPleaseEnable"));
     }
   };
 

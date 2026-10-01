@@ -19,6 +19,10 @@ import type { Ticket } from "@abonten/types/ticketType";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+// The name the create flow stores for an event with one paid ticket type
+// (a value in ticket_type.type, never shown as words).
+const SINGLE_TICKET_TYPE = "SINGLE TICKET";
+
 type ManageEventDetailsSectionProps = {
   event: ManagedEvent;
   hasConfirmedParticipation: boolean;
@@ -46,7 +50,7 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
     };
   }
 
-  if (ticketTypes.length === 1 && ticketTypes[0].type === "SINGLE TICKET") {
+  if (ticketTypes.length === 1 && ticketTypes[0].type === SINGLE_TICKET_TYPE) {
     return {
       mode: "Single Ticket Type",
       singleTicket: ticketTypes[0].price,
@@ -88,6 +92,7 @@ export default function ManageEventDetailsSection({
   onSaved,
 }: ManageEventDetailsSectionProps) {
   const t = useTranslations("events");
+  const tc = useTranslations("core");
 
   const toast = useToast();
 
@@ -151,18 +156,18 @@ export default function ManageEventDetailsSection({
   // and the database apply (@abonten/core/ticketCapacity).
   const watchedCapacity = eventEditForm.form.watch("capacity");
   const tiersForCapacity =
-    ticketMode === "Single Ticket Type"
+    ticketMode === t("singleTicketType")
       ? [{ quantity: singleTicketQuantity }]
-      : ticketMode === "Multiple Ticket Types"
+      : ticketMode === t("multipleTicketTypes")
         ? multipleTickets.map((t) => ({ quantity: t.quantity }))
         : [];
   const capacityProblem =
     ticketMode && ticketMode !== "Free"
-      ? ticketCapacityProblem(watchedCapacity, tiersForCapacity)
+      ? ticketCapacityProblem(tc, watchedCapacity, tiersForCapacity)
       : null;
   const capacityHint =
     ticketMode && ticketMode !== "Free"
-      ? ticketCapacityHint(watchedCapacity, tiersForCapacity)
+      ? ticketCapacityHint(tc, watchedCapacity, tiersForCapacity)
       : null;
 
   const saveButtonLabel = isResolvingLocation
@@ -238,7 +243,7 @@ export default function ManageEventDetailsSection({
             handleChecked={setTicketRegistrationChecked}
           />
 
-          {ticketMode === "Single Ticket Type" && (
+          {ticketMode === t("singleTicketType") && (
             <TicketInputs
               ticketType={ticketMode}
               singleTicketPrice={singleTicket}
@@ -248,7 +253,7 @@ export default function ManageEventDetailsSection({
             />
           )}
 
-          {ticketMode === "Multiple Ticket Types" && (
+          {ticketMode === t("multipleTicketTypes") && (
             <TicketInputs
               ticketType={ticketMode}
               multipleTickets={multipleTickets}

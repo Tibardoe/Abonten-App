@@ -3,10 +3,11 @@ import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   WEEKLY_PRODUCT_NAME,
-  WEEKLY_TAGLINE,
+  WEEKLY_TAGLINE_KEY,
   weeklyEditionPath,
 } from "@abonten/core/weekly/copy";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import WeeklyEditionView from "./WeeklyEditionView";
 import WeeklyFallback from "./WeeklyFallback";
@@ -47,12 +48,13 @@ export async function weeklyMetadata(
 ): Promise<Metadata> {
   const result = await getPublicWeeklyEdition(scope, week);
   const doc = result.data?.edition;
+  const tc = await getTranslations("core");
 
   if (!doc) {
     // Nothing public to describe: never index an empty or staff-only page.
     return {
       title: WEEKLY_PRODUCT_NAME,
-      description: WEEKLY_TAGLINE,
+      description: tc(WEEKLY_TAGLINE_KEY),
       robots: { index: false, follow: true },
     };
   }
@@ -63,7 +65,10 @@ export async function weeklyMetadata(
   // the social cards are not templated, so they carry the brand themselves.
   const title = `${e.title} · ${WEEKLY_PRODUCT_NAME} ${e.scopeName}`;
   const socialTitle = `${title} | Abonten Hub`;
-  const description = (e.subtitle ?? e.intro ?? WEEKLY_TAGLINE).slice(0, 155);
+  const description = (e.subtitle ?? e.intro ?? tc(WEEKLY_TAGLINE_KEY)).slice(
+    0,
+    155,
+  );
   const firstImage = doc.sections
     .flatMap((s) => s.items)
     .map((i) =>

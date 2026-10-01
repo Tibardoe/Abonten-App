@@ -1,7 +1,4 @@
-import {
-  BADGE_EXPLANATION,
-  BADGE_LABEL,
-} from "@abonten/core/verification/copy";
+import { badgeExplanation, badgeLabel } from "@abonten/core/verification/copy";
 import type { VerificationSubjectType } from "@abonten/types/verificationType";
 import { AppText, Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -22,19 +19,22 @@ export function VerifiedPill({
   variant?: "overlay" | "inline";
 }) {
   const t = useTranslations("verification");
+  const tc = useTranslations("core");
 
   const overlay = variant === "overlay";
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={t("whatThisMeans", {
-        item: BADGE_LABEL[subjectType],
+        item: badgeLabel(tc, subjectType),
       })}
       hitSlop={6}
       onPress={() =>
-        Alert.alert(BADGE_LABEL[subjectType], BADGE_EXPLANATION[subjectType], [
-          { text: t("gotIt") },
-        ])
+        Alert.alert(
+          badgeLabel(tc, subjectType),
+          badgeExplanation(tc, subjectType),
+          [{ text: t("gotIt") }],
+        )
       }
       className={
         overlay

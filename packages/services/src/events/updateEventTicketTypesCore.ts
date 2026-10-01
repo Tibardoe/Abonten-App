@@ -1,8 +1,12 @@
 import { logger } from "@abonten/core/logger";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
-import { paidTierProblem } from "@abonten/core/ticketTiers";
+import {
+  paidTierProblem,
+  ticketTierProblemMessage,
+} from "@abonten/core/ticketTiers";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT } from "../i18n/requestLocale";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
 // Post-auth body of updateEventTicketTypes, lifted so the
@@ -84,7 +88,12 @@ export async function updateEventTicketTypesCore(
       ...multipleTickets,
     ]) {
       const problem = paidTierProblem(tier);
-      if (problem) return { status: 400, message: problem };
+      if (problem) {
+        return {
+          status: 400,
+          message: ticketTierProblemMessage(coreT(), problem),
+        };
+      }
     }
   }
 
@@ -129,7 +138,7 @@ export async function updateEventTicketTypesCore(
   // types without one share what is left (@abonten/core/ticketCapacity).
   // The database re-checks this on insert, this is the friendly copy.
   if (!freeEvent) {
-    const capacityProblem = ticketCapacityProblem(event.capacity, [
+    const capacityProblem = ticketCapacityProblem(coreT(), event.capacity, [
       ...(singleTicket ? [singleTicket] : []),
       ...multipleTickets,
     ]);

@@ -4,8 +4,8 @@ import { cn } from "@/components/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   FEED_SURFACES,
-  FEED_SURFACE_LABEL,
-  SPOTLIGHT_TAGLINE,
+  SPOTLIGHT_TAGLINE_KEY,
+  feedSurfaceLabel,
 } from "@abonten/core/content/copy";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import type {
@@ -128,6 +128,7 @@ function useSilentCoords(wanted: boolean) {
 
 export default function SpotlightFeed() {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const { program, ready } = useContentProgram();
   const { data: user } = useCurrentUser();
@@ -325,7 +326,7 @@ export default function SpotlightFeed() {
         <div>
           <h1 className="text-xl font-bold">{t("spotlight")}</h1>
           <p className="hidden text-xs text-muted-foreground sm:block">
-            {SPOTLIGHT_TAGLINE}
+            {tc(SPOTLIGHT_TAGLINE_KEY)}
           </p>
         </div>
         {program.canPublish && program.spotlightPosting ? (
@@ -358,7 +359,7 @@ export default function SpotlightFeed() {
                 : "border-border bg-muted text-muted-foreground hover:bg-accent",
             )}
           >
-            {FEED_SURFACE_LABEL[s]}
+            {feedSurfaceLabel(tc, s)}
           </button>
         ))}
       </div>

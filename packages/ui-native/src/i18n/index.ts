@@ -1,6 +1,9 @@
 export {
   DEFAULT_LOCALE,
   I18nProvider,
+  getCurrentLocale,
+  onLocaleChosen,
+  translatorFor,
   useFormatter,
   useLocale,
   useTranslations,

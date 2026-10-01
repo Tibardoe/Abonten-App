@@ -15,6 +15,7 @@ import {
   useUnifiedSuggestions,
 } from "@/features/search/useUnifiedSearch";
 import { useQueryView } from "@/lib/useQueryView";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   chunkRows,
@@ -146,6 +147,7 @@ function SuggestionRow({
   onRemove?: () => void;
 }) {
   const t = useTranslations("search");
+  const tc = useTranslations("core");
 
   return (
     <Pressable
@@ -229,6 +231,7 @@ export function UnifiedSearch() {
   const { locale } = useLocale();
 
   const t = useTranslations("search");
+  const tc = useTranslations("core");
 
   const listPadding = useTabBarListPadding();
   const insets = useSafeAreaInsets();
@@ -326,6 +329,7 @@ export function UnifiedSearch() {
   const filterChips = useMemo(
     () =>
       describeSearchFilters(
+        { t: tc, locale },
         filters,
         effectiveMode,
         hasRealLocation ? area?.label : null,
@@ -339,6 +343,8 @@ export function UnifiedSearch() {
       area?.label,
       marketCurrency,
       market?.priceScale,
+      locale,
+      tc,
     ],
   );
   const activeFilterCount = activeSearchFilters(
@@ -545,11 +551,15 @@ export function UnifiedSearch() {
   const categoryMatches = useMemo(
     () =>
       typing && !organizerQuery
-        ? ALL_CATEGORY_NAMES.filter((n) =>
-            n.toLowerCase().includes(parsed.normalized),
+        ? ALL_CATEGORY_NAMES.filter(
+            (n) =>
+              n.toLowerCase().includes(parsed.normalized) ||
+              eventCategoryLabel(tc, n)
+                .toLowerCase()
+                .includes(parsed.normalized),
           ).slice(0, 4)
         : [],
-    [typing, organizerQuery, parsed.normalized],
+    [typing, organizerQuery, parsed.normalized, tc],
   );
 
   const renderRow = ({ item }: { item: Row }) => {
@@ -673,7 +683,11 @@ export function UnifiedSearch() {
         />
         <View className="flex-row flex-wrap justify-center gap-2 px-1">
           {BROWSE_CATEGORIES.slice(0, 6).map((name) => (
-            <Chip key={name} label={name} onPress={() => runSearch(name)} />
+            <Chip
+              key={name}
+              label={eventCategoryLabel(tc, name)}
+              onPress={() => runSearch(name)}
+            />
           ))}
         </View>
       </View>
@@ -1004,7 +1018,11 @@ export function UnifiedSearch() {
           <SectionHeader label={t("browseCategories")} />
           <View className="flex-row flex-wrap gap-2 px-1 pt-1">
             {BROWSE_CATEGORIES.map((name) => (
-              <Chip key={name} label={name} onPress={() => runSearch(name)} />
+              <Chip
+                key={name}
+                label={eventCategoryLabel(tc, name)}
+                onPress={() => runSearch(name)}
+              />
             ))}
           </View>
           {program.organizerSearch ? (

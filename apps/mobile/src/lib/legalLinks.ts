@@ -23,11 +23,12 @@ export const LEGAL_URLS = {
 
 export const HELP_URL = `${PUBLIC_SITE_ORIGIN}${HELP_PATH}`;
 
+/** `label` is a key in the `common` namespace; the drawer translates it. */
 export const LEGAL_LINK_ROWS: { label: string; url: string }[] = [
-  { label: "Terms & Conditions", url: LEGAL_URLS.terms },
-  { label: "Privacy", url: LEGAL_URLS.privacy },
-  { label: "Cookies", url: LEGAL_URLS.cookies },
-  { label: "Security", url: LEGAL_URLS.security },
+  { label: "termsConditions", url: LEGAL_URLS.terms },
+  { label: "privacy", url: LEGAL_URLS.privacy },
+  { label: "cookies", url: LEGAL_URLS.cookies },
+  { label: "security", url: LEGAL_URLS.security },
 ];
 
 export async function openExternalLink(url: string): Promise<void> {

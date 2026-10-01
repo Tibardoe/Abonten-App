@@ -42,6 +42,7 @@ export default function OrganizerManagedEventsList({
   const locale = useLocale();
 
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   return (
     <InfiniteList<UserPostType>
@@ -59,6 +60,7 @@ export default function OrganizerManagedEventsList({
           locale,
         );
         const overlayStatus = getEventStatusOverlay(
+          tc,
           event.starts_at,
           event.ends_at,
           event.occurrences,

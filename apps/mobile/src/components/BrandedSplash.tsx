@@ -1,4 +1,5 @@
 import { BRAND_MARK, BrandArtworkPaths, brandColors } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Svg from "react-native-svg";
 
@@ -26,8 +27,10 @@ const SPLASH_BG = brandColors.night;
 const SPLASH_MARK_WIDTH = 192;
 
 export function BrandedSplash() {
+  const t = useTranslations("common");
+
   return (
-    <View style={styles.root} accessibilityLabel="Abonten" accessible>
+    <View style={styles.root} accessibilityLabel={t("abonten")} accessible>
       <View style={styles.mark}>
         <Svg
           width={SPLASH_MARK_WIDTH}

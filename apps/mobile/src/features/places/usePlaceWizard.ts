@@ -16,12 +16,14 @@ import type {
   SavePlaceDraftResult,
 } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { dayName } from "@abonten/core/dateFormatter";
 import { getPlaceSchema } from "@abonten/validation/placeSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 
 // All state, validation and submit logic for the native place-creation
 // wizard — the mobile echo of the web usePlaceUploadForm hook, so the
@@ -33,15 +35,10 @@ import { useToast } from "@abonten/ui-native";
 const isRemote = (uri: string | null): boolean =>
   !!uri && /^https?:/i.test(uri);
 
-export const DAY_LABELS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+/** Day names (0 = Sunday) in the reader's language. */
+export function dayLabel(dayOfWeek: number, locale?: string | null): string {
+  return dayName(dayOfWeek, "long", locale);
+}
 
 // A place starts open every day 09:00–17:00 — a sensible default the owner
 // edits on the Hours step, mirroring the web DEFAULT_OPENING_HOURS.
@@ -56,13 +53,13 @@ const DEFAULT_OPENING_HOURS: PlaceOpeningHoursInput[] = Array.from(
 );
 
 const PLACE_MESSAGES = {
-  nameRequired: "Give your place a name.",
-  nameTooLong: "That name is too long (max 150 characters).",
-  descriptionRequired: "Add a short description.",
-  descriptionTooLong: "That description is too long (max 2000 characters).",
-  invalidUrl: "Enter a valid website URL.",
-  invalidPhone: "Enter a valid phone number.",
-  invalidWhatsapp: "Enter a valid WhatsApp number.",
+  nameRequired: "giveYourPlaceAName",
+  nameTooLong: "thatNameIsTooLongMax",
+  descriptionRequired: "addAShortDescription",
+  descriptionTooLong: "thatDescriptionIsTooLongMax",
+  invalidUrl: "enterAValidWebsiteUrl",
+  invalidPhone: "enterAValidPhoneNumber",
+  invalidWhatsapp: "enterAValidWhatsappNumber",
 };
 
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -75,6 +72,8 @@ export type PlaceWizardTextErrors = Partial<
 >;
 
 export function usePlaceWizard(resumeDraftId?: string) {
+  const t = useTranslations("places");
+
   const toast = useToast();
   const categoriesQuery = usePlaceCategories();
   const autocomplete = usePlacesAutocomplete();
@@ -87,7 +86,15 @@ export function usePlaceWizard(resumeDraftId?: string) {
   const draftQuery = usePlaceDraft(resumeDraftId);
 
   const clientRequestId = useRef(uuidv4()).current;
-  const placeSchema = useMemo(() => getPlaceSchema(PLACE_MESSAGES), []);
+  const placeSchema = useMemo(
+    () =>
+      getPlaceSchema(
+        Object.fromEntries(
+          Object.entries(PLACE_MESSAGES).map(([name, key]) => [name, t(key)]),
+        ) as typeof PLACE_MESSAGES,
+      ),
+    [t],
+  );
 
   // Draft tracking: `currentDraftId` becomes set after the first save (or is
   // seeded when resuming); `draftUpdatedAt` feeds the concurrency check;
@@ -181,8 +188,8 @@ export function usePlaceWizard(resumeDraftId?: string) {
     const resolved = await autocomplete.resolvePlace(placeId);
     setResolvingLocation(false);
     if (!resolved) {
-      toast.error("Couldn't use that location", {
-        description: "Please try another suggestion or type the address.",
+      toast.error(t("couldnTUseThatLocation"), {
+        description: t("pleaseTryAnotherSuggestionOrType"),
       });
       return;
     }
@@ -194,8 +201,8 @@ export function usePlaceWizard(resumeDraftId?: string) {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) {
-        toast.error("Location access needed", {
-          description: "Allow location access to use your current position.",
+        toast.error(t("locationAccessNeeded"), {
+          description: t("allowLocationAccessToUseYour"),
         });
         return;
       }
@@ -211,8 +218,8 @@ export function usePlaceWizard(resumeDraftId?: string) {
         : `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
       applyLocation(pos.coords.latitude, pos.coords.longitude, label);
     } catch {
-      toast.error("Couldn't get your location", {
-        description: "Please try again or type the address.",
+      toast.error(t("couldnTGetYourLocation"), {
+        description: t("pleaseTryAgainOrTypeThe"),
       });
     } finally {
       setResolvingLocation(false);
@@ -233,8 +240,8 @@ export function usePlaceWizard(resumeDraftId?: string) {
   } | null> {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to pick a cover photo.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToPickA"),
       });
       return null;
     }
@@ -262,8 +269,8 @@ export function usePlaceWizard(resumeDraftId?: string) {
   async function pickGalleryPhotos() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to add gallery photos.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToAddGallery"),
       });
       return;
     }
@@ -328,15 +335,14 @@ export function usePlaceWizard(resumeDraftId?: string) {
   function validateBasics(): boolean {
     if (!validateText()) return false;
     if (categoryId === null) {
-      toast.error("Pick a category", {
-        description: "Choose the category that fits best.",
+      toast.error(t("pickACategory"), {
+        description: t("chooseTheCategoryThatFitsBest"),
       });
       return false;
     }
     if (!address || !coords) {
-      toast.error("Add a location", {
-        description:
-          "Pick a suggestion, choose on the map, or use your current location so people can find this place.",
+      toast.error(t("addALocation"), {
+        description: t("pickASuggestionChooseOnThe"),
       });
       return false;
     }
@@ -434,26 +440,26 @@ export function usePlaceWizard(resumeDraftId?: string) {
     // make Publish silently do nothing. Each gap now names itself and offers
     // a jump to the step that owns it.
     if (!coverUri) {
-      toast.error("Your place needs a cover photo.", {
-        description: "Add one on the first step.",
-        action: { label: "Go there", onPress: () => setStep(0) },
+      toast.error(t("yourPlaceNeedsACoverPhoto"), {
+        description: t("addOneOnTheFirstStep"),
+        action: { label: t("goThere"), onPress: () => setStep(0) },
       });
       return null;
     }
     if (categoryId === null || !coords) {
       toast.error(
-        categoryId === null ? "Pick a category." : "Confirm the location.",
+        categoryId === null ? t("pickACategory2") : t("confirmTheLocation"),
         {
-          description: "Both are on the Basic info step.",
-          action: { label: "Go there", onPress: () => setStep(2) },
+          description: t("bothAreOnTheBasicInfo"),
+          action: { label: t("goThere"), onPress: () => setStep(2) },
         },
       );
       return null;
     }
     if (!hoursComplete) {
-      toast.error("Every open day needs an open and close time.", {
-        description: "Use HH:MM, or mark the day closed.",
-        action: { label: "Go there", onPress: () => setStep(3) },
+      toast.error(t("everyOpenDayNeedsAnOpen"), {
+        description: t("useHhMmOrMarkThe"),
+        action: { label: t("goThere"), onPress: () => setStep(3) },
       });
       return null;
     }

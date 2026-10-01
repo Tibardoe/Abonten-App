@@ -124,7 +124,7 @@ export default function WithdrawScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={blocked}
-          subject="your balance and payout accounts"
+          subject={t("yourBalanceAndPayoutAccounts")}
           onRetry={() => {
             finance.refetch();
             accountsQ.refetch();

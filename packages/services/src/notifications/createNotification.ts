@@ -1,10 +1,45 @@
 import { logger } from "@abonten/core/logger";
 import { notificationCategory } from "@abonten/core/notifications/categories";
+import type { I18nLocale, ServerTranslator } from "@abonten/i18n/server";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { Database } from "@abonten/types/database.types";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreTFor, trFor } from "../i18n/requestLocale";
+import { userLocale } from "../i18n/userLocale";
 import { sendPushToUser } from "./sendPushNotification";
+
+/** What a notice's wording is written with: the RECIPIENT's language. */
+export type NotificationWords = {
+  locale: I18nLocale;
+  /** The `server` namespace (notifications.* live there). */
+  t: ServerTranslator;
+  /** The `core` namespace, for @abonten/core's copy helpers. */
+  core: ServerTranslator;
+};
+
+export type NotificationText = { title: string; body?: string | null };
+
+/**
+ * A notice whose words are produced for the person who receives it. Every
+ * notice the product writes itself uses this; the plain `title`/`body` form
+ * of CreateNotificationInput is only for text a person typed (an admin
+ * broadcast, a message preview).
+ */
+export type LocalizedNotificationInput = Omit<
+  CreateNotificationInput,
+  "title" | "body"
+> & {
+  text: (words: NotificationWords) => NotificationText;
+};
+
+/** The translators for one recipient (one lookup of their language). */
+export async function notificationWordsFor(
+  userId: string,
+): Promise<NotificationWords> {
+  const locale = await userLocale(userId);
+  return { locale, t: trFor(locale), core: coreTFor(locale) };
+}
 
 /**
  * Writes one notification row for `input.userId` and fires a best-effort
@@ -23,8 +58,17 @@ import { sendPushToUser } from "./sendPushNotification";
  */
 export async function createNotificationCore(
   supabase: SupabaseClient<Database>,
-  input: CreateNotificationInput,
+  request: CreateNotificationInput | LocalizedNotificationInput,
 ): Promise<{ status: number; message?: string }> {
+  let input: CreateNotificationInput;
+  if ("text" in request) {
+    const { text, ...rest } = request;
+    const words = text(await notificationWordsFor(request.userId));
+    input = { ...rest, title: words.title, body: words.body ?? null };
+  } else {
+    input = request;
+  }
+
   let db: SupabaseClient<Database>;
   try {
     db = getSupabaseServiceClient();

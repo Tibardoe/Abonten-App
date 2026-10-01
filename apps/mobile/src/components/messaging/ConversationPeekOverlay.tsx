@@ -3,7 +3,11 @@ import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -68,7 +72,7 @@ function identityFor(item: ConversationListItem): string {
     item.other_display_name ||
     item.subject_title ||
     item.title ||
-    "Conversation"
+    translatorFor("messaging")("conversation")
   );
 }
 

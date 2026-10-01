@@ -38,7 +38,7 @@ export default function FinancesMobileTabs() {
                 : "border-border text-muted-foreground hover:text-foreground",
             )}
           >
-            {item.label}
+            {t(item.label)}
           </Link>
         );
       })}

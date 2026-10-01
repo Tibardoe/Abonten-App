@@ -1,9 +1,9 @@
 "use client";
 
 import { TimeInput } from "@/components/atoms/TimeInput";
-import { DISPLAY_DAYS } from "@abonten/core/dayOfWeek";
+import { displayDays } from "@abonten/core/dayOfWeek";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type PlaceOpeningHoursEditorProps = {
   openingHours: PlaceOpeningHoursInput[];
@@ -20,6 +20,7 @@ export default function PlaceOpeningHoursEditor({
   onChange,
 }: PlaceOpeningHoursEditorProps) {
   const t = useTranslations("places");
+  const locale = useLocale();
 
   const updateDay = (
     dayOfWeek: number,
@@ -61,7 +62,7 @@ export default function PlaceOpeningHoursEditor({
       </button>
 
       <div className="space-y-2">
-        {DISPLAY_DAYS.map(({ dayOfWeek, label }) => {
+        {displayDays(locale).map(({ dayOfWeek, label }) => {
           const hour = openingHours.find((h) => h.dayOfWeek === dayOfWeek);
           if (!hour) return null;
 

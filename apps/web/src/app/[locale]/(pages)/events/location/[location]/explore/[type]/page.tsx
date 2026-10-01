@@ -28,13 +28,14 @@ const validFilters = [
 
 type FilterType = (typeof validFilters)[number];
 
-const FILTER_TITLES: Record<FilterType, (place: string) => string> = {
-  "happening-today": (place) => `Events happening today in ${place}`,
-  "happening-this-week": (place) => `Events this week in ${place}`,
-  "happening-this-month": (place) => `Events this month in ${place}`,
-  "top-rated-organizers": (place) => `Top-rated organizers in ${place}`,
-  "around-you": (place) => `Events near you in ${place}`,
-  category: (place) => `Events by category in ${place}`,
+// Keys in the `events` namespace; each takes the place name.
+const FILTER_TITLE_KEYS: Record<FilterType, string> = {
+  "happening-today": "eventsHappeningTodayIn",
+  "happening-this-week": "eventsThisWeekIn",
+  "happening-this-month": "eventsThisMonthIn",
+  "top-rated-organizers": "topRatedOrganizersIn",
+  "around-you": "eventsNearYouIn",
+  category: "eventsByCategoryIn",
 };
 
 export async function generateMetadata({
@@ -51,7 +52,7 @@ export async function generateMetadata({
     : null;
   if (!filter) return { title: t("eventsIn", { label: label }) };
   return {
-    title: FILTER_TITLES[filter](label),
+    title: t(FILTER_TITLE_KEYS[filter], { place: label }),
     alternates: {
       canonical: `/events/location/${location}/explore/${filter}`,
     },

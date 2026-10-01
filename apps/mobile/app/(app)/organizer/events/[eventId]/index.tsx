@@ -104,7 +104,7 @@ function OverviewCards({
       tiles.push({
         label: t("remaining"),
         value: String(n(overview.capacity_remaining)),
-        sublabel: `of ${overview.capacity} capacity`,
+        sublabel: t("ofCapacity", { capacity: overview.capacity }),
       });
     }
     if (grossSales > 0) {
@@ -132,7 +132,7 @@ function OverviewCards({
       tiles.push({
         label: t("remaining"),
         value: String(n(overview.capacity_remaining)),
-        sublabel: `of ${overview.capacity} capacity`,
+        sublabel: t("ofCapacity", { capacity: overview.capacity }),
       });
     }
   }
@@ -554,7 +554,7 @@ export default function EventInsightsScreen() {
       {!definiteFailure && view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="this event's insights"
+          subject={t("thisEventSInsights")}
           onRetry={() => q.refetch()}
           loading={
             <View className="items-center py-12">

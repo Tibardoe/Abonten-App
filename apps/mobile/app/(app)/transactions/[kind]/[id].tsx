@@ -60,6 +60,7 @@ function dt(value: string, locale: string) {
 
 export default function TransactionDetailScreen() {
   const t = useTranslations("transactions");
+  const tc = useTranslations("core");
   const { locale } = useLocale();
 
   const { kind, id } = useLocalSearchParams<{ kind: string; id: string }>();
@@ -80,7 +81,7 @@ export default function TransactionDetailScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={view}
-          subject="this transaction"
+          subject={t("thisTransaction")}
           onRetry={() => refetch()}
         />
       </View>
@@ -120,6 +121,7 @@ export default function TransactionDetailScreen() {
   const refund =
     cancelled.length > 0 && cancelled[0].transaction
       ? getRefundStatusLabel(
+          tc,
           cancelled[0].transaction.status,
           cancelled[0].transaction.refund_requested_at,
         )

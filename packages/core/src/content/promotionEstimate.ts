@@ -3,6 +3,7 @@ import type {
   ContentPromotionEstimate,
   ContentPromotionPricing,
 } from "@abonten/types/contentType";
+import type { CoreTranslator } from "../i18n/translator";
 import { formatMoney } from "../money/formatMoney";
 
 // The reach estimate for a promoted Spotlight. Pure and deterministic so the
@@ -43,6 +44,7 @@ export function roundReach(n: number, direction: "down" | "up"): number {
 
 /** Null when the budget is acceptable, otherwise the reason. */
 export function budgetProblem(
+  t: CoreTranslator,
   pricing: Pick<
     ContentPromotionPricing,
     "minBudgetMinor" | "maxBudgetMinor" | "budgetStepMinor" | "currency"
@@ -50,27 +52,34 @@ export function budgetProblem(
   budgetMinor: number,
 ): string | null {
   if (!Number.isInteger(budgetMinor) || budgetMinor <= 0) {
-    return "Choose a budget.";
+    return t("promotionBudget.choose");
   }
   if (budgetMinor < pricing.minBudgetMinor) {
-    return `The smallest budget is ${amount(pricing.minBudgetMinor, pricing.currency)}.`;
+    return t("promotionBudget.smallest", {
+      amount: amount(pricing.minBudgetMinor, pricing.currency),
+    });
   }
   if (budgetMinor > pricing.maxBudgetMinor) {
-    return `The largest budget is ${amount(pricing.maxBudgetMinor, pricing.currency)}.`;
+    return t("promotionBudget.largest", {
+      amount: amount(pricing.maxBudgetMinor, pricing.currency),
+    });
   }
   if (budgetMinor % pricing.budgetStepMinor !== 0) {
-    return `Budgets go up in steps of ${amount(pricing.budgetStepMinor, pricing.currency)}.`;
+    return t("promotionBudget.step", {
+      amount: amount(pricing.budgetStepMinor, pricing.currency),
+    });
   }
   return null;
 }
 
 export function durationProblem(
+  t: CoreTranslator,
   pricing: Pick<ContentPromotionPricing, "durationOptionsDays">,
   durationDays: number,
 ): string | null {
   return pricing.durationOptionsDays.includes(durationDays)
     ? null
-    : "Choose how long the promotion can run.";
+    : t("promotionBudget.chooseDuration");
 }
 
 /**

@@ -34,6 +34,7 @@ export default function PlaceDraftCard({
   const locale = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -54,7 +55,7 @@ export default function PlaceDraftCard({
     deletePlaceDraft(draft.id).then((response) => {
       if (response.status !== 200) {
         onRestoreDraft(draft);
-        onDeleteError(response.message ?? "Couldn't delete this draft.");
+        onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
       }
     });
   };
@@ -86,7 +87,7 @@ export default function PlaceDraftCard({
           })}
         </p>
         <p className="text-xs text-muted-foreground">
-          {formatExpiresIn(draft.expiresAt)}
+          {formatExpiresIn(tc, draft.expiresAt)}
         </p>
       </div>
 

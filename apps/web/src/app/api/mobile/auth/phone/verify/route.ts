@@ -2,6 +2,8 @@ import ensureProfileCompletionNotification from "@/actions/ensureProfileCompleti
 import { createAnonClient } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import { localeOfRequest } from "@abonten/services/i18n/requestLocale";
+import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import {
   issueOneTimePassword,
   verifyPhoneOtpAndResolveUser,
@@ -63,6 +65,12 @@ export async function POST(req: Request) {
         message: "Something went wrong signing you in.",
       });
     }
+
+    // The language the app was showing, before anything is written for
+    // them (the app keeps it in sync afterwards: useLocaleSync).
+    await saveUserLocale(resolved.userId, localeOfRequest(req), {
+      onlyIfUnset: true,
+    });
 
     if (resolved.isNewUser) {
       await ensureProfileCompletionNotification(resolved.userId);

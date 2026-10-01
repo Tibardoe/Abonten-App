@@ -42,7 +42,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
-const STEPS = ["Business", "Owner", "Details", "Photos", "Submit"] as const;
+const STEPS = ["business", "owner", "details", "photos", "submit"] as const;
 
 type Position = { lat: number; lng: number; accuracyM: number };
 
@@ -460,7 +460,7 @@ export default function OnboardingWizard({
                   : "bg-muted text-muted-foreground"
             }`}
           >
-            {label}
+            {t(label)}
           </li>
         ))}
       </ol>

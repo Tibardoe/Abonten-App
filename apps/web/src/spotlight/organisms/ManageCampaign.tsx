@@ -7,10 +7,11 @@ import { useToast } from "@/hooks/useToast";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachine";
 import {
-  CAMPAIGN_OBJECTIVE_LABEL,
-  CAMPAIGN_STATUS_LABEL,
-  PROMOTION_END_REASON_LABEL,
-  PROMOTION_ESTIMATE_NOTE,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  campaignObjectiveLabel,
+  campaignStatusLabel,
+  isCampaignStatus,
+  promotionEndReasonLabel,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -27,6 +28,7 @@ function when(iso: string | null): string {
 
 export default function ManageCampaign({ campaignId }: { campaignId: string }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
   const toast = useToast();
@@ -92,35 +94,35 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
   const n = (v: number | undefined) => format.number(v ?? 0);
   const unused = Math.max(0, c.paidMinor - c.spentMinor - c.refundedMinor);
   const budget: [string, string][] = [
-    ["Budget", formatMinor(c.budgetMinor, c.currency)],
-    ["Used so far", formatMinor(c.spentMinor, c.currency)],
-    ["Unused", formatMinor(unused, c.currency)],
-    ["Refunded", formatMinor(c.refundedMinor, c.currency)],
-    ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
-    ["Runs for up to", `${c.durationDays} days`],
-    ["Starts", when(c.startsAt)],
-    ["Ends by", when(c.endsAt)],
+    [t("budget"), formatMinor(c.budgetMinor, c.currency)],
+    [t("usedSoFar"), formatMinor(c.spentMinor, c.currency)],
+    [t("unused"), formatMinor(unused, c.currency)],
+    [t("refunded"), formatMinor(c.refundedMinor, c.currency)],
+    [t("goal"), campaignObjectiveLabel(tc, c.objective)],
+    [t("runsForUpTo"), `${c.durationDays} days`],
+    [t("starts"), when(c.startsAt)],
+    [t("endsBy"), when(c.endsAt)],
   ];
   // Reach is people; impressions are times shown. Kept apart on purpose.
   const delivery: [string, string][] = [
     [
-      "Estimated reach",
+      t("estimatedReach"),
       formatReachRange({
         reachLow: c.estimatedReachLow,
         reachHigh: c.estimatedReachHigh,
       }),
     ],
-    ["People reached", n(m?.reach ?? c.reach)],
+    [t("peopleReached"), n(m?.reach ?? c.reach)],
     [
-      "Sponsored impressions",
+      t("sponsoredImpressions"),
       `${n(m?.impressions ?? c.impressions)} of ${n(c.impressionGoal)}`,
     ],
-    ["Meaningful views", n(m?.meaningfulViews ?? c.views)],
-    ["Completed views", n(m?.completions ?? c.completions)],
-    ["Profile visits", n(m?.clicks.profile)],
-    ["Event taps", n(m?.clicks.event)],
-    ["Place taps", n(m?.clicks.place)],
-    ["New followers", n(m?.follows)],
+    [t("meaningfulViews"), n(m?.meaningfulViews ?? c.views)],
+    [t("completedViews"), n(m?.completions ?? c.completions)],
+    [t("profileVisits"), n(m?.clicks.profile)],
+    [t("eventTaps"), n(m?.clicks.event)],
+    [t("placeTaps"), n(m?.clicks.place)],
+    [t("newFollowers"), n(m?.follows)],
     [
       "Tickets / reservations",
       `${n(m?.conversions.ticketPurchases)} / ${n(m?.conversions.reservations)}`,
@@ -176,7 +178,7 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
 
       {c.status === "completed" && c.endReason ? (
         <p className="rounded-md border p-3 text-sm text-muted-foreground">
-          {PROMOTION_END_REASON_LABEL[c.endReason]}.
+          {promotionEndReasonLabel(tc, c.endReason)}.
           {unused > 0
             ? ` ${t("ofTheBudgetWasnTUsed", {
                 amount: formatMinor(unused, c.currency),
@@ -201,7 +203,9 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
           </dl>
         </section>
       ))}
-      <p className="text-xs text-muted-foreground">{PROMOTION_ESTIMATE_NOTE}</p>
+      <p className="text-xs text-muted-foreground">
+        {tc(PROMOTION_ESTIMATE_NOTE_KEY)}
+      </p>
 
       <div className="flex flex-wrap gap-2">
         {canPause ? (
@@ -242,9 +246,9 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
           {events.map((e) => (
             <li key={e.id} className="text-sm">
               <span className="font-medium">
-                {CAMPAIGN_STATUS_LABEL[
-                  e.toStatus as keyof typeof CAMPAIGN_STATUS_LABEL
-                ] ?? e.toStatus}
+                {isCampaignStatus(e.toStatus)
+                  ? campaignStatusLabel(tc, e.toStatus)
+                  : e.toStatus}
               </span>
               <span className="text-muted-foreground">
                 {" "}

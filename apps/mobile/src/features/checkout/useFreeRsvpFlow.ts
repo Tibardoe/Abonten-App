@@ -5,6 +5,7 @@ import { setPendingRedirect } from "@/lib/authRedirect";
 import { useNowTick } from "@/lib/useNowTick";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 
@@ -15,6 +16,8 @@ import { useState } from "react";
 // while it may still be loading, because the screen calls it before its
 // loading/offline early returns (a hook can't sit after them).
 export function useFreeRsvpFlow(event: EventDetail | undefined) {
+  const t = useTranslations("checkout");
+
   const toast = useToast();
   const router = useRouter();
   const pathname = usePathname();
@@ -64,13 +67,13 @@ export function useFreeRsvpFlow(event: EventDetail | undefined) {
     }
     if (res.status === 300) {
       setDone(true);
-      toast.success("You're in", {
-        description: "You already have a ticket for this event.",
+      toast.success(t("youReIn"), {
+        description: t("youAlreadyHaveATicketFor"),
       });
       return;
     }
-    toast.error("Couldn't RSVP", {
-      description: res.message ?? "Please try again in a moment.",
+    toast.error(t("couldnTRsvp"), {
+      description: res.message ?? t("pleaseTryAgainInAMoment"),
     });
   }
 

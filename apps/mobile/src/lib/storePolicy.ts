@@ -16,5 +16,4 @@ import { Platform } from "react-native";
 export const IN_APP_PROMOTION_PURCHASES = Platform.OS !== "ios";
 
 /** Shown where the payment step would be on iOS. No link, no "buy it on…". */
-export const PROMOTION_PURCHASE_UNAVAILABLE =
-  "Buying promotions isn't available in the iPhone app.";
+export const PROMOTION_PURCHASE_UNAVAILABLE = "buyingPromotionsIsnTAvailableIn";

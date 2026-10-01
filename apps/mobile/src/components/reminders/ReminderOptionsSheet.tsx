@@ -70,7 +70,7 @@ export function ReminderOptionsSheet({
                 tone={checked ? "primary" : "muted"}
               />
               <AppText variant="body" className="flex-1">
-                {o.label}
+                {t(o.label)}
               </AppText>
             </Pressable>
           );

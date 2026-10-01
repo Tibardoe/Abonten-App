@@ -7,8 +7,8 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import { formatMoney } from "@abonten/core/formatMoney";
 import {
-  TRANSACTION_PERIOD_LABELS,
   type TransactionPeriod,
+  transactionPeriodLabel,
 } from "@abonten/core/transactionsDateRange";
 import type { UserTransactionRow } from "@abonten/types/transactions";
 import {
@@ -61,6 +61,7 @@ function TransactionRow({
   onPress: () => void;
 }) {
   const t = useTranslations("transactions");
+  const tc = useTranslations("core");
 
   const hasRefund = !!row.refund_status && row.refund_status !== "none";
   // A cancelled ticket whose transaction still reads "successful" but has a
@@ -80,7 +81,7 @@ function TransactionRow({
       accessibilityRole="button"
       accessibilityLabel={`${
         row.title ??
-        (row.kind === "ticket" ? "Ticket purchase" : "Subscription")
+        (row.kind === "ticket" ? t("ticketPurchase") : t("subscription"))
       }, ${money(row.total_paid ?? row.amount, row.currency)}, ${row.status}`}
       className="gap-2 rounded-2xl border border-border bg-card p-3 active:opacity-90"
     >
@@ -138,6 +139,7 @@ function TransactionRow({
 
 export default function Transactions() {
   const t = useTranslations("transactions");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const [period, setPeriod] = useState<TransactionPeriod>("thisMonth");
@@ -172,7 +174,7 @@ export default function Transactions() {
         {PERIODS.map((p) => (
           <Chip
             key={p}
-            label={TRANSACTION_PERIOD_LABELS[p]}
+            label={transactionPeriodLabel(tc, p)}
             selected={period === p}
             onPress={() => setPeriod(p)}
           />
@@ -243,7 +245,7 @@ export default function Transactions() {
         ) : (
           <QueryUnavailable
             view={historyView}
-            subject="your transactions"
+            subject={t("yourTransactions")}
             onRetry={() => historyQuery.refetch()}
             loading={<Spinner className="mt-6" />}
           />

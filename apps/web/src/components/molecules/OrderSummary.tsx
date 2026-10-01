@@ -1,6 +1,6 @@
 import {
-  PROMOTION_ESTIMATE_NOTE,
-  PROMOTION_REVIEW_NOTE,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  PROMOTION_REVIEW_NOTE_KEY,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import { formatMoney } from "@abonten/core/formatMoney";
@@ -34,6 +34,7 @@ type OrderSummaryProps = {
  */
 export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   if (orderSummary.type === "spotlight-promotion") {
     const { postCaption, summaryLabel, totalAmount, currency } = orderSummary;
@@ -68,8 +69,8 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
         <p className="text-xs text-muted-foreground">
           {t("itIsShownWithASponsored", {
-            PROMOTION_ESTIMATE_NOTE: PROMOTION_ESTIMATE_NOTE,
-            PROMOTION_REVIEW_NOTE: PROMOTION_REVIEW_NOTE,
+            estimateNote: tc(PROMOTION_ESTIMATE_NOTE_KEY),
+            reviewNote: tc(PROMOTION_REVIEW_NOTE_KEY),
           })}
         </p>
 

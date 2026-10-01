@@ -9,14 +9,15 @@ import {
   useUpdatePlaceService,
 } from "@/features/organizer/useManagePlace";
 import {
-  DAY_LABELS,
   TIME_RE,
+  dayLabel,
   usePlaceEdit,
 } from "@/features/organizer/usePlaceEdit";
 import type {
   PlaceServiceRow,
   PlaceTemporaryStatus,
 } from "@abonten/api-client";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   AppText,
@@ -29,7 +30,7 @@ import {
   ScreenError,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -359,6 +360,8 @@ function ServicesSection({
 
 export default function EditPlaceScreen() {
   const t = useTranslations("manage");
+  const { locale } = useLocale();
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
@@ -377,7 +380,7 @@ export default function EditPlaceScreen() {
         <View className="flex-1 bg-background">
           <QueryUnavailable
             view={w.loadView}
-            subject="this place"
+            subject={t("thisPlace")}
             onRetry={() => w.reload()}
           />
         </View>
@@ -476,7 +479,7 @@ export default function EditPlaceScreen() {
           {w.categories.map((c) => (
             <Chip
               key={c.id}
-              label={c.name}
+              label={placeCategoryLabel(tc, c)}
               selected={c.id === w.categoryId}
               onPress={() => w.setCategoryId(c.id)}
             />
@@ -678,7 +681,9 @@ export default function EditPlaceScreen() {
             className="gap-2 rounded-xl border border-border bg-card p-3"
           >
             <View className="flex-row items-center justify-between">
-              <AppText variant="bodyStrong">{DAY_LABELS[h.dayOfWeek]}</AppText>
+              <AppText variant="bodyStrong">
+                {dayLabel(h.dayOfWeek, locale)}
+              </AppText>
               <Switch
                 value={!h.isClosed}
                 onValueChange={(open) =>

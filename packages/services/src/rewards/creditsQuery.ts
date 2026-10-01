@@ -18,6 +18,7 @@ import type {
   CreditSummary,
 } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT } from "../i18n/requestLocale";
 import { creditCurrencyFor } from "./creditCurrency";
 import { getRewardsProgramCore } from "./rewardsProgramQuery";
 
@@ -185,9 +186,10 @@ export async function getCreditActivityCore(
         })
       : null;
 
+  const words = coreT();
   return {
     status: 200,
-    data: page.map((row) => toCreditActivityItem(row, currency)),
+    data: page.map((row) => toCreditActivityItem(words, row, currency)),
     nextCursor,
     hasNextPage,
   };

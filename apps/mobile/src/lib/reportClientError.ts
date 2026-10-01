@@ -3,6 +3,7 @@ import {
   buildErrorEventPayload,
   sendErrorReport,
 } from "@abonten/core/reportError";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import Constants from "expo-constants";
 import { supabase } from "./supabase";
 
@@ -56,7 +57,13 @@ export function reportClientError(
       }
       await sendErrorReport(payload, {
         endpoint: `${baseUrl}/api/observability/error`,
-        headers: token ? { authorization: `Bearer ${token}` } : undefined,
+        headers: token
+          ? {
+              authorization: translatorFor("common")("bearer", {
+                token: token,
+              }),
+            }
+          : undefined,
         post: (url, init) => fetch(url, init as RequestInit),
       });
     })();

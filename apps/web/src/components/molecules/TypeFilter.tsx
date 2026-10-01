@@ -1,6 +1,7 @@
 "use client";
 
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
+import { eventTypeLabel } from "@abonten/core/categoryLabels";
 import { useTranslations } from "next-intl";
 import TileSelector from "./TileSelector";
 
@@ -18,6 +19,7 @@ export default function TypeFilter({
   classname,
 }: TypeFIlter) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const types =
     eventCategoriesAndTypes.find((c) => c.category === selectedCategory)
@@ -26,7 +28,10 @@ export default function TypeFilter({
   return (
     <TileSelector
       mode="multi"
-      options={types.map((type) => ({ id: type, label: type }))}
+      options={types.map((type) => ({
+        id: type,
+        label: eventTypeLabel(tc, type),
+      }))}
       value={selectedTypes}
       onChange={handleType}
       label={t("type")}

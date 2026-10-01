@@ -4,10 +4,12 @@ import {
   type SocialMapLine,
 } from "@/components/map/SocialMap";
 import { useMarket } from "@/features/markets/MarketProvider";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import type { CoreTranslator } from "@abonten/core/i18n/translator";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import {
   type DistanceUnit,
@@ -51,6 +53,7 @@ function eventItem(
   unit: DistanceUnit,
   locale: string,
   t: Translate,
+  tc: CoreTranslator,
 ): SocialMapItem | null {
   const point = pointOf(e as unknown as { location?: string });
   if (!point) return null;
@@ -93,15 +96,19 @@ function eventItem(
     lines,
     tag:
       price == null || price === 0
-        ? "Free"
+        ? tc("searchFilters.price.free")
         : formatMoney(currency, price, { trimZeroFraction: true }),
   };
 }
 
-function placeItem(p: PlaceType): SocialMapItem | null {
+function placeItem(p: PlaceType, tc: CoreTranslator): SocialMapItem | null {
   const point = pointOf(p as unknown as { location?: string });
   if (!point) return null;
-  const open = derivePlaceCardOpenStatus(p.is_open, p.temporary_status ?? null);
+  const open = derivePlaceCardOpenStatus(
+    tc,
+    p.is_open,
+    p.temporary_status ?? null,
+  );
   const address =
     p.address && typeof p.address === "object" && "full_address" in p.address
       ? String((p.address as { full_address: string }).full_address ?? "")
@@ -109,7 +116,15 @@ function placeItem(p: PlaceType): SocialMapItem | null {
   const lines: SocialMapLine[] = [
     {
       icon: open.isOpen ? "time" : "time-outline",
-      text: [open.label, p.category_name].filter(Boolean).join(" · "),
+      text: [
+        open.label,
+        placeCategoryLabel(tc, {
+          slug: p.category_slug,
+          name: p.category_name,
+        }),
+      ]
+        .filter(Boolean)
+        .join(" · "),
       tone: open.isOpen ? "success" : undefined,
     },
   ];
@@ -144,6 +159,7 @@ export function ExploreMap({
   center: { lat: number; lng: number } | null;
 }) {
   const t = useTranslations("explore");
+  const tc = useTranslations("core");
   const { locale } = useLocale();
 
   const { context } = useMarket();
@@ -151,10 +167,10 @@ export function ExploreMap({
   const items = useMemo<SocialMapItem[]>(() => {
     const src =
       kind === "events"
-        ? events.map((e) => eventItem(e, unit, locale, t))
-        : places.map(placeItem);
+        ? events.map((e) => eventItem(e, unit, locale, t, tc))
+        : places.map((p) => placeItem(p, tc));
     return src.filter((x): x is SocialMapItem => x != null);
-  }, [kind, events, places, unit, locale, t]);
+  }, [kind, events, places, unit, locale, t, tc]);
 
   return (
     <SocialMap

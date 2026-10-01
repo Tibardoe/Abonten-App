@@ -169,7 +169,7 @@ export function OrganizerEventCard({
               {remaining != null ? (
                 <Metric
                   label={soldOut ? t("status2") : t("spotsLeft")}
-                  value={soldOut ? "Sold out" : remaining.toLocaleString()}
+                  value={soldOut ? t("soldOut") : remaining.toLocaleString()}
                   align="right"
                 />
               ) : null}

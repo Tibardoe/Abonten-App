@@ -1,9 +1,10 @@
 import { cn } from "@/components/lib/utils";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
+import { campaignStatusLabel } from "@abonten/core/content/copy";
 import type {
   ContentCampaignStatus,
   ContentOwnPost,
 } from "@abonten/types/contentType";
+import { useTranslations } from "next-intl";
 
 // `label` is a catalog key in the spotlight namespace.
 export function postStatusLabel(post: ContentOwnPost): {
@@ -78,9 +79,10 @@ export function CampaignStatusPill({
 }: {
   status: ContentCampaignStatus;
 }) {
+  const tc = useTranslations("core");
   return (
     <StatusPill
-      label={CAMPAIGN_STATUS_LABEL[status]}
+      label={campaignStatusLabel(tc, status)}
       tone={campaignTone(status)}
     />
   );

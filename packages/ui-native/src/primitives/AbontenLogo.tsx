@@ -1,4 +1,5 @@
 import Svg, { G, Path } from "react-native-svg";
+import { useTranslations } from "../i18n";
 import { useTheme } from "../theme/ThemeProvider";
 import { brandColors } from "../theme/tokens";
 import { BRAND_MARK, type BrandArtwork } from "./brandPaths";
@@ -55,6 +56,8 @@ export function BrandArtworkPaths({
 }
 
 export function AbontenLogo({ size = 28, color, cutColor }: AbontenLogoProps) {
+  const t = useTranslations("common");
+
   const { colors, scheme } = useTheme();
   const artwork = markForSize(size);
   return (
@@ -63,7 +66,7 @@ export function AbontenLogo({ size = 28, color, cutColor }: AbontenLogoProps) {
       height={size}
       viewBox={artwork.viewBox}
       accessibilityRole="image"
-      accessibilityLabel="Abonten"
+      accessibilityLabel={t("abonten")}
     >
       <BrandArtworkPaths
         artwork={artwork}

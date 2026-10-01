@@ -46,6 +46,21 @@ const CHECK = flag("check");
 const ONLY = option("only");
 const REPORT_PATH = option("report");
 const VERBOSE = flag("verbose");
+// { "<file>": ["<text>", …] } — strings to move to the catalogs even
+// though they sit in a position this script does not recognise as text
+// (a `what="your tickets"` prop, an array element, a `kicker` variable).
+// check-literals.mjs --json writes the file.
+const FORCE_PATH = option("force");
+// --module-keys <out.json>: a forced literal at module scope (a label map,
+// a list of choices) cannot call a hook where it stands. Its text moves to
+// the catalog and the literal becomes the catalog KEY; the component that
+// renders it wraps the value in t(). The output file lists every such key
+// with the constant that owns it, so each render site can be found.
+const MODULE_KEYS_PATH = option("module-keys");
+const moduleKeys = [];
+const FORCE = FORCE_PATH
+  ? JSON.parse(readFileSync(resolve(FORCE_PATH), "utf8"))
+  : {};
 
 // ---------------------------------------------------------------------------
 // Target configuration
@@ -71,9 +86,12 @@ const TARGETS = {
       ".test.",
       ".d.ts",
     ],
-    extensions: [".tsx"],
+    extensions: [".tsx", ".ts"],
     hookImport: { name: "useTranslations", from: "next-intl" },
     asyncImport: { name: "getTranslations", from: "next-intl/server" },
+    // Browser-only helpers (a click handler in a .ts module) cannot call a
+    // hook: they ask the provider's translator at call time.
+    moduleTranslator: { name: "translatorFor", from: "@/i18n/clientTranslator" },
     namespaceFor(file) {
       const rel = file.replace(/\\/g, "/").replace(/^apps\/web\/src\//, "");
       const seg = rel.split("/").filter((s) => s !== "[locale]");
@@ -97,6 +115,7 @@ const TARGETS = {
       const map = {
         components: "common",
         hooks: "common",
+        utils: "common",
         providers: "common",
         userAccount: "account",
         landingPage: "landing",
@@ -113,12 +132,15 @@ const TARGETS = {
       ".d.ts",
       "packages/ui-native/src/i18n/",
       "packages/ui-native/src/primitives/brandPaths.ts",
-      "apps/mobile/src/lib/",
       "+native-intent",
     ],
-    extensions: [".tsx"],
+    extensions: [".tsx", ".ts"],
     hookImport: { name: "useTranslations", from: "@abonten/ui-native/i18n" },
     asyncImport: null,
+    moduleTranslator: {
+      name: "translatorFor",
+      from: "@abonten/ui-native/i18n",
+    },
     namespaceFor(file) {
       const rel = file.replace(/\\/g, "/");
       if (rel.startsWith("packages/ui-native/")) return "common";
@@ -336,8 +358,9 @@ function isNoiseText(text, { attribute } = {}) {
   if (/^[A-Z0-9_\-:.]+$/.test(t) && !/[a-z]/.test(t) && t.length <= 8)
     return true;
   if (/^(https?:\/\/|mailto:|tel:|\/|#|www\.)/i.test(t)) return true;
-  // A catalog key ("footer.privacy", "tabs.all") already points at text.
-  if (/^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)+$/.test(t)) return true;
+  // A catalog key ("footer.privacy", "tabs.all", "payoutAccounts2") already
+  // points at text.
+  if (/^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)*$/.test(t)) return true;
   if (/^[\w.+-]+@[\w-]+\.[\w.]+$/.test(t)) return true;
   if (
     /^(abonten|abonten hub|abonten hub ltd|ab[ɔo]nten|paystack|google|apple|x|instagram|tiktok|facebook|linkedin|cloudinary|hubtel|resend|supabase|sentry|expo|ios|android|whatsapp|momo|mtn|vodafone|airteltigo|telecel|visa|mastercard|ghs|gh₵|usd|eur|gbp|xof|ngn|kes|png|jpg|jpeg|pdf|mp4|svg|utc|gmt|qr|id|ok|px|km|mi|kg|cm|mm|am|pm|a\.m\.|p\.m\.|n\/a|vs|etc\.?|e\.g\.|i\.e\.|vat|nhil|getfund|ltd|llc|inc|t&c|faq|sms|otp|url|api|pin|cvv|cvc|iban|swift|bic|ussd|rsvp|diy|ceo|cto|cfo|hq|dj|mc|vip|vvip|tv|hd|4k|3d|2d|ui|ux|seo|csv|json|xml|html|css|js|ts|tsx|ai|ar|vr|nft|crypto|btc|eth)$/i.test(
@@ -535,12 +558,26 @@ if (!cfg) {
   process.exit(2);
 }
 
+// A plain .ts module that only ever runs on the server (it reads cookies,
+// holds the service-role client, calls the services package) words its
+// messages with tr() from @abonten/services/i18n/requestLocale, not with a
+// React translator: scripts/i18n/extract-server-messages.mjs owns it.
+const SERVER_ONLY_IMPORT =
+  /from "(server-only|next\/headers|next\/server|@\/config\/supabase\/(server|serviceClient)|@abonten\/services\/[^"]+|node:[a-z_/]+|resend|@react-pdf\/renderer)"|^import "server-only";|^"use server";/m;
+
+function isServerModule(file) {
+  if (!file.endsWith(".ts")) return false;
+  const source = readFileSync(join(ROOT, file), "utf8");
+  return SERVER_ONLY_IMPORT.test(source);
+}
+
 const files = cfg.roots
   .flatMap((r) => walk(join(ROOT, r), []))
   .map((f) => relative(ROOT, f).split(sep).join("/"))
   .filter((f) => cfg.extensions.some((e) => f.endsWith(e)))
   .filter((f) => !cfg.exclude.some((x) => f.includes(x)))
   .filter((f) => !ONLY || f.includes(ONLY))
+  .filter((f) => !isServerModule(f))
   .sort();
 
 const allowlist = existsSync(ALLOWLIST_PATH)
@@ -697,7 +734,11 @@ function findComponentAncestor(node) {
       const isDefaultExport =
         ts.isFunctionDeclaration(n) &&
         n.modifiers?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword);
-      if (isComponentName(name) || isDefaultExport)
+      const isAsyncInner =
+        !cfg.asyncImport &&
+        !isModuleLevel(n) &&
+        !!n.modifiers?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword);
+      if ((isComponentName(name) || isDefaultExport) && !isAsyncInner)
         return { fn: n, name: name ?? "default" };
       if (name && SERVER_HOST_FUNCTIONS.has(name) && isModuleLevel(n))
         return { fn: n, name };
@@ -764,7 +805,12 @@ for (const file of files) {
 
   const edits = []; // { start, end, text }
   const hooks = new Map(); // component fn -> { tName, ns, async, existing }
-  const needs = { hook: false, asyncHook: false, rich: false };
+  const needs = {
+    hook: false,
+    asyncHook: false,
+    rich: false,
+    moduleTranslator: false,
+  };
   const flagged = [];
   const remaining = [];
   const handled = new Set(); // nodes already consumed by a run
@@ -805,6 +851,15 @@ for (const file of files) {
     const meta = metadataHostFor(node);
     if (meta) return meta;
     const anc = findComponentAncestor(node);
+    if (
+      !anc.fn &&
+      cfg.moduleTranslator &&
+      flagInfo.forced &&
+      /^inside module-level function|^async function/.test(anc.reason ?? "")
+    ) {
+      needs.moduleTranslator = true;
+      return { tName: null, ns, moduleFn: true };
+    }
     if (!anc.fn) {
       flagged.push({
         file,
@@ -820,6 +875,10 @@ for (const file of files) {
       const isAsync = !!anc.fn.modifiers?.some(
         (m) => m.kind === ts.SyntaxKind.AsyncKeyword,
       );
+      if (isAsync && !cfg.asyncImport && cfg.moduleTranslator && flagInfo.forced) {
+        needs.moduleTranslator = true;
+        return { tName: null, ns, moduleFn: true };
+      }
       if (isAsync && !cfg.asyncImport) {
         flagged.push({
           file,
@@ -858,6 +917,13 @@ for (const file of files) {
 
   function tCall(h, key, params, rich) {
     const nsPrefix = "";
+    if (h.moduleFn) {
+      const { file: nsFile, prefix } = splitNamespace(h.ns);
+      const call = `${cfg.moduleTranslator.name}("${nsFile}")`;
+      return params?.length
+        ? `${call}("${prefix}${key}", { ${params.join(", ")} })`
+        : `${call}("${prefix}${key}")`;
+    }
     const fn = rich ? `${h.tName}.rich` : h.tName;
     if (params?.length) {
       return `${fn}("${nsPrefix}${key}", { ${params.join(", ")} })`;
@@ -1225,9 +1291,19 @@ for (const file of files) {
 
   // `aria-label={`Remove one from ${label}`}` — a template with text and
   // expressions becomes one ICU message with named params.
+  const forced = new Set(FORCE[file] ?? []);
+
+  function templateShape(node) {
+    return (
+      node.head.text +
+      node.templateSpans.map((span) => `{}${span.literal.text}`).join("")
+    );
+  }
+
   function processTemplate(node) {
     if (handled.has(node)) return;
-    const pos = displayPositionOf(node);
+    const isForced = forced.has(templateShape(node));
+    const pos = displayPositionOf(node) ?? (isForced ? { kind: "forced" } : null);
     if (!pos) return;
     const used = new Set();
     const params = [];
@@ -1238,9 +1314,9 @@ for (const file of files) {
       message += `{${name}}${span.literal.text}`;
     }
     if (!/\p{L}{2,}/u.test(message.replace(/\{[^}]*\}/g, ""))) return;
-    if (isNoiseText(message.replace(/\{[^}]*\}/g, "x"))) return;
+    if (!isForced && isNoiseText(message.replace(/\{[^}]*\}/g, "x"))) return;
     if (allowTexts.has(message) || fileAllowed) return;
-    const h = tFor(node, { text: message });
+    const h = tFor(node, { text: message, forced: isForced });
     if (!h) {
       remaining.push({ file, line: lineOf(node), text: message });
       return;
@@ -1254,25 +1330,49 @@ for (const file of files) {
 
   function processString(node) {
     if (handled.has(node) || handled.has(node.parent)) return;
-    const pos = displayPositionOf(node);
+    const isForced = forced.has(node.text);
+    const pos = displayPositionOf(node) ?? (isForced ? { kind: "forced" } : null);
     if (!pos) return;
     const text = node.text;
-    if (isNoiseText(text, { attribute: pos.attribute })) return;
+    if (!isForced && isNoiseText(text, { attribute: pos.attribute })) return;
     if (allowTexts.has(text) || fileAllowed) return;
     // Values that are really code: variants, keys, ids, enum props such as
     // next/image's placeholder="blur" or loading="lazy".
     // A lowercase single token is a code ("completed", "blur"), not text.
-    if (pos.kind !== "child" && /^[a-z0-9_-]+$/.test(text)) return;
-    const h = tFor(node, { text });
+    if (!isForced && pos.kind !== "child" && /^[a-z0-9_-]+$/.test(text))
+      return;
+    const h = tFor(node, { text, forced: isForced });
     if (!h) {
+      if (
+        MODULE_KEYS_PATH &&
+        isForced &&
+        findComponentAncestor(node).reason === "module scope"
+      ) {
+        const key = record({ ns }, text);
+        let owner = null;
+        for (let q = node.parent; q && !ts.isSourceFile(q); q = q.parent) {
+          if (ts.isVariableDeclaration(q) && ts.isIdentifier(q.name)) {
+            owner = q.name.text;
+            break;
+          }
+        }
+        edits.push({
+          start: node.getStart(sf),
+          end: node.end,
+          text: JSON.stringify(key),
+        });
+        moduleKeys.push({ file, line: lineOf(node), owner, key, ns, text });
+        handled.add(node);
+        report.rewritten++;
+        return;
+      }
       remaining.push({ file, line: lineOf(node), text });
       return;
     }
     const key = record(h, text);
     let replacement = tCall(h, key);
     // placeholder="x" -> placeholder={t("x")}
-    if (pos.kind === "attribute" && ts.isJsxAttribute(node.parent))
-      replacement = `{${replacement}}`;
+    if (ts.isJsxAttribute(node.parent)) replacement = `{${replacement}}`;
     edits.push({ start: node.getStart(sf), end: node.end, text: replacement });
     handled.add(node);
     report.rewritten++;
@@ -1423,6 +1523,16 @@ for (const file of files) {
   }
   if (importNeeded.async)
     ensureImport(cfg.asyncImport.name, cfg.asyncImport.from);
+  if (needs.moduleTranslator) {
+    const from =
+      target === "mobile" && file.startsWith("packages/ui-native/")
+        ? relative(dirname(abs), join(ROOT, "packages/ui-native/src/i18n"))
+            .split(sep)
+            .join("/")
+            .replace(/^(?!\.)/, "./")
+        : cfg.moduleTranslator.from;
+    ensureImport(cfg.moduleTranslator.name, from);
+  }
 
   // --- apply edits (from the end) --------------------------------------------
   edits.sort((a, b) => b.start - a.start || b.end - a.end);
@@ -1494,6 +1604,12 @@ for (const [reason, items] of Object.entries(byReason)) {
 
 const text = lines.join("\n");
 if (REPORT_PATH) writeFileSync(REPORT_PATH, text);
+if (MODULE_KEYS_PATH) {
+  writeFileSync(
+    resolve(MODULE_KEYS_PATH),
+    `${JSON.stringify(moduleKeys, null, 2)}\n`,
+  );
+}
 else console.log(text);
 
 if (CHECK) {

@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import {
-  WEEKLY_ISSUE_LABEL,
-  WEEKLY_VALIDITY_LABEL,
+  weeklyIssueLabel,
+  weeklyValidityLabel,
 } from "@abonten/core/weekly/copy";
 import type {
   WeeklyAdminSection,
@@ -40,7 +41,7 @@ function IssueDetail({
         {issue.items.map((i) => (
           <li key={i.itemId}>
             {subjectLabel(sections, i.subjectId)} —{" "}
-            {WEEKLY_VALIDITY_LABEL[i.reason] ?? i.reason}
+            {weeklyValidityLabel(tc, i.reason) ?? i.reason}
           </li>
         ))}
       </ul>
@@ -104,13 +105,13 @@ export function ValidationPanel({
       ) : null}
       {validation.errors.map((issue) => (
         <div key={issue.code} role="alert">
-          <p className="text-destructive">{WEEKLY_ISSUE_LABEL[issue.code]}</p>
+          <p className="text-destructive">{weeklyIssueLabel(tc, issue.code)}</p>
           <IssueDetail issue={issue} sections={sections} />
         </div>
       ))}
       {validation.warnings.map((issue) => (
         <div key={issue.code}>
-          <p className="text-warning">{WEEKLY_ISSUE_LABEL[issue.code]}</p>
+          <p className="text-warning">{weeklyIssueLabel(tc, issue.code)}</p>
           <IssueDetail issue={issue} sections={sections} />
         </div>
       ))}

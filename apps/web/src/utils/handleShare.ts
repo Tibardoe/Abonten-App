@@ -1,3 +1,4 @@
+import { translatorFor } from "@/i18n/clientTranslator";
 import { logger } from "@abonten/core/logger";
 type ShareData = {
   title: string;
@@ -18,7 +19,8 @@ export async function handleShare({
 }: ShareData): Promise<"native" | "copy" | null> {
   const shareData = {
     title,
-    text: text ?? `Check out this event: ${title}`,
+    text:
+      text ?? translatorFor("common")("checkOutThisEvent", { title: title }),
     url,
   };
 
@@ -34,7 +36,7 @@ export async function handleShare({
 
   try {
     await navigator.clipboard.writeText(url);
-    alert("Link copied to clipboard!");
+    alert(translatorFor("common")("linkCopiedToClipboard"));
     return "copy";
   } catch (err) {
     logger.error("Clipboard copy failed:", err);

@@ -1,6 +1,7 @@
 "use client";
 
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { OrganizerPlaceRow as PlaceListRow } from "@abonten/types/placeRows";
@@ -24,6 +25,7 @@ export default function OrganizerPlacesList({
   emptyState: React.ReactNode;
 }) {
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   return (
     <InfiniteList<PlaceListRow>
@@ -57,7 +59,8 @@ export default function OrganizerPlacesList({
             <div className="flex-1 min-w-0">
               <h2 className="font-bold truncate">{place.name}</h2>
               <p className="text-sm text-muted-foreground truncate">
-                {place.place_category?.name ?? t("uncategorized")}
+                {placeCategoryLabel(tc, place.place_category ?? {}) ||
+                  t("uncategorized")}
                 {place.temporary_status && (
                   <span className="ml-2 text-destructive">
                     ·{" "}

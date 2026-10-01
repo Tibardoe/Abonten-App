@@ -56,7 +56,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
         const address = results[0].formatted_address;
         onLocationSelect({ lat, lng, address });
       } else {
-        onLocationSelect({ lat, lng, address: "Unknown location" });
+        onLocationSelect({ lat, lng, address: t("unknownLocation") });
       }
     });
   };
@@ -81,7 +81,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const locateUser = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
+      alert(t("geolocationIsNotSupportedByYour"));
       return;
     }
 
@@ -91,7 +91,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
         handleMapInteraction(latitude, longitude);
       },
       () => {
-        alert("Unable to retrieve your location.");
+        alert(t("unableToRetrieveYourLocation"));
       },
     );
   };

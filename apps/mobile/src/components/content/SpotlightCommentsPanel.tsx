@@ -8,7 +8,6 @@ import { useRequireSignIn } from "@/features/content/contentLinks";
 import { hapticLight } from "@/lib/haptics";
 import { useIsOnline } from "@/lib/network";
 import type { CachedComment } from "@abonten/core/content/commentCache";
-import { countLabel } from "@abonten/core/content/copy";
 import { MAX_COMMENT_LENGTH } from "@abonten/core/content/limits";
 import {
   AppText,
@@ -209,7 +208,7 @@ export function SpotlightCommentsPanel({
                 className="flex-1 text-center"
               >
                 {commentCount > 0
-                  ? countLabel(commentCount, "comment", undefined, locale)
+                  ? t("commentsCount", { count: commentCount })
                   : t("comments")}
               </AppText>
               <Pressable

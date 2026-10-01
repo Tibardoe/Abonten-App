@@ -1,4 +1,7 @@
 import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
+import { eventCategoryLabel } from "../categoryLabels";
+import { intlLocale } from "../i18n/coreStrings";
+import type { CoreI18n, CoreTranslator } from "../i18n/translator";
 import { currencyMinorFactor, isKnownCurrency } from "../money/currencies";
 import { formatMoney } from "../money/formatMoney";
 import {
@@ -6,6 +9,7 @@ import {
   isValidTimeZone,
   wallClockToInstant,
 } from "../time/timeZone";
+import { formatDistance } from "../units/distance";
 
 // Filters for global search (Discovery). Deliberately NOT the Explore
 // event/place filters: those browse one kind of listing around a place;
@@ -63,23 +67,56 @@ export const EMPTY_SEARCH_FILTERS: SearchFilters = {
   minRating: null,
 };
 
-export const SEARCH_WHEN_OPTIONS: { value: SearchWhen; label: string }[] = [
-  { value: "any", label: "Any time" },
-  { value: "today", label: "Today" },
-  { value: "tomorrow", label: "Tomorrow" },
-  { value: "weekend", label: "This weekend" },
-  { value: "week", label: "Next 7 days" },
-  { value: "month", label: "Next 30 days" },
-];
+// The words for every option live under `searchFilters.*` of the core
+// namespace; the lists below are only the values.
 
-export const SEARCH_RADIUS_OPTIONS: { value: number | null; label: string }[] =
-  [
-    { value: null, label: "Anywhere" },
-    { value: 5, label: "Within 5 km" },
-    { value: 10, label: "Within 10 km" },
-    { value: 25, label: "Within 25 km" },
-    { value: 50, label: "Within 50 km" },
-  ];
+export const SEARCH_WHEN_VALUES: readonly SearchWhen[] = [
+  "any",
+  "today",
+  "tomorrow",
+  "weekend",
+  "week",
+  "month",
+] as const;
+
+export function searchWhenLabel(t: CoreTranslator, when: SearchWhen): string {
+  return t(`searchFilters.when.${when}`);
+}
+
+export function searchWhenOptions(
+  t: CoreTranslator,
+): { value: SearchWhen; label: string }[] {
+  return SEARCH_WHEN_VALUES.map((value) => ({
+    value,
+    label: searchWhenLabel(t, value),
+  }));
+}
+
+/** km around the chosen location; null = anywhere. */
+export const SEARCH_RADIUS_VALUES: readonly (number | null)[] = [
+  null,
+  5,
+  10,
+  25,
+  50,
+] as const;
+
+function radiusLabel({ t, locale }: CoreI18n, km: number | null): string {
+  return km === null
+    ? t("searchFilters.anywhere")
+    : t("searchFilters.within", {
+        distance: formatDistance(km * 1000, "km", intlLocale(locale)),
+      });
+}
+
+export function searchRadiusOptions(
+  i18n: CoreI18n,
+): { value: number | null; label: string }[] {
+  return SEARCH_RADIUS_VALUES.map((value) => ({
+    value,
+    label: radiusLabel(i18n, value),
+  }));
+}
 
 /**
  * The price buckets, labelled in the market's currency ("Under ₦50" in
@@ -110,33 +147,53 @@ export function searchPriceCaps(priceScale = 1): {
 }
 
 export function searchPriceOptions(
+  t: CoreTranslator,
   currency: string,
   priceScale = 1,
 ): { value: SearchPrice; label: string }[] {
   const caps = searchPriceCaps(priceScale);
   // Before the market is known the labels carry the bare number.
   const under = (major: number) =>
-    isKnownCurrency(currency)
-      ? `Under ${formatMoney(
-          { amountMinor: major * currencyMinorFactor(currency), currency },
-          { trimZeroFraction: true },
-        )}`
-      : `Under ${major}`;
+    t("searchFilters.price.under", {
+      amount: isKnownCurrency(currency)
+        ? formatMoney(
+            { amountMinor: major * currencyMinorFactor(currency), currency },
+            { trimZeroFraction: true },
+          )
+        : String(major),
+    });
   return [
-    { value: "any", label: "Any price" },
-    { value: "free", label: "Free" },
+    { value: "any", label: t("searchFilters.price.any") },
+    { value: "free", label: t("searchFilters.price.free") },
     { value: "under_50", label: under(caps.under_50) },
     { value: "under_200", label: under(caps.under_200) },
   ];
 }
 
-export const SEARCH_RATING_OPTIONS: { value: number | null; label: string }[] =
-  [
-    { value: null, label: "Any rating" },
-    { value: 3, label: "3+ stars" },
-    { value: 4, label: "4+ stars" },
-    { value: 4.5, label: "4.5+ stars" },
-  ];
+/** Minimum average rating; null = any. */
+export const SEARCH_RATING_VALUES: readonly (number | null)[] = [
+  null,
+  3,
+  4,
+  4.5,
+] as const;
+
+function ratingLabel({ t, locale }: CoreI18n, rating: number | null): string {
+  return rating === null
+    ? t("searchFilters.anyRating")
+    : t("searchFilters.minStars", {
+        rating: new Intl.NumberFormat(intlLocale(locale)).format(rating),
+      });
+}
+
+export function searchRatingOptions(
+  i18n: CoreI18n,
+): { value: number | null; label: string }[] {
+  return SEARCH_RATING_VALUES.map((value) => ({
+    value,
+    label: ratingLabel(i18n, value),
+  }));
+}
 
 type Scope = "event" | "place";
 
@@ -215,6 +272,7 @@ export function clearSearchFiltersFor(
 
 /** Short labels for the chips under the search bar. */
 export function describeSearchFilters(
+  i18n: CoreI18n,
   filters: SearchFilters,
   mode: SearchMode,
   locationLabel: string | null | undefined,
@@ -222,36 +280,48 @@ export function describeSearchFilters(
   currency: string,
   priceScale = 1,
 ): { key: SearchFilterKey; label: string }[] {
+  const { t, locale } = i18n;
   return activeSearchFilters(filters, mode).map((key) => {
     switch (key) {
       case "when":
+        return { key, label: searchWhenLabel(t, filters.when) };
+      case "radiusKm": {
+        const distance = formatDistance(
+          (filters.radiusKm ?? 0) * 1000,
+          "km",
+          intlLocale(locale),
+        );
         return {
           key,
-          label:
-            SEARCH_WHEN_OPTIONS.find((o) => o.value === filters.when)?.label ??
-            "",
+          label: locationLabel
+            ? t("searchFilters.withinOf", { distance, location: locationLabel })
+            : t("searchFilters.within", { distance }),
         };
-      case "radiusKm":
-        return {
-          key,
-          label: `Within ${filters.radiusKm} km${locationLabel ? ` of ${locationLabel}` : ""}`,
-        };
+      }
       case "price":
         return {
           key,
           label:
-            searchPriceOptions(currency, priceScale).find(
+            searchPriceOptions(t, currency, priceScale).find(
               (o) => o.value === filters.price,
             )?.label ?? "",
         };
       case "eventCategory":
-        return { key, label: filters.eventCategory ?? "" };
+        return {
+          key,
+          label: filters.eventCategory
+            ? eventCategoryLabel(t, filters.eventCategory)
+            : "",
+        };
       case "placeCategoryId":
-        return { key, label: filters.placeCategoryName ?? "Category" };
+        return {
+          key,
+          label: filters.placeCategoryName ?? t("searchFilters.category"),
+        };
       case "openNow":
-        return { key, label: "Open now" };
+        return { key, label: t("searchFilters.openNow") };
       case "minRating":
-        return { key, label: `${filters.minRating}+ stars` };
+        return { key, label: ratingLabel(i18n, filters.minRating) };
     }
   });
 }
@@ -421,10 +491,10 @@ export function searchFiltersFromParams(
   const pcat = Number(one("pcat"));
   const rating = Number(one("rating"));
   return {
-    when: SEARCH_WHEN_OPTIONS.some((o) => o.value === when)
+    when: SEARCH_WHEN_VALUES.includes(when as SearchWhen)
       ? (when as SearchWhen)
       : "any",
-    radiusKm: SEARCH_RADIUS_OPTIONS.some((o) => o.value === km) ? km : null,
+    radiusKm: SEARCH_RADIUS_VALUES.includes(km) ? km : null,
     price: SEARCH_PRICE_VALUES.includes(price as SearchPrice)
       ? (price as SearchPrice)
       : "any",
@@ -436,8 +506,6 @@ export function searchFiltersFromParams(
         ? (one("pcatName")?.slice(0, 80) ?? null)
         : null,
     openNow: one("open") === "1",
-    minRating: SEARCH_RATING_OPTIONS.some((o) => o.value === rating)
-      ? rating
-      : null,
+    minRating: SEARCH_RATING_VALUES.includes(rating) ? rating : null,
   };
 }

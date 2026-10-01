@@ -17,7 +17,7 @@ import { signOff } from "@abonten/core/brand/signOff";
 import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import {
   WEEKLY_PRODUCT_NAME,
-  WEEKLY_TAGLINE,
+  WEEKLY_TAGLINE_KEY,
   weeklyShareText,
 } from "@abonten/core/weekly/copy";
 import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
@@ -44,6 +44,7 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
   const { locale } = useLocale();
 
   const t = useTranslations("weekly");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -54,13 +55,11 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
   const height = Math.round(Math.min(Math.max(width * 1.15, 420), 560));
   const notices = [
     doc.isFallbackScope
-      ? `There is no edition for your area this week, so these are ${e.scopeName}-wide picks.`
+      ? t("thereIsNoEditionForYour", { scopeName: e.scopeName })
       : null,
-    doc.isPreviousWeek
-      ? "This week's edition is on its way. Here is last week's."
-      : null,
+    doc.isPreviousWeek ? t("thisWeekSEditionIsOn2") : null,
     e.weekIsOver && !doc.isPreviousWeek
-      ? "A past edition. Some events have already happened."
+      ? t("aPastEditionSomeEventsHave")
       : null,
   ].filter((n): n is string => !!n);
 
@@ -94,7 +93,7 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
           style={{ color: "rgba(255,255,255,0.86)" }}
           numberOfLines={3}
         >
-          {e.subtitle ?? WEEKLY_TAGLINE}
+          {e.subtitle ?? tc(WEEKLY_TAGLINE_KEY)}
         </AppText>
         <AppText
           className="mt-3 text-[12px] font-semibold uppercase tracking-widest"
@@ -133,6 +132,7 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
 
 function WeeklySkeleton() {
   const t = useTranslations("weekly");
+  const tc = useTranslations("core");
 
   return (
     <View className="gap-6 pt-4" accessibilityLabel={t("loadingAbontenWeekly")}>
@@ -155,6 +155,7 @@ export function WeeklyScreen({
   week?: string;
 }) {
   const t = useTranslations("weekly");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const { area } = useExploreLocation();
@@ -235,7 +236,7 @@ export function WeeklyScreen({
                 description={
                   !state?.available || state.notFound
                     ? t("itMayHaveBeenTakenDown")
-                    : WEEKLY_TAGLINE
+                    : tc(WEEKLY_TAGLINE_KEY)
                 }
                 actionLabel={t("exploreEventsAndPlaces")}
                 onAction={() => router.replace("/(app)/(tabs)")}

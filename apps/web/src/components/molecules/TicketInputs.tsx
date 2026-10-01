@@ -114,7 +114,7 @@ export default function TicketInputs({
 
   return (
     <>
-      {ticketType === "Single Ticket Type" && (
+      {ticketType === t("singleTicketType") && (
         <div className="flex justify-between items-center gap-2">
           <div className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
             <span className="text-sm text-green-600">{currency}</span>
@@ -139,7 +139,7 @@ export default function TicketInputs({
         </div>
       )}
 
-      {ticketType === "Multiple Ticket Types" && (
+      {ticketType === t("multipleTicketTypes") && (
         <div className="space-y-2">
           <div className="flex flex-col gap-2">
             <div className="w-full">

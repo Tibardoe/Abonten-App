@@ -1,11 +1,16 @@
 import { formatMoney } from "@abonten/core/formatMoney";
-import { getRefundStatusLabel } from "@abonten/core/refundStatus";
+import {
+  type RefundStatusKind,
+  getRefundStatusKind,
+  getRefundStatusLabel,
+} from "@abonten/core/refundStatus";
 import {
   AppText,
   Icon,
   type IoniconName,
   StatusPill,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { View } from "react-native";
 
 // §10 — one place that turns a cancelled ticket's transaction state into a
@@ -16,51 +21,14 @@ import { View } from "react-native";
 // shared StatusPill with an icon, the amount, and a plain-English line
 // answering "is my money coming back / do I need to do anything?".
 
-type Meta = {
-  pillStatus: string;
-  pillLabel: string;
-  icon: IoniconName;
-  nextStep: string;
-};
+type Meta = { pillStatus: string; icon: IoniconName };
 
-function metaFor(label: string, coreDescription?: string): Meta {
-  switch (label) {
-    case "Refund pending":
-      return {
-        pillStatus: "refund_pending",
-        pillLabel: "Refund pending",
-        icon: "time-outline",
-        nextStep:
-          "Your refund is on its way to your original payment method — this usually takes a few business days. Nothing more is needed from you.",
-      };
-    case "Refund issued":
-      return {
-        pillStatus: "refunded",
-        pillLabel: "Refund issued",
-        icon: "checkmark-circle",
-        nextStep:
-          "This was refunded to your original payment method. It can take a few business days to show on your statement.",
-      };
-    case "Refund failed":
-      return {
-        pillStatus: "failed",
-        pillLabel: "Refund failed",
-        icon: "alert-circle",
-        nextStep:
-          "We couldn't complete the refund automatically. Our team has been notified and will resolve it — you don't need to do anything.",
-      };
-    default:
-      // "No refund yet"
-      return {
-        pillStatus: "pending",
-        pillLabel: "No refund yet",
-        icon: "information-circle-outline",
-        nextStep:
-          coreDescription ??
-          "A refund is issued once every ticket in this order is cancelled.",
-      };
-  }
-}
+const META: Record<RefundStatusKind, Meta> = {
+  pending: { pillStatus: "refund_pending", icon: "time-outline" },
+  issued: { pillStatus: "refunded", icon: "checkmark-circle" },
+  failed: { pillStatus: "failed", icon: "alert-circle" },
+  none: { pillStatus: "pending", icon: "information-circle-outline" },
+};
 
 export function RefundStatusPanel({
   transactionStatus,
@@ -73,20 +41,27 @@ export function RefundStatusPanel({
   amount: number | null | undefined;
   currency: string | null | undefined;
 }) {
-  const core = getRefundStatusLabel(
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+  const kind = getRefundStatusKind(
     transactionStatus ?? "",
     refundRequestedAt ?? null,
   );
-  if (!core) return null;
+  const core = getRefundStatusLabel(
+    tc,
+    transactionStatus ?? "",
+    refundRequestedAt ?? null,
+  );
+  if (!kind || !core) return null;
 
-  const meta = metaFor(core.label, core.description);
+  const meta = META[kind];
 
   return (
     <View className="gap-2 rounded-xl border border-border bg-muted p-3">
       <View className="flex-row items-center justify-between gap-2">
         <StatusPill
           status={meta.pillStatus}
-          options={{ label: meta.pillLabel }}
+          options={{ label: core.label }}
           size="sm"
         />
         {typeof amount === "number" ? (
@@ -103,7 +78,7 @@ export function RefundStatusPanel({
           style={{ marginTop: 2 }}
         />
         <AppText variant="caption" className="flex-1">
-          {meta.nextStep}
+          {t(`refundNext.${kind}`)}
         </AppText>
       </View>
     </View>

@@ -2,28 +2,33 @@ import type {
   ActivePromotionState,
   ActivePromotionSummary,
 } from "@abonten/types/promotionSummaryType";
+import type { CoreTranslator } from "./i18n/translator";
 
 // Wording for the Settings promotion summary, shared by web and mobile so
-// both say the same thing about the same promotion.
+// both say the same thing about the same promotion. Words live under
+// `promotionSummary.*` of the core namespace.
 
-export const PROMOTION_KIND_LABEL: Record<
-  ActivePromotionSummary["resourceType"],
-  string
-> = {
-  event: "Featured event",
-  place: "Featured place",
-  spotlight: "Promoted Spotlight",
-};
+export function promotionKindLabel(
+  t: CoreTranslator,
+  kind: ActivePromotionSummary["resourceType"],
+): string {
+  return t(`promotionSummary.kind.${kind}`);
+}
 
-export const PROMOTION_STATE_LABEL: Record<ActivePromotionState, string> = {
-  active: "Active",
-  scheduled: "Starts soon",
-  in_review: "In review",
-  paused: "Paused",
-};
+export function promotionStateLabel(
+  t: CoreTranslator,
+  state: ActivePromotionState,
+): string {
+  return t(`promotionSummary.state.${state}`);
+}
 
 /** "3-day package · Active" / "Promoted Spotlight · In review". */
-export function promotionStatusLine(p: ActivePromotionSummary): string {
-  const state = PROMOTION_STATE_LABEL[p.state];
-  return p.tierLabel ? `${p.tierLabel} package · ${state}` : state;
+export function promotionStatusLine(
+  t: CoreTranslator,
+  p: ActivePromotionSummary,
+): string {
+  const state = promotionStateLabel(t, p.state);
+  return p.tierLabel
+    ? t("promotionSummary.statusLine", { tier: p.tierLabel, state })
+    : state;
 }

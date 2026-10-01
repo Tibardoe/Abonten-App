@@ -9,6 +9,7 @@ import OrganizerCard from "@/discovery/molecules/OrganizerCard";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import PlaceCard from "@/places/molecules/PlaceCard";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type {
   SearchEntityType,
@@ -186,6 +187,7 @@ function SingleGroup<T extends { id: string }>({
 
 function NoResults({ request }: { request: SearchRequest }) {
   const t = useTranslations("discovery");
+  const tc = useTranslations("core");
 
   const organizerMode = request.q.trim().startsWith("@");
   const categories = eventCategoriesAndTypes.slice(0, 6).map((c) => c.category);
@@ -213,7 +215,7 @@ function NoResults({ request }: { request: SearchRequest }) {
               href={`/search?category=${encodeURIComponent(category)}`}
               className="rounded-full bg-muted px-3 py-1.5 text-sm text-foreground hover:bg-accent"
             >
-              {category}
+              {eventCategoryLabel(tc, category)}
             </Link>
           ))}
         </div>

@@ -13,6 +13,7 @@ import type {
 } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { coreT } from "../i18n/requestLocale";
 import {
   RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
@@ -74,7 +75,7 @@ export async function postPlaceCore(
     return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
   }
 
-  const locationCheck = validateLocationInput({
+  const locationCheck = validateLocationInput(coreT(), {
     address: input.address,
     latitude: input.latitude,
     longitude: input.longitude,

@@ -31,7 +31,7 @@ export default function AccountRestrictedPage() {
             email: SUPPORT_EMAIL,
             link: (chunks) => (
               <a
-                href={mailto(SUPPORT_EMAIL, "Restricted account")}
+                href={mailto(SUPPORT_EMAIL, t("restrictedAccount"))}
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {chunks}

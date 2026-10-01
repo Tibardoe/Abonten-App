@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
 import { MESSAGE_ATTACHMENTS_BUCKET } from "@abonten/types/messagingType";
 import type { SendMessageAttachmentInput } from "@abonten/types/messagingType";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 
@@ -105,7 +106,7 @@ export async function pickChatImage(): Promise<StagedAttachment | null> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) {
     throw new AttachmentPermissionError(
-      "Photo access is needed to send a picture.",
+      translatorFor("messaging")("photoAccessIsNeededToSend"),
     );
   }
   const picked = await ImagePicker.launchImageLibraryAsync({
@@ -123,7 +124,7 @@ export async function pickChatMedia(limit = 4): Promise<StagedAttachment[]> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) {
     throw new AttachmentPermissionError(
-      "Photo and video access is needed to send media.",
+      translatorFor("messaging")("photoAndVideoAccessIsNeeded"),
     );
   }
   const picked = await ImagePicker.launchImageLibraryAsync({
@@ -147,7 +148,7 @@ export async function captureChatPhoto(): Promise<StagedAttachment | null> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
   if (!perm.granted) {
     throw new AttachmentPermissionError(
-      "Camera access is needed to take a photo.",
+      translatorFor("messaging")("cameraAccessIsNeededToTake"),
     );
   }
   const shot = await ImagePicker.launchCameraAsync({

@@ -6,6 +6,7 @@ import akAccount from "@abonten/i18n/messages/ak/account.json";
 import akAuth from "@abonten/i18n/messages/ak/auth.json";
 import akCheckout from "@abonten/i18n/messages/ak/checkout.json";
 import akCommon from "@abonten/i18n/messages/ak/common.json";
+import akCore from "@abonten/i18n/messages/ak/core.json";
 import akDiscovery from "@abonten/i18n/messages/ak/discovery.json";
 import akEvents from "@abonten/i18n/messages/ak/events.json";
 import akExplore from "@abonten/i18n/messages/ak/explore.json";
@@ -36,6 +37,7 @@ import deAccount from "@abonten/i18n/messages/de/account.json";
 import deAuth from "@abonten/i18n/messages/de/auth.json";
 import deCheckout from "@abonten/i18n/messages/de/checkout.json";
 import deCommon from "@abonten/i18n/messages/de/common.json";
+import deCore from "@abonten/i18n/messages/de/core.json";
 import deDiscovery from "@abonten/i18n/messages/de/discovery.json";
 import deEvents from "@abonten/i18n/messages/de/events.json";
 import deExplore from "@abonten/i18n/messages/de/explore.json";
@@ -66,6 +68,7 @@ import enAccount from "@abonten/i18n/messages/en/account.json";
 import enAuth from "@abonten/i18n/messages/en/auth.json";
 import enCheckout from "@abonten/i18n/messages/en/checkout.json";
 import enCommon from "@abonten/i18n/messages/en/common.json";
+import enCore from "@abonten/i18n/messages/en/core.json";
 import enDiscovery from "@abonten/i18n/messages/en/discovery.json";
 import enEvents from "@abonten/i18n/messages/en/events.json";
 import enExplore from "@abonten/i18n/messages/en/explore.json";
@@ -96,6 +99,7 @@ import esAccount from "@abonten/i18n/messages/es/account.json";
 import esAuth from "@abonten/i18n/messages/es/auth.json";
 import esCheckout from "@abonten/i18n/messages/es/checkout.json";
 import esCommon from "@abonten/i18n/messages/es/common.json";
+import esCore from "@abonten/i18n/messages/es/core.json";
 import esDiscovery from "@abonten/i18n/messages/es/discovery.json";
 import esEvents from "@abonten/i18n/messages/es/events.json";
 import esExplore from "@abonten/i18n/messages/es/explore.json";
@@ -126,6 +130,7 @@ import frAccount from "@abonten/i18n/messages/fr/account.json";
 import frAuth from "@abonten/i18n/messages/fr/auth.json";
 import frCheckout from "@abonten/i18n/messages/fr/checkout.json";
 import frCommon from "@abonten/i18n/messages/fr/common.json";
+import frCore from "@abonten/i18n/messages/fr/core.json";
 import frDiscovery from "@abonten/i18n/messages/fr/discovery.json";
 import frEvents from "@abonten/i18n/messages/fr/events.json";
 import frExplore from "@abonten/i18n/messages/fr/explore.json";
@@ -156,6 +161,7 @@ import ptAccount from "@abonten/i18n/messages/pt/account.json";
 import ptAuth from "@abonten/i18n/messages/pt/auth.json";
 import ptCheckout from "@abonten/i18n/messages/pt/checkout.json";
 import ptCommon from "@abonten/i18n/messages/pt/common.json";
+import ptCore from "@abonten/i18n/messages/pt/core.json";
 import ptDiscovery from "@abonten/i18n/messages/pt/discovery.json";
 import ptEvents from "@abonten/i18n/messages/pt/events.json";
 import ptExplore from "@abonten/i18n/messages/pt/explore.json";
@@ -193,6 +199,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     auth: enAuth,
     checkout: enCheckout,
     common: enCommon,
+    core: enCore,
     discovery: enDiscovery,
     events: enEvents,
     explore: enExplore,
@@ -225,6 +232,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     auth: akAuth,
     checkout: akCheckout,
     common: akCommon,
+    core: akCore,
     discovery: akDiscovery,
     events: akEvents,
     explore: akExplore,
@@ -257,6 +265,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     auth: deAuth,
     checkout: deCheckout,
     common: deCommon,
+    core: deCore,
     discovery: deDiscovery,
     events: deEvents,
     explore: deExplore,
@@ -289,6 +298,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     auth: esAuth,
     checkout: esCheckout,
     common: esCommon,
+    core: esCore,
     discovery: esDiscovery,
     events: esEvents,
     explore: esExplore,
@@ -321,6 +331,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     auth: frAuth,
     checkout: frCheckout,
     common: frCommon,
+    core: frCore,
     discovery: frDiscovery,
     events: frEvents,
     explore: frExplore,
@@ -353,6 +364,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     auth: ptAuth,
     checkout: ptCheckout,
     common: ptCommon,
+    core: ptCore,
     discovery: ptDiscovery,
     events: ptEvents,
     explore: ptExplore,

@@ -1,7 +1,7 @@
 import { CardTitle } from "@/components/ui/typography";
 import { rewardsEarnLines } from "@abonten/core/rewards/earnCopy";
 import type { RewardsProgram } from "@abonten/types/rewards";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 // "How to earn" / "How to use" copy built from the ACTIVE program terms, so
 // the page can never promise a rate the reward engine doesn't pay. Anything
@@ -12,15 +12,17 @@ export default function RewardsHowItWorks({
   program: RewardsProgram;
 }) {
   const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+  const locale = useLocale();
 
-  const earn = rewardsEarnLines(program);
+  const earn = rewardsEarnLines({ t: tc, locale }, program);
 
   const use: string[] = [];
   if (program.redemption.promotions) {
-    use.push("Feature your events and places.");
+    use.push(t("featureYourEventsAndPlaces"));
   }
   if (program.redemption.tickets) {
-    use.push("Pay for tickets at checkout.");
+    use.push(t("payForTicketsAtCheckout"));
   }
 
   return (

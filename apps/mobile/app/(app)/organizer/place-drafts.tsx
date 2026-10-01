@@ -129,7 +129,7 @@ export default function PlaceDraftsScreen() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="your drafts"
+            subject={t("yourDrafts")}
             onRetry={() => q.refetch()}
             loading={<ActivityIndicator className="mt-10" />}
           />

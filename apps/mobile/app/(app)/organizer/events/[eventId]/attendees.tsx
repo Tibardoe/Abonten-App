@@ -194,7 +194,7 @@ export default function EventAttendeesScreen() {
           ) : (
             <QueryUnavailable
               view={view}
-              subject="the attendee list"
+              subject={t("theAttendeeList")}
               onRetry={() => q.refetch()}
               loading={<ActivityIndicator className="mt-10" />}
             />

@@ -66,9 +66,9 @@ type FavSub = "events" | "places";
 type ReviewSub = "event" | "place";
 
 const SEGMENT_LABEL: Record<SpotlightSegment, string> = {
-  published: "Published",
-  saved: "Saved",
-  drafts: "Drafts",
+  published: "published",
+  saved: "saved",
+  drafts: "drafts",
 };
 
 type GridRow = { id: string; tiles: SpotlightTile[] };
@@ -294,7 +294,7 @@ export default function UserProfileScreen() {
         {profileView.kind === "offline" || profileView.kind === "error" ? (
           <QueryUnavailable
             view={profileView}
-            subject="this profile"
+            subject={t("thisProfile")}
             onRetry={() => profileQuery.refetch()}
           />
         ) : (
@@ -329,7 +329,7 @@ export default function UserProfileScreen() {
           <SegmentedTabs
             options={segments.map((key) => ({
               key,
-              label: SEGMENT_LABEL[key],
+              label: t(SEGMENT_LABEL[key]),
             }))}
             value={currentSegment}
             onChange={setSegment}
@@ -453,7 +453,7 @@ export default function UserProfileScreen() {
             ) : (
               <QueryUnavailable
                 view={tabView}
-                subject="this tab"
+                subject={t("thisTab")}
                 onRetry={() => active.refetch()}
                 loading={<Spinner className="mt-6" />}
               />

@@ -115,7 +115,7 @@ export function MessageActionOverlay({
         // so its text wraps identically and it keeps the bubble's exact
         // width and horizontal position (spec §8).
         maxPreviewWidth={(screen.width - 24) * 0.85}
-        a11yPreviewLabel="Selected message"
+        a11yPreviewLabel={t("selectedMessage")}
         renderAccessory={
           message
             ? (dismiss) => (

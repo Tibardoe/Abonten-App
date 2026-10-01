@@ -625,10 +625,10 @@ export default function PendingCheckoutsBasket({
         totalLabel={formatMoney(currency, selectedGrandTotal)}
         statusText={
           selectedSessions.length === 0
-            ? "No checkout selected"
+            ? t("noCheckoutSelected")
             : allSelectedAreFree
-              ? "Free — ready to confirm"
-              : (paymentStatus.selectedMethodLabel ?? "Select a payment method")
+              ? t("freeReadyToConfirm")
+              : (paymentStatus.selectedMethodLabel ?? t("selectAPaymentMethod"))
         }
       >
         {selectedSessions.length > 0 && !allSelectedAreFree ? (

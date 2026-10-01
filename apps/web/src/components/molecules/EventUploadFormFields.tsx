@@ -152,7 +152,7 @@ export default function EventUploadFormFields({
                   <FormControl>
                     <PostInput
                       type="text"
-                      inputPlaceholder="Title"
+                      inputPlaceholder={t("title")}
                       {...field}
                     />
                   </FormControl>
@@ -172,7 +172,7 @@ export default function EventUploadFormFields({
                   <FormControl>
                     <PostInput
                       type="text"
-                      inputPlaceholder="Description"
+                      inputPlaceholder={t("description")}
                       {...field}
                     />
                   </FormControl>
@@ -279,7 +279,7 @@ export default function EventUploadFormFields({
                   <FormControl>
                     <PostInput
                       type="number"
-                      inputPlaceholder="Capacity"
+                      inputPlaceholder={t("capacity")}
                       {...field}
                       onChange={(e) =>
                         field.onChange(
@@ -328,7 +328,7 @@ export default function EventUploadFormFields({
               handleChecked={handleChecked}
             />
 
-            {ticket === "Single Ticket Type" && (
+            {ticket === t("singleTicketType") && (
               <TicketInputs
                 ticketType={ticket}
                 singleTicketPrice={singleTicket}
@@ -338,7 +338,7 @@ export default function EventUploadFormFields({
               />
             )}
 
-            {ticket === "Multiple Ticket Types" && (
+            {ticket === t("multipleTicketTypes") && (
               <TicketInputs
                 ticketType={ticket}
                 multipleTickets={multipleTickets}

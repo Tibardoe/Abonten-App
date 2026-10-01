@@ -18,7 +18,7 @@ export default function NoEventsInLocation({ location }: { location: string }) {
   const [showChangeLocationModal, setShowChangeLocationModal] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const label = locationLabelFromSlug(location);
+  const label = locationLabelFromSlug(location, t("yourArea"));
 
   const showPlaces = () => {
     const params = new URLSearchParams(searchParams.toString());

@@ -1,5 +1,6 @@
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import type { TicketPdfData } from "@abonten/core/ticketPdfData";
+import { translatorFor } from "@abonten/ui-native/i18n";
 
 // The stacked Abonten logo as a PNG — the same asset the web ticket PDF uses.
 // Mirrors apps/web/src/config/brandAssets.ts `ABONTEN_PDF_LOGO_URL`; kept in
@@ -21,10 +22,12 @@ function escapeHtml(value: string): string {
  * "Download As PDF" button, so the three can't drift into different designs.
  */
 export function buildTicketReceiptHtml(ticket: TicketPdfData): string {
+  // The same words as the web ticket PDF (namespace `common`).
+  const t = translatorFor("common");
   const activeStatus = ticket.status === "active" || ticket.status === "used";
-  const statusText = ticket.status === "used" ? "Checked in" : ticket.status;
+  const statusText = ticket.status === "used" ? t("checkedIn") : ticket.status;
   const attendeeRow = ticket.attendeeName
-    ? `<div class="row"><span class="label">Attendee</span><span class="value">${escapeHtml(
+    ? `<div class="row"><span class="label">${escapeHtml(t("attendee"))}</span><span class="value">${escapeHtml(
         ticket.attendeeName,
       )}</span></div>`
     : "";
@@ -61,8 +64,8 @@ export function buildTicketReceiptHtml(ticket: TicketPdfData): string {
 </head>
 <body>
   <img class="logo" src="${ABONTEN_LOGO_URL}" alt="Abonten" />
-  <div class="heading">Receipt</div>
-  <div class="issued">Issued on: ${escapeHtml(ticket.issuedAt)}</div>
+  <div class="heading">${escapeHtml(t("receipt"))}</div>
+  <div class="issued">${escapeHtml(t("issuedOn2", { issuedAt: ticket.issuedAt }))}</div>
 
   <div class="card">
     <img class="flyer" src="${escapeHtml(ticket.flyerImageUrl)}" alt="${escapeHtml(
@@ -71,24 +74,24 @@ export function buildTicketReceiptHtml(ticket: TicketPdfData): string {
     <div class="card-body">
       <div class="title">${escapeHtml(ticket.eventTitle)}</div>
       ${attendeeRow}
-      <div class="row"><span class="label">Ticket Type</span><span class="value">${escapeHtml(
+      <div class="row"><span class="label">${escapeHtml(t("ticketType2"))}</span><span class="value">${escapeHtml(
         ticket.ticketTypeName,
       )}</span></div>
-      <div class="row"><span class="label">Ticket Code</span><span class="value">${escapeHtml(
+      <div class="row"><span class="label">${escapeHtml(t("ticketCode2"))}</span><span class="value">${escapeHtml(
         ticket.ticketCode,
       )}</span></div>
-      <div class="row"><span class="label">Status</span><span class="${
+      <div class="row"><span class="label">${escapeHtml(t("statusLabel"))}</span><span class="${
         activeStatus ? "status-active" : "status-other"
       }">${escapeHtml(statusText)}</span></div>
-      <div class="row"><span class="label">Location</span><span class="value">${escapeHtml(
+      <div class="row"><span class="label">${escapeHtml(t("location"))}</span><span class="value">${escapeHtml(
         ticket.eventAddress,
       )}</span></div>
-      <div class="row"><span class="label">Date</span><span class="value">${escapeHtml(
+      <div class="row"><span class="label">${escapeHtml(t("date"))}</span><span class="value">${escapeHtml(
         `${ticket.eventDate} ${ticket.eventTime}`.trim(),
       )}</span></div>
       <div class="qr-wrap"><img class="qr" src="${escapeHtml(
         ticket.qrImageUrl,
-      )}" alt="Ticket QR code" /></div>
+      )}" alt="${escapeHtml(t("ticketQrCode"))}" /></div>
       <div class="footer">www.abontenhub.com</div>
     </div>
   </div>

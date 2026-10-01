@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
-import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { isPlaceOpenNow } from "@abonten/core/computePlaceOpenStatus";
 import { readEventAddress } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import {
@@ -117,7 +117,7 @@ export async function getUserFavoritePlaces(options?: {
   const favoritesWithPlaceType: FavoritePlaces[] = visible.map((favorite) => {
     const place = favorite.place;
     const openingHours: PlaceOpeningHourRow[] = place.place_opening_hours ?? [];
-    const { isOpen } = computePlaceOpenStatus(
+    const isOpen = isPlaceOpenNow(
       openingHours,
       place.temporary_status,
       new Date(),

@@ -283,16 +283,18 @@ export const MessageBubble = memo(function MessageBubble({
         value: isMine ? t("you") : t("they"),
         clockTime: clockTime(message.created_at),
       })
-    : `${isMine ? "You" : "Them"}: ${
-        message.content ||
-        (isAudio
-          ? "Voice message"
-          : hasImages
-            ? "Photo"
-            : isFile
-              ? "Attachment"
-              : "Message")
-      }, ${clockTime(message.created_at)}`;
+    : t(isMine ? "a11yYouSaid" : "a11yTheySaid", {
+        content:
+          message.content ||
+          (isAudio
+            ? t("voiceMessage")
+            : hasImages
+              ? t("photo")
+              : isFile
+                ? t("attachment")
+                : t("message")),
+        time: clockTime(message.created_at),
+      });
 
   const longPress = Gesture.LongPress()
     .minDuration(260)

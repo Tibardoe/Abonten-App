@@ -182,7 +182,7 @@ export default function PayoutAccountsScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={view}
-          subject="your payout accounts"
+          subject={t("yourPayoutAccounts")}
           onRetry={() => refetch()}
           loading={
             <View className="flex-1 items-center justify-center">

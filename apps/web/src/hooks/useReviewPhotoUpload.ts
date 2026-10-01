@@ -6,6 +6,7 @@ import {
   MAX_REVIEW_PHOTOS,
   MAX_REVIEW_PHOTO_SIZE_BYTES,
 } from "@abonten/core/uploadLimits";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type ReviewPhotoUploadItem = {
@@ -50,6 +51,8 @@ export function useReviewPhotoUpload(
   // hook's own uploads.
   reservedSlots = 0,
 ) {
+  const t = useTranslations("common");
+
   const [items, setItems] = useState<ReviewPhotoUploadItem[]>([]);
   const objectUrls = useRef<Set<string>>(new Set());
   const effectiveMax = Math.max(MAX_REVIEW_PHOTOS - reservedSlots, 0);
@@ -82,7 +85,7 @@ export function useReviewPhotoUpload(
       if (signatureResponse.status !== 200 || !signatureResponse.data) {
         patch(id, {
           status: "error",
-          errorMessage: signatureResponse.message ?? "Failed to start upload.",
+          errorMessage: signatureResponse.message ?? t("failedToStartUpload"),
         });
         return;
       }
@@ -125,11 +128,11 @@ export function useReviewPhotoUpload(
           errorMessage:
             error instanceof Error
               ? error.message
-              : "We couldn't upload this photo. Please try again.",
+              : t("weCouldnTUploadThisPhoto"),
         });
       }
     },
-    [getUploadSignature, patch],
+    [getUploadSignature, patch, t],
   );
 
   const addFiles = useCallback(

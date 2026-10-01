@@ -19,8 +19,7 @@ export default function AvatarUploadButton() {
 
   const { imagePreview, fileInputRef, openFilePicker, handleFileChange } =
     useImageSelection({
-      invalidFileMessage:
-        "Please select an image file for your profile picture.",
+      invalidFileMessage: t("pleaseSelectAnImageFileFor"),
       // Sanity ceiling on the original picked file -- the real size gate
       // applies after cropping/compression (see useAvatarUpload.ts).
       maxSizeBytes: MAX_AVATAR_SOURCE_SIZE_BYTES,

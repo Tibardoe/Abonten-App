@@ -1,9 +1,10 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import { addWeeklyItem, searchWeeklySubjects } from "@/server/actions/weekly";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { WEEKLY_VALIDITY_LABEL } from "@abonten/core/weekly/copy";
+import { weeklyValidityLabel } from "@abonten/core/weekly/copy";
 import type {
   WeeklyAdminSection,
   WeeklySubjectOption,
@@ -129,7 +130,8 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
                     </p>
                     {r.validity ? (
                       <p className="text-destructive">
-                        Cannot be featured: {WEEKLY_VALIDITY_LABEL[r.validity]}
+                        Cannot be featured:{" "}
+                        {weeklyValidityLabel(tc, r.validity)}
                       </p>
                     ) : null}
                   </div>

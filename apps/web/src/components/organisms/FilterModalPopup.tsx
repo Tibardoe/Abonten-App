@@ -9,10 +9,14 @@ import { distances, rating } from "@/data/distanceAndRating";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
+import {
+  distanceFilterOptions,
+  ratingFilterOptions,
+} from "@abonten/core/distanceAndRating";
 import { priceSliderMax } from "@abonten/core/exploreFilters";
 import { currencySymbol } from "@abonten/core/money/formatMoney";
 import { priceParam } from "@abonten/core/parseFilterModalQueries";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import { useState } from "react";
@@ -109,6 +113,8 @@ export default function FilterModalPopup({
   initialMaxDistanceKm,
 }: FilterModalPopupProp) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
+  const locale = useLocale();
 
   const params = useParams();
   const locationSlug =
@@ -335,7 +341,7 @@ export default function FilterModalPopup({
                 value={minMax}
                 onChange={setMinMax}
                 currencyPrefix={priceSymbol}
-                formatMax={() => "Any"}
+                formatMax={() => t("any")}
               />
 
               <hr className="mt-5 border-border" />
@@ -417,7 +423,10 @@ export default function FilterModalPopup({
             mode="single"
             label={t("rating")}
             labelClassName="font-semibold md:text-lg mb-3"
-            options={rating.map((r) => ({ id: r, label: r }))}
+            options={ratingFilterOptions(tc, locale).map((o) => ({
+              id: o.value,
+              label: o.label,
+            }))}
             value={ratingg}
             onChange={setRating}
           />
@@ -431,7 +440,10 @@ export default function FilterModalPopup({
             mode="single"
             label={t("distance")}
             labelClassName="font-semibold md:text-lg mb-3"
-            options={distances.map((d) => ({ id: d, label: d }))}
+            options={distanceFilterOptions(tc, locale).map((o) => ({
+              id: o.value,
+              label: o.label,
+            }))}
             value={distance}
             onChange={setDistance}
           />

@@ -32,9 +32,10 @@ import { openDirections as openMapsDirections } from "@/lib/directions";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { placeShareUrl } from "@/lib/share";
 import { useQueryView } from "@/lib/useQueryView";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
-import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { dayName, getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
@@ -51,7 +52,7 @@ import {
   Stars,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
@@ -65,8 +66,6 @@ import {
   ScrollView,
   View,
 } from "react-native";
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function timeLabel(t: string | null): string {
   if (!t) return "";
@@ -111,6 +110,8 @@ function ContactRow({
 
 export default function PlaceDetailScreen() {
   const t = useTranslations("places");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
 
   const toast = useToast();
   // `visit`: opened from a place's check-in QR code (Rewards Phase 8).
@@ -188,7 +189,7 @@ export default function PlaceDetailScreen() {
           <DetailHeaderActions
             kind="place"
             id={id}
-            shareTitle={place?.name ?? "Place"}
+            shareTitle={place?.name ?? t("place")}
             shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
             onReport={
               session && place?.owner_id && place.owner_id !== session.user.id
@@ -247,7 +248,7 @@ export default function PlaceDetailScreen() {
         {header}
         <QueryUnavailable
           view={detailView}
-          subject="this place"
+          subject={t("thisPlace")}
           onRetry={() => refetch()}
           loading={<PlaceDetailSkeleton />}
           className="flex-1 justify-center"
@@ -272,6 +273,7 @@ export default function PlaceDetailScreen() {
         })
       : null;
   const openStatus = computePlaceOpenStatus(
+    { t: tc, locale },
     place.openingHours,
     place.temporary_status,
     new Date(),
@@ -362,7 +364,8 @@ export default function PlaceDetailScreen() {
             <View className="flex-row flex-wrap items-center gap-2">
               <View className="rounded-full bg-black/40 px-3 py-1">
                 <AppText className="text-[12px] font-semibold text-white">
-                  {place.place_category?.name ?? t("place")}
+                  {placeCategoryLabel(tc, place.place_category ?? {}) ||
+                    t("place")}
                 </AppText>
               </View>
               {place.verified ? (
@@ -620,7 +623,7 @@ export default function PlaceDetailScreen() {
                       }`}
                     >
                       <AppText variant="small">
-                        {DAY_LABELS[h.day_of_week]}
+                        {dayName(h.day_of_week, "short", locale)}
                       </AppText>
                       <AppText variant="muted">
                         {h.is_closed || !h.open_time || !h.close_time
@@ -781,7 +784,8 @@ export default function PlaceDetailScreen() {
           <View className="flex-row items-center gap-3">
             <View className="flex-1">
               <AppText variant="caption" numberOfLines={1}>
-                {place.place_category?.name ?? t("place")}
+                {placeCategoryLabel(tc, place.place_category ?? {}) ||
+                  t("place")}
               </AppText>
               <AppText variant="bodyStrong" numberOfLines={1}>
                 {openStatus.label}

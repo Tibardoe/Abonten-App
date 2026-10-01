@@ -5,6 +5,7 @@ import {
 } from "@abonten/core/reviews/reviewList";
 import { withReferralCode } from "@abonten/core/rewards/referralCode";
 import { weeklyEditionPath } from "@abonten/core/weekly/copy";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { Platform, Share } from "react-native";
 
 // Native share — the mobile stand-in for the web share buttons. The web
@@ -82,7 +83,10 @@ export async function shareLink(
   url: string | null,
 ): Promise<ShareOutcome> {
   if (!url) {
-    return { kind: "failed", message: "This link isn't available yet." };
+    return {
+      kind: "failed",
+      message: translatorFor("common")("thisLinkIsnTAvailableYet"),
+    };
   }
   try {
     const result = await Share.share(
@@ -105,7 +109,7 @@ export async function shareLink(
       message:
         e instanceof Error && e.message
           ? e.message
-          : "The share sheet couldn't be opened.",
+          : translatorFor("common")("theShareSheetCouldnTBe"),
     };
   }
 }

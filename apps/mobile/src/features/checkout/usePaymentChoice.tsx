@@ -38,6 +38,8 @@ function savedLabel(m: PaymentMethodRow, t: (key: string) => string): string {
 }
 
 export function usePaymentChoice(target: PaymentTarget | null) {
+  const t = useTranslations("checkout");
+
   const queryClient = useQueryClient();
   const { data: methodsRes } = usePaymentMethods();
   const saved = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
@@ -92,7 +94,7 @@ export function usePaymentChoice(target: PaymentTarget | null) {
     const answer = refreshed.data?.status === 200 ? refreshed.data.data : null;
     const entry = answer?.saved.find((s) => s.id === id);
     if (answer && !entry?.usable) {
-      return entry?.reason ?? "It can't pay for this order.";
+      return entry?.reason ?? t("itCanTPayForThis");
     }
     setSavedId(id);
     setMethod(null);

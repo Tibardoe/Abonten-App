@@ -124,7 +124,7 @@ export default async function page({
         {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
           <FulfillmentRecoveryBanner
             paymentAttemptId={latestAttempt.id}
-            initialMessage="Your payment was successful. We're completing your promotion now — tap Retry to finish."
+            initialMessage={t("yourPaymentWasSuccessfulWeRe")}
           />
         )}
 
@@ -229,7 +229,7 @@ export default async function page({
         {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
           <FulfillmentRecoveryBanner
             paymentAttemptId={latestAttempt.id}
-            initialMessage="Your payment was successful. We're finishing your promotion now — tap Retry to finish."
+            initialMessage={t("yourPaymentWasSuccessfulWeRe2")}
           />
         )}
 
@@ -337,7 +337,7 @@ export default async function page({
         {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
           <FulfillmentRecoveryBanner
             paymentAttemptId={latestAttempt.id}
-            initialMessage="Your payment was successful. We're completing your promotion now — tap Retry to finish."
+            initialMessage={t("yourPaymentWasSuccessfulWeRe")}
           />
         )}
 

@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import {
   EMPTY_REVIEW_SUMMARY,
   type ReviewListRpcRow,
-  emptyReviewsMessage,
-  formatReviewCount,
   parseReviewRow,
   parseReviewSummary,
   parseSharedReviewId,
   ratingShares,
   reviewByIdArgs,
   reviewListArgs,
+  reviewSortOptions,
   reviewerDisplayName,
   reviewsPath,
   toReviewPage,
@@ -155,11 +155,11 @@ describe("summary", () => {
 });
 
 describe("copy and links", () => {
-  it("counts and empty states", () => {
-    expect(formatReviewCount(1)).toBe("1 review");
-    expect(formatReviewCount(1234)).toBe("1,234 reviews");
-    expect(emptyReviewsMessage(1, "place").title).toBe("No 1-star reviews yet");
-    expect(emptyReviewsMessage(null, "event").title).toBe("No reviews yet");
+  it("offers both sort orders, worded from the catalog", () => {
+    expect(reviewSortOptions(t)).toEqual([
+      { value: "helpful", label: "Most helpful" },
+      { value: "recent", label: "Most recent" },
+    ]);
   });
 
   it("builds review links and only accepts ids from ?review=", () => {

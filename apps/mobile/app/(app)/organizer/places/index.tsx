@@ -5,6 +5,7 @@ import {
 } from "@/features/organizer/useOrganizerPlaces";
 import { useQueryView } from "@/lib/useQueryView";
 import type { OrganizerPlaceRow } from "@abonten/api-client";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Refresher } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -14,12 +15,13 @@ import { useCallback } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 
 const CLOSED_LABEL: Record<string, string> = {
-  permanently_closed: "Permanently closed",
-  temporarily_closed: "Temporarily closed",
+  permanently_closed: "permanentlyClosed",
+  temporarily_closed: "temporarilyClosed",
 };
 
 function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const cover =
@@ -30,7 +32,9 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
         })
       : null;
   const closed = place.temporary_status
-    ? (CLOSED_LABEL[place.temporary_status] ?? null)
+    ? CLOSED_LABEL[place.temporary_status]
+      ? t(CLOSED_LABEL[place.temporary_status])
+      : null
     : null;
 
   return (
@@ -62,7 +66,8 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
           className="text-[13px] text-muted-foreground"
           numberOfLines={1}
         >
-          {place.place_category?.name ?? t("uncategorized")}
+          {placeCategoryLabel(tc, place.place_category ?? {}) ||
+            t("uncategorized")}
           {closed ? ` · ${closed}` : ""}
         </AppText>
       </View>
@@ -114,7 +119,7 @@ export default function OrganizerPlacesScreen() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="your places"
+            subject={t("yourPlaces3")}
             onRetry={() => q.refetch()}
             loading={<ActivityIndicator className="mt-10" />}
           />

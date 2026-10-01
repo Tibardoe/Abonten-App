@@ -62,14 +62,14 @@ export default function DesktopFooter() {
         <div className="flex flex-col gap-4">
           <Image
             src="/assets/images/brand/abonten-logotype-light.svg"
-            alt="Abonten"
+            alt={t("abonten")}
             width={150}
             height={28}
             className="h-7 w-auto self-start dark:hidden"
           />
           <Image
             src="/assets/images/brand/abonten-logotype-night.svg"
-            alt="Abonten"
+            alt={t("abonten")}
             width={150}
             height={28}
             className="hidden h-7 w-auto self-start dark:block"

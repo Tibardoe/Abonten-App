@@ -52,7 +52,7 @@ export function AreaSuggestionCard() {
             size="sm"
             onPress={useCurrent}
             loading={busy}
-            loadingTitle="Locating…"
+            loadingTitle={t("locating")}
           />
         </View>
       </View>

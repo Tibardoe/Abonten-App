@@ -99,13 +99,21 @@ function localizedNames(
   return names;
 }
 
-function dayName(weekday: number, style: "short" | "long", locale?: string) {
+export function dayName(
+  weekday: number,
+  style: "short" | "long",
+  locale?: string | null,
+) {
   if (isEnglishLike(locale))
     return (style === "short" ? DAYS_SHORT : DAYS_LONG)[weekday];
   return localizedNames(intlLocale(locale), "weekday", style)[weekday];
 }
 
-function monthName(month: number, style: "short" | "long", locale?: string) {
+export function monthName(
+  month: number,
+  style: "short" | "long",
+  locale?: string | null,
+) {
   if (isEnglishLike(locale))
     return (style === "short" ? MONTHS_SHORT : MONTHS_LONG)[month];
   return localizedNames(intlLocale(locale), "month", style)[month];

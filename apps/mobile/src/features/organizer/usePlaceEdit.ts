@@ -14,12 +14,14 @@ import type {
   PlaceTemporaryStatus,
   UpdatePlaceResult,
 } from "@abonten/api-client";
+import { dayName } from "@abonten/core/dateFormatter";
 import { getPlaceSchema } from "@abonten/validation/placeSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 
 // Mobile echo of the web useManagePlaceDetailsForm + ManagePlaceHoursSection.
 // One hook backing the per-place edit screen: core-fields form (Details &
@@ -27,24 +29,19 @@ import { useToast } from "@abonten/ui-native";
 // Each has its own save, mirroring how the web tabs each own their action.
 
 const PLACE_MESSAGES = {
-  nameRequired: "Give your place a name.",
-  nameTooLong: "That name is too long (max 150 characters).",
-  descriptionRequired: "Add a short description.",
-  descriptionTooLong: "That description is too long (max 2000 characters).",
-  invalidUrl: "Enter a valid website URL.",
-  invalidPhone: "Enter a valid phone number.",
-  invalidWhatsapp: "Enter a valid WhatsApp number.",
+  nameRequired: "giveYourPlaceAName",
+  nameTooLong: "thatNameIsTooLongMax",
+  descriptionRequired: "addAShortDescription",
+  descriptionTooLong: "thatDescriptionIsTooLongMax",
+  invalidUrl: "enterAValidWebsiteUrl",
+  invalidPhone: "enterAValidPhoneNumber",
+  invalidWhatsapp: "enterAValidWhatsappNumber",
 };
 
-export const DAY_LABELS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+/** Day names (0 = Sunday) in the reader's language. */
+export function dayLabel(dayOfWeek: number, locale?: string | null): string {
+  return dayName(dayOfWeek, "long", locale);
+}
 
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -72,6 +69,8 @@ function toHoursRows(
 }
 
 export function usePlaceEdit(placeId: string) {
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const query = usePlaceManageContext(placeId);
   const loadView = useQueryView(query);
@@ -80,7 +79,15 @@ export function usePlaceEdit(placeId: string) {
   const update = useUpdatePlace(placeId);
   const updateHours = useUpdatePlaceHours(placeId);
   const setStatusMutation = useSetPlaceStatus(placeId);
-  const placeSchema = useMemo(() => getPlaceSchema(PLACE_MESSAGES), []);
+  const placeSchema = useMemo(
+    () =>
+      getPlaceSchema(
+        Object.fromEntries(
+          Object.entries(PLACE_MESSAGES).map(([name, key]) => [name, t(key)]),
+        ) as typeof PLACE_MESSAGES,
+      ),
+    [t],
+  );
 
   const [prefilled, setPrefilled] = useState(false);
 
@@ -197,8 +204,8 @@ export function usePlaceEdit(placeId: string) {
     const resolved = await autocomplete.resolvePlace(id);
     setResolvingLocation(false);
     if (!resolved) {
-      toast.error("Couldn't use that location", {
-        description: "Please try another suggestion or type the address.",
+      toast.error(t("couldnTUseThatLocation"), {
+        description: t("pleaseTryAnotherSuggestionOrType"),
       });
       return;
     }
@@ -210,8 +217,8 @@ export function usePlaceEdit(placeId: string) {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) {
-        toast.error("Location access needed", {
-          description: "Allow location access to use your current position.",
+        toast.error(t("locationAccessNeeded"), {
+          description: t("allowLocationAccessToUseYour"),
         });
         return;
       }
@@ -227,8 +234,8 @@ export function usePlaceEdit(placeId: string) {
         : `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
       applyLocation(pos.coords.latitude, pos.coords.longitude, label);
     } catch {
-      toast.error("Couldn't get your location", {
-        description: "Please try again or type the address.",
+      toast.error(t("couldnTGetYourLocation"), {
+        description: t("pleaseTryAgainOrTypeThe"),
       });
     } finally {
       setResolvingLocation(false);
@@ -242,8 +249,8 @@ export function usePlaceEdit(placeId: string) {
   async function pickCover() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to pick a cover photo.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToPickA"),
       });
       return;
     }
@@ -266,15 +273,14 @@ export function usePlaceEdit(placeId: string) {
   async function saveDetails(): Promise<UpdatePlaceResult | null> {
     if (!validateText()) return null;
     if (categoryId === null) {
-      toast.error("Pick a category", {
-        description: "Choose the category that fits best.",
+      toast.error(t("pickACategory"), {
+        description: t("chooseTheCategoryThatFitsBest"),
       });
       return null;
     }
     if (!address.trim() || !coords) {
-      toast.error("Confirm the location", {
-        description:
-          "Pick the address from a suggestion, the map, or your current location.",
+      toast.error(t("confirmTheLocation"), {
+        description: t("pickTheAddressFromASuggestion"),
       });
       return null;
     }
@@ -297,9 +303,8 @@ export function usePlaceEdit(placeId: string) {
 
   async function saveHours(): Promise<PlaceHoursStatusResult | null> {
     if (!hoursComplete) {
-      toast.error("Check your hours", {
-        description:
-          "Every open day needs an open and close time in HH:MM format.",
+      toast.error(t("checkYourHours"), {
+        description: t("everyOpenDayNeedsAnOpen"),
       });
       return null;
     }

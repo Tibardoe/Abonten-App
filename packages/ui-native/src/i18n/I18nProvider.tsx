@@ -14,6 +14,7 @@ import {
   useFormatter as useIntlFormatter,
   useTranslations as useIntlTranslations,
 } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { CATALOG, I18N_LOCALES, type I18nLocale } from "./catalog";
 
 // The native twin of the web app's next-intl setup, on the same library
@@ -83,6 +84,74 @@ function messagesFor(locale: I18nLocale): Messages {
   return merged;
 }
 
+// Stable identities: use-intl rebuilds every translator when these change,
+// and a translator that changes identity re-runs each effect that lists it.
+function ignoreIntlError(): void {}
+
+function keyPathFallback({
+  namespace,
+  key,
+}: {
+  namespace?: string;
+  key: string;
+}): string {
+  return namespace ? `${namespace}.${key}` : key;
+}
+
+// The language the app is showing right now, for code outside React (the
+// API client sends it with every request so the server answers in it).
+let currentLocale: I18nLocale = DEFAULT_LOCALE;
+
+export function getCurrentLocale(): I18nLocale {
+  return currentLocale;
+}
+
+type ModuleTranslator = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
+const moduleTranslators = new Map<string, ModuleTranslator>();
+
+/**
+ * A translator for code that is not a component or a hook: a helper that
+ * words a toast, a share message or an upload error (`src/lib`, a module
+ * singleton). `translatorFor("common")("uploadFailed")` is resolved when it
+ * is called, so it speaks the language the app is showing at that moment.
+ * Inside React use useTranslations(): this one does not re-render anything.
+ */
+export function translatorFor(namespace: string): ModuleTranslator {
+  return (key, values) => {
+    const id = `${currentLocale}|${namespace}`;
+    let translate = moduleTranslators.get(id);
+    if (!translate) {
+      translate = createTranslator({
+        locale: intlTag(currentLocale),
+        messages: messagesFor(currentLocale),
+        namespace,
+        onError: ignoreIntlError,
+        getMessageFallback: keyPathFallback,
+      }) as unknown as ModuleTranslator;
+      moduleTranslators.set(id, translate);
+    }
+    return translate(key, values);
+  };
+}
+
+type LocaleChangeListener = (locale: I18nLocale) => void;
+const localeChangeListeners = new Set<LocaleChangeListener>();
+
+/**
+ * Called when the person picks a language in Settings (not on launch). The
+ * app uses it to save the choice to their account so notifications and
+ * emails arrive in it too.
+ */
+export function onLocaleChosen(listener: LocaleChangeListener): () => void {
+  localeChangeListeners.add(listener);
+  return () => {
+    localeChangeListeners.delete(listener);
+  };
+}
+
 type LocaleContextValue = {
   locale: I18nLocale;
   setLocale: (next: I18nLocale) => void;
@@ -125,7 +194,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const setLocale = useCallback((next: I18nLocale) => {
     setLocaleState(next);
     SecureStore.setItemAsync(STORAGE_KEY, next).catch(() => {});
+    for (const listener of localeChangeListeners) listener(next);
   }, []);
+
+  currentLocale = locale;
 
   const value = useMemo<LocaleContextValue>(
     () => ({ locale, setLocale }),
@@ -142,10 +214,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         // A missing key is a catalog bug, not a crash: show the key path
         // (which the catalog parity check in CI would have refused) and
         // keep rendering.
-        onError={() => {}}
-        getMessageFallback={({ namespace, key }) =>
-          namespace ? `${namespace}.${key}` : key
-        }
+        onError={ignoreIntlError}
+        getMessageFallback={keyPathFallback}
       >
         {children}
       </IntlProvider>

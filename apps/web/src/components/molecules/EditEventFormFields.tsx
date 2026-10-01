@@ -123,7 +123,11 @@ export default function EditEventFormFields({
                   {t("eventName")}
                 </FormLabel>
                 <FormControl>
-                  <PostInput type="text" inputPlaceholder="Title" {...field} />
+                  <PostInput
+                    type="text"
+                    inputPlaceholder={t("title")}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage className="text-sm" />
               </FormItem>
@@ -141,7 +145,7 @@ export default function EditEventFormFields({
                 <FormControl>
                   <PostInput
                     type="text"
-                    inputPlaceholder="Description"
+                    inputPlaceholder={t("description")}
                     {...field}
                   />
                 </FormControl>
@@ -246,7 +250,7 @@ export default function EditEventFormFields({
                     <FormControl>
                       <PostInput
                         type="number"
-                        inputPlaceholder="Capacity"
+                        inputPlaceholder={t("capacity")}
                         {...field}
                         onChange={(e) =>
                           field.onChange(

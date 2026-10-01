@@ -41,7 +41,7 @@ export default function ContinueEventDraftButton({
     openFilePicker,
     handleFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your event flyer.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
     onInvalidFile: (message) => setError(message),
     onSelect: () => setShowModal(true),
   });

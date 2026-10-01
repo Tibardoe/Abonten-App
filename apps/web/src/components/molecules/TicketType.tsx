@@ -41,21 +41,21 @@ export default function TicketType({
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => handleTicket("Free")}
+              onClick={() => handleTicket(t("free"))}
               className="flex justify-between items-center w-full text-sm"
             >
               {t("free")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== "Free",
-                    flex: ticket === "Free",
+                    hidden: ticket !== t("free"),
+                    flex: ticket === t("free"),
                   })}
                 />
               </span>
             </button>
 
-            {ticket === "Free" && (
+            {ticket === t("free") && (
               <div className="flex items-center gap-2 text-foreground">
                 <button
                   type="button"
@@ -80,15 +80,15 @@ export default function TicketType({
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => handleTicket("Single Ticket Type")}
+              onClick={() => handleTicket(t("singleTicketType"))}
               className="flex justify-between items-center w-full text-sm"
             >
               {t("singleTicketType")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== "Single Ticket Type",
-                    flex: ticket === "Single Ticket Type",
+                    hidden: ticket !== t("singleTicketType"),
+                    flex: ticket === t("singleTicketType"),
                   })}
                 />
               </span>
@@ -98,15 +98,15 @@ export default function TicketType({
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => handleTicket("Multiple Ticket Types")}
+              onClick={() => handleTicket(t("multipleTicketTypes"))}
               className="flex justify-between items-center w-full text-sm"
             >
               {t("multipleTicketTypes")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== "Multiple Ticket Types",
-                    flex: ticket === "Multiple Ticket Types",
+                    hidden: ticket !== t("multipleTicketTypes"),
+                    flex: ticket === t("multipleTicketTypes"),
                   })}
                 />
               </span>

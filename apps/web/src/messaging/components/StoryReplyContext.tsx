@@ -26,11 +26,12 @@ export function StoryReplyContext({
   isMine: boolean;
 }) {
   const t = useTranslations("messaging");
+  const tc = useTranslations("core");
 
   const ctx = readStoryReplyContext(systemData);
   if (!ctx) return null;
   const live = storyReplyStoryLive(ctx);
-  const label = storyReplyLabel(ctx, isMine);
+  const label = storyReplyLabel(tc, ctx, isMine);
 
   return (
     <div

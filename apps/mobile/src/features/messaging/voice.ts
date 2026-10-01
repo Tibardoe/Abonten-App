@@ -1,4 +1,5 @@
 import type { SendMessageAttachmentInput } from "@abonten/types/messagingType";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   AudioModule,
   RecordingPresets,
@@ -55,6 +56,8 @@ function meterToLevel(db: number | undefined): number {
 }
 
 export function useVoiceRecorder() {
+  const t = useTranslations("messaging");
+
   const recorder = useAudioRecorder({
     ...RecordingPresets.HIGH_QUALITY,
     isMeteringEnabled: true,
@@ -157,7 +160,7 @@ export function useVoiceRecorder() {
       setPhase("idle");
       if (prompted) return "denied";
       throw new AttachmentPermissionError(
-        "Microphone access is needed to record a voice message.",
+        t("microphoneAccessIsNeededToRecord"),
       );
     }
     setPermissionDenied(false);
@@ -185,7 +188,7 @@ export function useVoiceRecorder() {
         ? e
         : new Error("Couldn't start recording. Please try again.");
     }
-  }, [recorder, resetAudioMode]);
+  }, [recorder, resetAudioMode, t]);
 
   const lock = useCallback(() => {
     setPhase((p) => (p === "recording" ? "locked" : p));

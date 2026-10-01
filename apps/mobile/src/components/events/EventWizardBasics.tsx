@@ -1,4 +1,8 @@
 import type { EventWizard } from "@/features/events/useEventWizard";
+import {
+  eventCategoryLabel,
+  eventTypeLabel,
+} from "@abonten/core/categoryLabels";
 import { AppText, Chip, Field, Input } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { Switch, View } from "react-native";
@@ -9,6 +13,7 @@ import { Switch, View } from "react-native";
 // Step navigation is owned by the screen header (app/(app)/event/new.tsx).
 export function EventWizardBasics({ w }: { w: EventWizard }) {
   const t = useTranslations("events");
+  const tc = useTranslations("core");
 
   return (
     <View className="gap-4">
@@ -36,7 +41,7 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
           {w.categories.map((c) => (
             <Chip
               key={c}
-              label={c}
+              label={eventCategoryLabel(tc, c)}
               selected={c === w.category}
               onPress={() => w.selectCategory(c)}
             />
@@ -47,12 +52,12 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
       {w.category ? (
         <Field label={t("types")} hint={t("pickOneOrMore")}>
           <View className="flex-row flex-wrap gap-2">
-            {w.categoryTypes.map((t) => (
+            {w.categoryTypes.map((type) => (
               <Chip
-                key={t}
-                label={t}
-                selected={w.types.includes(t)}
-                onPress={() => w.toggleType(t)}
+                key={type}
+                label={eventTypeLabel(tc, type)}
+                selected={w.types.includes(type)}
+                onPress={() => w.toggleType(type)}
               />
             ))}
           </View>
