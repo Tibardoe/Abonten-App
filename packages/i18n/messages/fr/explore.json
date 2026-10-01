@@ -117,7 +117,7 @@
   "showMap": "Afficher la carte",
   "showMore": "{value} Afficher plus",
   "showResults": "Afficher les résultats",
-  "showResultsFilter": "Afficher les résultats · {activeCount} filtre{value}",
+  "showResultsFilter": "Show results · {activeCount, plural, one {# filter} other {# filters}}",
   "showingAreaWhereYouLastWere": "Affichage de {label}, votre dernière position. Activez la localisation pour continuer à vous suivre.",
   "showingForNowTurnOnLocation": "Affichage de {label} pour l'instant. Activez la localisation pour voir ce qui se trouve près de vous, ou choisissez une zone.",
   "showingUntilYourLocationComesThrough": "Affichage de {label} en attendant votre position.",

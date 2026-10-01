@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import { type EligibilitySnapshot, evaluateEligibility } from "./eligibility";
 
 const good: EligibilitySnapshot = {
@@ -38,7 +39,7 @@ const settings = { offlineMaxDistanceM: 200 };
 
 describe("evaluateEligibility", () => {
   it("passes a complete offline onboarding", () => {
-    const r = evaluateEligibility(good, rule, settings);
+    const r = evaluateEligibility(t, good, rule, settings);
     expect(r.pass).toBe(true);
     expect(r.hard).toEqual([]);
     expect(r.soft).toEqual([]);
@@ -46,6 +47,7 @@ describe("evaluateEligibility", () => {
 
   it("fails hard when the owner is unverified, a team member, or lost the listing", () => {
     const r = evaluateEligibility(
+      t,
       {
         ...good,
         ownerPhoneVerified: false,
@@ -67,6 +69,7 @@ describe("evaluateEligibility", () => {
 
   it("flags soft problems: photos, description, distance, duplicates", () => {
     const r = evaluateEligibility(
+      t,
       {
         ...good,
         photoCount: 1,
@@ -90,12 +93,14 @@ describe("evaluateEligibility", () => {
 
   it("allows GPS accuracy up to 100 m on top of the distance", () => {
     const within = evaluateEligibility(
+      t,
       { ...good, submissionDistanceM: 280, submissionAccuracyM: 90 },
       rule,
       settings,
     );
     expect(within.soft).toEqual([]);
     const beyond = evaluateEligibility(
+      t,
       { ...good, submissionDistanceM: 320, submissionAccuracyM: 500 },
       rule,
       settings,
@@ -105,6 +110,7 @@ describe("evaluateEligibility", () => {
 
   it("skips the on-site check for online work and unknown checks stay null", () => {
     const r = evaluateEligibility(
+      t,
       {
         ...good,
         mode: "online",
@@ -126,6 +132,7 @@ describe("evaluateEligibility", () => {
 
   it("respects rule switches", () => {
     const r = evaluateEligibility(
+      t,
       {
         ...good,
         hasContact: false,
@@ -147,6 +154,7 @@ describe("evaluateEligibility", () => {
     // The lead has not decided yet: pending, not failed -- and definitely
     // not "ready", which would let money move on an unreviewed submission.
     const r = evaluateEligibility(
+      t,
       { ...good, reviewVerified: null },
       rule,
       settings,
@@ -158,6 +166,7 @@ describe("evaluateEligibility", () => {
 
   it("still fails outright when the lead rejected it", () => {
     const r = evaluateEligibility(
+      t,
       { ...good, reviewVerified: false },
       rule,
       settings,

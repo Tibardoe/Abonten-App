@@ -32,6 +32,7 @@ export const I18N_NAMESPACES = [
   "spotlight",
   "tickets",
   "transactions",
+  "validation",
   "verification",
   "wallet",
   "weekly",

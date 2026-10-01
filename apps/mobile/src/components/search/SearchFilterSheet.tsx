@@ -257,10 +257,7 @@ export function SearchFilterSheet({
           <Button
             title={
               activeCount > 0
-                ? t("showResultsFilter", {
-                    activeCount: activeCount,
-                    value: activeCount === 1 ? "" : "s",
-                  })
+                ? t("showResultsFilter", { activeCount })
                 : t("showResults")
             }
             onPress={() => {

@@ -1,5 +1,6 @@
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { useShareLink } from "@/lib/useShareLink";
+import { reportTitle } from "@abonten/core/reportCopy";
 import { Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
@@ -27,6 +28,7 @@ export function DetailHeaderActions({
   onReport?: () => void;
 }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const share = useShareLink();
   return (
@@ -34,7 +36,7 @@ export function DetailHeaderActions({
       {onReport ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t("reportThis4", { kind: kind })}
+          accessibilityLabel={reportTitle(tc, kind)}
           hitSlop={8}
           onPress={onReport}
           className="p-1 active:opacity-70"

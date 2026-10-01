@@ -446,6 +446,33 @@
       "winding_down": "Winding down"
     }
   },
+  "fieldOpsEligibility": {
+    "category": "Category set",
+    "contact": "A phone or WhatsApp number",
+    "description": "Description of {count}+ characters",
+    "descriptionChars": "{count, plural, one {# character} other {# characters}}",
+    "distanceAway": "{distance} m away",
+    "distanceAwayAccuracy": "{distance} m away (±{accuracy} m)",
+    "duplicateDifferent": "member said it's a different business",
+    "duplicateUnacknowledged": "unacknowledged match",
+    "holding": "Holding period of {days, plural, one {# day} other {# days}} elapsed",
+    "insideTerritory": "Pin is inside the assigned territory",
+    "leadVerified": "Team lead verified",
+    "moderation": "moderation: {state}",
+    "noListingYet": "no listing yet",
+    "noPosition": "no position recorded",
+    "notDuplicate": "No strong match with an existing listing",
+    "onSite": "Submitted within {max} m of the business",
+    "openingHours": "Opening hours given",
+    "ownerMatches": "Listing is still owned by the verified owner",
+    "ownerNotMember": "Owner is not on a Field Ops team",
+    "ownerVerified": "Owner verified their phone",
+    "photos": "At least {count, plural, one {# photo} other {# photos}}",
+    "photosUploaded": "{count} uploaded",
+    "placeNotModerated": "Listing is not hidden or removed",
+    "placePublished": "Listing is published",
+    "placeStatus": "status: {status}"
+  },
   "filters": {
     "anyDistance": "Any distance",
     "customRange": "Custom range",
@@ -495,6 +522,12 @@
   "member": {
     "former": "Former Abonten member",
     "generic": "Abonten member"
+  },
+  "messagePreview": {
+    "attachment": "Attachment",
+    "photo": "Photo",
+    "voice": "Voice message",
+    "you": "You: {preview}"
   },
   "noticeWords": {
     "someone": "Someone"
@@ -906,6 +939,8 @@
     "choose": "Choose a budget.",
     "chooseDuration": "Choose how long the promotion can run.",
     "largest": "The largest budget is {amount}.",
+    "reachAbout": "About {count, plural, one {# person} other {# people}}",
+    "reachRange": "{low, number}–{high, number} people",
     "smallest": "The smallest budget is {amount}.",
     "step": "Budgets go up in steps of {amount}."
   },
@@ -936,9 +971,29 @@
     "noneDescription": "Issued once every ticket in this order is cancelled.",
     "pending": "Refund pending"
   },
+  "report": {
+    "category": {
+      "copyright": "Copyright issue",
+      "fake_listing": "Fake event / place",
+      "fraud_scam": "Fraud or scam",
+      "harassment": "Harassment",
+      "impersonation": "Impersonation",
+      "inappropriate": "Inappropriate content",
+      "misleading": "Misleading information",
+      "other": "Other",
+      "safety": "Safety concern",
+      "spam": "Spam"
+    },
+    "thanks": "Thank you — our team will review this report.",
+    "title": "{target, select, event {Report this event} place {Report this place} event_review {Report this review} place_review {Report this review} user_review {Report this review} user {Report this profile} organizer {Report this organizer} highlight {Report this highlight} message {Report this message} conversation {Report this conversation} spotlight {Report this Spotlight} story {Report this Story} content_comment {Report this comment} other {Report this}}"
+  },
   "reviewSort": {
     "helpful": "Most helpful",
     "recent": "Most recent"
+  },
+  "reviewer": {
+    "attendee": "Attendee",
+    "guest": "Guest"
   },
   "searchFilters": {
     "anyRating": "Any rating",
@@ -961,6 +1016,12 @@
     },
     "within": "Within {distance}",
     "withinOf": "Within {distance} of {location}"
+  },
+  "spotlightBadge": {
+    "draft": "Draft",
+    "hidden": "Hidden",
+    "limited": "Limited",
+    "removed": "Removed"
   },
   "storyReply": {
     "nameReacted": "{name} reacted to your story",

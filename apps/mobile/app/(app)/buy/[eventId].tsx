@@ -582,10 +582,7 @@ export default function BuyTicketsScreen() {
         <View className="gap-2 rounded-xl border border-border bg-card p-4">
           <AppText variant="overline">{t("orderSummary2")}</AppText>
           <SummaryLine
-            label={t("subtotalTicket", {
-              totalCount: totalCount,
-              value: totalCount === 1 ? "" : "s",
-            })}
+            label={t("subtotalTicket", { totalCount })}
             value={money(currency, subtotal)}
           />
           {discount > 0 ? (

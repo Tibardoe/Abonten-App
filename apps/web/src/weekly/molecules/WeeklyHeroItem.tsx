@@ -78,7 +78,10 @@ export default function WeeklyHeroItem({
     : null;
   const rating =
     place?.avg_rating != null && Number(place.avg_rating) > 0
-      ? `${Number(place.avg_rating).toFixed(1)} (${place.review_count} review${place.review_count === 1 ? "" : "s"})`
+      ? t("ratingWithReviews", {
+          rating: Number(place.avg_rating).toFixed(1),
+          count: place.review_count ?? 0,
+        })
       : null;
 
   return (

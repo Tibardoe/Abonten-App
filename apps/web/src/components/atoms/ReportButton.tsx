@@ -2,6 +2,7 @@
 
 import { ReportDialog } from "@/components/organisms/ReportDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { reportTitle } from "@abonten/core/reportCopy";
 import type { ReportTargetType } from "@abonten/types/adminTypes";
 import { Flag } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -27,6 +28,7 @@ export default function ReportButton({
   className?: string;
 }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const { data: user } = useCurrentUser();
   const [open, setOpen] = useState(false);
@@ -39,7 +41,7 @@ export default function ReportButton({
       {variant === "icon" ? (
         <button
           type="button"
-          aria-label={t("reportThis2", { targetType: targetType })}
+          aria-label={reportTitle(tc, targetType)}
           onClick={() => setOpen(true)}
           className={
             className ??

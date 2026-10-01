@@ -21,7 +21,7 @@ import { useState, useTransition } from "react";
 export default function OwnerVerificationStep({
   campaignId,
   onboardingId,
-  noun,
+  party,
   verified,
   onVerified,
   fullName,
@@ -34,8 +34,8 @@ export default function OwnerVerificationStep({
   onboardingId: string;
   /** The campaign region's dial prefix, so "024..." is read as local. */
   dialCode: string;
-  /** "owner" for a business, "organiser" for an event. */
-  noun: string;
+  /** Whose phone is verified: a business's owner or an event's organiser. */
+  party: "owner" | "organiser";
   verified: boolean;
   onVerified: () => void;
   fullName: string;
@@ -57,7 +57,7 @@ export default function OwnerVerificationStep({
       // be refused or sent into the void, so it is normalised here first.
       const e164 = toE164(phone, dialCode);
       if (!e164) {
-        toast.error(t("enterTheSPhoneEG", { noun: noun, dialCode: dialCode }));
+        toast.error(t("enterTheSPhoneEG", { party, dialCode }));
         return;
       }
       const res = await requestFieldOpsOwnerOtp({
@@ -69,7 +69,7 @@ export default function OwnerVerificationStep({
       if (res.status === 200) {
         setSent(true);
         setConsentPath(res.data?.consentPath ?? null);
-        toast.success(t("codeSentToThe", { noun: noun }));
+        toast.success(t("codeSentToThe", { party }));
       } else {
         toast.error(res.message ?? t("couldnTSendTheCode"));
       }
@@ -83,12 +83,7 @@ export default function OwnerVerificationStep({
         code: value,
       });
       if (res.status === 200) {
-        toast.success(
-          t("verified2", {
-            toUpperCase: noun[0].toUpperCase(),
-            slice: noun.slice(1),
-          }),
-        );
+        toast.success(t("verified2", { party }));
         onVerified();
       } else {
         toast.error(res.message ?? t("thatCodeDidnTWork"));
@@ -106,16 +101,11 @@ export default function OwnerVerificationStep({
   return (
     <>
       <p className="text-sm text-muted-foreground">
-        {t("aCodeGoesToTheS", { noun: noun })}
+        {t("aCodeGoesToTheS", { party })}
       </p>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="ov-name">
-            {t("sFullName", {
-              toUpperCase: noun[0].toUpperCase(),
-              slice: noun.slice(1),
-            })}
-          </Label>
+          <Label htmlFor="ov-name">{t("sFullName", { party })}</Label>
           <Input
             id="ov-name"
             value={fullName}

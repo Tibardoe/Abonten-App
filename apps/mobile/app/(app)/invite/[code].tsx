@@ -75,14 +75,14 @@ export default function InviteScreen() {
   const name = data?.referrerName ?? "A friend";
   const offer =
     data?.programOn && data.welcomeMinor
-      ? t("getOffYourFirstTicket", {
-          formatCredit: formatCredit(data.welcomeMinor, data.currency),
-          value: data.minOrderMinor
-            ? t("ofOrMore", {
-                formatCredit: formatCredit(data.minOrderMinor, data.currency),
-              })
-            : "",
-        })
+      ? data.minOrderMinor
+        ? t("getOffYourFirstTicketOfOrMore", {
+            formatCredit: formatCredit(data.welcomeMinor, data.currency),
+            min: formatCredit(data.minOrderMinor, data.currency),
+          })
+        : t("getOffYourFirstTicket", {
+            formatCredit: formatCredit(data.welcomeMinor, data.currency),
+          })
       : null;
 
   return (

@@ -11,7 +11,7 @@
   "earlier": "Earlier",
   "emailsAboutPicksAndAlerts": "Emails about picks and alerts",
   "enjoyEventsLikeThis": "Enjoy events like this?",
-  "getNotifiedWhenSimilarEventsAre": "Get notified when similar {value} events are happening {value2}.",
+  "getNotifiedWhenSimilarEventsAre": "Get notified when similar {category} events are happening near {locality}.",
   "getUpdatesFromAndDiscoverSimilar": "Get updates from {name} and discover similar places nearby.",
   "gotIt": "Got it",
   "likeThisPlace": "Like this place?",
@@ -38,5 +38,6 @@
   "weLlOnlySendWhatYou": "We'll only send what you asked for, never more than one pick a day.",
   "yesterday": "Yesterday",
   "youLlHearWhenPostsSomething": "You'll hear when {label} posts something new.",
-  "yourNotifications": "your notifications"
+  "yourNotifications": "your notifications",
+  "getNotifiedWhenSimilarEventsAreNearYou": "Get notified when similar {category} events are happening near you."
 }

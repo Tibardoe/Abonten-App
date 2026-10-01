@@ -101,8 +101,7 @@ export default function EventFinanceSummary({
               <p className="text-xs text-muted-foreground">
                 {t("request", {
                   refundRequestCount: summary.refundRequestCount,
-                })}
-                {summary.refundRequestCount === 1 ? "" : "s"}{" "}
+                })}{" "}
                 {t("pendingCompleted", {
                   formatMoney: formatMoney(
                     summary.currency,

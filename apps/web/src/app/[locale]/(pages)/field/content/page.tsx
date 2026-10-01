@@ -92,8 +92,7 @@ export default async function FieldContentPage() {
         )}
         {closed.length > 0 ? (
           <p className="text-xs text-muted-foreground">
-            {t("closedBrief", { length: closed.length })}
-            {closed.length === 1 ? "" : "s"}.
+            {t("closedBrief", { length: closed.length })}.
           </p>
         ) : null}
       </section>

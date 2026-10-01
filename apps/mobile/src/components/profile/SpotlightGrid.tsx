@@ -1,4 +1,7 @@
-import type { SpotlightTile } from "@abonten/core/content/profileContent";
+import {
+  type SpotlightTile,
+  spotlightBadgeLabel,
+} from "@abonten/core/content/profileContent";
 import { AppText, Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
@@ -34,6 +37,7 @@ export const SpotlightTileRow = memo(function SpotlightTileRow({
 
 function Tile({ tile }: { tile: SpotlightTile }) {
   const t = useTranslations("profile");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   return (
@@ -42,7 +46,7 @@ function Tile({ tile }: { tile: SpotlightTile }) {
       accessibilityRole="button"
       accessibilityLabel={t("spotlightViews", {
         toLocaleString: tile.views.toLocaleString(),
-        value: tile.badge ? `, ${tile.badge}` : "",
+        value: tile.badge ? `, ${spotlightBadgeLabel(tc, tile.badge)}` : "",
       })}
       className="flex-1 overflow-hidden bg-muted active:opacity-80"
       style={{ aspectRatio: 9 / 16 }}
@@ -67,7 +71,7 @@ function Tile({ tile }: { tile: SpotlightTile }) {
       {tile.badge ? (
         <View className="absolute left-1.5 top-1.5 rounded-md bg-black/65 px-1.5 py-0.5">
           <AppText className="text-[10px] font-bold uppercase text-white">
-            {tile.badge}
+            {spotlightBadgeLabel(tc, tile.badge)}
           </AppText>
         </View>
       ) : null}

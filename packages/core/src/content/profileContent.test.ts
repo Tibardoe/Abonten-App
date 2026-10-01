@@ -76,15 +76,15 @@ describe("spotlight tiles", () => {
     });
     expect(tileFromOwnPost(own({ status: "draft" }))).toMatchObject({
       href: "/(app)/spotlight/post/p1",
-      badge: "Draft",
+      badge: "draft",
     });
     expect(tileFromOwnPost(own({ moderationState: "hidden" }))).toMatchObject({
       href: "/(app)/spotlight/post/p1",
-      badge: "Hidden",
+      badge: "hidden",
     });
     expect(
       tileFromOwnPost(own({ moderationState: "restricted" })),
-    ).toMatchObject({ href: "/(app)/spotlight/p1", badge: "Limited" });
+    ).toMatchObject({ href: "/(app)/spotlight/p1", badge: "limited" });
   });
 
   it("never uses a video file as a thumbnail", () => {

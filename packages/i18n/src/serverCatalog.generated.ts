@@ -6,24 +6,35 @@
 import akCore from "../messages/ak/core.json";
 import akEmails from "../messages/ak/emails.json";
 import akServer from "../messages/ak/server.json";
+import akValidation from "../messages/ak/validation.json";
 import deCore from "../messages/de/core.json";
 import deEmails from "../messages/de/emails.json";
 import deServer from "../messages/de/server.json";
+import deValidation from "../messages/de/validation.json";
 import enCore from "../messages/en/core.json";
 import enEmails from "../messages/en/emails.json";
 import enServer from "../messages/en/server.json";
+import enValidation from "../messages/en/validation.json";
 import esCore from "../messages/es/core.json";
 import esEmails from "../messages/es/emails.json";
 import esServer from "../messages/es/server.json";
+import esValidation from "../messages/es/validation.json";
 import frCore from "../messages/fr/core.json";
 import frEmails from "../messages/fr/emails.json";
 import frServer from "../messages/fr/server.json";
+import frValidation from "../messages/fr/validation.json";
 import ptCore from "../messages/pt/core.json";
 import ptEmails from "../messages/pt/emails.json";
 import ptServer from "../messages/pt/server.json";
+import ptValidation from "../messages/pt/validation.json";
 import type { I18nLocale } from "./namespaces";
 
-export const SERVER_NAMESPACES = ["core", "emails", "server"] as const;
+export const SERVER_NAMESPACES = [
+  "core",
+  "emails",
+  "server",
+  "validation",
+] as const;
 export type ServerNamespace = (typeof SERVER_NAMESPACES)[number];
 
 type Messages = Record<string, unknown>;
@@ -36,30 +47,36 @@ export const SERVER_CATALOG: Record<
     core: enCore,
     emails: enEmails,
     server: enServer,
+    validation: enValidation,
   },
   ak: {
     core: akCore,
     emails: akEmails,
     server: akServer,
+    validation: akValidation,
   },
   de: {
     core: deCore,
     emails: deEmails,
     server: deServer,
+    validation: deValidation,
   },
   es: {
     core: esCore,
     emails: esEmails,
     server: esServer,
+    validation: esValidation,
   },
   fr: {
     core: frCore,
     emails: frEmails,
     server: frServer,
+    validation: frValidation,
   },
   pt: {
     core: ptCore,
     emails: ptEmails,
     server: ptServer,
+    validation: ptValidation,
   },
 };

@@ -89,7 +89,7 @@
   "startingCheckout": "Starting checkout…",
   "startsThePayment": "Starts the payment",
   "subtotal": "Subtotal",
-  "subtotalTicket": "Subtotal · {totalCount} ticket{value}",
+  "subtotalTicket": "Subtotal · {totalCount, plural, one {# ticket} other {# tickets}}",
   "thatCodeDidnTWorkTry": "That code didn't work. Try again.",
   "thatPromoCodeCouldnTBe": "That promo code couldn't be applied.",
   "theFinalTotalIsConfirmedOn": "The final total is confirmed on the next screen before you pay.",

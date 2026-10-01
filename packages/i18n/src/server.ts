@@ -12,6 +12,7 @@ import {
   SERVER_CATALOG,
   type ServerNamespace,
 } from "./serverCatalog.generated";
+import { matchValidationMessage } from "./validation";
 
 export { I18N_LOCALES, type I18nLocale } from "./namespaces";
 export type { ServerNamespace } from "./serverCatalog.generated";
@@ -226,6 +227,11 @@ export function translateServerText(
     const values: TranslationValues = {};
     for (let i = 0; i < count; i++) values[String(i)] = m[i + 1] ?? "";
     return t(`db.${key}`, values);
+  }
+  // A sentence a shared schema wrote (`parsed.error.issues[0].message`).
+  const schema = matchValidationMessage(text);
+  if (schema) {
+    return serverTranslator(lang, "validation")(schema.key, schema.values);
   }
   return text;
 }

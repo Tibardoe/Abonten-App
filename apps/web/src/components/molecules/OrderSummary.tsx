@@ -60,7 +60,7 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
         <div className="text-sm text-muted-foreground">
           <p className="font-medium">{t("estimatedReach")}</p>
           <p className="text-card-foreground font-semibold">
-            {formatReachRange({
+            {formatReachRange(tc, {
               reachLow: orderSummary.estimatedReachLow,
               reachHigh: orderSummary.estimatedReachHigh,
             })}

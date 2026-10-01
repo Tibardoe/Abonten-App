@@ -61,15 +61,15 @@ describe("parseReviewRow", () => {
       avatarPublicId: null,
       deleted: true,
     });
-    expect(reviewerDisplayName(r.reviewer, "event")).toBe(
+    expect(reviewerDisplayName(t, r.reviewer, "event")).toBe(
       "Former Abonten member",
     );
   });
 
   it("falls back to a neutral name per subject kind", () => {
     const r = parseReviewRow(rpcRow({ reviewer_username: null }));
-    expect(reviewerDisplayName(r.reviewer, "event")).toBe("Attendee");
-    expect(reviewerDisplayName(r.reviewer, "place")).toBe("Guest");
+    expect(reviewerDisplayName(t, r.reviewer, "event")).toBe("Attendee");
+    expect(reviewerDisplayName(t, r.reviewer, "place")).toBe("Guest");
   });
 });
 

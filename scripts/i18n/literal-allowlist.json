@@ -187,6 +187,111 @@
       "file": "apps/web/src/lib/email/sendEmail.ts",
       "text": "Resend email send",
       "reason": "The name of a tracing span."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Card",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Mobile Money",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Bank transfer",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Pay by bank",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Apple Pay",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Google Pay",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "QR code",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Instant EFT",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Wallet",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/messagingInboxCache.ts",
+      "text": "[Voice message]",
+      "reason": "The stand-in send_message stores in the shared row; conversationPreviewText() words it for the reader."
+    },
+    {
+      "file": "packages/core/src/notifications/notices.ts",
+      "text": "has{}{}",
+      "reason": "The name of a derived ICU argument (hasPlace), not words."
+    },
+    {
+      "file": "packages/core/src/distanceAndRating.ts",
+      "text": "Up to {}km",
+      "reason": "A filter value as it is written in the URL (?distance=, ?rating=); distanceFilterOptions() and ratingFilterOptions() give the words."
+    },
+    {
+      "file": "packages/core/src/distanceAndRating.ts",
+      "text": "From {}",
+      "reason": "A filter value as it is written in the URL (?distance=, ?rating=); distanceFilterOptions() and ratingFilterOptions() give the words."
+    },
+    {
+      "file": "packages/core/src/userFacingError.ts",
+      "text": "Something went wrong. Please try again.",
+      "reason": "The generic sentence; the response edge (translateServerText) and the apps translate it by its catalog key."
+    },
+    {
+      "file": "packages/api-client/src/client.ts",
+      "text": "Request to {} timed out after {}ms",
+      "reason": "The message of a transport error, logged and reported; screens show their own translated \"couldn't load\" text."
+    },
+    {
+      "file": "packages/api-client/src/client.ts",
+      "text": "Request to {} failed",
+      "reason": "The message of a transport error, logged and reported; screens show their own translated \"couldn't load\" text."
+    },
+    {
+      "file": "packages/api-client/src/client.ts",
+      "text": "Response from {} was not JSON (HTTP {})",
+      "reason": "The message of a transport error, logged and reported; screens show their own translated \"couldn't load\" text."
+    },
+    {
+      "file": "packages/services/src/payments/finalizePayment.ts",
+      "text": "{} failed",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "keys mix test and live ({})",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} is named for another market ({}).",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "missing {}",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
     }
   ]
 }

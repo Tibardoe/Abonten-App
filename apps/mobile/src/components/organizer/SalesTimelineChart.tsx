@@ -102,7 +102,6 @@ export function SalesTimelineChart({
               money: money(currency, n(sel.gross)),
               n: n(sel.orders),
             })}
-            {n(sel.orders) === 1 ? "" : "s"}
           </AppText>
         ) : (
           <AppText variant="metaStrong">
@@ -110,7 +109,6 @@ export function SalesTimelineChart({
               money: money(currency, periodTotal),
               periodOrders: periodOrders,
             })}
-            {periodOrders === 1 ? "" : "s"}
           </AppText>
         )}
       </View>

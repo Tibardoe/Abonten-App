@@ -193,10 +193,10 @@ describe("reach formatting", () => {
     expect(roundReach(-5, "up")).toBe(0);
   });
   it("formats a range", () => {
-    expect(formatReachRange({ reachLow: 2400, reachHigh: 3700 })).toBe(
+    expect(formatReachRange(t, { reachLow: 2400, reachHigh: 3700 })).toBe(
       "2,400–3,700 people",
     );
-    expect(formatReachRange({ reachLow: 50, reachHigh: 50 })).toBe(
+    expect(formatReachRange(t, { reachLow: 50, reachHigh: 50 })).toBe(
       "About 50 people",
     );
   });

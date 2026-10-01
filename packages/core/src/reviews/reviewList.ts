@@ -136,11 +136,15 @@ export function parseReviewRow(row: ReviewListRpcRow): ReviewListRow {
 
 /** The name a review is shown under. */
 export function reviewerDisplayName(
+  t: CoreTranslator,
   reviewer: ReviewListRow["reviewer"],
   kind: ReviewSubjectKind,
 ): string {
-  if (reviewer.deleted) return "Former Abonten member";
-  return reviewer.username ?? (kind === "event" ? "Attendee" : "Guest");
+  if (reviewer.deleted) return t("member.former");
+  return (
+    reviewer.username ??
+    t(kind === "event" ? "reviewer.attendee" : "reviewer.guest")
+  );
 }
 
 // ---------------------------------------------------------------------------

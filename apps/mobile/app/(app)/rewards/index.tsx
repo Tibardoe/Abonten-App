@@ -187,12 +187,23 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
       <AppText variant="cardTitle">{t("inviteFriends")}</AppText>
       <AppText variant="small">
         {invite.referrerMinor
-          ? t("youGetWhenAFriendBuys", {
-              formatCredit: formatCredit(invite.referrerMinor, invite.currency),
-              value: invite.refereeMinor
-                ? `, and they get ${formatCredit(invite.refereeMinor, invite.currency)} off it`
-                : "",
-            })
+          ? invite.refereeMinor
+            ? t("youGetWhenAFriendBuysBoth", {
+                formatCredit: formatCredit(
+                  invite.referrerMinor,
+                  invite.currency,
+                ),
+                friendCredit: formatCredit(
+                  invite.refereeMinor,
+                  invite.currency,
+                ),
+              })
+            : t("youGetWhenAFriendBuys", {
+                formatCredit: formatCredit(
+                  invite.referrerMinor,
+                  invite.currency,
+                ),
+              })
           : t("inviteFriendsToAbonten")}
         {invite.stats.joined > 0
           ? t("joinedSoFar", { joined: invite.stats.joined })

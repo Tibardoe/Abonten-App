@@ -125,7 +125,6 @@ export default function OnboardingDetailView({
                   status: detail.place.status,
                   count: detail.place.photoCount,
                 })}
-                {detail.place.photoCount === 1 ? "" : "s"}
                 {mapsHref ? (
                   <>
                     {" "}

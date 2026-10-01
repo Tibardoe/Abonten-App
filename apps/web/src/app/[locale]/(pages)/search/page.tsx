@@ -155,6 +155,7 @@ export default async function page({
     ? queryParams.price[0]
     : queryParams.price;
   const priceChip = describePriceParam(
+    await getTranslations("core"),
     priceRaw,
     marketContext.markets.find(
       (m) => m.countryCode === marketContext.context.marketCountry,

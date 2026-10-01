@@ -1,6 +1,7 @@
 import { hapticMedium } from "@/lib/haptics";
 import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { conversationPreviewText } from "@abonten/core/messagingInboxCache";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
 import {
@@ -74,7 +75,11 @@ function identityFor(item: ConversationListItem): string {
 function previewFor(item: ConversationListItem, mine: boolean): string {
   if (!item.last_message_preview)
     return translatorFor("messaging")("noMessagesYet");
-  return mine ? `You: ${item.last_message_preview}` : item.last_message_preview;
+  return conversationPreviewText(
+    translatorFor("core"),
+    item.last_message_preview,
+    mine,
+  );
 }
 
 function SwipeAction({
@@ -176,7 +181,7 @@ export const ConversationRow = memo(function ConversationRow({
       accessibilityRole="button"
       accessibilityLabel={t("longPressForActions", {
         identity: identity,
-        value: unread ? `, ${item.unread_count} unread` : "",
+        unread: unread ? item.unread_count : 0,
       })}
       onPress={handlePress}
       onLongPress={onLongPress ? handleLongPress : undefined}

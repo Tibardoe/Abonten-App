@@ -58,5 +58,7 @@
   "thisWeekSEditionIsOn2": "This week's edition is on its way. Here is last week's.",
   "viewEvent": "View event",
   "viewPlace": "View place",
-  "widePicks": "{scopeName}-wide picks"
+  "widePicks": "{scopeName}-wide picks",
+  "picksCount": "{count, plural, one {# pick} other {# picks}}",
+  "ratingWithReviews": "{rating} ({count, plural, one {# review} other {# reviews}})"
 }

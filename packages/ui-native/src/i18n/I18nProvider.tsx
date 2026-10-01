@@ -1,3 +1,4 @@
+import { translateValidation } from "@abonten/i18n/validation";
 import * as SecureStore from "expo-secure-store";
 import {
   type ReactNode,
@@ -236,4 +237,19 @@ export function useLocale(): LocaleContextValue {
     throw new Error("useLocale must be used within <I18nProvider>");
   }
   return ctx;
+}
+
+/**
+ * Words a shared schema's message for the reader (@abonten/validation
+ * writes English wherever it runs). Text that is not one of the schema's
+ * sentences is returned unchanged.
+ */
+export function useValidationText(): (
+  message: string | null | undefined,
+) => string {
+  const t = useIntlTranslations("validation");
+  return useCallback(
+    (message) => translateValidation((key, values) => t(key, values), message),
+    [t],
+  );
 }

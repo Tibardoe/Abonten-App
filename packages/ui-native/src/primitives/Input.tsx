@@ -5,6 +5,7 @@ import {
   View,
   type ViewProps,
 } from "react-native";
+import { useValidationText } from "../i18n/I18nProvider";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { family } from "../theme/tokens";
 import { AppText } from "./Typography";
@@ -81,6 +82,8 @@ export function Field({
   children,
   ...rest
 }: FieldProps) {
+  // A schema from @abonten/validation speaks English; the reader may not.
+  const validationText = useValidationText();
   return (
     <View
       className={["gap-1.5", className ?? ""].filter(Boolean).join(" ")}
@@ -90,7 +93,7 @@ export function Field({
       {children}
       {error ? (
         <AppText variant="small" tone="error">
-          {error}
+          {validationText(error)}
         </AppText>
       ) : hint ? (
         <AppText variant="caption">{hint}</AppText>

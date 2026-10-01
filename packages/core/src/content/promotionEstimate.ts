@@ -175,15 +175,17 @@ export function estimatePromotionReach(
   };
 }
 
-/** "2,400–3,700 people" */
-export function formatReachRange(estimate: {
-  reachLow: number;
-  reachHigh: number;
-}): string {
-  const f = (n: number) => n.toLocaleString("en-GB");
+/** "2,400–3,700 people", worded and grouped for the reader's language. */
+export function formatReachRange(
+  t: CoreTranslator,
+  estimate: { reachLow: number; reachHigh: number },
+): string {
   return estimate.reachLow === estimate.reachHigh
-    ? `About ${f(estimate.reachLow)} people`
-    : `${f(estimate.reachLow)}–${f(estimate.reachHigh)} people`;
+    ? t("promotionBudget.reachAbout", { count: estimate.reachLow })
+    : t("promotionBudget.reachRange", {
+        low: estimate.reachLow,
+        high: estimate.reachHigh,
+      });
 }
 
 function amount(minor: number, currency: string): string {

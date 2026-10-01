@@ -1,5 +1,6 @@
 import { usePromptOffer, usePromptResponse } from "@/features/alerts/useAlerts";
 import { api } from "@/lib/api";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import type { PromptContext } from "@abonten/types/discoveryType";
 import { AppText, Button, Card, Icon, useToast } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -22,6 +23,7 @@ export function RecommendationPromptCard({
   onClose?: () => void;
 }) {
   const t = useTranslations("notifications");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const router = useRouter();
@@ -96,12 +98,14 @@ export function RecommendationPromptCard({
   const title = place ? t("likeThisPlace") : t("enjoyEventsLikeThis");
   const body = place
     ? t("getUpdatesFromAndDiscoverSimilar", { name: place.name })
-    : t("getNotifiedWhenSimilarEventsAre", {
-        value: similar?.category ?? "",
-        value2: similar?.locality
-          ? `near ${similar.locality}`
-          : (t("nearYou") ?? ""),
-      });
+    : similar?.locality
+      ? t("getNotifiedWhenSimilarEventsAre", {
+          category: eventCategoryLabel(tc, similar.category ?? ""),
+          locality: similar.locality,
+        })
+      : t("getNotifiedWhenSimilarEventsAreNearYou", {
+          category: eventCategoryLabel(tc, similar?.category ?? ""),
+        });
 
   return (
     <Card className="gap-3">

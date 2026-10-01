@@ -60,7 +60,7 @@
   "seeTheirEvents": "See their events",
   "setYourLocationOnExploreTo": "Set your location on Explore to search by distance.",
   "showResults": "Show results",
-  "showResultsFilter": "Show results · {activeCount} filter{value}",
+  "showResultsFilter": "Show results · {activeCount, plural, one {# filter} other {# filters}}",
   "spotlights": "Spotlights",
   "tipTypeAndANameTo": "Tip: type @ and a name to find an organizer.",
   "tryADifferentCategoryOrFewer": "Try a different category or fewer filters.",
@@ -72,5 +72,7 @@
   "weCouldnTFindAnyEvents": "We couldn't find any events matching that search. Try a different or more general term.",
   "when": "When",
   "youReOffline": "You're offline",
-  "yourLocation": "your location"
+  "yourLocation": "your location",
+  "upcomingCount": "{count} upcoming",
+  "placesCount": "{count, plural, one {# place} other {# places}}"
 }

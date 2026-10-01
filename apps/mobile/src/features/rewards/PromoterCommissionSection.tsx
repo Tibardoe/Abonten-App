@@ -131,10 +131,8 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
       {s.sales > 0 ? (
         <View className="gap-1 border-t border-border pt-3">
           <AppText variant="small">
-            {t("order", { sales: s.sales })}
-            {s.sales === 1 ? "" : "s"}{" "}
-            {t("byPromoter", { promoters: s.promoters })}
-            {s.promoters === 1 ? "" : "s"}{" "}
+            {t("order", { sales: s.sales })}{" "}
+            {t("byPromoter", { promoters: s.promoters })}{" "}
             {t("inTicketSales", {
               formatCredit: formatCredit(s.revenueMinor, data.currency),
             })}

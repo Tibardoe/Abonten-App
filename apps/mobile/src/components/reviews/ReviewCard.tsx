@@ -49,10 +49,11 @@ function ReviewCardImpl({
   const { locale } = useLocale();
 
   const t = useTranslations("reviews");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
-  const name = reviewerDisplayName(review.reviewer, kind);
+  const name = reviewerDisplayName(tc, review.reviewer, kind);
   const profileHref =
     !review.reviewer.deleted && review.reviewer.username
       ? `/(app)/user/${review.reviewer.username}`

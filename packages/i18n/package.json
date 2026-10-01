@@ -8,6 +8,7 @@
     "./catalog": "./src/catalog.ts",
     "./namespaces": "./src/namespaces.ts",
     "./server": "./src/server.ts",
+    "./validation": "./src/validation.ts",
     "./messages/*": "./messages/*"
   },
   "scripts": {

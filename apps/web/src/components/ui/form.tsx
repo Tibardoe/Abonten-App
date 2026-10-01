@@ -13,6 +13,7 @@ import {
 } from "react-hook-form";
 
 import { Label } from "@/components/ui/label";
+import { useValidationText } from "@/i18n/useValidationText";
 import { cn } from "../lib/utils";
 
 const Form = FormProvider;
@@ -148,7 +149,9 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message ?? "") : children;
+  // A schema from @abonten/validation speaks English; the reader may not.
+  const validationText = useValidationText();
+  const body = error ? validationText(String(error?.message ?? "")) : children;
 
   if (!body) {
     return null;

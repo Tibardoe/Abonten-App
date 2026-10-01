@@ -30,6 +30,7 @@ import akSettings from "@abonten/i18n/messages/ak/settings.json";
 import akSpotlight from "@abonten/i18n/messages/ak/spotlight.json";
 import akTickets from "@abonten/i18n/messages/ak/tickets.json";
 import akTransactions from "@abonten/i18n/messages/ak/transactions.json";
+import akValidation from "@abonten/i18n/messages/ak/validation.json";
 import akVerification from "@abonten/i18n/messages/ak/verification.json";
 import akWallet from "@abonten/i18n/messages/ak/wallet.json";
 import akWeekly from "@abonten/i18n/messages/ak/weekly.json";
@@ -61,6 +62,7 @@ import deSettings from "@abonten/i18n/messages/de/settings.json";
 import deSpotlight from "@abonten/i18n/messages/de/spotlight.json";
 import deTickets from "@abonten/i18n/messages/de/tickets.json";
 import deTransactions from "@abonten/i18n/messages/de/transactions.json";
+import deValidation from "@abonten/i18n/messages/de/validation.json";
 import deVerification from "@abonten/i18n/messages/de/verification.json";
 import deWallet from "@abonten/i18n/messages/de/wallet.json";
 import deWeekly from "@abonten/i18n/messages/de/weekly.json";
@@ -92,6 +94,7 @@ import enSettings from "@abonten/i18n/messages/en/settings.json";
 import enSpotlight from "@abonten/i18n/messages/en/spotlight.json";
 import enTickets from "@abonten/i18n/messages/en/tickets.json";
 import enTransactions from "@abonten/i18n/messages/en/transactions.json";
+import enValidation from "@abonten/i18n/messages/en/validation.json";
 import enVerification from "@abonten/i18n/messages/en/verification.json";
 import enWallet from "@abonten/i18n/messages/en/wallet.json";
 import enWeekly from "@abonten/i18n/messages/en/weekly.json";
@@ -123,6 +126,7 @@ import esSettings from "@abonten/i18n/messages/es/settings.json";
 import esSpotlight from "@abonten/i18n/messages/es/spotlight.json";
 import esTickets from "@abonten/i18n/messages/es/tickets.json";
 import esTransactions from "@abonten/i18n/messages/es/transactions.json";
+import esValidation from "@abonten/i18n/messages/es/validation.json";
 import esVerification from "@abonten/i18n/messages/es/verification.json";
 import esWallet from "@abonten/i18n/messages/es/wallet.json";
 import esWeekly from "@abonten/i18n/messages/es/weekly.json";
@@ -154,6 +158,7 @@ import frSettings from "@abonten/i18n/messages/fr/settings.json";
 import frSpotlight from "@abonten/i18n/messages/fr/spotlight.json";
 import frTickets from "@abonten/i18n/messages/fr/tickets.json";
 import frTransactions from "@abonten/i18n/messages/fr/transactions.json";
+import frValidation from "@abonten/i18n/messages/fr/validation.json";
 import frVerification from "@abonten/i18n/messages/fr/verification.json";
 import frWallet from "@abonten/i18n/messages/fr/wallet.json";
 import frWeekly from "@abonten/i18n/messages/fr/weekly.json";
@@ -185,6 +190,7 @@ import ptSettings from "@abonten/i18n/messages/pt/settings.json";
 import ptSpotlight from "@abonten/i18n/messages/pt/spotlight.json";
 import ptTickets from "@abonten/i18n/messages/pt/tickets.json";
 import ptTransactions from "@abonten/i18n/messages/pt/transactions.json";
+import ptValidation from "@abonten/i18n/messages/pt/validation.json";
 import ptVerification from "@abonten/i18n/messages/pt/verification.json";
 import ptWallet from "@abonten/i18n/messages/pt/wallet.json";
 import ptWeekly from "@abonten/i18n/messages/pt/weekly.json";
@@ -223,6 +229,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     spotlight: enSpotlight,
     tickets: enTickets,
     transactions: enTransactions,
+    validation: enValidation,
     verification: enVerification,
     wallet: enWallet,
     weekly: enWeekly,
@@ -256,6 +263,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     spotlight: akSpotlight,
     tickets: akTickets,
     transactions: akTransactions,
+    validation: akValidation,
     verification: akVerification,
     wallet: akWallet,
     weekly: akWeekly,
@@ -289,6 +297,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     spotlight: deSpotlight,
     tickets: deTickets,
     transactions: deTransactions,
+    validation: deValidation,
     verification: deVerification,
     wallet: deWallet,
     weekly: deWeekly,
@@ -322,6 +331,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     spotlight: esSpotlight,
     tickets: esTickets,
     transactions: esTransactions,
+    validation: esValidation,
     verification: esVerification,
     wallet: esWallet,
     weekly: esWeekly,
@@ -355,6 +365,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     spotlight: frSpotlight,
     tickets: frTickets,
     transactions: frTransactions,
+    validation: frValidation,
     verification: frVerification,
     wallet: frWallet,
     weekly: frWeekly,
@@ -388,6 +399,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     spotlight: ptSpotlight,
     tickets: ptTickets,
     transactions: ptTransactions,
+    validation: ptValidation,
     verification: ptVerification,
     wallet: ptWallet,
     weekly: ptWeekly,

@@ -3,6 +3,8 @@
 // copy drives the lead's and admin's review checklist and the unit tests,
 // so the two always describe the same rules.
 
+import type { CoreTranslator, TranslationValues } from "../i18n/translator";
+
 export type EligibilityRule = {
   holding_days?: number;
   min_photos?: number;
@@ -66,11 +68,14 @@ export type EligibilityResult = {
 const HIDDEN = new Set(["hidden", "removed"]);
 
 export function evaluateEligibility(
+  t: CoreTranslator,
   s: EligibilitySnapshot,
   rule: EligibilityRule,
   settings: { offlineMaxDistanceM: number },
 ): EligibilityResult {
   const checks: EligibilityCheck[] = [];
+  const e = (key: string, values?: TranslationValues) =>
+    t(`fieldOpsEligibility.${key}`, values);
   const add = (
     key: string,
     label: string,
@@ -80,74 +85,58 @@ export function evaluateEligibility(
   ) => checks.push({ key, label, ok, severity, detail });
 
   if (rule.require_owner_phone_verified !== false) {
-    add(
-      "owner_verified",
-      "Owner verified their phone",
-      s.ownerPhoneVerified,
-      "hard",
-    );
+    add("owner_verified", e("ownerVerified"), s.ownerPhoneVerified, "hard");
   }
-  add(
-    "owner_not_member",
-    "Owner is not on a Field Ops team",
-    !s.ownerIsTeamMember,
-    "hard",
-  );
+  add("owner_not_member", e("ownerNotMember"), !s.ownerIsTeamMember, "hard");
 
   add(
     "place_published",
-    "Listing is published",
+    e("placePublished"),
     s.placeStatus === null ? null : s.placeStatus === "published",
     "hard",
-    s.placeStatus ? `status: ${s.placeStatus}` : "no listing yet",
+    s.placeStatus
+      ? e("placeStatus", { status: s.placeStatus })
+      : e("noListingYet"),
   );
   add(
     "place_not_moderated",
-    "Listing is not hidden or removed",
+    e("placeNotModerated"),
     s.placeModerationState === null
       ? null
       : !HIDDEN.has(s.placeModerationState),
     "hard",
-    s.placeModerationState ? `moderation: ${s.placeModerationState}` : null,
+    s.placeModerationState
+      ? e("moderation", { state: s.placeModerationState })
+      : null,
   );
-  add(
-    "owner_matches",
-    "Listing is still owned by the verified owner",
-    s.placeOwnerMatches,
-    "hard",
-  );
+  add("owner_matches", e("ownerMatches"), s.placeOwnerMatches, "hard");
 
   const minPhotos = rule.min_photos ?? 2;
   add(
     "photos",
-    `At least ${minPhotos} photo${minPhotos === 1 ? "" : "s"}`,
+    e("photos", { count: minPhotos }),
     s.photoCount >= minPhotos,
     "soft",
-    `${s.photoCount} uploaded`,
+    e("photosUploaded", { count: s.photoCount }),
   );
   const minChars = rule.min_description_chars ?? 80;
   add(
     "description",
-    `Description of ${minChars}+ characters`,
+    e("description", { count: minChars }),
     s.descriptionChars >= minChars,
     "soft",
-    `${s.descriptionChars} characters`,
+    e("descriptionChars", { count: s.descriptionChars }),
   );
-  add("category", "Category set", s.hasCategory, "soft");
+  add("category", e("category"), s.hasCategory, "soft");
   if (rule.require_contact !== false) {
-    add("contact", "A phone or WhatsApp number", s.hasContact, "soft");
+    add("contact", e("contact"), s.hasContact, "soft");
   }
   if (rule.require_opening_hours !== false) {
-    add("opening_hours", "Opening hours given", s.hasOpeningHours, "soft");
+    add("opening_hours", e("openingHours"), s.hasOpeningHours, "soft");
   }
 
   if (rule.require_inside_territory !== false) {
-    add(
-      "inside_territory",
-      "Pin is inside the assigned territory",
-      s.insideTerritory,
-      "soft",
-    );
+    add("inside_territory", e("insideTerritory"), s.insideTerritory, "soft");
   }
   if (s.mode === "offline") {
     const max = rule.max_distance_m ?? settings.offlineMaxDistanceM;
@@ -158,36 +147,37 @@ export function evaluateEligibility(
         : s.submissionDistanceM <= max + allowance;
     add(
       "on_site",
-      `Submitted within ${max} m of the business`,
+      e("onSite", { max }),
       ok,
       "soft",
       s.submissionDistanceM === null
-        ? "no position recorded"
-        : `${s.submissionDistanceM} m away${
-            s.submissionAccuracyM !== null
-              ? ` (±${s.submissionAccuracyM} m)`
-              : ""
-          }`,
+        ? e("noPosition")
+        : s.submissionAccuracyM !== null
+          ? e("distanceAwayAccuracy", {
+              distance: s.submissionDistanceM,
+              accuracy: s.submissionAccuracyM,
+            })
+          : e("distanceAway", { distance: s.submissionDistanceM }),
     );
   }
 
   add(
     "not_duplicate",
-    "No strong match with an existing listing",
+    e("notDuplicate"),
     !s.strongDuplicate,
     "soft",
     s.strongDuplicate
       ? s.duplicateAcknowledged
-        ? "member said it's a different business"
-        : "unacknowledged match"
+        ? e("duplicateDifferent")
+        : e("duplicateUnacknowledged")
       : null,
   );
 
-  add("lead_verified", "Team lead verified", s.reviewVerified, "hard");
+  add("lead_verified", e("leadVerified"), s.reviewVerified, "hard");
   if ((rule.release_policy ?? "holding_period") === "holding_period") {
     add(
       "holding",
-      `Holding period of ${rule.holding_days ?? 7} days elapsed`,
+      e("holding", { days: rule.holding_days ?? 7 }),
       s.holdingElapsed,
       "info",
     );

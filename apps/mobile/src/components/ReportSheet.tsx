@@ -4,10 +4,9 @@ import { useSubmitReport } from "@/features/reports/useSubmitReport";
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
 import type { SubmitReportBody } from "@abonten/api-client";
+import { reportCategoryLabel, reportTitle } from "@abonten/core/reportCopy";
 import {
   REPORTABLE_CATEGORIES,
-  REPORT_CATEGORY_LABEL,
-  REPORT_TARGET_LABEL,
   type ReportTargetType,
 } from "@abonten/types/adminTypes";
 import { AppText, Button, Field, Icon, Input, Sheet } from "@abonten/ui-native";
@@ -62,6 +61,7 @@ export function ReportSheet({
   label: string;
 }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const { session } = useSession();
   const categories = REPORTABLE_CATEGORIES[targetType];
@@ -195,7 +195,7 @@ export function ReportSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={t("reportThis5", { item: REPORT_TARGET_LABEL[targetType] })}
+      title={reportTitle(tc, targetType)}
       footer={
         submitted ? (
           <Button title={t("done")} onPress={onClose} />
@@ -285,7 +285,7 @@ export function ReportSheet({
                       variant="body"
                       className={on ? "font-semibold" : undefined}
                     >
-                      {REPORT_CATEGORY_LABEL[c]}
+                      {reportCategoryLabel(tc, c)}
                     </AppText>
                   </Pressable>
                 );

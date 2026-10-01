@@ -114,7 +114,10 @@ export default function CampaignScreen() {
     [t("status"), campaignStatusLabel(tc, c.status)],
     [t("goal"), campaignObjectiveLabel(tc, c.objective)],
     [t("budget"), formatMinor(c.budgetMinor, c.currency)],
-    [t("runsForUpTo"), `${c.durationDays} days`],
+    [
+      t("runsForUpTo"),
+      tc("promotionSummary.duration.days", { count: c.durationDays }),
+    ],
     [t("usedSoFar"), formatMinor(c.spentMinor, c.currency)],
     [t("unused"), formatMinor(unused, c.currency)],
     [t("refunded"), formatMinor(c.refundedMinor, c.currency)],
@@ -123,7 +126,7 @@ export default function CampaignScreen() {
   const delivery: [string, string][] = [
     [
       t("estimatedReach"),
-      formatReachRange({
+      formatReachRange(tc, {
         reachLow: c.estimatedReachLow,
         reachHigh: c.estimatedReachHigh,
       }),

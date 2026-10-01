@@ -191,8 +191,7 @@ function FinanceSection({
               {n(finance.pendingRefunds) > 0 ||
               n(finance.completedRefunds) > 0 ? (
                 <AppText variant="muted">
-                  {t("request", { n: n(finance.refundRequestCount) })}
-                  {n(finance.refundRequestCount) === 1 ? "" : "s"}{" "}
+                  {t("request", { n: n(finance.refundRequestCount) })}{" "}
                   {t("pendingCompleted", {
                     money: money(finance.currency, n(finance.pendingRefunds)),
                     money2: money(

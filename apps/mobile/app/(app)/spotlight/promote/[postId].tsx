@@ -211,7 +211,7 @@ export default function PromoteSpotlightScreen() {
         amount: res.data.checkout.totalPrice,
         currency: res.data.checkout.currency,
         summary: res.data.checkout.summaryLabel,
-        reach: formatReachRange({
+        reach: formatReachRange(tc, {
           reachLow: res.data.checkout.estimatedReachLow,
           reachHigh: res.data.checkout.estimatedReachHigh,
         }),
@@ -386,7 +386,7 @@ export default function PromoteSpotlightScreen() {
                 <View style={{ opacity: stale ? 0.6 : 1 }}>
                   <AppText variant="sectionTitle">
                     {est.deliverable
-                      ? formatReachRange(est)
+                      ? formatReachRange(tc, est)
                       : t("notEnoughAudience")}
                   </AppText>
                   <AppText variant="meta">

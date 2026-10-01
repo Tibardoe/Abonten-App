@@ -49,7 +49,7 @@
   "atLeastOneTicketTypeIs": "At least one ticket type is required.",
   "atMostEvidencePhotos": "At most {MAX_EVIDENCE} evidence photos.",
   "attachmentsCanTChangeOnceA": "Attachments can't change once a post is published.",
-  "automaticRefreshIsOffProvider": "Automatic refresh is off (provider: {provider}).",
+  "automaticRefreshIsOffProvider": "Automatic refresh is off (provider: {provider, select, manual {manual} other {off}}).",
   "bankPayoutsArenTAvailableIn": "Bank payouts aren't available in {name} yet.",
   "becauseYouLike": "Because you like {category}",
   "bookingAccepted": "Booking accepted.",
@@ -1220,5 +1220,9 @@
   "couldNotVerifyYourTeamMembership": "Could not verify your team membership",
   "theProgrammeIsSwitchedOff": "The programme is switched off",
   "youAreNotOnThisCampaignSTeam": "You are not on this campaign's team",
-  "yourRoleCanTDoThis": "Your role can't do this"
+  "yourRoleCanTDoThis": "Your role can't do this",
+  "similarEventsNear": "{category} events near {locality}",
+  "similarEventsNearby": "{category} events nearby",
+  "similarPlacesNear": "{category} places near {locality}",
+  "similarPlacesNearby": "{category} places nearby"
 }

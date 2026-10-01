@@ -264,7 +264,7 @@
   "newRegistrationFor": "New registration for",
   "noActiveTickets": "No active tickets.",
   "noAttendeesYet": "No attendees yet.",
-  "noBookings": "No {value}bookings.",
+  "noBookings": "{filter, select, pending {No pending bookings.} accepted {No accepted bookings.} declined {No declined bookings.} cancelled {No cancelled bookings.} other {No bookings.}}",
   "noCancelledTickets": "No cancelled tickets.",
   "noEarningsYet": "No earnings yet.",
   "noEventSalesInThisPeriod": "No event sales in this period yet.",

@@ -470,7 +470,9 @@ export default function Explore() {
           <EmptyState
             icon={tab === "events" ? "calendar-outline" : "location-outline"}
             title={t("nothingListedYet", {
-              value: areaName ? `in ${areaName}` : whereText(area),
+              value: areaName
+                ? t("inArea", { area: areaName })
+                : whereText(area),
             })}
             description={
               notLaunched.browse.cities.length > 0

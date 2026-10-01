@@ -43,6 +43,7 @@ export default function ReviewListItem({
   const locale = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const [expanded, setExpanded] = useState(false);
   // "Read more" only when the clamped text actually overflows — a character
@@ -58,7 +59,7 @@ export default function ReviewListItem({
     observer.observe(el);
     return () => observer.disconnect();
   }, [expanded]);
-  const name = reviewerDisplayName(review.reviewer, kind);
+  const name = reviewerDisplayName(tc, review.reviewer, kind);
   const profileHref =
     !review.reviewer.deleted && review.reviewer.username
       ? `/user/${review.reviewer.username}/posts`

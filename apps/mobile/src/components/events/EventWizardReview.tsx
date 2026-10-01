@@ -26,16 +26,19 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
               w.rangeStartTime,
             )} – ${prettyTime(w.rangeEndTime)}`
         : "—"
-      : `${w.occurrences.length} date${w.occurrences.length === 1 ? "" : "s"}`;
+      : t("datesCount", { count: w.occurrences.length });
 
   const ticketing =
     w.ticketMode === "free"
       ? t("free")
       : w.ticketMode === "single"
-        ? `${formatMoney(w.currency, Number(w.ticketPrice || 0))}${
-            w.ticketQuantity ? ` · ${w.ticketQuantity} available` : ""
-          }`
-        : `${w.tiers.length} ticket type${w.tiers.length === 1 ? "" : "s"}`;
+        ? w.ticketQuantity
+          ? t("quantityAvailable", {
+              price: formatMoney(w.currency, Number(w.ticketPrice || 0)),
+              count: w.ticketQuantity,
+            })
+          : formatMoney(w.currency, Number(w.ticketPrice || 0))
+        : t("ticketTypesCount", { count: w.tiers.length });
 
   return (
     <View className="gap-4">

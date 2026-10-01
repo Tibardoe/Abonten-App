@@ -154,7 +154,6 @@ function PromoCodeCard({
           </AppText>
           <AppText className="text-xs text-muted-foreground">
             {t("use", { timesUsed: code.timesUsed })}
-            {code.timesUsed === 1 ? "" : "s"}
             {code.maxUses != null
               ? t("ofMax", { maxUses: code.maxUses })
               : t("unlimited2")}

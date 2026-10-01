@@ -78,7 +78,7 @@
   "letsYouSignInWithA": "Lets you sign in with a code sent by text — a way back in if you can't get into your email or Google account. We'll send a code to check it's yours.",
   "linked": "Linked",
   "listingsAbroadCanShowARough": "Listings abroad can show a rough “≈” price in this currency. You always pay in the listing's own currency.",
-  "loading": "Loading…",
+  "loading": "Cargando…",
   "loadingPromotions": "Loading promotions",
   "manageEvents": "Manage Events",
   "manageEvents2": "Manage events",
@@ -147,7 +147,7 @@
   "regionAndCurrency": "Region and currency",
   "resumeNow": "Resume now",
   "saveChanges": "Guardar cambios",
-  "saved": "Saved.",
+  "saved": "Guardado.",
   "security": {
     "phone": {
       "accountSecurity": "Account & security",

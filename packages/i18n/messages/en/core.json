@@ -491,7 +491,9 @@
     "smallest": "The smallest budget is {amount}.",
     "largest": "The largest budget is {amount}.",
     "step": "Budgets go up in steps of {amount}.",
-    "chooseDuration": "Choose how long the promotion can run."
+    "chooseDuration": "Choose how long the promotion can run.",
+    "reachAbout": "About {count, plural, one {# person} other {# people}}",
+    "reachRange": "{low, number}–{high, number} people"
   },
   "reviewSort": {
     "helpful": "Most helpful",
@@ -847,6 +849,65 @@
   },
   "noticeWords": {
     "someone": "Someone"
+  },
+  "reviewer": {
+    "attendee": "Attendee",
+    "guest": "Guest"
+  },
+  "spotlightBadge": {
+    "removed": "Removed",
+    "hidden": "Hidden",
+    "draft": "Draft",
+    "limited": "Limited"
+  },
+  "messagePreview": {
+    "photo": "Photo",
+    "voice": "Voice message",
+    "attachment": "Attachment",
+    "you": "You: {preview}"
+  },
+  "report": {
+    "category": {
+      "spam": "Spam",
+      "fraud_scam": "Fraud or scam",
+      "misleading": "Misleading information",
+      "harassment": "Harassment",
+      "inappropriate": "Inappropriate content",
+      "fake_listing": "Fake event / place",
+      "safety": "Safety concern",
+      "copyright": "Copyright issue",
+      "impersonation": "Impersonation",
+      "other": "Other"
+    },
+    "title": "{target, select, event {Report this event} place {Report this place} event_review {Report this review} place_review {Report this review} user_review {Report this review} user {Report this profile} organizer {Report this organizer} highlight {Report this highlight} message {Report this message} conversation {Report this conversation} spotlight {Report this Spotlight} story {Report this Story} content_comment {Report this comment} other {Report this}}",
+    "thanks": "Thank you — our team will review this report."
+  },
+  "fieldOpsEligibility": {
+    "ownerVerified": "Owner verified their phone",
+    "ownerNotMember": "Owner is not on a Field Ops team",
+    "placePublished": "Listing is published",
+    "placeStatus": "status: {status}",
+    "noListingYet": "no listing yet",
+    "placeNotModerated": "Listing is not hidden or removed",
+    "moderation": "moderation: {state}",
+    "ownerMatches": "Listing is still owned by the verified owner",
+    "photos": "At least {count, plural, one {# photo} other {# photos}}",
+    "photosUploaded": "{count} uploaded",
+    "description": "Description of {count}+ characters",
+    "descriptionChars": "{count, plural, one {# character} other {# characters}}",
+    "category": "Category set",
+    "contact": "A phone or WhatsApp number",
+    "openingHours": "Opening hours given",
+    "insideTerritory": "Pin is inside the assigned territory",
+    "onSite": "Submitted within {max} m of the business",
+    "noPosition": "no position recorded",
+    "distanceAway": "{distance} m away",
+    "distanceAwayAccuracy": "{distance} m away (±{accuracy} m)",
+    "notDuplicate": "No strong match with an existing listing",
+    "duplicateDifferent": "member said it's a different business",
+    "duplicateUnacknowledged": "unacknowledged match",
+    "leadVerified": "Team lead verified",
+    "holding": "Holding period of {days, plural, one {# day} other {# days}} elapsed"
   },
   "eventCategories": {
     "musicAndConcerts": "Music & Concerts",

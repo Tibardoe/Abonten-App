@@ -68,6 +68,65 @@ const TARGETS = {
       "+native-intent",
     ],
   },
+  // The shared copy and rules. Its words go through a CoreTranslator; the
+  // admin console's own labels (admin/) are English by design.
+  core: {
+    roots: ["packages/core/src"],
+    exclude: [
+      ".test.",
+      ".d.ts",
+      "packages/core/src/admin/",
+      "packages/core/src/i18n/",
+      "packages/core/src/logger",
+      "packages/core/src/notifications/storedNotices.ts",
+      // Staff tools (the admin console is English): permissions, market
+      // readiness and transitions, reward risk signals, the search
+      // vocabulary and Weekly editors, per-country address forms.
+      "packages/core/src/adminPermissions.ts",
+      "packages/core/src/market/readiness.ts",
+      "packages/core/src/market/transitions.ts",
+      "packages/core/src/rewards/riskScore.ts",
+      "packages/core/src/search/searchVocabulary.ts",
+      "packages/core/src/weekly/sectionKinds.ts",
+      "packages/core/src/geo/addressSchema.ts",
+      "packages/core/src/geo/countryDefaults.ts",
+      "packages/core/src/fieldOps/territory.ts",
+      // Data and names, not sentences: category values (worded through
+      // categoryLabels), networks, currency symbols, the brand.
+      "packages/core/src/eventCategoriesAndTypes.ts",
+      "packages/core/src/networkProviderData.ts",
+      "packages/core/src/money/currencies.ts",
+      "packages/core/src/brand/",
+      // English calendar words kept for runtimes without Intl data.
+      "packages/core/src/dateFormatter.ts",
+      // Messages of errors thrown for logs and callers' catch blocks.
+      "packages/core/src/env/",
+      "packages/core/src/http/",
+      "packages/core/src/money/money.ts",
+    ],
+  },
+  // The packages every app shares that have no translator of their own:
+  // a label map or a validation message here reaches every reader in
+  // English. They must hold codes and keys, never words.
+  shared: {
+    roots: [
+      "packages/types/src",
+      "packages/validation/src",
+      "packages/api-client/src",
+    ],
+    exclude: [
+      ".test.",
+      ".d.ts",
+      "database.types.ts",
+      // The admin console's English label maps; the apps word reports
+      // through @abonten/core/reportCopy.
+      "packages/types/src/adminTypes.ts",
+      // A schema's sentences are English keys of the `validation` catalog
+      // (extract-validation-messages.mjs reads them with --with-validation
+      // and checks none is missing).
+      ...(flag("with-validation") ? [] : ["packages/validation/src/"]),
+    ],
+  },
   // Code that answers requests. Its words for people go through tr() /
   // coreT() / the notice registry; what is left in English must be
   // something no person reads (a log line, an audit note, a reason stored
@@ -222,18 +281,77 @@ function looksLikeCode(text) {
   return false;
 }
 
+// Words that sit beside a `${value}` without being English prose.
+const TEMPLATE_NOISE = new Set([
+  "bearer",
+  "basic",
+  "auto",
+  "none",
+  "solid",
+  "center",
+  "translate",
+  "rotate",
+  "scale",
+  "calc",
+  "var",
+  "rgb",
+  "rgba",
+  "hsl",
+  "minmax",
+  "repeat",
+  "deg",
+  "turn",
+  "eq",
+  "ilike",
+  "asc",
+  "desc",
+  "utf",
+  "true",
+  "false",
+  "null",
+]);
+
+/**
+ * `${count} upcoming`, `${n} date${s}`, `review${s}`: a template that puts
+ * a value next to one lowercase English word. The two-word test misses
+ * these, and they are the ones that read worst in another language.
+ */
+function gluesAWord(text) {
+  if (!/\{[^}]*\}/.test(text)) return false;
+  // only letters, digits, spaces and light punctuation: not a path, a URL,
+  // a selector, a class list or a format string
+  if (/[/\\:=_<>@#$%&*;[\]|~^`"]/.test(text.replace(/\{[^}]*\}/g, ""))) {
+    return false;
+  }
+  // `row-${id}`, `url(${src})`, `prefs.${userId}`: an identifier, not words
+  if (/[A-Za-z0-9][-.(]\{|\}[-.(][A-Za-z0-9]/.test(text) && !/\s/.test(text)) {
+    return false;
+  }
+  const words = text
+    .replace(/\{[^}]*\}/g, " \u0000 ")
+    .split(/[\s,.()·–—+!?'’-]+/)
+    .filter(Boolean);
+  if (!words.includes("\u0000")) return false;
+  return words.some(
+    (w) => /^[a-z]{3,}$/.test(w) && !TEMPLATE_NOISE.has(w) && w !== "\u0000",
+  );
+}
+
 function isProse(text, singleOk) {
   const t = text.replace(/\{[^}]*\}/g, " ").trim();
   if (!t) return false;
   if (!/[A-Za-zÀ-ÿ]/.test(t)) return false;
-  if (looksLikeClassList(t) || looksLikeCode(t)) return false;
+  if (!singleOk && gluesAWord(text)) return true;
+  // `You: ${preview}` — one Capitalised word beside a value
   if (
     !singleOk &&
     /\{[^}]*\}/.test(text) &&
-    /^[A-Z][a-z]{2,}$/.test(t.replace(/[.,:;!?…]+$/, ""))
+    /^[A-Z][a-z]{2,}$/.test(t.replace(/[.,:;!?…]+$/, "")) &&
+    !/^(Bearer|Basic|Token)$/.test(t)
   ) {
     return true;
   }
+  if (looksLikeClassList(t) || looksLikeCode(t)) return false;
   if (TWO_WORDS.test(t)) {
     // all-lowercase-with-symbols technical strings ("use client", "no-store")
     if (/^[a-z0-9\s\-_:;=,.()/'"]+$/.test(t) && !/[.!?…]$/.test(t)) {

@@ -319,8 +319,7 @@ export function ClaimPlaceSheet({
           {failedCount > 0 ? (
             <View className="w-full gap-2 pt-2">
               <AppText variant="small" tone="error" className="text-center">
-                {t("document", { failedCount: failedCount })}
-                {failedCount === 1 ? "" : "s"} {t("didnTUpload")}
+                {t("document", { failedCount })}
               </AppText>
               {docs
                 .filter((d) => d.status === "error")

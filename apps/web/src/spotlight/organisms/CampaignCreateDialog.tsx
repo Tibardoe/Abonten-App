@@ -388,7 +388,7 @@ export default function CampaignCreateDialog({
                 <div className={cn(stale && "opacity-60")}>
                   <p className="text-xl font-bold">
                     {est.deliverable
-                      ? formatReachRange(est)
+                      ? formatReachRange(tc, est)
                       : t("notEnoughAudience")}
                   </p>
                   <p className="text-xs text-muted-foreground">

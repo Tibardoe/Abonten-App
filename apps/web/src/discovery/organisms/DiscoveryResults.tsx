@@ -272,13 +272,22 @@ export default function DiscoveryResults({
       ? t("noResults")
       : [
           counts.events
-            ? `${counts.events}${initial.events.hasNextPage ? "+" : ""} events`
+            ? t("eventsCount", {
+                count: counts.events,
+                plus: initial.events.hasNextPage ? "+" : "",
+              })
             : null,
           counts.places
-            ? `${counts.places}${initial.places.hasNextPage ? "+" : ""} places`
+            ? t("placesCount", {
+                count: counts.places,
+                plus: initial.places.hasNextPage ? "+" : "",
+              })
             : null,
           counts.organizers
-            ? `${counts.organizers}${initial.organizers.hasNextPage ? "+" : ""} organizers`
+            ? t("organizersCount", {
+                count: counts.organizers,
+                plus: initial.organizers.hasNextPage ? "+" : "",
+              })
             : null,
         ]
           .filter(Boolean)

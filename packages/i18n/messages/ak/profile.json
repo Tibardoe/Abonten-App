@@ -61,6 +61,7 @@
   "follower2": "follower",
   "followers": "Followers",
   "followers2": "followers",
+  "followersCount": "{count, plural, one {# follower} other {# followers}}",
   "free": "Free",
   "highlightBy": "Highlight by @{username}",
   "highlightDeleted": "Highlight deleted",

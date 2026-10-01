@@ -231,7 +231,7 @@ export default function EventOnboardingWizard({
           <OwnerVerificationStep
             campaignId={campaignId}
             onboardingId={o.id}
-            noun="organiser"
+            party="organiser"
             verified={ownerVerified}
             onVerified={() => {
               setOwnerVerified(true);

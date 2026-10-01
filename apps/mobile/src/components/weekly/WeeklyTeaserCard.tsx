@@ -39,7 +39,7 @@ export function WeeklyTeaserCard() {
   // A fallback edition is the country-wide one; its scope name is the country.
   const area = teaser.scopeName;
   const week = formatWeekRange(teaser.weekStart, locale);
-  const picks = `${teaser.itemCount} ${teaser.itemCount === 1 ? "pick" : "picks"}`;
+  const picks = t("picksCount", { count: teaser.itemCount });
   const height = Math.round(Math.min(Math.max(width * 1.02, 380), 480));
 
   const open = () => {

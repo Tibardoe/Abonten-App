@@ -446,6 +446,33 @@
       "winding_down": "Läuft aus"
     }
   },
+  "fieldOpsEligibility": {
+    "category": "Category set",
+    "contact": "A phone or WhatsApp number",
+    "description": "Description of {count}+ characters",
+    "descriptionChars": "{count, plural, one {# character} other {# characters}}",
+    "distanceAway": "{distance} m away",
+    "distanceAwayAccuracy": "{distance} m away (±{accuracy} m)",
+    "duplicateDifferent": "member said it's a different business",
+    "duplicateUnacknowledged": "unacknowledged match",
+    "holding": "Holding period of {days, plural, one {# day} other {# days}} elapsed",
+    "insideTerritory": "Pin is inside the assigned territory",
+    "leadVerified": "Team lead verified",
+    "moderation": "moderation: {state}",
+    "noListingYet": "no listing yet",
+    "noPosition": "no position recorded",
+    "notDuplicate": "No strong match with an existing listing",
+    "onSite": "Submitted within {max} m of the business",
+    "openingHours": "Opening hours given",
+    "ownerMatches": "Listing is still owned by the verified owner",
+    "ownerNotMember": "Owner is not on a Field Ops team",
+    "ownerVerified": "Owner verified their phone",
+    "photos": "At least {count, plural, one {# photo} other {# photos}}",
+    "photosUploaded": "{count} uploaded",
+    "placeNotModerated": "Listing is not hidden or removed",
+    "placePublished": "Listing is published",
+    "placeStatus": "status: {status}"
+  },
   "filters": {
     "anyDistance": "Jede Entfernung",
     "customRange": "Eigener Zeitraum",
@@ -495,6 +522,12 @@
   "member": {
     "former": "Ehemaliges Abonten-Mitglied",
     "generic": "Abonten-Mitglied"
+  },
+  "messagePreview": {
+    "attachment": "Attachment",
+    "photo": "Photo",
+    "voice": "Voice message",
+    "you": "You: {preview}"
   },
   "noticeWords": {
     "someone": "Jemand"
@@ -906,6 +939,8 @@
     "choose": "Wähle ein Budget.",
     "chooseDuration": "Wähle, wie lange die Promotion laufen darf.",
     "largest": "Das größte Budget beträgt {amount}.",
+    "reachAbout": "About {count, plural, one {# person} other {# people}}",
+    "reachRange": "{low, number}–{high, number} people",
     "smallest": "Das kleinste Budget beträgt {amount}.",
     "step": "Budgets steigen in Schritten von {amount}."
   },
@@ -936,9 +971,29 @@
     "noneDescription": "Wird veranlasst, sobald alle Tickets dieser Bestellung storniert sind.",
     "pending": "Erstattung ausstehend"
   },
+  "report": {
+    "category": {
+      "copyright": "Copyright issue",
+      "fake_listing": "Fake event / place",
+      "fraud_scam": "Fraud or scam",
+      "harassment": "Harassment",
+      "impersonation": "Impersonation",
+      "inappropriate": "Inappropriate content",
+      "misleading": "Misleading information",
+      "other": "Other",
+      "safety": "Safety concern",
+      "spam": "Spam"
+    },
+    "thanks": "Thank you — our team will review this report.",
+    "title": "{target, select, event {Report this event} place {Report this place} event_review {Report this review} place_review {Report this review} user_review {Report this review} user {Report this profile} organizer {Report this organizer} highlight {Report this highlight} message {Report this message} conversation {Report this conversation} spotlight {Report this Spotlight} story {Report this Story} content_comment {Report this comment} other {Report this}}"
+  },
   "reviewSort": {
     "helpful": "Am hilfreichsten",
     "recent": "Neueste zuerst"
+  },
+  "reviewer": {
+    "attendee": "Attendee",
+    "guest": "Guest"
   },
   "searchFilters": {
     "anyRating": "Jede Bewertung",
@@ -961,6 +1016,12 @@
     },
     "within": "Im Umkreis von {distance}",
     "withinOf": "Im Umkreis von {distance} um {location}"
+  },
+  "spotlightBadge": {
+    "draft": "Draft",
+    "hidden": "Hidden",
+    "limited": "Limited",
+    "removed": "Removed"
   },
   "storyReply": {
     "nameReacted": "{name} hat auf deine Story reagiert",

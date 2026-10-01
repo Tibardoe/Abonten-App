@@ -35,7 +35,7 @@ const allNamespaces = readdirSync(join(MESSAGES, "en"))
 // ever downloads them.
 const SERVER_ONLY = ["server", "emails"];
 // Namespaces the server translates from (statically imported there).
-const SERVER_READS = ["core", ...SERVER_ONLY];
+const SERVER_READS = ["core", "validation", ...SERVER_ONLY];
 
 const namespaces = allNamespaces.filter((ns) => !SERVER_ONLY.includes(ns));
 const serverNamespaces = allNamespaces.filter((ns) =>

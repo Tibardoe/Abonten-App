@@ -81,7 +81,7 @@ export default async function SpotlightCampaignDetailPage({
   const delivery: [string, string][] = [
     [
       "Estimated reach (sold)",
-      `${formatReachRange({ reachLow: c.estimatedReachLow, reachHigh: c.estimatedReachHigh })} · ${c.estimateBasis}`,
+      `${formatReachRange(tc, { reachLow: c.estimatedReachLow, reachHigh: c.estimatedReachHigh })} · ${c.estimateBasis}`,
     ],
     ["Reach", n(m?.reach ?? c.reach)],
     [

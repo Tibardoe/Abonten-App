@@ -49,6 +49,7 @@ export function useReviewInteractions(
   subject: ReviewSubject | undefined,
 ): ReviewInteractions {
   const t = useTranslations("reviews");
+  const tc = useTranslations("core");
 
   const { session } = useSession();
   const router = useRouter();
@@ -80,11 +81,11 @@ export function useReviewInteractions(
     (reviewId: string, rating: number) => {
       if (!subject) return;
       void share(
-        `${rating}-star review of ${subject.title}`,
+        t("starReviewOf", { rating, title: subject.title }),
         reviewShareUrl(subject.kind, subject.slug, reviewId),
       );
     },
-    [share, subject],
+    [share, subject, t],
   );
 
   const confirmDelete = useCallback(
@@ -114,7 +115,7 @@ export function useReviewInteractions(
   const confirmBlock = useCallback(
     (review: ReviewListRow) => {
       if (!subject) return;
-      const name = reviewerDisplayName(review.reviewer, subject.kind);
+      const name = reviewerDisplayName(tc, review.reviewer, subject.kind);
       Alert.alert(t("block2", { name: name }), t("youWonTSeeTheirReviews"), [
         { text: t("cancel"), style: "cancel" },
         {
@@ -137,7 +138,7 @@ export function useReviewInteractions(
         },
       ]);
     },
-    [block, subject, toast, t],
+    [block, subject, toast, t, tc],
   );
 
   const onAction = (action: ReviewAction) => {
@@ -159,7 +160,7 @@ export function useReviewInteractions(
           id: r.id,
           label: t("reviewBy", {
             value: subject
-              ? reviewerDisplayName(r.reviewer, subject.kind)
+              ? reviewerDisplayName(tc, r.reviewer, subject.kind)
               : t("aReviewer"),
           }),
         });
@@ -205,7 +206,7 @@ export function useReviewInteractions(
 
   const blockName =
     menu?.type === "other" && subject
-      ? reviewerDisplayName(menu.review.reviewer, subject.kind)
+      ? reviewerDisplayName(tc, menu.review.reviewer, subject.kind)
       : undefined;
 
   const sheets = subject ? (

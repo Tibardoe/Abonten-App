@@ -1,3 +1,7 @@
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { logger } from "@abonten/core/logger";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type {
@@ -8,7 +12,7 @@ import type {
   SubscriptionTarget,
 } from "@abonten/types/discoveryType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { tr } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import { resolveDiscoveryAccess } from "../search/discoveryProgram";
 import { checkRateLimit } from "../security/rateLimit";
 
@@ -488,13 +492,28 @@ export async function listSubscriptionsCore(
           ? addressText(eventById.get(r.source_event_id ?? "")?.address)
           : addressText(placeById.get(r.source_place_id ?? "")?.address);
       const locality = localityFromAddress(sourceAddress);
-      const what =
+      // Category names are data (English in the database): worded for the
+      // reader through the category catalogs.
+      const category =
         r.kind === "similar_events"
-          ? `${r.topic_category} events`
-          : `${categoryName.get(r.topic_category ?? "") ?? r.topic_category} places`;
+          ? eventCategoryLabel(coreT(), r.topic_category ?? "")
+          : placeCategoryLabel(coreT(), {
+              name:
+                categoryName.get(r.topic_category ?? "") ??
+                r.topic_category ??
+                undefined,
+            });
+      const label =
+        r.kind === "similar_events"
+          ? locality
+            ? tr("similarEventsNear", { category, locality })
+            : tr("similarEventsNearby", { category })
+          : locality
+            ? tr("similarPlacesNear", { category, locality })
+            : tr("similarPlacesNearby", { category });
       items.push({
         ...base,
-        label: locality ? `${what} near ${locality}` : `${what} nearby`,
+        label,
         targetSlug: null,
         imagePublicId: null,
         imageVersion: null,

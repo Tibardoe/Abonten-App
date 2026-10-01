@@ -58,7 +58,6 @@ function TimelineTooltip({
           formatMoney: formatMoney(currency, Number(row.gross)),
           orders: row.orders,
         })}
-        {row.orders === 1 ? "" : "s"}
       </p>
     </div>
   );

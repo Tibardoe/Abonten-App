@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import { formatOpsDateTime } from "@/lib/format";
 import { updatePromotionPricing } from "@/server/actions/content";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
@@ -258,7 +259,9 @@ export function PromotionPricingForm({
               <p className="font-semibold">
                 {formatMinor(e.budgetMinor, e.currency)}
               </p>
-              <p>{e.deliverable ? formatReachRange(e) : "Would be refused"}</p>
+              <p>
+                {e.deliverable ? formatReachRange(tc, e) : "Would be refused"}
+              </p>
               <p className="text-muted-foreground">
                 {e.impressionGoal.toLocaleString("en-GB")} impressions bought ·{" "}
                 {e.basis}

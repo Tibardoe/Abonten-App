@@ -320,7 +320,6 @@ export default function EditEventScreen() {
             {w.occurrences.length > 0 ? (
               <AppText variant="overline">
                 {t("date", { length: w.occurrences.length })}
-                {w.occurrences.length === 1 ? "" : "s"}
               </AppText>
             ) : null}
             {[...w.occurrences]

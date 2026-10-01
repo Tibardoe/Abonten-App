@@ -107,9 +107,9 @@ export function ProfileHeader({
               label={
                 profile.follower_count === 1 ? t("follower") : t("followers")
               }
-              accessibilityLabel={`${profile.follower_count.toLocaleString()} ${
-                profile.follower_count === 1 ? "follower" : "followers"
-              }`}
+              accessibilityLabel={t("followersCount", {
+                count: profile.follower_count,
+              })}
             />
             <Stat
               value={compactCount(profile.total_favorites)}

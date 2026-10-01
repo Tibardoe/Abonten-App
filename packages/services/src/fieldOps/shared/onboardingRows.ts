@@ -17,6 +17,7 @@ import type {
   FieldOpsSimilarPlace,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { coreT } from "../../i18n/requestLocale";
 import { displayName, namesFor, num } from "./fieldOpsRows";
 
 // Row shapes and mappers for fieldops_onboarding and its evidence /
@@ -559,6 +560,7 @@ export async function buildOnboardingDetail(
       : null,
   };
   const checks: FieldOpsEligibilityCheck[] = evaluateEligibility(
+    coreT(),
     snapshot,
     eligibility,
     { offlineMaxDistanceM: num(settings.offline_max_distance_m) || 200 },

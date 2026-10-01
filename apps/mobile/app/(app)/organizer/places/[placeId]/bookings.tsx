@@ -240,7 +240,7 @@ export default function PlaceBookingsScreen() {
           </AppText>
         ) : view.kind === "empty" ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            {t("noBookings", { value: filter === "all" ? "" : `${filter} ` })}
+            {t("noBookings", { filter })}
           </AppText>
         ) : (
           <QueryUnavailable

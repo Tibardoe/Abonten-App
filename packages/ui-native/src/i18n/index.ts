@@ -7,5 +7,6 @@ export {
   useFormatter,
   useLocale,
   useTranslations,
+  useValidationText,
 } from "./I18nProvider";
 export { I18N_LOCALES, type I18nLocale, LOCALE_LABELS } from "./catalog";

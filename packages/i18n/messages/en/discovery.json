@@ -70,5 +70,8 @@
   "weWonTEmailYouPicks": "We won't email you picks or alerts any more. Push notifications and your For you page aren't affected.",
   "youLlHearWhenPostsSomething": "You'll hear when {label} posts something new.",
   "youReUnsubscribed": "You're unsubscribed",
-  "yourPicks": "your picks"
+  "yourPicks": "your picks",
+  "eventsCount": "{count, plural, one {#{plus} event} other {#{plus} events}}",
+  "placesCount": "{count, plural, one {#{plus} place} other {#{plus} places}}",
+  "organizersCount": "{count, plural, one {#{plus} organizer} other {#{plus} organizers}}"
 }

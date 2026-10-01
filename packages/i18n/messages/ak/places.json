@@ -126,7 +126,6 @@
   "description": "Description",
   "descriptionOptional": "Description (optional)",
   "didnTRespondBeforeThisDate": "didn't respond before this date. Nothing was reserved.",
-  "didnTUpload": "didn't upload.",
   "directions": "Directions",
   "dismiss": "Dismiss",
   "document": "{failedCount} document",

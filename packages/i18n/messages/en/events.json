@@ -78,7 +78,7 @@
   "cropRotateOrFlip": "Crop, rotate or flip",
   "currentLocation": "Current location",
   "date": "Date · {formatDateWithSuffix}",
-  "date2": "{length} date",
+  "date2": "{length, plural, one {# date selected} other {# dates selected}}",
   "dateRange": "Date range",
   "dates": "{length} dates",
   "deleteText": "Delete",
@@ -398,10 +398,13 @@
     }
   },
   "writeAReview": "Write a Review",
-  "youHaveSavedDraft": "You have {draftCount} saved draft",
+  "youHaveSavedDraft": "You have {draftCount, plural, one {# saved draft} other {# saved drafts}}",
   "youReGoing": "You're going",
   "yourArea": "your area",
   "yourEvent": "Your event",
   "yourEventNeedsAFlyer": "Your event needs a flyer.",
-  "yourReview": "Your Review"
+  "yourReview": "Your Review",
+  "datesCount": "{count, plural, one {# date} other {# dates}}",
+  "ticketTypesCount": "{count, plural, one {# ticket type} other {# ticket types}}",
+  "quantityAvailable": "{price} · {count} available"
 }

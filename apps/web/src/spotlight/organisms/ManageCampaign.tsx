@@ -99,7 +99,10 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
     [t("unused"), formatMinor(unused, c.currency)],
     [t("refunded"), formatMinor(c.refundedMinor, c.currency)],
     [t("goal"), campaignObjectiveLabel(tc, c.objective)],
-    [t("runsForUpTo"), `${c.durationDays} days`],
+    [
+      t("runsForUpTo"),
+      tc("promotionSummary.duration.days", { count: c.durationDays }),
+    ],
     [t("starts"), when(c.startsAt)],
     [t("endsBy"), when(c.endsAt)],
   ];
@@ -107,7 +110,7 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
   const delivery: [string, string][] = [
     [
       t("estimatedReach"),
-      formatReachRange({
+      formatReachRange(tc, {
         reachLow: c.estimatedReachLow,
         reachHigh: c.estimatedReachHigh,
       }),

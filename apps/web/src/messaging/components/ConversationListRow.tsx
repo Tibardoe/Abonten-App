@@ -14,6 +14,7 @@ import {
 } from "@/messaging/hooks/useMessagingActions";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { conversationPreviewText } from "@abonten/core/messagingInboxCache";
 import type {
   ConversationListItem,
   ConversationType,
@@ -67,6 +68,7 @@ export function ConversationListRow({
   const locale = useLocale();
 
   const t = useTranslations("messaging");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const setState = useSetConversationState();
@@ -92,9 +94,7 @@ export function ConversationListRow({
       : null;
   const preview = !item.last_message_preview
     ? t("noMessagesYet")
-    : lastFromMe
-      ? `You: ${item.last_message_preview}`
-      : item.last_message_preview;
+    : conversationPreviewText(tc, item.last_message_preview, lastFromMe);
 
   const showAvatar = item.type !== "support" && !!item.other_user_id;
   const avatarSrc = buildCloudinaryUrl(

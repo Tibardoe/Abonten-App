@@ -55,6 +55,7 @@ export default function ReviewItemActions({
   ownerId: string | null;
 }) {
   const t = useTranslations("reviews");
+  const tc = useTranslations("core");
   const format = useFormatter();
 
   const toast = useToast();
@@ -67,7 +68,7 @@ export default function ReviewItemActions({
 
   const isOwn = !!viewerId && viewerId === review.reviewerId;
   const isOwner = !!viewerId && viewerId === ownerId;
-  const name = reviewerDisplayName(review.reviewer, kind);
+  const name = reviewerDisplayName(tc, review.reviewer, kind);
   const canVote = !isOwn && !isOwner;
 
   const toggleHelpful = () => {

@@ -143,7 +143,6 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
           {w.occurrences.length > 0 ? (
             <AppText variant="overline">
               {t("date2", { length: w.occurrences.length })}
-              {w.occurrences.length === 1 ? "" : "s"} {t("selected3")}
             </AppText>
           ) : null}
           {w.occurrences.map((o) => (

@@ -25,9 +25,11 @@ export function OrganizerRow({
     router.push(`/(app)/user/${organizer.username}`);
   };
   const facts = [
-    organizer.upcomingCount > 0 ? `${organizer.upcomingCount} upcoming` : null,
+    organizer.upcomingCount > 0
+      ? t("upcomingCount", { count: organizer.upcomingCount })
+      : null,
     organizer.placeCount > 0
-      ? `${organizer.placeCount} ${organizer.placeCount === 1 ? "place" : "places"}`
+      ? t("placesCount", { count: organizer.placeCount })
       : null,
     organizer.ratingCount > 0 && organizer.avgRating != null
       ? `★ ${organizer.avgRating.toFixed(1)} (${organizer.ratingCount})`

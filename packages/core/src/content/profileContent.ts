@@ -2,6 +2,7 @@ import type {
   ContentOwnPost,
   ContentPostDocument,
 } from "@abonten/types/contentType";
+import type { CoreTranslator } from "../i18n/translator";
 
 // What a profile's content area offers, and to whom. Shared rules so the
 // mobile profile (and any later web port) cannot drift into showing
@@ -32,27 +33,37 @@ export function spotlightSegments(isOwn: boolean): SpotlightSegment[] {
   return isOwn ? ["published", "saved", "drafts"] : ["published"];
 }
 
+export type SpotlightBadge = "removed" | "hidden" | "draft" | "limited";
+
+/** "Draft", "Hidden", "Removed", "Limited" in the reader's language. */
+export function spotlightBadgeLabel(
+  t: CoreTranslator,
+  badge: SpotlightBadge,
+): string {
+  return t(`spotlightBadge.${badge}`);
+}
+
 export type SpotlightTile = {
   id: string;
   thumbnailUrl: string | null;
   isVideo: boolean;
   views: number;
-  /** A short state label on your own tiles: Draft, Hidden, Removed, Limited. */
-  badge: string | null;
+  /** The state marked on your own tiles; spotlightBadgeLabel() words it. */
+  badge: SpotlightBadge | null;
   /** Where a tap goes: the player, or the manage screen for a draft. */
   href: string;
 };
 
 export function tileFromOwnPost(post: ContentOwnPost): SpotlightTile {
-  const badge =
+  const badge: SpotlightBadge | null =
     post.moderationState === "removed"
-      ? "Removed"
+      ? "removed"
       : post.moderationState === "hidden"
-        ? "Hidden"
+        ? "hidden"
         : post.status === "draft"
-          ? "Draft"
+          ? "draft"
           : post.moderationState === "restricted"
-            ? "Limited"
+            ? "limited"
             : null;
   const playable =
     post.status === "published" &&

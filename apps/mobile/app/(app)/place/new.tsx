@@ -202,8 +202,7 @@ export default function CreatePlaceScreen() {
           <Link href="/(app)/organizer/place-drafts" asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText variant="body">
-                {t("youHaveSavedDraft", { draftCount: draftCount })}
-                {draftCount === 1 ? "" : "s"}
+                {t("youHaveSavedDraft", { draftCount })}
               </AppText>
               <AppText variant="small" tone="brand" className="font-semibold">
                 {t("resume")}

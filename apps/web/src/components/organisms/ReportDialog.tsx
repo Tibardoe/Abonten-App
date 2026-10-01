@@ -14,9 +14,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/config/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
+  reportCategoryLabel,
+  reportThanks,
+  reportTitle,
+} from "@abonten/core/reportCopy";
+import {
   REPORTABLE_CATEGORIES,
-  REPORT_CATEGORY_LABEL,
-  REPORT_TARGET_LABEL,
   type ReportCategory,
   type ReportTargetType,
 } from "@abonten/types/adminTypes";
@@ -48,6 +51,7 @@ export function ReportDialog({
   targetLabel: string;
 }) {
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const { data: user } = useCurrentUser();
   const categories = REPORTABLE_CATEGORIES[targetType];
@@ -136,8 +140,6 @@ export function ReportDialog({
     }
   }
 
-  const targetWord = REPORT_TARGET_LABEL[targetType];
-
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
       <DialogContent className="max-w-md">
@@ -145,9 +147,7 @@ export function ReportDialog({
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <CheckCircle2 className="h-11 w-11 text-primary" />
             <DialogTitle>{t("reportSubmitted")}</DialogTitle>
-            <DialogDescription>
-              {t("thankYouOurTeamWillReview", { targetWord: targetWord })}
-            </DialogDescription>
+            <DialogDescription>{reportThanks(tc)}</DialogDescription>
             <Button className="mt-2 w-full" onClick={() => onOpenChange(false)}>
               {t("done")}
             </Button>
@@ -155,9 +155,7 @@ export function ReportDialog({
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>
-                {t("reportThis", { targetWord: targetWord })}
-              </DialogTitle>
+              <DialogTitle>{reportTitle(tc, targetType)}</DialogTitle>
               <DialogDescription className="line-clamp-2">
                 {targetLabel}
               </DialogDescription>
@@ -180,7 +178,7 @@ export function ReportDialog({
                           : "border-border hover:bg-muted"
                       }`}
                     >
-                      {REPORT_CATEGORY_LABEL[c]}
+                      {reportCategoryLabel(tc, c)}
                     </button>
                   ))}
                 </div>
@@ -234,7 +232,7 @@ export function ReportDialog({
                     <span className="text-muted-foreground">
                       {t("reason")}{" "}
                     </span>
-                    {category ? REPORT_CATEGORY_LABEL[category] : ""}
+                    {category ? reportCategoryLabel(tc, category) : ""}
                   </p>
                   {details.trim() && (
                     <p className="mt-1 whitespace-pre-wrap">

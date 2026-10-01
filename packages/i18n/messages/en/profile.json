@@ -113,5 +113,6 @@
   "toSwitchBetweenEventsAndPlaces": "to switch between Events and Places",
   "uploadFailedPleaseTryAgain": "Upload failed. Please try again.",
   "video": "video",
-  "viewProfilePhoto": "View profile photo"
+  "viewProfilePhoto": "View profile photo",
+  "followersCount": "{count, plural, one {# follower} other {# followers}}"
 }
