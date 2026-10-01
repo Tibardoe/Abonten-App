@@ -3,45 +3,45 @@
   "areYouSureYouWantTo": "Tem a certeza de que quer cancelar este bilhete?",
   "cancelThisTicket": "Cancelar este bilhete?",
   "cancelTicket": "Cancelar bilhete",
-  "cancelTicketRequestRefund": "Cancel ticket & request refund",
+  "cancelTicketRequestRefund": "Cancelar bilhete e pedir reembolso",
   "cancelling": "A cancelar…",
   "checkedIn": "Entrada registada",
   "couldnTCancel": "Não foi possível cancelar",
-  "couldnTCreateTheReceipt": "Couldn't create the receipt",
-  "downloadReceiptPdf": "Download receipt (PDF)",
+  "couldnTCreateTheReceipt": "Não foi possível criar o recibo",
+  "downloadReceiptPdf": "Transferir recibo (PDF)",
   "empty": {
     "active": {
-      "description": "Tickets you buy will show up here.",
-      "title": "No active tickets"
+      "description": "Os bilhetes que comprar aparecerão aqui.",
+      "title": "Sem bilhetes ativos"
     },
     "cancelled": {
-      "description": "Cancelled tickets show up here.",
-      "title": "No cancelled tickets"
+      "description": "Os bilhetes cancelados aparecem aqui.",
+      "title": "Sem bilhetes cancelados"
     },
     "past": {
-      "description": "Tickets for events that have ended or were cancelled.",
-      "title": "No past tickets"
+      "description": "Bilhetes de eventos que terminaram ou foram cancelados.",
+      "title": "Sem bilhetes anteriores"
     },
     "refunds": {
-      "description": "Refunds for cancelled paid tickets will appear here when applicable.",
+      "description": "Os reembolsos de bilhetes pagos cancelados aparecerão aqui quando aplicável.",
       "title": "Ainda não há reembolsos"
     }
   },
   "keepTicket": "Manter bilhete",
   "locationUnavailable": "Localização indisponível",
-  "noQrCode": "No QR code",
+  "noQrCode": "Sem código QR",
   "pleaseTryAgainInAMoment": "Tente novamente dentro de momentos.",
-  "preparingReceipt": "Preparing receipt…",
-  "receiptReady": "Receipt ready",
-  "seat": "Seat {seat_number}",
-  "sharingIsnTAvailableOnThis": "Sharing isn't available on this device, but the receipt PDF was generated.",
-  "showThisAtEntry": "Show this at entry",
-  "somethingWentWrongGeneratingThePdf": "Something went wrong generating the PDF. Please try again.",
-  "thisTicket": "this ticket",
-  "thisTicketCouldNotBeFound": "This ticket could not be found.",
-  "ticket": "Ticket",
+  "preparingReceipt": "A preparar o recibo…",
+  "receiptReady": "Recibo pronto",
+  "seat": "Lugar {seat_number}",
+  "sharingIsnTAvailableOnThis": "A partilha não está disponível neste dispositivo, mas o recibo em PDF foi gerado.",
+  "showThisAtEntry": "Mostre isto à entrada",
+  "somethingWentWrongGeneratingThePdf": "Algo correu mal ao gerar o PDF. Tente novamente.",
+  "thisTicket": "este bilhete",
+  "thisTicketCouldNotBeFound": "Não foi possível encontrar este bilhete.",
+  "ticket": "Bilhete",
   "ticketCancelled": "Bilhete cancelado",
-  "ticketReference": "Ticket reference",
+  "ticketReference": "Referência do bilhete",
   "viewEvent": "Ver evento",
-  "yourTickets": "your tickets"
+  "yourTickets": "os seus bilhetes"
 }
