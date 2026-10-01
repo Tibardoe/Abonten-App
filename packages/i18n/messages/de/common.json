@@ -752,7 +752,7 @@
   "ticketing": "Ticketing",
   "tickets": "Tickets",
   "tickets2": "{toLocaleString} Tickets",
-  "tickets3": "{type} tickets",
+  "tickets3": "{type}-Tickets",
   "ticketsChargedAtFullPrice": "{count, plural, one {# Ticket wird} other {# Tickets werden}} zum vollen Preis berechnet.",
   "ticketsOfType": "{type}-Tickets",
   "ticketsPurchased": "Gekaufte Tickets",

@@ -447,31 +447,31 @@
     }
   },
   "fieldOpsEligibility": {
-    "category": "Category set",
-    "contact": "A phone or WhatsApp number",
-    "description": "Description of {count}+ characters",
-    "descriptionChars": "{count, plural, one {# character} other {# characters}}",
-    "distanceAway": "{distance} m away",
-    "distanceAwayAccuracy": "{distance} m away (±{accuracy} m)",
-    "duplicateDifferent": "member said it's a different business",
-    "duplicateUnacknowledged": "unacknowledged match",
-    "holding": "Holding period of {days, plural, one {# day} other {# days}} elapsed",
-    "insideTerritory": "Pin is inside the assigned territory",
-    "leadVerified": "Team lead verified",
-    "moderation": "moderation: {state}",
-    "noListingYet": "no listing yet",
-    "noPosition": "no position recorded",
-    "notDuplicate": "No strong match with an existing listing",
-    "onSite": "Submitted within {max} m of the business",
-    "openingHours": "Opening hours given",
-    "ownerMatches": "Listing is still owned by the verified owner",
-    "ownerNotMember": "Owner is not on a Field Ops team",
-    "ownerVerified": "Owner verified their phone",
-    "photos": "At least {count, plural, one {# photo} other {# photos}}",
-    "photosUploaded": "{count} uploaded",
-    "placeNotModerated": "Listing is not hidden or removed",
-    "placePublished": "Listing is published",
-    "placeStatus": "status: {status}"
+    "category": "Catégorie renseignée",
+    "contact": "Un numéro de téléphone ou WhatsApp",
+    "description": "Description de {count} caractères ou plus",
+    "descriptionChars": "{count, plural, one {# caractère} other {# caractères}}",
+    "distanceAway": "à {distance} m",
+    "distanceAwayAccuracy": "à {distance} m (±{accuracy} m)",
+    "duplicateDifferent": "le membre a indiqué qu'il s'agit d'un autre commerce",
+    "duplicateUnacknowledged": "correspondance non confirmée",
+    "holding": "Période de retenue de {days, plural, one {# jour} other {# jours}} écoulée",
+    "insideTerritory": "Le repère se trouve dans le territoire attribué",
+    "leadVerified": "Vérifié par le responsable d'équipe",
+    "moderation": "modération : {state}",
+    "noListingYet": "pas encore de fiche",
+    "noPosition": "aucune position enregistrée",
+    "notDuplicate": "Aucune correspondance forte avec une fiche existante",
+    "onSite": "Soumis à moins de {max} m du commerce",
+    "openingHours": "Horaires d'ouverture renseignés",
+    "ownerMatches": "La fiche appartient toujours au propriétaire vérifié",
+    "ownerNotMember": "Le propriétaire ne fait pas partie d'une équipe Field Ops",
+    "ownerVerified": "Le propriétaire a vérifié son téléphone",
+    "photos": "Au moins {count, plural, one {# photo} other {# photos}}",
+    "photosUploaded": "{count} envoyées",
+    "placeNotModerated": "La fiche n'est ni masquée ni retirée",
+    "placePublished": "La fiche est publiée",
+    "placeStatus": "statut : {status}"
   },
   "filters": {
     "anyDistance": "Toutes distances",
@@ -524,10 +524,10 @@
     "generic": "Membre d'Abonten"
   },
   "messagePreview": {
-    "attachment": "Attachment",
+    "attachment": "Pièce jointe",
     "photo": "Photo",
-    "voice": "Voice message",
-    "you": "You: {preview}"
+    "voice": "Message vocal",
+    "you": "Vous : {preview}"
   },
   "noticeWords": {
     "someone": "Quelqu'un"
@@ -847,7 +847,7 @@
     "eft": "Virement instantané (EFT)",
     "google_pay": "Google Pay",
     "mobile_money": "Mobile money",
-    "qr": "QR code",
+    "qr": "Code QR",
     "ussd": "USSD",
     "wallet": "Portefeuille"
   },
@@ -939,8 +939,8 @@
     "choose": "Choisissez un budget.",
     "chooseDuration": "Choisissez la durée de diffusion de la promotion.",
     "largest": "Le budget maximum est de {amount}.",
-    "reachAbout": "About {count, plural, one {# person} other {# people}}",
-    "reachRange": "{low, number}–{high, number} people",
+    "reachAbout": "Environ {count, plural, one {# personne} other {# personnes}}",
+    "reachRange": "{low, number}–{high, number} personnes",
     "smallest": "Le budget minimum est de {amount}.",
     "step": "Les budgets augmentent par paliers de {amount}."
   },
@@ -973,27 +973,27 @@
   },
   "report": {
     "category": {
-      "copyright": "Copyright issue",
-      "fake_listing": "Fake event / place",
-      "fraud_scam": "Fraud or scam",
-      "harassment": "Harassment",
-      "impersonation": "Impersonation",
-      "inappropriate": "Inappropriate content",
-      "misleading": "Misleading information",
-      "other": "Other",
-      "safety": "Safety concern",
+      "copyright": "Problème de droits d'auteur",
+      "fake_listing": "Faux événement / lieu",
+      "fraud_scam": "Fraude ou arnaque",
+      "harassment": "Harcèlement",
+      "impersonation": "Usurpation d'identité",
+      "inappropriate": "Contenu inapproprié",
+      "misleading": "Informations trompeuses",
+      "other": "Autre",
+      "safety": "Problème de sécurité",
       "spam": "Spam"
     },
-    "thanks": "Thank you — our team will review this report.",
-    "title": "{target, select, event {Report this event} place {Report this place} event_review {Report this review} place_review {Report this review} user_review {Report this review} user {Report this profile} organizer {Report this organizer} highlight {Report this highlight} message {Report this message} conversation {Report this conversation} spotlight {Report this Spotlight} story {Report this Story} content_comment {Report this comment} other {Report this}}"
+    "thanks": "Merci — notre équipe va examiner ce signalement.",
+    "title": "{target, select, event {Signaler cet événement} place {Signaler ce lieu} event_review {Signaler cet avis} place_review {Signaler cet avis} user_review {Signaler cet avis} user {Signaler ce profil} organizer {Signaler cet organisateur} highlight {Signaler ce temps fort} message {Signaler ce message} conversation {Signaler cette conversation} spotlight {Signaler ce Spotlight} story {Signaler cette Story} content_comment {Signaler ce commentaire} other {Signaler ceci}}"
   },
   "reviewSort": {
     "helpful": "Les plus utiles",
     "recent": "Les plus récents"
   },
   "reviewer": {
-    "attendee": "Attendee",
-    "guest": "Guest"
+    "attendee": "Participant",
+    "guest": "Invité"
   },
   "searchFilters": {
     "anyRating": "Toutes les notes",
@@ -1018,10 +1018,10 @@
     "withinOf": "Dans un rayon de {distance} autour de {location}"
   },
   "spotlightBadge": {
-    "draft": "Draft",
-    "hidden": "Hidden",
-    "limited": "Limited",
-    "removed": "Removed"
+    "draft": "Brouillon",
+    "hidden": "Masqué",
+    "limited": "Limité",
+    "removed": "Retiré"
   },
   "storyReply": {
     "nameReacted": "{name} a réagi à votre story",

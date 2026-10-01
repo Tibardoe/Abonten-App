@@ -447,31 +447,31 @@
     }
   },
   "fieldOpsEligibility": {
-    "category": "Category set",
-    "contact": "A phone or WhatsApp number",
-    "description": "Description of {count}+ characters",
-    "descriptionChars": "{count, plural, one {# character} other {# characters}}",
-    "distanceAway": "{distance} m away",
-    "distanceAwayAccuracy": "{distance} m away (±{accuracy} m)",
-    "duplicateDifferent": "member said it's a different business",
-    "duplicateUnacknowledged": "unacknowledged match",
-    "holding": "Holding period of {days, plural, one {# day} other {# days}} elapsed",
-    "insideTerritory": "Pin is inside the assigned territory",
-    "leadVerified": "Team lead verified",
-    "moderation": "moderation: {state}",
-    "noListingYet": "no listing yet",
-    "noPosition": "no position recorded",
-    "notDuplicate": "No strong match with an existing listing",
-    "onSite": "Submitted within {max} m of the business",
-    "openingHours": "Opening hours given",
-    "ownerMatches": "Listing is still owned by the verified owner",
-    "ownerNotMember": "Owner is not on a Field Ops team",
-    "ownerVerified": "Owner verified their phone",
-    "photos": "At least {count, plural, one {# photo} other {# photos}}",
-    "photosUploaded": "{count} uploaded",
-    "placeNotModerated": "Listing is not hidden or removed",
-    "placePublished": "Listing is published",
-    "placeStatus": "status: {status}"
+    "category": "Kategorie festgelegt",
+    "contact": "Eine Telefon- oder WhatsApp-Nummer",
+    "description": "Beschreibung mit mindestens {count} Zeichen",
+    "descriptionChars": "{count, plural, one {# Zeichen} other {# Zeichen}}",
+    "distanceAway": "{distance} m entfernt",
+    "distanceAwayAccuracy": "{distance} m entfernt (±{accuracy} m)",
+    "duplicateDifferent": "das Mitglied hat angegeben, dass es ein anderes Geschäft ist",
+    "duplicateUnacknowledged": "unbestätigte Übereinstimmung",
+    "holding": "Haltefrist von {days, plural, one {# Tag} other {# Tagen}} abgelaufen",
+    "insideTerritory": "Die Markierung liegt im zugewiesenen Gebiet",
+    "leadVerified": "Von der Teamleitung verifiziert",
+    "moderation": "Moderation: {state}",
+    "noListingYet": "noch kein Eintrag",
+    "noPosition": "keine Position erfasst",
+    "notDuplicate": "Keine deutliche Übereinstimmung mit einem vorhandenen Eintrag",
+    "onSite": "Innerhalb von {max} m um das Geschäft eingereicht",
+    "openingHours": "Öffnungszeiten angegeben",
+    "ownerMatches": "Der Eintrag gehört weiterhin dem verifizierten Inhaber",
+    "ownerNotMember": "Der Inhaber gehört keinem Field-Ops-Team an",
+    "ownerVerified": "Der Inhaber hat sein Telefon bestätigt",
+    "photos": "Mindestens {count, plural, one {# Foto} other {# Fotos}}",
+    "photosUploaded": "{count} hochgeladen",
+    "placeNotModerated": "Der Eintrag ist weder ausgeblendet noch entfernt",
+    "placePublished": "Der Eintrag ist veröffentlicht",
+    "placeStatus": "Status: {status}"
   },
   "filters": {
     "anyDistance": "Jede Entfernung",
@@ -524,10 +524,10 @@
     "generic": "Abonten-Mitglied"
   },
   "messagePreview": {
-    "attachment": "Attachment",
-    "photo": "Photo",
-    "voice": "Voice message",
-    "you": "You: {preview}"
+    "attachment": "Anhang",
+    "photo": "Foto",
+    "voice": "Sprachnachricht",
+    "you": "Du: {preview}"
   },
   "noticeWords": {
     "someone": "Jemand"
@@ -939,8 +939,8 @@
     "choose": "Wähle ein Budget.",
     "chooseDuration": "Wähle, wie lange die Promotion laufen darf.",
     "largest": "Das größte Budget beträgt {amount}.",
-    "reachAbout": "About {count, plural, one {# person} other {# people}}",
-    "reachRange": "{low, number}–{high, number} people",
+    "reachAbout": "Etwa {count, plural, one {# Person} other {# Personen}}",
+    "reachRange": "{low, number}–{high, number} Personen",
     "smallest": "Das kleinste Budget beträgt {amount}.",
     "step": "Budgets steigen in Schritten von {amount}."
   },
@@ -973,27 +973,27 @@
   },
   "report": {
     "category": {
-      "copyright": "Copyright issue",
-      "fake_listing": "Fake event / place",
-      "fraud_scam": "Fraud or scam",
-      "harassment": "Harassment",
-      "impersonation": "Impersonation",
-      "inappropriate": "Inappropriate content",
-      "misleading": "Misleading information",
-      "other": "Other",
-      "safety": "Safety concern",
+      "copyright": "Urheberrechtsproblem",
+      "fake_listing": "Gefälschtes Event / gefälschter Ort",
+      "fraud_scam": "Betrug oder Abzocke",
+      "harassment": "Belästigung",
+      "impersonation": "Identitätsmissbrauch",
+      "inappropriate": "Unangemessene Inhalte",
+      "misleading": "Irreführende Informationen",
+      "other": "Sonstiges",
+      "safety": "Sicherheitsbedenken",
       "spam": "Spam"
     },
-    "thanks": "Thank you — our team will review this report.",
-    "title": "{target, select, event {Report this event} place {Report this place} event_review {Report this review} place_review {Report this review} user_review {Report this review} user {Report this profile} organizer {Report this organizer} highlight {Report this highlight} message {Report this message} conversation {Report this conversation} spotlight {Report this Spotlight} story {Report this Story} content_comment {Report this comment} other {Report this}}"
+    "thanks": "Danke — unser Team prüft diese Meldung.",
+    "title": "{target, select, event {Dieses Event melden} place {Diesen Ort melden} event_review {Diese Bewertung melden} place_review {Diese Bewertung melden} user_review {Diese Bewertung melden} user {Dieses Profil melden} organizer {Diesen Veranstalter melden} highlight {Dieses Highlight melden} message {Diese Nachricht melden} conversation {Diese Unterhaltung melden} spotlight {Dieses Spotlight melden} story {Diese Story melden} content_comment {Diesen Kommentar melden} other {Das melden}}"
   },
   "reviewSort": {
     "helpful": "Am hilfreichsten",
     "recent": "Neueste zuerst"
   },
   "reviewer": {
-    "attendee": "Attendee",
-    "guest": "Guest"
+    "attendee": "Teilnehmer",
+    "guest": "Gast"
   },
   "searchFilters": {
     "anyRating": "Jede Bewertung",
@@ -1018,10 +1018,10 @@
     "withinOf": "Im Umkreis von {distance} um {location}"
   },
   "spotlightBadge": {
-    "draft": "Draft",
-    "hidden": "Hidden",
-    "limited": "Limited",
-    "removed": "Removed"
+    "draft": "Entwurf",
+    "hidden": "Ausgeblendet",
+    "limited": "Eingeschränkt",
+    "removed": "Entfernt"
   },
   "storyReply": {
     "nameReacted": "{name} hat auf deine Story reagiert",

@@ -61,7 +61,7 @@
   "follower2": "abonné",
   "followers": "Abonnés",
   "followers2": "abonnés",
-  "followersCount": "{count, plural, one {# follower} other {# followers}}",
+  "followersCount": "{count, plural, one {# abonné} other {# abonnés}}",
   "free": "Gratuit",
   "highlightBy": "Temps fort de @{username}",
   "highlightDeleted": "Temps fort supprimé",

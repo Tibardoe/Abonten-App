@@ -752,7 +752,7 @@
   "ticketing": "Venta de entradas",
   "tickets": "Entradas",
   "tickets2": "{toLocaleString} entradas",
-  "tickets3": "{type} tickets",
+  "tickets3": "Entradas {type}",
   "ticketsChargedAtFullPrice": "{count, plural, one {# entrada se cobra} other {# entradas se cobran}} a precio completo.",
   "ticketsOfType": "Entradas {type}",
   "ticketsPurchased": "Entradas compradas",

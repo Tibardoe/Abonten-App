@@ -88,7 +88,7 @@
   "inThisChat2": "dans cette discussion",
   "includingYou": ", vous y compris",
   "loadingVoiceMessage": "Chargement du message vocal…",
-  "longPressForActions": "{identity}{unread, plural, =0 {} one {, # unread} other {, # unread}}. Long press for actions",
+  "longPressForActions": "{identity}{unread, plural, =0 {} one {, # non lu} other {, # non lus}}. Appui long pour les actions",
   "markAsRead": "Marquer comme lu",
   "markAsUnread": "Marquer comme non lu",
   "message": "Message",

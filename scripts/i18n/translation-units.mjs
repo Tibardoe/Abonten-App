@@ -5,6 +5,7 @@
 // still carries the same placeholders, plural/select branches and tags.
 //
 //   node scripts/i18n/translation-units.mjs export --out <dir> [--size 300]
+//       [--untranslated fr,es]   only what those locales still say in English
 //       <dir>/units-NN.txt     one unit per line:  id|English text
 //       <dir>/units.json       id → { text, keys: ["ns:key.path", …] }
 //
@@ -179,7 +180,24 @@ if (mode === "export") {
   const out = resolve(option("out") ?? "translation-units");
   const size = Number(option("size") ?? 300);
   mkdirSync(out, { recursive: true });
-  const units = englishUnits();
+  // A later pass asks only for what the named locales still say in English:
+  // the sentences added or reworded since the last hand-off.
+  const pending = (option("untranslated") ?? "").split(",").filter(Boolean);
+  const cache = new Map();
+  const valueIn = (locale, ref) => {
+    const at = ref.indexOf(":");
+    const file = `${ref.slice(0, at)}.json`;
+    const id = `${locale}/${file}`;
+    if (!cache.has(id)) cache.set(id, flatten(read(locale, file)));
+    return cache.get(id)[ref.slice(at + 1)];
+  };
+  const units = englishUnits().filter(
+    (unit) =>
+      pending.length === 0 ||
+      unit.keys.some((ref) =>
+        pending.some((locale) => valueIn(locale, ref) === unit.text),
+      ),
+  );
   const index = {};
   units.forEach((unit, i) => {
     index[i + 1] = unit;

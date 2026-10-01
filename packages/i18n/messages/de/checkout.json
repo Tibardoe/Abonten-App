@@ -89,7 +89,7 @@
   "startingCheckout": "Bezahlvorgang wird gestartet…",
   "startsThePayment": "Startet die Zahlung",
   "subtotal": "Zwischensumme",
-  "subtotalTicket": "Subtotal · {totalCount, plural, one {# ticket} other {# tickets}}",
+  "subtotalTicket": "Zwischensumme · {totalCount, plural, one {# Ticket} other {# Tickets}}",
   "thatCodeDidnTWorkTry": "Dieser Code hat nicht funktioniert. Versuche es erneut.",
   "thatPromoCodeCouldnTBe": "Dieser Promo-Code konnte nicht angewendet werden.",
   "theFinalTotalIsConfirmedOn": "Der Endbetrag wird auf dem nächsten Bildschirm bestätigt, bevor du bezahlst.",

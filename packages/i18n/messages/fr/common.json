@@ -752,7 +752,7 @@
   "ticketing": "Billetterie",
   "tickets": "Billets",
   "tickets2": "{toLocaleString} billets",
-  "tickets3": "{type} tickets",
+  "tickets3": "Billets {type}",
   "ticketsChargedAtFullPrice": "{count, plural, one {# billet est facturé} other {# billets sont facturés}} au plein tarif.",
   "ticketsOfType": "Billets {type}",
   "ticketsPurchased": "Billets achetés",
