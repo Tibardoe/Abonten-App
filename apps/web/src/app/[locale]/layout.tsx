@@ -41,7 +41,7 @@ export async function generateMetadata({
     // Every page sets a short title; the template appends the brand once.
     title: {
       default: title,
-      template: t("sAbontenHub"),
+      template: "%s | Abonten Hub",
     },
     description,
     // The link preview for any page that doesn't bring its own (events,
@@ -56,7 +56,7 @@ export async function generateMetadata({
           url: "/assets/images/brand/og-default.jpg",
           width: 1200,
           height: 630,
-          alt: t("abonten"),
+          alt: "Abonten",
         },
       ],
     },

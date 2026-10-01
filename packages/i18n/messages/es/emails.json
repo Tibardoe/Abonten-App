@@ -42,10 +42,10 @@
   "ticket": {
     "amountPaid": "Amount paid",
     "attached": "Your ticket is attached to this email as a PDF. You can also open it anytime from My Tickets in Abonten.",
-    "date": "Date",
+    "date": "Fecha",
     "detailsLabel": "Ticket details",
     "event": "Event",
-    "free": "Free",
+    "free": "Gratis",
     "heading": "Congratulations! 🎟️",
     "intro": "{greeting} your ticket for <strong>{eventTitle}</strong> has been successfully purchased.",
     "keepSafe": "Please keep your ticket safe — you'll need it (or the attached PDF) for entry at the venue. If you have any questions, contact us through the Abonten app.",

@@ -85,7 +85,7 @@ export default function ReviewItemActions({
     const url = `${window.location.origin}${reviewsPath(kind, subjectSlug, review.id)}`;
     const title = t("starReviewOf", {
       rating: review.rating,
-      subjectTitle: subjectTitle,
+      title: subjectTitle,
     });
     try {
       if (navigator.share) {

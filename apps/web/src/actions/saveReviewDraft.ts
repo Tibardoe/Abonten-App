@@ -142,7 +142,7 @@ export const saveReviewDraft = withActionLocale(async function saveReviewDraft({
     return {
       status: 500,
       message: tr("failedToSaveDraft", {
-        value: insertDraftError?.message ?? tr("unknownError"),
+        reason: insertDraftError?.message ?? tr("unknownError"),
       }),
     };
   }

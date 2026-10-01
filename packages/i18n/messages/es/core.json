@@ -5,7 +5,7 @@
     "generic": "A few quick steps left.",
     "phone": "Add a phone number as a second way to sign in if you can't get into your email or Google account.",
     "profile": "Add your name, a username and a photo so people recognise you on your profile and reviews.",
-    "title": "Finish setting up your account"
+    "title": "Termina de configurar tu cuenta"
   },
   "checkoutLimits": {
     "maxPerOrder": "You can buy at most {max} tickets in one order.",
@@ -38,7 +38,7 @@
       "eventCancelled": "Event cancelled",
       "eventEnded": "Event has ended",
       "eventUnavailable": "Event unavailable",
-      "permanentlyClosed": "Permanently closed",
+      "permanentlyClosed": "Cerrado permanentemente",
       "placeUnavailable": "Place unavailable",
       "soldOut": "Sold out",
       "viewEvent": "View event",
@@ -119,7 +119,7 @@
     "creditRemovedByAbonten": "Credit removed by Abonten",
     "creditReturned": "Credit returned",
     "creditUpdate": "Credit update",
-    "expired": "Expired",
+    "expired": "Caducado",
     "fromPending": "From {label} · pending",
     "labelExpired": "{label} · expired",
     "pending": "Pending",
@@ -145,14 +145,14 @@
   },
   "emailOtp": {
     "codeSent": "If that email can receive mail, we've sent a {length}-digit code.",
-    "generic": "Something went wrong. Please try again.",
-    "invalidEmail": "Enter a valid email address.",
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "invalidEmail": "Introduce un correo electrónico válido.",
     "invalidFormat": "Enter the {length}-digit code we emailed you.",
     "invalidOrExpired": "That code is incorrect or has expired. Try again, or request a new one.",
     "rateLimited": "Too many requests. Please wait a moment and try again."
   },
   "errors": {
-    "generic": "Something went wrong. Please try again."
+    "generic": "Algo salió mal. Inténtalo de nuevo."
   },
   "eventCategories": {
     "artsCultureAndTheatre": "Arts, Culture & Theatre",
@@ -176,7 +176,7 @@
     "techAndInnovation": "Tech & Innovation"
   },
   "eventCta": {
-    "buy": "Buy tickets",
+    "buy": "Comprar entradas",
     "canceled": "Event canceled",
     "ended": "Event ended",
     "going": "View my ticket",
@@ -424,7 +424,7 @@
   "expires": {
     "days": "Expires in {days}d",
     "daysHours": "Expires in {days}d {hours}h",
-    "expired": "Expired",
+    "expired": "Caducado",
     "hours": "Expires in {hours}h",
     "minutes": "Expires in {minutes}m"
   },
@@ -798,8 +798,8 @@
     "closedToday": "Closed today",
     "openClosesAt": "Open now · Closes at {time}",
     "openNow": "Open now",
-    "permanentlyClosed": "Permanently closed",
-    "temporarilyClosed": "Temporarily closed"
+    "permanentlyClosed": "Cerrado permanentemente",
+    "temporarilyClosed": "Cerrado temporalmente"
   },
   "otp": {
     "expired": "That code has expired. Please request a new one.",
@@ -810,7 +810,7 @@
     "apple_pay": "Apple Pay",
     "bank_redirect": "Pay by bank",
     "bank_transfer": "Bank transfer",
-    "card": "Card",
+    "card": "Tarjeta",
     "eft": "Instant EFT",
     "google_pay": "Google Pay",
     "mobile_money": "Mobile Money",
@@ -878,7 +878,7 @@
       "confirm": "Confirm your email",
       "description": "Needed to pay for tickets and promotions — your tickets and receipts are emailed to you. You can also sign in with a code sent there.",
       "done": "Email verified",
-      "label": "Add your email",
+      "label": "Añade tu correo electrónico",
       "verify": "Verify your email"
     },
     "group": {
@@ -948,7 +948,7 @@
     "openNow": "Open now",
     "price": {
       "any": "Any price",
-      "free": "Free",
+      "free": "Gratis",
       "under": "Under {amount}"
     },
     "when": {
@@ -1086,7 +1086,7 @@
       "hidden": "Hidden by moderation",
       "missing": "Listing no longer exists",
       "not_published": "Not published",
-      "permanently_closed": "Permanently closed",
+      "permanently_closed": "Cerrado permanentemente",
       "removed": "Removed by moderation",
       "restricted": "Restricted by moderation",
       "unsupported": "Not supported yet"

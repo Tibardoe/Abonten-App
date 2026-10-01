@@ -495,5 +495,6 @@
   "yourClaimRequestHasBeenSubmitted": "Your claim request has been submitted. An admin will review it soon.",
   "yourCoverIsUnchangedPleaseTry": "Your cover is unchanged. Please try again.",
   "yourPlaceNeedsACoverPhoto": "Your place needs a cover photo.",
-  "yourReview": "Your Review"
+  "yourReview": "Your Review",
+  "placeKind": "Place"
 }

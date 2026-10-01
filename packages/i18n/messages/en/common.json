@@ -578,7 +578,6 @@
   "reviewDrafts": "Review Drafts",
   "reviewPhoto": "Review photo",
   "rotation": "Rotation: {rotate}°",
-  "sAbontenHub": "%s | Abonten Hub",
   "sHighlight": "{username}'s highlight",
   "sProfile": "{name}'s profile",
   "salesArePausedInRightNow": "Sales are paused in {marketName} right now.",
@@ -900,5 +899,6 @@
   "yourPaymentIsStillProcessingThis": "Your payment is still processing. This page stays reserved until it expires.",
   "yourTicketIsReady": "Your ticket is ready.",
   "yourTicketsAreReady": "Your tickets are ready.",
-  "zoomX": "Zoom: {toFixed}x"
+  "zoomX": "Zoom: {toFixed}x",
+  "tickets3": "{type} tickets"
 }

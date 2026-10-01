@@ -254,6 +254,7 @@
   "place": "Place",
   "placeCoverPhoto": "Place cover photo",
   "placeGalleryPhoto": "Place gallery photo",
+  "placeKind": "Place",
   "placeNotFound": "Place not found",
   "placePublished": "Place published",
   "placePublishedSuccessfully": "✅ Place published successfully!",

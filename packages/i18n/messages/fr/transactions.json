@@ -5,7 +5,7 @@
   "completed": "Completed",
   "date": "Date",
   "dateTime": "Date/Time",
-  "discount": "Discount",
+  "discount": "Réduction",
   "event": "Event",
   "expires": "Expires",
   "inclCredit": "incl. {formatMoney} credit",

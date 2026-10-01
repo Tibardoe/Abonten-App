@@ -287,7 +287,7 @@ export const MessageBubble = memo(function MessageBubble({
         content:
           message.content ||
           (isAudio
-            ? t("voiceMessage")
+            ? t("voiceMessage2")
             : hasImages
               ? t("photo")
               : isFile

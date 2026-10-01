@@ -6,7 +6,7 @@
   "cancelTicketRequestRefund": "Cancel ticket & request refund",
   "cancelling": "Cancelling…",
   "checkedIn": "Checked in",
-  "couldnTCancel": "Couldn't cancel",
+  "couldnTCancel": "Annulation impossible",
   "couldnTCreateTheReceipt": "Couldn't create the receipt",
   "downloadReceiptPdf": "Download receipt (PDF)",
   "empty": {
@@ -30,7 +30,7 @@
   "keepTicket": "Keep ticket",
   "locationUnavailable": "Location unavailable",
   "noQrCode": "No QR code",
-  "pleaseTryAgainInAMoment": "Please try again in a moment.",
+  "pleaseTryAgainInAMoment": "Veuillez réessayer dans un instant.",
   "preparingReceipt": "Preparing receipt…",
   "receiptReady": "Receipt ready",
   "seat": "Seat {seat_number}",
