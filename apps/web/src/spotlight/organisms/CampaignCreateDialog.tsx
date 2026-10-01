@@ -35,7 +35,7 @@ import type {
 } from "@abonten/types/contentType";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
@@ -74,6 +74,7 @@ export default function CampaignCreateDialog({
   locationLabel: string | null;
   onClose: () => void;
 }) {
+  const locale = useLocale();
   const t = useTranslations("spotlight");
   const tc = useTranslations("core");
   const format = useFormatter();
@@ -300,7 +301,7 @@ export default function CampaignCreateDialog({
                         : "hover:bg-accent",
                     )}
                   >
-                    {formatMinor(b, opts.currency)}
+                    {formatMinor(b, opts.currency, locale)}
                   </button>
                 ))}
               </div>
@@ -334,10 +335,12 @@ export default function CampaignCreateDialog({
                     formatMinor: formatMinor(
                       opts.minBudgetMinor,
                       opts.currency,
+                      locale,
                     ),
                     formatMinor2: formatMinor(
                       opts.maxBudgetMinor,
                       opts.currency,
+                      locale,
                     ),
                   })}
               </p>
@@ -444,6 +447,7 @@ export default function CampaignCreateDialog({
                       formatMinor: formatMinor(
                         Number.isFinite(budgetMinor) ? budgetMinor : 0,
                         opts.currency,
+                        locale,
                       ),
                     })}
               </button>

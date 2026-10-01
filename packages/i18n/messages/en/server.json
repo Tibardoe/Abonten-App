@@ -1224,5 +1224,15 @@
   "similarEventsNear": "{category} events near {locality}",
   "similarEventsNearby": "{category} events nearby",
   "similarPlacesNear": "{category} places near {locality}",
-  "similarPlacesNearby": "{category} places nearby"
+  "similarPlacesNearby": "{category} places nearby",
+  "abontenOrder": "Abonten order",
+  "unnamedArea": "Unnamed area",
+  "organizerFallbackName": "Organizer",
+  "fieldOpsTimeline": {
+    "started": "Started",
+    "ownerCodeSent": "Owner code sent",
+    "ownerVerified": "Owner verified their phone",
+    "claimFiledFor": "Claim filed for {name}",
+    "eventListedFor": "Event listed for {date}"
+  }
 }

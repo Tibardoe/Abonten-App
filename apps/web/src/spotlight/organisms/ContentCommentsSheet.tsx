@@ -297,7 +297,8 @@ function CommentRow({
     onDeleted();
   };
 
-  const name = comment.author.username ?? comment.author.fullName ?? "Someone";
+  const name =
+    comment.author.username ?? comment.author.fullName ?? t("someone");
 
   return (
     <li className={isReply ? "ml-10" : undefined}>

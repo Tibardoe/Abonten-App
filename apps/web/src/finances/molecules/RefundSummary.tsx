@@ -4,7 +4,7 @@ import getOrganizerRefundSummary from "@/actions/getOrganizerRefundSummary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 /**
  * "Why did my available balance change?" — pending refunds are money
@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
  * never disagree with the Available/Pending figures above it.
  */
 export default function RefundSummary() {
+  const locale = useLocale();
   const t = useTranslations("finances");
 
   const { data, isPending, isError } = useQuery({
@@ -57,7 +58,9 @@ export default function RefundSummary() {
                 {t("pendingRefunds")}
               </p>
               <p className="font-semibold text-lg">
-                {formatMoney(row.currency, row.pending_refund_amount)}
+                {formatMoney(row.currency, row.pending_refund_amount, {
+                  locale,
+                })}
               </p>
             </div>
             <div>
@@ -65,7 +68,9 @@ export default function RefundSummary() {
                 {t("completedRefunds")}
               </p>
               <p className="font-semibold text-lg">
-                {formatMoney(row.currency, row.completed_refund_amount)}
+                {formatMoney(row.currency, row.completed_refund_amount, {
+                  locale,
+                })}
               </p>
             </div>
           </div>

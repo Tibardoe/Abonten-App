@@ -97,6 +97,10 @@ const TARGETS = {
       "packages/core/src/networkProviderData.ts",
       "packages/core/src/money/currencies.ts",
       "packages/core/src/brand/",
+      // Country names from CLDR (scripts/gen-country-data.mjs), in English
+      // and in each language the app speaks.
+      "packages/core/src/geo/countryData.ts",
+      "packages/core/src/geo/countryNames.generated.ts",
       // English calendar words kept for runtimes without Intl data.
       "packages/core/src/dateFormatter.ts",
       // Messages of errors thrown for logs and callers' catch blocks.
@@ -585,6 +589,15 @@ function isSafeCall(node, sf) {
   if (cur && (ts.isCallExpression(cur) || ts.isNewExpression(cur))) {
     if (cur.expression === child) return false;
     const text = calleeText(cur, sf).replace(/\s+/g, "");
+    // router.push({ pathname, params: { title: "Your order" } }): the path
+    // is not words, but a phrase handed to the next screen is.
+    if (
+      /\.(push|replace|navigate|setParams|dismissTo)$/.test(text) &&
+      !ts.isCallExpression(node.parent) &&
+      isPhrase(node)
+    ) {
+      return false;
+    }
     // array.push("words") is not a router push
     if (
       /\.push$/.test(text) &&
@@ -609,10 +622,35 @@ function isSentence(node) {
   return /[.!?…]$/.test(text) && text.split(/\s+/).length >= 3;
 }
 
+// So is a phrase that opens with a Capitalised word and goes on with more
+// words or a value: `const kind = deleted ? "Deleted message" : "Photo"`,
+// `mode: "Single Ticket Type"`, `successCtaLabel: \`View ${kind}\``. A name
+// such as `kind`, `mode` or `type` excuses a code ("mobile_money", "Free"),
+// never a phrase — these reached readers in English because the name did.
+function isPhrase(node) {
+  const raw = literalText(node) ?? "";
+  const hasValue = raw.includes("{}");
+  const text = raw.replace(/\{\}/g, " ").trim();
+  if (!/^[A-Z][a-z]+/.test(text)) return false;
+  if (/^[A-Z][a-z]+$/.test(text)) return hasValue;
+  if (!/^[A-Za-zÀ-ÿ’'.,!?…:–—\-\s]+$/.test(text)) return false;
+  return /\s[A-Za-zÀ-ÿ]/.test(text);
+}
+
 function inNonTextPosition(node, sf) {
   const p = node.parent;
   if (!p) return true;
-  const nameExcuses = !isSentence(node);
+  // `author.name ?? "Someone"`: a Capitalised word standing in for a missing
+  // name is shown to a reader, whatever the variable is called.
+  const isFallbackWord =
+    ts.isBinaryExpression(p) &&
+    p.right === node &&
+    [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(
+      p.operatorToken.kind,
+    ) &&
+    ONE_CAPITALISED.test((node.text ?? "").trim());
+  const nameExcuses =
+    !isSentence(node) && !isPhrase(node) && !isFallbackWord;
   // imports, exports, types, directives
   for (let cur = p; cur; cur = cur.parent) {
     if (

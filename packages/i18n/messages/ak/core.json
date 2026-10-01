@@ -823,6 +823,10 @@
     "welcome_credit": {
       "body": "{amount} off your first ticket order of {min} or more. Use it within {days} days.",
       "title": "You have welcome credit"
+    },
+    "content_campaign_refunded": {
+      "title": "Your Spotlight promotion refund is on its way",
+      "body": "{amount} is being returned to your payment method."
     }
   },
   "openStatus": {
@@ -1055,7 +1059,9 @@
   "ticketTiers": {
     "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid.",
     "freeReserved": "“{name}” is reserved for free events. Give this ticket type another name.",
-    "paidNeedsPrice": "Paid tickets need a price greater than zero. To let people in for free, make the event free."
+    "paidNeedsPrice": "Paid tickets need a price greater than zero. To let people in for free, make the event free.",
+    "freeName": "Free",
+    "singleName": "Standard ticket"
   },
   "verification": {
     "badgeExplanation": {

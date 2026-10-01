@@ -1,6 +1,6 @@
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRef, useState } from "react";
 import { type LayoutChangeEvent, View } from "react-native";
@@ -39,6 +39,7 @@ export function PriceRangeField({
   max: number | null;
   onChange: (next: { min: number | null; max: number | null }) => void;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("explore");
 
   const c = useThemeColors();
@@ -48,7 +49,7 @@ export function PriceRangeField({
   const ANY_THRESHOLD = BASE_ANY_THRESHOLD * factor;
   const snap = (v: number) => Math.round(v / STEP) * STEP;
   const amount = (v: number) =>
-    formatMoney(currency, v, { trimZeroFraction: true });
+    formatMoney(currency, v, { trimZeroFraction: true, locale });
   const [trackWidth, setTrackWidth] = useState(0);
 
   const lo = min ?? 0;

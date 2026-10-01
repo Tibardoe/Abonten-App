@@ -50,7 +50,8 @@ export const CommentRow = memo(function CommentRow({
 
   const sending = comment.localState === "sending";
   const failed = comment.localState === "failed";
-  const name = comment.author.username ?? comment.author.fullName ?? "Someone";
+  const name =
+    comment.author.username ?? comment.author.fullName ?? t("someone");
 
   return (
     <View className={isReply ? "ml-11" : undefined}>

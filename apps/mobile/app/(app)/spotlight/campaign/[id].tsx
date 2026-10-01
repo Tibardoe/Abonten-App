@@ -18,6 +18,7 @@ import {
   promotionEndReasonLabel,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
+import { formatCount, formatDateTime } from "@abonten/core/i18n/format";
 import { currencyMinorFactor } from "@abonten/core/money/currencies";
 import {
   AppText,
@@ -27,7 +28,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -35,6 +36,7 @@ import { Alert, ScrollView, View } from "react-native";
 // One of your Spotlight promotions: status, spend, delivery and history,
 // with pause, resume and cancel.
 export default function CampaignScreen() {
+  const { locale } = useLocale();
   const t = useTranslations("spotlight");
   const tc = useTranslations("core");
 
@@ -108,19 +110,19 @@ export default function CampaignScreen() {
   const canCancel = canTransitionCampaign(c.status, "cancelled", "advertiser");
 
   const m = c.metrics;
-  const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GB");
+  const n = (v: number | undefined) => formatCount(v ?? 0, locale);
   const unused = Math.max(0, c.paidMinor - c.spentMinor - c.refundedMinor);
   const rows: [string, string][] = [
     [t("status"), campaignStatusLabel(tc, c.status)],
     [t("goal"), campaignObjectiveLabel(tc, c.objective)],
-    [t("budget"), formatMinor(c.budgetMinor, c.currency)],
+    [t("budget"), formatMinor(c.budgetMinor, c.currency, locale)],
     [
       t("runsForUpTo"),
       tc("promotionSummary.duration.days", { count: c.durationDays }),
     ],
-    [t("usedSoFar"), formatMinor(c.spentMinor, c.currency)],
-    [t("unused"), formatMinor(unused, c.currency)],
-    [t("refunded"), formatMinor(c.refundedMinor, c.currency)],
+    [t("usedSoFar"), formatMinor(c.spentMinor, c.currency, locale)],
+    [t("unused"), formatMinor(unused, c.currency, locale)],
+    [t("refunded"), formatMinor(c.refundedMinor, c.currency, locale)],
   ];
   // Reach is people; impressions are times shown.
   const delivery: [string, string][] = [
@@ -202,7 +204,7 @@ export default function CampaignScreen() {
             {promotionEndReasonLabel(tc, c.endReason)}.
             {unused > 0
               ? t("ofTheBudgetWasnTUsed2", {
-                  formatMinor: formatMinor(unused, c.currency),
+                  formatMinor: formatMinor(unused, c.currency, locale),
                 })
               : ""}
           </AppText>
@@ -288,7 +290,7 @@ export default function CampaignScreen() {
                   : e.toStatus}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {new Date(e.createdAt).toLocaleString()}
+                {formatDateTime(e.createdAt, locale)}
                 {e.reason ? ` · ${e.reason}` : ""}
               </AppText>
             </View>

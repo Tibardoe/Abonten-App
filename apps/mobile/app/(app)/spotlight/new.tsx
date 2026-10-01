@@ -770,7 +770,6 @@ function PublishPreview({
   state: PublishState;
 }) {
   const t = useTranslations("spotlight");
-  const tc = useTranslations("core");
 
   const first = items[0];
   if (!first) return null;

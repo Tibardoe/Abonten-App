@@ -8,8 +8,9 @@ import {
 } from "@/features/checkout/useCheckoutCountdown";
 import type { PendingCheckoutSession } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Card, Icon, SectionTitle } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Alert, Pressable, View } from "react-native";
@@ -84,7 +85,9 @@ function SessionCard({
   session: PendingCheckoutSession;
   onExpired: () => void;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("checkout");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const release = useCancelCheckout();
@@ -167,13 +170,13 @@ function SessionCard({
             className="flex-row items-center justify-between"
           >
             <AppText variant="muted">
-              {line.type} × {line.quantity}
+              {ticketTypeLabel(tc, line.type)} × {line.quantity}
               {line.discount > 0
-                ? ` · −${formatMoney(line.currency, line.discount)}`
+                ? ` · −${formatMoney(line.currency, line.discount, { locale })}`
                 : ""}
             </AppText>
             <AppText variant="small">
-              {formatMoney(line.currency, line.amount)}
+              {formatMoney(line.currency, line.amount, { locale })}
             </AppText>
           </View>
         ))}
@@ -184,7 +187,7 @@ function SessionCard({
           {t("checkoutTotal")}
         </AppText>
         <AppText className="text-sm font-semibold text-foreground">
-          {formatMoney(currency, session.sessionSubtotal)}
+          {formatMoney(currency, session.sessionSubtotal, { locale })}
         </AppText>
       </View>
 

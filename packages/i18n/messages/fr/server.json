@@ -1224,5 +1224,15 @@
   "yourRefundIsInProgressBut": "Votre remboursement est en cours, mais nous n'avons pas encore pu vous restituer votre crédit. Veuillez réessayer ou contacter l'assistance.",
   "yourRefundWasStartedButWe": "Votre remboursement a été lancé, mais nous n'avons pas encore pu vous restituer votre crédit. Veuillez réessayer ou contacter l'assistance.",
   "yourRoleCanTDoThis": "Votre rôle ne permet pas de faire cela",
-  "yourSpotlight": "Votre Spotlight"
+  "yourSpotlight": "Votre Spotlight",
+  "abontenOrder": "Commande Abonten",
+  "unnamedArea": "Zone sans nom",
+  "organizerFallbackName": "Organisateur",
+  "fieldOpsTimeline": {
+    "started": "Démarré",
+    "ownerCodeSent": "Code envoyé au propriétaire",
+    "ownerVerified": "Le propriétaire a vérifié son téléphone",
+    "claimFiledFor": "Revendication déposée pour {name}",
+    "eventListedFor": "Événement référencé pour le {date}"
+  }
 }

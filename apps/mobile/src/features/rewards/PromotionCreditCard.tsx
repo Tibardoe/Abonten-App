@@ -1,12 +1,17 @@
+import { formatDate } from "@abonten/core/i18n/format";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { PromotionCredit } from "@abonten/types/rewards";
 import { AppText, Button, Overline } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 const monthOf = (period: string) =>
-  new Date(`${period}T00:00:00Z`).toLocaleDateString(undefined, {
+  formatDate(`${period}T00:00:00Z`, getCurrentLocale(), {
     month: "long",
     timeZone: "UTC",
   });
@@ -16,6 +21,7 @@ const monthOf = (period: string) =>
 // a way to spend it on featuring. Separate from the withdrawable balance --
 // credit is never paid out as money.
 export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
+  const { locale } = useLocale();
   const t = useTranslations("rewards");
 
   const router = useRouter();
@@ -32,7 +38,11 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
   if (visits) {
     lines.push(
       t("ownAVerifiedPlaceEveryDifferent", {
-        formatCredit: formatCredit(visits.perVisitorMinor, credit.currency),
+        formatCredit: formatCredit(
+          visits.perVisitorMinor,
+          credit.currency,
+          locale,
+        ),
         maxVisitors: visits.maxVisitors,
       }),
     );
@@ -41,7 +51,11 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
     lines.push(
       t("theFirstTimeOneOfYour", {
         uniqueBuyers: milestone.uniqueBuyers,
-        formatCredit: formatCredit(milestone.amountMinor, credit.currency),
+        formatCredit: formatCredit(
+          milestone.amountMinor,
+          credit.currency,
+          locale,
+        ),
       }),
     );
   }
@@ -51,12 +65,16 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
       <View className="gap-1">
         <Overline>{t("promotionCredit")}</Overline>
         <AppText variant="hero" className="tabular-nums">
-          {formatCredit(credit.promotionOnlyMinor, credit.currency)}
+          {formatCredit(credit.promotionOnlyMinor, credit.currency, locale)}
         </AppText>
         {credit.pendingMinor > 0 ? (
           <AppText variant="small" tone="muted">
             {t("pending3", {
-              formatCredit: formatCredit(credit.pendingMinor, credit.currency),
+              formatCredit: formatCredit(
+                credit.pendingMinor,
+                credit.currency,
+                locale,
+              ),
             })}
           </AppText>
         ) : null}
@@ -66,6 +84,7 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
               formatCredit: formatCredit(
                 credit.last.amountMinor,
                 credit.currency,
+                locale,
               ),
               monthOf: monthOf(credit.last.periodStart),
             })}
@@ -76,7 +95,11 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
       {credit.canRedeem && credit.spendableMinor > credit.promotionOnlyMinor ? (
         <AppText variant="small">
           {t("youCanPutTowardsFeaturingAn", {
-            formatCredit: formatCredit(credit.spendableMinor, credit.currency),
+            formatCredit: formatCredit(
+              credit.spendableMinor,
+              credit.currency,
+              locale,
+            ),
           })}
         </AppText>
       ) : null}

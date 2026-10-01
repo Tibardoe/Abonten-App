@@ -2,6 +2,7 @@
 
 import checkInTicket from "@/actions/checkInTicket";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { AttendanceRow as Attendee } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -45,6 +46,7 @@ function AttendanceRow({
   queryKey: unknown[];
 }) {
   const t = useTranslations("events");
+  const tc = useTranslations("core");
 
   const queryClient = useQueryClient();
 
@@ -74,7 +76,7 @@ function AttendanceRow({
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm text-muted-foreground">
-            {attendee.ticket_type?.type}
+            {ticketTypeLabel(tc, attendee.ticket_type?.type)}
           </span>
 
           {isCancelled ? (

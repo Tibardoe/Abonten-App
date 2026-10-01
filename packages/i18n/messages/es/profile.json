@@ -101,7 +101,7 @@
   "slideOptions": "Opciones de la diapositiva",
   "someItemsWereSkipped": "Se omitieron algunos elementos",
   "someone": "Alguien",
-  "spotlightViews": "Spotlight, {toLocaleString} visualizaciones{value}",
+  "spotlightViews": "Spotlight, {count, plural, one {# visualización} other {# visualizaciones}}{value}",
   "spotlights": "Spotlights",
   "switchBetweenEventsAndPlaces": "Cambiar entre Eventos y Lugares",
   "thisCanTBeUndone": "Esta acción no se puede deshacer.",

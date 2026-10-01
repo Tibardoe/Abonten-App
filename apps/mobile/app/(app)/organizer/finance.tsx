@@ -24,7 +24,11 @@ import {
   Refresher,
   StatusPill,
 } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Link } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
@@ -72,7 +76,7 @@ const FILTER_LINES: Record<
 
 function amount(currency: string, value: number): string {
   const sign = value < 0 ? "−" : "";
-  return `${sign}${formatMoney(currency, Math.abs(value))}`;
+  return `${sign}${formatMoney(currency, Math.abs(value), { locale: getCurrentLocale() })}`;
 }
 
 function BalanceLine({

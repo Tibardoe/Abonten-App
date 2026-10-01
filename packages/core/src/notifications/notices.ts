@@ -17,6 +17,8 @@ import type {
   CoreTranslator,
   TranslationValues,
 } from "../i18n/translator";
+import { isKnownCurrency } from "../money/currencies";
+import { formatMoney } from "../money/formatMoney";
 import { promotionDurationLabel } from "../promotionSummary";
 import { noticeFromStoredText } from "./storedNotices";
 
@@ -70,6 +72,7 @@ export const NOTICES: Record<string, NoticeTemplate> = {
     title: "notices.content_campaign.title",
     literalBody: "reason",
   },
+  content_campaign_refunded: n("content_campaign_refunded"),
   // Places (services)
   place_booking_requested: n("place_booking_requested"),
   place_booking_cancelled: n("place_booking_cancelled"),
@@ -295,6 +298,20 @@ function valuesFor(
   if (typeof params.period === "string") {
     values.month = monthText(params.period, locale);
     values.monthYear = monthYearText(params.period, locale);
+  }
+  // `creditMinor: 500` + `currency: "GHS"` → `credit: "GH₵5.00"`, written
+  // the way the reader's language writes amounts. A notice stored before
+  // this carries the amount already said (`credit: "GH₵5.00"`): kept as is.
+  if (typeof params.currency === "string") {
+    for (const [key, value] of Object.entries(params)) {
+      if (!key.endsWith("Minor") || typeof value !== "number") continue;
+      const name = key.slice(0, -5);
+      if (name in params || !isKnownCurrency(params.currency)) continue;
+      values[name] = formatMoney(
+        { amountMinor: value, currency: params.currency },
+        { locale },
+      );
+    }
   }
   // `fromDate: "2026-10-03"` → `from: "3 Oct 2026"` in the reader's language.
   for (const [key, value] of Object.entries(params)) {

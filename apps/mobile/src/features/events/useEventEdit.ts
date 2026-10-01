@@ -31,6 +31,10 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  FREE_TICKET_TYPE,
+  SINGLE_TICKET_TYPE,
+} from "@abonten/core/ticketTiers";
 import { useToast } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import type {
@@ -199,9 +203,9 @@ export function useEventEdit(eventId: string) {
     // Ticket types — mirrors the web inferInitialTicketState.
     const tt = event.ticket_type ?? [];
     setTicketCurrency(event.currency ?? tt[0]?.currency ?? "");
-    if (tt.length === 1 && tt[0].type === "FREE") {
+    if (tt.length === 1 && tt[0].type === FREE_TICKET_TYPE) {
       setTicketMode("free");
-    } else if (tt.length === 1 && tt[0].type === t("singleTicket")) {
+    } else if (tt.length === 1 && tt[0].type === SINGLE_TICKET_TYPE) {
       setTicketMode("single");
       setTicketPrice(String(tt[0].price));
       setTicketQuantity(tt[0].quantity != null ? String(tt[0].quantity) : "");

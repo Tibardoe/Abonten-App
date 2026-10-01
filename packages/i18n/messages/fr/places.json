@@ -305,7 +305,7 @@
   "requestABookingWithThisPlace": "Demander une réservation dans ce lieu",
   "requestBooking": "Demander une réservation",
   "requestBooking2": "Demander une réservation",
-  "requestingAt": "Demande pour le {toLocaleDateString} à {prettyTime}",
+  "requestingAt": "Demande pour le {date} à {prettyTime}",
   "resolvingLocation": "Recherche du lieu…",
   "resolvingLocation2": "Recherche du lieu…",
   "respond": "Répondre",

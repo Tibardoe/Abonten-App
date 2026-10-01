@@ -13,7 +13,6 @@ import type { Database } from "@abonten/types/database.types";
 // Not a "use server" file — it takes an already-constructed Supabase client.
 
 import { logger } from "@abonten/core/logger";
-import { formatMoney } from "@abonten/core/money/formatMoney";
 import { fromMajor, money } from "@abonten/core/money/money";
 import { splitRefundTender } from "@abonten/core/rewards/refundTenderSplit";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
@@ -361,8 +360,10 @@ export async function issueRefundCore(
   // Best-effort — the hold above is already the source of truth; a failed
   // notification never undoes a real refund request. Completion/failure is
   // notified separately by the webhook once Paystack actually confirms it.
+  // The amount as minor units: the notice says it the way the reader's
+  // language writes money.
   const creditBack = credit.returnedNow
-    ? formatMoney(money(split.creditBackMinor, transaction.currency))
+    ? { creditMinor: split.creditBackMinor, currency: transaction.currency }
     : null;
   const completed = split.cashBackMinor === 0;
   await createNotificationCore(privileged, {
@@ -370,10 +371,10 @@ export async function issueRefundCore(
     type: completed ? "refund_completed" : "refund_requested",
     notice: completed
       ? creditBack
-        ? { id: "refund_completed_credit", params: { credit: creditBack } }
+        ? { id: "refund_completed_credit", params: creditBack }
         : { id: "refund_completed_plain" }
       : creditBack
-        ? { id: "refund_requested_credit", params: { credit: creditBack } }
+        ? { id: "refund_requested_credit", params: creditBack }
         : { id: "refund_requested" },
     link: "/transactions",
     data: { kind: "ticket" },

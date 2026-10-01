@@ -27,6 +27,7 @@ import {
 } from "@abonten/core/content/feedPlayback";
 import { formatSpeed, holdRate } from "@abonten/core/content/playbackControls";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
+import { formatCount } from "@abonten/core/i18n/format";
 import type {
   ContentFeedItem,
   ContentViewSurface,
@@ -38,7 +39,7 @@ import {
   type IoniconName,
   useReducedMotion,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -760,6 +761,7 @@ function RailButton({
   selected?: boolean;
   onPress: () => void;
 }) {
+  const { locale } = useLocale();
   const text = caption ?? (count !== undefined ? compact(count) : null);
   return (
     <Pressable
@@ -767,7 +769,7 @@ function RailButton({
       hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel={
-        count !== undefined ? `${label}, ${count.toLocaleString()}` : label
+        count !== undefined ? `${label}, ${formatCount(count, locale)}` : label
       }
       accessibilityState={selected === undefined ? undefined : { selected }}
       className="min-h-[48px] w-[56px] items-center justify-center active:opacity-60"

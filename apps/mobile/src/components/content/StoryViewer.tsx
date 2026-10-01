@@ -993,14 +993,14 @@ function StorySlide({
             }}
             accessibilityRole="button"
             accessibilityLabel={t("viewedOpenInsights", {
-              toLocaleString: engagement.counts.views.toLocaleString(),
+              count: engagement.counts.views,
             })}
             className="flex-row items-center gap-1.5 self-start rounded-full bg-black/35 px-3 py-2"
           >
             <Icon name="eye-outline" size={16} color="#fff" />
             <AppText className="text-[13px] font-semibold text-white">
               {t("viewed", {
-                toLocaleString: engagement.counts.views.toLocaleString(),
+                count: engagement.counts.views,
               })}
             </AppText>
             <Icon name="chevron-forward" size={14} color="#fff" />

@@ -97,7 +97,7 @@ function eventItem(
     tag:
       price == null || price === 0
         ? tc("searchFilters.price.free")
-        : formatMoney(currency, price, { trimZeroFraction: true }),
+        : formatMoney(currency, price, { trimZeroFraction: true, locale }),
   };
 }
 

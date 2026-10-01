@@ -5,7 +5,7 @@
   "aStoryHoldsAtMostItems": "A Story holds at most {maxItems} items.",
   "aStoryHoldsUpToItems": "A Story holds up to {maxItems} items.",
   "aboutSponsoredImpressions": "About {impressions} sponsored impressions. {item}",
-  "aboutSponsoredImpressions2": "About {toLocaleString} sponsored impressions. {item}",
+  "aboutSponsoredImpressions2": "About {count, number} sponsored impressions. {item}",
   "addAComment": "Add a comment…",
   "addMore": "Add more",
   "addPhotoOrVideo": "Add photo or video",
@@ -412,8 +412,8 @@
   "viewChat": "View chat",
   "viewReplies": "View {count, plural, one {# reply} other {# replies}}",
   "viewTheConversation": "View the conversation",
-  "viewed": "{toLocaleString} viewed",
-  "viewedOpenInsights": "{toLocaleString} viewed. Open insights",
+  "viewed": "{count, number} viewed",
+  "viewedOpenInsights": "{count, number} viewed. Open insights",
   "views": "Views",
   "viewsCount": "{count, plural, one {# view} other {# views}}",
   "viewsWatchTimeEdits": "Views, watch time, edits",
@@ -444,5 +444,6 @@
   "yourSpotlightIsLive": "Your Spotlight is live.",
   "yourSpotlightIsLive2": "Your Spotlight is live",
   "yourStoryIsLive": "Your Story is live.",
-  "yourStoryIsLive2": "Your Story is live"
+  "yourStoryIsLive2": "Your Story is live",
+  "someone": "Someone"
 }

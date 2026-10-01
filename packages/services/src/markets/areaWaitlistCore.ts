@@ -213,7 +213,7 @@ export async function joinAreaWaitlistCore(
       return { status: 200, data: { waiting: true, areaName: already.label } };
     const coarse = coarsePoint(point);
     const areaName =
-      coverage.region?.name ?? cleanLabel(input.label) ?? "Unnamed area";
+      coverage.region?.name ?? cleanLabel(input.label) ?? tr("unnamedArea");
     if (existing.length >= MAX_WAITING_AREAS)
       return {
         status: 400,

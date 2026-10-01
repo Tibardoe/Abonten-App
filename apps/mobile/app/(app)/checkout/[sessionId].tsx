@@ -19,7 +19,7 @@ import type { PreparedCheckoutSession } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText, useToast } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
@@ -247,6 +247,7 @@ function CheckoutReady({
   onCancel: () => void;
   cancelling: boolean;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("checkout");
 
   const payment = useTicketPayment({
@@ -276,22 +277,22 @@ function CheckoutReady({
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Line
             label={t("subtotal")}
-            value={formatMoney(currency, session.subtotal)}
+            value={formatMoney(currency, session.subtotal, { locale })}
           />
           {session.discount > 0 ? (
             <Line
               label={t("discount")}
-              value={`− ${formatMoney(currency, session.discount)}`}
+              value={`− ${formatMoney(currency, session.discount, { locale })}`}
             />
           ) : null}
           <Line
             label={t("serviceFee")}
-            value={formatMoney(currency, session.fee)}
+            value={formatMoney(currency, session.fee, { locale })}
           />
           <View className="my-1 h-px bg-border" />
           <Line
             label={t("total")}
-            value={formatMoney(currency, session.total)}
+            value={formatMoney(currency, session.total, { locale })}
             strong
           />
         </View>
@@ -299,7 +300,7 @@ function CheckoutReady({
         {grandTotal !== session.total ? (
           <AppText variant="muted">
             {t("groupTotal", {
-              formatMoney: formatMoney(currency, grandTotal),
+              formatMoney: formatMoney(currency, grandTotal, { locale }),
             })}
           </AppText>
         ) : null}

@@ -4,6 +4,7 @@ import { postEvent } from "@/actions/postEvent";
 import resolveListingMarket from "@/actions/resolveListingMarket";
 import { saveEventDraft } from "@/actions/saveEventDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
+import { TICKET_MODE } from "@/events/ticketMode";
 import { useToast } from "@/hooks/useToast";
 import {
   getBufferedNow,
@@ -323,7 +324,7 @@ export function useEventUploadForm({
     setTicket(selectedTicket);
     // A free event has nothing to discount: whatever codes were drafted
     // before the switch go with it, so none can ride along on submit.
-    if (selectedTicket === "Free") {
+    if (selectedTicket === TICKET_MODE.free) {
       setPromoCodes([]);
       setShowPromoCodeFormPopup(false);
     }
@@ -344,17 +345,17 @@ export function useEventUploadForm({
   // rather than as a toast at the end.
   const watchedCapacity = form.watch("capacity");
   const tiersForCapacity =
-    ticket === t("singleTicketType")
+    ticket === TICKET_MODE.single
       ? [{ quantity: singleTicketQuantity }]
-      : ticket === t("multipleTicketTypes")
+      : ticket === TICKET_MODE.multiple
         ? multipleTickets.map((t) => ({ quantity: t.quantity }))
         : [];
   const capacityProblem =
-    ticket && ticket !== "Free"
+    ticket && ticket !== TICKET_MODE.free
       ? ticketCapacityProblem(tc, watchedCapacity, tiersForCapacity)
       : null;
   const capacityHint =
-    ticket && ticket !== "Free"
+    ticket && ticket !== TICKET_MODE.free
       ? ticketCapacityHint(tc, watchedCapacity, tiersForCapacity)
       : null;
 
@@ -520,8 +521,8 @@ export function useEventUploadForm({
       // re-checks every tier (paidTierProblem) before writing.
       const noTicketingSet =
         !ticket ||
-        (ticket === t("singleTicketType") && !singleTicket) ||
-        (ticket === t("multipleTicketTypes") && multipleTickets.length === 0);
+        (ticket === TICKET_MODE.single && !singleTicket) ||
+        (ticket === TICKET_MODE.multiple && multipleTickets.length === 0);
 
       if (noTicketingSet) {
         toast.error(t("eventTicketingMustBeSet"));
@@ -545,7 +546,7 @@ export function useEventUploadForm({
         selectedFile: file,
         existingFlyer: !file ? existingFlyer : undefined,
         draftId: currentDraftId,
-        promoCodes: ticket === "Free" ? [] : promoCodes,
+        promoCodes: ticket === TICKET_MODE.free ? [] : promoCodes,
         freeEvents: ticket,
         singleTicket,
         singleTicketQuantity,

@@ -4,7 +4,7 @@ import { getPlaceVisitPanel } from "@/actions/getPlaceVisitPanel";
 import { Button } from "@/components/ui/button";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { IoClose, IoExpandOutline } from "react-icons/io5";
@@ -20,6 +20,7 @@ export default function PlaceVisitQrCard({
   placeId: string;
   placeName: string;
 }) {
+  const locale = useLocale();
   const t = useTranslations("places");
 
   const { data } = useQuery({
@@ -82,7 +83,11 @@ export default function PlaceVisitQrCard({
             {t("showThisCodeAtYourCounter")}{" "}
             {panel.verified
               ? t("everyDifferentPersonWhoChecksIn", {
-                  amount: formatCredit(panel.perVisitorMinor, panel.currency),
+                  amount: formatCredit(
+                    panel.perVisitorMinor,
+                    panel.currency,
+                    locale,
+                  ),
                   maxVisitors: panel.maxVisitors,
                 })
               : t("visitsAreCountedNowOnlyVerified")}
@@ -116,7 +121,7 @@ export default function PlaceVisitQrCard({
           <div>
             <dt className="text-muted-foreground">{t("creditEarned")}</dt>
             <dd className="text-lg font-semibold tabular-nums">
-              {formatCredit(s.earnedMinor, panel.currency)}
+              {formatCredit(s.earnedMinor, panel.currency, locale)}
             </dd>
           </div>
         </dl>

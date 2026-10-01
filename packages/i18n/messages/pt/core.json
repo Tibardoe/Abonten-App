@@ -823,6 +823,10 @@
     "welcome_credit": {
       "body": "{amount} de desconto na sua primeira encomenda de bilhetes de {min} ou mais. Utilize-o no prazo de {days} dias.",
       "title": "Tem crédito de boas-vindas"
+    },
+    "content_campaign_refunded": {
+      "title": "O reembolso da sua promoção de Spotlight está a caminho",
+      "body": "{amount} estão a ser devolvidos ao seu método de pagamento."
     }
   },
   "openStatus": {
@@ -1055,7 +1059,9 @@
   "ticketTiers": {
     "freeEventPromoCodes": "Os códigos promocionais não estão disponíveis num evento gratuito. Remova-os ou torne o evento pago.",
     "freeReserved": "«{name}» está reservado a eventos gratuitos. Dê outro nome a este tipo de bilhete.",
-    "paidNeedsPrice": "Os bilhetes pagos precisam de um preço superior a zero. Para deixar entrar gratuitamente, torne o evento gratuito."
+    "paidNeedsPrice": "Os bilhetes pagos precisam de um preço superior a zero. Para deixar entrar gratuitamente, torne o evento gratuito.",
+    "freeName": "Gratuito",
+    "singleName": "Bilhete normal"
   },
   "verification": {
     "badgeExplanation": {

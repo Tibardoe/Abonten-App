@@ -117,7 +117,7 @@ export default function ManagePlacePromotionSection({
                 {promotionDurationLabel(tc, tier.duration_label)}
               </span>
               <span className="text-sm text-muted-foreground">
-                {formatMoney(tier.currency, tier.price)}
+                {formatMoney(tier.currency, tier.price, { locale })}
               </span>
             </button>
           ))}

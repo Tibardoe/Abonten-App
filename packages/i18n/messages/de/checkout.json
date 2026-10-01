@@ -128,5 +128,8 @@
   "yourPaymentWentThroughButThe": "Deine Zahlung ist durchgegangen, aber die Promotion ist noch nicht aktiv. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
   "yourPaymentWentThroughButThe2": "Deine Zahlung ist durchgegangen, aber die Promotion ist noch nicht in der Prüfung. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
   "yourPaymentWentThroughButWe": "Deine Zahlung ist durchgegangen, aber dein Ticket wurde noch nicht ausgestellt. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
-  "yourSeatsAreHeldForA": "Deine Plätze sind für begrenzte Zeit reserviert."
+  "yourSeatsAreHeldForA": "Deine Plätze sind für begrenzte Zeit reserviert.",
+  "yourOrder": "Deine Bestellung",
+  "paidWithAmountCredit": "Mit {amount} Guthaben bezahlt",
+  "viewMyTickets": "Meine Tickets ansehen"
 }

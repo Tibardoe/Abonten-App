@@ -9,6 +9,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import {
   AppText,
   Button,
@@ -48,6 +49,7 @@ export default function TicketDetailScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("tickets");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -210,7 +212,10 @@ export default function TicketDetailScreen() {
 
         {/* Ticket details */}
         <View className="w-full gap-3 rounded-xl border border-border bg-card p-4">
-          <Row icon="pricetag-outline" label={ticket.ticket_type.type} />
+          <Row
+            icon="pricetag-outline"
+            label={ticketTypeLabel(tc, ticket.ticket_type.type)}
+          />
           {ticket.seat_number ? (
             <Row
               icon="grid-outline"

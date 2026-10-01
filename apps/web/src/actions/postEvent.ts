@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { TICKET_MODE } from "@/events/ticketMode";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
 import {
@@ -74,7 +75,7 @@ export const postEvent = withActionLocale(async function postEvent(
     startsAt: formData.starts_at ?? null,
     endsAt: formData.ends_at ?? null,
     specificDates: formData.specific_dates ?? null,
-    freeEvent: formData.freeEvents === "Free",
+    freeEvent: formData.freeEvents === TICKET_MODE.free,
     singleTicket:
       formData.singleTicket != null
         ? {

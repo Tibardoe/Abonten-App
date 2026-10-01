@@ -24,6 +24,7 @@ import {
   mapOnboarding,
   readProgramSettings,
 } from "../shared/onboardingRows";
+import { TIMELINE_NOTE } from "../shared/timelineNotes";
 
 // Onboarding an event works exactly like a place: the organiser proves the
 // number is theirs with an OTP, and the event is created through the same
@@ -266,7 +267,7 @@ export async function submitEventOnboardingCore(
     status: "submitted",
     actorUserId: userId,
     actorKind: "member",
-    note: `Event listed for ${startsAt.toDateString()}`,
+    note: TIMELINE_NOTE.eventListedFor(startsAt.toISOString().slice(0, 10)),
     details: { eventId },
   });
 

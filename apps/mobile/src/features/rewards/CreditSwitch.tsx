@@ -1,7 +1,7 @@
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Switch, View } from "react-native";
 
 // The "Use Abonten Credit" switch shown on ticket and promotion checkout:
@@ -19,6 +19,7 @@ export function CreditSwitch({
   onChange: (v: boolean) => void;
   disabled: boolean;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("rewards");
 
   return (
@@ -27,7 +28,11 @@ export function CreditSwitch({
         <View className="flex-1 gap-0.5">
           <AppText className="text-sm font-semibold text-foreground">
             {t("useAbontenCredit", {
-              formatCredit: formatCredit(quote.creditMinor, quote.currency),
+              formatCredit: formatCredit(
+                quote.creditMinor,
+                quote.currency,
+                locale,
+              ),
             })}
           </AppText>
           <AppText variant="meta">
@@ -36,6 +41,7 @@ export function CreditSwitch({
                   formatCredit: formatCredit(
                     quote.spendableMinor,
                     quote.currency,
+                    locale,
                   ),
                 })
               : value
@@ -55,19 +61,19 @@ export function CreditSwitch({
           <View className="flex-row justify-between">
             <AppText variant="meta">{t("total")}</AppText>
             <AppText variant="meta" className="tabular-nums">
-              {formatCredit(quote.orderTotalMinor, quote.currency)}
+              {formatCredit(quote.orderTotalMinor, quote.currency, locale)}
             </AppText>
           </View>
           <View className="flex-row justify-between">
             <AppText variant="meta">{t("credit")}</AppText>
             <AppText variant="meta" className="tabular-nums">
-              −{formatCredit(quote.creditMinor, quote.currency)}
+              −{formatCredit(quote.creditMinor, quote.currency, locale)}
             </AppText>
           </View>
           <View className="flex-row justify-between">
             <AppText variant="metaStrong">{t("youPay")}</AppText>
             <AppText variant="metaStrong" className="tabular-nums">
-              {formatCredit(quote.cashMinor, quote.currency)}
+              {formatCredit(quote.cashMinor, quote.currency, locale)}
             </AppText>
           </View>
         </View>

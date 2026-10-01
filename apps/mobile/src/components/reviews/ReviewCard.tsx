@@ -1,4 +1,5 @@
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { formatCount } from "@abonten/core/i18n/format";
 import {
   type ReviewListRow,
   type ReviewSubjectKind,
@@ -64,7 +65,7 @@ function ReviewCardImpl({
     review.helpfulCount === 1
       ? t("n1PersonFoundThisHelpful")
       : t("peopleFoundThisHelpful2", {
-          toLocaleString: review.helpfulCount.toLocaleString("en-US"),
+          toLocaleString: formatCount(review.helpfulCount, locale),
         });
 
   return (
@@ -226,7 +227,7 @@ function ReviewCardImpl({
             >
               {t("helpful")}
               {review.helpfulCount > 0
-                ? ` · ${review.helpfulCount.toLocaleString("en-US")}`
+                ? ` · ${formatCount(review.helpfulCount, locale)}`
                 : ""}
             </AppText>
           </PressableScale>

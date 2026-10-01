@@ -15,7 +15,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -322,6 +322,7 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
 }
 
 function OwnCampaigns() {
+  const locale = useLocale();
   const t = useTranslations("spotlight");
 
   const query = useQuery({
@@ -394,7 +395,7 @@ function OwnCampaigns() {
               </p>
             </div>
             <span className="shrink-0 text-sm font-semibold">
-              {formatMinor(c.budgetMinor, c.currency)}
+              {formatMinor(c.budgetMinor, c.currency, locale)}
             </span>
           </Link>
         </li>

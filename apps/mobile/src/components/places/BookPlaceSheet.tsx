@@ -1,6 +1,7 @@
 import { TimeField, prettyTime } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import { useRequestBooking } from "@/features/places/usePlaceBooking";
+import { formatDate } from "@abonten/core/i18n/format";
 import {
   AppText,
   Button,
@@ -10,7 +11,7 @@ import {
   Input,
   Sheet,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -33,6 +34,7 @@ export function BookPlaceSheet({
   placeName: string;
   services: BookingService[];
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("places");
 
   const hasServices = services.length > 0;
@@ -195,7 +197,7 @@ export function BookPlaceSheet({
             {requestedTime ? (
               <AppText variant="caption">
                 {t("requestingAt", {
-                  toLocaleDateString: requestedTime.toLocaleDateString(),
+                  date: formatDate(requestedTime, locale),
                   prettyTime: prettyTime(time),
                 })}
               </AppText>

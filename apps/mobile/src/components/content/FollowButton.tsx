@@ -3,9 +3,10 @@ import { useRequireSignIn } from "@/features/content/contentLinks";
 import { useFollow } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { hapticSelection } from "@/lib/haptics";
+import { formatCount } from "@abonten/core/i18n/format";
 import type { FollowTargetKind } from "@abonten/types/contentType";
 import { AppText } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable } from "react-native";
 
 // Public Follow for an organizer or place: fills the Following feed and the
@@ -39,6 +40,7 @@ export function FollowButton({
   /** The viewer's follow state when a post document already carries it. */
   known?: boolean;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("spotlight");
 
   const { session } = useSession();
@@ -103,7 +105,7 @@ export function FollowButton({
         ].join(" ")}
       >
         {following ? t("following") : t("follow")}
-        {showCount && count > 0 ? ` · ${count.toLocaleString()}` : ""}
+        {showCount && count > 0 ? ` · ${formatCount(count, locale)}` : ""}
       </AppText>
     </Pressable>
   );

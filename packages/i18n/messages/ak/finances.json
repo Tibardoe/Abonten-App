@@ -12,7 +12,7 @@
   "addPayoutAccount": "Add payout account",
   "amount": "Amount",
   "available": "Available:",
-  "availablePending": "{currency}: {toLocaleString} available · {toLocaleString2} pending",
+  "availablePending": "{currency}: {available} available · {pending} pending",
   "availableToWithdraw": "Available to withdraw",
   "back": "Back",
   "bankAccount": "Bank Account",

@@ -1,11 +1,13 @@
+import { TICKET_MODE, type TicketMode } from "@/events/ticketMode";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { cn } from "../lib/utils";
 
 type TicketProp = {
+  /** A TICKET_MODE code, never a label. */
   ticket: string | null;
-  handleTicket: (categoryName: string) => void;
+  handleTicket: (mode: TicketMode) => void;
   checked: boolean;
   handleChecked: (state: boolean) => void;
 };
@@ -41,21 +43,21 @@ export default function TicketType({
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => handleTicket(t("free"))}
+              onClick={() => handleTicket(TICKET_MODE.free)}
               className="flex justify-between items-center w-full text-sm"
             >
               {t("free")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== t("free"),
-                    flex: ticket === t("free"),
+                    hidden: ticket !== TICKET_MODE.free,
+                    flex: ticket === TICKET_MODE.free,
                   })}
                 />
               </span>
             </button>
 
-            {ticket === t("free") && (
+            {ticket === TICKET_MODE.free && (
               <div className="flex items-center gap-2 text-foreground">
                 <button
                   type="button"
@@ -80,15 +82,15 @@ export default function TicketType({
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => handleTicket(t("singleTicketType"))}
+              onClick={() => handleTicket(TICKET_MODE.single)}
               className="flex justify-between items-center w-full text-sm"
             >
               {t("singleTicketType")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== t("singleTicketType"),
-                    flex: ticket === t("singleTicketType"),
+                    hidden: ticket !== TICKET_MODE.single,
+                    flex: ticket === TICKET_MODE.single,
                   })}
                 />
               </span>
@@ -98,15 +100,15 @@ export default function TicketType({
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => handleTicket(t("multipleTicketTypes"))}
+              onClick={() => handleTicket(TICKET_MODE.multiple)}
               className="flex justify-between items-center w-full text-sm"
             >
               {t("multipleTicketTypes")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== t("multipleTicketTypes"),
-                    flex: ticket === t("multipleTicketTypes"),
+                    hidden: ticket !== TICKET_MODE.multiple,
+                    flex: ticket === TICKET_MODE.multiple,
                   })}
                 />
               </span>

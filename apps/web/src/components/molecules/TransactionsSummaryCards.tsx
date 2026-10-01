@@ -8,7 +8,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import type { TransactionPeriod } from "@abonten/core/transactionsDateRange";
 import type { UserTransactionSummaryRow } from "@abonten/types/transactions";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type SummaryResult =
   | { status: 200; data: UserTransactionSummaryRow[] }
@@ -25,6 +25,7 @@ export default function TransactionsSummaryCards({
   initialSummary: SummaryResult;
   fetchSummary: (period: TransactionPeriod) => Promise<SummaryResult>;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -64,7 +65,7 @@ export default function TransactionsSummaryCards({
   const otherCurrencyRows = data.data.slice(1);
 
   const money = (amount: number, currency: string) =>
-    formatMoney(currency, Number(amount));
+    formatMoney(currency, Number(amount), { locale });
 
   return (
     <div className="flex flex-col gap-3">

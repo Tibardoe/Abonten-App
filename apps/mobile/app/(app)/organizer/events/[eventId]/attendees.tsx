@@ -7,6 +7,7 @@ import {
 } from "@/features/organizer/useAttendees";
 import { useQueryView } from "@/lib/useQueryView";
 import type { AttendanceRow } from "@abonten/api-client";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Refresher, useToast } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
@@ -25,6 +26,7 @@ function AttendeeRow({
   eventId: string;
 }) {
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const checkIn = useCheckInTicket(eventId);
@@ -32,7 +34,9 @@ function AttendeeRow({
   const isCancelled = attendee.status === "cancelled";
   const isCheckedIn = attendee.ticket?.status === "used";
   const name =
-    attendee.user_info?.full_name ?? attendee.user_info?.username ?? "Attendee";
+    attendee.user_info?.full_name ??
+    attendee.user_info?.username ??
+    t("attendee");
 
   const toggle = (checkedIn: boolean) => {
     if (!attendee.ticket_id) return;
@@ -72,7 +76,7 @@ function AttendeeRow({
         <View className="shrink-0 flex-row items-center gap-2">
           {attendee.ticket_type?.type ? (
             <AppText className="text-sm text-muted-foreground">
-              {attendee.ticket_type.type}
+              {ticketTypeLabel(tc, attendee.ticket_type.type)}
             </AppText>
           ) : null}
           <View

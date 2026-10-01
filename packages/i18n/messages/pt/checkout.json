@@ -128,5 +128,8 @@
   "yourPaymentWentThroughButThe": "O seu pagamento foi processado, mas a promoção ainda não está ativa. Tente novamente agora — não será cobrado outra vez.",
   "yourPaymentWentThroughButThe2": "O seu pagamento foi processado, mas a promoção ainda não chegou à revisão. Tente novamente agora — não será cobrado outra vez.",
   "yourPaymentWentThroughButWe": "O seu pagamento foi processado, mas ainda não emitimos o seu bilhete. Tente novamente agora — não será cobrado outra vez.",
-  "yourSeatsAreHeldForA": "Os seus lugares ficam reservados por tempo limitado."
+  "yourSeatsAreHeldForA": "Os seus lugares ficam reservados por tempo limitado.",
+  "yourOrder": "A sua encomenda",
+  "paidWithAmountCredit": "Pago com {amount} de crédito",
+  "viewMyTickets": "Ver os meus bilhetes"
 }

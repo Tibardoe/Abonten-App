@@ -307,16 +307,23 @@ export async function notifyCampaign(
     advertiserId: string;
     status: string;
     reason?: string | null;
+    /** A refund on its way back: said in the advertiser's own language. */
+    refund?: { amountMinor: number; currency: string };
   },
 ): Promise<void> {
   try {
     await createNotificationCore(supabase, {
       userId: campaign.advertiserId,
       type: "content_campaign",
-      notice: {
-        id: "content_campaign",
-        params: { status: campaign.status, reason: campaign.reason ?? null },
-      },
+      notice: campaign.refund
+        ? { id: "content_campaign_refunded", params: campaign.refund }
+        : {
+            id: "content_campaign",
+            params: {
+              status: campaign.status,
+              reason: campaign.reason ?? null,
+            },
+          },
       link: `/manage/spotlight/campaigns/${campaign.id}`,
       data: { kind: "content_campaign", campaignId: campaign.id } as never,
     });

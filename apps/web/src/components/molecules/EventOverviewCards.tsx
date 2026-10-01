@@ -3,7 +3,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { EventOverviewAnalytics } from "@abonten/types/eventAnalytics";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function EventOverviewCards({
   overview,
@@ -16,6 +16,7 @@ export default function EventOverviewCards({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   if (isLoading) {
@@ -40,7 +41,8 @@ export default function EventOverviewCards({
   }
 
   const currency = overview.currency ?? "";
-  const money = (amount: number) => formatMoney(currency, Number(amount));
+  const money = (amount: number) =>
+    formatMoney(currency, Number(amount), { locale });
 
   // Free/RSVP events lead with registrations, not a sales figure that would
   // otherwise misleadingly read as "GHS 0" — Gross Sales is only shown if

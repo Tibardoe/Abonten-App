@@ -12,6 +12,7 @@ import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
 import { campaignStatusLabel } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
+import { formatCount } from "@abonten/core/i18n/format";
 import {
   AppText,
   Button,
@@ -22,7 +23,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -42,6 +43,7 @@ function formatWatchTime(ms: number): string {
 // the Insights button on your own Spotlight, your profile's grid, and
 // Spotlight & Stories in the menu.
 export default function ManagePostScreen() {
+  const { locale } = useLocale();
   const t = useTranslations("spotlight");
   const tc = useTranslations("core");
 
@@ -336,7 +338,7 @@ export default function ManagePostScreen() {
                     ? "…"
                     : typeof value === "string"
                       ? value
-                      : (value ?? 0).toLocaleString()}
+                      : formatCount(value ?? 0, locale)}
                 </AppText>
               </View>
             ))}

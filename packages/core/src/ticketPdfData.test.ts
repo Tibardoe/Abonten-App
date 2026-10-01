@@ -28,6 +28,7 @@ describe("the receipt's words", () => {
       issuedOn: "Issued on: 1 Oct 2026",
       attendee: "Attendee",
       ticketType: "Ticket type",
+      ticketTypeValue: "Regular",
       ticketCode: "Ticket code",
       status: "Status",
       statusValue: "Active",
@@ -43,6 +44,17 @@ describe("the receipt's words", () => {
     expect(labels.issuedOn).toBe("Émis le : 1 Oct 2026");
     expect(labels.ticketType).toBe("Type de billet");
     expect(labels.statusValue).toBe("Enregistré à l'entrée");
+  });
+
+  it("word a tier the system named, and keep one the organizer named", () => {
+    const tier = (name: string, translate = t) =>
+      ticketPdfLabels(translate, { ...data("active"), ticketTypeName: name })
+        .ticketTypeValue;
+    expect(tier("SINGLE TICKET")).toBe("Standard ticket");
+    expect(tier("FREE")).toBe("Free");
+    expect(tier("SINGLE TICKET", tFr)).toBe("Billet standard");
+    expect(tier("FREE", tFr)).toBe("Gratuit");
+    expect(tier("VIP", tFr)).toBe("VIP");
   });
 
   it("word the status instead of printing the stored code", () => {

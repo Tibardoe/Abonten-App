@@ -75,15 +75,23 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
               ? "youGetWhenFriendBuysMin"
               : "youGetWhenFriendBuys",
             {
-              amount: formatCredit(invite.referrerMinor, invite.currency),
+              amount: formatCredit(
+                invite.referrerMinor,
+                invite.currency,
+                locale,
+              ),
               minimum: invite.minOrderMinor
-                ? formatCredit(invite.minOrderMinor, invite.currency)
+                ? formatCredit(invite.minOrderMinor, invite.currency, locale)
                 : "",
             },
           )}{" "}
           {invite.refereeMinor
             ? `${t("theyGetOffThatTicket", {
-                amount: formatCredit(invite.refereeMinor, invite.currency),
+                amount: formatCredit(
+                  invite.refereeMinor,
+                  invite.currency,
+                  locale,
+                ),
               })} `
             : ""}
           {t("invitesWorkForNewAccountsIn")}
@@ -143,13 +151,13 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
         <div>
           <dt className="text-muted-foreground">{t("earned")}</dt>
           <dd className="text-lg font-semibold tabular-nums">
-            {formatCredit(stats.earnedMinor, invite.currency)}
+            {formatCredit(stats.earnedMinor, invite.currency, locale)}
           </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">{t("pending2")}</dt>
           <dd className="text-lg font-semibold tabular-nums">
-            {formatCredit(stats.pendingMinor, invite.currency)}
+            {formatCredit(stats.pendingMinor, invite.currency, locale)}
           </dd>
         </div>
       </dl>

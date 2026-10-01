@@ -11,7 +11,7 @@ import {
 } from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText, BottomBar, Button } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
@@ -51,6 +51,7 @@ export function useTicketPayment({
   /** The quote went stale (balance changed, checkout lapsed): refetch it. */
   onCreditRefused?: () => void;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("checkout");
 
   const router = useRouter();
@@ -135,13 +136,19 @@ export function useTicketPayment({
         // screen confirms it on its first check.
         mode: ps ? ps.mode : "direct",
         deepLink: `abonten://checkout/${sessionId}`,
-        contextTitle: eventTitle ?? "Your order",
+        contextTitle: eventTitle ?? t("yourOrder"),
         ...(eventId ? { eventId } : {}),
         amountLabel: ps
-          ? formatMoney(currency, payAmount)
-          : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0, currency)} credit`,
+          ? formatMoney(currency, payAmount, { locale })
+          : t("paidWithAmountCredit", {
+              amount: formatCredit(
+                res.data.credit?.appliedMinor ?? 0,
+                currency,
+                locale,
+              ),
+            }),
         successHref: "/(app)/tickets",
-        successCtaLabel: "View my tickets",
+        successCtaLabel: t("viewMyTickets"),
         ...(ps === null
           ? {
               chargeStatus: "success",
@@ -215,6 +222,7 @@ export function PaymentSection({ state }: { state: TicketPayment }) {
 // picker still needs something (an email, a way to pay) Pay stays disabled
 // and the picker's own "Add email" / "Add a wallet" is the way forward.
 export function PayBar({ state }: { state: TicketPayment }) {
+  const { locale } = useLocale();
   const t = useTranslations("checkout");
 
   const { quote, creditCoversAll } = state;
@@ -226,8 +234,8 @@ export function PayBar({ state }: { state: TicketPayment }) {
       : t("total");
   const amount =
     creditCoversAll && quote
-      ? formatCredit(quote.creditMinor, quote.currency)
-      : formatMoney(state.currency, state.payAmount);
+      ? formatCredit(quote.creditMinor, quote.currency, locale)
+      : formatMoney(state.currency, state.payAmount, { locale });
 
   return (
     <BottomBar>

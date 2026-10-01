@@ -14,19 +14,21 @@ import {
   promotionEndReasonLabel,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
+import { formatDateTime } from "@abonten/core/i18n/format";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
 import { CampaignStatusPill } from "../molecules/ContentStatusBadge";
 
-function when(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleString() : "—";
+function when(iso: string | null, locale: string): string {
+  return iso ? formatDateTime(iso, locale) : "—";
 }
 
 export default function ManageCampaign({ campaignId }: { campaignId: string }) {
+  const locale = useLocale();
   const t = useTranslations("spotlight");
   const tc = useTranslations("core");
   const format = useFormatter();
@@ -94,17 +96,17 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
   const n = (v: number | undefined) => format.number(v ?? 0);
   const unused = Math.max(0, c.paidMinor - c.spentMinor - c.refundedMinor);
   const budget: [string, string][] = [
-    [t("budget"), formatMinor(c.budgetMinor, c.currency)],
-    [t("usedSoFar"), formatMinor(c.spentMinor, c.currency)],
-    [t("unused"), formatMinor(unused, c.currency)],
-    [t("refunded"), formatMinor(c.refundedMinor, c.currency)],
+    [t("budget"), formatMinor(c.budgetMinor, c.currency, locale)],
+    [t("usedSoFar"), formatMinor(c.spentMinor, c.currency, locale)],
+    [t("unused"), formatMinor(unused, c.currency, locale)],
+    [t("refunded"), formatMinor(c.refundedMinor, c.currency, locale)],
     [t("goal"), campaignObjectiveLabel(tc, c.objective)],
     [
       t("runsForUpTo"),
       tc("promotionSummary.duration.days", { count: c.durationDays }),
     ],
-    [t("starts"), when(c.startsAt)],
-    [t("endsBy"), when(c.endsAt)],
+    [t("starts"), when(c.startsAt, locale)],
+    [t("endsBy"), when(c.endsAt, locale)],
   ];
   // Reach is people; impressions are times shown. Kept apart on purpose.
   const delivery: [string, string][] = [
@@ -184,7 +186,7 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
           {promotionEndReasonLabel(tc, c.endReason)}.
           {unused > 0
             ? ` ${t("ofTheBudgetWasnTUsed", {
-                amount: formatMinor(unused, c.currency),
+                amount: formatMinor(unused, c.currency, locale),
               })}`
             : ""}
         </p>
@@ -255,7 +257,7 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
               </span>
               <span className="text-muted-foreground">
                 {" "}
-                · {new Date(e.createdAt).toLocaleString()}
+                · {formatDateTime(e.createdAt, locale)}
               </span>
               {e.reason ? (
                 <p className="text-xs text-muted-foreground">{e.reason}</p>

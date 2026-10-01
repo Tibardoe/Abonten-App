@@ -112,7 +112,6 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
 
 export default function SettingsOverview() {
   const t = useTranslations("settings");
-  const tc = useTranslations("core");
 
   const router = useRouter();
   const online = useIsOnline();

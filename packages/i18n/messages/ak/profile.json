@@ -101,7 +101,7 @@
   "slideOptions": "Slide options",
   "someItemsWereSkipped": "Some items were skipped",
   "someone": "Someone",
-  "spotlightViews": "Spotlight, {toLocaleString} views{value}",
+  "spotlightViews": "Spotlight, {count, plural, one {# view} other {# views}}{value}",
   "spotlights": "Spotlights",
   "switchBetweenEventsAndPlaces": "Switch between Events and Places",
   "thisCanTBeUndone": "This can't be undone.",

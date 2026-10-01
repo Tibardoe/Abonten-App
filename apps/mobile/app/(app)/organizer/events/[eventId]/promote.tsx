@@ -161,7 +161,7 @@ export default function PromoteEventScreen() {
                 })}
               </AppText>
               <AppText className="text-sm font-semibold text-foreground">
-                {formatMoney(reserved.currency, reserved.amount)}
+                {formatMoney(reserved.currency, reserved.amount, { locale })}
               </AppText>
             </View>
           </View>
@@ -195,7 +195,7 @@ export default function PromoteEventScreen() {
                     {promotionDurationLabel(tc, tier.duration_label)}
                   </AppText>
                   <AppText className="text-sm text-muted-foreground">
-                    {formatMoney(tier.currency, tier.price)}
+                    {formatMoney(tier.currency, tier.price, { locale })}
                   </AppText>
                 </Pressable>
               );

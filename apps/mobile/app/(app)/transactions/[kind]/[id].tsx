@@ -5,6 +5,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { TransactionKind } from "@abonten/types/transactions";
 import {
   AppText,
@@ -138,7 +139,7 @@ export default function TransactionDetailScreen() {
           {t("amount")}
         </AppText>
         <AppText variant="bodyStrong">
-          {formatMoney(currency, Number(amount))}
+          {formatMoney(currency, Number(amount), { locale })}
         </AppText>
       </View>
 
@@ -164,33 +165,37 @@ export default function TransactionDetailScreen() {
             <Row label={t("event")} value={data.event?.title ?? null} />
             <Row
               label={t("ticketType2")}
-              value={data.ticket_type?.type ?? null}
+              value={
+                data.ticket_type?.type
+                  ? ticketTypeLabel(tc, data.ticket_type.type)
+                  : null
+              }
             />
             <Row label={t("quantity")} value={data.quantity} />
             <Row
               label={t("unitPrice2")}
-              value={formatMoney(currency, data.unit_price)}
+              value={formatMoney(currency, data.unit_price, { locale })}
             />
             {data.discount > 0 ? (
               <Row
                 label={t("discount")}
-                value={`-${formatMoney(currency, data.discount)}`}
+                value={`-${formatMoney(currency, data.discount, { locale })}`}
               />
             ) : null}
             <Row
               label={t("ticketPrice2")}
-              value={formatMoney(currency, data.total_price)}
+              value={formatMoney(currency, data.total_price, { locale })}
             />
             {data.serviceFee > 0 ? (
               <Row
                 label={t("serviceFee")}
-                value={formatMoney(currency, data.serviceFee)}
+                value={formatMoney(currency, data.serviceFee, { locale })}
               />
             ) : null}
             {data.totalPaid !== data.total_price ? (
               <Row
                 label={t("totalPaid2")}
-                value={formatMoney(currency, data.totalPaid)}
+                value={formatMoney(currency, data.totalPaid, { locale })}
               />
             ) : null}
             <Row label={t("dateTime")} value={dt(data.created_at, locale)} />
@@ -211,17 +216,17 @@ export default function TransactionDetailScreen() {
             <Row label={t("plan")} value={data.subscription_plan_name} />
             <Row
               label={t("unitPrice2")}
-              value={formatMoney(currency, data.unit_price)}
+              value={formatMoney(currency, data.unit_price, { locale })}
             />
             {data.discount > 0 ? (
               <Row
                 label={t("discount")}
-                value={`-${formatMoney(currency, data.discount)}`}
+                value={`-${formatMoney(currency, data.discount, { locale })}`}
               />
             ) : null}
             <Row
               label={t("totalPrice2")}
-              value={formatMoney(currency, data.total_price)}
+              value={formatMoney(currency, data.total_price, { locale })}
             />
             <Row label={t("dateTime")} value={dt(data.created_at, locale)} />
             <Row label={t("reference")} value={id} />

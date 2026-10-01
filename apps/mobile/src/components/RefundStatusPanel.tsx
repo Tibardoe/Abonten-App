@@ -10,7 +10,7 @@ import {
   type IoniconName,
   StatusPill,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { View } from "react-native";
 
 // §10 — one place that turns a cancelled ticket's transaction state into a
@@ -41,6 +41,7 @@ export function RefundStatusPanel({
   amount: number | null | undefined;
   currency: string | null | undefined;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("common");
   const tc = useTranslations("core");
   const kind = getRefundStatusKind(
@@ -66,7 +67,7 @@ export function RefundStatusPanel({
         />
         {typeof amount === "number" ? (
           <AppText variant="bodyStrong">
-            {formatMoney(currency, amount)}
+            {formatMoney(currency, amount, { locale })}
           </AppText>
         ) : null}
       </View>

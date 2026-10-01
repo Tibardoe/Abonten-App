@@ -2,7 +2,7 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsOnboardingDetail } from "@abonten/types/fieldOps";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 /** Read-only detail of one onboarding, for the member and the team lead. */
@@ -13,6 +13,7 @@ export default function OnboardingDetailView({
   detail: FieldOpsOnboardingDetail;
   viewer: "member" | "lead";
 }) {
+  const locale = useLocale();
   const t = useTranslations("fieldOps");
   const tc = useTranslations("core");
   const format = useFormatter();
@@ -185,6 +186,7 @@ export default function OnboardingDetailView({
                   formatMinor: formatMinor(
                     detail.rule.amountMinor,
                     detail.rule.currency,
+                    locale,
                   ),
                   holdingDays: detail.rule.holdingDays,
                 })}

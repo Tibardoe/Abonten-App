@@ -4,10 +4,11 @@ import getOrganizerPendingEarnings from "@/actions/getOrganizerPendingEarnings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 export default function PendingEarningsList() {
+  const locale = useLocale();
   const t = useTranslations("finances");
 
   const { data, isPending, isError } = useQuery({
@@ -56,7 +57,7 @@ export default function PendingEarningsList() {
 
               <div className="flex items-center gap-3">
                 <p className="font-semibold text-sm">
-                  {formatMoney(row.currency, row.amount)}
+                  {formatMoney(row.currency, row.amount, { locale })}
                 </p>
                 <Link
                   href={`/manage/events/${row.event_id}?tab=insights`}

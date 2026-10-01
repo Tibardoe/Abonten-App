@@ -42,8 +42,11 @@ function walletPhoneLooksValid(raw: string, dialCode: string | null): boolean {
 // destinations. Reuses the existing useAddPayoutAccount API + validation.
 type SheetStep = "closed" | "choose" | "mobile_money" | "bank";
 
-function accountTitle(a: PayoutAccountRow): string {
-  const kind = a.account_type === "mobile_money" ? "Mobile money" : "Bank";
+function accountTitle(
+  a: PayoutAccountRow,
+  t: (key: "mobileMoney" | "bank") => string,
+): string {
+  const kind = a.account_type === "mobile_money" ? t("mobileMoney") : t("bank");
   return `${a.provider ?? kind} · ${a.account_number}`;
 }
 
@@ -215,7 +218,7 @@ export default function PayoutAccountsScreen() {
             >
               <View className="flex-row items-center justify-between">
                 <AppText className="flex-1 text-sm font-medium text-foreground">
-                  {accountTitle(a)}
+                  {accountTitle(a, t)}
                 </AppText>
                 {a.is_default ? (
                   <View className="rounded-full bg-accent px-2 py-0.5">

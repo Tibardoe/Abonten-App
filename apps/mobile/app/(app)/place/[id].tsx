@@ -653,6 +653,7 @@ export default function PlaceDetailScreen() {
                       <AppText variant="muted">
                         {formatMoney(placeCurrency, s.price, {
                           trimZeroFraction: true,
+                          locale,
                         })}
                         {s.price_unit ? ` / ${s.price_unit}` : ""}
                       </AppText>

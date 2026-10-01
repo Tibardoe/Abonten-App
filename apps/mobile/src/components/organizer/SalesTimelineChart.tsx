@@ -3,8 +3,9 @@ import type {
   OrganizerTimelineRow,
 } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatDate, formatDateTime } from "@abonten/core/i18n/format";
 import { AppText, Overline } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo, useState } from "react";
 import { type LayoutChangeEvent, Pressable, View } from "react-native";
@@ -24,7 +25,10 @@ const CHART_H = 176;
 const TOP_PAD = 12; // headroom above the tallest bar
 
 function money(currency: string, amount: number): string {
-  return formatMoney(currency, amount, { trimZeroFraction: true });
+  return formatMoney(currency, amount, {
+    trimZeroFraction: true,
+    locale: getCurrentLocale(),
+  });
 }
 
 function compact(amount: number): string {
@@ -37,11 +41,12 @@ function compact(amount: number): string {
 
 function bucketLabel(bucketStart: string, bucket: DashboardBucket): string {
   const d = new Date(bucketStart);
-  if (bucket === "hour")
-    return d.toLocaleTimeString("en-US", { hour: "numeric" });
-  if (bucket === "month")
-    return d.toLocaleDateString("en-US", { month: "short" });
-  return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+  // The axis reads in the app's language ("14 h", "sept."), like the rest
+  // of the dashboard.
+  const locale = getCurrentLocale();
+  if (bucket === "hour") return formatDateTime(d, locale, { hour: "numeric" });
+  if (bucket === "month") return formatDate(d, locale, { month: "short" });
+  return formatDate(d, locale, { day: "numeric", month: "short" });
 }
 
 export function SalesTimelineChart({

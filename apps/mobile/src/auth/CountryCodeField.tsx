@@ -4,7 +4,7 @@ import {
   phoneCountries,
 } from "@abonten/core/countries";
 import { AppText, Icon, Input, Sheet } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -28,7 +28,15 @@ export function CountryCodeField({
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const ordered = useMemo(() => phoneCountries(priority), [priority]);
+  const { locale } = useLocale();
+  // Named and sorted in the reader's language.
+  const ordered = useMemo(
+    () => phoneCountries(priority, locale),
+    [priority, locale],
+  );
+  const valueName =
+    ordered.find((c) => c.countryCode === value.countryCode)?.name ??
+    value.name;
   const results = matchCountry(query, ordered);
 
   function close() {
@@ -41,7 +49,7 @@ export function CountryCodeField({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t("countryCodeCurrently", {
-          name: value.name,
+          name: valueName,
           callingCode: value.callingCode,
         })}
         onPress={() => setOpen(true)}

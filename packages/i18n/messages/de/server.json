@@ -1224,5 +1224,15 @@
   "yourRefundIsInProgressBut": "Deine Erstattung läuft, aber wir konnten dein Guthaben noch nicht zurückbuchen. Bitte versuche es erneut oder wende dich an den Support.",
   "yourRefundWasStartedButWe": "Deine Erstattung wurde gestartet, aber wir konnten dein Guthaben noch nicht zurückbuchen. Bitte versuche es erneut oder wende dich an den Support.",
   "yourRoleCanTDoThis": "Deine Rolle darf das nicht",
-  "yourSpotlight": "Dein Spotlight"
+  "yourSpotlight": "Dein Spotlight",
+  "abontenOrder": "Abonten-Bestellung",
+  "unnamedArea": "Unbenannte Gegend",
+  "organizerFallbackName": "Veranstalter",
+  "fieldOpsTimeline": {
+    "started": "Begonnen",
+    "ownerCodeSent": "Code an den Inhaber gesendet",
+    "ownerVerified": "Der Inhaber hat sein Telefon bestätigt",
+    "claimFiledFor": "Anspruch eingereicht für {name}",
+    "eventListedFor": "Event eingetragen für {date}"
+  }
 }

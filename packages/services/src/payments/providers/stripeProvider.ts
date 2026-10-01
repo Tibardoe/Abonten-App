@@ -30,6 +30,7 @@ import {
 import type { PaymentMethodCode } from "@abonten/core/market/types";
 import { type Money, money } from "@abonten/core/money/money";
 import { z } from "zod";
+import { tr } from "../../i18n/requestLocale";
 import type {
   CheckoutInit,
   InitializeCheckoutInput,
@@ -231,7 +232,7 @@ export const stripeProvider: PaymentProvider = {
           price_data: {
             currency: input.amount.currency.toLowerCase(),
             unit_amount: input.amount.amountMinor,
-            product_data: { name: input.description ?? "Abonten order" },
+            product_data: { name: input.description ?? tr("abontenOrder") },
           },
         },
       ],

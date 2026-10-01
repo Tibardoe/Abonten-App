@@ -2,13 +2,15 @@
 
 import { useContentProgram } from "@/spotlight/hooks/useContentProgram";
 import { useFollow } from "@/spotlight/hooks/useFollow";
-import { useTranslations } from "next-intl";
+import { formatCount } from "@abonten/core/i18n/format";
+import { useLocale, useTranslations } from "next-intl";
 
 // "N followers" in the profile's stats row. Reads the same follow status the
 // Follow button does (one request, shared through React Query), so the
 // number moves the moment someone follows. Follow only exists while
 // Spotlight or Stories is on for the visitor, so the count goes with it.
 export default function ProfileFollowerCount({ userId }: { userId: string }) {
+  const locale = useLocale();
   const t = useTranslations("account");
 
   const { program } = useContentProgram();
@@ -23,7 +25,7 @@ export default function ProfileFollowerCount({ userId }: { userId: string }) {
       <dt className="sr-only">{t("followers")}</dt>
       <dd>
         <span className="font-semibold tabular-nums">
-          {count.toLocaleString()}
+          {formatCount(count, locale)}
         </span>{" "}
         {count === 1 ? t("follower") : t("followers2")}
       </dd>

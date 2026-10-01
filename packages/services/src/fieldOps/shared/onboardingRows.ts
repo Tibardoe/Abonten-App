@@ -19,6 +19,7 @@ import type {
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { coreT } from "../../i18n/requestLocale";
 import { displayName, namesFor, num } from "./fieldOpsRows";
+import { wordTimelineNote } from "./timelineNotes";
 
 // Row shapes and mappers for fieldops_onboarding and its evidence /
 // timeline, plus the shared "detail" builder used by the member, lead and
@@ -286,7 +287,7 @@ export async function loadTimeline(
     toStatus: r.to_status,
     actorKind: r.actor_kind as FieldOpsOnboardingEvent["actorKind"],
     actorName: r.actor_user_id ? displayName(names.get(r.actor_user_id)) : null,
-    note: r.note,
+    note: wordTimelineNote(r.note),
     details: (r.details ?? {}) as Record<string, unknown>,
     createdAt: r.created_at,
   }));

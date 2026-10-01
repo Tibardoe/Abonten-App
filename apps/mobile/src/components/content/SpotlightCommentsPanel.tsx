@@ -16,7 +16,7 @@ import {
   useKeyboardLift,
   useToast,
 } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -78,8 +78,6 @@ export function SpotlightCommentsPanel({
   commentCount: number;
   onClose: () => void;
 }) {
-  const { locale } = useLocale();
-
   const t = useTranslations("spotlight");
 
   const toast = useToast();

@@ -8,7 +8,7 @@ import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalida
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import PendingEarningsList from "../molecules/PendingEarningsList";
 import PromotionCreditCard from "../molecules/PromotionCreditCard";
@@ -37,6 +37,7 @@ type FinancesOverviewProps = {
 export default function FinancesOverview({
   initialOverview,
 }: FinancesOverviewProps) {
+  const locale = useLocale();
   const t = useTranslations("finances");
 
   const queryClient = useQueryClient();
@@ -83,7 +84,9 @@ export default function FinancesOverview({
             {t("availableToWithdraw")}
           </p>
           <p className="font-bold text-2xl md:text-3xl">
-            {formatMoney(primary.currency, primary.available_balance)}
+            {formatMoney(primary.currency, primary.available_balance, {
+              locale,
+            })}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             {t("moneyAvailableAfterEligibleEventProceeds")}
@@ -104,7 +107,9 @@ export default function FinancesOverview({
           <div>
             <p className="text-sm text-muted-foreground">{t("pending2")}</p>
             <p className="font-semibold text-lg">
-              {formatMoney(primary.currency, primary.pending_balance)}
+              {formatMoney(primary.currency, primary.pending_balance, {
+                locale,
+              })}
             </p>
           </div>
           <div>
@@ -112,7 +117,9 @@ export default function FinancesOverview({
               {t("totalEarnings")}
             </p>
             <p className="font-semibold text-lg">
-              {formatMoney(primary.currency, primary.total_earnings)}
+              {formatMoney(primary.currency, primary.total_earnings, {
+                locale,
+              })}
             </p>
           </div>
         </div>
@@ -123,8 +130,12 @@ export default function FinancesOverview({
               <p key={row.currency} className="text-xs text-muted-foreground">
                 {t("availablePending", {
                   currency: row.currency,
-                  toLocaleString: row.available_balance.toLocaleString(),
-                  toLocaleString2: row.pending_balance.toLocaleString(),
+                  available: formatMoney(row.currency, row.available_balance, {
+                    locale,
+                  }),
+                  pending: formatMoney(row.currency, row.pending_balance, {
+                    locale,
+                  }),
                 })}
               </p>
             ))}

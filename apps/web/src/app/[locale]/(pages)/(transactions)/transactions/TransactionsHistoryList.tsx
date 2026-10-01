@@ -139,7 +139,9 @@ export default function TransactionsHistoryList({
                   {/* What the customer actually paid — ticket price + service
                       fee. `total_paid` falls back to `amount` for free/legacy
                       rows where no fee applies. */}
-                  {formatMoney(item.currency, item.total_paid ?? item.amount)}
+                  {formatMoney(item.currency, item.total_paid ?? item.amount, {
+                    locale,
+                  })}
                 </p>
                 {item.credit_used ? (
                   <p className="text-xs font-normal text-muted-foreground">
@@ -147,6 +149,7 @@ export default function TransactionsHistoryList({
                       formatMoney: formatMoney(
                         item.currency,
                         Number(item.credit_used),
+                        { locale },
                       ),
                     })}
                   </p>

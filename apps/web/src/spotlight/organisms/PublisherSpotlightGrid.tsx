@@ -3,10 +3,11 @@
 import { listPublisherContent } from "@/actions/content/listPublisherContent";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { spotlightPath } from "@abonten/core/content/links";
+import { formatCount } from "@abonten/core/i18n/format";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { IoPlay } from "react-icons/io5";
@@ -35,6 +36,7 @@ export default function PublisherSpotlightGrid({
   hideWhenEmpty?: boolean;
   emptyText?: string;
 }) {
+  const locale = useLocale();
   const t = useTranslations("spotlight");
   const emptyText = emptyTextProp ?? t("noSpotlightsYet");
 
@@ -112,7 +114,7 @@ export default function PublisherSpotlightGrid({
                   ) : null}
                   <span className="absolute bottom-1 left-1 flex items-center gap-0.5 text-xs font-semibold text-white drop-shadow">
                     <IoPlay aria-hidden />
-                    {post.counts.views.toLocaleString()}
+                    {formatCount(post.counts.views, locale)}
                   </span>
                 </Link>
               </li>

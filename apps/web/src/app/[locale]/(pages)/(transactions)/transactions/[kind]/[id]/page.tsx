@@ -5,6 +5,7 @@ import TransactionStatusIcon, {
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type {
   TransactionKind,
   TransactionStatus,
@@ -131,6 +132,7 @@ export default async function Page({
             row.kind === "ticket" && typeof row.totalPaid === "number"
               ? row.totalPaid
               : row.total_price,
+            { locale },
           )}
         </p>
       </div>
@@ -156,33 +158,36 @@ export default async function Page({
         {row.kind === "ticket" ? (
           <>
             <DetailRow label={t("event")} value={row.event?.title} />
-            <DetailRow label={t("ticketType")} value={row.ticket_type?.type} />
+            <DetailRow
+              label={t("ticketType")}
+              value={ticketTypeLabel(tc, row.ticket_type?.type)}
+            />
             <DetailRow label={t("quantity")} value={row.quantity} />
             <DetailRow
               label={t("unitPrice")}
-              value={formatMoney(currency, row.unit_price)}
+              value={formatMoney(currency, row.unit_price, { locale })}
             />
             {row.discount > 0 && (
               <DetailRow
                 label={t("discount")}
-                value={`-${formatMoney(currency, row.discount)}`}
+                value={`-${formatMoney(currency, row.discount, { locale })}`}
               />
             )}
             <DetailRow
               label={t("ticketPrice")}
-              value={formatMoney(currency, row.total_price)}
+              value={formatMoney(currency, row.total_price, { locale })}
             />
             {typeof row.serviceFee === "number" && row.serviceFee > 0 && (
               <DetailRow
                 label={t("serviceFee")}
-                value={formatMoney(currency, row.serviceFee)}
+                value={formatMoney(currency, row.serviceFee, { locale })}
               />
             )}
             {typeof row.totalPaid === "number" &&
               row.totalPaid !== row.total_price && (
                 <DetailRow
                   label={t("totalPaid")}
-                  value={formatMoney(currency, row.totalPaid)}
+                  value={formatMoney(currency, row.totalPaid, { locale })}
                 />
               )}
             <DetailRow
@@ -215,17 +220,17 @@ export default async function Page({
             <DetailRow label={t("plan")} value={row.subscription_plan_name} />
             <DetailRow
               label={t("unitPrice")}
-              value={formatMoney(currency, row.unit_price)}
+              value={formatMoney(currency, row.unit_price, { locale })}
             />
             {row.discount > 0 && (
               <DetailRow
                 label={t("discount")}
-                value={`-${formatMoney(currency, row.discount)}`}
+                value={`-${formatMoney(currency, row.discount, { locale })}`}
               />
             )}
             <DetailRow
               label={t("totalPrice")}
-              value={formatMoney(currency, row.total_price)}
+              value={formatMoney(currency, row.total_price, { locale })}
             />
             <DetailRow
               label={t("dateTime")}

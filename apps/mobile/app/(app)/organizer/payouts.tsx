@@ -15,7 +15,7 @@ function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
     <View className="gap-2 rounded-2xl border border-border bg-card p-3">
       <View className="flex-row items-start justify-between gap-3">
         <AppText variant="bodyStrong">
-          {formatMoney(row.currency, row.amount)}
+          {formatMoney(row.currency, row.amount, { locale })}
         </AppText>
         <StatusPill status={row.status} size="sm" />
       </View>

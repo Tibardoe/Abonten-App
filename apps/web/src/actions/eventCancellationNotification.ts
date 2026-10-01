@@ -78,7 +78,9 @@ export default withActionLocale(async function eventCancellationNotification(
           react: EventCancellationEmailTemplate({
             words,
             eventTitle,
-            amountLabel: formatMoney(attendee.currency, attendee.amount),
+            amountLabel: formatMoney(attendee.currency, attendee.amount, {
+              locale: words.locale,
+            }),
             currency: attendee.currency,
             myTicketsUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/manage/my-events?tab=refunds`,
           }),

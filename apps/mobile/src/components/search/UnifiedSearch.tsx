@@ -147,7 +147,6 @@ function SuggestionRow({
   onRemove?: () => void;
 }) {
   const t = useTranslations("search");
-  const tc = useTranslations("core");
 
   return (
     <Pressable

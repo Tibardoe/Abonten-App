@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { TICKET_MODE } from "@/events/ticketMode";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   type UpdateEventTicketTypesCoreResult,
@@ -46,7 +47,7 @@ export default withActionLocale(async function updateEventTicketTypes(
   return updateEventTicketTypesCore(supabase, user.id, {
     eventId: input.eventId,
     currency: input.currency,
-    freeEvent: input.freeEvents === "Free",
+    freeEvent: input.freeEvents === TICKET_MODE.free,
     singleTicket:
       input.singleTicket != null
         ? { price: input.singleTicket, quantity: input.singleTicketQuantity }

@@ -268,6 +268,7 @@ function EventPreviewPanel({
               ? t("free")
               : formatMoney(event.currency, event.min_price, {
                   trimZeroFraction: true,
+                  locale,
                 })}
           </span>
         </div>

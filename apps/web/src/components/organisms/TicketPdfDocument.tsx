@@ -169,7 +169,7 @@ export default function TicketPdfDocument({
 
             <View style={styles.row}>
               <Text style={styles.label}>{labels.ticketType}</Text>
-              <Text style={styles.value}>{ticket.ticketTypeName}</Text>
+              <Text style={styles.value}>{labels.ticketTypeValue}</Text>
             </View>
 
             <View style={styles.row}>

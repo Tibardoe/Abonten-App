@@ -39,6 +39,7 @@ import {
   appendTimeline,
   mapOnboarding,
 } from "../shared/onboardingRows";
+import { TIMELINE_NOTE } from "../shared/timelineNotes";
 
 // The business owner's consent: a code goes to THEIR phone (Hubtel, purpose
 // "fieldops-owner"); entering it proves the phone, records consent and
@@ -238,7 +239,7 @@ export async function requestOwnerOtpCore(
     status: row.status,
     actorUserId: userId,
     actorKind: "member",
-    note: "Owner code sent",
+    note: TIMELINE_NOTE.ownerCodeSent,
     details: { phone: maskPhoneNumber(phone) },
   });
   return {
@@ -362,7 +363,7 @@ export async function attachOwnerCore(
     status: row.status,
     actorUserId,
     actorKind: actorUserId ? "member" : "system",
-    note: "Owner verified their phone",
+    note: TIMELINE_NOTE.ownerVerified,
     details: {
       new_account: isNewUser,
       prior_places: places ?? 0,

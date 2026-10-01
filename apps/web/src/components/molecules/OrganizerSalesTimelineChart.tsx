@@ -45,6 +45,7 @@ function TimelineTooltip({
   payload?: { payload: Row & { label: string } }[];
   currency: string;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   if (!active || !payload || payload.length === 0) return null;
@@ -55,7 +56,7 @@ function TimelineTooltip({
       <p className="font-medium">{row.label}</p>
       <p className="text-muted-foreground">
         {t("order", {
-          formatMoney: formatMoney(currency, Number(row.gross)),
+          formatMoney: formatMoney(currency, Number(row.gross), { locale }),
           orders: row.orders,
         })}
       </p>
@@ -116,7 +117,7 @@ export default function OrganizerSalesTimelineChart({
     <div
       role="img"
       aria-label={t("salesOverTimeChartTotalAcross", {
-        total: formatMoney(currency, total),
+        total: formatMoney(currency, total, { locale }),
         count: chartData.length,
         bucket,
       })}

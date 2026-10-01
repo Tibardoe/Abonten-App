@@ -9,7 +9,7 @@ import {
   Overline,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { View } from "react-native";
@@ -22,6 +22,7 @@ const pct = (bps: number) => Number((bps / 100).toFixed(2));
 // and it comes off the organizer's payout for that sale. Hidden while
 // commissions aren't switched on (and the event has no offer).
 export function PromoterCommissionSection({ eventId }: { eventId: string }) {
+  const { locale } = useLocale();
   const t = useTranslations("rewards");
 
   const toast = useToast();
@@ -134,13 +135,13 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
             {t("order", { sales: s.sales })}{" "}
             {t("byPromoter", { promoters: s.promoters })}{" "}
             {t("inTicketSales", {
-              formatCredit: formatCredit(s.revenueMinor, data.currency),
+              formatCredit: formatCredit(s.revenueMinor, data.currency, locale),
             })}
           </AppText>
           <AppText variant="small" tone="muted">
             {t("commissionPendingPaid", {
-              formatCredit: formatCredit(s.pendingMinor, data.currency),
-              formatCredit2: formatCredit(s.paidMinor, data.currency),
+              formatCredit: formatCredit(s.pendingMinor, data.currency, locale),
+              formatCredit2: formatCredit(s.paidMinor, data.currency, locale),
             })}
           </AppText>
         </View>

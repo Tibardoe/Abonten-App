@@ -18,6 +18,22 @@ type UploadToCloudinaryParams = {
 // server entirely -- the whole point being that a Server Action never sees
 // these bytes (see uploadHighlight.ts). Built on XMLHttpRequest rather than
 // fetch specifically because fetch has no upload-progress event; XHR does.
+/**
+ * The person stopped the upload themselves. Callers test for this class
+ * (isUploadCancelled) and say nothing — matching the error's wording only
+ * worked in the language it was written in.
+ */
+export class UploadCancelledError extends Error {
+  constructor() {
+    super("upload_cancelled");
+    this.name = "UploadCancelledError";
+  }
+}
+
+export function isUploadCancelled(error: unknown): boolean {
+  return error instanceof UploadCancelledError;
+}
+
 export function uploadToCloudinary({
   file,
   cloudName,
@@ -83,7 +99,7 @@ export function uploadToCloudinary({
 
       xhr.onerror = () =>
         reject(new Error("Upload failed. Please check your connection."));
-      xhr.onabort = () => reject(new Error("Upload cancelled."));
+      xhr.onabort = () => reject(new UploadCancelledError());
 
       xhr.send(formData);
     },

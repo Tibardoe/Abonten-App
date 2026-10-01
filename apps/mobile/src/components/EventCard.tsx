@@ -20,7 +20,11 @@ import {
   Skeleton,
   StatusPill,
 } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { shadow } from "@abonten/ui-native/theme";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -77,7 +81,10 @@ function priceLabel(
   const price = event.min_price ?? event.ticket_price;
   if (price == null || price === 0) return t("freeEntry");
   const currency = event.currency ?? event.ticket_currency ?? "";
-  const amount = formatMoney(currency, price, { trimZeroFraction: true });
+  const amount = formatMoney(currency, price, {
+    trimZeroFraction: true,
+    locale: getCurrentLocale(),
+  });
   return event.min_price != null && event.min_price !== event.ticket_price
     ? t("fromPrice", { price: amount })
     : amount;
@@ -124,7 +131,6 @@ export function EventCard({ event }: { event: UserPostType }) {
   const { locale } = useLocale();
 
   const t = useTranslations("common");
-  const tc = useTranslations("core");
 
   const router = useRouter();
   const qc = useQueryClient();
@@ -266,7 +272,7 @@ export function EventCard({ event }: { event: UserPostType }) {
             <Icon name="people-outline" size={14} tone="muted" />
             {attendees > 0 ? (
               <AppText variant="meta" numberOfLines={1}>
-                {t("going", { toLocaleString: attendees.toLocaleString() })}
+                {t("going", { count: attendees })}
               </AppText>
             ) : null}
             {attendees > 0 && fewLeft ? (
@@ -279,7 +285,9 @@ export function EventCard({ event }: { event: UserPostType }) {
                 className="shrink font-semibold"
                 numberOfLines={1}
               >
-                {t("onlyLeft2", { toLocaleString: remaining.toLocaleString() })}
+                {t("onlyLeft2", {
+                  count: remaining,
+                })}
               </AppText>
             ) : null}
           </View>

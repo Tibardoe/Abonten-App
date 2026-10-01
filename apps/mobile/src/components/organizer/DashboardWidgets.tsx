@@ -12,6 +12,7 @@ import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Icon, type IoniconName, Overline } from "@abonten/ui-native";
 import {
+  getCurrentLocale,
   translatorFor,
   useLocale,
   useTranslations,
@@ -28,7 +29,10 @@ import { Pressable, View } from "react-native";
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null | undefined, amount: number): string {
-  return formatMoney(currency, Math.round(amount), { trimZeroFraction: true });
+  return formatMoney(currency, Math.round(amount), {
+    trimZeroFraction: true,
+    locale: getCurrentLocale(),
+  });
 }
 
 function FinanceSummary() {

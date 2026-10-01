@@ -5,7 +5,7 @@
   "aStoryHoldsAtMostItems": "Une Story contient au maximum {maxItems} éléments.",
   "aStoryHoldsUpToItems": "Une Story contient jusqu'à {maxItems} éléments.",
   "aboutSponsoredImpressions": "Environ {impressions} impressions sponsorisées. {item}",
-  "aboutSponsoredImpressions2": "Environ {toLocaleString} impressions sponsorisées. {item}",
+  "aboutSponsoredImpressions2": "Environ {count, number} impressions sponsorisées. {item}",
   "addAComment": "Ajouter un commentaire…",
   "addMore": "Ajouter d'autres éléments",
   "addPhotoOrVideo": "Ajouter une photo ou une vidéo",
@@ -412,8 +412,8 @@
   "viewChat": "Voir la discussion",
   "viewReplies": "Voir {count, plural, one {# réponse} other {# réponses}}",
   "viewTheConversation": "Voir la conversation",
-  "viewed": "{toLocaleString} vues",
-  "viewedOpenInsights": "{toLocaleString} vues. Ouvrir les statistiques",
+  "viewed": "{count, plural, one {# vue} other {# vues}}",
+  "viewedOpenInsights": "{count, plural, one {# vue} other {# vues}}. Ouvrir les statistiques",
   "views": "Vues",
   "viewsCount": "{count, plural, one {# vue} other {# vues}}",
   "viewsWatchTimeEdits": "Vues, durée de visionnage, modifications",
@@ -444,5 +444,6 @@
   "yourSpotlightIsLive": "Votre Spotlight est en ligne.",
   "yourSpotlightIsLive2": "Votre Spotlight est en ligne",
   "yourStoryIsLive": "Votre Story est en ligne.",
-  "yourStoryIsLive2": "Votre Story est en ligne"
+  "yourStoryIsLive2": "Votre Story est en ligne",
+  "someone": "Quelqu’un"
 }

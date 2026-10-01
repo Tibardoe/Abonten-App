@@ -39,6 +39,7 @@ import {
   mapOnboarding,
   readProgramSettings,
 } from "../shared/onboardingRows";
+import { TIMELINE_NOTE } from "../shared/timelineNotes";
 import { consentPathFor } from "./ownerOtpCore";
 
 // The onboarding wizard, server side: start a draft, look for duplicates,
@@ -238,7 +239,7 @@ export async function startOnboardingCore(
     status: "draft",
     actorUserId: userId,
     actorKind: "member",
-    note: "Started",
+    note: TIMELINE_NOTE.started,
   });
   return { status: 200, data: mapOnboarding(row) };
 }

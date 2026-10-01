@@ -1224,5 +1224,15 @@
   "yourRefundIsInProgressBut": "Tu reembolso está en curso, pero aún no hemos podido devolverte el crédito. Inténtalo de nuevo o contacta con soporte.",
   "yourRefundWasStartedButWe": "Tu reembolso se inició, pero aún no hemos podido devolverte el crédito. Inténtalo de nuevo o contacta con soporte.",
   "yourRoleCanTDoThis": "Tu rol no puede hacer esto",
-  "yourSpotlight": "Tu Spotlight"
+  "yourSpotlight": "Tu Spotlight",
+  "abontenOrder": "Pedido de Abonten",
+  "unnamedArea": "Zona sin nombre",
+  "organizerFallbackName": "Organizador",
+  "fieldOpsTimeline": {
+    "started": "Iniciado",
+    "ownerCodeSent": "Código enviado al propietario",
+    "ownerVerified": "El propietario verificó su teléfono",
+    "claimFiledFor": "Reclamación presentada para {name}",
+    "eventListedFor": "Evento publicado para el {date}"
+  }
 }

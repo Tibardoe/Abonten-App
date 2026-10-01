@@ -16,14 +16,14 @@ import {
   Overline,
   ScreenError,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 
 function fmt(currency: string, v: number): string {
-  return formatMoney(currency, v);
+  return formatMoney(currency, v, { locale: getCurrentLocale() });
 }
 
 export default function WithdrawScreen() {

@@ -19,7 +19,7 @@ import {
   EmptyState,
   Skeleton,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -29,6 +29,7 @@ import { ScrollView, View } from "react-native";
 // here by +native-intent). Signed out: the invite is kept on the device and
 // applied right after sign-up. Signed in: it's applied here.
 export default function InviteScreen() {
+  const { locale } = useLocale();
   const t = useTranslations("rewards");
   const tc = useTranslations("core");
 
@@ -77,11 +78,19 @@ export default function InviteScreen() {
     data?.programOn && data.welcomeMinor
       ? data.minOrderMinor
         ? t("getOffYourFirstTicketOfOrMore", {
-            formatCredit: formatCredit(data.welcomeMinor, data.currency),
-            min: formatCredit(data.minOrderMinor, data.currency),
+            formatCredit: formatCredit(
+              data.welcomeMinor,
+              data.currency,
+              locale,
+            ),
+            min: formatCredit(data.minOrderMinor, data.currency, locale),
           })
         : t("getOffYourFirstTicket", {
-            formatCredit: formatCredit(data.welcomeMinor, data.currency),
+            formatCredit: formatCredit(
+              data.welcomeMinor,
+              data.currency,
+              locale,
+            ),
           })
       : null;
 

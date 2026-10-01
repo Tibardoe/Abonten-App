@@ -5,12 +5,17 @@ import ManagePromoCodesButton from "@/components/atoms/ManagePromoCodesButton";
 import EditEventFormFields from "@/components/molecules/EditEventFormFields";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
+import { TICKET_MODE, type TicketMode } from "@/events/ticketMode";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
 import { useToast } from "@/hooks/useToast";
 import {
   ticketCapacityHint,
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
+import {
+  FREE_TICKET_TYPE,
+  SINGLE_TICKET_TYPE,
+} from "@abonten/core/ticketTiers";
 import type {
   ManagedEvent,
   ManagedEventTicketType,
@@ -21,15 +26,12 @@ import { useState } from "react";
 
 // The name the create flow stores for an event with one paid ticket type
 // (a value in ticket_type.type, never shown as words).
-const SINGLE_TICKET_TYPE = "SINGLE TICKET";
 
 type ManageEventDetailsSectionProps = {
   event: ManagedEvent;
   hasConfirmedParticipation: boolean;
   onSaved: () => void;
 };
-
-type TicketMode = "Free" | "Single Ticket Type" | "Multiple Ticket Types";
 
 function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
   mode: TicketMode;
@@ -40,9 +42,9 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
 } {
   const currency = ticketTypes[0]?.currency ?? "";
 
-  if (ticketTypes.length === 1 && ticketTypes[0].type === "FREE") {
+  if (ticketTypes.length === 1 && ticketTypes[0].type === FREE_TICKET_TYPE) {
     return {
-      mode: "Free",
+      mode: TICKET_MODE.free,
       singleTicket: null,
       singleTicketQuantity: null,
       multipleTickets: [],
@@ -52,7 +54,7 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
 
   if (ticketTypes.length === 1 && ticketTypes[0].type === SINGLE_TICKET_TYPE) {
     return {
-      mode: "Single Ticket Type",
+      mode: TICKET_MODE.single,
       singleTicket: ticketTypes[0].price,
       singleTicketQuantity: ticketTypes[0].quantity,
       multipleTickets: [],
@@ -61,7 +63,7 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
   }
 
   return {
-    mode: "Multiple Ticket Types",
+    mode: TICKET_MODE.multiple,
     singleTicket: null,
     singleTicketQuantity: null,
     multipleTickets: ticketTypes.map((t) => ({
@@ -156,17 +158,17 @@ export default function ManageEventDetailsSection({
   // and the database apply (@abonten/core/ticketCapacity).
   const watchedCapacity = eventEditForm.form.watch("capacity");
   const tiersForCapacity =
-    ticketMode === t("singleTicketType")
+    ticketMode === TICKET_MODE.single
       ? [{ quantity: singleTicketQuantity }]
-      : ticketMode === t("multipleTicketTypes")
+      : ticketMode === TICKET_MODE.multiple
         ? multipleTickets.map((t) => ({ quantity: t.quantity }))
         : [];
   const capacityProblem =
-    ticketMode && ticketMode !== "Free"
+    ticketMode && ticketMode !== TICKET_MODE.free
       ? ticketCapacityProblem(tc, watchedCapacity, tiersForCapacity)
       : null;
   const capacityHint =
-    ticketMode && ticketMode !== "Free"
+    ticketMode && ticketMode !== TICKET_MODE.free
       ? ticketCapacityHint(tc, watchedCapacity, tiersForCapacity)
       : null;
 
@@ -238,12 +240,12 @@ export default function ManageEventDetailsSection({
         >
           <TicketType
             ticket={ticketMode}
-            handleTicket={(value) => setTicketMode(value as TicketMode)}
+            handleTicket={setTicketMode}
             checked={ticketRegistrationChecked}
             handleChecked={setTicketRegistrationChecked}
           />
 
-          {ticketMode === t("singleTicketType") && (
+          {ticketMode === TICKET_MODE.single && (
             <TicketInputs
               ticketType={ticketMode}
               singleTicketPrice={singleTicket}
@@ -253,7 +255,7 @@ export default function ManageEventDetailsSection({
             />
           )}
 
-          {ticketMode === t("multipleTicketTypes") && (
+          {ticketMode === TICKET_MODE.multiple && (
             <TicketInputs
               ticketType={ticketMode}
               multipleTickets={multipleTickets}
@@ -269,11 +271,12 @@ export default function ManageEventDetailsSection({
             <p className="text-xs text-muted-foreground">{capacityHint}</p>
           ) : null}
 
-          {ticketMode === "Free" && initialTicketState.mode !== "Free" && (
-            <p className="text-xs text-muted-foreground">
-              {t("makingThisEventFreeRemovesIts")}
-            </p>
-          )}
+          {ticketMode === TICKET_MODE.free &&
+            initialTicketState.mode !== TICKET_MODE.free && (
+              <p className="text-xs text-muted-foreground">
+                {t("makingThisEventFreeRemovesIts")}
+              </p>
+            )}
         </fieldset>
 
         {!hasConfirmedParticipation && (
@@ -292,7 +295,7 @@ export default function ManageEventDetailsSection({
 
       <div>
         <h2 className="font-semibold text-lg mb-2">{t("promoCodes")}</h2>
-        {initialTicketState.mode === "Free" ? (
+        {initialTicketState.mode === TICKET_MODE.free ? (
           <p className="text-sm text-muted-foreground">
             {t("promoCodesArenTAvailableOn")}
           </p>

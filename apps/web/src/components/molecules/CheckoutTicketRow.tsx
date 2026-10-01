@@ -2,6 +2,7 @@ import type { getTickets } from "@/actions/getTickets";
 import QuantityStepper from "@/components/atoms/QuantityStepper";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { SINGLE_TICKET_TYPE, ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { useLocale, useTranslations } from "next-intl";
 import { MdDiscount } from "react-icons/md";
 
@@ -31,6 +32,9 @@ export default function CheckoutTicketRow({
   const locale = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
+  // "Standard ticket" / "Free" for the tiers the system names itself.
+  const tierName = ticketTypeLabel(tc, ticket.type);
 
   return (
     <div
@@ -39,10 +43,10 @@ export default function CheckoutTicketRow({
       }`}
     >
       <div className="flex items-center justify-between px-4">
-        <p>{ticket.type}</p>
+        <p>{tierName}</p>
 
         <QuantityStepper
-          label={t("ticketsOfType", { type: ticket.type ?? "" })}
+          label={t("ticketsOfType", { type: tierName })}
           quantity={quantity}
           maxQuantity={ticket.quantity}
           onIncrement={onIncrement}
@@ -58,14 +62,16 @@ export default function CheckoutTicketRow({
             <p className="flex items-center gap-2">
               {discountedUnitPrice !== null ? (
                 <span className="flex justify-center items-center gap-1">
-                  {formatMoney(ticket.currency, discountedUnitPrice)}{" "}
+                  {formatMoney(ticket.currency, discountedUnitPrice, {
+                    locale,
+                  })}{" "}
                   <MdDiscount
                     className="text-lg"
                     aria-label={t("discounted")}
                   />
                 </span>
               ) : (
-                formatMoney(ticket.currency, ticket.price)
+                formatMoney(ticket.currency, ticket.price, { locale })
               )}
             </p>
 
@@ -94,7 +100,7 @@ export default function CheckoutTicketRow({
           </p>
         </div>
 
-        {ticket.type !== t("singleTicket") && ticket.available_until && (
+        {ticket.type !== SINGLE_TICKET_TYPE && ticket.available_until && (
           <p className="text-sm">
             {t("salesEndOn", {
               date: formatSingleDateTime(

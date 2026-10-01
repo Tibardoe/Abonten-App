@@ -260,7 +260,7 @@ export function describeEventFilters(
   if (f.minPrice != null || f.maxPrice != null) {
     const price = explorePriceFor(f, priceScale);
     const fmt = (v: number) =>
-      formatMoney(currency, v, { trimZeroFraction: true });
+      formatMoney(currency, v, { trimZeroFraction: true, locale });
     chips.push({
       key: "price",
       label:

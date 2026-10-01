@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 const pct = (bps: number) => Number((bps / 100).toFixed(2));
@@ -23,6 +23,7 @@ export default function PromoterCommissionCard({
 }: {
   eventId: string;
 }) {
+  const locale = useLocale();
   const t = useTranslations("events");
 
   const toast = useToast();
@@ -135,19 +136,19 @@ export default function PromoterCommissionCard({
           <div>
             <dt className="text-muted-foreground">{t("ticketSales")}</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.revenueMinor, offer.currency)}
+              {formatCredit(s.revenueMinor, offer.currency, locale)}
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("commissionPending")}</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.pendingMinor, offer.currency)}
+              {formatCredit(s.pendingMinor, offer.currency, locale)}
             </dd>
           </div>
           <div>
             <dt className="text-muted-foreground">{t("commissionPaid")}</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.paidMinor, offer.currency)}
+              {formatCredit(s.paidMinor, offer.currency, locale)}
             </dd>
           </div>
         </dl>

@@ -101,7 +101,7 @@
   "slideOptions": "Opções do diapositivo",
   "someItemsWereSkipped": "Alguns itens foram ignorados",
   "someone": "Alguém",
-  "spotlightViews": "Spotlight, {toLocaleString} visualizações{value}",
+  "spotlightViews": "Spotlight, {count, plural, one {# visualização} other {# visualizações}}{value}",
   "spotlights": "Spotlights",
   "switchBetweenEventsAndPlaces": "Alternar entre Eventos e Locais",
   "thisCanTBeUndone": "Esta ação não pode ser anulada.",

@@ -45,7 +45,7 @@ export function ConversationHeader({
     context?.subject.event?.title ??
     context?.subject.place?.name ??
     context?.title ??
-    "Conversation";
+    t("conversation");
 
   const contextLine =
     context?.type === "event"

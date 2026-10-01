@@ -140,7 +140,7 @@
   "deleting": "A eliminar…",
   "description": "Descrição",
   "descriptionOptional": "Descrição (opcional)",
-  "discount": "{toLocaleString} de desconto",
+  "discount": "{amount} de desconto",
   "discount2": "Desconto (%)",
   "discount3": "Desconto",
   "discounts": "Descontos",
@@ -409,7 +409,7 @@
   "retry": "Tentar novamente",
   "retrying": "A tentar novamente…",
   "returning": "Regressos: {round} %",
-  "revenue": "{toLocaleString} de receita",
+  "revenue": "{amount} de receita",
   "revenue2": "Receita",
   "review": "Avaliação",
   "reviewWithdrawal": "Rever levantamento",
@@ -586,5 +586,8 @@
   "yourPlaces3": "os seus locais",
   "yourResponse": "A sua resposta",
   "yourTransactions": "as suas transações",
-  "yyyyMmDd": "AAAA-MM-DD"
+  "yyyyMmDd": "AAAA-MM-DD",
+  "paidWithAmountCredit": "Pago com {amount} de crédito",
+  "promotionPaymentTitle": "{kind, select, spotlight {Promover o seu Spotlight} place {Destacar este local} other {Destacar este evento}}",
+  "promotionPaymentDone": "{kind, select, spotlight {Ver promoção} place {Ver local} other {Ver evento}}"
 }

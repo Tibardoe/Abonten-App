@@ -101,7 +101,7 @@
   "slideOptions": "Folienoptionen",
   "someItemsWereSkipped": "Einige Elemente wurden übersprungen",
   "someone": "Jemand",
-  "spotlightViews": "Spotlight, {toLocaleString} Aufrufe{value}",
+  "spotlightViews": "Spotlight, {count, plural, one {# Aufruf} other {# Aufrufe}}{value}",
   "spotlights": "Spotlights",
   "switchBetweenEventsAndPlaces": "Zwischen Events und Orten wechseln",
   "thisCanTBeUndone": "Das kann nicht rückgängig gemacht werden.",

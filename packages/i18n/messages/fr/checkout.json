@@ -128,5 +128,8 @@
   "yourPaymentWentThroughButThe": "Votre paiement est passé, mais la promotion n'est pas encore active. Réessayez maintenant — vous ne serez pas débité une seconde fois.",
   "yourPaymentWentThroughButThe2": "Votre paiement est passé, mais la promotion n'est pas encore arrivée en validation. Réessayez maintenant — vous ne serez pas débité une seconde fois.",
   "yourPaymentWentThroughButWe": "Votre paiement est passé, mais nous n'avons pas encore émis votre billet. Réessayez maintenant — vous ne serez pas débité une seconde fois.",
-  "yourSeatsAreHeldForA": "Vos places sont réservées pour une durée limitée."
+  "yourSeatsAreHeldForA": "Vos places sont réservées pour une durée limitée.",
+  "yourOrder": "Votre commande",
+  "paidWithAmountCredit": "Payé avec {amount} de crédit",
+  "viewMyTickets": "Voir mes billets"
 }

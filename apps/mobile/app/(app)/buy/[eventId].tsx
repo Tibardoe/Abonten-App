@@ -21,6 +21,7 @@ import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import {
   AppText,
   BottomBar,
@@ -34,7 +35,11 @@ import {
   Stepper,
   useToast,
 } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -59,7 +64,7 @@ function isOnSale(
 }
 
 function money(currency: string, n: number): string {
-  return formatMoney(currency, n);
+  return formatMoney(currency, n, { locale: getCurrentLocale() });
 }
 
 // The mobile "Buy tickets" screen: pick an occurrence + quantities, optionally
@@ -71,6 +76,7 @@ export default function BuyTicketsScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("checkout");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -458,7 +464,7 @@ export default function BuyTicketsScreen() {
               >
                 <View className="flex-1">
                   <AppText variant="body" className="font-medium">
-                    {tier.type}
+                    {ticketTypeLabel(tc, tier.type)}
                   </AppText>
                   <AppText variant="meta">
                     {tier.price === 0

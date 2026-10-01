@@ -124,6 +124,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
       : t("from", {
           formatMoney: formatMoney(event.currency, event.min_price, {
             trimZeroFraction: true,
+            locale,
           }),
         })
     : null;

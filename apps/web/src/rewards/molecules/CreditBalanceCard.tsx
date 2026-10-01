@@ -34,14 +34,14 @@ export default function CreditBalanceCard({
           summary.inDebt && "text-destructive",
         )}
       >
-        {formatCredit(summary.availableMinor, summary.currency)}
+        {formatCredit(summary.availableMinor, summary.currency, locale)}
       </p>
 
       <div className="mt-4 flex flex-col gap-1.5 text-sm">
         {summary.pendingMinor > 0 ? (
           <p>
             <span className="font-medium tabular-nums">
-              {formatCredit(summary.pendingMinor, summary.currency)}
+              {formatCredit(summary.pendingMinor, summary.currency, locale)}
             </span>{" "}
             <span className="text-muted-foreground">
               {summary.nextRelease
@@ -49,6 +49,7 @@ export default function CreditBalanceCard({
                     amount: formatCredit(
                       summary.nextRelease.amountMinor,
                       summary.currency,
+                      locale,
                     ),
                     date: formatDateWithSuffix(
                       summary.nextRelease.releaseAt,
@@ -63,7 +64,11 @@ export default function CreditBalanceCard({
         {summary.onHoldMinor > 0 ? (
           <p className="text-muted-foreground">
             {t.rich("amountOnHoldForCheckout", {
-              amount: formatCredit(summary.onHoldMinor, summary.currency),
+              amount: formatCredit(
+                summary.onHoldMinor,
+                summary.currency,
+                locale,
+              ),
               strong: (chunks) => (
                 <span className="font-medium tabular-nums text-foreground">
                   {chunks}
@@ -79,9 +84,9 @@ export default function CreditBalanceCard({
                 ? "welcomeCreditForFirstOrderMin"
                 : "welcomeCreditForFirstOrder",
               {
-                amount: formatCredit(welcomeMinor, summary.currency),
+                amount: formatCredit(welcomeMinor, summary.currency, locale),
                 minimum: welcomeMinOrderMinor
-                  ? formatCredit(welcomeMinOrderMinor, summary.currency)
+                  ? formatCredit(welcomeMinOrderMinor, summary.currency, locale)
                   : "",
                 strong: (chunks) => (
                   <span className="font-medium tabular-nums text-foreground">
@@ -98,6 +103,7 @@ export default function CreditBalanceCard({
               formatCredit: formatCredit(
                 summary.expiringSoon.amountMinor,
                 summary.currency,
+                locale,
               ),
               formatDateWithSuffix: formatDateWithSuffix(
                 summary.expiringSoon.expiresAt,

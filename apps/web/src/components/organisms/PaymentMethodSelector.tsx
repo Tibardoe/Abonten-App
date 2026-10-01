@@ -37,7 +37,7 @@ import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { creditMinorToMajor } from "@abonten/core/rewards/creditAmount";
 import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useState } from "react";
@@ -136,6 +136,7 @@ const DIRECT_CHARGE_POLL_INTERVAL_MS = 4000;
 export default function PaymentMethodSelector(
   props: PaymentMethodSelectorProps,
 ) {
+  const locale = useLocale();
   const t = useTranslations("common");
   const tc = useTranslations("core");
 
@@ -936,7 +937,9 @@ export default function PaymentMethodSelector(
             : t("startingPayment")
           : creditCoversAll
             ? t("confirmAndPayWithCredit")
-            : t("pay", { formatMoney: formatMoney(currency, amount) })}
+            : t("pay", {
+                formatMoney: formatMoney(currency, amount, { locale }),
+              })}
       </button>
     </div>
   );

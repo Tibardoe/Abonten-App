@@ -101,7 +101,7 @@
   "slideOptions": "Options de la diapositive",
   "someItemsWereSkipped": "Certains éléments ont été ignorés",
   "someone": "Quelqu'un",
-  "spotlightViews": "Spotlight, {toLocaleString} vues{value}",
+  "spotlightViews": "Spotlight, {count, plural, one {# vue} other {# vues}}{value}",
   "spotlights": "Spotlights",
   "switchBetweenEventsAndPlaces": "Basculer entre Événements et Lieux",
   "thisCanTBeUndone": "Cette action est irréversible.",

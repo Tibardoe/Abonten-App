@@ -8,8 +8,9 @@ import ModalShell from "@/components/atoms/ModalShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
+import { formatDateTime } from "@abonten/core/i18n/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
@@ -37,6 +38,7 @@ export default function ManagePromoCodesModal({
   eventId,
   handleClosePopup,
 }: ManagePromoCodesModalProps) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   const queryClient = useQueryClient();
@@ -263,7 +265,7 @@ export default function ManagePromoCodesModal({
                           <p>{t("expires")}</p>
                           <p>
                             {code.expiresAt
-                              ? new Date(code.expiresAt).toLocaleString()
+                              ? formatDateTime(code.expiresAt, locale)
                               : t("never")}
                           </p>
                         </div>

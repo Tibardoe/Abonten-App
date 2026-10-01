@@ -2,7 +2,10 @@
 
 import getHighlightUploadSignature from "@/actions/getHighlightUploadSignature";
 import uploadHighlight from "@/actions/uploadHighlight";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import {
+  isUploadCancelled,
+  uploadToCloudinary,
+} from "@/utils/uploadToCloudinary";
 import type { HighlightUploadItem } from "@abonten/types/highlightUploadType";
 import type { MediaItem } from "@abonten/types/mediaItemType";
 import { useQueryClient } from "@tanstack/react-query";
@@ -88,7 +91,7 @@ export function useHighlightUpload(username: string) {
         cloudinaryResult = await promise;
       } catch (error) {
         // cancel() already removed this item from state -- nothing to patch.
-        if (error instanceof Error && error.message === t("uploadCancelled")) {
+        if (isUploadCancelled(error)) {
           return;
         }
         patch(setItems, id, {

@@ -3,7 +3,7 @@
 import { cn } from "@/components/lib/utils";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 // The checkout "Use credit" switch (promotions now, tickets in Phase 3).
 // It only shows what the server quoted — the amount applied is decided
@@ -19,6 +19,7 @@ export default function UseCreditToggle({
   onChange: (next: boolean) => void;
   disabled?: boolean;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   return (
@@ -27,7 +28,11 @@ export default function UseCreditToggle({
         <div className="min-w-0">
           <p className="text-sm font-semibold">
             {t("useAbontenCredit", {
-              formatCredit: formatCredit(quote.creditMinor, quote.currency),
+              formatCredit: formatCredit(
+                quote.creditMinor,
+                quote.currency,
+                locale,
+              ),
             })}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -36,6 +41,7 @@ export default function UseCreditToggle({
                   formatCredit: formatCredit(
                     quote.spendableMinor,
                     quote.currency,
+                    locale,
                   ),
                 })
               : checked
@@ -68,15 +74,15 @@ export default function UseCreditToggle({
         <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-border pt-2 text-sm tabular-nums">
           <dt className="text-muted-foreground">{t("total")}</dt>
           <dd className="text-right">
-            {formatCredit(quote.orderTotalMinor, quote.currency)}
+            {formatCredit(quote.orderTotalMinor, quote.currency, locale)}
           </dd>
           <dt className="text-muted-foreground">{t("credit")}</dt>
           <dd className="text-right">
-            −{formatCredit(quote.creditMinor, quote.currency)}
+            −{formatCredit(quote.creditMinor, quote.currency, locale)}
           </dd>
           <dt className="font-semibold">{t("youPay")}</dt>
           <dd className="text-right font-semibold">
-            {formatCredit(quote.cashMinor, quote.currency)}
+            {formatCredit(quote.cashMinor, quote.currency, locale)}
           </dd>
         </dl>
       ) : null}

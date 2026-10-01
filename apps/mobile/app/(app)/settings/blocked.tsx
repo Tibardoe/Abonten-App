@@ -91,7 +91,6 @@ function BlockedRow({ account }: { account: BlockedAccount }) {
 
 export default function BlockedAccountsScreen() {
   const t = useTranslations("settings");
-  const tc = useTranslations("core");
 
   const query = useBlockedAccounts();
   const view = useQueryView(query, (d) => d.length === 0);

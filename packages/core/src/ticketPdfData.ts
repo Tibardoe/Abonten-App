@@ -2,6 +2,7 @@ import type { UserTicketType } from "@abonten/types/ticketType";
 import { buildCloudinaryUrl } from "./cloudinaryUrl";
 import { formatDateWithSuffix, getFormattedEventDate } from "./dateFormatter";
 import type { CoreTranslator } from "./i18n/translator";
+import { ticketTypeLabel } from "./ticketTiers";
 
 export type TicketPdfData = {
   ticketCode: string;
@@ -67,6 +68,8 @@ export type TicketPdfLabels = {
   issuedOn: string;
   attendee: string;
   ticketType: string;
+  /** The tier's name: worded when it is one the system named. */
+  ticketTypeValue: string;
   ticketCode: string;
   status: string;
   /** The ticket's status as a word (never the stored code). */
@@ -91,6 +94,7 @@ export function ticketPdfLabels(
     issuedOn: t("ticketReceipt.issuedOn", { date: ticket.issuedAt }),
     attendee: t("ticketReceipt.attendee"),
     ticketType: t("ticketReceipt.ticketType"),
+    ticketTypeValue: ticketTypeLabel(t, ticket.ticketTypeName),
     ticketCode: t("ticketReceipt.ticketCode"),
     status: t("ticketReceipt.status"),
     statusValue: t("ticketReceipt.statusValue", { status: ticket.status }),

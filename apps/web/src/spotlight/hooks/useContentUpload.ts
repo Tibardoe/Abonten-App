@@ -2,7 +2,10 @@
 
 import getContentUploadSignature from "@/actions/content/getContentUploadSignature";
 import { registerContentMedia } from "@/actions/content/registerContentMedia";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import {
+  isUploadCancelled,
+  uploadToCloudinary,
+} from "@/utils/uploadToCloudinary";
 import type { ContentKind, ContentMediaItem } from "@abonten/types/contentType";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
@@ -125,7 +128,7 @@ export function useContentUpload(kind: ContentKind) {
         xhrs.current.set(item.id, xhr);
         uploaded = await promise;
       } catch (error) {
-        if (error instanceof Error && error.message === t("uploadCancelled")) {
+        if (isUploadCancelled(error)) {
           return null;
         }
         patch(item.id, {

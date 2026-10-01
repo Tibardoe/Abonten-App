@@ -12,7 +12,7 @@
   "addPayoutAccount": "Ajouter un compte de versement",
   "amount": "Montant",
   "available": "Disponible :",
-  "availablePending": "{currency} : {toLocaleString} disponibles · {toLocaleString2} en attente",
+  "availablePending": "{currency} : {available} disponibles · {pending} en attente",
   "availableToWithdraw": "Disponible pour retrait",
   "back": "Retour",
   "bankAccount": "Compte bancaire",

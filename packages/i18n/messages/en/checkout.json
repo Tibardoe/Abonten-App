@@ -128,5 +128,8 @@
   "yourPaymentWentThroughButThe": "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButThe2": "Your payment went through, but the promotion hasn't reached review yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButWe": "Your payment went through, but we haven't issued your ticket yet. Retry now — you won't be charged again.",
-  "yourSeatsAreHeldForA": "Your seats are held for a limited time."
+  "yourSeatsAreHeldForA": "Your seats are held for a limited time.",
+  "yourOrder": "Your order",
+  "paidWithAmountCredit": "Paid with {amount} credit",
+  "viewMyTickets": "View my tickets"
 }

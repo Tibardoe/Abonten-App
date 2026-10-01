@@ -1,6 +1,7 @@
 import StatTile from "@/components/atoms/StatTile";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
-import { useTranslations } from "next-intl";
+import { formatCount } from "@abonten/core/i18n/format";
+import { useLocale, useTranslations } from "next-intl";
 
 type ManagePlaceInsightsSectionProps = {
   insights: Record<string, number>;
@@ -19,6 +20,7 @@ export default function ManagePlaceInsightsSection({
   isError,
   onRetry,
 }: ManagePlaceInsightsSectionProps) {
+  const locale = useLocale();
   const t = useTranslations("places");
 
   if (isError) {
@@ -45,7 +47,7 @@ export default function ManagePlaceInsightsSection({
         <StatTile
           key={tile.label}
           label={tile.label}
-          value={tile.value.toLocaleString()}
+          value={formatCount(tile.value, locale)}
         />
       ))}
     </div>

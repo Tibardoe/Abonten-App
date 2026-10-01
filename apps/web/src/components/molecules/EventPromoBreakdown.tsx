@@ -3,21 +3,26 @@
 import getEventPromoAnalytics from "@/actions/getEventPromoAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function EventPromoBreakdown({
   eventId,
   period,
   startDate,
   endDate,
+  currency,
 }: {
   eventId: string;
+  /** The event's currency: a discount is an amount of money. */
+  currency: string | null;
   period: DashboardPeriod;
   startDate: string | null;
   endDate: string | null;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   const {
@@ -80,7 +85,9 @@ export default function EventPromoBreakdown({
               </div>
               <span className="text-sm font-medium shrink-0">
                 {t("discount", {
-                  toLocaleString: Number(row.total_discount).toLocaleString(),
+                  amount: formatMoney(currency, Number(row.total_discount), {
+                    locale,
+                  }),
                 })}
               </span>
             </div>

@@ -823,6 +823,10 @@
     "welcome_credit": {
       "body": "{amount} Rabatt auf deine erste Ticketbestellung ab {min}. Löse es innerhalb von {days} Tagen ein.",
       "title": "Du hast Willkommensguthaben"
+    },
+    "content_campaign_refunded": {
+      "title": "Die Erstattung deiner Spotlight-Promotion ist unterwegs",
+      "body": "{amount} werden auf deine Zahlungsmethode zurückerstattet."
     }
   },
   "openStatus": {
@@ -1055,7 +1059,9 @@
   "ticketTiers": {
     "freeEventPromoCodes": "Promo-Codes sind bei einem kostenlosen Event nicht verfügbar. Entferne sie oder mache das Event kostenpflichtig.",
     "freeReserved": "„{name}“ ist kostenlosen Events vorbehalten. Gib diesem Tickettyp einen anderen Namen.",
-    "paidNeedsPrice": "Bezahlte Tickets brauchen einen Preis über null. Um Menschen kostenlos einzulassen, mache das Event kostenlos."
+    "paidNeedsPrice": "Bezahlte Tickets brauchen einen Preis über null. Um Menschen kostenlos einzulassen, mache das Event kostenlos.",
+    "freeName": "Kostenlos",
+    "singleName": "Standardticket"
   },
   "verification": {
     "badgeExplanation": {

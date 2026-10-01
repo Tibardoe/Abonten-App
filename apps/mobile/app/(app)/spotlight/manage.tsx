@@ -53,7 +53,6 @@ function postStatus(post: ContentOwnPost): {
 // Creator tools: your Spotlights, Stories and promotions.
 export default function ManageContentScreen() {
   const t = useTranslations("spotlight");
-  const tc = useTranslations("core");
 
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -132,8 +131,6 @@ export default function ManageContentScreen() {
 }
 
 function Posts({ kind }: { kind: ContentKind }) {
-  const { locale } = useLocale();
-
   const t = useTranslations("spotlight");
   const tc = useTranslations("core");
 
@@ -287,7 +284,7 @@ function Campaigns() {
             </AppText>
           </View>
           <AppText variant="bodyStrong">
-            {formatMinor(item.budgetMinor, item.currency)}
+            {formatMinor(item.budgetMinor, item.currency, locale)}
           </AppText>
         </Pressable>
       )}

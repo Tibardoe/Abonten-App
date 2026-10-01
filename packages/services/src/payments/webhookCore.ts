@@ -15,7 +15,6 @@
 // provider to redeliver (Paystack and Stripe both retry on non-2xx).
 
 import { logger } from "@abonten/core/logger";
-import { formatMoney } from "@abonten/core/money/formatMoney";
 import { fromMajor } from "@abonten/core/money/money";
 import type { Database, Json } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
@@ -287,9 +286,13 @@ async function handleRefundOutcome(
   }
 
   const creditReturned = Number(updated.credit_refunded_amount ?? 0);
-  const creditText =
+  // As minor units: the notice words the amount for its reader.
+  const creditBack =
     creditReturned > 0
-      ? formatMoney(fromMajor(creditReturned, updated.currency))
+      ? {
+          creditMinor: fromMajor(creditReturned, updated.currency).amountMinor,
+          currency: updated.currency,
+        }
       : null;
 
   await createNotificationCore(supabase, {
@@ -298,8 +301,8 @@ async function handleRefundOutcome(
     notice:
       newStatus === "refunded"
         ? { id: "refund_completed" }
-        : creditText
-          ? { id: "refund_failed_credit", params: { credit: creditText } }
+        : creditBack
+          ? { id: "refund_failed_credit", params: creditBack }
           : { id: "refund_failed" },
     link: "/transactions",
     data: { kind: "ticket" },

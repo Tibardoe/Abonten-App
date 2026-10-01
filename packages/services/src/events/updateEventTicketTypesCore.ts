@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
+  SINGLE_TICKET_TYPE,
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
@@ -165,7 +166,7 @@ export async function updateEventTicketTypesCore(
         ...(singleTicket
           ? [
               {
-                type: "SINGLE TICKET",
+                type: SINGLE_TICKET_TYPE,
                 price: singleTicket.price,
                 currency,
                 quantity: singleTicket.quantity,

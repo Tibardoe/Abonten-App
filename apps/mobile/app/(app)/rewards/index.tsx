@@ -69,7 +69,6 @@ function BalanceCard({
   const { locale } = useLocale();
 
   const t = useTranslations("rewards");
-  const tc = useTranslations("core");
 
   const welcomeMinor = summary.bySpendScope.first_order ?? 0;
   return (
@@ -80,18 +79,23 @@ function BalanceCard({
         tone={summary.inDebt ? "error" : "primary"}
         className="tabular-nums"
       >
-        {formatCredit(summary.availableMinor, summary.currency)}
+        {formatCredit(summary.availableMinor, summary.currency, locale)}
       </AppText>
       {summary.pendingMinor > 0 ? (
         <AppText variant="small" className="mt-2">
           {t("pending3", {
-            formatCredit: formatCredit(summary.pendingMinor, summary.currency),
+            formatCredit: formatCredit(
+              summary.pendingMinor,
+              summary.currency,
+              locale,
+            ),
           })}
           {summary.nextRelease
             ? t("nextUnlocks", {
                 formatCredit: formatCredit(
                   summary.nextRelease.amountMinor,
                   summary.currency,
+                  locale,
                 ),
                 formatDateWithSuffix: formatDateWithSuffix(
                   summary.nextRelease.releaseAt,
@@ -105,20 +109,25 @@ function BalanceCard({
       {summary.onHoldMinor > 0 ? (
         <AppText variant="meta">
           {t("onHoldForACheckoutIn", {
-            formatCredit: formatCredit(summary.onHoldMinor, summary.currency),
+            formatCredit: formatCredit(
+              summary.onHoldMinor,
+              summary.currency,
+              locale,
+            ),
           })}
         </AppText>
       ) : null}
       {welcomeMinor > 0 ? (
         <AppText variant="meta">
           {t("isWelcomeCreditForYourFirst", {
-            formatCredit: formatCredit(welcomeMinor, summary.currency),
+            formatCredit: formatCredit(welcomeMinor, summary.currency, locale),
           })}
           {welcomeMinOrderMinor
             ? t("ofOrMore", {
                 formatCredit: formatCredit(
                   welcomeMinOrderMinor,
                   summary.currency,
+                  locale,
                 ),
               })
             : ""}
@@ -131,6 +140,7 @@ function BalanceCard({
             formatCredit: formatCredit(
               summary.expiringSoon.amountMinor,
               summary.currency,
+              locale,
             ),
             formatDateWithSuffix: formatDateWithSuffix(
               summary.expiringSoon.expiresAt,
@@ -161,7 +171,6 @@ function ReferralCodeCard({
   rateBps,
 }: { code: string; rateBps: number }) {
   const t = useTranslations("rewards");
-  const tc = useTranslations("core");
 
   return (
     <Card className="gap-1">
@@ -178,8 +187,8 @@ function ReferralCodeCard({
 
 // Invites have their own screen (code, QR, share sheet, friends list).
 function InviteCard({ invite }: { invite: ReferralInvite }) {
+  const { locale } = useLocale();
   const t = useTranslations("rewards");
-  const tc = useTranslations("core");
 
   const router = useRouter();
   return (
@@ -192,16 +201,19 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
                 formatCredit: formatCredit(
                   invite.referrerMinor,
                   invite.currency,
+                  locale,
                 ),
                 friendCredit: formatCredit(
                   invite.refereeMinor,
                   invite.currency,
+                  locale,
                 ),
               })
             : t("youGetWhenAFriendBuys", {
                 formatCredit: formatCredit(
                   invite.referrerMinor,
                   invite.currency,
+                  locale,
                 ),
               })
           : t("inviteFriendsToAbonten")}
@@ -223,6 +235,7 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
 // Invites have their own screen; this is the rest of "how to earn", from
 // the same shared wording as web (@abonten/core/rewards/earnCopy).
 function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
+  const { locale } = useLocale();
   const t = useTranslations("rewards");
   const tc = useTranslations("core");
 
@@ -255,6 +268,7 @@ function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
             formatCredit: formatCredit(
               progress.pendingMinor,
               progress.currency,
+              locale,
             ),
           })}
         </AppText>
@@ -307,7 +321,6 @@ function HowItWorks({ program }: { program: RewardsProgram }) {
 function ActivityRow({ item }: { item: CreditActivityItem }) {
   const { locale } = useLocale();
   const t = useTranslations("rewards");
-  const tc = useTranslations("core");
 
   const badge = STATE_BADGE[item.state];
   const detail =
@@ -349,7 +362,7 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
           tone={item.amountMinor < 0 || struck ? "muted" : "primary"}
           className={struck ? "tabular-nums line-through" : "tabular-nums"}
         >
-          {formatCreditDelta(item.amountMinor, item.currency)}
+          {formatCreditDelta(item.amountMinor, item.currency, locale)}
         </AppText>
         {badge ? (
           <Badge label={t(badge.label)} tone={badge.tone} uppercase={false} />
@@ -361,7 +374,6 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
 
 export default function Rewards() {
   const t = useTranslations("rewards");
-  const tc = useTranslations("core");
 
   const program = useRewardsProgram();
   const enabled = program.data?.enabled === true;

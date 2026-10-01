@@ -224,7 +224,10 @@ export async function listFollowingCore(
       out.push({
         targetKind: "organizer",
         targetId: u.id,
-        name: u.full_name ?? (u.username as string | null) ?? "Organizer",
+        name:
+          u.full_name ??
+          (u.username as string | null) ??
+          tr("organizerFallbackName"),
         username: u.username as string | null,
         slug: null,
         avatarPublicId: u.avatar_public_id,

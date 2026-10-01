@@ -304,7 +304,7 @@
   "requestABookingWithThisPlace": "Request a booking with this place",
   "requestBooking": "Request Booking",
   "requestBooking2": "Request booking",
-  "requestingAt": "Requesting {toLocaleDateString} at {prettyTime}",
+  "requestingAt": "Requesting {date} at {prettyTime}",
   "resolvingLocation": "Resolving location...",
   "resolvingLocation2": "Resolving location…",
   "respond": "Respond",

@@ -8,10 +8,11 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import { spotlightPath, storyPath } from "@abonten/core/content/links";
+import { formatCount } from "@abonten/core/i18n/format";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -117,6 +118,7 @@ function PostPreview({ post }: { post: ContentPostDocument }) {
 }
 
 function Insights({ postId }: { postId: string }) {
+  const locale = useLocale();
   const t = useTranslations("spotlight");
 
   const [days, setDays] = useState<(typeof RANGES)[number]>(28);
@@ -178,7 +180,7 @@ function Insights({ postId }: { postId: string }) {
             <div key={label} className="rounded-lg border p-3">
               <dt className="text-xs text-muted-foreground">{label}</dt>
               <dd className="text-lg font-semibold">
-                {query.isLoading ? "…" : (value ?? 0).toLocaleString()}
+                {query.isLoading ? "…" : formatCount(value ?? 0, locale)}
               </dd>
             </div>
           ))}

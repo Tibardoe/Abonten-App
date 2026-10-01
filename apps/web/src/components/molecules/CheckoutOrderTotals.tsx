@@ -1,5 +1,5 @@
 import { formatMoney } from "@abonten/core/formatMoney";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type CheckoutOrderTotalsProps = {
   currency: string | undefined;
@@ -16,10 +16,11 @@ export default function CheckoutOrderTotals({
   fee,
   total,
 }: CheckoutOrderTotalsProps) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   const show = (n: number) =>
-    formatMoney(currency, typeof n === "number" ? n : 0);
+    formatMoney(currency, typeof n === "number" ? n : 0, { locale });
   return (
     <div className="rounded-2xl mt-5">
       {/* Subtotal */}

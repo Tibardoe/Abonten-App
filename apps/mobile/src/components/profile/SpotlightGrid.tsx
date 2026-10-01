@@ -45,7 +45,7 @@ function Tile({ tile }: { tile: SpotlightTile }) {
       onPress={() => router.push(tile.href as never)}
       accessibilityRole="button"
       accessibilityLabel={t("spotlightViews", {
-        toLocaleString: tile.views.toLocaleString(),
+        count: tile.views,
         value: tile.badge ? `, ${spotlightBadgeLabel(tc, tile.badge)}` : "",
       })}
       className="flex-1 overflow-hidden bg-muted active:opacity-80"

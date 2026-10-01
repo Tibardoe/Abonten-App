@@ -7,7 +7,8 @@ import {
   useCheckoutCountdown,
 } from "@/hooks/useCheckoutCountdown";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { useTranslations } from "next-intl";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 
@@ -34,7 +35,9 @@ export default function TicketCheckoutSessionCard({
   pendingLineIds,
   isRemoving,
 }: TicketCheckoutSessionCardProps) {
+  const locale = useLocale();
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const { secondsLeft, isExpired, isWarning } = useCheckoutCountdown(
     session.expiresAt,
@@ -111,20 +114,22 @@ export default function TicketCheckoutSessionCard({
               className="border border-border rounded-md px-4 py-3 bg-muted shadow-sm space-y-2"
             >
               <div className="flex justify-between items-center text-sm font-semibold text-foreground">
-                <p>{line.type}</p>
+                <p>{ticketTypeLabel(tc, line.type)}</p>
                 <button
                   type="button"
                   disabled={isLinePending}
                   onClick={() => onDeleteLine(line.ticketCheckoutId)}
                   className="hover:opacity-70 transition-opacity disabled:opacity-40"
-                  aria-label={t("removeTickets", { type: line.type })}
+                  aria-label={t("removeTickets", {
+                    type: ticketTypeLabel(tc, line.type),
+                  })}
                 >
                   <RiDeleteBin6Line className="text-destructive" aria-hidden />
                 </button>
               </div>
 
               <QuantityStepper
-                label={t("tickets3", { type: line.type })}
+                label={t("tickets3", { type: ticketTypeLabel(tc, line.type) })}
                 quantity={line.quantity}
                 minQuantity={1}
                 maxQuantity={maxQuantity}
@@ -139,19 +144,21 @@ export default function TicketCheckoutSessionCard({
 
               <div className="flex justify-between text-xs text-muted-foreground">
                 <p>{t("unitPrice")}</p>
-                <p>{formatMoney(line.currency, line.unitPrice)}</p>
+                <p>{formatMoney(line.currency, line.unitPrice, { locale })}</p>
               </div>
 
               {line.discount > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <p>{t("discount3")}</p>
-                  <p>−{formatMoney(line.currency, line.discount)}</p>
+                  <p>
+                    −{formatMoney(line.currency, line.discount, { locale })}
+                  </p>
                 </div>
               )}
 
               <div className="flex justify-between text-xs font-semibold text-foreground">
                 <p>{t("subtotal2")}</p>
-                <p>{formatMoney(line.currency, line.amount)}</p>
+                <p>{formatMoney(line.currency, line.amount, { locale })}</p>
               </div>
             </div>
           );
@@ -161,7 +168,9 @@ export default function TicketCheckoutSessionCard({
       <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
         <p>{t("checkoutTotal")}</p>
         <p>
-          {formatMoney(session.lines[0]?.currency, session.sessionSubtotal)}
+          {formatMoney(session.lines[0]?.currency, session.sessionSubtotal, {
+            locale,
+          })}
         </p>
       </div>
     </div>

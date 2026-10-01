@@ -2,7 +2,6 @@ import getAreaWaitlistStatus from "@/actions/getAreaWaitlistStatus";
 import getMarketContext from "@/actions/getMarketContext";
 import { locationLabelFromSlug } from "@/utils/locationLabel";
 import { areaCoverage } from "@abonten/core/market/coverage";
-import { getTranslations } from "next-intl/server";
 import AreaCoveragePanel from "../molecules/AreaCoveragePanel";
 
 // "Abonten isn't in Kumasi yet" at the top of Explore, for a city that's
@@ -22,8 +21,6 @@ export default async function AreaCoverageNotice({
   /** Back from signing in to join the list: finish the join. */
   autoJoin: boolean;
 }) {
-  const t = await getTranslations("events");
-
   if (lat == null || lng == null) return null;
   const { markets, context } = await getMarketContext();
   const coverage = areaCoverage({
@@ -33,9 +30,10 @@ export default async function AreaCoverageNotice({
   });
   if (coverage.kind !== "not_launched") return null;
 
-  const label = locationLabelFromSlug(location, t("yourArea"));
+  // An empty fallback says "this address names no place" without asking
+  // whether two translated strings happen to be equal.
   const areaName =
-    coverage.region?.name ?? (label === t("yourArea") ? null : label);
+    coverage.region?.name ?? (locationLabelFromSlug(location, "") || null);
   const status = await getAreaWaitlistStatus({ lat, lng });
 
   return (

@@ -5,6 +5,7 @@ import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
+import { formatCount } from "@abonten/core/i18n/format";
 import {
   AppText,
   Icon,
@@ -12,7 +13,7 @@ import {
   Refresher,
   SectionTitle,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Link, useLocalSearchParams } from "expo-router";
 import {
@@ -48,6 +49,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
 }
 
 export default function PlaceManageScreen() {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
@@ -110,7 +112,7 @@ export default function PlaceManageScreen() {
             <StatTile
               key={tile.key}
               label={t(tile.label)}
-              value={(insights?.[tile.key] ?? 0).toLocaleString()}
+              value={formatCount(insights?.[tile.key] ?? 0, locale)}
             />
           ))}
         </View>

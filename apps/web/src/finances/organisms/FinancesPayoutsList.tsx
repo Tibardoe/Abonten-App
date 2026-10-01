@@ -73,7 +73,7 @@ export default function FinancesPayoutsList({
               >
                 <div className="space-y-1">
                   <h2 className="font-bold">
-                    {formatMoney(payout.currency, payout.amount)}
+                    {formatMoney(payout.currency, payout.amount, { locale })}
                   </h2>
                   <p className="text-sm text-muted-foreground">{date}</p>
                   <p className="text-xs text-muted-foreground font-mono">

@@ -13,10 +13,13 @@ type PopupCloseProp = {
   onAdded: (method: PaymentMethodRow) => void;
 };
 
-const STEP_TITLES: Record<string, string> = {
-  "Mobile Money": "addMobileMoneyWallet",
-  "Bank Card": "addBankCard",
-};
+// The option chosen in step 1, as a code: its title is worded when shown.
+type MethodOption = "mobile_money" | "card";
+
+const STEP_TITLES = {
+  mobile_money: "addMobileMoneyWallet",
+  card: "addBankCard",
+} as const;
 
 export default function AddPaymentMethodPopup({
   onclick,
@@ -26,10 +29,10 @@ export default function AddPaymentMethodPopup({
 
   const [step, setStep] = useState(1);
 
-  const [title, setTitle] = useState("");
+  const [option, setOption] = useState<MethodOption | null>(null);
 
-  const increaseStep = (title: string) => {
-    setTitle(title);
+  const increaseStep = (chosen: MethodOption) => {
+    setOption(chosen);
     setStep((prevState) => prevState + 1);
   };
 
@@ -40,8 +43,8 @@ export default function AddPaymentMethodPopup({
       title={
         step === 1
           ? t("addAPaymentMethod")
-          : STEP_TITLES[title]
-            ? t(STEP_TITLES[title])
+          : option
+            ? t(STEP_TITLES[option])
             : t("addWallet")
       }
       className="md:w-[30rem]"
@@ -52,24 +55,22 @@ export default function AddPaymentMethodPopup({
             imgUrl="/assets/images/phone.svg"
             optionTitle={t("mobileMoney2")}
             optionDetails={t("mtnTelecelAtMoneyGMoney")}
-            handleStep={increaseStep}
+            handleStep={() => increaseStep("mobile_money")}
           />
 
           <PaymentOptionCard
             imgUrl="/assets/images/bankCard.svg"
             optionTitle={t("bankCard")}
             optionDetails="Visa, Mastercard"
-            handleStep={increaseStep}
+            handleStep={() => increaseStep("card")}
           />
         </div>
       )}
 
-      {step === 2 && title === t("mobileMoney2") && (
+      {step === 2 && option === "mobile_money" && (
         <AddMomoWallet onSaved={onAdded} />
       )}
-      {step === 2 && title === t("bankCard") && (
-        <AddBankCard onSaved={onAdded} />
-      )}
+      {step === 2 && option === "card" && <AddBankCard onSaved={onAdded} />}
     </BottomSheet>
   );
 }

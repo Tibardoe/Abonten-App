@@ -5,7 +5,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 /**
@@ -16,6 +16,7 @@ import Link from "next/link";
  * stays where money actually moves.
  */
 export default function OrganizerFinanceSummary() {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -58,13 +59,17 @@ export default function OrganizerFinanceSummary() {
             {t("availableToWithdraw")}
           </p>
           <p className="font-bold">
-            {formatMoney(overview.currency, overview.available_balance)}
+            {formatMoney(overview.currency, overview.available_balance, {
+              locale,
+            })}
           </p>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">{t("pending")}</p>
           <p className="font-bold">
-            {formatMoney(overview.currency, overview.pending_balance)}
+            {formatMoney(overview.currency, overview.pending_balance, {
+              locale,
+            })}
           </p>
         </div>
       </div>

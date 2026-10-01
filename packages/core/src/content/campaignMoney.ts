@@ -42,7 +42,11 @@ export function remainingMinor(input: {
 }
 
 /** "GH₵50.00" from minor units, in the campaign's own currency. */
-export function formatMinor(minor: number, currency: string): string {
+export function formatMinor(
+  minor: number,
+  currency: string,
+  locale?: string | null,
+): string {
   if (!isKnownCurrency(currency)) return (Math.round(minor) / 100).toFixed(2);
-  return formatMoney({ amountMinor: Math.round(minor), currency });
+  return formatMoney({ amountMinor: Math.round(minor), currency }, { locale });
 }

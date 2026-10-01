@@ -132,7 +132,6 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
 
 function WeeklySkeleton() {
   const t = useTranslations("weekly");
-  const tc = useTranslations("core");
 
   return (
     <View className="gap-6 pt-4" accessibilityLabel={t("loadingAbontenWeekly")}>

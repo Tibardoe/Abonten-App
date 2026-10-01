@@ -157,7 +157,6 @@ const Bubble = memo(function Bubble({
   onAdd?: () => void;
 }) {
   const t = useTranslations("spotlight");
-  const tc = useTranslations("core");
 
   return (
     <View className="items-center gap-1.5" style={{ width: ITEM_WIDTH }}>

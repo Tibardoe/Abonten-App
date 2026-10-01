@@ -189,7 +189,7 @@ export default function EventCard({
             <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground">
               {min_price === 0 || min_price === null
                 ? t("free")
-                : `${formatMoney(currency, min_price, { trimZeroFraction: true })}${
+                : `${formatMoney(currency, min_price, { trimZeroFraction: true, locale })}${
                     approx ? ` · ${approx}` : ""
                   }`}
             </span>

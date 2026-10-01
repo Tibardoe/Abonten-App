@@ -143,6 +143,39 @@ describe("renderNotice", () => {
       body: "You're on Osu from 3 Oct 2026 to 5 Oct 2026.",
     });
   });
+
+  it("writes an amount the way the reader's language writes money", () => {
+    // French groups with a (non-breaking) space: fold it to a plain one.
+    const plain = (text: string | null | undefined) =>
+      (text ?? "").replace(/\p{Zs}/gu, " ");
+    const refund: Notice = {
+      id: "refund_completed_credit",
+      params: { creditMinor: 150000, currency: "GHS" },
+    };
+    expect(renderNotice(i18nEn, refund)?.body).toBe(
+      "GH₵1,500.00 is back in your Abonten Credit.",
+    );
+    expect(plain(renderNotice(i18nFr, refund)?.body)).toContain("GH₵1 500,00");
+
+    const campaign: Notice = {
+      id: "content_campaign_refunded",
+      params: { amountMinor: 2500, currency: "GHS" },
+    };
+    expect(renderNotice(i18nEn, campaign)).toEqual({
+      title: "Your Spotlight promotion refund is on its way",
+      body: "GH₵25.00 is being returned to your payment method.",
+    });
+    expect(plain(renderNotice(i18nFr, campaign)?.body)).toContain("GH₵25,00");
+  });
+
+  it("keeps an amount an older notice already said in words", () => {
+    expect(
+      renderNotice(i18nFr, {
+        id: "refund_completed_credit",
+        params: { credit: "GH₵5.00" },
+      })?.body,
+    ).toContain("GH₵5.00");
+  });
 });
 
 // Rows written before notices carried their template (and every row the

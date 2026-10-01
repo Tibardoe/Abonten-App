@@ -19,6 +19,26 @@ import type { CoreTranslator } from "./i18n/translator";
 
 export const FREE_TICKET_TYPE = "FREE";
 
+/**
+ * The name the create/update services give the one tier of a "single ticket
+ * type" event. Like FREE it is a code: compare against it, never show it.
+ */
+export const SINGLE_TICKET_TYPE = "SINGLE TICKET";
+
+/**
+ * What a ticket tier is called on screen. The two tiers the system names
+ * itself are codes and are worded here in the reader's language; a tier the
+ * organizer named ("VIP", "Early bird") is shown as they wrote it.
+ */
+export function ticketTypeLabel(
+  t: CoreTranslator,
+  type: string | null | undefined,
+): string {
+  if (type === FREE_TICKET_TYPE) return t("ticketTiers.freeName");
+  if (type === SINGLE_TICKET_TYPE) return t("ticketTiers.singleName");
+  return type ?? "";
+}
+
 /** The event offers one-click free registration (the FREE tier). */
 export function hasFreeRegistration(
   ticketTypes: readonly { type: string | null }[],

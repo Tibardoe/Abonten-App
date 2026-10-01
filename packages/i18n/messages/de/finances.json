@@ -12,7 +12,7 @@
   "addPayoutAccount": "Auszahlungskonto hinzufügen",
   "amount": "Betrag",
   "available": "Verfügbar:",
-  "availablePending": "{currency}: {toLocaleString} verfügbar · {toLocaleString2} ausstehend",
+  "availablePending": "{currency}: {available} verfügbar · {pending} ausstehend",
   "availableToWithdraw": "Zur Auszahlung verfügbar",
   "back": "Zurück",
   "bankAccount": "Bankkonto",

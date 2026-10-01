@@ -9,6 +9,7 @@ import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { settleEnvelope } from "@/lib/envelope";
 import { useQueryView } from "@/lib/useQueryView";
 import type { EventPromoCode } from "@abonten/api-client";
+import { formatDateTime } from "@abonten/core/i18n/format";
 import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -18,7 +19,7 @@ import {
   Refresher,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -57,6 +58,7 @@ function PromoCodeCard({
   code: EventPromoCode;
   eventId: string;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   const toast = useToast();
@@ -263,7 +265,7 @@ function PromoCodeCard({
               </AppText>
               <AppText className="text-sm text-foreground">
                 {code.expiresAt
-                  ? new Date(code.expiresAt).toLocaleString()
+                  ? formatDateTime(code.expiresAt, locale)
                   : t("never")}
               </AppText>
             </View>

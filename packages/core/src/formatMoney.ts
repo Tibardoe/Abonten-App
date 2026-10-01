@@ -17,7 +17,7 @@ import { formatMajor } from "./money/formatMoney";
 export function formatMoney(
   currency: string | null | undefined,
   amount: number | string | null | undefined,
-  options: { trimZeroFraction?: boolean; locale?: string } = {},
+  options: { trimZeroFraction?: boolean; locale?: string | null } = {},
 ): string {
   if (!currency || !isKnownCurrency(currency)) {
     const num = typeof amount === "string" ? Number(amount) : (amount ?? 0);

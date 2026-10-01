@@ -6,6 +6,7 @@ import { convertForDisplay } from "@abonten/core/money/conversion";
 import { formatMoney } from "@abonten/core/money/formatMoney";
 import { fromMajor } from "@abonten/core/money/money";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale } from "next-intl";
 import { useMemo } from "react";
 
 const viewerTimeZone = () => {
@@ -25,6 +26,7 @@ const viewerTimeZone = () => {
  * the server prices and charges every order in the listing's own currency.
  */
 export function useMarketContext(browsingCountry?: string | null) {
+  const locale = useLocale();
   const query = useQuery({
     queryKey: ["market-context", browsingCountry ?? null],
     queryFn: () =>
@@ -69,11 +71,13 @@ export function useMarketContext(browsingCountry?: string | null) {
         );
         if (!converted || converted.stale) return null;
         return `≈ ${formatMoney(converted.approx, {
-          locale: context.locale,
+          // The app's language, not the device's: the estimate reads like
+          // every other amount on the screen.
+          locale,
           trimZeroFraction: true,
           viewerCurrency: context.displayCurrency,
         })}`;
       },
     };
-  }, [query.data]);
+  }, [query.data, locale]);
 }

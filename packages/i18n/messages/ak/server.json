@@ -1224,5 +1224,15 @@
   "yourRefundIsInProgressBut": "Your refund is in progress, but we couldn't return your credit yet. Please try again or contact support.",
   "yourRefundWasStartedButWe": "Your refund was started, but we couldn't return your credit yet. Please try again or contact support.",
   "yourRoleCanTDoThis": "Your role can't do this",
-  "yourSpotlight": "Your Spotlight"
+  "yourSpotlight": "Your Spotlight",
+  "abontenOrder": "Abonten order",
+  "unnamedArea": "Unnamed area",
+  "organizerFallbackName": "Organizer",
+  "fieldOpsTimeline": {
+    "started": "Started",
+    "ownerCodeSent": "Owner code sent",
+    "ownerVerified": "Owner verified their phone",
+    "claimFiledFor": "Claim filed for {name}",
+    "eventListedFor": "Event listed for {date}"
+  }
 }

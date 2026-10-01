@@ -72,7 +72,7 @@ export default function CreditActivityRow({
             struck && "line-through opacity-60",
           )}
         >
-          {formatCreditDelta(item.amountMinor, item.currency)}
+          {formatCreditDelta(item.amountMinor, item.currency, locale)}
         </span>
         {STATE_LABEL[item.state] ? (
           <span

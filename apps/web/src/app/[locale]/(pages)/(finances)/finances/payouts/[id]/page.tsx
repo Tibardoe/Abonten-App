@@ -64,7 +64,7 @@ export default async function PayoutDetailPage({
     <div className="space-y-10 text-sm mb-5 md:mb-0 w-full">
       <div className="font-bold text-muted-foreground flex justify-between items-center bg-muted rounded-md p-5">
         <p>{t("amount")}</p>
-        <p>{formatMoney(payout.currency, payout.amount)}</p>
+        <p>{formatMoney(payout.currency, payout.amount, { locale })}</p>
       </div>
 
       <div className="flex gap-3 bg-muted rounded-md p-5 items-center">

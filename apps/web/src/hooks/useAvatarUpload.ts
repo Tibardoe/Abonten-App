@@ -3,7 +3,10 @@
 import getAvatarUploadSignature from "@/actions/getAvatarUploadSignature";
 import { saveToSupabase } from "@/actions/saveAvatarToSupabase";
 import { useToast } from "@/hooks/useToast";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import {
+  isUploadCancelled,
+  uploadToCloudinary,
+} from "@/utils/uploadToCloudinary";
 import { logger } from "@abonten/core/logger";
 import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -96,7 +99,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
       } catch (error) {
         // A user-initiated cancel already rejects via xhr.onabort with this
         // message (see uploadToCloudinary.ts) — no error toast for that case.
-        if (error instanceof Error && error.message === t("uploadCancelled")) {
+        if (isUploadCancelled(error)) {
           return;
         }
         logger.error("Error uploading image:", error);

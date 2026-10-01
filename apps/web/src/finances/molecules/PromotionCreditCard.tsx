@@ -17,6 +17,7 @@ const monthOf = (period: string, locale: string) =>
 function earnLines(
   t: ReturnType<typeof useTranslations>,
   credit: PromotionCredit,
+  locale: string,
 ): string[] {
   const lines: string[] = [];
   const { organizerShareBps, venueShareBps, milestone, visits } = credit.rates;
@@ -37,7 +38,11 @@ function earnLines(
   if (visits) {
     lines.push(
       t("ownAVerifiedPlaceEveryDifferent", {
-        formatCredit: formatCredit(visits.perVisitorMinor, credit.currency),
+        formatCredit: formatCredit(
+          visits.perVisitorMinor,
+          credit.currency,
+          locale,
+        ),
         maxVisitors: visits.maxVisitors,
       }),
     );
@@ -46,7 +51,11 @@ function earnLines(
     lines.push(
       t("theFirstTimeOneOfYour", {
         uniqueBuyers: milestone.uniqueBuyers,
-        formatCredit: formatCredit(milestone.amountMinor, credit.currency),
+        formatCredit: formatCredit(
+          milestone.amountMinor,
+          credit.currency,
+          locale,
+        ),
       }),
     );
   }
@@ -72,7 +81,7 @@ export default function PromotionCreditCard() {
   const credit = data?.status === 200 ? data.data : undefined;
   if (isError || !credit || !credit.enabled) return null;
 
-  const lines = earnLines(t, credit);
+  const lines = earnLines(t, credit, locale);
   const hasActivity =
     credit.promotionOnlyMinor > 0 ||
     credit.pendingMinor > 0 ||
@@ -87,7 +96,7 @@ export default function PromotionCreditCard() {
             {t("promotionCredit")}
           </p>
           <p className="font-bold text-2xl md:text-3xl tabular-nums">
-            {formatCredit(credit.promotionOnlyMinor, credit.currency)}
+            {formatCredit(credit.promotionOnlyMinor, credit.currency, locale)}
           </p>
           {credit.pendingMinor > 0 ? (
             <p className="text-sm text-muted-foreground mt-1">
@@ -95,6 +104,7 @@ export default function PromotionCreditCard() {
                 formatCredit: formatCredit(
                   credit.pendingMinor,
                   credit.currency,
+                  locale,
                 ),
               })}
             </p>
@@ -105,6 +115,7 @@ export default function PromotionCreditCard() {
                 formatCredit: formatCredit(
                   credit.last.amountMinor,
                   credit.currency,
+                  locale,
                 ),
                 monthOf: monthOf(credit.last.periodStart, locale),
               })}
@@ -124,7 +135,11 @@ export default function PromotionCreditCard() {
       {credit.canRedeem && credit.spendableMinor > credit.promotionOnlyMinor ? (
         <p className="text-sm">
           {t("youCanPutTowardsFeaturingAn", {
-            formatCredit: formatCredit(credit.spendableMinor, credit.currency),
+            formatCredit: formatCredit(
+              credit.spendableMinor,
+              credit.currency,
+              locale,
+            ),
           })}
         </p>
       ) : null}

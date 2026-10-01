@@ -2,7 +2,7 @@ import { CardTitle } from "@/components/ui/typography";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { loyaltyProgressCopy } from "@abonten/core/rewards/earnCopy";
 import type { LoyaltyProgress } from "@abonten/types/rewards";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 // The loyalty fee rebate (Rewards Phase 8): one dot per different event the
 // caller has bought tickets to in the current count, and what the next
@@ -12,6 +12,7 @@ export default function LoyaltyProgressCard({
 }: {
   progress: LoyaltyProgress;
 }) {
+  const locale = useLocale();
   const t = useTranslations("rewards");
   const tc = useTranslations("core");
 
@@ -48,6 +49,7 @@ export default function LoyaltyProgressCard({
             formatCredit: formatCredit(
               progress.pendingMinor,
               progress.currency,
+              locale,
             ),
           })}
         </p>
@@ -55,7 +57,11 @@ export default function LoyaltyProgressCard({
       {progress.earnedMinor > 0 ? (
         <p className="mt-1 text-xs text-muted-foreground">
           {t("givenBackSoFar", {
-            formatCredit: formatCredit(progress.earnedMinor, progress.currency),
+            formatCredit: formatCredit(
+              progress.earnedMinor,
+              progress.currency,
+              locale,
+            ),
           })}
         </p>
       ) : null}

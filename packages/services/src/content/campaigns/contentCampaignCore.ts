@@ -19,7 +19,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { CreateContentCampaignInput } from "@abonten/validation/contentSchemas";
 import { cancelPromotionCheckout } from "../../checkout/checkoutCancellation";
-import { tr } from "../../i18n/requestLocale";
+import { requestLocale, tr } from "../../i18n/requestLocale";
 import { checkRateLimit } from "../../security/rateLimit";
 import { notifyCampaign } from "../contentNotifyCore";
 import { type Envelope, FAIL } from "../contentShared";
@@ -390,7 +390,7 @@ export function summaryLabel(
 ): string {
   const amount = formatMoney(
     { amountMinor: budgetMinor, currency },
-    { trimZeroFraction: true },
+    { trimZeroFraction: true, locale: requestLocale() },
   );
   return tr("budgetUpToDay", { amount, days: durationDays });
 }

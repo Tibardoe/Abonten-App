@@ -3,7 +3,7 @@
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import { matchCountry, phoneCountries } from "@abonten/core/countries";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -22,6 +22,7 @@ export default function PhoneInput({
   onChange,
 }: Props) {
   const t = useTranslations("common");
+  const locale = useLocale();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [query, setQuery] = useState("");
@@ -30,10 +31,13 @@ export default function PhoneInput({
   const ordered = useMemo(() => {
     const open = markets.map((m) => m.countryCode);
     const viewer = context?.viewerCountry;
+    // Named and sorted in the reader's language: "Allemagne", not
+    // "Germany", for someone reading French.
     return phoneCountries(
       viewer && !open.includes(viewer) ? [...open, viewer] : open,
+      locale,
     );
-  }, [markets, context?.viewerCountry]);
+  }, [markets, context?.viewerCountry, locale]);
   const results = matchCountry(query, ordered);
 
   useClickOutside([containerRef], () => setShowDropdown(false));

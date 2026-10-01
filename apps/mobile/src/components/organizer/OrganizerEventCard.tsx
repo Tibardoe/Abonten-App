@@ -1,7 +1,12 @@
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCount } from "@abonten/core/i18n/format";
 import { AppText, Icon, StatusPill } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -18,7 +23,10 @@ const num = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 // The event's own currency sign, whole amounts on a card (GH₵1,250, ₦45,000).
 function money(currency: string | null | undefined, amount: number): string {
-  return formatMoney(currency, amount, { trimZeroFraction: true });
+  return formatMoney(currency, amount, {
+    trimZeroFraction: true,
+    locale: getCurrentLocale(),
+  });
 }
 
 /** Resolve the pill status, folding "sold out" in when capacity is hit. */
@@ -150,7 +158,7 @@ export function OrganizerEventCard({
             />
             <Metric
               label={t("ticketsSold2")}
-              value={sold.toLocaleString()}
+              value={formatCount(sold, locale)}
               align="right"
             />
           </View>
@@ -161,15 +169,17 @@ export function OrganizerEventCard({
                 label={cap != null ? t("sold2") : t("ticketsSold2")}
                 value={
                   cap != null
-                    ? `${sold.toLocaleString()} / ${cap.toLocaleString()}`
-                    : sold.toLocaleString()
+                    ? `${formatCount(sold, locale)} / ${formatCount(cap, locale)}`
+                    : formatCount(sold, locale)
                 }
                 emphasis
               />
               {remaining != null ? (
                 <Metric
                   label={soldOut ? t("status2") : t("spotsLeft")}
-                  value={soldOut ? t("soldOut") : remaining.toLocaleString()}
+                  value={
+                    soldOut ? t("soldOut") : formatCount(remaining, locale)
+                  }
                   align="right"
                 />
               ) : null}

@@ -213,6 +213,7 @@ export default function InviteFriends() {
                     formatCredit: formatCredit(
                       data.referrerMinor,
                       data.currency,
+                      locale,
                     ),
                   })}
                   {data.minOrderMinor
@@ -220,6 +221,7 @@ export default function InviteFriends() {
                         formatCredit: formatCredit(
                           data.minOrderMinor,
                           data.currency,
+                          locale,
                         ),
                       })
                     : ""}
@@ -229,6 +231,7 @@ export default function InviteFriends() {
                         formatCredit: formatCredit(
                           data.refereeMinor,
                           data.currency,
+                          locale,
                         ),
                       })
                     : ""}
@@ -287,11 +290,11 @@ export default function InviteFriends() {
                 [t("boughtATicket"), String(data.stats.qualified)],
                 [
                   t("earned"),
-                  formatCredit(data.stats.earnedMinor, data.currency),
+                  formatCredit(data.stats.earnedMinor, data.currency, locale),
                 ],
                 [
                   t("pending2"),
-                  formatCredit(data.stats.pendingMinor, data.currency),
+                  formatCredit(data.stats.pendingMinor, data.currency, locale),
                 ],
               ].map(([label, value]) => (
                 <View key={label} className="w-1/2 gap-0.5">

@@ -78,7 +78,7 @@ export function buildTicketReceiptHtml(
       <div class="title">${escapeHtml(ticket.eventTitle)}</div>
       ${attendeeRow}
       <div class="row"><span class="label">${escapeHtml(labels.ticketType)}</span><span class="value">${escapeHtml(
-        ticket.ticketTypeName,
+        labels.ticketTypeValue,
       )}</span></div>
       <div class="row"><span class="label">${escapeHtml(labels.ticketCode)}</span><span class="value">${escapeHtml(
         ticket.ticketCode,

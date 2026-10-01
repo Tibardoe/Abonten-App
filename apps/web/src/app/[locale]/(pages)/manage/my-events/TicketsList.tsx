@@ -11,10 +11,14 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
-import { getRefundStatusLabel } from "@abonten/core/refundStatus";
+import {
+  getRefundStatusKind,
+  getRefundStatusLabel,
+} from "@abonten/core/refundStatus";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -34,6 +38,7 @@ function TicketCard({
   // exact list, and put it back if cancellation fails.
   queryKey: unknown[];
 }) {
+  const locale = useLocale();
   const t = useTranslations("manage");
   const tc = useTranslations("core");
 
@@ -64,7 +69,13 @@ function TicketCard({
       event.event.occurrences,
     ) === "ended";
   const canRetryRefund =
-    refundBadge?.label === t("refundFailed") && event.transaction_id;
+    refundBadge !== null &&
+    event.transaction &&
+    getRefundStatusKind(
+      event.transaction.status,
+      event.transaction.refund_requested_at,
+    ) === "failed" &&
+    event.transaction_id;
   return (
     <div className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border">
       <div className="relative h-36 w-full">
@@ -104,7 +115,7 @@ function TicketCard({
             status are what a user scans for first. */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span>
-            {event.ticket_type.type} ·{" "}
+            {ticketTypeLabel(tc, event.ticket_type.type)} ·{" "}
             <span className="font-mono">{event.ticket_code}</span>
           </span>
         </div>
@@ -115,7 +126,9 @@ function TicketCard({
               <RefundStatusBadge badge={refundBadge} />
               {refundAmount !== undefined && (
                 <span className="text-sm font-semibold">
-                  {formatMoney(event.transaction?.currency, refundAmount)}
+                  {formatMoney(event.transaction?.currency, refundAmount, {
+                    locale,
+                  })}
                 </span>
               )}
             </div>

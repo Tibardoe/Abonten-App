@@ -15,7 +15,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { buildWithdrawAmountSchema } from "@abonten/validation/payoutSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -50,6 +50,7 @@ export default function WithdrawModal({
   onSuccess,
   onBalanceStale,
 }: WithdrawModalProps) {
+  const locale = useLocale();
   const t = useTranslations("finances");
 
   const [step, setStep] = useState<Step>("form");
@@ -131,7 +132,7 @@ export default function WithdrawModal({
               <div className="rounded-md bg-muted p-3 text-sm">
                 {t("available")}
                 <span className="font-semibold">
-                  {formatMoney(currency, availableBalance)}
+                  {formatMoney(currency, availableBalance, { locale })}
                 </span>
               </div>
 
@@ -225,7 +226,7 @@ export default function WithdrawModal({
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("amount")}</span>
                 <span className="font-semibold">
-                  {formatMoney(currency, Number(amount))}
+                  {formatMoney(currency, Number(amount), { locale })}
                 </span>
               </div>
               <hr className="border-border" />
@@ -266,7 +267,9 @@ export default function WithdrawModal({
                 {isSubmitting
                   ? t("submitting")
                   : t("withdraw2", {
-                      formatMoney: formatMoney(currency, Number(amount)),
+                      formatMoney: formatMoney(currency, Number(amount), {
+                        locale,
+                      }),
                     })}
               </Button>
             </div>

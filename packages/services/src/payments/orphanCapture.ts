@@ -15,7 +15,6 @@
 // redelivers and the refund is tried again; Finance sees every open row.
 
 import { logger } from "@abonten/core/logger";
-import { formatMoney } from "@abonten/core/money/formatMoney";
 import { toMajor } from "@abonten/core/money/money";
 import { createNotificationCore } from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -144,7 +143,10 @@ export async function refundOrphanCapture(input: {
     type: "refund_requested",
     notice: {
       id: "orphan_refund",
-      params: { amount: formatMoney(verification.amount) },
+      params: {
+        amountMinor: verification.amount.amountMinor,
+        currency: verification.amount.currency,
+      },
     },
     link: "/transactions",
     data: { kind: "ticket" },

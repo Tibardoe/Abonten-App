@@ -12,7 +12,7 @@
   "addPayoutAccount": "Adicionar conta de recebimento",
   "amount": "Montante",
   "available": "Disponível:",
-  "availablePending": "{currency}: {toLocaleString} disponíveis · {toLocaleString2} pendentes",
+  "availablePending": "{currency}: {available} disponíveis · {pending} pendentes",
   "availableToWithdraw": "Disponível para levantamento",
   "back": "Voltar",
   "bankAccount": "Conta bancária",

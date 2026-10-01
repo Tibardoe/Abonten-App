@@ -202,7 +202,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
     context?.subject.event?.title ??
     context?.subject.place?.name ??
     context?.title ??
-    "Conversation";
+    t("conversation");
   const SubjectIcon =
     context?.type === "place"
       ? Store

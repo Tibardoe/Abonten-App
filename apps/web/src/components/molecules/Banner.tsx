@@ -110,6 +110,7 @@ export default function Banner({ event }: BannerProps) {
                 : t("from", {
                     formatMoney: formatMoney(event.currency, event.min_price, {
                       trimZeroFraction: true,
+                      locale,
                     }),
                   })}
             </div>

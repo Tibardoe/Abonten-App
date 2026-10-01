@@ -26,9 +26,9 @@ function TransactionsListSkeleton() {
 // Positive lines (money coming in) are prefixed "+", negative lines
 // (fees/refunds/payouts) show their natural minus sign — never relying on
 // color alone, per the task's explicit "not color-only" requirement.
-function formatSignedAmount(amount: number, currency: string) {
+function formatSignedAmount(amount: number, currency: string, locale: string) {
   const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
-  return `${sign}${formatMoney(currency, Math.abs(amount))}`;
+  return `${sign}${formatMoney(currency, Math.abs(amount), { locale })}`;
 }
 
 type FinancesTransactionsListProps = {
@@ -83,7 +83,7 @@ export default function FinancesTransactionsList({
 
             <div className="flex items-center gap-2 md:gap-3 font-bold">
               <div className="text-right">
-                <p>{formatSignedAmount(item.amount, item.currency)}</p>
+                <p>{formatSignedAmount(item.amount, item.currency, locale)}</p>
                 <p className="text-xs font-medium text-muted-foreground">
                   {statusLabel}
                 </p>

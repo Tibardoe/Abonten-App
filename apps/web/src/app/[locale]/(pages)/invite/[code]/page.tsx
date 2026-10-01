@@ -7,7 +7,7 @@ import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { ANDROID_APP_LISTED, playStoreUrl } from "@abonten/core/rewards/invite";
 import { resolveReferralCodeCore } from "@abonten/services/rewards/inviteCore";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,13 +32,14 @@ function offerLine(
   welcomeMinor: number | null,
   minOrderMinor: number | null,
   currency: string,
+  locale: string,
 ): string | null {
   if (!welcomeMinor) return null;
-  const amount = formatCredit(welcomeMinor, currency);
+  const amount = formatCredit(welcomeMinor, currency, locale);
   return minOrderMinor
     ? t("offerOffFirstTicketMin", {
         amount,
-        min: formatCredit(minOrderMinor, currency),
+        min: formatCredit(minOrderMinor, currency, locale),
       })
     : t("offerOffFirstTicket", { amount });
 }
@@ -59,7 +60,13 @@ export async function generateMetadata({
   });
   const description =
     (data.programOn
-      ? offerLine(t, data.welcomeMinor, data.minOrderMinor, data.currency)
+      ? offerLine(
+          t,
+          data.welcomeMinor,
+          data.minOrderMinor,
+          data.currency,
+          await getLocale(),
+        )
       : null) ?? t("findEventsAndPlacesNearYou2");
   return {
     title,
@@ -108,7 +115,13 @@ export default async function InvitePage({
 
   const name = data.referrerName ?? "A friend";
   const offer = data.programOn
-    ? offerLine(t, data.welcomeMinor, data.minOrderMinor, data.currency)
+    ? offerLine(
+        t,
+        data.welcomeMinor,
+        data.minOrderMinor,
+        data.currency,
+        await getLocale(),
+      )
     : null;
   const avatar = data.referrerAvatar
     ? buildCloudinaryUrl(

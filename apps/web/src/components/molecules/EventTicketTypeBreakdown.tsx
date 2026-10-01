@@ -3,9 +3,11 @@
 import getEventTicketTypeAnalytics from "@/actions/getEventTicketTypeAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function EventTicketTypeBreakdown({
   eventId,
@@ -18,7 +20,9 @@ export default function EventTicketTypeBreakdown({
   startDate: string | null;
   endDate: string | null;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const {
     data: response,
@@ -56,12 +60,14 @@ export default function EventTicketTypeBreakdown({
               className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2"
             >
               <div className="flex justify-between items-center gap-2">
-                <h3 className="font-semibold">{row.type}</h3>
+                <h3 className="font-semibold">
+                  {ticketTypeLabel(tc, row.type)}
+                </h3>
                 <span className="text-sm text-muted-foreground shrink-0">
                   {t("sold", { sold: row.sold })}
                   {row.quantity_capacity != null
                     ? ` / ${row.quantity_capacity}`
-                    : " / Unlimited"}
+                    : ` / ${t("unlimited")}`}
                 </span>
               </div>
 
@@ -79,14 +85,15 @@ export default function EventTicketTypeBreakdown({
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
                   {row.price > 0
-                    ? `${row.currency ?? ""} ${Number(row.price).toLocaleString()}`.trim()
+                    ? formatMoney(row.currency, Number(row.price), { locale })
                     : t("free")}
                 </span>
                 {row.revenue > 0 && (
                   <span>
-                    {row.currency ?? ""}{" "}
                     {t("revenue", {
-                      toLocaleString: Number(row.revenue).toLocaleString(),
+                      amount: formatMoney(row.currency, Number(row.revenue), {
+                        locale,
+                      }),
                     })}
                   </span>
                 )}

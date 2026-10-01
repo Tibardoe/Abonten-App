@@ -24,7 +24,7 @@ import {
   formatCredit,
 } from "@abonten/core/rewards/creditAmount";
 import { AppText } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -73,6 +73,7 @@ function PromotionPaymentSectionInner({
   onFeatured,
   kind = "event",
 }: PromotionPaymentSectionProps) {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   const router = useRouter();
@@ -199,16 +200,18 @@ function PromotionPaymentSectionInner({
         // charge.
         mode: ps ? ps.mode : "direct",
         deepLink: `abonten://promotion/${checkoutId}`,
-        contextTitle:
-          kind === "spotlight"
-            ? "Promote your Spotlight"
-            : `Feature this ${kind}`,
+        contextTitle: t("promotionPaymentTitle", { kind }),
         amountLabel: ps
-          ? formatMoney(currency, payAmount)
-          : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0, currency)} credit`,
+          ? formatMoney(currency, payAmount, { locale })
+          : t("paidWithAmountCredit", {
+              amount: formatCredit(
+                res.data.credit?.appliedMinor ?? 0,
+                currency,
+                locale,
+              ),
+            }),
         successHref,
-        successCtaLabel:
-          kind === "spotlight" ? "View promotion" : `View ${kind}`,
+        successCtaLabel: t("promotionPaymentDone", { kind }),
         ...(ps === null
           ? {
               chargeStatus: "success",
@@ -245,7 +248,9 @@ function PromotionPaymentSectionInner({
         >
           {creditCoversAll
             ? t("confirmAndPayWithCredit")
-            : t("pay", { formatMoney: formatMoney(currency, payAmount) })}
+            : t("pay", {
+                formatMoney: formatMoney(currency, payAmount, { locale }),
+              })}
         </AppText>
       )}
     </Pressable>

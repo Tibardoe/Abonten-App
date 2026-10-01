@@ -4,7 +4,7 @@ import { usePlaceVisitPanel } from "@/features/rewards/usePlaceVisits";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { AppText, Button, Overline, Refresher } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -29,6 +29,7 @@ function Tile({ label, value }: { label: string; value: string }) {
 }
 
 export default function PlaceCheckInScreen() {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
@@ -98,6 +99,7 @@ export default function PlaceCheckInScreen() {
                   formatCredit: formatCredit(
                     panel.perVisitorMinor,
                     panel.currency,
+                    locale,
                   ),
                   maxVisitors: panel.maxVisitors,
                 })
@@ -116,7 +118,11 @@ export default function PlaceCheckInScreen() {
             />
             <Tile
               label={t("creditEarned")}
-              value={formatCredit(panel.stats.earnedMinor, panel.currency)}
+              value={formatCredit(
+                panel.stats.earnedMinor,
+                panel.currency,
+                locale,
+              )}
             />
           </View>
         </>

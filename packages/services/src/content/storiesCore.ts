@@ -109,7 +109,9 @@ export async function getStoryTrayCore(
                 kind: "organizer",
                 id: u.id,
                 name:
-                  u.full_name ?? (u.username as string | null) ?? "Organizer",
+                  u.full_name ??
+                  (u.username as string | null) ??
+                  tr("organizerFallbackName"),
                 username: u.username as string | null,
                 avatarPublicId: u.avatar_public_id,
                 avatarVersion: u.avatar_version,

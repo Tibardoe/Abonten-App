@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -36,6 +36,7 @@ export default function EventFinanceSummary({
   startDate: string | null;
   endDate: string | null;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -80,7 +81,7 @@ export default function EventFinanceSummary({
       <div className="rounded-xl border border-border bg-card text-card-foreground p-4 space-y-3">
         <Row
           label={t("ticketSales")}
-          value={formatMoney(summary.currency, summary.ticketSales)}
+          value={formatMoney(summary.currency, summary.ticketSales, { locale })}
         />
         {/* Under the customer-paid-service-fee model the organizer keeps
             100% of the ticket price, so there is no fee to deduct here.
@@ -88,14 +89,14 @@ export default function EventFinanceSummary({
         {summary.platformFee !== 0 && (
           <Row
             label={t("abontenFees")}
-            value={`-${formatMoney(summary.currency, summary.platformFee)}`}
+            value={`-${formatMoney(summary.currency, summary.platformFee, { locale })}`}
           />
         )}
         {summary.refunds !== 0 && (
           <div className="space-y-1">
             <Row
               label={t("refunds")}
-              value={`-${formatMoney(summary.currency, Math.abs(summary.refunds))}`}
+              value={`-${formatMoney(summary.currency, Math.abs(summary.refunds), { locale })}`}
             />
             {(summary.pendingRefunds > 0 || summary.completedRefunds > 0) && (
               <p className="text-xs text-muted-foreground">
@@ -106,10 +107,12 @@ export default function EventFinanceSummary({
                   formatMoney: formatMoney(
                     summary.currency,
                     summary.pendingRefunds,
+                    { locale },
                   ),
                   formatMoney2: formatMoney(
                     summary.currency,
                     summary.completedRefunds,
+                    { locale },
                   ),
                 })}
               </p>
@@ -118,18 +121,20 @@ export default function EventFinanceSummary({
         )}
         <Row
           label={t("netSales")}
-          value={formatMoney(summary.currency, summary.netSales)}
+          value={formatMoney(summary.currency, summary.netSales, { locale })}
         />
         {summary.promoterCommissions !== 0 && (
           <Row
             label={t("promoterCommissions")}
-            value={`-${formatMoney(summary.currency, Math.abs(summary.promoterCommissions))}`}
+            value={`-${formatMoney(summary.currency, Math.abs(summary.promoterCommissions), { locale })}`}
           />
         )}
         <hr className="border-border" />
         <Row
           label={t("organizerEarnings")}
-          value={formatMoney(summary.currency, summary.organizerEarnings)}
+          value={formatMoney(summary.currency, summary.organizerEarnings, {
+            locale,
+          })}
         />
 
         <hr className="border-border" />
@@ -150,6 +155,7 @@ export default function EventFinanceSummary({
                 formatMoney: formatMoney(
                   summary.currency,
                   summary.organizerEarnings,
+                  { locale },
                 ),
               })}
             </p>

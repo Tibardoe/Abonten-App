@@ -6,13 +6,11 @@ import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import PayoutDestinationForm from "@/fieldOps/organisms/PayoutDestinationForm";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsCommission } from "@abonten/types/fieldOps";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-
-const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 const STATUS_COPY: Record<string, string> = {
   pending: "inHolding",
@@ -25,6 +23,9 @@ const STATUS_COPY: Record<string, string> = {
 
 export default async function FieldEarningsPage() {
   const t = await getTranslations("fieldOps");
+  const locale = await getLocale();
+  const money = (minor: number, currency: string) =>
+    formatMinor(minor, currency, locale);
   const format = await getFormatter();
 
   const me = await loadFieldOpsMe();

@@ -261,6 +261,7 @@ export default async function page({
       ? ""
       : formatMoney(minTicket?.currency, minTicket?.price, {
           trimZeroFraction: true,
+          locale,
         });
   const priceLabel =
     minTicket?.price === 0 || minTicket === null

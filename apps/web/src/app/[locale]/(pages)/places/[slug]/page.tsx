@@ -370,6 +370,7 @@ export default async function page({
                           <span className="shrink-0 font-medium text-card-foreground">
                             {formatMoney(placeCurrency, service.price, {
                               trimZeroFraction: true,
+                              locale,
                             })}
                             {service.price_unit
                               ? ` / ${service.price_unit}`

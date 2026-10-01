@@ -397,7 +397,9 @@
   "ticketTiers": {
     "paidNeedsPrice": "Paid tickets need a price greater than zero. To let people in for free, make the event free.",
     "freeReserved": "“{name}” is reserved for free events. Give this ticket type another name.",
-    "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid."
+    "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid.",
+    "freeName": "Free",
+    "singleName": "Standard ticket"
   },
   "fieldOpsCampaign": {
     "action": {
@@ -845,6 +847,10 @@
     },
     "fieldops_commission_reversed": {
       "title": "A commission was taken back"
+    },
+    "content_campaign_refunded": {
+      "title": "Your Spotlight promotion refund is on its way",
+      "body": "{amount} is being returned to your payment method."
     }
   },
   "noticeWords": {

@@ -4,12 +4,10 @@ import StatTile from "@/fieldOps/atoms/StatTile";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-
-const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 /** "3 of 4" reads better than "75%" at these volumes. */
 const outOf = (part: number, whole: number) =>
@@ -17,6 +15,9 @@ const outOf = (part: number, whole: number) =>
 
 export default async function FieldLeadPerformancePage() {
   const t = await getTranslations("fieldOps");
+  const locale = await getLocale();
+  const money = (minor: number, currency: string) =>
+    formatMinor(minor, currency, locale);
 
   const me = await loadFieldOpsMe();
   const current = me.data?.current;

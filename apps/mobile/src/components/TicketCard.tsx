@@ -3,6 +3,7 @@ import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { AppText, Icon, TicketStatusBadge, useToast } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
@@ -25,6 +26,7 @@ export function TicketCard({
   const { locale } = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const toast = useToast();
@@ -115,7 +117,9 @@ export function TicketCard({
         </View>
 
         <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
-          <AppText variant="meta">{ticket.ticket_type.type}</AppText>
+          <AppText variant="meta">
+            {ticketTypeLabel(tc, ticket.ticket_type.type)}
+          </AppText>
           <AppText variant="meta" className="tracking-widest">
             · {ticket.ticket_code}
           </AppText>

@@ -3,7 +3,7 @@ import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { View } from "react-native";
@@ -12,6 +12,7 @@ import { View } from "react-native";
 // web review/publish step. Publish is the header's "Publish" button
 // (app/(app)/event/new.tsx).
 export function EventWizardReview({ w }: { w: EventWizard }) {
+  const { locale } = useLocale();
   const t = useTranslations("events");
 
   const c = useThemeColors();
@@ -34,10 +35,12 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
       : w.ticketMode === "single"
         ? w.ticketQuantity
           ? t("quantityAvailable", {
-              price: formatMoney(w.currency, Number(w.ticketPrice || 0)),
+              price: formatMoney(w.currency, Number(w.ticketPrice || 0), {
+                locale,
+              }),
               count: w.ticketQuantity,
             })
-          : formatMoney(w.currency, Number(w.ticketPrice || 0))
+          : formatMoney(w.currency, Number(w.ticketPrice || 0), { locale })
         : t("ticketTypesCount", { count: w.tiers.length });
 
   return (

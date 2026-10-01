@@ -96,7 +96,10 @@ export async function loadPublisher(
   return {
     kind: "organizer",
     id: data.id,
-    name: data.full_name ?? (data.username as string | null) ?? "Organizer",
+    name:
+      data.full_name ??
+      (data.username as string | null) ??
+      tr("organizerFallbackName"),
     username: data.username as string | null,
     avatarPublicId: data.avatar_public_id,
     avatarVersion: data.avatar_version,

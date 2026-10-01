@@ -1,8 +1,9 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
+import { TICKET_MODE } from "@/events/ticketMode";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { Ticket } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import React from "react";
 import { useState } from "react";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -38,6 +39,7 @@ export default function TicketInputs({
   multipleTickets = [],
   handleMultipleTickets,
 }: TicketInputProp) {
+  const locale = useLocale();
   const t = useTranslations("common");
   const format = useFormatter();
 
@@ -114,7 +116,7 @@ export default function TicketInputs({
 
   return (
     <>
-      {ticketType === t("singleTicketType") && (
+      {ticketType === TICKET_MODE.single && (
         <div className="flex justify-between items-center gap-2">
           <div className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
             <span className="text-sm text-green-600">{currency}</span>
@@ -139,7 +141,7 @@ export default function TicketInputs({
         </div>
       )}
 
-      {ticketType === t("multipleTicketTypes") && (
+      {ticketType === TICKET_MODE.multiple && (
         <div className="space-y-2">
           <div className="flex flex-col gap-2">
             <div className="w-full">
@@ -229,7 +231,7 @@ export default function TicketInputs({
                         {t("price")}
                       </span>
                       <span className="text-sm font-semibold">
-                        {formatMoney(currency, ticket.price)}
+                        {formatMoney(currency, ticket.price, { locale })}
                       </span>
                     </div>
                   </div>

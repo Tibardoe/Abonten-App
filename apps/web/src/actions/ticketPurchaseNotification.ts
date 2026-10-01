@@ -15,7 +15,8 @@ import {
   buildTicketPdfData,
   buildTicketPdfFilename,
 } from "@abonten/core/ticketPdfData";
-import { tr } from "@abonten/services/i18n/requestLocale";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
+import { coreTFor, tr } from "@abonten/services/i18n/requestLocale";
 import { userLocaleRaw } from "@abonten/services/i18n/userLocale";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { getLocale } from "next-intl/server";
@@ -42,8 +43,6 @@ export default withActionLocale(async function ticketPurchaseNotification(
   orderAmount?: number | null,
   authOverride?: AuthOverride,
 ) {
-  const locale = await getLocale();
-
   try {
     if (!emailIsConfigured()) {
       logger.warn("RESEND_API_KEY is not set; skipping ticket purchase email");
@@ -144,12 +143,15 @@ export default withActionLocale(async function ticketPurchaseNotification(
     const currency = firstTicket.ticket_type.currency;
     const amountLabel =
       orderAmount && orderAmount > 0
-        ? formatMoney(currency, orderAmount)
+        ? formatMoney(currency, orderAmount, { locale })
         : words.t("ticket.free");
 
     const ticketLines: EmailTicketLine[] = tickets.map((ticket) => ({
       ticketCode: ticket.ticket_code,
-      ticketTypeName: ticket.ticket_type.type,
+      ticketTypeName: ticketTypeLabel(
+        coreTFor(locale),
+        ticket.ticket_type.type,
+      ),
     }));
 
     const { data, error } = await sendEmail({

@@ -13,10 +13,13 @@ type PopupCloseProp = {
   onAdded: (account: PayoutAccountRow) => void;
 };
 
-const STEP_TITLES: Record<string, string> = {
-  "Mobile Money": "addMobileMoneyAccount",
-  "Bank Account": "addBankAccount",
-};
+// The option chosen in step 1, as a code: its title is worded when shown.
+type PayoutOption = "mobile_money" | "bank";
+
+const STEP_TITLES = {
+  mobile_money: "addMobileMoneyAccount",
+  bank: "addBankAccount",
+} as const;
 
 // Mirrors AddPaymentMethodPopup.tsx's exact two-step shell (choose type,
 // then fill the matching form) — same modal chrome, applied to organizer
@@ -28,10 +31,10 @@ export default function AddPayoutAccountPopup({
   const t = useTranslations("finances");
 
   const [step, setStep] = useState(1);
-  const [title, setTitle] = useState("");
+  const [option, setOption] = useState<PayoutOption | null>(null);
 
-  const increaseStep = (title: string) => {
-    setTitle(title);
+  const increaseStep = (chosen: PayoutOption) => {
+    setOption(chosen);
     setStep((prevState) => prevState + 1);
   };
 
@@ -42,8 +45,8 @@ export default function AddPayoutAccountPopup({
       title={
         step === 1
           ? t("addAPayoutAccount")
-          : STEP_TITLES[title]
-            ? t(STEP_TITLES[title])
+          : option
+            ? t(STEP_TITLES[option])
             : t("addPayoutAccount")
       }
       className="md:w-[30rem]"
@@ -54,22 +57,22 @@ export default function AddPayoutAccountPopup({
             imgUrl="/assets/images/phone.svg"
             optionTitle={t("mobileMoney")}
             optionDetails={t("mtnTelecelAtMoneyGMoney")}
-            handleStep={increaseStep}
+            handleStep={() => increaseStep("mobile_money")}
           />
 
           <PaymentOptionCard
             imgUrl="/assets/images/bankCard.svg"
             optionTitle={t("bankAccount")}
             optionDetails={t("receiveEarningsDirectlyIntoYourBank")}
-            handleStep={increaseStep}
+            handleStep={() => increaseStep("bank")}
           />
         </div>
       )}
 
-      {step === 2 && title === t("mobileMoney") && (
+      {step === 2 && option === "mobile_money" && (
         <AddMobileMoneyPayoutForm onSaved={onAdded} />
       )}
-      {step === 2 && title === t("bankAccount") && (
+      {step === 2 && option === "bank" && (
         <AddBankPayoutForm onSaved={onAdded} />
       )}
     </BottomSheet>

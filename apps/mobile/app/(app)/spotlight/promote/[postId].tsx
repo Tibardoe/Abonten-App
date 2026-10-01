@@ -42,7 +42,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -61,6 +61,7 @@ type Reserved = {
 // reach range (never a promise); nothing runs until payment is confirmed
 // and the promotion passes review.
 export default function PromoteSpotlightScreen() {
+  const { locale } = useLocale();
   const t = useTranslations("spotlight");
   const tc = useTranslations("core");
 
@@ -319,7 +320,7 @@ export default function PromoteSpotlightScreen() {
                 {opts.suggestedBudgetsMinor.map((b) => (
                   <Chip
                     key={b}
-                    label={formatMinor(b, opts.currency)}
+                    label={formatMinor(b, opts.currency, locale)}
                     selected={budgetMinor === b}
                     onPress={() => setBudgetText(String(b / factor))}
                   />
@@ -344,10 +345,12 @@ export default function PromoteSpotlightScreen() {
                     formatMinor: formatMinor(
                       opts.minBudgetMinor,
                       opts.currency,
+                      locale,
                     ),
                     formatMinor2: formatMinor(
                       opts.maxBudgetMinor,
                       opts.currency,
+                      locale,
                     ),
                   })}
               </AppText>
@@ -392,8 +395,7 @@ export default function PromoteSpotlightScreen() {
                   <AppText variant="meta">
                     {est.deliverable
                       ? t("aboutSponsoredImpressions2", {
-                          toLocaleString:
-                            est.estimatedImpressions.toLocaleString("en-GB"),
+                          count: est.estimatedImpressions,
                           item: promotionEstimateBasisLabel(tc, est.basis),
                         })
                       : est.basis === "no_data"
@@ -421,6 +423,7 @@ export default function PromoteSpotlightScreen() {
                 formatMinor: formatMinor(
                   Number.isFinite(budgetMinor) ? budgetMinor : 0,
                   opts.currency,
+                  locale,
                 ),
               })}
               loading={starting}

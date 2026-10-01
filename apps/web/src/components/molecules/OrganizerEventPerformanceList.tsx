@@ -107,11 +107,12 @@ export default function OrganizerEventPerformanceList({
                   {formatMoney(
                     event.currency ?? fallbackCurrency,
                     Number(event.revenue),
+                    { locale },
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {t("tickets2", {
-                    toLocaleString: Number(event.tickets_sold).toLocaleString(),
+                    count: Number(event.tickets_sold),
                   })}
                 </p>
               </div>

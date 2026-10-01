@@ -6,7 +6,7 @@ import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
 import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export type SpotlightPromotionSummaryProps = {
   type: "spotlight-promotion";
@@ -33,6 +33,7 @@ type OrderSummaryProps = {
  * PendingCheckoutsBasket/TicketCheckoutSessionCard).
  */
 export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
+  const locale = useLocale();
   const t = useTranslations("common");
   const tc = useTranslations("core");
 
@@ -76,7 +77,7 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
         <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
           <p>{t("totalAmount")}</p>
-          <p>{formatMoney(currency, totalAmount)}</p>
+          <p>{formatMoney(currency, totalAmount, { locale })}</p>
         </div>
       </div>
     );
@@ -105,7 +106,7 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
         <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
           <p>{t("totalAmount")}</p>
-          <p>{formatMoney(currency, totalAmount)}</p>
+          <p>{formatMoney(currency, totalAmount, { locale })}</p>
         </div>
       </div>
     );
@@ -133,7 +134,7 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
       <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
         <p>{t("totalAmount")}</p>
-        <p>{formatMoney(currency, totalAmount)}</p>
+        <p>{formatMoney(currency, totalAmount, { locale })}</p>
       </div>
     </div>
   );

@@ -4,16 +4,17 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import ContentSubmitForm from "@/fieldOps/organisms/ContentSubmitForm";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const money = (minor: number, currency: string) => formatMinor(minor, currency);
-
 export default async function FieldContentPage() {
   const t = await getTranslations("fieldOps");
+  const locale = await getLocale();
+  const money = (minor: number, currency: string) =>
+    formatMinor(minor, currency, locale);
   const format = await getFormatter();
 
   const me = await loadFieldOpsMe();

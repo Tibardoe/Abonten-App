@@ -669,7 +669,7 @@ function StorySlide({
             <span className="flex flex-1 items-center gap-1 text-sm text-white">
               <IoEyeOutline aria-hidden />
               {t("viewed", {
-                toLocaleString: engagement.counts.views.toLocaleString(),
+                count: engagement.counts.views,
               })}
             </span>
           ) : repliesPossible ? (

@@ -110,6 +110,7 @@ export default function EventAnalyticsDashboard({
         endDate={endDate}
       />
       <EventPromoBreakdown
+        currency={overview?.currency ?? null}
         eventId={eventId}
         period={period}
         startDate={startDate}

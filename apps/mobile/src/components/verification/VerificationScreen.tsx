@@ -78,7 +78,6 @@ function DocRow({
   onRetry: () => void;
 }) {
   const t = useTranslations("verification");
-  const tc = useTranslations("core");
 
   return (
     <View className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-2.5">
@@ -717,7 +716,6 @@ function EvidenceTypePicker({
   onChange: (v: string) => void;
 }) {
   const t = useTranslations("verification");
-  const tc = useTranslations("core");
 
   if (types.length === 0) return null;
   const selected = types.find((t) => t.key === value);

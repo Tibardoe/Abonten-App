@@ -6,6 +6,7 @@ import {
 } from "@/features/transactions/useTransactions";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatDate } from "@abonten/core/i18n/format";
 import {
   type TransactionPeriod,
   transactionPeriodLabel,
@@ -21,7 +22,11 @@ import {
   Spinner,
   StatusPill,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, ScrollView, View } from "react-native";
@@ -41,7 +46,9 @@ const PERIODS: TransactionPeriod[] = [
 ];
 
 function money(amount: number, currency: string) {
-  return formatMoney(currency, Number(amount ?? 0));
+  return formatMoney(currency, Number(amount ?? 0), {
+    locale: getCurrentLocale(),
+  });
 }
 
 function Tile({ label, value }: { label: string; value: string }) {
@@ -60,8 +67,8 @@ function TransactionRow({
   row: UserTransactionRow;
   onPress: () => void;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("transactions");
-  const tc = useTranslations("core");
 
   const hasRefund = !!row.refund_status && row.refund_status !== "none";
   // A cancelled ticket whose transaction still reads "successful" but has a
@@ -130,7 +137,7 @@ function TransactionRow({
           ) : null}
         </View>
         <AppText variant="caption">
-          {new Date(row.created_at).toLocaleDateString()}
+          {formatDate(row.created_at, locale)}
         </AppText>
       </View>
     </Pressable>

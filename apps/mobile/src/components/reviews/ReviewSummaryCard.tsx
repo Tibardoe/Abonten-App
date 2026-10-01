@@ -1,3 +1,4 @@
+import { formatCount } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewRatingFilter,
@@ -5,7 +6,7 @@ import {
   ratingShares,
 } from "@abonten/core/reviews/reviewList";
 import { AppText, Stars } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The overall picture before the individual reviews: the average, how many
@@ -24,6 +25,7 @@ export function ReviewSummaryCard({
   /** When set, tapping a row filters the list to that rating (again clears it). */
   onSelect?: (rating: ReviewRatingFilter) => void;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("reviews");
 
   const shares = ratingShares(summary);
@@ -70,7 +72,7 @@ export function ReviewSummaryCard({
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
-                {summary.counts[star].toLocaleString("en-US")}
+                {formatCount(summary.counts[star], locale)}
               </AppText>
             </View>
           );

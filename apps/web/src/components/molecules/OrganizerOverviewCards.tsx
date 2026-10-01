@@ -10,12 +10,13 @@ import {
   computeTrend,
 } from "@abonten/core/admin/computeTrend";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCount } from "@abonten/core/i18n/format";
 import {
   type DashboardPeriod,
   dashboardPeriodComparisonLabel,
 } from "@abonten/core/organizerDashboardDateRange";
 import type { OrganizerOverviewRow } from "@abonten/types/eventAnalytics";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type Row = OrganizerOverviewRow;
 
@@ -58,6 +59,7 @@ export default function OrganizerOverviewCards({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
   const tc = useTranslations("core");
 
@@ -98,7 +100,7 @@ export default function OrganizerOverviewCards({
   const comparisonLabel = dashboardPeriodComparisonLabel(tc, period);
 
   const money = (amount: number, currency: string | null) =>
-    formatMoney(currency ?? fallbackCurrency, Number(amount));
+    formatMoney(currency ?? fallbackCurrency, Number(amount), { locale });
 
   const ticketsSold = Number(primary.tickets_sold ?? 0);
   const registrations = Number(primary.registrations ?? 0);
@@ -151,7 +153,7 @@ export default function OrganizerOverviewCards({
 
         <StatTile
           label={ticketsLabel}
-          value={ticketsValue.toLocaleString()}
+          value={formatCount(ticketsValue, locale)}
           footer={
             <TrendLine trend={ticketsTrend} comparisonLabel={comparisonLabel} />
           }

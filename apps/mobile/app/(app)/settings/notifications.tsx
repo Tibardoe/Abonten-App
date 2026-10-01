@@ -8,6 +8,7 @@ import {
 } from "@/features/alerts/useAlerts";
 import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
 import { useQueryView } from "@/lib/useQueryView";
+import { formatDate } from "@abonten/core/i18n/format";
 import type { NotificationSubscription } from "@abonten/types/discoveryType";
 import {
   AppText,
@@ -19,7 +20,7 @@ import {
   Refresher,
   Skeleton,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -69,6 +70,7 @@ const KIND_LABEL: Record<NotificationSubscription["kind"], string> = {
 };
 
 export default function NotificationSettings() {
+  const { locale } = useLocale();
   const t = useTranslations("settings");
   const router = useRouter();
   const { program } = useDiscoveryProgram();
@@ -170,10 +172,10 @@ export default function NotificationSettings() {
                   <AppText variant="small" tone="muted">
                     {pausedUntil
                       ? t("alertsAndPicksArePausedUntil2", {
-                          toLocaleDateString: pausedUntil.toLocaleDateString(
-                            undefined,
-                            { day: "numeric", month: "short" },
-                          ),
+                          toLocaleDateString: formatDate(pausedUntil, locale, {
+                            day: "numeric",
+                            month: "short",
+                          }),
                         })
                       : t("pauseAlertsAndPicksForTwo")}
                   </AppText>

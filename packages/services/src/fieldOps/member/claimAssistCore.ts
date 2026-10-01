@@ -18,6 +18,7 @@ import {
   appendTimeline,
   mapOnboarding,
 } from "../shared/onboardingRows";
+import { TIMELINE_NOTE } from "../shared/timelineNotes";
 
 // Claim assistance: the business is already on Abonten, but the listing is
 // unclaimed (or claimed by the wrong person). Rather than creating a second
@@ -187,7 +188,7 @@ export async function submitClaimAssistCore(
     status: "submitted",
     actorUserId: userId,
     actorKind: "member",
-    note: `Claim filed for ${place.name}`,
+    note: TIMELINE_NOTE.claimFiledFor(place.name),
     details: { claimRequestId: claimId },
   });
 

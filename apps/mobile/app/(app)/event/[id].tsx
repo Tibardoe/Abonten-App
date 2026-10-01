@@ -59,6 +59,7 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import {
+  getCurrentLocale,
   translatorFor,
   useLocale,
   useTranslations,
@@ -83,7 +84,10 @@ function priceRange(tickets: { price: number; currency: string }[]): string {
   if (min === 0) return translatorFor("events")("freeEntry");
   const currency = tickets[0]?.currency ?? "";
   return translatorFor("events")("from", {
-    formatMoney: formatMoney(currency, min, { trimZeroFraction: true }),
+    formatMoney: formatMoney(currency, min, {
+      trimZeroFraction: true,
+      locale: getCurrentLocale(),
+    }),
   });
 }
 
@@ -378,7 +382,7 @@ export default function EventDetailScreen() {
                   <Icon name="people" size={13} color="#fff" />
                   <AppText className="text-[12px] font-semibold text-white">
                     {t("going", {
-                      toLocaleString: attendanceCount.toLocaleString(),
+                      count: attendanceCount,
                     })}
                   </AppText>
                 </View>
@@ -534,7 +538,7 @@ export default function EventDetailScreen() {
               <InfoRow
                 icon="people-outline"
                 label={t("going", {
-                  toLocaleString: attendanceCount.toLocaleString(),
+                  count: attendanceCount,
                 })}
                 sub={
                   event.capacity

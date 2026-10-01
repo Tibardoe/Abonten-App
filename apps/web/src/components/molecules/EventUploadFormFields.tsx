@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { TICKET_MODE } from "@/events/ticketMode";
 import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import PlaceSearchSelect from "@/places/molecules/PlaceSearchSelect";
 import { useTranslations } from "next-intl";
@@ -328,7 +329,7 @@ export default function EventUploadFormFields({
               handleChecked={handleChecked}
             />
 
-            {ticket === t("singleTicketType") && (
+            {ticket === TICKET_MODE.single && (
               <TicketInputs
                 ticketType={ticket}
                 singleTicketPrice={singleTicket}
@@ -338,7 +339,7 @@ export default function EventUploadFormFields({
               />
             )}
 
-            {ticket === t("multipleTicketTypes") && (
+            {ticket === TICKET_MODE.multiple && (
               <TicketInputs
                 ticketType={ticket}
                 multipleTickets={multipleTickets}

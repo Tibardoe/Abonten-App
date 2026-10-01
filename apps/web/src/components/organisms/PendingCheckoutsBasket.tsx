@@ -24,7 +24,7 @@ import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -42,6 +42,7 @@ const QUERY_KEY = PENDING_CHECKOUTS_QUERY_KEY;
 export default function PendingCheckoutsBasket({
   initialSessions,
 }: PendingCheckoutsBasketProps) {
+  const locale = useLocale();
   const t = useTranslations("common");
 
   const queryClient = useQueryClient();
@@ -594,27 +595,27 @@ export default function PendingCheckoutsBasket({
         </p>
         <div className="flex justify-between text-sm text-muted-foreground">
           <p>{t("selectedSubtotal")}</p>
-          <p>{formatMoney(currency, selectedGrossSubtotal)}</p>
+          <p>{formatMoney(currency, selectedGrossSubtotal, { locale })}</p>
         </div>
         {selectedDiscount > 0 && (
           <div className="flex justify-between text-sm text-muted-foreground">
             <p>{t("discount2")}</p>
-            <p>-{formatMoney(currency, selectedDiscount)}</p>
+            <p>-{formatMoney(currency, selectedDiscount, { locale })}</p>
           </div>
         )}
         <div className="flex justify-between text-sm text-muted-foreground">
           <p>{t("serviceFee")}</p>
-          <p>{formatMoney(currency, selectedFee)}</p>
+          <p>{formatMoney(currency, selectedFee, { locale })}</p>
         </div>
         {selectedTax > 0 && (
           <div className="flex justify-between text-sm text-muted-foreground">
             <p>{taxLabel}</p>
-            <p>{formatMoney(currency, selectedTax)}</p>
+            <p>{formatMoney(currency, selectedTax, { locale })}</p>
           </div>
         )}
         <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
           <p>{t("total")}</p>
-          <p>{formatMoney(currency, selectedGrandTotal)}</p>
+          <p>{formatMoney(currency, selectedGrandTotal, { locale })}</p>
         </div>
       </div>
 
@@ -622,7 +623,7 @@ export default function PendingCheckoutsBasket({
         isExpanded={isPaymentPanelExpanded}
         onToggle={() => setIsPaymentPanelExpanded((prev) => !prev)}
         toggleDisabled={isPaymentInFlight}
-        totalLabel={formatMoney(currency, selectedGrandTotal)}
+        totalLabel={formatMoney(currency, selectedGrandTotal, { locale })}
         statusText={
           selectedSessions.length === 0
             ? t("noCheckoutSelected")

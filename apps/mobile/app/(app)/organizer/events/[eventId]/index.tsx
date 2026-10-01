@@ -15,7 +15,11 @@ import type {
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Chip, Overline, Refresher } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
@@ -32,7 +36,7 @@ const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null | undefined, amount: number): string {
-  return formatMoney(currency, amount);
+  return formatMoney(currency, amount, { locale: getCurrentLocale() });
 }
 
 function SectionTitle({ children }: { children: string }) {
@@ -246,6 +250,7 @@ function TicketTypesSection({
 }: {
   rows: EventInsightsTicketTypeRow[];
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   return (
@@ -288,14 +293,13 @@ function TicketTypesSection({
                 <View className="flex-row justify-between">
                   <AppText variant="muted">
                     {price > 0
-                      ? `${row.currency ?? ""} ${price.toLocaleString()}`.trim()
+                      ? formatMoney(row.currency, price, { locale })
                       : t("free")}
                   </AppText>
                   {revenue > 0 ? (
                     <AppText variant="muted">
-                      {row.currency ?? ""}{" "}
                       {t("revenue", {
-                        toLocaleString: revenue.toLocaleString(),
+                        amount: formatMoney(row.currency, revenue, { locale }),
                       })}
                     </AppText>
                   ) : null}
@@ -314,7 +318,15 @@ function TicketTypesSection({
   );
 }
 
-function PromoSection({ rows }: { rows: EventInsightsPromoRow[] }) {
+function PromoSection({
+  rows,
+  currency,
+}: {
+  rows: EventInsightsPromoRow[];
+  /** The event's currency: a discount is an amount of money. */
+  currency: string | null;
+}) {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   return (
@@ -344,7 +356,9 @@ function PromoSection({ rows }: { rows: EventInsightsPromoRow[] }) {
               </View>
               <AppText className="shrink-0 text-sm font-medium text-foreground">
                 {t("discount", {
-                  toLocaleString: n(row.total_discount).toLocaleString(),
+                  amount: formatMoney(currency, n(row.total_discount), {
+                    locale,
+                  }),
                 })}
               </AppText>
             </View>
@@ -585,7 +599,10 @@ export default function EventInsightsScreen() {
 
           <FinanceSection finance={insights.finance} period={period} />
           <TicketTypesSection rows={insights.ticketTypes} />
-          <PromoSection rows={insights.promos} />
+          <PromoSection
+            rows={insights.promos}
+            currency={insights.overview?.currency ?? null}
+          />
           {insights.dates.hasOccurrences ? (
             <DateSection rows={insights.dates.rows} />
           ) : null}

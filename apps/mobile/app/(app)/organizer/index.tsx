@@ -14,6 +14,7 @@ import type {
   OrganizerOverviewRow,
 } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCount } from "@abonten/core/i18n/format";
 import {
   AppText,
   Chip,
@@ -22,7 +23,11 @@ import {
   Overline,
   Refresher,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -37,7 +42,7 @@ const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null, amount: number | string): string {
-  return formatMoney(currency, n(amount));
+  return formatMoney(currency, n(amount), { locale: getCurrentLocale() });
 }
 
 // Percent change vs. the previous period. null when there's no comparable
@@ -158,6 +163,7 @@ function NavRow({ href, label }: { href: string; label: string }) {
 }
 
 export default function OrganizerDashboard() {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("30d");
@@ -298,13 +304,13 @@ export default function OrganizerDashboard() {
               <KpiMini
                 label={t("ticketsSold2")}
                 icon="ticket-outline"
-                value={n(head?.tickets_sold).toLocaleString()}
+                value={formatCount(n(head?.tickets_sold), locale)}
                 delta={period === "all" ? undefined : ticketsDelta}
               />
               <KpiMini
                 label={t("activeEvents")}
                 icon="calendar-outline"
-                value={n(head?.active_events_count).toLocaleString()}
+                value={formatCount(n(head?.active_events_count), locale)}
               />
             </View>
           </View>
@@ -326,11 +332,14 @@ export default function OrganizerDashboard() {
             <View className="flex-row flex-wrap gap-y-3">
               <MetricRow
                 label={t("paidOrders")}
-                value={n(moneyRows[0]?.paid_orders).toLocaleString()}
+                value={formatCount(n(moneyRows[0]?.paid_orders), locale)}
               />
               <MetricRow
                 label={t("buyers")}
-                value={n(moneyRows[0]?.distinct_purchasers).toLocaleString()}
+                value={formatCount(
+                  n(moneyRows[0]?.distinct_purchasers),
+                  locale,
+                )}
               />
               <MetricRow
                 label={t("discounts")}
@@ -341,19 +350,19 @@ export default function OrganizerDashboard() {
               />
               <MetricRow
                 label={t("registrations")}
-                value={n(head?.registrations).toLocaleString()}
+                value={formatCount(n(head?.registrations), locale)}
               />
               <MetricRow
                 label={t("cancelled")}
-                value={n(head?.tickets_cancelled).toLocaleString()}
+                value={formatCount(n(head?.tickets_cancelled), locale)}
               />
               <MetricRow
                 label={t("upcomingEvents")}
-                value={n(head?.upcoming_events_count).toLocaleString()}
+                value={formatCount(n(head?.upcoming_events_count), locale)}
               />
               <MetricRow
                 label={t("totalEvents")}
-                value={n(head?.total_events_count).toLocaleString()}
+                value={formatCount(n(head?.total_events_count), locale)}
               />
             </View>
           </View>

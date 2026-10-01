@@ -8,6 +8,7 @@ import { logger } from "@abonten/core/logger";
 import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
+  SINGLE_TICKET_TYPE,
   freeEventPromoCodeProblem,
   freeEventPromoCodesMessage,
   paidTierProblem,
@@ -224,7 +225,7 @@ export async function postEventCore(
         ...(input.singleTicket
           ? [
               {
-                type: "SINGLE TICKET",
+                type: SINGLE_TICKET_TYPE,
                 price: input.singleTicket.price,
                 currency,
                 quantity: input.singleTicket.quantity,

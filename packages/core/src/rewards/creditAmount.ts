@@ -23,20 +23,28 @@ export function majorToCreditMinor(major: number, currency: string): number {
  * The currency's own sign is what people recognise; the same formatter
  * real payments use, so a credit line and a cash line never disagree.
  */
-export function formatCredit(minor: number, currency: string): string {
+export function formatCredit(
+  minor: number,
+  currency: string,
+  locale?: string | null,
+): string {
   const safe = Number.isFinite(minor) ? Math.round(minor) : 0;
   // Copy must never crash a screen: an unknown code shows the bare amount.
   if (!isKnownCurrency(currency)) return (safe / 100).toFixed(2);
-  return formatMoney({ amountMinor: safe, currency });
+  return formatMoney({ amountMinor: safe, currency }, { locale });
 }
 
 /** Like formatCredit but always shows the sign: "+GH₵3.00" / "−GH₵3.00". */
-export function formatCreditDelta(minor: number, currency: string): string {
+export function formatCreditDelta(
+  minor: number,
+  currency: string,
+  locale?: string | null,
+): string {
   const safe = Number.isFinite(minor) ? Math.round(minor) : 0;
   if (!isKnownCurrency(currency))
     return `${safe > 0 ? "+" : safe < 0 ? "−" : ""}${(Math.abs(safe) / 100).toFixed(2)}`;
   return formatMoney(
     { amountMinor: safe, currency },
-    { signDisplay: "always" },
+    { signDisplay: "always", locale },
   );
 }

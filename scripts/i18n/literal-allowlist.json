@@ -9,7 +9,8 @@
     "field ops context resolved": "A Sentry breadcrumb for engineers, never shown to a person.",
     "'Courier New', Courier, monospace": "A CSS font stack.",
     "not found": "Cloudinary's own result code for a missing asset, compared against.",
-    "Helvetica": "A PDF font name (the ticket receipt fallback font)."
+    "Helvetica": "A PDF font name (the ticket receipt fallback font).",
+    "Abonten Hub": "The product name."
   },
   "texts": [
     "Compiled",
@@ -21,7 +22,8 @@
     "field ops context resolved",
     "'Courier New', Courier, monospace",
     "not found",
-    "Helvetica"
+    "Helvetica",
+    "Abonten Hub"
   ],
   "files": [],
   "entries": [
@@ -44,11 +46,6 @@
       "file": "apps/mobile/src/lib/queryErrors.ts",
       "text": "{} not found",
       "reason": "An Error message for logs only; screens show their own not-found state."
-    },
-    {
-      "file": "apps/web/src/events/organisms/ManageEventDetailsSection.tsx",
-      "text": "SINGLE TICKET",
-      "reason": "A value stored in ticket_type.type, compared, never shown."
     },
     {
       "file": "packages/services/src/payments/webhookCore.ts",
@@ -294,6 +291,91 @@
       "file": "packages/services/src/payments/providers/registry.ts",
       "text": "missing {}",
       "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "apps/web/src/events/ticketMode.ts",
+      "text": "Free",
+      "reason": "A ticket-mode code kept in state and sent to postEvent; TicketType words it through the catalog."
+    },
+    {
+      "file": "apps/web/src/events/ticketMode.ts",
+      "text": "Single Ticket Type",
+      "reason": "A ticket-mode code kept in state and sent to postEvent; TicketType words it through the catalog."
+    },
+    {
+      "file": "apps/web/src/events/ticketMode.ts",
+      "text": "Multiple Ticket Types",
+      "reason": "A ticket-mode code kept in state and sent to postEvent; TicketType words it through the catalog."
+    },
+    {
+      "file": "apps/web/src/components/molecules/ReceivingAccountForms.tsx",
+      "text": "Mobile Money",
+      "reason": "The chosen option's code; the button shows the translated label."
+    },
+    {
+      "file": "apps/web/src/components/molecules/ReceivingAccountForms.tsx",
+      "text": "Bank",
+      "reason": "The chosen option's code; the button shows the translated label."
+    },
+    {
+      "file": "packages/core/src/reportError.ts",
+      "text": "Error",
+      "reason": "The fallback error type name in an error report for engineers."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "For customers",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "For organizers",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "For place owners",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "Account, privacy and safety",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "packages/services/src/profile/otpProviders/hubtelOtpProvider.ts",
+      "text": "Hubtel SMS send did not complete: {}",
+      "reason": "A log line and the failure detail stored for staff."
+    },
+    {
+      "file": "packages/services/src/profile/otpProviders/twilioVerifyProvider.ts",
+      "text": "Twilio Verify send did not complete: {}",
+      "reason": "A log line and the failure detail stored for staff."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Owner code sent",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Owner verified their phone",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Claim filed for {}",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Event listed for {}",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Started",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
     }
   ]
 }

@@ -81,17 +81,18 @@ export function ReplyQuote({
     : "text-muted-foreground";
   const glyphColor = onPrimary ? c["primary-foreground"] : c.primary;
 
+  // What the quoted message was, in words: shown under the sender's name.
   const kind = deleted
-    ? "Deleted message"
+    ? t("deletedMessage")
     : isImage
-      ? "Photo"
+      ? t("photo")
       : isVideo
-        ? "Video"
+        ? t("video2")
         : isAudio
-          ? "Voice message"
+          ? t("voiceMessage2")
           : isFile
-            ? "Attachment"
-            : "Message";
+            ? t("attachment")
+            : t("message");
 
   const showThumb = (isImage || isVideo) && !!thumb.data && !deleted;
   const inlineGlyph =

@@ -13,6 +13,7 @@ import {
   buildTicketPdfFilename,
   ticketPdfLabels,
 } from "@abonten/core/ticketPdfData";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { pdf } from "@react-pdf/renderer";
 import { useLocale, useTranslations } from "next-intl";
@@ -141,7 +142,7 @@ export default function TicketModal({
               <p className="text-sm text-muted-foreground mb-2 font-bold">
                 {t("ticketType")}
                 <span className="font-mono text-foreground">
-                  {event.ticket_type.type}
+                  {ticketTypeLabel(tc, event.ticket_type.type)}
                 </span>
               </p>
 
