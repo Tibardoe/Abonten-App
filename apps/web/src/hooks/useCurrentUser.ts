@@ -5,13 +5,23 @@ import { getUserEventRole } from "@/actions/getUserEventRole";
 import { getUserPlaceRole } from "@/actions/getUserPlaceRole";
 import { supabase } from "@/config/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useHydrated } from "./useHydrated";
 
 // A shared, single query key for "who is signed in", so every component
 // that needs it (Header, SideBar, MobileNavBar, review/menu buttons, etc.)
 // shares one cached fetch instead of each calling supabase.auth.getUser()
 // independently under its own key.
+//
+// The server never knows the answer (pages are rendered for everyone), so
+// its HTML is always the "not known yet" view. The browser must start from
+// that same view: the header asks first, and the answer is often in the
+// cache before the rest of the page (inside a Suspense boundary) is
+// attached to its HTML. Without this, a signed-in visitor's event page
+// rendered "loading reviews" over HTML that said "no reviews yet", React
+// threw the server's HTML away and built the page again (error #418).
 export function useCurrentUser() {
-  return useQuery({
+  const hydrated = useHydrated();
+  const query = useQuery({
     queryKey: ["auth-user"],
     queryFn: async () => {
       const { data, error } = await supabase.auth.getUser();
@@ -20,6 +30,16 @@ export function useCurrentUser() {
     },
     staleTime: 60 * 1000,
   });
+  if (hydrated) return query;
+  return {
+    ...query,
+    data: undefined,
+    status: "pending",
+    isPending: true,
+    isLoading: true,
+    isSuccess: false,
+    isFetched: false,
+  } as typeof query;
 }
 
 // Adds the user_info profile row (username, avatar, etc.) on top of

@@ -37,6 +37,13 @@ export type ProfileCompletionGroup = "profile" | "account";
 /** `unverified`: the value exists (or a change is waiting) but isn't confirmed. */
 export type ProfileCompletionItemState = "done" | "missing" | "unverified";
 
+/**
+ * A key of the checklist's own group in the core namespace. Typed as that
+ * group, not as any string, so the web app knows which messages a screen
+ * showing the checklist needs (scripts/i18n/gen-route-messages.mjs).
+ */
+export type ProfileCompletionCopyKey = `profileCompletion.${string}`;
+
 export type ProfileCompletionItem = {
   key: ProfileCompletionItemKey;
   group: ProfileCompletionGroup;
@@ -45,9 +52,9 @@ export type ProfileCompletionItem = {
    * what to do ("Add your email"), what it is once done ("Email verified"),
    * and why it helps — only what the product really does with it.
    */
-  labelKey: string;
-  doneLabelKey: string;
-  descriptionKey: string;
+  labelKey: ProfileCompletionCopyKey;
+  doneLabelKey: ProfileCompletionCopyKey;
+  descriptionKey: ProfileCompletionCopyKey;
   state: ProfileCompletionItemState;
   complete: boolean;
   /** Web settings route that completes it; mobile maps it to its own screen. */

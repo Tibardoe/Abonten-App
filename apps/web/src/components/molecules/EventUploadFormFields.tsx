@@ -308,7 +308,7 @@ export default function EventUploadFormFields({
                   <FormControl>
                     <PostInput
                       type="text"
-                      inputPlaceholder="Website (optional)"
+                      inputPlaceholder={t("websiteOptional")}
                       {...field}
                     />
                   </FormControl>

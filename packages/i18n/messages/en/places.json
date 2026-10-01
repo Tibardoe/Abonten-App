@@ -495,5 +495,8 @@
   "yourCoverIsUnchangedPleaseTry": "Your cover is unchanged. Please try again.",
   "yourPlaceNeedsACoverPhoto": "Your place needs a cover photo.",
   "yourReview": "Your Review",
-  "placeKind": "Place"
+  "placeKind": "Place",
+  "websiteOptional": "Website (optional)",
+  "whatsappOptional": "WhatsApp (optional)",
+  "checkTheBasicInfoStep": "Some details are missing. Check the name, category, description and address."
 }

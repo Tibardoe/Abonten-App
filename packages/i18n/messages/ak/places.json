@@ -456,9 +456,11 @@
   "weNeedYourLocationToCheck": "We need your location to check you in. Allow location for this site and try again.",
   "website": "Website: {website_url}",
   "website2": "Website",
+  "websiteOptional": "Website (optional)",
   "weeklyHours": "Weekly hours",
   "whatShouldVisitorsKnowAboutThis": "What should visitors know about this place?",
   "whatsapp": "WhatsApp: {whatsapp}",
+  "whatsappOptional": "WhatsApp (optional)",
   "whyAreYouTheOwnerOptional": "Why are you the owner? (optional)",
   "wizardSteps": {
     "basics": {
@@ -495,5 +497,6 @@
   "yourClaimRequestHasBeenSubmitted": "Your claim request has been submitted. An admin will review it soon.",
   "yourCoverIsUnchangedPleaseTry": "Your cover is unchanged. Please try again.",
   "yourPlaceNeedsACoverPhoto": "Your place needs a cover photo.",
-  "yourReview": "Your Review"
+  "yourReview": "Your Review",
+  "checkTheBasicInfoStep": "Some details are missing. Check the name, category, description and address."
 }

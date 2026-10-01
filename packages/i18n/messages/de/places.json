@@ -456,9 +456,11 @@
   "weNeedYourLocationToCheck": "Wir brauchen deinen Standort, um dich einzuchecken. Erlaube den Standortzugriff für diese Website und versuche es erneut.",
   "website": "Website: {website_url}",
   "website2": "Website",
+  "websiteOptional": "Website (optional)",
   "weeklyHours": "Wöchentliche Öffnungszeiten",
   "whatShouldVisitorsKnowAboutThis": "Was sollten Besucher über diesen Ort wissen?",
   "whatsapp": "WhatsApp: {whatsapp}",
+  "whatsappOptional": "WhatsApp (optional)",
   "whyAreYouTheOwnerOptional": "Warum bist du der Inhaber? (optional)",
   "wizardSteps": {
     "basics": {
@@ -495,5 +497,6 @@
   "yourClaimRequestHasBeenSubmitted": "Dein Anspruch wurde eingereicht. Ein Admin wird ihn prüfen.",
   "yourCoverIsUnchangedPleaseTry": "Dein Titelbild ist unverändert. Bitte versuche es erneut.",
   "yourPlaceNeedsACoverPhoto": "Dein Ort braucht ein Titelbild.",
-  "yourReview": "Deine Bewertung"
+  "yourReview": "Deine Bewertung",
+  "checkTheBasicInfoStep": "Es fehlen noch Angaben. Prüfe Name, Kategorie, Beschreibung und Adresse."
 }

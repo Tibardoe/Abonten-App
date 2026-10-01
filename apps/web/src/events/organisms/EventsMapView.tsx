@@ -1,12 +1,13 @@
 "use client";
 
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { UserPostType } from "@abonten/types/postsType";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,8 +17,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoClose, IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import NoEventsFound from "../molecules/NoEventsFound";
-
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
 
 const containerClass =
   "w-full h-[500px] md:h-[600px] rounded-lg overflow-hidden";
@@ -50,15 +49,7 @@ export default function EventsMapView({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Google Maps API key is missing.");
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   // Parsed once per `events` change — UserPostType.location is a raw
   // PostGIS WKB hex string (see parseWKBHex.ts). An event with a

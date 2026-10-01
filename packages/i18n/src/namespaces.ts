@@ -12,6 +12,7 @@ export const I18N_NAMESPACES = [
   "discovery",
   "events",
   "explore",
+  "fatal",
   "fieldOps",
   "finances",
   "help",

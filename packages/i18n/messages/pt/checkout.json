@@ -53,6 +53,7 @@
   "orderProcessedSuccessfully": "Encomenda processada com sucesso!",
   "orderSummary": "Resumo da encomenda",
   "orderSummary2": "Resumo da encomenda",
+  "paidWithAmountCredit": "Pago com {amount} de crédito",
   "paidWithCredit": "Pago com crédito",
   "past": "passado",
   "past2": " · passado",
@@ -116,11 +117,13 @@
   "total": "Total",
   "unavailable": "Indisponível",
   "viewMyTicket": "Ver o meu bilhete",
+  "viewMyTickets": "Ver os meus bilhetes",
   "walletAdded": "Método de pagamento adicionado",
   "walletSaved": "Método de pagamento guardado",
   "youAlreadyHaveATicketFor": "Já tem um bilhete para este evento.",
   "youReGoing": "Vai participar",
   "youReIn": "Está inscrito",
+  "yourOrder": "A sua encomenda",
   "yourPaymentCouldNotBeCompleted": "Não foi possível concluir o seu pagamento.",
   "yourPaymentIsStillBeingConfirmed": "O seu pagamento ainda está a ser confirmado. Normalmente fica resolvido em menos de um minuto.",
   "yourPaymentWasSuccessfulWeRe": "O seu pagamento foi bem-sucedido. Estamos a concluir a sua promoção — toque em Tentar novamente para terminar.",
@@ -128,8 +131,5 @@
   "yourPaymentWentThroughButThe": "O seu pagamento foi processado, mas a promoção ainda não está ativa. Tente novamente agora — não será cobrado outra vez.",
   "yourPaymentWentThroughButThe2": "O seu pagamento foi processado, mas a promoção ainda não chegou à revisão. Tente novamente agora — não será cobrado outra vez.",
   "yourPaymentWentThroughButWe": "O seu pagamento foi processado, mas ainda não emitimos o seu bilhete. Tente novamente agora — não será cobrado outra vez.",
-  "yourSeatsAreHeldForA": "Os seus lugares ficam reservados por tempo limitado.",
-  "yourOrder": "A sua encomenda",
-  "paidWithAmountCredit": "Pago com {amount} de crédito",
-  "viewMyTickets": "Ver os meus bilhetes"
+  "yourSeatsAreHeldForA": "Os seus lugares ficam reservados por tempo limitado."
 }

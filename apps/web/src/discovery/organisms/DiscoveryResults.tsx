@@ -418,17 +418,13 @@ export default function DiscoveryResults({
                       href={hrefFor(request, { mode: section.key })}
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      {t("seeAll", {
-                        toLowerCase: section.title.toLowerCase(),
-                      })}
+                      {t("seeAll", { section: section.key })}
                     </Link>
                   ) : null}
                 </div>
                 {section.group.error ? (
                   <InlineErrorRetry
-                    message={t("couldnTLoad", {
-                      toLowerCase: section.title.toLowerCase(),
-                    })}
+                    message={t("couldnTLoad", { section: section.key })}
                     onRetry={() => window.location.reload()}
                   />
                 ) : (

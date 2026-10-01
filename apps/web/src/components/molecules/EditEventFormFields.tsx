@@ -224,7 +224,7 @@ export default function EditEventFormFields({
                   <FormControl>
                     <PostInput
                       type="text"
-                      inputPlaceholder="Website (optional)"
+                      inputPlaceholder={t("websiteOptional")}
                       {...field}
                     />
                   </FormControl>

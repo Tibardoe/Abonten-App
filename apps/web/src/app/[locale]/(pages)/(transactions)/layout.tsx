@@ -1,3 +1,4 @@
+import SegmentMessages from "@/i18n/SegmentMessages";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
@@ -22,8 +23,10 @@ export default async function layout({
   children: React.ReactNode;
 }>) {
   return (
-    <div>
-      <section className="flex flex-col w-full gap-10">{children}</section>
-    </div>
+    <SegmentMessages segment="(transactions)">
+      <div>
+        <section className="flex flex-col w-full gap-10">{children}</section>
+      </div>
+    </SegmentMessages>
   );
 }

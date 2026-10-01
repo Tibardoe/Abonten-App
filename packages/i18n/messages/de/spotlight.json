@@ -326,6 +326,7 @@
   "signInToReplyToStories": "Melde dich an, um auf Stories zu antworten.",
   "signInToSeeSpotlightsFrom": "Melde dich an, um Spotlights von Leuten zu sehen, denen du folgst.",
   "someFilesDidnTUploadFix": "Einige Dateien wurden nicht hochgeladen. Behebe das und versuche es erneut.",
+  "someone": "Jemand",
   "somethingWentWrong": "Etwas ist schiefgelaufen.",
   "somethingWentWrongPleaseTryAgain": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   "speed": "Geschwindigkeit {formatSpeed}",
@@ -444,6 +445,5 @@
   "yourSpotlightIsLive": "Dein Spotlight ist live.",
   "yourSpotlightIsLive2": "Dein Spotlight ist live",
   "yourStoryIsLive": "Deine Story ist live.",
-  "yourStoryIsLive2": "Deine Story ist live",
-  "someone": "Jemand"
+  "yourStoryIsLive2": "Deine Story ist live"
 }

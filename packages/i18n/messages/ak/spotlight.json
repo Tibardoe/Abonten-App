@@ -326,6 +326,7 @@
   "signInToReplyToStories": "Sign in to reply to Stories.",
   "signInToSeeSpotlightsFrom": "Sign in to see Spotlights from the people you follow.",
   "someFilesDidnTUploadFix": "Some files didn't upload. Fix them and try again.",
+  "someone": "Someone",
   "somethingWentWrong": "Something went wrong.",
   "somethingWentWrongPleaseTryAgain": "Something went wrong. Please try again.",
   "speed": "{formatSpeed} speed",
@@ -444,6 +445,5 @@
   "yourSpotlightIsLive": "Your Spotlight is live.",
   "yourSpotlightIsLive2": "Your Spotlight is live",
   "yourStoryIsLive": "Your Story is live.",
-  "yourStoryIsLive2": "Your Story is live",
-  "someone": "Someone"
+  "yourStoryIsLive2": "Your Story is live"
 }

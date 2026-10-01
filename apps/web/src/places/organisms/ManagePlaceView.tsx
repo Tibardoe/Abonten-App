@@ -1,6 +1,6 @@
 "use client";
 
-import EventUploadModal from "@/components/organisms/EventUploadModal";
+import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import ManagePlaceBookingsSection from "@/places/organisms/ManagePlaceBookingsSection";
 import ManagePlaceDetailsSection from "@/places/organisms/ManagePlaceDetailsSection";

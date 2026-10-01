@@ -20,8 +20,12 @@ export type PlaceSetupItemKey =
 
 export type PlaceSetupItem = {
   key: PlaceSetupItemKey;
-  /** Key under the core namespace; render with placeSetupItemLabel. */
-  labelKey: string;
+  /**
+   * Key under the core namespace; render with placeSetupItemLabel. Typed
+   * as the checklist's own group, so the web app knows which messages a
+   * screen showing it needs (scripts/i18n/gen-route-messages.mjs).
+   */
+  labelKey: `placeSetup.${string}`;
   complete: boolean;
   /** Which tab of the manage screen this item lives on. */
   tab: "photos" | "hours" | "details" | "services" | "verification";

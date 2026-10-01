@@ -20,6 +20,7 @@
   "abontenIsnTAvailableInThis": "Abonten ist in diesem Land noch nicht verfügbar.",
   "abontenIsnTAvailableInYet": "Abonten ist hier noch nicht verfügbar: {name}.",
   "abontenIsnTTakingNewListings": "Abonten nimmt derzeit hier keine neuen Einträge an: {name}.",
+  "abontenOrder": "Abonten-Bestellung",
   "abontenWeeklyIsNotAvailableFor": "Abonten Weekly ist für diese Gegend nicht verfügbar.",
   "addAStorefrontPhotoAndAn": "Füge vor dem Einreichen ein Foto der Außenansicht und ein Foto des Innenraums hinzu.",
   "addAnEmailAddressToYour": "Füge deinem Konto zuerst eine E-Mail-Adresse hinzu.",
@@ -574,6 +575,13 @@
   "failedToSaveDraft": "Entwurf konnte nicht gespeichert werden: {reason}",
   "failedToStartPaymentPleaseTry": "Zahlung konnte nicht gestartet werden. Bitte versuche es erneut.",
   "failedWithDetail": "{what}: {detail}",
+  "fieldOpsTimeline": {
+    "claimFiledFor": "Anspruch eingereicht für {name}",
+    "eventListedFor": "Event eingetragen für {date}",
+    "ownerCodeSent": "Code an den Inhaber gesendet",
+    "ownerVerified": "Der Inhaber hat sein Telefon bestätigt",
+    "started": "Begonnen"
+  },
   "flyerUploadFailed": "Flyer-Upload fehlgeschlagen.",
   "flyerUploadToCloudinaryFailed": "Flyer-Upload zu Cloudinary fehlgeschlagen.",
   "fromAnOrganizerYouFollow": "Von einem Veranstalter, dem du folgst",
@@ -712,6 +720,7 @@
   "openingHoursUpdatedSuccessfully": "Öffnungszeiten erfolgreich aktualisiert!",
   "openinghoursArrayIsRequired": "openingHours (Array) ist erforderlich",
   "openinghoursMustBeAnArray": "openingHours muss ein Array sein",
+  "organizerFallbackName": "Veranstalter",
   "organizerNotFound": "Veranstalter nicht gefunden.",
   "organizerTypeOnlyAppliesToOrganizer": "Der Veranstaltertyp gilt nur für die Veranstalter-Verifizierung.",
   "otpIsRequired": "otp is required",
@@ -1107,6 +1116,7 @@
   "unknownPlatform": "Unbekannte Plattform.",
   "unknownReview": "Unbekannte Bewertung.",
   "unknownSubscription": "Unbekanntes Abonnement.",
+  "unnamedArea": "Unbenannte Gegend",
   "unsupportedFileFormat": "Nicht unterstütztes Dateiformat.",
   "unsupportedLocale": "Nicht unterstützte Sprache",
   "unsupportedMediaType": "Nicht unterstützter Medientyp",
@@ -1224,15 +1234,5 @@
   "yourRefundIsInProgressBut": "Deine Erstattung läuft, aber wir konnten dein Guthaben noch nicht zurückbuchen. Bitte versuche es erneut oder wende dich an den Support.",
   "yourRefundWasStartedButWe": "Deine Erstattung wurde gestartet, aber wir konnten dein Guthaben noch nicht zurückbuchen. Bitte versuche es erneut oder wende dich an den Support.",
   "yourRoleCanTDoThis": "Deine Rolle darf das nicht",
-  "yourSpotlight": "Dein Spotlight",
-  "abontenOrder": "Abonten-Bestellung",
-  "unnamedArea": "Unbenannte Gegend",
-  "organizerFallbackName": "Veranstalter",
-  "fieldOpsTimeline": {
-    "started": "Begonnen",
-    "ownerCodeSent": "Code an den Inhaber gesendet",
-    "ownerVerified": "Der Inhaber hat sein Telefon bestätigt",
-    "claimFiledFor": "Anspruch eingereicht für {name}",
-    "eventListedFor": "Event eingetragen für {date}"
-  }
+  "yourSpotlight": "Dein Spotlight"
 }

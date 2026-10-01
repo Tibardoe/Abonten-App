@@ -3,9 +3,25 @@ import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { undoSlug } from "@abonten/core/geerateSlug";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import SearchTitleResultsList from "./SearchTitleResultsList";
+
+// The same title and indexing rule as /search: the tab says what was
+// searched for, and result pages are not for search engines.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ searchTitle: string }>;
+}): Promise<Metadata> {
+  const t = await getTranslations("search");
+  const query = undoSlug((await params).searchTitle);
+  return {
+    title: query ? t("search2", { slice: query.slice(0, 60) }) : t("search"),
+    robots: { index: false, follow: true },
+  };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

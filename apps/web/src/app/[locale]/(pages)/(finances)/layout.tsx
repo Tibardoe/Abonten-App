@@ -1,6 +1,7 @@
 import PageHeader from "@/components/molecules/PageHeader";
 import FinancesDesktopSidebar from "@/finances/organisms/FinancesDesktopSidebar";
 import FinancesMobileTabs from "@/finances/organisms/FinancesMobileTabs";
+import SegmentMessages from "@/i18n/SegmentMessages";
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -28,18 +29,20 @@ export default function FinancesLayout({
   const t = useTranslations("finances");
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader title={t("finances")} />
+    <SegmentMessages segment="(finances)">
+      <div className="flex flex-col gap-6">
+        <PageHeader title={t("finances")} />
 
-      <FinancesMobileTabs />
+        <FinancesMobileTabs />
 
-      <section className="flex flex-col lg:flex-row lg:gap-10">
-        <div className="hidden lg:block">
-          <FinancesDesktopSidebar />
-        </div>
+        <section className="flex flex-col lg:flex-row lg:gap-10">
+          <div className="hidden lg:block">
+            <FinancesDesktopSidebar />
+          </div>
 
-        <div className="flex-1 min-w-0">{children}</div>
-      </section>
-    </div>
+          <div className="flex-1 min-w-0">{children}</div>
+        </section>
+      </div>
+    </SegmentMessages>
   );
 }

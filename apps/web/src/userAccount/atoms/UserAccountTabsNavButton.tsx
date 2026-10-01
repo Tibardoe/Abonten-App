@@ -9,12 +9,11 @@ type TabsNavButtonProp = {
   imgUrl: string;
   text: string;
   username: string;
-  // Route segment this tab links to, when it differs from the display
-  // label (e.g. the "Events" tab's label was renamed from "Posts" per the
-  // Places spec, but the underlying route is still /user/[username]/posts
-  // -- renaming the route itself would break existing links/bookmarks for
-  // no user-facing benefit). Defaults to the lowercased label.
-  path?: string;
+  // Route segment this tab links to: /user/[username]/<path>. Always
+  // given, never worked out from the label: the label is translated
+  // ("Lieux", "Favoris", "Avis"), and a link built from it led French,
+  // Spanish, German and Portuguese readers to a page that does not exist.
+  path: "posts" | "places" | "spotlight" | "favorites" | "reviews";
 };
 
 export default function UserAccountTabsNavButton({
@@ -25,7 +24,7 @@ export default function UserAccountTabsNavButton({
 }: TabsNavButtonProp) {
   const pathname = usePathname();
 
-  const href = `/user/${username}/${path ?? text.toLowerCase()}`;
+  const href = `/user/${username}/${path}`;
   const isActive = pathname === href;
 
   return (

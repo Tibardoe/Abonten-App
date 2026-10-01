@@ -53,6 +53,7 @@
   "orderProcessedSuccessfully": "Bestellung erfolgreich verarbeitet!",
   "orderSummary": "Bestellübersicht",
   "orderSummary2": "Bestellübersicht",
+  "paidWithAmountCredit": "Mit {amount} Guthaben bezahlt",
   "paidWithCredit": "Mit Guthaben bezahlt",
   "past": "vorbei",
   "past2": " · vorbei",
@@ -116,11 +117,13 @@
   "total": "Gesamt",
   "unavailable": "Nicht verfügbar",
   "viewMyTicket": "Mein Ticket ansehen",
+  "viewMyTickets": "Meine Tickets ansehen",
   "walletAdded": "Zahlungsmethode hinzugefügt",
   "walletSaved": "Zahlungsmethode gespeichert",
   "youAlreadyHaveATicketFor": "Du hast bereits ein Ticket für dieses Event.",
   "youReGoing": "Du bist dabei",
   "youReIn": "Du bist dabei",
+  "yourOrder": "Deine Bestellung",
   "yourPaymentCouldNotBeCompleted": "Deine Zahlung konnte nicht abgeschlossen werden.",
   "yourPaymentIsStillBeingConfirmed": "Deine Zahlung wird noch bestätigt. Das dauert meist weniger als eine Minute.",
   "yourPaymentWasSuccessfulWeRe": "Deine Zahlung war erfolgreich. Wir schließen deine Promotion gerade ab — tippe auf „Erneut versuchen“, um fertigzustellen.",
@@ -128,8 +131,5 @@
   "yourPaymentWentThroughButThe": "Deine Zahlung ist durchgegangen, aber die Promotion ist noch nicht aktiv. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
   "yourPaymentWentThroughButThe2": "Deine Zahlung ist durchgegangen, aber die Promotion ist noch nicht in der Prüfung. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
   "yourPaymentWentThroughButWe": "Deine Zahlung ist durchgegangen, aber dein Ticket wurde noch nicht ausgestellt. Versuche es jetzt erneut — dir wird nichts doppelt berechnet.",
-  "yourSeatsAreHeldForA": "Deine Plätze sind für begrenzte Zeit reserviert.",
-  "yourOrder": "Deine Bestellung",
-  "paidWithAmountCredit": "Mit {amount} Guthaben bezahlt",
-  "viewMyTickets": "Meine Tickets ansehen"
+  "yourSeatsAreHeldForA": "Deine Plätze sind für begrenzte Zeit reserviert."
 }

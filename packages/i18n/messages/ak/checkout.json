@@ -53,6 +53,7 @@
   "orderProcessedSuccessfully": "Order processed successfully!",
   "orderSummary": "Order Summary",
   "orderSummary2": "Order summary",
+  "paidWithAmountCredit": "Paid with {amount} credit",
   "paidWithCredit": "Paid with credit",
   "past": "past",
   "past2": " · past",
@@ -116,11 +117,13 @@
   "total": "Total",
   "unavailable": "Unavailable",
   "viewMyTicket": "View my ticket",
+  "viewMyTickets": "View my tickets",
   "walletAdded": "Wallet added",
   "walletSaved": "Wallet saved",
   "youAlreadyHaveATicketFor": "You already have a ticket for this event.",
   "youReGoing": "You're going",
   "youReIn": "You're in",
+  "yourOrder": "Your order",
   "yourPaymentCouldNotBeCompleted": "Your payment could not be completed.",
   "yourPaymentIsStillBeingConfirmed": "Your payment is still being confirmed. This usually clears within a minute.",
   "yourPaymentWasSuccessfulWeRe": "Your payment was successful. We're completing your promotion now — tap Retry to finish.",
@@ -128,8 +131,5 @@
   "yourPaymentWentThroughButThe": "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButThe2": "Your payment went through, but the promotion hasn't reached review yet. Retry now — you won't be charged again.",
   "yourPaymentWentThroughButWe": "Your payment went through, but we haven't issued your ticket yet. Retry now — you won't be charged again.",
-  "yourSeatsAreHeldForA": "Your seats are held for a limited time.",
-  "yourOrder": "Your order",
-  "paidWithAmountCredit": "Paid with {amount} credit",
-  "viewMyTickets": "View my tickets"
+  "yourSeatsAreHeldForA": "Your seats are held for a limited time."
 }

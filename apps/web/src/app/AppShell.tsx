@@ -1,12 +1,12 @@
 import "./globals.css";
 import { euclidCircular } from "@/app/fonts";
 import LocaleProvider from "@/i18n/LocaleProvider";
+import RootMessages from "@/i18n/RootMessages";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
 import ToastProvider from "@/providers/ToastProvider";
 import InviteBinder from "@/rewards/atoms/InviteBinder";
 import ReferralTouchLogger from "@/rewards/atoms/ReferralTouchLogger";
-import { NextIntlClientProvider } from "next-intl";
 
 // The document every page is rendered in: <html lang>, the brand font, and
 // the provider stack (theme, language, data cache, toasts). The root layout
@@ -33,9 +33,11 @@ export default function AppShell({
           enableSystem
           disableTransitionOnChange
         >
-          {/* Locale, messages and time zone are inherited from the request
-              configuration (i18n/request.ts) — nothing is passed here. */}
-          <NextIntlClientProvider>
+          {/* Language and time zone come from the request configuration
+              (i18n/request.ts). The browser is handed the messages the
+              site chrome reads; each part of the site adds its own
+              (i18n/SegmentMessages.tsx). */}
+          <RootMessages>
             <LocaleProvider>
               <ReactQueryProvider>
                 <ToastProvider>
@@ -45,7 +47,7 @@ export default function AppShell({
                 </ToastProvider>
               </ReactQueryProvider>
             </LocaleProvider>
-          </NextIntlClientProvider>
+          </RootMessages>
         </ThemeProvider>
       </body>
     </html>

@@ -326,6 +326,7 @@
   "signInToReplyToStories": "Inicia sesión para responder a Stories.",
   "signInToSeeSpotlightsFrom": "Inicia sesión para ver los Spotlights de las personas a las que sigues.",
   "someFilesDidnTUploadFix": "Algunos archivos no se subieron. Corrígelos e inténtalo de nuevo.",
+  "someone": "Alguien",
   "somethingWentWrong": "Algo salió mal.",
   "somethingWentWrongPleaseTryAgain": "Algo salió mal. Inténtalo de nuevo.",
   "speed": "Velocidad {formatSpeed}",
@@ -444,6 +445,5 @@
   "yourSpotlightIsLive": "Tu Spotlight está publicado.",
   "yourSpotlightIsLive2": "Tu Spotlight está publicado",
   "yourStoryIsLive": "Tu Story está publicada.",
-  "yourStoryIsLive2": "Tu Story está publicada",
-  "someone": "Alguien"
+  "yourStoryIsLive2": "Tu Story está publicada"
 }

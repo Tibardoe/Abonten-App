@@ -104,8 +104,6 @@ export function buildWebCsp(options: CspOptions = {}): string {
     "https://res.cloudinary.com",
     // Client-side reverse geocoding + Places
     "https://maps.googleapis.com",
-    // Coarse location fallback in usePlacesAutocomplete / useUserLocation
-    "https://ipapi.co",
     // Paystack inline may call its own API from the host page
     "https://api.paystack.co",
     "https://checkout.paystack.com",

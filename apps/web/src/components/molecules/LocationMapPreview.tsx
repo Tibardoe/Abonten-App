@@ -1,9 +1,8 @@
 "use client";
 
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+import { GoogleMap, Marker } from "@react-google-maps/api";
 
 const containerClass =
   "w-full h-[180px] md:h-[220px] rounded-lg overflow-hidden";
@@ -24,15 +23,7 @@ export default function LocationMapPreview({
   location,
   className,
 }: LocationMapPreviewProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Google Maps API key is missing.");
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   let center: { lat: number; lng: number };
   try {

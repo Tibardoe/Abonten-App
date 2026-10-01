@@ -1,12 +1,12 @@
 "use client";
 
 import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
+import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import NewEventOrDraftChooser from "../molecules/NewEventOrDraftChooser";
-import EventUploadModal from "../organisms/EventUploadModal";
 import { Button } from "../ui/button";
 
 // Single "Post" trigger for event upload at every breakpoint, replacing the

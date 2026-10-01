@@ -120,7 +120,7 @@
   "notificationsAreBlockedForThisSite": "Les notifications sont bloquées pour ce site. Autorisez-les dans les réglages du site de votre navigateur, puis revenez ici.",
   "notificationsAreTurnedOffForAbonten": "Les notifications sont désactivées pour Abonten sur ce téléphone ; rien de ce qui suit ne peut donc vous parvenir.",
   "ofDone": "{done} sur {length} terminés",
-  "ofStepsDone": "{completedCount} étapes sur {total} terminées",
+  "ofStepsDone": "{completedCount, plural, one {# étape terminée} other {# étapes terminées}} sur {total}",
   "onIphoneAndIpadAddAbonten": "Sur iPhone et iPad, ajoutez Abonten Hub à votre écran d'accueil depuis le menu Partager de Safari, puis ouvrez-le depuis cet écran pour activer cette option.",
   "oneStepLeft": "Plus qu'une étape",
   "openSettings": "Ouvrir les réglages",

@@ -250,6 +250,34 @@ export function usePlaceUploadForm({
     return true;
   };
 
+  // "Select a category" and "Address is required" are answers to a try,
+  // not a greeting: they used to sit in red under an untouched form from
+  // the moment it opened.
+  const [hasAttemptedBasicInfo, setHasAttemptedBasicInfo] = useState(false);
+
+  // The first step checks its own fields before the owner moves on. The
+  // steps unmount their fields, so a name left empty here used to surface
+  // only at Publish (step 4), as an error on a field that was no longer on
+  // screen: the button did nothing and said nothing.
+  const validateBasicInfo = async (): Promise<boolean> => {
+    setHasAttemptedBasicInfo(true);
+    const fieldsValid = await form.trigger([
+      "name",
+      "description",
+      "website_url",
+      "phone",
+      "whatsapp",
+    ]);
+    return fieldsValid && categoryId !== null;
+  };
+
+  // Publish refused by the form's own rules (a draft continued with a
+  // field that no longer passes, say): tell the owner where to look.
+  const onInvalidSubmit = () => {
+    setHasAttemptedBasicInfo(true);
+    toast.error(t("checkTheBasicInfoStep"));
+  };
+
   const onSubmit = async (formData: PlaceSchema) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
@@ -340,6 +368,9 @@ export function usePlaceUploadForm({
     isUploading,
     isResolvingLocation,
     onSubmit,
+    onInvalidSubmit,
+    validateBasicInfo,
+    hasAttemptedBasicInfo,
     resolveLocation,
     categoryId,
     setCategoryId,

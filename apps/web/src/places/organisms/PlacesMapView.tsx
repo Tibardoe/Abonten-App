@@ -2,12 +2,13 @@
 
 import StarRatingDisplay from "@/components/atoms/Rating";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,8 +17,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoClose, IoLocationOutline } from "react-icons/io5";
 import PlaceOpenStatusBadge from "../molecules/PlaceOpenStatusBadge";
 import VerifiedBadge from "../molecules/VerifiedBadge";
-
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
 
 const containerClass =
   "w-full h-[500px] md:h-[600px] rounded-lg overflow-hidden";
@@ -31,7 +30,7 @@ type PlaceMarker = { place: PlaceType; lat: number; lng: number };
 // cursor-paginated, since a map can't usefully "load more" the way an
 // infinite list scroll can.
 //
-// Follows MapPicker.tsx's useJsApiLoader/API-key wiring, but unlike that
+// Loads the map the way MapPicker.tsx does (useGoogleMaps), but unlike that
 // component (single draggable marker, fixed zoom/panTo) this renders one
 // static Marker per place and auto-fits the viewport to all of them via
 // map.fitBounds — a small, justified addition not used elsewhere in this
@@ -43,15 +42,7 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Google Maps API key is missing.");
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   // Parsed once per `places` change -- PlaceType.location is a raw PostGIS
   // WKB hex string (see parseWKBHex.ts, already used by GetDirectionBtn.tsx

@@ -11,6 +11,7 @@ import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
 import ExploreEventsList from "./ExploreEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -79,9 +80,9 @@ export default async function page({
 
   const { location, type } = await params;
 
-  if (!validFilters.includes(type as FilterType)) {
-    throw new Error("Invalid heading provided");
-  }
+  // A mistyped or stale link is a page that does not exist, not a failure
+  // of ours: it gets the 404 page, and is not reported as an error.
+  if (!validFilters.includes(type as FilterType)) notFound();
 
   const filter = type as FilterType;
   const safeLocation = location ?? "";

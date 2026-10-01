@@ -1,7 +1,7 @@
 "use client";
 
 import { type EventDraftDetail, getEventDraft } from "@/actions/getEventDraft";
-import EventUploadModal from "@/components/organisms/EventUploadModal";
+import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useTranslations } from "next-intl";

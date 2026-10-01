@@ -1,13 +1,15 @@
 "use client";
 
+import {
+  EventUploadModal,
+  PlaceUploadModal,
+} from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
-import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import EventUploadModal from "../organisms/EventUploadModal";
 
 // Desktop nav-link trigger for creating an Event or a Place (rendered only
 // inside the desktop header). "Create" replaces the old single-purpose

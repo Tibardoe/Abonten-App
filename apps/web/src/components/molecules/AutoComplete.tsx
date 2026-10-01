@@ -55,7 +55,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
       loadError,
       inputValue,
       searchResults,
-      countryCode,
+      countries,
       containerRef,
       autocompleteServiceRef,
       sessionTokenRef,
@@ -126,8 +126,8 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
           const request: google.maps.places.AutocompleteRequest = {
             input: text,
             sessionToken: sessionTokenRef.current,
-            ...(countryCode && {
-              componentRestrictions: { country: countryCode },
+            ...(countries.length > 0 && {
+              componentRestrictions: { country: countries },
             }),
           };
 
@@ -190,7 +190,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
       }),
       [
         inputValue,
-        countryCode,
+        countries,
         autocompleteServiceRef,
         sessionTokenRef,
         handleSelectPrediction,

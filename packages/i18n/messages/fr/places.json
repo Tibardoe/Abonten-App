@@ -456,9 +456,11 @@
   "weNeedYourLocationToCheck": "Nous avons besoin de votre position pour vous enregistrer. Autorisez la localisation pour ce site et réessayez.",
   "website": "Site web : {website_url}",
   "website2": "Site web",
+  "websiteOptional": "Site web (facultatif)",
   "weeklyHours": "Horaires hebdomadaires",
   "whatShouldVisitorsKnowAboutThis": "Que doivent savoir les visiteurs sur ce lieu ?",
   "whatsapp": "WhatsApp : {whatsapp}",
+  "whatsappOptional": "WhatsApp (facultatif)",
   "whyAreYouTheOwnerOptional": "Pourquoi êtes-vous le propriétaire ? (facultatif)",
   "wizardSteps": {
     "basics": {
@@ -495,5 +497,6 @@
   "yourClaimRequestHasBeenSubmitted": "Votre demande de revendication a été envoyée. Un administrateur l'examinera.",
   "yourCoverIsUnchangedPleaseTry": "Votre couverture est inchangée. Veuillez réessayer.",
   "yourPlaceNeedsACoverPhoto": "Votre lieu a besoin d'une photo de couverture.",
-  "yourReview": "Votre avis"
+  "yourReview": "Votre avis",
+  "checkTheBasicInfoStep": "Il manque des informations. Vérifiez le nom, la catégorie, la description et l'adresse."
 }

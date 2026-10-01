@@ -316,6 +316,7 @@
   "overview": "Overview",
   "paidOrders": "Paid orders",
   "paidTickets": "Paid tickets",
+  "paidWithAmountCredit": "Paid with {amount} credit",
   "partySize": "Party size: {party_size}",
   "past": "Past",
   "past2": "Past ({past})",
@@ -380,6 +381,8 @@
   "promoterCommission": "Promoter commission",
   "promoterCommissionReturned": "Promoter commission returned",
   "promoterCommissions": "Promoter commissions",
+  "promotionPaymentDone": "{kind, select, spotlight {View promotion} place {View place} other {View event}}",
+  "promotionPaymentTitle": "{kind, select, spotlight {Promote your Spotlight} place {Feature this place} other {Feature this event}}",
   "publishYourFirstEventToStart": "Publish your first event to start seeing sales here.",
   "published": "Published",
   "qtyOptional": "Qty (optional)",
@@ -586,8 +589,5 @@
   "yourPlaces3": "your places",
   "yourResponse": "Your response",
   "yourTransactions": "your transactions",
-  "yyyyMmDd": "YYYY-MM-DD",
-  "paidWithAmountCredit": "Paid with {amount} credit",
-  "promotionPaymentTitle": "{kind, select, spotlight {Promote your Spotlight} place {Feature this place} other {Feature this event}}",
-  "promotionPaymentDone": "{kind, select, spotlight {View promotion} place {View place} other {View event}}"
+  "yyyyMmDd": "YYYY-MM-DD"
 }

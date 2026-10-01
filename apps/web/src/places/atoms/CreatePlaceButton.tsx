@@ -2,8 +2,8 @@
 
 import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
 import NewPlaceOrDraftChooser from "@/components/molecules/NewPlaceOrDraftChooser";
+import { PlaceUploadModal } from "@/components/organisms/LazyUploadModals";
 import { Button } from "@/components/ui/button";
-import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 

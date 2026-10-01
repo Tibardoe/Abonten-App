@@ -1,8 +1,11 @@
 #!/usr/bin/env node
-// Writes the two generated files that enumerate the translation catalogs:
+// Writes the generated files that enumerate the translation catalogs:
 //
 //   packages/i18n/src/namespaces.ts          — the namespace list the web
 //                                              app's lazy loader iterates;
+//   packages/i18n/src/browserCatalog.generated.ts
+//                                            — one import() per namespace
+//                                              the browser may fetch;
 //   packages/ui-native/src/i18n/catalog.generated.ts
 //                                            — static imports of every
 //                                              (locale, namespace) JSON for
@@ -131,8 +134,32 @@ ${serverEntries.join("\n")}
 };
 `;
 
+const browserTs = `${header}// One import() per namespace the browser may read. The web app sends each
+// page the messages it needs; a namespace it did not send (a dialog that
+// opens later) is fetched from here as its own cached file. The
+// server-only namespaces are not listed, so no bundler ever makes them
+// downloadable.
+
+import type { I18nLocale, I18nNamespace } from "./namespaces";
+
+type Messages = Record<string, unknown>;
+
+export const BROWSER_NAMESPACE_LOADERS: Record<
+  I18nNamespace,
+  (locale: I18nLocale) => Promise<{ default: Messages }>
+> = {
+${namespaces
+  .map(
+    (ns) =>
+      `  ${JSON.stringify(ns)}: (locale) => import(\`../messages/\${locale}/${ns}.json\`),`,
+  )
+  .join("\n")}
+};
+`;
+
 const outputs = [
   [join(ROOT, "packages/i18n/src/namespaces.ts"), namespacesTs],
+  [join(ROOT, "packages/i18n/src/browserCatalog.generated.ts"), browserTs],
   [join(ROOT, "packages/ui-native/src/i18n/catalog.generated.ts"), nativeTs],
   [join(ROOT, "packages/i18n/src/serverCatalog.generated.ts"), serverTs],
 ].map(([path, content]) => [path, biomeFormat(path, content)]);

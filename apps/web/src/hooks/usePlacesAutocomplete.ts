@@ -1,15 +1,14 @@
 "use client";
 
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import { logger } from "@abonten/core/logger";
 import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddressType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
-import { useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-const libraries: "places"[] = ["places"];
 
 type UsePlacesAutocompleteOptions = {
   address?: AutoCompleteAddressType;
@@ -19,8 +18,8 @@ type UsePlacesAutocompleteOptions = {
 
 /**
  * Shared Google Places Autocomplete logic behind AutoComplete.tsx and
- * PostAutoComplete.tsx — script loading, country detection (for restricting
- * suggestions), debounced predictions, session token lifecycle, and
+ * PostAutoComplete.tsx — script loading, which countries to suggest places
+ * in, debounced predictions, session token lifecycle, and
  * place/current-location resolution. Each component only differs in what
  * happens *after* a place is resolved (AutoComplete additionally navigates;
  * PostAutoComplete doesn't), so that part stays in the components
@@ -37,7 +36,19 @@ export function usePlacesAutocomplete({
   const [searchResults, setSearchResults] = useState<
     google.maps.places.AutocompletePrediction[]
   >([]);
-  const [countryCode, setCountryCode] = useState<string | null>(null);
+  // Suggest places in the countries Abonten is open in, not in whichever
+  // country the visitor's connection is in: someone in London planning a
+  // night out in Accra must be able to find Accra. (This used to ask a
+  // third-party IP lookup for the visitor's country on every page with an
+  // address field.) Google takes at most five countries; with more open
+  // markets than that, the one being browsed.
+  const { markets, context } = useMarketContext();
+  const marketCountry = context?.marketCountry ?? null;
+  const countries = useMemo(() => {
+    const open = markets.map((m) => m.countryCode.toLowerCase());
+    if (open.length > 0 && open.length <= 5) return open;
+    return marketCountry ? [marketCountry.toLowerCase()] : [];
+  }, [markets, marketCountry]);
 
   const autocompleteServiceRef =
     useRef<google.maps.places.AutocompleteService | null>(null);
@@ -52,44 +63,17 @@ export function usePlacesAutocomplete({
 
   useClickOutside([containerRef], () => setSearchResults([]));
 
-  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey,
-    libraries,
-  });
-
   // A missing key or a failed script load is an operational problem, not
   // something to surface to end users -- the location field degrades to
-  // plain manual entry either way. Log it once so it's visible in
-  // monitoring instead of only as a broken-looking input.
-  useEffect(() => {
-    if (!googleMapsApiKey) {
-      logger.error(
-        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set -- location autocomplete is disabled; manual entry only.",
-      );
-    }
-  }, [googleMapsApiKey]);
+  // plain manual entry either way (useGoogleMaps logs a missing key once).
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+  const { isLoaded, loadError } = useGoogleMaps();
 
   useEffect(() => {
     if (loadError) {
       logger.error("Google Maps script failed to load:", loadError);
     }
   }, [loadError]);
-
-  useEffect(() => {
-    const fetchUserCountry = async () => {
-      try {
-        const res = await fetch("https://ipapi.co/json/");
-        const data = await res.json();
-        setCountryCode(data.country_code);
-      } catch (error) {
-        logger.error("Failed to fetch country code:", error);
-      }
-    };
-
-    fetchUserCountry();
-  }, []);
 
   useEffect(() => {
     if (isLoaded && window.google) {
@@ -114,8 +98,8 @@ export function usePlacesAutocomplete({
       const request: google.maps.places.AutocompleteRequest = {
         input,
         sessionToken: sessionTokenRef.current,
-        ...(countryCode && {
-          componentRestrictions: { country: countryCode },
+        ...(countries.length > 0 && {
+          componentRestrictions: { country: countries },
         }),
       };
 
@@ -137,7 +121,7 @@ export function usePlacesAutocomplete({
         },
       );
     },
-    [countryCode],
+    [countries],
   );
 
   const debouncedApiCall = useMemo(
@@ -297,7 +281,7 @@ export function usePlacesAutocomplete({
     loadError,
     inputValue,
     searchResults,
-    countryCode,
+    countries,
     containerRef,
     autocompleteServiceRef,
     sessionTokenRef,

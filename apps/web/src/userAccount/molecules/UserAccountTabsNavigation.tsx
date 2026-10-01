@@ -40,6 +40,7 @@ export default function UserAccountTabsNavigation({
         <UserAccountTabsNavButton
           imgUrl="/assets/images/location.svg"
           text={t("places")}
+          path="places"
           username={username}
         />
 
@@ -47,6 +48,7 @@ export default function UserAccountTabsNavigation({
           <UserAccountTabsNavButton
             imgUrl="/assets/images/posts.svg"
             text={t("spotlight")}
+            path="spotlight"
             username={username}
           />
         ) : null}
@@ -55,6 +57,7 @@ export default function UserAccountTabsNavigation({
           <UserAccountTabsNavButton
             imgUrl="/assets/images/favorites.svg"
             text={t("favorites")}
+            path="favorites"
             username={username}
           />
         )}
@@ -62,6 +65,7 @@ export default function UserAccountTabsNavigation({
         <UserAccountTabsNavButton
           imgUrl="/assets/images/reviews.svg"
           text={t("reviews")}
+          path="reviews"
           username={username}
         />
       </div>

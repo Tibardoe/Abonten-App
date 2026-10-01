@@ -181,7 +181,7 @@ export default function ManagePlaceDetailsSection({
                 <FormControl>
                   <PostInput
                     type="text"
-                    inputPlaceholder="Website (optional)"
+                    inputPlaceholder={t("websiteOptional")}
                     {...field}
                   />
                 </FormControl>
@@ -221,7 +221,7 @@ export default function ManagePlaceDetailsSection({
                 <FormControl>
                   <PostInput
                     type="text"
-                    inputPlaceholder="WhatsApp (optional)"
+                    inputPlaceholder={t("whatsappOptional")}
                     {...field}
                   />
                 </FormControl>

@@ -1,14 +1,13 @@
 "use client";
 
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { animateMarkerTo } from "@/utils/animateMarker";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { TbLocation } from "react-icons/tb";
-
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
 
 const containerClass =
   "w-full h-[500px] md:h-[300px] rounded-lg overflow-hidden";
@@ -32,15 +31,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const mapRef = useRef<google.maps.Map | null>(null); // for centering map programmatically
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Google Maps API key is missing.");
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   useEffect(() => {
     if (isLoaded && !geocoder) {

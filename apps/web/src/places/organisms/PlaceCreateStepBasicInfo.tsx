@@ -19,6 +19,7 @@ type PlaceCreateStepBasicInfoProps = Pick<
   | "setCategoryId"
   | "selectedAddress"
   | "setSelectedAddress"
+  | "hasAttemptedBasicInfo"
   | "addressInputRef"
   | "handleSelectCoordinates"
 > & { className?: string };
@@ -36,6 +37,7 @@ export default function PlaceCreateStepBasicInfo({
   setCategoryId,
   selectedAddress,
   setSelectedAddress,
+  hasAttemptedBasicInfo,
   addressInputRef,
   handleSelectCoordinates,
   className,
@@ -63,8 +65,10 @@ export default function PlaceCreateStepBasicInfo({
         />
 
         <PlaceCategoryPicker categoryId={categoryId} onSelect={setCategoryId} />
-        {categoryId === null && (
-          <p className="text-destructive text-sm">{t("selectACategory")}</p>
+        {hasAttemptedBasicInfo && categoryId === null && (
+          <p role="alert" className="text-destructive text-sm">
+            {t("selectACategory")}
+          </p>
         )}
 
         <FormField
@@ -93,8 +97,10 @@ export default function PlaceCreateStepBasicInfo({
             svgUrl: "/assets/images/location.svg",
           }}
         />
-        {selectedAddress === "" && (
-          <p className="text-destructive text-sm">{t("addressIsRequired")}</p>
+        {hasAttemptedBasicInfo && selectedAddress === "" && (
+          <p role="alert" className="text-destructive text-sm">
+            {t("addressIsRequired")}
+          </p>
         )}
 
         <FormField
@@ -105,7 +111,7 @@ export default function PlaceCreateStepBasicInfo({
               <FormControl>
                 <PostInput
                   type="text"
-                  inputPlaceholder="Website (optional)"
+                  inputPlaceholder={t("websiteOptional")}
                   {...field}
                 />
               </FormControl>
@@ -122,7 +128,7 @@ export default function PlaceCreateStepBasicInfo({
               <FormControl>
                 <PostInput
                   type="text"
-                  inputPlaceholder="Phone (optional)"
+                  inputPlaceholder={t("phoneOptional")}
                   {...field}
                 />
               </FormControl>
@@ -139,7 +145,7 @@ export default function PlaceCreateStepBasicInfo({
               <FormControl>
                 <PostInput
                   type="text"
-                  inputPlaceholder="WhatsApp (optional)"
+                  inputPlaceholder={t("whatsappOptional")}
                   {...field}
                 />
               </FormControl>

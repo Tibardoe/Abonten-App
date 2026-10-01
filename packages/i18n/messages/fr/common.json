@@ -7,7 +7,7 @@
   "abontenOn": "Abonten sur {label}",
   "abontenOnSocialMedia": "Abonten sur les réseaux sociaux",
   "accountNumber": "Numéro de compte",
-  "accountSetupOfStepsDone": "Configuration du compte : {completedCount} étapes sur {total} terminées",
+  "accountSetupOfStepsDone": "Configuration du compte : {completedCount, plural, one {# étape terminée} other {# étapes terminées}} sur {total}",
   "active": "Actif",
   "activeEvents": "Événements actifs",
   "add": "Ajouter",

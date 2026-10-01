@@ -1,5 +1,5 @@
 // One fetch wrapper for every server-to-server call this platform makes
-// (Paystack, Hubtel, Expo push, Google Geocoding, Cloudinary, ipapi). A
+// (Paystack, Hubtel, Expo push, Google Geocoding, Cloudinary). A
 // plain `fetch` has no deadline: a provider that accepts the TCP connection
 // and then stalls holds the serverless function until the platform kills it
 // (Vercel: up to the route's maxDuration), which on the money path means a

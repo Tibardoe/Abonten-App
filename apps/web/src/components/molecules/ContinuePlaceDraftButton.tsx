@@ -1,7 +1,7 @@
 "use client";
 
 import { type PlaceDraftDetail, getPlaceDraft } from "@/actions/getPlaceDraft";
-import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
+import { PlaceUploadModal } from "@/components/organisms/LazyUploadModals";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";

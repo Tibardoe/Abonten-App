@@ -544,6 +544,10 @@
     "content_campaign": {
       "title": "{status, select, pending_review {Your Spotlight promotion is in review} scheduled {Your Spotlight promotion is approved and scheduled} active {Your Spotlight promotion is live} rejected {Your Spotlight promotion was not approved} paused {Your Spotlight promotion is paused} completed {Your Spotlight promotion has finished} refunded {Your Spotlight promotion refund is on its way} other {Your Spotlight promotion is {status}}}"
     },
+    "content_campaign_refunded": {
+      "body": "{amount} is being returned to your payment method.",
+      "title": "Your Spotlight promotion refund is on its way"
+    },
     "content_comment": {
       "title": "{actor} commented on your {kind, select, story {Story} other {Spotlight}}"
     },
@@ -823,10 +827,6 @@
     "welcome_credit": {
       "body": "{amount} off your first ticket order of {min} or more. Use it within {days} days.",
       "title": "You have welcome credit"
-    },
-    "content_campaign_refunded": {
-      "title": "Your Spotlight promotion refund is on its way",
-      "body": "{amount} is being returned to your payment method."
     }
   },
   "openStatus": {
@@ -1058,9 +1058,9 @@
   },
   "ticketTiers": {
     "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid.",
+    "freeName": "Free",
     "freeReserved": "“{name}” is reserved for free events. Give this ticket type another name.",
     "paidNeedsPrice": "Paid tickets need a price greater than zero. To let people in for free, make the event free.",
-    "freeName": "Free",
     "singleName": "Standard ticket"
   },
   "verification": {

@@ -1,6 +1,7 @@
 import FieldOpsTabs from "@/fieldOps/atoms/FieldOpsTabs";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import { tagFieldOpsRequest } from "@/fieldOps/lib/tagFieldOpsRequest";
+import SegmentMessages from "@/i18n/SegmentMessages";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -37,12 +38,14 @@ export default async function FieldLayout({
     isLead: me.data.current.isLead,
   });
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <FieldOpsTabs
-        isLead={me.data.current.isLead}
-        role={me.data.current.membership.role}
-      />
-      {children}
-    </div>
+    <SegmentMessages segment="field">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <FieldOpsTabs
+          isLead={me.data.current.isLead}
+          role={me.data.current.membership.role}
+        />
+        {children}
+      </div>
+    </SegmentMessages>
   );
 }

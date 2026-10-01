@@ -106,6 +106,8 @@ export default function PlaceUploadModal({
     handleSubmit,
     onSubmit,
     resolveLocation,
+    validateBasicInfo,
+    onInvalidSubmit,
     hasMeaningfulContent,
     saveDraft,
     isSavingDraft,
@@ -126,6 +128,9 @@ export default function PlaceUploadModal({
   // PostAutoComplete has already unmounted and can no longer resolve
   // anything typed here.
   const handleBasicInfoNext = async () => {
+    // The step's own fields first (the messages appear under them), then
+    // the address, which needs a round trip to resolve.
+    if (!(await validateBasicInfo())) return;
     const resolved = await resolveLocation();
     if (resolved) setStep(2);
   };
@@ -243,7 +248,10 @@ export default function PlaceUploadModal({
                 title={t("newPlaceReview")}
                 primaryAction={{
                   label: publishButtonLabel,
-                  onClick: handleSubmit(onSubmit),
+                  onClick: handleSubmit(onSubmit, () => {
+                    onInvalidSubmit();
+                    setStep(1);
+                  }),
                   disabled: isUploading,
                 }}
               />

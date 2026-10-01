@@ -544,6 +544,10 @@
     "content_campaign": {
       "title": "{status, select, pending_review {Votre promotion Spotlight est en cours d'examen} scheduled {Votre promotion Spotlight est approuvée et programmée} active {Votre promotion Spotlight est en ligne} rejected {Votre promotion Spotlight n'a pas été approuvée} paused {Votre promotion Spotlight est en pause} completed {Votre promotion Spotlight est terminée} refunded {Le remboursement de votre promotion Spotlight est en route} other {Votre promotion Spotlight est : {status}}}"
     },
+    "content_campaign_refunded": {
+      "body": "{amount} sont en cours de remboursement sur votre moyen de paiement.",
+      "title": "Le remboursement de votre promotion Spotlight est en cours"
+    },
     "content_comment": {
       "title": "{actor} a commenté votre {kind, select, story {Story} other {Spotlight}}"
     },
@@ -823,10 +827,6 @@
     "welcome_credit": {
       "body": "{amount} de réduction sur votre première commande de billets de {min} ou plus. À utiliser dans les {days} jours.",
       "title": "Vous avez un crédit de bienvenue"
-    },
-    "content_campaign_refunded": {
-      "title": "Le remboursement de votre promotion Spotlight est en cours",
-      "body": "{amount} sont en cours de remboursement sur votre moyen de paiement."
     }
   },
   "openStatus": {
@@ -1058,9 +1058,9 @@
   },
   "ticketTiers": {
     "freeEventPromoCodes": "Les codes promo ne sont pas disponibles pour un événement gratuit. Supprimez-les ou rendez l'événement payant.",
+    "freeName": "Gratuit",
     "freeReserved": "« {name} » est réservé aux événements gratuits. Donnez un autre nom à ce type de billet.",
     "paidNeedsPrice": "Les billets payants doivent avoir un prix supérieur à zéro. Pour laisser entrer les gens gratuitement, rendez l'événement gratuit.",
-    "freeName": "Gratuit",
     "singleName": "Billet standard"
   },
   "verification": {

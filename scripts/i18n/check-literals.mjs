@@ -245,7 +245,10 @@ const allowEntries = new Set(
 
 // ── what reads like prose ────────────────────────────────────────────
 
-const TWO_WORDS = /[A-Za-zÀ-ÿ]{2,}[’']?[a-z]*\s+[A-Za-zÀ-ÿ]+/;
+// Two words, the second possibly opening a bracket or a quote:
+// "Website (optional)" reached readers in English because the bracket hid
+// the second word.
+const TWO_WORDS = /[A-Za-zÀ-ÿ]{2,}[’']?[a-z]*\s+[(\[“"'«]?[A-Za-zÀ-ÿ]+/;
 const ONE_CAPITALISED = /^[A-Z][a-z]{2,}[.!?…]?$/;
 
 function looksLikeClassList(text) {

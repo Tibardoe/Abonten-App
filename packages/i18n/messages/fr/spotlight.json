@@ -326,6 +326,7 @@
   "signInToReplyToStories": "Connectez-vous pour répondre aux Stories.",
   "signInToSeeSpotlightsFrom": "Connectez-vous pour voir les Spotlights des personnes que vous suivez.",
   "someFilesDidnTUploadFix": "Certains fichiers n'ont pas été envoyés. Corrigez-les et réessayez.",
+  "someone": "Quelqu’un",
   "somethingWentWrong": "Une erreur s'est produite.",
   "somethingWentWrongPleaseTryAgain": "Une erreur s'est produite. Veuillez réessayer.",
   "speed": "Vitesse {formatSpeed}",
@@ -444,6 +445,5 @@
   "yourSpotlightIsLive": "Votre Spotlight est en ligne.",
   "yourSpotlightIsLive2": "Votre Spotlight est en ligne",
   "yourStoryIsLive": "Votre Story est en ligne.",
-  "yourStoryIsLive2": "Votre Story est en ligne",
-  "someone": "Quelqu’un"
+  "yourStoryIsLive2": "Votre Story est en ligne"
 }

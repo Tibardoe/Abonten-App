@@ -10,6 +10,7 @@ import akCore from "@abonten/i18n/messages/ak/core.json";
 import akDiscovery from "@abonten/i18n/messages/ak/discovery.json";
 import akEvents from "@abonten/i18n/messages/ak/events.json";
 import akExplore from "@abonten/i18n/messages/ak/explore.json";
+import akFatal from "@abonten/i18n/messages/ak/fatal.json";
 import akFieldOps from "@abonten/i18n/messages/ak/fieldOps.json";
 import akFinances from "@abonten/i18n/messages/ak/finances.json";
 import akHelp from "@abonten/i18n/messages/ak/help.json";
@@ -42,6 +43,7 @@ import deCore from "@abonten/i18n/messages/de/core.json";
 import deDiscovery from "@abonten/i18n/messages/de/discovery.json";
 import deEvents from "@abonten/i18n/messages/de/events.json";
 import deExplore from "@abonten/i18n/messages/de/explore.json";
+import deFatal from "@abonten/i18n/messages/de/fatal.json";
 import deFieldOps from "@abonten/i18n/messages/de/fieldOps.json";
 import deFinances from "@abonten/i18n/messages/de/finances.json";
 import deHelp from "@abonten/i18n/messages/de/help.json";
@@ -74,6 +76,7 @@ import enCore from "@abonten/i18n/messages/en/core.json";
 import enDiscovery from "@abonten/i18n/messages/en/discovery.json";
 import enEvents from "@abonten/i18n/messages/en/events.json";
 import enExplore from "@abonten/i18n/messages/en/explore.json";
+import enFatal from "@abonten/i18n/messages/en/fatal.json";
 import enFieldOps from "@abonten/i18n/messages/en/fieldOps.json";
 import enFinances from "@abonten/i18n/messages/en/finances.json";
 import enHelp from "@abonten/i18n/messages/en/help.json";
@@ -106,6 +109,7 @@ import esCore from "@abonten/i18n/messages/es/core.json";
 import esDiscovery from "@abonten/i18n/messages/es/discovery.json";
 import esEvents from "@abonten/i18n/messages/es/events.json";
 import esExplore from "@abonten/i18n/messages/es/explore.json";
+import esFatal from "@abonten/i18n/messages/es/fatal.json";
 import esFieldOps from "@abonten/i18n/messages/es/fieldOps.json";
 import esFinances from "@abonten/i18n/messages/es/finances.json";
 import esHelp from "@abonten/i18n/messages/es/help.json";
@@ -138,6 +142,7 @@ import frCore from "@abonten/i18n/messages/fr/core.json";
 import frDiscovery from "@abonten/i18n/messages/fr/discovery.json";
 import frEvents from "@abonten/i18n/messages/fr/events.json";
 import frExplore from "@abonten/i18n/messages/fr/explore.json";
+import frFatal from "@abonten/i18n/messages/fr/fatal.json";
 import frFieldOps from "@abonten/i18n/messages/fr/fieldOps.json";
 import frFinances from "@abonten/i18n/messages/fr/finances.json";
 import frHelp from "@abonten/i18n/messages/fr/help.json";
@@ -170,6 +175,7 @@ import ptCore from "@abonten/i18n/messages/pt/core.json";
 import ptDiscovery from "@abonten/i18n/messages/pt/discovery.json";
 import ptEvents from "@abonten/i18n/messages/pt/events.json";
 import ptExplore from "@abonten/i18n/messages/pt/explore.json";
+import ptFatal from "@abonten/i18n/messages/pt/fatal.json";
 import ptFieldOps from "@abonten/i18n/messages/pt/fieldOps.json";
 import ptFinances from "@abonten/i18n/messages/pt/finances.json";
 import ptHelp from "@abonten/i18n/messages/pt/help.json";
@@ -209,6 +215,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     discovery: enDiscovery,
     events: enEvents,
     explore: enExplore,
+    fatal: enFatal,
     fieldOps: enFieldOps,
     finances: enFinances,
     help: enHelp,
@@ -243,6 +250,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     discovery: akDiscovery,
     events: akEvents,
     explore: akExplore,
+    fatal: akFatal,
     fieldOps: akFieldOps,
     finances: akFinances,
     help: akHelp,
@@ -277,6 +285,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     discovery: deDiscovery,
     events: deEvents,
     explore: deExplore,
+    fatal: deFatal,
     fieldOps: deFieldOps,
     finances: deFinances,
     help: deHelp,
@@ -311,6 +320,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     discovery: esDiscovery,
     events: esEvents,
     explore: esExplore,
+    fatal: esFatal,
     fieldOps: esFieldOps,
     finances: esFinances,
     help: esHelp,
@@ -345,6 +355,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     discovery: frDiscovery,
     events: frEvents,
     explore: frExplore,
+    fatal: frFatal,
     fieldOps: frFieldOps,
     finances: frFinances,
     help: frHelp,
@@ -379,6 +390,7 @@ export const CATALOG: Record<I18nLocale, LocaleMessages> = {
     discovery: ptDiscovery,
     events: ptEvents,
     explore: ptExplore,
+    fatal: ptFatal,
     fieldOps: ptFieldOps,
     finances: ptFinances,
     help: ptHelp,

@@ -20,6 +20,7 @@
   "abontenIsnTAvailableInThis": "O Abonten ainda não está disponível neste país.",
   "abontenIsnTAvailableInYet": "O Abonten ainda não está disponível aqui: {name}.",
   "abontenIsnTTakingNewListings": "O Abonten não está a aceitar novas páginas aqui neste momento: {name}.",
+  "abontenOrder": "Encomenda Abonten",
   "abontenWeeklyIsNotAvailableFor": "O Abonten Weekly não está disponível para esta zona.",
   "addAStorefrontPhotoAndAn": "Adicione uma foto da fachada e uma foto do interior antes de enviar.",
   "addAnEmailAddressToYour": "Adicione primeiro um endereço de e-mail à sua conta.",
@@ -574,6 +575,13 @@
   "failedToSaveDraft": "Não foi possível guardar o rascunho: {reason}",
   "failedToStartPaymentPleaseTry": "Não foi possível iniciar o pagamento. Tente novamente.",
   "failedWithDetail": "{what}: {detail}",
+  "fieldOpsTimeline": {
+    "claimFiledFor": "Reivindicação registada para {name}",
+    "eventListedFor": "Evento listado para {date}",
+    "ownerCodeSent": "Código enviado ao proprietário",
+    "ownerVerified": "O proprietário verificou o telefone",
+    "started": "Iniciado"
+  },
   "flyerUploadFailed": "O carregamento do cartaz falhou.",
   "flyerUploadToCloudinaryFailed": "O carregamento do cartaz para o Cloudinary falhou.",
   "fromAnOrganizerYouFollow": "De um organizador que segue",
@@ -712,6 +720,7 @@
   "openingHoursUpdatedSuccessfully": "Horário de funcionamento atualizado com sucesso!",
   "openinghoursArrayIsRequired": "openingHours (lista) é obrigatório",
   "openinghoursMustBeAnArray": "openingHours tem de ser uma lista",
+  "organizerFallbackName": "Organizador",
   "organizerNotFound": "Organizador não encontrado.",
   "organizerTypeOnlyAppliesToOrganizer": "O tipo de organizador só se aplica à verificação de organizador.",
   "otpIsRequired": "otp is required",
@@ -1107,6 +1116,7 @@
   "unknownPlatform": "Plataforma desconhecida.",
   "unknownReview": "Avaliação desconhecida.",
   "unknownSubscription": "Subscrição desconhecida.",
+  "unnamedArea": "Zona sem nome",
   "unsupportedFileFormat": "Formato de ficheiro não suportado.",
   "unsupportedLocale": "Idioma não suportado",
   "unsupportedMediaType": "Tipo de conteúdo multimédia não suportado",
@@ -1224,15 +1234,5 @@
   "yourRefundIsInProgressBut": "O seu reembolso está em curso, mas ainda não conseguimos devolver o seu crédito. Tente novamente ou contacte o apoio.",
   "yourRefundWasStartedButWe": "O seu reembolso foi iniciado, mas ainda não conseguimos devolver o seu crédito. Tente novamente ou contacte o apoio.",
   "yourRoleCanTDoThis": "A sua função não pode fazer isto",
-  "yourSpotlight": "O seu Spotlight",
-  "abontenOrder": "Encomenda Abonten",
-  "unnamedArea": "Zona sem nome",
-  "organizerFallbackName": "Organizador",
-  "fieldOpsTimeline": {
-    "started": "Iniciado",
-    "ownerCodeSent": "Código enviado ao proprietário",
-    "ownerVerified": "O proprietário verificou o telefone",
-    "claimFiledFor": "Reivindicação registada para {name}",
-    "eventListedFor": "Evento listado para {date}"
-  }
+  "yourSpotlight": "O seu Spotlight"
 }

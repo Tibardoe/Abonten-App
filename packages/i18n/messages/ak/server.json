@@ -20,6 +20,7 @@
   "abontenIsnTAvailableInThis": "Abonten isn't available in this country yet.",
   "abontenIsnTAvailableInYet": "Abonten isn't available in {name} yet.",
   "abontenIsnTTakingNewListings": "Abonten isn't taking new listings in {name} right now.",
+  "abontenOrder": "Abonten order",
   "abontenWeeklyIsNotAvailableFor": "Abonten Weekly is not available for this area.",
   "addAStorefrontPhotoAndAn": "Add a storefront photo and an interior photo before submitting.",
   "addAnEmailAddressToYour": "Add an email address to your account first.",
@@ -574,6 +575,13 @@
   "failedToSaveDraft": "Failed to save draft: {reason}",
   "failedToStartPaymentPleaseTry": "Failed to start payment. Please try again.",
   "failedWithDetail": "{what}: {detail}",
+  "fieldOpsTimeline": {
+    "claimFiledFor": "Claim filed for {name}",
+    "eventListedFor": "Event listed for {date}",
+    "ownerCodeSent": "Owner code sent",
+    "ownerVerified": "Owner verified their phone",
+    "started": "Started"
+  },
   "flyerUploadFailed": "Flyer upload failed.",
   "flyerUploadToCloudinaryFailed": "Flyer upload to Cloudinary failed.",
   "fromAnOrganizerYouFollow": "From an organizer you follow",
@@ -712,6 +720,7 @@
   "openingHoursUpdatedSuccessfully": "Opening hours updated successfully!",
   "openinghoursArrayIsRequired": "openingHours (array) is required",
   "openinghoursMustBeAnArray": "openingHours must be an array",
+  "organizerFallbackName": "Organizer",
   "organizerNotFound": "Organizer not found.",
   "organizerTypeOnlyAppliesToOrganizer": "Organizer type only applies to organizer verification.",
   "otpIsRequired": "otp is required",
@@ -1107,6 +1116,7 @@
   "unknownPlatform": "Unknown platform.",
   "unknownReview": "Unknown review.",
   "unknownSubscription": "Unknown subscription.",
+  "unnamedArea": "Unnamed area",
   "unsupportedFileFormat": "Unsupported file format.",
   "unsupportedLocale": "Unsupported locale",
   "unsupportedMediaType": "Unsupported media type",
@@ -1224,15 +1234,5 @@
   "yourRefundIsInProgressBut": "Your refund is in progress, but we couldn't return your credit yet. Please try again or contact support.",
   "yourRefundWasStartedButWe": "Your refund was started, but we couldn't return your credit yet. Please try again or contact support.",
   "yourRoleCanTDoThis": "Your role can't do this",
-  "yourSpotlight": "Your Spotlight",
-  "abontenOrder": "Abonten order",
-  "unnamedArea": "Unnamed area",
-  "organizerFallbackName": "Organizer",
-  "fieldOpsTimeline": {
-    "started": "Started",
-    "ownerCodeSent": "Owner code sent",
-    "ownerVerified": "Owner verified their phone",
-    "claimFiledFor": "Claim filed for {name}",
-    "eventListedFor": "Event listed for {date}"
-  }
+  "yourSpotlight": "Your Spotlight"
 }
