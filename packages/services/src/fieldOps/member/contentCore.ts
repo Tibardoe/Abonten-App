@@ -189,8 +189,7 @@ export async function submitContentCore(
       .filter((id): id is string => Boolean(id)),
     {
       type: "fieldops_content_received",
-      title: "New content to review",
-      body: "The content creator sent in a deliverable.",
+      template: { id: "fieldops_content_received" },
       route: "/field/lead/content",
     },
   );

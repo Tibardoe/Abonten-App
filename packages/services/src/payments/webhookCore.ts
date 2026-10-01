@@ -295,16 +295,12 @@ async function handleRefundOutcome(
   await createNotificationCore(supabase, {
     userId: updated.user_id,
     type: newStatus === "refunded" ? "refund_completed" : "refund_failed",
-    title:
+    notice:
       newStatus === "refunded"
-        ? "Refund completed"
-        : "Refund couldn't be completed",
-    body:
-      newStatus === "refunded"
-        ? "Your refund has been sent back to your payment method."
+        ? { id: "refund_completed" }
         : creditText
-          ? `Your ${creditText} of Abonten Credit is back, but we couldn't return the rest to your payment method automatically. Our team will follow up.`
-          : "We couldn't process your refund automatically. Our team will follow up.",
+          ? { id: "refund_failed_credit", params: { credit: creditText } }
+          : { id: "refund_failed" },
     link: "/transactions",
     data: { kind: "ticket" },
   }).catch((error) => {

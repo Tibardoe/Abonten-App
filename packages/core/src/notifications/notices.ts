@@ -12,7 +12,13 @@
 // digests) attach the same `notice` shape; see the migration that added it.
 
 import { intlLocale, isEnglishLike } from "../i18n/coreStrings";
-import type { CoreI18n, TranslationValues } from "../i18n/translator";
+import type {
+  CoreI18n,
+  CoreTranslator,
+  TranslationValues,
+} from "../i18n/translator";
+import { promotionDurationLabel } from "../promotionSummary";
+import { noticeFromStoredText } from "./storedNotices";
 
 export type NoticeParams = Record<
   string,
@@ -78,6 +84,7 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   refund_requested_credit: n("refund_requested_credit"),
   refund_completed: n("refund_completed"),
   refund_completed_credit: n("refund_completed_credit"),
+  refund_completed_plain: n("refund_completed_plain"),
   refund_failed: n("refund_failed"),
   refund_failed_credit: n("refund_failed_credit"),
   orphan_refund: n("orphan_refund"),
@@ -87,9 +94,33 @@ export const NOTICES: Record<string, NoticeTemplate> = {
   promotion_started_place: n("promotion_started_place"),
   promotion_started_generic: n("promotion_started_generic"),
   // Field Ops (services + SQL)
-  fieldops_content_brief: n("fieldops_content_brief"),
+  fieldops_content_brief: {
+    title: "notices.fieldops_content_brief.title",
+    literalBody: "description",
+  },
   fieldops_assignment_created: n("fieldops_assignment_created"),
-  fieldops_assignment_changed: n("fieldops_assignment_changed"),
+  fieldops_assignment_changed: {
+    title: "notices.fieldops_assignment_changed.title",
+    literalBody: "reason",
+  },
+  fieldops_review_verified: n("fieldops_review_verified"),
+  // An admin's decision carries the admin's own note as its body.
+  fieldops_review_verified_noted: {
+    title: "notices.fieldops_review_verified.title",
+    literalBody: "note",
+  },
+  fieldops_commission_reversed: {
+    title: "notices.fieldops_commission_reversed.title",
+    literalBody: "reason",
+  },
+  fieldops_review_needs_changes: {
+    title: "notices.fieldops_review_needs_changes.title",
+    literalBody: "note",
+  },
+  fieldops_review_rejected: {
+    title: "notices.fieldops_review_rejected.title",
+    literalBody: "note",
+  },
   fieldops_membership_added: n("fieldops_membership_added"),
   fieldops_claim_received: n("fieldops_claim_received"),
   fieldops_event_received: n("fieldops_event_received"),
@@ -214,13 +245,27 @@ function monthYearText(period: string, locale: string): string {
   }).format(new Date(Date.UTC(y, m - 1, 1)));
 }
 
+const isEmpty = (value: unknown) =>
+  value === null || value === undefined || value === "";
+
 /**
  * The values an ICU message may take, from a notice's params: everything
  * is passed through as text or number, and a few conventions are turned
- * into words for the reader's calendar — `startsAt` (+ `timezone`) becomes
- * `when` and `dayTime`, `period` becomes `month` and `monthYear`.
+ * into words for the reader:
+ *
+ *  - `hasPlace` ("yes" | "no") for every param `place`, so a message words
+ *    the missing-name case itself instead of the writer storing an English
+ *    stand-in like "the place";
+ *  - an empty `actor` reads "Someone";
+ *  - `startsAt` (+ `timezone`) becomes `when` and `dayTime`, `period`
+ *    becomes `month` and `monthYear`, `fromDate` becomes `from`;
+ *  - `durationLabel` (a tier's English "3 days") becomes `duration`.
  */
-function valuesFor(params: NoticeParams, locale: string): TranslationValues {
+function valuesFor(
+  t: CoreTranslator,
+  params: NoticeParams,
+  locale: string,
+): TranslationValues {
   const values: TranslationValues = {};
   for (const [key, value] of Object.entries(params)) {
     if (value === null || value === undefined) {
@@ -231,6 +276,17 @@ function valuesFor(params: NoticeParams, locale: string): TranslationValues {
       values[key] = value;
     }
   }
+  for (const [key, value] of Object.entries(params)) {
+    if (key.startsWith("has")) continue;
+    const flag = `has${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+    if (!(flag in params)) values[flag] = isEmpty(value) ? "no" : "yes";
+  }
+  if ("actor" in params && isEmpty(params.actor)) {
+    values.actor = t("noticeWords.someone");
+  }
+  if (typeof params.durationLabel === "string") {
+    values.duration = promotionDurationLabel(t, params.durationLabel);
+  }
   if (typeof params.startsAt === "string") {
     const tz = typeof params.timezone === "string" ? params.timezone : null;
     values.when = whenText(params.startsAt, tz, locale);
@@ -239,6 +295,31 @@ function valuesFor(params: NoticeParams, locale: string): TranslationValues {
   if (typeof params.period === "string") {
     values.month = monthText(params.period, locale);
     values.monthYear = monthYearText(params.period, locale);
+  }
+  // `fromDate: "2026-10-03"` → `from: "3 Oct 2026"` in the reader's language.
+  for (const [key, value] of Object.entries(params)) {
+    if (
+      key.endsWith("Date") &&
+      typeof value === "string" &&
+      /^\d{4}-\d{2}-\d{2}/.test(value)
+    ) {
+      const [y, m, day] = value.slice(0, 10).split("-").map(Number);
+      values[key.slice(0, -4)] = new Intl.DateTimeFormat(intlLocale(locale), {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+      }).format(new Date(Date.UTC(y, m - 1, day)));
+    }
+  }
+  // Last, so a derived value (`when`) gets its flag (`hasWhen`) too. The
+  // flag says whether the writer gave a value, so "Someone" stays "no".
+  for (const key of Object.keys(values)) {
+    if (key.startsWith("has")) continue;
+    const flag = `has${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+    if (flag in values) continue;
+    const given = key in params ? params[key] : values[key];
+    values[flag] = isEmpty(given) ? "no" : "yes";
   }
   return values;
 }
@@ -255,7 +336,7 @@ export function renderNotice(
   const template = NOTICES[notice.id];
   if (!template) return null;
   const params = notice.params ?? {};
-  const values = valuesFor(params, locale);
+  const values = valuesFor(t, params, locale);
   const title = t(template.title, values);
   let body: string | null = null;
   if (template.literalBody) {
@@ -272,11 +353,15 @@ export function renderNotice(
  * language when the row carries a notice. Rows without one keep their text.
  */
 export function localizeNotificationRow<
-  T extends { title: string; body: string | null; data: unknown },
+  T extends { type: string; title: string; body: string | null; data: unknown },
 >(i18n: CoreI18n, row: T): T {
   const data = row.data as { notice?: unknown } | null;
-  if (!data || !isNotice(data.notice)) return row;
-  const words = renderNotice(i18n, data.notice);
+  // A row written with its notice says what it is; one the database (or an
+  // older release) wrote is read back from its English text.
+  const notice =
+    data && isNotice(data.notice) ? data.notice : noticeFromStoredText(row);
+  if (!notice) return row;
+  const words = renderNotice(i18n, notice);
   if (!words) return row;
   return { ...row, title: words.title, body: words.body };
 }

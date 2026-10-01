@@ -5,6 +5,7 @@ import { useIsOnline } from "@/lib/network";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import {
+  promotionDurationLabel,
   promotionKindLabel,
   promotionStateLabel,
 } from "@abonten/core/promotionSummary";
@@ -84,7 +85,9 @@ function PromotionRow({ promotion }: { promotion: ActivePromotionSummary }) {
             hideIcon
           />
           <AppText variant="meta" numberOfLines={1}>
-            {promotion.tierLabel ? `${promotion.tierLabel} · ` : ""}
+            {promotion.tierLabel
+              ? `${promotionDurationLabel(tc, promotion.tierLabel)} · `
+              : ""}
             {upcoming ? t("starts") : t("ends")} {when}
           </AppText>
         </View>

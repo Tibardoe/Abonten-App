@@ -6,6 +6,7 @@ import { createClient } from "@/config/supabase/server";
 import ManageEventView from "@/events/organisms/ManageEventView";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
@@ -45,6 +46,7 @@ export default async function page({
   params: Promise<{ eventId: string }>;
 }) {
   const t = await getTranslations("manage");
+  const tc = await getTranslations("core");
 
   const { eventId } = await params;
   const supabase = await createClient();
@@ -127,8 +129,12 @@ export default async function page({
   const currentPromotion = activePromotion
     ? {
         ends_at: activePromotion.ends_at,
-        tier_label:
-          activePromotion.event_promotion_tier?.duration_label ?? null,
+        tier_label: activePromotion.event_promotion_tier?.duration_label
+          ? promotionDurationLabel(
+              tc,
+              activePromotion.event_promotion_tier.duration_label,
+            )
+          : null,
       }
     : null;
 

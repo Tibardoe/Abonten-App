@@ -4,6 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   type LocalizedNotificationInput,
+  type NoticeNotificationInput,
   createNotificationCore,
 } from "@abonten/services/notifications/createNotification";
 import type { Database } from "@abonten/types/database.types";
@@ -24,7 +25,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * directly instead of going through this wrapper.
  */
 export default withActionLocale(async function createNotification(
-  input: CreateNotificationInput | LocalizedNotificationInput,
+  input:
+    | CreateNotificationInput
+    | LocalizedNotificationInput
+    | NoticeNotificationInput,
   supabaseOverride?: SupabaseClient<Database>,
 ) {
   const supabase = supabaseOverride ?? (await createClient());

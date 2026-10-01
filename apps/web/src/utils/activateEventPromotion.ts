@@ -142,10 +142,15 @@ export default async function activateEventPromotion(
     {
       userId,
       type: "promotion_started",
-      title: "Your event is now featured",
-      body: event?.title
-        ? `${event.title} is now featured (${tier.duration_label}).`
-        : `Your promotion is now active (${tier.duration_label}).`,
+      notice: event?.title
+        ? {
+            id: "promotion_started_event",
+            params: { title: event.title, durationLabel: tier.duration_label },
+          }
+        : {
+            id: "promotion_started_generic",
+            params: { durationLabel: tier.duration_label },
+          },
       link: `/manage/events/${checkout.event_id}`,
       data: { kind: "event_featured", eventId: checkout.event_id },
       imagePublicId: event?.flyer_public_id ?? null,

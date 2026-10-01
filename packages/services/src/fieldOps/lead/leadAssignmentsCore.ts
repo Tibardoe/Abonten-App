@@ -155,11 +155,15 @@ export async function createAssignmentCore(
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
   await notifyFieldOps(supabase, [member.user_id], {
     type: "fieldops_assignment_created",
-    title: `New assignment: ${territory.name}`,
-    body:
-      input.startsOn === input.endsOn
-        ? `You're on ${territory.name} on ${input.startsOn}.`
-        : `You're on ${territory.name} from ${input.startsOn} to ${input.endsOn}.`,
+    template: {
+      id: "fieldops_assignment_created",
+      params: {
+        territory: territory.name,
+        sameDay: input.startsOn === input.endsOn ? "yes" : "no",
+        fromDate: input.startsOn,
+        toDate: input.endsOn,
+      },
+    },
     route: "/field",
   });
   return {
@@ -215,11 +219,13 @@ export async function cancelAssignmentCore(
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
   const territoryName =
     (current.fieldops_territory as unknown as { name: string } | null)?.name ??
-    "a territory";
+    null;
   await notifyFieldOps(supabase, [current.member_user_id], {
     type: "fieldops_assignment_changed",
-    title: `Assignment cancelled: ${territoryName}`,
-    body: input.reason,
+    template: {
+      id: "fieldops_assignment_changed",
+      params: { territory: territoryName, reason: input.reason },
+    },
     route: "/field/assignments",
   });
   return {

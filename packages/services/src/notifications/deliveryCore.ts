@@ -1,7 +1,12 @@
 import { timingSafeEqual } from "node:crypto";
 import { logger } from "@abonten/core/logger";
+import { localizeNotificationRow } from "@abonten/core/notifications/notices";
 import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import {
+  type NotificationWords,
+  notificationWordsFor,
+} from "./createNotification";
 import { type PushResult, sendPushToUser } from "./sendPushNotification";
 
 // Push + email delivery for notifications written in SQL: the reward
@@ -142,11 +147,11 @@ const singlePush = (row: ClaimedRow) => ({
 });
 
 /** Several reward notices for one person in a run go out as one push. */
-function rewardPushFor(rows: ClaimedRow[]) {
+function rewardPushFor(rows: ClaimedRow[], words: NotificationWords) {
   if (rows.length === 1) return singlePush(rows[0]);
   const summary = rows.map((r) => r.title).join(" · ");
   return {
-    title: `${rows.length} Abonten Rewards updates`,
+    title: words.t("notifications.rewardsUpdates", { count: rows.length }),
     body: summary.length > 160 ? `${summary.slice(0, 157)}…` : summary,
     link: "/rewards",
     data: { kind: "rewards" },
@@ -216,15 +221,21 @@ export async function deliverQueuedNotificationsCore(
     groups.set(key, list);
   }
 
-  await inChunks([...groups.values()], async (group) => {
-    const { channel, user_id: userId } = group[0];
-    const ids = group.map((r) => r.delivery_id);
+  await inChunks([...groups.values()], async (queued) => {
+    const { channel, user_id: userId } = queued[0];
+    const ids = queued.map((r) => r.delivery_id);
     try {
+      // The database wrote these rows in English; the person they are for
+      // gets them in the language saved on their account.
+      const words = await notificationWordsFor(userId);
+      const group = queued.map((row) =>
+        localizeNotificationRow({ t: words.core, locale: words.locale }, row),
+      );
       if (channel === "push") {
         const result = await sendPush(
           userId,
           group[0].source === "rewards"
-            ? rewardPushFor(group)
+            ? rewardPushFor(group, words)
             : singlePush(group[0]),
         );
         if (result === "sent") {

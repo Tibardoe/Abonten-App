@@ -361,19 +361,20 @@ export async function issueRefundCore(
   // Best-effort — the hold above is already the source of truth; a failed
   // notification never undoes a real refund request. Completion/failure is
   // notified separately by the webhook once Paystack actually confirms it.
-  const creditText = credit.returnedNow
-    ? `${formatMoney(money(split.creditBackMinor, transaction.currency))} is back in your Abonten Credit`
+  const creditBack = credit.returnedNow
+    ? formatMoney(money(split.creditBackMinor, transaction.currency))
     : null;
   const completed = split.cashBackMinor === 0;
   await createNotificationCore(privileged, {
     userId: transaction.user_id,
     type: completed ? "refund_completed" : "refund_requested",
-    title: completed ? "Refund completed" : "Refund requested",
-    body: completed
-      ? `${creditText ?? "Your refund is complete"}.`
-      : creditText
-        ? `${creditText}. We've requested the rest back to your payment method — you'll be notified once it's completed.`
-        : "We've requested a refund for your cancelled ticket. You'll be notified once it's completed.",
+    notice: completed
+      ? creditBack
+        ? { id: "refund_completed_credit", params: { credit: creditBack } }
+        : { id: "refund_completed_plain" }
+      : creditBack
+        ? { id: "refund_requested_credit", params: { credit: creditBack } }
+        : { id: "refund_requested" },
     link: "/transactions",
     data: { kind: "ticket" },
   }).catch((error) => {

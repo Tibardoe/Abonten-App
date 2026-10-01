@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Notice } from "@abonten/core/notifications/notices";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -149,8 +150,10 @@ export async function requestPlaceBookingCore(
 
   await notifyOwner(place.owner_id, {
     type: "place_booking_requested",
-    title: "New booking request",
-    body: `You have a new booking request for ${place.name}.`,
+    notice: {
+      id: "place_booking_requested",
+      params: { place: place.name },
+    },
     link: `/manage/places/${placeId}`,
   });
 
@@ -228,8 +231,10 @@ export async function cancelPlaceBookingCore(
   if (place?.owner_id) {
     await notifyOwner(place.owner_id, {
       type: "place_booking_cancelled",
-      title: "A booking was cancelled",
-      body: `A customer cancelled their booking for ${place.name ?? "your place"}.`,
+      notice: {
+        id: "place_booking_cancelled",
+        params: { place: place.name ?? null },
+      },
       link: `/manage/places/${booking.place_id}`,
     });
   }
@@ -241,8 +246,7 @@ async function notifyOwner(
   ownerId: string,
   notification: {
     type: string;
-    title: string;
-    body: string;
+    notice: Notice;
     link: string | null;
   },
 ): Promise<void> {

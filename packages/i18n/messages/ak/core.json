@@ -496,6 +496,9 @@
     "former": "Former Abonten member",
     "generic": "Abonten member"
   },
+  "noticeWords": {
+    "someone": "Someone"
+  },
   "notices": {
     "area_launched": {
       "body": "Events and places in {area} are on Abonten. Take a look.",
@@ -571,7 +574,6 @@
       "title": "Tomorrow: {title}"
     },
     "fieldops_assignment_changed": {
-      "body": "Your lead cancelled this assignment. Open Field work to see what is still yours.",
       "title": "Assignment cancelled: {territory}"
     },
     "fieldops_assignment_created": {
@@ -582,6 +584,9 @@
       "body": "A member helped an owner claim a listing that was already on Abonten.",
       "title": "Claim help: {place}"
     },
+    "fieldops_commission_reversed": {
+      "title": "A commission was taken back"
+    },
     "fieldops_confirmed": {
       "body": "Your commission is confirmed and waiting for the next payout.",
       "title": "Confirmed: {name}"
@@ -591,7 +596,6 @@
       "title": "Content approved"
     },
     "fieldops_content_brief": {
-      "body": "Open Field work to see what the lead is asking for.",
       "title": "New brief: {title}"
     },
     "fieldops_content_commission_confirmed": {
@@ -628,6 +632,16 @@
     "fieldops_paid": {
       "body": "Your Field Ops earnings have been sent to your mobile money number.",
       "title": "You have been paid"
+    },
+    "fieldops_review_needs_changes": {
+      "title": "{hasName, select, yes {Changes needed: {name}} other {Changes needed: your onboarding}}"
+    },
+    "fieldops_review_rejected": {
+      "title": "{hasName, select, yes {Not accepted: {name}} other {Not accepted: your onboarding}}"
+    },
+    "fieldops_review_verified": {
+      "body": "Your team lead verified it. The commission is confirmed after the holding period.",
+      "title": "{hasName, select, yes {Verified: {name}} other {Verified: your onboarding}}"
     },
     "fieldops_stipend": {
       "body": "Your stipend for {monthYear} is ready for the next payout.",
@@ -703,6 +717,10 @@
     },
     "refund_completed_credit": {
       "body": "{credit} is back in your Abonten Credit.",
+      "title": "Refund completed"
+    },
+    "refund_completed_plain": {
+      "body": "Your refund is complete.",
       "title": "Refund completed"
     },
     "refund_failed": {
@@ -892,6 +910,12 @@
     "step": "Budgets go up in steps of {amount}."
   },
   "promotionSummary": {
+    "duration": {
+      "days": "{count, plural, one {# day} other {# days}}",
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "months": "{count, plural, one {# month} other {# months}}",
+      "weeks": "{count, plural, one {# week} other {# weeks}}"
+    },
     "kind": {
       "event": "Featured event",
       "place": "Featured place",
@@ -983,18 +1007,6 @@
       "2": "We may come back and ask for something else before deciding.",
       "3": "You will get a notification when a decision is made, and the reason if it is not approved.",
       "4": "Your documents are private. Only Abonten reviewers can open them, and they are deleted once they are no longer needed."
-    },
-    "notification": {
-      "approvedBody": "{subject} is now verified on Abonten.",
-      "approvedTitle": "Verified",
-      "infoRequestedBody": "To verify {subject}, we need: {reason}",
-      "infoRequestedTitle": "More information needed",
-      "rejectedBody": "Your verification request for {subject} was not approved. {reason}",
-      "rejectedTitle": "Verification not approved",
-      "revokedBody": "The verified badge for {subject} was removed. {reason}",
-      "revokedTitle": "Verification removed",
-      "submittedBody": "We have your verification request for {subject}. We will notify you when it has been reviewed.",
-      "submittedTitle": "Verification request received"
     },
     "organizerType": {
       "business": "Registered business",

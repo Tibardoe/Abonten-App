@@ -139,10 +139,15 @@ export default async function activatePlacePromotion(
     {
       userId,
       type: "promotion_started",
-      title: "Your place is now featured",
-      body: place?.name
-        ? `${place.name} is now featured (${tier.duration_label}).`
-        : `Your promotion is now active (${tier.duration_label}).`,
+      notice: place?.name
+        ? {
+            id: "promotion_started_place",
+            params: { title: place.name, durationLabel: tier.duration_label },
+          }
+        : {
+            id: "promotion_started_generic",
+            params: { durationLabel: tier.duration_label },
+          },
       link: `/manage/places/${checkout.place_id}`,
       data: {
         kind: "place_featured",

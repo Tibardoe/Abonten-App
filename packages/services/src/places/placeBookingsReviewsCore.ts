@@ -214,19 +214,16 @@ export async function respondToPlaceBookingCore(
     };
   }
 
-  const placeName = place?.name ?? "the place";
-
   const notifyResult = await createNotificationCore(supabase, {
     userId: booking.customer_id,
     type: `place_booking_${newStatus}`,
-    title:
-      newStatus === "accepted"
-        ? "Your booking was accepted"
-        : "Your booking was declined",
-    body:
-      newStatus === "accepted"
-        ? `Your booking request for ${placeName} was accepted.`
-        : `Your booking request for ${placeName} was declined.`,
+    notice: {
+      id:
+        newStatus === "accepted"
+          ? "place_booking_accepted"
+          : "place_booking_declined",
+      params: { place: place?.name ?? null },
+    },
     link: place?.slug ? `/places/${place.slug}` : null,
   });
 

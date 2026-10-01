@@ -230,8 +230,10 @@ export async function inviteTeamMemberCore(
   if (mapped.status === "active" && mapped.userId) {
     await notifyFieldOps(supabase, [mapped.userId], {
       type: "fieldops_membership_added",
-      title: `You've joined ${campaignName}`,
-      body: "Open Field work to see your assignments.",
+      template: {
+        id: "fieldops_membership_added",
+        params: { campaign: campaignName },
+      },
       route: "/field",
     });
   }

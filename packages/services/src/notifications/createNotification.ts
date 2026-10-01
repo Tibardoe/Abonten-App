@@ -1,9 +1,13 @@
 import { logger } from "@abonten/core/logger";
 import { notificationCategory } from "@abonten/core/notifications/categories";
+import { type Notice, renderNotice } from "@abonten/core/notifications/notices";
 import type { I18nLocale, ServerTranslator } from "@abonten/i18n/server";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { Database } from "@abonten/types/database.types";
-import type { CreateNotificationInput } from "@abonten/types/notificationType";
+import type {
+  CreateNotificationInput,
+  NotificationData,
+} from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreTFor, tr, trFor } from "../i18n/requestLocale";
 import { userLocale } from "../i18n/userLocale";
@@ -33,6 +37,19 @@ export type LocalizedNotificationInput = Omit<
   text: (words: NotificationWords) => NotificationText;
 };
 
+/**
+ * A notice from the registry (@abonten/core/notifications/notices): the
+ * row stores `data.notice = { id, params }` beside the words, so the push
+ * and the row are written in the recipient's language now and the inbox
+ * re-words it in whatever language they read it in later.
+ */
+export type NoticeNotificationInput = Omit<
+  CreateNotificationInput,
+  "title" | "body"
+> & {
+  notice: Notice;
+};
+
 /** The translators for one recipient (one lookup of their language). */
 export async function notificationWordsFor(
   userId: string,
@@ -58,10 +75,26 @@ export async function notificationWordsFor(
  */
 export async function createNotificationCore(
   supabase: SupabaseClient<Database>,
-  request: CreateNotificationInput | LocalizedNotificationInput,
+  request:
+    | CreateNotificationInput
+    | LocalizedNotificationInput
+    | NoticeNotificationInput,
 ): Promise<{ status: number; message?: string }> {
   let input: CreateNotificationInput;
-  if ("text" in request) {
+  if ("notice" in request) {
+    const { notice, ...rest } = request;
+    const words = await notificationWordsFor(request.userId);
+    const rendered = renderNotice(
+      { t: words.core, locale: words.locale },
+      notice,
+    );
+    input = {
+      ...rest,
+      title: rendered?.title ?? "",
+      body: rendered?.body ?? null,
+      data: { ...(rest.data ?? {}), notice } as NotificationData,
+    };
+  } else if ("text" in request) {
     const { text, ...rest } = request;
     const words = text(await notificationWordsFor(request.userId));
     input = { ...rest, title: words.title, body: words.body ?? null };

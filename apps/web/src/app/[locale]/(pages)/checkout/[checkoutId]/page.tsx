@@ -11,6 +11,7 @@ import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector"
 import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
 import { PageTitle } from "@/components/ui/typography";
 import { createClient } from "@/config/supabase/server";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import { getLatestPaymentAttemptStatus } from "@abonten/services/payments/paymentAttempt";
 import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
 import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
@@ -30,6 +31,7 @@ export default async function page({
   searchParams: Promise<{ type: string }>;
 }) {
   const t = await getTranslations("checkout");
+  const tc = await getTranslations("core");
 
   const { checkoutId } = await params;
   const checkoutType = (await searchParams).type;
@@ -60,7 +62,10 @@ export default async function page({
     const orderSummary: PlacePromotionSummaryProps = {
       type: "promotion",
       placeName: data.place?.name ?? "",
-      tierLabel: data.place_promotion_tier?.duration_label ?? "",
+      tierLabel: promotionDurationLabel(
+        tc,
+        data.place_promotion_tier?.duration_label,
+      ),
       amount: data.unit_price,
       totalAmount: data.total_price,
       currency: data.currency,
@@ -276,7 +281,10 @@ export default async function page({
     const orderSummary: EventPromotionSummaryProps = {
       type: "event-promotion",
       eventTitle: data.event?.title ?? "",
-      tierLabel: data.event_promotion_tier?.duration_label ?? "",
+      tierLabel: promotionDurationLabel(
+        tc,
+        data.event_promotion_tier?.duration_label,
+      ),
       amount: data.unit_price,
       totalAmount: data.total_price,
       currency: data.currency,

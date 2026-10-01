@@ -206,8 +206,10 @@ export async function submitClaimAssistCore(
       .filter((id): id is string => Boolean(id)),
     {
       type: "fieldops_submission_received",
-      title: `Claim help: ${place.name}`,
-      body: "A member helped an owner claim a listing that was already on Abonten.",
+      template: {
+        id: "fieldops_claim_received",
+        params: { place: place.name },
+      },
       route: `/field/lead/review/${row.id}`,
     },
   );

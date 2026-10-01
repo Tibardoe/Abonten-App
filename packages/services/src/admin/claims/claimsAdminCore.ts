@@ -351,16 +351,20 @@ export async function reviewClaimCore(
     await createNotificationCore(supabase, {
       userId: claim.claimant_id,
       type: "place_claim_approved",
-      title: "Your claim was approved",
-      body: `You now manage ${placeName}.`,
+      notice: {
+        id: "place_claim_approved",
+        params: { place: place?.name ?? null },
+      },
       link: `/manage/places/${claim.place_id}`,
     });
     if (verifyToo) {
       await createNotificationCore(supabase, {
         userId: claim.claimant_id,
         type: "verification_approved",
-        title: "Verified",
-        body: `${placeName} is now verified on Abonten.`,
+        notice: {
+          id: "verification_approved",
+          params: { subject: place?.name ?? null, subjectKind: "place" },
+        },
         link: `/manage/places/${claim.place_id}?tab=verification`,
         data: {
           kind: "verification",
@@ -390,8 +394,10 @@ export async function reviewClaimCore(
     await createNotificationCore(supabase, {
       userId: claim.claimant_id,
       type: "place_claim_rejected",
-      title: "Your claim request was not approved",
-      body: `Your request to claim ${placeName} was rejected.`,
+      notice: {
+        id: "place_claim_rejected",
+        params: { place: place?.name ?? null },
+      },
       link: place?.slug ? `/places/${place.slug}` : null,
     });
   }

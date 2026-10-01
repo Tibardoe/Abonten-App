@@ -5,7 +5,6 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
-import { verificationNotificationCopy } from "@abonten/core/verification/copy";
 import type {
   AdminContext,
   AdminNoteEntry,
@@ -560,12 +559,12 @@ export async function decideVerificationCaseCore(
 
   const subjectName = await subjectDisplayName(supabase, row);
   const reason = input.reason?.trim() ?? "";
-  const noticeKind =
+  const noticeId =
     input.decision === "approve"
-      ? "approved"
+      ? "verification_approved"
       : input.decision === "request_info"
-        ? "infoRequested"
-        : "rejected";
+        ? "verification_info_requested"
+        : "verification_rejected";
 
   await createNotificationCore(supabase, {
     userId: row.requester_id,
@@ -575,11 +574,14 @@ export async function decideVerificationCaseCore(
         : input.decision === "request_info"
           ? "verification_info_requested"
           : "verification_rejected",
-    text: ({ core }) =>
-      verificationNotificationCopy(core, noticeKind, {
-        subject: subjectName ?? core(subjectFallbackKey(row)),
+    notice: {
+      id: noticeId,
+      params: {
+        subject: subjectName ?? null,
+        subjectKind: row.subject_type,
         reason,
-      }),
+      },
+    },
     link: verificationLink(row),
     data: verificationNotificationData(row),
   });
@@ -663,11 +665,14 @@ export async function revokeVerificationCore(
   await createNotificationCore(supabase, {
     userId: row.requester_id,
     type: "verification_revoked",
-    text: ({ core }) =>
-      verificationNotificationCopy(core, "revoked", {
-        subject: subjectName ?? core(subjectFallbackKey(row)),
+    notice: {
+      id: "verification_revoked",
+      params: {
+        subject: subjectName ?? null,
+        subjectKind: row.subject_type,
         reason: input.reason.trim(),
-      }),
+      },
+    },
     link: verificationLink(row),
     data: verificationNotificationData(row),
   });
@@ -717,12 +722,6 @@ async function subjectDisplayName(
 }
 
 /** "this place" / "your organizer profile", in the recipient's language. */
-function subjectFallbackKey(row: CaseRow): string {
-  return row.subject_type === "place"
-    ? "verification.owner.thisPlace"
-    : "verification.owner.yourOrganizerProfile";
-}
-
 export async function addVerificationNoteCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,

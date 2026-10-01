@@ -159,10 +159,10 @@ export async function respondToPlaceReviewCore(
     await createNotificationCore(supabase, {
       userId: review.reviewer_id,
       type: "review_reply",
-      title: "The owner replied to your review",
-      body: place.name
-        ? `See the reply on your review of ${place.name}.`
-        : "See the reply on your place review.",
+      notice: {
+        id: "review_reply_place",
+        params: { name: place.name ?? null },
+      },
       link: place.slug ? `/places/${place.slug}` : null,
       data: {
         kind: "review_reply",
@@ -333,10 +333,10 @@ export async function respondToEventReviewCore(
     await createNotificationCore(supabase, {
       userId: review.reviewer_id,
       type: "review_reply",
-      title: "The organizer replied to your review",
-      body: event.title
-        ? `See the reply on your review of ${event.title}.`
-        : "See the reply on your event review.",
+      notice: {
+        id: "review_reply_event",
+        params: { name: event.title ?? null },
+      },
       link: event.event_code
         ? `/events/${String(event.event_code).toLowerCase()}`
         : null,

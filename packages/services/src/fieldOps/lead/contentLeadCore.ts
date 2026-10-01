@@ -115,8 +115,13 @@ export async function upsertContentBriefCore(
     if (creator?.user_id) {
       await notifyFieldOps(supabase, [creator.user_id], {
         type: "fieldops_content_brief",
-        title: `New brief: ${input.title}`,
-        body: input.description ?? null,
+        template: {
+          id: "fieldops_content_brief",
+          params: {
+            title: input.title,
+            description: input.description ?? null,
+          },
+        },
         route: "/field/content",
       });
     }

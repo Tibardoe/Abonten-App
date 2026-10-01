@@ -8,6 +8,7 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import { AppText, useToast } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
@@ -25,6 +26,7 @@ export default function PromoteEventScreen() {
   const { locale } = useLocale();
 
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -123,7 +125,10 @@ export default function PromoteEventScreen() {
           <AppText className="text-sm text-muted-foreground">
             {ctx.currentPromotion.tierLabel
               ? t("placementActive", {
-                  tierLabel: ctx.currentPromotion.tierLabel,
+                  tierLabel: promotionDurationLabel(
+                    tc,
+                    ctx.currentPromotion.tierLabel,
+                  ),
                 })
               : t("active")}
             {t("until")}
@@ -151,7 +156,9 @@ export default function PromoteEventScreen() {
             </AppText>
             <View className="flex-row justify-between">
               <AppText className="text-sm text-foreground">
-                {t("placement", { tierLabel: reserved.tierLabel })}
+                {t("placement", {
+                  tierLabel: promotionDurationLabel(tc, reserved.tierLabel),
+                })}
               </AppText>
               <AppText className="text-sm font-semibold text-foreground">
                 {formatMoney(reserved.currency, reserved.amount)}
@@ -185,7 +192,7 @@ export default function PromoteEventScreen() {
                   }`}
                 >
                   <AppText className="font-medium text-foreground">
-                    {tier.duration_label}
+                    {promotionDurationLabel(tc, tier.duration_label)}
                   </AppText>
                   <AppText className="text-sm text-muted-foreground">
                     {formatMoney(tier.currency, tier.price)}

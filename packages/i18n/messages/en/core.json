@@ -136,18 +136,6 @@
       "withdrawnBody": "This request was cancelled. You can start a new one any time.",
       "revokedTitle": "Verification removed",
       "revokedBody": "This verification was removed. You can send a new request."
-    },
-    "notification": {
-      "submittedTitle": "Verification request received",
-      "submittedBody": "We have your verification request for {subject}. We will notify you when it has been reviewed.",
-      "approvedTitle": "Verified",
-      "approvedBody": "{subject} is now verified on Abonten.",
-      "infoRequestedTitle": "More information needed",
-      "infoRequestedBody": "To verify {subject}, we need: {reason}",
-      "rejectedTitle": "Verification not approved",
-      "rejectedBody": "Your verification request for {subject} was not approved. {reason}",
-      "revokedTitle": "Verification removed",
-      "revokedBody": "The verified badge for {subject} was removed. {reason}"
     }
   },
   "weekly": {
@@ -333,7 +321,13 @@
       "in_review": "In review",
       "paused": "Paused"
     },
-    "statusLine": "{tier} package · {state}"
+    "statusLine": "{tier} package · {state}",
+    "duration": {
+      "hours": "{count, plural, one {# hour} other {# hours}}",
+      "days": "{count, plural, one {# day} other {# days}}",
+      "weeks": "{count, plural, one {# week} other {# weeks}}",
+      "months": "{count, plural, one {# month} other {# months}}"
+    }
   },
   "openStatus": {
     "temporarilyClosed": "Temporarily closed",
@@ -561,38 +555,38 @@
   "notices": {
     "verification_submitted": {
       "title": "Verification request received",
-      "body": "We have your verification request for {subject}. We will notify you when it has been reviewed."
+      "body": "We have your verification request for {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {this place} other {your organizer profile}}}}. We will notify you when it has been reviewed."
     },
     "verification_approved": {
       "title": "Verified",
-      "body": "{subject} is now verified on Abonten."
+      "body": "{hasSubject, select, yes {{subject}} other {{subjectKind, select, place {This place} other {Your organizer profile}}}} is now verified on Abonten."
     },
     "verification_info_requested": {
       "title": "More information needed",
-      "body": "To verify {subject}, we need: {reason}"
+      "body": "To verify {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {this place} other {your organizer profile}}}}, we need: {reason}"
     },
     "verification_rejected": {
       "title": "Verification not approved",
-      "body": "Your verification request for {subject} was not approved. {reason}"
+      "body": "Your verification request for {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {this place} other {your organizer profile}}}} was not approved. {reason}"
     },
     "verification_revoked": {
       "title": "Verification removed",
-      "body": "The verified badge for {subject} was removed. {reason}"
+      "body": "The verified badge for {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {this place} other {your organizer profile}}}} was removed. {reason}"
     },
     "content_like": {
-      "title": "{others, plural, =0 {{name} liked your {kind, select, story {Story} other {Spotlight}}} one {{name} and # other liked your {kind, select, story {Story} other {Spotlight}}} other {{name} and # others liked your {kind, select, story {Story} other {Spotlight}}}}"
+      "title": "{others, plural, =0 {{actor} liked your {kind, select, story {Story} other {Spotlight}}} one {{actor} and # other liked your {kind, select, story {Story} other {Spotlight}}} other {{actor} and # others liked your {kind, select, story {Story} other {Spotlight}}}}"
     },
     "content_reaction": {
-      "title": "{others, plural, =0 {{name} reacted to your {kind, select, story {Story} other {Spotlight}}} one {{name} and # other reacted to your {kind, select, story {Story} other {Spotlight}}} other {{name} and # others reacted to your {kind, select, story {Story} other {Spotlight}}}}"
+      "title": "{others, plural, =0 {{actor} reacted {emoji} to your {kind, select, story {Story} other {Spotlight}}} one {{actor} and # other reacted {emoji} to your {kind, select, story {Story} other {Spotlight}}} other {{actor} and # others reacted {emoji} to your {kind, select, story {Story} other {Spotlight}}}}"
     },
     "content_comment": {
-      "title": "{name} commented on your {kind, select, story {Story} other {Spotlight}}"
+      "title": "{actor} commented on your {kind, select, story {Story} other {Spotlight}}"
     },
     "content_reply": {
-      "title": "{name} replied to your comment"
+      "title": "{actor} replied to your comment"
     },
     "content_follow": {
-      "title": "{others, plural, =0 {{name} started following {target}} one {{name} and # other started following {target}} other {{name} and # others started following {target}}}"
+      "title": "{others, plural, =0 {{actor} started following {target}} one {{actor} and # other started following {target}} other {{actor} and # others started following {target}}}"
     },
     "content_moderation": {
       "title": "Your {kind, select, story {Story} other {Spotlight}} has been {state, select, restricted {restricted} hidden {hidden} other {removed}}",
@@ -610,31 +604,31 @@
     },
     "place_booking_cancelled": {
       "title": "A booking was cancelled",
-      "body": "A customer cancelled their booking for {place}."
+      "body": "{hasPlace, select, yes {A customer cancelled their booking for {place}.} other {A customer cancelled their booking for your place.}}"
     },
     "place_booking_accepted": {
       "title": "Your booking was accepted",
-      "body": "Your booking request for {place} was accepted."
+      "body": "{hasPlace, select, yes {Your booking request for {place} was accepted.} other {Your booking request was accepted.}}"
     },
     "place_booking_declined": {
       "title": "Your booking was declined",
-      "body": "Your booking request for {place} was declined."
+      "body": "{hasPlace, select, yes {Your booking request for {place} was declined.} other {Your booking request was declined.}}"
     },
     "place_claim_approved": {
       "title": "Your claim was approved",
-      "body": "You now manage {place}."
+      "body": "{hasPlace, select, yes {You now manage {place}.} other {You now manage the place.}}"
     },
     "place_claim_rejected": {
       "title": "Your claim request was not approved",
-      "body": "Your request to claim {place} was rejected."
+      "body": "{hasPlace, select, yes {Your request to claim {place} was rejected.} other {Your request to claim the place was rejected.}}"
     },
     "review_reply_place": {
       "title": "The owner replied to your review",
-      "body": "{name, select, other {See the reply on your review of {name}.}}"
+      "body": "{hasName, select, yes {See the reply on your review of {name}.} other {See the reply on your place review.}}"
     },
     "review_reply_event": {
       "title": "The organizer replied to your review",
-      "body": "{name, select, other {See the reply on your review of {name}.}}"
+      "body": "{hasName, select, yes {See the reply on your review of {name}.} other {See the reply on your event review.}}"
     },
     "refund_requested": {
       "title": "Refund requested",
@@ -666,7 +660,7 @@
     },
     "ticket_confirmed": {
       "title": "Ticket confirmed",
-      "body": "{title, select, other {Your ticket for {title} is confirmed.}}"
+      "body": "{hasTitle, select, yes {Your ticket for {title} is confirmed.} other {Your ticket is confirmed.}}"
     },
     "promotion_started_event": {
       "title": "Your event is now featured",
@@ -681,16 +675,14 @@
       "body": "Your promotion is now active ({duration})."
     },
     "fieldops_content_brief": {
-      "title": "New brief: {title}",
-      "body": "Open Field work to see what the lead is asking for."
+      "title": "New brief: {title}"
     },
     "fieldops_assignment_created": {
       "title": "New assignment: {territory}",
-      "body": "Open Field work to see your assignments."
+      "body": "{sameDay, select, yes {You're on {territory} on {from}.} other {You're on {territory} from {from} to {to}.}}"
     },
     "fieldops_assignment_changed": {
-      "title": "Assignment cancelled: {territory}",
-      "body": "Your lead cancelled this assignment. Open Field work to see what is still yours."
+      "title": "{hasTerritory, select, yes {Assignment cancelled: {territory}} other {Assignment cancelled}}"
     },
     "fieldops_membership_added": {
       "title": "You've joined {campaign}",
@@ -706,22 +698,22 @@
     },
     "fieldops_onboarding_received": {
       "title": "Review: {place}",
-      "body": "A member onboarded a place. Open it to review the submission."
+      "body": "{hasMember, select, yes {{member} submitted a new business.} other {A member submitted a new business.}}"
     },
     "fieldops_content_received": {
       "title": "New content to review",
       "body": "The content creator sent in a deliverable."
     },
     "fieldops_not_eligible": {
-      "title": "Not eligible: {name}",
+      "title": "{hasName, select, yes {Not eligible: {name}} other {Not eligible: your onboarding}}",
       "body": "An automatic check after the holding period did not pass. Open it to see why."
     },
     "fieldops_flag_raised": {
-      "title": "Needs a look: {name}",
+      "title": "{hasName, select, yes {Needs a look: {name}} other {Needs a look: an onboarding}}",
       "body": "An automatic check flagged this submission for an admin."
     },
     "fieldops_confirmed": {
-      "title": "Confirmed: {name}",
+      "title": "{hasName, select, yes {Confirmed: {name}} other {Confirmed: your onboarding}}",
       "body": "Your commission is confirmed and waiting for the next payout."
     },
     "fieldops_paid": {
@@ -745,11 +737,11 @@
     },
     "review_received_event": {
       "title": "New review",
-      "body": "Someone left a {rating}-star review on {title}."
+      "body": "{hasTitle, select, yes {Someone left a {rating}-star review on {title}.} other {Someone left a new review on your event.}}"
     },
     "review_received_place": {
       "title": "New review",
-      "body": "Someone left a {rating}-star review on {name}."
+      "body": "{hasName, select, yes {Someone left a {rating}-star review on {name}.} other {Someone left a new review on your place.}}"
     },
     "event_cancelled_paid": {
       "title": "Event cancelled",
@@ -761,7 +753,7 @@
     },
     "event_reminder": {
       "title": "Tomorrow: {title}",
-      "body": "{address, select, other {Starts {dayTime} at {address}. Your ticket is in My Events.}}"
+      "body": "{hasAddress, select, yes {Starts {dayTime} at {address}. Your ticket is in My Events.} other {Starts {dayTime}. Your ticket is in My Events.}}"
     },
     "area_launched": {
       "title": "Abonten is now in {area}",
@@ -769,31 +761,31 @@
     },
     "digest_organizer": {
       "title": "New event from @{username}",
-      "body": "{title} · {when}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}"
     },
     "digest_organizer_unknown": {
       "title": "New event from an organizer you follow",
-      "body": "{title} · {when}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}"
     },
     "digest_place": {
       "title": "New event at {place}",
-      "body": "{title} · {when}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}"
     },
     "digest_place_unknown": {
       "title": "New event at a place you follow",
-      "body": "{title} · {when}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}"
     },
     "digest_event": {
       "title": "An event you might like",
-      "body": "{title} · {when}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}"
     },
     "digest_place_pick": {
       "title": "A place you might like",
-      "body": "{name}{category, select, other { · {category}}}"
+      "body": "{hasCategory, select, yes {{name} · {category}} other {{name}}}"
     },
     "digest_many": {
       "title": "{count} picks for you",
-      "body": "{first} and {more, plural, one {# more} other {# more}}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}} and {more, plural, one {# more} other {# more}}"
     },
     "welcome_credit": {
       "title": "You have welcome credit",
@@ -801,11 +793,11 @@
     },
     "referral_qualified": {
       "title": "{path, select, first_order {Your friend bought a ticket} organizer_sales {Your friend's event is selling} other {Your friend claimed their place}}",
-      "body": "{name} qualified. {amount} is pending for you and unlocks {unlocks}."
+      "body": "{name} qualified. {amount} is pending for you and unlocks {unlocks, select, event {after the event} other {in about two weeks}}."
     },
     "loyalty_reward": {
       "title": "Your service fee is coming back",
-      "body": "You've bought tickets to {required} different events. The {amount} service fee on this order comes back as credit after {event}."
+      "body": "{hasEvent, select, yes {You've bought tickets to {required} different events. The {amount} service fee on this order comes back as credit after {event}.} other {You've bought tickets to {required} different events. The {amount} service fee on this order comes back as credit after the event.}}"
     },
     "referral_joined": {
       "title": "A friend joined with your invite",
@@ -834,7 +826,27 @@
     "promotion_credit_visits": {
       "title": "Visitors earned you promotion credit",
       "body": "{visitors, plural, one {# verified visitor} other {# verified visitors}} checked in at your place in {month}. Here's {amount} of promotion credit to feature it."
+    },
+    "fieldops_review_verified": {
+      "title": "{hasName, select, yes {Verified: {name}} other {Verified: your onboarding}}",
+      "body": "Your team lead verified it. The commission is confirmed after the holding period."
+    },
+    "fieldops_review_needs_changes": {
+      "title": "{hasName, select, yes {Changes needed: {name}} other {Changes needed: your onboarding}}"
+    },
+    "fieldops_review_rejected": {
+      "title": "{hasName, select, yes {Not accepted: {name}} other {Not accepted: your onboarding}}"
+    },
+    "refund_completed_plain": {
+      "title": "Refund completed",
+      "body": "Your refund is complete."
+    },
+    "fieldops_commission_reversed": {
+      "title": "A commission was taken back"
     }
+  },
+  "noticeWords": {
+    "someone": "Someone"
   },
   "eventCategories": {
     "musicAndConcerts": "Music & Concerts",

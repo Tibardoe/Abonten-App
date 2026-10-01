@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { localizeNotificationRow } from "@abonten/core/notifications/notices";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -10,7 +11,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { tr } from "../i18n/requestLocale";
+import { coreT, requestLocale, tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { markRecommendationOpenedCore } from "./recommendationsCore";
 
@@ -55,8 +56,14 @@ export async function fetchNotificationsPage(
     };
   }
 
+  // Each row is worded in the language of whoever is reading it now: the
+  // notice it was written from (data.notice), or for a row the database
+  // wrote, the notice its English text says it is.
+  const i18n = { t: coreT(), locale: requestLocale() };
   const { page, hasNextPage } = splitPage<NotificationType>(
-    (data ?? []) as unknown as NotificationType[],
+    ((data ?? []) as unknown as NotificationType[]).map((row) =>
+      localizeNotificationRow(i18n, row),
+    ),
     pageSize,
   );
 

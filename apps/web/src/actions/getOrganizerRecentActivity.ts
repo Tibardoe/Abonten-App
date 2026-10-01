@@ -5,9 +5,9 @@ import { withActionLocale } from "@/i18n/withActionLocale";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerRecentActivity } from "@abonten/services/organizer/organizerDashboardQuery";
 
-export default withActionLocale(async function getOrganizerRecentActivity(
-  limit = 8,
-) {
+// Declared on its own, then wrapped: passed inline, the wrapper would give
+// the defaulted parameters its own (unknown) type instead of their default.
+async function getOrganizerRecentActivity(limit = 8) {
   const supabase = await createClient();
 
   const {
@@ -20,4 +20,6 @@ export default withActionLocale(async function getOrganizerRecentActivity(
   }
 
   return fetchOrganizerRecentActivity(supabase, limit);
-});
+}
+
+export default withActionLocale(getOrganizerRecentActivity);

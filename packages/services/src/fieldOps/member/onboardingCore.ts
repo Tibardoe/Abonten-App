@@ -687,8 +687,13 @@ export async function submitOnboardingCore(
     (leads ?? []).map((l) => l.user_id).filter((id): id is string => !!id),
     {
       type: "fieldops_submission_received",
-      title: `Review: ${input.place.name}`,
-      body: `${row.fieldops_team_member?.full_name_snapshot ?? "A member"} submitted a new business.`,
+      template: {
+        id: "fieldops_onboarding_received",
+        params: {
+          place: input.place.name,
+          member: row.fieldops_team_member?.full_name_snapshot ?? null,
+        },
+      },
       route: `/field/lead/review/${row.id}`,
     },
   );

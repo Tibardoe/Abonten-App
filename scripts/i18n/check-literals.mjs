@@ -68,6 +68,75 @@ const TARGETS = {
       "+native-intent",
     ],
   },
+  // Code that answers requests. Its words for people go through tr() /
+  // coreT() / the notice registry; what is left in English must be
+  // something no person reads (a log line, an audit note, a reason stored
+  // for staff, a provider-facing description).
+  server: {
+    roots: [
+      "packages/services/src",
+      "apps/web/src/actions",
+      "apps/web/src/app/api",
+      "apps/web/src/utils",
+      "apps/web/src/lib",
+    ],
+    // Under these roots only modules that run on the server belong here.
+    serverModulesOnlyUnder: ["apps/web/src/utils", "apps/web/src/lib"],
+    exclude: [
+      "__integration__",
+      ".test.",
+      ".d.ts",
+      "packages/services/src/i18n/",
+      // The admin console is English (staff tool); so are its services.
+      "packages/services/src/admin/",
+      "apps/web/src/app/api/observability/",
+      "apps/web/src/app/api/jobs/",
+      "apps/web/src/app/api/maintenance/",
+      "apps/web/src/app/api/monitoring/",
+    ],
+    // Values that are stored or sent for staff, logs and providers.
+    nonTextNames: [
+      "failure_reason",
+      "failureReason",
+      "p_reason",
+      "p_note",
+      "p_detail",
+      "p_summary",
+      "p_memo",
+      "p_description",
+      "p_label",
+      "note",
+      "memo",
+      "summary",
+      "detail",
+      "details",
+      "reference",
+      "operation",
+      "step",
+      "stage",
+      "source",
+      "context",
+      "cause",
+      "hint",
+      "outcome",
+      "result",
+      "level",
+      "metric",
+      "label",
+      "subject_type",
+      "resource_type",
+      "entity",
+    ],
+    safeCalls: [
+      // Thrown for the caller's catch block or the log, never shown as is.
+      /^(new)?\w*(Error|Exception)$/,
+      /^super$/,
+      /^(fail|unsupported|invariant|assertNever|warnOnce)$/,
+      /^(recordAdminAudit|recordAudit|audit\w*)$/,
+      /^(Sentry|logger)\.\w+$/,
+      /\.(startSpan|setTag|setContext|addBreadcrumb)$/,
+    ],
+  },
 };
 
 const cfg = TARGETS[target];
@@ -99,6 +168,8 @@ const files = cfg.roots
   .filter((f) => !cfg.exclude.some((x) => f.includes(x)))
   .filter((f) => !ONLY || f.includes(ONLY))
   .sort();
+
+const IS_SERVER = target === "server";
 
 const allowlist = existsSync(ALLOWLIST_PATH)
   ? JSON.parse(readFileSync(ALLOWLIST_PATH, "utf8"))
@@ -342,7 +413,10 @@ const NON_TEXT_WORDS = [
   "family",
   "weight",
 ];
-const NON_TEXT_EXACT = new Set(NON_TEXT_WORDS);
+const NON_TEXT_EXACT = new Set([
+  ...NON_TEXT_WORDS,
+  ...(cfg.nonTextNames ?? []),
+]);
 const NON_TEXT_SUFFIX = NON_TEXT_WORDS.filter((w) => w.length > 2).map(
   (w) => w.charAt(0).toUpperCase() + w.slice(1),
 );
@@ -398,7 +472,10 @@ function isSafeCall(node, sf) {
     ) {
       return false;
     }
-    return SAFE_CALLS.some((re) => re.test(text));
+    return (
+      SAFE_CALLS.some((re) => re.test(text)) ||
+      (cfg.safeCalls ?? []).some((re) => re.test(text))
+    );
   }
   if (cur && ts.isTaggedTemplateExpression(cur)) return true;
   if (cur && ts.isThrowStatement(cur)) return true;
@@ -525,7 +602,19 @@ for (const file of files) {
   if (allowFiles.some((f) => file.includes(f))) continue;
   const abs = join(ROOT, file);
   const source = readFileSync(abs, "utf8");
-  if (file.endsWith(".ts") && SERVER_ONLY_IMPORT.test(source)) continue;
+  if (IS_SERVER) {
+    // Browser-side helpers that sit beside server modules are the web
+    // target's; .tsx is React (the web target's too).
+    if (file.endsWith(".tsx")) continue;
+    if (
+      cfg.serverModulesOnlyUnder.some((r) => file.startsWith(r)) &&
+      !SERVER_ONLY_IMPORT.test(source)
+    ) {
+      continue;
+    }
+  } else if (file.endsWith(".ts") && SERVER_ONLY_IMPORT.test(source)) {
+    continue;
+  }
   const sf = ts.createSourceFile(
     abs,
     source,

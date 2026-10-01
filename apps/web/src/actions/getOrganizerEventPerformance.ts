@@ -7,7 +7,9 @@ import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange"
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerEventPerformance } from "@abonten/services/organizer/organizerDashboardQuery";
 
-export default withActionLocale(async function getOrganizerEventPerformance(
+// Declared on its own, then wrapped: passed inline, the wrapper would give
+// the defaulted parameters its own (unknown) type instead of their default.
+async function getOrganizerEventPerformance(
   period: DashboardPeriod,
   sort: "revenue" | "tickets" = "revenue",
   limit = 10,
@@ -30,4 +32,6 @@ export default withActionLocale(async function getOrganizerEventPerformance(
     limit,
     await requestTimeZone(),
   );
-});
+}
+
+export default withActionLocale(getOrganizerEventPerformance);

@@ -4,6 +4,7 @@ import insertPlacePromotionCheckout from "@/actions/insertPlacePromotionCheckout
 import { useToast } from "@/hooks/useToast";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -35,6 +36,7 @@ export default function ManagePlacePromotionSection({
   const locale = useLocale();
 
   const t = useTranslations("places");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const [selectedTierId, setSelectedTierId] = useState<number | null>(
@@ -111,7 +113,9 @@ export default function ManagePlacePromotionSection({
                   : "border-border hover:border-primary/40"
               }`}
             >
-              <span className="font-medium">{tier.duration_label}</span>
+              <span className="font-medium">
+                {promotionDurationLabel(tc, tier.duration_label)}
+              </span>
               <span className="text-sm text-muted-foreground">
                 {formatMoney(tier.currency, tier.price)}
               </span>

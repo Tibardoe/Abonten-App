@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/useToast";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { EventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import type { EventPromotionTier } from "@abonten/types/postsType";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -43,6 +44,7 @@ export default function ManageEventPromotionSection({
   const locale = useLocale();
 
   const t = useTranslations("events");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const [selectedTierId, setSelectedTierId] = useState<number | null>(
@@ -134,7 +136,9 @@ export default function ManageEventPromotionSection({
                       : "border-border hover:border-primary/40"
                   }`}
                 >
-                  <span className="font-medium">{tier.duration_label}</span>
+                  <span className="font-medium">
+                    {promotionDurationLabel(tc, tier.duration_label)}
+                  </span>
                   <span className="text-sm text-muted-foreground">
                     {formatMoney(tier.currency, tier.price)}
                   </span>

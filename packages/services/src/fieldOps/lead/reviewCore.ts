@@ -179,18 +179,17 @@ export async function reviewOnboardingCore(
     await recordPendingCommission(supabase, row.id);
   }
 
-  const titles: Record<FieldOpsReviewDecision, string> = {
-    verified: `Verified: ${row.business_name ?? "your onboarding"}`,
-    needs_changes: `Changes needed: ${row.business_name ?? "your onboarding"}`,
-    rejected: `Not accepted: ${row.business_name ?? "your onboarding"}`,
+  const reviewNotice: Record<FieldOpsReviewDecision, string> = {
+    verified: "fieldops_review_verified",
+    needs_changes: "fieldops_review_needs_changes",
+    rejected: "fieldops_review_rejected",
   };
   await notifyFieldOps(supabase, [row.member_user_id], {
     type: "fieldops_submission_reviewed",
-    title: titles[input.decision],
-    body:
-      input.decision === "verified"
-        ? "Your team lead verified it. The commission is confirmed after the holding period."
-        : (input.note ?? null),
+    template: {
+      id: reviewNotice[input.decision],
+      params: { name: row.business_name ?? null, note: input.note ?? null },
+    },
     route: `/field/submissions/${row.id}`,
   });
 

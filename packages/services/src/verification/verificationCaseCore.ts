@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { verificationNotificationCopy } from "@abonten/core/verification/copy";
 import {
   canStartNewCase,
   isEditable,
@@ -698,16 +697,10 @@ export async function submitVerificationCaseCore(
   await createNotificationCore(supabase, {
     userId,
     type: "verification_submitted",
-    text: ({ core }) =>
-      verificationNotificationCopy(core, "submitted", {
-        subject:
-          facts.name ??
-          core(
-            row.subject_type === "place"
-              ? "verification.owner.thisPlace"
-              : "verification.owner.yourOrganizerProfile",
-          ),
-      }),
+    notice: {
+      id: "verification_submitted",
+      params: { subject: facts.name ?? null, subjectKind: row.subject_type },
+    },
     link: verificationLink(row),
     data: verificationNotificationData(row),
   });

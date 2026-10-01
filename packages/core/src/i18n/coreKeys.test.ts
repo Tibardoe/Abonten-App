@@ -95,7 +95,6 @@ import {
   organizerTypeLabel,
   ownerStatusCopy,
   verificationChipLabel,
-  verificationNotificationCopy,
   verificationStatusLabel,
   whyVerify,
 } from "../verification/copy";
@@ -179,15 +178,6 @@ describe("core copy keys", () => {
     for (const type of ORGANIZER_TYPES) {
       organizerTypeLabel(strict, type);
       organizerTypeDescription(strict, type);
-    }
-    for (const kind of [
-      "submitted",
-      "approved",
-      "infoRequested",
-      "rejected",
-      "revoked",
-    ] as const) {
-      verificationNotificationCopy(strict, kind, { subject: "x", reason: "y" });
     }
   });
 

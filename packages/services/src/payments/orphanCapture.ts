@@ -142,8 +142,10 @@ export async function refundOrphanCapture(input: {
   await createNotificationCore(supabase, {
     userId: attempt.user_id,
     type: "refund_requested",
-    title: "We're refunding a payment",
-    body: `Your payment of ${formatMoney(verification.amount)} arrived after the order had closed, so nothing was issued for it. We've asked for the full amount to go back to your payment method.`,
+    notice: {
+      id: "orphan_refund",
+      params: { amount: formatMoney(verification.amount) },
+    },
     link: "/transactions",
     data: { kind: "ticket" },
   }).catch((error) => {

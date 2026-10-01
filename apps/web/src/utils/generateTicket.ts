@@ -359,10 +359,7 @@ export default async function generateTicket(
   await createNotificationCore(supabase, {
     userId,
     type: "ticket_confirmed",
-    title: "Ticket confirmed",
-    body: event.title
-      ? `Your ticket for ${event.title} is confirmed.`
-      : "Your ticket is confirmed.",
+    notice: { id: "ticket_confirmed", params: { title: event.title ?? null } },
     link: "/manage/my-events",
     data: {
       kind: "ticket",

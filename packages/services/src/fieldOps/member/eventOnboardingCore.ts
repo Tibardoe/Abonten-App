@@ -283,8 +283,10 @@ export async function submitEventOnboardingCore(
       .filter((id): id is string => Boolean(id)),
     {
       type: "fieldops_submission_received",
-      title: `Event: ${input.event.title}`,
-      body: "A member onboarded an event. It pays once the event has run.",
+      template: {
+        id: "fieldops_event_received",
+        params: { title: input.event.title },
+      },
       route: `/field/lead/review/${row.id}`,
     },
   );
