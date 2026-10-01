@@ -1040,6 +1040,18 @@
     "usesAll": "{capacity, plural, one {Las cantidades de entradas usan la única plaza.} other {Las cantidades de entradas usan las # plazas.}}",
     "usesSome": "Las cantidades de entradas usan {reserved} de {capacity, plural, one {# plaza} other {# plazas}}; {left} quedarán sin vender a menos que aumentes una cantidad."
   },
+  "ticketReceipt": {
+    "attendee": "Asistente",
+    "date": "Fecha",
+    "issuedOn": "Emitido el: {date}",
+    "location": "Ubicación",
+    "qrCode": "Código QR de la entrada",
+    "status": "Estado",
+    "statusValue": "{status, select, active {Activa} used {Registrada en la entrada} cancelled {Cancelada} expired {Caducada} other {Desconocido}}",
+    "ticketCode": "Código de la entrada",
+    "ticketType": "Tipo de entrada",
+    "title": "Recibo"
+  },
   "ticketTiers": {
     "freeEventPromoCodes": "Los códigos promocionales no están disponibles en un evento gratuito. Elimínalos o haz que el evento sea de pago.",
     "freeReserved": "«{name}» está reservado para eventos gratuitos. Pon otro nombre a este tipo de entrada.",

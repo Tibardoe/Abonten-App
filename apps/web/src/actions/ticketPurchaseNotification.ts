@@ -129,13 +129,13 @@ export default withActionLocale(async function ticketPurchaseNotification(
     const words = emailWords(locale, username);
 
     const ticketPdfDatas = tickets.map((ticket) =>
-      buildTicketPdfData(ticket, attendeeName),
+      buildTicketPdfData(ticket, attendeeName, locale),
     );
 
     const pdfBuffers = await Promise.all(
       ticketPdfDatas.map(async (pdfData) => ({
         filename: buildTicketPdfFilename(pdfData.ticketCode),
-        content: await generateTicketPdfBuffer(pdfData),
+        content: await generateTicketPdfBuffer(pdfData, locale),
       })),
     );
 

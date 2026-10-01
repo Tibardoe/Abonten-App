@@ -17,13 +17,10 @@ export {
   type I18nNamespace,
 } from "@abonten/i18n/namespaces";
 
-// How each language names itself: a person who cannot read the current
-// language must still find their own in the list.
-export const LOCALE_LABELS = {
-  en: "English",
-  fr: "Français",
-  es: "Español",
-  de: "Deutsch",
-  pt: "Português",
-  ak: "Twi",
-} as const satisfies Record<string, string>;
+// How each language names itself, the order the picker lists them in, and
+// which ones are only partly translated: one list for the web and the app.
+export {
+  LOCALE_NAMES as LOCALE_LABELS,
+  LOCALE_ORDER,
+  isPartialLocale,
+} from "@abonten/i18n/locales";

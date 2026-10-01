@@ -1,0 +1,12 @@
+{
+  "names": {
+    "en": "English",
+    "fr": "Français",
+    "es": "Español",
+    "de": "Deutsch",
+    "pt": "Português",
+    "ak": "Twi"
+  },
+  "order": ["en", "fr", "es", "de", "pt", "ak"],
+  "partial": ["ak"]
+}

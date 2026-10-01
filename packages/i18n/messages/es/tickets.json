@@ -34,6 +34,7 @@
   "preparingReceipt": "Preparando el recibo…",
   "receiptReady": "Recibo listo",
   "seat": "Asiento {seat_number}",
+  "shareReceiptTitle": "Recibo de entrada de Abonten",
   "sharingIsnTAvailableOnThis": "Compartir no está disponible en este dispositivo, pero el recibo en PDF se ha generado.",
   "showThisAtEntry": "Muestra esto en la entrada",
   "somethingWentWrongGeneratingThePdf": "Algo salió mal al generar el PDF. Inténtalo de nuevo.",

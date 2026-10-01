@@ -1,5 +1,7 @@
 import ModalShell from "@/components/atoms/ModalShell";
 import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
+import { useToast } from "@/hooks/useToast";
+import { loadTicketPdfFontInBrowser } from "@/utils/ticketPdfFont";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   formatDateWithSuffix,
@@ -9,6 +11,7 @@ import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
+  ticketPdfLabels,
 } from "@abonten/core/ticketPdfData";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { pdf } from "@react-pdf/renderer";
@@ -32,13 +35,34 @@ export default function TicketModal({
   const locale = useLocale();
 
   const t = useTranslations("common");
+  const tc = useTranslations("core");
+  const tt = useTranslations("tickets");
+  const toast = useToast();
 
   const handleDOwnloadPdf = async () => {
+    try {
+      await downloadPdf();
+    } catch {
+      // Before this, a failed download did nothing at all: the button
+      // simply never answered.
+      toast.error(tt("somethingWentWrongGeneratingThePdf"));
+    }
+  };
+
+  const downloadPdf = async () => {
     // Same TicketPdfDocument the purchase-confirmation email attaches
     // server-side — this is the one canonical ticket PDF, just generated
     // client-side here instead of via renderToBuffer.
+    // The words are worked out here, where the page's language is known:
+    // the PDF renderer runs outside the page and cannot read it.
+    const data = buildTicketPdfData(event, undefined, locale);
+    const font = await loadTicketPdfFontInBrowser();
     const blob = await pdf(
-      <TicketPdfDocument ticket={buildTicketPdfData(event)} />,
+      <TicketPdfDocument
+        ticket={data}
+        labels={ticketPdfLabels(tc, data)}
+        font={font}
+      />,
     ).toBlob();
 
     const url = URL.createObjectURL(blob);

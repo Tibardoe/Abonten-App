@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./catalog": "./src/catalog.ts",
+    "./locales": "./src/locales.ts",
     "./namespaces": "./src/namespaces.ts",
     "./server": "./src/server.ts",
     "./validation": "./src/validation.ts",

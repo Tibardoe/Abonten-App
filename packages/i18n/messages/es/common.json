@@ -357,6 +357,7 @@
   "keepOrder": "Mantener pedido",
   "keepTicket": "Mantener entrada",
   "keepTicket2": "Mantener entrada",
+  "languagePartial": "Traducción parcial — algunas pantallas siguen en inglés.",
   "lastEdited": "Última edición {getRelativeTime}",
   "leaveBlankForUnlimitedCapacity": "Déjalo en blanco para aforo ilimitado",
   "left": "Quedan {quantity}",

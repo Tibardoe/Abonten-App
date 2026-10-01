@@ -34,6 +34,7 @@
   "preparingReceipt": "Beleg wird vorbereitet…",
   "receiptReady": "Beleg bereit",
   "seat": "Platz {seat_number}",
+  "shareReceiptTitle": "Abonten-Ticketbeleg",
   "sharingIsnTAvailableOnThis": "Teilen ist auf diesem Gerät nicht verfügbar, aber der PDF-Beleg wurde erstellt.",
   "showThisAtEntry": "Zeige das am Einlass",
   "somethingWentWrongGeneratingThePdf": "Beim Erstellen der PDF ist etwas schiefgelaufen. Bitte versuche es erneut.",

@@ -1040,6 +1040,18 @@
     "usesAll": "{capacity, plural, one {Die Ticketmengen belegen den einen Platz.} other {Die Ticketmengen belegen alle # Plätze.}}",
     "usesSome": "Die Ticketmengen belegen {reserved} von {capacity, plural, one {# Platz} other {# Plätzen}}; {left} bleiben unverkauft, wenn du keine Menge erhöhst."
   },
+  "ticketReceipt": {
+    "attendee": "Teilnehmer",
+    "date": "Datum",
+    "issuedOn": "Ausgestellt am: {date}",
+    "location": "Ort",
+    "qrCode": "QR-Code des Tickets",
+    "status": "Status",
+    "statusValue": "{status, select, active {Aktiv} used {Eingecheckt} cancelled {Storniert} expired {Abgelaufen} other {Unbekannt}}",
+    "ticketCode": "Ticketcode",
+    "ticketType": "Tickettyp",
+    "title": "Beleg"
+  },
   "ticketTiers": {
     "freeEventPromoCodes": "Promo-Codes sind bei einem kostenlosen Event nicht verfügbar. Entferne sie oder mache das Event kostenpflichtig.",
     "freeReserved": "„{name}“ ist kostenlosen Events vorbehalten. Gib diesem Tickettyp einen anderen Namen.",

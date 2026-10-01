@@ -895,5 +895,6 @@
   "yourTicketIsReady": "Your ticket is ready.",
   "yourTicketsAreReady": "Your tickets are ready.",
   "zoomX": "Zoom: {toFixed}x",
-  "tickets3": "{type} tickets"
+  "tickets3": "{type} tickets",
+  "languagePartial": "Partly translated — some screens are still in English."
 }

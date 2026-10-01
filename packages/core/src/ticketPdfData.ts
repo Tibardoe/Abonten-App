@@ -1,6 +1,7 @@
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { buildCloudinaryUrl } from "./cloudinaryUrl";
 import { formatDateWithSuffix, getFormattedEventDate } from "./dateFormatter";
+import type { CoreTranslator } from "./i18n/translator";
 
 export type TicketPdfData = {
   ticketCode: string;
@@ -21,22 +22,26 @@ export type TicketPdfData = {
  * purchase email fetch) into exactly what the canonical ticket PDF needs.
  * Used by both the client-side "Download As PDF" button and the
  * server-side email attachment, so the two can never render different data.
+ * `locale` is the language of the person the receipt is for: its dates are
+ * written in it (the buyer's saved language for the emailed PDF).
  */
 export function buildTicketPdfData(
   ticket: UserTicketType,
   attendeeName?: string | null,
+  locale?: string | null,
 ): TicketPdfData {
   const { date, time } = getFormattedEventDate(
     ticket.event.starts_at,
     ticket.event.ends_at,
     ticket.event.occurrences,
     ticket.event.timezone,
+    locale,
   );
 
   return {
     ticketCode: ticket.ticket_code,
     status: ticket.status,
-    issuedAt: formatDateWithSuffix(ticket.issued_at),
+    issuedAt: formatDateWithSuffix(ticket.issued_at, undefined, locale),
     ticketTypeName: ticket.ticket_type.type,
     eventTitle: ticket.event.title,
     eventAddress: ticket.event.address?.full_address ?? "",
@@ -53,6 +58,45 @@ export function buildTicketPdfData(
       lossless: true,
     }),
     attendeeName,
+  };
+}
+
+/** The words printed on the receipt, in the reader's language. */
+export type TicketPdfLabels = {
+  title: string;
+  issuedOn: string;
+  attendee: string;
+  ticketType: string;
+  ticketCode: string;
+  status: string;
+  /** The ticket's status as a word (never the stored code). */
+  statusValue: string;
+  location: string;
+  date: string;
+  qrCode: string;
+};
+
+/**
+ * The receipt's words from a `core` translator. The three places that draw
+ * the receipt (the browser download, the emailed attachment, the app's
+ * share sheet) all use this, so none of them needs a React hook inside a
+ * PDF renderer and none can word the receipt differently.
+ */
+export function ticketPdfLabels(
+  t: CoreTranslator,
+  ticket: TicketPdfData,
+): TicketPdfLabels {
+  return {
+    title: t("ticketReceipt.title"),
+    issuedOn: t("ticketReceipt.issuedOn", { date: ticket.issuedAt }),
+    attendee: t("ticketReceipt.attendee"),
+    ticketType: t("ticketReceipt.ticketType"),
+    ticketCode: t("ticketReceipt.ticketCode"),
+    status: t("ticketReceipt.status"),
+    statusValue: t("ticketReceipt.statusValue", { status: ticket.status }),
+    location: t("ticketReceipt.location"),
+    date: t("ticketReceipt.date"),
+    qrCode: t("ticketReceipt.qrCode"),
   };
 }
 

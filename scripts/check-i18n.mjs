@@ -13,9 +13,13 @@
 // the last, silently), and a key that is both a message and a group
 // ("appearance": "Appearance" beside "appearance": { "title": … }).
 //
+// And a finished language shows nothing in English (see the last section):
+// before 2026-10-01 a person who chose French read most of the app in
+// English, because new sentences reached the catalogs untranslated.
+//
 // Run: node scripts/check-i18n.mjs
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -258,3 +262,107 @@ if (problems.length) {
 console.log(
   `i18n: ${locales.length} locales match ${BASE} across ${files.length} files; ${parsed} messages are valid ICU.`,
 );
+
+// ── a finished language leaves nothing in English ──
+//
+// A new English sentence is copied into every catalog so no key is missing,
+// which also means it SHOWS in English to someone reading French until it is
+// translated. For every language not listed as partial in locales.json, a
+// value that still equals the English one must either be translated or be
+// recorded in same-as-english.json as a word that really is the same there
+// ("Total", "Menu", a brand name).
+//
+//   node scripts/check-i18n.mjs --accept-same    record what is the same now
+
+const registry = JSON.parse(
+  readFileSync(
+    new URL("../packages/i18n/src/locales.json", import.meta.url),
+    "utf8",
+  ),
+);
+const SAME_FILE = fileURLToPath(
+  new URL("../packages/i18n/same-as-english.json", import.meta.url),
+);
+const ACCEPT = process.argv.includes("--accept-same");
+const finished = locales.filter((locale) => !registry.partial.includes(locale));
+
+// The words of a message: its literal text, including inside plural and
+// select branches, without the values and the tags.
+function wordsOf(message) {
+  let ast;
+  try {
+    ast = parseIcu(message, { ignoreTag: false });
+  } catch {
+    return message;
+  }
+  let text = "";
+  const walk = (nodes) => {
+    for (const node of nodes) {
+      if (node.type === 0) text += `${node.value} `;
+      if (node.options)
+        for (const option of Object.values(node.options)) walk(option.value);
+      if (node.children) walk(node.children);
+    }
+  };
+  walk(ast);
+  return text;
+}
+
+let recorded = {};
+try {
+  recorded = JSON.parse(readFileSync(SAME_FILE, "utf8"));
+} catch {
+  recorded = {};
+}
+const same = {};
+const untranslated = [];
+for (const locale of finished) {
+  const allowed = new Set(recorded[locale] ?? []);
+  same[locale] = [];
+  for (const file of files) {
+    const ns = file.replace(/\.json$/, "");
+    const english = messagesOf(BASE, file);
+    const translated = messagesOf(locale, file);
+    for (const [key, message] of Object.entries(english)) {
+      if (translated[key] !== message) continue;
+      // Nothing to translate: a number, a symbol, values only.
+      if (!/\p{L}{2,}/u.test(wordsOf(message))) continue;
+      const ref = `${ns}:${key}`;
+      same[locale].push(ref);
+      if (!allowed.has(ref))
+        untranslated.push(`${locale}/${file}: "${key}" = ${message}`);
+    }
+  }
+  same[locale].sort();
+}
+
+if (ACCEPT) {
+  writeFileSync(SAME_FILE, `${JSON.stringify(same, null, 2)}\n`);
+  const total = Object.values(same).reduce((n, refs) => n + refs.length, 0);
+  console.log(
+    `i18n: recorded ${total} values as the same as English in ${finished.join(", ")}.`,
+  );
+} else if (untranslated.length) {
+  console.error(
+    `${untranslated.length} messages still show in English to people reading ${finished.join(", ")}:`,
+  );
+  for (const line of untranslated.slice(0, 60)) console.error(`  ${line}`);
+  if (untranslated.length > 60)
+    console.error(`  … and ${untranslated.length - 60} more`);
+  console.error(
+    [
+      "",
+      "Translate them:",
+      `  node scripts/i18n/translation-units.mjs export --out <dir> --untranslated ${finished.join(",")}`,
+      "  (write <dir>/<locale>-01.txt, then: … import --locale <locale> --in <dir>)",
+      "or, for a word that really is the same in that language:",
+      "  node scripts/check-i18n.mjs --accept-same",
+    ].join("\n"),
+  );
+  process.exit(1);
+} else {
+  const total = Object.values(same).reduce((n, refs) => n + refs.length, 0);
+  console.log(
+    `i18n: nothing is left in English in ${finished.join(", ")} (${total} values recorded as the same word); partly translated: ${registry.partial.join(", ") || "none"}.`,
+  );
+}

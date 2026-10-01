@@ -43,5 +43,6 @@
   "ticketCancelled": "Ticket cancelled",
   "ticketReference": "Ticket reference",
   "viewEvent": "View event",
-  "yourTickets": "your tickets"
+  "yourTickets": "your tickets",
+  "shareReceiptTitle": "Abonten ticket receipt"
 }

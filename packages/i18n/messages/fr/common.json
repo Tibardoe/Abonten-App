@@ -357,6 +357,7 @@
   "keepOrder": "Garder la commande",
   "keepTicket": "Garder le billet",
   "keepTicket2": "Garder le billet",
+  "languagePartial": "Traduction partielle — certains écrans sont encore en anglais.",
   "lastEdited": "Dernière modification {getRelativeTime}",
   "leaveBlankForUnlimitedCapacity": "Laissez vide pour une capacité illimitée",
   "left": "{quantity} restants",

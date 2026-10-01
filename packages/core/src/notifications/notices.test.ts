@@ -1,6 +1,7 @@
 import coreMessages from "@abonten/i18n/messages/en/core.json";
+import { coreTranslator } from "@abonten/i18n/server";
 import { describe, expect, it } from "vitest";
-import { i18nEn } from "../i18n/testTranslator";
+import { i18nEn, i18nFr } from "../i18n/testTranslator";
 import {
   NOTICES,
   type Notice,
@@ -594,5 +595,46 @@ describe("stored English rows", () => {
       title: "Ticket confirmed",
       body: "Your ticket for Afro Night is confirmed.",
     });
+  });
+});
+
+// A person who reads French, Spanish, German or Portuguese opens the same
+// inbox: every row the database or an older build wrote in English has to
+// come out in their language, with the names and amounts it carried.
+describe.each(["fr", "es", "de", "pt"])("stored rows read in %s", (locale) => {
+  const i18n = { locale, t: coreTranslator(locale) };
+
+  it("says a known notice in that language", () => {
+    const french = renderNotice(i18nFr, {
+      id: "ticket_confirmed",
+      params: { title: "Afro Night" },
+    });
+    expect(french).toEqual({
+      title: "Billet confirmé",
+      body: "Votre billet pour Afro Night est confirmé.",
+    });
+    const rendered = renderNotice(i18n, {
+      id: "ticket_confirmed",
+      params: { title: "Afro Night" },
+    });
+    expect(rendered?.title).not.toBe("Ticket confirmed");
+    expect(rendered?.body).toContain("Afro Night");
+  });
+
+  it("leaves no row in English and no value unfilled", () => {
+    let translatedTitles = 0;
+    for (const [type, title, body] of STORED) {
+      const shown = localizeNotificationRow(i18n, row(type, title, body));
+      const label = `${type} — ${title}`;
+      expect(shown.title, label).toBeTruthy();
+      for (const text of [shown.title, shown.body ?? ""]) {
+        // A value the message never received, or a key shown as text.
+        expect(text, label).not.toMatch(/\{[a-zA-Z0-9_]+\}/);
+        expect(text, label).not.toMatch(/\bnotices\.[a-z_]+\.(title|body)\b/);
+      }
+      if (shown.title !== title) translatedTitles += 1;
+    }
+    // A handful of titles are a name or the same word in both languages.
+    expect(translatedTitles / STORED.length).toBeGreaterThan(0.9);
   });
 });

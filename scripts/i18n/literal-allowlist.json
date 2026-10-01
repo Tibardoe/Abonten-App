@@ -8,7 +8,8 @@
     "{} | Abonten Hub": "The page title followed by the brand.",
     "field ops context resolved": "A Sentry breadcrumb for engineers, never shown to a person.",
     "'Courier New', Courier, monospace": "A CSS font stack.",
-    "not found": "Cloudinary's own result code for a missing asset, compared against."
+    "not found": "Cloudinary's own result code for a missing asset, compared against.",
+    "Helvetica": "A PDF font name (the ticket receipt fallback font)."
   },
   "texts": [
     "Compiled",
@@ -19,7 +20,8 @@
     "{} | Abonten Hub",
     "field ops context resolved",
     "'Courier New', Courier, monospace",
-    "not found"
+    "not found",
+    "Helvetica"
   ],
   "files": [],
   "entries": [

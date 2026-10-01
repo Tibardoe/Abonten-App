@@ -1040,6 +1040,18 @@
     "usesAll": "{capacity, plural, one {Ticket quantities use the one seat.} other {Ticket quantities use all # seats.}}",
     "usesSome": "Ticket quantities use {reserved} of {capacity, plural, one {# seat} other {# seats}}; {left} will stay unsold unless you raise a quantity."
   },
+  "ticketReceipt": {
+    "attendee": "Attendee",
+    "date": "Date",
+    "issuedOn": "Issued on: {date}",
+    "location": "Location",
+    "qrCode": "Ticket QR code",
+    "status": "Status",
+    "statusValue": "{status, select, active {Active} used {Checked in} cancelled {Cancelled} expired {Expired} other {Unknown}}",
+    "ticketCode": "Ticket code",
+    "ticketType": "Ticket type",
+    "title": "Receipt"
+  },
   "ticketTiers": {
     "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid.",
     "freeReserved": "“{name}” is reserved for free events. Give this ticket type another name.",

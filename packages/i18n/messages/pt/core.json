@@ -1040,6 +1040,18 @@
     "usesAll": "{capacity, plural, one {As quantidades de bilhetes ocupam o único lugar.} other {As quantidades de bilhetes ocupam os # lugares.}}",
     "usesSome": "As quantidades de bilhetes ocupam {reserved} de {capacity, plural, one {# lugar} other {# lugares}}; {left} ficarão por vender, a menos que aumente uma quantidade."
   },
+  "ticketReceipt": {
+    "attendee": "Participante",
+    "date": "Data",
+    "issuedOn": "Emitido em: {date}",
+    "location": "Localização",
+    "qrCode": "Código QR do bilhete",
+    "status": "Estado",
+    "statusValue": "{status, select, active {Ativo} used {Entrada registada} cancelled {Cancelado} expired {Expirado} other {Desconhecido}}",
+    "ticketCode": "Código do bilhete",
+    "ticketType": "Tipo de bilhete",
+    "title": "Recibo"
+  },
   "ticketTiers": {
     "freeEventPromoCodes": "Os códigos promocionais não estão disponíveis num evento gratuito. Remova-os ou torne o evento pago.",
     "freeReserved": "«{name}» está reservado a eventos gratuitos. Dê outro nome a este tipo de bilhete.",

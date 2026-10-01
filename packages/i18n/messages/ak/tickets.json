@@ -34,6 +34,7 @@
   "preparingReceipt": "Preparing receipt…",
   "receiptReady": "Receipt ready",
   "seat": "Seat {seat_number}",
+  "shareReceiptTitle": "Abonten ticket receipt",
   "sharingIsnTAvailableOnThis": "Sharing isn't available on this device, but the receipt PDF was generated.",
   "showThisAtEntry": "Show this at entry",
   "somethingWentWrongGeneratingThePdf": "Something went wrong generating the PDF. Please try again.",

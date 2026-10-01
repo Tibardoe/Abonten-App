@@ -3,6 +3,7 @@
 import { useToast } from "@/hooks/useToast";
 import { useLocaleSwitcher } from "@/i18n/LocaleProvider";
 import { type Locale, localeNames, locales } from "@/i18n/config";
+import { isPartialLocale } from "@abonten/i18n/locales";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -42,7 +43,16 @@ export default function Language() {
             onClick={() => handleSelect(code)}
             className="flex items-center justify-between w-full md:text-lg disabled:opacity-50"
           >
-            <span>{localeNames[code]}</span>
+            <span className="flex flex-col items-start text-left">
+              <span>{localeNames[code]}</span>
+              {/* Said in the language being read now, so the person choosing
+                  can understand it before they switch. */}
+              {isPartialLocale(code) ? (
+                <span lang={locale} className="text-sm text-muted-foreground">
+                  {t("languagePartial")}
+                </span>
+              ) : null}
+            </span>
 
             <input
               type="radio"

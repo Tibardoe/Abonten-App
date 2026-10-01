@@ -1152,5 +1152,17 @@
     "retirementCelebrations": "Retirement Celebrations",
     "babyShowers": "Baby Showers",
     "christeningEvents": "Christening Events"
+  },
+  "ticketReceipt": {
+    "title": "Receipt",
+    "issuedOn": "Issued on: {date}",
+    "attendee": "Attendee",
+    "ticketType": "Ticket type",
+    "ticketCode": "Ticket code",
+    "status": "Status",
+    "statusValue": "{status, select, active {Active} used {Checked in} cancelled {Cancelled} expired {Expired} other {Unknown}}",
+    "location": "Location",
+    "date": "Date",
+    "qrCode": "Ticket QR code"
   }
 }

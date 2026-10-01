@@ -1,15 +1,28 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import TicketPdfDocument, {
   type PdfImageData,
 } from "@/components/organisms/TicketPdfDocument";
 import { ABONTEN_PDF_LOGO_URL } from "@/config/brandAssets";
+import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import {
   HTTP_TIMEOUTS,
   fetchWithTimeout,
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
-import type { TicketPdfData } from "@abonten/core/ticketPdfData";
+import {
+  type TicketPdfData,
+  ticketPdfLabels,
+} from "@abonten/core/ticketPdfData";
+import { coreTranslator } from "@abonten/i18n/server";
 import { generateQRCodeDataURL } from "@abonten/services/tickets/generateTicketCode";
 import { renderToBuffer } from "@react-pdf/renderer";
+import {
+  TICKET_PDF_FALLBACK_FONT,
+  TICKET_PDF_FONT_PATHS,
+  type TicketPdfFont,
+  registerTicketPdfFont,
+} from "./ticketPdfFont";
 
 /**
  * Fetches an image for the PDF, or null when it cannot be used: a missing
@@ -57,19 +70,70 @@ async function loadQr(ticket: TicketPdfData): Promise<PdfImageData | null> {
 }
 
 /**
+ * One of the receipt's font files: from this deployment's own files when
+ * they are on disk (local, self-hosted), else from the site, where the
+ * same file is a static asset.
+ */
+async function loadFontFile(path: string): Promise<Uint8Array> {
+  try {
+    return await readFile(join(process.cwd(), "public", path));
+  } catch {
+    const res = await fetchWithTimeout(`${PUBLIC_SITE_ORIGIN}${path}`, {
+      timeoutMs: HTTP_TIMEOUTS.cloudinary,
+    });
+    if (!res.ok) throw new Error(`font ${path}: ${res.status}`);
+    return new Uint8Array(await res.arrayBuffer());
+  }
+}
+
+let receiptFont: Promise<TicketPdfFont> | null = null;
+
+/**
+ * The receipt font, loaded once per server instance. A failure is not
+ * remembered: this receipt is drawn in Helvetica and the next one tries
+ * again.
+ */
+function loadReceiptFont(): Promise<TicketPdfFont> {
+  if (!receiptFont) {
+    receiptFont = Promise.all([
+      loadFontFile(TICKET_PDF_FONT_PATHS.regular),
+      loadFontFile(TICKET_PDF_FONT_PATHS.bold),
+    ])
+      .then(([regular, bold]) => registerTicketPdfFont({ regular, bold }))
+      .catch((error) => {
+        receiptFont = null;
+        logger.warn("Ticket PDF: receipt font unavailable, using Helvetica", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return TICKET_PDF_FALLBACK_FONT;
+      });
+  }
+  return receiptFont;
+}
+
+/**
  * Server-side counterpart to TicketModal's client-side `pdf().toBlob()` —
  * both render the exact same TicketPdfDocument, so the emailed PDF and the
  * one a user downloads from My Events are never two different designs.
+ * `locale` is the buyer's language (the email's): `ticket` should have
+ * been built with the same one so its dates match the words.
  */
 export async function generateTicketPdfBuffer(
   ticket: TicketPdfData,
+  locale: string | null | undefined,
 ): Promise<Buffer> {
-  const [logo, flyer, qr] = await Promise.all([
+  const [logo, flyer, qr, font] = await Promise.all([
     loadPdfImage(ABONTEN_PDF_LOGO_URL),
     loadPdfImage(ticket.flyerImageUrl),
     loadQr(ticket),
+    loadReceiptFont(),
   ]);
   return renderToBuffer(
-    <TicketPdfDocument ticket={ticket} images={{ logo, flyer, qr }} />,
+    <TicketPdfDocument
+      ticket={ticket}
+      labels={ticketPdfLabels(coreTranslator(locale), ticket)}
+      images={{ logo, flyer, qr }}
+      font={font}
+    />,
   );
 }

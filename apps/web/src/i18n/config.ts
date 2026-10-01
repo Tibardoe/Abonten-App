@@ -1,3 +1,5 @@
+import { LOCALE_NAMES } from "@abonten/i18n/locales";
+
 export const locales = ["en", "fr", "es", "de", "pt", "ak"] as const;
 
 export type Locale = (typeof locales)[number];
@@ -6,14 +8,9 @@ export const defaultLocale: Locale = "en";
 
 // How each language names itself, for the language picker: a person who
 // cannot read the current language must still find their own in the list.
-export const localeNames: Record<Locale, string> = {
-  en: "English",
-  fr: "Français",
-  es: "Español",
-  de: "Deutsch",
-  pt: "Português",
-  ak: "Twi",
-};
+// One list for the web and the app (@abonten/i18n/locales), which also says
+// which languages are only partly translated.
+export const localeNames: Record<Locale, string> = LOCALE_NAMES;
 
 export const LOCALE_COOKIE_NAME = "NEXT_LOCALE";
 

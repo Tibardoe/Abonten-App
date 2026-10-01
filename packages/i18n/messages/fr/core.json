@@ -1040,6 +1040,18 @@
     "usesAll": "{capacity, plural, one {Les quantités de billets utilisent l'unique place.} other {Les quantités de billets utilisent les # places.}}",
     "usesSome": "Les quantités de billets utilisent {reserved} sur {capacity, plural, one {# place} other {# places}} ; {left} resteront invendues à moins d'augmenter une quantité."
   },
+  "ticketReceipt": {
+    "attendee": "Participant",
+    "date": "Date",
+    "issuedOn": "Émis le : {date}",
+    "location": "Lieu",
+    "qrCode": "QR code du billet",
+    "status": "Statut",
+    "statusValue": "{status, select, active {Actif} used {Enregistré à l'entrée} cancelled {Annulé} expired {Expiré} other {Inconnu}}",
+    "ticketCode": "Code du billet",
+    "ticketType": "Type de billet",
+    "title": "Reçu"
+  },
   "ticketTiers": {
     "freeEventPromoCodes": "Les codes promo ne sont pas disponibles pour un événement gratuit. Supprimez-les ou rendez l'événement payant.",
     "freeReserved": "« {name} » est réservé aux événements gratuits. Donnez un autre nom à ce type de billet.",
