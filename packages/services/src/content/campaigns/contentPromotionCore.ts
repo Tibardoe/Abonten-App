@@ -241,9 +241,9 @@ export function undeliverableMessage(
   estimate: ContentPromotionEstimate,
 ): string {
   if (estimate.basis === "no_data") {
-    return "We can't estimate reach for promotions yet. Please try again later.";
+    return tr("weCanTEstimateReachFor");
   }
-  return "The audience for this promotion is too small for this budget right now. Lower the budget, let it run longer or show it to a wider area.";
+  return tr("theAudienceForThisPromotionIs");
 }
 
 function shareByRadius(raw: unknown): Record<string, number> {

@@ -232,7 +232,7 @@ export async function requestOwnerOtpCore(
       owner_phone_e164: phone,
     } as never)
     .eq("id", row.id);
-  if (error) return dbErr(error, "Could not save the owner's details");
+  if (error) return dbErr(error, tr("couldNotSaveTheOwnerS"));
   await appendTimeline(supabase, {
     onboardingId: row.id,
     status: row.status,
@@ -354,7 +354,7 @@ export async function attachOwnerCore(
         message: tr("thisOwnerAlreadyHasAnOnboarding"),
       };
     }
-    return dbErr(error, "Could not record the owner");
+    return dbErr(error, tr("couldNotRecordTheOwner"));
   }
   if (!data) return { status: 409, message: tr("theOwnerWasAlreadyRecorded") };
   await appendTimeline(supabase, {

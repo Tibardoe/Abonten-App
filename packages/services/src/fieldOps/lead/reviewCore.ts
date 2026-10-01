@@ -58,7 +58,7 @@ export async function listReviewQueueCore(
     .limit(300);
   if (input.status) q = q.eq("status", input.status);
   const { data, error } = await q;
-  if (error) return dbErr(error, "Could not load the review queue");
+  if (error) return dbErr(error, tr("couldNotLoadTheReviewQueue"));
   const rows = (data ?? []) as unknown as OnboardingRow[];
   // Waiting on the lead first, then the rest newest-first.
   const rank = (s: string) => (s === "submitted" ? 0 : 1);
@@ -152,7 +152,7 @@ export async function reviewOnboardingCore(
       } as never)
       .eq("id", row.id)
       .eq("status", "submitted");
-    if (error) return dbErr(error, "Could not record the verification");
+    if (error) return dbErr(error, tr("couldNotRecordTheVerification"));
   }
 
   const { error: trErr } = await supabase.rpc(
@@ -169,7 +169,7 @@ export async function reviewOnboardingCore(
   if (trErr) {
     return trErr.code === "23514"
       ? { status: 409, message: trErr.message }
-      : dbErr(trErr, "Could not save the decision");
+      : dbErr(trErr, tr("couldNotSaveTheDecision"));
   }
 
   // Verification earns a PENDING commission at the rule's amount. It only

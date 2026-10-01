@@ -79,7 +79,7 @@ export async function getMyContentCore(
         .limit(200),
     ],
   );
-  if (error) return dbErr(error, "Could not load the content briefs");
+  if (error) return dbErr(error, tr("couldNotLoadTheContentBriefs"));
   if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
 
   const rule =
@@ -173,7 +173,7 @@ export async function submitContentCore(
         message: tr("thatPostHasAlreadyBeenSent"),
       };
     }
-    return dbErr(error, "Could not send the deliverable");
+    return dbErr(error, tr("couldNotSendTheDeliverable"));
   }
 
   const { data: leads } = await supabase

@@ -1,10 +1,11 @@
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { logger } from "@abonten/core/logger";
 import type {
   RecommendationItem,
   RecommendationReason,
 } from "@abonten/types/discoveryType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { tr } from "../i18n/requestLocale";
+import { coreT, tr } from "../i18n/requestLocale";
 import { resolveDiscoveryAccess } from "../search/discoveryProgram";
 
 // The person-facing side of the recommendation engine: the "For you" list
@@ -26,16 +27,20 @@ function reasonLabel(
   switch (reason) {
     case "organizer":
       return names.organizer
-        ? `New from @${names.organizer}`
-        : "From an organizer you follow";
+        ? tr("newFrom", { organizer: names.organizer })
+        : tr("fromAnOrganizerYouFollow");
     case "place":
-      return names.place ? `At ${names.place}` : "At a place you follow";
+      return names.place
+        ? tr("atPlace", { place: names.place })
+        : tr("atAPlaceYouFollow");
     case "similar_events":
       return typeof basis.category === "string"
-        ? `Because you like ${basis.category}`
-        : "Similar to events you liked";
+        ? tr("becauseYouLike", {
+            category: eventCategoryLabel(coreT(), basis.category),
+          })
+        : tr("similarToEventsYouLiked");
     case "similar_places":
-      return "Similar to places you liked";
+      return tr("similarToPlacesYouLiked");
   }
 }
 

@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { tr } from "../../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../../supabase/serviceClient";
@@ -64,7 +65,10 @@ export default async function activateContentCampaign(
       return { status: 200, message: tr("campaignAlreadyActivated") };
     }
     logger.error(`activateContentCampaign: ${error.message}`);
-    return { status: 500, message: error.message };
+    return {
+      status: 500,
+      message: userFacingError("Activate campaign", error),
+    };
   }
   const result = (data ?? {}) as { campaign_id?: string; replayed?: boolean };
   if (result.campaign_id && !result.replayed) {
@@ -72,8 +76,7 @@ export default async function activateContentCampaign(
       id: result.campaign_id,
       advertiserId: userId,
       status: "pending_review",
-      reason:
-        "We check every promotion before it runs. You'll hear from us when it's approved.",
+      reason: tr("weCheckEveryPromotionBeforeIt"),
     });
   }
   return { status: 200, message: tr("campaignSubmittedForReview") };

@@ -9,6 +9,7 @@ import {
 } from "@/utils/discoveryAction";
 import { logger } from "@abonten/core/logger";
 import { parseSearchQuery } from "@abonten/core/search/parseSearchQuery";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { resolveDiscoveryAccess } from "@abonten/services/search/discoveryProgram";
 import { suggestCore } from "@abonten/services/search/searchCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
@@ -41,7 +42,7 @@ export const suggestDiscovery = withActionLocale(
         ? `search-suggest:user:${caller.userId}`
         : `search-suggest:ip:${await requestIp()}`;
       if (!(await checkRateLimit(key, 180, 60))) {
-        return fallback(429, "Slow down a little.");
+        return fallback(429, tr("slowDownALittle"));
       }
       const { program, settings } = await resolveDiscoveryAccess(
         caller.svc,
@@ -53,7 +54,7 @@ export const suggestDiscovery = withActionLocale(
       });
     } catch (error) {
       logger.error("suggestDiscovery failed", error);
-      return fallback(500, "Suggestions are unavailable right now.");
+      return fallback(500, tr("suggestionsAreUnavailableRightNow"));
     }
   },
 );

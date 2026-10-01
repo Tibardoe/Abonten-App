@@ -102,7 +102,7 @@ export async function requestEvidenceUploadCore(
   if (error || !inserted) {
     return dbErr(
       error ?? { message: tr("insertFailed") },
-      "Could not prepare the upload",
+      tr("couldNotPrepareTheUpload"),
     );
   }
   const { data: signed, error: signErr } = await supabase.storage
@@ -166,7 +166,7 @@ export async function removeEvidenceCore(
     .from("fieldops_onboarding_evidence")
     .delete()
     .eq("id", ev.id);
-  if (error) return dbErr(error, "Could not remove the photo");
+  if (error) return dbErr(error, tr("couldNotRemoveThePhoto"));
   return {
     status: 200,
     message: tr("photoRemoved"),

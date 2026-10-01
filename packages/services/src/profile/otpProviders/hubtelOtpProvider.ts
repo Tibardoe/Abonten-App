@@ -72,7 +72,7 @@ function codeHash(requestId: string, code: string): string {
 /** Plain ASCII keeps it one GSM-7 segment (an en dash or curly quote would double the price). */
 export function otpMessage(code: string): string {
   const minutes = Math.round(PENDING_OTP_TTL_MS / 60_000);
-  return `Your Abonten code is ${code}. It expires in ${minutes} minutes. Don't share it with anyone.`;
+  return tr("yourAbontenCodeIsItExpires", { code: code, minutes: minutes });
 }
 
 // Hubtel's numeric `status`: 0 accepted, 1 accepted for delivery. It says

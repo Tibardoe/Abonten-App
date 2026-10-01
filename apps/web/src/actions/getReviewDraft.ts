@@ -92,7 +92,7 @@ export const getReviewDraft = withActionLocale(async function getReviewDraft(
     .eq("organizer_id", reviewDraft.reviewed_id);
 
   if (reviewedEventsError) {
-    ineligibleReason = "Could not verify this draft's eligibility right now.";
+    ineligibleReason = tr("couldNotVerifyThisDraftS");
   } else {
     const reviewedEventIds = (reviewedEvents ?? []).map((e) => e.id);
     let hasAttended = false;
@@ -107,8 +107,7 @@ export const getReviewDraft = withActionLocale(async function getReviewDraft(
     }
 
     if (!hasAttended) {
-      ineligibleReason =
-        "You can only review organizers of events you've attended.";
+      ineligibleReason = tr("youCanOnlyReviewOrganizersOf2");
     } else {
       const { count: existingReviewCount } = await supabase
         .from("review")
@@ -117,7 +116,7 @@ export const getReviewDraft = withActionLocale(async function getReviewDraft(
         .eq("reviewed_id", reviewDraft.reviewed_id);
 
       if ((existingReviewCount ?? 0) > 0) {
-        ineligibleReason = "You've already reviewed this organizer.";
+        ineligibleReason = tr("youVeAlreadyReviewedThisOrganizer");
       }
     }
   }

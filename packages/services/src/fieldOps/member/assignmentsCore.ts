@@ -49,7 +49,7 @@ export async function listMyAssignmentsCore(
     .limit(200);
   if (input.status) query = query.eq("status", input.status);
   const { data, error } = await query;
-  if (error) return dbErr(error, "Could not load your assignments");
+  if (error) return dbErr(error, tr("couldNotLoadYourAssignments"));
   return {
     status: 200,
     data: await mapAssignments(supabase, (data ?? []) as AssignmentRow[]),
@@ -180,7 +180,7 @@ export async function startAssignmentCore(
     .eq("status", "assigned")
     .select(ASSIGNMENT_COLUMNS)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not start the assignment");
+  if (error) return dbErr(error, tr("couldNotStartTheAssignment"));
   if (!data) {
     return {
       status: 409,
@@ -240,7 +240,7 @@ export async function completeAssignmentCore(
     .eq("status", "started")
     .select(ASSIGNMENT_COLUMNS)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not complete the assignment");
+  if (error) return dbErr(error, tr("couldNotCompleteTheAssignment"));
   if (!data) {
     return {
       status: 409,

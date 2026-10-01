@@ -223,7 +223,7 @@ export async function startOnboardingCore(
   if (error || !data) {
     return dbErr(
       error ?? { message: tr("insertFailed") },
-      "Could not start the onboarding",
+      tr("couldNotStartTheOnboarding"),
     );
   }
   const row = data as unknown as OnboardingRow;
@@ -327,7 +327,7 @@ export async function listMyOnboardingsCore(
     .limit(200);
   if (input.status) q = q.eq("status", input.status);
   const { data, error } = await q;
-  if (error) return dbErr(error, "Could not load your onboardings");
+  if (error) return dbErr(error, tr("couldNotLoadYourOnboardings"));
   return {
     status: 200,
     data: ((data ?? []) as unknown as OnboardingRow[]).map((r) =>
@@ -650,7 +650,7 @@ export async function submitOnboardingCore(
         message: tr("thisBusinessHasAlreadyBeenOnboarded"),
       };
     }
-    return dbErr(updErr, "Could not save the submission");
+    return dbErr(updErr, tr("couldNotSaveTheSubmission"));
   }
 
   const { data: moved, error: trErr } = await supabase.rpc(
@@ -668,7 +668,7 @@ export async function submitOnboardingCore(
       },
     },
   );
-  if (trErr) return dbErr(trErr, "Could not submit");
+  if (trErr) return dbErr(trErr, tr("couldNotSubmit"));
 
   if (row.prospect_id) {
     await supabase
@@ -746,7 +746,7 @@ export async function withdrawOnboardingCore(
     p_note: input.reason ?? undefined,
     p_details: {},
   });
-  if (error) return dbErr(error, "Could not withdraw");
+  if (error) return dbErr(error, tr("couldNotWithdraw"));
   if (row.prospect_id) {
     await supabase
       .from("fieldops_prospect")

@@ -103,7 +103,7 @@ export type VerificationEnvelope<T = undefined> = {
  */
 export function transitionError(
   error: { message?: string; code?: string },
-  fallback = "Something went wrong!",
+  fallback = tr("somethingWentWrong"),
 ): VerificationEnvelope {
   const msg = error.message ?? "";
   if (msg.includes("verification_case_not_found")) {

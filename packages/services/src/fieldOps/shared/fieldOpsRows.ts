@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import { type Notice, renderNotice } from "@abonten/core/notifications/notices";
 import { isSystemDbMessage } from "@abonten/core/userFacingError";
+import { translateServerText } from "@abonten/i18n/server";
 import type {
   FieldOpsAssignment,
   FieldOpsAssignmentMode,
@@ -16,6 +17,7 @@ import type {
   GeoJsonPolygon,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { requestLocale, tr } from "../../i18n/requestLocale";
 import {
   createNotificationCore,
   notificationWordsFor,
@@ -49,12 +51,16 @@ export function dbErr(
         : error.code === "P0002"
           ? 404
           : 400;
-  // Postgres's own wording (constraint names, SQL) stays in the log.
+  // Postgres's own wording (constraint names, SQL) stays in the log; a
+  // reason the database raised for a person is worded in their language.
   return {
     status,
     message: isSystemDbMessage(error.message)
       ? friendly
-      : `${friendly}: ${error.message}`,
+      : tr("failedWithDetail", {
+          what: friendly,
+          detail: translateServerText(requestLocale(), error.message),
+        }),
   };
 }
 

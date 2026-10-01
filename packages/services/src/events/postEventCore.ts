@@ -15,14 +15,15 @@ import {
 } from "@abonten/core/ticketTiers";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
 import { coreT, tr } from "../i18n/requestLocale";
 import {
-  RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
+  restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -108,7 +109,7 @@ export async function postEventCore(
   // 20260925110100); the restricted-account check the database applies to
   // a person's own writes is made here instead.
   if (await isAccountRestricted(userId)) {
-    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+    return { status: 403, message: restrictedAccountMessage() };
   }
 
   const locationCheck = validateLocationInput(coreT(), {
@@ -117,7 +118,10 @@ export async function postEventCore(
     longitude: input.longitude,
   });
   if (!locationCheck.valid) {
-    return { status: 400, message: locationCheck.message };
+    return {
+      status: 400,
+      message: userFacingError("Create event", locationCheck),
+    };
   }
 
   // Where the venue is decides the market, and with it the currency the
@@ -128,7 +132,8 @@ export async function postEventCore(
     lng: input.longitude,
     countryHint: input.addressDetails?.country_code ?? null,
   });
-  if (!resolved.ok) return { status: 400, message: resolved.message };
+  if (!resolved.ok)
+    return { status: 400, message: userFacingError("Create event", resolved) };
   const { location } = resolved;
   const currency = location.market?.defaultCurrency as string;
   const toInstant = (value: DateInput | null | undefined): Date | null =>
@@ -317,7 +322,10 @@ export async function postEventCore(
     if (createEventError.code === CHECK_VIOLATION) {
       // The capacity / free-event guards raise check_violation with a
       // message written for the organizer (see the migration).
-      return { status: 400, message: createEventError.message };
+      return {
+        status: 400,
+        message: userFacingError("Create event", createEventError),
+      };
     }
     if (createEventError.code === UNIQUE_VIOLATION) {
       if (

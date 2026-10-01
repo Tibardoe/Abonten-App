@@ -9,6 +9,7 @@ import {
 } from "@/utils/discoveryAction";
 import { logger } from "@abonten/core/logger";
 import { parseSearchQuery } from "@abonten/core/search/parseSearchQuery";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { resolveDiscoveryAccess } from "@abonten/services/search/discoveryProgram";
 import { searchCore } from "@abonten/services/search/searchCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
@@ -39,10 +40,7 @@ export const searchDiscovery = withActionLocale(async function searchDiscovery(
       ? `search:user:${caller.userId}`
       : `search:ip:${await requestIp()}`;
     if (!(await checkRateLimit(key, 60, 60))) {
-      return emptyResults(
-        429,
-        "You are searching very quickly. Try again in a moment.",
-      );
+      return emptyResults(429, tr("youAreSearchingVeryQuicklyTry"));
     }
     const { program, settings } = await resolveDiscoveryAccess(
       caller.svc,
@@ -56,6 +54,6 @@ export const searchDiscovery = withActionLocale(async function searchDiscovery(
     });
   } catch (error) {
     logger.error("searchDiscovery failed", error);
-    return emptyResults(500, "Search is unavailable right now.");
+    return emptyResults(500, tr("searchIsUnavailableRightNow"));
   }
 });

@@ -356,8 +356,10 @@ export async function createMultiCheckoutPaymentAttemptCore(
       callbackUrl: callbackUrlFor(primarySession.checkoutSessionId),
       description:
         prepared.validSessions.length === 1
-          ? `Tickets · ${prepared.validSessions[0].eventTitle}`
-          : `Tickets for ${prepared.validSessions.length} events`,
+          ? tr("ticketsForEvent", {
+              event: prepared.validSessions[0].eventTitle,
+            })
+          : tr("ticketsForEvents", { count: prepared.validSessions.length }),
     });
 
     // Another request is still opening this charge: leave its attempts be.

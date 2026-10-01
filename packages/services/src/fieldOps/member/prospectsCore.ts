@@ -219,7 +219,7 @@ export async function createProspectCore(
   if (error || !data) {
     return dbErr(
       error ?? { message: tr("insertFailed") },
-      "Could not save the business",
+      tr("couldNotSaveTheBusiness"),
     );
   }
   const [mapped] = mapProspects([data as ProspectRow], userId);
@@ -334,7 +334,7 @@ export async function updateProspectCore(
   if (error || !data) {
     return dbErr(
       error ?? { message: tr("updateFailed") },
-      "Could not update the business",
+      tr("couldNotUpdateTheBusiness"),
     );
   }
   const [mapped] = mapProspects([data as ProspectRow], userId);

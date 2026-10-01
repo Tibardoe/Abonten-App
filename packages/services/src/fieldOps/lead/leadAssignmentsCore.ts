@@ -52,7 +52,7 @@ export async function listLeadAssignmentsCore(
   }
   if (input.status) query = query.eq("status", input.status);
   const { data, error } = await query;
-  if (error) return dbErr(error, "Could not load assignments");
+  if (error) return dbErr(error, tr("couldNotLoadAssignments"));
   return {
     status: 200,
     data: await mapAssignments(supabase, (data ?? []) as AssignmentRow[]),
@@ -149,7 +149,7 @@ export async function createAssignmentCore(
     }
     return dbErr(
       error ?? { message: tr("insertFailed") },
-      "Could not create the assignment",
+      tr("couldNotCreateTheAssignment"),
     );
   }
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
@@ -214,7 +214,7 @@ export async function cancelAssignmentCore(
     .in("status", ["assigned", "started"])
     .select(ASSIGNMENT_COLUMNS)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not cancel the assignment");
+  if (error) return dbErr(error, tr("couldNotCancelTheAssignment"));
   if (!data) return { status: 409, message: tr("thisAssignmentJustChanged") };
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
   const territoryName =

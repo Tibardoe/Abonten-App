@@ -95,7 +95,7 @@ export async function listLeadTeamCore(
     .order("role")
     .order("status")
     .order("created_at");
-  if (error) return dbErr(error, "Could not load the team");
+  if (error) return dbErr(error, tr("couldNotLoadTheTeam"));
   return {
     status: 200,
     data: await mapLeadMembers(supabase, (data ?? []) as LeadMemberRow[]),
@@ -223,7 +223,7 @@ export async function inviteTeamMemberCore(
     }
     return dbErr(
       error ?? { message: tr("insertFailed") },
-      "Could not invite the member",
+      tr("couldNotInviteTheMember"),
     );
   }
   const [mapped] = await mapLeadMembers(supabase, [data as LeadMemberRow]);
@@ -295,7 +295,7 @@ export async function setLeadMemberStatusCore(
     .update(update as never)
     .eq("id", current.id)
     .eq("status", current.status);
-  if (error) return dbErr(error, "Could not update the member");
+  if (error) return dbErr(error, tr("couldNotUpdateTheMember"));
 
   if (input.status !== "active") {
     // Their open assignments end with the membership.

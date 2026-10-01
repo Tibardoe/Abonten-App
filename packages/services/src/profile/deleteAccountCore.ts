@@ -45,16 +45,16 @@ type Blockers = {
 /** The reason a person must act before deleting, or null when they may. */
 export function describeDeletionBlockers(b: Blockers): string | null {
   if (b.is_admin) {
-    return "Admin accounts can't be deleted from here. Ask another admin to remove your admin access first.";
+    return tr("adminAccountsCanTBeDeleted");
   }
   if (Number(b.upcoming_events_with_attendees) > 0) {
-    return "You still have upcoming events with attendees. Cancel those events first so your attendees are refunded and told, then delete your account.";
+    return tr("youStillHaveUpcomingEventsWith");
   }
   if (Number(b.payouts_in_flight) > 0) {
-    return "A payout to you is still being processed. Once it has completed you can delete your account.";
+    return tr("aPayoutToYouIsStill");
   }
   if (Number(b.balance_owed) > 0.005) {
-    return "You still have earnings waiting to be paid out. Request a payout from Finances first, then delete your account once it has completed.";
+    return tr("youStillHaveEarningsWaitingTo");
   }
   return null;
 }

@@ -201,6 +201,8 @@ function looksLikeClassList(text) {
 function looksLikeCode(text) {
   const t = text.trim();
   if (t.startsWith("<")) return true; // markup: its words are handled inside
+  if (/^(Bearer|Basic|Token)( |$)/.test(t)) return true; // an Authorization header
+  if (/<[^<>\s]+@[^<>\s]+>$/.test(t)) return true; // "Name <mailbox@host>"
   if (/^(https?:|mailto:|tel:|\/|\.\/|\.\.\/|#|@\/|~\/|data:)/.test(t))
     return true;
   // one token: code unless it is a plain Capitalised word ("Free", "Closed")

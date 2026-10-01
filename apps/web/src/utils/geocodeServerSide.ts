@@ -7,6 +7,7 @@ import {
   type GeocodeLookup,
   geocodePlaceName,
 } from "@abonten/services/geo/placeNameGeocode";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { headers } from "next/headers";
 
 export type GeocodeResult = {
@@ -72,6 +73,6 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
     });
   } catch (error) {
     logger.warn(`Geocoding "${address}" failed`, error);
-    return { lat: null, lng: null, error: "Location lookup unavailable" };
+    return { lat: null, lng: null, error: tr("locationLookupUnavailable") };
   }
 }

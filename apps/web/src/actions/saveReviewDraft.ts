@@ -81,7 +81,7 @@ export const saveReviewDraft = withActionLocale(async function saveReviewDraft({
       .eq("id", parsed.data.reviewedId)
       .maybeSingle();
     title = reviewedUser?.username
-      ? `Review of ${reviewedUser.username}`
+      ? tr("reviewOf", { username: reviewedUser.username })
       : null;
   }
 

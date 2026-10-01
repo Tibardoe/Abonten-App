@@ -52,7 +52,7 @@ function campaignState(status: string): ActivePromotionState {
 
 function caption(text: string | null | undefined): string {
   const t = (text ?? "").trim().replace(/\s+/g, " ");
-  if (!t) return "Your Spotlight";
+  if (!t) return tr("yourSpotlight");
   return t.length > 60 ? `${t.slice(0, 57)}…` : t;
 }
 

@@ -13,8 +13,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import {
-  RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
+  restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -74,7 +74,7 @@ export async function addPayoutAccountCore(
   // refuses client writes since 2026-09-25): the rail, country, currency
   // and number format below are the checks a direct write skipped.
   if (await isAccountRestricted(userId)) {
-    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+    return { status: 403, message: restrictedAccountMessage() };
   }
   const parsed = addPayoutAccountSchema.safeParse(input);
 

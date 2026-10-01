@@ -69,10 +69,9 @@ export type ChargeInitResult =
   | { status: 409; message: string; busy: true }
   | { status: 200; data: CheckoutInit };
 
-const STALE_MESSAGE =
-  "This order changed since its payment was started. Please try again.";
-const BUSY_MESSAGE =
-  "This payment is already being started. Please wait a moment.";
+// Worded when answered, in the language of the request.
+const staleMessage = () => tr("thisOrderChangedSinceItsPayment");
+const busyMessage = () => tr("thisPaymentIsAlreadyBeingStarted");
 
 // A claim whose provider page isn't recorded yet counts as another request
 // still opening it for this long (the provider call's own deadline is 20 s,
@@ -118,7 +117,7 @@ async function retireAttempt(
     );
     return { status: 500, message: tr("somethingWentWrong") };
   }
-  return { status: 409, message: STALE_MESSAGE, stale: true };
+  return { status: 409, message: staleMessage(), stale: true };
 }
 
 /** Claimed by a request that may still be opening its provider page. */
@@ -156,12 +155,12 @@ async function awaitClaimedCharge(
     }
     const row = data as PaymentAttemptRow | null;
     if (!row || (row.status !== "initiated" && row.status !== "pending")) {
-      return { status: 409, message: STALE_MESSAGE, stale: true };
+      return { status: 409, message: staleMessage(), stale: true };
     }
     const cached = cachedInit(row, provider);
     if (cached) return { status: 200, data: cached };
   }
-  return { status: 409, message: BUSY_MESSAGE, busy: true };
+  return { status: 409, message: busyMessage(), busy: true };
 }
 
 function referenceFor(provider: string): string {
@@ -277,7 +276,7 @@ async function recordInit(
   // Closed while the page was being opened (the buyer changed the order or
   // the method): that page must not be handed out. Its reference stays on
   // the closed attempt, so a payment on it would still be refunded.
-  if (!data) return { status: 409, message: STALE_MESSAGE, stale: true };
+  if (!data) return { status: 409, message: staleMessage(), stale: true };
   return { status: 200, data: init };
 }
 
@@ -369,7 +368,7 @@ export async function initiateChargeForAttempt(input: {
       method: methodCode,
     }));
   } catch (error) {
-    return describeFailure(error, "Failed to start payment. Please try again.");
+    return describeFailure(error, tr("failedToStartPaymentPleaseTry"));
   }
 
   const caps = provider.capabilities(account);
@@ -473,8 +472,8 @@ export async function initiateChargeForAttempt(input: {
     return describeFailure(
       error,
       methodCode === "mobile_money"
-        ? "We couldn't start your mobile money payment. Please try again."
-        : "We couldn't start your payment. Please try again.",
+        ? tr("weCouldnTStartYourMobile")
+        : tr("weCouldnTStartYourPayment"),
     );
   }
 }

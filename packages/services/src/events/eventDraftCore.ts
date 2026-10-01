@@ -224,7 +224,11 @@ export async function fetchEventDraftsList(
     .order("updated_at", { ascending: false });
 
   if (draftsError) {
-    return { status: 500, message: draftsError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Event draft", draftsError),
+      data: [],
+    };
   }
   if (!drafts || drafts.length === 0) {
     return { status: 200, data: [] };
@@ -238,7 +242,11 @@ export async function fetchEventDraftsList(
     .in("draft_id", draftIds);
 
   if (eventDraftsError) {
-    return { status: 500, message: eventDraftsError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Event draft", eventDraftsError),
+      data: [],
+    };
   }
 
   const flyerByDraftId = new Map(
@@ -274,7 +282,7 @@ export async function fetchEventDraftDetail(
     .maybeSingle();
 
   if (draftError) {
-    return { status: 500, message: draftError.message };
+    return { status: 500, message: userFacingError("Event draft", draftError) };
   }
   if (!draft || draft.user_id !== userId) {
     return { status: 404, message: tr("draftNotFound") };
@@ -331,7 +339,7 @@ export async function deleteEventDraftCore(
     .maybeSingle();
 
   if (draftError) {
-    return { status: 500, message: draftError.message };
+    return { status: 500, message: userFacingError("Event draft", draftError) };
   }
   if (!draft || draft.user_id !== userId) {
     return { status: 404, message: tr("draftNotFound") };

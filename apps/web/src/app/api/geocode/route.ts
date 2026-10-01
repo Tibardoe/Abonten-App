@@ -4,6 +4,7 @@ import {
   fetchWithTimeout,
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import { NextResponse } from "next/server";
 
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+      return NextResponse.json({ error: tr("notSignedIn") }, { status: 401 });
     }
 
     // DB-backed (limitation OBS-001): the previous in-memory counter reset
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
 
     if (!allowed) {
       return NextResponse.json(
-        { error: "Too many requests. Please try again shortly." },
+        { error: tr("tooManyRequestsPleaseTryAgain") },
         { status: 429 },
       );
     }
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
 
     if (!address) {
       return NextResponse.json(
-        { error: "Address is required" },
+        { error: tr("addressIsRequired") },
         { status: 400 },
       );
     }
@@ -60,8 +61,9 @@ export async function GET(req: Request) {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
+      logger.error("Geocode: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set");
       return NextResponse.json(
-        { error: "Missing Google Maps API Key" },
+        { error: tr("locationLookupUnavailable") },
         { status: 500 },
       );
     }
@@ -82,11 +84,14 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(
-      { error: data.status || "Geocoding failed" },
+      { error: data.status || tr("geocodingFailed") },
       { status: 500 },
     );
   } catch (error) {
     logger.error("Geocode error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: tr("somethingWentWrong") },
+      { status: 500 },
+    );
   }
 }

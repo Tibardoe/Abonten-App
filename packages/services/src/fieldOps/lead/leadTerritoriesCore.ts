@@ -64,7 +64,7 @@ export async function listLeadTerritoriesCore(
     .order("status")
     .order("priority", { ascending: false })
     .order("name");
-  if (error) return dbErr(error, "Could not load territories");
+  if (error) return dbErr(error, tr("couldNotLoadTerritories"));
   return {
     status: 200,
     data: ((data ?? []) as TerritoryRow[]).map(mapTerritory),
@@ -127,7 +127,7 @@ export async function upsertLeadTerritoryCore(
       .neq("status", "retired")
       .select(TERRITORY_COLUMNS)
       .maybeSingle();
-    if (error) return dbErr(error, "Could not save the territory");
+    if (error) return dbErr(error, tr("couldNotSaveTheTerritory"));
     if (!data) return { status: 404, message: tr("territoryNotFound") };
     return {
       status: 200,
@@ -149,7 +149,7 @@ export async function upsertLeadTerritoryCore(
     }
     return dbErr(
       error ?? { message: tr("insertFailed") },
-      "Could not add the territory",
+      tr("couldNotAddTheTerritory"),
     );
   }
   return {
@@ -189,7 +189,7 @@ export async function setLeadTerritoryStatusCore(
     .neq("status", "retired")
     .select(TERRITORY_COLUMNS)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not update the territory");
+  if (error) return dbErr(error, tr("couldNotUpdateTheTerritory"));
   if (!data) return { status: 404, message: tr("territoryNotFound") };
   return {
     status: 200,

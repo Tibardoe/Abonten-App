@@ -164,10 +164,13 @@ export async function cancelEventCore(
 
   const message =
     refundsFailedToStart > 0
-      ? `Event cancelled. ${refundsInitiated} refund(s) started, but ${refundsFailedToStart} couldn't be started and will need a manual retry.`
+      ? tr("eventCancelledRefundSStartedBut", {
+          started: refundsInitiated,
+          failed: refundsFailedToStart,
+        })
       : refundsInitiated > 0
-        ? `Event cancelled. ${refundsInitiated} refund(s) have been started.`
-        : "Event cancelled successfully.";
+        ? tr("eventCancelledRefundSHaveBeen", { started: refundsInitiated })
+        : tr("eventCancelledSuccessfully");
 
   return {
     status: 200,

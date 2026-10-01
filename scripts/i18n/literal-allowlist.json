@@ -7,7 +7,8 @@
     "%s | Abonten Hub": "Next.js title template: the page title followed by the brand.",
     "{} | Abonten Hub": "The page title followed by the brand.",
     "field ops context resolved": "A Sentry breadcrumb for engineers, never shown to a person.",
-    "'Courier New', Courier, monospace": "A CSS font stack."
+    "'Courier New', Courier, monospace": "A CSS font stack.",
+    "not found": "Cloudinary's own result code for a missing asset, compared against."
   },
   "texts": [
     "Compiled",
@@ -17,7 +18,8 @@
     "%s | Abonten Hub",
     "{} | Abonten Hub",
     "field ops context resolved",
-    "'Courier New', Courier, monospace"
+    "'Courier New', Courier, monospace",
+    "not found"
   ],
   "files": [],
   "entries": [
@@ -45,6 +47,146 @@
       "file": "apps/web/src/events/organisms/ManageEventDetailsSection.tsx",
       "text": "SINGLE TICKET",
       "reason": "A value stored in ticket_type.type, compared, never shown."
+    },
+    {
+      "file": "packages/services/src/payments/webhookCore.ts",
+      "text": "Server error",
+      "reason": "A webhook's answer to the payment provider, never shown to a person."
+    },
+    {
+      "file": "apps/web/src/app/api/paystack/webhook/route.ts",
+      "text": "Server error",
+      "reason": "A webhook's answer to the payment provider, never shown to a person."
+    },
+    {
+      "file": "apps/web/src/app/api/payments/webhook/[provider]/[country]/route.ts",
+      "text": "Server error",
+      "reason": "A webhook's answer to the payment provider, never shown to a person."
+    },
+    {
+      "file": "packages/services/src/payments/webhookCore.ts",
+      "text": "Unknown provider",
+      "reason": "An answer to the payment provider's webhook call, read by the provider."
+    },
+    {
+      "file": "packages/services/src/payments/webhookCore.ts",
+      "text": "Webhook not configured",
+      "reason": "An answer to the payment provider's webhook call, read by the provider."
+    },
+    {
+      "file": "packages/services/src/payments/chargeInit.ts",
+      "text": "Replaced: the order changed after payment started",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/chargeInit.ts",
+      "text": "Payment could not be started",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/createMultiCheckoutPaymentAttemptCore.ts",
+      "text": "Credit could not be reserved",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/createMultiCheckoutPaymentAttemptCore.ts",
+      "text": "Payment could not be started",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/finalizePayment.ts",
+      "text": "charge completed after the attempt was {}",
+      "reason": "The detail of an orphan capture record, read by staff."
+    },
+    {
+      "file": "packages/services/src/payments/finalizePayment.ts",
+      "text": "finalizePayment: verification mismatch for attempt {} (status={}, amount={} {} vs {} {})",
+      "reason": "The body of a reconciliation incident, read by staff."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "live keys are not allowed on a {} deployment",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "secret key is not a recognised test or live key",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "secret key is {} but PAYMENTS_MODE is {}",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "public key is not a recognised test or live key",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "webhook secret is not a recognised test or live key",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} is not a {} {} variable.",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} belongs to the default market's account; use one named for {}.",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} must hold the same value as {} (Paystack signs webhooks with the secret key)",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/fx/exchangeRateCore.ts",
+      "text": "{} is not set",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/paystackApi.ts",
+      "text": "Paystack charge failed",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/providers/paystackApi.ts",
+      "text": "Paystack mobile money charge failed",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/profile/phoneAuthCore.ts",
+      "text": "Unknown error creating user",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/profile/phoneAuthCore.ts",
+      "text": "Existing user not found after conflict",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/profile/otpProviders/hubtelOtpProvider.ts",
+      "text": "no readable body",
+      "reason": "A log detail about the provider's answer."
+    },
+    {
+      "file": "packages/services/src/profile/otpSendMonitoring.ts",
+      "text": "{} OTP send failed ({})",
+      "reason": "The title of a monitoring incident, read by staff."
+    },
+    {
+      "file": "packages/services/src/payments/providers/paystackProvider.ts",
+      "text": "côte d'ivoire",
+      "reason": "A country name as Paystack spells it, matched against its bank list."
+    },
+    {
+      "file": "apps/web/src/lib/email/sendEmail.ts",
+      "text": "Resend email send",
+      "reason": "The name of a tracing span."
     }
   ]
 }

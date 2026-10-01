@@ -4,6 +4,7 @@ import {
   paidTierProblem,
   ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
@@ -254,7 +255,10 @@ export async function updateEventTicketTypesCore(
   if (insertError) {
     if (insertError.code === CHECK_VIOLATION) {
       // The capacity / free-event guards raise with an organizer-facing message.
-      return { status: 400, message: insertError.message };
+      return {
+        status: 400,
+        message: userFacingError("Update ticket types", insertError),
+      };
     }
     logger.error(`Failed inserting new ticket types: ${insertError.message}`);
     return { status: 500, message: tr("somethingWentWrong") };

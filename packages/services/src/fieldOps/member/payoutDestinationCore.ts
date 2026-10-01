@@ -113,7 +113,7 @@ export async function getPayoutDestinationCore(
     )
     .eq("id", membershipId)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not load your payout details");
+  if (error) return dbErr(error, tr("couldNotLoadYourPayoutDetails"));
   return {
     status: 200,
     data: {
@@ -206,7 +206,7 @@ export async function setPayoutDestinationCore(
       "payout_momo_number, payout_momo_network, payout_holder_name, payout_updated_at",
     )
     .maybeSingle();
-  if (error) return dbErr(error, "Could not save your payout details");
+  if (error) return dbErr(error, tr("couldNotSaveYourPayoutDetails"));
   logger.info(
     `fieldOps payout destination updated for membership ${membershipId}`,
   );

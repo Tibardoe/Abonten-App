@@ -85,7 +85,7 @@ export async function getMyEarningsCore(
         .order("created_at", { ascending: false })
         .limit(50),
     ]);
-  if (error) return dbErr(error, "Could not load your earnings");
+  if (error) return dbErr(error, tr("couldNotLoadYourEarnings"));
   if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
 
   const commissions = ((data ?? []) as unknown as CommissionRow[]).map(

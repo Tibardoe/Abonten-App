@@ -172,9 +172,19 @@ function buildDbIndex(): DbIndex {
     | undefined;
   const exact = new Map<string, string>();
   const patterns: DbIndex["patterns"] = [];
+  // A fixed sentence a service already has a key for is recognised the same
+  // way: the generic "Something went wrong. Please try again." that
+  // @abonten/core's userFacingError returns has no translator of its own.
+  // A database message wins when both say the same words.
+  const server = SERVER_CATALOG[DEFAULT_LOCALE].server as Messages;
+  for (const [key, english] of Object.entries(server)) {
+    if (typeof english === "string" && !english.includes("{")) {
+      exact.set(english, key);
+    }
+  }
   for (const [key, english] of Object.entries(db ?? {})) {
     if (!/\{\d+\}/.test(english)) {
-      exact.set(english, key);
+      exact.set(english, `db.${key}`);
       continue;
     }
     const parts = english.split(/\{\d+\}/);
@@ -192,9 +202,9 @@ function buildDbIndex(): DbIndex {
 }
 
 /**
- * Translates a message a database function raised (or any other English
- * sentence the catalog's `db` group lists). Unknown text comes back as is,
- * and English asks for nothing.
+ * Translates a message a database function raised (the catalog's `db`
+ * group) or a fixed English sentence the `server` catalog has a key for.
+ * Unknown text comes back as is, and English asks for nothing.
  */
 export function translateServerText(
   locale: string | null | undefined,
@@ -206,7 +216,7 @@ export function translateServerText(
   if (!dbIndex) dbIndex = buildDbIndex();
   const t = serverTranslator(lang, "server");
   const exactKey = dbIndex.exact.get(text);
-  if (exactKey) return t(`db.${exactKey}`);
+  if (exactKey) return t(exactKey);
   for (const { re, key, count } of dbIndex.patterns) {
     const m = text.match(re);
     if (!m) continue;

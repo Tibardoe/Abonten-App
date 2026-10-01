@@ -106,7 +106,7 @@ export async function initCardVerificationCore(
       callbackUrl,
       methods: ["card"],
       metadata: { purpose: "card_verification", userId },
-      description: "Card verification (refunded)",
+      description: tr("cardVerificationRefunded"),
     });
   } catch (error) {
     logger.error(`Failed initializing card verification: ${error}`);

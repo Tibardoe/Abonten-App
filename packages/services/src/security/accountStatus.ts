@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // user_info.status_id: 1 active, 2 suspended, 3 banned, 4 deleted.
@@ -26,5 +27,6 @@ export async function isAccountRestricted(userId: string): Promise<boolean> {
   return !!data && RESTRICTED.has(data.status_id);
 }
 
-export const RESTRICTED_ACCOUNT_MESSAGE =
-  "Your account has been restricted. Contact support if you think this is a mistake.";
+/** Worded when answered, in the language of the request. */
+export const restrictedAccountMessage = () =>
+  tr("yourAccountHasBeenRestrictedContact");

@@ -134,7 +134,7 @@ export async function submitClaimAssistCore(
           message: tr("someoneHasAlreadyFiledAClaim"),
         };
       }
-      return dbErr(claimErr, "Could not file the claim");
+      return dbErr(claimErr, tr("couldNotFileTheClaim"));
     }
     claimId = claim?.id as string;
   }
@@ -166,7 +166,7 @@ export async function submitClaimAssistCore(
         message: tr("thisListingIsAlreadyPartOf"),
       };
     }
-    return dbErr(updErr, "Could not save the claim");
+    return dbErr(updErr, tr("couldNotSaveTheClaim"));
   }
 
   const { error: trErr } = await supabase.rpc(
@@ -180,7 +180,7 @@ export async function submitClaimAssistCore(
       p_details: { claim_request_id: claimId, place_id: input.placeId },
     },
   );
-  if (trErr) return dbErr(trErr, "Could not submit");
+  if (trErr) return dbErr(trErr, tr("couldNotSubmit"));
 
   await appendTimeline(supabase, {
     onboardingId: row.id,

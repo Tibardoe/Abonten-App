@@ -90,16 +90,14 @@ async function resolveSubject(
       return {
         name: data.name,
         eligible: false,
-        blockedReason:
-          "Publish this place before asking for verification. Drafts and archived places can't be reviewed.",
+        blockedReason: tr("publishThisPlaceBeforeAskingFor"),
       };
     }
     if (hidden) {
       return {
         name: data.name,
         eligible: false,
-        blockedReason:
-          "This listing is currently hidden by Abonten, so it can't be verified.",
+        blockedReason: tr("thisListingIsCurrentlyHiddenBy"),
       };
     }
     return { name: data.name, eligible: true, blockedReason: null };
@@ -121,8 +119,7 @@ async function resolveSubject(
     return {
       name: data.full_name || data.username,
       eligible: false,
-      blockedReason:
-        "Your account is restricted, so verification isn't available right now.",
+      blockedReason: tr("yourAccountIsRestrictedSoVerification"),
     };
   }
   return {
@@ -221,8 +218,8 @@ export async function getSubjectVerificationCore(
   ) {
     canStart = false;
     blockedReason = approvedRow
-      ? "This is already verified."
-      : "You already have a request in progress.";
+      ? tr("thisIsAlreadyVerified")
+      : tr("youAlreadyHaveARequestIn");
   }
 
   return {

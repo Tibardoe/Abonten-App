@@ -82,7 +82,7 @@ export async function getLeadDashboardCore(
       .eq("team_id", teamId),
   ]);
   if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
-  if (tErr) return dbErr(tErr, "Could not load territories");
+  if (tErr) return dbErr(tErr, tr("couldNotLoadTerritories"));
 
   const openAssignments = await mapAssignments(
     supabase,

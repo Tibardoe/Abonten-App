@@ -153,21 +153,17 @@ const OUTCOME_MESSAGE: Record<
   (name: string | null) => string
 > = {
   recorded: (n) =>
-    `You're checked in at ${n ?? "this place"}. Thanks for visiting!`,
+    tr("youReCheckedInAtThanks", { place: n ?? tr("thisPlace") }),
   already_today: (n) =>
-    `You've already checked in at ${n ?? "this place"} today.`,
-  invalid_code: () =>
-    "That code has changed. Scan the code on the screen again.",
-  too_far: () =>
-    "You need to be at the place to check in. Move closer and try again.",
-  own_place: () => "You can't check in at your own place.",
-  place_unavailable: () => "This place isn't taking check-ins.",
-  mocked_location: () =>
-    "Turn off any app that changes your location, then try again.",
-  no_location: () => "We need your location to check you in.",
-  poor_location: () =>
-    "We couldn't get an accurate location. Wait a moment or step outside, then try again.",
-  off: () => "Check-ins aren't available right now.",
+    tr("youVeAlreadyCheckedInAt", { place: n ?? tr("thisPlace") }),
+  invalid_code: () => tr("thatCodeHasChangedScanThe"),
+  too_far: () => tr("youNeedToBeAtThe"),
+  own_place: () => tr("youCanTCheckInAt"),
+  place_unavailable: () => tr("thisPlaceIsnTTakingCheck"),
+  mocked_location: () => tr("turnOffAnyAppThatChanges"),
+  no_location: () => tr("weNeedYourLocationToCheck"),
+  poor_location: () => tr("weCouldnTGetAnAccurate"),
+  off: () => tr("checkInsArenTAvailableRight"),
 };
 
 export function placeVisitMessage(result: PlaceVisitResult): string {

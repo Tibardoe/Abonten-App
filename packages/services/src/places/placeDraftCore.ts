@@ -223,7 +223,11 @@ export async function fetchPlaceDraftsList(
     .order("updated_at", { ascending: false });
 
   if (draftsError) {
-    return { status: 500, message: draftsError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Place draft", draftsError),
+      data: [],
+    };
   }
   if (!drafts || drafts.length === 0) {
     return { status: 200, data: [] };
@@ -237,7 +241,11 @@ export async function fetchPlaceDraftsList(
     .in("draft_id", draftIds);
 
   if (placeDraftsError) {
-    return { status: 500, message: placeDraftsError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Place draft", placeDraftsError),
+      data: [],
+    };
   }
 
   const coverByDraftId = new Map(
@@ -273,7 +281,7 @@ export async function fetchPlaceDraftDetail(
     .maybeSingle();
 
   if (draftError) {
-    return { status: 500, message: draftError.message };
+    return { status: 500, message: userFacingError("Place draft", draftError) };
   }
   if (!draft || draft.user_id !== userId) {
     return { status: 404, message: tr("draftNotFound") };
@@ -328,7 +336,7 @@ export async function deletePlaceDraftCore(
     .maybeSingle();
 
   if (draftError) {
-    return { status: 500, message: draftError.message };
+    return { status: 500, message: userFacingError("Place draft", draftError) };
   }
   if (!draft || draft.user_id !== userId) {
     return { status: 404, message: tr("draftNotFound") };

@@ -102,7 +102,7 @@ export async function upsertContentBriefCore(
         .select(BRIEF_COLUMNS)
         .single();
   const { data, error } = await q;
-  if (error) return dbErr(error, "Could not save the brief");
+  if (error) return dbErr(error, tr("couldNotSaveTheBrief"));
   if (!data) return { status: 404, message: tr("briefNotFound") };
 
   // Tell the creator there is something new to make.
@@ -166,7 +166,7 @@ export async function listTeamContentCore(
       .order("created_at", { ascending: false })
       .limit(200),
   ]);
-  if (error) return dbErr(error, "Could not load the team's content");
+  if (error) return dbErr(error, tr("couldNotLoadTheTeamS"));
 
   const rows = ((subs ?? []) as unknown as ContentSubmissionRow[]).map(
     mapContentSubmission,
@@ -231,7 +231,7 @@ export async function reviewContentCore(
   if (error) {
     return error.code === "23514"
       ? { status: 409, message: error.message }
-      : dbErr(error, "Could not save the decision");
+      : dbErr(error, tr("couldNotSaveTheDecision"));
   }
 
   const { data: fresh } = await supabase

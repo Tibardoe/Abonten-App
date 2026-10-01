@@ -392,7 +392,7 @@ export function summaryLabel(
     { amountMinor: budgetMinor, currency },
     { trimZeroFraction: true },
   );
-  return `${amount} budget · up to ${durationDays} day${durationDays === 1 ? "" : "s"}`;
+  return tr("budgetUpToDay", { amount, days: durationDays });
 }
 
 // PostgREST returns the geography column as WKB hex; the same parser the
@@ -550,7 +550,7 @@ export async function advertiserCampaignActionCore(
       id: input.campaignId,
       advertiserId: userId,
       status: "cancelled",
-      reason: "Any unspent budget can be refunded by our team.",
+      reason: tr("anyUnspentBudgetCanBeRefunded"),
     });
   }
   return getContentCampaignCore(supabase, userId, input.campaignId);

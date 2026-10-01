@@ -42,7 +42,11 @@ export async function fetchEventPromoCodes(
     .maybeSingle();
 
   if (eventError) {
-    return { status: 500, message: eventError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Promo code", eventError),
+      data: [],
+    };
   }
 
   if (!event) {
@@ -62,7 +66,11 @@ export async function fetchEventPromoCodes(
     .order("created_at", { ascending: false });
 
   if (promoCodesError) {
-    return { status: 500, message: promoCodesError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Promo code", promoCodesError),
+      data: [],
+    };
   }
 
   const data: EventPromoCode[] = (promoCodes ?? []).map((p) => ({
@@ -109,7 +117,7 @@ export async function updatePromoCodeCore(
     .maybeSingle();
 
   if (fetchError) {
-    return { status: 500, message: fetchError.message };
+    return { status: 500, message: userFacingError("Promo code", fetchError) };
   }
 
   if (!promoCode || promoCode.event_id === null) {
@@ -124,7 +132,7 @@ export async function updatePromoCodeCore(
     .maybeSingle();
 
   if (eventError) {
-    return { status: 500, message: eventError.message };
+    return { status: 500, message: userFacingError("Promo code", eventError) };
   }
 
   if (!event) {
@@ -159,7 +167,10 @@ export async function updatePromoCodeCore(
 
   if (updateError) {
     if (updateError.code === CHECK_VIOLATION) {
-      return { status: 400, message: updateError.message };
+      return {
+        status: 400,
+        message: userFacingError("Promo code", updateError),
+      };
     }
     return {
       status: 500,
@@ -188,7 +199,7 @@ export async function deletePromoCodeCore(
     .maybeSingle();
 
   if (fetchError) {
-    return { status: 500, message: fetchError.message };
+    return { status: 500, message: userFacingError("Promo code", fetchError) };
   }
 
   if (!promoCode || promoCode.event_id === null) {
@@ -203,7 +214,7 @@ export async function deletePromoCodeCore(
     .maybeSingle();
 
   if (eventError) {
-    return { status: 500, message: eventError.message };
+    return { status: 500, message: userFacingError("Promo code", eventError) };
   }
 
   if (!event) {

@@ -15,8 +15,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
 import { coreT, tr } from "../i18n/requestLocale";
 import {
-  RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
+  restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
@@ -97,7 +97,7 @@ export async function updateEventCore(
   // but the zone update below runs as the service — check first, and answer
   // with the reason instead of a generic failure.
   if (await isAccountRestricted(userId)) {
-    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+    return { status: 403, message: restrictedAccountMessage() };
   }
 
   const locationCheck = validateLocationInput(coreT(), {
@@ -106,7 +106,10 @@ export async function updateEventCore(
     longitude,
   });
   if (!locationCheck.valid) {
-    return { status: 400, message: locationCheck.message };
+    return {
+      status: 400,
+      message: userFacingError("Update event", locationCheck),
+    };
   }
 
   // A moved event stays in its market: the currency its tickets were sold
@@ -116,7 +119,8 @@ export async function updateEventCore(
     lng: longitude,
     countryHint: input.addressDetails?.country_code ?? null,
   });
-  if (!resolved.ok) return { status: 400, message: resolved.message };
+  if (!resolved.ok)
+    return { status: 400, message: userFacingError("Update event", resolved) };
   const { location } = resolved;
   const toInstant = (value: DateInput | null | undefined): Date | null =>
     value == null
@@ -279,7 +283,10 @@ export async function updateEventCore(
   if (updateError) {
     if (updateError.code === CHECK_VIOLATION) {
       // The capacity guard raises with an organizer-facing message.
-      return { status: 400, message: updateError.message };
+      return {
+        status: 400,
+        message: userFacingError("Update event", updateError),
+      };
     }
     logger.error(`updateEventCore: update failed (${updateError.message})`);
     return {

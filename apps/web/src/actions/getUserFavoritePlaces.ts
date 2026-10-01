@@ -143,7 +143,7 @@ export const getUserFavoritePlaces = withActionLocale(
           slug: place.slug,
           description: place.description,
           category_id: place.category_id,
-          category_name: place.place_category?.name ?? "Uncategorized",
+          category_name: place.place_category?.name ?? tr("uncategorized"),
           category_slug: place.place_category?.slug ?? "",
           location: typeof place.location === "string" ? place.location : "",
           address: readEventAddress(place.address),

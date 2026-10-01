@@ -240,7 +240,7 @@ export async function submitEventOnboardingCore(
         message: tr("thisEventHasAlreadyBeenOnboarded"),
       };
     }
-    return dbErr(updErr, "Could not save the submission");
+    return dbErr(updErr, tr("couldNotSaveTheSubmission"));
   }
 
   const { error: trErr } = await supabase.rpc(
@@ -259,7 +259,7 @@ export async function submitEventOnboardingCore(
       },
     },
   );
-  if (trErr) return dbErr(trErr, "Could not submit");
+  if (trErr) return dbErr(trErr, tr("couldNotSubmit"));
 
   await appendTimeline(supabase, {
     onboardingId: row.id,

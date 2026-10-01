@@ -269,16 +269,16 @@ export async function registerContentMediaCore(
     resource.resource_type === "raw" ||
     isVideo !== (input.resourceType === "video")
   ) {
-    return refuse("Unsupported media type.");
+    return refuse(tr("unsupportedMediaType2"));
   }
   if (!isAllowedFormat(resource.format, isVideo)) {
-    return refuse("Unsupported file format.");
+    return refuse(tr("unsupportedFileFormat"));
   }
   if (
     resource.bytes >
     (isVideo ? MAX_CONTENT_VIDEO_BYTES : MAX_CONTENT_IMAGE_BYTES)
   ) {
-    return refuse("That file is too large.");
+    return refuse(tr("thatFileIsTooLarge"));
   }
 
   const settings = await readContentSettings(supabase);
@@ -296,15 +296,13 @@ export async function registerContentMediaCore(
     // Fail closed: a length we can't read can't be checked against the
     // limit, and a file with no picture isn't a video post.
     if (full === null) {
-      return refuse(
-        "We couldn't read this video's length. Try exporting it again.",
-      );
+      return refuse(tr("weCouldnTReadThisVideo"));
     }
     if (resource.has_video === false) {
-      return refuse("That file has no video picture.");
+      return refuse(tr("thatFileHasNoVideoPicture"));
     }
     if (full < MIN_VIDEO_SECONDS) {
-      return refuse("That video is too short.");
+      return refuse(tr("thatVideoIsTooShort"));
     }
     const start = input.trimStartSeconds;
     const end = input.trimEndSeconds;
@@ -329,9 +327,7 @@ export async function registerContentMediaCore(
       durationSeconds = full;
     }
     if (durationSeconds !== null && durationSeconds > maxSeconds + 0.5) {
-      return refuse(
-        `Videos can be at most ${maxSeconds} seconds. Trim it and try again.`,
-      );
+      return refuse(tr("videosCanBeAtMostSeconds", { maxSeconds: maxSeconds }));
     }
   }
 
