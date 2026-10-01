@@ -88,7 +88,7 @@ Paging is keyset on `(score desc, id asc)` with a pinned `as_of`, so the time te
 All are `SECURITY DEFINER`, `search_path = ''`, executable by `anon`. They return public listing and public profile columns only; organizers never expose email, phone or account status.
 
 - **Service**: `packages/services/src/search/searchCore.ts` runs the groups a request needs in parallel, maps rows to `@abonten/types/searchType`, and treats one failed group as that group's error, not the whole search's.
-- **Web**: `/search?q=&type=all|events|places|organizers&organizer=` (`apps/web/src/app/(pages)/search/page.tsx`), rate-limited Server Actions `searchDiscovery` (60 a minute) and `suggestDiscovery` (180 a minute). Old `/search/<slug>` links redirect when unified search is on; `/search?q=` redirects the other way when it is off for the visitor.
+- **Web**: `/search?q=&type=all|events|places|organizers&organizer=` (`apps/web/src/app/[locale]/(pages)/search/page.tsx`), rate-limited Server Actions `searchDiscovery` (60 a minute) and `suggestDiscovery` (180 a minute). Old `/search/<slug>` links redirect when unified search is on; `/search?q=` redirects the other way when it is off for the visitor.
 - **Mobile**: type-ahead goes through `GET /api/mobile/search/suggest` (180 a minute per user or IP, the programme's switches, logging) and submitted searches through `GET /api/mobile/search`. Until 2026-09-15 the app called `search_suggest` directly with the anon key, which nothing could rate-limit or count; the earlier "hybrid" decision was reversed by the owner for that reason. `search_suggest` keeps its anon grant so app builds from before the change keep working until they update; those builds' type-ahead stays unmetered and unlogged.
 
 ## 3. Search analytics

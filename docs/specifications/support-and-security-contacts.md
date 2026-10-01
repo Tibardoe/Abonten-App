@@ -35,7 +35,7 @@ complianceReviewRequired: no
 | Step | Status |
 |---|---|
 | Insert the addresses into the legal pages and bump versions (Terms 1.2-draft, Privacy 1.2-draft, Security 1.1-draft; still no effective date) | Done 2026-09-12 |
-| Shared constant `packages/core/src/brand/contacts.ts`, read by the help centre card (`apps/web/src/components/molecules/ContactSupportCard.tsx`), the restricted-account page (`apps/web/src/app/account-restricted/page.tsx`), both footers and the mobile drawer (`apps/mobile/src/lib/legalLinks.ts`) | Done 2026-09-12 |
+| Shared constant `packages/core/src/brand/contacts.ts`, read by the help centre card (`apps/web/src/components/molecules/ContactSupportCard.tsx`), the restricted-account page (`apps/web/src/app/[locale]/account-restricted/page.tsx`), both footers and the mobile drawer (`apps/mobile/src/lib/legalLinks.ts`) | Done 2026-09-12 |
 | Validator asserts the legal pages quote exactly these addresses and that no other `@abontenhub.com` (outbound senders excepted) or personal address appears in documentation | Done 2026-09-12 (`contacts` rule) |
 | Mailbox operations: who reads what, reply-as-alias setup, verification, no forwarding | Documented in `../operations/account-and-support-procedures.md` §Email channels; the Gmail "Send mail as" setup is a one-time action for the founder before any reply is sent |
 | Help pages, privacy procedure, admin support page, vulnerability runbook, processor table (Google Workspace) updated | Done 2026-09-12 |

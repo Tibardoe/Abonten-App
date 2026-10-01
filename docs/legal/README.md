@@ -16,7 +16,7 @@ complianceReviewRequired: yes
 
 ## Where the text lives
 
-The canonical text of every public legal document is a Markdown file in **`apps/web/src/content/legal/`**, rendered by the website at `/legal/<slug>` (`apps/web/src/app/(pages)/legal/[slug]/page.tsx`) and opened from the mobile app in its in-app browser (`apps/mobile/src/lib/legalLinks.ts`). The short paths `/terms`, `/privacy` and `/cookies` redirect to the long ones (`apps/web/next.config.ts`).
+The canonical text of every public legal document is a Markdown file in **`apps/web/src/content/legal/`**, rendered by the website at `/legal/<slug>` (`apps/web/src/app/[locale]/(pages)/legal/[slug]/page.tsx`) and opened from the mobile app in its in-app browser (`apps/mobile/src/lib/legalLinks.ts`). The short paths `/terms`, `/privacy` and `/cookies` redirect to the long ones (`apps/web/next.config.ts`).
 
 Keeping the text in the web app (rather than in this folder) guarantees it is in the Vercel build context and is versioned with the page that renders it. This folder holds the register and the rules.
 
@@ -54,7 +54,7 @@ Where users are shown or asked to accept the documents:
 | Mobile sign-in | Same sentence with links | `apps/mobile/app/(auth)/sign-in.tsx` |
 | Web footers and side menu | Terms · Privacy · Cookies · Security · Help | `DesktopFooter.tsx`, `MobileFooter.tsx` |
 | Mobile drawer and Settings | Legal rows and Help centre / Legal & policies entries | `AppDrawer.tsx`, `app/(app)/settings/index.tsx` |
-| Field-programme owner consent page | "you agree to … the Abonten Terms and Conditions" | `apps/web/src/app/(pages)/consent/field/[token]/page.tsx` |
-| Restricted-account page | Links to help and Terms | `apps/web/src/app/account-restricted/page.tsx` |
+| Field-programme owner consent page | "you agree to … the Abonten Terms and Conditions" | `apps/web/src/app/[locale]/(pages)/consent/field/[token]/page.tsx` |
+| Restricted-account page | Links to help and Terms | `apps/web/src/app/[locale]/account-restricted/page.tsx` |
 
 Whether "continuing" is sufficient acceptance is legal item C1.
