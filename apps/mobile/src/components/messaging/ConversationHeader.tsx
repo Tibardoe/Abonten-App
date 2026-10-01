@@ -1,5 +1,6 @@
 import type { ConversationContext } from "@abonten/api-client";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -33,6 +34,8 @@ export function ConversationHeader({
   /** The other participant has this conversation open right now. */
   present?: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const { ref: menuRef, measure: measureMenu } = useAnchorMeasure();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -71,7 +74,7 @@ export function ConversationHeader({
         ? `${contextLine} · ${subjectName}`
         : subjectName
     : contextLine;
-  const closedNote = context?.status === "closed" ? " · Closed" : "";
+  const closedNote = context?.status === "closed" ? t("closed") : "";
 
   function openSubject() {
     if (context?.subject.event) {
@@ -98,7 +101,7 @@ export function ConversationHeader({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={t("back")}
           hitSlop={8}
           onPress={() =>
             router.canGoBack()
@@ -120,7 +123,11 @@ export function ConversationHeader({
             .join(", ")}
           accessibilityHint={
             subjectTappable
-              ? `Opens the ${context?.subject.event ? "event" : "place"}`
+              ? t("opensThe", {
+                  value: context?.subject.event
+                    ? t("event2")
+                    : (t("place2") ?? ""),
+                })
               : undefined
           }
           onPress={subjectTappable ? openSubject : undefined}
@@ -161,7 +168,7 @@ export function ConversationHeader({
                 className="font-semibold"
                 accessibilityLiveRegion="polite"
               >
-                typing…
+                {t("typing")}
               </AppText>
             ) : present ? (
               <View className="flex-row items-center gap-1.5">
@@ -170,7 +177,7 @@ export function ConversationHeader({
                   style={{ backgroundColor: c.success }}
                 />
                 <AppText variant="caption" numberOfLines={1}>
-                  In this chat
+                  {t("inThisChat")}
                 </AppText>
               </View>
             ) : about || closedNote ? (
@@ -185,8 +192,8 @@ export function ConversationHeader({
         <Pressable
           ref={menuRef}
           accessibilityRole="button"
-          accessibilityLabel="Conversation options"
-          accessibilityHint="Opens mute, archive and report"
+          accessibilityLabel={t("conversationOptions")}
+          accessibilityHint={t("opensMuteArchiveAndReport")}
           hitSlop={8}
           // Hand the caller this button's own frame so the menu can hang off
           // it instead of arriving from the bottom of the screen.

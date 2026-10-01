@@ -4,6 +4,7 @@ import getOrganizerRefundSummary from "@/actions/getOrganizerRefundSummary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 /**
  * "Why did my available balance change?" — pending refunds are money
@@ -15,6 +16,8 @@ import { useQuery } from "@tanstack/react-query";
  * never disagree with the Available/Pending figures above it.
  */
 export default function RefundSummary() {
+  const t = useTranslations("finances");
+
   const { data, isPending, isError } = useQuery({
     queryKey: ["organizer-refund-summary"],
     queryFn: getOrganizerRefundSummary,
@@ -37,10 +40,9 @@ export default function RefundSummary() {
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <h2 className="font-bold md:text-lg">Refunds</h2>
+        <h2 className="font-bold md:text-lg">{t("refunds")}</h2>
         <p className="text-sm text-muted-foreground">
-          Ticket revenue returned or reserved to be returned to attendees —
-          never counted as part of your available balance.
+          {t("ticketRevenueReturnedOrReservedTo")}
         </p>
       </div>
 
@@ -51,13 +53,17 @@ export default function RefundSummary() {
             className="rounded-xl border border-border bg-card text-card-foreground p-4 grid grid-cols-2 gap-4"
           >
             <div>
-              <p className="text-sm text-muted-foreground">Pending refunds</p>
+              <p className="text-sm text-muted-foreground">
+                {t("pendingRefunds")}
+              </p>
               <p className="font-semibold text-lg">
                 {formatMoney(row.currency, row.pending_refund_amount)}
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Completed refunds</p>
+              <p className="text-sm text-muted-foreground">
+                {t("completedRefunds")}
+              </p>
               <p className="font-semibold text-lg">
                 {formatMoney(row.currency, row.completed_refund_amount)}
               </p>

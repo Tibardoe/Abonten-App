@@ -11,6 +11,7 @@ import {
   Volume2Icon,
   VolumeXIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -34,6 +35,8 @@ export default function HighlightModal({
   handleShowHighlightModal,
   onUpload,
 }: ClosePopupModalType) {
+  const t = useTranslations("common");
+
   const {
     mediaItems,
     activeId,
@@ -205,7 +208,7 @@ export default function HighlightModal({
         <div className="relative w-full h-screen">
           <Image
             src={item.url}
-            alt="Selected media"
+            alt={t("selectedMedia")}
             fill
             className="object-contain"
             unoptimized
@@ -243,7 +246,7 @@ export default function HighlightModal({
           <button
             type="button"
             onClick={togglePlayPause}
-            aria-label={isPlaying ? "Pause video" : "Play video"}
+            aria-label={isPlaying ? t("pauseVideo") : t("playVideo")}
             className="p-4 bg-black bg-opacity-50 rounded-full"
           >
             {isPlaying ? (
@@ -261,7 +264,7 @@ export default function HighlightModal({
     <ModalShell
       open
       onClose={handleCancelOrBack}
-      title="New Highlight"
+      title={t("newHighlight")}
       overlayClassName="bg-overlay/90"
       className="flex-col"
     >
@@ -270,7 +273,7 @@ export default function HighlightModal({
         <button
           type="button"
           onClick={handleCancelOrBack}
-          aria-label={step === 1 && !isCropping ? "Close" : "Back"}
+          aria-label={step === 1 && !isCropping ? t("close") : t("back")}
           className="text-white p-2 rounded-full backdrop-blur-md border border-white/20 bg-black bg-opacity-75"
         >
           {step === 1 && !isCropping ? (
@@ -282,7 +285,7 @@ export default function HighlightModal({
 
         {step === 1 && (
           <h2 className="text-white font-medium text-lg backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md">
-            New Highlight
+            {t("newHighlight")}
           </h2>
         )}
 
@@ -290,7 +293,8 @@ export default function HighlightModal({
           <div className="flex items-center gap-2">
             {mediaItems.length > 1 && (
               <span className="text-white text-sm backdrop-blur-md border border-white/20 bg-black bg-opacity-75 px-2.5 py-1.5 rounded-full">
-                {currentIndex + 1}/{mediaItems.length} selected
+                {currentIndex + 1}
+                {t("selected", { length: mediaItems.length })}
               </span>
             )}
 
@@ -301,7 +305,7 @@ export default function HighlightModal({
                   setImageToCrop(currentMedia.url);
                   setIsCropping(true);
                 }}
-                aria-label="Crop image"
+                aria-label={t("cropImage")}
                 className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full"
               >
                 <CiCrop className="w-5 h-5 text-white" />
@@ -316,7 +320,7 @@ export default function HighlightModal({
                 isPreviewReady ? "" : "opacity-50 cursor-not-allowed"
               }`}
             >
-              Upload
+              {t("upload")}
             </button>
           </div>
         )}
@@ -338,14 +342,14 @@ export default function HighlightModal({
               <div className="bg-iconGray p-6 rounded-full">
                 <Image
                   src="/assets/images/gallery.svg"
-                  alt="Gallery"
+                  alt={t("gallery")}
                   width={60}
                   height={60}
                   className="filter invert"
                 />
               </div>
               <h3 className="text-white md:text-xl font-medium">
-                Upload highlights here
+                {t("uploadHighlightsHere")}
               </h3>
               <input
                 type="file"
@@ -359,7 +363,7 @@ export default function HighlightModal({
                 className="px-8 py-6 md:text-lg rounded-md font-medium hover:bg-white hover:bg-opacity-50"
                 onClick={() => fileInputRef.current?.click()}
               >
-                Select from Gallery
+                {t("selectFromGallery")}
               </Button>
             </div>
           ) : step === 2 && currentMedia ? (
@@ -379,7 +383,7 @@ export default function HighlightModal({
                     <button
                       type="button"
                       onClick={toggleMute}
-                      aria-label={isMuted ? "Unmute video" : "Mute video"}
+                      aria-label={isMuted ? t("unmuteVideo") : t("muteVideo")}
                       className="bg-black bg-opacity-50 p-2 rounded-full"
                     >
                       {isMuted ? (

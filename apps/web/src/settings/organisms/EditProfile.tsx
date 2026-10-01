@@ -1,3 +1,6 @@
+import { useTranslations } from "next-intl";
 export default function EditProfile() {
-  return <div>Edit Profile</div>;
+  const t = useTranslations("settings");
+
+  return <div>{t("editProfile2")}</div>;
 }

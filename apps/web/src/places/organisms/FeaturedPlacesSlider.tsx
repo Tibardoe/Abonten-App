@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/carousel";
 import { useCarouselAutoplay } from "@/hooks/useCarouselAutoplay";
 import type { PlaceType } from "@abonten/types/placeType";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import PlaceBanner from "../molecules/PlaceBanner";
 
@@ -32,6 +33,8 @@ const AUTOPLAY_DELAY_MS = 4000;
 export default function FeaturedPlacesSlider({
   places,
 }: FeaturedPlacesSliderProps) {
+  const t = useTranslations("places");
+
   const { plugin, setApi } = useCarouselAutoplay(AUTOPLAY_DELAY_MS);
   const loggedImpressions = useRef<Set<string>>(new Set());
 
@@ -51,7 +54,7 @@ export default function FeaturedPlacesSlider({
 
   return (
     <div>
-      <h2 className="font-medium text-lg mb-1">Featured Places</h2>
+      <h2 className="font-medium text-lg mb-1">{t("featuredPlaces")}</h2>
 
       {places.length === 1 ? (
         <PlaceBanner place={places[0]} />

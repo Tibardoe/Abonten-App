@@ -2,6 +2,7 @@
 
 import ChangeLocationModal from "@/components/organisms/ChangeLocationModal";
 import { locationLabelFromSlug } from "@/utils/locationLabel";
+import { useTranslations } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import NoEventsFound from "./NoEventsFound";
@@ -12,6 +13,8 @@ import NoEventsFound from "./NoEventsFound";
 // somewhere else, or see this area's places instead (the same shallow
 // "?tab=" switch ExploreTabs itself uses).
 export default function NoEventsInLocation({ location }: { location: string }) {
+  const t = useTranslations("events");
+
   const [showChangeLocationModal, setShowChangeLocationModal] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -32,8 +35,8 @@ export default function NoEventsInLocation({ location }: { location: string }) {
       )}
 
       <NoEventsFound
-        heading={`Nothing on in ${label} yet`}
-        description={`There are no upcoming events near ${label} right now. New events are listed all the time, so check back soon or look somewhere else.`}
+        heading={t("nothingOnInYet", { label: label })}
+        description={t("thereAreNoUpcomingEventsNear", { label: label })}
       />
 
       <div className="-mt-6 flex flex-wrap items-center justify-center gap-2 pb-8">
@@ -42,14 +45,14 @@ export default function NoEventsInLocation({ location }: { location: string }) {
           onClick={() => setShowChangeLocationModal(true)}
           className="h-10 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          Change location
+          {t("changeLocation")}
         </button>
         <button
           type="button"
           onClick={showPlaces}
           className="h-10 rounded-full border border-border bg-background px-5 text-sm font-semibold transition-colors hover:bg-accent"
         >
-          See places instead
+          {t("seePlacesInstead")}
         </button>
       </div>
     </div>

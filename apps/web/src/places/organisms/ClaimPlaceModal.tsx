@@ -3,6 +3,7 @@
 import { submitPlaceClaimRequest } from "@/actions/submitPlaceClaimRequest";
 import ModalShell from "@/components/atoms/ModalShell";
 import { useToast } from "@/hooks/useToast";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ClaimPlaceModalProps = {
@@ -26,6 +27,8 @@ export default function ClaimPlaceModal({
   onClose,
   onSubmitted,
 }: ClaimPlaceModalProps) {
+  const t = useTranslations("places");
+
   const toast = useToast();
 
   const [note, setNote] = useState("");
@@ -56,15 +59,21 @@ export default function ClaimPlaceModal({
   };
 
   return (
-    <ModalShell open onClose={onClose} title={`Claim ${placeName}`}>
+    <ModalShell
+      open
+      onClose={onClose}
+      title={t("claim", { placeName: placeName })}
+    >
       <div className="w-full self-end md:self-center h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
         <div className="flex justify-between items-center gap-3">
-          <h1 className="text-xl font-bold">Claim {placeName}</h1>
+          <h1 className="text-xl font-bold">
+            {t("claim", { placeName: placeName })}
+          </h1>
           <button
             type="button"
             onClick={onClose}
             className="font-bold text-muted-foreground hover:text-foreground shrink-0"
-            aria-label="Close"
+            aria-label={t("close")}
           >
             ✕
           </button>
@@ -73,27 +82,25 @@ export default function ClaimPlaceModal({
         {submitted ? (
           <div className="space-y-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Your claim request has been submitted. An admin will review it
-              soon.
+              {t("yourClaimRequestHasBeenSubmitted")}
             </p>
             <button
               type="button"
               onClick={onClose}
               className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
             >
-              Close
+              {t("close")}
             </button>
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Tell us why you're the rightful owner of this place. An admin will
-              review your request before ownership changes.
+              {t("tellUsWhyYouReThe")}
             </p>
 
             <textarea
               rows={4}
-              placeholder="Note (optional)"
+              placeholder={t("noteOptional")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="w-full rounded-md border border-input bg-background p-2 text-sm"
@@ -101,7 +108,7 @@ export default function ClaimPlaceModal({
 
             <input
               type="tel"
-              placeholder="Contact phone (optional)"
+              placeholder={t("contactPhoneOptional")}
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
               className="w-full rounded-md border border-input bg-background p-2 text-sm"
@@ -109,7 +116,7 @@ export default function ClaimPlaceModal({
 
             <input
               type="email"
-              placeholder="Contact email (optional)"
+              placeholder={t("contactEmailOptional")}
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               className="w-full rounded-md border border-input bg-background p-2 text-sm"
@@ -122,7 +129,7 @@ export default function ClaimPlaceModal({
                 onClick={handleSubmit}
                 className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
               >
-                {isSubmitting ? "Submitting..." : "Submit Claim"}
+                {isSubmitting ? t("submitting") : t("submitClaim")}
               </button>
               <button
                 type="button"
@@ -130,7 +137,7 @@ export default function ClaimPlaceModal({
                 disabled={isSubmitting}
                 className="flex-1 border border-border py-2 rounded-md text-sm hover:bg-accent transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           </div>

@@ -2,9 +2,13 @@ import { createClient } from "@/config/supabase/server";
 import { MessagingWorkspace } from "@/messaging/components/MessagingWorkspace";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Messages" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("messaging");
+  return { title: t("messages") };
+}
 
 // Per-user, request-time data (this user's inbox) — same force-dynamic
 // precedent as wallet/page.tsx.

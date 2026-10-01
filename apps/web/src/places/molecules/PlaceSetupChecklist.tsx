@@ -3,6 +3,7 @@
 import type { PlaceSetup } from "@abonten/core/placeSetup";
 import { VERIFICATION_CHIP_LABEL } from "@abonten/core/verification/copy";
 import type { VerificationStatus } from "@abonten/types/verificationType";
+import { useTranslations } from "next-intl";
 import { IoCheckmarkCircle } from "react-icons/io5";
 
 // "Finish setting up your place" — the same shape as
@@ -31,12 +32,14 @@ export default function PlaceSetupChecklist({
   setup: PlaceSetup;
   onGoToTab: (tab: string) => void;
 }) {
+  const t = useTranslations("places");
+
   if (setup.isComplete) return null;
 
   return (
     <div className="space-y-3 rounded-xl border border-border bg-muted p-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">Finish setting up your place</h2>
+        <h2 className="font-semibold">{t("finishSettingUpYourPlace")}</h2>
         <span className="text-sm text-muted-foreground">
           {setup.completedCount}/{setup.total}
         </span>

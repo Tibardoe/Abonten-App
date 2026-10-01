@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
@@ -10,6 +11,8 @@ type PromoCodeProp = {
 export default function PromoCodeBtn({
   handlePromoCodeFormPopup,
 }: PromoCodeProp) {
+  const t = useTranslations("common");
+
   const [showPromoCodeFormPopup, _setShowPromoCodeFormPopup] = useState(false);
 
   return (
@@ -18,7 +21,7 @@ export default function PromoCodeBtn({
       onClick={() => handlePromoCodeFormPopup(true)}
       className="flex justify-between items-center w-full"
     >
-      Add Promo Code
+      {t("addPromoCode")}
       {showPromoCodeFormPopup ? (
         <IoIosArrowUp className="text-2xl" />
       ) : (

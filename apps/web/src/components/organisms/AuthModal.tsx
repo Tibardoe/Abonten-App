@@ -128,7 +128,7 @@ export default function AuthModal({
       return true;
     } catch (error) {
       logger.error("Phone Sign-In Error:", error);
-      setSendErrorMessage("Something went wrong. Please try again.");
+      setSendErrorMessage(t("somethingWentWrongPleaseTryAgain"));
       return false;
     } finally {
       setIsSendingOtp(false);
@@ -184,7 +184,7 @@ export default function AuthModal({
       return true;
     } catch (error) {
       logger.error("Email Sign-In Error:", error);
-      setSendErrorMessage("Something went wrong. Please try again.");
+      setSendErrorMessage(t("somethingWentWrongPleaseTryAgain"));
       return false;
     } finally {
       setIsSendingOtp(false);

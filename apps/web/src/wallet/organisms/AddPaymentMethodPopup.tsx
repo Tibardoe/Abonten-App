@@ -2,6 +2,7 @@
 
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import { BottomSheet } from "@/components/atoms/BottomSheet";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import PaymentOptionCard from "../molecules/PaymentOptionCard";
 import AddBankCard from "./AddBankCard";
@@ -21,6 +22,8 @@ export default function AddPaymentMethodPopup({
   onclick,
   onAdded,
 }: PopupCloseProp) {
+  const t = useTranslations("wallet");
+
   const [step, setStep] = useState(1);
 
   const [title, setTitle] = useState("");
@@ -36,8 +39,8 @@ export default function AddPaymentMethodPopup({
       onClose={onclick}
       title={
         step === 1
-          ? "Add a payment method"
-          : (STEP_TITLES[title] ?? "Add wallet")
+          ? t("addAPaymentMethod")
+          : (STEP_TITLES[title] ?? t("addWallet"))
       }
       className="md:w-[30rem]"
     >

@@ -1,6 +1,7 @@
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { PromotionCredit } from "@abonten/types/rewards";
 import { AppText, Button, Overline } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
@@ -15,6 +16,8 @@ const monthOf = (period: string) =>
 // a way to spend it on featuring. Separate from the withdrawable balance --
 // credit is never paid out as money.
 export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
+  const t = useTranslations("rewards");
+
   const router = useRouter();
   const { organizerShareBps, venueShareBps, milestone, visits, expiryDays } =
     credit.rates;
@@ -44,39 +47,44 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
   return (
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <View className="gap-1">
-        <Overline>Promotion credit</Overline>
+        <Overline>{t("promotionCredit")}</Overline>
         <AppText variant="hero" className="tabular-nums">
           {formatCredit(credit.promotionOnlyMinor, credit.currency)}
         </AppText>
         {credit.pendingMinor > 0 ? (
           <AppText variant="small" tone="muted">
-            {formatCredit(credit.pendingMinor, credit.currency)} pending
+            {t("pending3", {
+              formatCredit: formatCredit(credit.pendingMinor, credit.currency),
+            })}
           </AppText>
         ) : null}
         {credit.last ? (
           <AppText variant="small" tone="muted">
-            +{formatCredit(credit.last.amountMinor, credit.currency)} for events
-            that ended in {monthOf(credit.last.periodStart)}
+            {t("forEventsThatEndedIn", {
+              formatCredit: formatCredit(
+                credit.last.amountMinor,
+                credit.currency,
+              ),
+              monthOf: monthOf(credit.last.periodStart),
+            })}
           </AppText>
         ) : null}
       </View>
 
       {credit.canRedeem && credit.spendableMinor > credit.promotionOnlyMinor ? (
         <AppText variant="small">
-          You can put {formatCredit(credit.spendableMinor, credit.currency)}{" "}
-          towards featuring an event or place, including your other Abonten
-          Credit.
+          {t("youCanPutTowardsFeaturingAn", {
+            formatCredit: formatCredit(credit.spendableMinor, credit.currency),
+          })}
         </AppText>
       ) : null}
       {!credit.canRedeem && credit.promotionOnlyMinor > 0 ? (
-        <AppText variant="small">
-          Soon you&apos;ll be able to use it to feature your events and places.
-        </AppText>
+        <AppText variant="small">{t("soonYouLlBeAbleTo3")}</AppText>
       ) : null}
 
       {credit.canRedeem && credit.spendableMinor > 0 ? (
         <Button
-          title="Feature an event"
+          title={t("featureAnEvent")}
           leftIcon="megaphone-outline"
           fullWidth
           onPress={() => router.push("/(app)/organizer/events")}
@@ -94,11 +102,11 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
       ) : null}
 
       <AppText variant="caption">
-        Promotion credit only pays for featuring events and places
+        {t("promotionCreditOnlyPaysForFeaturing")}
         {expiryDays
-          ? `, and lasts ${expiryDays} days from when you get it`
+          ? t("andLastsDaysFromWhenYou", { expiryDays: expiryDays })
           : ""}
-        . It can&apos;t be withdrawn.
+        {t("itCanTBeWithdrawn")}
       </AppText>
     </View>
   );

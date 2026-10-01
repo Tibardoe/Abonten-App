@@ -1,6 +1,7 @@
 "use client";
 
 import { useContentProgram } from "@/spotlight/hooks/useContentProgram";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import UserAccountTabsNavButton from "../atoms/UserAccountTabsNavButton";
 
@@ -11,6 +12,8 @@ type UsernameProp = {
 export default function UserAccountTabsNavigation({
   ownUsername,
 }: UsernameProp) {
+  const t = useTranslations("account");
+
   const pathname = usePathname(); // e.g. /Tibardoe/posts
 
   // Extract the username from the pathname
@@ -29,21 +32,21 @@ export default function UserAccountTabsNavigation({
       <div className="flex w-full justify-between px-1 sm:w-auto sm:justify-center sm:gap-5 sm:px-0">
         <UserAccountTabsNavButton
           imgUrl="/assets/images/posts.svg"
-          text="Events"
+          text={t("events")}
           path="posts"
           username={username}
         />
 
         <UserAccountTabsNavButton
           imgUrl="/assets/images/location.svg"
-          text="Places"
+          text={t("places")}
           username={username}
         />
 
         {program.spotlight ? (
           <UserAccountTabsNavButton
             imgUrl="/assets/images/posts.svg"
-            text="Spotlight"
+            text={t("spotlight")}
             username={username}
           />
         ) : null}
@@ -51,14 +54,14 @@ export default function UserAccountTabsNavigation({
         {isCurrentUser && (
           <UserAccountTabsNavButton
             imgUrl="/assets/images/favorites.svg"
-            text="Favorites"
+            text={t("favorites")}
             username={username}
           />
         )}
 
         <UserAccountTabsNavButton
           imgUrl="/assets/images/reviews.svg"
-          text="Reviews"
+          text={t("reviews")}
           username={username}
         />
       </div>

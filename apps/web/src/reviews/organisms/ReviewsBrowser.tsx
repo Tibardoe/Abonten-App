@@ -13,8 +13,8 @@ import {
   type ReviewRatingFilter,
   type ReviewSort,
   type ReviewSummary,
-  emptyReviewsMessage,
 } from "@abonten/core/reviews/reviewList";
+import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import OrganizerReplyControls from "../molecules/OrganizerReplyControls";
 import ReviewItemActions from "../molecules/ReviewItemActions";
@@ -32,8 +32,9 @@ import type { ReviewsSubject } from "./ReviewsPreview";
 // on every page and nothing repeats as new reviews arrive. A shared link
 // (?review=<id>) pins that review at the top.
 
-const RATING_FILTERS: { value: ReviewRatingFilter; label: string }[] = [
-  { value: null, label: "All" },
+// `label: null` is the "All" filter, named from the catalog at render.
+const RATING_FILTERS: { value: ReviewRatingFilter; label: string | null }[] = [
+  { value: null, label: null },
   { value: 5, label: "5 ★" },
   { value: 4, label: "4 ★" },
   { value: 3, label: "3 ★" },
@@ -58,6 +59,9 @@ export default function ReviewsBrowser({
   initialShared: ReviewListRow | null;
   addReviewButton: ReactNode;
 }) {
+  const t = useTranslations("reviews");
+  const format = useFormatter();
+
   const { data: user } = useCurrentUser();
   const viewerId = user?.id ?? null;
   const [rating, setRating] = useState<ReviewRatingFilter>(null);
@@ -82,7 +86,18 @@ export default function ReviewsBrowser({
     (r) => r.id !== sharedRow?.id,
   );
   const total = summary.data?.total ?? 0;
-  const empty = emptyReviewsMessage(rating, subject.kind);
+  const empty = rating
+    ? {
+        title: t("noStarReviewsYet", { rating }),
+        description: t("tryAnotherRatingOrShowAll"),
+      }
+    : {
+        title: t("noReviewsYet"),
+        description:
+          subject.kind === "event"
+            ? t("peopleWhoAttendedCanReview")
+            : t("beTheFirstToShare"),
+      };
   const isOrganizer =
     subject.kind === "event" && !!viewerId && viewerId === subject.ownerId;
 
@@ -146,22 +161,22 @@ export default function ReviewsBrowser({
 
       {sharedReviewId && shared.isSuccess && !sharedRow ? (
         <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-          The review you opened is no longer available.
+          {t("theReviewYouOpenedIsNo")}
         </p>
       ) : null}
       {sharedRow ? (
-        <ul aria-label="Shared review">{renderReview(sharedRow, true)}</ul>
+        <ul aria-label={t("sharedReview")}>{renderReview(sharedRow, true)}</ul>
       ) : null}
 
       {total > 0 ? (
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <fieldset className="flex flex-wrap gap-2">
-            <legend className="sr-only">Filter by rating</legend>
+            <legend className="sr-only">{t("filterByRating")}</legend>
             {RATING_FILTERS.map((f) => {
               const active = rating === f.value;
               return (
                 <button
-                  key={f.label}
+                  key={f.label ?? "all"}
                   type="button"
                   aria-pressed={active}
                   onClick={() => setRating(f.value)}
@@ -172,14 +187,14 @@ export default function ReviewsBrowser({
                   }`}
                 >
                   {f.value && summary.data
-                    ? `${f.label} · ${summary.data.counts[f.value].toLocaleString("en-US")}`
-                    : f.label}
+                    ? `${f.label} · ${format.number(summary.data.counts[f.value])}`
+                    : (f.label ?? t("all"))}
                 </button>
               );
             })}
           </fieldset>
           <label className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Sort by</span>
+            <span className="text-muted-foreground">{t("sortBy")}</span>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as ReviewSort)}
@@ -203,7 +218,7 @@ export default function ReviewsBrowser({
         </ul>
       ) : list.isError && rows.length === 0 ? (
         <InlineErrorRetry
-          message="We couldn't load these reviews."
+          message={t("weCouldnTLoadTheseReviews")}
           onRetry={() => list.refetch()}
         />
       ) : rows.length === 0 && !sharedRow ? (
@@ -216,7 +231,7 @@ export default function ReviewsBrowser({
               onClick={() => setRating(null)}
               className="mt-3 text-sm font-medium text-primary hover:underline"
             >
-              Show all reviews
+              {t("showAllReviews")}
             </button>
           ) : null}
         </div>

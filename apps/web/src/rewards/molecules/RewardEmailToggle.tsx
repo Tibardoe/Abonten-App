@@ -3,6 +3,7 @@
 import { setRewardEmailPreference } from "@/actions/setRewardEmailPreference";
 import { useToast } from "@/hooks/useToast";
 import type { RewardEmailPreference } from "@abonten/types/rewards";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 /**
@@ -14,6 +15,8 @@ export default function RewardEmailToggle({
 }: {
   initial: RewardEmailPreference;
 }) {
+  const t = useTranslations("rewards");
+
   const toast = useToast();
   const [on, setOn] = useState(initial.rewardEmails);
   const [pending, start] = useTransition();
@@ -24,9 +27,9 @@ export default function RewardEmailToggle({
       const res = await setRewardEmailPreference({ enabled: next });
       if (res.status === 200 && res.data) {
         setOn(res.data.rewardEmails);
-        toast.success(res.message ?? "Saved.");
+        toast.success(res.message ?? t("saved2"));
       } else {
-        toast.error(res.message ?? "Couldn't save that. Please try again.");
+        toast.error(res.message ?? t("couldnTSaveThatPleaseTry"));
       }
     });
 
@@ -34,12 +37,12 @@ export default function RewardEmailToggle({
     <section className="flex items-start justify-between gap-4 rounded-xl border p-5">
       <div>
         <p id="reward-emails-label" className="font-medium">
-          Email me when credit is ready
+          {t("emailMeWhenCreditIsReady")}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           {initial.email
-            ? `To ${initial.email}. At most one email every 12 hours.`
-            : "Your account has no email address, so you'll get these in the app only."}
+            ? t("toAtMostOneEmailEvery", { email: initial.email })
+            : t("yourAccountHasNoEmailAddress")}
         </p>
       </div>
       <button

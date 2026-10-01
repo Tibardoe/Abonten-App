@@ -1,6 +1,7 @@
 import { getOwnedPlaceReviews } from "@/actions/getOwnedPlaceReviews";
 import { getUserReviews } from "@/actions/getUserReviews";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
+import { getTranslations } from "next-intl/server";
 import UserReviewsTabs from "./UserReviewsTabs";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -12,6 +13,8 @@ export default async function page({
 }: {
   params: Promise<{ username: string }>;
 }) {
+  const t = await getTranslations("account");
+
   const { username } = await params;
 
   const [eventReviewsFirstPage, placeReviewsFirstPage] = await Promise.all([
@@ -22,7 +25,9 @@ export default async function page({
   if (eventReviewsFirstPage.status !== 200) {
     return (
       <div className="text-center mt-5 text-destructive">
-        Failed to load reviews: {eventReviewsFirstPage.message}
+        {t("failedToLoadReviews", {
+          message: eventReviewsFirstPage.message ?? "",
+        })}
       </div>
     );
   }
@@ -39,10 +44,10 @@ export default async function page({
 
   const eventReviewsEmptyState = (
     <div className="flex flex-col items-center justify-center mt-10 gap-4 text-center">
-      <h1 className="text-2xl font-bold text-foreground">No reviews yet</h1>
-      <p className="text-muted-foreground">
-        Be the first to leave a review and rating.
-      </p>
+      <h1 className="text-2xl font-bold text-foreground">
+        {t("noReviewsYet")}
+      </h1>
+      <p className="text-muted-foreground">{t("beTheFirstToLeaveA")}</p>
       <AddReviewButton username={username} />
     </div>
   );
@@ -50,10 +55,10 @@ export default async function page({
   const placeReviewsEmptyState = (
     <div className="flex flex-col items-center justify-center mt-10 gap-4 text-center">
       <h1 className="text-2xl font-bold text-foreground">
-        No place reviews yet
+        {t("noPlaceReviewsYet")}
       </h1>
       <p className="text-muted-foreground">
-        Reviews of places this user owns will show up here.
+        {t("reviewsOfPlacesThisUserOwns")}
       </p>
     </div>
   );

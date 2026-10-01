@@ -1,5 +1,6 @@
 import StatTile from "@/components/atoms/StatTile";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import { useTranslations } from "next-intl";
 
 type ManagePlaceInsightsSectionProps = {
   insights: Record<string, number>;
@@ -18,22 +19,24 @@ export default function ManagePlaceInsightsSection({
   isError,
   onRetry,
 }: ManagePlaceInsightsSectionProps) {
+  const t = useTranslations("places");
+
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't load this place's insights."
+        message={t("weCouldnTLoadThisPlace")}
         onRetry={onRetry}
       />
     );
   }
 
   const tiles = [
-    { label: "Place Views", value: insights.view ?? 0 },
-    { label: "Directions", value: insights.direction_click ?? 0 },
-    { label: "Phone Calls", value: insights.phone_click ?? 0 },
+    { label: t("placeViews"), value: insights.view ?? 0 },
+    { label: t("directions"), value: insights.direction_click ?? 0 },
+    { label: t("phoneCalls"), value: insights.phone_click ?? 0 },
     { label: "WhatsApp", value: insights.whatsapp_click ?? 0 },
-    { label: "Favorites", value: insights.favorites ?? 0 },
-    { label: "Reviews", value: insights.reviews ?? 0 },
+    { label: t("favorites"), value: insights.favorites ?? 0 },
+    { label: t("reviews"), value: insights.reviews ?? 0 },
   ];
 
   return (

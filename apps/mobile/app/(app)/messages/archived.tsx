@@ -20,6 +20,7 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import type { ConversationListItem } from "@abonten/api-client";
 import { EmptyState, ListFooter, Refresher, Spinner } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
@@ -27,6 +28,8 @@ import { FlatList, View } from "react-native";
 // Dedicated Archived destination (spec §14). Back nav + its own search +
 // the archived conversation list; swipe right to unarchive.
 export default function ArchivedMessages() {
+  const t = useTranslations("messaging");
+
   const router = useRouter();
   const { session } = useSession();
 
@@ -109,13 +112,13 @@ export default function ArchivedMessages() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="title" title="Archived" />
+      <AppHeader variant="title" title={t("archived")} />
 
       <InboxSearchBar
         value={searchInput}
         onChangeText={setSearchInput}
         onClear={() => setSearchInput("")}
-        placeholder="Search archived"
+        placeholder={t("searchArchived")}
       />
 
       <FlatList
@@ -132,11 +135,11 @@ export default function ArchivedMessages() {
           view.kind === "empty" ? (
             <EmptyState
               icon="archive-outline"
-              title={search ? "No conversations found" : "No archived chats"}
+              title={search ? t("noConversationsFound") : t("noArchivedChats")}
               description={
                 search
-                  ? "Try another name, event, or place."
-                  : "Conversations you archive show up here. Swipe one left to bring it back."
+                  ? t("tryAnotherNameEventOrPlace")
+                  : t("conversationsYouArchiveShowUpHere")
               }
             />
           ) : (

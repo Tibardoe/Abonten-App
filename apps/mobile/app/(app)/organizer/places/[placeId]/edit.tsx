@@ -29,6 +29,7 @@ import {
   ScreenError,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -41,9 +42,9 @@ import {
 } from "react-native";
 
 const STATUS_OPTIONS: { value: PlaceTemporaryStatus; label: string }[] = [
-  { value: null, label: "Normal hours" },
-  { value: "temporarily_closed", label: "Temporarily closed" },
-  { value: "permanently_closed", label: "Permanently closed" },
+  { value: null, label: "hoursStatus.normalHours" },
+  { value: "temporarily_closed", label: "hoursStatus.temporarilyClosed" },
+  { value: "permanently_closed", label: "hoursStatus.permanentlyClosed" },
 ];
 
 type ServiceForm = {
@@ -87,24 +88,26 @@ function ServiceFields({
   submitting: boolean;
   submitLabel: string;
 }) {
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-2">
       <Input
         value={value.name}
         onChangeText={(v) => onChange({ name: v })}
-        placeholder="Service name"
+        placeholder={t("serviceName")}
       />
       <Input
         value={value.description}
         onChangeText={(v) => onChange({ description: v })}
-        placeholder="Description (optional)"
+        placeholder={t("descriptionOptional")}
       />
       <View className="flex-row gap-2">
         <View className="flex-1">
           <Input
             value={value.price}
             onChangeText={(v) => onChange({ price: v })}
-            placeholder="Price (optional)"
+            placeholder={t("priceOptional")}
             keyboardType="decimal-pad"
           />
         </View>
@@ -112,13 +115,13 @@ function ServiceFields({
           <Input
             value={value.priceUnit}
             onChangeText={(v) => onChange({ priceUnit: v })}
-            placeholder="Unit (e.g. per hour)"
+            placeholder={t("unitEGPerHour")}
           />
         </View>
       </View>
       <View className="flex-row items-center justify-between">
         <AppText className="text-sm text-foreground">
-          Show price publicly
+          {t("showPricePublicly")}
         </AppText>
         <Switch
           value={value.showPrice}
@@ -128,7 +131,7 @@ function ServiceFields({
       <View className="flex-row gap-2">
         <View className="flex-1">
           <Button
-            title={submitting ? "Saving…" : submitLabel}
+            title={submitting ? t("saving") : submitLabel}
             loading={submitting}
             disabled={submitting || !value.name.trim()}
             onPress={onSubmit}
@@ -136,7 +139,7 @@ function ServiceFields({
         </View>
         <View className="flex-1">
           <Button
-            title="Cancel"
+            title={t("cancel")}
             variant="outline"
             onPress={onCancel}
             disabled={submitting}
@@ -154,6 +157,8 @@ function ServicesSection({
   placeId: string;
   services: PlaceServiceRow[];
 }) {
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const add = useAddPlaceService(placeId);
   const update = useUpdatePlaceService(placeId);
@@ -187,8 +192,8 @@ function ServicesSection({
 
   const submitAdd = () => {
     if (form.price.trim() !== "" && priceValue() === null) {
-      toast.error("Check the price", {
-        description: "Enter a number or leave it blank.",
+      toast.error(t("checkThePrice"), {
+        description: t("enterANumberOrLeaveIt"),
       });
       return;
     }
@@ -203,18 +208,18 @@ function ServicesSection({
       {
         onSuccess: (res) => {
           if (res.status === 200) setAdding(false);
-          else toast.error("Couldn't add", { description: res.message });
+          else toast.error(t("couldnTAdd"), { description: res.message });
         },
         onError: () =>
-          toast.error("Couldn't add", { description: "Please try again." }),
+          toast.error(t("couldnTAdd"), { description: t("pleaseTryAgain") }),
       },
     );
   };
 
   const submitEdit = (serviceId: string) => {
     if (form.price.trim() !== "" && priceValue() === null) {
-      toast.error("Check the price", {
-        description: "Enter a number or leave it blank.",
+      toast.error(t("checkThePrice"), {
+        description: t("enterANumberOrLeaveIt"),
       });
       return;
     }
@@ -232,41 +237,45 @@ function ServicesSection({
       {
         onSuccess: (res) => {
           if (res.status === 200) setEditingId(null);
-          else toast.error("Couldn't save", { description: res.message });
+          else toast.error(t("couldnTSave"), { description: res.message });
         },
         onError: () =>
-          toast.error("Couldn't save", { description: "Please try again." }),
+          toast.error(t("couldnTSave"), { description: t("pleaseTryAgain") }),
       },
     );
   };
 
   const confirmRemove = (s: PlaceServiceRow) => {
-    Alert.alert("Remove this service?", `"${s.name}" — this can't be undone.`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove",
-        style: "destructive",
-        onPress: () =>
-          remove.mutate(s.id, {
-            onSuccess: (res) => {
-              if (res.status !== 200)
-                toast.error("Couldn't remove", { description: res.message });
-            },
-            onError: () =>
-              toast.error("Couldn't remove", {
-                description: "Please try again.",
-              }),
-          }),
-      },
-    ]);
+    Alert.alert(
+      t("removeThisService"),
+      t("thisCanTBeUndone2", { name: s.name }),
+      [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("remove"),
+          style: "destructive",
+          onPress: () =>
+            remove.mutate(s.id, {
+              onSuccess: (res) => {
+                if (res.status !== 200)
+                  toast.error(t("couldnTRemove"), { description: res.message });
+              },
+              onError: () =>
+                toast.error(t("couldnTRemove"), {
+                  description: t("pleaseTryAgain"),
+                }),
+            }),
+        },
+      ],
+    );
   };
 
   return (
     <View className="gap-3">
-      <AppText variant="label">Services</AppText>
+      <AppText variant="label">{t("services")}</AppText>
 
       {services.length === 0 && !adding ? (
-        <AppText variant="muted">No services listed yet.</AppText>
+        <AppText variant="muted">{t("noServicesListedYet")}</AppText>
       ) : null}
 
       {services.map((s) =>
@@ -281,7 +290,7 @@ function ServicesSection({
               onSubmit={() => submitEdit(s.id)}
               onCancel={() => setEditingId(null)}
               submitting={update.isPending}
-              submitLabel="Save"
+              submitLabel={t("save")}
             />
           </View>
         ) : (
@@ -333,12 +342,12 @@ function ServicesSection({
             onSubmit={submitAdd}
             onCancel={() => setAdding(false)}
             submitting={add.isPending}
-            submitLabel="Add service"
+            submitLabel={t("addService")}
           />
         </View>
       ) : (
         <Button
-          title="Add a service"
+          title={t("addAService")}
           variant="outline"
           size="sm"
           onPress={beginAdd}
@@ -349,6 +358,8 @@ function ServicesSection({
 }
 
 export default function EditPlaceScreen() {
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const w = usePlaceEdit(placeId ?? "");
@@ -388,11 +399,11 @@ export default function EditPlaceScreen() {
     const res = await w.saveDetails();
     if (!res) return;
     if (res.status === 200) {
-      toast.success("Place updated");
+      toast.success(t("placeUpdated"));
     } else {
-      toast.error(res.message ?? "We couldn't save your changes.", {
-        description: "Your edits are still on screen — try again.",
-        action: { label: "Retry", onPress: onSaveDetails },
+      toast.error(res.message ?? t("weCouldnTSaveYourChanges"), {
+        description: t("yourEditsAreStillOnScreen"),
+        action: { label: t("retry"), onPress: onSaveDetails },
       });
     }
     if (res.status === 200) router.back();
@@ -402,11 +413,11 @@ export default function EditPlaceScreen() {
     const res = await w.saveHours();
     if (!res) return;
     if (res.status === 200) {
-      toast.success("Opening hours updated");
+      toast.success(t("openingHoursUpdated"));
     } else {
-      toast.error(res.message ?? "We couldn't save your opening hours.", {
-        description: "Your edits are still on screen — try again.",
-        action: { label: "Retry", onPress: onSaveHours },
+      toast.error(res.message ?? t("weCouldnTSaveYourOpening"), {
+        description: t("yourEditsAreStillOnScreen"),
+        action: { label: t("retry"), onPress: onSaveHours },
       });
     }
   }
@@ -416,8 +427,8 @@ export default function EditPlaceScreen() {
     const commit = async () => {
       const res = await w.applyStatus(next);
       if (res && res.status !== 200) {
-        toast.error("Couldn't update", {
-          description: res.message ?? "Please try again.",
+        toast.error(t("couldnTUpdate"), {
+          description: res.message ?? t("pleaseTryAgain"),
         });
       }
     };
@@ -427,14 +438,14 @@ export default function EditPlaceScreen() {
     }
     Alert.alert(
       next === "permanently_closed"
-        ? "Mark as permanently closed?"
-        : "Mark as temporarily closed?",
+        ? t("markAsPermanentlyClosed")
+        : t("markAsTemporarilyClosed"),
       next === "permanently_closed"
-        ? "It will stop appearing as open in searches."
-        : "It will show as closed to visitors until you switch back to Normal hours.",
+        ? t("itWillStopAppearingAsOpen")
+        : t("itWillShowAsClosedTo"),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Mark closed", style: "destructive", onPress: commit },
+        { text: t("cancel"), style: "cancel" },
+        { text: t("markClosed"), style: "destructive", onPress: commit },
       ],
     );
   }
@@ -446,11 +457,11 @@ export default function EditPlaceScreen() {
       keyboardShouldPersistTaps="handled"
     >
       {/* Details */}
-      <Field label="Name" error={w.textErrors.name}>
+      <Field label={t("name")} error={w.textErrors.name}>
         <Input value={w.name} onChangeText={w.setName} />
       </Field>
 
-      <Field label="Description" error={w.textErrors.description}>
+      <Field label={t("description")} error={w.textErrors.description}>
         <Input
           value={w.description}
           onChangeText={w.setDescription}
@@ -460,7 +471,7 @@ export default function EditPlaceScreen() {
         />
       </Field>
 
-      <Field label="Category">
+      <Field label={t("category")}>
         <View className="flex-row flex-wrap gap-2">
           {w.categories.map((c) => (
             <Chip
@@ -473,7 +484,11 @@ export default function EditPlaceScreen() {
         </View>
       </Field>
 
-      <Field label="Website" error={w.textErrors.website_url} hint="Optional">
+      <Field
+        label={t("website")}
+        error={w.textErrors.website_url}
+        hint={t("optional")}
+      >
         <Input
           value={w.website}
           onChangeText={w.setWebsite}
@@ -486,7 +501,11 @@ export default function EditPlaceScreen() {
 
       <View className="flex-row gap-3">
         <View className="flex-1">
-          <Field label="Phone" error={w.textErrors.phone} hint="Optional">
+          <Field
+            label={t("phone")}
+            error={w.textErrors.phone}
+            hint={t("optional")}
+          >
             <Input
               value={w.phone}
               onChangeText={w.setPhone}
@@ -495,7 +514,11 @@ export default function EditPlaceScreen() {
           </Field>
         </View>
         <View className="flex-1">
-          <Field label="WhatsApp" error={w.textErrors.whatsapp} hint="Optional">
+          <Field
+            label="WhatsApp"
+            error={w.textErrors.whatsapp}
+            hint={t("optional")}
+          >
             <Input
               value={w.whatsapp}
               onChangeText={w.setWhatsapp}
@@ -506,7 +529,7 @@ export default function EditPlaceScreen() {
       </View>
 
       {/* Cover */}
-      <Field label="Cover photo">
+      <Field label={t("coverPhoto")}>
         <View className="gap-2">
           {coverPreview ? (
             <Image
@@ -517,7 +540,9 @@ export default function EditPlaceScreen() {
             />
           ) : null}
           <Button
-            title={w.newCoverUri ? "Choose a different photo" : "Change cover"}
+            title={
+              w.newCoverUri ? t("chooseADifferentPhoto") : t("changeCover")
+            }
             variant="outline"
             size="sm"
             onPress={w.pickCover}
@@ -526,10 +551,7 @@ export default function EditPlaceScreen() {
       </Field>
 
       {/* Gallery photos */}
-      <Field
-        label="Photos"
-        hint="These show in the place's photo gallery. Set any one as the cover."
-      >
+      <Field label={t("photos")} hint={t("theseShowInThePlaceS")}>
         <PlacePhotoManager
           placeId={placeId ?? ""}
           photos={w.photos}
@@ -538,18 +560,18 @@ export default function EditPlaceScreen() {
       </Field>
 
       {/* Location */}
-      <Field label="Location">
+      <Field label={t("location")}>
         <View className="gap-2">
           <Input
             value={w.autocomplete.query}
             onChangeText={w.autocomplete.setQuery}
-            placeholder="Start typing an address…"
+            placeholder={t("startTypingAnAddress")}
             autoCorrect={false}
           />
           {w.resolvingLocation ? (
             <View className="flex-row items-center gap-2 py-1">
               <ActivityIndicator size="small" />
-              <AppText variant="meta">Resolving location…</AppText>
+              <AppText variant="meta">{t("resolvingLocation")}</AppText>
             </View>
           ) : null}
           {w.autocomplete.predictions.length > 0 ? (
@@ -577,7 +599,7 @@ export default function EditPlaceScreen() {
             >
               <Icon name="map-outline" size={16} tone="primary" />
               <AppText variant="small" tone="brand">
-                Choose on map
+                {t("chooseOnMap")}
               </AppText>
             </Pressable>
             <Pressable
@@ -587,22 +609,24 @@ export default function EditPlaceScreen() {
             >
               <Icon name="locate-outline" size={16} tone="primary" />
               <AppText variant="small" tone="brand">
-                Current location
+                {t("currentLocation")}
               </AppText>
             </Pressable>
           </View>
           {w.address && w.coords ? (
-            <AppText variant="meta">Selected: {w.address}</AppText>
+            <AppText variant="meta">
+              {t("selected", { address: w.address })}
+            </AppText>
           ) : (
             <AppText variant="small" tone="error">
-              Re-pick the location so the update keeps valid coordinates.
+              {t("rePickTheLocationSoThe")}
             </AppText>
           )}
         </View>
       </Field>
 
       <Button
-        title={w.isSavingDetails ? "Saving…" : "Save details"}
+        title={w.isSavingDetails ? t("saving") : t("saveDetails")}
         loading={w.isSavingDetails}
         disabled={w.isSavingDetails}
         onPress={onSaveDetails}
@@ -612,12 +636,12 @@ export default function EditPlaceScreen() {
 
       {/* Status */}
       <View className="gap-3">
-        <AppText variant="label">Status</AppText>
+        <AppText variant="label">{t("status2")}</AppText>
         <View className="flex-row flex-wrap gap-2">
           {STATUS_OPTIONS.map((o) => (
             <Chip
               key={o.label}
-              label={o.label}
+              label={t(o.label)}
               selected={o.value === w.status}
               onPress={() => onPickStatus(o.value)}
             />
@@ -625,8 +649,8 @@ export default function EditPlaceScreen() {
         </View>
         {w.status ? (
           <Field
-            label="Note for visitors"
-            hint="Optional — reason, reopening date"
+            label={t("noteForVisitors")}
+            hint={t("optionalReasonReopeningDate")}
           >
             <Input
               value={w.statusNote}
@@ -639,7 +663,7 @@ export default function EditPlaceScreen() {
           </Field>
         ) : null}
         {w.isSavingStatus ? (
-          <AppText variant="meta">Saving status…</AppText>
+          <AppText variant="meta">{t("savingStatus")}</AppText>
         ) : null}
       </View>
 
@@ -647,7 +671,7 @@ export default function EditPlaceScreen() {
 
       {/* Weekly hours */}
       <View className="gap-3">
-        <AppText variant="label">Weekly hours</AppText>
+        <AppText variant="label">{t("weeklyHours")}</AppText>
         {w.hours.map((h) => (
           <View
             key={h.dayOfWeek}
@@ -666,16 +690,16 @@ export default function EditPlaceScreen() {
               <View className="flex-row items-center gap-2">
                 <View className="flex-1">
                   <TimeField
-                    label="Opens"
+                    label={t("opens")}
                     value={h.openTime ?? null}
                     onChange={(v) => w.setHours(h.dayOfWeek, { openTime: v })}
                     invalid={!TIME_RE.test(h.openTime ?? "")}
                   />
                 </View>
-                <AppText variant="muted">to</AppText>
+                <AppText variant="muted">{t("to")}</AppText>
                 <View className="flex-1">
                   <TimeField
-                    label="Closes"
+                    label={t("closes")}
                     value={h.closeTime ?? null}
                     onChange={(v) => w.setHours(h.dayOfWeek, { closeTime: v })}
                     invalid={!TIME_RE.test(h.closeTime ?? "")}
@@ -686,7 +710,7 @@ export default function EditPlaceScreen() {
           </View>
         ))}
         <Button
-          title={w.isSavingHours ? "Saving…" : "Save hours"}
+          title={w.isSavingHours ? t("saving") : t("saveHours")}
           variant="secondary"
           loading={w.isSavingHours}
           disabled={w.isSavingHours || !w.hoursComplete}

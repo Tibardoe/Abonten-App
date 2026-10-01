@@ -7,6 +7,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { UserPostType } from "@abonten/types/postsType";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -41,6 +42,8 @@ export default function EventsMapView({
   location: string;
   eventCategory?: string | null;
 }) {
+  const t = useTranslations("events");
+
   const [selectedEvent, setSelectedEvent] = useState<UserPostType | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -120,7 +123,7 @@ export default function EventsMapView({
     if (mapRef.current) fitToMarkers(mapRef.current);
   }, [fitToMarkers]);
 
-  if (!isLoaded) return <p>Loading map...</p>;
+  if (!isLoaded) return <p>{t("loadingMap")}</p>;
 
   if (markers.length === 0) {
     const listParams = new URLSearchParams(searchParams.toString());
@@ -129,14 +132,17 @@ export default function EventsMapView({
     return (
       <NoEventsFound
         compact
-        heading="No events to show on the map"
+        heading={t("noEventsToShowOnThe")}
         description={
           eventCategory
-            ? `None of the ${eventCategory} events in ${location} have a mappable location yet.`
-            : `None of the events in ${location} have a mappable location yet.`
+            ? t("noneOfTheEventsInHave", {
+                eventCategory: eventCategory,
+                location: location,
+              })
+            : t("noneOfTheEventsInHave2", { location: location })
         }
         action={{
-          label: "Switch to list view",
+          label: t("switchToListView"),
           href: `${pathname}?${listParams.toString()}`,
         }}
       />
@@ -193,11 +199,16 @@ function EventPreviewPanel({
   panelRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("events");
+
   const dateTime = getFormattedEventDate(
     event.starts_at,
     event.ends_at,
     event.occurrences,
     event.timezone,
+    locale,
   );
 
   return (
@@ -208,7 +219,7 @@ function EventPreviewPanel({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close preview"
+        aria-label={t("closePreview")}
         className="absolute top-2 right-2 z-10 grid place-items-center rounded-full bg-popover text-popover-foreground p-1.5 shadow"
       >
         <IoClose className="text-lg" />
@@ -228,7 +239,7 @@ function EventPreviewPanel({
                 height: 128,
               },
             )}
-            alt={`Flyer for ${event.title}`}
+            alt={t("flyerFor", { title: event.title })}
             fill
             className="object-cover"
             sizes="320px"
@@ -248,13 +259,13 @@ function EventPreviewPanel({
           <div className="flex items-start gap-1.5 text-muted-foreground">
             <IoLocationOutline className="mt-0.5 flex-shrink-0" />
             <p className="text-xs line-clamp-1">
-              {event.address?.full_address || "Location not specified"}
+              {event.address?.full_address || t("locationNotSpecified")}
             </p>
           </div>
 
           <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground">
             {event.min_price === 0 || event.min_price == null
-              ? "Free"
+              ? t("free")
               : formatMoney(event.currency, event.min_price, {
                   trimZeroFraction: true,
                 })}

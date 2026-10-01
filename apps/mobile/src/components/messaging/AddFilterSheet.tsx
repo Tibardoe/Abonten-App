@@ -11,6 +11,7 @@ import {
   type IoniconName,
   Sheet,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 const HELP: Record<CustomFilterKey, string> = {
@@ -34,12 +35,14 @@ export function AddFilterSheet({
   active: CustomFilterKey[];
   onToggle: (key: CustomFilterKey) => void;
 }) {
+  const t = useTranslations("messaging");
+
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title="Add filter"
-      footer={<Button title="Done" onPress={onClose} />}
+      title={t("addFilter")}
+      footer={<Button title={t("done")} onPress={onClose} />}
     >
       <View className="gap-2">
         {CUSTOM_FILTER_KEYS.map((key) => {

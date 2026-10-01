@@ -3,6 +3,7 @@
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { SearchOrganizerHit } from "@abonten/types/searchType";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,6 +23,8 @@ export default function OrganizerCard({
 }: {
   organizer: SearchOrganizerHit;
 }) {
+  const t = useTranslations("discovery");
+
   const href = `/user/${organizer.username}/posts`;
   const avatar = buildCloudinaryUrl(
     organizer.avatarPublicId ?? DEFAULT_AVATAR.id,
@@ -64,14 +67,14 @@ export default function OrganizerCard({
             {organizer.upcomingCount > 0 ? (
               <span className="inline-flex items-center gap-1">
                 <IoCalendarOutline aria-hidden />
-                {organizer.upcomingCount} upcoming
+                {t("upcoming", { upcomingCount: organizer.upcomingCount })}
               </span>
             ) : null}
             {organizer.placeCount > 0 ? (
               <span className="inline-flex items-center gap-1">
                 <IoStorefrontOutline aria-hidden />
                 {organizer.placeCount}{" "}
-                {organizer.placeCount === 1 ? "place" : "places"}
+                {organizer.placeCount === 1 ? t("place") : t("places")}
               </span>
             ) : null}
             {organizer.ratingCount > 0 && organizer.avgRating != null ? (
@@ -82,7 +85,7 @@ export default function OrganizerCard({
             ) : null}
             {organizer.isNew ? (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
-                New
+                {t("newText")}
               </span>
             ) : null}
           </div>
@@ -99,7 +102,7 @@ export default function OrganizerCard({
             href={eventsHref}
             className="inline-flex items-center rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
           >
-            See their events
+            {t("seeTheirEvents")}
           </Link>
         ) : null}
         <SubscribeBell

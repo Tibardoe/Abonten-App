@@ -12,6 +12,7 @@ import {
 } from "@abonten/core/ticketPdfData";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { pdf } from "@react-pdf/renderer";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -28,6 +29,10 @@ export default function TicketModal({
   handleShowTicket,
   event,
 }: ReceiptButtonProp) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   const handleDOwnloadPdf = async () => {
     // Same TicketPdfDocument the purchase-confirmation email attaches
     // server-side — this is the one canonical ticket PDF, just generated
@@ -50,7 +55,7 @@ export default function TicketModal({
     <ModalShell
       open
       onClose={() => handleShowTicket(false)}
-      title={`Ticket receipt — ${event.event.title}`}
+      title={t("ticketReceipt", { title: event.event.title })}
     >
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[90%] lg:w-[35%] md:rounded-xl p-3 space-y-5 overflow-y-scroll">
         <button
@@ -59,14 +64,22 @@ export default function TicketModal({
           className="flex items-center gap-1 text-muted-foreground font-medium hover:text-foreground transition mb-6"
         >
           <IoChevronBackSharp className="text-2xl" />
-          Back
+          {t("back")}
         </button>
 
         <div className="pdf-content p-2">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold tracking-wide mb-1">Receipt</h1>
+            <h1 className="text-4xl font-bold tracking-wide mb-1">
+              {t("receipt")}
+            </h1>
             <p className="text-muted-foreground text-sm">
-              Issued on: {formatDateWithSuffix(event.issued_at)}
+              {t("issuedOn", {
+                formatDateWithSuffix: formatDateWithSuffix(
+                  event.issued_at,
+                  undefined,
+                  locale,
+                ),
+              })}
             </p>
           </div>
 
@@ -102,33 +115,35 @@ export default function TicketModal({
               </div>
 
               <p className="text-sm text-muted-foreground mb-2 font-bold">
-                Ticket Type:{" "}
+                {t("ticketType")}
                 <span className="font-mono text-foreground">
                   {event.ticket_type.type}
                 </span>
               </p>
 
               <p className="text-sm text-muted-foreground mb-2">
-                Ticket Code:{" "}
+                {t("ticketCode")}
                 <span className="font-mono text-foreground">
                   {event.ticket_code}
                 </span>
               </p>
 
               <p className="text-sm text-muted-foreground mb-4">
-                Location: {event.event.address.full_address}
+                {t("location2", {
+                  full_address: event.event.address.full_address,
+                })}
               </p>
 
               <p className="text-sm text-muted-foreground mb-4">
-                Date:{" "}
-                {
-                  getFormattedEventDate(
+                {t("date2", {
+                  date: getFormattedEventDate(
                     event.event.starts_at,
                     event.event.ends_at,
                     event.event.occurrences,
                     event.event.timezone,
-                  ).date
-                }
+                    locale,
+                  ).date,
+                })}
               </p>
 
               <div className="mt-4 flex justify-center">
@@ -160,7 +175,7 @@ export default function TicketModal({
           onClick={handleDOwnloadPdf}
           className="w-full rounded-lg p-6 font-bold"
         >
-          Download As PDF
+          {t("downloadAsPdf")}
         </Button>
       </div>
     </ModalShell>

@@ -5,6 +5,7 @@ import {
   StoryViewer,
 } from "@/components/content/StoryViewer";
 import type { ContentPostDocument } from "@abonten/types/contentType";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
@@ -16,6 +17,8 @@ const ENTRY = /^(organizer|place|abonten):([0-9a-f-]{36})$/i;
 // in over Messages) rather than a <Modal>, so replying can use the keyboard
 // in the app's own window and a report sheet can open over the Story.
 export default function StoryPlayScreen() {
+  const t = useTranslations("spotlight");
+
   const router = useRouter();
   const params = useLocalSearchParams<{ queue?: string; start?: string }>();
   const [reportFor, setReportFor] = useState<ContentPostDocument | null>(null);
@@ -59,7 +62,7 @@ export default function StoryPlayScreen() {
           onClose={() => setReportFor(null)}
           targetType="story"
           targetId={reportFor.id}
-          label={reportFor.caption?.slice(0, 80) || "Story"}
+          label={reportFor.caption?.slice(0, 80) || t("story")}
         />
       ) : null}
     </View>

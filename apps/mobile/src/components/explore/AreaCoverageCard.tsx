@@ -18,6 +18,7 @@ import {
   waitingText,
 } from "@abonten/core/market/coverageCopy";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -50,6 +51,8 @@ export function AreaCoverageCard({
   areaName: string | null;
   showBrowse?: boolean;
 }) {
+  const t = useTranslations("explore");
+
   const router = useRouter();
   const pathname = usePathname();
   const { session } = useSession();
@@ -92,7 +95,9 @@ export function AreaCoverageCard({
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${waitlist.waiting ? waitingText(areaName) : title} Show more`}
+        accessibilityLabel={t("showMore", {
+          value: waitlist.waiting ? waitingText(areaName) : title,
+        })}
         onPress={() => fold(false)}
         className="mx-4 mb-2 flex-row items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 active:opacity-70"
       >
@@ -123,7 +128,7 @@ export function AreaCoverageCard({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Fold this message"
+          accessibilityLabel={t("foldThisMessage")}
           hitSlop={10}
           onPress={() => fold(true)}
           className="active:opacity-60"
@@ -171,7 +176,7 @@ export function AreaCoverageCard({
             className="active:opacity-60"
           >
             <AppText variant="label" tone="brand">
-              List an event
+              {t("listAnEvent")}
             </AppText>
           </Pressable>
           <Pressable
@@ -181,7 +186,7 @@ export function AreaCoverageCard({
             className="active:opacity-60"
           >
             <AppText variant="label" tone="brand">
-              Add a place
+              {t("addAPlace")}
             </AppText>
           </Pressable>
         </View>

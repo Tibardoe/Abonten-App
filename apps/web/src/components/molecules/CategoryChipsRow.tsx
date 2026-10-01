@@ -1,4 +1,5 @@
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 export type CategoryChipItem = {
@@ -22,6 +23,8 @@ export default function CategoryChipsRow({
   allSelected: boolean;
   items: CategoryChipItem[];
 }) {
+  const t = useTranslations("common");
+
   return (
     <div
       className={cn(
@@ -40,7 +43,7 @@ export default function CategoryChipsRow({
             : "bg-muted text-muted-foreground hover:bg-accent",
         )}
       >
-        All
+        {t("all")}
       </Link>
 
       {items.map((item) => (

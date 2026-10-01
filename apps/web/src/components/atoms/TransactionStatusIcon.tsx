@@ -4,7 +4,7 @@ import { BsFillDashCircleFill } from "react-icons/bs";
 import { IoMdCheckmarkCircle, IoMdTime } from "react-icons/io";
 import { MdCancel } from "react-icons/md";
 
-// Single source of truth mapping status -> {Icon, colorClass, label}, reused
+// Single source of truth mapping status -> {Icon, colorClass, labelKey}, reused
 // by the summary tiles, list rows, and detail page so an icon/status-label
 // pairing is never duplicated or drifts. Icons carry the meaning (never
 // color alone) per the accessibility requirement for this page.
@@ -13,29 +13,34 @@ const STATUS_META: Record<
   {
     Icon: IconType;
     colorClass: string;
-    label: string;
+    /** Catalog key in the common namespace. */
+    labelKey: string;
   }
 > = {
   paid: {
     Icon: IoMdCheckmarkCircle,
     colorClass: "text-primary",
-    label: "Successful",
+    labelKey: "status.successful",
   },
   pending: {
     Icon: IoMdTime,
     colorClass: "text-muted-foreground",
-    label: "Pending",
+    labelKey: "status.pending",
   },
-  failed: { Icon: MdCancel, colorClass: "text-destructive", label: "Failed" },
+  failed: {
+    Icon: MdCancel,
+    colorClass: "text-destructive",
+    labelKey: "status.failed",
+  },
   cancelled: {
     Icon: BsFillDashCircleFill,
     colorClass: "text-muted-foreground",
-    label: "Cancelled",
+    labelKey: "status.cancelled",
   },
   expired: {
     Icon: BsFillDashCircleFill,
     colorClass: "text-muted-foreground",
-    label: "Expired",
+    labelKey: "status.expired",
   },
 };
 

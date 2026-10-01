@@ -5,6 +5,7 @@ import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
 import { formatWeekRange } from "@abonten/core/weekly/week";
 import type { WeeklyBannerSlide } from "@abonten/types/weeklyType";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { View, useWindowDimensions } from "react-native";
 import { WeeklyBanner } from "./WeeklyBanner";
@@ -16,6 +17,10 @@ import { WeeklyChip, weeklyListingPath } from "./weeklyBannerParts";
 // teaser are on for this person and this week's edition is out for the
 // explored area; otherwise it takes no space at all.
 export function WeeklyTeaserCard() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("weekly");
+
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { area: browsing } = useExploreLocation();
@@ -29,7 +34,7 @@ export function WeeklyTeaserCard() {
 
   // A fallback edition is the country-wide one; its scope name is the country.
   const area = teaser.scopeName;
-  const week = formatWeekRange(teaser.weekStart);
+  const week = formatWeekRange(teaser.weekStart, locale);
   const picks = `${teaser.itemCount} ${teaser.itemCount === 1 ? "pick" : "picks"}`;
   const height = Math.round(Math.min(Math.max(width * 1.02, 380), 480));
 
@@ -49,14 +54,22 @@ export function WeeklyTeaserCard() {
         height={height}
         onPress={open}
         onSlidePress={openSlide}
-        accessibilityLabel={`Open ${WEEKLY_PRODUCT_NAME} for ${area}: ${teaser.title}, ${week}, ${picks}`}
+        accessibilityLabel={t("openFor", {
+          WEEKLY_PRODUCT_NAME: WEEKLY_PRODUCT_NAME,
+          area: area,
+          title: teaser.title,
+          week: week,
+          picks: picks,
+        })}
         eyebrow={
           <>
             <WeeklyChip strong>
               ✨ {WEEKLY_PRODUCT_NAME} · {area}
             </WeeklyChip>
             {teaser.isFallbackScope ? (
-              <WeeklyChip>{teaser.scopeName}-wide picks</WeeklyChip>
+              <WeeklyChip>
+                {t("widePicks", { scopeName: teaser.scopeName })}
+              </WeeklyChip>
             ) : null}
           </>
         }
@@ -83,7 +96,7 @@ export function WeeklyTeaserCard() {
         <View className="mt-4 flex-row">
           <View className="flex-row items-center gap-2.5 rounded-full bg-white py-1.5 pl-4 pr-1.5">
             <AppText className="text-[14px] font-semibold text-slate-950">
-              {"See this week's picks"}
+              {t("seeThisWeekSPicks")}
             </AppText>
             <View className="h-7 w-7 items-center justify-center rounded-full bg-slate-950">
               <Icon name="arrow-forward" size={15} color="#fff" />

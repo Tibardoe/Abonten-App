@@ -22,6 +22,7 @@ import {
   Skeleton,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -42,6 +43,8 @@ const STATUS_LABEL: Record<ReferralInvite["recent"][number]["status"], string> =
   };
 
 function EnterInviteCode() {
+  const t = useTranslations("rewards");
+
   const c = useThemeColors();
   const qc = useQueryClient();
   const [code, setCode] = useState("");
@@ -54,7 +57,7 @@ function EnterInviteCode() {
   async function apply() {
     const normalized = normalizeReferralCode(code);
     if (!normalized) {
-      setMessage({ tone: "error", text: "Enter the 7-character invite code." });
+      setMessage({ tone: "error", text: t("enterThe7CharacterInviteCode") });
       return;
     }
     setBusy(true);
@@ -69,12 +72,12 @@ function EnterInviteCode() {
           qc.invalidateQueries({ queryKey: ["mobile", "rewards"] });
         }
       } else {
-        setMessage({ tone: "error", text: res.message ?? "Please try again." });
+        setMessage({ tone: "error", text: res.message ?? t("pleaseTryAgain") });
       }
     } catch {
       setMessage({
         tone: "error",
-        text: "Network error. Check your connection and try again.",
+        text: t("networkErrorCheckYourConnectionAnd"),
       });
     } finally {
       setBusy(false);
@@ -83,9 +86,7 @@ function EnterInviteCode() {
 
   return (
     <Card className="gap-2">
-      <AppText variant="label">
-        Joined because a friend invited you? Enter their code
-      </AppText>
+      <AppText variant="label">{t("joinedBecauseAFriendInvitedYou")}</AppText>
       <View className="flex-row gap-2">
         <TextInput
           className="h-[48px] flex-1 rounded-xl border border-input bg-background px-3 text-[16px] tracking-[3px] text-foreground"
@@ -99,12 +100,12 @@ function EnterInviteCode() {
           autoCapitalize="characters"
           autoCorrect={false}
           maxLength={9}
-          accessibilityLabel="Friend's invite code"
+          accessibilityLabel={t("friendSInviteCode")}
           onSubmitEditing={apply}
           returnKeyType="done"
         />
         <Button
-          title="Apply"
+          title={t("apply")}
           loading={busy}
           loadingTitle="Applying…"
           disabled={code.trim().length === 0}
@@ -124,6 +125,10 @@ function EnterInviteCode() {
 }
 
 export default function InviteFriends() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("rewards");
+
   const invite = useReferralInvite();
   const toast = useToast();
   const data = invite.data;
@@ -164,7 +169,7 @@ export default function InviteFriends() {
 
   async function copyCode() {
     if (!data?.code) return;
-    if (await copyText(data.code)) toast.success("Invite code copied");
+    if (await copyText(data.code)) toast.success(t("inviteCodeCopied"));
     else await shareAny();
   }
 
@@ -172,7 +177,7 @@ export default function InviteFriends() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Invite friends"
+        title={t("inviteFriends")}
         backFallback="/(app)/rewards"
       />
       {view.kind !== "content" && view.kind !== "empty" ? (
@@ -190,8 +195,8 @@ export default function InviteFriends() {
       ) : !data || (!data.enabled && !data.invitedBy) ? (
         <EmptyState
           icon="people-outline"
-          title="Invites aren't available yet"
-          description="Soon you'll be able to invite friends and earn credit when they buy their first ticket."
+          title={t("invitesArenTAvailableYet")}
+          description={t("soonYouLlBeAbleTo2")}
         />
       ) : (
         <ScrollView
@@ -202,14 +207,28 @@ export default function InviteFriends() {
             <Card elevated className="items-center gap-3">
               {data.referrerMinor ? (
                 <AppText variant="body" className="text-center">
-                  You get {formatCredit(data.referrerMinor, data.currency)} when
-                  a friend you invite buys their first ticket
+                  {t("youGetWhenAFriendYou", {
+                    formatCredit: formatCredit(
+                      data.referrerMinor,
+                      data.currency,
+                    ),
+                  })}
                   {data.minOrderMinor
-                    ? ` of ${formatCredit(data.minOrderMinor, data.currency)} or more`
-                    : ""}{" "}
-                  and their event has taken place.
+                    ? t("ofOrMore", {
+                        formatCredit: formatCredit(
+                          data.minOrderMinor,
+                          data.currency,
+                        ),
+                      })
+                    : ""}
+                  {t("andTheirEventHasTakenPlace")}
                   {data.refereeMinor
-                    ? ` They get ${formatCredit(data.refereeMinor, data.currency)} off that ticket.`
+                    ? t("theyGetOffThatTicket2", {
+                        formatCredit: formatCredit(
+                          data.refereeMinor,
+                          data.currency,
+                        ),
+                      })
                     : ""}
                 </AppText>
               ) : null}
@@ -217,16 +236,16 @@ export default function InviteFriends() {
                 <QrCode
                   value={data.inviteUrl}
                   size={184}
-                  accessibilityLabel="QR code of your invite link"
+                  accessibilityLabel={t("qrCodeOfYourInviteLink")}
                 />
               </View>
-              <AppText variant="caption">Your code</AppText>
+              <AppText variant="caption">{t("yourCode2")}</AppText>
               <AppText variant="hero" className="tracking-widest">
                 {data.code}
               </AppText>
               <View className="w-full gap-2">
                 <Button
-                  title="Share on WhatsApp"
+                  title={t("shareOnWhatsapp")}
                   leftIcon="logo-whatsapp"
                   size="lg"
                   fullWidth
@@ -235,7 +254,7 @@ export default function InviteFriends() {
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Button
-                      title="Share link"
+                      title={t("shareLink")}
                       variant="outline"
                       leftIcon="share-outline"
                       fullWidth
@@ -244,7 +263,7 @@ export default function InviteFriends() {
                   </View>
                   <View className="flex-1">
                     <Button
-                      title="Copy code"
+                      title={t("copyCode")}
                       variant="outline"
                       leftIcon="copy-outline"
                       fullWidth
@@ -254,7 +273,7 @@ export default function InviteFriends() {
                 </View>
               </View>
               <AppText variant="caption" className="text-center">
-                Invites work for new accounts, in their first week.
+                {t("invitesWorkForNewAccountsIn")}
               </AppText>
             </Card>
           ) : null}
@@ -288,21 +307,21 @@ export default function InviteFriends() {
                     <AppText variant="bodyStrong">{friend.name}</AppText>
                     <AppText variant="meta" className="flex-1 text-right">
                       {STATUS_LABEL[friend.status]} ·{" "}
-                      {formatDateWithSuffix(friend.at)}
+                      {formatDateWithSuffix(friend.at, undefined, locale)}
                     </AppText>
                   </View>
                 ))}
               </View>
             ) : (
               <AppText variant="muted">
-                Friends who join with your invite show up here.
+                {t("friendsWhoJoinWithYourInvite")}
               </AppText>
             )}
           </Card>
 
           {data.invitedBy ? (
             <AppText variant="muted" className="text-center">
-              You joined with {data.invitedBy.name}&apos;s invite.
+              {t("youJoinedWithSInvite", { name: data.invitedBy.name })}
             </AppText>
           ) : data.canBind ? (
             <EnterInviteCode />

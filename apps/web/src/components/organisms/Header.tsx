@@ -80,7 +80,7 @@ export default function Header() {
             <SheetTrigger asChild>
               <button
                 type="button"
-                aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                aria-label={isMenuOpen ? t("closeMenu") : t("openMenu")}
                 className="lg:hidden -ml-1 flex h-10 w-10 items-center justify-center rounded-full text-sidebar-foreground transition-colors hover:bg-accent"
               >
                 {isMenuOpen ? (
@@ -95,14 +95,14 @@ export default function Header() {
               side="left"
               className="w-[80%] sm:max-w-sm p-0 bg-sidebar text-sidebar-foreground border-sidebar-border"
             >
-              <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+              <SheetTitle className="sr-only">{t("navigationMenu")}</SheetTitle>
               <SideBar onPostSuccess={closeSidebar} onNavigate={closeSidebar} />
             </SheetContent>
           </Sheet>
 
           <Link
             href={exploreHref}
-            aria-label="Abonten home"
+            aria-label={t("abontenHome")}
             className="flex shrink-0 items-center"
           >
             {/* The mark alone on narrow screens (the Small weight is drawn

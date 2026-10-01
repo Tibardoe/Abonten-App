@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
+import { useTranslations } from "next-intl";
 import PlaceCategoryPicker from "../molecules/PlaceCategoryPicker";
 
 type PlaceCreateStepBasicInfoProps = Pick<
@@ -39,6 +40,8 @@ export default function PlaceCreateStepBasicInfo({
   handleSelectCoordinates,
   className,
 }: PlaceCreateStepBasicInfoProps) {
+  const t = useTranslations("places");
+
   return (
     <Form {...form}>
       <div className={className}>
@@ -57,7 +60,7 @@ export default function PlaceCreateStepBasicInfo({
 
         <PlaceCategoryPicker categoryId={categoryId} onSelect={setCategoryId} />
         {categoryId === null && (
-          <p className="text-destructive text-sm">Select a category</p>
+          <p className="text-destructive text-sm">{t("selectACategory")}</p>
         )}
 
         <FormField
@@ -82,12 +85,12 @@ export default function PlaceCreateStepBasicInfo({
           address={{ address: setSelectedAddress }}
           onSelectCoordinates={handleSelectCoordinates}
           placeholderText={{
-            text: "Address",
+            text: t("address"),
             svgUrl: "/assets/images/location.svg",
           }}
         />
         {selectedAddress === "" && (
-          <p className="text-destructive text-sm">Address is required</p>
+          <p className="text-destructive text-sm">{t("addressIsRequired")}</p>
         )}
 
         <FormField

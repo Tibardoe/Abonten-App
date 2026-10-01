@@ -15,6 +15,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { IoEllipsisHorizontal } from "react-icons/io5";
 import { useContentProgram } from "../hooks/useContentProgram";
@@ -40,6 +41,8 @@ export default function ContentMoreMenu({
   onOpenChange?: (open: boolean) => void;
   triggerClassName?: string;
 }) {
+  const t = useTranslations("spotlight");
+
   const { data: user } = useCurrentUser();
   const { program } = useContentProgram();
   const toast = useToast();
@@ -66,9 +69,9 @@ export default function ContentMoreMenu({
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(contentShareUrl(post.kind, post.id));
-      toast.success("Link copied.");
+      toast.success(t("linkCopied"));
     } catch {
-      toast.error("Couldn't copy the link.");
+      toast.error(t("couldnTCopyTheLink"));
     }
   };
 
@@ -76,7 +79,7 @@ export default function ContentMoreMenu({
     const res = await getContentDownloadUrl({ postId: post.id });
     const data = dataOf(res);
     if (!data) {
-      toast.error(messageOf(res, "This can't be downloaded."));
+      toast.error(messageOf(res, t("thisCanTBeDownloaded")));
       return;
     }
     window.open(data.url, "_blank", "noopener,noreferrer");
@@ -88,10 +91,10 @@ export default function ContentMoreMenu({
     setDeleting(false);
     setConfirmDelete(false);
     if (res.status !== 200) {
-      toast.error(messageOf(res, `Couldn't delete this ${noun}.`));
+      toast.error(messageOf(res, t("couldnTDeleteThis", { noun: noun })));
       return;
     }
-    toast.success(`${noun} deleted.`);
+    toast.success(t("deleted2", { noun: noun }));
     qc.invalidateQueries({ queryKey: ["content"] });
     onDeleted?.();
   };
@@ -100,7 +103,7 @@ export default function ContentMoreMenu({
     <>
       <DropdownMenu onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger
-          aria-label="More options"
+          aria-label={t("moreOptions")}
           className={
             triggerClassName ??
             "rounded-full p-2 text-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
@@ -109,9 +112,13 @@ export default function ContentMoreMenu({
           <IoEllipsisHorizontal className="text-xl" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
-          <DropdownMenuItem onSelect={copyLink}>Copy link</DropdownMenuItem>
+          <DropdownMenuItem onSelect={copyLink}>
+            {t("copyLink")}
+          </DropdownMenuItem>
           {canDownload ? (
-            <DropdownMenuItem onSelect={download}>Download</DropdownMenuItem>
+            <DropdownMenuItem onSelect={download}>
+              {t("download")}
+            </DropdownMenuItem>
           ) : null}
           {extraItems.map((item) => (
             <DropdownMenuItem key={item.label} onSelect={item.onSelect}>
@@ -120,7 +127,7 @@ export default function ContentMoreMenu({
           ))}
           {!isAuthor && user && post.kind === "spotlight" && onNotInterested ? (
             <DropdownMenuItem onSelect={onNotInterested}>
-              Not interested
+              {t("notInterested")}
             </DropdownMenuItem>
           ) : null}
           {!isAuthor && user ? (
@@ -130,7 +137,7 @@ export default function ContentMoreMenu({
                 className="text-destructive"
                 onSelect={() => setReportOpen(true)}
               >
-                Report {noun}
+                {t("report", { noun: noun })}
               </DropdownMenuItem>
             </>
           ) : null}
@@ -141,7 +148,7 @@ export default function ContentMoreMenu({
                 className="text-destructive"
                 onSelect={() => setConfirmDelete(true)}
               >
-                Delete {noun}
+                {t("deleteText", { noun: noun })}
               </DropdownMenuItem>
             </>
           ) : null}
@@ -160,10 +167,10 @@ export default function ContentMoreMenu({
 
       {confirmDelete ? (
         <ConfirmDeleteModal
-          title={`Delete this ${noun}?`}
-          message="It disappears for everyone straight away. This can't be undone."
-          confirmLabel="Delete"
-          loadingLabel="Deleting…"
+          title={t("deleteThis", { noun: noun })}
+          message={t("itDisappearsForEveryoneStraightAway")}
+          confirmLabel={t("deleteText2")}
+          loadingLabel={t("deleting")}
           isLoading={deleting}
           onConfirm={remove}
           onCancel={() => setConfirmDelete(false)}

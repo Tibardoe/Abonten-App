@@ -13,6 +13,7 @@ import {
   PressableScale,
   Sheet,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useTheme } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -87,19 +88,21 @@ function StackedItemsSheet({
   items: SocialMapItem[] | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("explore");
+
   const router = useRouter();
   const open = !!items && items.length > 0;
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title={items ? `${items.length} at this spot` : ""}
+      title={items ? t("atThisSpot", { length: items.length }) : ""}
     >
       <View className="gap-2">
         {(items ?? []).map((item) => (
           <PressableScale
             key={item.id}
-            accessibilityLabel={`Open ${item.title}`}
+            accessibilityLabel={t("open", { title: item.title })}
             onPress={() => {
               onClose();
               router.push(
@@ -157,7 +160,7 @@ function StackedItemsSheet({
 export function SocialMap({
   items,
   center,
-  emptyLabel = "Nothing to map here",
+  emptyLabel: emptyLabelProp,
   bottomInset = 0,
 }: {
   items: SocialMapItem[];
@@ -166,6 +169,9 @@ export function SocialMap({
   /** Extra room under the card, when something overlaps the map's bottom. */
   bottomInset?: number;
 }) {
+  const t = useTranslations("explore");
+  const emptyLabel = emptyLabelProp ?? t("nothingToMapHere");
+
   const { scheme } = useTheme();
   // biome-ignore lint/suspicious/noExplicitAny: react-native-maps ref has no types through the shim
   const mapRef = useRef<any>(null);
@@ -340,8 +346,8 @@ export function SocialMap({
     return (
       <EmptyState
         icon="map-outline"
-        title="Map needs the latest app"
-        description="Update Abonten (or rebuild the dev client with the Google Maps key) to use the map view."
+        title={t("mapNeedsTheLatestApp")}
+        description={t("updateAbontenOrRebuildTheDev")}
       />
     );
   }
@@ -351,7 +357,7 @@ export function SocialMap({
       <EmptyState
         icon="map-outline"
         title={emptyLabel}
-        description="Switch back to the list, or widen your filters."
+        description={t("switchBackToTheListOr")}
       />
     );
   }
@@ -470,7 +476,7 @@ export function SocialMap({
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Back to the area you're browsing"
+            accessibilityLabel={t("backToTheAreaYouRe")}
             onPress={() => {
               hapticLight();
               mapRef.current?.animateToRegion(start, 450);

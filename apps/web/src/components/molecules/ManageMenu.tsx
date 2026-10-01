@@ -141,7 +141,7 @@ export default function ManageMenu({
               className={itemClass(isSpotlightActive)}
             >
               <IoPlayCircleOutline className="text-lg" />
-              Spotlight &amp; Stories
+              {t("spotlightStories")}
             </Link>
           </DropdownMenuItem>
         )}

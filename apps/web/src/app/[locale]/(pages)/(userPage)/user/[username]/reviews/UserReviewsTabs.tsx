@@ -6,6 +6,7 @@ import type {
   OrganizerReviewListItem,
   OwnedPlaceReviewListItem,
 } from "@abonten/types/reviewType";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import PlaceReviewsList from "./PlaceReviewsList";
 import UserReviewsList from "./UserReviewsList";
@@ -44,6 +45,8 @@ export default function UserReviewsTabs({
   ) => Promise<PaginatedResult<OwnedPlaceReviewListItem>>;
   placeReviewsEmptyState: React.ReactNode;
 }) {
+  const t = useTranslations("account");
+
   const [activeTab, setActiveTab] = useState<Tab>("event");
 
   return (
@@ -53,8 +56,8 @@ export default function UserReviewsTabs({
     >
       <div className="flex justify-center">
         <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:min-w-[240px]">
-          <TabsTrigger value="event">Event Reviews</TabsTrigger>
-          <TabsTrigger value="place">Place Reviews</TabsTrigger>
+          <TabsTrigger value="event">{t("eventReviews")}</TabsTrigger>
+          <TabsTrigger value="place">{t("placeReviews")}</TabsTrigger>
         </TabsList>
       </div>
 

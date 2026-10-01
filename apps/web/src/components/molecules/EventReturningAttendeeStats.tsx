@@ -5,6 +5,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 export default function EventReturningAttendeeStats({
   eventId,
@@ -17,6 +18,8 @@ export default function EventReturningAttendeeStats({
   startDate: string | null;
   endDate: string | null;
 }) {
+  const t = useTranslations("common");
+
   const {
     data: response,
     isLoading,
@@ -35,18 +38,18 @@ export default function EventReturningAttendeeStats({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-bold md:text-lg">Attendee Behavior</h2>
+      <h2 className="font-bold md:text-lg">{t("attendeeBehavior")}</h2>
 
       {isLoading ? (
         <StatTilesSkeleton count={2} />
       ) : isError ? (
         <InlineErrorRetry
-          message="We couldn't load attendee behavior."
+          message={t("weCouldnTLoadAttendeeBehavior")}
           onRetry={() => refetch()}
         />
       ) : !stats || total === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Not enough attendees yet to calculate returning vs. first-time.
+          {t("notEnoughAttendeesYetToCalculate")}
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -60,16 +63,22 @@ export default function EventReturningAttendeeStats({
           </div>
           <div className="flex justify-between text-sm">
             <span>
-              Returning:{" "}
-              {Math.round((Number(stats.returning_count) / total) * 100)}%
+              {t("returning", {
+                round: Math.round(
+                  (Number(stats.returning_count) / total) * 100,
+                ),
+              })}
               <span className="text-muted-foreground">
                 {" "}
                 ({stats.returning_count})
               </span>
             </span>
             <span>
-              First-time:{" "}
-              {Math.round((Number(stats.first_time_count) / total) * 100)}%
+              {t("firstTime", {
+                round: Math.round(
+                  (Number(stats.first_time_count) / total) * 100,
+                ),
+              })}
               <span className="text-muted-foreground">
                 {" "}
                 ({stats.first_time_count})

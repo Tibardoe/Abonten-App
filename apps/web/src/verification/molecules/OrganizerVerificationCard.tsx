@@ -10,6 +10,7 @@ import type {
   SubjectVerificationView,
   VerificationStatus,
 } from "@abonten/types/verificationType";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IoCheckmarkCircle, IoShieldCheckmarkOutline } from "react-icons/io5";
@@ -20,6 +21,8 @@ import { IoCheckmarkCircle, IoShieldCheckmarkOutline } from "react-icons/io5";
 // clutter to the dashboard.
 
 export default function OrganizerVerificationCard() {
+  const t = useTranslations("verification");
+
   const [view, setView] = useState<SubjectVerificationView | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -61,16 +64,16 @@ export default function OrganizerVerificationCard() {
       <section className="flex items-center gap-3 rounded-xl border border-mint/40 bg-mint/10 p-4">
         <IoCheckmarkCircle aria-hidden className="text-xl text-primary" />
         <div className="min-w-0">
-          <h3 className="font-semibold">Verified organizer</h3>
+          <h3 className="font-semibold">{t("verifiedOrganizer")}</h3>
           <p className="text-sm text-muted-foreground">
-            Your badge shows on your events and your profile.
+            {t("yourBadgeShowsOnYourEvents")}
           </p>
         </div>
         <Link
           href="/manage/verification"
           className="ml-auto shrink-0 text-sm text-primary hover:underline"
         >
-          View
+          {t("view")}
         </Link>
       </section>
     );
@@ -81,8 +84,8 @@ export default function OrganizerVerificationCard() {
         reason: current?.decisionReason,
       })
     : {
-        title: "Get verified",
-        body: "Show ticket buyers that Abonten has checked who is behind your events. Optional, and free.",
+        title: t("getVerified"),
+        body: t("showTicketBuyersThatAbontenHas"),
       };
 
   return (
@@ -105,7 +108,7 @@ export default function OrganizerVerificationCard() {
           href="/manage/verification"
           className="mt-2 inline-block text-sm text-primary hover:underline"
         >
-          {status ? "Open verification" : "Start verification"}
+          {status ? t("openVerification") : t("startVerification")}
         </Link>
       </div>
     </section>

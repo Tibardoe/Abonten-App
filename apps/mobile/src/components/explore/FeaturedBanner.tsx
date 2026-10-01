@@ -10,6 +10,7 @@ import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { WeeklyBannerSlide } from "@abonten/types/weeklyType";
 import { AppText } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useRef } from "react";
 import { View, useWindowDimensions } from "react-native";
@@ -25,12 +26,19 @@ import { View, useWindowDimensions } from "react-native";
 // "Featured" (events) or "Sponsored" (places) — the web banners' words — and
 // each caption repeats it.
 
-function eventSlide(e: UserPostType): WeeklyBannerSlide {
+type Translate = (key: string) => string;
+
+function eventSlide(
+  e: UserPostType,
+  locale: string,
+  t: Translate,
+): WeeklyBannerSlide {
   const when = getFormattedEventDate(
     e.starts_at,
     e.ends_at,
     e.occurrences,
     e.timezone,
+    locale,
   );
   const meta = [when?.date, e.address?.full_address]
     .filter(Boolean)
@@ -40,7 +48,7 @@ function eventSlide(e: UserPostType): WeeklyBannerSlide {
     subjectType: "event",
     subjectId: e.id,
     title: e.title,
-    headline: "Featured event",
+    headline: t("featuredEvent"),
     meta: meta || null,
     publicId: e.flyer_public_id ?? "",
     version: e.flyer_version ?? null,
@@ -48,7 +56,7 @@ function eventSlide(e: UserPostType): WeeklyBannerSlide {
   };
 }
 
-function placeSlide(p: PlaceType): WeeklyBannerSlide {
+function placeSlide(p: PlaceType, t: Translate): WeeklyBannerSlide {
   const rating =
     (p.review_count ?? 0) > 0 ? `${(p.avg_rating ?? 0).toFixed(1)} ★` : null;
   const meta = [p.category_name, rating].filter(Boolean).join(" · ");
@@ -57,7 +65,7 @@ function placeSlide(p: PlaceType): WeeklyBannerSlide {
     subjectType: "place",
     subjectId: p.id,
     title: p.name,
-    headline: "Sponsored place",
+    headline: t("sponsoredPlace"),
     meta: meta || null,
     publicId: p.cover_public_id ?? "",
     version: p.cover_version ?? null,
@@ -74,12 +82,18 @@ export function FeaturedBanner({
   events: UserPostType[];
   places: PlaceType[];
 }) {
+  const t = useTranslations("explore");
+  const { locale } = useLocale();
+
   const router = useRouter();
   const { width } = useWindowDimensions();
 
   const slides = useMemo(
-    () => (kind === "events" ? events.map(eventSlide) : places.map(placeSlide)),
-    [kind, events, places],
+    () =>
+      kind === "events"
+        ? events.map((e) => eventSlide(e, locale, t))
+        : places.map((p) => placeSlide(p, t)),
+    [kind, events, places, locale, t],
   );
 
   // A sponsored place counts one impression when its slide is actually on
@@ -98,7 +112,7 @@ export function FeaturedBanner({
   // stacked still leave the feed within reach; same responsive rule.
   const height = Math.round(Math.min(Math.max(width * 0.92, 340), 420));
   const count = slides.length;
-  const label = kind === "events" ? "Featured events" : "Sponsored places";
+  const label = kind === "events" ? t("featuredEvents") : t("sponsoredPlaces");
 
   const open = (slide: WeeklyBannerSlide | null) => {
     if (!slide) return;
@@ -114,10 +128,14 @@ export function FeaturedBanner({
         onPress={open}
         onSlidePress={open}
         onSlideShown={onSlideShown}
-        accessibilityLabel={`${label}, ${count} ${count === 1 ? "listing" : "listings"}. Opens the one on show.`}
+        accessibilityLabel={t("opensTheOneOnShow", {
+          label: label,
+          count: count,
+          value: count === 1 ? t("listing") : t("listings"),
+        })}
         eyebrow={
           <WeeklyChip strong>
-            {kind === "events" ? "📣 Featured" : "📣 Sponsored"}
+            {kind === "events" ? t("featured") : t("sponsored")}
           </WeeklyChip>
         }
       >
@@ -125,13 +143,13 @@ export function FeaturedBanner({
           className="text-[12px] font-medium"
           style={{ color: "rgba(255,255,255,0.82)" }}
         >
-          {count} {count === 1 ? "pick" : "picks"} · Paid placement
+          {count} {count === 1 ? t("pick") : t("picks")} {t("paidPlacement")}
         </AppText>
         <AppText
           className="mt-1.5 text-[30px] font-extrabold leading-[33px] text-white"
           numberOfLines={2}
         >
-          {kind === "events" ? "Featured events" : "Featured places"}
+          {kind === "events" ? t("featuredEvents") : t("featuredPlaces")}
         </AppText>
         <AppText
           className="mt-2 text-[14px] leading-[20px]"
@@ -139,8 +157,8 @@ export function FeaturedBanner({
           numberOfLines={2}
         >
           {kind === "events"
-            ? "Promoted by organizers near you."
-            : "Promoted by places near you."}
+            ? t("promotedByOrganizersNearYou")
+            : t("promotedByPlacesNearYou")}
         </AppText>
       </WeeklyBanner>
     </View>

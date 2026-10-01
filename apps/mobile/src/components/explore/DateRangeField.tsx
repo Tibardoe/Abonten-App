@@ -1,4 +1,5 @@
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -48,6 +49,8 @@ export function DateRangeField({
   /** "single" picks exactly one day (end stays null); "range" is start→end. */
   mode?: "single" | "range";
 }) {
+  const t = useTranslations("explore");
+
   const c = useThemeColors();
   const today = useMemo(() => {
     const t = new Date();
@@ -103,7 +106,7 @@ export function DateRangeField({
       <View className="flex-row items-center justify-between">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Previous month"
+          accessibilityLabel={t("previousMonth")}
           hitSlop={8}
           onPress={() =>
             setView((v) => new Date(v.getFullYear(), v.getMonth() - 1, 1))
@@ -116,7 +119,7 @@ export function DateRangeField({
         </AppText>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Next month"
+          accessibilityLabel={t("nextMonth")}
           hitSlop={8}
           onPress={() =>
             setView((v) => new Date(v.getFullYear(), v.getMonth() + 1, 1))
@@ -203,7 +206,7 @@ export function DateRangeField({
           className="self-start pt-1"
         >
           <AppText variant="small" tone="brand" className="font-medium">
-            Clear dates
+            {t("clearDates")}
           </AppText>
         </Pressable>
       )}

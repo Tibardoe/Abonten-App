@@ -3,6 +3,7 @@
 import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import TileSelector from "@/components/molecules/TileSelector";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 type PlaceCategoryPickerProps = {
   categoryId: number | null;
@@ -17,6 +18,8 @@ export default function PlaceCategoryPicker({
   categoryId,
   onSelect,
 }: PlaceCategoryPickerProps) {
+  const t = useTranslations("places");
+
   const { data: categories, isLoading } = useQuery({
     queryKey: ["place-categories"],
     queryFn: async () => {
@@ -28,7 +31,7 @@ export default function PlaceCategoryPicker({
 
   return (
     <TileSelector
-      label="Category"
+      label={t("category")}
       mode="single"
       loading={isLoading}
       options={(categories ?? []).map((cat) => ({

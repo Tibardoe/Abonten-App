@@ -4,6 +4,7 @@ import MaskIcon from "@/components/atoms/MaskIcon";
 import HighlightModal from "@/components/organisms/HighlightModal";
 import { useHighlightUpload } from "@/hooks/useHighlightUpload";
 import type { MediaItem } from "@abonten/types/mediaItemType";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import HighlightUploadStatus from "./HighlightUploadStatus";
 
@@ -12,6 +13,8 @@ type HighlightProps = {
 };
 
 export default function Higlight({ username }: HighlightProps) {
+  const t = useTranslations("account");
+
   const [showHighlighModal, setShowHighlightModal] = useState(false);
 
   // Owned here (not in HighlightModal) because the modal closes immediately
@@ -47,7 +50,7 @@ export default function Higlight({ username }: HighlightProps) {
       >
         <MaskIcon
           src="/assets/images/highlight.svg"
-          alt="Highlight button"
+          alt={t("highlightButton")}
           className="w-20 h-20"
         />
       </button>

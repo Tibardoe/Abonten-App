@@ -9,6 +9,7 @@ import { useLongPress } from "@/hooks/useLongPress";
 import HighlightsRowSkeleton from "@/userAccount/molecules/HighlightsRowSkeleton";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import {
   type CSSProperties,
@@ -46,6 +47,8 @@ function HighlightAvatar({
   onLongPress,
   onContextMenu,
 }: HighlightAvatarProps) {
+  const t = useTranslations("common");
+
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Some mobile browsers (Android Chrome in particular) fire a native
@@ -120,7 +123,7 @@ function HighlightAvatar({
     >
       <Image
         src={thumbnailUrl}
-        alt="Highlight"
+        alt={t("highlight")}
         width={70}
         height={70}
         draggable={false}
@@ -135,6 +138,8 @@ export default function UserHighlights({
   username,
   isOwner,
 }: HighlightProps) {
+  const t = useTranslations("common");
+
   const queryClient = useQueryClient();
 
   const [openGroupIndex, setOpenGroupIndex] = useState<number | null>(null);
@@ -334,7 +339,7 @@ export default function UserHighlights({
       if (previousHighlights) {
         queryClient.setQueryData(highlightsQueryKey, previousHighlights);
       }
-      setDeleteError(response.message ?? "Failed to delete highlight.");
+      setDeleteError(response.message ?? t("failedToDeleteHighlight"));
       setTimeout(() => setDeleteError(null), 3000);
     }
 
@@ -342,7 +347,11 @@ export default function UserHighlights({
   };
 
   if (highlightError) {
-    return <div className="text-destructive">Error: {highlightError}</div>;
+    return (
+      <div className="text-destructive">
+        {t("error", { highlightError: highlightError })}
+      </div>
+    );
   }
 
   if (isLoading) {
@@ -406,7 +415,7 @@ export default function UserHighlights({
                     <HighlightMenu
                       actions={[
                         {
-                          label: "Delete Highlight",
+                          label: t("deleteHighlight"),
                           destructive: true,
                           onSelect: () => {
                             setPendingDeleteGroupId(lastItem.group_id);
@@ -464,10 +473,10 @@ export default function UserHighlights({
 
         {showConfirmDelete && (
           <ConfirmDeleteModal
-            title="Delete this highlight?"
-            message="Are you sure you want to delete this highlight? This will delete all photos and videos in it."
-            confirmLabel="Delete Highlight"
-            loadingLabel="Deleting…"
+            title={t("deleteThisHighlight")}
+            message={t("areYouSureYouWantTo4")}
+            confirmLabel={t("deleteHighlight")}
+            loadingLabel={t("deleting")}
             isLoading={isDeleting}
             onConfirm={handleDeleteHighlight}
             onCancel={() => {

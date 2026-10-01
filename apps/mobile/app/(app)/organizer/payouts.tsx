@@ -5,9 +5,12 @@ import type { OrganizerPayoutRow } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Refresher, StatusPill } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { ActivityIndicator, FlatList, View } from "react-native";
 
 function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
+  const { locale } = useLocale();
+
   return (
     <View className="gap-2 rounded-2xl border border-border bg-card p-3">
       <View className="flex-row items-start justify-between gap-3">
@@ -17,13 +20,16 @@ function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
         <StatusPill status={row.status} size="sm" />
       </View>
       <AppText variant="caption" numberOfLines={1}>
-        {formatDateWithSuffix(row.requested_at)} · {row.reference}
+        {formatDateWithSuffix(row.requested_at, undefined, locale)} ·{" "}
+        {row.reference}
       </AppText>
     </View>
   );
 }
 
 export default function PayoutsScreen() {
+  const t = useTranslations("manage");
+
   const q = usePayouts();
   const rows = q.data && q.data.status === 200 ? q.data.data : [];
   // "No withdrawals yet" is only ever said for an answer the server gave;
@@ -42,7 +48,7 @@ export default function PayoutsScreen() {
       ListEmptyComponent={
         view.kind === "empty" ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            No withdrawals yet.
+            {t("noWithdrawalsYet")}
           </AppText>
         ) : (
           <QueryUnavailable

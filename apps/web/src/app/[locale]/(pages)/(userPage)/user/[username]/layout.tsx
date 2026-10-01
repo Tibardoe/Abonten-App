@@ -2,6 +2,7 @@ import { publicSupabase } from "@/config/supabase/publicClient";
 import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
 import ProfileHeaderSkeleton from "@/userAccount/organisms/ProfileHeaderSkeleton";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 // Public profile pages share one title: the person's display name (or
@@ -9,17 +10,19 @@ import { Suspense } from "react";
 export async function generateMetadata({
   params,
 }: LayoutProps): Promise<Metadata> {
+  const t = await getTranslations("account");
+
   const { username } = await params;
   const { data } = await publicSupabase
     .from("user_info")
     .select("full_name, username")
     .eq("username", username)
     .maybeSingle();
-  if (!data) return { title: "Profile not found" };
+  if (!data) return { title: t("profileNotFound") };
   const name = data.full_name?.trim() || `@${data.username}`;
   return {
     title: name,
-    description: `${name} on Abonten Hub: events, places and reviews.`,
+    description: t("onAbontenHubEventsPlacesAnd", { name: name }),
   };
 }
 

@@ -19,6 +19,7 @@ import {
 } from "@abonten/validation/paymentMethodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -27,6 +28,8 @@ type PopupCloseProp = {
 };
 
 export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
+  const t = useTranslations("wallet");
+
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -81,7 +84,7 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Save your mobile money wallet for faster checkout.
+        {t("saveYourMobileMoneyWalletFor")}
       </p>
 
       <Form {...form}>
@@ -92,7 +95,7 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="networkCode" className="text-sm">
-                  Mobile Money Network
+                  {t("mobileMoneyNetwork")}
                 </label>
                 <FormControl>
                   <Select
@@ -111,10 +114,10 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
                   >
                     <option value="" disabled>
                       {isNetworksPending
-                        ? "Loading networks…"
+                        ? t("loadingNetworks")
                         : isNetworksError
-                          ? "Couldn't load networks"
-                          : "Select mobile network"}
+                          ? t("couldnTLoadNetworks")
+                          : t("selectMobileNetwork")}
                     </option>
                     {networks.map((network) => (
                       <option key={network.code} value={network.code}>
@@ -134,14 +137,14 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="phone" className="text-sm">
-                  Mobile Money Number
+                  {t("mobileMoneyNumber")}
                 </label>
                 <FormControl>
                   <Input
                     id="phone"
                     type="tel"
                     {...field}
-                    placeholder="Eg. 0244123456"
+                    placeholder={t("eg0244123456")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -151,13 +154,13 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
 
           <div className="flex flex-col gap-2">
             <label htmlFor="label" className="text-sm">
-              Label (optional)
+              {t("labelOptional")}
             </label>
             <Input
               id="label"
               type="text"
               {...register("label")}
-              placeholder="Eg. My MTN MoMo"
+              placeholder={t("egMyMtnMomo")}
             />
           </div>
 
@@ -170,7 +173,7 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
             disabled={isSubmitting || isNetworksPending || isNetworksError}
             className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
           >
-            {isSubmitting ? "Saving..." : "Save This Wallet"}
+            {isSubmitting ? t("saving") : t("saveThisWallet")}
           </Button>
         </form>
       </Form>

@@ -3,6 +3,7 @@
 import { requestPlaceBooking } from "@/actions/requestPlaceBooking";
 import ModalShell from "@/components/atoms/ModalShell";
 import { useToast } from "@/hooks/useToast";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type BookingService = {
@@ -34,6 +35,8 @@ export default function RequestBookingModal({
   onClose,
   onSubmitted,
 }: RequestBookingModalProps) {
+  const t = useTranslations("places");
+
   const toast = useToast();
 
   const hasServices = services.length > 0;
@@ -61,7 +64,7 @@ export default function RequestBookingModal({
 
   const handleSubmit = async () => {
     if (!requestedTime) {
-      toast.error("Please choose a date and time.");
+      toast.error(t("pleaseChooseADateAndTime"));
       return;
     }
 
@@ -70,7 +73,7 @@ export default function RequestBookingModal({
       Number.isNaN(parsedTime.getTime()) ||
       parsedTime.getTime() <= Date.now()
     ) {
-      toast.error("Please choose a time in the future.");
+      toast.error(t("pleaseChooseATimeInThe"));
       return;
     }
 
@@ -96,15 +99,21 @@ export default function RequestBookingModal({
   };
 
   return (
-    <ModalShell open onClose={onClose} title={`Book ${placeName}`}>
+    <ModalShell
+      open
+      onClose={onClose}
+      title={t("book2", { placeName: placeName })}
+    >
       <div className="w-full self-end md:self-center h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
         <div className="flex justify-between items-center gap-3">
-          <h1 className="text-xl font-bold">Book {placeName}</h1>
+          <h1 className="text-xl font-bold">
+            {t("book2", { placeName: placeName })}
+          </h1>
           <button
             type="button"
             onClick={onClose}
             className="font-bold text-muted-foreground hover:text-foreground shrink-0"
-            aria-label="Close"
+            aria-label={t("close")}
           >
             ✕
           </button>
@@ -113,23 +122,20 @@ export default function RequestBookingModal({
         {submitted ? (
           <div className="space-y-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Your booking request has been sent. The owner will accept or
-              decline it soon.
+              {t("yourBookingRequestHasBeenSent")}
             </p>
             <button
               type="button"
               onClick={onClose}
               className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
             >
-              Close
+              {t("close")}
             </button>
           </div>
         ) : step === "confirm" ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              This place currently has no services available for booking. You
-              can still send a general request and arrange the details with the
-              owner. Would you like to continue?
+              {t("thisPlaceCurrentlyHasNoServices")}
             </p>
             <div className="flex gap-2 pt-1">
               <button
@@ -137,22 +143,21 @@ export default function RequestBookingModal({
                 onClick={() => setStep("form")}
                 className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
               >
-                Continue
+                {t("continueText")}
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="flex-1 border border-border py-2 rounded-md text-sm hover:bg-accent transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              This is a request only -- payment, if any, is arranged directly
-              with the owner.
+              {t("thisIsARequestOnlyPayment")}
             </p>
 
             {services.length > 0 && (
@@ -161,7 +166,7 @@ export default function RequestBookingModal({
                 onChange={(e) => setServiceId(e.target.value)}
                 className="w-full rounded-md border border-input bg-background p-2 text-sm"
               >
-                <option value="">No specific service</option>
+                <option value="">{t("noSpecificService")}</option>
                 {services.map((service) => (
                   <option key={service.id} value={service.id}>
                     {service.name}
@@ -181,7 +186,7 @@ export default function RequestBookingModal({
             <input
               type="number"
               min={1}
-              placeholder="Party size (optional)"
+              placeholder={t("partySizeOptional")}
               value={partySize}
               onChange={(e) => setPartySize(e.target.value)}
               className="w-full rounded-md border border-input bg-background p-2 text-sm"
@@ -189,7 +194,7 @@ export default function RequestBookingModal({
 
             <textarea
               rows={3}
-              placeholder="Note for the owner (optional)"
+              placeholder={t("noteForTheOwnerOptional")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="w-full rounded-md border border-input bg-background p-2 text-sm"
@@ -202,7 +207,7 @@ export default function RequestBookingModal({
                 onClick={handleSubmit}
                 className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
               >
-                {isSubmitting ? "Sending..." : "Request Booking"}
+                {isSubmitting ? t("sending") : t("requestBooking")}
               </button>
               <button
                 type="button"
@@ -210,7 +215,7 @@ export default function RequestBookingModal({
                 disabled={isSubmitting}
                 className="flex-1 border border-border py-2 rounded-md text-sm hover:bg-accent transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           </div>

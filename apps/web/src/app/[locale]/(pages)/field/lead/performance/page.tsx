@@ -4,6 +4,7 @@ import StatTile from "@/fieldOps/atoms/StatTile";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,8 @@ const outOf = (part: number, whole: number) =>
   whole === 0 ? "—" : `${part} of ${whole}`;
 
 export default async function FieldLeadPerformancePage() {
+  const t = await getTranslations("fieldOps");
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current || !current.isLead) notFound();
@@ -29,31 +32,32 @@ export default async function FieldLeadPerformancePage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Performance</PageTitle>
+        <PageTitle>{t("performance")}</PageTitle>
         <SupportingText>
-          How {a.campaign.name} is going. Every figure is counted from the work
-          itself, so nothing here can be typed in.
+          {t("howIsGoingEveryFigureIs", { name: a.campaign.name })}
         </SupportingText>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile
-          label="Towns covered"
+          label={t("townsCovered")}
           value={`${stats.territories.covered + stats.territories.completed}/${stats.territories.total}`}
           hint={`${stats.territories.coveragePct}%`}
         />
         <StatTile
-          label="Businesses listed"
+          label={t("businessesListed")}
           value={stats.onboardings.succeeded}
-          hint={`${stats.onboardings.submitted + stats.onboardings.verified} still moving`}
+          hint={t("stillMoving", {
+            value: stats.onboardings.submitted + stats.onboardings.verified,
+          })}
         />
         <StatTile
-          label="Waiting on you"
+          label={t("waitingOnYou")}
           value={stats.onboardings.submitted}
-          hint="submissions to review"
+          hint={t("submissionsToReview")}
         />
         <StatTile
-          label="Earned by the team"
+          label={t("earnedByTheTeam")}
           value={money(
             stats.money.approved_minor +
               stats.money.in_payout_minor +
@@ -63,25 +67,25 @@ export default async function FieldLeadPerformancePage() {
           // "Earned" is confirmed money only. Without the holding figure a
           // lead who just verified a submission sees 0.00 and assumes the
           // verification did nothing.
-          hint={`${money(stats.money.paid_minor, stats.currency)} paid · ${money(
-            stats.money.pending_minor,
-            stats.currency,
-          )} in holding`}
+          hint={t("paidInHolding", {
+            money: money(stats.money.paid_minor, stats.currency),
+            money2: money(stats.money.pending_minor, stats.currency),
+          })}
         />
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Your team</h2>
+        <h2 className="text-lg font-semibold">{t("yourTeam")}</h2>
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full min-w-[44rem] text-sm">
             <thead className="border-b bg-muted/40 text-left">
               <tr>
-                <th className="p-3 font-medium">Member</th>
-                <th className="p-3 font-medium">Days out</th>
-                <th className="p-3 font-medium">Found</th>
-                <th className="p-3 font-medium">Sent in</th>
-                <th className="p-3 font-medium">Stood up</th>
-                <th className="p-3 font-medium">Earned</th>
+                <th className="p-3 font-medium">{t("member")}</th>
+                <th className="p-3 font-medium">{t("daysOut")}</th>
+                <th className="p-3 font-medium">{t("found")}</th>
+                <th className="p-3 font-medium">{t("sentIn")}</th>
+                <th className="p-3 font-medium">{t("stoodUp")}</th>
+                <th className="p-3 font-medium">{t("earned")}</th>
               </tr>
             </thead>
             <tbody>
@@ -89,7 +93,7 @@ export default async function FieldLeadPerformancePage() {
                 <tr key={m.memberId} className="border-b last:border-0">
                   <td className="p-3">
                     <div className="font-medium">
-                      {m.fullName ?? "a member"}
+                      {m.fullName ?? t("aMember")}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {m.role.replace(/_/g, " ")}
@@ -103,8 +107,7 @@ export default async function FieldLeadPerformancePage() {
                     {outOf(m.succeeded, m.submitted)}
                     {m.rejected > 0 ? (
                       <span className="text-muted-foreground">
-                        {" "}
-                        · {m.rejected} not
+                        {t("not", { rejected: m.rejected })}
                       </span>
                     ) : null}
                   </td>
@@ -117,32 +120,34 @@ export default async function FieldLeadPerformancePage() {
           </table>
         </div>
         <p className="text-xs text-muted-foreground">
-          &quot;Stood up&quot; means the automatic check after the holding
-          period passed. A member whose work keeps failing it usually needs
-          help, not a telling-off — open one and see which check it was.
+          {t("stoodUpMeansTheAutomaticCheck")}
         </p>
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Towns</h2>
+        <h2 className="text-lg font-semibold">{t("towns")}</h2>
         <ul className="flex flex-col gap-2">
-          {territories.map((t) => (
+          {territories.map((territory) => (
             <li
-              key={t.territoryId}
+              key={territory.territoryId}
               className="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3"
             >
               <div>
-                <p className="font-medium">{t.name}</p>
+                <p className="font-medium">{territory.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {t.prospects} found · {t.contacted} spoken to · {t.submitted}{" "}
-                  sent in · {t.succeeded} listed
+                  {t("foundSpokenToSentInListed", {
+                    prospects: territory.prospects,
+                    contacted: territory.contacted,
+                    submitted: territory.submitted,
+                    succeeded: territory.succeeded,
+                  })}
                 </p>
               </div>
               <StatusChip
                 status={
-                  t.status === "completed"
+                  territory.status === "completed"
                     ? "completed"
-                    : t.covered
+                    : territory.covered
                       ? "covered"
                       : "uncovered"
                 }

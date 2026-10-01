@@ -6,6 +6,7 @@ import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { OrganizerReviewListItem } from "@abonten/types/reviewType";
 import { ClockIcon, UserIcon } from "lucide-react";
+import { useLocale } from "next-intl";
 
 export default function UserReviewsList({
   queryKey,
@@ -20,6 +21,8 @@ export default function UserReviewsList({
   ) => Promise<PaginatedResult<OrganizerReviewListItem>>;
   emptyState: React.ReactNode;
 }) {
+  const locale = useLocale();
+
   return (
     <InfiniteList
       queryKey={queryKey}
@@ -50,7 +53,9 @@ export default function UserReviewsList({
             </div>
             <div className="flex items-center gap-1">
               <ClockIcon size={16} />
-              <span>{getRelativeTime(review.created_at)}</span>
+              <span>
+                {getRelativeTime(review.created_at, undefined, locale)}
+              </span>
             </div>
           </div>
         </li>

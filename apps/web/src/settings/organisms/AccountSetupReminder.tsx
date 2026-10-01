@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAccountSetupPrompt } from "@/hooks/useProfileCompletion";
 import { accountSetupPromptMessage } from "@abonten/core/accountSetupPrompt";
 import { UserRoundCheck, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 // "Finish setting up your account" — a card in the page, never a pop-up.
@@ -17,6 +18,8 @@ export default function AccountSetupReminder({
 }: {
   className?: string;
 }) {
+  const t = useTranslations("settings");
+
   const { completion, visible, dismiss } = useAccountSetupPrompt();
   if (!visible || !completion) return null;
   const message = accountSetupPromptMessage(completion);
@@ -24,7 +27,7 @@ export default function AccountSetupReminder({
 
   return (
     <section
-      aria-label="Account setup"
+      aria-label={t("accountSetup")}
       className={`rounded-xl border border-border bg-card p-4 shadow-sm ${className ?? ""}`}
     >
       <div className="flex items-start gap-3">
@@ -40,7 +43,7 @@ export default function AccountSetupReminder({
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Not now — hide this reminder"
+          aria-label={t("notNowHideThisReminder")}
           className="rounded-full p-1.5 text-muted-foreground hover:bg-accent"
         >
           <X className="h-4 w-4" />
@@ -49,18 +52,24 @@ export default function AccountSetupReminder({
       <div className="mt-3 space-y-1">
         <Progress
           value={fraction * 100}
-          aria-label={`${completion.completedCount} of ${completion.total} steps done`}
+          aria-label={t("ofStepsDone", {
+            completedCount: completion.completedCount,
+            total: completion.total,
+          })}
         />
         <p className="text-xs text-muted-foreground">
-          {completion.completedCount} of {completion.total} steps done
+          {t("ofStepsDone", {
+            completedCount: completion.completedCount,
+            total: completion.total,
+          })}
         </p>
       </div>
       <div className="mt-3 flex gap-2">
         <Button asChild size="sm">
-          <Link href="/settings/account-setup">Continue setup</Link>
+          <Link href="/settings/account-setup">{t("continueSetup")}</Link>
         </Button>
         <Button size="sm" variant="ghost" onClick={dismiss}>
-          Not now
+          {t("notNow")}
         </Button>
       </div>
     </section>

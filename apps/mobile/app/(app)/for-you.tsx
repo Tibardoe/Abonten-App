@@ -16,6 +16,7 @@ import {
   Refresher,
   Skeleton,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { FlatList, Pressable, View } from "react-native";
@@ -31,6 +32,10 @@ function PickRow({
   item: RecommendationItem;
   onDismiss: () => void;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("discovery");
+
   const router = useRouter();
   const isEvent = item.subjectType === "event" && item.event;
   const title = isEvent ? item.event?.title : item.place?.name;
@@ -44,7 +49,7 @@ function PickRow({
     isEvent
       ? [
           item.event?.startsAt
-            ? formatDateWithSuffix(item.event.startsAt)
+            ? formatDateWithSuffix(item.event.startsAt, undefined, locale)
             : null,
           item.event?.address,
         ]
@@ -68,7 +73,7 @@ function PickRow({
     <View className="flex-row gap-3 rounded-2xl border border-border bg-card p-3">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Open ${title}`}
+        accessibilityLabel={t("open", { title: title ?? "" })}
         onPress={open}
       >
         <View className="h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-xl bg-muted">
@@ -112,7 +117,7 @@ function PickRow({
           className="mt-auto self-start"
         >
           <AppText variant="small" tone="muted">
-            Not interested
+            {t("notInterested")}
           </AppText>
         </Pressable>
       </View>
@@ -121,6 +126,8 @@ function PickRow({
 }
 
 export default function ForYou() {
+  const t = useTranslations("discovery");
+
   const router = useRouter();
   const recs = useRecommendations();
   const dismiss = useDismissRecommendation();
@@ -130,7 +137,11 @@ export default function ForYou() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="title" title="For you" backFallback="/(app)/(tabs)" />
+      <AppHeader
+        variant="title"
+        title={t("forYou")}
+        backFallback="/(app)/(tabs)"
+      />
       <FlatList
         data={items}
         keyExtractor={(i) => i.id}
@@ -143,9 +154,9 @@ export default function ForYou() {
           view.kind === "empty" ? (
             <EmptyState
               icon="sparkles-outline"
-              title="No picks yet"
-              description="Turn on alerts after you get a ticket, or tap Notify me on organizers and places you like."
-              actionLabel="Manage notifications"
+              title={t("noPicksYet")}
+              description={t("turnOnAlertsAfterYouGet2")}
+              actionLabel={t("manageNotifications")}
               onAction={() => router.push("/(app)/settings/notifications")}
             />
           ) : (
@@ -171,7 +182,7 @@ export default function ForYou() {
               className="items-center pt-2"
             >
               <AppText variant="small" tone="brand">
-                Manage notifications
+                {t("manageNotifications")}
               </AppText>
             </Pressable>
           ) : null

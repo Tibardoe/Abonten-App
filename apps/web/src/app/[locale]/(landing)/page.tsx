@@ -1,6 +1,7 @@
 import LandingAuthLinks from "@/landingPage/molecules/LandingAuthLinks";
 import LandingLocationSearch from "@/landingPage/organisms/LandingLocationSearch";
 import { SIGN_OFF } from "@abonten/core/brand/signOff";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import landingHero from "../../../../public/assets/images/landing-hero.jpg";
@@ -10,6 +11,8 @@ import landingHero from "../../../../public/assets/images/landing-hero.jpg";
 // export const instant = false;
 
 export default function Home() {
+  const t = useTranslations("landing");
+
   return (
     <div className="fixed w-full">
       <div className="bg-night w-full h-dvh relative text-white flex flex-col items-center">
@@ -30,7 +33,7 @@ export default function Home() {
         {/* Header */}
         <nav className="fixed w-full bg-gradient-to-b from-black/60 to-transparent flex justify-center z-10">
           <div className="flex justify-between items-center py-5 w-[90%]">
-            <Link href="/" aria-label="Abonten home">
+            <Link href="/" aria-label={t("abontenHome")}>
               {/* The ABƆNTEN logotype: the landing page is the one place
                   with room for the full word at a readable size. */}
               <Image
@@ -53,11 +56,10 @@ export default function Home() {
           <div className="w-[90%] flex flex-col items-center gap-8 lg:items-start lg:gap-10">
             <div className="flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
               <h1 className="max-w-[16ch] font-bold text-[2.5rem] leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-7xl">
-                Connecting people to experiences
+                {t("connectingPeopleToExperiences")}
               </h1>
               <p className="max-w-md text-base text-white/80 text-pretty md:text-lg">
-                Find events and places near you, get your tickets, and see
-                what&apos;s on this week.
+                {t("findEventsAndPlacesNearYou")}
               </p>
             </div>
 

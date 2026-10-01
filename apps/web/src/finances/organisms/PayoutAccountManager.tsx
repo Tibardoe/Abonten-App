@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoMdAddCircle } from "react-icons/io";
 import PayoutAccountCard from "../molecules/PayoutAccountCard";
@@ -27,6 +28,8 @@ export const PAYOUT_ACCOUNTS_QUERY_KEY = ["payout-accounts"];
 export default function PayoutAccountManager({
   initialAccounts,
 }: PayoutAccountManagerProps) {
+  const t = useTranslations("finances");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -54,16 +57,12 @@ export default function PayoutAccountManager({
     },
     onSuccess: (response) => {
       if (response.status !== 200) {
-        toast.error(
-          response.message ??
-            "We couldn't remove that payout account. Please try again.",
-        );
+        toast.error(response.message ?? t("weCouldnTRemoveThatPayout"));
       } else {
-        toast.success("Payout account removed.");
+        toast.success(t("payoutAccountRemoved"));
       }
     },
-    onError: () =>
-      toast.error("We couldn't remove that payout account. Please try again."),
+    onError: () => toast.error(t("weCouldnTRemoveThatPayout")),
   });
 
   const setDefaultMutation = useMutation({
@@ -72,13 +71,10 @@ export default function PayoutAccountManager({
       queryClient.invalidateQueries({ queryKey: PAYOUT_ACCOUNTS_QUERY_KEY }),
     onSuccess: (response) => {
       if (response.status !== 200) {
-        toast.error(
-          response.message ?? "We couldn't update your default payout account.",
-        );
+        toast.error(response.message ?? t("weCouldnTUpdateYourDefault"));
       }
     },
-    onError: () =>
-      toast.error("We couldn't update your default payout account."),
+    onError: () => toast.error(t("weCouldnTUpdateYourDefault")),
   });
 
   if (isPending && accounts.length === 0) {
@@ -93,13 +89,13 @@ export default function PayoutAccountManager({
   if (isError) {
     return (
       <div className="space-y-3 text-center text-muted-foreground py-8">
-        <p>Couldn't load your payout accounts.</p>
+        <p>{t("couldnTLoadYourPayoutAccounts")}</p>
         <button
           type="button"
           onClick={() => refetch()}
           className="underline font-medium"
         >
-          Try again
+          {t("tryAgain")}
         </button>
       </div>
     );
@@ -109,9 +105,9 @@ export default function PayoutAccountManager({
     <div className="space-y-4">
       {accounts.length === 0 ? (
         <div className="text-center py-8 space-y-1">
-          <p className="font-medium">No payout accounts added yet.</p>
+          <p className="font-medium">{t("noPayoutAccountsAddedYet")}</p>
           <p className="text-sm text-muted-foreground">
-            Add a mobile money or bank account to receive your earnings.
+            {t("addAMobileMoneyOrBank")}
           </p>
         </div>
       ) : (
@@ -134,7 +130,7 @@ export default function PayoutAccountManager({
         className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
       >
         <IoMdAddCircle className="text-primary text-2xl" />
-        Add payout account
+        {t("addPayoutAccount")}
       </button>
 
       {isAddOpen && (
@@ -151,10 +147,10 @@ export default function PayoutAccountManager({
 
       {pendingRemoveId && (
         <ConfirmDeleteModal
-          title="Remove this payout account?"
-          message="You can add it again later if you change your mind."
-          confirmLabel="Remove"
-          loadingLabel="Removing…"
+          title={t("removeThisPayoutAccount")}
+          message={t("youCanAddItAgainLater")}
+          confirmLabel={t("remove")}
+          loadingLabel={t("removing2")}
           isLoading={removeMutation.isPending}
           onConfirm={() => removeMutation.mutate(pendingRemoveId)}
           onCancel={() => setPendingRemoveId(null)}

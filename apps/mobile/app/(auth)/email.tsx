@@ -10,6 +10,7 @@ import {
   KeyboardAwareScrollView,
   KeyboardRevealGroup,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -21,6 +22,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // off to the shared verify screen. The code is verified directly against
 // Supabase there, so the session lands in secure-store natively.
 export default function EmailSignIn() {
+  const t = useTranslations("auth");
+
   const router = useRouter();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -35,7 +38,7 @@ export default function EmailSignIn() {
   async function sendCode() {
     if (!valid) {
       hapticError();
-      setError("Enter a valid email address.");
+      setError(t("emailInvalid"));
       return;
     }
     setError(null);
@@ -45,7 +48,7 @@ export default function EmailSignIn() {
 
       if (res.status !== 200) {
         hapticError();
-        setError(res.message ?? "Couldn't send the code. Try again.");
+        setError(res.message ?? t("couldnTSendTheCodeTry"));
         return;
       }
 
@@ -55,7 +58,7 @@ export default function EmailSignIn() {
       });
     } catch {
       hapticError();
-      setError("Network error. Check your connection and try again.");
+      setError(t("networkErrorCheckYourConnectionAnd"));
     } finally {
       setBusy(false);
     }
@@ -66,7 +69,7 @@ export default function EmailSignIn() {
       <View className="flex-1">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={t("back")}
           onPress={() => router.back()}
           disabled={busy}
           hitSlop={10}
@@ -97,15 +100,15 @@ export default function EmailSignIn() {
 
             <View className="gap-2">
               <AppText variant="pageTitle" className="text-center">
-                Continue with email
+                {t("continueWithEmail")}
               </AppText>
               <AppText variant="muted" className="text-center">
-                We'll email you a 6-digit code to sign in.
+                {t("emailEntryDescription")}
               </AppText>
             </View>
 
             <KeyboardRevealGroup className="gap-3 rounded-2xl border border-border bg-card p-4">
-              <AppText variant="label">Email address</AppText>
+              <AppText variant="label">{t("emailLabel")}</AppText>
               <TextInput
                 className={[
                   "h-[52px] rounded-xl border bg-background px-3 text-[16px] text-foreground",
@@ -145,7 +148,7 @@ export default function EmailSignIn() {
               ) : null}
 
               <Button
-                title={busy ? "Sending code…" : "Send code"}
+                title={busy ? t("sendingCode2") : t("sendCode")}
                 size="lg"
                 fullWidth
                 loading={busy}

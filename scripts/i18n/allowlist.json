@@ -1,0 +1,10 @@
+{
+  "texts": [
+    "{title} | Abonten Hub",
+    "YouTube",
+    "Accra",
+    "Your location",
+    "Selected location"
+  ],
+  "files": ["apps/web/src/app/global-error.tsx"]
+}

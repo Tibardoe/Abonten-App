@@ -6,6 +6,7 @@ import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { OwnedPlaceReviewListItem } from "@abonten/types/reviewType";
 import { ClockIcon, MapPinIcon, UserIcon } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 // Sibling of UserReviewsList.tsx rather than a parameterized variant of it —
@@ -25,6 +26,10 @@ export default function PlaceReviewsList({
   ) => Promise<PaginatedResult<OwnedPlaceReviewListItem>>;
   emptyState: React.ReactNode;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("account");
+
   return (
     <InfiniteList
       queryKey={queryKey}
@@ -39,7 +44,7 @@ export default function PlaceReviewsList({
         >
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-card-foreground">
-              {review.title || "Review"}
+              {review.title || t("review")}
             </h2>
             <Rating rating={review.rating} />
           </div>
@@ -64,7 +69,9 @@ export default function PlaceReviewsList({
             </div>
             <div className="flex items-center gap-1">
               <ClockIcon size={16} />
-              <span>{getRelativeTime(review.created_at)}</span>
+              <span>
+                {getRelativeTime(review.created_at, undefined, locale)}
+              </span>
             </div>
           </div>
         </li>

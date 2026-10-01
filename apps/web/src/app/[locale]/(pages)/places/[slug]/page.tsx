@@ -33,6 +33,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -63,12 +64,14 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("places");
+
   const { slug } = await params;
   const response = await getPlaceBySlug(slug);
 
   // The segment layout has already answered with a 404 for a missing slug.
   if (response.status !== 200 || !response.data) {
-    return { title: "Place not found" };
+    return { title: t("placeNotFound") };
   }
 
   const place = response.data;
@@ -110,6 +113,8 @@ export default async function page({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const t = await getTranslations("places");
+
   const { slug } = await params;
 
   const placeResponse = await getPlaceBySlug(slug);
@@ -258,7 +263,7 @@ export default async function page({
               </span>
             ) : (
               <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-base">
-                New
+                {t("newText")}
               </span>
             )}
           </div>
@@ -301,7 +306,7 @@ export default async function page({
             {/* About */}
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
               <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
-                About
+                {t("about")}
               </h2>
               <p className="text-muted-foreground leading-relaxed text-sm md:text-base whitespace-pre-line">
                 {place.description}
@@ -311,7 +316,7 @@ export default async function page({
             {/* Opening Hours */}
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
               <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
-                Opening hours
+                {t("openingHours")}
               </h2>
               <PlaceOpeningHoursTable
                 openingHours={place.openingHours}
@@ -328,7 +333,7 @@ export default async function page({
             {services.length > 0 && (
               <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
                 <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
-                  Services
+                  {t("services")}
                 </h2>
                 <div className="space-y-4">
                   {services.map(
@@ -375,7 +380,7 @@ export default async function page({
             {galleryPhotos.length > 0 && (
               <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
                 <h2 className="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-card-foreground">
-                  Photos
+                  {t("photos")}
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
                   {galleryPhotos.map(
@@ -394,7 +399,7 @@ export default async function page({
                             photo.version,
                             { width: 300, height: 300 },
                           )}
-                          alt={`${place.name} photo`}
+                          alt={t("photo", { name: place.name })}
                           fill
                           className="object-cover"
                           sizes="(max-width: 768px) 50vw, 25vw"
@@ -410,7 +415,7 @@ export default async function page({
             <PublisherSpotlightGrid
               publisherKind="place"
               publisherId={place.id}
-              title="Spotlight"
+              title={t("spotlight")}
               hideWhenEmpty
             />
 
@@ -440,7 +445,7 @@ export default async function page({
             <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
               <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
                 <FiMapPin className="text-xl md:text-2xl text-foreground" />
-                <h3 className="text-lg font-medium">Location</h3>
+                <h3 className="text-lg font-medium">{t("location")}</h3>
               </div>
               <p className="text-muted-foreground mb-4 text-sm md:text-base">
                 {fullAddress}
@@ -451,7 +456,7 @@ export default async function page({
             {/* Contact */}
             {(place.phone || place.whatsapp || place.website_url) && (
               <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm space-y-3">
-                <h3 className="text-lg font-medium">Contact</h3>
+                <h3 className="text-lg font-medium">{t("contact")}</h3>
 
                 {place.phone && (
                   <a
@@ -490,7 +495,7 @@ export default async function page({
 
         {/* Upcoming Events */}
         <div className="mb-10">
-          <h2 className="font-semibold text-lg mb-3">Upcoming events</h2>
+          <h2 className="font-semibold text-lg mb-3">{t("upcomingEvents")}</h2>
           {upcomingEvents.length > 0 ? (
             <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
               {upcomingEvents.map((event, index) => (
@@ -499,7 +504,7 @@ export default async function page({
             </ul>
           ) : (
             <p className="text-muted-foreground text-sm">
-              No upcoming events here.
+              {t("noUpcomingEventsHere")}
             </p>
           )}
         </div>
@@ -507,7 +512,7 @@ export default async function page({
         {/* Similar Places */}
         {similarPlaces.length > 0 && (
           <div>
-            <h2 className="font-semibold text-lg mb-3">Similar places</h2>
+            <h2 className="font-semibold text-lg mb-3">{t("similarPlaces")}</h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-3">
               {similarPlaces.map((similarPlace, index) => (
                 <PlaceCard

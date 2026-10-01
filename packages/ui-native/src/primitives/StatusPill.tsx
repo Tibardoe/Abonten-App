@@ -1,4 +1,5 @@
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import { useTranslations } from "../i18n";
 import { useTheme } from "../theme/ThemeProvider";
 import { tintBackground, tintBorder } from "../theme/color";
 import { Icon } from "./Icon";
@@ -56,9 +57,13 @@ export function StatusPill({
   style,
   className,
 }: StatusPillProps) {
+  const t = useTranslations("common");
+
   const { colors: c, scheme } = useTheme();
   const entry = resolveStatus(status, options);
   if (!entry.label) return null;
+  // The registry hands back a catalog key; a caller's override is text.
+  const label = options?.label ?? t(entry.label);
 
   const accent = c[TONE_TOKEN[entry.tone]];
   const bg = variant === "plain" ? c.muted : tintBackground(accent, scheme);
@@ -72,7 +77,7 @@ export function StatusPill({
   return (
     <View
       accessibilityRole="text"
-      accessibilityLabel={`Status: ${entry.label}`}
+      accessibilityLabel={t("status2", { label })}
       className={`flex-row items-center self-start rounded-full border ${pad} ${gap} ${className ?? ""}`}
       style={[{ backgroundColor: bg, borderColor: border }, style]}
     >
@@ -88,7 +93,7 @@ export function StatusPill({
               : c[TONE_TOKEN[entry.tone]],
         }}
       >
-        {entry.label}
+        {label}
       </AppText>
     </View>
   );

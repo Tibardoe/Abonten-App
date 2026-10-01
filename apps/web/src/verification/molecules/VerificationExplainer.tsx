@@ -3,6 +3,7 @@ import type {
   VerificationEvidenceType,
   VerificationSubjectType,
 } from "@abonten/types/verificationType";
+import { useTranslations } from "next-intl";
 import { IoCheckmarkCircle, IoInformationCircleOutline } from "react-icons/io5";
 
 // What the owner reads before starting. Three jobs, in order: why the badge
@@ -16,10 +17,12 @@ export default function VerificationExplainer({
   subjectType: VerificationSubjectType;
   evidenceTypes: VerificationEvidenceType[];
 }) {
+  const t = useTranslations("verification");
+
   return (
     <div className="space-y-5">
       <section className="space-y-2">
-        <h3 className="font-semibold">Why verify</h3>
+        <h3 className="font-semibold">{t("whyVerify")}</h3>
         <ul className="space-y-1.5">
           {WHY_VERIFY[subjectType].map((line) => (
             <li key={line} className="flex items-start gap-2 text-sm">
@@ -34,10 +37,9 @@ export default function VerificationExplainer({
       </section>
 
       <section className="space-y-2">
-        <h3 className="font-semibold">What you can send</h3>
+        <h3 className="font-semibold">{t("whatYouCanSend")}</h3>
         <p className="text-sm text-muted-foreground">
-          Send whatever you have. You do not need all of these, and there is no
-          single document Abonten insists on.
+          {t("sendWhateverYouHaveYouDo")}
         </p>
         <ul className="space-y-2">
           {evidenceTypes.map((t) => (
@@ -56,7 +58,7 @@ export default function VerificationExplainer({
       <section className="space-y-2 rounded-xl border border-border bg-muted p-4">
         <h3 className="flex items-center gap-2 font-semibold">
           <IoInformationCircleOutline aria-hidden className="text-lg" />
-          How review works
+          {t("howReviewWorks")}
         </h3>
         <ul className="space-y-1.5">
           {HOW_REVIEW_WORKS.map((line) => (

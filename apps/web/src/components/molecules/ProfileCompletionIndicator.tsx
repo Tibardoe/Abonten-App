@@ -1,6 +1,7 @@
 "use client";
 
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 // Compact "3/5" account-setup badge with a ring, shown in the Edit Profile
@@ -8,6 +9,8 @@ import Link from "next/link";
 // something to global nav). Renders nothing once the profile is complete,
 // and nothing while loading/signed out.
 export default function ProfileCompletionIndicator() {
+  const t = useTranslations("common");
+
   const { data: completion } = useProfileCompletion();
 
   if (!completion || completion.isComplete) return null;
@@ -20,7 +23,10 @@ export default function ProfileCompletionIndicator() {
     <Link
       href="/settings/account-setup"
       className="flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-foreground/80 hover:bg-accent transition-colors"
-      aria-label={`Account setup: ${completedCount} of ${total} steps done`}
+      aria-label={t("accountSetupOfStepsDone", {
+        completedCount: completedCount,
+        total: total,
+      })}
     >
       {/* biome-ignore lint/a11y/noSvgWithoutTitle: purely decorative, the parent Link already carries the accessible aria-label */}
       <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden>

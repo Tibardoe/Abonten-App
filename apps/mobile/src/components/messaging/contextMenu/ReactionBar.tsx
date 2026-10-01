@@ -1,5 +1,6 @@
 import { hapticSelection } from "@/lib/haptics";
 import { Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -22,6 +23,8 @@ export function ReactionBar({
   /** Opens the full emoji picker for anything not in the quick slots. */
   onMore: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   return (
     <View
@@ -47,7 +50,7 @@ export function ReactionBar({
           <Pressable
             key={emoji}
             accessibilityRole="button"
-            accessibilityLabel={`React ${emoji}`}
+            accessibilityLabel={t("react2", { emoji: emoji })}
             accessibilityState={{ selected: active }}
             onPress={() => {
               hapticSelection();
@@ -85,8 +88,8 @@ export function ReactionBar({
       />
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="More emoji"
-        accessibilityHint="Opens the emoji keyboard to react with any emoji"
+        accessibilityLabel={t("moreEmoji")}
+        accessibilityHint={t("opensTheEmojiKeyboardToReact")}
         onPress={() => {
           hapticSelection();
           onMore();

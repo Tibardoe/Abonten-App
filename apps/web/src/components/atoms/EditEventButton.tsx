@@ -1,6 +1,7 @@
 "use client";
 
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { MdOutlineEdit } from "react-icons/md";
 
@@ -15,6 +16,8 @@ type EventProp = {
 // that file's git history) — Part 9 of the spec: one editing experience,
 // not two competing ones.
 export default function EditEventButton({ eventId, asMenuItem }: EventProp) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const onClick = () => router.push(`/manage/events/${eventId}`);
 
@@ -22,7 +25,7 @@ export default function EditEventButton({ eventId, asMenuItem }: EventProp) {
     return (
       <DropdownMenuItem onSelect={onClick} className="gap-2">
         <MdOutlineEdit className="text-xl" />
-        Edit Event
+        {t("editEvent")}
       </DropdownMenuItem>
     );
   }
@@ -34,7 +37,7 @@ export default function EditEventButton({ eventId, asMenuItem }: EventProp) {
       onClick={onClick}
     >
       <MdOutlineEdit className="text-xl" />
-      Edit Event
+      {t("editEvent")}
     </button>
   );
 }

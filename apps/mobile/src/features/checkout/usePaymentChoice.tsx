@@ -6,6 +6,7 @@ import {
 import { api } from "@/lib/api";
 import type { PaymentMethodRow } from "@abonten/api-client";
 import { AppText, Icon, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -29,11 +30,11 @@ export type PaymentChoice =
   | { paymentMethodId: null; method: string }
   | null;
 
-function savedLabel(m: PaymentMethodRow): string {
+function savedLabel(m: PaymentMethodRow, t: (key: string) => string): string {
   const d = m.details as Record<string, string>;
   return m.method_type === "momo"
-    ? `${d.networkName ?? "Mobile money"} · ${d.phone ?? ""}`
-    : `${d.brand ?? "Card"} ···· ${d.last4 ?? ""}`;
+    ? `${d.networkName ?? t("mobileMoney")} · ${d.phone ?? ""}`
+    : `${d.brand ?? t("card")} ···· ${d.last4 ?? ""}`;
 }
 
 export function usePaymentChoice(target: PaymentTarget | null) {
@@ -129,6 +130,8 @@ export function PaymentChoiceList({
 }: {
   state: ReturnType<typeof usePaymentChoice>;
 }) {
+  const t = useTranslations("checkout");
+
   const { saved, hosted, choice, isUsable, reasonFor } = state;
   const toast = useToast();
   const [adding, setAdding] = useState(false);
@@ -136,11 +139,11 @@ export function PaymentChoiceList({
   async function onAdded(method: PaymentMethodRow) {
     const problem = await state.adoptSaved(method.id);
     if (problem) {
-      toast.info("Wallet saved", { description: problem });
+      toast.info(t("walletSaved"), { description: problem });
       return;
     }
-    toast.success("Wallet added", {
-      description: "It's selected for this payment.",
+    toast.success(t("walletAdded"), {
+      description: t("itSSelectedForThisPayment"),
     });
   }
 
@@ -163,7 +166,7 @@ export function PaymentChoiceList({
           >
             <View className="flex-row items-center justify-between">
               <AppText className="text-sm text-foreground">
-                {savedLabel(m)}
+                {savedLabel(m, t)}
               </AppText>
               {selected ? (
                 <AppText variant="small" tone="brand" className="font-semibold">
@@ -181,23 +184,23 @@ export function PaymentChoiceList({
       })}
       <Pressable
         accessibilityRole="button"
-        accessibilityHint="Saves a mobile money wallet or card and selects it"
+        accessibilityHint={t("savesAMobileMoneyWalletOr")}
         onPress={() => setAdding(true)}
         className="flex-row items-center gap-3 rounded-xl border border-dashed border-border bg-card p-3 active:opacity-80"
       >
         <Icon name="add-circle-outline" size={20} tone="primary" />
         <View className="flex-1">
           <AppText className="text-sm font-semibold text-foreground">
-            {saved.length > 0 ? "Add another wallet" : "Add a wallet"}
+            {saved.length > 0 ? t("addAnotherWallet") : t("addAWallet")}
           </AppText>
           <AppText variant="small" tone="muted">
-            Mobile money or card, saved for next time
+            {t("mobileMoneyOrCardSavedFor")}
           </AppText>
         </View>
       </Pressable>
       {hosted.length > 0 ? (
         <AppText variant="small" tone="muted" className="mt-1">
-          Or pay once, without saving
+          {t("orPayOnceWithoutSaving")}
         </AppText>
       ) : null}
       {hosted.map((m) => {
@@ -219,7 +222,7 @@ export function PaymentChoiceList({
               </AppText>
             ) : m.recommended ? (
               <AppText variant="small" tone="muted">
-                Recommended
+                {t("recommended")}
               </AppText>
             ) : null}
           </Pressable>
@@ -227,7 +230,7 @@ export function PaymentChoiceList({
       })}
       {!state.transacting && state.marketName ? (
         <AppText variant="small" tone="muted">
-          Sales are paused in {state.marketName} right now.
+          {t("salesArePausedInRightNow", { marketName: state.marketName })}
         </AppText>
       ) : null}
       <AddWalletSheet

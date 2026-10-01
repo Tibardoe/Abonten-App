@@ -34,6 +34,8 @@ const ROUTE_FILES = new Set([
 // Files that legitimately live outside app/[locale].
 const ROOT_ALLOWED = new Set([
   "global-error.tsx",
+  "global-not-found.tsx",
+  "AppShell.tsx",
   "robots.ts",
   "sitemap.ts",
   "fonts.ts",

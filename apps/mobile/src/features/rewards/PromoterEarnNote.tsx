@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { View } from "react-native";
 import { useReferralCode } from "./useReferralCode";
@@ -17,6 +18,8 @@ export function PromoterEarnNote({
   eventId: string;
   organizerId: string | null;
 }) {
+  const t = useTranslations("rewards");
+
   const { session } = useSession();
   const code = useReferralCode();
   const program = useRewardsProgram({ enabled: !!code });
@@ -44,12 +47,11 @@ export function PromoterEarnNote({
     <View className="flex-row items-start gap-3 rounded-xl border border-border bg-card p-3">
       <Icon name="megaphone-outline" size={20} tone="primary" />
       <AppText variant="small" className="flex-1">
-        Share this event and earn{" "}
+        {t("shareThisEventAndEarn")}
         <AppText variant="small" className="font-semibold">
           {Number((rate / 100).toFixed(2))}%
-        </AppText>{" "}
-        of every ticket sold through your link. The organizer pays it as credit
-        after the event. Tap share at the top.
+        </AppText>
+        {t("ofEveryTicketSoldThroughYour")}
       </AppText>
     </View>
   );

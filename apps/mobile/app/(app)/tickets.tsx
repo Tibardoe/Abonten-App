@@ -38,25 +38,25 @@ type ReviewSub = "toReview" | "reviewed";
 const EMPTY_COPY: Record<TicketFilter, { title: string; description: string }> =
   {
     active: {
-      title: "No active tickets",
-      description: "Tickets you buy will show up here.",
+      title: "empty.active.title",
+      description: "empty.active.description",
     },
     past: {
-      title: "No past tickets",
-      description: "Tickets for events that have ended or were cancelled.",
+      title: "empty.past.title",
+      description: "empty.past.description",
     },
     cancelled: {
-      title: "No cancelled tickets",
-      description: "Cancelled tickets show up here.",
+      title: "empty.cancelled.title",
+      description: "empty.cancelled.description",
     },
     refunds: {
-      title: "No refunds yet",
-      description:
-        "Refunds for cancelled paid tickets will appear here when applicable.",
+      title: "empty.refunds.title",
+      description: "empty.refunds.description",
     },
   };
 
 function TicketFilterList({ tab }: { tab: TicketFilter }) {
+  const t = useTranslations("tickets");
   const q = useMyTickets(tab);
   const tickets: UserTicketType[] =
     q.data?.pages.flatMap((p) => p.tickets) ?? [];
@@ -87,8 +87,8 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
         view.kind === "empty" ? (
           <EmptyState
             icon="receipt-outline"
-            title={EMPTY_COPY[tab].title}
-            description={EMPTY_COPY[tab].description}
+            title={t(EMPTY_COPY[tab].title)}
+            description={t(EMPTY_COPY[tab].description)}
           />
         ) : (
           // Tickets are never written to disk (they carry a QR code and
@@ -127,13 +127,13 @@ export default function Tickets() {
           options={[
             {
               key: "tickets",
-              label: ticketsSub === "past" ? "Past" : "Active",
+              label: ticketsSub === "past" ? t("past") : t("active"),
             },
-            { key: "cancelled", label: "Cancelled" },
-            { key: "refunds", label: "Refunds" },
+            { key: "cancelled", label: t("cancelled") },
+            { key: "refunds", label: t("refunds") },
             {
               key: "review",
-              label: reviewSub === "reviewed" ? "Reviewed" : "To review",
+              label: reviewSub === "reviewed" ? t("reviewed") : t("toReview"),
             },
           ]}
           value={section}
@@ -145,8 +145,8 @@ export default function Tickets() {
         <View className="px-4 pb-1">
           <SegmentedTabs
             options={[
-              { key: "active", label: "Active" },
-              { key: "past", label: "Past" },
+              { key: "active", label: t("active") },
+              { key: "past", label: t("past") },
             ]}
             value={ticketsSub}
             onChange={setTicketsSub}
@@ -159,8 +159,8 @@ export default function Tickets() {
         <View className="px-4 pb-1">
           <SegmentedTabs
             options={[
-              { key: "toReview", label: "To review" },
-              { key: "reviewed", label: "Reviewed" },
+              { key: "toReview", label: t("toReview") },
+              { key: "reviewed", label: t("reviewed") },
             ]}
             value={reviewSub}
             onChange={setReviewSub}

@@ -1,4 +1,5 @@
 import { AppText, Icon, type IoniconName, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Pressable, View } from "react-native";
 
@@ -50,16 +51,18 @@ export function AttachmentSheet({
   onCamera: () => void;
   onFile: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const pick = (fn: () => void) => () => {
     onClose();
     fn();
   };
   return (
-    <Sheet open={open} onClose={onClose} title="Add to message">
+    <Sheet open={open} onClose={onClose} title={t("addToMessage")}>
       <View className="flex-row gap-3 pb-2 pt-1">
-        <Tile icon="images" label="Gallery" onPress={pick(onPickMedia)} />
-        <Tile icon="camera" label="Camera" onPress={pick(onCamera)} />
-        <Tile icon="document-text" label="File" onPress={pick(onFile)} />
+        <Tile icon="images" label={t("gallery")} onPress={pick(onPickMedia)} />
+        <Tile icon="camera" label={t("camera")} onPress={pick(onCamera)} />
+        <Tile icon="document-text" label={t("file")} onPress={pick(onFile)} />
       </View>
     </Sheet>
   );

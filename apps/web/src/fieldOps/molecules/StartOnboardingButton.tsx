@@ -3,6 +3,7 @@
 import { startFieldOpsOnboarding } from "@/actions/fieldOps/startFieldOpsOnboarding";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/useToast";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useTransition } from "react";
 
@@ -15,7 +16,7 @@ export default function StartOnboardingButton({
   territoryId,
   prospectId,
   kind = "place",
-  label = "Onboard this business",
+  label: labelProp,
   size = "sm",
   variant = "default",
 }: {
@@ -28,6 +29,9 @@ export default function StartOnboardingButton({
   size?: "sm" | "default";
   variant?: "default" | "outline";
 }) {
+  const t = useTranslations("fieldOps");
+  const label = labelProp ?? t("onboardThisBusiness");
+
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -45,13 +49,13 @@ export default function StartOnboardingButton({
       if (res.status === 200 && res.data) {
         router.push(`/field/onboard/${res.data.id}`);
       } else {
-        toast.error(res.message ?? "Couldn't start the onboarding.");
+        toast.error(res.message ?? t("couldnTStartTheOnboarding"));
       }
     });
 
   return (
     <Button size={size} variant={variant} onClick={go} disabled={pending}>
-      {pending ? "Opening…" : label}
+      {pending ? t("opening") : label}
     </Button>
   );
 }

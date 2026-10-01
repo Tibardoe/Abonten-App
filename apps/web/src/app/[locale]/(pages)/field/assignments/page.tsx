@@ -2,11 +2,14 @@ import { listMyFieldOpsAssignments } from "@/actions/fieldOps/listMyFieldOpsAssi
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import AssignmentCard from "@/fieldOps/molecules/AssignmentCard";
+import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function FieldAssignmentsPage() {
+  const t = await getTranslations("fieldOps");
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current) notFound();
@@ -29,16 +32,16 @@ export default async function FieldAssignmentsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Assignments</PageTitle>
-        <SupportingText>
-          Where you&apos;re working, and where you have been.
-        </SupportingText>
+        <PageTitle>{t("assignments")}</PageTitle>
+        <SupportingText>{t("whereYouReWorkingAndWhere")}</SupportingText>
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Open</h2>
+        <h2 className="text-lg font-semibold">{t("open")}</h2>
         {open.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No open assignments.</p>
+          <p className="text-sm text-muted-foreground">
+            {t("noOpenAssignments")}
+          </p>
         ) : (
           open.map((a) => (
             <AssignmentCard
@@ -53,7 +56,7 @@ export default async function FieldAssignmentsPage() {
 
       {closed.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">History</h2>
+          <h2 className="text-lg font-semibold">{t("history")}</h2>
           {closed.map((a) => (
             <AssignmentCard
               key={a.id}

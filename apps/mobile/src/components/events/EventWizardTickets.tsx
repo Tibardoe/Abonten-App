@@ -1,11 +1,14 @@
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { uuidv4 } from "@/lib/uuid";
 import { AppText, Button, Chip, Field, Input } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // Step 5 of the event wizard — free, a single paid tier, or multiple named
 // tiers. Mirrors the web TicketType + TicketInputs.
 export function EventWizardTickets({ w }: { w: EventWizard }) {
+  const t = useTranslations("events");
+
   function addTier() {
     w.setTiers((prev) => [
       ...prev,
@@ -14,7 +17,7 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
   }
   function patchTier(i: number, patch: Partial<(typeof w.tiers)[number]>) {
     w.setTiers((prev) =>
-      prev.map((t, idx) => (idx === i ? { ...t, ...patch } : t)),
+      prev.map((tier, idx) => (idx === i ? { ...tier, ...patch } : tier)),
     );
   }
 
@@ -26,10 +29,10 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
             key={m}
             label={
               m === "free"
-                ? "Free"
+                ? t("free")
                 : m === "single"
-                  ? "One price"
-                  : "Multiple types"
+                  ? t("onePrice")
+                  : t("multipleTypes")
             }
             selected={w.ticketMode === m}
             onPress={() => w.setTicketMode(m)}
@@ -39,15 +42,14 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
 
       {w.ticketMode === "free" ? (
         <AppText variant="muted">
-          Attendees reserve a free ticket. Capacity (Basics step) caps the
-          total. Promo codes aren&apos;t available on a free event.
+          {t("attendeesReserveAFreeTicketCapacity")}
         </AppText>
       ) : null}
 
       {w.ticketMode === "single" ? (
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Field label={`Price (${w.currency})`}>
+            <Field label={t("price", { currency: w.currency ?? "" })}>
               <Input
                 value={w.ticketPrice}
                 onChangeText={w.setTicketPrice}
@@ -57,12 +59,12 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
             </Field>
           </View>
           <View className="flex-1">
-            <Field label="Quantity" hint="Optional">
+            <Field label={t("quantity")} hint={t("optional")}>
               <Input
                 value={w.ticketQuantity}
                 onChangeText={w.setTicketQuantity}
                 keyboardType="number-pad"
-                placeholder="Unlimited"
+                placeholder={t("unlimited")}
               />
             </Field>
           </View>
@@ -71,14 +73,14 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
 
       {w.ticketMode === "multiple" ? (
         <View className="gap-3">
-          {w.tiers.map((t, i) => (
+          {w.tiers.map((tier, i) => (
             <View
-              key={t.id}
+              key={tier.id}
               className="gap-2 rounded-xl border border-border bg-card p-3"
             >
               <View className="flex-row items-center justify-between">
                 <AppText variant="small" className="font-semibold">
-                  Ticket type {i + 1}
+                  {t("ticketType")} {i + 1}
                 </AppText>
                 <Pressable
                   accessibilityRole="button"
@@ -87,37 +89,37 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
                   }
                 >
                   <AppText variant="small" tone="error">
-                    Remove
+                    {t("remove")}
                   </AppText>
                 </Pressable>
               </View>
               <Input
-                value={t.name}
+                value={tier.name}
                 onChangeText={(v) => patchTier(i, { name: v })}
-                placeholder="e.g. VIP"
+                placeholder={t("eGVip")}
               />
               <View className="flex-row gap-3">
                 <View className="flex-1">
                   <Input
-                    value={t.price}
+                    value={tier.price}
                     onChangeText={(v) => patchTier(i, { price: v })}
                     keyboardType="decimal-pad"
-                    placeholder={`Price (${w.currency})`}
+                    placeholder={t("price", { currency: w.currency ?? "" })}
                   />
                 </View>
                 <View className="flex-1">
                   <Input
-                    value={t.quantity}
+                    value={tier.quantity}
                     onChangeText={(v) => patchTier(i, { quantity: v })}
                     keyboardType="number-pad"
-                    placeholder="Qty (optional)"
+                    placeholder={t("qtyOptional")}
                   />
                 </View>
               </View>
             </View>
           ))}
           <Button
-            title="Add ticket type"
+            title={t("addTicketType")}
             variant="outline"
             size="sm"
             onPress={addTier}

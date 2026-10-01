@@ -27,6 +27,7 @@ import {
   ProgressBar,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -48,6 +49,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // publish. Uploads run on this screen with real progress; the server checks
 // every limit again.
 export default function NewContentScreen() {
+  const t = useTranslations("spotlight");
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const toast = useToast();
@@ -116,8 +119,8 @@ export default function NewContentScreen() {
       }
       toast.info(
         kind === "story"
-          ? `A Story holds up to ${maxItems} items.`
-          : "A Spotlight holds one photo or video.",
+          ? t("aStoryHoldsUpToItems", { maxItems: maxItems })
+          : t("aSpotlightHoldsOnePhotoOr"),
       );
     }
     for (const item of composer.items) {
@@ -239,10 +242,10 @@ export default function NewContentScreen() {
     invalidate();
     toast.success(
       asDraft
-        ? "Saved as a draft"
+        ? t("savedAsADraft2")
         : kind === "story"
-          ? "Your Story is live"
-          : "Your Spotlight is live",
+          ? t("yourStoryIsLive2")
+          : t("yourSpotlightIsLive2"),
     );
     composer.reset();
     router.back();
@@ -251,17 +254,20 @@ export default function NewContentScreen() {
   if (ready && kinds.length === 0) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-8">
-        <AppText variant="sectionTitle">Posting isn't available yet</AppText>
+        <AppText variant="sectionTitle">{t("postingIsnTAvailableYet")}</AppText>
         <AppText variant="muted" className="text-center">
-          Spotlight and Stories posting is rolling out to organizers and place
-          owners.
+          {t("spotlightAndStoriesPostingIsRolling")}
         </AppText>
-        <Button title="Close" variant="outline" onPress={() => router.back()} />
+        <Button
+          title={t("close")}
+          variant="outline"
+          onPress={() => router.back()}
+        />
       </View>
     );
   }
 
-  const title = kind === "story" ? "New Story" : "New Spotlight";
+  const title = kind === "story" ? t("newStory") : t("newSpotlight");
 
   // ── Step 1: pick ─────────────────────────────────────────────────
   if (step === 1) {
@@ -289,7 +295,7 @@ export default function NewContentScreen() {
               {kinds.map((k) => (
                 <Chip
                   key={k}
-                  label={k === "story" ? "Story" : "Spotlight"}
+                  label={k === "story" ? t("story") : t("spotlight")}
                   selected={kind === k}
                   onPress={() => setKind(k)}
                 />
@@ -301,10 +307,13 @@ export default function NewContentScreen() {
           </View>
           <AppText className="text-center text-[15px] text-white/80">
             {kind === "story"
-              ? `Share up to ${maxItems} photos or videos. Your Story disappears after ${program.storyTtlHours} hours.`
-              : `One photo or a video up to ${maxSeconds} seconds about your event or place.`}
+              ? t("shareUpToPhotosOrVideos", {
+                  maxItems: maxItems,
+                  storyTtlHours: program.storyTtlHours,
+                })
+              : t("onePhotoOrAVideoUp", { maxSeconds: maxSeconds })}
           </AppText>
-          <Button title="Select from gallery" size="lg" onPress={pick} />
+          <Button title={t("selectFromGallery")} size="lg" onPress={pick} />
         </View>
       </View>
     );
@@ -336,7 +345,7 @@ export default function NewContentScreen() {
                 accessibilityRole="button"
                 onPress={() => setCropOpen(true)}
                 hitSlop={10}
-                accessibilityLabel="Crop photo"
+                accessibilityLabel={t("cropPhoto")}
               >
                 <Icon name="crop-outline" size={22} color="#fff" />
               </Pressable>
@@ -353,7 +362,7 @@ export default function NewContentScreen() {
                   tooLong ? "text-white/40" : "text-mint",
                 ].join(" ")}
               >
-                Next
+                {t("next")}
               </AppText>
             </Pressable>
           </View>
@@ -373,7 +382,7 @@ export default function NewContentScreen() {
                   onPress={togglePreviewPlay}
                   accessibilityRole="button"
                   accessibilityLabel={
-                    previewPlaying ? "Pause preview" : "Play preview"
+                    previewPlaying ? t("pausePreview") : t("playPreview")
                   }
                 >
                   <VideoView
@@ -412,7 +421,7 @@ export default function NewContentScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      previewPlaying ? "Pause preview" : "Play preview"
+                      previewPlaying ? t("pausePreview") : t("playPreview")
                     }
                     className="h-10 w-10 items-center justify-center rounded-full bg-black/55"
                   >
@@ -427,7 +436,7 @@ export default function NewContentScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      previewMuted ? "Turn sound on" : "Turn sound off"
+                      previewMuted ? t("turnSoundOn") : t("turnSoundOff")
                     }
                     className="h-10 w-10 items-center justify-center rounded-full bg-black/55"
                   >
@@ -463,10 +472,10 @@ export default function NewContentScreen() {
                   <View className="items-center gap-2 px-8">
                     <Icon name="alert-circle-outline" size={28} color="#fff" />
                     <AppText className="text-center text-[14px] text-white">
-                      This video can't be previewed on this phone.
+                      {t("thisVideoCanTBePreviewed")}
                     </AppText>
                     <AppText className="text-center text-[12px] text-white/70">
-                      You can still post it; we'll check it when it uploads.
+                      {t("youCanStillPostItWe")}
                     </AppText>
                   </View>
                 ) : (
@@ -474,8 +483,8 @@ export default function NewContentScreen() {
                     <ActivityIndicator color="#fff" />
                     <AppText className="text-[13px] text-white/80">
                       {active.type === "video"
-                        ? "Preparing preview…"
-                        : "Loading photo…"}
+                        ? t("preparingPreview")
+                        : t("loadingPhoto")}
                     </AppText>
                   </View>
                 )}
@@ -501,7 +510,7 @@ export default function NewContentScreen() {
               ) : null}
               {tooLong ? (
                 <AppText className="px-4 text-center text-[13px] text-white/80">
-                  Trim to {maxSeconds} seconds or less.
+                  {t("trimToSecondsOrLess", { maxSeconds: maxSeconds })}
                 </AppText>
               ) : null}
             </View>
@@ -615,10 +624,10 @@ export default function NewContentScreen() {
         />
         {program.publisherPlaces.length > 0 ? (
           <View className="gap-2">
-            <AppText variant="label">Post as</AppText>
+            <AppText variant="label">{t("postAs")}</AppText>
             <View className="flex-row flex-wrap gap-2">
               <Chip
-                label="Me"
+                label={t("me")}
                 selected={placeId === null}
                 onPress={() => setPublisherPlace(null)}
               />
@@ -635,14 +644,14 @@ export default function NewContentScreen() {
         ) : null}
 
         <View className="gap-2">
-          <AppText variant="label">Caption</AppText>
+          <AppText variant="label">{t("caption")}</AppText>
           <TextInput
             value={caption}
             onChangeText={setCaption}
             maxLength={MAX_CAPTION_LENGTH}
             multiline
             editable={!busy}
-            placeholder="Say something. #hashtags help people find it."
+            placeholder={t("saySomethingHashtagsHelpPeopleFind")}
             placeholderTextColor="#8a8a8a"
             className="min-h-[96px] rounded-xl border border-input bg-background px-3 py-2.5 text-[15px] text-foreground"
             textAlignVertical="top"
@@ -651,10 +660,10 @@ export default function NewContentScreen() {
 
         {(events.data?.length ?? 0) > 0 ? (
           <View className="gap-2">
-            <AppText variant="label">Link an event (optional)</AppText>
+            <AppText variant="label">{t("linkAnEventOptional")}</AppText>
             <View className="flex-row flex-wrap gap-2">
               <Chip
-                label="None"
+                label={t("none")}
                 selected={eventId === null}
                 onPress={() => setEventId(null)}
               />
@@ -672,10 +681,10 @@ export default function NewContentScreen() {
 
         {program.publisherPlaces.length > 0 ? (
           <View className="gap-2">
-            <AppText variant="label">Link a place (optional)</AppText>
+            <AppText variant="label">{t("linkAPlaceOptional")}</AppText>
             <View className="flex-row flex-wrap gap-2">
               <Chip
-                label="None"
+                label={t("none")}
                 selected={linkedPlaceId === null}
                 onPress={() => setLinkedPlaceId(null)}
               />
@@ -692,14 +701,14 @@ export default function NewContentScreen() {
         ) : null}
 
         <ToggleRow
-          label="Allow comments"
+          label={t("allowComments")}
           value={allowComments}
           onChange={setAllowComments}
           disabled={busy}
         />
         {kind === "spotlight" && program.spotlightDownloads ? (
           <ToggleRow
-            label="Let people download this video"
+            label={t("letPeopleDownloadThisVideo")}
             value={allowDownload}
             onChange={setAllowDownload}
             disabled={busy}
@@ -724,14 +733,16 @@ export default function NewContentScreen() {
 
         <View className="gap-2 pb-8">
           <Button
-            title={publish.state.phase === "error" ? "Try again" : "Publish"}
+            title={
+              publish.state.phase === "error" ? t("tryAgain") : t("publish")
+            }
             loading={busy}
             loadingTitle="Publishing…"
             disabled={!rights || busy}
             onPress={() => submit(false)}
           />
           <Button
-            title="Save draft"
+            title={t("saveDraft")}
             variant="outline"
             disabled={!rights || busy}
             onPress={() => submit(true)}
@@ -757,6 +768,8 @@ function PublishPreview({
   posters: Record<string, VideoThumbnail>;
   state: PublishState;
 }) {
+  const t = useTranslations("spotlight");
+
   const first = items[0];
   if (!first) return null;
   const still =
@@ -809,11 +822,11 @@ function PublishPreview({
         {state.phase === "error" ? (
           <>
             <AppText variant="bodyStrong" tone="error">
-              Not posted yet
+              {t("notPostedYet")}
             </AppText>
             <AppText variant="small">{state.message}</AppText>
             <AppText variant="caption" tone="muted">
-              Anything already uploaded is kept — Try again picks up from there.
+              {t("anythingAlreadyUploadedIsKeptTry")}
             </AppText>
           </>
         ) : label ? (
@@ -827,13 +840,13 @@ function PublishPreview({
           <>
             <AppText variant="bodyStrong">
               {items.length > 1
-                ? `${items.length} items ready`
+                ? t("itemsReady", { length: items.length })
                 : first.type === "video"
-                  ? "Video ready to post"
-                  : "Photo ready to post"}
+                  ? t("videoReadyToPost")
+                  : t("photoReadyToPost")}
             </AppText>
             <AppText variant="caption" tone="muted">
-              It uploads when you publish. Keep the app open until it's done.
+              {t("itUploadsWhenYouPublishKeep")}
             </AppText>
           </>
         )}

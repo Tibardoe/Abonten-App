@@ -1,5 +1,6 @@
 import { reportClientError } from "@/lib/reportClientError";
 import { Sentry } from "@/lib/sentry";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import type { ErrorBoundaryProps } from "expo-router";
 import { usePathname } from "expo-router";
 import { useEffect } from "react";
@@ -29,6 +30,8 @@ const PALETTE = {
 };
 
 export function RootErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const t = useTranslations("common");
+
   const pathname = usePathname();
   const scheme = useColorScheme() === "dark" ? "dark" : "light";
   const c = PALETTE[scheme];
@@ -57,10 +60,10 @@ export function RootErrorBoundary({ error, retry }: ErrorBoundaryProps) {
         }}
       >
         <Text style={{ color: c.fg, fontSize: 16, fontWeight: "700" }}>
-          Something went wrong
+          {t("somethingWentWrong")}
         </Text>
         <Text style={{ color: c.muted, fontSize: 14, textAlign: "center" }}>
-          The team has been notified. You can try again — your place is saved.
+          {t("theTeamHasBeenNotifiedYou")}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -76,7 +79,7 @@ export function RootErrorBoundary({ error, retry }: ErrorBoundaryProps) {
           }}
         >
           <Text style={{ color: "#ffffff", fontSize: 15, fontWeight: "600" }}>
-            Try again
+            {t("tryAgain")}
           </Text>
         </Pressable>
       </View>

@@ -14,6 +14,7 @@ import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -33,6 +34,8 @@ function TicketCard({
   // exact list, and put it back if cancellation fails.
   queryKey: unknown[];
 }) {
+  const t = useTranslations("manage");
+
   const refundBadge =
     showRefundInfo && event.status === "cancelled" && event.transaction
       ? getRefundStatusLabel(
@@ -132,7 +135,7 @@ function TicketCard({
           event.status === "cancelled" &&
           !event.transaction && (
             <p className="text-sm text-muted-foreground">
-              No payment on this ticket — nothing to refund.
+              {t("noPaymentOnThisTicketNothing")}
             </p>
           )}
 

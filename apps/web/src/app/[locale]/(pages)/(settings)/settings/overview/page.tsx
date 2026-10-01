@@ -19,15 +19,15 @@ export default async function page() {
       <PromotionDetails />
 
       <div className="space-y-2">
-        <h1>Quick Links</h1>
+        <h1>{t("quickLinks")}</h1>
 
         <DetailsContainer>
           <div className="flex justify-between items-center">
-            <p className="font-medium md:text-lg">Manage payment method</p>
+            <p className="font-medium md:text-lg">{t("managePaymentMethod")}</p>
             <Link href="/wallet">
               <MaskIcon
                 src="/assets/images/arrowRight.svg"
-                alt="Arrow right"
+                alt={t("arrowRight")}
                 className="w-6 h-6 md:w-8 md:h-8"
               />
             </Link>
@@ -36,11 +36,13 @@ export default async function page() {
           <hr />
 
           <div className="flex justify-between items-center">
-            <p className="font-medium md:text-lg">View transaction history</p>
+            <p className="font-medium md:text-lg">
+              {t("viewTransactionHistory")}
+            </p>
             <Link href="/transactions">
               <MaskIcon
                 src="/assets/images/arrowRight.svg"
-                alt="Arrow right"
+                alt={t("arrowRight")}
                 className="w-6 h-6 md:w-8 md:h-8"
               />
             </Link>

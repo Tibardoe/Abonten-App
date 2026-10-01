@@ -5,6 +5,7 @@ import { useHighlightUpload } from "@/features/profile/HighlightUploadProvider";
 import { useHighlightComposer } from "@/features/profile/useHighlightComposer";
 import type { HighlightMediaPick } from "@/features/profile/useHighlights";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { type VideoThumbnail, VideoView, useVideoPlayer } from "expo-video";
@@ -36,6 +37,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // a progress banner then runs on the profile's highlights row.
 
 export default function NewHighlight() {
+  const t = useTranslations("profile");
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { session } = useSession();
@@ -218,7 +221,7 @@ export default function NewHighlight() {
             <Icon name="close" size={26} color="#fff" />
           </Pressable>
           <AppText className="text-[16px] font-semibold text-white">
-            New highlight
+            {t("newHighlight")}
           </AppText>
           <View style={{ width: 26 }} />
         </View>
@@ -228,10 +231,9 @@ export default function NewHighlight() {
             <Icon name="images-outline" size={40} color="#fff" />
           </View>
           <AppText className="text-center text-[15px] text-white/80">
-            Add photos and videos to your highlights. Trim clips and crop photos
-            before you post.
+            {t("addPhotosAndVideosToYour")}
           </AppText>
-          <Button title="Select from gallery" size="lg" onPress={pick} />
+          <Button title={t("selectFromGallery")} size="lg" onPress={pick} />
         </View>
       </View>
     );
@@ -256,14 +258,14 @@ export default function NewHighlight() {
           <AppText className="flex-1 text-[15px] font-semibold text-white">
             {composer.items.length > 1
               ? `${composer.activeIndex + 1} / ${composer.items.length}`
-              : "New highlight"}
+              : t("newHighlight")}
           </AppText>
           {active?.type === "image" ? (
             <Pressable
               accessibilityRole="button"
               onPress={() => setCropOpen(true)}
               hitSlop={10}
-              accessibilityLabel="Crop photo"
+              accessibilityLabel={t("cropPhoto")}
             >
               <Icon name="crop-outline" size={22} color="#fff" />
             </Pressable>
@@ -282,7 +284,7 @@ export default function NewHighlight() {
                   : "text-white/40",
               ].join(" ")}
             >
-              Post
+              {t("post")}
             </AppText>
           </Pressable>
         </View>

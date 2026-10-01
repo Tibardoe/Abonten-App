@@ -44,6 +44,7 @@ import { PiTicketBold } from "react-icons/pi";
 import JsonLd from "@/components/atoms/JsonLd";
 import { eventJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
+import { getLocale, getTranslations } from "next-intl/server";
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
@@ -63,6 +64,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ eventCode: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("events");
+
   const { eventCode } = await params;
   const { data: event } = await publicSupabase
     .from("event")
@@ -71,7 +74,7 @@ export async function generateMetadata({
     .single();
 
   // The segment layout has already answered with a 404 for a missing code.
-  if (!event) return { title: "Event not found" };
+  if (!event) return { title: t("eventNotFound") };
 
   const title = event.title;
   const description = event.description
@@ -108,6 +111,10 @@ export default async function page({
 }: {
   params: Promise<{ eventCode: string }>;
 }) {
+  const locale = await getLocale();
+
+  const t = await getTranslations("events");
+
   const supabase = publicSupabase;
 
   const { eventCode } = await params;
@@ -227,12 +234,13 @@ export default async function page({
     (similarEventsResponse?.similarEvents ?? []) as unknown as UserPostType[]
   ).filter((evt) => evt.id !== event.id);
 
-  const postedAt = getRelativeTime(event.created_at);
+  const postedAt = getRelativeTime(event.created_at, undefined, locale);
   const eventDateAndTime = getFormattedEventDate(
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
     event.timezone,
+    locale,
   );
 
   const tags = parseEventTypes(event.event_type);
@@ -246,14 +254,18 @@ export default async function page({
     Number(t.price ?? 0),
   );
   const hasPriceRange = new Set(prices).size > 1;
+  const lowestPrice =
+    minTicket === null
+      ? ""
+      : formatMoney(minTicket?.currency, minTicket?.price, {
+          trimZeroFraction: true,
+        });
   const priceLabel =
     minTicket?.price === 0 || minTicket === null
-      ? "Free"
-      : `${hasPriceRange ? "From " : ""}${formatMoney(
-          minTicket?.currency,
-          minTicket?.price,
-          { trimZeroFraction: true },
-        )}`;
+      ? t("free")
+      : hasPriceRange
+        ? t("fromPrice", { price: lowestPrice })
+        : lowestPrice;
 
   // Organizers type the address with or without the scheme.
   const websiteHref = event.website_url
@@ -328,7 +340,7 @@ export default async function page({
                     event.user_info.avatar_version,
                     { width: 56, height: 56 },
                   )}
-                  alt={event.user_info.username ?? "Organizer"}
+                  alt={event.user_info.username ?? t("organizer")}
                   width={56}
                   height={56}
                   className="rounded-full border-2 border-border"
@@ -336,7 +348,7 @@ export default async function page({
               </Link>
               <div className="flex-1 min-w-0">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  Hosted by
+                  {t("hostedBy")}
                 </p>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Link
@@ -376,13 +388,13 @@ export default async function page({
                 )}
               </div>
               <span className="hidden sm:block text-sm text-muted-foreground shrink-0">
-                Posted {postedAt}
+                {t("posted", { postedAt: postedAt })}
               </span>
             </div>
             <MessageSubjectButton
               input={{ type: "event", eventId: event.id }}
               ownerId={event.organizer_id}
-              label="Message organizer"
+              label={t("messageOrganizer")}
               className="mt-4 w-full sm:w-auto"
             />
           </section>
@@ -390,12 +402,12 @@ export default async function page({
           {/* Ticket panel */}
           <aside
             id="tickets"
-            aria-label="Tickets"
+            aria-label={t("tickets")}
             className="lg:col-start-3 lg:row-start-1 lg:row-span-4 lg:sticky lg:top-28"
           >
             <div className="bg-card text-card-foreground rounded-xl border border-border p-4 md:p-6 shadow-sm space-y-5">
               <div>
-                <p className="text-sm text-muted-foreground">Tickets</p>
+                <p className="text-sm text-muted-foreground">{t("tickets")}</p>
                 <p className="text-2xl font-bold">{priceLabel}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {eventDateAndTime.date}
@@ -418,7 +430,7 @@ export default async function page({
 
               {isAbsolutelyFreeEvent && !event.require_registration && (
                 <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-                  Free entry. No ticket or registration needed.
+                  {t("freeEntryNoTicketOrRegistration")}
                 </p>
               )}
 
@@ -443,7 +455,7 @@ export default async function page({
                     rel="noopener noreferrer"
                     className="w-full flex items-center justify-center gap-2 border border-border bg-background py-2.5 rounded-lg text-sm font-medium hover:bg-accent transition-colors"
                   >
-                    Website <FiArrowUpRight className="text-base" />
+                    {t("website")} <FiArrowUpRight className="text-base" />
                   </a>
                 )}
               </div>
@@ -462,7 +474,7 @@ export default async function page({
           {/* Description */}
           <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
             <SectionTitle className="mb-3 md:mb-4 text-card-foreground">
-              About this event
+              {t("aboutThisEvent")}
             </SectionTitle>
             <p className="text-muted-foreground leading-relaxed text-sm md:text-base whitespace-pre-line">
               {event.description}
@@ -472,7 +484,7 @@ export default async function page({
           {/* When and where */}
           <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm space-y-5">
             <SectionTitle className="text-card-foreground">
-              When and where
+              {t("whenAndWhere")}
             </SectionTitle>
 
             <div className="flex items-start gap-3">
@@ -492,7 +504,7 @@ export default async function page({
                 <IoLocationOutline className="text-xl text-foreground" />
               </span>
               <div className="min-w-0">
-                <CardTitle>{event.place?.name ?? "Location"}</CardTitle>
+                <CardTitle>{event.place?.name ?? t("location")}</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {address.full_address}
                 </p>
@@ -501,7 +513,7 @@ export default async function page({
                     href={`/places/${event.place.slug}`}
                     className="mt-1 inline-block text-sm font-medium text-primary hover:underline"
                   >
-                    See the venue
+                    {t("seeTheVenue")}
                   </Link>
                 )}
               </div>
@@ -514,7 +526,7 @@ export default async function page({
           {/* Category and tags */}
           <section className="lg:col-span-2 bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
             <SectionTitle className="mb-3 text-card-foreground">
-              Good to know
+              {t("goodToKnow")}
             </SectionTitle>
             <div className="flex flex-wrap gap-2">
               {event.event_category && (
@@ -560,7 +572,7 @@ export default async function page({
 
         <div className="mt-6 md:mt-8">
           <EventsSlider
-            heading="Similar events"
+            heading={t("similarEvents")}
             events={similarEvents ?? []}
             eventCategory={event.event_category}
           />

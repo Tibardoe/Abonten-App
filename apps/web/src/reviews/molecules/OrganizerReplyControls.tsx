@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/useToast";
 import { patchReviewInData } from "@abonten/core/reviews/reviewCache";
 import type { ReviewListRow } from "@abonten/core/reviews/reviewList";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 // The event organizer's Reply / Edit reply / Delete reply under a review of
@@ -21,6 +22,8 @@ export default function OrganizerReplyControls({
   review: ReviewListRow;
   eventId: string;
 }) {
+  const t = useTranslations("reviews");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const [editing, setEditing] = useState(false);
@@ -45,7 +48,7 @@ export default function OrganizerReplyControls({
     onSuccess: (res, text, context) => {
       if (res.status === 200) {
         setDraft(null);
-        toast.success("Reply saved");
+        toast.success(t("replySaved"));
         queryClient.invalidateQueries({ queryKey: prefix });
         return;
       }
@@ -60,7 +63,7 @@ export default function OrganizerReplyControls({
       for (const [key, data] of context?.snapshot ?? []) {
         queryClient.setQueryData(key, data);
       }
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
       setDraft(text);
       setEditing(true);
     },
@@ -77,7 +80,7 @@ export default function OrganizerReplyControls({
     },
     onSuccess: (res, _v, context) => {
       if (res.status === 200) {
-        toast.success("Reply removed");
+        toast.success(t("replyRemoved"));
         queryClient.invalidateQueries({ queryKey: prefix });
         return;
       }
@@ -90,7 +93,7 @@ export default function OrganizerReplyControls({
       for (const [key, data] of context?.snapshot ?? []) {
         queryClient.setQueryData(key, data);
       }
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
     },
   });
 
@@ -116,7 +119,7 @@ export default function OrganizerReplyControls({
         onClick={() => setEditing(true)}
         className="mt-2 text-sm text-primary hover:underline"
       >
-        Reply
+        {t("reply")}
       </button>
     );
   }
@@ -128,25 +131,25 @@ export default function OrganizerReplyControls({
         onClick={() => setEditing(true)}
         className="text-primary hover:underline"
       >
-        Edit reply
+        {t("editReply")}
       </button>
       {confirmingDelete ? (
         <>
-          <span className="text-muted-foreground">Remove this reply?</span>
+          <span className="text-muted-foreground">{t("removeThisReply")}</span>
           <button
             type="button"
             disabled={remove.isPending}
             onClick={() => remove.mutate()}
             className="text-destructive font-medium hover:underline disabled:opacity-60"
           >
-            {remove.isPending ? "Removing…" : "Yes, remove"}
+            {remove.isPending ? t("removing") : t("yesRemove")}
           </button>
           <button
             type="button"
             onClick={() => setConfirmingDelete(false)}
             className="text-muted-foreground hover:underline"
           >
-            Keep
+            {t("keep")}
           </button>
         </>
       ) : (
@@ -155,7 +158,7 @@ export default function OrganizerReplyControls({
           onClick={() => setConfirmingDelete(true)}
           className="text-destructive hover:underline"
         >
-          Delete reply
+          {t("deleteReply")}
         </button>
       )}
     </div>
@@ -175,14 +178,16 @@ function ReplyForm({
   onCancel: () => void;
   onSubmit: (text: string) => void;
 }) {
+  const t = useTranslations("reviews");
+
   const [text, setText] = useState(initialText);
   return (
     <div className="mt-3 ml-4 md:ml-8 space-y-2">
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Write a reply to this review..."
-        aria-label="Your reply"
+        placeholder={t("writeAReplyToThisReview")}
+        aria-label={t("yourReply")}
         maxLength={500}
         className="w-full rounded-md border border-input bg-background p-2 text-sm"
         rows={2}
@@ -194,7 +199,11 @@ function ReplyForm({
           onClick={() => onSubmit(text.trim())}
           className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Post reply"}
+          {isSubmitting
+            ? t("saving")
+            : isEdit
+              ? t("saveChanges")
+              : t("postReply")}
         </button>
         <button
           type="button"
@@ -202,7 +211,7 @@ function ReplyForm({
           disabled={isSubmitting}
           className="border border-border px-3 py-1.5 rounded-md text-sm hover:bg-accent transition-colors"
         >
-          Cancel
+          {t("cancel")}
         </button>
       </div>
     </div>

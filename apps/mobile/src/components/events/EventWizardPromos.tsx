@@ -3,12 +3,15 @@ import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
 import { AppText, Button, Input } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
 // Step 6 of the event wizard — optional promo codes, applied at checkout.
 // Mirrors the web PromoCodeInputs (code / discount % / max uses / expiry).
 export function EventWizardPromos({ w }: { w: EventWizard }) {
+  const t = useTranslations("events");
+
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
   const [maxUses, setMaxUses] = useState("");
@@ -41,10 +44,7 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
 
   return (
     <View className="gap-4">
-      <AppText variant="muted">
-        Promo codes are optional. Add one or more discounts buyers can apply at
-        checkout, or skip this step.
-      </AppText>
+      <AppText variant="muted">{t("promoCodesAreOptionalAddOne")}</AppText>
 
       {w.promos.map((p, i) => (
         <View
@@ -56,8 +56,11 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
               {p.promoCode}
             </AppText>
             <AppText variant="meta">
-              {p.discount}% off · {p.maximumUse} uses · until{" "}
-              {prettyDate(p.expiryIso)}
+              {t("offUsesUntil", {
+                discount: p.discount,
+                maximumUse: p.maximumUse,
+                prettyDate: prettyDate(p.expiryIso),
+              })}
             </AppText>
           </View>
           <Pressable
@@ -67,20 +70,20 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
             }
           >
             <AppText variant="small" tone="error">
-              Remove
+              {t("remove")}
             </AppText>
           </Pressable>
         </View>
       ))}
 
       <View className="gap-3 rounded-xl border border-border border-dashed p-3">
-        <AppText variant="label">Add a promo code</AppText>
+        <AppText variant="label">{t("addAPromoCode")}</AppText>
         <Input
           value={code}
           onChangeText={setCode}
           autoCapitalize="characters"
           autoCorrect={false}
-          placeholder="e.g. EARLYBIRD"
+          placeholder={t("eGEarlybird")}
         />
         <View className="flex-row gap-3">
           <View className="flex-1">
@@ -88,7 +91,7 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
               value={discount}
               onChangeText={setDiscount}
               keyboardType="number-pad"
-              placeholder="Discount %"
+              placeholder={t("discount")}
             />
           </View>
           <View className="flex-1">
@@ -96,18 +99,18 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
               value={maxUses}
               onChangeText={setMaxUses}
               keyboardType="number-pad"
-              placeholder="Max uses"
+              placeholder={t("maxUses")}
             />
           </View>
         </View>
-        <AppText variant="caption">Expiry date</AppText>
+        <AppText variant="caption">{t("expiryDate")}</AppText>
         <DateRangeField
           start={expiry}
           end={null}
           onChange={(r) => setExpiry(r.start)}
         />
         <Button
-          title="Add promo code"
+          title={t("addPromoCode")}
           variant="outline"
           size="sm"
           disabled={!canAdd}

@@ -14,6 +14,7 @@ import { getOrganizerVerified } from "@/actions/verification/getOrganizerVerifie
 import SubscribeBell from "@/discovery/molecules/SubscribeBell";
 import FollowButton from "@/spotlight/molecules/FollowButton";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
+import { getTranslations } from "next-intl/server";
 type LayoutUserProp = {
   username: string;
   userDetails?: Awaited<ReturnType<typeof getUserProfileDetails>>;
@@ -27,13 +28,17 @@ export default async function ProfileDetails({
   username,
   userDetails: prefetchedUserDetails,
 }: LayoutUserProp) {
+  const t = await getTranslations("account");
+
   const userDetails =
     prefetchedUserDetails ?? (await getUserProfileDetails(username));
 
   if (userDetails.status !== 200 || userDetails.data.user_id === null) {
     return (
       <p className="text-destructive">
-        {userDetails.status === 200 ? "Profile not found" : userDetails.message}
+        {userDetails.status === 200
+          ? t("profileNotFound")
+          : userDetails.message}
       </p>
     );
   }
@@ -110,17 +115,21 @@ export default async function ProfileDetails({
             <ProfileFollowerCount userId={userId} />
 
             <div>
-              <dt className="sr-only">Events</dt>
+              <dt className="sr-only">{t("events")}</dt>
               <dd>
-                <span className="font-semibold tabular-nums text-foreground">
-                  {events.toLocaleString()}
-                </span>{" "}
-                {events === 1 ? "event" : "events"}
+                {t.rich("eventsCount", {
+                  count: events,
+                  strong: (chunks) => (
+                    <span className="font-semibold tabular-nums text-foreground">
+                      {chunks}
+                    </span>
+                  ),
+                })}
               </dd>
             </div>
 
             <div>
-              <dt className="sr-only">Rating</dt>
+              <dt className="sr-only">{t("rating")}</dt>
               <dd>
                 {rating.totalRatings > 0 ? (
                   <>
@@ -128,23 +137,26 @@ export default async function ProfileDetails({
                     <span className="font-semibold tabular-nums text-foreground">
                       {rating.averageRating.toFixed(1)}
                     </span>{" "}
-                    · {rating.totalRatings}{" "}
-                    {rating.totalRatings === 1 ? "review" : "reviews"}
+                    · {t("reviewsCount", { count: rating.totalRatings })}
                   </>
                 ) : (
-                  "No reviews yet"
+                  t("noReviewsYet")
                 )}
               </dd>
             </div>
 
             {isCurrentUser ? (
               <div>
-                <dt className="sr-only">Saved</dt>
+                <dt className="sr-only">{t("saved")}</dt>
                 <dd>
-                  <span className="font-semibold tabular-nums text-foreground">
-                    {Number(data.total_favorites ?? 0).toLocaleString()}
-                  </span>{" "}
-                  saved
+                  {t.rich("savedCount", {
+                    count: Number(data.total_favorites ?? 0),
+                    strong: (chunks) => (
+                      <span className="font-semibold tabular-nums text-foreground">
+                        {chunks}
+                      </span>
+                    ),
+                  })}
                 </dd>
               </div>
             ) : null}
@@ -157,11 +169,11 @@ export default async function ProfileDetails({
                   href="/settings/edit-profile"
                   className="inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  Edit profile
+                  {t("editProfile")}
                 </Link>
                 <Link
                   href="/settings"
-                  aria-label="Settings"
+                  aria-label={t("settings")}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border transition-colors hover:bg-accent"
                 >
                   <MdOutlineSettings className="text-xl text-muted-foreground" />

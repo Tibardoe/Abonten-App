@@ -3,6 +3,7 @@
 import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import NewEventOrDraftChooser from "../molecules/NewEventOrDraftChooser";
 import EventUploadModal from "../organisms/EventUploadModal";
@@ -13,6 +14,8 @@ import { Button } from "../ui/button";
 // event upload modal simultaneously (switching which was visible via CSS
 // only) rather than mounting one on demand.
 export default function PostButton() {
+  const t = useTranslations("common");
+
   const [showPostModal, setShowPostModal] = useState(false);
   const [showChooser, setShowChooser] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -50,7 +53,7 @@ export default function PostButton() {
   return (
     <>
       <Button className="px-10 font-medium text-sm mt-5" onClick={handleClick}>
-        Create Event
+        {t("createEvent")}
       </Button>
       {fileError && (
         <p className="text-destructive text-sm mt-1">{fileError}</p>

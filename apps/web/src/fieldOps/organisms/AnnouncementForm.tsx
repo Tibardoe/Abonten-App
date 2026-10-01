@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 /** One notification (+ push) to every active member of the lead's team. */
 export default function AnnouncementForm({
   campaignId,
 }: { campaignId: string }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const [pending, start] = useTransition();
   const [title, setTitle] = useState("");
@@ -22,11 +25,11 @@ export default function AnnouncementForm({
     start(async () => {
       const res = await sendFieldOpsAnnouncement({ campaignId, title, body });
       if (res.status === 200) {
-        toast.success(res.message ?? "Sent.");
+        toast.success(res.message ?? t("sent"));
         setTitle("");
         setBody("");
       } else {
-        toast.error(res.message ?? "Couldn't send that.");
+        toast.error(res.message ?? t("couldnTSendThat"));
       }
     });
   };
@@ -37,7 +40,7 @@ export default function AnnouncementForm({
       className="flex flex-col gap-3 rounded-xl border p-4"
     >
       <div className="flex flex-col gap-1">
-        <Label htmlFor="ann-title">Title</Label>
+        <Label htmlFor="ann-title">{t("title")}</Label>
         <Input
           id="ann-title"
           required
@@ -45,11 +48,11 @@ export default function AnnouncementForm({
           maxLength={120}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Meet at the lorry station at 8am"
+          placeholder={t("eGMeetAtTheLorry")}
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="ann-body">Message</Label>
+        <Label htmlFor="ann-body">{t("message")}</Label>
         <Textarea
           id="ann-body"
           required
@@ -62,7 +65,7 @@ export default function AnnouncementForm({
       </div>
       <div>
         <Button type="submit" disabled={pending}>
-          Send to the team
+          {t("sendToTheTeam")}
         </Button>
       </div>
     </form>

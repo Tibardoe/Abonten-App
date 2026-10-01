@@ -6,6 +6,7 @@
 // FlatList `inverted`, web `flex-col-reverse`) renders index 0 at the bottom.
 
 import type { MessageRow } from "@abonten/types/messagingType";
+import { coreString, intlLocale } from "./i18n/coreStrings";
 
 // The minimum an optimistic (not-yet-confirmed) message must expose for the
 // thread builder. Each platform's outbox type structurally satisfies this.
@@ -35,8 +36,8 @@ export type ChatEntry<P extends PendingMessageLike = PendingMessageLike> =
 // (no repeated avatar / name, tighter spacing).
 export const GROUPING_WINDOW_MS = 3 * 60_000;
 
-export function clockTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, {
+export function clockTime(iso: string, locale?: string | null): string {
+  return new Date(iso).toLocaleTimeString(intlLocale(locale), {
     hour: "numeric",
     minute: "2-digit",
   });
@@ -52,17 +53,17 @@ export function isSameCalendarDay(a: string, b: string): boolean {
 
 // "Today" / "Yesterday" / "Mon, 5 Sep" / "5 Sep 2024" — the label above the
 // first message of each calendar day.
-export function daySeparatorLabel(iso: string): string {
+export function daySeparatorLabel(iso: string, locale?: string | null): string {
   const then = new Date(iso);
   const today = startOfDay(new Date());
   const thatDay = startOfDay(then);
   const dayMs = 86_400_000;
 
-  if (thatDay === today) return "Today";
-  if (thatDay === today - dayMs) return "Yesterday";
+  if (thatDay === today) return coreString("today", locale);
+  if (thatDay === today - dayMs) return coreString("yesterday", locale);
 
   const sameYear = then.getFullYear() === new Date().getFullYear();
-  return then.toLocaleDateString(undefined, {
+  return then.toLocaleDateString(intlLocale(locale), {
     weekday: sameYear ? "short" : undefined,
     day: "numeric",
     month: "short",

@@ -24,6 +24,7 @@ import {
   Refresher,
   StatusPill,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Link } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
@@ -52,11 +53,11 @@ const LINE_LABEL: Record<OrganizerLedgerTransactionRow["line"], string> = {
 
 type LedgerFilter = "all" | "sales" | "fees" | "refunds" | "payouts";
 const FILTERS: { key: LedgerFilter; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "sales", label: "Sales" },
-  { key: "fees", label: "Fees" },
-  { key: "refunds", label: "Refunds" },
-  { key: "payouts", label: "Payouts" },
+  { key: "all", label: "ledgerFilters.all" },
+  { key: "sales", label: "ledgerFilters.sales" },
+  { key: "fees", label: "ledgerFilters.fees" },
+  { key: "refunds", label: "ledgerFilters.refunds" },
+  { key: "payouts", label: "ledgerFilters.payouts" },
 ];
 const FILTER_LINES: Record<
   LedgerFilter,
@@ -97,10 +98,14 @@ function BalanceLine({
 }
 
 function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <View className="gap-1">
-        <Overline>Available to withdraw ({row.currency})</Overline>
+        <Overline>
+          {t("availableToWithdraw", { currency: row.currency })}
+        </Overline>
         <AppText variant="hero" numberOfLines={1} adjustsFontSizeToFit>
           {amount(row.currency, row.available_balance)}
         </AppText>
@@ -108,12 +113,12 @@ function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
       <View className="gap-2 border-t border-border pt-3">
         <BalanceLine
           icon="time-outline"
-          label="Pending (settles after each event)"
+          label={t("pendingSettlesAfterEachEvent")}
           value={amount(row.currency, row.pending_balance)}
         />
         <BalanceLine
           icon="wallet-outline"
-          label="Total earned to date"
+          label={t("totalEarnedToDate")}
           value={amount(row.currency, row.total_earnings)}
         />
       </View>
@@ -122,6 +127,8 @@ function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
 }
 
 function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
+  const { locale } = useLocale();
+
   return (
     <View className="gap-2 rounded-2xl border border-border bg-card p-3">
       <View className="flex-row items-start justify-between gap-3">
@@ -145,7 +152,7 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
       </View>
       <View className="flex-row items-center justify-between">
         <AppText variant="caption">
-          {formatDateWithSuffix(row.created_at)}
+          {formatDateWithSuffix(row.created_at, undefined, locale)}
         </AppText>
         <StatusPill status={row.status} size="sm" />
       </View>
@@ -154,6 +161,8 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
 }
 
 export default function OrganizerFinanceScreen() {
+  const t = useTranslations("manage");
+
   const finance = useOrganizerFinance();
   const ledger = useOrganizerLedger();
   const promotionCredit = usePromotionCredit();
@@ -198,7 +207,7 @@ export default function OrganizerFinanceScreen() {
       ) : financeView.kind === "empty" ? (
         <View className="rounded-xl border border-border bg-card p-4">
           <AppText className="text-sm text-muted-foreground">
-            No earnings yet.
+            {t("noEarningsYet")}
           </AppText>
         </View>
       ) : (
@@ -219,20 +228,23 @@ export default function OrganizerFinanceScreen() {
       ) : null}
 
       <View className="gap-2">
-        <NavRow href="/(app)/organizer/withdraw" label="Withdraw" />
-        <NavRow href="/(app)/organizer/payouts" label="Withdrawal history" />
+        <NavRow href="/(app)/organizer/withdraw" label={t("withdraw")} />
+        <NavRow
+          href="/(app)/organizer/payouts"
+          label={t("withdrawalHistory")}
+        />
         <NavRow
           href="/(app)/organizer/payout-accounts"
-          label="Payout accounts"
+          label={t("payoutAccounts2")}
         />
       </View>
 
-      <Overline className="pt-2">Transactions</Overline>
+      <Overline className="pt-2">{t("transactions")}</Overline>
       <View className="flex-row flex-wrap gap-2">
         {FILTERS.map((f) => (
           <Chip
             key={f.key}
-            label={f.label}
+            label={t(f.label)}
             selected={filter === f.key}
             onPress={() => setFilter(f.key)}
           />
@@ -266,7 +278,7 @@ export default function OrganizerFinanceScreen() {
         ledgerView.kind === "empty" || ledgerView.kind === "content" ? (
           // Content with every row filtered out by the chip, or none at all.
           <AppText className="mt-6 text-center text-sm text-muted-foreground">
-            No transactions.
+            {t("noTransactions")}
           </AppText>
         ) : (
           <QueryUnavailable

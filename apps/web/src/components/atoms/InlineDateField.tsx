@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { MdOutlineDateRange } from "react-icons/md";
 import { cn } from "../lib/utils";
@@ -14,8 +15,8 @@ type InlineDateFieldProps = {
   formatDate?: (date: Date) => string;
 };
 
-const defaultFormat = (date: Date) =>
-  date.toLocaleDateString(undefined, {
+const defaultFormat = (date: Date, locale: string) =>
+  date.toLocaleDateString(locale, {
     weekday: "short",
     year: "numeric",
     month: "long",
@@ -34,8 +35,13 @@ export function InlineDateField({
   date,
   onSelect,
   disabledBefore,
-  formatDate = defaultFormat,
+  formatDate: formatDateProp,
 }: InlineDateFieldProps) {
+  const t = useTranslations("common");
+  const locale = useLocale();
+  const formatDate =
+    formatDateProp ?? ((value: Date) => defaultFormat(value, locale));
+
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Date | undefined>(date);
 
@@ -53,7 +59,7 @@ export function InlineDateField({
         className="flex w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       >
         <span className={cn(!date && "text-muted-foreground")}>
-          {date ? formatDate(date) : "Select date"}
+          {date ? formatDate(date) : t("selectDate")}
         </span>
         <MdOutlineDateRange className="shrink-0 text-lg text-muted-foreground" />
       </button>
@@ -69,7 +75,7 @@ export function InlineDateField({
               onClick={() => setOpen(false)}
               className="flex-1 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
             >
-              Cancel
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -80,7 +86,7 @@ export function InlineDateField({
               }}
               className="flex-1 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
             >
-              Done
+              {t("done")}
             </button>
           </div>
         }

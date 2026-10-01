@@ -7,6 +7,7 @@ import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus"
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import type { RefObject } from "react";
@@ -35,6 +36,8 @@ type PlaceMarker = { place: PlaceType; lat: number; lng: number };
 // map.fitBounds — a small, justified addition not used elsewhere in this
 // codebase, since MapPicker never has more than one point to frame.
 export default function PlacesMapView({ places }: { places: PlaceType[] }) {
+  const t = useTranslations("places");
+
   const [selectedPlace, setSelectedPlace] = useState<PlaceType | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -121,12 +124,12 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
     if (mapRef.current) fitToMarkers(mapRef.current);
   }, [fitToMarkers]);
 
-  if (!isLoaded) return <p>Loading map...</p>;
+  if (!isLoaded) return <p>{t("loadingMap")}</p>;
 
   if (markers.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[40vh] text-muted-foreground text-sm">
-        No places to show on the map.
+        {t("noPlacesToShowOnThe")}
       </div>
     );
   }
@@ -187,6 +190,8 @@ function PlacePreviewPanel({
   panelRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
 }) {
+  const t = useTranslations("places");
+
   const openStatus = derivePlaceCardOpenStatus(
     place.is_open,
     place.temporary_status,
@@ -203,7 +208,7 @@ function PlacePreviewPanel({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close preview"
+        aria-label={t("closePreview")}
         className="absolute top-2 right-2 z-10 grid place-items-center rounded-full bg-popover text-popover-foreground p-1.5 shadow"
       >
         <IoClose className="text-lg" />
@@ -220,7 +225,7 @@ function PlacePreviewPanel({
                 height: 128,
               },
             )}
-            alt={`Cover photo for ${place.name}`}
+            alt={t("coverPhotoFor", { name: place.name })}
             fill
             className="object-cover"
             sizes="320px"

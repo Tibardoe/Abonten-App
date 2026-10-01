@@ -1,6 +1,7 @@
 "use client";
 
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
@@ -22,6 +23,8 @@ export default function OtpInput({
   disabled = false,
   error,
 }: Props) {
+  const t = useTranslations("common");
+
   const [digits, setDigits] = useState<string[]>(
     Array.from({ length }, (_, i) => value[i] ?? ""),
   );
@@ -104,7 +107,7 @@ export default function OtpInput({
   return (
     <div className="flex flex-col gap-3 items-center">
       <fieldset
-        aria-label="Verification code"
+        aria-label={t("verificationCode")}
         className="flex gap-3 w-full justify-center border-0 p-0 m-0 min-w-0"
         onPaste={handlePaste}
       >
@@ -121,7 +124,7 @@ export default function OtpInput({
               inputMode="numeric"
               autoComplete="one-time-code"
               value={digit}
-              aria-label={`Digit ${index + 1} of ${length}`}
+              aria-label={t("digitOf", { value: index + 1, length: length })}
               aria-invalid={!!error}
               // No maxLength: iOS's SMS-autofill suggestion fills the
               // *entire* code into whichever box is focused as one input

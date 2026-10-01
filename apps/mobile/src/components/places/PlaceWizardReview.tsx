@@ -1,5 +1,6 @@
 import { DAY_LABELS, type PlaceWizard } from "@/features/places/usePlaceWizard";
 import { AppText } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
@@ -7,6 +8,8 @@ import { View } from "react-native";
 // web PlaceCreateStepReview. Publish is the header's "Publish" button
 // (app/(app)/place/new.tsx).
 export function PlaceWizardReview({ w }: { w: PlaceWizard }) {
+  const t = useTranslations("places");
+
   const categoryName =
     w.categories.find((c) => c.id === w.categoryId)?.name ?? "—";
   const openDays = w.openingHours
@@ -24,19 +27,21 @@ export function PlaceWizardReview({ w }: { w: PlaceWizard }) {
         />
       ) : null}
       <View className="gap-2 rounded-xl border border-border bg-card p-4">
-        <ReviewRow label="Name" value={w.name} />
-        <ReviewRow label="Category" value={categoryName} />
-        <ReviewRow label="Location" value={w.address} />
-        {w.website ? <ReviewRow label="Website" value={w.website} /> : null}
-        {w.phone ? <ReviewRow label="Phone" value={w.phone} /> : null}
+        <ReviewRow label={t("name")} value={w.name} />
+        <ReviewRow label={t("category")} value={categoryName} />
+        <ReviewRow label={t("location")} value={w.address} />
+        {w.website ? (
+          <ReviewRow label={t("website2")} value={w.website} />
+        ) : null}
+        {w.phone ? <ReviewRow label={t("phone2")} value={w.phone} /> : null}
         {w.whatsapp ? <ReviewRow label="WhatsApp" value={w.whatsapp} /> : null}
-        <ReviewRow label="Open days" value={openDays} />
+        <ReviewRow label={t("openDays")} value={openDays} />
       </View>
       <AppText variant="muted">{w.description}</AppText>
 
       {w.isSubmitError ? (
         <AppText variant="small" tone="error">
-          We couldn't publish your place. Please try again.
+          {t("weCouldnTPublishYourPlace2")}
         </AppText>
       ) : null}
     </View>

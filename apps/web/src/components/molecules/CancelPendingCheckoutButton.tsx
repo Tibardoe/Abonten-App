@@ -6,6 +6,7 @@ import { cancelContentCampaignCheckout } from "@/actions/content/cancelContentCa
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
@@ -27,6 +28,8 @@ export default function CancelPendingCheckoutButton({
   checkoutId,
   kind,
 }: CancelPendingCheckoutButtonProps) {
+  const t = useTranslations("common");
+
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
   const toast = useToast();
@@ -42,18 +45,16 @@ export default function CancelPendingCheckoutButton({
     onSuccess: (response) => {
       setShowConfirm(false);
       if (response.status === 200) {
-        toast.success("Order cancelled.");
+        toast.success(t("orderCancelled"));
         router.refresh();
       } else {
-        toast.error(
-          response.message ?? "Couldn't cancel this order. Please try again.",
-        );
+        toast.error(response.message ?? t("couldnTCancelThisOrderPlease"));
       }
     },
 
     onError: () => {
       setShowConfirm(false);
-      toast.error("Couldn't cancel this order. Please try again.");
+      toast.error(t("couldnTCancelThisOrderPlease"));
     },
   });
 
@@ -65,16 +66,16 @@ export default function CancelPendingCheckoutButton({
         onClick={() => setShowConfirm(true)}
       >
         <MdDeleteOutline className="text-lg" />
-        Cancel this order
+        {t("cancelThisOrder")}
       </button>
 
       {showConfirm && (
         <ConfirmDeleteModal
-          title="Cancel this order?"
-          message="Are you sure you want to cancel this pending order? This can't be undone."
-          confirmLabel="Cancel Order"
-          cancelLabel="Keep Order"
-          loadingLabel="Cancelling…"
+          title={t("cancelThisOrder2")}
+          message={t("areYouSureYouWantTo3")}
+          confirmLabel={t("cancelOrder")}
+          cancelLabel={t("keepOrder")}
+          loadingLabel={t("cancelling")}
           isLoading={isPending}
           onConfirm={() => mutate()}
           onCancel={() => setShowConfirm(false)}

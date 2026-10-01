@@ -63,7 +63,7 @@ export default function SecurityInputFields({
       // No need to reset isLinkingGoogle -- linkIdentity navigates away.
     } catch (error) {
       logger.error("Link Google account error:", error);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
       setIsLinkingGoogle(false);
     }
   };
@@ -126,11 +126,7 @@ export default function SecurityInputFields({
   }, [initialCallingCode]);
 
   const handleDeleteUser = async () => {
-    if (
-      !window.confirm(
-        "Delete your account? This cannot be undone. Tickets you bought and payment records are kept for accounting; your profile is removed.",
-      )
-    ) {
+    if (!window.confirm(t("deleteYourAccountThisCannotBe"))) {
       return;
     }
     const response = await deleteUser();
@@ -150,11 +146,11 @@ export default function SecurityInputFields({
     const email = emailInput.trim().toLowerCase();
 
     if (!isLikelyEmail(email)) {
-      setEmailErrorMessage("Enter a valid email address.");
+      setEmailErrorMessage(t("enterAValidEmailAddress"));
       return false;
     }
     if (email === currentEmail) {
-      setEmailErrorMessage("That's already your email address.");
+      setEmailErrorMessage(t("thatSAlreadyYourEmailAddress"));
       return false;
     }
 
@@ -173,9 +169,7 @@ export default function SecurityInputFields({
           error.status === 422 ||
           /already.*(registered|exists|in use)/i.test(error.message);
         setEmailErrorMessage(
-          conflict
-            ? "That email can't be used."
-            : "Couldn't send a code. Please try again.",
+          conflict ? t("thatEmailCanTBeUsed") : t("couldnTSendACodePlease"),
         );
         return false;
       }
@@ -185,7 +179,7 @@ export default function SecurityInputFields({
       return true;
     } catch (error) {
       logger.error("Email change send error:", error);
-      setEmailErrorMessage("Something went wrong. Please try again.");
+      setEmailErrorMessage(t("somethingWentWrongPleaseTryAgain"));
       return false;
     } finally {
       setIsSendingEmailCode(false);
@@ -207,7 +201,7 @@ export default function SecurityInputFields({
     setChangeFromEmail(null);
     setEmailStep("idle");
     setEmailOtp("");
-    toast.success("Email updated.");
+    toast.success(t("emailUpdated"));
     refreshAccountSetup();
   };
 
@@ -244,7 +238,7 @@ export default function SecurityInputFields({
       }
     } catch (error) {
       logger.error("Email change verify error:", error);
-      setEmailErrorMessage("Verification failed. Please try again.");
+      setEmailErrorMessage(t("verificationFailedPleaseTryAgain"));
     } finally {
       setIsVerifyingEmail(false);
     }
@@ -272,7 +266,7 @@ export default function SecurityInputFields({
       finishEmailChange(!!data.user?.email_confirmed_at);
     } catch (error) {
       logger.error("Email change (current) verify error:", error);
-      setEmailErrorMessage("Verification failed. Please try again.");
+      setEmailErrorMessage(t("verificationFailedPleaseTryAgain"));
     } finally {
       setIsVerifyingEmail(false);
     }
@@ -299,7 +293,7 @@ export default function SecurityInputFields({
       return true;
     } catch (error) {
       logger.error("Phone update send error:", error);
-      setPhoneErrorMessage("Something went wrong. Please try again.");
+      setPhoneErrorMessage(t("somethingWentWrongPleaseTryAgain"));
       return false;
     } finally {
       setIsSendingOtp(false);
@@ -335,7 +329,7 @@ export default function SecurityInputFields({
       setStep(1);
     } catch (error) {
       logger.error("Phone update verify error:", error);
-      setOtpErrorMessage("Verification failed. Please try again.");
+      setOtpErrorMessage(t("verificationFailedPleaseTryAgain"));
     } finally {
       setIsVerifying(false);
     }
@@ -346,10 +340,9 @@ export default function SecurityInputFields({
       {step === 1 && (
         <div className="space-y-3">
           <div>
-            <h2 className="font-semibold">Account & security</h2>
+            <h2 className="font-semibold">{t("accountSecurity")}</h2>
             <p className="text-sm text-muted-foreground">
-              Used to sign in and verify it's really you — not shown on your
-              public profile.
+              {t("usedToSignInAndVerify")}
             </p>
           </div>
 
@@ -376,10 +369,14 @@ export default function SecurityInputFields({
 
             {!hasGoogleIdentity && (
               <div className="space-y-2">
-                <span className="font-medium md:text-lg">Google account</span>
+                <span className="font-medium md:text-lg">
+                  {t("googleAccount")}
+                </span>
 
                 <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
-                  <span className="text-muted-foreground">Not linked</span>
+                  <span className="text-muted-foreground">
+                    {t("notLinked")}
+                  </span>
 
                   <button
                     type="button"
@@ -387,7 +384,7 @@ export default function SecurityInputFields({
                     onClick={handleLinkGoogle}
                     disabled={isLinkingGoogle}
                   >
-                    {isLinkingGoogle ? "Redirecting..." : "Link"}
+                    {isLinkingGoogle ? t("redirecting") : t("link")}
                   </button>
                 </div>
               </div>
@@ -396,7 +393,7 @@ export default function SecurityInputFields({
             {emailStep === "idle" ? (
               <form onSubmit={handleEmailSubmit} className="space-y-2">
                 <Input
-                  title="Email"
+                  title={t("email")}
                   inputPlaceholder="you@example.com"
                   type="email"
                   inputMode="email"
@@ -412,7 +409,7 @@ export default function SecurityInputFields({
 
                 {currentEmail && !currentEmailVerified && (
                   <p className="text-sm text-muted-foreground">
-                    This email hasn't been verified yet.
+                    {t("thisEmailHasnTBeenVerified")}
                   </p>
                 )}
 
@@ -433,10 +430,10 @@ export default function SecurityInputFields({
                   >
                     <MaskIcon
                       src="/assets/images/delete.svg"
-                      alt="Delete icon"
+                      alt={t("deleteIcon")}
                       className="w-6 h-6 md:w-8 md:h-8 bg-destructive"
                     />
-                    Delete account
+                    {t("deleteAccount")}
                   </button>
 
                   <Button
@@ -508,8 +505,7 @@ export default function SecurityInputFields({
                 className="space-y-3"
               >
                 <p className="text-sm text-muted-foreground">
-                  One more step — enter the code we also sent to your current
-                  address
+                  {t("oneMoreStepEnterTheCode")}
                   {changeFromEmail ? `, ${maskEmail(changeFromEmail)}` : ""}.
                 </p>
 

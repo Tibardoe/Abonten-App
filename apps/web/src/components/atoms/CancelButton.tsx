@@ -7,6 +7,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/useToast";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
 
@@ -20,6 +21,7 @@ type CancelProp = {
 };
 
 function buildConfirmMessage(
+  t: (key: string, values?: Record<string, number>) => string,
   impact:
     | {
         paidTicketCount: number;
@@ -30,18 +32,18 @@ function buildConfirmMessage(
   isLoadingImpact: boolean,
 ): string {
   if (isLoadingImpact || !impact) {
-    return "Checking this event for attendees…";
+    return t("cancelConfirm.checking");
   }
 
   if (impact.paidTicketCount > 0) {
-    return `${impact.attendeeCount} attendee${impact.attendeeCount === 1 ? "" : "s"} who already purchased tickets will be refunded to the payment method used for their ticket. This action cannot be undone.`;
+    return t("cancelConfirm.paid", { count: impact.attendeeCount });
   }
 
   if (impact.freeTicketCount > 0) {
-    return `${impact.attendeeCount} registered attendee${impact.attendeeCount === 1 ? "" : "s"} will be notified that the event has been cancelled. This action cannot be undone.`;
+    return t("cancelConfirm.free", { count: impact.attendeeCount });
   }
 
-  return "This event will no longer be available to attendees. This action cannot be undone.";
+  return t("cancelConfirm.none");
 }
 
 export default function CancelButton({
@@ -49,6 +51,8 @@ export default function CancelButton({
   asMenuItem,
   onRequestClose,
 }: CancelProp) {
+  const t = useTranslations("common");
+
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,13 +81,11 @@ export default function CancelButton({
         invalidateEventListQueries(queryClient);
         toast.success(response.message);
       } else {
-        setError(
-          response.message ?? "Failed updating event status. Please try again.",
-        );
+        setError(response.message ?? t("failedUpdatingEventStatusPleaseTry"));
       }
     },
     onError: () => {
-      setError("Something went wrong. Please try again.");
+      setError(t("somethingWentWrongPleaseTryAgain2"));
     },
   });
 
@@ -106,7 +108,7 @@ export default function CancelButton({
           className="gap-2 text-destructive focus:text-destructive"
         >
           <MdOutlineCancel className="text-xl" />
-          Cancel Event
+          {t("cancelEvent")}
         </DropdownMenuItem>
       ) : (
         <button
@@ -115,17 +117,17 @@ export default function CancelButton({
           className="flex items-center gap-1 p-1 text-destructive"
         >
           <MdOutlineCancel className="text-xl " />
-          Cancel Event
+          {t("cancelEvent")}
         </button>
       )}
 
       {showCancelConfirm && (
         <ConfirmDeleteModal
-          title="Cancel this event?"
-          message={error ?? buildConfirmMessage(impact, isLoadingImpact)}
-          confirmLabel="Cancel Event"
-          cancelLabel="Go Back"
-          loadingLabel="Cancelling…"
+          title={t("cancelThisEvent")}
+          message={error ?? buildConfirmMessage(t, impact, isLoadingImpact)}
+          confirmLabel={t("cancelEvent")}
+          cancelLabel={t("goBack")}
+          loadingLabel={t("cancelling")}
           isLoading={isPending}
           onConfirm={() => mutate()}
           onCancel={closeConfirm}

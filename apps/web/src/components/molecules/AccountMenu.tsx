@@ -105,7 +105,7 @@ export default function AccountMenu({
           <DropdownMenuItem asChild className="gap-2">
             <Link href="/rewards">
               <IoGiftOutline className="text-lg" />
-              Rewards
+              {t("rewards")}
             </Link>
           </DropdownMenuItem>
         )}
@@ -114,7 +114,7 @@ export default function AccountMenu({
           <DropdownMenuItem asChild className="gap-2">
             <Link href="/field">
               <IoMapOutline className="text-lg" />
-              Field work
+              {t("fieldWork")}
             </Link>
           </DropdownMenuItem>
         )}

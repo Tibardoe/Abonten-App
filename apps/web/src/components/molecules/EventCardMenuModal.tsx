@@ -1,5 +1,6 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getEventShareUrl } from "@abonten/core/shareUrl";
+import { useTranslations } from "next-intl";
 import AddToFavoriteButton from "../atoms/AddToFavoriteButton";
 import CancelButton from "../atoms/CancelButton";
 import DeleteEventButton from "../atoms/DeleteEventButton";
@@ -38,6 +39,8 @@ export default function EventCardMenuModal({
   eventStatus,
   onRequestClose,
 }: EventProp) {
+  const t = useTranslations("common");
+
   const shareUrl = getEventShareUrl(eventCode, address);
 
   // Shared with Header/SideBar/etc. — one cached fetch instead of each
@@ -73,7 +76,7 @@ export default function EventCardMenuModal({
 
           {isCancelled ? (
             <p className="px-2 py-1.5 text-sm text-muted-foreground">
-              This event has been cancelled
+              {t("thisEventHasBeenCancelled")}
             </p>
           ) : (
             <CancelButton

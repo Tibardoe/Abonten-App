@@ -4,6 +4,7 @@ import {
   type IoniconName,
   runAfterModalDismissal,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect } from "react";
 import {
@@ -58,6 +59,8 @@ export function AnchoredMenu({
   items: AnchoredMenuItem[];
   onClose: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const screen = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -119,7 +122,7 @@ export function AnchoredMenu({
         </Animated.View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Dismiss menu"
+          accessibilityLabel={t("dismissMenu")}
           onPress={onClose}
           style={StyleSheet.absoluteFill}
         />

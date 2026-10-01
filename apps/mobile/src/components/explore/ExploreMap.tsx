@@ -15,6 +15,7 @@ import {
 } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useMemo } from "react";
 
 // Adapter: the current Explore tab's filtered rows -> SocialMap markers.
@@ -40,7 +41,17 @@ function pointOf(row: { location?: string | null }): {
   }
 }
 
-function eventItem(e: UserPostType, unit: DistanceUnit): SocialMapItem | null {
+type Translate = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
+
+function eventItem(
+  e: UserPostType,
+  unit: DistanceUnit,
+  locale: string,
+  t: Translate,
+): SocialMapItem | null {
   const point = pointOf(e as unknown as { location?: string });
   if (!point) return null;
   const dt = getEventCardDateTime(
@@ -48,21 +59,22 @@ function eventItem(e: UserPostType, unit: DistanceUnit): SocialMapItem | null {
     e.ends_at,
     e.occurrences,
     e.timezone,
+    locale,
   );
-  const venue = e.address?.full_address || "Location not specified";
+  const venue = e.address?.full_address || t("locationNotSpecified");
   const price = e.min_price ?? e.ticket_price;
   const currency = e.currency ?? e.ticket_currency ?? null;
   const distanceKm = (e as { distance_km?: number }).distance_km;
   const lines: SocialMapLine[] = [
     {
       icon: "calendar-outline",
-      text: [dt.date, dt.time].filter(Boolean).join(" · ") || "Date TBC",
+      text: [dt.date, dt.time].filter(Boolean).join(" · ") || t("dateTbc"),
     },
     {
       icon: "location-outline",
       text:
         typeof distanceKm === "number"
-          ? `${formatDistance(distanceKm * 1000, unit)} · ${venue}`
+          ? `${formatDistance(distanceKm * 1000, unit, locale)} · ${venue}`
           : venue,
     },
   ];
@@ -131,21 +143,24 @@ export function ExploreMap({
   places: PlaceType[];
   center: { lat: number; lng: number } | null;
 }) {
+  const t = useTranslations("explore");
+  const { locale } = useLocale();
+
   const { context } = useMarket();
   const unit: DistanceUnit = context?.distanceUnit ?? "km";
   const items = useMemo<SocialMapItem[]>(() => {
     const src =
       kind === "events"
-        ? events.map((e) => eventItem(e, unit))
+        ? events.map((e) => eventItem(e, unit, locale, t))
         : places.map(placeItem);
     return src.filter((x): x is SocialMapItem => x != null);
-  }, [kind, events, places, unit]);
+  }, [kind, events, places, unit, locale, t]);
 
   return (
     <SocialMap
       items={items}
       center={center}
-      emptyLabel={`No ${kind} to map here`}
+      emptyLabel={t("noToMapHere", { kind: kind })}
     />
   );
 }

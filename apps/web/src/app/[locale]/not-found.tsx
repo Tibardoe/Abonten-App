@@ -3,11 +3,15 @@ import DesktopFooter from "@/components/organisms/DesktopFooter";
 import Header from "@/components/organisms/Header";
 import MobileNavBar from "@/components/organisms/MobileNavBar";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Page not found",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("common");
+  return {
+    title: t("pageNotFound"),
+    robots: { index: false, follow: false },
+  };
+}
 
 // Unmatched URLs for the whole site. Next renders this inside the root
 // layout only, so the main layout's chrome is composed here by hand: a

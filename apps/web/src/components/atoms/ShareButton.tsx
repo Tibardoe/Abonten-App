@@ -1,5 +1,6 @@
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useEventShare } from "@/hooks/useEventShare";
+import { useTranslations } from "next-intl";
 import { IoShareSocialOutline } from "react-icons/io5";
 
 type ShareBtnProps = {
@@ -17,13 +18,15 @@ export default function ShareButton({
   eventId,
   asMenuItem,
 }: ShareBtnProps) {
+  const t = useTranslations("common");
+
   const onClick = useEventShare({ eventId, title, url });
 
   if (asMenuItem) {
     return (
       <DropdownMenuItem onSelect={onClick} className="gap-2">
         <IoShareSocialOutline className="text-xl" />
-        Share Event
+        {t("shareEvent")}
       </DropdownMenuItem>
     );
   }
@@ -35,7 +38,7 @@ export default function ShareButton({
       className="flex items-center gap-1 p-1"
     >
       <IoShareSocialOutline className="text-xl" />
-      Share Event
+      {t("shareEvent")}
     </button>
   );
 }

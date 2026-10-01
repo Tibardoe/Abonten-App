@@ -1,5 +1,6 @@
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { formatDistance } from "date-fns";
+import { coreString, intlLocale, isEnglishLike } from "./i18n/coreStrings";
 import {
   isValidTimeZone,
   viewerTimeZone,
@@ -12,6 +13,11 @@ import {
 // person in London reads a Lagos event at Lagos time with no surprise;
 // leave it out for the viewer's own moments (receipts, activity). An
 // invalid zone falls back to the viewer's, never throws.
+//
+// Every formatter also takes the reader's locale ("fr", "en", ...) as its
+// last argument. English keeps the product's hand-set spelling ("Tue, 29th
+// Sep 2026, 7:00 PM"); every other language gets its own day and month
+// names from Intl and its own clock convention ("mar. 29 sept. 2026, 19:00").
 
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAYS_LONG = [
@@ -51,6 +57,59 @@ const MONTHS_LONG = [
   "November",
   "December",
 ];
+
+// Day and month names in a language, from Intl (English keeps the arrays
+// above so nothing about the product's English changes).
+const nameCache = new Map<string, string[]>();
+
+function localizedNames(
+  locale: string,
+  kind: "weekday" | "month",
+  style: "short" | "long",
+): string[] {
+  const key = `${locale}|${kind}|${style}`;
+  const cached = nameCache.get(key);
+  if (cached) return cached;
+  let names: string[];
+  try {
+    const f = new Intl.DateTimeFormat(locale, {
+      [kind]: style,
+      timeZone: "UTC",
+    });
+    names =
+      kind === "weekday"
+        ? // 2024-01-07 is a Sunday.
+          Array.from({ length: 7 }, (_, i) =>
+            f.format(new Date(Date.UTC(2024, 0, 7 + i))),
+          )
+        : Array.from({ length: 12 }, (_, i) =>
+            f.format(new Date(Date.UTC(2024, i, 1))),
+          );
+  } catch {
+    names =
+      kind === "weekday"
+        ? style === "short"
+          ? DAYS_SHORT
+          : DAYS_LONG
+        : style === "short"
+          ? MONTHS_SHORT
+          : MONTHS_LONG;
+  }
+  nameCache.set(key, names);
+  return names;
+}
+
+function dayName(weekday: number, style: "short" | "long", locale?: string) {
+  if (isEnglishLike(locale))
+    return (style === "short" ? DAYS_SHORT : DAYS_LONG)[weekday];
+  return localizedNames(intlLocale(locale), "weekday", style)[weekday];
+}
+
+function monthName(month: number, style: "short" | "long", locale?: string) {
+  if (isEnglishLike(locale))
+    return (style === "short" ? MONTHS_SHORT : MONTHS_LONG)[month];
+  return localizedNames(intlLocale(locale), "month", style)[month];
+}
 
 type Parts = {
   year: number;
@@ -154,7 +213,11 @@ export function zoneHint(
   return ` ${zoneAbbreviation(d, timeZone)}`;
 }
 
-function ordinal(day: number): string {
+// "1st", "22nd" is an English habit; other languages write the bare number
+// (French has "1er" for the first only, which readers do not expect in a
+// date line, so it is left bare too).
+function ordinal(day: number, locale?: string): string {
+  if (!isEnglishLike(locale)) return "";
   if (day % 10 === 1 && day !== 11) return "st";
   if (day % 10 === 2 && day !== 12) return "nd";
   if (day % 10 === 3 && day !== 13) return "rd";
@@ -166,12 +229,32 @@ function twelveHour(hours: number, minutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${hours >= 12 ? "PM" : "AM"}`;
 }
 
+const clockCache = new Map<string, Intl.DateTimeFormat>();
+
+// "7:00 PM" in English; the language's own clock elsewhere ("19:00").
+function clockLabel(hours: number, minutes: number, locale?: string): string {
+  if (isEnglishLike(locale)) return twelveHour(hours, minutes);
+  const tag = intlLocale(locale);
+  let f = clockCache.get(tag);
+  if (!f) {
+    f = new Intl.DateTimeFormat(tag, {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+    });
+    clockCache.set(tag, f);
+  }
+  return f.format(new Date(Date.UTC(2024, 0, 1, hours, minutes)));
+}
+
 export function formatDateWithSuffix(
   date: string | Date,
   timeZone?: string | null,
+  locale?: string | null,
 ): string {
   const p = wallClockParts(date, timeZone);
-  return `${p.day}${ordinal(p.day)} ${MONTHS_SHORT[p.month]} ${p.year}`;
+  const l = locale ?? undefined;
+  return `${p.day}${ordinal(p.day, l)} ${monthName(p.month, "short", l)} ${p.year}`;
 }
 
 /** A night out that runs past midnight still belongs to the evening it
@@ -195,13 +278,15 @@ export function formatFullDateTimeRange(
   from?: Date | null | string,
   to?: Date | null | string,
   timeZone?: string | null,
+  locale?: string | null,
 ): { date: string; time: string } {
+  const na = coreString("notAvailable", locale);
   const fromObj = from
-    ? formatSingleDateTime(from, timeZone)
-    : { date: "N/A", time: "N/A" };
+    ? formatSingleDateTime(from, timeZone, locale)
+    : { date: na, time: na };
   const toObj = to
-    ? formatSingleDateTime(to, timeZone)
-    : { date: "N/A", time: "N/A" };
+    ? formatSingleDateTime(to, timeZone, locale)
+    : { date: na, time: na };
 
   const isSameDate =
     fromObj.date === toObj.date || endsOvernight(from, to, timeZone);
@@ -216,14 +301,16 @@ export function formatFullDateTimeRange(
 export function formatSingleDateTime(
   date: Date | string,
   timeZone?: string | null,
+  locale?: string | null,
 ): {
   date: string;
   time: string;
 } {
   const p = wallClockParts(date, timeZone);
+  const l = locale ?? undefined;
   return {
-    date: `${DAYS_SHORT[p.weekday]}, ${p.day}${ordinal(p.day)} ${MONTHS_SHORT[p.month]} ${p.year}`,
-    time: twelveHour(p.hours, p.minutes),
+    date: `${dayName(p.weekday, "short", l)}, ${p.day}${ordinal(p.day, l)} ${monthName(p.month, "short", l)} ${p.year}`,
+    time: clockLabel(p.hours, p.minutes, l),
   };
 }
 
@@ -234,32 +321,64 @@ export function formatSingleDateTime(
  * device's clock is behind. Without the clamp that read "in less than a
  * minute" on a message that had just arrived.
  */
-export function getRelativeTime(date: string | Date, now: Date = new Date()) {
+export function getRelativeTime(
+  date: string | Date,
+  now: Date = new Date(),
+  locale?: string | null,
+) {
   const at = new Date(date);
   const past = at.getTime() > now.getTime() ? now : at;
+  if (!isEnglishLike(locale) && typeof Intl.RelativeTimeFormat === "function") {
+    try {
+      return relativeTimeIntl(past, now, intlLocale(locale));
+    } catch {
+      // fall through to the English wording
+    }
+  }
   return formatDistance(past, now, { addSuffix: true }).replace("about ", "");
+}
+
+// "il y a 5 minutes": the same thresholds date-fns uses, through Intl.
+function relativeTimeIntl(past: Date, now: Date, locale: string): string {
+  const seconds = Math.max(
+    0,
+    Math.round((now.getTime() - past.getTime()) / 1000),
+  );
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "always" });
+  const minutes = Math.max(1, Math.round(seconds / 60));
+  if (minutes < 45) return rtf.format(-minutes, "minute");
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return rtf.format(-hours, "hour");
+  const days = Math.round(hours / 24);
+  if (days < 30) return rtf.format(-days, "day");
+  const months = Math.round(days / 30);
+  if (months < 12) return rtf.format(-months, "month");
+  return rtf.format(-Math.round(days / 365), "year");
 }
 
 export function formatSpecificDateWithTimeRange(
   item: { date: Date; from: Date; to: Date },
   timeZone?: string | null,
+  locale?: string | null,
 ): string {
-  const dateStr = formatSingleDateTime(item.date, timeZone).date;
-  const fromTime = formatSingleDateTime(item.from, timeZone).time;
-  const toTime = formatSingleDateTime(item.to, timeZone).time;
+  const dateStr = formatSingleDateTime(item.date, timeZone, locale).date;
+  const fromTime = formatSingleDateTime(item.from, timeZone, locale).time;
+  const toTime = formatSingleDateTime(item.to, timeZone, locale).time;
   return `${dateStr} ${fromTime} - ${toTime}`;
 }
 
 export function getDateParts(
   dateInput: string | Date,
   timeZone?: string | null,
+  locale?: string | null,
 ) {
   const p = wallClockParts(dateInput, timeZone);
+  const l = locale ?? undefined;
   return {
-    day: DAYS_LONG[p.weekday],
-    month: MONTHS_LONG[p.month],
+    day: dayName(p.weekday, "long", l),
+    month: monthName(p.month, "long", l),
     date: p.day,
-    time: twelveHour(p.hours, p.minutes),
+    time: clockLabel(p.hours, p.minutes, l),
   };
 }
 
@@ -343,18 +462,24 @@ export function getEventCardDateTime(
   fallbackOccurrences?: Occurrence[] | null,
   /** The event's zone (event.timezone): the card reads the venue's clock. */
   timeZone?: string | null,
+  locale?: string | null,
 ): { date: string; time: string; extraDates: number } {
   const range = resolveEventDateRange(startsAt, endsAt, fallbackOccurrences);
-  if (!range) return { date: "Date TBC", time: "", extraDates: 0 };
+  if (!range)
+    return { date: coreString("dateTbc", locale), time: "", extraDates: 0 };
 
   const s = range.starts;
   const p = wallClockParts(s, timeZone);
+  const l = locale ?? undefined;
   const nowYear = wallClockParts(new Date(), timeZone).year;
-  const date = `${DAYS_SHORT[p.weekday]}, ${p.day} ${MONTHS_SHORT[p.month]}${
+  const date = `${dayName(p.weekday, "short", l)}, ${p.day} ${monthName(p.month, "short", l)}${
     p.year === nowYear ? "" : ` ${p.year}`
   }`;
   const h12 = p.hours % 12 || 12;
-  const time = `${h12}:${String(p.minutes).padStart(2, "0")} ${p.hours >= 12 ? "PM" : "AM"}${zoneHint(s, timeZone)}`;
+  const clock = isEnglishLike(l)
+    ? `${h12}:${String(p.minutes).padStart(2, "0")} ${p.hours >= 12 ? "PM" : "AM"}`
+    : clockLabel(p.hours, p.minutes, l);
+  const time = `${clock}${zoneHint(s, timeZone)}`;
 
   // How many *other* dates this event has beyond the one shown.
   const occCount = fallbackOccurrences?.length ?? 0;
@@ -378,17 +503,18 @@ export function getFormattedEventDate(
   fallbackOccurrences?: Occurrence[] | null,
   /** The event's zone (event.timezone). */
   timeZone?: string | null,
+  locale?: string | null,
 ): { date: string; time: string } {
   const range = resolveEventDateRange(startsAt, endsAt, fallbackOccurrences);
 
   if (!range) {
     return {
-      date: "Date not available",
-      time: "Time not available",
+      date: coreString("dateNotAvailable", locale),
+      time: coreString("timeNotAvailable", locale),
     };
   }
 
-  return formatFullDateTimeRange(range.starts, range.ends, timeZone);
+  return formatFullDateTimeRange(range.starts, range.ends, timeZone, locale);
 }
 
 /**

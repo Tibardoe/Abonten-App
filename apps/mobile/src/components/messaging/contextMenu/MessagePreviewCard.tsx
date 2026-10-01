@@ -6,6 +6,7 @@ import {
 import { clockTime } from "@/features/messaging/messagingTime";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import { View } from "react-native";
 import { ChatImage } from "../ChatImage";
@@ -25,6 +26,8 @@ import { ReplyQuote } from "../ReplyQuote";
 // the clone's height matches the measured anchor exactly (no menu overlap).
 
 function AudioPreview({ isMine }: { isMine: boolean }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   return (
     <View
@@ -52,7 +55,7 @@ function AudioPreview({ isMine }: { isMine: boolean }) {
         variant="caption"
         className={isMine ? "text-primary-foreground" : undefined}
       >
-        Voice message
+        {t("voiceMessage2")}
       </AppText>
     </View>
   );
@@ -70,6 +73,8 @@ export function MessagePreviewCard({
   /** Mirrors the bubble's read state so the clone shows the same tick. */
   seen?: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const deleted = !!message.deleted_at;
   const footerColor =
@@ -156,7 +161,7 @@ export function MessagePreviewCard({
         <View className="mt-1 flex-row items-center justify-end gap-1">
           {message.edited_at && !deleted ? (
             <AppText variant="caption" style={{ color: footerColor }}>
-              edited ·
+              {t("edited2")}
             </AppText>
           ) : null}
           <AppText

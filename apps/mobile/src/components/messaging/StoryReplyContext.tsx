@@ -4,6 +4,7 @@ import {
   storyReplyStoryLive,
 } from "@abonten/core/content/storyReply";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo } from "react";
@@ -20,6 +21,8 @@ export const StoryReplyContext = memo(function StoryReplyContext({
   systemData: Record<string, unknown> | null | undefined;
   isMine: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const router = useRouter();
   const ctx = readStoryReplyContext(systemData);
   if (!ctx) return null;
@@ -30,7 +33,9 @@ export const StoryReplyContext = memo(function StoryReplyContext({
     <View
       className={`mb-1 gap-1 ${isMine ? "items-end" : "items-start"}`}
       accessible={!live}
-      accessibilityLabel={live ? undefined : `${label}. The story has ended.`}
+      accessibilityLabel={
+        live ? undefined : t("theStoryHasEnded", { label: label })
+      }
     >
       <AppText variant="caption" tone="muted" className="px-1">
         {label}
@@ -39,7 +44,7 @@ export const StoryReplyContext = memo(function StoryReplyContext({
         <Pressable
           onPress={() => router.push(`/(app)/story/${ctx.postId}`)}
           accessibilityRole="button"
-          accessibilityLabel={`${label}. Open the story`}
+          accessibilityLabel={t("openTheStory", { label: label })}
           className="h-[104px] w-[64px] overflow-hidden rounded-xl bg-muted active:opacity-80"
         >
           <Image
@@ -62,7 +67,7 @@ export const StoryReplyContext = memo(function StoryReplyContext({
             tone="muted"
             className="text-center text-[10px] leading-3"
           >
-            Story ended
+            {t("storyEnded")}
           </AppText>
         </View>
       )}

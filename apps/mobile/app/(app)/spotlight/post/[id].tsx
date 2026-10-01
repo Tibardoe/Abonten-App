@@ -22,6 +22,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -41,6 +42,8 @@ function formatWatchTime(ms: number): string {
 // the Insights button on your own Spotlight, your profile's grid, and
 // Spotlight & Stories in the menu.
 export default function ManagePostScreen() {
+  const t = useTranslations("spotlight");
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
@@ -75,7 +78,7 @@ export default function ManagePostScreen() {
   const header = (
     <AppHeader
       variant="detail"
-      title="Insights"
+      title={t("insights")}
       backFallback="/(app)/spotlight/manage"
     />
   );
@@ -98,7 +101,7 @@ export default function ManagePostScreen() {
       <View className="flex-1 bg-background">
         {header}
         <ScreenError
-          message="This post isn't available."
+          message={t("thisPostIsnTAvailable")}
           onRetry={() => query.refetch()}
         />
       </View>
@@ -119,10 +122,10 @@ export default function ManagePostScreen() {
         ...(post.kind === "spotlight" ? { allowDownload } : {}),
       });
       if (r.status !== 200) {
-        toast.error(r.message ?? "Couldn't save your changes.");
+        toast.error(r.message ?? t("couldnTSaveYourChanges"));
         return;
       }
-      toast.success("Saved");
+      toast.success(t("saved2"));
       invalidate();
     } finally {
       setSaving(false);
@@ -130,34 +133,30 @@ export default function ManagePostScreen() {
   };
 
   const remove = () =>
-    Alert.alert(
-      "Delete this post?",
-      "It disappears for everyone. An active promotion is cancelled.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const r = await api.content.deletePost(post.id);
-            if (r.status !== 200) {
-              toast.error(r.message ?? "Couldn't delete this post.");
-              return;
-            }
-            invalidate();
-            router.back();
-          },
+    Alert.alert(t("deleteThisPost"), t("itDisappearsForEveryoneAnActive"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("deleteText2"),
+        style: "destructive",
+        onPress: async () => {
+          const r = await api.content.deletePost(post.id);
+          if (r.status !== 200) {
+            toast.error(r.message ?? t("couldnTDeleteThisPost"));
+            return;
+          }
+          invalidate();
+          router.back();
         },
-      ],
-    );
+      },
+    ]);
 
   const publishDraft = async () => {
     const r = await api.content.publishPost(post.id);
     if (r.status !== 200) {
-      toast.error(r.message ?? "Couldn't publish this post.");
+      toast.error(r.message ?? t("couldnTPublishThisPost"));
       return;
     }
-    toast.success("Published");
+    toast.success(t("published2"));
     invalidate();
   };
 
@@ -176,34 +175,39 @@ export default function ManagePostScreen() {
     post.kind === "spotlight" &&
     post.status === "published" &&
     post.moderationState === "visible";
-  const t = insights.data?.totals;
-  const views = t?.meaningfulViews ?? 0;
+  const totals = insights.data?.totals;
+  const views = totals?.meaningfulViews ?? 0;
   const tiles: [string, string | number | undefined][] = [
-    ["Views", t?.meaningfulViews],
-    ["People reached", t?.uniqueViewers],
-    ["Impressions", t?.impressions],
-    ["Watch time", t ? formatWatchTime(t.watchedMsTotal) : undefined],
+    [t("views"), totals?.meaningfulViews],
+    [t("peopleReached"), totals?.uniqueViewers],
+    [t("impressions"), totals?.impressions],
     [
-      "Avg. watch",
-      t
+      t("watchTime"),
+      totals ? formatWatchTime(totals.watchedMsTotal) : undefined,
+    ],
+    [
+      t("avgWatch"),
+      totals
         ? formatWatchTime(
-            t.viewStarts > 0 ? t.watchedMsTotal / t.viewStarts : 0,
+            totals.viewStarts > 0
+              ? totals.watchedMsTotal / totals.viewStarts
+              : 0,
           )
         : undefined,
     ],
     [
-      "Completion rate",
-      t
-        ? `${views > 0 ? Math.round((t.completions / views) * 100) : 0}%`
+      t("completionRate"),
+      totals
+        ? `${views > 0 ? Math.round((totals.completions / views) * 100) : 0}%`
         : undefined,
     ],
-    ["Likes", t?.likes],
-    ["Comments", t?.comments],
-    ["Shares", t?.shares],
-    ["Saves", t?.saves],
-    ["Profile visits", t?.profileClicks],
-    ["Event taps", t?.eventClicks],
-    ["Place taps", t?.placeClicks],
+    [t("likes"), totals?.likes],
+    [t("comments"), totals?.comments],
+    [t("shares"), totals?.shares],
+    [t("saves"), totals?.saves],
+    [t("profileVisits"), totals?.profileClicks],
+    [t("eventTaps"), totals?.eventClicks],
+    [t("placeTaps"), totals?.placeClicks],
   ];
   const campaign = (campaigns.data ?? [])
     .filter((c) => c.postId === post.id)
@@ -225,25 +229,26 @@ export default function ManagePostScreen() {
           </View>
           <View className="flex-1 gap-2">
             <AppText variant="bodyStrong">
-              {post.kind === "story" ? "Story" : "Spotlight"}
+              {post.kind === "story" ? t("story") : t("spotlight")}
             </AppText>
             <AppText variant="meta">
               {post.status === "draft"
-                ? "Draft"
+                ? t("draft")
                 : post.moderationState === "visible"
-                  ? "Live"
+                  ? t("live")
                   : post.moderationState}
             </AppText>
             {post.moderationState === "hidden" ||
             post.moderationState === "removed" ? (
               <AppText variant="small" tone="error">
-                Our moderation team {post.moderationState} this post. It isn't
-                shown to anyone else.
+                {t("ourModerationTeamThisPostIt", {
+                  moderationState: post.moderationState,
+                })}
               </AppText>
             ) : null}
             {live ? (
               <Button
-                title="View"
+                title={t("view")}
                 size="sm"
                 variant="outline"
                 onPress={() =>
@@ -255,7 +260,7 @@ export default function ManagePostScreen() {
                 }
               />
             ) : post.status === "draft" ? (
-              <Button title="Publish" size="sm" onPress={publishDraft} />
+              <Button title={t("publish")} size="sm" onPress={publishDraft} />
             ) : null}
           </View>
         </View>
@@ -266,14 +271,16 @@ export default function ManagePostScreen() {
               router.push(`/(app)/spotlight/campaign/${campaign.id}`)
             }
             accessibilityRole="button"
-            accessibilityLabel={`Promotion: ${CAMPAIGN_STATUS_LABEL[campaign.status]}. Open`}
+            accessibilityLabel={t("promotionOpen", {
+              item: CAMPAIGN_STATUS_LABEL[campaign.status],
+            })}
             className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
           >
             <View className="h-10 w-10 items-center justify-center rounded-full bg-accent">
               <Icon name="megaphone-outline" size={20} tone="primary" />
             </View>
             <View className="flex-1">
-              <AppText variant="bodyStrong">Promotion</AppText>
+              <AppText variant="bodyStrong">{t("promotion")}</AppText>
               <AppText variant="meta">
                 {CAMPAIGN_STATUS_LABEL[campaign.status]}
               </AppText>
@@ -284,16 +291,16 @@ export default function ManagePostScreen() {
           <Pressable
             onPress={() => router.push(`/(app)/spotlight/promote/${post.id}`)}
             accessibilityRole="button"
-            accessibilityLabel="Promote this Spotlight"
+            accessibilityLabel={t("promoteThisSpotlight")}
             className="flex-row items-center gap-3 rounded-xl bg-primary p-4 active:opacity-90"
           >
             <Icon name="megaphone-outline" size={22} tone="inverse" />
             <View className="flex-1">
               <AppText className="text-[15px] font-bold text-primary-foreground">
-                Promote this Spotlight
+                {t("promoteThisSpotlight")}
               </AppText>
               <AppText className="text-[13px] text-primary-foreground/85">
-                Show it to more people nearby
+                {t("showItToMorePeopleNearby")}
               </AppText>
             </View>
             <Icon name="chevron-forward" size={18} tone="inverse" />
@@ -302,7 +309,7 @@ export default function ManagePostScreen() {
 
         <View className="gap-2">
           <View className="flex-row items-center justify-between">
-            <AppText variant="sectionHeading">Insights</AppText>
+            <AppText variant="sectionHeading">{t("insights")}</AppText>
             <View className="flex-row gap-1">
               {RANGES.map((r) => (
                 <Chip
@@ -334,42 +341,45 @@ export default function ManagePostScreen() {
             ))}
           </View>
           <AppText variant="caption" tone="muted">
-            Counts update about once an hour. A view counts after two seconds of
-            watching.
+            {t("countsUpdateAboutOnceAnHour2")}
           </AppText>
         </View>
 
         <View className="gap-3">
-          <AppText variant="sectionHeading">Details</AppText>
+          <AppText variant="sectionHeading">{t("details")}</AppText>
           <TextInput
             value={caption}
             onChangeText={setCaption}
             maxLength={MAX_CAPTION_LENGTH}
             multiline
-            placeholder="Caption"
+            placeholder={t("caption")}
             placeholderTextColor="#8a8a8a"
             textAlignVertical="top"
             className="min-h-[88px] rounded-xl border border-input px-3 py-2.5 text-[15px] text-foreground"
           />
           <View className="flex-row items-center justify-between">
-            <AppText>Allow comments</AppText>
+            <AppText>{t("allowComments")}</AppText>
             <Switch value={allowComments} onValueChange={setAllowComments} />
           </View>
           {post.kind === "spotlight" ? (
             <View className="flex-row items-center justify-between">
-              <AppText>Allow downloads</AppText>
+              <AppText>{t("allowDownloads")}</AppText>
               <Switch value={allowDownload} onValueChange={setAllowDownload} />
             </View>
           ) : null}
           <Button
-            title="Save changes"
+            title={t("saveChanges")}
             disabled={!dirty}
             loading={saving}
             onPress={save}
           />
         </View>
 
-        <Button title="Delete" variant="destructive" onPress={remove} />
+        <Button
+          title={t("deleteText2")}
+          variant="destructive"
+          onPress={remove}
+        />
       </KeyboardAwareScrollView>
     </View>
   );

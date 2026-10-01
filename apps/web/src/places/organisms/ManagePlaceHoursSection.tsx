@@ -6,6 +6,7 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
 import PlaceOpeningHoursEditor from "@/places/molecules/PlaceOpeningHoursEditor";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type TemporaryStatus = "temporarily_closed" | "permanently_closed" | null;
@@ -38,9 +39,9 @@ function toInputRows(rows: DbOpeningHourRow[]): PlaceOpeningHoursInput[] {
 }
 
 const STATUS_OPTIONS: { value: TemporaryStatus; label: string }[] = [
-  { value: null, label: "Normal hours" },
-  { value: "temporarily_closed", label: "Temporarily closed" },
-  { value: "permanently_closed", label: "Permanently closed" },
+  { value: null, label: "hoursStatus.normalHours" },
+  { value: "temporarily_closed", label: "hoursStatus.temporarilyClosed" },
+  { value: "permanently_closed", label: "hoursStatus.permanentlyClosed" },
 ];
 
 // Weekly hours editor (reusing PlaceOpeningHoursEditor.tsx as-is, per the
@@ -56,6 +57,8 @@ export default function ManagePlaceHoursSection({
   temporaryStatusNote,
   onChanged,
 }: ManagePlaceHoursSectionProps) {
+  const t = useTranslations("places");
+
   const toast = useToast();
 
   const [hours, setHours] = useState<PlaceOpeningHoursInput[]>(
@@ -75,7 +78,7 @@ export default function ManagePlaceHoursSection({
       (hour) => !hour.isClosed && (!hour.openTime || !hour.closeTime),
     );
     if (hasIncompleteHours) {
-      toast.error("Please set open and close times for every open day.");
+      toast.error(t("pleaseSetOpenAndCloseTimes"));
       return;
     }
 
@@ -83,10 +86,10 @@ export default function ManagePlaceHoursSection({
     try {
       const response = await updatePlaceOpeningHours(placeId, hours);
       if (response.status === 200) {
-        toast.success("Hours updated successfully.");
+        toast.success(t("hoursUpdatedSuccessfully"));
         onChanged();
       } else {
-        toast.error(response.message ?? "We couldn't update your hours.");
+        toast.error(response.message ?? t("weCouldnTUpdateYourHours"));
       }
     } finally {
       setIsSavingHours(false);
@@ -116,10 +119,10 @@ export default function ManagePlaceHoursSection({
       );
       if (response.status === 200) {
         setCurrentStatus(status);
-        toast.success("Status updated successfully.");
+        toast.success(t("statusUpdatedSuccessfully"));
         onChanged();
       } else {
-        toast.error(response.message ?? "We couldn't update your status.");
+        toast.error(response.message ?? t("weCouldnTUpdateYourStatus"));
       }
     } finally {
       setIsSavingStatus(false);
@@ -130,7 +133,7 @@ export default function ManagePlaceHoursSection({
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Status</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t("status")}</h3>
         <div className="flex flex-wrap gap-2">
           {STATUS_OPTIONS.map((option) => (
             <button
@@ -143,7 +146,7 @@ export default function ManagePlaceHoursSection({
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>
@@ -153,7 +156,7 @@ export default function ManagePlaceHoursSection({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             onBlur={() => applyStatusChange(currentStatus)}
-            placeholder="Optional note for visitors (e.g. reason, reopening date)"
+            placeholder={t("optionalNoteForVisitorsEG")}
             className="w-full rounded-md border border-input bg-background p-2 text-sm"
             rows={2}
           />
@@ -161,7 +164,9 @@ export default function ManagePlaceHoursSection({
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Weekly hours</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          {t("weeklyHours")}
+        </h3>
         <PlaceOpeningHoursEditor openingHours={hours} onChange={setHours} />
 
         <button
@@ -170,7 +175,7 @@ export default function ManagePlaceHoursSection({
           disabled={isSavingHours}
           className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {isSavingHours ? "Saving..." : "Save hours"}
+          {isSavingHours ? t("saving") : t("saveHours")}
         </button>
       </div>
 
@@ -178,15 +183,15 @@ export default function ManagePlaceHoursSection({
         <ConfirmDeleteModal
           title={
             pendingStatus === "permanently_closed"
-              ? "Mark as permanently closed?"
-              : "Mark as temporarily closed?"
+              ? t("markAsPermanentlyClosed")
+              : t("markAsTemporarilyClosed")
           }
           message={
             pendingStatus === "permanently_closed"
-              ? "Mark this place as permanently closed? It will stop appearing as open in searches."
-              : "Mark this place as temporarily closed? It will show as closed to visitors until you switch it back to Normal hours."
+              ? t("markThisPlaceAsPermanentlyClosed")
+              : t("markThisPlaceAsTemporarilyClosed")
           }
-          confirmLabel="Mark Closed"
+          confirmLabel={t("markClosed")}
           isLoading={isSavingStatus}
           onConfirm={() => applyStatusChange(pendingStatus)}
           onCancel={() => setPendingStatus(undefined)}

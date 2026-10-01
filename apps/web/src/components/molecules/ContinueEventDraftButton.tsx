@@ -4,6 +4,7 @@ import { type EventDraftDetail, getEventDraft } from "@/actions/getEventDraft";
 import EventUploadModal from "@/components/organisms/EventUploadModal";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -25,6 +26,8 @@ export default function ContinueEventDraftButton({
   children,
   onDraftListChanged,
 }: ContinueEventDraftButtonProps) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const [draft, setDraft] = useState<EventDraftDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +82,7 @@ export default function ContinueEventDraftButton({
         onClick={handleContinue}
         disabled={loading}
       >
-        {loading ? "Loading..." : children}
+        {loading ? t("loading") : children}
       </button>
 
       <input

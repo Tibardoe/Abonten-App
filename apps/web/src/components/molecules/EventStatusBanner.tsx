@@ -2,6 +2,7 @@
 
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import type { Occurrence } from "@abonten/types/occurrenceType";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 // Above-the-fold "canceled / ended / in progress" banner on the event
@@ -16,6 +17,8 @@ export default function EventStatusBanner({
   eventDates: Occurrence[];
   eventStatus: string;
 }) {
+  const t = useTranslations("common");
+
   const [, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 30_000);
@@ -26,11 +29,11 @@ export default function EventStatusBanner({
   const state = resolveOccurrenceState(undefined, undefined, eventDates);
 
   const message = isCanceled
-    ? "This event has been cancelled."
+    ? t("thisEventHasBeenCancelled2")
     : state.blockReason === "ended"
-      ? "This event has ended."
+      ? t("thisEventHasEnded")
       : state.blockReason === "ongoing_no_future"
-        ? "This event is currently in progress."
+        ? t("thisEventIsCurrentlyInProgress")
         : null;
 
   if (!message) return null;

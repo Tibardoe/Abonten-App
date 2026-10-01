@@ -2,9 +2,8 @@
 
 import getAttendanceList from "@/actions/getAttendanceList";
 import EventAnalyticsDashboard from "@/components/organisms/EventAnalyticsDashboard";
+import { useTranslations } from "next-intl";
 import AttendanceListView from "./AttendanceListView";
-
-const emptyState = <p className="text-sm text-muted-foreground">None</p>;
 
 /**
  * Insights tab of the Unified Event Management page — the sole place
@@ -16,6 +15,8 @@ export default function ManageEventInsightsSection({
 }: {
   eventId: string;
 }) {
+  const t = useTranslations("events");
+
   async function fetchPage(cursor: string | null) {
     return getAttendanceList(eventId, { cursor });
   }
@@ -25,13 +26,15 @@ export default function ManageEventInsightsSection({
       <EventAnalyticsDashboard eventId={eventId} />
 
       <div>
-        <h2 className="font-bold md:text-lg mb-3">Attendees</h2>
+        <h2 className="font-bold md:text-lg mb-3">{t("attendees")}</h2>
 
         <AttendanceListView
           queryKey={["attendance-list", eventId]}
           initialPage={null}
           fetchPage={fetchPage}
-          emptyState={emptyState}
+          emptyState={
+            <p className="text-sm text-muted-foreground">{t("none")}</p>
+          }
         />
       </div>
     </div>

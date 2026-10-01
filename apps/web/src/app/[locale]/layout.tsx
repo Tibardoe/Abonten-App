@@ -1,15 +1,7 @@
-import type { Metadata } from "next";
-import "../globals.css";
-import { euclidCircular } from "@/app/fonts";
-import LocaleProvider from "@/i18n/LocaleProvider";
-import { type Locale, isLocale, locales } from "@/i18n/config";
-import ReactQueryProvider from "@/providers/ReactQueryProvider";
-import ThemeProvider from "@/providers/ThemeProvider";
-import ToastProvider from "@/providers/ToastProvider";
-import InviteBinder from "@/rewards/atoms/InviteBinder";
-import ReferralTouchLogger from "@/rewards/atoms/ReferralTouchLogger";
+import AppShell from "@/app/AppShell";
+import { isLocale, locales } from "@/i18n/config";
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
-import { NextIntlClientProvider } from "next-intl";
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
@@ -21,7 +13,8 @@ import { notFound } from "next/navigation";
 // address to its language ("/plans" → "/fr/plans" for a French visitor,
 // see i18n/routing.ts), so the whole page — <html lang>, titles, every
 // string — is rendered in that language on the server, and the static
-// pages are prerendered once per language.
+// pages are prerendered once per language. An address that matches no
+// route at all is rendered by app/global-not-found.tsx instead.
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
@@ -93,34 +86,5 @@ export default async function RootLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  return (
-    <html
-      lang={locale satisfies Locale}
-      className={`${euclidCircular.variable} antialiased`}
-      suppressHydrationWarning
-    >
-      <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {/* Locale, messages and time zone are inherited from the request
-              configuration (i18n/request.ts) — nothing is passed here. */}
-          <NextIntlClientProvider>
-            <LocaleProvider>
-              <ReactQueryProvider>
-                <ToastProvider>
-                  {children}
-                  <ReferralTouchLogger />
-                  <InviteBinder />
-                </ToastProvider>
-              </ReactQueryProvider>
-            </LocaleProvider>
-          </NextIntlClientProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+  return <AppShell locale={locale}>{children}</AppShell>;
 }

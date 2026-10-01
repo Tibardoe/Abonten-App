@@ -1,6 +1,7 @@
 "use client";
 
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { FiX } from "react-icons/fi";
 
@@ -25,13 +26,17 @@ export default function ExistingReviewPhotoGrid({
   photos,
   onRemove,
 }: ExistingReviewPhotoGridProps) {
+  const t = useTranslations("common");
+
   if (photos.length === 0) return null;
 
   const sorted = [...photos].sort((a, b) => a.position - b.position);
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-foreground">Current photos</p>
+      <p className="text-sm font-medium text-foreground">
+        {t("currentPhotos")}
+      </p>
 
       <div className="flex flex-wrap gap-2">
         {sorted.map((photo) => (
@@ -44,7 +49,7 @@ export default function ExistingReviewPhotoGrid({
                 width: 80,
                 height: 80,
               })}
-              alt="Review photo"
+              alt={t("reviewPhoto")}
               fill
               sizes="80px"
               className="object-cover"
@@ -53,7 +58,7 @@ export default function ExistingReviewPhotoGrid({
             <button
               type="button"
               onClick={() => onRemove(photo.id)}
-              aria-label="Remove photo"
+              aria-label={t("removePhoto")}
               className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 transition-colors"
             >
               <FiX className="text-xs" />

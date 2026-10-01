@@ -1,6 +1,7 @@
 "use client";
 
 import { Slider } from "@/components/ui/slider";
+import { useTranslations } from "next-intl";
 
 type PriceRangeSliderProps = {
   min: number;
@@ -36,6 +37,8 @@ export default function PriceRangeSlider({
   currencyPrefix = "",
   minGap,
 }: PriceRangeSliderProps) {
+  const t = useTranslations("common");
+
   const [low, high] = value;
 
   // A real, non-zero separation the thumbs must always keep. Expressed in
@@ -82,7 +85,7 @@ export default function PriceRangeSlider({
           <input
             type="number"
             inputMode="numeric"
-            aria-label="Minimum price"
+            aria-label={t("minimumPrice")}
             value={low}
             min={min}
             max={high}
@@ -104,7 +107,7 @@ export default function PriceRangeSlider({
           <input
             type="number"
             inputMode="numeric"
-            aria-label="Maximum price"
+            aria-label={t("maximumPrice")}
             value={high}
             min={low}
             max={max}
@@ -122,7 +125,7 @@ export default function PriceRangeSlider({
           minStepsBetweenThumbs={minStepsBetweenThumbs}
           value={[low, high]}
           onValueChange={handleSliderChange}
-          aria-label="Price range"
+          aria-label={t("priceRange")}
         />
       </div>
 

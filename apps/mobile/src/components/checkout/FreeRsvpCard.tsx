@@ -3,6 +3,7 @@ import type { FreeRsvpFlow } from "@/features/checkout/useFreeRsvpFlow";
 import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { AppText, Button } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -19,6 +20,10 @@ export function FreeRsvpCard({
   /** False when the screen's sticky bar carries the RSVP button. */
   showAction?: boolean;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("checkout");
+
   const router = useRouter();
   const {
     now,
@@ -35,7 +40,7 @@ export function FreeRsvpCard({
       <View className="gap-3">
         <View className="items-center gap-2 rounded-xl border border-border bg-card p-5">
           <AppText className="text-base font-bold text-success">
-            You're going
+            {t("youReGoing")}
           </AppText>
           <Pressable
             accessibilityRole="button"
@@ -43,7 +48,7 @@ export function FreeRsvpCard({
             className="rounded-lg bg-primary px-4 py-2.5"
           >
             <AppText className="text-sm font-semibold text-primary-foreground">
-              View my ticket
+              {t("viewMyTicket")}
             </AppText>
           </Pressable>
         </View>
@@ -61,7 +66,7 @@ export function FreeRsvpCard({
       {occurrences.length > 1 ? (
         <View className="gap-2">
           <AppText className="text-sm font-semibold text-foreground">
-            Date
+            {t("date")}
           </AppText>
           <View className="flex-row flex-wrap gap-2">
             {occurrences.map((o) => {
@@ -86,12 +91,12 @@ export function FreeRsvpCard({
                       selected ? "text-primary-foreground" : "text-foreground"
                     }`}
                   >
-                    {formatDateWithSuffix(o.starts_at)}
+                    {formatDateWithSuffix(o.starts_at, undefined, locale)}
                     {selectable
                       ? ""
                       : inProgress
-                        ? " · in progress"
-                        : " · past"}
+                        ? t("inProgress2")
+                        : t("past2")}
                   </AppText>
                 </Pressable>
               );
@@ -100,13 +105,11 @@ export function FreeRsvpCard({
         </View>
       ) : null}
 
-      <AppText variant="caption">
-        This event is free — one ticket per person.
-      </AppText>
+      <AppText variant="caption">{t("thisEventIsFreeOneTicket")}</AppText>
 
       {showAction ? (
         <Button
-          title={flow.pending ? "Reserving…" : "RSVP — get free ticket"}
+          title={flow.pending ? t("reserving") : t("rsvpGetFreeTicket")}
           loading={flow.pending}
           onPress={flow.submit}
         />

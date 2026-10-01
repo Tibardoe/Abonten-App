@@ -5,6 +5,7 @@ import { removePlaceService } from "@/actions/removePlaceService";
 import { updatePlaceService } from "@/actions/updatePlaceService";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoAddOutline, IoPencilOutline, IoTrashOutline } from "react-icons/io5";
 
@@ -47,6 +48,8 @@ export default function ManagePlaceServicesSection({
   services,
   onChanged,
 }: ManagePlaceServicesSectionProps) {
+  const t = useTranslations("places");
+
   const toast = useToast();
 
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
@@ -70,11 +73,11 @@ export default function ManagePlaceServicesSection({
       });
 
       if (response.status === 200) {
-        toast.success("Service added successfully.");
+        toast.success(t("serviceAddedSuccessfully"));
         setIsAdding(false);
         onChanged();
       } else {
-        toast.error(response.message ?? "We couldn't add that service.");
+        toast.error(response.message ?? t("weCouldnTAddThatService"));
       }
     } finally {
       setIsSubmitting(false);
@@ -94,11 +97,11 @@ export default function ManagePlaceServicesSection({
       });
 
       if (response.status === 200) {
-        toast.success("Service updated successfully.");
+        toast.success(t("serviceUpdatedSuccessfully"));
         setEditingServiceId(null);
         onChanged();
       } else {
-        toast.error(response.message ?? "We couldn't update that service.");
+        toast.error(response.message ?? t("weCouldnTUpdateThatService"));
       }
     } finally {
       setIsSubmitting(false);
@@ -111,10 +114,10 @@ export default function ManagePlaceServicesSection({
     try {
       const response = await removePlaceService(servicePendingRemoval);
       if (response.status === 200) {
-        toast.success("Service removed.");
+        toast.success(t("serviceRemoved"));
         onChanged();
       } else {
-        toast.error(response.message ?? "We couldn't remove that service.");
+        toast.error(response.message ?? t("weCouldnTRemoveThatService"));
       }
     } finally {
       setIsRemoving(false);
@@ -125,7 +128,9 @@ export default function ManagePlaceServicesSection({
   return (
     <div className="space-y-4">
       {services.length === 0 && !isAdding && (
-        <p className="text-muted-foreground text-sm">No services listed yet.</p>
+        <p className="text-muted-foreground text-sm">
+          {t("noServicesListedYet")}
+        </p>
       )}
 
       <ul className="space-y-3">
@@ -175,7 +180,7 @@ export default function ManagePlaceServicesSection({
                   type="button"
                   onClick={() => setEditingServiceId(service.id)}
                   className="p-1 text-muted-foreground hover:text-foreground"
-                  aria-label="Edit service"
+                  aria-label={t("editService")}
                 >
                   <IoPencilOutline />
                 </button>
@@ -183,7 +188,7 @@ export default function ManagePlaceServicesSection({
                   type="button"
                   onClick={() => setServicePendingRemoval(service.id)}
                   className="p-1 text-destructive hover:text-destructive/80"
-                  aria-label="Remove service"
+                  aria-label={t("removeService")}
                 >
                   <IoTrashOutline />
                 </button>
@@ -209,15 +214,15 @@ export default function ManagePlaceServicesSection({
           className="flex items-center gap-2 border border-dashed border-border rounded-lg px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
         >
           <IoAddOutline className="text-lg" />
-          Add a service
+          {t("addAService")}
         </button>
       )}
 
       {servicePendingRemoval && (
         <ConfirmDeleteModal
-          title="Remove this service?"
-          message="Remove this service? This can't be undone."
-          confirmLabel="Remove Service"
+          title={t("removeThisService")}
+          message={t("removeThisServiceThisCanT")}
+          confirmLabel={t("removeService2")}
           isLoading={isRemoving}
           onConfirm={handleConfirmRemove}
           onCancel={() => setServicePendingRemoval(null)}
@@ -238,6 +243,8 @@ function ServiceForm({
   onCancel: () => void;
   onSubmit: (values: ServiceFormValues) => void;
 }) {
+  const t = useTranslations("places");
+
   const [values, setValues] = useState<ServiceFormValues>(initialValues);
 
   const patch = (changes: Partial<ServiceFormValues>) =>
@@ -247,14 +254,14 @@ function ServiceForm({
     <div className="space-y-2">
       <input
         type="text"
-        placeholder="Service name"
+        placeholder={t("serviceName")}
         value={values.name}
         onChange={(e) => patch({ name: e.target.value })}
         className="w-full rounded-md border border-input bg-background p-2 text-sm"
       />
       <input
         type="text"
-        placeholder="Description (optional)"
+        placeholder={t("descriptionOptional")}
         value={values.description}
         onChange={(e) => patch({ description: e.target.value })}
         className="w-full rounded-md border border-input bg-background p-2 text-sm"
@@ -262,14 +269,14 @@ function ServiceForm({
       <div className="flex gap-2">
         <input
           type="number"
-          placeholder="Price (optional)"
+          placeholder={t("priceOptional")}
           value={values.price}
           onChange={(e) => patch({ price: e.target.value })}
           className="w-1/2 rounded-md border border-input bg-background p-2 text-sm"
         />
         <input
           type="text"
-          placeholder="Price unit (e.g. per hour)"
+          placeholder={t("priceUnitEGPerHour")}
           value={values.priceUnit}
           onChange={(e) => patch({ priceUnit: e.target.value })}
           className="w-1/2 rounded-md border border-input bg-background p-2 text-sm"
@@ -283,7 +290,7 @@ function ServiceForm({
           onChange={(e) => patch({ showPrice: e.target.checked })}
           className="h-4 w-4 accent-primary"
         />
-        Show price publicly
+        {t("showPricePublicly")}
       </label>
 
       <div className="flex gap-2 pt-1">
@@ -293,7 +300,7 @@ function ServiceForm({
           onClick={() => onSubmit(values)}
           className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {isSubmitting ? "Saving..." : "Save"}
+          {isSubmitting ? t("saving") : t("save")}
         </button>
         <button
           type="button"
@@ -301,7 +308,7 @@ function ServiceForm({
           disabled={isSubmitting}
           className="flex-1 border border-border py-2 rounded-md text-sm hover:bg-accent transition-colors"
         >
-          Cancel
+          {t("cancel")}
         </button>
       </div>
     </div>

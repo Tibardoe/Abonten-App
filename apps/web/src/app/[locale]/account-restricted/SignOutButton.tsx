@@ -1,9 +1,12 @@
 "use client";
 
 import { signOut } from "@/services/authService";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export default function SignOutButton() {
+  const t = useTranslations("auth");
+
   const [pending, setPending] = useState(false);
 
   return (
@@ -16,7 +19,7 @@ export default function SignOutButton() {
       }}
       className="inline-block rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors disabled:opacity-60"
     >
-      {pending ? "Signing out…" : "Sign out"}
+      {pending ? t("signingOut") : t("signOut")}
     </button>
   );
 }

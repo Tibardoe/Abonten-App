@@ -1,6 +1,7 @@
 "use client";
 
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
+import { useTranslations } from "next-intl";
 import TileSelector from "./TileSelector";
 
 type TypeFIlter = {
@@ -16,6 +17,8 @@ export default function TypeFilter({
   handleType,
   classname,
 }: TypeFIlter) {
+  const t = useTranslations("common");
+
   const types =
     eventCategoriesAndTypes.find((c) => c.category === selectedCategory)
       ?.types ?? [];
@@ -26,7 +29,7 @@ export default function TypeFilter({
       options={types.map((type) => ({ id: type, label: type }))}
       value={selectedTypes}
       onChange={handleType}
-      label="Type"
+      label={t("type")}
       labelClassName={classname}
     />
   );

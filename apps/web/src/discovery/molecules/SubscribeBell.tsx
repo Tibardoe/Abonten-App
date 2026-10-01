@@ -10,6 +10,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
 import type { SubscriptionStatusResult } from "@abonten/types/discoveryType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { IoNotifications, IoNotificationsOutline } from "react-icons/io5";
 
 // The private "Notify me" bell for an organizer or a place. There is no
@@ -37,6 +38,8 @@ export default function SubscribeBell({
   /** Where the bell is shown, recorded on the subscription for analytics. */
   source?: "profile" | "search";
 }) {
+  const t = useTranslations("discovery");
+
   const { program } = useDiscoveryProgram();
   const { data: user } = useCurrentUser();
   const requireAuth = useRequireAuth();
@@ -80,7 +83,7 @@ export default function SubscribeBell({
     onSuccess: (res, next, context) => {
       if (res.status !== 200) {
         qc.setQueryData(key, context?.previous);
-        toast.error(res.message ?? "Couldn't change these alerts.");
+        toast.error(res.message ?? t("couldnTChangeTheseAlerts"));
         return;
       }
       const subscriptionId =
@@ -94,13 +97,13 @@ export default function SubscribeBell({
       qc.invalidateQueries({ queryKey: ["notification-subscriptions"] });
       toast.success(
         next
-          ? `You'll hear when ${label} posts something new.`
-          : `Alerts from ${label} turned off.`,
+          ? t("youLlHearWhenPostsSomething", { label: label })
+          : t("alertsFromTurnedOff", { label: label }),
       );
     },
     onError: (_e, _next, context) => {
       qc.setQueryData(key, context?.previous);
-      toast.error("Couldn't change these alerts. Please try again.");
+      toast.error(t("couldnTChangeTheseAlertsPlease"));
     },
   });
 
@@ -108,7 +111,7 @@ export default function SubscribeBell({
   if (user && ownerId && user.id === ownerId) return null;
 
   const on = !!status?.subscribed;
-  const text = on ? "Notifying" : "Notify me";
+  const text = on ? t("notifying") : t("notifyMe");
 
   return (
     <button
@@ -117,7 +120,7 @@ export default function SubscribeBell({
       // Compact bells have no visible text, so they need a label; otherwise
       // the visible words start the accessible name (WCAG 2.5.3).
       aria-label={
-        compact ? `Notify me about new posts from ${label}` : undefined
+        compact ? t("notifyMeAboutNewPostsFrom", { label: label }) : undefined
       }
       disabled={toggle.isPending}
       onClick={async (e) => {
@@ -142,7 +145,7 @@ export default function SubscribeBell({
       {compact ? null : (
         <>
           {text}
-          <span className="sr-only"> about new posts from {label}</span>
+          <span className="sr-only"> {t("aboutNewPostsFrom", { label })}</span>
         </>
       )}
     </button>

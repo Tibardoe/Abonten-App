@@ -2,6 +2,7 @@ import { hapticSelection } from "@/lib/haptics";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { WeeklyBannerSlide } from "@abonten/types/weeklyType";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useIsFocused } from "expo-router";
@@ -72,6 +73,8 @@ export function WeeklyBanner({
   /** Fired when a slide comes on show (e.g. to count a sponsored impression). */
   onSlideShown?: (slide: WeeklyBannerSlide) => void;
 }) {
+  const t = useTranslations("weekly");
+
   const count = slides.length;
   const rotating = count > 1;
   const reduceMotion = useReducedMotion();
@@ -274,7 +277,7 @@ export function WeeklyBanner({
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel={
-                  userPaused ? "Resume the slideshow" : "Pause the slideshow"
+                  userPaused ? t("resumeTheSlideshow") : t("pauseTheSlideshow")
                 }
                 className="h-9 w-9 items-center justify-center rounded-full"
                 style={{
@@ -299,7 +302,12 @@ export function WeeklyBanner({
               <Pressable
                 onPress={() => onSlidePress(slide)}
                 accessibilityRole="link"
-                accessibilityLabel={`Open ${slide.subjectType === "event" ? "event" : "place"}: ${slide.title}${slide.meta ? `, ${slide.meta}` : ""}`}
+                accessibilityLabel={t("open", {
+                  value:
+                    slide.subjectType === "event" ? t("event2") : t("place"),
+                  title: slide.title,
+                  value2: slide.meta ? `, ${slide.meta}` : "",
+                })}
                 className="flex-row items-center gap-3 rounded-2xl p-2 pr-3 active:opacity-80"
                 style={{
                   backgroundColor: GLASS,
@@ -316,8 +324,8 @@ export function WeeklyBanner({
                   >
                     {slide.headline ??
                       (slide.subjectType === "event"
-                        ? "Featured event"
-                        : "Featured place")}
+                        ? t("featuredEvent")
+                        : t("featuredPlace"))}
                   </AppText>
                   <AppText
                     className="text-[14px] font-semibold text-white"
@@ -347,7 +355,11 @@ export function WeeklyBanner({
                     onPress={() => go(i, true)}
                     hitSlop={{ top: 12, bottom: 12 }}
                     accessibilityRole="button"
-                    accessibilityLabel={`Show pick ${i + 1} of ${count}: ${s.title}`}
+                    accessibilityLabel={t("showPickOf", {
+                      value: i + 1,
+                      count: count,
+                      title: s.title,
+                    })}
                     accessibilityState={{ selected: i === index }}
                     className="flex-1"
                   >

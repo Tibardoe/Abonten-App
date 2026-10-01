@@ -10,6 +10,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTransactionRow } from "@abonten/types/transactions";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 // Only meaningful for ticket rows with at least one cancelled ticket —
@@ -43,8 +44,10 @@ function getRefundSummary(item: UserTransactionRow) {
 }
 
 function TransactionsListSkeleton() {
+  const t = useTranslations("transactions");
+
   return (
-    <ul aria-busy="true" aria-label="Loading transactions">
+    <ul aria-busy="true" aria-label={t("loadingTransactions")}>
       {Array.from({ length: 6 }, (_, i) => (
         <li key={i.toLocaleString()}>
           <TransactionRowSkeleton />
@@ -67,6 +70,11 @@ export default function TransactionsHistoryList({
   ) => Promise<PaginatedResult<UserTransactionRow>>;
   emptyState: React.ReactNode;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("transactions");
+  const tc = useTranslations("common");
+
   return (
     <InfiniteList
       queryKey={queryKey}
@@ -76,11 +84,17 @@ export default function TransactionsHistoryList({
       loadingSkeleton={<TransactionsListSkeleton />}
       wrapItems
       renderItem={(item: UserTransactionRow) => {
-        const { date } = formatSingleDateTime(item.created_at);
-        const { label: statusLabel } = getTransactionStatusMeta(item.status);
+        const { date } = formatSingleDateTime(
+          item.created_at,
+          undefined,
+          locale,
+        );
+        const statusLabel = tc(getTransactionStatusMeta(item.status).labelKey);
         const title =
           item.title ??
-          (item.kind === "subscription" ? "Subscription" : "Ticket Purchase");
+          (item.kind === "subscription"
+            ? t("subscription")
+            : t("ticketPurchase"));
         const refundSummary = getRefundSummary(item);
 
         return (
@@ -119,8 +133,12 @@ export default function TransactionsHistoryList({
                 </p>
                 {item.credit_used ? (
                   <p className="text-xs font-normal text-muted-foreground">
-                    incl. {formatMoney(item.currency, Number(item.credit_used))}{" "}
-                    credit
+                    {t("inclCredit", {
+                      formatMoney: formatMoney(
+                        item.currency,
+                        Number(item.credit_used),
+                      ),
+                    })}
                   </p>
                 ) : null}
               </div>

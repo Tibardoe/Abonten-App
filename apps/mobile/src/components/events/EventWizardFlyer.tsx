@@ -1,6 +1,7 @@
 import { ImageCropModal } from "@/components/profile/ImageCropModal";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useState } from "react";
@@ -16,6 +17,8 @@ const isLocal = (uri: string | null): boolean =>
 // ImageCropper step. The section title/subtitle is drawn by the wizard
 // screen.
 export function EventWizardFlyer({ w }: { w: EventWizard }) {
+  const t = useTranslations("events");
+
   const c = useThemeColors();
   const [editing, setEditing] = useState<{
     uri: string;
@@ -60,20 +63,20 @@ export function EventWizardFlyer({ w }: { w: EventWizard }) {
         <View className="aspect-[4/5] w-full items-center justify-center rounded-xl border border-border border-dashed bg-muted">
           <Icon name="image-outline" size={28} tone="muted" />
           <AppText variant="meta" className="mt-2">
-            No flyer yet
+            {t("noFlyerYet")}
           </AppText>
         </View>
       )}
 
       <View className="gap-2">
         <Button
-          title={w.flyerUri ? "Replace flyer" : "Choose flyer"}
+          title={w.flyerUri ? t("replaceFlyer") : t("chooseFlyer")}
           variant="outline"
           onPress={choose}
         />
         {w.flyerUri && isLocal(w.flyerUri) && w.flyerSize ? (
           <Button
-            title="Crop, rotate or flip"
+            title={t("cropRotateOrFlip")}
             variant="ghost"
             onPress={editCurrent}
           />

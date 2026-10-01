@@ -18,14 +18,20 @@ import CreditActivityList from "@/rewards/organisms/CreditActivityList";
 import InvitePanel from "@/rewards/organisms/InvitePanel";
 import RewardsHowItWorks from "@/rewards/organisms/RewardsHowItWorks";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-export const metadata: Metadata = { title: "Rewards" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("rewards");
+  return { title: t("rewards") };
+}
 
 // Per-user, request-time data -- same force-dynamic precedent as /wallet.
 export const dynamic = "force-dynamic";
 
 export default async function RewardsPage() {
+  const t = await getTranslations("rewards");
+
   const program = await getRewardsProgram();
 
   // Rewards rolls out by audience (staff → beta → everyone). Until it's on
@@ -54,10 +60,8 @@ export default async function RewardsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Rewards</PageTitle>
-        <SupportingText>
-          Your Abonten Credit. Earn it on Abonten, spend it on Abonten.
-        </SupportingText>
+        <PageTitle>{t("rewards")}</PageTitle>
+        <SupportingText>{t("yourAbontenCreditEarnItOn")}</SupportingText>
       </div>
 
       {summary.status === 200 && summary.data ? (
@@ -71,7 +75,7 @@ export default async function RewardsPage() {
         />
       ) : (
         <p className="text-sm text-muted-foreground">
-          We couldn&apos;t load your balance right now. Try again in a moment.
+          {t("weCouldnTLoadYourBalance")}
         </p>
       )}
 
@@ -98,7 +102,7 @@ export default async function RewardsPage() {
       ) : null}
 
       <section>
-        <SectionTitle>Activity</SectionTitle>
+        <SectionTitle>{t("activity")}</SectionTitle>
         <div className="mt-2">
           <CreditActivityList initialPage={firstPage} fetchPage={fetchPage} />
         </div>

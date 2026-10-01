@@ -4,6 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useOpenConversation } from "@/messaging/hooks/useOpenConversation";
 import { SUPPORT_EMAIL, mailto } from "@abonten/core/brand/contacts";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "../ui/button";
 
@@ -14,19 +15,20 @@ import { Button } from "../ui/button";
 // centre afterwards; the official support mailbox is offered as the fallback
 // for anyone who cannot sign in.
 export default function ContactSupportCard() {
+  const t = useTranslations("common");
+
   const { data: user } = useCurrentUser();
   const openSupport = useOpenConversation();
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-1">
-        <p className="font-semibold">Still need help?</p>
+        <p className="font-semibold">{t("stillNeedHelp")}</p>
         <p className="text-sm text-muted-foreground">
-          Message Abonten Support from your inbox. Replies arrive as messages
-          and notifications.
+          {t("messageAbontenSupportFromYourInbox")}
         </p>
         <p className="text-sm text-muted-foreground">
-          Can&apos;t sign in? Email{" "}
+          {t("canTSignInEmail")}
           <a
             href={mailto(SUPPORT_EMAIL)}
             className="font-medium text-primary underline-offset-4 hover:underline"
@@ -42,11 +44,13 @@ export default function ContactSupportCard() {
           disabled={openSupport.isPending}
           onClick={() => openSupport.mutate({ type: "support" })}
         >
-          {openSupport.isPending ? "Opening…" : "Contact support"}
+          {openSupport.isPending ? t("opening") : t("contactSupport")}
         </Button>
       ) : (
         <Button asChild>
-          <Link href={getSignInUrl("/help")}>Sign in to contact support</Link>
+          <Link href={getSignInUrl("/help")}>
+            {t("signInToContactSupport")}
+          </Link>
         </Button>
       )}
     </div>

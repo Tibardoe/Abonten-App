@@ -24,6 +24,7 @@ import {
   Mic,
   MoreHorizontal,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ChatImageThumb } from "./ChatImageThumb";
 import { StoryReplyContext } from "./StoryReplyContext";
@@ -33,6 +34,8 @@ function VoiceAttachment({
 }: {
   attachment: MessageRow["attachments"][number];
 }) {
+  const t = useTranslations("messaging");
+
   const signed = useAttachmentUrl(attachment.storage_path);
   return (
     <div className="flex items-center gap-2 py-0.5">
@@ -43,8 +46,8 @@ function VoiceAttachment({
       ) : (
         <span className="text-xs opacity-70">
           {signed.isError
-            ? "Voice message unavailable"
-            : "Loading voice message…"}
+            ? t("voiceMessageUnavailable")
+            : t("loadingVoiceMessage")}
         </span>
       )}
     </div>
@@ -73,6 +76,8 @@ function ReplyQuote({
   reply: NonNullable<MessageRow["reply_to"]>;
   onPress?: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const isVideo =
     reply.message_type === "file" &&
     !!reply.attachment_mime?.startsWith("video/");
@@ -84,16 +89,16 @@ function ReplyQuote({
         ).padStart(2, "0")}`
       : "";
   const label = reply.deleted_at
-    ? "Deleted message"
+    ? t("deletedMessage")
     : reply.message_type === "image"
-      ? "Photo"
+      ? t("photo")
       : isVideo
-        ? `Video${dur}`
+        ? t("video", { dur: dur })
         : reply.message_type === "audio"
-          ? `Voice message${dur}`
+          ? t("voiceMessage", { dur: dur })
           : reply.message_type === "file"
-            ? "Attachment"
-            : (reply.content ?? "Message");
+            ? t("attachment")
+            : (reply.content ?? t("message"));
   const thumb =
     reply.message_type === "image" ? reply.attachment_path : undefined;
   return (
@@ -171,6 +176,8 @@ function Ticks({
   seen: boolean;
   onRetry: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   if (pending?.status === "failed") {
     return (
       <button
@@ -179,7 +186,7 @@ function Ticks({
         className="flex items-center gap-1 text-destructive"
       >
         <AlertCircle className="h-3 w-3" />
-        <span className="text-[11px] font-semibold">Retry</span>
+        <span className="text-[11px] font-semibold">{t("retry")}</span>
       </button>
     );
   }
@@ -207,6 +214,10 @@ export function MessageBubble({
   onReplyQuotePress,
   canEdit,
 }: Props) {
+  const locale = useLocale();
+
+  const t = useTranslations("messaging");
+
   const [menuOpen, setMenuOpen] = useState(false);
   const deleted = !!message.deleted_at;
   const hasImages =
@@ -238,7 +249,7 @@ export function MessageBubble({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="Message actions"
+                aria-label={t("messageActions")}
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground opacity-0 transition hover:bg-accent focus:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -274,7 +285,7 @@ export function MessageBubble({
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onReply(message)}>
-                Reply
+                {t("reply")}
               </DropdownMenuItem>
               {canCopy ? (
                 <DropdownMenuItem
@@ -282,12 +293,12 @@ export function MessageBubble({
                     void navigator.clipboard?.writeText(message.content ?? "");
                   }}
                 >
-                  Copy
+                  {t("copy")}
                 </DropdownMenuItem>
               ) : null}
               {isMine && canEdit ? (
                 <DropdownMenuItem onSelect={() => onEdit(message)}>
-                  Edit
+                  {t("edit")}
                 </DropdownMenuItem>
               ) : null}
               {isMine ? (
@@ -295,7 +306,7 @@ export function MessageBubble({
                   onSelect={() => onDelete(message)}
                   className="text-destructive"
                 >
-                  Delete
+                  {t("deleteText")}
                 </DropdownMenuItem>
               ) : null}
             </DropdownMenuContent>
@@ -345,7 +356,7 @@ export function MessageBubble({
                     : "text-muted-foreground",
                 )}
               >
-                This message was deleted
+                {t("thisMessageWasDeleted")}
               </span>
             ) : isAudio ? (
               message.attachments.map((a) => (
@@ -383,8 +394,10 @@ export function MessageBubble({
             )}
 
             <div className="mt-1 flex items-center justify-end gap-1 text-[11px] opacity-80">
-              {message.edited_at && !deleted ? <span>edited</span> : null}
-              <span>{clockTime(message.created_at)}</span>
+              {message.edited_at && !deleted ? (
+                <span>{t("edited")}</span>
+              ) : null}
+              <span>{clockTime(message.created_at, locale)}</span>
               {isMine && !deleted ? (
                 <Ticks
                   pending={pending}

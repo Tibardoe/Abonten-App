@@ -2,6 +2,7 @@ import { cn } from "@/components/lib/utils";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { CreditSummary } from "@abonten/types/rewards";
+import { useLocale, useTranslations } from "next-intl";
 
 // The one number a user should notice first -- what they can spend right
 // now -- with everything else (pending, on hold, expiring) explained in
@@ -14,15 +15,19 @@ export default function CreditBalanceCard({
   /** Welcome credit only pays for a first ticket order of at least this. */
   welcomeMinOrderMinor?: number | null;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("rewards");
+
   const frozen = summary.status === "frozen";
   const welcomeMinor = summary.bySpendScope.first_order ?? 0;
 
   return (
     <section
-      aria-label="Your Abonten Credit"
+      aria-label={t("yourAbontenCredit")}
       className="rounded-xl border bg-card p-5 md:p-6"
     >
-      <p className="text-sm text-muted-foreground">Available to spend</p>
+      <p className="text-sm text-muted-foreground">{t("availableToSpend")}</p>
       <p
         className={cn(
           "mt-1 text-4xl font-semibold tabular-nums tracking-tight",
@@ -39,53 +44,79 @@ export default function CreditBalanceCard({
               {formatCredit(summary.pendingMinor, summary.currency)}
             </span>{" "}
             <span className="text-muted-foreground">
-              pending
               {summary.nextRelease
-                ? ` · next ${formatCredit(summary.nextRelease.amountMinor, summary.currency)} unlocks ${formatDateWithSuffix(summary.nextRelease.releaseAt)}`
-                : ""}
+                ? t("pendingNextUnlocks", {
+                    amount: formatCredit(
+                      summary.nextRelease.amountMinor,
+                      summary.currency,
+                    ),
+                    date: formatDateWithSuffix(
+                      summary.nextRelease.releaseAt,
+                      undefined,
+                      locale,
+                    ),
+                  })
+                : t("pending")}
             </span>
           </p>
         ) : null}
         {summary.onHoldMinor > 0 ? (
           <p className="text-muted-foreground">
-            <span className="font-medium tabular-nums text-foreground">
-              {formatCredit(summary.onHoldMinor, summary.currency)}
-            </span>{" "}
-            on hold for a checkout in progress
+            {t.rich("amountOnHoldForCheckout", {
+              amount: formatCredit(summary.onHoldMinor, summary.currency),
+              strong: (chunks) => (
+                <span className="font-medium tabular-nums text-foreground">
+                  {chunks}
+                </span>
+              ),
+            })}
           </p>
         ) : null}
         {welcomeMinor > 0 ? (
           <p className="text-muted-foreground">
-            <span className="font-medium tabular-nums text-foreground">
-              {formatCredit(welcomeMinor, summary.currency)}
-            </span>{" "}
-            is welcome credit for your first ticket order
-            {welcomeMinOrderMinor
-              ? ` of ${formatCredit(welcomeMinOrderMinor, summary.currency)} or more`
-              : ""}
-            .
+            {t.rich(
+              welcomeMinOrderMinor
+                ? "welcomeCreditForFirstOrderMin"
+                : "welcomeCreditForFirstOrder",
+              {
+                amount: formatCredit(welcomeMinor, summary.currency),
+                minimum: welcomeMinOrderMinor
+                  ? formatCredit(welcomeMinOrderMinor, summary.currency)
+                  : "",
+                strong: (chunks) => (
+                  <span className="font-medium tabular-nums text-foreground">
+                    {chunks}
+                  </span>
+                ),
+              },
+            )}
           </p>
         ) : null}
         {summary.expiringSoon ? (
           <p className="text-amber-700 dark:text-amber-400">
-            {formatCredit(summary.expiringSoon.amountMinor, summary.currency)}{" "}
-            expires on {formatDateWithSuffix(summary.expiringSoon.expiresAt)}.
-            Use it before then.
+            {t("expiresOnUseItBeforeThen", {
+              formatCredit: formatCredit(
+                summary.expiringSoon.amountMinor,
+                summary.currency,
+              ),
+              formatDateWithSuffix: formatDateWithSuffix(
+                summary.expiringSoon.expiresAt,
+                undefined,
+                locale,
+              ),
+            })}
           </p>
         ) : null}
       </div>
 
       {frozen ? (
         <p className="mt-4 rounded-md bg-muted p-3 text-sm">
-          Your credit is on hold while we review recent activity. You can still
-          earn, but you can&apos;t spend credit until the review is finished.
-          Contact support if you have questions.
+          {t("yourCreditIsOnHoldWhile")}
         </p>
       ) : null}
       {summary.inDebt ? (
         <p className="mt-4 rounded-md bg-muted p-3 text-sm">
-          A reward was reversed after you had already used it. New credit you
-          earn goes towards this first.
+          {t("aRewardWasReversedAfterYou")}
         </p>
       ) : null}
     </section>

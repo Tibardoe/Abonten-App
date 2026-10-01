@@ -6,6 +6,7 @@ import {
   loadLegalDocument,
 } from "@/utils/publicContent";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -33,8 +34,10 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("legal");
+
   const { slug } = await params;
-  if (!isLegalSlug(slug)) return { title: "Legal" };
+  if (!isLegalSlug(slug)) return { title: t("legal") };
   const doc = loadLegalDocument(slug);
   return {
     title: doc.title,
@@ -48,6 +51,8 @@ export default async function LegalDocumentPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const t = await getTranslations("legal");
+
   const { slug } = await params;
   if (!isLegalSlug(slug)) notFound();
   const doc = loadLegalDocument(slug);
@@ -59,9 +64,9 @@ export default async function LegalDocumentPage({
     <div className="mx-auto flex max-w-5xl flex-col gap-8 py-6 lg:flex-row lg:gap-12">
       <aside className="lg:sticky lg:top-28 lg:w-64 lg:shrink-0 lg:self-start">
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          On this page
+          {t("onThisPage")}
         </p>
-        <nav aria-label="Sections">
+        <nav aria-label={t("sections")}>
           <ul className="flex flex-col gap-1 text-sm">
             {doc.headings
               .filter((h) => h.level === 2)
@@ -78,7 +83,7 @@ export default async function LegalDocumentPage({
           </ul>
         </nav>
         <p className="mt-6 mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Other documents
+          {t("otherDocuments")}
         </p>
         <ul className="flex flex-col gap-1 text-sm">
           {others.map((s) => (
@@ -96,14 +101,18 @@ export default async function LegalDocumentPage({
 
       <article className="min-w-0 flex-1">
         <div className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
-          {doc.version ? <span>Version {doc.version}</span> : null}
+          {doc.version ? (
+            <span>{t("version", { version: doc.version })}</span>
+          ) : null}
           {doc.effectiveDate ? (
-            <span> · Effective {doc.effectiveDate}</span>
+            <span> {t("effective", { effectiveDate: doc.effectiveDate })}</span>
           ) : null}
           {doc.lastUpdated ? (
-            <span> · Last updated {doc.lastUpdated}</span>
+            <span> {t("lastUpdated", { lastUpdated: doc.lastUpdated })}</span>
           ) : null}
-          {doc.status ? <span> · Status: {doc.status}</span> : null}
+          {doc.status ? (
+            <span> {t("status", { status: doc.status })}</span>
+          ) : null}
         </div>
         <MarkdownDocument blocks={doc.blocks} />
       </article>

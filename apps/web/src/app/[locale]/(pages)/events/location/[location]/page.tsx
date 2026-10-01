@@ -12,6 +12,7 @@ import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import AllEventsList from "./AllEventsList";
 
@@ -20,11 +21,13 @@ export async function generateMetadata({
 }: {
   params: Promise<{ location: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("events");
+
   const { location } = await params;
   const label = undoSlug(decodeURIComponent(location));
   return {
-    title: `Events in ${label}`,
-    description: `Upcoming events in ${label}: what is happening today, this week and this month, with tickets on Abonten Hub.`,
+    title: t("eventsIn", { label: label }),
+    description: t("upcomingEventsInWhatIsHappening", { label: label }),
     alternates: { canonical: `/events/location/${location}` },
   };
 }
@@ -40,6 +43,8 @@ export default async function page({
   params: Promise<{ location: string }>;
   searchParams: Promise<{ lat?: string; lng?: string; joinWaitlist?: string }>;
 }) {
+  const t = await getTranslations("events");
+
   const { location } = await params;
   const { lat: latParam, lng: lngParam, joinWaitlist } = await searchParams;
 
@@ -129,18 +134,17 @@ export default async function page({
         <div className="relative w-64 h-64 mx-auto mb-8">
           <img
             src="/assets/images/notFound.jpg"
-            alt="No events found"
+            alt={t("noEventsFound")}
             className="w-full h-full object-contain opacity-90"
           />
         </div>
 
         <h2 className="text-2xl font-medium text-muted-foreground mb-1">
-          No Events Found
+          {t("noEventsFound2")}
         </h2>
 
         <p className="text-muted-foreground text-sm mb-6 max-w-md">
-          We couldn’t find any events in this location. Try changing your
-          location or be the first to post one.
+          {t("weCouldnTFindAnyEvents")}
         </p>
       </div>
     </div>
@@ -164,37 +168,37 @@ export default async function page({
           <FeaturedEventsCarousel events={featuredEvents} />
 
           <EventsSlider
-            heading="Around-You"
+            heading={t("aroundYou")}
             events={aroundYou || []}
             urlPath={`location/${safeLocation}/explore/around-you`}
           />
 
           <EventsSlider
-            heading="Top-rated Organizers"
+            heading={t("topRatedOrganizers")}
             events={topRatedOrganizers}
             urlPath={`location/${safeLocation}/explore/top-rated-organizers`}
           />
 
           <EventsSlider
-            heading="Happening Today"
+            heading={t("happeningToday")}
             events={happeningToday}
             urlPath={`location/${safeLocation}/explore/happening-today`}
           />
 
           <EventsSlider
-            heading="Happening This Week"
+            heading={t("happeningThisWeek")}
             events={happeningThisWeek}
             urlPath={`location/${safeLocation}/explore/happening-this-week`}
           />
 
           <EventsSlider
-            heading="Happening This Month"
+            heading={t("happeningThisMonth")}
             events={happeningThisMonth}
             urlPath={`location/${safeLocation}/explore/happening-this-month`}
           />
 
           <div className="mb-5">
-            <h2 className="text-lg font-medium">All Events</h2>
+            <h2 className="text-lg font-medium">{t("allEvents")}</h2>
 
             <AllEventsList
               key={`${lat}-${lng}`}
@@ -211,18 +215,17 @@ export default async function page({
             <div className="relative w-64 h-64 mx-auto mb-8">
               <img
                 src="/assets/images/notFound.jpg"
-                alt="No events found"
+                alt={t("noEventsFound")}
                 className="w-full h-full object-contain opacity-90"
               />
             </div>
 
             <h2 className="text-2xl font-medium text-muted-foreground mb-1">
-              No Events Found
+              {t("noEventsFound2")}
             </h2>
 
             <p className="text-muted-foreground text-sm mb-6 max-w-md">
-              We couldn’t find any events in this location. Try changing your
-              location or be the first to post one.
+              {t("weCouldnTFindAnyEvents")}
             </p>
           </div>
         </div>

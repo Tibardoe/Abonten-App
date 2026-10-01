@@ -5,6 +5,7 @@ import type {
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { AppText, Icon, Stars } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -56,17 +57,21 @@ export function ProfilePlaceRow({ place }: { place: ProfilePlace }) {
 }
 
 export function ProfileReviewRow({ review }: { review: ProfileReview }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("profile");
+
   return (
     <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
       <View className="flex-row items-center justify-between">
         <AppText variant="bodyStrong" numberOfLines={1}>
-          {review.reviewer?.username ?? "Someone"}
+          {review.reviewer?.username ?? t("someone")}
         </AppText>
         <Stars rating={review.rating} />
       </View>
       {review.place?.name ? (
         <AppText variant="caption" numberOfLines={1}>
-          on {review.place.name}
+          {t("on", { name: review.place.name })}
         </AppText>
       ) : null}
       {review.title ? (
@@ -78,7 +83,7 @@ export function ProfileReviewRow({ review }: { review: ProfileReview }) {
         <AppText variant="body">{review.comment}</AppText>
       ) : null}
       <AppText variant="caption">
-        {formatDateWithSuffix(review.created_at)}
+        {formatDateWithSuffix(review.created_at, undefined, locale)}
       </AppText>
     </View>
   );

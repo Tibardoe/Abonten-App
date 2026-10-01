@@ -1,11 +1,16 @@
 import type { MessageRow } from "@abonten/types/messagingType";
+import { useTranslations } from "next-intl";
 
-function systemText(message: MessageRow, isMineInitiator: boolean): string {
+function systemText(
+  message: MessageRow,
+  isMineInitiator: boolean,
+  t: (key: string) => string,
+): string {
   switch (message.system_event) {
     case "conversation_started":
       return isMineInitiator
-        ? "You started this conversation"
-        : "Conversation started";
+        ? t("youStartedThisConversation")
+        : t("conversationStarted");
     default:
       return message.content ?? "";
   }
@@ -18,11 +23,13 @@ export function SystemMessageRow({
   message: MessageRow;
   currentUserId: string | undefined;
 }) {
+  const t = useTranslations("messaging");
   const initiatorId =
     (message.system_data?.initiator_id as string | undefined) ?? null;
   const text = systemText(
     message,
     !!currentUserId && initiatorId === currentUserId,
+    t,
   );
   if (!text) return null;
 

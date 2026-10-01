@@ -1,5 +1,7 @@
 import { getUserBookings } from "@/actions/getUserBookings";
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import UserBookingsList from "./UserBookingsList";
 
@@ -7,15 +9,18 @@ import UserBookingsList from "./UserBookingsList";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-const emptyState = (
-  <div className="flex flex-col items-center">
-    <h1 className="font-medium text-2xl">No bookings yet</h1>
+function EmptyState() {
+  const t = useTranslations("account");
+  return (
+    <div className="flex flex-col items-center">
+      <h1 className="font-medium text-2xl">{t("noBookingsYet")}</h1>
 
-    <p className="text-muted-foreground text-sm">
-      Your booking requests to places will show up here.
-    </p>
-  </div>
-);
+      <p className="text-muted-foreground text-sm">
+        {t("yourBookingRequestsToPlacesWill")}
+      </p>
+    </div>
+  );
+}
 
 /**
  * getUserBookings.ts is self-scoped (auth.getUser(), no username param) --
@@ -29,6 +34,8 @@ export default async function page({
 }: {
   params: Promise<{ username: string }>;
 }) {
+  const t = await getTranslations("account");
+
   const { username } = await params;
   const profile = await getUserProfileDetails(username);
   if (profile.status !== 200 || profile.ownUsername !== username) {
@@ -40,7 +47,7 @@ export default async function page({
   if (firstPage.status !== 200) {
     return (
       <div className="text-center mt-5 text-destructive">
-        Failed to load bookings: {firstPage.message}
+        {t("failedToLoadBookings", { message: firstPage.message ?? "" })}
       </div>
     );
   }
@@ -55,7 +62,7 @@ export default async function page({
       queryKey={["user-bookings"]}
       initialPage={firstPage}
       fetchPage={fetchPage}
-      emptyState={emptyState}
+      emptyState={<EmptyState />}
     />
   );
 }

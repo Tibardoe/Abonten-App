@@ -1,4 +1,5 @@
 import { Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -56,6 +57,8 @@ export function MediaViewer({
   onClose: () => void;
   onIndexChange?: (index: number) => void;
 }) {
+  const t = useTranslations("common");
+
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<MediaViewerItem>>(null);
@@ -135,7 +138,7 @@ export function MediaViewer({
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t("close")}
             hitSlop={12}
             onPress={onClose}
             style={styles.closeBtn}
@@ -161,6 +164,8 @@ function ZoomablePage({
   onClose: () => void;
   onZoomChange: (zoomed: boolean) => void;
 }) {
+  const t = useTranslations("common");
+
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const tx = useSharedValue(0);
@@ -306,7 +311,7 @@ function ZoomablePage({
             <View style={styles.fallback}>
               <Icon name="image-outline" size={40} color="#888" />
               <Animated.Text style={styles.fallbackText}>
-                Image unavailable
+                {t("imageUnavailable")}
               </Animated.Text>
             </View>
           ) : (
@@ -326,7 +331,7 @@ function ZoomablePage({
                   setLoading(false);
                   setFailed(true);
                 }}
-                accessibilityLabel="Full screen image"
+                accessibilityLabel={t("fullScreenImage")}
               />
             </Animated.View>
           )}

@@ -47,6 +47,7 @@ import {
   Store,
   UserPlus,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Composer } from "./Composer";
@@ -64,6 +65,8 @@ function canEditMessage(m: MessageRow, myId: string | undefined): boolean {
 }
 
 export function ChatThread({ conversationId }: { conversationId: string }) {
+  const t = useTranslations("messaging");
+
   const { data: user } = useCurrentUser();
   const myId = user?.id;
   const toast = useToast();
@@ -176,7 +179,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
       {
         onSettled: (res) => {
           if (res && res.status !== 200) {
-            toast.error(res.message ?? "Couldn't edit that message.");
+            toast.error(res.message ?? t("couldnTEditThatMessage"));
           }
           setEditing(null);
         },
@@ -185,11 +188,11 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   }
 
   function onDelete(m: MessageRow) {
-    if (!window.confirm("Delete this message? This can't be undone.")) return;
+    if (!window.confirm(t("deleteThisMessageThisCanT"))) return;
     deleteMsg.mutate(m.id, {
       onSettled: (res) => {
         if (res && res.status !== 200) {
-          toast.error(res.message ?? "Couldn't delete that message.");
+          toast.error(res.message ?? t("couldnTDeleteThatMessage"));
         }
       },
     });
@@ -216,7 +219,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center text-sm text-muted-foreground">
         <Ban className="h-6 w-6" />
-        This conversation isn&apos;t available.
+        {t("thisConversationIsnTAvailable")}
       </div>
     );
   }
@@ -228,7 +231,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
         <Link
           href="/messages"
           className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent md:hidden"
-          aria-label="Back to messages"
+          aria-label={t("backToMessages")}
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -250,13 +253,13 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
           )}
           <span className="block text-[11px] text-muted-foreground">
             {context?.type === "event"
-              ? "Event"
+              ? t("event")
               : context?.type === "place"
-                ? "Place"
+                ? t("place")
                 : context?.type === "support"
-                  ? "Support"
+                  ? t("support")
                   : ""}
-            {closed ? " · Closed" : ""}
+            {closed ? t("closed") : ""}
           </span>
         </div>
 
@@ -264,7 +267,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Conversation options"
+              aria-label={t("conversationOptions")}
               className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
             >
               <MoreVertical className="h-5 w-5" />
@@ -284,7 +287,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
               ) : (
                 <BellOff className="mr-2 h-4 w-4" />
               )}
-              {context?.my_participant.muted ? "Unmute" : "Mute"}
+              {context?.my_participant.muted ? t("unmute") : t("mute")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() =>
@@ -299,7 +302,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
               ) : (
                 <Archive className="mr-2 h-4 w-4" />
               )}
-              {context?.my_participant.archived ? "Unarchive" : "Archive"}
+              {context?.my_participant.archived ? t("unarchive") : t("archive")}
             </DropdownMenuItem>
             {otherUserId ? (
               <DropdownMenuItem
@@ -316,13 +319,13 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
                 ) : (
                   <Ban className="mr-2 h-4 w-4" />
                 )}
-                {iBlockedThem ? "Unblock" : "Block"}
+                {iBlockedThem ? t("unblock") : t("block")}
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => setReportOpen(true)}>
               <Flag className="mr-2 h-4 w-4" />
-              Report
+              {t("report")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -377,8 +380,8 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
           {entries.length === 0 ? (
             <p className="px-8 py-16 text-center text-sm text-muted-foreground">
               {messagesQ.isError
-                ? "Couldn't load messages."
-                : "No messages yet — say hello."}
+                ? t("couldnTLoadMessages")
+                : t("noMessagesYetSayHello")}
             </p>
           ) : null}
           {messagesQ.isFetchingNextPage ? (

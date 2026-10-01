@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toE164 } from "@/fieldOps/lib/wizardStorage";
 import { useToast } from "@/hooks/useToast";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 /**
@@ -42,6 +43,8 @@ export default function OwnerVerificationStep({
   onFullName: (v: string) => void;
   onPhone: (v: string) => void;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const [pending, start] = useTransition();
   const [sent, setSent] = useState(false);
@@ -54,9 +57,7 @@ export default function OwnerVerificationStep({
       // be refused or sent into the void, so it is normalised here first.
       const e164 = toE164(phone, dialCode);
       if (!e164) {
-        toast.error(
-          `Enter the ${noun}'s phone, e.g. 024 123 4567 or ${dialCode}241234567.`,
-        );
+        toast.error(t("enterTheSPhoneEG", { noun: noun, dialCode: dialCode }));
         return;
       }
       const res = await requestFieldOpsOwnerOtp({
@@ -68,9 +69,9 @@ export default function OwnerVerificationStep({
       if (res.status === 200) {
         setSent(true);
         setConsentPath(res.data?.consentPath ?? null);
-        toast.success(`Code sent to the ${noun}.`);
+        toast.success(t("codeSentToThe", { noun: noun }));
       } else {
-        toast.error(res.message ?? "Couldn't send the code.");
+        toast.error(res.message ?? t("couldnTSendTheCode"));
       }
     });
 
@@ -82,17 +83,22 @@ export default function OwnerVerificationStep({
         code: value,
       });
       if (res.status === 200) {
-        toast.success(`${noun[0].toUpperCase()}${noun.slice(1)} verified.`);
+        toast.success(
+          t("verified2", {
+            toUpperCase: noun[0].toUpperCase(),
+            slice: noun.slice(1),
+          }),
+        );
         onVerified();
       } else {
-        toast.error(res.message ?? "That code didn't work.");
+        toast.error(res.message ?? t("thatCodeDidnTWork"));
       }
     });
 
   if (verified) {
     return (
       <p className="rounded-md bg-emerald-500/10 p-3 text-sm">
-        Verified. Their Abonten account will own this from the start.
+        {t("verifiedTheirAbontenAccountWillOwn")}
       </p>
     );
   }
@@ -100,14 +106,15 @@ export default function OwnerVerificationStep({
   return (
     <>
       <p className="text-sm text-muted-foreground">
-        A code goes to the {noun}&apos;s phone. By entering it they agree to
-        list on Abonten. It must be their own number, not yours.
+        {t("aCodeGoesToTheS", { noun: noun })}
       </p>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="flex flex-col gap-1">
           <Label htmlFor="ov-name">
-            {noun[0].toUpperCase()}
-            {noun.slice(1)}&apos;s full name
+            {t("sFullName", {
+              toUpperCase: noun[0].toUpperCase(),
+              slice: noun.slice(1),
+            })}
           </Label>
           <Input
             id="ov-name"
@@ -117,7 +124,7 @@ export default function OwnerVerificationStep({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="ov-phone">Phone number</Label>
+          <Label htmlFor="ov-phone">{t("phoneNumber")}</Label>
           <Input
             id="ov-phone"
             inputMode="tel"
@@ -134,21 +141,20 @@ export default function OwnerVerificationStep({
           pending || fullName.trim().length < 2 || phone.trim().length < 9
         }
       >
-        {sent ? "Send another code" : "Send the code"}
+        {sent ? t("sendAnotherCode") : t("sendTheCode")}
       </Button>
       {sent ? (
         <div className="flex flex-col gap-2">
           {consentPath ? (
             <p className="rounded-md border border-dashed p-3 text-sm">
-              Working over the phone? Send them this link so they enter the code
-              themselves:{" "}
+              {t("workingOverThePhoneSendThem")}
               <span className="break-all font-mono text-xs">
                 {typeof window !== "undefined" ? window.location.origin : ""}
                 {consentPath}
               </span>
             </p>
           ) : null}
-          <Label>Code from their phone</Label>
+          <Label>{t("codeFromTheirPhone")}</Label>
           <OtpInput
             value={code}
             onChange={(v) => {

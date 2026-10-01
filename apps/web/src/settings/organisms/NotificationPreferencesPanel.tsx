@@ -16,6 +16,7 @@ import type {
   NotificationSubscription,
 } from "@abonten/types/discoveryType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useFormatter, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -128,6 +129,8 @@ function SubscriptionRow({
   onStop: () => void;
   pending: boolean;
 }) {
+  const t = useTranslations("settings");
+
   const href =
     sub.kind === "organizer" && sub.targetSlug
       ? `/user/${sub.targetSlug}/posts`
@@ -142,12 +145,12 @@ function SubscriptionRow({
     : null;
   const kindLabel =
     sub.kind === "organizer"
-      ? "New events"
+      ? t("newEvents")
       : sub.kind === "place"
-        ? "Updates from this place"
+        ? t("updatesFromThisPlace")
         : sub.kind === "similar_events"
-          ? "Similar events"
-          : "Similar places";
+          ? t("similarEvents")
+          : t("similarPlaces");
 
   return (
     <div className="flex items-center gap-3 py-3">
@@ -181,9 +184,7 @@ function SubscriptionRow({
         )}
         <p className="text-xs text-muted-foreground">
           {kindLabel}
-          {sub.status === "paused"
-            ? ' · Paused after several "Not interested"'
-            : ""}
+          {sub.status === "paused" ? t("pausedAfterSeveralNotInterested") : ""}
         </p>
       </div>
       <button
@@ -192,30 +193,32 @@ function SubscriptionRow({
         disabled={pending}
         className="shrink-0 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-50"
       >
-        Stop alerts
+        {t("stopAlerts")}
       </button>
     </div>
   );
 }
 
 function BrowserPushSection() {
+  const t = useTranslations("settings");
+
   const push = useWebPush();
   if (push.state === "loading" || push.state === "unavailable") return null;
 
   const description =
     push.state === "unsupported"
       ? needsHomeScreenInstall()
-        ? "On iPhone and iPad, add Abonten Hub to your Home Screen from Safari's Share menu, then open it from there to turn this on."
-        : "This browser can't show notifications. Try a recent Chrome, Edge, Firefox or Safari."
+        ? t("onIphoneAndIpadAddAbonten")
+        : t("thisBrowserCanTShowNotifications")
       : push.state === "denied"
-        ? "Notifications are blocked for this site. Allow them in your browser's site settings, then come back here."
-        : "Get the same notifications as the app on this computer or browser, even when the site isn't open. The switches above still apply.";
+        ? t("notificationsAreBlockedForThisSite")
+        : t("getTheSameNotificationsAsThe");
 
   return (
-    <Section title="This browser">
+    <Section title={t("thisBrowser")}>
       <Row
         id="browser-push"
-        title="Browser notifications"
+        title={t("browserNotifications")}
         description={push.error ?? description}
         checked={push.state === "on"}
         disabled={
@@ -230,6 +233,9 @@ function BrowserPushSection() {
 }
 
 export default function NotificationPreferencesPanel() {
+  const t = useTranslations("settings");
+  const format = useFormatter();
+
   const toast = useToast();
   const qc = useQueryClient();
   const { program } = useDiscoveryProgram();
@@ -269,15 +275,15 @@ export default function NotificationPreferencesPanel() {
     onSuccess: (res, _patch, context) => {
       if (res.status === 200 && "data" in res && res.data) {
         qc.setQueryData(PREFS_KEY, res.data);
-        toast.success(res.message ?? "Saved.");
+        toast.success(res.message ?? t("saved"));
       } else {
         qc.setQueryData(PREFS_KEY, context?.previous);
-        toast.error(res.message ?? "Couldn't save that. Please try again.");
+        toast.error(res.message ?? t("couldnTSaveThatPleaseTry"));
       }
     },
     onError: (_e, _patch, context) => {
       qc.setQueryData(PREFS_KEY, context?.previous);
-      toast.error("Couldn't save that. Please try again.");
+      toast.error(t("couldnTSaveThatPleaseTry"));
     },
   });
 
@@ -290,12 +296,12 @@ export default function NotificationPreferencesPanel() {
           (list ?? []).filter((s) => s.id !== subscriptionId),
         );
         qc.invalidateQueries({ queryKey: ["alert-subscription"] });
-        toast.success("Alerts turned off.");
+        toast.success(t("alertsTurnedOff"));
       } else {
-        toast.error(res.message ?? "Couldn't turn these alerts off.");
+        toast.error(res.message ?? t("couldnTTurnTheseAlertsOff"));
       }
     },
-    onError: () => toast.error("Couldn't turn these alerts off."),
+    onError: () => toast.error(t("couldnTTurnTheseAlertsOff")),
   });
 
   if (prefs.isLoading) {
@@ -310,7 +316,7 @@ export default function NotificationPreferencesPanel() {
   if (prefs.isError || !prefs.data) {
     return (
       <InlineErrorRetry
-        message="Couldn't load your notification settings."
+        message={t("couldnTLoadYourNotificationSettings")}
         onRetry={() => prefs.refetch()}
       />
     );
@@ -324,38 +330,43 @@ export default function NotificationPreferencesPanel() {
   return (
     <div className="space-y-6">
       {showFollowing ? (
-        <Section title="Alerts and picks">
+        <Section title={t("alertsAndPicks")}>
           <Row
             id="organizer-alerts"
-            title="New events from organizers you follow"
-            description="A push when someone you tapped “Notify me” on posts a new event."
+            title={t("newEventsFromOrganizersYouFollow")}
+            description={t("aPushWhenSomeoneYouTapped")}
             checked={p.organizerAlertsPush}
             disabled={save.isPending}
             onChange={(v) => save.mutate({ organizerAlertsPush: v })}
           />
           <Row
             id="place-updates"
-            title="Updates from places you follow"
-            description="New events at places you asked to hear from."
+            title={t("updatesFromPlacesYouFollow")}
+            description={t("newEventsAtPlacesYouAsked")}
             checked={p.placeUpdatesPush}
             disabled={save.isPending}
             onChange={(v) => save.mutate({ placeUpdatesPush: v })}
           />
           <Row
             id="recommendations"
-            title="Similar events and places"
-            description="Picks like the ones you said you enjoy. At most one push a day, never at night."
+            title={t("similarEventsAndPlaces")}
+            description={t("picksLikeTheOnesYouSaid")}
             checked={p.recommendationsPush}
             disabled={save.isPending}
             onChange={(v) => save.mutate({ recommendationsPush: v })}
           />
           <div className="flex flex-wrap items-center justify-between gap-3 py-4">
             <div>
-              <p className="font-medium">Take a break</p>
+              <p className="font-medium">{t("takeABreak")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {pausedUntil
-                  ? `Alerts and picks are paused until ${pausedUntil.toLocaleDateString(undefined, { day: "numeric", month: "short" })}.`
-                  : "Pause alerts and picks for two weeks. Tickets and payments still reach you."}
+                  ? t("alertsAndPicksArePausedUntil", {
+                      date: format.dateTime(pausedUntil, {
+                        day: "numeric",
+                        month: "short",
+                      }),
+                    })
+                  : t("pauseAlertsAndPicksForTwo")}
               </p>
             </div>
             <button
@@ -366,22 +377,21 @@ export default function NotificationPreferencesPanel() {
               }
               className="rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-accent disabled:opacity-50"
             >
-              {pausedUntil ? "Resume now" : "Pause for 2 weeks"}
+              {pausedUntil ? t("resumeNow") : t("pauseFor2Weeks")}
             </button>
           </div>
         </Section>
       ) : null}
 
       {showFollowing ? (
-        <Section title="What you follow">
+        <Section title={t("whatYouFollow")}>
           {subs.isLoading ? (
             <div className="py-4">
               <Skeleton className="h-10 w-full" />
             </div>
           ) : followed.length === 0 ? (
             <p className="py-4 text-sm text-muted-foreground">
-              You don't follow anyone yet. Tap “Notify me” on an organizer's
-              profile, or turn on alerts after you get a ticket.
+              {t("youDonTFollowAnyoneYet")}
             </p>
           ) : (
             followed.map((sub) => (
@@ -396,25 +406,25 @@ export default function NotificationPreferencesPanel() {
         </Section>
       ) : null}
 
-      <Section title="Messages and activity">
+      <Section title={t("messagesAndActivity")}>
         <Row
           id="social"
-          title="Messages, reviews and bookings"
-          description="Push for new messages, reviews of your events or places, replies and booking updates. You'll still see them in Notifications."
+          title={t("messagesReviewsAndBookings")}
+          description={t("pushForNewMessagesReviewsOf")}
           checked={p.socialPush}
           disabled={save.isPending}
           onChange={(v) => save.mutate({ socialPush: v })}
         />
       </Section>
 
-      <Section title="Email">
+      <Section title={t("email")}>
         <Row
           id="reward-emails"
-          title="Email me when credit is ready"
+          title={t("emailMeWhenCreditIsReady")}
           description={
             p.email
-              ? `To ${p.email}. At most one email every 12 hours.`
-              : "Your account has no email address, so you'll get these in the app only."
+              ? t("toAtMostOneEmailEvery", { email: p.email })
+              : t("yourAccountHasNoEmailAddress")
           }
           checked={p.rewardEmails && !!p.email}
           disabled={save.isPending || !p.email}
@@ -423,11 +433,11 @@ export default function NotificationPreferencesPanel() {
         {program.recommendationEmail || p.recommendationEmails ? (
           <Row
             id="recommendation-emails"
-            title="Email me picks and alerts"
+            title={t("emailMePicksAndAlerts")}
             description={
               p.email
-                ? `The same picks as the push, to ${p.email}. At most one a day. Unsubscribe from any of these emails at any time.`
-                : "Your account has no email address, so you'll get picks in the app only."
+                ? t("theSamePicksAsThePush", { email: p.email })
+                : t("yourAccountHasNoEmailAddress2")
             }
             checked={p.recommendationEmails && !!p.email}
             disabled={
@@ -449,12 +459,9 @@ export default function NotificationPreferencesPanel() {
             className="mt-0.5 text-lg text-muted-foreground"
           />
           <div>
-            <p className="font-medium">Always on</p>
+            <p className="font-medium">{t("alwaysOn")}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Tickets, payments, refunds, event cancellations, account security
-              and verification decisions. These are part of the service, so they
-              can't be turned off. To stop all push notifications, use your
-              device settings.
+              {t("ticketsPaymentsRefundsEventCancellationsAccount")}
             </p>
           </div>
         </div>

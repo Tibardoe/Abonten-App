@@ -2,6 +2,7 @@
 
 import { useEventShare } from "@/hooks/useEventShare";
 import { weeklyEditionPath, weeklyShareText } from "@abonten/core/weekly/copy";
+import { useTranslations } from "next-intl";
 import { IoShareSocialOutline } from "react-icons/io5";
 
 // Shares a dated edition link. The same share hook as events: the native
@@ -22,13 +23,15 @@ export default function WeeklyShareButton({
   /** "onImage" for use over a banner photo. */
   tone?: "default" | "onImage";
 }) {
+  const t = useTranslations("weekly");
+
   const origin =
     typeof window === "undefined"
       ? (process.env.NEXT_PUBLIC_BASE_URL ?? "")
       : window.location.origin;
   const share = useEventShare({
     title: weeklyShareText(title, scopeName),
-    text: "Check out this week's Abonten Weekly.",
+    text: t("checkOutThisWeekSAbonten"),
     url: `${origin}${weeklyEditionPath(scopeSlug, weekStart)}`,
   });
 
@@ -43,7 +46,7 @@ export default function WeeklyShareButton({
       }
     >
       <IoShareSocialOutline aria-hidden className="text-lg" />
-      Share
+      {t("share")}
     </button>
   );
 }

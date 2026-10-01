@@ -1,6 +1,7 @@
 "use client";
 
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { MdClose } from "react-icons/md";
 import { cn } from "../lib/utils";
@@ -30,6 +31,8 @@ export function BottomSheet({
   footer,
   className,
 }: BottomSheetProps) {
+  const t = useTranslations("common");
+
   const panelRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<Element | null>(null);
 
@@ -62,7 +65,7 @@ export function BottomSheet({
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("close")}
         onClick={onClose}
         className="absolute inset-0 bg-overlay/50"
       />
@@ -85,7 +88,7 @@ export function BottomSheet({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("close")}
             className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           >
             <MdClose className="text-xl" />

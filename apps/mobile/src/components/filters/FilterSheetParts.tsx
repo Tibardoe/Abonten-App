@@ -1,4 +1,5 @@
 import { AppText, Chip, Label } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The building blocks of every filter sheet (Search, Explore), so they look
@@ -21,6 +22,8 @@ export function FilterSection({
   first?: boolean;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("explore");
+
   return (
     <View className={first ? "gap-2.5" : "gap-2.5 border-t border-border pt-5"}>
       <View className="flex-row items-center justify-between">
@@ -35,11 +38,11 @@ export function FilterSection({
             onPress={onClear}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={`Clear ${label}`}
+            accessibilityLabel={t("clear2", { label: label })}
             className="min-h-[32px] justify-center"
           >
             <AppText variant="caption" tone="brand" className="font-semibold">
-              Clear
+              {t("clear")}
             </AppText>
           </Pressable>
         ) : null}

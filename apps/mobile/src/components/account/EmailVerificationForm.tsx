@@ -7,6 +7,7 @@ import {
   maskEmail,
 } from "@abonten/core/emailOtp";
 import { AppText, Button, Field, Input, OtpInput } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { View } from "react-native";
 
@@ -37,6 +38,8 @@ export function EmailVerificationForm({
   onDone: (message: string) => void;
   onCancel?: () => void;
 }) {
+  const t = useTranslations("account");
+
   const { session } = useSession();
   const user = session?.user;
   const currentEmail = user?.email ?? null;
@@ -62,9 +65,7 @@ export function EmailVerificationForm({
         e.status === 422 ||
         /already.*(registered|exists|in use)/i.test(e.message);
       setError(
-        conflict
-          ? "That email can't be used."
-          : "Couldn't send a code. Please try again.",
+        conflict ? t("thatEmailCanTBeUsed") : t("couldnTSendACodePlease"),
       );
       return false;
     }
@@ -75,11 +76,11 @@ export function EmailVerificationForm({
     setError(null);
     const next = email.trim().toLowerCase();
     if (!isLikelyEmail(next)) {
-      setError("Enter a valid email address.");
+      setError(t("enterAValidEmailAddress"));
       return;
     }
     if (next === currentEmail) {
-      setError("That's already your email address.");
+      setError(t("thatSAlreadyYourEmailAddress"));
       return;
     }
     setBusy(true);
@@ -89,7 +90,7 @@ export function EmailVerificationForm({
         setPhase({ step: "code", target: next, mode: "change-new" });
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("networkErrorPleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -105,13 +106,13 @@ export function EmailVerificationForm({
         options: { shouldCreateUser: false },
       });
       if (e) {
-        setError("Couldn't send a code. Please try again.");
+        setError(t("couldnTSendACodePlease"));
         return;
       }
       setOtp("");
       setPhase({ step: "code", target: currentEmail, mode: "confirm" });
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("networkErrorPleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -132,7 +133,7 @@ export function EmailVerificationForm({
       }
       setSentNote(`A new code is on its way to ${maskEmail(phase.target)}.`);
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("networkErrorPleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -172,7 +173,7 @@ export function EmailVerificationForm({
       await supabase.auth.refreshSession();
       onDone(phase.mode === "confirm" ? "Email verified." : "Email updated.");
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("networkErrorPleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -181,8 +182,8 @@ export function EmailVerificationForm({
   if (phase.step === "code") {
     const label =
       phase.mode === "change-current"
-        ? `One more code — sent to your current address (${maskEmail(phase.target)})`
-        : `Enter the code sent to ${maskEmail(phase.target)}`;
+        ? t("oneMoreCodeSentToYour", { maskEmail: maskEmail(phase.target) })
+        : t("enterTheCodeSentTo", { maskEmail: maskEmail(phase.target) });
     return (
       <View className="gap-3">
         <Field label={label}>
@@ -203,13 +204,13 @@ export function EmailVerificationForm({
         ) : null}
         <View className="flex-row flex-wrap gap-2">
           <Button
-            title={busy ? "Verifying…" : "Verify"}
+            title={busy ? t("verifying") : t("verify")}
             onPress={() => verify()}
             disabled={busy || otp.trim().length < EMAIL_OTP_CODE_LENGTH}
           />
           {phase.mode !== "change-current" ? (
             <Button
-              title="Resend code"
+              title={t("resendCode")}
               variant="outline"
               onPress={resend}
               disabled={busy}
@@ -217,7 +218,7 @@ export function EmailVerificationForm({
           ) : null}
           {phase.mode === "change-new" ? (
             <Button
-              title="Use a different email"
+              title={t("useADifferentEmail")}
               variant="ghost"
               onPress={() => {
                 setError(null);
@@ -228,7 +229,7 @@ export function EmailVerificationForm({
             />
           ) : onCancel ? (
             <Button
-              title="Cancel"
+              title={t("cancel")}
               variant="ghost"
               onPress={onCancel}
               disabled={busy}
@@ -244,17 +245,17 @@ export function EmailVerificationForm({
       {unconfirmed ? (
         <View className="gap-2 rounded-lg bg-muted p-3">
           <AppText variant="small">
-            {currentEmail} isn't confirmed yet. We'll send a code to it.
+            {t("isnTConfirmedYetWeLl", { currentEmail: currentEmail })}
           </AppText>
           <Button
-            title={busy ? "Sending…" : "Send code"}
+            title={busy ? t("sending") : t("sendCode")}
             variant="outline"
             onPress={startConfirm}
             disabled={busy}
           />
         </View>
       ) : null}
-      <Field label={currentEmail ? "New email" : "Email"}>
+      <Field label={currentEmail ? t("newEmail") : t("email")}>
         <Input
           value={email}
           onChangeText={setEmail}
@@ -274,13 +275,13 @@ export function EmailVerificationForm({
       ) : null}
       <View className="flex-row gap-2">
         <Button
-          title={busy ? "Sending…" : "Send code"}
+          title={busy ? t("sending") : t("sendCode")}
           onPress={startChange}
           disabled={busy}
         />
         {onCancel ? (
           <Button
-            title="Cancel"
+            title={t("cancel")}
             variant="outline"
             onPress={onCancel}
             disabled={busy}

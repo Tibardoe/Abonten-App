@@ -12,6 +12,7 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import type { NotificationType } from "@abonten/types/notificationType";
 import { AppText, EmptyState, ListFooter, Refresher } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Pressable, SectionList, View } from "react-native";
@@ -44,6 +45,8 @@ function groupByDay(items: NotificationType[]): Section[] {
 }
 
 export default function Notifications() {
+  const t = useTranslations("notifications");
+
   const router = useRouter();
   const q = useNotifications();
   const markAll = useMarkAllNotificationsRead();
@@ -76,20 +79,20 @@ export default function Notifications() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Notifications"
+        title={t("notifications")}
         backFallback="/(app)/account"
         rightAccessory={
           hasUnread ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Mark all read"
+              accessibilityLabel={t("markAllRead")}
               hitSlop={8}
               onPress={() => markAll.mutate()}
               disabled={markAll.isPending}
               className="px-2 active:opacity-60"
             >
               <AppText variant="small" tone="brand" className="font-medium">
-                Mark all read
+                {t("markAllRead")}
               </AppText>
             </Pressable>
           ) : null
@@ -121,8 +124,8 @@ export default function Notifications() {
             view.kind === "empty" ? (
               <EmptyState
                 icon="notifications-outline"
-                title="No notifications yet"
-                description="Updates about your tickets, events and messages show up here."
+                title={t("noNotificationsYet")}
+                description={t("updatesAboutYourTicketsEventsAnd")}
               />
             ) : (
               <QueryUnavailable

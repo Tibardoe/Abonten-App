@@ -8,6 +8,7 @@ import type {
   UserTransactionRow,
   UserTransactionSummaryRow,
 } from "@abonten/types/transactions";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import TransactionsHistoryList from "./TransactionsHistoryList";
 
@@ -33,14 +34,16 @@ export default function TransactionsPageClient({
     cursor: string | null,
   ) => Promise<PaginatedResult<UserTransactionRow>>;
 }) {
+  const t = useTranslations("transactions");
+
   const [period, setPeriod] = useState<TransactionPeriod>(initialPeriod);
 
   const emptyState = (
     <div className="m-auto py-10 text-center">
       <p className="text-sm text-muted-foreground">
         {hasAnyHistoryEver
-          ? "No transactions for this period."
-          : "You have no transactions yet. Purchases and promotions you pay for will show up here."}
+          ? t("noTransactionsForThisPeriod")
+          : t("youHaveNoTransactionsYetPurchases")}
       </p>
     </div>
   );

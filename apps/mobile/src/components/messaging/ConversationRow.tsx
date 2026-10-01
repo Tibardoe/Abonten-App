@@ -3,6 +3,7 @@ import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { type ReactElement, memo, useCallback, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -131,6 +132,10 @@ export const ConversationRow = memo(function ConversationRow({
    *  isn't visible behind the lift-out. */
   hidden?: boolean;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("messaging");
+
   const { ref: rowRef, measure } = useAnchorMeasure();
   const handlePress = useCallback(() => onPress(item), [onPress, item]);
   const handleLongPress = useCallback(() => {
@@ -164,7 +169,10 @@ export const ConversationRow = memo(function ConversationRow({
     <Pressable
       ref={rowRef}
       accessibilityRole="button"
-      accessibilityLabel={`${identity}${unread ? `, ${item.unread_count} unread` : ""}. Long press for actions`}
+      accessibilityLabel={t("longPressForActions", {
+        identity: identity,
+        value: unread ? `, ${item.unread_count} unread` : "",
+      })}
       onPress={handlePress}
       onLongPress={onLongPress ? handleLongPress : undefined}
       delayLongPress={280}
@@ -201,7 +209,7 @@ export const ConversationRow = memo(function ConversationRow({
               tone={unread ? "brand" : "muted"}
               className={`text-[13px] ${unread ? "font-semibold" : ""}`}
             >
-              {getRelativeTime(item.last_message_at)}
+              {getRelativeTime(item.last_message_at, undefined, locale)}
             </AppText>
           ) : null}
         </View>
@@ -258,6 +266,8 @@ function SwipeableRow({
   onArchiveToggle?: () => void;
   onToggleRead?: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const ref = useRef<Swipeable>(null);
   return (
     <Swipeable
@@ -271,7 +281,7 @@ function SwipeableRow({
                 align="left"
                 tone="muted"
                 icon={unread ? "checkmark-done-outline" : "ellipse-outline"}
-                label={unread ? "Read" : "Unread"}
+                label={unread ? t("read") : t("unread")}
               />
             )
           : undefined
@@ -283,7 +293,7 @@ function SwipeableRow({
                 align="right"
                 tone="brand"
                 icon={archivedView ? "arrow-undo-outline" : "archive-outline"}
-                label={archivedView ? "Unarchive" : "Archive"}
+                label={archivedView ? t("unarchive") : t("archive")}
               />
             )
           : undefined

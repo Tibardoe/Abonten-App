@@ -17,6 +17,7 @@ import {
   KeyboardRevealGroup,
   OtpInput,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -50,6 +51,8 @@ function maskPhone(e164: string | undefined) {
 //     Supabase (supabase.auth.verifyOtp), which persists the session to
 //     secure-store itself. No server round-trip on verify.
 export default function Verify() {
+  const t = useTranslations("auth");
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
@@ -116,7 +119,7 @@ export default function Verify() {
       try {
         if (channel === "email") {
           if (!email) {
-            setError("Missing email — go back and try again.");
+            setError(t("missingEmailGoBackAndTry"));
             return;
           }
           // verifyOtp persists the session to secure-store on success;
@@ -137,14 +140,14 @@ export default function Verify() {
         }
 
         if (!phoneE164) {
-          setError("Missing phone number — go back and try again.");
+          setError(t("missingPhoneNumberGoBackAnd"));
           return;
         }
         const res = await api.auth.verifyPhoneOtp({ phoneE164, code: value });
 
         if (res.status !== 200 || !res.data) {
           hapticError();
-          setError(res.message ?? "That code didn't work. Try again.");
+          setError(res.message ?? t("thatCodeDidnTWorkTry"));
           setCode("");
           return;
         }
@@ -156,18 +159,18 @@ export default function Verify() {
 
         if (setErr) {
           hapticError();
-          setError("Signed in, but the session couldn't be saved. Try again.");
+          setError(t("signedInButTheSessionCouldn"));
           return;
         }
         hapticSuccess();
       } catch {
         hapticError();
-        setError("Network error. Check your connection and try again.");
+        setError(t("networkErrorCheckYourConnectionAnd"));
       } finally {
         setBusy(false);
       }
     },
-    [channel, phoneE164, email, codeLength],
+    [channel, phoneE164, email, codeLength, t],
   );
 
   async function resend() {
@@ -178,31 +181,31 @@ export default function Verify() {
     try {
       if (channel === "email") {
         if (!email) {
-          setError("Go back and re-enter your email to get a new code.");
+          setError(t("goBackAndReEnterYour"));
           return;
         }
         const res = await api.auth.requestEmailOtp({ email: email.trim() });
         if (res.status !== 200) {
-          setError(res.message ?? "Couldn't resend the code. Try again.");
+          setError(res.message ?? t("couldnTResendTheCodeTry"));
           return;
         }
       } else {
         if (!dialCode || !rawPhone) {
-          setError("Go back and re-enter your number to get a new code.");
+          setError(t("goBackAndReEnterYour2"));
           return;
         }
         const res = await api.auth.requestPhoneOtp({ dialCode, rawPhone });
         if (res.status !== 200 || !res.data) {
-          setError(res.message ?? "Couldn't resend the code. Try again.");
+          setError(res.message ?? t("couldnTResendTheCodeTry"));
           return;
         }
         setPhoneCodeLength(res.data.codeLength);
       }
       setCode("");
-      setNotice("A new code is on its way.");
+      setNotice(t("aNewCodeIsOnIts"));
       startCountdown();
     } catch {
-      setError("Network error. Check your connection and try again.");
+      setError(t("networkErrorCheckYourConnectionAnd"));
     } finally {
       setResending(false);
     }
@@ -213,7 +216,7 @@ export default function Verify() {
       <View className="flex-1">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={t("back")}
           onPress={() => router.back()}
           disabled={busy}
           hitSlop={10}
@@ -244,10 +247,13 @@ export default function Verify() {
 
             <View className="gap-2">
               <AppText variant="pageTitle" className="text-center">
-                Enter your code
+                {t("enterYourCode")}
               </AppText>
               <AppText variant="muted" className="text-center">
-                We sent a {codeLength}-digit code to {destination}.
+                {t("weSentADigitCodeTo", {
+                  codeLength: codeLength,
+                  destination: destination,
+                })}
               </AppText>
             </View>
 
@@ -282,7 +288,7 @@ export default function Verify() {
 
               <View className="gap-4">
                 <Button
-                  title={busy ? "Verifying…" : "Verify"}
+                  title={busy ? t("verifying2") : t("verify")}
                   fullWidth
                   loading={busy}
                   disabled={busy || code.length < codeLength}
@@ -298,10 +304,10 @@ export default function Verify() {
                 >
                   <AppText variant="muted" className="text-center">
                     {resending
-                      ? "Sending…"
+                      ? t("sending")
                       : secondsLeft > 0
-                        ? `Resend code in ${secondsLeft}s`
-                        : "Resend code"}
+                        ? t("resendCodeInS", { secondsLeft: secondsLeft })
+                        : t("resendCode")}
                   </AppText>
                 </Pressable>
 
@@ -316,8 +322,8 @@ export default function Verify() {
                     className="text-center font-semibold"
                   >
                     {channel === "email"
-                      ? "Use a different email"
-                      : "Use a different number"}
+                      ? t("useDifferentEmail")
+                      : t("useADifferentNumber")}
                   </AppText>
                 </Pressable>
               </View>

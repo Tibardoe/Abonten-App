@@ -12,6 +12,7 @@ import PlaceDraftCard from "@/components/molecules/PlaceDraftCard";
 import ReviewDraftCard from "@/components/molecules/ReviewDraftCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/useToast";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type DraftsViewProps = {
@@ -31,6 +32,8 @@ export default function DraftsView({
   initialReviewDrafts,
   initialPlaceDrafts,
 }: DraftsViewProps) {
+  const t = useTranslations("common");
+
   const [activeTab, setActiveTab] = useState<Tab>("event");
   const [eventDrafts, setEventDrafts] = useState(initialEventDrafts);
   const [reviewDrafts, setReviewDrafts] = useState(initialReviewDrafts);
@@ -65,9 +68,9 @@ export default function DraftsView({
     >
       <div className="flex justify-center">
         <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid md:min-w-[360px]">
-          <TabsTrigger value="event">Event Drafts</TabsTrigger>
-          <TabsTrigger value="place">Place Drafts</TabsTrigger>
-          <TabsTrigger value="review">Review Drafts</TabsTrigger>
+          <TabsTrigger value="event">{t("eventDrafts")}</TabsTrigger>
+          <TabsTrigger value="place">{t("placeDrafts")}</TabsTrigger>
+          <TabsTrigger value="review">{t("reviewDrafts")}</TabsTrigger>
         </TabsList>
       </div>
 
@@ -75,7 +78,7 @@ export default function DraftsView({
         <div className="space-y-4">
           {eventDrafts.length === 0 ? (
             <div className="text-center space-y-4 py-10">
-              <p className="text-muted-foreground">No event drafts yet.</p>
+              <p className="text-muted-foreground">{t("noEventDraftsYet")}</p>
               <PostButton />
             </div>
           ) : (
@@ -103,7 +106,7 @@ export default function DraftsView({
         <div className="space-y-4">
           {placeDrafts.length === 0 ? (
             <p className="text-center text-muted-foreground py-10">
-              No place drafts yet.
+              {t("noPlaceDraftsYet")}
             </p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -130,7 +133,7 @@ export default function DraftsView({
         <div className="space-y-4">
           {reviewDrafts.length === 0 ? (
             <p className="text-center text-muted-foreground py-10">
-              No review drafts yet.
+              {t("noReviewDraftsYet")}
             </p>
           ) : (
             <div className="flex flex-col gap-3">

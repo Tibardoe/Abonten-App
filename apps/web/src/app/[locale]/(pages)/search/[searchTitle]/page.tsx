@@ -3,6 +3,7 @@ import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { undoSlug } from "@abonten/core/geerateSlug";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import SearchTitleResultsList from "./SearchTitleResultsList";
 
@@ -18,6 +19,8 @@ export default async function page({
 }: {
   params: Promise<{ searchTitle: string }>;
 }) {
+  const t = await getTranslations("search");
+
   const { searchTitle } = await params;
 
   const formattedSearchTitle = undoSlug(searchTitle);
@@ -42,9 +45,11 @@ export default async function page({
   // points at the search term rather than at filters.
   const emptyState = (
     <NoEventsFound
-      heading={`No results for "${formattedSearchTitle}"`}
-      description="We couldn't find any events matching that search. Try a different or more general term."
-      action={{ label: "Browse all events", href: "/" }}
+      heading={t("noResultsFor", {
+        formattedSearchTitle: formattedSearchTitle,
+      })}
+      description={t("weCouldnTFindAnyEvents")}
+      action={{ label: t("browseAllEvents"), href: "/" }}
     />
   );
 

@@ -1,5 +1,6 @@
 import type { SpotlightTile } from "@abonten/core/content/profileContent";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo } from "react";
@@ -32,12 +33,17 @@ export const SpotlightTileRow = memo(function SpotlightTileRow({
 });
 
 function Tile({ tile }: { tile: SpotlightTile }) {
+  const t = useTranslations("profile");
+
   const router = useRouter();
   return (
     <Pressable
       onPress={() => router.push(tile.href as never)}
       accessibilityRole="button"
-      accessibilityLabel={`Spotlight, ${tile.views.toLocaleString()} views${tile.badge ? `, ${tile.badge}` : ""}`}
+      accessibilityLabel={t("spotlightViews", {
+        toLocaleString: tile.views.toLocaleString(),
+        value: tile.badge ? `, ${tile.badge}` : "",
+      })}
       className="flex-1 overflow-hidden bg-muted active:opacity-80"
       style={{ aspectRatio: 9 / 16 }}
     >

@@ -5,6 +5,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useWeeklyProgram } from "@/hooks/useWeeklyProgram";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import WeeklyEditionSkeleton from "./WeeklyEditionSkeleton";
 import WeeklyEditionView from "./WeeklyEditionView";
 import WeeklyFallback from "./WeeklyFallback";
@@ -20,6 +21,8 @@ export default function WeeklyPersonalEdition({
   scope: string | null;
   week: string | null;
 }) {
+  const t = useTranslations("weekly");
+
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const { program, resolving } = useWeeklyProgram();
   const query = useQuery({
@@ -48,7 +51,7 @@ export default function WeeklyPersonalEdition({
     return (
       <div className="mx-auto w-full max-w-3xl">
         <InlineErrorRetry
-          message="Couldn't load Abonten Weekly."
+          message={t("couldnTLoadAbontenWeekly")}
           onRetry={() => query.refetch()}
         />
       </div>

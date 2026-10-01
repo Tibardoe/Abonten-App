@@ -9,6 +9,7 @@ import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import type { WeeklyItem, WeeklySection } from "@abonten/types/weeklyType";
 import { AppText, Icon, PressableScale } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import {
   shadow,
   useCarouselCardWidth,
@@ -72,6 +73,10 @@ const WHITE_85 = "rgba(255,255,255,0.85)";
 // The listing a "hero" section gives the most room: its photo fills the card
 // and the text sits over it, like the banner at the top of the screen.
 function HeroItem({ item }: { item: WeeklyItem }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("weekly");
+
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [imageFailed, setImageFailed] = useState(false);
@@ -87,6 +92,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
         event.ends_at,
         event.occurrences,
         event.timezone,
+        locale,
       )
     : null;
   const kicker = event
@@ -190,7 +196,9 @@ function HeroItem({ item }: { item: WeeklyItem }) {
             {when ? (
               <MetaLine icon="calendar-outline">
                 {[when.date, when.time].filter(Boolean).join(" · ")}
-                {when.extraDates > 0 ? ` +${when.extraDates} more` : ""}
+                {when.extraDates > 0
+                  ? t("more", { extraDates: when.extraDates })
+                  : ""}
               </MetaLine>
             ) : null}
             {rating ? <MetaLine icon="star">{rating}</MetaLine> : null}
@@ -210,7 +218,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
           <View className="mt-4 flex-row flex-wrap items-center gap-2">
             <View className="flex-row items-center gap-2.5 rounded-full bg-white py-1.5 pl-4 pr-1.5">
               <AppText className="text-[14px] font-semibold text-slate-950">
-                {event ? "View event" : "View place"}
+                {event ? t("viewEvent") : t("viewPlace")}
               </AppText>
               <View className="h-7 w-7 items-center justify-center rounded-full bg-slate-950">
                 <Icon name="arrow-forward" size={15} color="#fff" />

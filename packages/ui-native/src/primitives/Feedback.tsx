@@ -1,4 +1,5 @@
 import { ActivityIndicator, View } from "react-native";
+import { useTranslations } from "../i18n";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { Button } from "./Button";
 import { AppText } from "./Typography";
@@ -65,18 +66,26 @@ export function ListFooter({
   hasNextPage,
   isError,
   onRetry,
-  endLabel = "You're all caught up",
+  endLabel: endLabelProp,
 }: ListFooterProps) {
+  const t = useTranslations("common");
+  const endLabel = endLabelProp ?? t("youReAllCaughtUp");
+
   if (isFetchingNextPage) return <Spinner className="py-5" />;
 
   if (isError && count > 0) {
     return (
       <View className="items-center gap-2 py-5">
         <AppText variant="small" tone="muted">
-          Couldn't load more.
+          {t("couldnTLoadMore")}
         </AppText>
         {onRetry ? (
-          <Button title="Retry" size="sm" variant="outline" onPress={onRetry} />
+          <Button
+            title={t("retry")}
+            size="sm"
+            variant="outline"
+            onPress={onRetry}
+          />
         ) : null}
       </View>
     );
@@ -101,10 +110,13 @@ export type ErrorStateProps = {
 
 /** Full-screen "couldn't load … / Retry" — the detail-screen error state. */
 export function ScreenError({
-  message = "Something went wrong. Please try again.",
+  message: messageProp,
   onRetry,
-  retryLabel = "Retry",
+  retryLabel: retryLabelProp,
 }: ErrorStateProps) {
+  const t = useTranslations("common");
+  const message = messageProp ?? t("errors.genericRetry");
+  const retryLabel = retryLabelProp ?? t("retry");
   return (
     <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
       <AppText variant="muted" className="text-center">

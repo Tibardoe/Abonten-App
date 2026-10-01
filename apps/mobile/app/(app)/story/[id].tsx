@@ -9,6 +9,7 @@ import { useQueryView } from "@/lib/useQueryView";
 import { STORY_EXPIRED_MESSAGE } from "@abonten/core/content/copy";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { AppText, Avatar, Button, Spinner } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
@@ -17,6 +18,8 @@ import { View } from "react-native";
 // Story opens in the viewer at that Story; an ended one says so and offers
 // the publisher instead.
 export default function StoryLinkScreen() {
+  const t = useTranslations("spotlight");
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const q = useContentPost(id);
@@ -80,7 +83,7 @@ export default function StoryLinkScreen() {
             onClose={() => setReportFor(null)}
             targetType="story"
             targetId={reportFor.id}
-            label={reportFor.caption?.slice(0, 80) || "Story"}
+            label={reportFor.caption?.slice(0, 80) || t("story")}
           />
         ) : null}
       </View>
@@ -92,17 +95,17 @@ export default function StoryLinkScreen() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="detail"
-        title="Story"
+        title={t("story")}
         backFallback="/(app)/(tabs)/messages"
       />
       <View className="flex-1 items-center justify-center gap-4 px-8">
         <AppText variant="sectionTitle" className="text-center">
           {res?.status === 410
             ? STORY_EXPIRED_MESSAGE
-            : "This Story isn't available"}
+            : t("thisStoryIsnTAvailable")}
         </AppText>
         <AppText variant="muted" className="text-center">
-          Stories are only up for a short time.
+          {t("storiesAreOnlyUpForA")}
         </AppText>
         {expiredPublisher ? (
           <View className="items-center gap-2">
@@ -116,7 +119,7 @@ export default function StoryLinkScreen() {
         ) : null}
         {route ? (
           <Button
-            title={`See more from ${expiredPublisher?.name}`}
+            title={t("seeMoreFrom", { name: expiredPublisher?.name ?? "" })}
             onPress={() => router.replace(route as never)}
           />
         ) : null}

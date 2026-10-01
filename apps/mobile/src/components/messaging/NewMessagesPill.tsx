@@ -1,4 +1,5 @@
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { shadow } from "@abonten/ui-native/theme";
 import { Pressable, View } from "react-native";
 
@@ -14,8 +15,13 @@ export function NewMessagesPill({
   count: number;
   onPress: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   if (count <= 0) return null;
-  const label = `${count} new ${count === 1 ? "message" : "messages"}`;
+  const label = t("newText2", {
+    count: count,
+    value: count === 1 ? t("message2") : t("messages2"),
+  });
   return (
     <View
       pointerEvents="box-none"
@@ -24,7 +30,7 @@ export function NewMessagesPill({
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${label}. Scroll to latest.`}
+        accessibilityLabel={t("scrollToLatest", { label: label })}
         className="flex-row items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 active:opacity-80"
         style={shadow.card}
       >

@@ -6,6 +6,7 @@ import {
 } from "@abonten/core/dateFormatter";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import type { Occurrence } from "@abonten/types/occurrenceType";
+import { useLocale, useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import AttendingButton from "../atoms/AttendingButton";
 import CheckoutBtn from "../atoms/CheckoutBtn";
@@ -34,6 +35,10 @@ export default function EventDateSelector({
   eventStatus,
   timeZone,
 }: EventDateSelectorProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   // Re-render on a fixed cadence so a tab left open across an occurrence's
   // start/end time recomputes which date is selectable (and whether the CTA
   // should flip to "Event Ended"/"In Progress" or forward to the next date)
@@ -80,11 +85,11 @@ export default function EventDateSelector({
 
   const isCanceled = eventStatus === "canceled";
   const blockedLabel = isCanceled
-    ? "Event cancelled"
+    ? t("eventCancelled")
     : occurrenceState.blockReason === "ended"
-      ? "Event ended"
+      ? t("eventEnded")
       : occurrenceState.blockReason === "ongoing_no_future"
-        ? "Event in progress"
+        ? t("eventInProgress")
         : null;
 
   const selectedDateTime = selectedOccurrence
@@ -92,6 +97,7 @@ export default function EventDateSelector({
         selectedOccurrence.starts_at,
         selectedOccurrence.ends_at,
         timeZone,
+        locale,
       )
     : null;
 
@@ -100,7 +106,7 @@ export default function EventDateSelector({
       {sortedEventDates.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            {sortedEventDates.length > 1 ? "Choose a date" : "Date"}
+            {sortedEventDates.length > 1 ? t("chooseADate") : t("date")}
           </h3>
           <div className="flex overflow-x-auto gap-3 pb-1">
             {sortedEventDates.map((occurrence, index) => {
@@ -109,6 +115,7 @@ export default function EventDateSelector({
               const { day, month, date, time } = getDateParts(
                 dateValue,
                 timeZone,
+                locale,
               );
 
               // Only a strictly-future occurrence is selectable: an ongoing

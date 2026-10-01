@@ -2,6 +2,7 @@
 
 import type { ReviewPhotoUploadItem } from "@/hooks/useReviewPhotoUpload";
 import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef } from "react";
 import { FiCamera, FiX } from "react-icons/fi";
@@ -26,6 +27,8 @@ export default function ReviewPhotoPicker({
   onFilesSelected,
   onRemove,
 }: ReviewPhotoPickerProps) {
+  const t = useTranslations("common");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -37,7 +40,9 @@ export default function ReviewPhotoPicker({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-foreground">Photos (optional)</p>
+        <p className="text-sm font-medium text-foreground">
+          {t("photosOptional")}
+        </p>
         <span className="text-xs text-muted-foreground">
           {items.length}/{MAX_REVIEW_PHOTOS}
         </span>
@@ -51,7 +56,7 @@ export default function ReviewPhotoPicker({
           >
             <Image
               src={item.previewUrl}
-              alt={`Selected photo: ${item.fileName}`}
+              alt={t("selectedPhoto", { fileName: item.fileName })}
               fill
               sizes="80px"
               className="object-cover"
@@ -66,10 +71,10 @@ export default function ReviewPhotoPicker({
             {item.status === "error" && (
               <div
                 className="absolute inset-0 bg-destructive/80 flex items-center justify-center p-1"
-                title={item.errorMessage ?? "Upload failed"}
+                title={item.errorMessage ?? t("uploadFailed")}
               >
                 <p className="text-white text-[10px] leading-tight text-center line-clamp-3">
-                  {item.errorMessage ?? "Upload failed"}
+                  {item.errorMessage ?? t("uploadFailed")}
                 </p>
               </div>
             )}
@@ -77,7 +82,7 @@ export default function ReviewPhotoPicker({
             <button
               type="button"
               onClick={() => onRemove(item.id)}
-              aria-label={`Remove ${item.fileName}`}
+              aria-label={t("remove2", { fileName: item.fileName })}
               className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 transition-colors"
             >
               <FiX className="text-xs" />
@@ -92,7 +97,7 @@ export default function ReviewPhotoPicker({
             className="w-20 h-20 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
           >
             <FiCamera className="text-lg" />
-            <span className="text-[10px]">Add photo</span>
+            <span className="text-[10px]">{t("addPhoto")}</span>
           </button>
         )}
       </div>

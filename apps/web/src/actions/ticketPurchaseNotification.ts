@@ -14,6 +14,7 @@ import {
   buildTicketPdfFilename,
 } from "@abonten/core/ticketPdfData";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
+import { getLocale } from "next-intl/server";
 import React from "react";
 import getTicketsByIds from "./getTicketsByIds";
 
@@ -37,6 +38,8 @@ export default async function ticketPurchaseNotification(
   orderAmount?: number | null,
   authOverride?: AuthOverride,
 ) {
+  const locale = await getLocale();
+
   try {
     if (!emailIsConfigured()) {
       logger.warn("RESEND_API_KEY is not set; skipping ticket purchase email");
@@ -138,7 +141,11 @@ export default async function ticketPurchaseNotification(
         eventTime: firstPdfData.eventTime,
         eventAddress: firstPdfData.eventAddress,
         tickets: ticketLines,
-        purchaseDate: formatDateWithSuffix(firstTicket.issued_at),
+        purchaseDate: formatDateWithSuffix(
+          firstTicket.issued_at,
+          undefined,
+          locale,
+        ),
         amountLabel,
         myEventsUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/manage/my-events`,
       }),

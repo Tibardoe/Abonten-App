@@ -1,4 +1,5 @@
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
+import { useTranslations } from "next-intl";
 import TileSelector from "./TileSelector";
 
 type CategoryType = {
@@ -17,13 +18,15 @@ export default function CategoryFilter({
   category,
   classname,
 }: CategoryType) {
+  const t = useTranslations("common");
+
   return (
     <TileSelector
       mode="single"
       options={categoryOptions}
       value={category}
       onChange={handleCategory}
-      label="Category"
+      label={t("category")}
       labelClassName={classname}
     />
   );

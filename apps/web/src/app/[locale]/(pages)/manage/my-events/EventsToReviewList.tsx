@@ -5,16 +5,19 @@ import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import EventReviewModal from "@/events/organisms/EventReviewModal";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-const noEventsToReviewState = (
-  <p className="text-center text-muted-foreground text-sm py-10">
-    Nothing to review yet. Events you&apos;ve attended will show up here once
-    they end.
-  </p>
-);
+function NoEventsToReviewState() {
+  const t = useTranslations("manage");
+  return (
+    <p className="text-center text-muted-foreground text-sm py-10">
+      {t("nothingToReviewYet")}
+    </p>
+  );
+}
 
 // The "rate your purchase" inbox this tab implements: every checked-in,
 // ended, unreviewed event, each with a one-tap way into EventReviewModal
@@ -24,6 +27,8 @@ const noEventsToReviewState = (
 // deliberately no pagination, since a realistic backlog here is small,
 // unlike the ticket-history tabs.
 export default function EventsToReviewList() {
+  const t = useTranslations("manage");
+
   const queryClient = useQueryClient();
   const [reviewingEventId, setReviewingEventId] = useState<string | null>(null);
 
@@ -45,7 +50,7 @@ export default function EventsToReviewList() {
   }
 
   if (events.length === 0) {
-    return noEventsToReviewState;
+    return <NoEventsToReviewState />;
   }
 
   return (
@@ -75,14 +80,16 @@ export default function EventsToReviewList() {
               {event.title}
             </Link>
 
-            <p className="text-sm text-muted-foreground">How was this event?</p>
+            <p className="text-sm text-muted-foreground">
+              {t("howWasThisEvent")}
+            </p>
 
             <button
               type="button"
               onClick={() => setReviewingEventId(event.id)}
               className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
             >
-              Write a Review
+              {t("writeAReview")}
             </button>
           </div>
 

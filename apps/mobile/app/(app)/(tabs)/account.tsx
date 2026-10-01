@@ -77,9 +77,9 @@ export default function Account() {
         >
           <View className="items-center gap-2">
             <Icon name="person-circle-outline" size={48} tone="muted" />
-            <AppText variant="sectionTitle">Sign in to Abonten</AppText>
+            <AppText variant="sectionTitle">{t("signInToAbonten")}</AppText>
             <AppText variant="muted" className="text-center">
-              Sign in to buy tickets, save favourites, and manage your events.
+              {t("signInToBuyTicketsSave")}
             </AppText>
           </View>
           <Button
@@ -120,7 +120,7 @@ export default function Account() {
           />
           <View className="flex-1">
             <AppText variant="cardTitle">
-              {profile?.full_name ?? profile?.username ?? "Your account"}
+              {profile?.full_name ?? profile?.username ?? t("yourAccount")}
             </AppText>
             {profile?.username ? (
               <AppText variant="meta">@{profile.username}</AppText>
@@ -138,12 +138,12 @@ export default function Account() {
         <View className="gap-2">
           <NavRow
             icon="settings-outline"
-            label="Settings"
+            label={t("settings")}
             onPress={() => router.push("/(app)/settings")}
           />
           <NavRow
             icon="notifications-outline"
-            label="Notifications"
+            label={t("notifications")}
             onPress={() => router.push("/(app)/notifications")}
           />
           <NavRow
@@ -159,14 +159,14 @@ export default function Account() {
             content.program.storiesPosting) ? (
             <NavRow
               icon="play-circle-outline"
-              label="Your Spotlights & Stories"
+              label={t("yourSpotlightsStories")}
               onPress={() => router.push("/(app)/spotlight/manage")}
             />
           ) : null}
           {content.program.spotlight && profile?.username ? (
             <NavRow
               icon="bookmark-outline"
-              label="Saved Spotlights"
+              label={t("savedSpotlights")}
               onPress={() =>
                 router.push(
                   `/(app)/user/${profile.username}?tab=spotlights&segment=saved`,
@@ -176,13 +176,13 @@ export default function Account() {
           ) : null}
           <NavRow
             icon="swap-horizontal-outline"
-            label="Transactions"
+            label={t("transactions")}
             onPress={() => router.push("/(app)/transactions")}
           />
           {rewards.data?.enabled ? (
             <NavRow
               icon="gift-outline"
-              label="Rewards"
+              label={t("rewards")}
               onPress={() => router.push("/(app)/rewards")}
             />
           ) : null}
@@ -199,13 +199,13 @@ export default function Account() {
           {isOrganizer ? (
             <NavRow
               icon="grid-outline"
-              label="Organizer"
+              label={t("organizer")}
               onPress={() => router.push("/(app)/organizer")}
             />
           ) : null}
           <NavRow
             icon="help-buoy-outline"
-            label="Help & support"
+            label={t("helpSupport")}
             onPress={() => {
               if (!openSupport.isPending)
                 openSupport.mutate({ type: "support" });

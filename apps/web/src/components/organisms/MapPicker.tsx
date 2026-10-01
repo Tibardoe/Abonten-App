@@ -3,6 +3,7 @@
 import { animateMarkerTo } from "@/utils/animateMarker";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { useTranslations } from "next-intl";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { TbLocation } from "react-icons/tb";
@@ -23,6 +24,8 @@ const MapPicker: React.FC<MapPickerProps> = ({
   defaultCenter,
   center,
 }) => {
+  const t = useTranslations("common");
+
   const [markerPosition, setMarkerPosition] = useState(center || defaultCenter);
 
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
@@ -99,7 +102,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     }
   }, [center]);
 
-  if (!isLoaded) return <p>Loading map...</p>;
+  if (!isLoaded) return <p>{t("loadingMap")}</p>;
 
   return (
     <div className="relative">

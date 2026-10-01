@@ -11,6 +11,7 @@ import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { useQueryView } from "@/lib/useQueryView";
 import type { PlaceType } from "@abonten/types/placeType";
 import { Button, EmptyState, Refresher, Spinner } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, View } from "react-native";
@@ -18,6 +19,8 @@ import { FlatList, View } from "react-native";
 // Places around the browsing area — the same area Explore shows, with the
 // same switcher, so "near you" here and there are always the same place.
 export default function Places() {
+  const t = useTranslations("places");
+
   const router = useRouter();
   const { area, resolving } = useExploreLocation();
   const coords = area ? { lat: area.lat, lng: area.lng } : null;
@@ -33,11 +36,15 @@ export default function Places() {
 
   const header = (
     <View>
-      <AppHeader variant="title" title="Places" backFallback="/(app)/account" />
+      <AppHeader
+        variant="title"
+        title={t("places")}
+        backFallback="/(app)/account"
+      />
       <View className="flex-row items-center justify-between gap-2 px-4 pb-2 pt-3">
         <AreaSwitcher onPress={() => setLocationOpen(true)} />
         <Button
-          title="Add place"
+          title={t("addPlace2")}
           size="sm"
           onPress={() => router.push("/(app)/place/new")}
         />
@@ -75,8 +82,8 @@ export default function Places() {
           view.kind === "empty" ? (
             <EmptyState
               icon="location-outline"
-              title={`No places ${whereText(area)}`}
-              description="Check back soon, or change your location."
+              title={t("noPlaces", { whereText: whereText(area) })}
+              description={t("checkBackSoonOrChangeYour")}
             />
           ) : (
             <QueryUnavailable

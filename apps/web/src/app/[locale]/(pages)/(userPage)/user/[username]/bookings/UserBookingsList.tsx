@@ -12,6 +12,7 @@ import type {
   CustomerPlaceBooking,
 } from "@abonten/types/placeBookingType";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -49,6 +50,10 @@ export default function UserBookingsList({
   ) => Promise<PaginatedResult<CustomerPlaceBooking>>;
   emptyState: React.ReactNode;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("account");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -59,12 +64,10 @@ export default function UserBookingsList({
     try {
       const result = await cancelPlaceBooking(bookingId);
       if (result.status === 200) {
-        toast.success(result.message ?? "Booking request cancelled.");
+        toast.success(result.message ?? t("bookingRequestCancelled"));
         queryClient.invalidateQueries({ queryKey });
       } else {
-        toast.error(
-          result.message ?? "We couldn't cancel that booking request.",
-        );
+        toast.error(result.message ?? t("weCouldnTCancelThatBooking"));
       }
     } finally {
       setCancellingId(null);
@@ -81,7 +84,11 @@ export default function UserBookingsList({
         emptyState={emptyState}
         listClassName="flex flex-col gap-3"
         renderItem={(booking) => {
-          const { date, time } = formatSingleDateTime(booking.requested_time);
+          const { date, time } = formatSingleDateTime(
+            booking.requested_time,
+            undefined,
+            locale,
+          );
           const state = resolveBookingState(
             booking.status,
             booking.requested_time,
@@ -99,14 +106,14 @@ export default function UserBookingsList({
                     href={`/places/${booking.place?.slug ?? ""}`}
                     className="font-medium hover:text-primary transition-colors"
                   >
-                    {booking.place?.name ?? "Place"}
+                    {booking.place?.name ?? t("place")}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    {date} at {time}
+                    {t("at", { date: date, time: time })}
                   </p>
                   {booking.party_size != null && (
                     <p className="text-sm text-muted-foreground">
-                      Party size: {booking.party_size}
+                      {t("partySize", { party_size: booking.party_size })}
                     </p>
                   )}
                 </div>
@@ -125,18 +132,18 @@ export default function UserBookingsList({
                   onClick={() => setConfirmingId(booking.id)}
                   className="text-sm text-destructive hover:underline"
                 >
-                  Cancel booking
+                  {t("cancelBooking")}
                 </button>
               )}
 
               {confirmingId === booking.id && (
                 <ConfirmDeleteModal
-                  title="Cancel this booking request?"
-                  message={`Cancel your booking request for ${
-                    booking.place?.name ?? "this place"
-                  }?`}
-                  confirmLabel="Cancel Request"
-                  cancelLabel="Keep Request"
+                  title={t("cancelThisBookingRequest")}
+                  message={t("cancelYourBookingRequestFor", {
+                    value: booking.place?.name ?? "this place",
+                  })}
+                  confirmLabel={t("cancelRequest")}
+                  cancelLabel={t("keepRequest")}
                   isLoading={cancellingId === booking.id}
                   onConfirm={() => handleCancel(booking.id)}
                   onCancel={() => setConfirmingId(null)}

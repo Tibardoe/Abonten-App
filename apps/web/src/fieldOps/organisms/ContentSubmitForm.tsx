@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
 import type { FieldOpsContentBrief } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -17,7 +18,7 @@ const PLATFORMS = [
   { value: "x", label: "X" },
   { value: "youtube", label: "YouTube" },
   { value: "whatsapp", label: "WhatsApp" },
-  { value: "other", label: "Somewhere else" },
+  { value: "other", label: null },
 ] as const;
 
 /**
@@ -32,6 +33,8 @@ export default function ContentSubmitForm({
   campaignId: string;
   briefs: FieldOpsContentBrief[];
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -62,7 +65,7 @@ export default function ContentSubmitForm({
         },
       });
       if (res.status === 200) {
-        toast.success(res.message ?? "Sent for review.");
+        toast.success(res.message ?? t("sentForReview"));
         setOpen(false);
         setUrl("");
         setCaption("");
@@ -71,27 +74,27 @@ export default function ContentSubmitForm({
         setShares("");
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't send it.");
+        toast.error(res.message ?? t("couldnTSendIt"));
       }
     });
 
   if (!open) {
-    return <Button onClick={() => setOpen(true)}>Send in a post</Button>;
+    return <Button onClick={() => setOpen(true)}>{t("sendInAPost")}</Button>;
   }
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border p-4">
-      <h3 className="font-medium">Send in a post</h3>
+      <h3 className="font-medium">{t("sendInAPost")}</h3>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="c-brief">Against a brief (optional)</Label>
+          <Label htmlFor="c-brief">{t("againstABriefOptional")}</Label>
           <select
             id="c-brief"
             className="h-10 rounded-md border bg-background px-3 text-sm"
             value={briefId}
             onChange={(e) => setBriefId(e.target.value)}
           >
-            <option value="">Not from a brief</option>
+            <option value="">{t("notFromABrief")}</option>
             {briefs
               .filter((b) => b.status === "open")
               .map((b) => (
@@ -102,7 +105,7 @@ export default function ContentSubmitForm({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="c-platform">Where you posted it</Label>
+          <Label htmlFor="c-platform">{t("whereYouPostedIt")}</Label>
           <select
             id="c-platform"
             className="h-10 rounded-md border bg-background px-3 text-sm"
@@ -111,14 +114,14 @@ export default function ContentSubmitForm({
           >
             {PLATFORMS.map((p) => (
               <option key={p.value} value={p.value}>
-                {p.label}
+                {p.label ?? t("somewhereElse")}
               </option>
             ))}
           </select>
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="c-url">Link to the post</Label>
+        <Label htmlFor="c-url">{t("linkToThePost")}</Label>
         <Input
           id="c-url"
           inputMode="url"
@@ -128,7 +131,7 @@ export default function ContentSubmitForm({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="c-caption">What it was about (optional)</Label>
+        <Label htmlFor="c-caption">{t("whatItWasAboutOptional")}</Label>
         <Textarea
           id="c-caption"
           rows={2}
@@ -138,27 +141,26 @@ export default function ContentSubmitForm({
         />
       </div>
       <div>
-        <p className="text-sm font-medium">How it did (optional)</p>
+        <p className="text-sm font-medium">{t("howItDidOptional")}</p>
         <p className="text-xs text-muted-foreground">
-          Whatever the app showed you. These are recorded as your own figures
-          and nothing is paid on them.
+          {t("whateverTheAppShowedYouThese")}
         </p>
         <div className="mt-2 grid grid-cols-3 gap-2">
           <Input
             inputMode="numeric"
-            placeholder="Views"
+            placeholder={t("views2")}
             value={views}
             onChange={(e) => setViews(e.target.value.replace(/\D/g, ""))}
           />
           <Input
             inputMode="numeric"
-            placeholder="Likes"
+            placeholder={t("likes2")}
             value={likes}
             onChange={(e) => setLikes(e.target.value.replace(/\D/g, ""))}
           />
           <Input
             inputMode="numeric"
-            placeholder="Shares"
+            placeholder={t("shares2")}
             value={shares}
             onChange={(e) => setShares(e.target.value.replace(/\D/g, ""))}
           />
@@ -169,10 +171,10 @@ export default function ContentSubmitForm({
           onClick={submit}
           disabled={pending || !/^https?:\/\/.{5,}/.test(url.trim())}
         >
-          Send for review
+          {t("sendForReview")}
         </Button>
         <Button variant="outline" onClick={() => setOpen(false)}>
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </div>

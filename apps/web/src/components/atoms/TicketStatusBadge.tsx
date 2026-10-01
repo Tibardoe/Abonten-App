@@ -1,4 +1,5 @@
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import {
   MdCheckCircle,
   MdHistoryToggleOff,
@@ -33,23 +34,27 @@ export default function TicketStatusBadge({
   eventCancelled,
   eventEnded,
 }: TicketStatusBadgeProps) {
+  const t = useTranslations("common");
+
   const config = (() => {
     switch (status) {
       case "cancelled":
         return {
-          label: cancelledByOrganizer ? "Cancelled by organizer" : "Cancelled",
+          label: cancelledByOrganizer
+            ? t("cancelledByOrganizer")
+            : t("cancelled"),
           icon: MdOutlineCancel,
           className: "bg-destructive/10 text-destructive",
         };
       case "used":
         return {
-          label: "Checked in",
+          label: t("checkedIn"),
           icon: MdHowToReg,
           className: "bg-success/10 text-success",
         };
       case "expired":
         return {
-          label: "Expired",
+          label: t("expired"),
           icon: MdHistoryToggleOff,
           className: "bg-muted text-muted-foreground",
         };
@@ -58,20 +63,20 @@ export default function TicketStatusBadge({
         // lifecycle can still make "Active" the wrong thing to say.
         if (eventCancelled) {
           return {
-            label: "Event cancelled",
+            label: t("eventCancelled"),
             icon: MdOutlineCancel,
             className: "bg-destructive/10 text-destructive",
           };
         }
         if (eventEnded) {
           return {
-            label: "Ended",
+            label: t("ended"),
             icon: MdHistoryToggleOff,
             className: "bg-muted text-muted-foreground",
           };
         }
         return {
-          label: "Active",
+          label: t("active"),
           icon: MdCheckCircle,
           className: "bg-success/10 text-success",
         };

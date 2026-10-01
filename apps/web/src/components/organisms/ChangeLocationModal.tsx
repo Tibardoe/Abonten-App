@@ -5,6 +5,7 @@ import { useMarketContext } from "@/hooks/useMarketContext";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -25,6 +26,8 @@ const MapModal = dynamic(() => import("@/components/organisms/MapModal"), {
 export default function ChangeLocationModal({
   handleShowChangeLocationModal,
 }: ChangeLocationModalProp) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const autoCompleteRef = useRef<AutoCompleteHandle>(null);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
@@ -110,11 +113,11 @@ export default function ChangeLocationModal({
     <ModalShell
       open
       onClose={() => handleShowChangeLocationModal(false)}
-      title="Set your location"
+      title={t("setYourLocation")}
     >
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[80%] lg:w-[40%] md:rounded-xl p-5 space-y-10">
         <div className="flex justify-between">
-          <h1 className="text-2xl font-bold mx-auto">Set your location</h1>
+          <h1 className="text-2xl font-bold mx-auto">{t("setYourLocation")}</h1>
 
           <button
             type="button"
@@ -122,7 +125,7 @@ export default function ChangeLocationModal({
           >
             <MaskIcon
               src="/assets/images/circularCancel.svg"
-              alt="Cancel"
+              alt={t("cancel")}
               className="w-[30px] h-[30px] bg-foreground"
             />
           </button>
@@ -136,7 +139,7 @@ export default function ChangeLocationModal({
             <AutoComplete
               ref={autoCompleteRef}
               placeholderText={{
-                text: "Enter your address",
+                text: t("enterYourAddress"),
                 svgUrl: "/assets/images/search.svg",
               }}
               classname="bg-muted"
@@ -149,7 +152,7 @@ export default function ChangeLocationModal({
               disabled={isResolvingLocation}
               className="grid w-20 shrink-0 place-items-center rounded-lg bg-primary px-4 font-bold text-primary-foreground disabled:opacity-60 md:w-24"
             >
-              {isResolvingLocation ? "..." : "Set"}
+              {isResolvingLocation ? "..." : t("set")}
             </button>
           </div>
 
@@ -161,10 +164,10 @@ export default function ChangeLocationModal({
             >
               <MaskIcon
                 src="/assets/images/onMap.svg"
-                alt="Choose on map"
+                alt={t("chooseOnMap")}
                 className="w-[30px] h-[30px]"
               />
-              Choose on map
+              {t("chooseOnMap")}
             </button>
 
             <hr className="border-border" />

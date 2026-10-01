@@ -50,6 +50,7 @@ import {
   SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, View } from "react-native";
@@ -73,6 +74,8 @@ const SEGMENT_LABEL: Record<SpotlightSegment, string> = {
 type GridRow = { id: string; tiles: SpotlightTile[] };
 
 export default function UserProfileScreen() {
+  const t = useTranslations("profile");
+
   const params = useLocalSearchParams<{
     username: string;
     tab?: string;
@@ -152,13 +155,13 @@ export default function UserProfileScreen() {
   const navHeader = (
     <AppHeader
       variant="detail"
-      title={username ? `@${username}` : "Profile"}
+      title={username ? `@${username}` : t("profile")}
       backFallback="/(app)"
       leftAccessory={
         isOwn ? (
           <HeaderIconButton
             name="add"
-            accessibilityLabel="Create"
+            accessibilityLabel={t("create")}
             onPress={() => setCreateOpen(true)}
           />
         ) : undefined
@@ -167,13 +170,13 @@ export default function UserProfileScreen() {
         isOwn ? (
           <HeaderIconButton
             name="settings-outline"
-            accessibilityLabel="Settings"
+            accessibilityLabel={t("settings")}
             onPress={() => router.push("/(app)/settings")}
           />
         ) : session ? (
           <HeaderIconButton
             name="flag-outline"
-            accessibilityLabel="Report this user"
+            accessibilityLabel={t("reportThisUser")}
             onPress={() => setReportOpen(true)}
           />
         ) : undefined
@@ -273,7 +276,7 @@ export default function UserProfileScreen() {
       return (
         <View className="flex-1 bg-background">
           {navHeader}
-          <ScreenError message="This profile could not be found." />
+          <ScreenError message={t("thisProfileCouldNotBeFound")} />
         </View>
       );
     }
@@ -295,7 +298,7 @@ export default function UserProfileScreen() {
             onRetry={() => profileQuery.refetch()}
           />
         ) : (
-          <ScreenError message="This profile could not be found." />
+          <ScreenError message={t("thisProfileCouldNotBeFound")} />
         )}
       </View>
     );
@@ -338,8 +341,8 @@ export default function UserProfileScreen() {
         <View className="px-4 pb-2 pt-3">
           <SegmentedTabs
             options={[
-              { key: "events", label: "Events" },
-              { key: "places", label: "Places" },
+              { key: "events", label: t("events") },
+              { key: "places", label: t("places") },
             ]}
             value={favSub}
             onChange={setFavSub}
@@ -351,8 +354,8 @@ export default function UserProfileScreen() {
         <View className="px-4 pb-2 pt-3">
           <SegmentedTabs
             options={[
-              { key: "event", label: "Event Reviews" },
-              { key: "place", label: "Place Reviews" },
+              { key: "event", label: t("eventReviews") },
+              { key: "place", label: t("placeReviews") },
             ]}
             value={reviewSub}
             onChange={setReviewSub}
@@ -363,21 +366,24 @@ export default function UserProfileScreen() {
       {currentTab === "favorites" && !session ? (
         <EmptyState
           icon="heart-outline"
-          title="Sign in to see favourites"
-          description="Favourites are private to each account."
+          title={t("signInToSeeFavourites")}
+          description={t("favouritesArePrivateToEachAccount")}
         />
       ) : null}
     </View>
   );
 
-  const empty = emptyCopy({
-    tab: currentTab,
-    listingKind,
-    segment: currentSegment,
-    favSub,
-    reviewSub,
-    isOwn,
-  });
+  const empty = emptyCopy(
+    {
+      tab: currentTab,
+      listingKind,
+      segment: currentSegment,
+      favSub,
+      reviewSub,
+      isOwn,
+    },
+    t,
+  );
 
   return (
     <View className="flex-1 bg-background">
@@ -478,7 +484,7 @@ export default function UserProfileScreen() {
         onClose={() => setReportOpen(false)}
         targetType="user"
         targetId={profile.user_id}
-        label={profile.username ? `@${profile.username}` : "this user"}
+        label={profile.username ? `@${profile.username}` : t("thisUser")}
       />
     </View>
   );
@@ -486,14 +492,17 @@ export default function UserProfileScreen() {
 
 // An empty tab should say what fills it, not just that it is empty — second
 // person on your own profile, third on someone else's.
-function emptyCopy(o: {
-  tab: ProfileTab;
-  listingKind: ListingKind;
-  segment: SpotlightSegment;
-  favSub: FavSub;
-  reviewSub: ReviewSub;
-  isOwn: boolean;
-}): {
+function emptyCopy(
+  o: {
+    tab: ProfileTab;
+    listingKind: ListingKind;
+    segment: SpotlightSegment;
+    favSub: FavSub;
+    reviewSub: ReviewSub;
+    isOwn: boolean;
+  },
+  t: (key: string, values?: Record<string, string | number>) => string,
+): {
   icon: "albums-outline" | "play-circle-outline" | "bookmark-outline";
   title: string;
   description: string;
@@ -503,47 +512,52 @@ function emptyCopy(o: {
     if (o.segment === "saved") {
       return {
         icon: "bookmark-outline",
-        title: "No saved Spotlights",
-        description:
-          "Tap Save on a Spotlight to keep it here. Only you see this.",
+        title: t("empty.savedSpotlights.title"),
+        description: t("empty.savedSpotlights.description"),
       };
     }
     if (o.segment === "drafts") {
       return {
         icon: "play-circle-outline",
-        title: "No drafts",
-        description: "Spotlights you start but don't publish wait here.",
+        title: t("empty.drafts.title"),
+        description: t("empty.drafts.description"),
       };
     }
     return o.isOwn
       ? {
           icon: "play-circle-outline",
-          title: "No Spotlights yet",
-          description: "Short videos you publish show up here.",
-          actionLabel: "Create a Spotlight",
+          title: t("empty.ownSpotlights.title"),
+          description: t("empty.ownSpotlights.description"),
+          actionLabel: t("empty.ownSpotlights.action"),
         }
       : {
           icon: "play-circle-outline",
-          title: "No Spotlights yet",
-          description: "Nothing published here yet.",
+          title: t("empty.theirSpotlights.title"),
+          description: t("empty.theirSpotlights.description"),
         };
   }
   const title =
     o.tab === "listings"
       ? o.listingKind === "events"
-        ? "No events yet"
-        : "No places yet"
+        ? t("empty.noEventsYet")
+        : t("empty.noPlacesYet")
       : o.tab === "favorites"
-        ? `No favourite ${o.favSub} yet`
+        ? o.favSub === "events"
+          ? t("empty.noFavouriteEventsYet")
+          : t("empty.noFavouritePlacesYet")
         : o.reviewSub === "event"
-          ? "No reviews yet"
-          : "No place reviews yet";
+          ? t("empty.noReviewsYet")
+          : t("empty.noPlaceReviewsYet");
   const description = o.isOwn
     ? o.tab === "listings"
-      ? `${o.listingKind === "events" ? "Events" : "Places"} you publish will be listed here.`
+      ? o.listingKind === "events"
+        ? t("empty.eventsYouPublish")
+        : t("empty.placesYouPublish")
       : o.tab === "favorites"
-        ? `Tap the heart on any ${o.favSub === "events" ? "event" : "place"} to save it here.`
-        : "Reviews you leave will be listed here."
-    : "Nothing here yet.";
+        ? o.favSub === "events"
+          ? t("empty.tapTheHeartOnAnyEvent")
+          : t("empty.tapTheHeartOnAnyPlace")
+        : t("empty.reviewsYouLeave")
+    : t("empty.nothingHereYet");
   return { icon: "albums-outline", title, description };
 }

@@ -3,6 +3,7 @@ import { PageTitle, SupportingText } from "@/components/ui/typography";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import LeadTerritoryList from "@/fieldOps/organisms/LeadTerritoryList";
 import { findCountry } from "@abonten/core/geo/countries";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +11,8 @@ export const dynamic = "force-dynamic";
 const EDITABLE = new Set(["draft", "active", "paused", "winding_down"]);
 
 export default async function FieldLeadTerritoriesPage() {
+  const t = await getTranslations("fieldOps");
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current?.isLead) notFound();
@@ -21,10 +24,11 @@ export default async function FieldLeadTerritoriesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Territories</PageTitle>
+        <PageTitle>{t("territories")}</PageTitle>
         <SupportingText>
-          The towns and areas of {current.campaign.regionName} your team covers.
-          Mark one completed once it has been worked through.
+          {t("theTownsAndAreasOfYour", {
+            regionName: current.campaign.regionName,
+          })}
         </SupportingText>
       </div>
       <LeadTerritoryList

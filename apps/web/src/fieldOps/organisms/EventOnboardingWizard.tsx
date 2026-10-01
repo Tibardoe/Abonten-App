@@ -14,6 +14,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { FieldOpsOnboardingDraft } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -59,6 +60,8 @@ export default function EventOnboardingWizard({
   draft: FieldOpsOnboardingDraft;
   isOffline: boolean;
 }) {
+  const t = useTranslations("fieldOps");
+
   const o = draft.onboarding;
   const toast = useToast();
   const router = useRouter();
@@ -86,26 +89,28 @@ export default function EventOnboardingWizard({
     version: string;
   } | null>(null);
 
-  const usePin = () =>
-    start(async () => {
+  const usePin = () => {
+    const t = useTranslations("fieldOps");
+    return start(async () => {
       try {
         const p = await currentPosition();
         setPin({ lat: p.lat, lng: p.lng });
-        toast.success("Location set from where you are.");
+        toast.success(t("locationSetFromWhereYouAre"));
       } catch (e) {
         toast.error((e as Error).message);
       }
     });
+  };
 
   const uploadFlyer = (file: File) =>
     start(async () => {
       if (file.size > MAX_EVENT_FLYER_SIZE_BYTES) {
-        toast.error("That flyer is too large.");
+        toast.error(t("thatFlyerIsTooLarge"));
         return;
       }
       const sig = await getEventFlyerUploadSignature();
       if (sig.status !== 200 || !sig.data) {
-        toast.error(sig.message ?? "Couldn't start the upload.");
+        toast.error(sig.message ?? t("couldnTStartTheUpload"));
         return;
       }
       try {
@@ -121,9 +126,9 @@ export default function EventOnboardingWizard({
         });
         const up = await promise;
         setFlyer({ publicId: up.public_id, version: String(up.version) });
-        toast.success("Flyer uploaded.");
+        toast.success(t("flyerUploaded"));
       } catch {
-        toast.error("The flyer didn't upload. Try again.");
+        toast.error(t("theFlyerDidnTUploadTry"));
       }
     });
 
@@ -135,15 +140,15 @@ export default function EventOnboardingWizard({
         reason: "Not going ahead",
       });
       if (res.status === 200) {
-        toast.success("Withdrawn.");
+        toast.success(t("withdrawn"));
         router.push("/field/submissions");
-      } else toast.error(res.message ?? "Couldn't withdraw.");
+      } else toast.error(res.message ?? t("couldnTWithdraw"));
     });
 
   const submit = () =>
     start(async () => {
       if (!pin || !flyer) {
-        toast.error("Set the location and upload the flyer first.");
+        toast.error(t("setTheLocationAndUploadThe"));
         return;
       }
       let here: Position | null = null;
@@ -180,10 +185,10 @@ export default function EventOnboardingWizard({
         submissionAccuracyM: here?.accuracyM ?? null,
       });
       if (res.status === 200) {
-        toast.success(res.message ?? "Submitted.");
+        toast.success(res.message ?? t("submitted2"));
         router.push(`/field/submissions/${o.id}`);
       } else {
-        toast.error(res.message ?? "Couldn't submit.");
+        toast.error(res.message ?? t("couldnTSubmit"));
       }
     });
 
@@ -217,7 +222,7 @@ export default function EventOnboardingWizard({
 
       {step === 1 ? (
         <section className="flex flex-col gap-3 rounded-xl border p-4">
-          <h2 className="font-semibold">The organiser</h2>
+          <h2 className="font-semibold">{t("theOrganiser")}</h2>
           <OwnerVerificationStep
             campaignId={campaignId}
             onboardingId={o.id}
@@ -235,14 +240,14 @@ export default function EventOnboardingWizard({
           />
           <div className="flex justify-between">
             <Button type="button" variant="ghost" onClick={withdraw}>
-              Withdraw
+              {t("withdraw")}
             </Button>
             <Button
               type="button"
               onClick={() => setStep(2)}
               disabled={!ownerVerified}
             >
-              Next
+              {t("next")}
             </Button>
           </div>
         </section>
@@ -250,9 +255,9 @@ export default function EventOnboardingWizard({
 
       {step === 2 ? (
         <section className="flex flex-col gap-3 rounded-xl border p-4">
-          <h2 className="font-semibold">The event</h2>
+          <h2 className="font-semibold">{t("theEvent")}</h2>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="e-title">Name of the event</Label>
+            <Label htmlFor="e-title">{t("nameOfTheEvent")}</Label>
             <Input
               id="e-title"
               value={title}
@@ -261,7 +266,7 @@ export default function EventOnboardingWizard({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="e-desc">What happens there</Label>
+            <Label htmlFor="e-desc">{t("whatHappensThere")}</Label>
             <Textarea
               id="e-desc"
               rows={4}
@@ -270,12 +275,12 @@ export default function EventOnboardingWizard({
               maxLength={4000}
             />
             <p className="text-xs text-muted-foreground">
-              {description.trim().length}/80 characters minimum
+              {t("n80CharactersMinimum", { length: description.trim().length })}
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <Label htmlFor="e-cat">Kind of event</Label>
+              <Label htmlFor="e-cat">{t("kindOfEvent")}</Label>
               <select
                 id="e-cat"
                 className="h-10 rounded-md border bg-background px-3 text-sm"
@@ -297,7 +302,7 @@ export default function EventOnboardingWizard({
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="e-type">More precisely</Label>
+              <Label htmlFor="e-type">{t("morePrecisely")}</Label>
               <select
                 id="e-type"
                 className="h-10 rounded-md border bg-background px-3 text-sm"
@@ -315,7 +320,7 @@ export default function EventOnboardingWizard({
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="e-cap">How many people (optional)</Label>
+              <Label htmlFor="e-cap">{t("howManyPeopleOptional")}</Label>
               <Input
                 id="e-cap"
                 inputMode="numeric"
@@ -324,7 +329,7 @@ export default function EventOnboardingWizard({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="e-start">Starts</Label>
+              <Label htmlFor="e-start">{t("starts")}</Label>
               <Input
                 id="e-start"
                 type="datetime-local"
@@ -333,7 +338,7 @@ export default function EventOnboardingWizard({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="e-end">Ends</Label>
+              <Label htmlFor="e-end">{t("ends")}</Label>
               <Input
                 id="e-end"
                 type="datetime-local"
@@ -343,7 +348,7 @@ export default function EventOnboardingWizard({
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="e-addr">Where</Label>
+            <Label htmlFor="e-addr">{t("where")}</Label>
             <Input
               id="e-addr"
               value={address}
@@ -353,7 +358,7 @@ export default function EventOnboardingWizard({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button type="button" variant="outline" onClick={usePin}>
-              {pin ? "Update the pin" : "Set the location"}
+              {pin ? t("updateThePin") : t("setTheLocation")}
             </Button>
             {pin ? (
               <span className="text-xs text-muted-foreground">
@@ -367,11 +372,11 @@ export default function EventOnboardingWizard({
               checked={freeEvent}
               onChange={(e) => setFreeEvent(e.target.checked)}
             />
-            Free to attend
+            {t("freeToAttend")}
           </label>
           {!freeEvent ? (
             <div className="flex flex-col gap-1">
-              <Label htmlFor="e-price">Ticket price (GH&#8373;)</Label>
+              <Label htmlFor="e-price">{t("ticketPriceGh")}</Label>
               <Input
                 id="e-price"
                 inputMode="decimal"
@@ -382,14 +387,14 @@ export default function EventOnboardingWizard({
           ) : null}
           <div className="flex justify-between">
             <Button type="button" variant="ghost" onClick={() => setStep(1)}>
-              Back
+              {t("back")}
             </Button>
             <Button
               type="button"
               onClick={() => setStep(3)}
               disabled={!detailsReady}
             >
-              Next
+              {t("next")}
             </Button>
           </div>
         </section>
@@ -397,17 +402,16 @@ export default function EventOnboardingWizard({
 
       {step === 3 ? (
         <section className="flex flex-col gap-3 rounded-xl border p-4">
-          <h2 className="font-semibold">Flyer</h2>
+          <h2 className="font-semibold">{t("flyer")}</h2>
           <p className="text-sm text-muted-foreground">
-            One clear photo of the flyer or poster. This is what people see in
-            the app.
+            {t("oneClearPhotoOfTheFlyer")}
           </p>
           {flyer ? (
             <img
               src={buildCloudinaryUrl(flyer.publicId, flyer.version, {
                 width: 600,
               })}
-              alt="The event flyer"
+              alt={t("theEventFlyer")}
               className="max-h-72 w-auto rounded-lg border object-contain"
             />
           ) : null}
@@ -423,21 +427,19 @@ export default function EventOnboardingWizard({
           />
 
           <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-            The event will be listed under the organiser straight away. Your
-            commission is confirmed after the event has actually taken place
-            &mdash; not before.
+            {t("theEventWillBeListedUnder")}
           </p>
 
           <div className="flex justify-between">
             <Button type="button" variant="ghost" onClick={() => setStep(2)}>
-              Back
+              {t("back")}
             </Button>
             <Button
               type="button"
               onClick={submit}
               disabled={pending || !flyer || !detailsReady || !ownerVerified}
             >
-              {pending ? "Sending…" : "Submit for review"}
+              {pending ? t("sending") : t("submitForReview")}
             </Button>
           </div>
         </section>

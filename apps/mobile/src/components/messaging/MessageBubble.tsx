@@ -9,12 +9,13 @@ import { VOICE_SUPPORTED } from "@/features/messaging/voiceSupport";
 import { hapticLight, hapticMedium } from "@/lib/haptics";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon, useReducedMotion } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   type ThemeColors,
   useThemeColors,
   withAlpha,
 } from "@abonten/ui-native/theme";
-import { Suspense, lazy, memo, useCallback, useEffect } from "react";
+import { Suspense, lazy, memo, useCallback, useEffect, useMemo } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -116,6 +117,8 @@ export function StatusTicks({
   /** Rendered on the teal own-message bubble (true) or on a bare surface. */
   onPrimary: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   if (pending?.status === "failed") {
     const errorColor = onPrimary ? onPrimaryInk(c).strong : c.destructive;
@@ -124,7 +127,7 @@ export function StatusTicks({
         onPress={onRetry}
         hitSlop={8}
         accessibilityRole="button"
-        accessibilityLabel="Message not sent. Tap to retry"
+        accessibilityLabel={t("messageNotSentTapToRetry")}
         className="flex-row items-center gap-1"
       >
         <Icon name="alert-circle" size={14} color={errorColor} />
@@ -133,7 +136,7 @@ export function StatusTicks({
           className="font-semibold"
           style={{ color: errorColor }}
         >
-          Tap to retry
+          {t("tapToRetry")}
         </AppText>
       </Pressable>
     );
@@ -143,13 +146,13 @@ export function StatusTicks({
   const strong = onPrimary ? ink.strong : c.primary;
   if (pending?.status === "sending") {
     return (
-      <View accessible accessibilityLabel="Sending">
+      <View accessible accessibilityLabel={t("sending")}>
         <Icon name="time-outline" size={14} color={dim} />
       </View>
     );
   }
   return (
-    <View accessible accessibilityLabel={seen ? "Read" : "Sent"}>
+    <View accessible accessibilityLabel={seen ? t("read") : t("sent")}>
       <Icon
         name={seen ? "checkmark-done" : "checkmark"}
         size={16}
@@ -161,11 +164,13 @@ export function StatusTicks({
 
 /** What a soft-deleted message shows in place of its content. */
 export function DeletedTombstone({ isMine }: { isMine: boolean }) {
+  const t = useTranslations("messaging");
+
   return (
     <View className="flex-row items-center gap-1.5 py-0.5">
       <Icon name="ban-outline" size={15} tone="muted" />
       <AppText variant="small" tone="muted" className="italic">
-        {isMine ? "You deleted this message" : "This message was deleted"}
+        {isMine ? t("youDeletedThisMessage") : t("thisMessageWasDeleted")}
       </AppText>
     </View>
   );
@@ -183,12 +188,6 @@ export function bubbleShapeClass(isMine: boolean, deleted: boolean): string {
   }`;
 }
 
-// Exposed to assistive tech as the accessible equivalent of a long press.
-// Deliberately the standard "longpress" action rather than "activate": VoiceOver
-// / TalkBack fire "activate" on a double tap, which must stay free to open an
-// image bubble's viewer.
-const A11Y_ACTIONS = [{ name: "longpress", label: "Message actions" }];
-
 export const MessageBubble = memo(function MessageBubble({
   message,
   pending,
@@ -205,6 +204,16 @@ export const MessageBubble = memo(function MessageBubble({
   onToggleReaction,
   onRetry,
 }: Props) {
+  const t = useTranslations("messaging");
+  // Exposed to assistive tech as the accessible equivalent of a long press.
+  // Deliberately the standard "longpress" action rather than "activate":
+  // VoiceOver / TalkBack fire "activate" on a double tap, which must stay
+  // free to open an image bubble's viewer.
+  const a11yActions = useMemo(
+    () => [{ name: "longpress", label: t("a11y.messageActions") }],
+    [t],
+  );
+
   const c = useThemeColors();
   const reduceMotion = useReducedMotion();
   const deleted = !!message.deleted_at;
@@ -270,7 +279,10 @@ export const MessageBubble = memo(function MessageBubble({
   // What VoiceOver / TalkBack reads for the bubble. Attachment-only messages
   // have no text, so name the kind instead of announcing an empty bubble.
   const a11yLabel = deleted
-    ? `${isMine ? "You" : "They"} deleted a message, ${clockTime(message.created_at)}`
+    ? t("deletedAMessage", {
+        value: isMine ? t("you") : t("they"),
+        clockTime: clockTime(message.created_at),
+      })
     : `${isMine ? "You" : "Them"}: ${
         message.content ||
         (isAudio
@@ -388,7 +400,7 @@ export const MessageBubble = memo(function MessageBubble({
               variant="caption"
               className={isMine ? "text-primary-foreground" : undefined}
             >
-              Voice message
+              {t("voiceMessage2")}
             </AppText>
             <ActivityIndicator size="small" />
           </View>
@@ -424,7 +436,7 @@ export const MessageBubble = memo(function MessageBubble({
               variant="caption"
               className={isMine ? "text-primary-foreground" : undefined}
             >
-              Voice message · update the app to play
+              {t("voiceMessageUpdateTheAppTo")}
             </AppText>
           </View>
         )
@@ -483,7 +495,7 @@ export const MessageBubble = memo(function MessageBubble({
       <View className="mt-1 flex-row flex-wrap items-center justify-end gap-1">
         {message.edited_at && !deleted ? (
           <AppText variant="caption" style={{ color: footerColor }}>
-            edited ·
+            {t("edited2")}
           </AppText>
         ) : null}
         <AppText
@@ -592,8 +604,8 @@ export const MessageBubble = memo(function MessageBubble({
             accessible
             accessibilityRole="button"
             accessibilityLabel={a11yLabel}
-            accessibilityHint="Reply, react, and more are available as actions"
-            accessibilityActions={A11Y_ACTIONS}
+            accessibilityHint={t("replyReactAndMoreAreAvailable")}
+            accessibilityActions={a11yActions}
             onAccessibilityAction={onA11yAction}
             style={[bubbleStyle, hiddenForMenu ? { opacity: 0 } : null]}
             className={bubbleClassName}

@@ -45,6 +45,7 @@ const APPLY = flag("apply");
 const CHECK = flag("check");
 const ONLY = option("only");
 const REPORT_PATH = option("report");
+const VERBOSE = flag("verbose");
 
 // ---------------------------------------------------------------------------
 // Target configuration
@@ -314,11 +315,16 @@ const NEVER_KEYS = new Set(["name"]);
 
 // Calls whose string arguments a person reads: callee text matched against
 // these patterns.
+// Variables and functions whose value a person reads.
+const TEXTISH_NAME =
+  /(label|title|text|message|description|subtitle|heading|headline|hint|placeholder|caption|copy|note|summary|reason|tooltip|cta|prompt|error|warning|body|emptyState|helper)$/i;
+
 const TEXT_CALLS = [
   /^toast\.(success|error|warning|info|loading|show|message)$/,
   /^Alert\.alert$/,
   /^(window\.)?confirm$/,
-  /^set[A-Z]\w*(Error|Errors|Message|Status|Hint|Notice|Label|Title|Text|Reason|Feedback|Warning|Success|Caption|Placeholder)$/,
+  /^messageOf$/,
+  /^set(?:[A-Z]\w*)?(Error|Errors|Message|Status|Hint|Notice|Label|Title|Text|Reason|Feedback|Warning|Success|Caption|Placeholder)$/,
   /^(show|notify|announce)[A-Z]\w*$/,
 ];
 
@@ -330,6 +336,8 @@ function isNoiseText(text, { attribute } = {}) {
   if (/^[A-Z0-9_\-:.]+$/.test(t) && !/[a-z]/.test(t) && t.length <= 8)
     return true;
   if (/^(https?:\/\/|mailto:|tel:|\/|#|www\.)/i.test(t)) return true;
+  // A catalog key ("footer.privacy", "tabs.all") already points at text.
+  if (/^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)+$/.test(t)) return true;
   if (/^[\w.+-]+@[\w-]+\.[\w.]+$/.test(t)) return true;
   if (
     /^(abonten|abonten hub|abonten hub ltd|ab[ɔo]nten|paystack|google|apple|x|instagram|tiktok|facebook|linkedin|cloudinary|hubtel|resend|supabase|sentry|expo|ios|android|whatsapp|momo|mtn|vodafone|airteltigo|telecel|visa|mastercard|ghs|gh₵|usd|eur|gbp|xof|ngn|kes|png|jpg|jpeg|pdf|mp4|svg|utc|gmt|qr|id|ok|px|km|mi|kg|cm|mm|am|pm|a\.m\.|p\.m\.|n\/a|vs|etc\.?|e\.g\.|i\.e\.|vat|nhil|getfund|ltd|llc|inc|t&c|faq|sms|otp|url|api|pin|cvv|cvc|iban|swift|bic|ussd|rsvp|diy|ceo|cto|cfo|hq|dj|mc|vip|vvip|tv|hd|4k|3d|2d|ui|ux|seo|csv|json|xml|html|css|js|ts|tsx|ai|ar|vr|nft|crypto|btc|eth)$/i.test(
@@ -490,7 +498,15 @@ function keyFor(ns, text) {
   const base = slugFor(text);
   let key = `${prefix}${base}`;
   let n = 2;
-  while (key in r.en || r.added.has(key)) {
+  // A key must not collide with an existing leaf, nor sit where a nested
+  // group already lives ("appearance" beside "appearance.title"): the JSON
+  // can hold only one of the two.
+  const taken = (k) =>
+    k in r.en ||
+    r.added.has(k) ||
+    Object.keys(r.en).some((e) => e.startsWith(`${k}.`)) ||
+    [...r.added.keys()].some((e) => e.startsWith(`${k}.`));
+  while (taken(key)) {
     key = `${prefix}${base}${n++}`;
   }
   r.added.set(key, text);
@@ -833,6 +849,7 @@ for (const file of files) {
 
   function record(h, text) {
     report.found++;
+    if (VERBOSE) console.error(`  ${file} ${JSON.stringify(text)}`);
     const key = keyFor(h.ns, text);
     const { file: nsFile } = splitNamespace(h.ns);
     report.byNamespace[nsFile] = (report.byNamespace[nsFile] ?? 0) + 1;
@@ -942,6 +959,51 @@ for (const file of files) {
     return name;
   }
 
+  // The source of a param expression, with two touches: a fallback literal
+  // a person would read (`place?.name ?? "this place"`) becomes t("…"),
+  // and an optional chain with no fallback gets `?? ""`, because ICU
+  // params refuse undefined.
+  function paramExprText(e) {
+    const base = e.getStart(sf);
+    let text = e.getText(sf);
+    const literals = [];
+    const collect = (n) => {
+      if (isStringLike(n)) {
+        const q = n.parent;
+        const fallback =
+          q &&
+          ((ts.isBinaryExpression(q) &&
+            q.right === n &&
+            [
+              ts.SyntaxKind.QuestionQuestionToken,
+              ts.SyntaxKind.BarBarToken,
+            ].includes(q.operatorToken.kind)) ||
+            (ts.isConditionalExpression(q) && q.condition !== n));
+        if (fallback && !isNoiseText(n.text) && !allowTexts.has(n.text)) {
+          literals.push(n);
+        }
+      }
+      ts.forEachChild(n, collect);
+    };
+    collect(e);
+    for (const lit of literals.sort((a, b) => b.pos - a.pos)) {
+      const h = tFor(lit, { text: lit.text });
+      if (!h) continue;
+      const key = record(h, lit.text);
+      const start = lit.getStart(sf) - base;
+      const end = lit.end - base;
+      text = text.slice(0, start) + tCall(h, key) + text.slice(end);
+      handled.add(lit);
+    }
+    const topLevelFallback =
+      ts.isBinaryExpression(e) &&
+      [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(
+        e.operatorToken.kind,
+      );
+    if (/\?\./.test(text) && !topLevelFallback) text = `${text} ?? ""`;
+    return text;
+  }
+
   function emitRun(parent, run) {
     if (run.every((n) => ts.isJsxText(n) && n.text.trim() === "")) return;
     const first = run[0];
@@ -982,7 +1044,7 @@ for (const file of files) {
         }
         onlyText = false;
         const name = paramName(e, used);
-        params.push(`${name}: ${e.getText(sf)}`);
+        params.push(`${name}: ${paramExprText(e)}`);
         message += `{${name}}`;
         return;
       }
@@ -1111,7 +1173,83 @@ for (const file of files) {
         return { kind: "default", key: name };
       }
     }
+    // `const title = cond ? "Paid" : "Pending"` — a value named like text,
+    // assigned inside a component and rendered later.
+    if (
+      ts.isVariableDeclaration(p) &&
+      p.initializer === n &&
+      ts.isIdentifier(p.name) &&
+      TEXTISH_NAME.test(p.name.text)
+    ) {
+      return { kind: "variable", key: p.name.text };
+    }
+    // `return "Paid"` inside `function statusLabel()` / `const label =
+    // useMemo(() => …)`: the function (or the variable it feeds) is named
+    // like text.
+    if (
+      (ts.isReturnStatement(p) && p.expression === n) ||
+      (ts.isArrowFunction(p) && p.body === n)
+    ) {
+      const fn = ts.isReturnStatement(p) ? enclosingFunction(p) : p;
+      const name = fn ? (nameOfFunction(fn) ?? feedsVariable(fn)) : undefined;
+      if (name && TEXTISH_NAME.test(name)) return { kind: "return", key: name };
+    }
     return null;
+  }
+
+  function enclosingFunction(node) {
+    for (let q = node.parent; q; q = q.parent) {
+      if (isFunctionLike(q)) return q;
+    }
+    return null;
+  }
+
+  // `const label = useMemo(() => …)` / `const title = cond ? fn() : …`:
+  // the variable a function expression ultimately feeds.
+  function feedsVariable(fn) {
+    for (let q = fn.parent; q; q = q.parent) {
+      if (ts.isVariableDeclaration(q) && ts.isIdentifier(q.name))
+        return q.name.text;
+      if (
+        !(
+          ts.isCallExpression(q) ||
+          ts.isParenthesizedExpression(q) ||
+          ts.isConditionalExpression(q) ||
+          ts.isAsExpression(q)
+        )
+      )
+        return undefined;
+    }
+    return undefined;
+  }
+
+  // `aria-label={`Remove one from ${label}`}` — a template with text and
+  // expressions becomes one ICU message with named params.
+  function processTemplate(node) {
+    if (handled.has(node)) return;
+    const pos = displayPositionOf(node);
+    if (!pos) return;
+    const used = new Set();
+    const params = [];
+    let message = node.head.text;
+    for (const span of node.templateSpans) {
+      const name = paramName(span.expression, used);
+      params.push(`${name}: ${paramExprText(span.expression)}`);
+      message += `{${name}}${span.literal.text}`;
+    }
+    if (!/\p{L}{2,}/u.test(message.replace(/\{[^}]*\}/g, ""))) return;
+    if (isNoiseText(message.replace(/\{[^}]*\}/g, "x"))) return;
+    if (allowTexts.has(message) || fileAllowed) return;
+    const h = tFor(node, { text: message });
+    if (!h) {
+      remaining.push({ file, line: lineOf(node), text: message });
+      return;
+    }
+    const key = record(h, message);
+    const replacement = tCall(h, key, params);
+    edits.push({ start: node.getStart(sf), end: node.end, text: replacement });
+    handled.add(node);
+    report.rewritten++;
   }
 
   function processString(node) {
@@ -1121,9 +1259,10 @@ for (const file of files) {
     const text = node.text;
     if (isNoiseText(text, { attribute: pos.attribute })) return;
     if (allowTexts.has(text) || fileAllowed) return;
-    // Values that are really code: variants, keys, ids.
-    if (pos.kind === "object" && /^[a-z0-9_-]+$/.test(text) && !/\s/.test(text))
-      return;
+    // Values that are really code: variants, keys, ids, enum props such as
+    // next/image's placeholder="blur" or loading="lazy".
+    // A lowercase single token is a code ("completed", "blur"), not text.
+    if (pos.kind !== "child" && /^[a-z0-9_-]+$/.test(text)) return;
     const h = tFor(node, { text });
     if (!h) {
       remaining.push({ file, line: lineOf(node), text });
@@ -1189,6 +1328,7 @@ for (const file of files) {
     if (ts.isJsxElement(node) || ts.isJsxFragment(node)) processChildren(node);
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
       processString(node);
+    if (ts.isTemplateExpression(node)) processTemplate(node);
     ts.forEachChild(node, visit);
   }
   visit(sf);

@@ -22,6 +22,7 @@ import {
   type ToastApi,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import * as Linking from "expo-linking";
@@ -72,16 +73,17 @@ function reportAttachmentError(
   toast: ToastApi,
   e: unknown,
   fallbackTitle: string,
+  t: (key: string) => string,
 ) {
   if (e instanceof AttachmentPermissionError) {
-    Alert.alert("Permission needed", e.message, [
-      { text: "Not now", style: "cancel" },
-      { text: "Open Settings", onPress: () => Linking.openSettings() },
+    Alert.alert(t("permissionNeeded"), e.message, [
+      { text: t("notNow"), style: "cancel" },
+      { text: t("openSettings"), onPress: () => Linking.openSettings() },
     ]);
     return;
   }
   toast.error(fallbackTitle, {
-    description: e instanceof Error ? e.message : "Please try again.",
+    description: e instanceof Error ? e.message : t("pleaseTryAgain"),
   });
 }
 
@@ -94,6 +96,8 @@ function ReplyPreview({
   senderName: string;
   onCancel: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const att = message.attachments[0];
   const isImage = message.message_type === "image";
   const isAudio = message.message_type === "audio";
@@ -134,7 +138,7 @@ function ReplyPreview({
             numberOfLines={1}
             className="text-[13px] font-semibold leading-[16px] text-primary"
           >
-            Replying to {senderName}
+            {t("replyingTo2", { senderName: senderName })}
           </AppText>
           <AppText
             variant="meta"
@@ -159,7 +163,7 @@ function ReplyPreview({
           onPress={onCancel}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Cancel reply"
+          accessibilityLabel={t("cancelReply")}
           className="w-10 items-center justify-center active:opacity-60"
         >
           <Icon name="close" size={18} tone="muted" />
@@ -188,6 +192,8 @@ export function Composer({
   disabled?: boolean;
   disabledReason?: string;
 }) {
+  const t = useTranslations("messaging");
+
   const toast = useToast();
   const c = useThemeColors();
   const [text, setText] = useState("");
@@ -221,7 +227,7 @@ export function Composer({
       if (items.length === 1) setPreview(items[0]);
       else setStaged((prev) => [...prev, ...items].slice(0, MAX_ATTACHMENTS));
     } catch (e) {
-      reportAttachmentError(toast, e, "Can't add media");
+      reportAttachmentError(toast, e, t("cantAddMedia"), t);
     }
   }
 
@@ -230,7 +236,7 @@ export function Composer({
       const shot = await captureChatPhoto();
       if (shot) setPreview(shot);
     } catch (e) {
-      reportAttachmentError(toast, e, "Can't open the camera");
+      reportAttachmentError(toast, e, t("cantOpenTheCamera"), t);
     }
   }
 
@@ -239,7 +245,7 @@ export function Composer({
       const doc = await pickChatDocument();
       if (doc) setPreview(doc);
     } catch (e) {
-      reportAttachmentError(toast, e, "Can't add file");
+      reportAttachmentError(toast, e, t("cantAddFile"), t);
     }
   }
 
@@ -268,11 +274,9 @@ export function Composer({
         setUploading(false);
         setText(body);
         setStaged(toUpload);
-        toast.error("Upload failed", {
+        toast.error(t("uploadFailed"), {
           description:
-            e instanceof Error
-              ? e.message
-              : "Your attachment couldn't be sent.",
+            e instanceof Error ? e.message : t("yourAttachmentCouldnTBeSent"),
         });
         return;
       }
@@ -319,8 +323,8 @@ export function Composer({
       onCancelReply();
       setPreview(null);
     } catch (e) {
-      toast.error("Upload failed", {
-        description: e instanceof Error ? e.message : "Please try again.",
+      toast.error(t("uploadFailed"), {
+        description: e instanceof Error ? e.message : t("pleaseTryAgain"),
       });
     } finally {
       setPreviewSending(false);
@@ -331,7 +335,7 @@ export function Composer({
     return (
       <BottomBar className="border-t border-border bg-card px-4 pt-4">
         <AppText variant="meta" className="text-center">
-          {disabledReason ?? "You can't send messages in this conversation."}
+          {disabledReason ?? t("youCanTSendMessagesIn")}
         </AppText>
       </BottomBar>
     );
@@ -344,7 +348,7 @@ export function Composer({
       className="h-10 w-10 items-center justify-center rounded-full bg-primary active:opacity-80"
       style={{ opacity: canSend ? 1 : 0.4 }}
       accessibilityRole="button"
-      accessibilityLabel="Send message"
+      accessibilityLabel={t("sendMessage")}
     >
       {uploading ? (
         <ActivityIndicator color={c["primary-foreground"]} size="small" />
@@ -371,7 +375,7 @@ export function Composer({
     <View
       className="h-10 w-10 items-center justify-center rounded-full bg-primary opacity-40"
       accessibilityRole="button"
-      accessibilityLabel="Send message"
+      accessibilityLabel={t("sendMessage")}
     >
       <Icon name="arrow-up" size={21} tone="inverse" />
     </View>
@@ -419,7 +423,7 @@ export function Composer({
                 }
                 hitSlop={6}
                 accessibilityRole="button"
-                accessibilityLabel="Remove attachment"
+                accessibilityLabel={t("removeAttachment")}
                 className="absolute -right-2 -top-2 h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-card bg-foreground"
               >
                 <Icon name="close" size={12} tone="inverse" />
@@ -437,7 +441,7 @@ export function Composer({
           className="h-10 w-10 items-center justify-center rounded-full active:opacity-60"
           style={{ opacity: staged.length >= MAX_ATTACHMENTS ? 0.4 : 1 }}
           accessibilityRole="button"
-          accessibilityLabel="Add attachment"
+          accessibilityLabel={t("addAttachment")}
         >
           <Icon name="add" size={26} tone="muted" />
         </Pressable>
@@ -450,11 +454,11 @@ export function Composer({
               onTyping(v.trim().length > 0);
             }}
             onBlur={() => onTyping(false)}
-            placeholder="Message"
+            placeholder={t("message")}
             placeholderTextColor={c["muted-foreground"]}
             multiline
             maxLength={MESSAGE_MAX_LENGTH}
-            accessibilityLabel="Message"
+            accessibilityLabel={t("message")}
             className="rounded-[22px] border border-input bg-background px-4 text-[16px] text-foreground"
             style={[
               {
@@ -475,7 +479,7 @@ export function Composer({
               className="mt-1 text-right"
               accessibilityLiveRegion="polite"
             >
-              {MESSAGE_MAX_LENGTH - text.length} characters left
+              {MESSAGE_MAX_LENGTH - text.length} {t("charactersLeft")}
             </AppText>
           ) : null}
         </View>

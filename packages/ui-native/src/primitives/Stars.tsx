@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { useTranslations } from "../i18n";
 import { Icon } from "./Icon";
 
 // A 0–5 star rating display — the native echo of the web StarRatingDisplay /
@@ -16,11 +17,13 @@ export function Stars({
   size?: number;
   className?: string;
 }) {
+  const t = useTranslations("common");
+
   const filled = Math.round(rating);
   return (
     <View
       className={["flex-row", className ?? ""].filter(Boolean).join(" ")}
-      accessibilityLabel={`${rating} out of 5 stars`}
+      accessibilityLabel={t("outOf5Stars", { rating: rating })}
     >
       {[1, 2, 3, 4, 5].map((n) => (
         <Icon

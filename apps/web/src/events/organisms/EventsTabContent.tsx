@@ -17,6 +17,7 @@ import {
   filterEventList,
 } from "@abonten/core/exploreFilters";
 import type { UserPostType } from "@abonten/types/postsType";
+import { getTranslations } from "next-intl/server";
 
 // Radius (km) used for the "All Events" section — matches the previous
 // getNearByEvents(lat, lng, 10000) call's 10km/10000m radius exactly
@@ -60,6 +61,8 @@ export default async function EventsTabContent({
   maxDistanceKm?: number | null;
   view?: "list" | "map";
 }) {
+  const t = await getTranslations("events");
+
   // Same nullable-coordinate handling as PlacesTabContent.tsx -- geocoding
   // can fail (geocodeAddress returns { lat: null, lng: null, error }), and
   // the events RPCs take plain numbers.
@@ -201,16 +204,20 @@ export default async function EventsTabContent({
     <NoEventsFound
       heading={
         eventCategory
-          ? `No ${eventCategory} events found`
-          : "No events match your filters"
+          ? t("noEventsFound3", { eventCategory: eventCategory })
+          : t("noEventsMatchYourFilters")
       }
       description={
         eventCategory
-          ? `We couldn't find any ${eventCategory} events in ${location}${hasActiveFilters ? " matching your filters" : ""}. Try a different category or check back soon.`
-          : `We couldn't find any events in ${location} matching your filters. Try adjusting or clearing them.`
+          ? t("weCouldnTFindAnyEvents2", {
+              eventCategory: eventCategory,
+              location: location,
+              value: hasActiveFilters ? " matching your filters" : "",
+            })
+          : t("weCouldnTFindAnyEvents3", { location: location })
       }
       action={{
-        label: "View all events",
+        label: t("viewAllEvents"),
         href: `/explore/${location}?tab=events`,
       }}
     />
@@ -229,35 +236,35 @@ export default async function EventsTabContent({
       <FeaturedEventsCarousel events={featuredEvents} />
 
       <EventsSlider
-        heading="Around you"
+        heading={t("aroundYou2")}
         events={curatedAroundYou}
         urlPath={`location/${location}/explore/around-you`}
         hideWhenEmpty
       />
 
       <EventsSlider
-        heading="From top-rated organizers"
+        heading={t("fromTopRatedOrganizers")}
         events={topRatedOrganizers}
         urlPath={`location/${location}/explore/top-rated-organizers`}
         hideWhenEmpty
       />
 
       <EventsSlider
-        heading="Happening today"
+        heading={t("happeningToday2")}
         events={happeningToday}
         urlPath={`location/${location}/explore/happening-today`}
         hideWhenEmpty
       />
 
       <EventsSlider
-        heading="Happening this week"
+        heading={t("happeningThisWeek2")}
         events={happeningThisWeek}
         urlPath={`location/${location}/explore/happening-this-week`}
         hideWhenEmpty
       />
 
       <EventsSlider
-        heading="Happening this month"
+        heading={t("happeningThisMonth2")}
         events={happeningThisMonth}
         urlPath={`location/${location}/explore/happening-this-month`}
         hideWhenEmpty
@@ -265,7 +272,7 @@ export default async function EventsTabContent({
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">
-          <h2 className="text-xl font-bold">All Events</h2>
+          <h2 className="text-xl font-bold">{t("allEvents")}</h2>
           <ViewToggle view={view} />
         </div>
 

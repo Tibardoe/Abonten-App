@@ -19,6 +19,7 @@ import {
   TicketStatusBadge,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, Pressable, ScrollView, View } from "react-native";
@@ -44,6 +45,10 @@ function Row({
 }
 
 export default function TicketDetailScreen() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("tickets");
+
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -72,7 +77,7 @@ export default function TicketDetailScreen() {
     );
   }
   if (!ticket) {
-    return <ScreenError message="This ticket could not be found." />;
+    return <ScreenError message={t("thisTicketCouldNotBeFound")} />;
   }
 
   const qr =
@@ -95,6 +100,7 @@ export default function TicketDetailScreen() {
     ticket.event.starts_at,
     ticket.event.ends_at,
     ticket.event.timezone,
+    locale,
   );
   const cancelledByOrganizer = ticket.event.status === "canceled";
   const eventEnded =
@@ -111,14 +117,12 @@ export default function TicketDetailScreen() {
     if (!ticket) return;
     const paid = ticket.transaction_id != null;
     Alert.alert(
-      "Cancel this ticket?",
-      paid
-        ? "A refund of the ticket price will be issued to your original payment method. The Abonten service fee is not refunded."
-        : "Are you sure you want to cancel this ticket?",
+      t("cancelThisTicket"),
+      paid ? t("aRefundOfTheTicketPrice") : t("areYouSureYouWantTo"),
       [
-        { text: "Keep ticket", style: "cancel" },
+        { text: t("keepTicket"), style: "cancel" },
         {
-          text: "Cancel ticket",
+          text: t("cancelTicket"),
           style: "destructive",
           onPress: async () => {
             const res = await cancel.mutateAsync({
@@ -126,12 +130,12 @@ export default function TicketDetailScreen() {
               transactionId: ticket.transaction_id,
             });
             if (res.status === 200) {
-              Alert.alert("Ticket cancelled", res.message ?? "", [
+              Alert.alert(t("ticketCancelled"), res.message ?? "", [
                 { text: "OK", onPress: () => router.back() },
               ]);
             } else {
-              toast.error("Couldn't cancel", {
-                description: res.message ?? "Please try again in a moment.",
+              toast.error(t("couldnTCancel"), {
+                description: res.message ?? t("pleaseTryAgainInAMoment"),
               });
             }
           },
@@ -142,7 +146,11 @@ export default function TicketDetailScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="title" title="Ticket" backFallback="/(app)/tickets" />
+      <AppHeader
+        variant="title"
+        title={t("ticket")}
+        backFallback="/(app)/tickets"
+      />
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4 pb-10"
@@ -176,7 +184,7 @@ export default function TicketDetailScreen() {
             <View className="flex-row items-center gap-2">
               <Icon name="location-outline" size={15} tone="muted" />
               <AppText variant="meta" numberOfLines={1}>
-                {ticket.event.address?.full_address ?? "Location unavailable"}
+                {ticket.event.address?.full_address ?? t("locationUnavailable")}
               </AppText>
             </View>
             <View className="mt-1">
@@ -204,18 +212,28 @@ export default function TicketDetailScreen() {
         <View className="w-full gap-3 rounded-xl border border-border bg-card p-4">
           <Row icon="pricetag-outline" label={ticket.ticket_type.type} />
           {ticket.seat_number ? (
-            <Row icon="grid-outline" label={`Seat ${ticket.seat_number}`} />
+            <Row
+              icon="grid-outline"
+              label={t("seat", { seat_number: ticket.seat_number })}
+            />
           ) : null}
           <Row
             icon="barcode-outline"
-            label="Ticket reference"
+            label={t("ticketReference")}
             sub={ticket.ticket_code}
           />
           {used && ticket.used_at ? (
             <Row
               icon="checkmark-done-circle-outline"
-              label="Checked in"
-              sub={formatFullDateTimeRange(ticket.used_at, ticket.used_at).time}
+              label={t("checkedIn")}
+              sub={
+                formatFullDateTimeRange(
+                  ticket.used_at,
+                  ticket.used_at,
+                  undefined,
+                  locale,
+                ).time
+              }
             />
           ) : null}
         </View>
@@ -232,11 +250,11 @@ export default function TicketDetailScreen() {
             <View className="h-56 w-56 items-center justify-center rounded-lg bg-muted">
               <Icon name="qr-code-outline" size={40} tone="muted" />
               <AppText variant="meta" className="mt-2">
-                No QR code
+                {t("noQrCode")}
               </AppText>
             </View>
           )}
-          <AppText variant="caption">Show this at entry</AppText>
+          <AppText variant="caption">{t("showThisAtEntry")}</AppText>
           <AppText variant="meta" className="tracking-[3px]">
             {ticket.ticket_code}
           </AppText>
@@ -246,8 +264,8 @@ export default function TicketDetailScreen() {
           <Button
             title={
               receipt.isGenerating
-                ? "Preparing receipt…"
-                : "Download receipt (PDF)"
+                ? t("preparingReceipt")
+                : t("downloadReceiptPdf")
             }
             fullWidth
             leftIcon="download-outline"
@@ -261,7 +279,7 @@ export default function TicketDetailScreen() {
             className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
             onPress={() => router.push(`/(app)/event/${ticket.event.id}`)}
           >
-            <AppText variant="bodyStrong">View event</AppText>
+            <AppText variant="bodyStrong">{t("viewEvent")}</AppText>
           </Pressable>
 
           {canCancel ? (
@@ -273,10 +291,10 @@ export default function TicketDetailScreen() {
             >
               <AppText variant="small" tone="error" className="font-semibold">
                 {cancel.isPending
-                  ? "Cancelling…"
+                  ? t("cancelling")
                   : ticket.transaction_id
-                    ? "Cancel ticket & request refund"
-                    : "Cancel ticket"}
+                    ? t("cancelTicketRequestRefund")
+                    : t("cancelTicket")}
               </AppText>
             </Pressable>
           ) : null}

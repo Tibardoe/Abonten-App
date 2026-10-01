@@ -16,6 +16,7 @@ import {
   Overline,
   ScreenError,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
@@ -26,6 +27,8 @@ function fmt(currency: string, v: number): string {
 }
 
 export default function WithdrawScreen() {
+  const t = useTranslations("manage");
+
   const router = useRouter();
   const c = useThemeColors();
   const finance = useOrganizerFinance();
@@ -74,9 +77,11 @@ export default function WithdrawScreen() {
   const error = !amount
     ? null
     : !amountValid
-      ? "Enter an amount greater than zero."
+      ? t("enterAnAmountGreaterThanZero")
       : overBalance
-        ? `You can withdraw at most ${fmt(selectedCurrency ?? "", available)}.`
+        ? t("youCanWithdrawAtMost", {
+            fmt: fmt(selectedCurrency ?? "", available),
+          })
         : null;
   const canProceed =
     !!selectedCurrency && !!defaultAccountId && amountValid && !overBalance;
@@ -111,9 +116,7 @@ export default function WithdrawScreen() {
     // Server-side balance check can still reject (stale local balance).
     submittedRef.current = false;
     setConfirming(false);
-    setServerError(
-      res.message ?? "Couldn't request withdrawal. Please try again.",
-    );
+    setServerError(res.message ?? t("couldnTRequestWithdrawalPleaseTry"));
   }
 
   if (blocked) {
@@ -136,12 +139,12 @@ export default function WithdrawScreen() {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
         <AppText className="text-center text-muted-foreground">
-          Add a payout account before you can withdraw.
+          {t("addAPayoutAccountBeforeYou")}
         </AppText>
         <Link href="/(app)/organizer/payout-accounts" asChild>
           <Pressable className="rounded-lg bg-primary px-4 py-2 active:opacity-90">
             <AppText className="font-semibold text-primary-foreground">
-              Add payout account
+              {t("addPayoutAccount2")}
             </AppText>
           </Pressable>
         </Link>
@@ -154,14 +157,16 @@ export default function WithdrawScreen() {
       <View className="flex-1 items-center justify-center gap-4 bg-background p-8">
         <Icon name="checkmark-circle" size={56} tone="success" />
         <AppText variant="sectionHeading" className="text-center">
-          Withdrawal requested
+          {t("withdrawalRequested")}
         </AppText>
         <AppText variant="muted" className="text-center">
-          {fmt(selectedCurrency ?? "", value)} to{" "}
-          {selectedAccount?.account_number}. Reference {done.reference} — it's
-          reviewed before the funds are sent.
+          {t("toReferenceItSReviewedBefore", {
+            fmt: fmt(selectedCurrency ?? "", value),
+            account_number: selectedAccount?.account_number ?? "",
+            reference: done.reference,
+          })}
         </AppText>
-        <Button title="Done" fullWidth onPress={() => router.back()} />
+        <Button title={t("done")} fullWidth onPress={() => router.back()} />
       </View>
     );
   }
@@ -174,7 +179,7 @@ export default function WithdrawScreen() {
     >
       {balances.length > 1 ? (
         <View className="gap-2">
-          <Overline>Currency</Overline>
+          <Overline>{t("currency")}</Overline>
           <View className="flex-row flex-wrap gap-2">
             {balances.map((b) => (
               <Chip
@@ -192,18 +197,19 @@ export default function WithdrawScreen() {
       ) : null}
 
       <View className="rounded-2xl border border-border bg-card p-4">
-        <Overline>Available to withdraw</Overline>
+        <Overline>{t("availableToWithdraw2")}</Overline>
         <AppText variant="pageTitle">
           {fmt(selectedCurrency ?? "", available)}
         </AppText>
       </View>
 
       <View className="gap-2">
-        <Overline>To account</Overline>
+        <Overline>{t("toAccount")}</Overline>
         {accounts.length === 0 ? (
           <AppText variant="muted">
-            None of your payout accounts receives {selectedCurrency}. Add one in
-            that currency to withdraw this balance.
+            {t("noneOfYourPayoutAccountsReceives", {
+              selectedCurrency: selectedCurrency,
+            })}
           </AppText>
         ) : null}
         {accounts.map((a) => {
@@ -230,7 +236,7 @@ export default function WithdrawScreen() {
       </View>
 
       <View className="gap-2">
-        <Overline>Amount</Overline>
+        <Overline>{t("amount")}</Overline>
         <View className="flex-row items-center gap-2">
           <TextInput
             value={amount}
@@ -254,7 +260,7 @@ export default function WithdrawScreen() {
             className="rounded-lg border border-border px-3 py-3 active:opacity-70"
           >
             <AppText variant="small" tone="brand" className="font-semibold">
-              Max
+              {t("max")}
             </AppText>
           </Pressable>
         </View>
@@ -264,13 +270,13 @@ export default function WithdrawScreen() {
           </AppText>
         ) : (
           <View className="flex-row justify-between">
-            <AppText variant="caption">You'll receive</AppText>
+            <AppText variant="caption">{t("youLlReceive")}</AppText>
             <AppText variant="metaStrong">
               {fmt(selectedCurrency ?? "", amountValid ? value : 0)}
             </AppText>
           </View>
         )}
-        <AppText variant="caption">No withdrawal fee.</AppText>
+        <AppText variant="caption">{t("noWithdrawalFee")}</AppText>
       </View>
 
       {serverError ? (
@@ -283,21 +289,21 @@ export default function WithdrawScreen() {
 
       {confirming ? (
         <View className="gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
-          <AppText variant="bodyStrong">Confirm withdrawal</AppText>
+          <AppText variant="bodyStrong">{t("confirmWithdrawal")}</AppText>
           <View className="flex-row justify-between">
-            <AppText variant="muted">Amount</AppText>
+            <AppText variant="muted">{t("amount")}</AppText>
             <AppText variant="bodyStrong">
               {fmt(selectedCurrency ?? "", value)}
             </AppText>
           </View>
           <View className="flex-row justify-between">
-            <AppText variant="muted">To</AppText>
+            <AppText variant="muted">{t("to2")}</AppText>
             <AppText variant="small">{selectedAccount?.account_number}</AppText>
           </View>
           <View className="mt-1 flex-row gap-3">
             <View className="flex-1">
               <Button
-                title="Edit"
+                title={t("edit")}
                 variant="outline"
                 onPress={() => setConfirming(false)}
                 disabled={request.isPending}
@@ -305,7 +311,7 @@ export default function WithdrawScreen() {
             </View>
             <View className="flex-1">
               <Button
-                title="Confirm"
+                title={t("confirm")}
                 loading={request.isPending}
                 disabled={request.isPending}
                 onPress={submit}
@@ -315,7 +321,7 @@ export default function WithdrawScreen() {
         </View>
       ) : (
         <Button
-          title="Review withdrawal"
+          title={t("reviewWithdrawal")}
           fullWidth
           disabled={!canProceed}
           onPress={() => setConfirming(true)}
@@ -323,7 +329,7 @@ export default function WithdrawScreen() {
       )}
 
       <AppText variant="caption" className="text-center">
-        Withdrawals are reviewed before the funds are sent.
+        {t("withdrawalsAreReviewedBeforeTheFunds")}
       </AppText>
     </KeyboardAwareScrollView>
   );

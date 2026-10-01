@@ -10,6 +10,7 @@ import {
   Input,
   Sheet,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -32,6 +33,8 @@ export function BookPlaceSheet({
   placeName: string;
   services: BookingService[];
 }) {
+  const t = useTranslations("places");
+
   const hasServices = services.length > 0;
 
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -70,11 +73,11 @@ export function BookPlaceSheet({
   function onSubmit() {
     setError(null);
     if (!requestedTime) {
-      setError("Please pick a date and time.");
+      setError(t("pleasePickADateAndTime"));
       return;
     }
     if (requestedTime.getTime() <= Date.now()) {
-      setError("Please pick a time in the future.");
+      setError(t("pleasePickATimeInThe"));
       return;
     }
     request.mutate(
@@ -89,11 +92,11 @@ export function BookPlaceSheet({
           if (res.status === 200) {
             setSubmitted(true);
           } else {
-            setError(res.message ?? "Couldn't send your request.");
+            setError(res.message ?? t("couldnTSendYourRequest"));
           }
         },
         onError: (e) =>
-          setError(e instanceof Error ? e.message : "Something went wrong."),
+          setError(e instanceof Error ? e.message : t("somethingWentWrong2")),
       },
     );
   }
@@ -102,22 +105,25 @@ export function BookPlaceSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={`Book ${placeName}`}
+      title={t("book2", { placeName: placeName })}
       footer={
         submitted ? (
-          <Button title="Done" onPress={onClose} />
+          <Button title={t("done")} onPress={onClose} />
         ) : step === "confirm" ? (
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <Button title="Cancel" variant="outline" onPress={onClose} />
+              <Button title={t("cancel")} variant="outline" onPress={onClose} />
             </View>
             <View className="flex-1">
-              <Button title="Continue" onPress={() => setStep("form")} />
+              <Button
+                title={t("continueText")}
+                onPress={() => setStep("form")}
+              />
             </View>
           </View>
         ) : (
           <Button
-            title={request.isPending ? "Sending…" : "Request booking"}
+            title={request.isPending ? t("sending2") : t("requestBooking2")}
             onPress={onSubmit}
             disabled={request.isPending}
           />
@@ -127,38 +133,32 @@ export function BookPlaceSheet({
       {step === "confirm" && !submitted ? (
         <View className="gap-3 py-2">
           <AppText variant="bodyStrong">
-            No services available for booking
+            {t("noServicesAvailableForBooking")}
           </AppText>
           <AppText variant="muted">
-            This place currently has no services available for booking. You can
-            still send a general request and arrange the details with the owner.
-            Would you like to continue?
+            {t("thisPlaceCurrentlyHasNoServices")}
           </AppText>
         </View>
       ) : submitted ? (
         <View className="items-center gap-3 py-4">
           <Icon name="checkmark-circle" size={44} tone="success" />
           <AppText variant="bodyStrong" className="text-center">
-            Booking request sent
+            {t("bookingRequestSent")}
           </AppText>
           <AppText variant="muted" className="text-center">
-            The owner will accept or decline it. You can track it under My
-            bookings.
+            {t("theOwnerWillAcceptOrDecline")}
           </AppText>
         </View>
       ) : (
         <View className="gap-4">
-          <AppText variant="muted">
-            This is a request only — payment, if any, is arranged directly with
-            the owner.
-          </AppText>
+          <AppText variant="muted">{t("thisIsARequestOnlyPayment2")}</AppText>
 
           {services.length > 0 ? (
             <View className="gap-2">
-              <AppText variant="label">Service</AppText>
+              <AppText variant="label">{t("service2")}</AppText>
               <View className="flex-row flex-wrap gap-2">
                 <Chip
-                  label="No specific service"
+                  label={t("noSpecificService")}
                   selected={serviceId === null}
                   onPress={() => setServiceId(null)}
                 />
@@ -175,7 +175,7 @@ export function BookPlaceSheet({
           ) : null}
 
           <View className="gap-2">
-            <AppText variant="label">Date</AppText>
+            <AppText variant="label">{t("date")}</AppText>
             <DateRangeField
               start={date}
               end={null}
@@ -185,27 +185,29 @@ export function BookPlaceSheet({
           </View>
 
           <View className="gap-2">
-            <AppText variant="label">Time</AppText>
+            <AppText variant="label">{t("time")}</AppText>
             <TimeField
               value={time}
               onChange={setTime}
-              label="Booking time"
+              label={t("bookingTime")}
               invalid={!!error && !time}
             />
             {requestedTime ? (
               <AppText variant="caption">
-                Requesting {requestedTime.toLocaleDateString()} at{" "}
-                {prettyTime(time)}
+                {t("requestingAt", {
+                  toLocaleDateString: requestedTime.toLocaleDateString(),
+                  prettyTime: prettyTime(time),
+                })}
               </AppText>
             ) : null}
           </View>
 
           <View className="gap-2">
-            <AppText variant="label">Party size (optional)</AppText>
+            <AppText variant="label">{t("partySizeOptional")}</AppText>
             <View className="flex-row items-center gap-4">
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Fewer guests"
+                accessibilityLabel={t("fewerGuests")}
                 disabled={partySize <= 0}
                 onPress={() => setPartySize((n) => Math.max(0, n - 1))}
                 hitSlop={6}
@@ -224,7 +226,7 @@ export function BookPlaceSheet({
               </AppText>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="More guests"
+                accessibilityLabel={t("moreGuests")}
                 disabled={partySize >= 50}
                 onPress={() => setPartySize((n) => Math.min(50, n + 1))}
                 hitSlop={6}
@@ -243,11 +245,11 @@ export function BookPlaceSheet({
             </View>
           </View>
 
-          <Field label="Note for the owner (optional)">
+          <Field label={t("noteForTheOwnerOptional")}>
             <Input
               value={note}
               onChangeText={setNote}
-              placeholder="Anything the owner should know"
+              placeholder={t("anythingTheOwnerShouldKnow")}
               multiline
               numberOfLines={3}
               maxLength={500}

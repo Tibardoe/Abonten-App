@@ -16,6 +16,7 @@ import {
   addBankPayoutAccountSchema,
 } from "@abonten/validation/payoutAccountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -24,6 +25,8 @@ type PopupCloseProp = {
 };
 
 export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
+  const t = useTranslations("finances");
+
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<AddBankPayoutAccountInput>({
@@ -56,7 +59,7 @@ export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Add an account you'll withdraw your earnings to.
+        {t("addAnAccountYouLlWithdraw")}
       </p>
 
       <Form {...form}>
@@ -67,14 +70,14 @@ export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="accountHolderName" className="text-sm">
-                  Account Holder Name
+                  {t("accountHolderName")}
                 </label>
                 <FormControl>
                   <Input
                     id="accountHolderName"
                     type="text"
                     {...field}
-                    placeholder="Eg. Kwame Mensah"
+                    placeholder={t("egKwameMensah")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -88,14 +91,14 @@ export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="bankName" className="text-sm">
-                  Bank Name
+                  {t("bankName")}
                 </label>
                 <FormControl>
                   <Input
                     id="bankName"
                     type="text"
                     {...field}
-                    placeholder="Eg. GCB Bank"
+                    placeholder={t("egGcbBank")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -109,7 +112,7 @@ export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="accountNumber" className="text-sm">
-                  Account Number
+                  {t("accountNumber")}
                 </label>
                 <FormControl>
                   <Input
@@ -117,7 +120,7 @@ export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
                     type="text"
                     inputMode="numeric"
                     {...field}
-                    placeholder="Eg. 1234567890"
+                    placeholder={t("eg1234567890")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -134,7 +137,7 @@ export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
             disabled={isSubmitting}
             className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
           >
-            {isSubmitting ? "Saving..." : "Save Payout Account"}
+            {isSubmitting ? t("saving") : t("savePayoutAccount")}
           </Button>
         </form>
       </Form>

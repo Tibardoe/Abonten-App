@@ -11,6 +11,7 @@ import {
 } from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText, BottomBar, Button } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
@@ -50,6 +51,8 @@ export function useTicketPayment({
   /** The quote went stale (balance changed, checkout lapsed): refetch it. */
   onCreditRefused?: () => void;
 }) {
+  const t = useTranslations("checkout");
+
   const router = useRouter();
   const needsEmail = useNeedsEmailToPay();
   const payment = usePaymentChoice({
@@ -93,8 +96,8 @@ export function useTicketPayment({
       const expired = res.status === 409 && res.invalidSessionIds.length > 0;
       setError(
         expired
-          ? "This checkout expired. Go back and start again."
-          : (res.message ?? "Couldn't start the payment."),
+          ? t("thisCheckoutExpiredGoBackAnd")
+          : (res.message ?? t("couldnTStartThePayment")),
       );
       if (res.status === 409 && !expired) onCreditRefused?.();
       return;
@@ -102,7 +105,7 @@ export function useTicketPayment({
 
     const attemptId = res.data.attempts[0]?.id;
     if (!attemptId) {
-      setError("Couldn't start the payment.");
+      setError(t("couldnTStartThePayment"));
       return;
     }
     const ps = res.data.payment;
@@ -118,7 +121,7 @@ export function useTicketPayment({
       verification.status !== 202 &&
       verification.status !== 207
     ) {
-      setError(verification.message ?? "Couldn't complete the payment.");
+      setError(verification.message ?? t("couldnTCompleteThePayment"));
       onCreditRefused?.();
       return;
     }
@@ -178,6 +181,8 @@ export type TicketPayment = ReturnType<typeof useTicketPayment>;
 // With no wallet yet the list still offers "Add a wallet" (added in place
 // and selected) and the ways to pay once, so there is no separate empty card.
 export function PaymentSection({ state }: { state: TicketPayment }) {
+  const t = useTranslations("checkout");
+
   if (state.needsEmail) {
     return <EmailRequiredCard purpose="tickets" />;
   }
@@ -197,7 +202,7 @@ export function PaymentSection({ state }: { state: TicketPayment }) {
     <View className="gap-3">
       {creditSwitch}
       <AppText className="text-sm font-semibold text-foreground">
-        {state.useCredit ? "Pay the rest with" : "Pay with"}
+        {state.useCredit ? t("payTheRestWith") : t("payWith")}
       </AppText>
       <PaymentChoiceList state={state.payment} />
     </View>
@@ -210,13 +215,15 @@ export function PaymentSection({ state }: { state: TicketPayment }) {
 // picker still needs something (an email, a way to pay) Pay stays disabled
 // and the picker's own "Add email" / "Add a wallet" is the way forward.
 export function PayBar({ state }: { state: TicketPayment }) {
+  const t = useTranslations("checkout");
+
   const { quote, creditCoversAll } = state;
 
   const caption = creditCoversAll
-    ? "Paid with credit"
+    ? t("paidWithCredit")
     : state.useCredit
-      ? "To pay after credit"
-      : "Total";
+      ? t("toPayAfterCredit")
+      : t("total");
   const amount =
     creditCoversAll && quote
       ? formatCredit(quote.creditMinor, quote.currency)
@@ -239,16 +246,16 @@ export function PayBar({ state }: { state: TicketPayment }) {
           </AppText>
         </View>
         <Button
-          title={creditCoversAll ? "Pay with credit" : "Pay now"}
+          title={creditCoversAll ? t("payWithCredit") : t("payNow")}
           disabled={!state.canPay}
           loading={state.pending}
           onPress={state.onPay}
           accessibilityHint={
             state.needsEmail
-              ? "Add your email above to pay"
+              ? t("addYourEmailAboveToPay")
               : !state.canPay
-                ? "Choose a way to pay above"
-                : "Starts the payment"
+                ? t("chooseAWayToPayAbove")
+                : t("startsThePayment")
           }
         />
       </View>

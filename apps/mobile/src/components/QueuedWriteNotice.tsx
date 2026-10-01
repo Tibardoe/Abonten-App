@@ -1,4 +1,5 @@
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { View } from "react-native";
 
 // Writes use React Query's `networkMode: "online"`, so a mutation fired with
@@ -8,19 +9,18 @@ import { View } from "react-native";
 // there, which reads as a hang. `mutation.isPaused` is the exact signal for
 // "queued, waiting for a connection", so say so where the person is looking.
 
-/** Button label for a write React Query has parked until reconnection. */
-export const QUEUED_WRITE_LABEL = "Waiting for connection…";
-
 /**
  * The line that explains the parked button. Render it in the same footer as
  * the submit button, guarded by the mutation's own `isPaused`.
  */
 export function QueuedWriteNotice() {
+  const t = useTranslations("common");
+
   return (
     <View className="flex-row items-center gap-1.5">
       <Icon name="cloud-offline-outline" size={15} tone="muted" />
       <AppText variant="small" tone="muted">
-        You're offline. This will send as soon as you're back online.
+        {t("youReOfflineThisWillSend")}
       </AppText>
     </View>
   );

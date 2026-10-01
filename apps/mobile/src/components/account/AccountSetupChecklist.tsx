@@ -5,6 +5,7 @@ import {
   type ProfileCompletionItem,
 } from "@abonten/core/profileCompletion";
 import { AppText, Icon, type IoniconName, Label } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The account-setup steps, grouped ("Your profile", "Sign-in & contact"):
@@ -26,13 +27,15 @@ function Row({
   item: ProfileCompletionItem;
   onPress: () => void;
 }) {
+  const t = useTranslations("account");
+
   const done = item.complete;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
         done
-          ? `${item.doneLabel}. Tap to change.`
+          ? t("tapToChange", { doneLabel: item.doneLabel })
           : `${item.label}. ${item.description}`
       }
       onPress={onPress}
@@ -56,7 +59,7 @@ function Row({
         {!done ? <AppText variant="meta">{item.description}</AppText> : null}
         {item.state === "unverified" ? (
           <AppText variant="caption" tone="warning">
-            Waiting for a code
+            {t("waitingForACode")}
           </AppText>
         ) : null}
       </View>
@@ -74,6 +77,8 @@ export function AccountSetupChecklist({
   groups?: ProfileCompletionGroup[];
   onItemPress: (item: ProfileCompletionItem) => void;
 }) {
+  const t = useTranslations("account");
+
   return (
     <View className="gap-5">
       {groups.map((group) => {
@@ -84,7 +89,7 @@ export function AccountSetupChecklist({
             <View className="flex-row items-center justify-between">
               <Label>{PROFILE_COMPLETION_GROUP_TITLES[group]}</Label>
               <AppText variant="caption">
-                {done} of {items.length} done
+                {t("ofDone", { done: done, length: items.length })}
               </AppText>
             </View>
             {items.map((item) => (

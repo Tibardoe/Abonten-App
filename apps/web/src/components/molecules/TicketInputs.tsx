@@ -2,6 +2,7 @@ import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { Ticket } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
+import { useFormatter, useTranslations } from "next-intl";
 import React from "react";
 import { useState } from "react";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -37,6 +38,9 @@ export default function TicketInputs({
   multipleTickets = [],
   handleMultipleTickets,
 }: TicketInputProp) {
+  const t = useTranslations("common");
+  const format = useFormatter();
+
   const [date, setDate] = React.useState<Date | undefined>(undefined);
 
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
@@ -71,7 +75,7 @@ export default function TicketInputs({
         (t) => t.category?.trim().toUpperCase() === normalized,
       );
       if (isDuplicate) {
-        setDuplicateError("This category name has already been added.");
+        setDuplicateError(t("thisCategoryNameHasAlreadyBeen"));
         return;
       }
 
@@ -118,7 +122,7 @@ export default function TicketInputs({
             <input
               type="number"
               min={0}
-              placeholder="Fee"
+              placeholder={t("fee")}
               value={singleTicketPrice ?? ""}
               onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
               className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
@@ -128,7 +132,7 @@ export default function TicketInputs({
           <Input
             type="number"
             min={1}
-            placeholder="Quantity (optional)"
+            placeholder={t("quantityOptional")}
             value={singleTicketQuantity ?? ""}
             onChange={(e) => handleSingleTicketQuantity?.(readQuantity(e))}
           />
@@ -141,7 +145,7 @@ export default function TicketInputs({
             <div className="w-full">
               <Input
                 type="text"
-                placeholder="Category name"
+                placeholder={t("categoryName")}
                 value={newCategory}
                 onChange={(e) => {
                   setNewCategory(e.target.value);
@@ -163,7 +167,7 @@ export default function TicketInputs({
                 <input
                   type="number"
                   min={0}
-                  placeholder="Fee"
+                  placeholder={t("fee")}
                   value={newPrice ?? ""}
                   onChange={(e) => setNewPrice(Number(e.target.value))}
                   className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
@@ -173,7 +177,7 @@ export default function TicketInputs({
               <Input
                 type="number"
                 min={1}
-                placeholder="Quantity (optional)"
+                placeholder={t("quantityOptional")}
                 value={quantity ?? ""}
                 onChange={(e) => setQuantity(readQuantity(e))}
               />
@@ -181,13 +185,13 @@ export default function TicketInputs({
 
             <div className="grid gap-3 sm:grid-cols-2">
               <InlineDateField
-                label="Available From"
+                label={t("availableFrom")}
                 date={date}
                 onSelect={setDate}
                 disabledBefore={new Date()}
               />
               <InlineDateField
-                label="Available Until"
+                label={t("availableUntil")}
                 date={endDate}
                 onSelect={setEndDate}
                 disabledBefore={date ?? new Date()}
@@ -199,7 +203,7 @@ export default function TicketInputs({
               onClick={handleClick}
               disabled={!newCategory || newPrice === null || !date || !endDate}
             >
-              Add
+              {t("add")}
             </Button>
           </div>
 
@@ -213,7 +217,7 @@ export default function TicketInputs({
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">
                       <span className="text-sm text-muted-foreground">
-                        Category
+                        {t("category")}
                       </span>
                       <span className="text-sm font-semibold">
                         {ticket.category}
@@ -222,7 +226,7 @@ export default function TicketInputs({
 
                     <div className="flex flex-col text-right">
                       <span className="text-sm text-muted-foreground">
-                        Price
+                        {t("price")}
                       </span>
                       <span className="text-sm font-semibold">
                         {formatMoney(currency, ticket.price)}
@@ -231,15 +235,25 @@ export default function TicketInputs({
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>Quantity</span>
-                    <p>{ticket.quantity ?? "No limit of its own"}</p>
+                    <span>{t("quantity")}</span>
+                    <p>{ticket.quantity ?? t("noLimitOfItsOwn")}</p>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground flex items-center gap-2">
                       <MdDateRange className="text-xl" />
-                      {ticket.availableFrom?.toLocaleDateString()} &rarr;{" "}
-                      {ticket.availableUntil?.toLocaleDateString()}
+                      {t("availableFromUntil", {
+                        from: ticket.availableFrom
+                          ? format.dateTime(ticket.availableFrom, {
+                              dateStyle: "medium",
+                            })
+                          : "",
+                        until: ticket.availableUntil
+                          ? format.dateTime(ticket.availableUntil, {
+                              dateStyle: "medium",
+                            })
+                          : "",
+                      })}
                     </div>
 
                     <button

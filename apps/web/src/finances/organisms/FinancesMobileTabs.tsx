@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FINANCES_NAV_ITEMS } from "../financesNavItems";
@@ -9,13 +10,15 @@ import { FINANCES_NAV_ITEMS } from "../financesNavItems";
 // exact scroll/pill styling, since there's no room for a persistent
 // sidebar at that width.
 export default function FinancesMobileTabs() {
+  const t = useTranslations("finances");
+
   const pathname = usePathname();
 
   return (
     <div
       className="flex gap-2 overflow-x-scroll lg:hidden"
       role="tablist"
-      aria-label="Finances section"
+      aria-label={t("financesSection")}
     >
       {FINANCES_NAV_ITEMS.map((item) => {
         const isActive = item.exact

@@ -4,6 +4,7 @@ import type {
 } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Overline } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo, useState } from "react";
 import { type LayoutChangeEvent, Pressable, View } from "react-native";
@@ -52,6 +53,8 @@ export function SalesTimelineChart({
   bucket: DashboardBucket;
   currency: string;
 }) {
+  const t = useTranslations("manage");
+
   const c = useThemeColors();
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
@@ -68,11 +71,11 @@ export function SalesTimelineChart({
   if (data.length === 0) {
     return (
       <View className="gap-2">
-        <Overline>Sales over time</Overline>
+        <Overline>{t("salesOverTime")}</Overline>
         <View className="items-center gap-1 rounded-xl border border-border bg-card px-3 py-6">
-          <AppText variant="bodyStrong">No sales yet</AppText>
+          <AppText variant="bodyStrong">{t("noSalesYet")}</AppText>
           <AppText variant="meta" className="text-center">
-            Gross sales for this period will chart here once tickets sell.
+            {t("grossSalesForThisPeriodWill")}
           </AppText>
         </View>
       </View>
@@ -91,16 +94,22 @@ export function SalesTimelineChart({
   return (
     <View className="gap-2">
       <View className="flex-row items-baseline justify-between">
-        <Overline>Sales over time</Overline>
+        <Overline>{t("salesOverTime")}</Overline>
         {sel ? (
           <AppText variant="metaStrong" tone="brand">
-            {bucketLabel(sel.bucket_start, bucket)} ·{" "}
-            {money(currency, n(sel.gross))} · {n(sel.orders)} order
+            {t("order2", {
+              bucketLabel: bucketLabel(sel.bucket_start, bucket),
+              money: money(currency, n(sel.gross)),
+              n: n(sel.orders),
+            })}
             {n(sel.orders) === 1 ? "" : "s"}
           </AppText>
         ) : (
           <AppText variant="metaStrong">
-            {money(currency, periodTotal)} · {periodOrders} order
+            {t("order3", {
+              money: money(currency, periodTotal),
+              periodOrders: periodOrders,
+            })}
             {periodOrders === 1 ? "" : "s"}
           </AppText>
         )}

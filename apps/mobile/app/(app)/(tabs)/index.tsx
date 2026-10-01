@@ -63,6 +63,7 @@ import {
   SectionTitle,
   SegmentedTabs,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -77,6 +78,8 @@ type Tab = "events" | "places";
 // Today-Week-Month / Top Rated), and the filterable "All events" / "All
 // places" list with filter-aware empty states.
 export default function Explore() {
+  const t = useTranslations("explore");
+
   const router = useRouter();
   const listPadding = useTabBarListPadding();
   const tabBarOverlap = useTabBarOverlap();
@@ -303,38 +306,38 @@ export default function Explore() {
     tab === "events" ? (
       curatedEventsSuppressed ? (
         <Caption className="px-4 pt-4">
-          Rating filter applied — showing the full matching list below.
+          {t("ratingFilterAppliedShowingTheFull")}
         </Caption>
       ) : eventCuratedEmpty ? null : (
         <View>
           <EventSliderRow
-            title="Around you"
+            title={t("aroundYou")}
             events={eventSlidersFiltered.aroundYou}
             onViewAll={() => openSection("event", "aroundYou", "Around you")}
           />
           <EventSliderRow
-            title="Top-rated organizers"
+            title={t("topRatedOrganizers")}
             events={eventSlidersFiltered.topRatedOrganizers}
             onViewAll={() =>
               openSection("event", "topRatedOrganizers", "Top-rated organizers")
             }
           />
           <EventSliderRow
-            title="Happening today"
+            title={t("happeningToday")}
             events={eventSlidersFiltered.happeningToday}
             onViewAll={() =>
               openSection("event", "happeningToday", "Happening today")
             }
           />
           <EventSliderRow
-            title="Happening this week"
+            title={t("happeningThisWeek")}
             events={eventSlidersFiltered.happeningThisWeek}
             onViewAll={() =>
               openSection("event", "happeningThisWeek", "Happening this week")
             }
           />
           <EventSliderRow
-            title="Happening this month"
+            title={t("happeningThisMonth")}
             events={eventSlidersFiltered.happeningThisMonth}
             onViewAll={() =>
               openSection("event", "happeningThisMonth", "Happening this month")
@@ -345,17 +348,17 @@ export default function Explore() {
     ) : placeCuratedEmpty ? null : (
       <View>
         <PlaceSliderRow
-          title="Around you"
+          title={t("aroundYou")}
           places={placeSlidersFiltered.aroundYou}
           onViewAll={() => openSection("place", "aroundYou", "Around you")}
         />
         <PlaceSliderRow
-          title="Open now"
+          title={t("openNow")}
           places={placeSlidersFiltered.openNow}
           onViewAll={() => openSection("place", "openNow", "Open now")}
         />
         <PlaceSliderRow
-          title="Top rated"
+          title={t("topRated")}
           places={placeSlidersFiltered.topRated}
           onViewAll={() => openSection("place", "topRated", "Top rated")}
         />
@@ -424,7 +427,7 @@ export default function Explore() {
       {sliders}
 
       <SectionTitle className="px-4 pb-1 pt-2">
-        {tab === "events" ? "All events" : "All places"}
+        {tab === "events" ? t("allEvents") : t("allPlaces")}
       </SectionTitle>
     </View>
   );
@@ -445,11 +448,13 @@ export default function Explore() {
         <View>
           <EmptyState
             icon={tab === "events" ? "calendar-outline" : "location-outline"}
-            title={`Nothing listed ${areaName ? `in ${areaName}` : whereText(area)} yet`}
+            title={t("nothingListedYet", {
+              value: areaName ? `in ${areaName}` : whereText(area),
+            })}
             description={
               notLaunched.browse.cities.length > 0
-                ? "Abonten hasn't launched here yet. Explore a city that's open, or check back soon."
-                : "Abonten hasn't launched here yet. Check back soon."
+                ? t("abontenHasnTLaunchedHereYet")
+                : t("abontenHasnTLaunchedHereYet2")
             }
           />
           <BrowseElsewhereList
@@ -462,15 +467,15 @@ export default function Explore() {
           icon={tab === "events" ? "calendar-outline" : "location-outline"}
           title={
             activeCount > 0
-              ? `No ${tab} match your filters`
-              : `No ${tab} ${whereText(area)}`
+              ? t("noMatchYourFilters", { tab: tab })
+              : t("no", { tab: tab, whereText: whereText(area) })
           }
           description={
             activeCount > 0
-              ? "Try widening or clearing your filters."
-              : "Check back soon, or change your location."
+              ? t("tryWideningOrClearingYourFilters")
+              : t("checkBackSoonOrChangeYour")
           }
-          actionLabel={activeCount > 0 ? "Clear filters" : undefined}
+          actionLabel={activeCount > 0 ? t("clearFilters") : undefined}
           onAction={activeCount > 0 ? clearAllChips : undefined}
         />
       )
@@ -506,14 +511,16 @@ export default function Explore() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
-            activeCount > 0 ? `Filters (${activeCount} active)` : "Filters"
+            activeCount > 0
+              ? t("filtersActive", { activeCount: activeCount })
+              : t("filters")
           }
           onPress={() => setFilterOpen(true)}
           className="min-h-[36px] flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
         >
           <Icon name="options-outline" size={18} tone="foreground" />
           <AppText variant="small" className="font-medium">
-            Filters
+            {t("filters")}
           </AppText>
           {activeCount > 0 ? (
             <View className="ml-0.5 min-w-[18px] items-center rounded-full bg-primary px-1">
@@ -544,8 +551,8 @@ export default function Explore() {
       <View className="px-4 pb-1">
         <SegmentedTabs
           options={[
-            { key: "events", label: "Events" },
-            { key: "places", label: "Places" },
+            { key: "events", label: t("events") },
+            { key: "places", label: t("places") },
           ]}
           value={tab}
           onChange={setTab}
@@ -560,7 +567,7 @@ export default function Explore() {
       <View className="flex-row justify-end px-4 pb-1 pt-1">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={view === "list" ? "Show map" : "Show list"}
+          accessibilityLabel={view === "list" ? t("showMap") : t("showList")}
           onPress={() => setView((v) => (v === "list" ? "map" : "list"))}
           className="min-h-[36px] flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
         >
@@ -570,7 +577,7 @@ export default function Explore() {
             tone="foreground"
           />
           <AppText variant="small" className="font-medium">
-            {view === "list" ? "Map" : "List"}
+            {view === "list" ? t("map") : t("list")}
           </AppText>
         </Pressable>
       </View>

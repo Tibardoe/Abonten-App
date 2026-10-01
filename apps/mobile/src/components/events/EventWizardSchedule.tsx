@@ -11,6 +11,7 @@ import {
   Field,
   SegmentedTabs,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -20,6 +21,8 @@ import { Pressable, View } from "react-native";
 // single-day case no longer forces a range. Dates come from the pure-JS
 // calendar; times use the wheel TimeField and cross as "HH:MM".
 export function EventWizardSchedule({ w }: { w: EventWizard }) {
+  const t = useTranslations("events");
+
   const [draftDate, setDraftDate] = useState<string | null>(null);
   const [draftStart, setDraftStart] = useState("18:00");
   const [draftEnd, setDraftEnd] = useState("22:00");
@@ -31,7 +34,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
       return;
     }
     if (w.occurrences.some((o) => o.dateIso === draftDate)) {
-      setDateError("That date is already in the list.");
+      setDateError(t("thatDateIsAlreadyInThe"));
       return;
     }
     const startAt = combineDateAndTime(draftDate, draftStart);
@@ -39,11 +42,11 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
     if (!startAt || !endAt) return;
     // Same 5-hour notice rule the server + web enforce.
     if (startAt < getBufferedNow()) {
-      setDateError("Pick a date at least 5 hours from now.");
+      setDateError(t("pickADateAtLeast5"));
       return;
     }
     if (endAt <= startAt) {
-      setDateError("The end time must be after the start time.");
+      setDateError(t("theEndTimeMustBeAfter"));
       return;
     }
     w.setOccurrences((prev) =>
@@ -59,12 +62,12 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
     <View className="gap-5">
       <View className="flex-row gap-2">
         <Chip
-          label="One event"
+          label={t("oneEvent")}
           selected={w.scheduleMode === "single"}
           onPress={() => w.setScheduleMode("single")}
         />
         <Chip
-          label="Multiple dates"
+          label={t("multipleDates")}
           selected={w.scheduleMode === "specific"}
           onPress={() => w.setScheduleMode("specific")}
         />
@@ -74,15 +77,15 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
         <View className="gap-4">
           <SegmentedTabs
             options={[
-              { key: "single", label: "Single date" },
-              { key: "range", label: "Date range" },
+              { key: "single", label: t("singleDate") },
+              { key: "range", label: t("dateRange") },
             ]}
             value={w.dateMode}
             onChange={w.setDateMode}
           />
 
           {w.dateMode === "single" ? (
-            <Field label="Event date" hint="Tap the day your event happens">
+            <Field label={t("eventDate")} hint={t("tapTheDayYourEventHappens")}>
               <DateRangeField
                 mode="single"
                 start={w.rangeStart}
@@ -91,10 +94,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
               />
             </Field>
           ) : (
-            <Field
-              label="Start & end date"
-              hint="Tap the first day, then the last day"
-            >
+            <Field label={t("startEndDate")} hint={t("tapTheFirstDayThenThe")}>
               <DateRangeField
                 start={w.rangeStart}
                 end={w.rangeEnd}
@@ -105,9 +105,11 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
 
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <Field label={w.dateMode === "single" ? "Start time" : "Starts"}>
+              <Field
+                label={w.dateMode === "single" ? t("startTime") : t("starts")}
+              >
                 <TimeField
-                  label="Start time"
+                  label={t("startTime")}
                   value={w.rangeStartTime}
                   onChange={w.setRangeStartTime}
                   invalid={!TIME_RE.test(w.rangeStartTime)}
@@ -115,9 +117,9 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
               </Field>
             </View>
             <View className="flex-1">
-              <Field label={w.dateMode === "single" ? "End time" : "Ends"}>
+              <Field label={w.dateMode === "single" ? t("endTime") : t("ends")}>
                 <TimeField
-                  label="End time"
+                  label={t("endTime")}
                   value={w.rangeEndTime}
                   onChange={w.setRangeEndTime}
                   invalid={
@@ -140,8 +142,8 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
         <View className="gap-3">
           {w.occurrences.length > 0 ? (
             <AppText variant="overline">
-              {w.occurrences.length} date
-              {w.occurrences.length === 1 ? "" : "s"} selected
+              {t("date2", { length: w.occurrences.length })}
+              {w.occurrences.length === 1 ? "" : "s"} {t("selected3")}
             </AppText>
           ) : null}
           {w.occurrences.map((o) => (
@@ -159,14 +161,14 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
                 }
               >
                 <AppText variant="small" tone="error">
-                  Remove
+                  {t("remove")}
                 </AppText>
               </Pressable>
             </View>
           ))}
 
           <View className="gap-3 rounded-xl border border-dashed border-border p-3">
-            <AppText variant="label">Add a date</AppText>
+            <AppText variant="label">{t("addADate")}</AppText>
             <DateRangeField
               mode="single"
               start={draftDate}
@@ -176,7 +178,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
             <View className="flex-row gap-3">
               <View className="flex-1">
                 <TimeField
-                  label="Start time"
+                  label={t("startTime")}
                   value={draftStart}
                   onChange={setDraftStart}
                   invalid={!TIME_RE.test(draftStart)}
@@ -184,7 +186,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
               </View>
               <View className="flex-1">
                 <TimeField
-                  label="End time"
+                  label={t("endTime")}
                   value={draftEnd}
                   onChange={setDraftEnd}
                   invalid={!TIME_RE.test(draftEnd)}
@@ -197,7 +199,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
               </AppText>
             ) : null}
             <Button
-              title="Add date"
+              title={t("addDate")}
               variant="outline"
               size="sm"
               disabled={

@@ -6,6 +6,7 @@ import PlaceCardSkeleton from "@/places/molecules/PlaceCardSkeleton";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { OrganizerPlaceRow } from "@abonten/types/placeRows";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { IoLocationOutline } from "react-icons/io5";
@@ -34,6 +35,8 @@ export default function UserPlacesList({
   fetchPage: (cursor: string | null) => Promise<PaginatedResult<OwnedPlaceRow>>;
   emptyState: React.ReactNode;
 }) {
+  const t = useTranslations("account");
+
   return (
     <InfiniteList<OwnedPlaceRow>
       queryKey={queryKey}
@@ -68,7 +71,7 @@ export default function UserPlacesList({
                   place.cover_version,
                   { width: 420, height: 256 },
                 )}
-                alt={`Cover photo for ${place.name}`}
+                alt={t("coverPhotoFor", { name: place.name })}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -93,14 +96,14 @@ export default function UserPlacesList({
 
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs">
-                  {place.place_category?.name ?? "Uncategorized"}
+                  {place.place_category?.name ?? t("uncategorized")}
                 </span>
 
                 {place.temporary_status && (
                   <span className="px-2.5 py-1 bg-destructive/10 text-destructive rounded-full text-xs">
                     {place.temporary_status === "permanently_closed"
-                      ? "Permanently closed"
-                      : "Temporarily closed"}
+                      ? t("permanentlyClosed")
+                      : t("temporarilyClosed")}
                   </span>
                 )}
               </div>

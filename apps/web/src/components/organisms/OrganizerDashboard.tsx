@@ -33,6 +33,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import OrganizerVerificationCard from "@/verification/molecules/OrganizerVerificationCard";
+import { useTranslations } from "next-intl";
 type Row = OrganizerOverviewRow;
 
 // Every section below is its own useQuery — independent loading states, and
@@ -42,6 +43,8 @@ type Row = OrganizerOverviewRow;
 const STALE_TIME = 20_000;
 
 export default function OrganizerDashboard() {
+  const t = useTranslations("common");
+
   const [period, setPeriod] = useState<DashboardPeriod>("30d");
   const [performanceSort, setPerformanceSort] = useState<"revenue" | "tickets">(
     "revenue",
@@ -143,9 +146,9 @@ export default function OrganizerDashboard() {
   if (hasNoEvents) {
     return (
       <div className="flex flex-col items-center text-center gap-4 py-16">
-        <PageTitle>Welcome to your Organizer Dashboard</PageTitle>
+        <PageTitle>{t("welcomeToYourOrganizerDashboard")}</PageTitle>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Create your first event to start tracking your sales and performance.
+          {t("createYourFirstEventToStart")}
         </p>
         <div className="bg-primary text-primary-foreground rounded-md px-4 py-2">
           <EventUploadButton />
@@ -178,7 +181,7 @@ export default function OrganizerDashboard() {
       <OrganizerVerificationCard />
 
       <section className="flex flex-col gap-3">
-        <SectionTitle>Sales Over Time</SectionTitle>
+        <SectionTitle>{t("salesOverTime")}</SectionTitle>
         <OrganizerSalesTimelineChart
           data={timelineData}
           bucket={timelineBucket}

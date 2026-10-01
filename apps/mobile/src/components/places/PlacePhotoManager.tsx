@@ -15,6 +15,7 @@ import {
   Icon,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
@@ -34,6 +35,8 @@ export function PlacePhotoManager({
   photos: PlacePhotoRow[];
   currentCoverPublicId?: string | null;
 }) {
+  const t = useTranslations("places");
+
   const toast = useToast();
   const addPhoto = useAddPlacePhoto(placeId);
   const reorder = useReorderPlacePhotos(placeId);
@@ -57,8 +60,8 @@ export function PlacePhotoManager({
   async function pickAndAdd() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to add gallery photos.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToAddGallery"),
       });
       return;
     }
@@ -82,23 +85,25 @@ export function PlacePhotoManager({
             onProgress: (f) => progress.onProgress((i + f) / total),
           });
           if (res.status !== 200) {
-            toast.error(res.message ?? "We couldn't add that photo.", {
+            toast.error(res.message ?? t("weCouldnTAddThatPhoto"), {
               description:
                 added > 0
-                  ? `${added} of ${total} were added. Try the rest again.`
-                  : "Nothing was added. Please try again.",
+                  ? t("ofWereAddedTryTheRest", { added: added, total: total })
+                  : t("nothingWasAddedPleaseTryAgain"),
             });
             return;
           }
           added += 1;
         } catch {
-          toast.error("That upload didn't finish.", {
-            description: "Check your connection and try again.",
+          toast.error(t("thatUploadDidnTFinish"), {
+            description: t("checkYourConnectionAndTryAgain"),
           });
           return;
         }
       }
-      toast.success(added === 1 ? "Photo added" : `${added} photos added`);
+      toast.success(
+        added === 1 ? t("photoAdded") : t("photosAdded", { added: added }),
+      );
     } finally {
       progress.reset();
     }
@@ -116,8 +121,8 @@ export function PlacePhotoManager({
       {
         onError: () => {
           setOrder(photos);
-          toast.error("We couldn't save the new order.", {
-            description: "The gallery has been put back as it was.",
+          toast.error(t("weCouldnTSaveTheNew"), {
+            description: t("theGalleryHasBeenPutBack"),
           });
         },
       },
@@ -125,49 +130,45 @@ export function PlacePhotoManager({
   }
 
   function confirmRemove(photo: PlacePhotoRow) {
-    Alert.alert(
-      "Remove this photo?",
-      "It will be removed from your gallery. This can't be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () =>
-            remove.mutate(photo.id, {
-              onSuccess: (res) => {
-                if (res.status === 200) {
-                  toast.success("Photo removed");
-                  return;
-                }
-                toast.error(res.message ?? "We couldn't remove that photo.", {
-                  description: "It is still in your gallery. Try again.",
-                });
-              },
-              onError: () =>
-                toast.error("We couldn't reach the server.", {
-                  description: "Check your connection and try again.",
-                }),
-            }),
-        },
-      ],
-    );
+    Alert.alert(t("removeThisPhoto"), t("itWillBeRemovedFromYour"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("remove2"),
+        style: "destructive",
+        onPress: () =>
+          remove.mutate(photo.id, {
+            onSuccess: (res) => {
+              if (res.status === 200) {
+                toast.success(t("photoRemoved"));
+                return;
+              }
+              toast.error(res.message ?? t("weCouldnTRemoveThatPhoto"), {
+                description: t("itIsStillInYourGallery"),
+              });
+            },
+            onError: () =>
+              toast.error(t("weCouldnTReachTheServer"), {
+                description: t("checkYourConnectionAndTryAgain"),
+              }),
+          }),
+      },
+    ]);
   }
 
   function onSetCover(photo: PlacePhotoRow) {
     setCover.mutate(photo.id, {
       onSuccess: (res) => {
         if (res.status === 200) {
-          toast.success("Cover photo updated");
+          toast.success(t("coverPhotoUpdated"));
           return;
         }
-        toast.error(res.message ?? "We couldn't set that as the cover.", {
-          description: "Your cover is unchanged. Please try again.",
+        toast.error(res.message ?? t("weCouldnTSetThatAs"), {
+          description: t("yourCoverIsUnchangedPleaseTry"),
         });
       },
       onError: () =>
-        toast.error("We couldn't reach the server.", {
-          description: "Check your connection and try again.",
+        toast.error(t("weCouldnTReachTheServer"), {
+          description: t("checkYourConnectionAndTryAgain"),
         }),
     });
   }
@@ -175,7 +176,7 @@ export function PlacePhotoManager({
   return (
     <View className="gap-3">
       <Button
-        title="Add photos"
+        title={t("addPhotos")}
         loadingTitle="Uploading…"
         variant="outline"
         loading={addPhoto.isPending}
@@ -188,9 +189,9 @@ export function PlacePhotoManager({
       {order.length === 0 ? (
         <EmptyState
           icon="images-outline"
-          title="No gallery photos yet"
-          description="Photos of the space are what make a listing worth tapping. Add a few and they show on the place page."
-          actionLabel="Add photos"
+          title={t("noGalleryPhotosYet2")}
+          description={t("photosOfTheSpaceAreWhat")}
+          actionLabel={t("addPhotos")}
           onAction={pickAndAdd}
         />
       ) : (
@@ -224,7 +225,7 @@ export function PlacePhotoManager({
                         variant="caption"
                         className="font-semibold text-primary-foreground"
                       >
-                        Cover
+                        {t("cover")}
                       </AppText>
                     </View>
                   ) : null}
@@ -271,7 +272,7 @@ export function PlacePhotoManager({
                       tone="brand"
                       className="font-semibold"
                     >
-                      Set as cover
+                      {t("setAsCover")}
                     </AppText>
                   </Pressable>
                 ) : null}

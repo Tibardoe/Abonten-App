@@ -3,6 +3,7 @@
 import { setRecommendationEmailsByLink } from "@/actions/discovery/setRecommendationEmailsByLink";
 import { Button } from "@/components/ui/button";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -17,6 +18,8 @@ export default function RecommendationEmailUnsubscribe({
   userId: string;
   token: string;
 }) {
+  const t = useTranslations("discovery");
+
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -26,18 +29,16 @@ export default function RecommendationEmailUnsubscribe({
       setError(null);
       const res = await setRecommendationEmailsByLink({ userId, token });
       if (res.status === 200) setDone(true);
-      else setError(res.message ?? "Couldn't save that. Please try again.");
+      else setError(res.message ?? t("couldnTSaveThatPleaseTry"));
     });
 
   return (
     <>
       <PageTitle>
-        {done ? "You're unsubscribed" : "Stop emails about picks and alerts?"}
+        {done ? t("youReUnsubscribed") : t("stopEmailsAboutPicksAndAlerts")}
       </PageTitle>
       <SupportingText>
-        {done
-          ? "We won't email you picks or alerts any more. Push notifications and your For you page aren't affected."
-          : "These are the emails with new events and places picked from what you follow. Tickets, payments and account emails aren't affected."}
+        {done ? t("weWonTEmailYouPicks") : t("theseAreTheEmailsWithNew")}
       </SupportingText>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
@@ -50,11 +51,11 @@ export default function RecommendationEmailUnsubscribe({
             href="/settings/notifications"
             className="text-sm font-medium text-primary hover:underline"
           >
-            Notification settings
+            {t("notificationSettings")}
           </Link>
         ) : (
           <Button disabled={pending} onClick={unsubscribe}>
-            {pending ? "Saving…" : "Unsubscribe"}
+            {pending ? t("saving") : t("unsubscribe")}
           </Button>
         )}
       </div>

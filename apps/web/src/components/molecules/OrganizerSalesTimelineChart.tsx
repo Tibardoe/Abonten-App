@@ -4,6 +4,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardBucket } from "@abonten/core/organizerDashboardDateRange";
 import type { OrganizerSalesTimelinePoint } from "@abonten/types/eventAnalytics";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Bar,
   BarChart,
@@ -17,18 +18,22 @@ import { Skeleton } from "../ui/skeleton";
 
 type Row = OrganizerSalesTimelinePoint;
 
-function formatBucketLabel(bucketStart: string, bucket: DashboardBucket) {
+function formatBucketLabel(
+  bucketStart: string,
+  bucket: DashboardBucket,
+  locale: string,
+) {
   const date = new Date(bucketStart);
   if (bucket === "hour") {
-    return date.toLocaleTimeString("en-US", { hour: "numeric" });
+    return date.toLocaleTimeString(locale, { hour: "numeric" });
   }
   if (bucket === "month") {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(locale, {
       month: "short",
       year: "numeric",
     });
   }
-  return date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { weekday: "short", day: "numeric" });
 }
 
 function TimelineTooltip({
@@ -40,6 +45,9 @@ function TimelineTooltip({
   payload?: { payload: Row & { label: string } }[];
   currency: string;
 }) {
+  const t = useTranslations("common");
+  const locale = useLocale();
+
   if (!active || !payload || payload.length === 0) return null;
   const row = payload[0].payload;
 
@@ -47,7 +55,10 @@ function TimelineTooltip({
     <div className="bg-popover text-popover-foreground border border-border rounded-md shadow-md px-3 py-2 text-sm">
       <p className="font-medium">{row.label}</p>
       <p className="text-muted-foreground">
-        {formatMoney(currency, Number(row.gross))} &middot; {row.orders} order
+        {t("order", {
+          formatMoney: formatMoney(currency, Number(row.gross)),
+          orders: row.orders,
+        })}
         {row.orders === 1 ? "" : "s"}
       </p>
     </div>
@@ -69,6 +80,9 @@ export default function OrganizerSalesTimelineChart({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const t = useTranslations("common");
+  const locale = useLocale();
+
   if (isLoading) {
     return <Skeleton className="h-64 w-full rounded-md" />;
   }
@@ -76,7 +90,7 @@ export default function OrganizerSalesTimelineChart({
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't load your sales chart."
+        message={t("weCouldnTLoadYourSales")}
         onRetry={() => onRetry?.()}
       />
     );
@@ -86,14 +100,14 @@ export default function OrganizerSalesTimelineChart({
     return (
       <div className="h-64 flex items-center justify-center border border-dashed border-border rounded-md">
         <p className="text-sm text-muted-foreground">
-          No sales in this period yet.
+          {t("noSalesInThisPeriodYet")}
         </p>
       </div>
     );
   }
 
   const chartData = data.map((row) => ({
-    label: formatBucketLabel(row.bucket_start, bucket),
+    label: formatBucketLabel(row.bucket_start, bucket, locale),
     gross: Number(row.gross),
     orders: Number(row.orders),
   }));
@@ -103,7 +117,11 @@ export default function OrganizerSalesTimelineChart({
   return (
     <div
       role="img"
-      aria-label={`Sales over time chart. Total ${formatMoney(currency, total)} across ${chartData.length} ${bucket === "hour" ? "hours" : bucket === "month" ? "months" : "days"}.`}
+      aria-label={t("salesOverTimeChartTotalAcross", {
+        total: formatMoney(currency, total),
+        count: chartData.length,
+        bucket,
+      })}
     >
       <ResponsiveContainer width="100%" height={256}>
         <BarChart

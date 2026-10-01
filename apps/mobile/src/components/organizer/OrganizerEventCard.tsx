@@ -1,6 +1,7 @@
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Icon, StatusPill } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -104,6 +105,10 @@ export function OrganizerEventCard({
   ticketsSold: number | string;
   capacity?: number | string | null;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   const sold = num(ticketsSold);
   const cap = capacity == null ? null : num(capacity);
   const soldOut = cap != null && cap > 0 && sold >= cap;
@@ -113,7 +118,7 @@ export function OrganizerEventCard({
     <Link href={`/(app)/organizer/events/${eventId}`} asChild>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${title ?? "Untitled event"} — open`}
+        accessibilityLabel={t("open", { value: title ?? t("untitledEvent") })}
         className="gap-3 rounded-2xl border border-border bg-card p-4 active:opacity-80"
       >
         <View className="flex-row items-start justify-between gap-3">
@@ -122,7 +127,7 @@ export function OrganizerEventCard({
             numberOfLines={2}
             className="flex-1 leading-5"
           >
-            {title ?? "Untitled event"}
+            {title ?? t("untitledEvent")}
           </AppText>
           <StatusPill status={statusFor({ status, soldOut })} size="sm" />
         </View>
@@ -130,19 +135,21 @@ export function OrganizerEventCard({
         <View className="flex-row items-center gap-1.5">
           <Icon name="calendar-outline" size={13} tone="muted" />
           <AppText variant="caption">
-            {date ? formatDateWithSuffix(date) : "Date not set"}
+            {date
+              ? formatDateWithSuffix(date, undefined, locale)
+              : t("dateNotSet")}
           </AppText>
         </View>
 
         {variant === "performance" ? (
           <View className="flex-row items-end justify-between">
             <Metric
-              label="Revenue"
+              label={t("revenue2")}
               value={money(currency, num(revenue))}
               emphasis
             />
             <Metric
-              label="Tickets sold"
+              label={t("ticketsSold2")}
               value={sold.toLocaleString()}
               align="right"
             />
@@ -151,7 +158,7 @@ export function OrganizerEventCard({
           <View className="gap-2">
             <View className="flex-row items-end justify-between">
               <Metric
-                label={cap != null ? "Sold" : "Tickets sold"}
+                label={cap != null ? t("sold2") : t("ticketsSold2")}
                 value={
                   cap != null
                     ? `${sold.toLocaleString()} / ${cap.toLocaleString()}`
@@ -161,7 +168,7 @@ export function OrganizerEventCard({
               />
               {remaining != null ? (
                 <Metric
-                  label={soldOut ? "Status" : "Spots left"}
+                  label={soldOut ? t("status2") : t("spotsLeft")}
                   value={soldOut ? "Sold out" : remaining.toLocaleString()}
                   align="right"
                 />

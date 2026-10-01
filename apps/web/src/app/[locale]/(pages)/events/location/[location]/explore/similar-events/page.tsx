@@ -5,12 +5,16 @@ import { resolveEventCategoryLabel } from "@abonten/core/eventCategoryLabels";
 import { logger } from "@abonten/core/logger";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 // Depends entirely on the ?category query: a title for the tab, no index.
-export const metadata: Metadata = {
-  title: "Similar events",
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("events");
+  return {
+    title: t("similarEvents"),
+    robots: { index: false, follow: true },
+  };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -23,6 +27,8 @@ export default async function page({
   searchParams: Promise<{ category?: string }>;
   params: Promise<{ location?: string }>;
 }) {
+  const t = await getTranslations("events");
+
   const { category = "" } = await searchParams;
   const { location = "" } = await params;
 
@@ -59,7 +65,7 @@ export default async function page({
 
   return (
     <div className="space-y-3">
-      <h1 className="font-bold text-xl">Similar Events</h1>
+      <h1 className="font-bold text-xl">{t("similarEvents2")}</h1>
 
       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 overflow-x-scroll scrollbar-hide gap-2 pb-5">
         {events?.length
@@ -83,7 +89,7 @@ export default async function page({
                 attendanceCount={event.attendanceCount ?? 0}
               />
             ))
-          : "No Events"}
+          : t("noEvents")}
       </ul>
     </div>
   );

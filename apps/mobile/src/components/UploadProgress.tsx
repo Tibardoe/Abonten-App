@@ -1,5 +1,6 @@
 import type { UploadProgressState } from "@/features/uploads/useUploadProgress";
 import { ProgressBar } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { View } from "react-native";
 
 // The one visual for an in-flight upload. Reads its labels straight off the
@@ -22,11 +23,15 @@ export function UploadProgress({
   what?: string;
   className?: string;
 }) {
+  const t = useTranslations("common");
+
   if (!state.busy) return null;
 
   const base = LABEL[state.phase] ?? "Working…";
   const label =
-    state.phase === "uploading" && what ? `Uploading ${what}` : base;
+    state.phase === "uploading" && what
+      ? t("uploading4", { what: what })
+      : base;
 
   return (
     <View className={className}>

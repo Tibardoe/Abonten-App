@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useFieldOpsMe } from "@/hooks/useFieldOpsMe";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { IoMapOutline } from "react-icons/io5";
 
@@ -14,6 +15,8 @@ export default function FieldOpsNavLink({
   onNavigate?: () => void;
   className?: string;
 }) {
+  const t = useTranslations("fieldOps");
+
   const { data: user } = useCurrentUser();
   const { data } = useFieldOpsMe();
   if (!user || !data?.programEnabled || !data.current) return null;
@@ -28,7 +31,7 @@ export default function FieldOpsNavLink({
       }
     >
       <IoMapOutline className="text-2xl opacity-70" />
-      Field work
+      {t("fieldWork")}
     </Link>
   );
 }

@@ -1,5 +1,6 @@
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { OrganizerActivityRow } from "@abonten/types/eventAnalytics";
+import { useLocale, useTranslations } from "next-intl";
 import { TbCalendarPlus, TbTicket, TbTicketOff } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
 import InlineErrorRetry from "./InlineErrorRetry";
@@ -23,6 +24,10 @@ export default function OrganizerRecentActivity({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-2">
@@ -36,7 +41,7 @@ export default function OrganizerRecentActivity({
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't load recent activity."
+        message={t("weCouldnTLoadRecentActivity")}
         onRetry={() => onRetry?.()}
       />
     );
@@ -45,15 +50,17 @@ export default function OrganizerRecentActivity({
   if (items.length === 0) {
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Recent Activity</h2>
-        <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+        <h2 className="font-bold md:text-lg">{t("recentActivity")}</h2>
+        <p className="text-sm text-muted-foreground">
+          {t("noRecentActivityYet")}
+        </p>
       </section>
     );
   }
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-bold md:text-lg">Recent Activity</h2>
+      <h2 className="font-bold md:text-lg">{t("recentActivity")}</h2>
       <div className="flex flex-col divide-y divide-border border border-border bg-card rounded-md shadow-md">
         {items.map((item, i) => {
           const Icon = ACTIVITY_ICON[item.activity_type] ?? TbTicket;
@@ -79,7 +86,7 @@ export default function OrganizerRecentActivity({
                 </p>
               </div>
               <p className="text-xs text-muted-foreground shrink-0">
-                {getRelativeTime(item.occurred_at)}
+                {getRelativeTime(item.occurred_at, undefined, locale)}
               </p>
             </div>
           );

@@ -5,6 +5,7 @@ import type {
   CreditActivityItem,
   CreditActivityState,
 } from "@abonten/types/rewards";
+import { useLocale } from "next-intl";
 
 const STATE_LABEL: Record<CreditActivityState, string> = {
   pending: "Pending",
@@ -30,11 +31,13 @@ export default function CreditActivityRow({
 }: {
   item: CreditActivityItem;
 }) {
+  const locale = useLocale();
+
   const detail =
     item.state === "pending" && item.releaseAt
-      ? `Unlocks ${formatDateWithSuffix(item.releaseAt)}`
+      ? `Unlocks ${formatDateWithSuffix(item.releaseAt, undefined, locale)}`
       : item.state === "available" && item.expiresAt
-        ? `Expires ${formatDateWithSuffix(item.expiresAt)}`
+        ? `Expires ${formatDateWithSuffix(item.expiresAt, undefined, locale)}`
         : null;
   // A voided/expired grant never reached the user's balance as spendable
   // credit, so its amount is shown struck through rather than as income.
@@ -52,7 +55,7 @@ export default function CreditActivityRow({
           </p>
         ) : null}
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {formatDateWithSuffix(item.createdAt)}
+          {formatDateWithSuffix(item.createdAt, undefined, locale)}
           {detail ? ` · ${detail}` : ""}
         </p>
       </div>

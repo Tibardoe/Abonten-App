@@ -94,10 +94,10 @@ export default function RegionSettings() {
     onSuccess: (data) => {
       queryClient.setQueryData(PREFS_KEY, data);
       void queryClient.invalidateQueries({ queryKey: MARKET_CONTEXT_KEY });
-      toast.success("Saved.");
+      toast.success(t("saved"));
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Couldn't save.");
+      toast.error(error instanceof Error ? error.message : t("couldnTSave"));
     },
   });
 
@@ -118,7 +118,7 @@ export default function RegionSettings() {
         <View className="flex-1 items-center justify-center p-6">
           {prefs.isError ? (
             <AppText variant="muted">
-              Couldn't load your settings. Pull back and try again.
+              {t("couldnTLoadYourSettingsPull")}
             </AppText>
           ) : (
             <ActivityIndicator />
@@ -130,8 +130,8 @@ export default function RegionSettings() {
           contentContainerClassName="gap-6 p-4"
         >
           <Section
-            title="Home country"
-            hint="Sets which country's payment options your wallet uses. Your Abonten Credit stays in the currency it started in."
+            title={t("homeCountry")}
+            hint={t("setsWhichCountrySPaymentOptions")}
           >
             {markets.map((m) => (
               <Choice
@@ -145,11 +145,11 @@ export default function RegionSettings() {
           </Section>
 
           <Section
-            title="Show price estimates in"
-            hint="Listings abroad can show a rough “≈” price in this currency. You always pay in the listing's own currency."
+            title={t("showPriceEstimatesIn")}
+            hint={t("listingsAbroadCanShowARough")}
           >
             <Choice
-              label="My home currency"
+              label={t("myHomeCurrency")}
               selected={current.displayCurrency == null}
               disabled={busy}
               onPress={() => save.mutate({ displayCurrency: null })}
@@ -165,21 +165,21 @@ export default function RegionSettings() {
             ))}
           </Section>
 
-          <Section title="Distances">
+          <Section title={t("distances")}>
             <Choice
-              label="Country default"
+              label={t("countryDefault")}
               selected={current.distanceUnit == null}
               disabled={busy}
               onPress={() => save.mutate({ distanceUnit: null })}
             />
             <Choice
-              label="Kilometres"
+              label={t("kilometres")}
               selected={current.distanceUnit === "km"}
               disabled={busy}
               onPress={() => save.mutate({ distanceUnit: "km" })}
             />
             <Choice
-              label="Miles"
+              label={t("miles")}
               selected={current.distanceUnit === "mi"}
               disabled={busy}
               onPress={() => save.mutate({ distanceUnit: "mi" })}

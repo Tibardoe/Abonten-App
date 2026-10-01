@@ -1,5 +1,6 @@
 import { cn } from "@/components/lib/utils";
 import type { ContentPublisher } from "@abonten/types/contentType";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { MdVerified } from "react-icons/md";
@@ -27,6 +28,8 @@ export default function PublisherIdentity({
   /** "light" for text over media, "default" for normal surfaces. */
   tone?: "light" | "default";
 }) {
+  const t = useTranslations("spotlight");
+
   const href = publisherHref(publisher);
   const body = (
     <>
@@ -49,7 +52,7 @@ export default function PublisherIdentity({
           </span>
           {publisher.verified ? (
             <MdVerified
-              aria-label="Verified"
+              aria-label={t("verified")}
               className={cn(
                 "shrink-0 text-sm",
                 tone === "light" ? "text-white" : "text-primary",

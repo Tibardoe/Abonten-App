@@ -8,9 +8,13 @@ import { getSubjectVerification } from "@/actions/verification/getSubjectVerific
 import { createClient } from "@/config/supabase/server";
 import VerificationSection from "@/verification/organisms/VerificationSection";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Verification" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("manage");
+  return { title: t("verification") };
+}
 
 // Organizer verification (PROJECT.md §30). There is no organizer entity in
 // this schema — an organizer is a user_info row that has created events —
@@ -20,6 +24,8 @@ export const metadata: Metadata = { title: "Verification" };
 // Verification is optional: nothing about creating or publishing an event
 // depends on it, by design.
 export default async function OrganizerVerificationPage() {
+  const t = await getTranslations("manage");
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,7 +34,7 @@ export default async function OrganizerVerificationPage() {
   if (!user) {
     return (
       <p className="p-8 text-center text-muted-foreground">
-        Sign in to manage your organizer verification.
+        {t("signInToManageYourOrganizer")}
       </p>
     );
   }
@@ -46,12 +52,11 @@ export default async function OrganizerVerificationPage() {
           href="/manage/dashboard"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← Back to dashboard
+          {t("backToDashboard")}
         </Link>
-        <h1 className="text-xl font-bold">Organizer verification</h1>
+        <h1 className="text-xl font-bold">{t("organizerVerification")}</h1>
         <p className="text-sm text-muted-foreground">
-          Show ticket buyers that Abonten has checked who is behind your events.
-          This is optional — you can keep creating events either way.
+          {t("showTicketBuyersThatAbontenHas")}
         </p>
       </div>
 

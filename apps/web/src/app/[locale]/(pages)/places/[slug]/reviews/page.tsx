@@ -6,6 +6,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { reviewsPath } from "@abonten/core/reviews/reviewList";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -36,16 +37,19 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ review?: string | string[] }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("places");
+
   const [{ slug }, { review }] = await Promise.all([params, searchParams]);
   const place = await loadPlace(slug);
-  if (!place) return { title: "Place not found" };
+  if (!place) return { title: t("placeNotFound") };
 
-  const title = `Reviews of ${place.name}`;
+  const title = t("reviewsOf", { name: place.name });
   const description = await reviewsPageDescription(
     "place",
     place.id,
     place.name,
     review,
+    await getLocale(),
   );
   const image =
     place.cover_public_id && place.cover_version
@@ -80,6 +84,8 @@ export default async function page({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ review?: string | string[] }>;
 }) {
+  const t = await getTranslations("places");
+
   const [{ slug }, { review }] = await Promise.all([params, searchParams]);
   const place = await loadPlace(slug);
   if (!place) notFound();
@@ -96,7 +102,7 @@ export default async function page({
           <ChevronLeft className="h-4 w-4" aria-hidden />
           {place.name}
         </Link>
-        <h1 className="text-2xl font-bold md:text-3xl">Reviews</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">{t("reviews")}</h1>
       </div>
 
       <ReviewsBrowser

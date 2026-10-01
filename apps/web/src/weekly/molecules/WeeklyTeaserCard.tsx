@@ -2,6 +2,7 @@ import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import { formatWeekRange } from "@abonten/core/weekly/week";
 import type { WeeklyTeaser } from "@abonten/types/weeklyType";
+import { useLocale, useTranslations } from "next-intl";
 import { FiArrowRight, FiCalendar } from "react-icons/fi";
 import WeeklyBanner from "../organisms/WeeklyBanner";
 
@@ -10,9 +11,13 @@ import WeeklyBanner from "../organisms/WeeklyBanner";
 // the caption opens the listing on show. Only rendered while this week's
 // edition is out for this visitor.
 export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
+  const locale = useLocale();
+
+  const t = useTranslations("weekly");
+
   // A fallback edition is the country-wide one; its scope name is the country.
   const area = teaser.scopeName;
-  const week = formatWeekRange(teaser.weekStart);
+  const week = formatWeekRange(teaser.weekStart, locale);
   const picks = `${teaser.itemCount} ${teaser.itemCount === 1 ? "pick" : "picks"}`;
 
   return (
@@ -35,7 +40,7 @@ export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
           </span>
           {teaser.isFallbackScope ? (
             <span className="rounded-full bg-black/35 px-3 py-1.5 text-[11px] font-medium text-white/90 ring-1 ring-white/15 backdrop-blur-md">
-              {teaser.scopeName}-wide picks
+              {t("widePicks", { scopeName: teaser.scopeName })}
             </span>
           ) : null}
         </>
@@ -59,7 +64,7 @@ export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
         aria-hidden
         className="mt-5 inline-flex items-center gap-3 rounded-full bg-white py-1.5 pl-5 pr-1.5 text-sm font-semibold text-slate-950 shadow-lg shadow-black/20 transition-colors group-hover/banner:bg-primary group-hover/banner:text-primary-foreground"
       >
-        See this week&apos;s picks
+        {t("seeThisWeekSPicks")}
         <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-950 text-white transition-transform duration-300 group-hover/banner:translate-x-1 motion-reduce:transition-none">
           <FiArrowRight className="h-4 w-4" />
         </span>

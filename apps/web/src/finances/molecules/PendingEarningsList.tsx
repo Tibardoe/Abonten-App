@@ -4,9 +4,12 @@ import getOrganizerPendingEarnings from "@/actions/getOrganizerPendingEarnings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 export default function PendingEarningsList() {
+  const t = useTranslations("finances");
+
   const { data, isPending, isError } = useQuery({
     queryKey: ["organizer-pending-earnings"],
     queryFn: getOrganizerPendingEarnings,
@@ -18,10 +21,9 @@ export default function PendingEarningsList() {
   return (
     <section className="flex flex-col gap-3">
       <div>
-        <h2 className="font-bold md:text-lg">Pending earnings</h2>
+        <h2 className="font-bold md:text-lg">{t("pendingEarnings")}</h2>
         <p className="text-sm text-muted-foreground">
-          Funds become available 48 hours after each event ends, once settlement
-          conditions are met.
+          {t("fundsBecomeAvailable48HoursAfter")}
         </p>
       </div>
 
@@ -32,10 +34,12 @@ export default function PendingEarningsList() {
         </div>
       ) : isError ? (
         <p className="text-sm text-muted-foreground">
-          Couldn't load pending earnings.
+          {t("couldnTLoadPendingEarnings")}
         </p>
       ) : rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4">No pending funds</p>
+        <p className="text-sm text-muted-foreground py-4">
+          {t("noPendingFunds")}
+        </p>
       ) : (
         <div className="space-y-2">
           {rows.map((row) => (
@@ -46,7 +50,7 @@ export default function PendingEarningsList() {
               <div>
                 <p className="font-medium text-sm">{row.event_title}</p>
                 <p className="text-xs text-muted-foreground">
-                  Pending settlement
+                  {t("pendingSettlement")}
                 </p>
               </div>
 
@@ -58,7 +62,7 @@ export default function PendingEarningsList() {
                   href={`/manage/events/${row.event_id}?tab=insights`}
                   className="text-xs font-medium text-primary hover:underline"
                 >
-                  View event
+                  {t("viewEvent")}
                 </Link>
               </div>
             </div>

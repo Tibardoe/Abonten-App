@@ -5,9 +5,9 @@ import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewRatingFilter,
   type ReviewSummary,
-  formatReviewCount,
   ratingShares,
 } from "@abonten/core/reviews/reviewList";
+import { useFormatter, useTranslations } from "next-intl";
 
 const LEVELS = [5, 4, 3, 2, 1] as const;
 
@@ -23,6 +23,9 @@ export default function ReviewSummaryBars({
   selected?: ReviewRatingFilter;
   onSelect?: (rating: ReviewRatingFilter) => void;
 }) {
+  const t = useTranslations("reviews");
+  const format = useFormatter();
+
   const shares = ratingShares(summary);
   const average = roundRating(summary.average);
 
@@ -35,7 +38,7 @@ export default function ReviewSummaryBars({
         <div className="flex flex-col sm:items-center">
           <StarRatingDisplay rating={summary.average} />
           <span className="text-xs text-muted-foreground">
-            {formatReviewCount(summary.total)}
+            {t("reviewsCount", { count: summary.total })}
           </span>
         </div>
       </div>
@@ -57,7 +60,7 @@ export default function ReviewSummaryBars({
                 />
               </span>
               <span className="w-14 whitespace-nowrap text-right text-xs text-muted-foreground">
-                {summary.counts[star].toLocaleString("en-US")}
+                {format.number(summary.counts[star])}
               </span>
             </span>
           );
@@ -68,7 +71,11 @@ export default function ReviewSummaryBars({
                   type="button"
                   onClick={() => onSelect(active ? null : star)}
                   aria-pressed={active}
-                  aria-label={`${star} star: ${summary.counts[star]} reviews, ${shares[star]} percent`}
+                  aria-label={t("starReviewsPercent", {
+                    star: star,
+                    item: summary.counts[star],
+                    item2: shares[star],
+                  })}
                   className="w-full rounded hover:bg-accent/60"
                 >
                   {row}

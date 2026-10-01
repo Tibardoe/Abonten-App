@@ -14,6 +14,7 @@ import {
   StatusPill,
   resolveStatus,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { ScrollView, View } from "react-native";
 
@@ -52,12 +53,15 @@ function Row({
   );
 }
 
-function dt(value: string) {
-  const { date, time } = formatSingleDateTime(value);
+function dt(value: string, locale: string) {
+  const { date, time } = formatSingleDateTime(value, undefined, locale);
   return `${date} ${time}`;
 }
 
 export default function TransactionDetailScreen() {
+  const t = useTranslations("transactions");
+  const { locale } = useLocale();
+
   const { kind, id } = useLocalSearchParams<{ kind: string; id: string }>();
   const validKind =
     kind === "ticket" || kind === "subscription"
@@ -69,7 +73,7 @@ export default function TransactionDetailScreen() {
   // answer that no such transaction is visible to this person.
   const view = useQueryView(query);
 
-  if (!validKind) return <ScreenError message="Unknown transaction type." />;
+  if (!validKind) return <ScreenError message={t("unknownTransactionType")} />;
   if (view.kind === "loading") return <DetailRowsSkeleton />;
   if (view.kind === "offline" || view.kind === "error") {
     return (
@@ -83,7 +87,7 @@ export default function TransactionDetailScreen() {
     );
   }
   if (data === null || data === undefined) {
-    return <ScreenError message="This transaction could not be found." />;
+    return <ScreenError message={t("thisTransactionCouldNotBeFound")} />;
   }
 
   const statusInfo = resolveStatus(data.status, { fallback: "pending" });
@@ -104,10 +108,10 @@ export default function TransactionDetailScreen() {
         : data.created_at;
   const contextualLabel =
     data.status === "paid"
-      ? "Completed"
+      ? t("completed")
       : data.status === "pending"
-        ? "Expires"
-        : "Date";
+        ? t("expires")
+        : t("date");
 
   const cancelled =
     data.kind === "ticket"
@@ -129,7 +133,7 @@ export default function TransactionDetailScreen() {
     >
       <View className="flex-row items-center justify-between rounded-xl bg-muted p-4">
         <AppText variant="bodyStrong" className="text-muted-foreground">
-          Amount
+          {t("amount")}
         </AppText>
         <AppText variant="bodyStrong">
           {formatMoney(currency, Number(amount))}
@@ -146,7 +150,7 @@ export default function TransactionDetailScreen() {
           <AppText variant="bodyStrong">{statusInfo.label}</AppText>
           {contextualDate ? (
             <AppText variant="caption">
-              {contextualLabel}: {dt(contextualDate)}
+              {contextualLabel}: {dt(contextualDate, locale)}
             </AppText>
           ) : null}
         </View>
@@ -155,67 +159,70 @@ export default function TransactionDetailScreen() {
       <View className="gap-3 rounded-xl bg-muted p-4">
         {data.kind === "ticket" ? (
           <>
-            <Row label="Event" value={data.event?.title ?? null} />
-            <Row label="Ticket type" value={data.ticket_type?.type ?? null} />
-            <Row label="Quantity" value={data.quantity} />
+            <Row label={t("event")} value={data.event?.title ?? null} />
             <Row
-              label="Unit price"
+              label={t("ticketType2")}
+              value={data.ticket_type?.type ?? null}
+            />
+            <Row label={t("quantity")} value={data.quantity} />
+            <Row
+              label={t("unitPrice2")}
               value={formatMoney(currency, data.unit_price)}
             />
             {data.discount > 0 ? (
               <Row
-                label="Discount"
+                label={t("discount")}
                 value={`-${formatMoney(currency, data.discount)}`}
               />
             ) : null}
             <Row
-              label="Ticket price"
+              label={t("ticketPrice2")}
               value={formatMoney(currency, data.total_price)}
             />
             {data.serviceFee > 0 ? (
               <Row
-                label="Service fee"
+                label={t("serviceFee")}
                 value={formatMoney(currency, data.serviceFee)}
               />
             ) : null}
             {data.totalPaid !== data.total_price ? (
               <Row
-                label="Total paid"
+                label={t("totalPaid2")}
                 value={formatMoney(currency, data.totalPaid)}
               />
             ) : null}
-            <Row label="Date/Time" value={dt(data.created_at)} />
+            <Row label={t("dateTime")} value={dt(data.created_at, locale)} />
             <Row
-              label="Order reference"
+              label={t("orderReference2")}
               value={data.checkout_session_id ?? id}
             />
             {cancelled.length > 0 ? (
               <Row
-                label="Cancelled"
+                label={t("cancelled")}
                 value={`${cancelled.length} of ${data.quantity}`}
               />
             ) : null}
-            {refund ? <Row label="Refund" value={refund.label} /> : null}
+            {refund ? <Row label={t("refund")} value={refund.label} /> : null}
           </>
         ) : (
           <>
-            <Row label="Plan" value={data.subscription_plan_name} />
+            <Row label={t("plan")} value={data.subscription_plan_name} />
             <Row
-              label="Unit price"
+              label={t("unitPrice2")}
               value={formatMoney(currency, data.unit_price)}
             />
             {data.discount > 0 ? (
               <Row
-                label="Discount"
+                label={t("discount")}
                 value={`-${formatMoney(currency, data.discount)}`}
               />
             ) : null}
             <Row
-              label="Total price"
+              label={t("totalPrice2")}
               value={formatMoney(currency, data.total_price)}
             />
-            <Row label="Date/Time" value={dt(data.created_at)} />
-            <Row label="Reference" value={id} />
+            <Row label={t("dateTime")} value={dt(data.created_at, locale)} />
+            <Row label={t("reference")} value={id} />
           </>
         )}
       </View>

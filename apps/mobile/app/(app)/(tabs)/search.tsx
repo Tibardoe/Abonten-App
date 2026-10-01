@@ -32,6 +32,7 @@ import {
   Overline,
   Skeleton,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -74,6 +75,8 @@ function SuggestionRow({
   onPress: () => void;
   onRemove?: () => void;
 }) {
+  const t = useTranslations("search");
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -104,7 +107,7 @@ function SuggestionRow({
       {onRemove ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Remove ${title} from recent searches`}
+          accessibilityLabel={t("removeFromRecentSearches", { title: title })}
           hitSlop={10}
           onPress={onRemove}
           className="h-9 w-9 items-center justify-center rounded-full active:opacity-60"
@@ -142,6 +145,10 @@ function SectionHeader({
 }
 
 function LegacySearch() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("search");
+
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const listPadding = useTabBarListPadding();
@@ -238,7 +245,7 @@ function LegacySearch() {
             <Icon name="search-outline" size={18} tone="muted" />
             <TextInput
               ref={inputRef}
-              placeholder="Search events…"
+              placeholder={t("searchEvents")}
               placeholderTextColor={c["muted-foreground"]}
               autoCapitalize="none"
               autoCorrect={false}
@@ -255,7 +262,7 @@ function LegacySearch() {
             {raw.length > 0 ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Clear search"
+                accessibilityLabel={t("clearSearch")}
                 hitSlop={10}
                 onPress={clearInput}
                 className="h-7 w-7 items-center justify-center rounded-full active:opacity-60"
@@ -269,8 +276,8 @@ function LegacySearch() {
             accessibilityRole="button"
             accessibilityLabel={
               activeFilterCount > 0
-                ? `Filters (${activeFilterCount} active)`
-                : "Filters"
+                ? t("filtersActive", { activeFilterCount: activeFilterCount })
+                : t("filters")
             }
             onPress={() => setFilterOpen(true)}
             className="h-11 flex-row items-center gap-1 rounded-xl border border-border px-3 active:opacity-70"
@@ -313,10 +320,10 @@ function LegacySearch() {
             resultsView.kind === "empty" ? (
               <EmptyState
                 icon="search-outline"
-                title="No matching events"
-                description="Try a different term or clear your filters."
+                title={t("noMatchingEvents")}
+                description={t("tryADifferentTermOrClear")}
                 actionLabel={
-                  activeFilterCount > 0 ? "Clear filters" : undefined
+                  activeFilterCount > 0 ? t("clearFilters") : undefined
                 }
                 onAction={
                   activeFilterCount > 0
@@ -372,7 +379,7 @@ function LegacySearch() {
 
           {suggest.events.length > 0 ? (
             <>
-              <SectionHeader label="Events" />
+              <SectionHeader label={t("events")} />
               {suggest.events.map((event: EventSuggestion) => (
                 <SuggestionRow
                   key={event.id}
@@ -380,7 +387,7 @@ function LegacySearch() {
                   title={event.title}
                   subtitle={
                     event.starts_at
-                      ? formatDateWithSuffix(event.starts_at)
+                      ? formatDateWithSuffix(event.starts_at, undefined, locale)
                       : event.event_category
                   }
                   imageUri={
@@ -400,7 +407,7 @@ function LegacySearch() {
 
           {categoryMatches.length > 0 ? (
             <>
-              <SectionHeader label="Categories" />
+              <SectionHeader label={t("categories")} />
               {categoryMatches.map((name) => (
                 <SuggestionRow
                   key={name}
@@ -418,15 +425,15 @@ function LegacySearch() {
           categoryMatches.length === 0 ? (
             <AppText variant="muted" className="px-1 pt-3">
               {suggest.isError
-                ? "Couldn't load suggestions."
-                : "No matching events or categories."}
+                ? t("couldnTLoadSuggestions")
+                : t("noMatchingEventsOrCategories")}
             </AppText>
           ) : null}
 
           <View className="mt-1 border-t border-border pt-1">
             <SuggestionRow
               icon="search-outline"
-              title={`Search for “${trimmed}”`}
+              title={t("searchFor", { trimmed: trimmed })}
               onPress={() => runSearch(trimmed)}
             />
           </View>
@@ -440,8 +447,8 @@ function LegacySearch() {
           {recents.length > 0 ? (
             <>
               <SectionHeader
-                label="Recent"
-                action={{ label: "Clear all", onPress: clear }}
+                label={t("recent")}
+                action={{ label: t("clearAll"), onPress: clear }}
               />
               {recents.map((text) => (
                 <SuggestionRow
@@ -455,7 +462,7 @@ function LegacySearch() {
             </>
           ) : (
             <>
-              <SectionHeader label="Browse categories" />
+              <SectionHeader label={t("browseCategories")} />
               <View className="flex-row flex-wrap gap-2 px-1 pt-1">
                 {BROWSE_CATEGORIES.map((name) => (
                   <Chip

@@ -10,6 +10,7 @@ import { undoSlug } from "@abonten/core/geerateSlug";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import ExploreEventsList from "./ExploreEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -41,12 +42,14 @@ export async function generateMetadata({
 }: {
   params: Promise<{ location: string; type: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("events");
+
   const { location, type } = await params;
   const label = undoSlug(decodeURIComponent(location));
   const filter = (validFilters as readonly string[]).includes(type)
     ? (type as FilterType)
     : null;
-  if (!filter) return { title: `Events in ${label}` };
+  if (!filter) return { title: t("eventsIn", { label: label }) };
   return {
     title: FILTER_TITLES[filter](label),
     alternates: {
@@ -71,6 +74,8 @@ export default async function page({
 }: {
   params: Promise<{ location: string; type: string }>;
 }) {
+  const t = await getTranslations("events");
+
   const { location, type } = await params;
 
   if (!validFilters.includes(type as FilterType)) {
@@ -148,8 +153,8 @@ export default async function page({
 
   const emptyState = (
     <div className="w-full h-[500] flex flex-col justify-center items-center">
-      <h1 className="font-bold text-lg md:text-xl">No events found</h1>
-      <p>Try other categories</p>
+      <h1 className="font-bold text-lg md:text-xl">{t("noEventsFound")}</h1>
+      <p>{t("tryOtherCategories")}</p>
     </div>
   );
 

@@ -5,6 +5,7 @@ import {
   TIME_RE,
 } from "@/features/places/usePlaceWizard";
 import { AppText } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // Step 3 of the place wizard — the 7-day open/close editor. Mirrors the web
@@ -12,6 +13,8 @@ import { Pressable, View } from "react-native";
 // cross as "HH:MM" (the shape create_place's NULLIF(...)::time cast
 // expects). "Copy to every day" fills the rest from the first open day.
 export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
+  const t = useTranslations("places");
+
   const firstOpen = w.openingHours.find((h) => !h.isClosed);
 
   function copyToAll() {
@@ -28,7 +31,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
   return (
     <View className="gap-3">
       <View className="flex-row items-center justify-between">
-        <AppText variant="label">Opening hours</AppText>
+        <AppText variant="label">{t("openingHours")}</AppText>
         {firstOpen ? (
           <Pressable
             accessibilityRole="button"
@@ -37,7 +40,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
             className="active:opacity-60"
           >
             <AppText variant="small" tone="brand" className="font-semibold">
-              Copy to every day
+              {t("copyToEveryDay")}
             </AppText>
           </Pressable>
         ) : null}
@@ -67,7 +70,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
                     : "text-[13px] font-semibold text-primary-foreground"
                 }
               >
-                {h.isClosed ? "Closed" : "Open"}
+                {h.isClosed ? t("closed") : t("open")}
               </AppText>
             </Pressable>
           </View>
@@ -75,16 +78,16 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
             <View className="flex-row items-center gap-2">
               <View className="flex-1">
                 <TimeField
-                  label={`${DAY_LABELS[h.dayOfWeek]} — opens`}
+                  label={t("opens", { item: DAY_LABELS[h.dayOfWeek] })}
                   value={h.openTime ?? null}
                   onChange={(v) => w.setHours(h.dayOfWeek, { openTime: v })}
                   invalid={!!h.openTime && !TIME_RE.test(h.openTime)}
                 />
               </View>
-              <AppText variant="muted">to</AppText>
+              <AppText variant="muted">{t("to")}</AppText>
               <View className="flex-1">
                 <TimeField
-                  label={`${DAY_LABELS[h.dayOfWeek]} — closes`}
+                  label={t("closes", { item: DAY_LABELS[h.dayOfWeek] })}
                   value={h.closeTime ?? null}
                   onChange={(v) => w.setHours(h.dayOfWeek, { closeTime: v })}
                   invalid={!!h.closeTime && !TIME_RE.test(h.closeTime)}

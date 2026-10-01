@@ -3,6 +3,7 @@ import { PageTitle, SupportingText } from "@/components/ui/typography";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import EventOnboardingWizard from "@/fieldOps/organisms/EventOnboardingWizard";
 import OnboardingWizard from "@/fieldOps/organisms/OnboardingWizard";
+import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,8 @@ export default async function FieldOnboardPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations("fieldOps");
+
   const { id } = await params;
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
@@ -33,11 +36,11 @@ export default async function FieldOnboardPage({
     <div className="flex flex-col gap-6">
       <div>
         <PageTitle>
-          {isEvent ? "Onboard an event" : "Onboard a business"}
+          {isEvent ? t("onboardAnEvent") : t("onboardABusiness")}
         </PageTitle>
         <SupportingText>
           {res.data.onboarding.territoryName ?? current.campaign.regionName} ·{" "}
-          {res.data.onboarding.mode === "offline" ? "in person" : "online"}
+          {res.data.onboarding.mode === "offline" ? t("inPerson") : t("online")}
         </SupportingText>
       </div>
       {isEvent ? (

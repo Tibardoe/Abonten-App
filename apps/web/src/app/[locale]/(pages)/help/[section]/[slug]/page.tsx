@@ -6,6 +6,7 @@ import {
   loadHelpPage,
 } from "@/utils/publicContent";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -25,11 +26,13 @@ export async function generateMetadata({
 }: {
   params: Promise<{ section: string; slug: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("help");
+
   const { section, slug } = await params;
   const doc = loadHelpPage(section, slug);
-  if (!doc) return { title: "Help centre" };
+  if (!doc) return { title: t("helpCentre") };
   return {
-    title: `${doc.title} — Help centre`,
+    title: t("helpCentre3", { title: doc.title }),
     description: doc.summary ?? undefined,
     alternates: { canonical: `/help/${section}/${slug}` },
   };
@@ -40,13 +43,15 @@ export default async function HelpArticlePage({
 }: {
   params: Promise<{ section: string; slug: string }>;
 }) {
+  const t = await getTranslations("help");
+
   const { section, slug } = await params;
   const doc = loadHelpPage(section, slug);
   if (!doc) notFound();
 
   const pages = listHelpPages();
   const sectionLabel =
-    HELP_SECTIONS.find((s) => s.dir === section)?.label ?? "Help";
+    HELP_SECTIONS.find((s) => s.dir === section)?.label ?? t("help");
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 py-6 lg:flex-row lg:gap-12">
@@ -55,7 +60,7 @@ export default async function HelpArticlePage({
           href="/help"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← Help centre
+          {t("helpCentre2")}
         </Link>
         {HELP_SECTIONS.map((s) => {
           const items = pages.filter((p) => p.section === s.dir);
@@ -97,7 +102,7 @@ export default async function HelpArticlePage({
         <MarkdownDocument blocks={doc.blocks} />
         {doc.lastUpdated ? (
           <p className="mt-8 text-xs text-muted-foreground">
-            Last updated {doc.lastUpdated}
+            {t("lastUpdated", { lastUpdated: doc.lastUpdated })}
           </p>
         ) : null}
         <div className="mt-10">

@@ -3,6 +3,7 @@
 import { getUserEventReviews } from "@/actions/getUserEventReviews";
 import { getUserPlaceReviews } from "@/actions/getUserPlaceReviews";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ReviewedEventsList from "./ReviewedEventsList";
 import ReviewedPlacesList from "./ReviewedPlacesList";
@@ -29,6 +30,8 @@ async function fetchReviewedPlacesPage(cursor: string | null) {
 // threading a second tab dimension through page.tsx's server component for
 // what is a secondary, nested view.
 export default function ReviewedTabContent() {
+  const t = useTranslations("manage");
+
   const [activeType, setActiveType] = useState<ReviewedType>("events");
 
   return (
@@ -38,8 +41,8 @@ export default function ReviewedTabContent() {
     >
       <div className="flex justify-center">
         <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:min-w-[240px]">
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="places">Places</TabsTrigger>
+          <TabsTrigger value="events">{t("events")}</TabsTrigger>
+          <TabsTrigger value="places">{t("places")}</TabsTrigger>
         </TabsList>
       </div>
 

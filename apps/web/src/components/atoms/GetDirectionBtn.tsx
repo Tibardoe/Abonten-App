@@ -3,6 +3,7 @@
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { logger } from "@abonten/core/logger";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
+import { useTranslations } from "next-intl";
 import { IoLocationOutline } from "react-icons/io5";
 
 type EventDetailsType = {
@@ -10,6 +11,8 @@ type EventDetailsType = {
 };
 
 export default function GetDirectionBtn({ location }: EventDetailsType) {
+  const t = useTranslations("common");
+
   const handleGetDirection = async () => {
     try {
       const { coords } = await getCurrentPosition();
@@ -34,7 +37,7 @@ export default function GetDirectionBtn({ location }: EventDetailsType) {
       onClick={handleGetDirection}
       className="w-full flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
     >
-      <IoLocationOutline /> Get Directions
+      <IoLocationOutline /> {t("getDirections")}
     </button>
   );
 }

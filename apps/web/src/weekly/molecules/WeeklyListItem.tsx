@@ -1,12 +1,15 @@
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import type { WeeklyItem } from "@abonten/types/weeklyType";
+import { useLocale } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 
 // A compact row for "list" sections: thumbnail, headline, title and one line
 // of detail. Good for longer runs of picks where full cards would be heavy.
 export default function WeeklyListItem({ item }: { item: WeeklyItem }) {
+  const locale = useLocale();
+
   const event = item.event;
   const place = item.place;
   if (!event && !place) return null;
@@ -24,6 +27,7 @@ export default function WeeklyListItem({ item }: { item: WeeklyItem }) {
           event.ends_at,
           event.occurrences,
           event.timezone,
+          locale,
         ).date,
         event.address?.full_address,
       ]

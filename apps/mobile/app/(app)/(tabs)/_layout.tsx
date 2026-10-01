@@ -83,7 +83,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Explore",
+            title: t("explore"),
             tabBarLabel: t("home"),
             tabBarIcon: HomeTabIcon,
           }}
@@ -98,7 +98,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="spotlight"
           options={{
-            title: "Spotlight",
+            title: t("spotlight"),
             href: program.spotlight ? undefined : null,
             // Full-bleed video: the scene is black and the bar turns dark
             // with it (GlassTabBar's darkRoutes).

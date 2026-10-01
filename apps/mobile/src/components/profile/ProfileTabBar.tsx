@@ -3,6 +3,7 @@ import type {
   ProfileTab,
 } from "@abonten/core/content/profileContent";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useRef, useState } from "react";
 import { type LayoutChangeEvent, Pressable, View } from "react-native";
@@ -62,6 +63,8 @@ export function ProfileTabBar({
   listingMenuOpen: boolean;
   onOpenListingMenu: (anchor: Rect) => void;
 }) {
+  const t = useTranslations("profile");
+
   const c = useThemeColors();
   const reduceMotion = useReducedMotion();
   const [barWidth, setBarWidth] = useState(0);
@@ -124,7 +127,12 @@ export function ProfileTabBar({
                   selected: active,
                   expanded: listingMenuOpen,
                 }}
-                accessibilityLabel={`${label}. Double tap ${active ? "to switch between Events and Places" : "to show"}`}
+                accessibilityLabel={t("doubleTap", {
+                  label: label,
+                  value: active
+                    ? t("toSwitchBetweenEventsAndPlaces")
+                    : t("toShow"),
+                })}
                 onPress={() => {
                   if (active) openMenu();
                   else onChange(key);
@@ -151,7 +159,7 @@ export function ProfileTabBar({
                     onPress={openMenu}
                     hitSlop={{ top: 12, bottom: 12, left: 6, right: 12 }}
                     accessibilityRole="button"
-                    accessibilityLabel="Switch between Events and Places"
+                    accessibilityLabel={t("switchBetweenEventsAndPlaces")}
                   >
                     <Animated.View style={chevronStyle}>
                       <Icon

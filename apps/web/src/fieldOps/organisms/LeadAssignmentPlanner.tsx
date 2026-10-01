@@ -14,6 +14,7 @@ import type {
   FieldOpsLeadDashboard,
   FieldOpsTerritory,
 } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -39,6 +40,8 @@ export default function LeadAssignmentPlanner({
   territories: FieldOpsTerritory[];
   canPlan: boolean;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -64,11 +67,11 @@ export default function LeadAssignmentPlanner({
         notes: notes || null,
       });
       if (res.status === 200) {
-        toast.success(res.message ?? "Assigned.");
+        toast.success(res.message ?? t("assigned"));
         setNotes("");
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't assign that.");
+        toast.error(res.message ?? t("couldnTAssignThat"));
       }
     });
   };
@@ -83,12 +86,12 @@ export default function LeadAssignmentPlanner({
         reason,
       });
       if (res.status === 200) {
-        toast.success(res.message ?? "Cancelled.");
+        toast.success(res.message ?? t("cancelled2"));
         setCancelId(null);
         setReason("");
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't cancel that.");
+        toast.error(res.message ?? t("couldnTCancelThat"));
       }
     });
   };
@@ -106,26 +109,26 @@ export default function LeadAssignmentPlanner({
         }}
       >
         <div className="flex flex-col gap-1">
-          <Label htmlFor="day">Day</Label>
+          <Label htmlFor="day">{t("day")}</Label>
           <Input id="day" name="day" type="date" defaultValue={date} />
         </div>
         <Button type="submit" variant="outline">
-          Show
+          {t("show")}
         </Button>
         {date !== today ? (
           <Button asChild variant="ghost">
-            <Link href="/field/lead/assignments">Today</Link>
+            <Link href="/field/lead/assignments">{t("today")}</Link>
           </Button>
         ) : null}
       </form>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">
-          {date === today ? "Today" : date} ({assignments.length})
+          {date === today ? t("today") : date} ({assignments.length})
         </h2>
         {assignments.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nobody is assigned on this day.
+            {t("nobodyIsAssignedOnThisDay")}
           </p>
         ) : (
           <ul className="divide-y rounded-xl border">
@@ -134,10 +137,10 @@ export default function LeadAssignmentPlanner({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span>
                     <span className="font-medium">
-                      {a.memberName ?? "Member"}
+                      {a.memberName ?? t("member")}
                     </span>{" "}
                     · {a.territoryName} ·{" "}
-                    {a.mode === "offline" ? "in person" : "online"}
+                    {a.mode === "offline" ? t("inPerson") : t("online")}
                     {a.startsOn !== a.endsOn
                       ? ` · ${a.startsOn} → ${a.endsOn}`
                       : ""}
@@ -152,15 +155,16 @@ export default function LeadAssignmentPlanner({
                         variant="ghost"
                         onClick={() => setCancelId(a.id)}
                       >
-                        Cancel
+                        {t("cancel")}
                       </Button>
                     ) : null}
                   </div>
                 </div>
                 {a.status === "started" && a.startDistanceM !== null ? (
                   <p className="text-xs text-muted-foreground">
-                    Checked in {formatDistance(a.startDistanceM)} from the
-                    centre
+                    {t("checkedInFromTheCentre", {
+                      formatDistance: formatDistance(a.startDistanceM),
+                    })}
                     {a.startAccuracyM !== null
                       ? ` (±${a.startAccuracyM} m)`
                       : ""}
@@ -169,7 +173,7 @@ export default function LeadAssignmentPlanner({
                 ) : null}
                 {a.cancelReason ? (
                   <p className="text-xs text-muted-foreground">
-                    Cancelled: {a.cancelReason}
+                    {t("cancelled", { cancelReason: a.cancelReason })}
                   </p>
                 ) : null}
                 {cancelId === a.id ? (
@@ -178,7 +182,7 @@ export default function LeadAssignmentPlanner({
                       required
                       minLength={3}
                       maxLength={1000}
-                      placeholder="Why? The member sees this."
+                      placeholder={t("whyTheMemberSeesThis")}
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
                       className="max-w-sm"
@@ -189,7 +193,7 @@ export default function LeadAssignmentPlanner({
                       variant="destructive"
                       disabled={pending}
                     >
-                      Cancel assignment
+                      {t("cancelAssignment")}
                     </Button>
                     <Button
                       type="button"
@@ -197,7 +201,7 @@ export default function LeadAssignmentPlanner({
                       variant="ghost"
                       onClick={() => setCancelId(null)}
                     >
-                      Keep it
+                      {t("keepIt")}
                     </Button>
                   </form>
                 ) : null}
@@ -212,15 +216,15 @@ export default function LeadAssignmentPlanner({
           onSubmit={create}
           className="flex flex-col gap-3 rounded-xl border p-4"
         >
-          <h2 className="text-lg font-semibold">New assignment</h2>
+          <h2 className="text-lg font-semibold">{t("newAssignment")}</h2>
           {members.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Add active field members to your team first.
+              {t("addActiveFieldMembersToYour")}
             </p>
           ) : null}
           <div className="grid gap-3 md:grid-cols-2">
             <div className="flex flex-col gap-1">
-              <Label htmlFor="a-member">Member</Label>
+              <Label htmlFor="a-member">{t("member")}</Label>
               <Select
                 id="a-member"
                 required
@@ -230,13 +234,13 @@ export default function LeadAssignmentPlanner({
                 {members.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name ?? m.id} ·{" "}
-                    {m.role === "offline_member" ? "in person" : "online"}
+                    {m.role === "offline_member" ? t("inPerson") : t("online")}
                   </option>
                 ))}
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="a-territory">Territory</Label>
+              <Label htmlFor="a-territory">{t("territory")}</Label>
               <Select
                 id="a-territory"
                 required
@@ -253,7 +257,7 @@ export default function LeadAssignmentPlanner({
               </Select>
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="a-start">From</Label>
+              <Label htmlFor="a-start">{t("from")}</Label>
               <Input
                 id="a-start"
                 type="date"
@@ -266,7 +270,7 @@ export default function LeadAssignmentPlanner({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="a-end">To</Label>
+              <Label htmlFor="a-end">{t("to")}</Label>
               <Input
                 id="a-end"
                 type="date"
@@ -278,7 +282,7 @@ export default function LeadAssignmentPlanner({
             </div>
           </div>
           <div className="flex flex-col gap-1">
-            <Label htmlFor="a-notes">Notes for the member</Label>
+            <Label htmlFor="a-notes">{t("notesForTheMember")}</Label>
             <Input
               id="a-notes"
               maxLength={2000}
@@ -291,7 +295,7 @@ export default function LeadAssignmentPlanner({
               type="submit"
               disabled={pending || !memberId || !territoryId}
             >
-              Assign
+              {t("assign")}
             </Button>
           </div>
         </form>

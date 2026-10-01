@@ -14,15 +14,19 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-const noReviewsState = (
-  <p className="text-center text-muted-foreground text-sm py-10">
-    You haven&apos;t reviewed any events yet.
-  </p>
-);
+function NoReviewsState() {
+  const t = useTranslations("manage");
+  return (
+    <p className="text-center text-muted-foreground text-sm py-10">
+      {t("youHaventReviewedAnyEvents")}
+    </p>
+  );
+}
 
 // No generated Supabase types exist in this repo (see PROJECT.md) — matches
 // getUserEventReviews.ts's own biome-ignore'd `any` return type.
@@ -32,6 +36,10 @@ type EventReviewRow = any;
 const REVIEWED_EVENTS_QUERY_KEY = ["user-event-reviews"];
 
 function ReviewedEventCard({ review }: { review: EventReviewRow }) {
+  const locale = useLocale();
+
+  const t = useTranslations("manage");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
@@ -90,7 +98,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
             context.previousReviews,
           );
         }
-        toast.error(response.message ?? "Couldn't delete this review.");
+        toast.error(response.message ?? t("couldnTDeleteThisReview"));
       }
     },
 
@@ -101,7 +109,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
           context.previousReviews,
         );
       }
-      toast.error("Couldn't delete this review. Please try again.");
+      toast.error(t("couldnTDeleteThisReviewPlease"));
     },
   });
 
@@ -131,7 +139,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
         <div className="flex items-center justify-between">
           <StarRatingDisplay rating={review.rating} />
           <span className="text-xs text-muted-foreground">
-            {getRelativeTime(review.created_at)}
+            {getRelativeTime(review.created_at, undefined, locale)}
           </span>
         </div>
 
@@ -155,14 +163,14 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
             onClick={() => setIsEditing(true)}
             className="text-sm text-primary hover:underline"
           >
-            Edit
+            {t("edit")}
           </button>
           <button
             type="button"
             onClick={() => setShowDeleteConfirm(true)}
             className="text-sm text-destructive hover:underline"
           >
-            Delete
+            {t("deleteText")}
           </button>
         </div>
       </div>
@@ -185,9 +193,9 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4">
           <div className="bg-card text-card-foreground rounded-lg p-6 w-full max-w-sm space-y-4 shadow-lg">
-            <p className="font-medium">Delete your review?</p>
+            <p className="font-medium">{t("deleteYourReview")}</p>
             <p className="text-sm text-muted-foreground">
-              This can&apos;t be undone.
+              {t("thisCanTBeUndone")}
             </p>
             <div className="flex justify-end gap-2">
               <button
@@ -195,7 +203,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
                 onClick={() => setShowDeleteConfirm(false)}
                 className="px-3 py-1.5 rounded-md text-sm border border-border hover:bg-accent transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -203,7 +211,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
                 onClick={() => deleteReview()}
                 className="px-3 py-1.5 rounded-md text-sm bg-destructive text-destructive-foreground disabled:opacity-60"
               >
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? t("deleting") : t("deleteText")}
               </button>
             </div>
           </div>
@@ -227,7 +235,7 @@ export default function ReviewedEventsList({
       queryKey={["user-event-reviews"]}
       initialPage={initialPage}
       fetchPage={fetchPage}
-      emptyState={noReviewsState}
+      emptyState={<NoReviewsState />}
       listElement="div"
       listClassName="grid md:grid-cols-3 gap-6"
       renderItem={(review) => (

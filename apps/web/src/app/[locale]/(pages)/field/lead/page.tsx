@@ -5,12 +5,15 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import CampaignBanner from "@/fieldOps/molecules/CampaignBanner";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function FieldLeadDashboardPage() {
+  const t = await getTranslations("fieldOps");
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current?.isLead) notFound();
@@ -24,60 +27,66 @@ export default async function FieldLeadDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Team dashboard</PageTitle>
+        <PageTitle>{t("teamDashboard")}</PageTitle>
         <SupportingText>{d.today}</SupportingText>
       </div>
 
       <CampaignBanner campaign={d.campaign} membership={current.membership} />
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile label="Coverage" value={`${d.coveragePct}%`} />
-        <StatTile label="Territories" value={d.territories.length} />
-        <StatTile label="Working today" value={d.todayAssignments.length} />
+        <StatTile label={t("coverage")} value={`${d.coveragePct}%`} />
+        <StatTile label={t("territories")} value={d.territories.length} />
+        <StatTile label={t("workingToday")} value={d.todayAssignments.length} />
         <StatTile
-          label="Active members"
+          label={t("activeMembers")}
           value={d.team.active}
-          hint={d.team.invited > 0 ? `${d.team.invited} invited` : undefined}
+          hint={
+            d.team.invited > 0
+              ? t("invited2", { invited: d.team.invited })
+              : undefined
+          }
         />
       </section>
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Coverage board</h2>
+          <h2 className="text-lg font-semibold">{t("coverageBoard")}</h2>
           <Link
             href="/field/lead/territories"
             className="text-sm text-primary hover:underline"
           >
-            Manage territories
+            {t("manageTerritories")}
           </Link>
         </div>
         {d.territories.length === 0 ? (
           <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-            No territories yet. Add the towns your team will cover.
+            {t("noTerritoriesYetAddTheTowns")}
           </p>
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
-            {d.territories.map((t) => (
-              <li key={t.id} className="rounded-xl border p-4">
+            {d.territories.map((territory) => (
+              <li key={territory.id} className="rounded-xl border p-4">
                 <div className="flex items-start justify-between gap-2">
                   <Link
-                    href={`/field/territory/${t.id}`}
+                    href={`/field/territory/${territory.id}`}
                     className="font-medium hover:underline"
                   >
-                    {t.name}
+                    {territory.name}
                   </Link>
-                  <StatusChip status={t.coverage} />
+                  <StatusChip status={territory.coverage} />
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t.prospectCount} businesses logged
+                  {t("businessesLogged", {
+                    prospectCount: territory.prospectCount,
+                  })}
                 </p>
-                {t.openAssignments.length > 0 ? (
+                {territory.openAssignments.length > 0 ? (
                   <ul className="mt-2 space-y-1 text-sm">
-                    {t.openAssignments.map((a) => (
+                    {territory.openAssignments.map((a) => (
                       <li key={a.id} className="flex justify-between gap-2">
                         <span>
-                          {a.memberName ?? "Member"} ·{" "}
-                          {a.mode === "offline" ? "in person" : "online"}
+                          {a.memberName ?? t("member")} ·{" "}
+                          {a.mode === "offline" ? t("inPerson") : t("online")}
                         </span>
                         <StatusChip status={a.status} />
                       </li>
@@ -92,17 +101,17 @@ export default async function FieldLeadDashboardPage() {
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Today&apos;s assignments</h2>
+          <h2 className="text-lg font-semibold">{t("todaySAssignments")}</h2>
           <Link
             href="/field/lead/assignments"
             className="text-sm text-primary hover:underline"
           >
-            Plan assignments
+            {t("planAssignments")}
           </Link>
         </div>
         {d.todayAssignments.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nobody is assigned today.
+            {t("nobodyIsAssignedToday")}
           </p>
         ) : (
           <ul className="divide-y rounded-xl border">
@@ -113,11 +122,13 @@ export default async function FieldLeadDashboardPage() {
               >
                 <span>
                   <span className="font-medium">
-                    {a.memberName ?? "Member"}
+                    {a.memberName ?? t("member")}
                   </span>{" "}
                   · {a.territoryName}
                   {a.status === "started" && a.startDistanceM !== null
-                    ? ` · checked in ${formatDistance(a.startDistanceM)} from centre`
+                    ? t("checkedInFromCentre", {
+                        formatDistance: formatDistance(a.startDistanceM),
+                      })
                     : ""}
                 </span>
                 <StatusChip status={a.status} />

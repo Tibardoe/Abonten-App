@@ -8,6 +8,7 @@ import {
   type ReviewSubjectKind,
   reviewerDisplayName,
 } from "@abonten/core/reviews/reviewList";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -39,6 +40,10 @@ export default function ReviewListItem({
   actions,
   children,
 }: ReviewListItemProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   const [expanded, setExpanded] = useState(false);
   // "Read more" only when the clamped text actually overflows — a character
   // count can't know how wide the column is.
@@ -84,11 +89,13 @@ export default function ReviewListItem({
       }
     >
       {highlighted ? (
-        <p className="mb-2 text-xs font-semibold text-primary">Shared review</p>
+        <p className="mb-2 text-xs font-semibold text-primary">
+          {t("sharedReview")}
+        </p>
       ) : null}
       <div className="flex items-center gap-3">
         {profileHref ? (
-          <Link href={profileHref} aria-label={`${name}'s profile`}>
+          <Link href={profileHref} aria-label={t("sProfile", { name: name })}>
             {avatar}
           </Link>
         ) : (
@@ -106,13 +113,13 @@ export default function ReviewListItem({
             )}
             {isOwn ? (
               <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-primary">
-                You
+                {t("you")}
               </span>
             ) : null}
           </p>
           <p className="text-xs text-muted-foreground">
-            {getRelativeTime(review.createdAt)}
-            {review.editedAt ? " · Edited" : ""}
+            {getRelativeTime(review.createdAt, undefined, locale)}
+            {review.editedAt ? t("edited") : ""}
           </p>
         </div>
 
@@ -120,7 +127,7 @@ export default function ReviewListItem({
           <StarRatingDisplay rating={review.rating} />
           {kind === "event" && review.isVerifiedAttendee ? (
             <span className="text-[11px] font-medium text-success whitespace-nowrap">
-              ✓ Verified attendee
+              {t("verifiedAttendee")}
             </span>
           ) : null}
         </div>
@@ -148,7 +155,7 @@ export default function ReviewListItem({
               onClick={() => setExpanded((v) => !v)}
               className="mt-1 text-sm font-medium text-primary hover:underline"
             >
-              {expanded ? "Show less" : "Read more"}
+              {expanded ? t("showLess") : t("readMore")}
             </button>
           ) : null}
         </div>
@@ -159,7 +166,7 @@ export default function ReviewListItem({
       {review.response ? (
         <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">
           <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
-            {kind === "event" ? "Organizer's reply" : "Owner's reply"}
+            {kind === "event" ? t("organizerSReply") : t("ownerSReply")}
           </p>
           <p className="text-sm text-foreground">{review.response}</p>
         </div>

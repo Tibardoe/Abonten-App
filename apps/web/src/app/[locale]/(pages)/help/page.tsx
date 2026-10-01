@@ -2,6 +2,8 @@ import ContactSupportCard from "@/components/molecules/ContactSupportCard";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import { HELP_SECTIONS, listHelpPages } from "@/utils/publicContent";
 import type { Metadata } from "next";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -14,23 +16,24 @@ import Link from "next/link";
 
 export const dynamic = "force-static";
 
-export const metadata: Metadata = {
-  title: "Help centre",
-  description:
-    "How to find events and places, buy and use tickets, run events, manage a place, and look after your Abonten account.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("help");
+  return {
+    title: t("helpCentre"),
+    description: t("howToFindEventsAndPlaces"),
+  };
+}
 
 export default function HelpIndexPage() {
+  const t = useTranslations("help");
+
   const pages = listHelpPages();
 
   return (
     <section className="mx-auto flex max-w-4xl flex-col gap-8 py-6">
       <div className="flex flex-col gap-2">
-        <PageTitle>Help centre</PageTitle>
-        <SupportingText>
-          Step-by-step guides for customers, organizers and place owners, on the
-          web and in the Abonten app.
-        </SupportingText>
+        <PageTitle>{t("helpCentre")}</PageTitle>
+        <SupportingText>{t("stepByStepGuidesForCustomers")}</SupportingText>
       </div>
 
       {HELP_SECTIONS.map((section) => {

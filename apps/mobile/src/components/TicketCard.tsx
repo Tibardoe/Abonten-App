@@ -5,6 +5,7 @@ import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { AppText, Icon, TicketStatusBadge, useToast } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Alert, Pressable, View } from "react-native";
@@ -21,6 +22,10 @@ export function TicketCard({
   ticket: UserTicketType;
   showRefundInfo?: boolean;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("common");
+
   const router = useRouter();
   const toast = useToast();
   const cancel = useCancelTicket();
@@ -49,14 +54,12 @@ export function TicketCard({
   function onCancel() {
     const paid = ticket.transaction_id != null;
     Alert.alert(
-      "Cancel this ticket?",
-      paid
-        ? "A refund of the ticket price will be issued to your original payment method. The Abonten service fee is not refunded."
-        : "Are you sure you want to cancel this ticket?",
+      t("cancelThisTicket"),
+      paid ? t("aRefundOfTheTicketPrice") : t("areYouSureYouWantTo2"),
       [
-        { text: "Keep ticket", style: "cancel" },
+        { text: t("keepTicket2"), style: "cancel" },
         {
-          text: "Cancel ticket",
+          text: t("cancelTicket2"),
           style: "destructive",
           onPress: async () => {
             const res = await cancel.mutateAsync({
@@ -64,12 +67,12 @@ export function TicketCard({
               transactionId: ticket.transaction_id,
             });
             if (res.status === 200) {
-              toast.success("Ticket cancelled", {
+              toast.success(t("ticketCancelled"), {
                 description: res.message ?? undefined,
               });
             } else {
-              toast.error(res.message ?? "We couldn't cancel this ticket.", {
-                description: "Nothing has changed. Please try again.",
+              toast.error(res.message ?? t("weCouldnTCancelThisTicket"), {
+                description: t("nothingHasChangedPleaseTryAgain"),
               });
             }
           },
@@ -81,7 +84,7 @@ export function TicketCard({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${event.title} ticket`}
+      accessibilityLabel={t("ticket", { title: event.title })}
       onPress={() => router.push(`/(app)/ticket/${ticket.id}`)}
       className="overflow-hidden rounded-2xl border border-border bg-card active:opacity-95"
     >
@@ -118,7 +121,7 @@ export function TicketCard({
           </AppText>
           {event.starts_at ? (
             <AppText variant="meta">
-              · {formatDateWithSuffix(event.starts_at)}
+              · {formatDateWithSuffix(event.starts_at, undefined, locale)}
             </AppText>
           ) : null}
         </View>
@@ -133,29 +136,27 @@ export function TicketCard({
         ) : null}
 
         {showRefundInfo && ticket.status === "cancelled" && !txn ? (
-          <AppText variant="meta">
-            No payment on this ticket — nothing to refund.
-          </AppText>
+          <AppText variant="meta">{t("noPaymentOnThisTicketNothing")}</AppText>
         ) : null}
 
         <View className="flex-row items-center justify-between gap-2 pt-1">
           <View className="flex-row items-center gap-1">
             <Icon name="qr-code-outline" size={16} tone="primary" />
             <AppText variant="small" tone="brand" className="font-semibold">
-              View ticket
+              {t("viewTicket2")}
             </AppText>
           </View>
 
           {canCancel ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Cancel ticket"
+              accessibilityLabel={t("cancelTicket2")}
               disabled={cancel.isPending}
               onPress={onCancel}
               className="min-h-[36px] justify-center rounded-lg border border-border px-3 active:opacity-70"
             >
               <AppText variant="small" tone="error" className="font-semibold">
-                {cancel.isPending ? "Cancelling…" : "Cancel"}
+                {cancel.isPending ? t("cancelling") : t("cancel")}
               </AppText>
             </Pressable>
           ) : null}

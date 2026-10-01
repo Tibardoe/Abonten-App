@@ -10,6 +10,7 @@ import { flushContentViews } from "@/features/content/useContentTelemetry";
 import { useVolumeKeys } from "@/features/content/useVolumeKeys";
 import { useQueryView } from "@/lib/useQueryView";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -20,6 +21,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // video owns its own player (SpotlightVideo) and the sound follows the
 // app-wide Spotlight preference, so muting here is muting in the feed too.
 export default function SpotlightPostScreen() {
+  const t = useTranslations("spotlight");
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -67,14 +70,14 @@ export default function SpotlightPostScreen() {
       ) : !post || post.kind !== "spotlight" ? (
         <View className="flex-1 items-center justify-center gap-3 px-8">
           <AppText className="text-center text-[18px] font-semibold text-white">
-            This Spotlight isn't available
+            {t("thisSpotlightIsnTAvailable")}
           </AppText>
           <AppText className="text-center text-white/70">
             {(res && "message" in res && res.message) ||
-              "It may have been removed."}
+              t("itMayHaveBeenRemoved")}
           </AppText>
           <Button
-            title="More Spotlights"
+            title={t("moreSpotlights")}
             onPress={() => router.replace("/(app)/(tabs)/spotlight")}
           />
         </View>
@@ -95,7 +98,7 @@ export default function SpotlightPostScreen() {
         onPress={back}
         hitSlop={10}
         accessibilityRole="button"
-        accessibilityLabel="Back"
+        accessibilityLabel={t("back2")}
         style={{ position: "absolute", top: insets.top + 4, left: 8 }}
         className="h-10 w-10 items-center justify-center"
       >

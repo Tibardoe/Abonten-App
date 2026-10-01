@@ -1,4 +1,5 @@
 import { formatMoney } from "@abonten/core/formatMoney";
+import { useTranslations } from "next-intl";
 
 type CheckoutOrderTotalsProps = {
   currency: string | undefined;
@@ -15,19 +16,21 @@ export default function CheckoutOrderTotals({
   fee,
   total,
 }: CheckoutOrderTotalsProps) {
+  const t = useTranslations("common");
+
   const show = (n: number) =>
     formatMoney(currency, typeof n === "number" ? n : 0);
   return (
     <div className="rounded-2xl mt-5">
       {/* Subtotal */}
       <div className="flex justify-between items-center text-sm text-muted-foreground mb-2">
-        <p>Subtotal</p>
+        <p>{t("subtotal")}</p>
         <p className="font-medium tabular-nums">{show(subTotal)}</p>
       </div>
 
       {/* Customer-paid Abonten service fee */}
       <div className="flex justify-between items-center text-sm text-muted-foreground mb-2">
-        <p>Service fee</p>
+        <p>{t("serviceFee")}</p>
         <p className="tabular-nums">{show(fee)}</p>
       </div>
 
@@ -36,7 +39,7 @@ export default function CheckoutOrderTotals({
 
       {/* Total */}
       <div className="flex justify-between items-center text-base font-bold text-foreground">
-        <p>Total</p>
+        <p>{t("total")}</p>
         <p className="tabular-nums">{show(total)}</p>
       </div>
     </div>

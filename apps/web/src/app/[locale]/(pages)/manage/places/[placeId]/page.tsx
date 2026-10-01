@@ -9,6 +9,7 @@ import { createClient } from "@/config/supabase/server";
 import ManagePlaceView from "@/places/organisms/ManagePlaceView";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 // The tab names what is being managed. RLS limits the read to rows this
 // person may see; anyone else just gets the section's own title.
@@ -17,6 +18,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ placeId: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("manage");
+
   const { placeId } = await params;
   const supabase = await createClient();
   const { data } = await supabase
@@ -25,7 +28,7 @@ export async function generateMetadata({
     .eq("id", placeId)
     .maybeSingle();
   const name = data?.name;
-  return { title: name ? `Manage · ${name}` : "Manage place" };
+  return { title: name ? t("manage", { name: name }) : t("managePlace") };
 }
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -44,6 +47,8 @@ export default async function page({
 }: {
   params: Promise<{ placeId: string }>;
 }) {
+  const t = await getTranslations("manage");
+
   const { placeId } = await params;
   const supabase = await createClient();
 
@@ -54,7 +59,7 @@ export default async function page({
   if (!user) {
     return (
       <p className="p-8 text-center text-muted-foreground">
-        Sign in to manage this place.
+        {t("signInToManageThisPlace")}
       </p>
     );
   }
@@ -67,14 +72,16 @@ export default async function page({
 
   if (placeError || !place) {
     return (
-      <p className="p-8 text-center text-muted-foreground">Place not found.</p>
+      <p className="p-8 text-center text-muted-foreground">
+        {t("placeNotFound")}
+      </p>
     );
   }
 
   if (place.owner_id !== user.id) {
     return (
       <p className="p-8 text-center text-muted-foreground">
-        You're not authorized to manage this place.
+        {t("youReNotAuthorizedToManage2")}
       </p>
     );
   }

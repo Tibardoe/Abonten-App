@@ -1,6 +1,7 @@
 import { useVoiceBubblePlayer } from "@/features/messaging/useVoicePlayer";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -44,6 +45,8 @@ export default function VoiceMessageBubble({
   message: MessageRow;
   isMine: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const att = message.attachments[0];
   const player = useVoiceBubblePlayer(
@@ -103,7 +106,7 @@ export default function VoiceMessageBubble({
       <Pressable
         className="flex-row items-center"
         accessibilityRole="adjustable"
-        accessibilityLabel="Seek voice message"
+        accessibilityLabel={t("seekVoiceMessage")}
         onPress={(e) => {
           // Seek to the tapped fraction of the (fixed) waveform width.
           player.seekToFraction(e.nativeEvent.locationX / WAVE_W);

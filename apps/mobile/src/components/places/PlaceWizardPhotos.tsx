@@ -3,6 +3,7 @@ import {
   type PlaceWizard,
 } from "@/features/places/usePlaceWizard";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { Pressable, View } from "react-native";
 
@@ -13,6 +14,8 @@ import { Pressable, View } from "react-native";
 // flow's photo step; the section title/subtitle is drawn by the wizard
 // screen.
 export function PlaceWizardPhotos({ w }: { w: PlaceWizard }) {
+  const t = useTranslations("places");
+
   const photos = w.photoUris;
   const full = photos.length >= MAX_WIZARD_GALLERY_PHOTOS;
 
@@ -22,7 +25,7 @@ export function PlaceWizardPhotos({ w }: { w: PlaceWizard }) {
         <View className="items-center gap-2 rounded-xl border border-border border-dashed bg-muted px-4 py-8">
           <Icon name="images-outline" size={28} tone="muted" />
           <AppText variant="meta" className="text-center">
-            Optional — add a few photos of the space, menu or crowd.
+            {t("optionalAddAFewPhotosOf")}
           </AppText>
         </View>
       ) : (
@@ -38,7 +41,7 @@ export function PlaceWizardPhotos({ w }: { w: PlaceWizard }) {
                 onPress={() => w.removeGalleryPhoto(uri)}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Remove photo"
+                accessibilityLabel={t("removePhoto")}
                 className="absolute right-1 top-1 h-6 w-6 items-center justify-center rounded-full bg-black/70"
               >
                 <Icon name="close" size={14} color="#fff" />
@@ -51,10 +54,15 @@ export function PlaceWizardPhotos({ w }: { w: PlaceWizard }) {
       <Button
         title={
           photos.length === 0
-            ? "Add photos"
+            ? t("addPhotos")
             : full
-              ? `Maximum ${MAX_WIZARD_GALLERY_PHOTOS} photos`
-              : `Add more (${photos.length}/${MAX_WIZARD_GALLERY_PHOTOS})`
+              ? t("maximumPhotos", {
+                  MAX_WIZARD_GALLERY_PHOTOS: MAX_WIZARD_GALLERY_PHOTOS,
+                })
+              : t("addMore", {
+                  length: photos.length,
+                  MAX_WIZARD_GALLERY_PHOTOS: MAX_WIZARD_GALLERY_PHOTOS,
+                })
         }
         variant="outline"
         onPress={w.pickGalleryPhotos}

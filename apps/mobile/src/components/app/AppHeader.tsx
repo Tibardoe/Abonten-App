@@ -7,6 +7,7 @@ import {
   Icon,
   type IoniconName,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { type ReactNode, useState } from "react";
@@ -106,10 +107,14 @@ export function HeaderIconButton({
  * button, same as the web mobile header. Badges the unread count (capped
  * "9+") from the dedicated count endpoint. */
 function HeaderBellButton() {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const { data: unread = 0 } = useUnreadNotificationCount();
   const label =
-    unread > 0 ? `Notifications, ${unread} unread` : "Notifications";
+    unread > 0
+      ? t("notificationsUnread", { unread: unread })
+      : t("notifications");
 
   return (
     <Pressable
@@ -166,10 +171,13 @@ export function AppHeader({
   leftAccessory,
   rightAccessory,
   onNext,
-  nextLabel = "Next",
+  nextLabel: nextLabelProp,
   nextDisabled,
   nextLoading = false,
 }: AppHeaderProps) {
+  const t = useTranslations("common");
+  const nextLabel = nextLabelProp ?? t("next");
+
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -208,7 +216,7 @@ export function AppHeader({
         <>
           <HeaderIconButton
             name="menu"
-            accessibilityLabel="Menu"
+            accessibilityLabel={t("menu")}
             onPress={() => setOpen(true)}
           />
           {session ? <HeaderBellButton /> : null}
@@ -217,7 +225,7 @@ export function AppHeader({
       {backVisible ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Back"
+          accessibilityLabel={t("back")}
           hitSlop={8}
           onPress={handleBack}
           style={{

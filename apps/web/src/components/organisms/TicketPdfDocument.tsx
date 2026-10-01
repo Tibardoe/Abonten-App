@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "@react-pdf/renderer";
+import { useTranslations } from "next-intl";
 
 const styles = StyleSheet.create({
   page: {
@@ -108,6 +109,8 @@ export default function TicketPdfDocument({
   ticket: TicketPdfData;
   images?: TicketPdfImages;
 }) {
+  const t = useTranslations("common");
+
   const logo = images?.logo === undefined ? ABONTEN_PDF_LOGO_PATH : images.logo;
   const flyer =
     images?.flyer === undefined ? ticket.flyerImageUrl : images.flyer;
@@ -118,8 +121,10 @@ export default function TicketPdfDocument({
       <Page size="A4" style={styles.page}>
         {logo ? <Image src={logo} style={styles.logo} /> : null}
 
-        <Text style={styles.heading}>Receipt</Text>
-        <Text style={styles.issuedAt}>Issued on: {ticket.issuedAt}</Text>
+        <Text style={styles.heading}>{t("receipt")}</Text>
+        <Text style={styles.issuedAt}>
+          {t("issuedOn2", { issuedAt: ticket.issuedAt })}
+        </Text>
 
         <View style={styles.card}>
           {flyer ? <Image src={flyer} style={styles.flyer} /> : null}
@@ -129,23 +134,23 @@ export default function TicketPdfDocument({
 
             {ticket.attendeeName ? (
               <View style={styles.row}>
-                <Text style={styles.label}>Attendee</Text>
+                <Text style={styles.label}>{t("attendee")}</Text>
                 <Text style={styles.value}>{ticket.attendeeName}</Text>
               </View>
             ) : null}
 
             <View style={styles.row}>
-              <Text style={styles.label}>Ticket Type</Text>
+              <Text style={styles.label}>{t("ticketType2")}</Text>
               <Text style={styles.value}>{ticket.ticketTypeName}</Text>
             </View>
 
             <View style={styles.row}>
-              <Text style={styles.label}>Ticket Code</Text>
+              <Text style={styles.label}>{t("ticketCode2")}</Text>
               <Text style={styles.value}>{ticket.ticketCode}</Text>
             </View>
 
             <View style={styles.row}>
-              <Text style={styles.label}>Status</Text>
+              <Text style={styles.label}>{t("statusLabel")}</Text>
               <Text
                 style={
                   ticket.status === "active" || ticket.status === "used"
@@ -153,17 +158,17 @@ export default function TicketPdfDocument({
                     : styles.statusOther
                 }
               >
-                {ticket.status === "used" ? "Checked in" : ticket.status}
+                {ticket.status === "used" ? t("checkedIn") : ticket.status}
               </Text>
             </View>
 
             <View style={styles.row}>
-              <Text style={styles.label}>Location</Text>
+              <Text style={styles.label}>{t("location")}</Text>
               <Text style={styles.value}>{ticket.eventAddress}</Text>
             </View>
 
             <View style={styles.row}>
-              <Text style={styles.label}>Date</Text>
+              <Text style={styles.label}>{t("date")}</Text>
               <Text style={styles.value}>
                 {ticket.eventDate} {ticket.eventTime}
               </Text>

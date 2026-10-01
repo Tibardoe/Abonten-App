@@ -3,6 +3,7 @@
 import { BottomSheet } from "@/components/atoms/BottomSheet";
 import PaymentOptionCard from "@/wallet/molecules/PaymentOptionCard";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import AddBankPayoutForm from "../molecules/AddBankPayoutForm";
 import AddMobileMoneyPayoutForm from "../molecules/AddMobileMoneyPayoutForm";
@@ -24,6 +25,8 @@ export default function AddPayoutAccountPopup({
   onclick,
   onAdded,
 }: PopupCloseProp) {
+  const t = useTranslations("finances");
+
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
 
@@ -38,8 +41,8 @@ export default function AddPayoutAccountPopup({
       onClose={onclick}
       title={
         step === 1
-          ? "Add a payout account"
-          : (STEP_TITLES[title] ?? "Add payout account")
+          ? t("addAPayoutAccount")
+          : (STEP_TITLES[title] ?? t("addPayoutAccount"))
       }
       className="md:w-[30rem]"
     >

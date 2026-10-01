@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -26,6 +27,8 @@ export default function ContentBriefForm({
   campaignId: string;
   creator: { id: string; name: string | null } | null;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -51,7 +54,7 @@ export default function ContentBriefForm({
         dueOn: dueOn || null,
       });
       if (res.status === 200) {
-        toast.success(res.message ?? "Brief added.");
+        toast.success(res.message ?? t("briefAdded"));
         setOpen(false);
         setTitle("");
         setDescription("");
@@ -59,29 +62,30 @@ export default function ContentBriefForm({
         setPlatforms([]);
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't save the brief.");
+        toast.error(res.message ?? t("couldnTSaveTheBrief"));
       }
     });
 
   if (!open) {
-    return <Button onClick={() => setOpen(true)}>Add a brief</Button>;
+    return <Button onClick={() => setOpen(true)}>{t("addABrief")}</Button>;
   }
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border p-4">
-      <h3 className="font-medium">New brief</h3>
+      <h3 className="font-medium">{t("newBrief")}</h3>
       {creator ? (
         <p className="text-sm text-muted-foreground">
-          Goes to {creator.name ?? "your content creator"}.
+          {t("goesToCreator", {
+            name: creator.name ?? t("yourContentCreator"),
+          })}
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Nobody on the team has the content creator role yet, so this brief
-          will sit unassigned.
+          {t("nobodyOnTheTeamHasThe")}
         </p>
       )}
       <div className="flex flex-col gap-1">
-        <Label htmlFor="b-title">What you want made</Label>
+        <Label htmlFor="b-title">{t("whatYouWantMade")}</Label>
         <Input
           id="b-title"
           value={title}
@@ -90,7 +94,7 @@ export default function ContentBriefForm({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="b-desc">Anything they should know (optional)</Label>
+        <Label htmlFor="b-desc">{t("anythingTheyShouldKnowOptional")}</Label>
         <Textarea
           id="b-desc"
           rows={3}
@@ -100,7 +104,7 @@ export default function ContentBriefForm({
         />
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="b-due">Wanted by (optional)</Label>
+        <Label htmlFor="b-due">{t("wantedByOptional")}</Label>
         <Input
           id="b-due"
           type="date"
@@ -109,7 +113,7 @@ export default function ContentBriefForm({
         />
       </div>
       <div>
-        <p className="text-sm font-medium">Where it should go</p>
+        <p className="text-sm font-medium">{t("whereItShouldGo")}</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {PLATFORMS.map((p) => (
             <button
@@ -129,10 +133,10 @@ export default function ContentBriefForm({
       </div>
       <div className="flex gap-2">
         <Button onClick={submit} disabled={pending || title.trim().length < 3}>
-          Add the brief
+          {t("addTheBrief")}
         </Button>
         <Button variant="outline" onClick={() => setOpen(false)}>
-          Cancel
+          {t("cancel")}
         </Button>
       </div>
     </div>

@@ -1,11 +1,8 @@
 export {
-  I18nProvider,
-  useTranslations,
-  useLocale,
   DEFAULT_LOCALE,
+  I18nProvider,
+  useFormatter,
+  useLocale,
+  useTranslations,
 } from "./I18nProvider";
-export {
-  I18N_LOCALES,
-  LOCALE_LABELS,
-  type I18nLocale,
-} from "./catalog";
+export { I18N_LOCALES, type I18nLocale, LOCALE_LABELS } from "./catalog";

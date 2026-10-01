@@ -6,6 +6,7 @@ import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
 import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
+import { useTranslations } from "next-intl";
 
 export type SpotlightPromotionSummaryProps = {
   type: "spotlight-promotion";
@@ -32,29 +33,31 @@ type OrderSummaryProps = {
  * PendingCheckoutsBasket/TicketCheckoutSessionCard).
  */
 export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
+  const t = useTranslations("common");
+
   if (orderSummary.type === "spotlight-promotion") {
     const { postCaption, summaryLabel, totalAmount, currency } = orderSummary;
 
     return (
       <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
         <h2 className="font-semibold text-lg text-card-foreground">
-          Spotlight Promotion
+          {t("spotlightPromotion")}
         </h2>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium">Post:</p>
+          <p className="font-medium">{t("post")}</p>
           <p className="text-card-foreground font-semibold line-clamp-2">
-            {postCaption?.trim() || "Untitled Spotlight"}
+            {postCaption?.trim() || t("untitledSpotlight")}
           </p>
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium">Budget:</p>
+          <p className="font-medium">{t("budget")}</p>
           <p className="text-card-foreground font-semibold">{summaryLabel}</p>
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium">Estimated reach:</p>
+          <p className="font-medium">{t("estimatedReach")}</p>
           <p className="text-card-foreground font-semibold">
             {formatReachRange({
               reachLow: orderSummary.estimatedReachLow,
@@ -64,12 +67,14 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          {PROMOTION_ESTIMATE_NOTE} {PROMOTION_REVIEW_NOTE} It is shown with a
-          Sponsored label.
+          {t("itIsShownWithASponsored", {
+            PROMOTION_ESTIMATE_NOTE: PROMOTION_ESTIMATE_NOTE,
+            PROMOTION_REVIEW_NOTE: PROMOTION_REVIEW_NOTE,
+          })}
         </p>
 
         <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
-          <p>Total Amount</p>
+          <p>{t("totalAmount")}</p>
           <p>{formatMoney(currency, totalAmount)}</p>
         </div>
       </div>
@@ -83,22 +88,22 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
       <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
         <div className="flex justify-between items-center">
           <h2 className="font-semibold text-lg text-card-foreground">
-            Promotion Summary
+            {t("promotionSummary")}
           </h2>
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium">Place:</p>
+          <p className="font-medium">{t("place")}</p>
           <p className="text-card-foreground font-semibold">{placeName}</p>
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium">Duration:</p>
+          <p className="font-medium">{t("duration")}</p>
           <p className="text-card-foreground font-semibold">{tierLabel}</p>
         </div>
 
         <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
-          <p>Total Amount</p>
+          <p>{t("totalAmount")}</p>
           <p>{formatMoney(currency, totalAmount)}</p>
         </div>
       </div>
@@ -111,22 +116,22 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
     <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
       <div className="flex justify-between items-center">
         <h2 className="font-semibold text-lg text-card-foreground">
-          Promotion Summary
+          {t("promotionSummary")}
         </h2>
       </div>
 
       <div className="text-sm text-muted-foreground">
-        <p className="font-medium">Event:</p>
+        <p className="font-medium">{t("event")}</p>
         <p className="text-card-foreground font-semibold">{eventTitle}</p>
       </div>
 
       <div className="text-sm text-muted-foreground">
-        <p className="font-medium">Duration:</p>
+        <p className="font-medium">{t("duration")}</p>
         <p className="text-card-foreground font-semibold">{tierLabel}</p>
       </div>
 
       <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
-        <p>Total Amount</p>
+        <p>{t("totalAmount")}</p>
         <p>{formatMoney(currency, totalAmount)}</p>
       </div>
     </div>

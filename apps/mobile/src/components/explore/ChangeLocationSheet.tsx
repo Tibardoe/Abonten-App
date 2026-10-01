@@ -12,6 +12,7 @@ import {
   SheetOption,
   useModalHandoff,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCallback, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import {
@@ -66,6 +67,8 @@ export function ChangeLocationSheet({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("explore");
+
   const { area, devicePermission, chooseTypedArea, followDevice, chooseArea } =
     useExploreLocation();
   const auto = usePlacesAutocomplete(
@@ -148,7 +151,7 @@ export function ChangeLocationSheet({
           onClose();
         }}
         onDismiss={handoff.onDismiss}
-        title="Set your location"
+        title={t("setYourLocation")}
         minHeightRatio={0.45}
       >
         <View className="gap-4">
@@ -166,7 +169,7 @@ export function ChangeLocationSheet({
           {/* Opens the full-screen search; shaped like the field it opens. */}
           <Pressable
             accessibilityRole="search"
-            accessibilityLabel="Search a city, town or address"
+            accessibilityLabel={t("searchACityTownOrAddress")}
             onPress={() => {
               setError(null);
               setSearchOpen(true);
@@ -180,19 +183,19 @@ export function ChangeLocationSheet({
               numberOfLines={1}
               className="flex-1"
             >
-              {auto.query || "Search a city, town or address"}
+              {auto.query || t("searchACityTownOrAddress")}
             </AppText>
           </Pressable>
 
           <SheetOption
             icon="navigate"
             title={
-              busy === "current" ? "Finding you…" : "Use my current location"
+              busy === "current" ? t("findingYou") : t("useMyCurrentLocation")
             }
             subtitle={
               shown.status === "near_you"
-                ? "Already following you as you move"
-                : "Follows you as you move"
+                ? t("alreadyFollowingYouAsYouMove")
+                : t("followsYouAsYouMove")
             }
             onPress={submitCurrent}
             disabled={busy !== null && busy !== "current"}
@@ -200,8 +203,8 @@ export function ChangeLocationSheet({
 
           <SheetOption
             icon="map-outline"
-            title="Choose on map"
-            subtitle="Move the map under the pin"
+            title={t("chooseOnMap")}
+            subtitle={t("moveTheMapUnderThePin")}
             onPress={chooseOnMap}
             disabled={busy !== null}
           />
@@ -214,7 +217,7 @@ export function ChangeLocationSheet({
               {error.settings ? (
                 <View className="flex-row">
                   <Button
-                    title="Open settings"
+                    title={t("openSettings")}
                     variant="outline"
                     size="sm"
                     onPress={() => Linking.openSettings()}

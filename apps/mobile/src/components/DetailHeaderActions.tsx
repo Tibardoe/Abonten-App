@@ -1,6 +1,7 @@
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { useShareLink } from "@/lib/useShareLink";
 import { Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The event / place detail header's right-side actions: report (when the
@@ -25,13 +26,15 @@ export function DetailHeaderActions({
   /** When set, a flag button is shown that opens the report sheet. */
   onReport?: () => void;
 }) {
+  const t = useTranslations("common");
+
   const share = useShareLink();
   return (
     <View className="flex-row items-center gap-1">
       {onReport ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Report this ${kind}`}
+          accessibilityLabel={t("reportThis4", { kind: kind })}
           hitSlop={8}
           onPress={onReport}
           className="p-1 active:opacity-70"
@@ -42,7 +45,7 @@ export function DetailHeaderActions({
       {shareUrl ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Share"
+          accessibilityLabel={t("share")}
           hitSlop={8}
           onPress={() =>
             share(shareTitle, shareUrl).then((outcome) => {

@@ -2,11 +2,15 @@ import { PageTitle, SupportingText } from "@/components/ui/typography";
 import RewardEmailUnsubscribe from "@/rewards/molecules/RewardEmailUnsubscribe";
 import { isRewardEmailLinkValid } from "@abonten/services/notifications/rewardEmailPreferenceCore";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Abonten Rewards emails",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("notifications");
+  return {
+    title: t("abontenRewardsEmails"),
+    robots: { index: false },
+  };
+}
 
 // The footer link in every Abonten Rewards email. Public (no sign-in): the
 // link carries the person's id and a signed token. Nothing changes until
@@ -16,23 +20,22 @@ export default async function RewardEmailUnsubscribePage({
 }: {
   searchParams: Promise<{ u?: string; t?: string }>;
 }) {
-  const { u, t } = await searchParams;
+  const t = await getTranslations("notifications");
 
-  if (!isRewardEmailLinkValid(u, t)) {
+  const { u, t: token } = await searchParams;
+
+  if (!isRewardEmailLinkValid(u, token)) {
     return (
       <section className="mx-auto flex max-w-md flex-col gap-3 py-10 text-center">
-        <PageTitle>This link isn&apos;t valid</PageTitle>
-        <SupportingText>
-          Open the unsubscribe link from your latest Abonten Rewards email, or
-          sign in and turn reward emails off on your Rewards page.
-        </SupportingText>
+        <PageTitle>{t("thisLinkIsnTValid")}</PageTitle>
+        <SupportingText>{t("openTheUnsubscribeLinkFromYour2")}</SupportingText>
       </section>
     );
   }
 
   return (
     <section className="mx-auto flex max-w-md flex-col gap-3 py-10 text-center">
-      <RewardEmailUnsubscribe userId={u as string} token={t as string} />
+      <RewardEmailUnsubscribe userId={u as string} token={token as string} />
     </section>
   );
 }

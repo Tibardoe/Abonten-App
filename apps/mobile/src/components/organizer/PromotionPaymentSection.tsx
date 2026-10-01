@@ -24,6 +24,7 @@ import {
   formatCredit,
 } from "@abonten/core/rewards/creditAmount";
 import { AppText } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -71,6 +72,8 @@ function PromotionPaymentSectionInner({
   onFeatured,
   kind = "event",
 }: PromotionPaymentSectionProps) {
+  const t = useTranslations("manage");
+
   const router = useRouter();
   const needsEmail = useNeedsEmailToPay();
   const payment = usePaymentChoice({ kind, checkoutId });
@@ -120,7 +123,7 @@ function PromotionPaymentSectionInner({
           method,
         });
       } catch {
-        setError("Couldn't start the payment. Check your connection.");
+        setError(t("couldnTStartThePaymentCheck"));
         return;
       } finally {
         setCreatingSpotlight(false);
@@ -144,8 +147,8 @@ function PromotionPaymentSectionInner({
     if (res.status !== 200) {
       setError(
         res.status === 410
-          ? "This checkout expired. Go back and start again."
-          : (res.message ?? "Couldn't start the payment."),
+          ? t("thisCheckoutExpiredGoBackAnd")
+          : (res.message ?? t("couldnTStartThePayment")),
       );
       if (res.status === 409) refetchQuote();
       return;
@@ -164,7 +167,7 @@ function PromotionPaymentSectionInner({
       verification.status !== 202 &&
       verification.status !== 207
     ) {
-      setError(verification.message ?? "Couldn't complete the payment.");
+      setError(verification.message ?? t("couldnTCompleteThePayment"));
       refetchQuote();
       return;
     }
@@ -240,8 +243,8 @@ function PromotionPaymentSectionInner({
           }`}
         >
           {creditCoversAll
-            ? "Confirm and pay with credit"
-            : `Pay ${formatMoney(currency, payAmount)}`}
+            ? t("confirmAndPayWithCredit")
+            : t("pay", { formatMoney: formatMoney(currency, payAmount) })}
         </AppText>
       )}
     </Pressable>
@@ -282,7 +285,7 @@ function PromotionPaymentSectionInner({
     <View className="gap-3">
       {creditSwitch}
       <AppText className="text-sm font-semibold text-foreground">
-        {useCredit ? "Pay the rest with" : "Pay with"}
+        {useCredit ? t("payTheRestWith") : t("payWith")}
       </AppText>
       <PaymentChoiceList state={payment} />
 

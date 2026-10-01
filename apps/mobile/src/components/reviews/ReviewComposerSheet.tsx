@@ -1,7 +1,4 @@
-import {
-  QUEUED_WRITE_LABEL,
-  QueuedWriteNotice,
-} from "@/components/QueuedWriteNotice";
+import { QueuedWriteNotice } from "@/components/QueuedWriteNotice";
 import { UploadProgress } from "@/components/UploadProgress";
 import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
 import {
@@ -31,6 +28,7 @@ import {
   Sheet,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
@@ -67,6 +65,8 @@ export function ReviewComposerSheet({
   existingReview?: OwnReview | null;
   onSubmitted?: () => void;
 }) {
+  const t = useTranslations("reviews");
+
   const toast = useToast();
   const isEditing = !!existingReview;
   const [rating, setRating] = useState(0);
@@ -110,8 +110,8 @@ export function ReviewComposerSheet({
     if (remaining <= 0) return;
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to attach photos to your review.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToAttachPhotos"),
       });
       return;
     }
@@ -130,9 +130,9 @@ export function ReviewComposerSheet({
         asset.fileSize > MAX_REVIEW_PHOTO_SIZE_BYTES
       ) {
         setError(
-          `Each photo must be ${Math.round(
-            MAX_REVIEW_PHOTO_SIZE_BYTES / (1024 * 1024),
-          )}MB or smaller.`,
+          t("eachPhotoMustBeMbOr", {
+            round: Math.round(MAX_REVIEW_PHOTO_SIZE_BYTES / (1024 * 1024)),
+          }),
         );
         continue;
       }
@@ -157,15 +157,15 @@ export function ReviewComposerSheet({
   async function submit() {
     setError(null);
     if (rating <= 0) {
-      setError("Please select a rating.");
+      setError(t("pleaseSelectARating"));
       return;
     }
     if (title.length > 150) {
-      setError("Title must be less than 150 characters.");
+      setError(t("titleMustBeLessThan150"));
       return;
     }
     if (comment.length > 500) {
-      setError("Comment must be less than 500 characters.");
+      setError(t("commentMustBeLessThan500"));
       return;
     }
 
@@ -190,9 +190,7 @@ export function ReviewComposerSheet({
       } catch {
         setUploading(false);
         progress.reset();
-        setError(
-          "One of your photos didn't upload. Your review is still here — check your connection and try again.",
-        );
+        setError(t("oneOfYourPhotosDidnT"));
         return;
       }
       setUploading(false);
@@ -206,10 +204,10 @@ export function ReviewComposerSheet({
         announcePlaceInteraction({ placeId: subjectId, trigger: "review" });
       }
       onClose();
-      toast.success(isEditing ? "Review updated" : "Review posted", {
+      toast.success(isEditing ? t("reviewUpdated") : t("reviewPosted"), {
         description: isEditing
-          ? "Your changes are saved."
-          : `Thanks — it's on the ${kind} page now.`,
+          ? t("yourChangesAreSaved")
+          : t("thanksItSOnThePage", { kind: kind }),
       });
     };
     const onErr = (e: unknown) => {
@@ -217,7 +215,7 @@ export function ReviewComposerSheet({
       setError(
         e instanceof Error && e.message
           ? e.message
-          : "We couldn't save your review. Nothing was lost — try again.",
+          : t("weCouldnTSaveYourReview"),
       );
     };
 
@@ -267,21 +265,21 @@ export function ReviewComposerSheet({
       open={open}
       onClose={onClose}
       onDismiss={onDismiss}
-      title={isEditing ? "Edit your review" : "Write a review"}
+      title={isEditing ? t("editYourReview") : t("writeAReview")}
       footer={
         <View className="gap-2">
           {paused ? <QueuedWriteNotice /> : null}
           <Button
             title={
               uploading
-                ? "Uploading photos…"
+                ? t("uploadingPhotos")
                 : paused
-                  ? QUEUED_WRITE_LABEL
+                  ? t("waitingForConnection")
                   : busy
-                    ? "Saving…"
+                    ? t("saving2")
                     : isEditing
-                      ? "Save changes"
-                      : "Post review"
+                      ? t("saveChanges")
+                      : t("postReview")
             }
             onPress={submit}
             disabled={busy}
@@ -291,28 +289,28 @@ export function ReviewComposerSheet({
     >
       <View className="gap-4">
         <AppText variant="muted" numberOfLines={2}>
-          How was {subjectTitle}?
+          {t("howWas", { subjectTitle: subjectTitle })}
         </AppText>
 
         <View className="gap-2">
-          <AppText variant="label">Rating</AppText>
+          <AppText variant="label">{t("rating")}</AppText>
           <StarRatingInput value={rating} onChange={setRating} />
         </View>
 
-        <Field label="Title (optional)">
+        <Field label={t("titleOptional")}>
           <Input
             value={title}
             onChangeText={setTitle}
-            placeholder="Sum it up"
+            placeholder={t("sumItUp")}
             maxLength={150}
           />
         </Field>
 
-        <Field label="Review (optional)">
+        <Field label={t("reviewOptional")}>
           <Input
             value={comment}
             onChangeText={setComment}
-            placeholder="Share the details"
+            placeholder={t("shareTheDetails")}
             multiline
             numberOfLines={5}
             maxLength={500}
@@ -322,7 +320,10 @@ export function ReviewComposerSheet({
 
         <View className="gap-2">
           <AppText variant="label">
-            Photos (optional) · {photoCount}/{MAX_REVIEW_PHOTOS}
+            {t("photosOptional", {
+              photoCount: photoCount,
+              MAX_REVIEW_PHOTOS: MAX_REVIEW_PHOTOS,
+            })}
           </AppText>
           <ScrollView
             horizontal
@@ -346,7 +347,7 @@ export function ReviewComposerSheet({
                   className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5"
                   hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel="Remove photo"
+                  accessibilityLabel={t("removePhoto")}
                 >
                   <Icon name="close" size={14} color="#fff" />
                 </Pressable>
@@ -364,7 +365,7 @@ export function ReviewComposerSheet({
                   className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5"
                   hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel="Remove photo"
+                  accessibilityLabel={t("removePhoto")}
                 >
                   <Icon name="close" size={14} color="#fff" />
                 </Pressable>
@@ -375,7 +376,7 @@ export function ReviewComposerSheet({
                 onPress={pickPhotos}
                 className="h-[76px] w-[76px] items-center justify-center rounded-lg border border-dashed border-border"
                 accessibilityRole="button"
-                accessibilityLabel="Add photos"
+                accessibilityLabel={t("addPhotos")}
               >
                 <Icon name="camera-outline" size={22} tone="muted" />
               </Pressable>

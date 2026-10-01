@@ -2,6 +2,8 @@ import { getUserFavoritePlaces } from "@/actions/getUserFavoritePlaces";
 import { getUserFavoritePosts } from "@/actions/getUserFavoritePosts";
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import ExploreTabs from "@/places/organisms/ExploreTabs";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import FavoritePlacesList from "./FavoritePlacesList";
@@ -16,39 +18,45 @@ type FavoritesPageProps = {
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-const eventsEmptyState = (
-  <div className="flex flex-col items-center">
-    <h1 className="font-medium text-2xl">No Favorites added yet</h1>
+function EventsEmptyState() {
+  const t = useTranslations("account");
+  return (
+    <div className="flex flex-col items-center">
+      <h1 className="font-medium text-2xl">{t("noFavoritesAddedYet")}</h1>
 
-    <p className="text-muted-foreground text-sm">
-      Explore and save all your favorite events in one place
-    </p>
+      <p className="text-muted-foreground text-sm">
+        {t("exploreAndSaveAllYourFavoriteEvents")}
+      </p>
 
-    <Link
-      href="/events"
-      className="font-medium bg-primary text-primary-foreground py-1 px-5 rounded-md mt-5"
-    >
-      Explore events
-    </Link>
-  </div>
-);
+      <Link
+        href="/events"
+        className="font-medium bg-primary text-primary-foreground py-1 px-5 rounded-md mt-5"
+      >
+        {t("exploreEvents")}
+      </Link>
+    </div>
+  );
+}
 
-const placesEmptyState = (
-  <div className="flex flex-col items-center">
-    <h1 className="font-medium text-2xl">No favorite places yet</h1>
+function PlacesEmptyState() {
+  const t = useTranslations("account");
+  return (
+    <div className="flex flex-col items-center">
+      <h1 className="font-medium text-2xl">{t("noFavoritePlacesYet")}</h1>
 
-    <p className="text-muted-foreground text-sm">
-      Explore and save all your favorite places in one place
-    </p>
+      <p className="text-muted-foreground text-sm">
+        {t("exploreAndSaveAllYourFavoritePlaces")}
+      </p>
 
-    <Link
-      href="/places"
-      className="font-medium bg-primary text-primary-foreground py-1 px-5 rounded-md mt-5"
-    >
-      Explore places
-    </Link>
-  </div>
-);
+      <Link
+        href="/places"
+        className="font-medium bg-primary text-primary-foreground py-1 px-5 rounded-md mt-5"
+      >
+        {t("explorePlaces")}
+      </Link>
+    </div>
+  );
+}
 
 // Two independent sub-tabs -- Favorite Events (unchanged) and Favorite Places
 // (Milestone 7) -- each with its own query key/empty state, since a user can
@@ -60,6 +68,8 @@ export default async function page({
   params,
   searchParams,
 }: FavoritesPageProps) {
+  const t = await getTranslations("account");
+
   const { username } = await params;
   // Favorites are private to the viewer — the queries below are self-scoped
   // and ignore `:username`, so 404 rather than render your own favorites
@@ -91,28 +101,32 @@ export default async function page({
   const eventsContent =
     eventsFirstPage.status !== 200 ? (
       <div className="text-center mt-5 text-destructive">
-        Failed to load favorited posts: {eventsFirstPage.message}
+        {t("failedToLoadFavoritedPosts", {
+          message: eventsFirstPage.message ?? "",
+        })}
       </div>
     ) : (
       <FavoritesList
         queryKey={["favorites"]}
         initialPage={eventsFirstPage}
         fetchPage={fetchEventsPage}
-        emptyState={eventsEmptyState}
+        emptyState={<EventsEmptyState />}
       />
     );
 
   const placesContent =
     placesFirstPage.status !== 200 ? (
       <div className="text-center mt-5 text-destructive">
-        Failed to load favorited places: {placesFirstPage.message}
+        {t("failedToLoadFavoritedPlaces", {
+          message: placesFirstPage.message ?? "",
+        })}
       </div>
     ) : (
       <FavoritePlacesList
         queryKey={["favorite-places"]}
         initialPage={placesFirstPage}
         fetchPage={fetchPlacesPage}
-        emptyState={placesEmptyState}
+        emptyState={<PlacesEmptyState />}
       />
     );
 

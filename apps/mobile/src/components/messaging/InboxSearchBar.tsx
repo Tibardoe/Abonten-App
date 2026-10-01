@@ -1,4 +1,5 @@
 import { Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Pressable, TextInput, View } from "react-native";
 
@@ -10,13 +11,16 @@ export function InboxSearchBar({
   value,
   onChangeText,
   onClear,
-  placeholder = "Search messages",
+  placeholder: placeholderProp,
 }: {
   value: string;
   onChangeText: (v: string) => void;
   onClear: () => void;
   placeholder?: string;
 }) {
+  const t = useTranslations("messaging");
+  const placeholder = placeholderProp ?? t("searchMessages");
+
   const c = useThemeColors();
   return (
     <View className="mx-4 mb-1 mt-2 flex-row items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2.5">
@@ -32,12 +36,12 @@ export function InboxSearchBar({
         clearButtonMode="never"
         className="flex-1 p-0 text-[15px] text-foreground"
         style={{ color: c.foreground }}
-        accessibilityLabel="Search messages"
+        accessibilityLabel={t("searchMessages")}
       />
       {value.length > 0 ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Clear search"
+          accessibilityLabel={t("clearSearch")}
           onPress={onClear}
           hitSlop={8}
         >

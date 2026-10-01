@@ -4,6 +4,7 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import ContentSubmitForm from "@/fieldOps/organisms/ContentSubmitForm";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
+import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -12,6 +13,9 @@ export const dynamic = "force-dynamic";
 const money = (minor: number, currency: string) => formatMinor(minor, currency);
 
 export default async function FieldContentPage() {
+  const t = await getTranslations("fieldOps");
+  const format = await getFormatter();
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current) notFound();
@@ -26,11 +30,16 @@ export default async function FieldContentPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Content</PageTitle>
+        <PageTitle>{t("content")}</PageTitle>
         <SupportingText>
-          What the campaign wants made, and what you have sent in.
+          {t("whatTheCampaignWantsMadeAnd")}
           {content.liveRate
-            ? ` You earn ${money(content.liveRate.amountMinor, content.liveRate.currency)} per approved post.`
+            ? ` ${t("youEarnPerApprovedPost", {
+                money: money(
+                  content.liveRate.amountMinor,
+                  content.liveRate.currency,
+                ),
+              })}`
             : ""}
         </SupportingText>
       </div>
@@ -43,10 +52,10 @@ export default async function FieldContentPage() {
       ) : null}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Briefs</h2>
+        <h2 className="text-lg font-semibold">{t("briefs")}</h2>
         {open.length === 0 ? (
           <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-            Nothing open right now. Your team lead adds briefs here.
+            {t("nothingOpenRightNowYourTeam")}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -56,7 +65,11 @@ export default async function FieldContentPage() {
                   <p className="font-medium">{b.title}</p>
                   {b.dueOn ? (
                     <span className="text-sm text-muted-foreground">
-                      by {new Date(b.dueOn).toLocaleDateString()}
+                      {t("by", {
+                        date: format.dateTime(new Date(b.dueOn), {
+                          dateStyle: "medium",
+                        }),
+                      })}
                     </span>
                   ) : null}
                 </div>
@@ -68,9 +81,9 @@ export default async function FieldContentPage() {
                 <p className="mt-2 text-xs text-muted-foreground">
                   {b.platforms.length > 0
                     ? b.platforms.join(", ")
-                    : "any platform"}
+                    : t("anyPlatform")}
                   {b.submissionCount > 0
-                    ? ` · ${b.submissionCount} sent in`
+                    ? t("sentIn2", { submissionCount: b.submissionCount })
                     : ""}
                 </p>
               </li>
@@ -79,16 +92,17 @@ export default async function FieldContentPage() {
         )}
         {closed.length > 0 ? (
           <p className="text-xs text-muted-foreground">
-            {closed.length} closed brief{closed.length === 1 ? "" : "s"}.
+            {t("closedBrief", { length: closed.length })}
+            {closed.length === 1 ? "" : "s"}.
           </p>
         ) : null}
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Your posts</h2>
+        <h2 className="text-lg font-semibold">{t("yourPosts")}</h2>
         {content.submissions.length === 0 ? (
           <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-            Nothing sent in yet.
+            {t("nothingSentInYet")}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -107,7 +121,9 @@ export default async function FieldContentPage() {
                     <p className="text-sm text-muted-foreground">
                       {s.platform}
                       {s.briefTitle ? ` · ${s.briefTitle}` : ""} ·{" "}
-                      {new Date(s.createdAt).toLocaleDateString()}
+                      {format.dateTime(new Date(s.createdAt), {
+                        dateStyle: "medium",
+                      })}
                     </p>
                   </div>
                   <StatusChip
@@ -121,21 +137,28 @@ export default async function FieldContentPage() {
                   />
                 </div>
                 {s.reviewNote ? (
-                  <p className="mt-2 text-sm">Lead: {s.reviewNote}</p>
+                  <p className="mt-2 text-sm">
+                    {t("lead", { reviewNote: s.reviewNote })}
+                  </p>
                 ) : null}
                 {s.status === "approved" && s.holdingUntil ? (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Commission confirmed after{" "}
-                    {new Date(s.holdingUntil).toLocaleDateString()}.
+                    {t("commissionConfirmedAfter", {
+                      date: format.dateTime(new Date(s.holdingUntil), {
+                        dateStyle: "medium",
+                      }),
+                    })}
                   </p>
                 ) : null}
                 {s.selfReportedMetrics.views !== undefined ||
                 s.selfReportedMetrics.likes !== undefined ||
                 s.selfReportedMetrics.shares !== undefined ? (
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Your figures: {s.selfReportedMetrics.views ?? 0} views ·{" "}
-                    {s.selfReportedMetrics.likes ?? 0} likes ·{" "}
-                    {s.selfReportedMetrics.shares ?? 0} shares
+                    {t("yourFiguresSummary", {
+                      views: s.selfReportedMetrics.views ?? 0,
+                      likes: s.selfReportedMetrics.likes ?? 0,
+                      shares: s.selfReportedMetrics.shares ?? 0,
+                    })}
                   </p>
                 ) : null}
               </li>

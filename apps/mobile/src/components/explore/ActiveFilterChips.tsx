@@ -1,5 +1,6 @@
 import type { FilterChip } from "@/features/discovery/exploreFilters";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, ScrollView, View } from "react-native";
 
 // The row of removable chips that summarises the active filters — the web
@@ -16,6 +17,8 @@ export function ActiveFilterChips({
   onRemove: (key: string) => void;
   onClearAll: () => void;
 }) {
+  const t = useTranslations("explore");
+
   if (chips.length === 0) return null;
 
   return (
@@ -28,7 +31,7 @@ export function ActiveFilterChips({
         <Pressable
           key={chip.key}
           accessibilityRole="button"
-          accessibilityLabel={`Remove filter ${chip.label}`}
+          accessibilityLabel={t("removeFilter", { label: chip.label })}
           onPress={() => onRemove(chip.key)}
           className="flex-row items-center gap-1 rounded-full bg-primary px-3.5 py-2 active:opacity-80"
         >
@@ -45,7 +48,7 @@ export function ActiveFilterChips({
         className="flex-row items-center rounded-full border border-border px-3.5 py-2 active:opacity-70"
       >
         <AppText variant="meta" className="font-medium">
-          Clear all
+          {t("clearAll")}
         </AppText>
       </Pressable>
 

@@ -330,7 +330,7 @@ export function AppDrawer() {
         <Pressable
           style={StyleSheet.absoluteFill}
           accessibilityRole="button"
-          accessibilityLabel="Close menu"
+          accessibilityLabel={t("closeMenu")}
           onPress={dismiss}
         />
       </Animated.View>
@@ -365,7 +365,7 @@ export function AppDrawer() {
             <View className="h-[54px] flex-row items-center justify-between">
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Close menu"
+                accessibilityLabel={t("closeMenu")}
                 onPress={dismiss}
                 hitSlop={10}
                 className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
@@ -387,7 +387,7 @@ export function AppDrawer() {
             {weekly.enabled ? (
               <Row
                 icon="sparkles-outline"
-                label="Abonten Weekly"
+                label={t("abontenWeekly")}
                 onPress={() => go("/(app)/weekly")}
               />
             ) : null}
@@ -397,8 +397,8 @@ export function AppDrawer() {
                   accessibilityRole="button"
                   accessibilityLabel={
                     profile?.username
-                      ? `View your profile, @${profile.username}`
-                      : "Your account"
+                      ? t("viewYourProfile", { username: profile.username })
+                      : t("yourAccount")
                   }
                   // The identity card is the person, so it opens their public
                   // profile (the same screen the Account tab's header card
@@ -419,7 +419,7 @@ export function AppDrawer() {
                     <AppText variant="bodyStrong">
                       {profile?.full_name ??
                         profile?.username ??
-                        "Your account"}
+                        t("yourAccount")}
                     </AppText>
                     {profile?.username ? (
                       <AppText variant="meta">@{profile.username}</AppText>
@@ -431,12 +431,12 @@ export function AppDrawer() {
                 <Label className="mb-1 mt-3">{t("create")}</Label>
                 <Row
                   icon="add-circle-outline"
-                  label="Create event"
+                  label={t("createEvent")}
                   onPress={() => go("/(app)/event/new")}
                 />
                 <Row
                   icon="storefront-outline"
-                  label="Create place"
+                  label={t("createPlace")}
                   onPress={() => go("/(app)/place/new")}
                 />
 
@@ -465,7 +465,7 @@ export function AppDrawer() {
                 {isPlaceOwner ? (
                   <Row
                     icon="storefront-outline"
-                    label="My places"
+                    label={t("myPlaces")}
                     onPress={() => go("/(app)/organizer/places")}
                   />
                 ) : null}
@@ -473,7 +473,7 @@ export function AppDrawer() {
                 (content.spotlightPosting || content.storiesPosting) ? (
                   <Row
                     icon="videocam-outline"
-                    label="Spotlight & Stories"
+                    label={t("spotlightStories")}
                     onPress={() => go("/(app)/spotlight/manage")}
                   />
                 ) : null}
@@ -496,12 +496,12 @@ export function AppDrawer() {
                 />
                 <Row
                   icon="calendar-outline"
-                  label="My bookings"
+                  label={t("myBookings")}
                   onPress={() => go("/(app)/bookings")}
                 />
                 <Row
                   icon="notifications-outline"
-                  label="Notifications"
+                  label={t("notifications")}
                   onPress={() => go("/(app)/notifications")}
                 />
               </>
@@ -554,11 +554,13 @@ export function AppDrawer() {
                 onPress={() => openExternal(HELP_URL)}
                 className="active:opacity-60"
               >
-                <AppText variant="muted">Help centre</AppText>
+                <AppText variant="muted">{t("help")}</AppText>
               </Pressable>
               <Pressable
                 accessibilityRole="link"
-                accessibilityLabel={`Email ${SUPPORT_EMAIL}`}
+                accessibilityLabel={t("email", {
+                  SUPPORT_EMAIL: SUPPORT_EMAIL,
+                })}
                 onPress={() => openSupportEmail()}
                 className="active:opacity-60"
               >
@@ -569,7 +571,7 @@ export function AppDrawer() {
                   <Pressable
                     key={link.key}
                     accessibilityRole="link"
-                    accessibilityLabel={`Abonten on ${link.label}`}
+                    accessibilityLabel={t("abontenOn", { label: link.label })}
                     onPress={() => Linking.openURL(link.href).catch(() => {})}
                     className="active:opacity-60"
                   >

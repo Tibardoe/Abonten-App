@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 
 export type TileSelectorOption = {
   id: string;
@@ -37,6 +38,8 @@ export default function TileSelector({
   loading = false,
   className,
 }: TileSelectorProps) {
+  const t = useTranslations("common");
+
   const isSelected = (id: string) =>
     mode === "single" ? value === id : (value as string[]).includes(id);
 
@@ -49,7 +52,7 @@ export default function TileSelector({
     return (
       <div className={cn("space-y-2", className)}>
         {label && <h2 className={headingClassName}>{label}</h2>}
-        <p className="text-muted-foreground text-sm">Loading options...</p>
+        <p className="text-muted-foreground text-sm">{t("loadingOptions")}</p>
       </div>
     );
   }

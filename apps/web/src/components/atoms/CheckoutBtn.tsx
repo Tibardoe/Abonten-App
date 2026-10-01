@@ -3,6 +3,7 @@
 import { getTickets } from "@/actions/getTickets";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import CheckoutModal from "../organisms/CheckoutModal";
 import { Button } from "../ui/button";
@@ -26,6 +27,8 @@ export default function CheckoutBtn({
   time,
   soldOut,
 }: EventSlugPageProp) {
+  const t = useTranslations("common");
+
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const requireAuth = useRequireAuth();
@@ -52,7 +55,7 @@ export default function CheckoutBtn({
       className="h-12 w-full rounded-lg text-base font-semibold bg-muted text-muted-foreground cursor-not-allowed"
       disabled
     >
-      Sold out
+      {t("soldOut")}
     </Button>
   ) : (
     <>

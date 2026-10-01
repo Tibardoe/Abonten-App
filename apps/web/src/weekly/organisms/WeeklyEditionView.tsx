@@ -5,6 +5,7 @@ import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import { formatWeekRange } from "@abonten/core/weekly/week";
 import type { WeeklyEditionDocument } from "@abonten/types/weeklyType";
+import { useLocale, useTranslations } from "next-intl";
 import { FiArrowDown, FiCalendar, FiInfo } from "react-icons/fi";
 import WeeklyShareButton from "../molecules/WeeklyShareButton";
 import WeeklyBanner from "./WeeklyBanner";
@@ -22,6 +23,10 @@ export default function WeeklyEditionView({
   doc: WeeklyEditionDocument;
   preview?: boolean;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("weekly");
+
   const e = doc.edition;
   const intro = weeklyParagraphs(e.intro);
   const slides = weeklyBannerSlides(doc.sections);
@@ -58,7 +63,9 @@ export default function WeeklyEditionView({
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/35 px-3 py-1.5 text-[11px] font-medium text-white/90 ring-1 ring-white/15 backdrop-blur-md">
               <FiCalendar aria-hidden className="h-3.5 w-3.5" />
-              <time dateTime={e.weekStart}>{formatWeekRange(e.weekStart)}</time>
+              <time dateTime={e.weekStart}>
+                {formatWeekRange(e.weekStart, locale)}
+              </time>
             </span>
           </>
         }
@@ -74,7 +81,8 @@ export default function WeeklyEditionView({
             href="#weekly-picks"
             className="inline-flex h-11 items-center gap-3 rounded-full bg-white pl-5 pr-1.5 text-sm font-semibold text-slate-950 shadow-lg shadow-black/20 transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
-            Browse {pickCount} {pickCount === 1 ? "pick" : "picks"}
+            {t("browse", { pickCount: pickCount })}{" "}
+            {pickCount === 1 ? t("pick") : t("picks")}
             <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-950 text-white">
               <FiArrowDown aria-hidden className="h-4 w-4" />
             </span>
@@ -108,7 +116,7 @@ export default function WeeklyEditionView({
                 &ldquo;
               </span>
               <p className="relative text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                From the editors
+                {t("fromTheEditors")}
               </p>
               <div className="relative mt-3 max-w-3xl space-y-3 text-base leading-relaxed text-foreground/90 md:text-lg">
                 {intro.map((p) => (

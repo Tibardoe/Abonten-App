@@ -8,6 +8,7 @@ import type { UserPostType } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { AppText, Refresher } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { useCallback } from "react";
@@ -26,6 +27,10 @@ const STATUS_LABEL: Record<string, string> = {
 const CANCELLABLE = new Set(["draft", "published"]);
 
 function OrganizerEventCard({ event }: { event: UserPostType }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   const router = useRouter();
   const flyer =
     event.flyer_public_id && event.flyer_version
@@ -52,7 +57,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           />
         ) : (
           <View className="h-16 w-16 items-center justify-center rounded-lg bg-muted">
-            <AppText variant="caption">No image</AppText>
+            <AppText variant="caption">{t("noImage")}</AppText>
           </View>
         )}
         <View className="flex-1 gap-1">
@@ -64,7 +69,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           </AppText>
           {event.starts_at ? (
             <AppText variant="muted">
-              {formatDateWithSuffix(event.starts_at)}
+              {formatDateWithSuffix(event.starts_at, undefined, locale)}
             </AppText>
           ) : null}
           <View className="mt-0.5 flex-row items-center gap-2">
@@ -89,7 +94,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
         >
           <Pressable className="self-start px-1 py-1 active:opacity-70">
             <AppText variant="small" tone="error" className="font-semibold">
-              Cancel event
+              {t("cancelEvent")}
             </AppText>
           </Pressable>
         </Link>
@@ -99,6 +104,8 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
 }
 
 export default function OrganizerEventsScreen() {
+  const t = useTranslations("manage");
+
   const q = useOrganizerEvents();
   const events = flattenOrganizerEvents(q.data?.pages);
   // "No events yet" is only ever said for an answer the server gave;
@@ -122,7 +129,7 @@ export default function OrganizerEventsScreen() {
       ListEmptyComponent={
         view.kind === "empty" ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            You have no events yet.
+            {t("youHaveNoEventsYet")}
           </AppText>
         ) : (
           <QueryUnavailable

@@ -8,6 +8,7 @@ import type {
   ContentMediaItem,
   ContentViewSurface,
 } from "@abonten/types/contentType";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -69,6 +70,8 @@ export default function SpotlightCard({
   onHide?: () => void;
   className?: string;
 }) {
+  const t = useTranslations("spotlight");
+
   const { post, sponsored } = item;
   const campaignId = sponsored?.campaignId ?? null;
   const toast = useToast();
@@ -172,13 +175,13 @@ export default function SpotlightCard({
           className,
         )}
       >
-        <p className="text-sm">Thanks. You'll see fewer posts like this.</p>
+        <p className="text-sm">{t("thanksYouLlSeeFewerPosts")}</p>
         <button
           type="button"
           onClick={() => engagement.markNotInterested(false)}
           className="text-sm font-semibold underline"
         >
-          Undo
+          {t("undo")}
         </button>
       </div>
     );
@@ -191,7 +194,7 @@ export default function SpotlightCard({
       post.caption?.slice(0, 80) || "Spotlight on Abonten",
     );
     if (!channel) return;
-    if (channel === "copy_link") toast.success("Link copied.");
+    if (channel === "copy_link") toast.success(t("linkCopied"));
     engagement.recordShare(channel);
   };
 
@@ -204,7 +207,7 @@ export default function SpotlightCard({
 
   return (
     <article
-      aria-label={`Spotlight by ${post.publisher.name}`}
+      aria-label={t("spotlightBy", { name: post.publisher.name })}
       className={cn(
         "relative h-full w-full overflow-hidden bg-black",
         className,
@@ -253,7 +256,7 @@ export default function SpotlightCard({
               type="button"
               onClick={togglePlay}
               className="relative block h-full w-full"
-              aria-label="Pause or play"
+              aria-label={t("pauseOrPlay")}
             >
               <Image
                 src={
@@ -269,14 +272,14 @@ export default function SpotlightCard({
               />
               {videoFailed ? (
                 <span className="absolute inset-x-0 bottom-1/2 text-center text-sm text-white/80">
-                  This video can't play right now.
+                  {t("thisVideoCanTPlayRight")}
                 </span>
               ) : null}
             </button>
           )
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-white/70">
-            Media unavailable
+            {t("mediaUnavailable")}
           </div>
         )}
       </div>
@@ -289,7 +292,7 @@ export default function SpotlightCard({
         <button
           type="button"
           onClick={togglePlay}
-          aria-label="Play"
+          aria-label={t("play")}
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/50 p-5 text-white"
         >
           <IoPlay className="text-4xl" />
@@ -304,7 +307,7 @@ export default function SpotlightCard({
             <button
               type="button"
               onClick={() => setMuted(!muted)}
-              aria-label={muted ? "Turn sound on" : "Turn sound off"}
+              aria-label={muted ? t("turnSoundOn") : t("turnSoundOff")}
               className="rounded-full bg-black/40 p-2 text-white hover:bg-black/60"
             >
               {muted ? (
@@ -329,7 +332,7 @@ export default function SpotlightCard({
           {mediaIndex > 0 ? (
             <button
               type="button"
-              aria-label="Previous photo or video"
+              aria-label={t("previousPhotoOrVideo")}
               onClick={() => setMediaIndex((i) => Math.max(0, i - 1))}
               className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white"
             >
@@ -339,7 +342,7 @@ export default function SpotlightCard({
           {mediaIndex < post.media.length - 1 ? (
             <button
               type="button"
-              aria-label="Next photo or video"
+              aria-label={t("nextPhotoOrVideo")}
               onClick={() =>
                 setMediaIndex((i) => Math.min(post.media.length - 1, i + 1))
               }
@@ -365,7 +368,7 @@ export default function SpotlightCard({
       {/* Action rail */}
       <div className="absolute bottom-28 right-2 flex flex-col items-center gap-4 text-white">
         <RailButton
-          label={engagement.liked ? "Unlike" : "Like"}
+          label={engagement.liked ? t("unlike") : t("like")}
           pressed={engagement.liked}
           onClick={engagement.toggleLike}
           count={engagement.counts.likes}
@@ -378,7 +381,7 @@ export default function SpotlightCard({
         </RailButton>
         {post.allowComments ? (
           <RailButton
-            label="Comments"
+            label={t("comments")}
             onClick={() => setCommentsOpen(true)}
             count={engagement.counts.comments}
           >
@@ -386,14 +389,14 @@ export default function SpotlightCard({
           </RailButton>
         ) : null}
         <RailButton
-          label="Share"
+          label={t("share")}
           onClick={share}
           count={engagement.counts.shares}
         >
           <IoPaperPlaneOutline className="text-3xl" />
         </RailButton>
         <RailButton
-          label={engagement.saved ? "Remove from saved" : "Save"}
+          label={engagement.saved ? t("removeFromSaved") : t("save")}
           pressed={engagement.saved}
           onClick={engagement.toggleSave}
         >

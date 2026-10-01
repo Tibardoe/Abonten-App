@@ -12,6 +12,7 @@ import type { OutboxDraft } from "@/messaging/hooks/useMessageOutbox";
 import { MESSAGE_MAX_LENGTH } from "@abonten/types/messagingType";
 import type { MessageRow } from "@abonten/types/messagingType";
 import { Loader2, Paperclip, SendHorizonal, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 const MAX_ATTACHMENTS = 4;
@@ -33,6 +34,8 @@ export function Composer({
   disabled?: boolean;
   disabledReason?: string;
 }) {
+  const t = useTranslations("messaging");
+
   const toast = useToast();
   const [text, setText] = useState("");
   const [staged, setStaged] = useState<StagedAttachment[]>([]);
@@ -96,7 +99,7 @@ export function Composer({
         setUploading(false);
         setText(body);
         setStaged(toUpload);
-        toast.error("Your image couldn't be uploaded.");
+        toast.error(t("yourImageCouldnTBeUploaded"));
         return;
       }
       setUploading(false);
@@ -114,7 +117,7 @@ export function Composer({
   if (disabled) {
     return (
       <div className="border-t bg-card px-4 py-4 text-center text-sm text-muted-foreground">
-        {disabledReason ?? "You can't send messages in this conversation."}
+        {disabledReason ?? t("youCanTSendMessagesIn")}
       </div>
     );
   }
@@ -124,19 +127,19 @@ export function Composer({
       {replyingTo ? (
         <div className="flex items-center gap-2 border-b px-3 py-2 text-xs">
           <div className="min-w-0 flex-1">
-            <span className="font-semibold">Replying to </span>
+            <span className="font-semibold">{t("replyingTo")} </span>
             <span className="text-muted-foreground">
               {replyingTo.deleted_at
-                ? "Deleted message"
+                ? t("deletedMessage")
                 : replyingTo.message_type === "image"
-                  ? "Photo"
-                  : (replyingTo.content ?? "Message")}
+                  ? t("photo")
+                  : (replyingTo.content ?? t("message"))}
             </span>
           </div>
           <button
             type="button"
             onClick={onCancelReply}
-            aria-label="Cancel reply"
+            aria-label={t("cancelReply")}
             className="text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -151,12 +154,12 @@ export function Composer({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={s.previewUrl}
-                alt="Selected attachment"
+                alt={t("selectedAttachment")}
                 className="h-14 w-14 rounded-md object-cover"
               />
               <button
                 type="button"
-                aria-label="Remove image"
+                aria-label={t("removeImage")}
                 onClick={() => {
                   URL.revokeObjectURL(s.previewUrl);
                   setStaged((prev) => prev.filter((_, idx) => idx !== i));
@@ -173,7 +176,7 @@ export function Composer({
       <div className="flex items-end gap-2 px-3 py-2">
         <button
           type="button"
-          aria-label="Attach image"
+          aria-label={t("attachImage")}
           disabled={staged.length >= MAX_ATTACHMENTS}
           onClick={() => fileRef.current?.click()}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent disabled:opacity-40"
@@ -206,13 +209,13 @@ export function Composer({
           }}
           rows={1}
           maxLength={MESSAGE_MAX_LENGTH}
-          placeholder="Message"
+          placeholder={t("message")}
           className="max-h-40 flex-1 resize-none rounded-2xl border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
         />
 
         <button
           type="button"
-          aria-label="Send message"
+          aria-label={t("sendMessage")}
           disabled={!canSend}
           onClick={() => void handleSend()}
           className={cn(

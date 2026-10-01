@@ -10,6 +10,7 @@ import { invalidatePlaceListQueries } from "@/utils/mutationQueryInvalidation";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { PlaceDraftPayload } from "@abonten/validation/placeDraftSchema";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -60,6 +61,8 @@ export default function PlaceUploadModal({
   existingCoverPreviewUrl,
   onDraftSaved,
 }: PlaceUploadModalProps) {
+  const t = useTranslations("places");
+
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -109,14 +112,14 @@ export default function PlaceUploadModal({
   } = placeUploadForm;
 
   const publishButtonLabel = isResolvingLocation
-    ? "Resolving location..."
+    ? t("resolvingLocation")
     : isUploading
-      ? "Publishing..."
-      : "Publish";
+      ? t("publishing")
+      : t("publish");
 
   const basicInfoNextLabel = isResolvingLocation
-    ? "Resolving location..."
-    : "Next";
+    ? t("resolvingLocation")
+    : t("next");
 
   // The address field only exists while this step is mounted -- resolve it
   // now, before advancing, rather than at final Publish (step 4), where
@@ -152,7 +155,7 @@ export default function PlaceUploadModal({
       <ModalShell
         open
         onClose={requestClose}
-        title="Create Place"
+        title={t("createPlace")}
         className="bg-background md:bg-transparent"
       >
         {/* Matches EventUploadModal: px-4 gutters on mobile so nothing
@@ -170,7 +173,7 @@ export default function PlaceUploadModal({
             <>
               <UploadStepHeader
                 onBack={requestClose}
-                title="New Place · Basic Info"
+                title={t("newPlaceBasicInfo")}
                 primaryAction={{
                   label: basicInfoNextLabel,
                   onClick: handleBasicInfoNext,
@@ -198,9 +201,9 @@ export default function PlaceUploadModal({
                 <>
                   <UploadStepHeader
                     onBack={() => setStep(1)}
-                    title="New Place · Cover Photo"
+                    title={t("newPlaceCoverPhoto")}
                     primaryAction={{
-                      label: "Next",
+                      label: t("next"),
                       onClick: () => setStep(3),
                       disabled: isUploading || !coverPreview,
                     }}
@@ -219,9 +222,9 @@ export default function PlaceUploadModal({
             <>
               <UploadStepHeader
                 onBack={() => setStep(2)}
-                title="New Place · Hours"
+                title={t("newPlaceHours")}
                 primaryAction={{
-                  label: "Next",
+                  label: t("next"),
                   onClick: () => setStep(4),
                   disabled: isUploading,
                 }}
@@ -237,7 +240,7 @@ export default function PlaceUploadModal({
             <>
               <UploadStepHeader
                 onBack={() => setStep(3)}
-                title="New Place · Review"
+                title={t("newPlaceReview")}
                 primaryAction={{
                   label: publishButtonLabel,
                   onClick: handleSubmit(onSubmit),
@@ -256,7 +259,7 @@ export default function PlaceUploadModal({
 
       {showCancelConfirm && (
         <SaveDraftConfirmDialog
-          message="You have unsaved changes to this place."
+          message={t("youHaveUnsavedChangesToThis")}
           isSaving={isSavingDraft}
           onSaveDraft={handleSaveDraftAndClose}
           onDiscard={() => {

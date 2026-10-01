@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { forwardRef, useRef, useState } from "react";
 
 type inputProp = {
@@ -9,6 +10,8 @@ type inputProp = {
 
 const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
   ({ title, inputPlaceholder, ...props }, ref) => {
+    const t = useTranslations("common");
+
     const [inputFieldDisabled, setInputFieldDisabled] = useState(true);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -61,7 +64,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
                 : "flex font-semibold text-foreground/70"
             }
           >
-            Edit
+            {t("edit")}
           </button>
         </div>
       </div>

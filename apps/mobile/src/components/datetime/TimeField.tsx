@@ -1,4 +1,5 @@
 import { AppText, Icon, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -160,6 +161,8 @@ export function TimeField({
   label?: string;
   invalid?: boolean;
 }) {
+  const t = useTranslations("common");
+
   const c = useThemeColors();
   const [open, setOpen] = useState(false);
   const initial = useMemo(() => parse(value), [value]);
@@ -208,7 +211,7 @@ export function TimeField({
       <Sheet
         open={open}
         onClose={() => setOpen(false)}
-        title={label ?? "Pick a time"}
+        title={label ?? t("pickATime")}
         footer={
           <Pressable
             accessibilityRole="button"
@@ -216,7 +219,7 @@ export function TimeField({
             className="min-h-[48px] items-center justify-center rounded-xl bg-primary active:opacity-90"
           >
             <AppText className="text-[15px] font-semibold text-primary-foreground">
-              Done
+              {t("done")}
             </AppText>
           </Pressable>
         }

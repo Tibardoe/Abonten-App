@@ -26,6 +26,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -33,6 +34,8 @@ import { Alert, ScrollView, View } from "react-native";
 // One of your Spotlight promotions: status, spend, delivery and history,
 // with pause, resume and cancel.
 export default function CampaignScreen() {
+  const t = useTranslations("spotlight");
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const toast = useToast();
   const invalidate = useInvalidateContent();
@@ -43,7 +46,7 @@ export default function CampaignScreen() {
   const header = (
     <AppHeader
       variant="detail"
-      title="Promotion"
+      title={t("promotion")}
       backFallback="/(app)/spotlight/manage?tab=campaigns"
     />
   );
@@ -66,7 +69,7 @@ export default function CampaignScreen() {
       <View className="flex-1 bg-background">
         {header}
         <ScreenError
-          message="This promotion isn't available."
+          message={t("thisPromotionIsnTAvailable")}
           onRetry={() => q.refetch()}
         />
       </View>
@@ -80,15 +83,15 @@ export default function CampaignScreen() {
     try {
       const res = await api.content.campaignAction(c.id, action);
       if (res.status !== 200) {
-        toast.error(res.message ?? "Couldn't update this promotion.");
+        toast.error(res.message ?? t("couldnTUpdateThisPromotion"));
         return;
       }
       toast.success(
         action === "pause"
-          ? "Paused"
+          ? t("paused")
           : action === "resume"
-            ? "Resumed"
-            : "Cancelled",
+            ? t("resumed")
+            : t("cancelled"),
       );
       invalidate();
     } finally {
@@ -147,7 +150,7 @@ export default function CampaignScreen() {
         refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       >
         <AppText numberOfLines={2} variant="bodyStrong">
-          {c.post?.caption?.trim() || "Spotlight"}
+          {c.post?.caption?.trim() || t("spotlight")}
         </AppText>
 
         {c.status === "pending_payment" && c.checkoutId ? (
@@ -155,7 +158,9 @@ export default function CampaignScreen() {
           // order: it can be paid (or cancelled) from here.
           <View className="gap-2">
             <AppText variant="muted">
-              Waiting for payment. {PROMOTION_CASH_NOTE}
+              {t("waitingForPayment2", {
+                PROMOTION_CASH_NOTE: PROMOTION_CASH_NOTE,
+              })}
             </AppText>
             <PromotionPaymentSection
               kind="spotlight"
@@ -172,16 +177,18 @@ export default function CampaignScreen() {
         ) : null}
         {c.status === "pending_review" ? (
           <AppText variant="muted">
-            Payment received. Our team reviews every promotion before it runs.
-            If it isn't approved, you're refunded in full.
+            {t("paymentReceivedOurTeamReviewsEvery")}
           </AppText>
         ) : null}
         {c.status === "rejected" && c.reviewReason ? (
-          <AppText tone="error">Not approved: {c.reviewReason}</AppText>
+          <AppText tone="error">
+            {t("notApproved", { reviewReason: c.reviewReason })}
+          </AppText>
         ) : null}
         {c.status === "paused" && c.pauseSource !== "advertiser" ? (
           <AppText tone="warning">
-            Paused by Abonten{c.pauseReason ? `: ${c.pauseReason}` : "."}
+            {t("pausedByAbonten")}
+            {c.pauseReason ? `: ${c.pauseReason}` : "."}
           </AppText>
         ) : null}
 
@@ -189,14 +196,16 @@ export default function CampaignScreen() {
           <AppText variant="muted">
             {PROMOTION_END_REASON_LABEL[c.endReason]}.
             {unused > 0
-              ? ` ${formatMinor(unused, c.currency)} of the budget wasn't used.`
+              ? t("ofTheBudgetWasnTUsed2", {
+                  formatMinor: formatMinor(unused, c.currency),
+                })
               : ""}
           </AppText>
         ) : null}
 
         {[
-          { title: "Budget", list: rows },
-          { title: "Delivery", list: delivery },
+          { title: t("budget"), list: rows },
+          { title: t("delivery"), list: delivery },
         ].map((group) => (
           <View key={group.title} className="gap-2">
             <AppText variant="label">{group.title}</AppText>
@@ -225,7 +234,7 @@ export default function CampaignScreen() {
         <View className="gap-2">
           {canPause ? (
             <Button
-              title="Pause"
+              title={t("pause")}
               variant="outline"
               loading={busy === "pause"}
               disabled={!!busy}
@@ -234,7 +243,7 @@ export default function CampaignScreen() {
           ) : null}
           {canResume ? (
             <Button
-              title="Resume"
+              title={t("resume")}
               loading={busy === "resume"}
               disabled={!!busy}
               onPress={() => act("resume")}
@@ -242,18 +251,18 @@ export default function CampaignScreen() {
           ) : null}
           {canCancel ? (
             <Button
-              title="Cancel promotion"
+              title={t("cancelPromotion")}
               variant="destructive"
               loading={busy === "cancel"}
               disabled={!!busy}
               onPress={() =>
                 Alert.alert(
-                  "Cancel this promotion?",
-                  "It stops straight away. Any unused budget is reviewed for a refund by our team.",
+                  t("cancelThisPromotion"),
+                  t("itStopsStraightAwayAnyUnused"),
                   [
-                    { text: "Keep it", style: "cancel" },
+                    { text: t("keepIt"), style: "cancel" },
                     {
-                      text: "Cancel promotion",
+                      text: t("cancelPromotion"),
                       style: "destructive",
                       onPress: () => act("cancel"),
                     },
@@ -265,7 +274,7 @@ export default function CampaignScreen() {
         </View>
 
         <View className="gap-2">
-          <AppText variant="sectionHeading">History</AppText>
+          <AppText variant="sectionHeading">{t("history")}</AppText>
           {events.map((e) => (
             <View key={e.id} className="gap-0.5">
               <AppText variant="small" className="font-semibold">

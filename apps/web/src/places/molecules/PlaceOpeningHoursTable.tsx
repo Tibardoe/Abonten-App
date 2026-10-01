@@ -1,5 +1,6 @@
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
 import { DISPLAY_DAYS } from "@abonten/core/dayOfWeek";
+import { useTranslations } from "next-intl";
 
 type PlaceOpeningHoursTableProps = {
   openingHours: PlaceOpeningHourRow[];
@@ -21,6 +22,8 @@ export default function PlaceOpeningHoursTable({
   openingHours,
   today = new Date().getDay(),
 }: PlaceOpeningHoursTableProps) {
+  const t = useTranslations("places");
+
   return (
     <div className="divide-y divide-border">
       {DISPLAY_DAYS.map(({ dayOfWeek, label }) => {
@@ -39,7 +42,7 @@ export default function PlaceOpeningHoursTable({
             <span>{label}</span>
             <span>
               {!hour || hour.is_closed || !hour.open_time || !hour.close_time
-                ? "Closed"
+                ? t("closed")
                 : `${formatTime(hour.open_time)} - ${formatTime(hour.close_time)}`}
             </span>
           </div>

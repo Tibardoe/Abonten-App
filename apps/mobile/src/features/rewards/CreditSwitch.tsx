@@ -1,6 +1,7 @@
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Switch, View } from "react-native";
 
 // The "Use Abonten Credit" switch shown on ticket and promotion checkout:
@@ -18,44 +19,53 @@ export function CreditSwitch({
   onChange: (v: boolean) => void;
   disabled: boolean;
 }) {
+  const t = useTranslations("rewards");
+
   return (
     <View className="gap-2 rounded-xl border border-border bg-card p-3">
       <View className="flex-row items-center justify-between gap-3">
         <View className="flex-1 gap-0.5">
           <AppText className="text-sm font-semibold text-foreground">
-            Use {formatCredit(quote.creditMinor, quote.currency)} Abonten Credit
+            {t("useAbontenCredit", {
+              formatCredit: formatCredit(quote.creditMinor, quote.currency),
+            })}
           </AppText>
           <AppText variant="meta">
             {!quote.creditOnly
-              ? `You have ${formatCredit(quote.spendableMinor, quote.currency)} you can use here.`
+              ? t("youHaveYouCanUseHere", {
+                  formatCredit: formatCredit(
+                    quote.spendableMinor,
+                    quote.currency,
+                  ),
+                })
               : value
-                ? "Your credit covers this. Nothing else is charged."
-                : "Your credit can cover all of this. Turn it on to use it."}
+                ? t("yourCreditCoversThisNothingElse")
+                : t("yourCreditCanCoverAllOf")}
           </AppText>
         </View>
         <Switch
           value={value}
           onValueChange={onChange}
           disabled={disabled}
-          accessibilityLabel="Use Abonten Credit"
+          accessibilityLabel={t("useAbontenCredit2")}
         />
       </View>
       {value ? (
         <View className="gap-1 border-t border-border pt-2">
           <View className="flex-row justify-between">
-            <AppText variant="meta">Total</AppText>
+            <AppText variant="meta">{t("total")}</AppText>
             <AppText variant="meta" className="tabular-nums">
               {formatCredit(quote.orderTotalMinor, quote.currency)}
             </AppText>
           </View>
           <View className="flex-row justify-between">
-            <AppText variant="meta">Credit</AppText>
+            <AppText variant="meta">{t("credit")}</AppText>
             <AppText variant="meta" className="tabular-nums">
               −{formatCredit(quote.creditMinor, quote.currency)}
             </AppText>
           </View>
           <View className="flex-row justify-between">
-            <AppText variant="metaStrong">You pay</AppText>
+            <AppText variant="metaStrong">{t("youPay")}</AppText>
             <AppText variant="metaStrong" className="tabular-nums">
               {formatCredit(quote.cashMinor, quote.currency)}
             </AppText>

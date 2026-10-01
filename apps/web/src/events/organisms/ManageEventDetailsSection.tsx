@@ -16,6 +16,7 @@ import type {
   ManagedEventTicketType,
 } from "@abonten/types/managedEventType";
 import type { Ticket } from "@abonten/types/ticketType";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ManageEventDetailsSectionProps = {
@@ -86,6 +87,8 @@ export default function ManageEventDetailsSection({
   hasConfirmedParticipation,
   onSaved,
 }: ManageEventDetailsSectionProps) {
+  const t = useTranslations("events");
+
   const toast = useToast();
 
   const eventEditForm = useEventEditForm({
@@ -133,7 +136,7 @@ export default function ManageEventDetailsSection({
       });
 
       if (response.status === 200) {
-        toast.success("✅ Ticket types updated successfully!");
+        toast.success(t("ticketTypesUpdatedSuccessfully"));
         onSaved();
       } else {
         toast.error(`❌ ${response.message}`);
@@ -163,10 +166,10 @@ export default function ManageEventDetailsSection({
       : null;
 
   const saveButtonLabel = isResolvingLocation
-    ? "Resolving location..."
+    ? t("resolvingLocation")
     : isSubmitting
-      ? "Saving..."
-      : "Save changes";
+      ? t("saving")
+      : t("saveChanges2");
 
   // Wait for prefill to actually finish (isReady), not just for the raw
   // fetch to settle (isFetchingEvent) -- there's one render in between where
@@ -181,7 +184,7 @@ export default function ManageEventDetailsSection({
   if (isFetchingEvent || !isReady) {
     return (
       <div className="flex items-center justify-center py-10 text-muted-foreground text-sm">
-        Loading event...
+        {t("loadingEvent")}
       </div>
     );
   }
@@ -214,11 +217,11 @@ export default function ManageEventDetailsSection({
 
       <div className="space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">Ticket Types</h2>
+          <h2 className="font-semibold text-lg">{t("ticketTypes")}</h2>
           <p className="text-sm text-muted-foreground">
             {hasConfirmedParticipation
-              ? "This event already has confirmed tickets, so ticket types can no longer be changed."
-              : "Free entry, a single paid ticket, or several ticket categories."}
+              ? t("thisEventAlreadyHasConfirmedTickets")
+              : t("freeEntryASinglePaidTicket")}
           </p>
         </div>
 
@@ -263,8 +266,7 @@ export default function ManageEventDetailsSection({
 
           {ticketMode === "Free" && initialTicketState.mode !== "Free" && (
             <p className="text-xs text-muted-foreground">
-              Making this event free removes its promo codes: unused ones are
-              deleted and used ones are deactivated.
+              {t("makingThisEventFreeRemovesIts")}
             </p>
           )}
         </fieldset>
@@ -276,7 +278,7 @@ export default function ManageEventDetailsSection({
             disabled={isSavingTickets || !ticketMode || !!capacityProblem}
             className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
-            {isSavingTickets ? "Saving..." : "Save ticket types"}
+            {isSavingTickets ? t("saving") : t("saveTicketTypes")}
           </button>
         )}
       </div>
@@ -284,11 +286,10 @@ export default function ManageEventDetailsSection({
       <hr className="border-border" />
 
       <div>
-        <h2 className="font-semibold text-lg mb-2">Promo Codes</h2>
+        <h2 className="font-semibold text-lg mb-2">{t("promoCodes")}</h2>
         {initialTicketState.mode === "Free" ? (
           <p className="text-sm text-muted-foreground">
-            Promo codes aren&apos;t available on a free event. Make the event
-            paid to offer discount codes.
+            {t("promoCodesArenTAvailableOn")}
           </p>
         ) : (
           <ManagePromoCodesButton eventId={event.id} />

@@ -6,6 +6,7 @@ import {
 } from "@abonten/core/highlightPlayback";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { AppText, Avatar, Icon, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -82,6 +83,8 @@ export function HighlightViewer({
   avatarVersion,
   onReport,
 }: Props) {
+  const t = useTranslations("profile");
+
   const toast = useToast();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -440,12 +443,12 @@ export function HighlightViewer({
     if (!slide) return;
     setMenuOpen(false);
     Alert.alert(
-      `Delete this ${isVideo ? "video" : "photo"}?`,
-      "This can't be undone.",
+      t("deleteThis", { value: isVideo ? t("video") : t("photo") }),
+      t("thisCanTBeUndone"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("deleteText"),
           style: "destructive",
           onPress: () =>
             deleteSlide.mutate(slide.id, {
@@ -457,9 +460,9 @@ export function HighlightViewer({
                   );
               },
               onError: (err) =>
-                toast.error("Couldn't delete", {
+                toast.error(t("couldnTDelete"), {
                   description:
-                    err instanceof Error ? err.message : "Please try again.",
+                    err instanceof Error ? err.message : t("pleaseTryAgain"),
                 }),
             }),
         },
@@ -593,7 +596,7 @@ export function HighlightViewer({
                   onPress={() => setMenuOpen((v) => !v)}
                   hitSlop={10}
                   accessibilityRole="button"
-                  accessibilityLabel="Slide options"
+                  accessibilityLabel={t("slideOptions")}
                 >
                   <Icon name="ellipsis-vertical" size={20} color="#fff" />
                 </Pressable>
@@ -631,7 +634,7 @@ export function HighlightViewer({
                       tone="error"
                       className="font-medium"
                     >
-                      Delete {isVideo ? "video" : "photo"}
+                      {t("deleteText")} {isVideo ? t("video") : t("photo")}
                     </AppText>
                   </Pressable>
                 ) : onReport && slide ? (
@@ -645,7 +648,7 @@ export function HighlightViewer({
                   >
                     <Icon name="flag-outline" size={18} tone="foreground" />
                     <AppText variant="small" className="font-medium">
-                      Report {isVideo ? "video" : "photo"}
+                      {t("report")} {isVideo ? t("video") : t("photo")}
                     </AppText>
                   </Pressable>
                 ) : null}

@@ -21,6 +21,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { Alert, FlatList, View } from "react-native";
@@ -31,11 +32,11 @@ import { Alert, FlatList, View } from "react-native";
 type BookingState = BookingStatus | "lapsed";
 
 const STATUS_META: Record<BookingState, { tone: BadgeTone; label: string }> = {
-  pending: { tone: "warning", label: "Pending" },
-  accepted: { tone: "success", label: "Accepted" },
-  declined: { tone: "destructive", label: "Declined" },
-  cancelled: { tone: "muted", label: "Cancelled" },
-  lapsed: { tone: "muted", label: "Expired" },
+  pending: { tone: "warning", label: "bookingStatus.pending" },
+  accepted: { tone: "success", label: "bookingStatus.accepted" },
+  declined: { tone: "destructive", label: "bookingStatus.declined" },
+  cancelled: { tone: "muted", label: "bookingStatus.cancelled" },
+  lapsed: { tone: "muted", label: "bookingStatus.expired" },
 };
 
 function BookingRow({
@@ -45,6 +46,10 @@ function BookingRow({
   booking: MyBooking;
   onOpen: () => void;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("places");
+
   const toast = useToast();
   const cancel = useCancelBooking();
   const state = resolveBookingState(
@@ -53,7 +58,12 @@ function BookingRow({
   ) as BookingState;
   const meta = STATUS_META[state];
   const canCancel = state === "pending" || state === "accepted";
-  const when = formatFullDateTimeRange(booking.requested_time, null);
+  const when = formatFullDateTimeRange(
+    booking.requested_time,
+    null,
+    undefined,
+    locale,
+  );
 
   return (
     <View className="gap-2 rounded-xl border border-border bg-card p-3">
@@ -64,9 +74,9 @@ function BookingRow({
           numberOfLines={1}
           onPress={onOpen}
         >
-          {booking.place?.name ?? "Place"}
+          {booking.place?.name ?? t("place")}
         </AppText>
-        <Badge tone={meta.tone} label={meta.label} />
+        <Badge tone={meta.tone} label={t(meta.label)} />
       </View>
 
       <View className="gap-0.5">
@@ -75,11 +85,13 @@ function BookingRow({
         </AppText>
         {booking.place_service?.name ? (
           <AppText variant="caption">
-            Service: {booking.place_service.name}
+            {t("service", { name: booking.place_service.name })}
           </AppText>
         ) : null}
         {booking.party_size ? (
-          <AppText variant="caption">Party of {booking.party_size}</AppText>
+          <AppText variant="caption">
+            {t("partyOf", { party_size: booking.party_size })}
+          </AppText>
         ) : null}
         {booking.note ? (
           <AppText variant="caption" numberOfLines={2}>
@@ -88,23 +100,23 @@ function BookingRow({
         ) : null}
         {state === "lapsed" ? (
           <AppText variant="caption" tone="muted">
-            {booking.place?.name ?? "The owner"} didn't respond before this
-            date. Nothing was reserved.
+            {booking.place?.name ?? t("theOwner")}{" "}
+            {t("didnTRespondBeforeThisDate")}
           </AppText>
         ) : null}
       </View>
 
       {canCancel ? (
         <Button
-          title={cancel.isPending ? "Cancelling…" : "Cancel booking"}
+          title={cancel.isPending ? t("cancelling") : t("cancelBooking")}
           variant="outline"
           size="sm"
           disabled={cancel.isPending}
           onPress={() =>
-            Alert.alert("Cancel this booking?", "The owner will be notified.", [
-              { text: "Keep it", style: "cancel" },
+            Alert.alert(t("cancelThisBooking"), t("theOwnerWillBeNotified"), [
+              { text: t("keepIt"), style: "cancel" },
               {
-                text: "Cancel booking",
+                text: t("cancelBooking"),
                 style: "destructive",
                 onPress: () =>
                   cancel.mutate(
@@ -115,16 +127,15 @@ function BookingRow({
                     {
                       onSettled: (res) => {
                         if (res && res.status === 200) {
-                          toast.success("Booking cancelled", {
-                            description: "The owner has been notified.",
+                          toast.success(t("bookingCancelled"), {
+                            description: t("theOwnerHasBeenNotified"),
                           });
                           return;
                         }
                         toast.error(
-                          res?.message ?? "We couldn't cancel this booking.",
+                          res?.message ?? t("weCouldnTCancelThisBooking"),
                           {
-                            description:
-                              "Your booking is unchanged. Please try again.",
+                            description: t("yourBookingIsUnchangedPleaseTry"),
                           },
                         );
                       },
@@ -140,6 +151,8 @@ function BookingRow({
 }
 
 export default function MyBookingsScreen() {
+  const t = useTranslations("places");
+
   const router = useRouter();
   const q = useMyBookings();
 
@@ -151,7 +164,7 @@ export default function MyBookingsScreen() {
   }, [q]);
 
   const header = (
-    <AppHeader variant="title" title="My bookings" backFallback="/(app)" />
+    <AppHeader variant="title" title={t("myBookings")} backFallback="/(app)" />
   );
 
   if (q.isLoading) {
@@ -170,7 +183,7 @@ export default function MyBookingsScreen() {
       <View className="flex-1 bg-background">
         {header}
         <ScreenError
-          message="Couldn't load your bookings."
+          message={t("couldnTLoadYourBookings")}
           onRetry={() => q.refetch()}
         />
       </View>
@@ -191,9 +204,9 @@ export default function MyBookingsScreen() {
           view.kind === "empty" ? (
             <EmptyState
               icon="calendar-outline"
-              title="No bookings yet"
-              description="Find a place you like and tap Book — your requests and their status land here."
-              actionLabel="Browse places"
+              title={t("noBookingsYet")}
+              description={t("findAPlaceYouLikeAnd")}
+              actionLabel={t("browsePlaces")}
               onAction={() => router.push("/(app)/places")}
             />
           ) : (

@@ -8,6 +8,7 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import StartOnboardingButton from "@/fieldOps/molecules/StartOnboardingButton";
 import { useToast } from "@/hooks/useToast";
 import type { FieldOpsProspect } from "@abonten/types/fieldOps";
+import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -28,6 +29,9 @@ export default function ProspectRow({
   prospect: FieldOpsProspect;
   editable: boolean;
 }) {
+  const t = useTranslations("fieldOps");
+  const format = useFormatter();
+
   const toast = useToast();
   const router = useRouter();
   const [logging, setLogging] = useState(false);
@@ -46,12 +50,12 @@ export default function ProspectRow({
         contactAttempt: { channel, outcome, note: note || null },
       });
       if (res.status === 200) {
-        toast.success("Logged.");
+        toast.success(t("logged"));
         setLogging(false);
         setNote("");
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't log that.");
+        toast.error(res.message ?? t("couldnTLogThat"));
       }
     });
   };
@@ -65,7 +69,7 @@ export default function ProspectRow({
             {KIND_LABEL[p.kind]}
             {p.contactName ? ` · ${p.contactName}` : ""}
             {p.contactPhoneMasked ? ` · ${p.contactPhoneMasked}` : ""}
-            {p.memberName ? ` · logged by ${p.memberName}` : ""}
+            {p.memberName ? t("loggedBy", { memberName: p.memberName }) : ""}
           </p>
         </div>
         <StatusChip status={p.status} />
@@ -75,7 +79,7 @@ export default function ProspectRow({
         <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
           {p.contactAttempts.slice(-3).map((c) => (
             <li key={c.at}>
-              {new Date(c.at).toLocaleDateString()} ·{" "}
+              {format.dateTime(new Date(c.at), { dateStyle: "medium" })} ·{" "}
               {c.channel.replace("_", " ")} · {c.outcome.replace("_", " ")}
               {c.note ? ` — ${c.note}` : ""}
             </li>
@@ -102,24 +106,24 @@ export default function ProspectRow({
                 value={channel}
                 onChange={(e) => setChannel(e.target.value)}
               >
-                <option value="in_person">In person</option>
-                <option value="phone">Phone call</option>
+                <option value="in_person">{t("inPerson2")}</option>
+                <option value="phone">{t("phoneCall")}</option>
                 <option value="whatsapp">WhatsApp</option>
-                <option value="social">Social media</option>
-                <option value="email">Email</option>
+                <option value="social">{t("socialMedia")}</option>
+                <option value="email">{t("email")}</option>
               </Select>
               <Select
                 value={outcome}
                 onChange={(e) => setOutcome(e.target.value)}
               >
-                <option value="call_back">Call back later</option>
-                <option value="no_answer">No answer</option>
-                <option value="interested">Interested</option>
-                <option value="declined">Not interested</option>
-                <option value="other">Other</option>
+                <option value="call_back">{t("callBackLater")}</option>
+                <option value="no_answer">{t("noAnswer")}</option>
+                <option value="interested">{t("interested")}</option>
+                <option value="declined">{t("notInterested")}</option>
+                <option value="other">{t("other")}</option>
               </Select>
               <Input
-                placeholder="Note (optional)"
+                placeholder={t("noteOptional")}
                 maxLength={500}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -127,7 +131,7 @@ export default function ProspectRow({
             </div>
             <div className="flex gap-2">
               <Button type="submit" size="sm" disabled={pending}>
-                Log contact
+                {t("logContact")}
               </Button>
               <Button
                 type="button"
@@ -135,7 +139,7 @@ export default function ProspectRow({
                 variant="ghost"
                 onClick={() => setLogging(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
             </div>
           </form>
@@ -146,7 +150,7 @@ export default function ProspectRow({
             className="mt-3"
             onClick={() => setLogging(true)}
           >
-            Log a contact
+            {t("logAContact")}
           </Button>
         )
       ) : null}

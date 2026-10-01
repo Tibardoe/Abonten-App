@@ -19,6 +19,7 @@ import {
   Skeleton,
   StatusPill,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { type Href, useRouter } from "expo-router";
 import { Fragment } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -49,10 +50,16 @@ function promotionHref(p: ActivePromotionSummary): Href {
 }
 
 function PromotionRow({ promotion }: { promotion: ActivePromotionSummary }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("settings");
+
   const router = useRouter();
   const upcoming = promotion.state === "scheduled";
   const when = formatDateWithSuffix(
     upcoming ? promotion.startsAt : promotion.endsAt,
+    undefined,
+    locale,
   );
   return (
     <Pressable
@@ -77,7 +84,7 @@ function PromotionRow({ promotion }: { promotion: ActivePromotionSummary }) {
           />
           <AppText variant="meta" numberOfLines={1}>
             {promotion.tierLabel ? `${promotion.tierLabel} · ` : ""}
-            {upcoming ? "Starts" : "Ends"} {when}
+            {upcoming ? t("starts") : t("ends")} {when}
           </AppText>
         </View>
       </View>
@@ -100,6 +107,8 @@ function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 export default function SettingsOverview() {
+  const t = useTranslations("settings");
+
   const router = useRouter();
   const online = useIsOnline();
   const isOrganizer = useIsOrganizer();
@@ -112,7 +121,7 @@ export default function SettingsOverview() {
   let body: React.ReactNode;
   if (view.kind === "loading") {
     body = (
-      <View className="gap-4 py-2" accessibilityLabel="Loading promotions">
+      <View className="gap-4 py-2" accessibilityLabel={t("loadingPromotions")}>
         {["a", "b"].map((k) => (
           <View key={k} className="gap-2">
             <Skeleton width="30%" height={10} />
@@ -134,8 +143,8 @@ export default function SettingsOverview() {
       <View className="items-start gap-2 py-2">
         <AppText variant="body">
           {view.kind === "error"
-            ? "Couldn't load your promotions."
-            : "You're offline. Your promotions will load when you reconnect."}
+            ? t("couldnTLoadYourPromotions")
+            : t("youReOfflineYourPromotionsWill")}
         </AppText>
         {view.kind === "error" ? (
           <Pressable
@@ -144,7 +153,7 @@ export default function SettingsOverview() {
             hitSlop={8}
           >
             <AppText tone="brand" className="font-semibold">
-              Try again
+              {t("tryAgain")}
             </AppText>
           </Pressable>
         ) : null}
@@ -153,10 +162,8 @@ export default function SettingsOverview() {
   } else {
     body = (
       <View className="gap-1 py-2">
-        <AppText variant="bodyStrong">No active promotions</AppText>
-        <AppText variant="muted">
-          Feature an event, a place or a Spotlight to reach more people.
-        </AppText>
+        <AppText variant="bodyStrong">{t("noActivePromotions")}</AppText>
+        <AppText variant="muted">{t("featureAnEventAPlaceOr")}</AppText>
       </View>
     );
   }
@@ -165,7 +172,7 @@ export default function SettingsOverview() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Overview"
+        title={t("overview")}
         backFallback="/(app)/settings"
       />
       <ScrollView
@@ -173,19 +180,19 @@ export default function SettingsOverview() {
         contentContainerClassName="gap-3 p-4 pb-10"
         refreshControl={<Refresher onRefresh={() => promotions.refetch()} />}
       >
-        <Overline>Promotions</Overline>
+        <Overline>{t("promotions")}</Overline>
         <Card padded>
           {body}
           {view.kind === "empty" && isOrganizer ? (
             <>
               <Divider />
               <LinkRow
-                label="Manage events"
+                label={t("manageEvents2")}
                 onPress={() => router.push("/(app)/organizer/events")}
               />
               <Divider />
               <LinkRow
-                label="Manage places"
+                label={t("managePlaces2")}
                 onPress={() => router.push("/(app)/organizer/places")}
               />
             </>
@@ -194,20 +201,20 @@ export default function SettingsOverview() {
         {view.kind === "content" && view.refreshFailed ? (
           <AppText variant="caption" tone="muted">
             {online
-              ? "Couldn't refresh. Showing what was last loaded."
-              : "You're offline. Showing what was last loaded."}
+              ? t("couldnTRefreshShowingWhatWas")
+              : t("youReOfflineShowingWhatWas")}
           </AppText>
         ) : null}
 
-        <Overline className="mt-3">Quick links</Overline>
+        <Overline className="mt-3">{t("quickLinks2")}</Overline>
         <Card padded>
           <LinkRow
-            label="Manage payment methods"
+            label={t("managePaymentMethods")}
             onPress={() => router.push("/(app)/wallet")}
           />
           <Divider />
           <LinkRow
-            label="View transaction history"
+            label={t("viewTransactionHistory")}
             onPress={() => router.push("/(app)/transactions")}
           />
         </Card>

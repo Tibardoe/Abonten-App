@@ -13,6 +13,7 @@ import {
 import { parseFilters } from "@abonten/core/parseFilterModalQueries";
 import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
 import type { Metadata } from "next";
+import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import SearchResultsList from "./SearchResultsList";
@@ -31,9 +32,11 @@ export async function generateMetadata({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("search");
+
   const q = one((await searchParams).q);
   return {
-    title: q ? `${q.slice(0, 60)} · Search` : "Search",
+    title: q ? t("search2", { slice: q.slice(0, 60) }) : t("search"),
     robots: { index: false, follow: true },
   };
 }
@@ -47,6 +50,9 @@ export default async function page({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const t = await getTranslations("search");
+  const format = await getFormatter();
+
   const queryParams = await searchParams;
 
   // Unified search (Discovery). Only when the programme is on for this
@@ -161,14 +167,12 @@ export default async function page({
   }
 
   // Helper to format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
+  const formatDate = (dateString: string) =>
+    format.dateTime(new Date(dateString), {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
 
   // /search always carries a ?price= (even at the unfiltered 0-999
   // default, see FilterModalPopup's default branch), so it's excluded from
@@ -189,14 +193,14 @@ export default async function page({
   // plain "nothing here" message.
   const emptyState = hasActiveFilters ? (
     <NoEventsFound
-      heading="No events match these filters"
-      description="Try widening your price range or date window, or removing a filter or two."
-      action={{ label: "Clear all filters", href: "/search" }}
+      heading={t("noEventsMatchTheseFilters")}
+      description={t("tryWideningYourPriceRangeOr")}
+      action={{ label: t("clearAllFilters"), href: "/search" }}
     />
   ) : (
     <NoEventsFound
-      heading="No upcoming events yet"
-      description="Nothing is listed right now. Search above for places and people, or check back soon."
+      heading={t("noUpcomingEventsYet")}
+      description={t("nothingIsListedRightNowSearch")}
     />
   );
 
@@ -260,7 +264,7 @@ export default async function page({
             href="/search"
             className="text-sm text-primary hover:underline px-1"
           >
-            Clear all
+            {t("clearAll")}
           </Link>
         </div>
       )}

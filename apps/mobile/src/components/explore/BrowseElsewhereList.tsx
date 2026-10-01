@@ -7,6 +7,7 @@ import {
   cityDistanceText,
 } from "@abonten/core/market/coverageCopy";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // "Explore what's happening elsewhere": the launched cities offered from an
@@ -24,6 +25,8 @@ export function BrowseElsewhereList({
   browse: BrowseSuggestions;
   className?: string;
 }) {
+  const t = useTranslations("explore");
+
   const { chooseArea } = useExploreLocation();
   const { context } = useMarket();
   const unit = context?.distanceUnit ?? "km";
@@ -39,7 +42,11 @@ export function BrowseElsewhereList({
           <Pressable
             key={city.region.id}
             accessibilityRole="button"
-            accessibilityLabel={`Explore ${city.region.name}, ${distance}${reason ? `, ${reason}` : ""}`}
+            accessibilityLabel={t("explore2", {
+              name: city.region.name,
+              distance: distance,
+              value: reason ? `, ${reason}` : "",
+            })}
             onPress={() =>
               void chooseArea(
                 city.region.lat,

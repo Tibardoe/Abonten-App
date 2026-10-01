@@ -5,6 +5,7 @@ import FinanceLineIcon, {
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -32,6 +33,10 @@ export default async function PayoutDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const locale = await getLocale();
+
+  const t = await getTranslations("finances");
+
   const { id } = await params;
 
   const result = await getOrganizerPayoutDetail(id);
@@ -43,22 +48,22 @@ export default async function PayoutDetailPage({
   if (result.status !== 200) {
     return (
       <p className="text-sm text-destructive">
-        Couldn't load this payout. Please try again.
+        {t("couldnTLoadThisPayoutPlease")}
       </p>
     );
   }
 
   const payout = result.data;
-  const { label: statusLabel } = getFinanceStatusMeta(payout.status);
+  const statusLabel = t(getFinanceStatusMeta(payout.status).labelKey);
   const destinationLabel =
     payout.payout_account?.account_type === "mobile_money"
       ? payout.payout_account.provider
-      : "Bank Account";
+      : t("bankAccount");
 
   return (
     <div className="space-y-10 text-sm mb-5 md:mb-0 w-full">
       <div className="font-bold text-muted-foreground flex justify-between items-center bg-muted rounded-md p-5">
-        <p>Amount</p>
+        <p>{t("amount")}</p>
         <p>{formatMoney(payout.currency, payout.amount)}</p>
       </div>
 
@@ -70,38 +75,42 @@ export default async function PayoutDetailPage({
         <div>
           <p className="font-bold">{statusLabel}</p>
           <p className="text-muted-foreground text-xs">
-            Requested: {formatSingleDateTime(payout.requested_at).date}{" "}
-            {formatSingleDateTime(payout.requested_at).time}
+            {t("requested", {
+              date: formatSingleDateTime(payout.requested_at, undefined, locale)
+                .date,
+              time: formatSingleDateTime(payout.requested_at, undefined, locale)
+                .time,
+            })}
           </p>
         </div>
       </div>
 
       <div className="font-semibold text-muted-foreground bg-muted rounded-md p-5 space-y-5">
-        <DetailRow label="Reference" value={payout.reference} />
-        <DetailRow label="Destination" value={destinationLabel} />
+        <DetailRow label={t("reference")} value={payout.reference} />
+        <DetailRow label={t("destination")} value={destinationLabel} />
         {payout.payout_account && (
           <DetailRow
-            label="Account"
+            label={t("account")}
             value={maskAccountNumber(payout.payout_account.account_number)}
           />
         )}
         <DetailRow
-          label="Account holder"
+          label={t("accountHolder")}
           value={payout.payout_account?.account_holder_name}
         />
         <DetailRow
-          label="Requested"
-          value={`${formatSingleDateTime(payout.requested_at).date} ${formatSingleDateTime(payout.requested_at).time}`}
+          label={t("requested2")}
+          value={`${formatSingleDateTime(payout.requested_at, undefined, locale).date} ${formatSingleDateTime(payout.requested_at, undefined, locale).time}`}
         />
         {payout.processed_at && (
           <DetailRow
-            label="Processed"
-            value={`${formatSingleDateTime(payout.processed_at).date} ${formatSingleDateTime(payout.processed_at).time}`}
+            label={t("processed")}
+            value={`${formatSingleDateTime(payout.processed_at, undefined, locale).date} ${formatSingleDateTime(payout.processed_at, undefined, locale).time}`}
           />
         )}
         {payout.failure_reason && (
           <DetailRow
-            label="Failure reason"
+            label={t("failureReason")}
             value={
               <span className="text-destructive">{payout.failure_reason}</span>
             }

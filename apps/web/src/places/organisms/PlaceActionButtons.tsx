@@ -4,6 +4,7 @@ import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import RequestBookingButton from "@/places/molecules/RequestBookingButton";
+import { useTranslations } from "next-intl";
 import { FiPhone } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io5";
 
@@ -39,6 +40,8 @@ export default function PlaceActionButtons({
   whatsapp,
   services,
 }: PlaceActionButtonsProps) {
+  const t = useTranslations("places");
+
   const whatsappDigits = whatsapp?.replace(/\D/g, "");
 
   return (
@@ -63,7 +66,7 @@ export default function PlaceActionButtons({
       <MessageSubjectButton
         input={{ type: "place", placeId }}
         ownerId={ownerId}
-        label="Message"
+        label={t("message")}
         className="w-full"
       />
 
@@ -73,7 +76,7 @@ export default function PlaceActionButtons({
           onClick={() => logPlaceEngagement(placeId, "phone_click")}
           className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
         >
-          <FiPhone /> Call
+          <FiPhone /> {t("call")}
         </a>
       )}
 

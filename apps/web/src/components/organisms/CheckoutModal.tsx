@@ -13,6 +13,7 @@ import {
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
@@ -42,6 +43,8 @@ export default function CheckoutModal({
   time,
   date,
 }: CheckoutProp) {
+  const t = useTranslations("common");
+
   const [promoCodeInput, setPromoCodeInput] = useState("");
 
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
@@ -115,7 +118,7 @@ export default function CheckoutModal({
     mutationFn: (code: string) => getPromoCode(code, eventId),
     onSuccess: (response) => {
       if (response.status !== 200) {
-        toast.error(response.message ?? "That promo code couldn't be applied.");
+        toast.error(response.message ?? t("thatPromoCodeCouldnTBe"));
         setAppliedPromo(null);
         return;
       }
@@ -127,7 +130,7 @@ export default function CheckoutModal({
       });
     },
     onError: () => {
-      toast.error("We couldn't apply that promo code. Please try again.");
+      toast.error(t("weCouldnTApplyThatPromo"));
       setAppliedPromo(null);
     },
   });
@@ -219,10 +222,7 @@ export default function CheckoutModal({
     });
 
     if (response.status !== 200 && response.reason === "pending_checkout") {
-      toast.info(
-        response.message ??
-          "You already have a pending checkout for this event.",
-      );
+      toast.info(response.message ?? t("youAlreadyHaveAPendingCheckout"));
       router.push(`/checkout/${response.checkoutId}?type=ticket`);
 
       setIsProceeding(false);
@@ -230,9 +230,7 @@ export default function CheckoutModal({
     }
 
     if (response.status !== 200 || !response.checkoutSessionId) {
-      toast.error(
-        response.message ?? "We couldn't start checkout. Please try again.",
-      );
+      toast.error(response.message ?? t("weCouldnTStartCheckoutPlease"));
       setIsProceeding(false);
       return;
     }
@@ -241,14 +239,14 @@ export default function CheckoutModal({
   };
 
   const ticketsErrorMessage = isTicketsError
-    ? (ticketsResponseMessage ?? "Failed to load tickets. Please try again.")
+    ? (ticketsResponseMessage ?? t("failedToLoadTicketsPleaseTry"))
     : null;
 
   return (
     <ModalShell
       open
       onClose={() => handleCheckoutModal(false)}
-      title={`Checkout — ${eventTitle}`}
+      title={t("checkout2", { eventTitle: eventTitle })}
     >
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[90%] lg:w-[40%] md:rounded-xl py-5 space-y-5">
         {/* Header */}
@@ -267,7 +265,7 @@ export default function CheckoutModal({
               type="button"
               onClick={() => handleCheckoutModal(false)}
               className="self-start"
-              aria-label="Close checkout"
+              aria-label={t("closeCheckout")}
             >
               <MdOutlineCancel className="text-2xl" aria-hidden />
             </button>
@@ -279,7 +277,7 @@ export default function CheckoutModal({
         <div className="flex flex-col gap-5 overflow-y-scroll h-[80%] px-5">
           {/* Display tickets */}
           {isTicketsLoading ? (
-            <p className="text-muted-foreground">Loading tickets…</p>
+            <p className="text-muted-foreground">{t("loadingTickets")}</p>
           ) : isTicketsError ? (
             <div className="flex flex-col items-start gap-2">
               <p className="font-bold text-destructive">
@@ -290,11 +288,11 @@ export default function CheckoutModal({
                 onClick={() => refetchTickets()}
                 className="font-bold border border-border rounded-md px-4 py-2"
               >
-                Retry
+                {t("retry")}
               </button>
             </div>
           ) : ticketList.length === 0 ? (
-            <p className="font-bold">No tickets available for this event.</p>
+            <p className="font-bold">{t("noTicketsAvailableForThisEvent")}</p>
           ) : (
             <>
               {ticketList.map((ticket) => {
@@ -373,7 +371,7 @@ export default function CheckoutModal({
             }
             className="h-12 rounded-lg font-semibold text-primary-foreground bg-primary text-center mt-2 transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProceeding ? "One moment…" : "Continue to payment"}
+            {isProceeding ? t("oneMoment") : t("continueToPayment")}
           </button>
         </div>
       </div>

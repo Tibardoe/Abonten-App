@@ -15,6 +15,7 @@ import { getLatestPaymentAttemptStatus } from "@abonten/services/payments/paymen
 import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
 import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
 import type { CheckoutSessionStatus } from "@abonten/types/ticketType";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 // Per-user, request-time data (this specific session's status plus every
@@ -28,6 +29,8 @@ export default async function page({
   params: Promise<{ checkoutId: string }>;
   searchParams: Promise<{ type: string }>;
 }) {
+  const t = await getTranslations("checkout");
+
   const { checkoutId } = await params;
   const checkoutType = (await searchParams).type;
   const supabase = await createClient();
@@ -40,7 +43,7 @@ export default async function page({
     if (response.status !== 200 || !response.data?.length) {
       return (
         <div>
-          <p>Order processed successfully!</p>
+          <p>{t("orderProcessedSuccessfully")}</p>
         </div>
       );
     }
@@ -82,30 +85,32 @@ export default async function page({
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
-          <PageTitle>Order Summary</PageTitle>
+          <PageTitle>{t("orderSummary")}</PageTitle>
         </div>
 
         {sessionStatus === "paid" && (
           <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
-            Purchase complete —{" "}
-            <Link
-              href={`/manage/places/${data.place_id}`}
-              className="underline"
-            >
-              your place is now featured
-            </Link>
-            .
+            {t.rich("purchaseCompleteYourPlaceIsNow", {
+              link: (chunks) => (
+                <Link
+                  href={`/manage/places/${data.place_id}`}
+                  className="underline"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
           </div>
         )}
 
         {sessionStatus === "expired" && (
           <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
-            <p>This checkout has expired and can no longer be completed.</p>
+            <p>{t("thisCheckoutHasExpiredAndCan")}</p>
             <Link
               href={`/manage/places/${data.place_id}`}
               className="inline-block underline font-medium"
             >
-              Start a new promotion
+              {t("startANewPromotion")}
             </Link>
           </div>
         )}
@@ -149,7 +154,7 @@ export default async function page({
     if (response.status !== 200 || !response.data) {
       return (
         <p className="p-8 text-center text-muted-foreground">
-          Checkout not found.
+          {t("checkoutNotFound")}
         </p>
       );
     }
@@ -177,27 +182,29 @@ export default async function page({
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
-          <PageTitle>Order Summary</PageTitle>
+          <PageTitle>{t("orderSummary")}</PageTitle>
         </div>
 
         {sessionStatus === "paid" && (
           <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
-            Payment received —{" "}
-            <Link href={campaignHref} className="underline">
-              your promotion is waiting for review
-            </Link>
-            .
+            {t.rich("paymentReceivedYourPromotionIsWaiting", {
+              link: (chunks) => (
+                <Link href={campaignHref} className="underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
           </div>
         )}
 
         {sessionStatus === "expired" && (
           <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
-            <p>This checkout is no longer open.</p>
+            <p>{t("thisCheckoutIsNoLongerOpen")}</p>
             <Link
               href="/manage/spotlight"
               className="inline-block underline font-medium"
             >
-              Back to Spotlight
+              {t("backToSpotlight")}
             </Link>
           </div>
         )}
@@ -252,7 +259,7 @@ export default async function page({
     if (response.status !== 200 || !response.data?.length) {
       return (
         <div>
-          <p>Order processed successfully!</p>
+          <p>{t("orderProcessedSuccessfully")}</p>
         </div>
       );
     }
@@ -291,30 +298,32 @@ export default async function page({
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
-          <PageTitle>Order Summary</PageTitle>
+          <PageTitle>{t("orderSummary")}</PageTitle>
         </div>
 
         {sessionStatus === "paid" && (
           <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
-            Purchase complete —{" "}
-            <Link
-              href={`/manage/events/${data.event_id}`}
-              className="underline"
-            >
-              your event is now featured
-            </Link>
-            .
+            {t.rich("purchaseCompleteYourEventIsNow", {
+              link: (chunks) => (
+                <Link
+                  href={`/manage/events/${data.event_id}`}
+                  className="underline"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
           </div>
         )}
 
         {sessionStatus === "expired" && (
           <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
-            <p>This checkout has expired and can no longer be completed.</p>
+            <p>{t("thisCheckoutHasExpiredAndCan")}</p>
             <Link
               href={`/manage/events/${data.event_id}`}
               className="inline-block underline font-medium"
             >
-              Start a new promotion
+              {t("startANewPromotion")}
             </Link>
           </div>
         )}
@@ -388,18 +397,18 @@ export default async function page({
   return (
     <div className="flex flex-col justify-center gap-5">
       <div>
-        <PageTitle>Order Summary</PageTitle>
+        <PageTitle>{t("orderSummary")}</PageTitle>
       </div>
 
       {sessionStatus === "expired" && (
         <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
-          <p>This checkout has expired and can no longer be completed.</p>
+          <p>{t("thisCheckoutHasExpiredAndCan")}</p>
           {eventCode && (
             <Link
               href={`/events/${eventCode.toLowerCase()}`}
               className="inline-block underline font-medium"
             >
-              Start a new checkout
+              {t("startANewCheckout")}
             </Link>
           )}
         </div>

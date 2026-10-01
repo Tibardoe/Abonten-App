@@ -1,5 +1,6 @@
 import type { OwnReview } from "@/features/reviews/useReviewSubject";
 import { AppText, Icon, Stars } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 import { ReviewPhotoStrip } from "./ReviewPhotoStrip";
 
@@ -16,6 +17,8 @@ export function OwnReviewCard({
   kind: "event" | "place";
   onMore: () => void;
 }) {
+  const t = useTranslations("reviews");
+
   return (
     <View className="gap-2 rounded-xl border border-primary/40 bg-card p-3">
       <View className="flex-row items-center gap-2">
@@ -23,13 +26,13 @@ export function OwnReviewCard({
             "Your" when the stars re-laid out after an edit. */}
         <View className="flex-1 gap-1">
           <AppText variant="small" className="font-semibold" numberOfLines={1}>
-            Your review
+            {t("yourReview")}
           </AppText>
           <Stars rating={review.rating} size={13} />
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Your review options"
+          accessibilityLabel={t("yourReviewOptions")}
           hitSlop={10}
           onPress={onMore}
           className="h-9 w-9 items-center justify-center rounded-full active:bg-muted"
@@ -53,7 +56,7 @@ export function OwnReviewCard({
       {review.response ? (
         <View className="ml-3 mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
           <AppText variant="label" className="mb-1 text-primary">
-            {kind === "event" ? "Organizer's reply" : "Owner's reply"}
+            {kind === "event" ? t("organizerSReply") : t("ownerSReply")}
           </AppText>
           <AppText variant="small">{review.response}</AppText>
         </View>

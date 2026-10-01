@@ -5,6 +5,7 @@ import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton"
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 export default function EventTicketTypeBreakdown({
   eventId,
@@ -17,6 +18,8 @@ export default function EventTicketTypeBreakdown({
   startDate: string | null;
   endDate: string | null;
 }) {
+  const t = useTranslations("common");
+
   const {
     data: response,
     isLoading,
@@ -32,18 +35,18 @@ export default function EventTicketTypeBreakdown({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-bold md:text-lg">Ticket Types</h2>
+      <h2 className="font-bold md:text-lg">{t("ticketTypes")}</h2>
 
       {isLoading ? (
         <AnalyticsRowsSkeleton count={3} />
       ) : isError ? (
         <InlineErrorRetry
-          message="We couldn't load ticket type sales."
+          message={t("weCouldnTLoadTicketType")}
           onRetry={() => refetch()}
         />
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No ticket types set up yet.
+          {t("noTicketTypesSetUpYet")}
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -55,7 +58,7 @@ export default function EventTicketTypeBreakdown({
               <div className="flex justify-between items-center gap-2">
                 <h3 className="font-semibold">{row.type}</h3>
                 <span className="text-sm text-muted-foreground shrink-0">
-                  {row.sold} sold
+                  {t("sold", { sold: row.sold })}
                   {row.quantity_capacity != null
                     ? ` / ${row.quantity_capacity}`
                     : " / Unlimited"}
@@ -77,15 +80,19 @@ export default function EventTicketTypeBreakdown({
                 <span>
                   {row.price > 0
                     ? `${row.currency ?? ""} ${Number(row.price).toLocaleString()}`.trim()
-                    : "Free"}
+                    : t("free")}
                 </span>
                 {row.revenue > 0 && (
                   <span>
-                    {row.currency ?? ""} {Number(row.revenue).toLocaleString()}{" "}
-                    revenue
+                    {row.currency ?? ""}{" "}
+                    {t("revenue", {
+                      toLocaleString: Number(row.revenue).toLocaleString(),
+                    })}
                   </span>
                 )}
-                {row.cancelled > 0 && <span>{row.cancelled} cancelled</span>}
+                {row.cancelled > 0 && (
+                  <span>{t("cancelled3", { cancelled: row.cancelled })}</span>
+                )}
               </div>
             </div>
           ))}

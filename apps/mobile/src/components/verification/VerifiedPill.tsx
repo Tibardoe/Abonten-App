@@ -4,6 +4,7 @@ import {
 } from "@abonten/core/verification/copy";
 import type { VerificationSubjectType } from "@abonten/types/verificationType";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Alert, Pressable, View } from "react-native";
 
 // The public Verified badge. It is deliberately tappable: the badge alone
@@ -20,15 +21,19 @@ export function VerifiedPill({
   subjectType: VerificationSubjectType;
   variant?: "overlay" | "inline";
 }) {
+  const t = useTranslations("verification");
+
   const overlay = variant === "overlay";
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${BADGE_LABEL[subjectType]} — what this means`}
+      accessibilityLabel={t("whatThisMeans", {
+        item: BADGE_LABEL[subjectType],
+      })}
       hitSlop={6}
       onPress={() =>
         Alert.alert(BADGE_LABEL[subjectType], BADGE_EXPLANATION[subjectType], [
-          { text: "Got it" },
+          { text: t("gotIt") },
         ])
       }
       className={
@@ -50,7 +55,7 @@ export function VerifiedPill({
             : "text-[11px] font-semibold text-primary"
         }
       >
-        Verified
+        {t("verified")}
       </AppText>
     </Pressable>
   );

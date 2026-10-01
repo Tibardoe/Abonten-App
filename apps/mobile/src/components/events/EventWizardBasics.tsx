@@ -1,5 +1,6 @@
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { AppText, Chip, Field, Input } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Switch, View } from "react-native";
 
 // Step 2 of the event wizard — title, description, category + types,
@@ -7,28 +8,30 @@ import { Switch, View } from "react-native";
 // EventUploadFormFields "Event basics" + "Event details" sections.
 // Step navigation is owned by the screen header (app/(app)/event/new.tsx).
 export function EventWizardBasics({ w }: { w: EventWizard }) {
+  const t = useTranslations("events");
+
   return (
     <View className="gap-4">
-      <Field label="Title" error={w.textErrors.title}>
+      <Field label={t("title")} error={w.textErrors.title}>
         <Input
           value={w.title}
           onChangeText={w.setTitle}
-          placeholder="e.g. Sunset Rooftop Session"
+          placeholder={t("eGSunsetRooftopSession")}
         />
       </Field>
 
-      <Field label="Description" error={w.textErrors.description}>
+      <Field label={t("description")} error={w.textErrors.description}>
         <Input
           value={w.description}
           onChangeText={w.setDescription}
           multiline
           numberOfLines={4}
           style={{ minHeight: 96, textAlignVertical: "top" }}
-          placeholder="Tell people what to expect."
+          placeholder={t("tellPeopleWhatToExpect")}
         />
       </Field>
 
-      <Field label="Category">
+      <Field label={t("category")}>
         <View className="flex-row flex-wrap gap-2">
           {w.categories.map((c) => (
             <Chip
@@ -42,7 +45,7 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
       </Field>
 
       {w.category ? (
-        <Field label="Types" hint="Pick one or more">
+        <Field label={t("types")} hint={t("pickOneOrMore")}>
           <View className="flex-row flex-wrap gap-2">
             {w.categoryTypes.map((t) => (
               <Chip
@@ -57,19 +60,23 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
       ) : null}
 
       <Field
-        label="Capacity"
+        label={t("capacity2")}
         error={w.textErrors.capacity}
-        hint="Optional — total attendees allowed"
+        hint={t("optionalTotalAttendeesAllowed")}
       >
         <Input
           value={w.capacity}
           onChangeText={w.setCapacity}
           keyboardType="number-pad"
-          placeholder="e.g. 200"
+          placeholder={t("eG200")}
         />
       </Field>
 
-      <Field label="Website" error={w.textErrors.website_url} hint="Optional">
+      <Field
+        label={t("website")}
+        error={w.textErrors.website_url}
+        hint={t("optional")}
+      >
         <Input
           value={w.website}
           onChangeText={w.setWebsite}
@@ -82,10 +89,8 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
 
       <View className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3">
         <View className="flex-1 pr-3">
-          <AppText variant="bodyStrong">Require registration</AppText>
-          <AppText variant="meta">
-            Attendees must register even for a free event.
-          </AppText>
+          <AppText variant="bodyStrong">{t("requireRegistration")}</AppText>
+          <AppText variant="meta">{t("attendeesMustRegisterEvenForA")}</AppText>
         </View>
         <Switch
           value={w.requireRegistration}

@@ -8,6 +8,7 @@ import { countryFlag } from "@abonten/core/geo/countries";
 import { getCurrency } from "@abonten/core/money/currencies";
 import type { LocalePreferencesPatch } from "@abonten/types/marketType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useTransition } from "react";
 
 // Settings › Region & currency: which market is home (it decides the
@@ -20,6 +21,8 @@ const selectClass =
   "w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50";
 
 export default function RegionAndCurrency() {
+  const t = useTranslations("settings");
+
   const toast = useToast();
   const queryClient = useQueryClient();
   const [pending, start] = useTransition();
@@ -38,10 +41,10 @@ export default function RegionAndCurrency() {
     start(async () => {
       const res = await updateLocalePreferences(patch);
       if (res.status !== 200) {
-        toast.error(res.message ?? "Couldn't save your preferences.");
+        toast.error(res.message ?? t("couldnTSaveYourPreferences"));
         return;
       }
-      toast.success("Saved.");
+      toast.success(t("saved"));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["locale-preferences"] }),
         queryClient.invalidateQueries({ queryKey: ["market-context"] }),
@@ -49,12 +52,12 @@ export default function RegionAndCurrency() {
     });
 
   if (prefs.isPending) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <p className="text-sm text-muted-foreground">{t("loading")}</p>;
   }
   if (!current) {
     return (
       <p className="text-sm text-muted-foreground">
-        Sign in to choose your region and currency.
+        {t("signInToChooseYourRegion")}
       </p>
     );
   }
@@ -65,10 +68,9 @@ export default function RegionAndCurrency() {
       onSubmit={(e) => e.preventDefault()}
     >
       <label className="flex flex-col gap-2">
-        <span className="font-medium">Home country</span>
+        <span className="font-medium">{t("homeCountry")}</span>
         <span className="text-sm text-muted-foreground">
-          Sets which country's payment options your wallet uses. Your Abonten
-          Credit stays in the currency it started in.
+          {t("setsWhichCountrySPaymentOptions")}
         </span>
         <select
           className={selectClass}
@@ -77,7 +79,7 @@ export default function RegionAndCurrency() {
           onChange={(e) => save({ countryCode: e.target.value })}
         >
           {current.countryCode == null ? (
-            <option value="">Choose…</option>
+            <option value="">{t("choose")}</option>
           ) : null}
           {markets.map((m) => (
             <option key={m.countryCode} value={m.countryCode}>
@@ -88,10 +90,9 @@ export default function RegionAndCurrency() {
       </label>
 
       <label className="flex flex-col gap-2">
-        <span className="font-medium">Show price estimates in</span>
+        <span className="font-medium">{t("showPriceEstimatesIn")}</span>
         <span className="text-sm text-muted-foreground">
-          Listings abroad can show a rough “≈” price in this currency. You
-          always pay in the listing's own currency.
+          {t("listingsAbroadCanShowARough")}
         </span>
         <select
           className={selectClass}
@@ -99,7 +100,7 @@ export default function RegionAndCurrency() {
           value={current.displayCurrency ?? ""}
           onChange={(e) => save({ displayCurrency: e.target.value || null })}
         >
-          <option value="">My home currency</option>
+          <option value="">{t("myHomeCurrency")}</option>
           {currencies.map((code) => (
             <option key={code} value={code}>
               {code} — {getCurrency(code).name}
@@ -109,7 +110,7 @@ export default function RegionAndCurrency() {
       </label>
 
       <label className="flex flex-col gap-2">
-        <span className="font-medium">Distances</span>
+        <span className="font-medium">{t("distances")}</span>
         <select
           className={selectClass}
           disabled={pending}
@@ -123,9 +124,9 @@ export default function RegionAndCurrency() {
             })
           }
         >
-          <option value="">Country default</option>
-          <option value="km">Kilometres</option>
-          <option value="mi">Miles</option>
+          <option value="">{t("countryDefault")}</option>
+          <option value="km">{t("kilometres")}</option>
+          <option value="mi">{t("miles")}</option>
         </select>
       </label>
     </form>

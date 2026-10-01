@@ -1,5 +1,6 @@
 import { REMINDER_OFFSETS } from "@/features/reminders/eventReminders";
 import { AppText, Button, Icon, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -26,6 +27,8 @@ export function ReminderOptionsSheet({
   onSave: (draft: number[]) => void;
   onTurnOff: () => void;
 }) {
+  const t = useTranslations("events");
+
   const [draft, setDraft] = useState<number[]>(offsets);
   useEffect(() => {
     if (open) setDraft(offsets);
@@ -44,12 +47,11 @@ export function ReminderOptionsSheet({
       open={open}
       onClose={onClose}
       onDismiss={onDismiss}
-      title="Remind me"
+      title={t("remindMe")}
     >
       <View className="gap-2">
         <AppText variant="muted">
-          Pick when to be reminded. Notifications fire even if the app is
-          closed, and your choice syncs to your other devices.
+          {t("pickWhenToBeRemindedNotifications")}
         </AppText>
 
         {REMINDER_OFFSETS.map((o) => {
@@ -76,7 +78,7 @@ export function ReminderOptionsSheet({
 
         <View className="mt-2 gap-2">
           <Button
-            title="Save reminders"
+            title={t("saveReminders")}
             fullWidth
             loading={saving}
             disabled={saving}
@@ -84,7 +86,7 @@ export function ReminderOptionsSheet({
           />
           {active ? (
             <Button
-              title="Turn off reminders"
+              title={t("turnOffReminders")}
               variant="outline"
               fullWidth
               disabled={saving}

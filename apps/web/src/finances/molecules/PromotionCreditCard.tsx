@@ -5,10 +5,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { PromotionCredit } from "@abonten/types/rewards";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
-const monthOf = (period: string) =>
-  new Date(`${period}T00:00:00Z`).toLocaleDateString(undefined, {
+const monthOf = (period: string, locale: string) =>
+  new Date(`${period}T00:00:00Z`).toLocaleDateString(locale, {
     month: "long",
     timeZone: "UTC",
   });
@@ -46,6 +47,9 @@ function earnLines(credit: PromotionCredit): string[] {
  * paid out as money.
  */
 export default function PromotionCreditCard() {
+  const t = useTranslations("finances");
+  const locale = useLocale();
+
   const { data, isError } = useQuery({
     queryKey: ["promotion-credit"],
     queryFn: getPromotionCredit,
@@ -66,19 +70,31 @@ export default function PromotionCreditCard() {
     <section className="rounded-2xl border border-border bg-card text-card-foreground p-5 md:p-6 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">Promotion credit</p>
+          <p className="text-sm text-muted-foreground">
+            {t("promotionCredit")}
+          </p>
           <p className="font-bold text-2xl md:text-3xl tabular-nums">
             {formatCredit(credit.promotionOnlyMinor, credit.currency)}
           </p>
           {credit.pendingMinor > 0 ? (
             <p className="text-sm text-muted-foreground mt-1">
-              {formatCredit(credit.pendingMinor, credit.currency)} pending
+              {t("pending", {
+                formatCredit: formatCredit(
+                  credit.pendingMinor,
+                  credit.currency,
+                ),
+              })}
             </p>
           ) : null}
           {credit.last ? (
             <p className="text-sm text-muted-foreground mt-1">
-              +{formatCredit(credit.last.amountMinor, credit.currency)} for
-              events that ended in {monthOf(credit.last.periodStart)}
+              {t("forEventsThatEndedIn", {
+                formatCredit: formatCredit(
+                  credit.last.amountMinor,
+                  credit.currency,
+                ),
+                monthOf: monthOf(credit.last.periodStart, locale),
+              })}
             </p>
           ) : null}
         </div>
@@ -87,22 +103,20 @@ export default function PromotionCreditCard() {
             href="/manage/events"
             className={buttonVariants({ className: "font-semibold" })}
           >
-            Feature an event
+            {t("featureAnEvent")}
           </Link>
         ) : null}
       </div>
 
       {credit.canRedeem && credit.spendableMinor > credit.promotionOnlyMinor ? (
         <p className="text-sm">
-          You can put {formatCredit(credit.spendableMinor, credit.currency)}{" "}
-          towards featuring an event or place, including your other Abonten
-          Credit.
+          {t("youCanPutTowardsFeaturingAn", {
+            formatCredit: formatCredit(credit.spendableMinor, credit.currency),
+          })}
         </p>
       ) : null}
       {!credit.canRedeem && credit.promotionOnlyMinor > 0 ? (
-        <p className="text-sm">
-          Soon you&apos;ll be able to use it to feature your events and places.
-        </p>
+        <p className="text-sm">{t("soonYouLlBeAbleTo")}</p>
       ) : null}
 
       {lines.length > 0 ? (
@@ -114,11 +128,11 @@ export default function PromotionCreditCard() {
       ) : null}
 
       <p className="text-xs text-muted-foreground border-t border-border pt-3">
-        Promotion credit only pays for featuring events and places
         {credit.rates.expiryDays
-          ? `, and lasts ${credit.rates.expiryDays} days from when you get it`
-          : ""}
-        . It isn&apos;t part of your balance and can&apos;t be withdrawn.
+          ? t("promotionCreditExplainedWithExpiry", {
+              expiryDays: credit.rates.expiryDays,
+            })
+          : t("promotionCreditExplained")}
       </p>
     </section>
   );

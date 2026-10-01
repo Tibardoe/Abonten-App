@@ -56,6 +56,7 @@ import {
   SegmentedTabs,
   Skeleton,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -144,6 +145,8 @@ function SuggestionRow({
   onPress: () => void;
   onRemove?: () => void;
 }) {
+  const t = useTranslations("search");
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -180,7 +183,7 @@ function SuggestionRow({
       {onRemove ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Remove ${title} from recent searches`}
+          accessibilityLabel={t("removeFromRecentSearches", { title: title })}
           hitSlop={10}
           onPress={onRemove}
           className="h-9 w-9 items-center justify-center rounded-full active:opacity-60"
@@ -223,6 +226,10 @@ const thumb = (s: SearchSuggestion) =>
     : null;
 
 export function UnifiedSearch() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("search");
+
   const listPadding = useTabBarListPadding();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -404,16 +411,16 @@ export function UnifiedSearch() {
 
   const tabs = useMemo(() => {
     const all: { key: Tab; label: string }[] = [
-      { key: "all", label: "All" },
-      { key: "events", label: "Events" },
+      { key: "all", label: t("all") },
+      { key: "events", label: t("events") },
       ...(program.placeSearch
-        ? [{ key: "places" as const, label: "Places" }]
+        ? [{ key: "places" as const, label: t("places") }]
         : []),
       ...(program.organizerSearch
-        ? [{ key: "organizers" as const, label: "Organizers" }]
+        ? [{ key: "organizers" as const, label: t("organizers") }]
         : []),
       ...(content.spotlight && hasQuery
-        ? [{ key: "spotlights" as const, label: "Spotlights" }]
+        ? [{ key: "spotlights" as const, label: t("spotlights") }]
         : []),
     ];
     return parseSearchQuery(submitted ?? "").kind === "organizer"
@@ -425,6 +432,7 @@ export function UnifiedSearch() {
     content.spotlight,
     hasQuery,
     submitted,
+    t,
   ]);
 
   const spotlightPosts = spotlight.data ?? [];
@@ -446,9 +454,9 @@ export function UnifiedSearch() {
         out.push({
           kind: "section",
           key: "s-events",
-          label: "Events",
+          label: t("events"),
           action: p.events.hasNextPage
-            ? { label: "See all", mode: "events" }
+            ? { label: t("seeAll"), mode: "events" }
             : undefined,
         });
         p.events.items.forEach((hit, i) =>
@@ -459,9 +467,9 @@ export function UnifiedSearch() {
         out.push({
           kind: "section",
           key: "s-places",
-          label: "Places",
+          label: t("places"),
           action: p.places.hasNextPage
-            ? { label: "See all", mode: "places" }
+            ? { label: t("seeAll"), mode: "places" }
             : undefined,
         });
         p.places.items.forEach((hit, i) =>
@@ -472,9 +480,9 @@ export function UnifiedSearch() {
         out.push({
           kind: "section",
           key: "s-orgs",
-          label: "Organizers",
+          label: t("organizers"),
           action: p.organizers.hasNextPage
-            ? { label: "See all", mode: "organizers" }
+            ? { label: t("seeAll"), mode: "organizers" }
             : undefined,
         });
         p.organizers.items.forEach((hit, i) =>
@@ -485,10 +493,10 @@ export function UnifiedSearch() {
         out.push({
           kind: "section",
           key: "s-spotlights",
-          label: "Spotlights",
+          label: t("spotlights"),
           action:
             spotlightPosts.length > 3
-              ? { label: "See all", mode: "spotlights" }
+              ? { label: t("seeAll"), mode: "spotlights" }
               : undefined,
         });
         out.push({
@@ -527,7 +535,7 @@ export function UnifiedSearch() {
         hit,
         rank: i,
       }));
-  }, [results.data, effectiveMode, spotlightTab, spotlightPosts]);
+  }, [results.data, effectiveMode, spotlightTab, spotlightPosts, t]);
 
   const onEndReached = useCallback(() => {
     if (results.hasNextPage && !results.isFetchingNextPage)
@@ -618,33 +626,33 @@ export function UnifiedSearch() {
     ) : searchView.kind === "offline" ? (
       <EmptyState
         icon="cloud-offline-outline"
-        title="You're offline"
-        description="Search needs a connection. It will run when you're back online."
+        title={t("youReOffline")}
+        description={t("searchNeedsAConnectionItWill")}
       />
     ) : searchView.kind === "error" ? (
       <EmptyState
         icon="alert-circle-outline"
-        title="Search didn't load"
-        description="Check your connection and try again."
-        actionLabel="Try again"
+        title={t("searchDidnTLoad")}
+        description={t("checkYourConnectionAndTryAgain")}
+        actionLabel={t("tryAgain")}
         onAction={() => active.refetch()}
       />
     ) : spotlightTab ? (
       <EmptyState
         icon="play-circle-outline"
-        title={`No Spotlights for “${submitted ?? ""}”`}
-        description="Try another word or a #hashtag."
+        title={t("noSpotlightsFor", { value: submitted ?? "" })}
+        description={t("tryAnotherWordOrAHashtag")}
       />
     ) : filtered ? (
       <EmptyState
         icon="options-outline"
-        title="Nothing matches these filters"
+        title={t("nothingMatchesTheseFilters")}
         description={
           hasQuery
-            ? `No results for “${submitted}” with the filters you chose.`
-            : "Try a different category or fewer filters."
+            ? t("noResultsForWithTheFilters", { submitted: submitted })
+            : t("tryADifferentCategoryOrFewer")
         }
-        actionLabel="Clear filters"
+        actionLabel={t("clearFilters")}
         onAction={() =>
           setFilters((f) => clearSearchFiltersFor(f, effectiveMode))
         }
@@ -656,11 +664,11 @@ export function UnifiedSearch() {
           title={
             organizerQuery ||
             parseSearchQuery(submitted ?? "").kind === "organizer"
-              ? `No organizers match ${submitted}`
-              : `No results for “${submitted ?? ""}”`
+              ? t("noOrganizersMatch", { submitted: submitted ?? "" })
+              : t("noResultsFor2", { value: submitted ?? "" })
           }
-          description="Try a shorter or more general term, or check the spelling."
-          actionLabel="Explore what's on"
+          description={t("tryAShorterOrMoreGeneral")}
+          actionLabel={t("exploreWhatSOn")}
           onAction={() => router.push("/(app)/(tabs)")}
         />
         <View className="flex-row flex-wrap justify-center gap-2 px-1">
@@ -686,8 +694,8 @@ export function UnifiedSearch() {
             />
             <TextInput
               ref={inputRef}
-              accessibilityLabel="Search events, places and organizers"
-              placeholder="Events, places, organizers or @handle"
+              accessibilityLabel={t("searchEventsPlacesAndOrganizers")}
+              placeholder={t("eventsPlacesOrganizersOrHandle")}
               placeholderTextColor={c["muted-foreground"]}
               autoCapitalize="none"
               autoCorrect={false}
@@ -705,7 +713,7 @@ export function UnifiedSearch() {
             {raw.length > 0 ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Clear search"
+                accessibilityLabel={t("clearSearch")}
                 hitSlop={10}
                 onPress={clearInput}
                 className="h-7 w-7 items-center justify-center rounded-full active:opacity-60"
@@ -721,8 +729,10 @@ export function UnifiedSearch() {
               accessibilityRole="button"
               accessibilityLabel={
                 activeFilterCount > 0
-                  ? `Filters, ${activeFilterCount} active`
-                  : "Filters"
+                  ? t("filtersActive2", {
+                      activeFilterCount: activeFilterCount,
+                    })
+                  : t("filters")
               }
               onPress={() => {
                 Keyboard.dismiss();
@@ -794,10 +804,10 @@ export function UnifiedSearch() {
         {scope ? (
           <View className="mt-3 flex-row items-center gap-2">
             <AppText variant="small" className="flex-1">
-              Events by @{scope.username}
+              {t("eventsBy", { username: scope.username })}
             </AppText>
             <Button
-              title="Back to results"
+              title={t("backToResults")}
               size="sm"
               variant="outline"
               onPress={() => setScope(null)}
@@ -863,7 +873,7 @@ export function UnifiedSearch() {
 
           {suggest.organizers.length > 0 && organizerQuery ? (
             <>
-              <SectionHeader label="Organizers" />
+              <SectionHeader label={t("organizers")} />
               {suggest.organizers.map((s) => (
                 <SuggestionRow
                   key={s.id}
@@ -879,14 +889,16 @@ export function UnifiedSearch() {
           ) : null}
           {!organizerQuery && suggest.events.length > 0 ? (
             <>
-              <SectionHeader label="Events" />
+              <SectionHeader label={t("events")} />
               {suggest.events.map((s) => (
                 <SuggestionRow
                   key={s.id}
                   icon="calendar-outline"
                   title={s.label}
                   subtitle={
-                    s.startsAt ? formatDateWithSuffix(s.startsAt) : s.sublabel
+                    s.startsAt
+                      ? formatDateWithSuffix(s.startsAt, undefined, locale)
+                      : s.sublabel
                   }
                   imageUri={thumb(s)}
                   onPress={() => openSuggestion(s)}
@@ -896,7 +908,7 @@ export function UnifiedSearch() {
           ) : null}
           {!organizerQuery && suggest.places.length > 0 ? (
             <>
-              <SectionHeader label="Places" />
+              <SectionHeader label={t("places")} />
               {suggest.places.map((s) => (
                 <SuggestionRow
                   key={s.id}
@@ -912,7 +924,7 @@ export function UnifiedSearch() {
           ) : null}
           {!organizerQuery && suggest.organizers.length > 0 ? (
             <>
-              <SectionHeader label="Organizers" />
+              <SectionHeader label={t("organizers")} />
               {suggest.organizers.map((s) => (
                 <SuggestionRow
                   key={s.id}
@@ -928,7 +940,7 @@ export function UnifiedSearch() {
           ) : null}
           {categoryMatches.length > 0 ? (
             <>
-              <SectionHeader label="Categories" />
+              <SectionHeader label={t("categories")} />
               {categoryMatches.map((name) => (
                 <SuggestionRow
                   key={name}
@@ -949,8 +961,8 @@ export function UnifiedSearch() {
             0 ? (
             <AppText variant="muted" className="px-1 pt-3">
               {suggest.isError
-                ? "Couldn't load suggestions."
-                : "No quick matches. Search anyway."}
+                ? t("couldnTLoadSuggestions")
+                : t("noQuickMatchesSearchAnyway")}
             </AppText>
           ) : null}
 
@@ -959,8 +971,8 @@ export function UnifiedSearch() {
               icon="search-outline"
               title={
                 organizerQuery
-                  ? `Search organizers for “${trimmed}”`
-                  : `Search for “${trimmed}”`
+                  ? t("searchOrganizersFor", { trimmed: trimmed })
+                  : t("searchFor", { trimmed: trimmed })
               }
               onPress={() => runSearch(trimmed)}
             />
@@ -975,8 +987,8 @@ export function UnifiedSearch() {
           {recents.length > 0 ? (
             <>
               <SectionHeader
-                label="Recent"
-                action={{ label: "Clear all", onPress: clear }}
+                label={t("recent")}
+                action={{ label: t("clearAll"), onPress: clear }}
               />
               {recents.map((text) => (
                 <SuggestionRow
@@ -989,7 +1001,7 @@ export function UnifiedSearch() {
               ))}
             </>
           ) : null}
-          <SectionHeader label="Browse categories" />
+          <SectionHeader label={t("browseCategories")} />
           <View className="flex-row flex-wrap gap-2 px-1 pt-1">
             {BROWSE_CATEGORIES.map((name) => (
               <Chip key={name} label={name} onPress={() => runSearch(name)} />
@@ -997,7 +1009,7 @@ export function UnifiedSearch() {
           </View>
           {program.organizerSearch ? (
             <AppText variant="caption" tone="muted" className="px-1 pt-4">
-              Tip: type @ and a name to find an organizer.
+              {t("tipTypeAndANameTo")}
             </AppText>
           ) : null}
         </ScrollView>

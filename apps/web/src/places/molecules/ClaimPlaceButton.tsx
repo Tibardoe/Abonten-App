@@ -6,6 +6,7 @@ import {
   usePlaceClaimState,
 } from "@/hooks/usePlaceClaimState";
 import ClaimPlaceModal from "@/places/organisms/ClaimPlaceModal";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type ClaimPlaceButtonProps = {
@@ -33,6 +34,8 @@ export default function ClaimPlaceButton({
   placeName,
   ownerId,
 }: ClaimPlaceButtonProps) {
+  const t = useTranslations("places");
+
   const { data: user } = useCurrentUser();
   const { data: claimState } = usePlaceClaimState(placeId, user?.id, ownerId);
   const invalidateClaimState = useInvalidatePlaceClaimState();
@@ -43,7 +46,7 @@ export default function ClaimPlaceButton({
   if (claimState?.status === "pending") {
     return (
       <span className="px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm shrink-0">
-        Claim pending review
+        {t("claimPendingReview")}
       </span>
     );
   }
@@ -57,7 +60,7 @@ export default function ClaimPlaceButton({
         onClick={() => setShowModal(true)}
         className="px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm hover:bg-black/30 transition-colors shrink-0"
       >
-        Claim this Place
+        {t("claimThisPlace")}
       </button>
 
       {showModal && (

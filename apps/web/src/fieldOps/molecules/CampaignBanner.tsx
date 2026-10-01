@@ -3,6 +3,7 @@ import type {
   FieldOpsCampaignSummary,
   FieldOpsMembership,
 } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 
 const ROLE_LABEL: Record<FieldOpsMembership["role"], string> = {
   team_lead: "Team lead",
@@ -29,9 +30,11 @@ export default function CampaignBanner({
   campaign: FieldOpsCampaignSummary;
   membership: FieldOpsMembership;
 }) {
+  const t = useTranslations("fieldOps");
+
   const note =
     membership.status === "suspended"
-      ? "Your membership is suspended. Talk to your team lead."
+      ? t("yourMembershipIsSuspendedTalkTo")
       : STATUS_NOTE[campaign.status];
   return (
     <section className="rounded-xl border p-4">

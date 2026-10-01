@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import type { useEventEditForm } from "@/hooks/useEventEditForm";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 type EditEventFormFieldsProps = Pick<
@@ -79,6 +80,8 @@ export default function EditEventFormFields({
   className,
   restrictedLocked = false,
 }: EditEventFormFieldsProps) {
+  const t = useTranslations("common");
+
   return (
     <Form {...form}>
       <form className={className} onSubmit={handleSubmit(onSubmit)}>
@@ -91,7 +94,7 @@ export default function EditEventFormFields({
                   existingFlyer.version,
                   { width: 640, height: 360 },
                 )}
-                alt="Current event flyer"
+                alt={t("currentEventFlyer")}
                 fill
                 className="object-cover"
               />
@@ -100,7 +103,7 @@ export default function EditEventFormFields({
 
           <div className="space-y-1">
             <label htmlFor="edit-flyer" className="text-sm font-medium">
-              Replace flyer (optional)
+              {t("replaceFlyerOptional")}
             </label>
             <input
               id="edit-flyer"
@@ -117,7 +120,7 @@ export default function EditEventFormFields({
             render={({ field }) => (
               <FormItem className="space-y-1.5">
                 <FormLabel className="text-sm font-medium">
-                  Event name
+                  {t("eventName")}
                 </FormLabel>
                 <FormControl>
                   <PostInput type="text" inputPlaceholder="Title" {...field} />
@@ -133,7 +136,7 @@ export default function EditEventFormFields({
             render={({ field }) => (
               <FormItem className="space-y-1.5">
                 <FormLabel className="text-sm font-medium">
-                  Description
+                  {t("description")}
                 </FormLabel>
                 <FormControl>
                   <PostInput
@@ -153,9 +156,7 @@ export default function EditEventFormFields({
           >
             {restrictedLocked && (
               <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted px-3 py-2">
-                This event already has confirmed tickets — location, dates and
-                capacity can't be changed to protect people who already have a
-                ticket.
+                {t("thisEventAlreadyHasConfirmedTickets")}
               </p>
             )}
 
@@ -165,19 +166,21 @@ export default function EditEventFormFields({
               onSelectCoordinates={handleSelectCoordinates}
               value={selectedAddress}
               placeholderText={{
-                text: "Location",
+                text: t("location"),
                 svgUrl: "/assets/images/location.svg",
               }}
             />
             {selectedAddress === "" && (
-              <p className="text-destructive text-sm">Location required</p>
+              <p className="text-destructive text-sm">
+                {t("locationRequired")}
+              </p>
             )}
 
             {/* Date and time — dateType is fixed to whatever the event was
               created with (single/range vs specific dates); switching the
               schedule TYPE isn't supported from edit, only the dates within it. */}
             <div className="space-y-4 text-sm">
-              <h2>Date & Time</h2>
+              <h2>{t("dateTime")}</h2>
               <DateTimePicker
                 handleDateAndTime={handleDateAndTime}
                 dateType={dateType}
@@ -190,7 +193,9 @@ export default function EditEventFormFields({
           <div className="space-y-4 text-sm font-normal">
             <CategoryFilter handleCategory={setCategory} category={category} />
             {category === "" && (
-              <p className="text-destructive text-sm">Select event category</p>
+              <p className="text-destructive text-sm">
+                {t("selectEventCategory")}
+              </p>
             )}
 
             <TypeFilter
@@ -200,7 +205,7 @@ export default function EditEventFormFields({
             />
             {types.length === 0 && (
               <p className="text-destructive text-sm">
-                Select at least one type for event
+                {t("selectAtLeastOneTypeFor")}
               </p>
             )}
 
@@ -210,7 +215,7 @@ export default function EditEventFormFields({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">
-                    Website (optional)
+                    {t("websiteOptional")}
                   </FormLabel>
                   <FormControl>
                     <PostInput
@@ -236,7 +241,7 @@ export default function EditEventFormFields({
                     }
                   >
                     <FormLabel className="text-sm font-medium">
-                      Capacity
+                      {t("capacity")}
                     </FormLabel>
                     <FormControl>
                       <PostInput
@@ -251,7 +256,7 @@ export default function EditEventFormFields({
                       />
                     </FormControl>
                     <p className="text-xs text-muted-foreground">
-                      Leave blank for unlimited capacity
+                      {t("leaveBlankForUnlimitedCapacity")}
                     </p>
                   </fieldset>
                   <FormMessage className="text-sm" />
@@ -260,7 +265,7 @@ export default function EditEventFormFields({
             />
 
             <label className="flex justify-between items-center font-semibold text-foreground cursor-pointer">
-              <span>Require registration</span>
+              <span>{t("requireRegistration")}</span>
               <input
                 type="checkbox"
                 checked={checked}

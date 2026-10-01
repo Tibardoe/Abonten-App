@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/form";
 import { networks } from "@abonten/core/networkProviderData";
 import type { receivingAccountSchema } from "@abonten/validation/receivingAcountSchema";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 // import { useState } from "react";
 import type { useForm } from "react-hook-form";
@@ -34,6 +35,8 @@ export default function ReceivingAccountForms({
   showNetworkDropdown,
   form,
 }: ReceivingAccountType) {
+  const t = useTranslations("common");
+
   const { control } = form;
 
   const fieldInputClassName =
@@ -42,7 +45,7 @@ export default function ReceivingAccountForms({
   return (
     <Form {...form}>
       <div className="max-w-3xl mx-auto space-y-3">
-        <h2>Receiving Account Details</h2>
+        <h2>{t("receivingAccountDetails")}</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -53,7 +56,7 @@ export default function ReceivingAccountForms({
                 <FormControl>
                   <input
                     {...field}
-                    placeholder="Full Name"
+                    placeholder={t("fullName")}
                     className={fieldInputClassName}
                   />
                 </FormControl>
@@ -69,7 +72,7 @@ export default function ReceivingAccountForms({
                 <FormControl>
                   <input
                     {...field}
-                    placeholder="Email"
+                    placeholder={t("email")}
                     className={fieldInputClassName}
                   />
                 </FormControl>
@@ -80,13 +83,12 @@ export default function ReceivingAccountForms({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          NB: Full name should be the same as your bank or mobile money account
-          name
+          {t("nbFullNameShouldBeThe")}
         </p>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="font-medium text-sm">Select Payment Option</p>
+            <p className="font-medium text-sm">{t("selectPaymentOption")}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -114,10 +116,10 @@ export default function ReceivingAccountForms({
                 onClick={() => setShowNetworkDropdown(!selectedNetwork)}
                 className="w-full border border-input px-4 py-2 rounded-md flex justify-between items-center text-sm text-foreground"
               >
-                {selectedNetwork || "Select Mobile Network"}
+                {selectedNetwork || t("selectMobileNetwork")}
                 <MaskIcon
                   src="/assets/images/arrowDown.svg"
-                  alt="Dropdown"
+                  alt={t("dropdown")}
                   className="w-5 h-5"
                 />
               </button>
@@ -151,7 +153,7 @@ export default function ReceivingAccountForms({
                     <FormControl>
                       <input
                         {...field}
-                        placeholder="Phone Number"
+                        placeholder={t("phoneNumber2")}
                         className={fieldInputClassName}
                       />
                     </FormControl>
@@ -173,7 +175,7 @@ export default function ReceivingAccountForms({
                       <FormControl>
                         <input
                           {...field}
-                          placeholder="Bank Name"
+                          placeholder={t("bankName")}
                           className={fieldInputClassName}
                         />
                       </FormControl>
@@ -189,7 +191,7 @@ export default function ReceivingAccountForms({
                       <FormControl>
                         <input
                           {...field}
-                          placeholder="Bank Branch"
+                          placeholder={t("bankBranch")}
                           className={fieldInputClassName}
                         />
                       </FormControl>
@@ -206,7 +208,7 @@ export default function ReceivingAccountForms({
                     <FormControl>
                       <input
                         {...field}
-                        placeholder="Account Number"
+                        placeholder={t("accountNumber")}
                         type="number"
                         className={fieldInputClassName}
                       />

@@ -1,5 +1,6 @@
 import { useProfileCompletion } from "@/features/profile/useProfileCompletion";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -9,6 +10,8 @@ import { Pressable, View } from "react-native";
 // Account setup, linked underneath. Gone once the profile steps are done.
 
 export function ProfileCompletionCard() {
+  const t = useTranslations("profile");
+
   const { data: completion } = useProfileCompletion();
   const router = useRouter();
 
@@ -20,7 +23,7 @@ export function ProfileCompletionCard() {
 
   return (
     <View className="gap-3 rounded-xl border border-border bg-muted p-4">
-      <AppText variant="bodyStrong">Finish your profile</AppText>
+      <AppText variant="bodyStrong">{t("finishYourProfile")}</AppText>
       <View className="gap-2">
         {missing.map((item) => (
           <View key={item.key} className="flex-row gap-2">
@@ -46,8 +49,10 @@ export function ProfileCompletionCard() {
           className="flex-row items-center gap-1 self-start active:opacity-60"
         >
           <AppText variant="small" tone="brand" className="font-semibold">
-            See all account setup steps ({completion.completedCount} of{" "}
-            {completion.total} done)
+            {t("seeAllAccountSetupStepsOf", {
+              completedCount: completion.completedCount,
+              total: completion.total,
+            })}
           </AppText>
           <Icon name="chevron-forward" size={14} tone="primary" />
         </Pressable>

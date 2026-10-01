@@ -2,6 +2,7 @@ import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
 import type { SearchOrganizerHit } from "@abonten/types/searchType";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -16,6 +17,8 @@ export function OrganizerRow({
   onOpen?: () => void;
   onSeeEvents?: () => void;
 }) {
+  const t = useTranslations("search");
+
   const router = useRouter();
   const open = () => {
     onOpen?.();
@@ -35,7 +38,7 @@ export function OrganizerRow({
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Open @${organizer.username}`}
+        accessibilityLabel={t("open", { username: organizer.username })}
         onPress={open}
         className="flex-row items-center gap-3 active:opacity-80"
       >
@@ -55,7 +58,7 @@ export function OrganizerRow({
           </View>
           <AppText variant="meta" tone="muted" numberOfLines={1}>
             @{organizer.username}
-            {organizer.isNew ? " · New" : ""}
+            {organizer.isNew ? t("newText") : ""}
           </AppText>
           {facts.length ? (
             <AppText variant="caption" tone="muted" numberOfLines={1}>
@@ -73,7 +76,7 @@ export function OrganizerRow({
             className="h-10 justify-center rounded-full bg-primary px-4 active:opacity-80"
           >
             <AppText variant="label" className="text-primary-foreground">
-              See their events
+              {t("seeTheirEvents")}
             </AppText>
           </Pressable>
         ) : null}

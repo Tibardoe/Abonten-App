@@ -6,6 +6,7 @@ import type {
   ContentCampaignStatus,
   ContentFeedSurface,
 } from "@abonten/types/contentType";
+import { intlLocale } from "../i18n/coreStrings";
 
 export const SPOTLIGHT_PRODUCT_NAME = "Spotlight";
 
@@ -14,8 +15,9 @@ export function countLabel(
   n: number,
   singular: string,
   plural = `${singular}s`,
+  locale?: string | null,
 ) {
-  return `${n.toLocaleString("en-GB")} ${n === 1 ? singular : plural}`;
+  return `${n.toLocaleString(intlLocale(locale))} ${n === 1 ? singular : plural}`;
 }
 export const STORIES_PRODUCT_NAME = "Stories";
 

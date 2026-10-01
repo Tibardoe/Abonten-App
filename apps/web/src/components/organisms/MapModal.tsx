@@ -2,6 +2,7 @@
 
 import ModalShell from "@/components/atoms/ModalShell";
 import { generateSlug } from "@abonten/core/geerateSlug";
+import { useTranslations } from "next-intl";
 // import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
@@ -27,6 +28,8 @@ const MapModal: React.FC<MapModalProps> = ({
   defaultCenter,
   onLocationSelect,
 }) => {
+  const t = useTranslations("common");
+
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
     lng: number;
@@ -51,7 +54,7 @@ const MapModal: React.FC<MapModalProps> = ({
   };
 
   return (
-    <ModalShell open={isOpen} onClose={onClose} title="Set your location">
+    <ModalShell open={isOpen} onClose={onClose} title={t("setYourLocation")}>
       <div className="bg-card text-card-foreground md:rounded-xl w-full h-full md:w-[60%] md:h-[80%] lg:w-[40%] relative shadow-lg space-y-4">
         <MapPicker
           defaultCenter={defaultCenter}
@@ -60,7 +63,7 @@ const MapModal: React.FC<MapModalProps> = ({
         />
 
         <div className="p-4 space-y-2">
-          <h2 className="text-lg font-semibold">Set your location</h2>
+          <h2 className="text-lg font-semibold">{t("setYourLocation")}</h2>
           <div>
             {/* <input
               type="text"
@@ -71,7 +74,7 @@ const MapModal: React.FC<MapModalProps> = ({
 
             <AutoComplete
               placeholderText={{
-                text: "Enter your address",
+                text: t("enterYourAddress"),
                 svgUrl: "/assets/images/search.svg",
               }}
               classname="bg-muted"
@@ -83,7 +86,7 @@ const MapModal: React.FC<MapModalProps> = ({
             />
 
             <p className="text-muted-foreground">
-              Move the pin to your preferred location
+              {t("moveThePinToYourPreferred")}
             </p>
           </div>
         </div>
@@ -96,7 +99,7 @@ const MapModal: React.FC<MapModalProps> = ({
             onClick={handleConfirm}
             className="bg-primary w-full rounded-full text-primary-foreground font-bold px-4 py-2 text-center"
           >
-            Set address
+            {t("setAddress")}
           </Link>
         </div>
 

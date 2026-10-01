@@ -5,6 +5,7 @@ import {
 } from "@/features/organizer/usePayouts";
 import { useQueryView } from "@/lib/useQueryView";
 import { AppText, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -27,6 +28,8 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 export default function CancelEventScreen() {
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const { eventId, title } = useLocalSearchParams<{
     eventId: string;
@@ -47,13 +50,13 @@ export default function CancelEventScreen() {
   async function onCancel() {
     const res = await cancel.mutateAsync(eventId ?? "");
     if (res.status === 200) {
-      Alert.alert("Event cancelled", res.message, [
+      Alert.alert(t("eventCancelled"), res.message, [
         { text: "OK", onPress: () => router.back() },
       ]);
       return;
     }
-    toast.error("Couldn't cancel", {
-      description: res.message ?? "Please try again.",
+    toast.error(t("couldnTCancel"), {
+      description: res.message ?? t("pleaseTryAgain"),
     });
   }
 
@@ -71,7 +74,7 @@ export default function CancelEventScreen() {
       contentContainerClassName="gap-5 p-4 pb-10"
     >
       <AppText variant="sectionHeading">
-        {title ?? "Cancel this event?"}
+        {title ?? t("cancelThisEvent")}
       </AppText>
 
       {impactError ? (
@@ -81,8 +84,8 @@ export default function CancelEventScreen() {
               impact.data.status !== 200 &&
               impact.data.message) ||
               (impactView.kind === "offline"
-                ? "You're offline. The cancellation details — how many tickets and buyers this affects — will load when you're back online. Cancelling is disabled until then."
-                : "Couldn't load the cancellation details — how many tickets and buyers this affects. Cancelling is disabled until this loads.")}
+                ? t("youReOfflineTheCancellationDetails")
+                : t("couldnTLoadTheCancellationDetails"))}
           </AppText>
           <Pressable
             onPress={() => impact.refetch()}
@@ -90,33 +93,32 @@ export default function CancelEventScreen() {
             className="self-start rounded-lg border border-border px-3 py-1.5 active:opacity-80"
           >
             <AppText variant="small" className="font-semibold text-foreground">
-              {impact.isFetching ? "Retrying…" : "Retry"}
+              {impact.isFetching ? t("retrying") : t("retry")}
             </AppText>
           </Pressable>
         </View>
       ) : (
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Row
-            label="Paid tickets"
+            label={t("paidTickets")}
             value={String(data?.paidTicketCount ?? 0)}
           />
           <Row
-            label="Free tickets"
+            label={t("freeTickets")}
             value={String(data?.freeTicketCount ?? 0)}
           />
-          <Row label="Attendees" value={String(data?.attendeeCount ?? 0)} />
+          <Row
+            label={t("attendees")}
+            value={String(data?.attendeeCount ?? 0)}
+          />
         </View>
       )}
 
       <View className="gap-2 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
         <AppText className="text-sm font-semibold text-destructive">
-          This cannot be undone
+          {t("thisCannotBeUndone")}
         </AppText>
-        <AppText variant="muted">
-          Every ticket is cancelled, all paid buyers are refunded (the service
-          fee is not returned), and every attendee is emailed. Create a new
-          event if you need to reschedule.
-        </AppText>
+        <AppText variant="muted">{t("everyTicketIsCancelledAllPaid")}</AppText>
       </View>
 
       <Pressable
@@ -134,7 +136,7 @@ export default function CancelEventScreen() {
           ) : null}
         </View>
         <AppText variant="small" className="flex-1">
-          I understand this cancels the event and refunds all buyers.
+          {t("iUnderstandThisCancelsTheEvent")}
         </AppText>
       </Pressable>
 
@@ -156,7 +158,7 @@ export default function CancelEventScreen() {
               !confirmed || impactError ? "text-muted-foreground" : "text-white"
             }`}
           >
-            Cancel event
+            {t("cancelEvent")}
           </AppText>
         )}
       </Pressable>
@@ -166,7 +168,7 @@ export default function CancelEventScreen() {
         onPress={() => router.back()}
         className="items-center rounded-xl border border-border px-4 py-3 active:opacity-90"
       >
-        <AppText className="text-sm text-foreground">Keep event</AppText>
+        <AppText className="text-sm text-foreground">{t("keepEvent")}</AppText>
       </Pressable>
     </ScrollView>
   );

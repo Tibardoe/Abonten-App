@@ -113,11 +113,10 @@ export default function NotificationSettings() {
           <Card className="flex-row items-center gap-3">
             <Icon name="notifications-off-outline" size={20} tone="warning" />
             <AppText variant="small" className="flex-1">
-              Notifications are turned off for Abonten on this phone, so nothing
-              below can reach you.
+              {t("notificationsAreTurnedOffForAbonten")}
             </AppText>
             <Button
-              title="Open settings"
+              title={t("openSettings")}
               size="sm"
               variant="outline"
               onPress={() => Linking.openSettings()}
@@ -143,38 +142,43 @@ export default function NotificationSettings() {
             {showFollowing ? (
               <Card className="gap-0">
                 <AppText variant="cardTitle" className="pb-1">
-                  Alerts and picks
+                  {t("alertsAndPicks")}
                 </AppText>
                 <Row
-                  title="New events from organizers you follow"
-                  description="When someone you tapped Notify me on posts a new event."
+                  title={t("newEventsFromOrganizersYouFollow")}
+                  description={t("whenSomeoneYouTappedNotifyMe")}
                   value={p.organizerAlertsPush}
                   disabled={save.isPending}
                   onChange={(v) => save.mutate({ organizerAlertsPush: v })}
                 />
                 <Row
-                  title="Updates from places you follow"
-                  description="New events at places you asked to hear from."
+                  title={t("updatesFromPlacesYouFollow")}
+                  description={t("newEventsAtPlacesYouAsked")}
                   value={p.placeUpdatesPush}
                   disabled={save.isPending}
                   onChange={(v) => save.mutate({ placeUpdatesPush: v })}
                 />
                 <Row
-                  title="Similar events and places"
-                  description="Picks like the ones you enjoy. At most one a day, never at night."
+                  title={t("similarEventsAndPlaces")}
+                  description={t("picksLikeTheOnesYouEnjoy")}
                   value={p.recommendationsPush}
                   disabled={save.isPending}
                   onChange={(v) => save.mutate({ recommendationsPush: v })}
                 />
                 <View className="gap-2 py-3">
-                  <AppText variant="bodyStrong">Take a break</AppText>
+                  <AppText variant="bodyStrong">{t("takeABreak")}</AppText>
                   <AppText variant="small" tone="muted">
                     {pausedUntil
-                      ? `Alerts and picks are paused until ${pausedUntil.toLocaleDateString(undefined, { day: "numeric", month: "short" })}.`
-                      : "Pause alerts and picks for two weeks. Tickets and payments still reach you."}
+                      ? t("alertsAndPicksArePausedUntil2", {
+                          toLocaleDateString: pausedUntil.toLocaleDateString(
+                            undefined,
+                            { day: "numeric", month: "short" },
+                          ),
+                        })
+                      : t("pauseAlertsAndPicksForTwo")}
                   </AppText>
                   <Button
-                    title={pausedUntil ? "Resume now" : "Pause for 2 weeks"}
+                    title={pausedUntil ? t("resumeNow") : t("pauseFor2Weeks")}
                     variant="outline"
                     size="sm"
                     disabled={save.isPending}
@@ -190,19 +194,18 @@ export default function NotificationSettings() {
 
             {showFollowing ? (
               <Card className="gap-2">
-                <AppText variant="cardTitle">What you follow</AppText>
+                <AppText variant="cardTitle">{t("whatYouFollow")}</AppText>
                 {subsView.kind === "loading" ? (
                   <Skeleton width="100%" height={44} />
                 ) : subsView.kind === "offline" || subsView.kind === "error" ? (
                   <AppText variant="small" tone="muted">
                     {subsView.kind === "offline"
-                      ? "You're offline. What you follow will load when you're back online."
-                      : "Couldn't load what you follow. Pull down to try again."}
+                      ? t("youReOfflineWhatYouFollow")
+                      : t("couldnTLoadWhatYouFollow")}
                   </AppText>
                 ) : followed.length === 0 ? (
                   <AppText variant="small" tone="muted">
-                    You don't follow anyone yet. Tap Notify me on an organizer's
-                    profile, or turn on alerts after you get a ticket.
+                    {t("youDonTFollowAnyoneYet2")}
                   </AppText>
                 ) : (
                   followed.map((sub) => (
@@ -247,11 +250,11 @@ export default function NotificationSettings() {
                         </AppText>
                         <AppText variant="caption" tone="muted">
                           {KIND_LABEL[sub.kind]}
-                          {sub.status === "paused" ? " · paused" : ""}
+                          {sub.status === "paused" ? t("paused") : ""}
                         </AppText>
                       </View>
                       <Button
-                        title="Stop"
+                        title={t("stop")}
                         size="sm"
                         variant="outline"
                         disabled={stop.isPending && stop.variables === sub.id}
@@ -265,11 +268,11 @@ export default function NotificationSettings() {
 
             <Card className="gap-0">
               <AppText variant="cardTitle" className="pb-1">
-                Messages and activity
+                {t("messagesAndActivity")}
               </AppText>
               <Row
-                title="Messages, reviews and bookings"
-                description="Push for new messages, reviews, replies and booking updates. You'll still see them in Notifications."
+                title={t("messagesReviewsAndBookings")}
+                description={t("pushForNewMessagesReviewsReplies")}
                 value={p.socialPush}
                 disabled={save.isPending}
                 onChange={(v) => save.mutate({ socialPush: v })}
@@ -278,14 +281,14 @@ export default function NotificationSettings() {
 
             <Card className="gap-0">
               <AppText variant="cardTitle" className="pb-1">
-                Email
+                {t("email")}
               </AppText>
               <Row
-                title="Email me when credit is ready"
+                title={t("emailMeWhenCreditIsReady")}
                 description={
                   p.email
-                    ? `To ${p.email}. At most one email every 12 hours.`
-                    : "Your account has no email address, so you'll get these in the app only."
+                    ? t("toAtMostOneEmailEvery", { email: p.email })
+                    : t("yourAccountHasNoEmailAddress")
                 }
                 value={p.rewardEmails && !!p.email}
                 disabled={save.isPending || !p.email}
@@ -302,17 +305,17 @@ export default function NotificationSettings() {
                     tone="brand"
                     className="font-semibold"
                   >
-                    Add an email address
+                    {t("addAnEmailAddress")}
                   </AppText>
                 </Pressable>
               ) : null}
               {program.recommendationEmail || p.recommendationEmails ? (
                 <Row
-                  title="Email me picks and alerts"
+                  title={t("emailMePicksAndAlerts")}
                   description={
                     p.email
-                      ? `The same picks as the push, to ${p.email}. At most one a day. Unsubscribe from any of these emails at any time.`
-                      : "Your account has no email address, so you'll get picks in the app only."
+                      ? t("theSamePicksAsThePush", { email: p.email })
+                      : t("yourAccountHasNoEmailAddress2")
                   }
                   value={p.recommendationEmails && !!p.email}
                   disabled={
@@ -328,11 +331,9 @@ export default function NotificationSettings() {
             <Card className="flex-row gap-3 bg-muted">
               <Icon name="lock-closed-outline" size={18} tone="muted" />
               <View className="flex-1 gap-0.5">
-                <AppText variant="bodyStrong">Always on</AppText>
+                <AppText variant="bodyStrong">{t("alwaysOn")}</AppText>
                 <AppText variant="small" tone="muted">
-                  Tickets, payments, refunds, event cancellations, account
-                  security and verification decisions. These are part of the
-                  service, so they can't be turned off here.
+                  {t("ticketsPaymentsRefundsEventCancellationsAccount2")}
                 </AppText>
               </View>
             </Card>

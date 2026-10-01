@@ -1,6 +1,7 @@
 "use client";
 
 import type { PlaceType } from "@abonten/types/placeType";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaArrowLeftLong, FaArrowRightLong } from "react-icons/fa6";
 import PlaceCard from "../molecules/PlaceCard";
@@ -17,6 +18,8 @@ type PlacesSliderProps = {
 // in this milestone) and no empty-state overlay (callers just skip
 // rendering this component when `places` is empty).
 export default function PlacesSlider({ heading, places }: PlacesSliderProps) {
+  const t = useTranslations("places");
+
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const scrollRef = useRef<HTMLUListElement>(null);
@@ -67,7 +70,7 @@ export default function PlacesSlider({ heading, places }: PlacesSliderProps) {
             type="button"
             onClick={() => scroll("left")}
             className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-popover transition-all hover:scale-110"
-            aria-label="Scroll left"
+            aria-label={t("scrollLeft")}
           >
             <FaArrowLeftLong className="text-xl text-popover-foreground" />
           </button>
@@ -87,7 +90,7 @@ export default function PlacesSlider({ heading, places }: PlacesSliderProps) {
             type="button"
             onClick={() => scroll("right")}
             className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-popover transition-all hover:scale-110"
-            aria-label="Scroll right"
+            aria-label={t("scrollRight")}
           >
             <FaArrowRightLong className="text-xl text-popover-foreground" />
           </button>

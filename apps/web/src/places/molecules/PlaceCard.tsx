@@ -8,6 +8,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { formatDistance } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
+import { useLocale, useTranslations } from "next-intl";
 import { IoLocationOutline } from "react-icons/io5";
 import AddPlaceToFavoriteButton from "./AddPlaceToFavoriteButton";
 import PlaceOpenStatusBadge from "./PlaceOpenStatusBadge";
@@ -29,6 +30,10 @@ export default function PlaceCard({
   verified,
   priority,
 }: PlaceType & { priority?: boolean }) {
+  const locale = useLocale();
+
+  const t = useTranslations("places");
+
   const { context } = useMarketContext();
   const openStatus = derivePlaceCardOpenStatus(is_open, temporary_status);
   const fullAddress =
@@ -46,7 +51,7 @@ export default function PlaceCard({
           width: 420,
           height: 256,
         })}
-        alt={`Cover photo for ${name}`}
+        alt={t("coverPhotoFor", { name: name })}
         priority={priority}
       />
 
@@ -82,11 +87,13 @@ export default function PlaceCard({
 
             {distance_km != null && (
               <span className="px-2 py-1 bg-muted rounded-full text-xs text-muted-foreground">
-                {formatDistance(
-                  distance_km * 1000,
-                  context?.distanceUnit ?? "km",
-                )}{" "}
-                away
+                {t("away", {
+                  formatDistance: formatDistance(
+                    distance_km * 1000,
+                    context?.distanceUnit ?? "km",
+                    locale,
+                  ),
+                })}
               </span>
             )}
           </div>

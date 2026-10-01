@@ -2,6 +2,7 @@ import PageHeader from "@/components/molecules/PageHeader";
 import FinancesDesktopSidebar from "@/finances/organisms/FinancesDesktopSidebar";
 import FinancesMobileTabs from "@/finances/organisms/FinancesMobileTabs";
 import type { Metadata } from "next";
+import { useTranslations } from "next-intl";
 
 // Organizer money pages: never indexed.
 export const metadata: Metadata = {
@@ -20,9 +21,11 @@ export default function FinancesLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const t = useTranslations("finances");
+
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Finances" />
+      <PageHeader title={t("finances")} />
 
       <FinancesMobileTabs />
 

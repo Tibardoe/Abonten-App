@@ -4,6 +4,7 @@ import {
   phoneCountries,
 } from "@abonten/core/countries";
 import { AppText, Icon, Input, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -23,6 +24,8 @@ export function CountryCodeField({
   /** ISO codes listed first: the open markets, then the visitor's own. */
   priority?: readonly string[];
 }) {
+  const t = useTranslations("auth");
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ordered = useMemo(() => phoneCountries(priority), [priority]);
@@ -37,7 +40,10 @@ export function CountryCodeField({
     <>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Country code, currently ${value.name} ${value.callingCode}`}
+        accessibilityLabel={t("countryCodeCurrently", {
+          name: value.name,
+          callingCode: value.callingCode,
+        })}
         onPress={() => setOpen(true)}
         className="h-[52px] flex-row items-center gap-1.5 rounded-xl border border-input bg-background px-3 active:opacity-70"
       >
@@ -48,10 +54,10 @@ export function CountryCodeField({
         <Icon name="chevron-down" size={14} tone="muted" />
       </Pressable>
 
-      <Sheet open={open} onClose={close} title="Select country">
+      <Sheet open={open} onClose={close} title={t("selectCountry")}>
         <View className="gap-3">
           <Input
-            placeholder="Search by name or code"
+            placeholder={t("searchByNameOrCode")}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
@@ -60,7 +66,7 @@ export function CountryCodeField({
           <View className="overflow-hidden rounded-lg border border-border">
             {results.length === 0 ? (
               <AppText variant="muted" className="p-3">
-                No country matches “{query}”.
+                {t("noCountryMatches", { query: query })}
               </AppText>
             ) : (
               results.map((c, i) => {

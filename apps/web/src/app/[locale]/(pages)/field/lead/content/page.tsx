@@ -5,12 +5,16 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import ContentBriefForm from "@/fieldOps/organisms/ContentBriefForm";
 import ContentReviewRow from "@/fieldOps/organisms/ContentReviewRow";
+import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function FieldLeadContentPage() {
+  const t = await getTranslations("fieldOps");
+  const format = await getFormatter();
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current || !current.isLead) notFound();
@@ -31,10 +35,8 @@ export default async function FieldLeadContentPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Content</PageTitle>
-        <SupportingText>
-          Brief your content creator and review what comes back.
-        </SupportingText>
+        <PageTitle>{t("content")}</PageTitle>
+        <SupportingText>{t("briefYourContentCreatorAndReview")}</SupportingText>
       </div>
 
       <ContentBriefForm
@@ -46,11 +48,11 @@ export default async function FieldLeadContentPage() {
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">
-          Waiting for you ({waiting.length})
+          {t("waitingForYou", { length: waiting.length })}
         </h2>
         {waiting.length === 0 ? (
           <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-            Nothing to review.
+            {t("nothingToReview")}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -65,16 +67,19 @@ export default async function FieldLeadContentPage() {
                   {s.url}
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  {s.memberName ?? "the creator"} · {s.platform}
+                  {s.memberName ?? t("theCreator")} · {s.platform}
                   {s.briefTitle ? ` · ${s.briefTitle}` : ""} ·{" "}
-                  {new Date(s.createdAt).toLocaleDateString()}
+                  {format.dateTime(new Date(s.createdAt), {
+                    dateStyle: "medium",
+                  })}
                 </p>
                 {s.caption ? <p className="mt-2 text-sm">{s.caption}</p> : null}
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Their own figures: {s.selfReportedMetrics.views ?? 0} views ·{" "}
-                  {s.selfReportedMetrics.likes ?? 0} likes ·{" "}
-                  {s.selfReportedMetrics.shares ?? 0} shares. Nothing is paid on
-                  these — open the link and judge the work.
+                  {t("theirOwnFiguresSummary", {
+                    views: s.selfReportedMetrics.views ?? 0,
+                    likes: s.selfReportedMetrics.likes ?? 0,
+                    shares: s.selfReportedMetrics.shares ?? 0,
+                  })}
                 </p>
                 <ContentReviewRow
                   campaignId={current.campaign.id}
@@ -87,10 +92,10 @@ export default async function FieldLeadContentPage() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Briefs</h2>
+        <h2 className="text-lg font-semibold">{t("briefs")}</h2>
         {content.briefs.length === 0 ? (
           <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-            No briefs yet.
+            {t("noBriefsYet")}
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -104,11 +109,15 @@ export default async function FieldLeadContentPage() {
                   <p className="text-xs text-muted-foreground">
                     {b.platforms.length > 0
                       ? b.platforms.join(", ")
-                      : "any platform"}
+                      : t("anyPlatform")}
                     {b.dueOn
-                      ? ` · by ${new Date(b.dueOn).toLocaleDateString()}`
+                      ? t("by2", {
+                          date: format.dateTime(new Date(b.dueOn), {
+                            dateStyle: "medium",
+                          }),
+                        })
                       : ""}
-                    {` · ${b.submissionCount} sent in`}
+                    {t("sentIn2", { submissionCount: b.submissionCount })}
                   </p>
                 </div>
                 <StatusChip status={b.status} />
@@ -120,7 +129,7 @@ export default async function FieldLeadContentPage() {
 
       {decided.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Already decided</h2>
+          <h2 className="text-lg font-semibold">{t("alreadyDecided")}</h2>
           <ul className="flex flex-col gap-2">
             {decided.map((s) => (
               <li

@@ -6,6 +6,7 @@ import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import PayoutDestinationForm from "@/fieldOps/organisms/PayoutDestinationForm";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import type { FieldOpsCommission } from "@abonten/types/fieldOps";
+import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -23,6 +24,9 @@ const STATUS_COPY: Record<string, string> = {
 };
 
 export default async function FieldEarningsPage() {
+  const t = await getTranslations("fieldOps");
+  const format = await getFormatter();
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current) notFound();
@@ -54,7 +58,7 @@ export default async function FieldEarningsPage() {
                 href={`/field/submissions/${c.onboardingId}`}
                 className="font-medium hover:underline"
               >
-                {c.businessName ?? "An onboarding"}
+                {c.businessName ?? t("anOnboarding")}
               </Link>
             ) : (
               <span className="font-medium">
@@ -63,7 +67,7 @@ export default async function FieldEarningsPage() {
             )}
             <p className="text-sm text-muted-foreground">
               {STATUS_COPY[c.status] ?? c.status} ·{" "}
-              {new Date(c.earnedAt).toLocaleDateString()}
+              {format.dateTime(new Date(c.earnedAt), { dateStyle: "medium" })}
             </p>
           </div>
           <span
@@ -79,7 +83,7 @@ export default async function FieldEarningsPage() {
         ) : null}
         {c.status === "reversed" && c.reversalReason ? (
           <p className="mt-2 text-sm text-muted-foreground">
-            Taken back: {c.reversalReason}
+            {t("takenBack", { reversalReason: c.reversalReason })}
           </p>
         ) : null}
       </li>
@@ -89,44 +93,50 @@ export default async function FieldEarningsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Earnings</PageTitle>
+        <PageTitle>{t("earnings")}</PageTitle>
         <SupportingText>
-          What you have earned on {earnings.campaign.name}.
+          {t("whatYouHaveEarnedOn", { name: earnings.campaign.name })}
           {earnings.liveRate
-            ? ` You earn ${money(earnings.liveRate.amountMinor, earnings.liveRate.currency)} for each business that passes its checks.`
+            ? ` ${t("youEarnForEachBusinessThat", {
+                money: money(
+                  earnings.liveRate.amountMinor,
+                  earnings.liveRate.currency,
+                ),
+              })}`
             : ""}
         </SupportingText>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile
-          label="In holding"
+          label={t("inHolding")}
           value={money(totals.pendingMinor, totals.currency)}
           hint={
             earnings.nextReleaseAt
-              ? `next ${new Date(earnings.nextReleaseAt).toLocaleDateString()}`
+              ? t("next2", {
+                  date: format.dateTime(new Date(earnings.nextReleaseAt), {
+                    dateStyle: "medium",
+                  }),
+                })
               : undefined
           }
         />
         <StatTile
-          label="Ready to pay"
+          label={t("readyToPay")}
           value={money(totals.approvedMinor, totals.currency)}
         />
         <StatTile
-          label="In a payout"
+          label={t("inAPayout")}
           value={money(totals.inPayoutMinor, totals.currency)}
         />
         <StatTile
-          label="Paid"
+          label={t("paid")}
           value={money(totals.paidMinor, totals.currency)}
         />
       </div>
 
       <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-        A commission is confirmed after the holding period, once an automatic
-        check confirms the business is still listed and owned by the owner who
-        verified their phone. Confirmed earnings are paid out by the office in
-        weekly batches.
+        {t("aCommissionIsConfirmedAfterThe")}
       </p>
 
       <PayoutDestinationForm
@@ -136,21 +146,29 @@ export default async function FieldEarningsPage() {
 
       {earnings.payouts.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Payments</h2>
+          <h2 className="text-lg font-semibold">{t("payments")}</h2>
           <ul className="flex flex-col gap-3">
             {earnings.payouts.map((p) => (
               <li key={p.id} className="rounded-xl border p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
-                    <p className="font-medium">{p.batchLabel ?? "Payment"}</p>
+                    <p className="font-medium">
+                      {p.batchLabel ?? t("payment")}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {p.status === "paid"
-                        ? `Sent ${p.paidAt ? new Date(p.paidAt).toLocaleDateString() : ""}`
+                        ? t("sent2", {
+                            date: p.paidAt
+                              ? format.dateTime(new Date(p.paidAt), {
+                                  dateStyle: "medium",
+                                })
+                              : "",
+                          })
                         : p.status === "failed"
-                          ? "Did not go through - it is back in your confirmed total"
-                          : "Being prepared"}
+                          ? t("didNotGoThroughItIs")
+                          : t("beingPrepared")}
                       {p.commissionCount > 0
-                        ? ` - ${p.commissionCount} commission${p.commissionCount === 1 ? "" : "s"}`
+                        ? ` – ${t("commissionsCount", { count: p.commissionCount })}`
                         : ""}
                     </p>
                     {p.paymentReference ? (
@@ -170,11 +188,10 @@ export default async function FieldEarningsPage() {
       ) : null}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Your commissions</h2>
+        <h2 className="text-lg font-semibold">{t("yourCommissions")}</h2>
         {lines.length === 0 ? (
           <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-            Nothing yet. A commission appears here once your team lead verifies
-            a business you onboarded.
+            {t("nothingYetACommissionAppearsHere")}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">{lines.map(row)}</ul>

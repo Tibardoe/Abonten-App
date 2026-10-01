@@ -30,6 +30,7 @@ import type {
   ContentProgram,
 } from "@abonten/types/contentType";
 import { AppText, Button, Icon, Refresher, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import {
   useIsFocused,
@@ -76,6 +77,8 @@ const RESTORED_FEED_MAX_AGE_MS = 10 * 60 * 1000;
 // same. Nothing else re-orders the feed while someone is watching it (see
 // useContentFeed).
 export default function SpotlightFeedScreen() {
+  const t = useTranslations("spotlight");
+
   const router = useRouter();
   // The floating tab bar sits over the bottom of the screen: the feed ends
   // above it (the black scene shows around the bar), so pages keep their
@@ -202,13 +205,13 @@ export default function SpotlightFeedScreen() {
     } catch {
       toast.error(
         online
-          ? "Couldn't refresh Spotlight. Try again."
-          : "You're offline. Showing what was already loaded.",
+          ? t("couldnTRefreshSpotlightTryAgain")
+          : t("youReOfflineShowingWhatWas"),
       );
     } finally {
       refreshing.current = false;
     }
-  }, [feedEnabled, refreshFeed, feedKey, toast, online]);
+  }, [feedEnabled, refreshFeed, feedKey, toast, online, t]);
 
   // Re-pressing the tab: back to the first video, or refresh when already
   // there. `navigation.isFocused()` is read at press time, before the tab
@@ -342,25 +345,24 @@ export default function SpotlightFeedScreen() {
   } | null = null;
   if (ready && !program.spotlight) {
     empty = {
-      title: "Spotlight isn't available yet",
-      body: "We're rolling it out gradually. Check back soon.",
+      title: t("spotlightIsnTAvailableYet"),
+      body: t("weReRollingItOutGradually"),
     };
   } else if (needsSignIn) {
     empty = {
-      title: "Follow organizers and places",
-      body: "Sign in to see Spotlights from the people you follow.",
-      label: "Sign in",
+      title: t("followOrganizersAndPlaces"),
+      body: t("signInToSeeSpotlightsFrom"),
+      label: t("signIn"),
       action: () => router.push("/(auth)/sign-in"),
     };
   } else if (needsLocation && !locating && !coords) {
     empty = {
-      title: "Where are you?",
-      body: "Use your location, or choose an area in Explore, to see Spotlights near you.",
-      label: "Use my location",
+      title: t("whereAreYou"),
+      body: t("useYourLocationOrChooseAn"),
+      label: t("useMyLocation"),
       action: () => {
         void followDevice().then((outcome) => {
-          if (outcome !== "ok")
-            toast.error("We couldn't get your location right now.");
+          if (outcome !== "ok") toast.error(t("weCouldnTGetYourLocation"));
         });
       },
     };
@@ -369,23 +371,23 @@ export default function SpotlightFeedScreen() {
     // screen; a failed refresh never replaces it with an error.
   } else if (!online && !feed.isFetching) {
     empty = {
-      title: "You're offline",
-      body: "Spotlight will load as soon as you're back online.",
+      title: t("youReOffline"),
+      body: t("spotlightWillLoadAsSoonAs"),
     };
   } else if (feed.isError) {
     empty = {
-      title: "Couldn't load Spotlight",
-      body: "Check your connection and try again.",
-      label: "Retry",
+      title: t("couldnTLoadSpotlight"),
+      body: t("checkYourConnectionAndTryAgain"),
+      label: t("retry"),
       action: () => feed.refetch(),
     };
   } else if (feed.isFetched && !feed.isFetching) {
     empty = {
-      title: "Nothing here yet",
+      title: t("nothingHereYet"),
       body:
         surface === "following"
-          ? "Follow organizers and places to fill this tab."
-          : "New Spotlights will show up here.",
+          ? t("followOrganizersAndPlacesToFill")
+          : t("newSpotlightsWillShowUpHere"),
     };
   }
 
@@ -589,7 +591,7 @@ export default function SpotlightFeedScreen() {
               onPress={() => router.push("/(app)/spotlight/new?kind=spotlight")}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Create a Spotlight"
+              accessibilityLabel={t("createASpotlight")}
               className="h-10 w-10 items-center justify-center"
             >
               <Icon name="add-circle-outline" size={26} color="#fff" />

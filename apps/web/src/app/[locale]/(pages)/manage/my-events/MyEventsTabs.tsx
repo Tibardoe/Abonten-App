@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -23,39 +24,50 @@ import ReviewedTabContent from "./ReviewedTabContent";
 import TicketsList from "./TicketsList";
 import { type MyEventsTab, isMyEventsTab } from "./myEventsTab";
 
-const noActiveTicketsState = (
-  <div className="text-center space-y-3 py-10">
-    <p className="text-muted-foreground">No active tickets.</p>
-    <Link
-      href="/"
-      className="inline-block text-sm font-semibold text-primary underline"
-    >
-      Discover events
-    </Link>
-  </div>
-);
+function NoActiveTicketsState() {
+  const t = useTranslations("manage");
+  return (
+    <div className="text-center space-y-3 py-10">
+      <p className="text-muted-foreground">{t("noActiveTickets")}</p>
+      <Link
+        href="/"
+        className="inline-block text-sm font-semibold text-primary underline"
+      >
+        {t("discoverEvents")}
+      </Link>
+    </div>
+  );
+}
 
-const noCancelledTicketsState = (
-  <p className="text-center text-muted-foreground text-sm py-10">
-    No cancelled tickets.
-  </p>
-);
-
-const noPastTicketsState = (
-  <p className="mx-auto max-w-xs text-center text-muted-foreground text-sm py-10">
-    No past tickets. Tickets for events that have ended or were cancelled show
-    up here.
-  </p>
-);
-
-const noRefundsState = (
-  <div className="text-center space-y-1 py-10">
-    <p className="font-semibold">No refunds yet</p>
-    <p className="text-muted-foreground text-sm">
-      Refunds for cancelled ticket purchases will appear here when applicable.
+function NoCancelledTicketsState() {
+  const t = useTranslations("manage");
+  return (
+    <p className="text-center text-muted-foreground text-sm py-10">
+      {t("noCancelledTickets")}
     </p>
-  </div>
-);
+  );
+}
+
+function NoPastTicketsState() {
+  const t = useTranslations("manage");
+  return (
+    <p className="mx-auto max-w-xs text-center text-muted-foreground text-sm py-10">
+      {t("noPastTickets")}
+    </p>
+  );
+}
+
+function NoRefundsState() {
+  const t = useTranslations("manage");
+  return (
+    <div className="text-center space-y-1 py-10">
+      <p className="font-semibold">{t("noRefundsYet")}</p>
+      <p className="text-muted-foreground text-sm">
+        {t("refundsForCancelledTicketPurchases")}
+      </p>
+    </div>
+  );
+}
 
 // The count that rides alongside each tab label -- deliberately lighter than
 // the label and kept on the same line, never wrapped beneath it.
@@ -95,6 +107,8 @@ export default function MyEventsTabs({
   fetchCancelledPage: FetchTicketPage;
   fetchRefundsPage: FetchTicketPage;
 }) {
+  const t = useTranslations("manage");
+
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -220,7 +234,7 @@ export default function MyEventsTabs({
                 }}
               >
                 <span className="truncate">
-                  {currentTab === "past" ? "Past" : "Active"}
+                  {currentTab === "past" ? t("past") : t("active")}
                 </span>
                 <TabCount
                   value={currentTab === "past" ? counts.past : counts.active}
@@ -245,7 +259,7 @@ export default function MyEventsTabs({
                   currentTab === "active" && "bg-accent font-medium",
                 )}
               >
-                Active ({counts.active})
+                {t("active2", { active: counts.active })}
               </button>
               <button
                 type="button"
@@ -255,7 +269,7 @@ export default function MyEventsTabs({
                   currentTab === "past" && "bg-accent font-medium",
                 )}
               >
-                Past ({counts.past})
+                {t("past2", { past: counts.past })}
               </button>
             </PopoverContent>
           </Popover>
@@ -264,14 +278,14 @@ export default function MyEventsTabs({
             className="group min-w-0 gap-1 rounded-md px-1.5 text-xs md:px-3 md:text-sm"
             value="cancelled"
           >
-            <span className="truncate">Cancelled</span>
+            <span className="truncate">{t("cancelled")}</span>
             <TabCount value={counts.cancelled} />
           </TabsTrigger>
           <TabsTrigger
             className="group min-w-0 gap-1 rounded-md px-1.5 text-xs md:px-3 md:text-sm"
             value="refunds"
           >
-            <span className="truncate">Refunds</span>
+            <span className="truncate">{t("refunds")}</span>
             <TabCount value={counts.refunds} />
           </TabsTrigger>
 
@@ -305,10 +319,10 @@ export default function MyEventsTabs({
                   {/* Shorter label on mobile so it plus the count still fit
                       one line in a quarter-width cell. */}
                   <span className="md:hidden">
-                    {currentTab === "reviewed" ? "Reviewed" : "Review"}
+                    {currentTab === "reviewed" ? t("reviewed") : t("review")}
                   </span>
                   <span className="hidden md:inline">
-                    {currentTab === "reviewed" ? "Reviewed" : "To Review"}
+                    {currentTab === "reviewed" ? t("reviewed") : t("toReview")}
                   </span>
                 </span>
                 <TabCount
@@ -336,7 +350,7 @@ export default function MyEventsTabs({
                   currentTab === "toReview" && "bg-accent font-medium",
                 )}
               >
-                To Review ({toReviewCount})
+                {t("toReview2", { toReviewCount: toReviewCount })}
               </button>
               <button
                 type="button"
@@ -346,7 +360,7 @@ export default function MyEventsTabs({
                   currentTab === "reviewed" && "bg-accent font-medium",
                 )}
               >
-                Reviewed ({reviewedCount})
+                {t("reviewed2", { reviewedCount: reviewedCount })}
               </button>
             </PopoverContent>
           </Popover>
@@ -358,7 +372,7 @@ export default function MyEventsTabs({
           queryKey={["attending-events", "active"]}
           initialPage={activeInitialPage}
           fetchPage={fetchActivePage}
-          emptyState={noActiveTicketsState}
+          emptyState={<NoActiveTicketsState />}
         />
       </TabsContent>
 
@@ -367,7 +381,7 @@ export default function MyEventsTabs({
           queryKey={["attending-events", "past"]}
           initialPage={pastInitialPage}
           fetchPage={fetchPastPage}
-          emptyState={noPastTicketsState}
+          emptyState={<NoPastTicketsState />}
         />
       </TabsContent>
 
@@ -376,7 +390,7 @@ export default function MyEventsTabs({
           queryKey={["attending-events", "cancelled"]}
           initialPage={cancelledInitialPage}
           fetchPage={fetchCancelledPage}
-          emptyState={noCancelledTicketsState}
+          emptyState={<NoCancelledTicketsState />}
         />
       </TabsContent>
 
@@ -385,7 +399,7 @@ export default function MyEventsTabs({
           queryKey={["attending-events", "refunds"]}
           initialPage={refundsInitialPage}
           fetchPage={fetchRefundsPage}
-          emptyState={noRefundsState}
+          emptyState={<NoRefundsState />}
           showRefundInfo
         />
       </TabsContent>

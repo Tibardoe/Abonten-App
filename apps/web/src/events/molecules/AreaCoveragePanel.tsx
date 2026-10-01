@@ -19,6 +19,7 @@ import {
   waitingText,
 } from "@abonten/core/market/coverageCopy";
 import type { DistanceUnit } from "@abonten/core/units/distance";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -47,6 +48,8 @@ export default function AreaCoveragePanel({
   distanceUnit: DistanceUnit;
   autoJoin: boolean;
 }) {
+  const t = useTranslations("events");
+
   const [waiting, setWaiting] = useState(initiallyWaiting);
   const [pending, startTransition] = useTransition();
   const toast = useToast();
@@ -76,10 +79,10 @@ export default function AreaCoveragePanel({
         setWaiting(true);
         toast.success(waitingText(res.data?.areaName ?? areaName));
       } else if (res.status === 409) {
-        toast.success("Abonten is already open here. Have a look around.");
+        toast.success(t("abontenIsAlreadyOpenHereHave"));
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't add you to the list.");
+        toast.error(res.message ?? t("couldnTAddYouToThe"));
       }
     });
   }
@@ -88,7 +91,7 @@ export default function AreaCoveragePanel({
     startTransition(async () => {
       const res = await leaveAreaWaitlist(point);
       if (res.status === 200) setWaiting(false);
-      else toast.error(res.message ?? "Couldn't take you off the list.");
+      else toast.error(res.message ?? t("couldnTTakeYouOffThe"));
     });
   }
 
@@ -130,12 +133,12 @@ export default function AreaCoveragePanel({
             onClick={leave}
             disabled={pending}
           >
-            {pending ? "Removing you…" : LEAVE_WAITLIST_LABEL}
+            {pending ? t("removingYou") : LEAVE_WAITLIST_LABEL}
           </Button>
         ) : (
           <Button type="button" size="sm" onClick={join} disabled={pending}>
             <FiBell aria-hidden className="h-4 w-4" />
-            {pending ? "Adding you…" : JOIN_WAITLIST_LABEL}
+            {pending ? t("addingYou") : JOIN_WAITLIST_LABEL}
           </Button>
         )}
       </div>
@@ -182,14 +185,14 @@ export default function AreaCoveragePanel({
           href="/help/organizers/creating-and-publishing-events"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          How to list an event
+          {t("howToListAnEvent")}
         </Link>
         {" · "}
         <Link
           href="/help/place-owners/managing-your-place"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          How to add a place
+          {t("howToAddAPlace")}
         </Link>
       </p>
     </section>

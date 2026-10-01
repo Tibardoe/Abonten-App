@@ -1,4 +1,5 @@
 import { Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // Native echo of the web atoms/StarRatingInput: a tappable 1–5 row. No hover
@@ -12,6 +13,8 @@ export function StarRatingInput({
   onChange: (rating: number) => void;
   size?: number;
 }) {
+  const t = useTranslations("reviews");
+
   return (
     <View className="flex-row gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -20,7 +23,7 @@ export function StarRatingInput({
           onPress={() => onChange(star)}
           hitSlop={6}
           accessibilityRole="button"
-          accessibilityLabel={`Rate ${star} out of 5`}
+          accessibilityLabel={t("rateOutOf5", { star: star })}
         >
           <Icon
             name={value >= star ? "star" : "star-outline"}

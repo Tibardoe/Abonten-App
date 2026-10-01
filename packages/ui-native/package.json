@@ -29,7 +29,8 @@
     "react-native-gesture-handler": "*",
     "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
-    "react-native-svg": "*"
+    "react-native-svg": "*",
+    "use-intl": ">=4"
   },
   "devDependencies": {
     "@abonten/config": "*",

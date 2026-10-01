@@ -4,6 +4,7 @@ import InfiniteList from "@/components/organisms/InfiniteList";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { OrganizerPlaceRow as PlaceListRow } from "@abonten/types/placeRows";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa";
@@ -22,6 +23,8 @@ export default function OrganizerPlacesList({
   fetchPage: (cursor: string | null) => Promise<PaginatedResult<PlaceListRow>>;
   emptyState: React.ReactNode;
 }) {
+  const t = useTranslations("manage");
+
   return (
     <InfiniteList<PlaceListRow>
       queryKey={queryKey}
@@ -54,13 +57,13 @@ export default function OrganizerPlacesList({
             <div className="flex-1 min-w-0">
               <h2 className="font-bold truncate">{place.name}</h2>
               <p className="text-sm text-muted-foreground truncate">
-                {place.place_category?.name ?? "Uncategorized"}
+                {place.place_category?.name ?? t("uncategorized")}
                 {place.temporary_status && (
                   <span className="ml-2 text-destructive">
                     ·{" "}
                     {place.temporary_status === "permanently_closed"
-                      ? "Permanently closed"
-                      : "Temporarily closed"}
+                      ? t("permanentlyClosed")
+                      : t("temporarilyClosed")}
                   </span>
                 )}
               </p>

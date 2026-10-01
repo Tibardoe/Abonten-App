@@ -1,4 +1,5 @@
 import type { OrganizerAttentionRow } from "@abonten/types/eventAnalytics";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { TbAlertTriangle, TbCircleCheck } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
@@ -19,6 +20,8 @@ export default function OrganizerNeedsAttention({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const t = useTranslations("common");
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-2">
@@ -31,7 +34,7 @@ export default function OrganizerNeedsAttention({
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't check what needs attention."
+        message={t("weCouldnTCheckWhatNeeds")}
         onRetry={() => onRetry?.()}
       />
     );
@@ -40,13 +43,13 @@ export default function OrganizerNeedsAttention({
   if (items.length === 0) {
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Needs Attention</h2>
+        <h2 className="font-bold md:text-lg">{t("needsAttention")}</h2>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <TbCircleCheck
             className="text-lg text-primary shrink-0"
             aria-hidden="true"
           />
-          You're all caught up — nothing needs attention right now.
+          {t("youReAllCaughtUpNothing")}
         </div>
       </section>
     );
@@ -54,7 +57,7 @@ export default function OrganizerNeedsAttention({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-bold md:text-lg">Needs Attention</h2>
+      <h2 className="font-bold md:text-lg">{t("needsAttention")}</h2>
       <div className="flex flex-col gap-2">
         {items.map((item, i) => (
           <Link

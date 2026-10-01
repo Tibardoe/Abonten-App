@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 type InputBoxProp = {
   title: string;
   value: string;
@@ -5,6 +6,8 @@ type InputBoxProp = {
 };
 
 export default function InputBox({ title, value, placeholder }: InputBoxProp) {
+  const t = useTranslations("settings");
+
   return (
     <div>
       <h2 className="font-bold text-xl">{title}</h2>
@@ -18,9 +21,9 @@ export default function InputBox({ title, value, placeholder }: InputBoxProp) {
           value={value}
         />
 
-        {title === "phone" && <button type="button">Edit</button>}
+        {title === "phone" && <button type="button">{t("edit")}</button>}
 
-        {title === "email" && <button type="button">Edit</button>}
+        {title === "email" && <button type="button">{t("edit")}</button>}
       </div>
     </div>
   );

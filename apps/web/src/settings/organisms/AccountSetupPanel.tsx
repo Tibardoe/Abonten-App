@@ -18,6 +18,7 @@ import {
   Phone,
   User,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 // Settings › Account setup: the five steps, what each is for, which are
@@ -37,6 +38,8 @@ const GROUPS: ProfileCompletionGroup[] = ["profile", "account"];
 const SKELETON_KEYS = ["a", "b", "c", "d", "e"];
 
 function Row({ item }: { item: ProfileCompletionItem }) {
+  const t = useTranslations("settings");
+
   const Icon = item.complete ? Check : ICONS[item.key];
   return (
     <li>
@@ -64,7 +67,7 @@ function Row({ item }: { item: ProfileCompletionItem }) {
           ) : null}
           {item.state === "unverified" ? (
             <span className="block text-xs text-warning">
-              Waiting for a code
+              {t("waitingForACode")}
             </span>
           ) : null}
         </span>
@@ -75,6 +78,8 @@ function Row({ item }: { item: ProfileCompletionItem }) {
 }
 
 export default function AccountSetupPanel() {
+  const t = useTranslations("settings");
+
   const {
     data: completion,
     isLoading,
@@ -95,7 +100,7 @@ export default function AccountSetupPanel() {
   if (isError || !completion) {
     return (
       <InlineErrorRetry
-        message="We couldn't load your account setup."
+        message={t("weCouldnTLoadYourAccount")}
         onRetry={() => refetch()}
       />
     );
@@ -108,28 +113,33 @@ export default function AccountSetupPanel() {
       <div className="space-y-3 rounded-xl border border-border bg-card p-4">
         {completion.isComplete ? (
           <div>
-            <p className="font-semibold">You&apos;re all set</p>
+            <p className="font-semibold">{t("youReAllSet")}</p>
             <p className="text-sm text-muted-foreground">
-              Your profile is complete and you have two ways to sign in.
+              {t("yourProfileIsCompleteAndYou")}
             </p>
           </div>
         ) : (
           <div>
             <p className="font-semibold">
-              {left === 1 ? "One step left" : `${left} steps left`}
+              {left === 1 ? t("oneStepLeft") : t("stepsLeft", { left: left })}
             </p>
             <p className="text-sm text-muted-foreground">
-              None of these are required to use Abonten. Each one says what
-              it&apos;s for.
+              {t("noneOfTheseAreRequiredTo")}
             </p>
           </div>
         )}
         <Progress
           value={(completion.completedCount / completion.total) * 100}
-          aria-label={`${completion.completedCount} of ${completion.total} steps done`}
+          aria-label={t("ofStepsDone", {
+            completedCount: completion.completedCount,
+            total: completion.total,
+          })}
         />
         <p className="text-xs text-muted-foreground">
-          {completion.completedCount} of {completion.total} steps done
+          {t("ofStepsDone", {
+            completedCount: completion.completedCount,
+            total: completion.total,
+          })}
         </p>
       </div>
 
@@ -143,7 +153,7 @@ export default function AccountSetupPanel() {
                 {PROFILE_COMPLETION_GROUP_TITLES[group]}
               </h2>
               <span className="text-xs text-muted-foreground">
-                {done} of {items.length} done
+                {t("ofDone", { done: done, length: items.length })}
               </span>
             </div>
             <ul className="space-y-2">

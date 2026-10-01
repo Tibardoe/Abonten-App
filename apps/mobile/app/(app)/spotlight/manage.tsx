@@ -19,6 +19,7 @@ import {
   SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
@@ -26,29 +27,33 @@ import { FlatList, Pressable, View } from "react-native";
 
 type Tab = "spotlight" | "story" | "campaigns";
 
+// `label` is a catalog key in the spotlight namespace.
 function postStatus(post: ContentOwnPost): {
   label: string;
   tone: "success" | "muted" | "warning" | "error";
 } {
   if (post.moderationState === "removed")
-    return { label: "Removed", tone: "error" };
+    return { label: "postStatus.removed", tone: "error" };
   if (post.moderationState === "hidden")
-    return { label: "Hidden", tone: "error" };
-  if (post.status === "draft") return { label: "Draft", tone: "muted" };
+    return { label: "postStatus.hidden", tone: "error" };
+  if (post.status === "draft")
+    return { label: "postStatus.draft", tone: "muted" };
   if (
     post.kind === "story" &&
     post.expiresAt &&
     Date.parse(post.expiresAt) <= Date.now()
   ) {
-    return { label: "Ended", tone: "muted" };
+    return { label: "postStatus.ended", tone: "muted" };
   }
   if (post.moderationState === "restricted")
-    return { label: "Limited", tone: "warning" };
-  return { label: "Live", tone: "success" };
+    return { label: "postStatus.limited", tone: "warning" };
+  return { label: "postStatus.live", tone: "success" };
 }
 
 // Creator tools: your Spotlights, Stories and promotions.
 export default function ManageContentScreen() {
+  const t = useTranslations("spotlight");
+
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
   const { program, ready } = useContentProgram();
@@ -60,26 +65,26 @@ export default function ManageContentScreen() {
 
   const options: { key: Tab; label: string }[] = [
     ...(program.spotlightPosting
-      ? [{ key: "spotlight" as const, label: "Spotlights" }]
+      ? [{ key: "spotlight" as const, label: t("spotlights") }]
       : []),
     ...(program.storiesPosting
-      ? [{ key: "story" as const, label: "Stories" }]
+      ? [{ key: "story" as const, label: t("stories") }]
       : []),
     ...(program.spotlightPromotions
-      ? [{ key: "campaigns" as const, label: "Promotions" }]
+      ? [{ key: "campaigns" as const, label: t("promotions") }]
       : []),
   ];
 
   const header = (
     <AppHeader
       variant="detail"
-      title="Spotlight & Stories"
+      title={t("spotlightStories")}
       backFallback="/(app)"
       rightAccessory={
         program.canPublish ? (
           <HeaderIconButton
             name="add"
-            accessibilityLabel="Create"
+            accessibilityLabel={t("create")}
             onPress={() =>
               router.push(
                 `/(app)/spotlight/new?kind=${tab === "story" ? "story" : "spotlight"}`,
@@ -105,8 +110,8 @@ export default function ManageContentScreen() {
         {header}
         <EmptyState
           icon="videocam-outline"
-          title="Posting isn't available yet"
-          description="Spotlight and Stories are rolling out to organizers and place owners."
+          title={t("postingIsnTAvailableYet")}
+          description={t("spotlightAndStoriesAreRollingOut")}
         />
       </View>
     );
@@ -126,6 +131,10 @@ export default function ManageContentScreen() {
 }
 
 function Posts({ kind }: { kind: ContentKind }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("spotlight");
+
   const router = useRouter();
   const q = useOwnContent(kind);
   const posts = q.data?.pages.flatMap((p) => p.posts) ?? [];
@@ -144,8 +153,8 @@ function Posts({ kind }: { kind: ContentKind }) {
         view.kind === "empty" ? (
           <EmptyState
             icon="videocam-outline"
-            title={kind === "story" ? "No Stories yet" : "No Spotlights yet"}
-            actionLabel="Create"
+            title={kind === "story" ? t("noStoriesYet") : t("noSpotlightsYet2")}
+            actionLabel={t("create")}
             onAction={() => router.push(`/(app)/spotlight/new?kind=${kind}`)}
           />
         ) : (
@@ -184,7 +193,7 @@ function Posts({ kind }: { kind: ContentKind }) {
                   tone={status.tone}
                   className="font-semibold"
                 >
-                  {status.label}
+                  {t(status.label)}
                 </AppText>
                 {item.campaign ? (
                   <AppText variant="caption" tone="brand">
@@ -196,12 +205,12 @@ function Posts({ kind }: { kind: ContentKind }) {
                 </AppText>
               </View>
               <AppText numberOfLines={1}>
-                {item.caption?.trim() || "No caption"}
+                {item.caption?.trim() || t("noCaption")}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {countLabel(item.counts.views, "view")} ·{" "}
-                {countLabel(item.counts.likes, "like")} ·{" "}
-                {countLabel(item.counts.comments, "comment")}
+                {countLabel(item.counts.views, "view", undefined, locale)} ·{" "}
+                {countLabel(item.counts.likes, "like", undefined, locale)} ·{" "}
+                {countLabel(item.counts.comments, "comment", undefined, locale)}
               </AppText>
             </View>
             <Icon name="chevron-forward" size={16} tone="muted" />
@@ -213,6 +222,10 @@ function Posts({ kind }: { kind: ContentKind }) {
 }
 
 function Campaigns() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("spotlight");
+
   const router = useRouter();
   const q = useOwnCampaigns();
   const rows: ContentCampaign[] = q.data ?? [];
@@ -227,8 +240,8 @@ function Campaigns() {
         view.kind === "empty" ? (
           <EmptyState
             icon="megaphone-outline"
-            title="No promotions yet"
-            description="Open a live Spotlight and choose Promote."
+            title={t("noPromotionsYet")}
+            description={t("openALiveSpotlightAndChoose")}
           />
         ) : (
           <QueryUnavailable
@@ -258,12 +271,19 @@ function Campaigns() {
               {CAMPAIGN_STATUS_LABEL[item.status]}
             </AppText>
             <AppText numberOfLines={1}>
-              {item.post?.caption?.trim() || "Spotlight"}
+              {item.post?.caption?.trim() || t("spotlight")}
             </AppText>
             <AppText variant="caption" tone="muted">
-              {countLabel(item.reach, "person", "people")} reached ·{" "}
-              {countLabel(item.impressions, "impression")} ·{" "}
-              {countLabel(item.clicks, "tap")}
+              {t("reached2", {
+                countLabel: countLabel(item.reach, "person", "people", locale),
+                countLabel2: countLabel(
+                  item.impressions,
+                  "impression",
+                  undefined,
+                  locale,
+                ),
+                countLabel3: countLabel(item.clicks, "tap", undefined, locale),
+              })}
             </AppText>
           </View>
           <AppText variant="bodyStrong">

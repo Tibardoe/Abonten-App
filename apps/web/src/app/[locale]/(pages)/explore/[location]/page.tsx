@@ -10,6 +10,7 @@ import { geocodeAddress } from "@/utils/geocodeServerSide";
 import WeeklyTeaser from "@/weekly/organisms/WeeklyTeaser";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 // One canonical URL per location: the filter, tab and coordinate query
@@ -19,11 +20,15 @@ export async function generateMetadata({
 }: {
   params: Promise<{ location: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("explore");
+
   const { location } = await params;
   const label = undoSlug(decodeURIComponent(location));
   return {
-    title: `Events and places in ${label}`,
-    description: `Discover upcoming events, restaurants, nightlife and places to visit in ${label} on Abonten Hub.`,
+    title: t("eventsAndPlacesIn", { label: label }),
+    description: t("discoverUpcomingEventsRestaurantsNightlifeAnd", {
+      label: label,
+    }),
     alternates: { canonical: `/explore/${location}` },
   };
 }
@@ -59,6 +64,8 @@ export default async function page({
     joinWaitlist?: string;
   }>;
 }) {
+  const t = await getTranslations("explore");
+
   const { location } = await params;
   const {
     lat: latParam,
@@ -102,7 +109,7 @@ export default async function page({
 
   return (
     <section className="space-y-2">
-      <h1 className="text-xl md:text-2xl font-bold">Explore</h1>
+      <h1 className="text-xl md:text-2xl font-bold">{t("explore")}</h1>
 
       <LocationAndFilterSection />
 

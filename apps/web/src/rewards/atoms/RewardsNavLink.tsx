@@ -1,6 +1,7 @@
 "use client";
 
 import { useRewardsProgram } from "@/hooks/useRewardsProgram";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { IoGiftOutline } from "react-icons/io5";
 
@@ -13,6 +14,8 @@ export default function RewardsNavLink({
   onNavigate?: () => void;
   className?: string;
 }) {
+  const t = useTranslations("rewards");
+
   const { data } = useRewardsProgram();
   if (!data?.enabled) return null;
 
@@ -26,7 +29,7 @@ export default function RewardsNavLink({
       }
     >
       <IoGiftOutline className="text-2xl opacity-70" />
-      Rewards
+      {t("rewards")}
     </Link>
   );
 }

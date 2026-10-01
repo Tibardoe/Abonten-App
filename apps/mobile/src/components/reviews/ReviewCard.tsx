@@ -11,6 +11,7 @@ import {
   PressableScale,
   Stars,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { memo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -45,6 +46,10 @@ function ReviewCardImpl({
   onToggleHelpful,
   onMore,
 }: ReviewCardProps) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("reviews");
+
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const name = reviewerDisplayName(review.reviewer, kind);
@@ -53,11 +58,13 @@ function ReviewCardImpl({
       ? `/(app)/user/${review.reviewer.username}`
       : null;
   const long = (review.comment?.length ?? 0) > FOLD_AT;
-  const when = getRelativeTime(review.createdAt);
+  const when = getRelativeTime(review.createdAt, undefined, locale);
   const helpfulLabel =
     review.helpfulCount === 1
-      ? "1 person found this helpful"
-      : `${review.helpfulCount.toLocaleString("en-US")} people found this helpful`;
+      ? t("n1PersonFoundThisHelpful")
+      : t("peopleFoundThisHelpful2", {
+          toLocaleString: review.helpfulCount.toLocaleString("en-US"),
+        });
 
   return (
     <View
@@ -69,7 +76,7 @@ function ReviewCardImpl({
         <View className="flex-row items-center gap-1">
           <Icon name="link-outline" size={13} tone="primary" />
           <AppText variant="caption" tone="brand" className="font-semibold">
-            Shared review
+            {t("sharedReview")}
           </AppText>
         </View>
       ) : null}
@@ -77,7 +84,9 @@ function ReviewCardImpl({
       <View className="flex-row items-center gap-2.5">
         <Pressable
           accessibilityRole={profileHref ? "button" : undefined}
-          accessibilityLabel={profileHref ? `${name}'s profile` : undefined}
+          accessibilityLabel={
+            profileHref ? t("sProfile", { name: name }) : undefined
+          }
           disabled={!profileHref}
           onPress={profileHref ? () => router.push(profileHref) : undefined}
           className="flex-1 flex-row items-center gap-2.5 active:opacity-70"
@@ -99,7 +108,7 @@ function ReviewCardImpl({
               {isOwn ? (
                 <View className="rounded-full bg-accent px-2 py-0.5">
                   <AppText variant="caption" tone="brand">
-                    You
+                    {t("you")}
                   </AppText>
                 </View>
               ) : null}
@@ -108,7 +117,7 @@ function ReviewCardImpl({
               <View className="flex-row items-center gap-1">
                 <Icon name="checkmark-circle" size={12} tone="success" />
                 <AppText variant="caption" tone="success">
-                  Verified attendee
+                  {t("verifiedAttendee")}
                 </AppText>
               </View>
             ) : null}
@@ -117,7 +126,7 @@ function ReviewCardImpl({
         {onMore ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Review options"
+            accessibilityLabel={t("reviewOptions")}
             hitSlop={10}
             onPress={onMore}
             className="h-9 w-9 items-center justify-center rounded-full active:bg-muted"
@@ -131,7 +140,7 @@ function ReviewCardImpl({
         <Stars rating={review.rating} size={13} />
         <AppText variant="caption">
           {when}
-          {review.editedAt ? " · Edited" : ""}
+          {review.editedAt ? t("edited") : ""}
         </AppText>
       </View>
 
@@ -157,7 +166,7 @@ function ReviewCardImpl({
               className="mt-1 self-start active:opacity-60"
             >
               <AppText variant="small" tone="brand" className="font-semibold">
-                {expanded ? "Show less" : "Read more"}
+                {expanded ? t("showLess") : t("readMore")}
               </AppText>
             </Pressable>
           ) : null}
@@ -171,7 +180,7 @@ function ReviewCardImpl({
       {review.response ? (
         <View className="ml-3 mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
           <AppText variant="label" className="mb-1 text-primary">
-            {kind === "event" ? "Organizer's reply" : "Owner's reply"}
+            {kind === "event" ? t("organizerSReply") : t("ownerSReply")}
           </AppText>
           <AppText variant="small">{review.response}</AppText>
         </View>
@@ -187,8 +196,8 @@ function ReviewCardImpl({
             accessibilityRole="button"
             accessibilityLabel={
               review.viewerFoundHelpful
-                ? "Marked as helpful. Tap to undo."
-                : "Mark this review as helpful"
+                ? t("markedAsHelpfulTapToUndo")
+                : t("markThisReviewAsHelpful")
             }
             accessibilityState={{ selected: review.viewerFoundHelpful }}
             onPress={() => onToggleHelpful(!review.viewerFoundHelpful)}
@@ -214,7 +223,7 @@ function ReviewCardImpl({
                   : "text-muted-foreground"
               }`}
             >
-              Helpful
+              {t("helpful")}
               {review.helpfulCount > 0
                 ? ` · ${review.helpfulCount.toLocaleString("en-US")}`
                 : ""}

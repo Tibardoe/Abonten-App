@@ -2,6 +2,7 @@ import type { getTickets } from "@/actions/getTickets";
 import QuantityStepper from "@/components/atoms/QuantityStepper";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { useLocale, useTranslations } from "next-intl";
 import { MdDiscount } from "react-icons/md";
 
 type Ticket = NonNullable<
@@ -27,6 +28,10 @@ export default function CheckoutTicketRow({
   onIncrement,
   onDecrement,
 }: CheckoutTicketRowProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   return (
     <div
       className={`border-2 rounded-md py-4 space-y-4 ${
@@ -37,7 +42,7 @@ export default function CheckoutTicketRow({
         <p>{ticket.type}</p>
 
         <QuantityStepper
-          label={`${ticket.type} tickets`}
+          label={t("ticketsOfType", { type: ticket.type ?? "" })}
           quantity={quantity}
           maxQuantity={ticket.quantity}
           onIncrement={onIncrement}
@@ -54,7 +59,10 @@ export default function CheckoutTicketRow({
               {discountedUnitPrice !== null ? (
                 <span className="flex justify-center items-center gap-1">
                   {formatMoney(ticket.currency, discountedUnitPrice)}{" "}
-                  <MdDiscount className="text-lg" aria-label="Discounted" />
+                  <MdDiscount
+                    className="text-lg"
+                    aria-label={t("discounted")}
+                  />
                 </span>
               ) : (
                 formatMoney(ticket.currency, ticket.price)
@@ -63,7 +71,10 @@ export default function CheckoutTicketRow({
 
             {quantity > 0 && hasAppliedPromo && eligibleUnits < quantity && (
               <p className="text-xs text-muted-foreground">
-                Discount applies to {eligibleUnits} of {quantity}
+                {t("discountAppliesToOf", {
+                  eligibleUnits: eligibleUnits,
+                  quantity: quantity,
+                })}
               </p>
             )}
           </div>
@@ -76,16 +87,22 @@ export default function CheckoutTicketRow({
             }
           >
             {ticket.quantity === null
-              ? "Unlimited"
+              ? t("unlimited")
               : ticket.quantity === 0
-                ? "Sold out"
-                : `${ticket.quantity} left`}
+                ? t("soldOut")
+                : t("left", { quantity: ticket.quantity })}
           </p>
         </div>
 
         {ticket.type !== "SINGLE TICKET" && ticket.available_until && (
           <p className="text-sm">
-            Sales end on {formatSingleDateTime(ticket.available_until).date}
+            {t("salesEndOn", {
+              date: formatSingleDateTime(
+                ticket.available_until,
+                undefined,
+                locale,
+              ).date,
+            })}
           </p>
         )}
       </div>

@@ -12,6 +12,7 @@ import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { priceSliderMax } from "@abonten/core/exploreFilters";
 import { currencySymbol } from "@abonten/core/money/formatMoney";
 import { priceParam } from "@abonten/core/parseFilterModalQueries";
+import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import { useState } from "react";
@@ -107,6 +108,8 @@ export default function FilterModalPopup({
   initialMinRating,
   initialMaxDistanceKm,
 }: FilterModalPopupProp) {
+  const t = useTranslations("common");
+
   const params = useParams();
   const locationSlug =
     typeof params?.location === "string" ? params.location : "";
@@ -302,10 +305,10 @@ export default function FilterModalPopup({
         variant="outline"
         className="flex-1 rounded-md"
       >
-        Reset
+        {t("reset")}
       </Button>
       <Button onClick={handleFilter} className="flex-1 rounded-md">
-        Show results
+        {t("showResults")}
       </Button>
     </div>
   );
@@ -314,17 +317,17 @@ export default function FilterModalPopup({
     <BottomSheet
       open
       onClose={() => handlePopup(false)}
-      title="Filter"
+      title={t("filter")}
       footer={footer}
       className="md:w-[32rem]"
     >
       <div className="space-y-5">
-        <h2 className="font-semibold md:text-lg">Sort by</h2>
+        <h2 className="font-semibold md:text-lg">{t("sortBy")}</h2>
 
         <div className="space-y-5">
           {contentType === "events" && (
             <div>
-              <p className="mb-3">Price</p>
+              <p className="mb-3">{t("price")}</p>
 
               <PriceRangeSlider
                 min={0}
@@ -379,7 +382,7 @@ export default function FilterModalPopup({
           {contentType === "places" && (
             <div>
               <label className="flex items-center justify-between font-semibold md:text-lg cursor-pointer">
-                <span>Open now</span>
+                <span>{t("openNow")}</span>
                 <input
                   type="checkbox"
                   checked={openNowOnly}
@@ -395,10 +398,10 @@ export default function FilterModalPopup({
           {/* date -- Events only */}
           {contentType === "events" && (
             <div>
-              <h2 className="font-semibold md:text-lg mb-3">Date</h2>
+              <h2 className="font-semibold md:text-lg mb-3">{t("date")}</h2>
 
               <DateRangePickerSheet
-                label="Event date range"
+                label={t("eventDateRange")}
                 value={date}
                 onChange={setDate}
               />
@@ -412,7 +415,7 @@ export default function FilterModalPopup({
         <div>
           <TileSelector
             mode="single"
-            label="Rating"
+            label={t("rating")}
             labelClassName="font-semibold md:text-lg mb-3"
             options={rating.map((r) => ({ id: r, label: r }))}
             value={ratingg}
@@ -426,7 +429,7 @@ export default function FilterModalPopup({
         <div>
           <TileSelector
             mode="single"
-            label="Distance"
+            label={t("distance")}
             labelClassName="font-semibold md:text-lg mb-3"
             options={distances.map((d) => ({ id: d, label: d }))}
             value={distance}

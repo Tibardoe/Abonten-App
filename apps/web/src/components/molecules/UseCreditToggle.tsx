@@ -3,6 +3,7 @@
 import { cn } from "@/components/lib/utils";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { CreditQuote } from "@abonten/types/rewards";
+import { useTranslations } from "next-intl";
 
 // The checkout "Use credit" switch (promotions now, tickets in Phase 3).
 // It only shows what the server quoted — the amount applied is decided
@@ -18,26 +19,35 @@ export default function UseCreditToggle({
   onChange: (next: boolean) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations("common");
+
   return (
     <div className="space-y-2 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold">
-            Use {formatCredit(quote.creditMinor, quote.currency)} Abonten Credit
+            {t("useAbontenCredit", {
+              formatCredit: formatCredit(quote.creditMinor, quote.currency),
+            })}
           </p>
           <p className="text-xs text-muted-foreground">
             {!quote.creditOnly
-              ? `You have ${formatCredit(quote.spendableMinor, quote.currency)} you can use here.`
+              ? t("youHaveYouCanUseHere", {
+                  formatCredit: formatCredit(
+                    quote.spendableMinor,
+                    quote.currency,
+                  ),
+                })
               : checked
-                ? "Your credit covers this. No card or wallet is charged."
-                : "Your credit can cover all of this. Turn it on to use it."}
+                ? t("yourCreditCoversThisNoCard")
+                : t("yourCreditCanCoverAllOf")}
           </p>
         </div>
         <button
           type="button"
           role="switch"
           aria-checked={checked}
-          aria-label="Use Abonten Credit"
+          aria-label={t("useAbontenCredit2")}
           disabled={disabled}
           onClick={() => onChange(!checked)}
           className={cn(
@@ -56,15 +66,15 @@ export default function UseCreditToggle({
 
       {checked ? (
         <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 border-t border-border pt-2 text-sm tabular-nums">
-          <dt className="text-muted-foreground">Total</dt>
+          <dt className="text-muted-foreground">{t("total")}</dt>
           <dd className="text-right">
             {formatCredit(quote.orderTotalMinor, quote.currency)}
           </dd>
-          <dt className="text-muted-foreground">Credit</dt>
+          <dt className="text-muted-foreground">{t("credit")}</dt>
           <dd className="text-right">
             −{formatCredit(quote.creditMinor, quote.currency)}
           </dd>
-          <dt className="font-semibold">You pay</dt>
+          <dt className="font-semibold">{t("youPay")}</dt>
           <dd className="text-right font-semibold">
             {formatCredit(quote.cashMinor, quote.currency)}
           </dd>

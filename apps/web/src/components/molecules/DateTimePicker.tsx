@@ -4,6 +4,7 @@ import {
   formatFullDateTimeRange,
   formatSingleDateTime,
 } from "@abonten/core/dateFormatter";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { InlineDateField } from "../atoms/InlineDateField";
@@ -42,11 +43,10 @@ function nextHalfHour(): Date {
 // independent of whatever format the native time input in the editor below
 // shows while editing (that follows the browser/OS locale) -- the two are
 // unrelated, since this only formats an already-committed Date for display.
-const timeLabel = (date: Date) =>
-  date.toLocaleTimeString([], {
+const timeLabel = (date: Date, locale: string) =>
+  date.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
   });
 
 export default function DateTimePicker({
@@ -55,6 +55,10 @@ export default function DateTimePicker({
   initialRange,
   initialEntries,
 }: DateAndTimeType) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   const [isRangeMode, setIsRangeMode] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,10 +90,18 @@ export default function DateTimePicker({
           <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted px-3 py-2">
             <div>
               <p className="text-sm">
-                {formatFullDateTimeRange(dateRange.from, dateRange.to).date}
+                {
+                  formatFullDateTimeRange(
+                    dateRange.from,
+                    dateRange.to,
+                    undefined,
+                    locale,
+                  ).date
+                }
               </p>
               <p className="text-xs text-muted-foreground">
-                {timeLabel(dateRange.from)} – {timeLabel(dateRange.to)}
+                {timeLabel(dateRange.from, locale)} –{" "}
+                {timeLabel(dateRange.to, locale)}
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -110,7 +122,7 @@ export default function DateTimePicker({
                   setEditorOpen(true);
                 }}
               >
-                Edit
+                {t("edit")}
               </Button>
               <Button
                 type="button"
@@ -118,7 +130,7 @@ export default function DateTimePicker({
                 variant="destructive"
                 onClick={() => commitSingle({ from: undefined, to: undefined })}
               >
-                Delete
+                {t("deleteText")}
               </Button>
             </div>
           </div>
@@ -137,10 +149,11 @@ export default function DateTimePicker({
             >
               <div>
                 <p className="text-sm">
-                  {formatSingleDateTime(entry.start).date}
+                  {formatSingleDateTime(entry.start, undefined, locale).date}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {timeLabel(entry.start)} – {timeLabel(entry.end)}
+                  {timeLabel(entry.start, locale)} –{" "}
+                  {timeLabel(entry.end, locale)}
                 </p>
               </div>
               <div className="flex gap-2 shrink-0">
@@ -153,7 +166,7 @@ export default function DateTimePicker({
                     setEditorOpen(true);
                   }}
                 >
-                  Edit
+                  {t("edit")}
                 </Button>
                 <Button
                   type="button"
@@ -165,7 +178,7 @@ export default function DateTimePicker({
                     handleDateAndTime(next);
                   }}
                 >
-                  Delete
+                  {t("deleteText")}
                 </Button>
               </div>
             </li>
@@ -188,8 +201,8 @@ export default function DateTimePicker({
             }}
           >
             {dateType === "specific" && entries.length > 0
-              ? "+ Add another date"
-              : "+ Add date and time"}
+              ? t("addAnotherDate")
+              : t("addDateAndTime")}
           </Button>
         )}
 
@@ -219,11 +232,11 @@ export default function DateTimePicker({
           submitLabel={
             dateType === "single"
               ? dateRange.from
-                ? "Save changes"
-                : "Add date"
+                ? t("saveChanges")
+                : t("addDate")
               : editingIndex !== null
-                ? "Save changes"
-                : "Add date"
+                ? t("saveChanges")
+                : t("addDate")
           }
           onCancel={() => {
             setEditorOpen(false);
@@ -243,7 +256,7 @@ export default function DateTimePicker({
                   e.end.getTime() === candidate.end.getTime(),
               );
               if (isDuplicate) {
-                setError("This date and time has already been added.");
+                setError(t("thisDateAndTimeHasAlready"));
                 return;
               }
 
@@ -292,6 +305,8 @@ function EditorFields({
   onCancel,
   onSubmit,
 }: EditorFieldsProps) {
+  const t = useTranslations("common");
+
   const [day, setDay] = useState<Date | undefined>(initial?.from);
   const [rangeDays, setRangeDays] = useState<DateRange>({
     from: initial?.from,
@@ -308,7 +323,7 @@ function EditorFields({
     const endDay = dateType === "single" && isRangeMode ? rangeDays.to : day;
 
     if (!startDay || !endDay || !fromTime || !toTime) {
-      setError("Please select a date, start time, and end time.");
+      setError(t("pleaseSelectADateStartTime"));
       return;
     }
 
@@ -316,7 +331,7 @@ function EditorFields({
     const end = combineDateAndTime(endDay, toTime);
 
     if (end <= start) {
-      setError("End time must be after start time.");
+      setError(t("endTimeMustBeAfterStart"));
       return;
     }
 
@@ -335,7 +350,7 @@ function EditorFields({
             className="h-4 w-4 accent-primary"
           />
           <label htmlFor="rangeMode" className="text-sm">
-            Use date range (event spans multiple days)
+            {t("useDateRangeEventSpansMultiple")}
           </label>
         </div>
       )}
@@ -343,13 +358,13 @@ function EditorFields({
       {dateType === "single" && isRangeMode ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <InlineDateField
-            label="Start date"
+            label={t("startDate")}
             date={rangeDays.from}
             onSelect={(d) => setRangeDays((r) => ({ ...r, from: d }))}
             disabledBefore={new Date()}
           />
           <InlineDateField
-            label="End date"
+            label={t("endDate")}
             date={rangeDays.to}
             onSelect={(d) => setRangeDays((r) => ({ ...r, to: d }))}
             disabledBefore={rangeDays.from ?? new Date()}
@@ -357,7 +372,7 @@ function EditorFields({
         </div>
       ) : (
         <InlineDateField
-          label="Date"
+          label={t("date")}
           date={day}
           onSelect={setDay}
           disabledBefore={new Date()}
@@ -366,13 +381,13 @@ function EditorFields({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <InlineTimeField
-          label="Start time"
+          label={t("startTime")}
           date={fromTime}
           onChange={setFromTime}
           seedValue={nextHalfHour}
         />
         <InlineTimeField
-          label="End time"
+          label={t("endTime")}
           date={toTime}
           onChange={setToTime}
           seedValue={() =>
@@ -392,7 +407,7 @@ function EditorFields({
           className="w-full"
           onClick={onCancel}
         >
-          Cancel
+          {t("cancel")}
         </Button>
         <Button type="button" className="w-full" onClick={handleSubmit}>
           {submitLabel}

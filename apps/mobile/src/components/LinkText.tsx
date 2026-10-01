@@ -2,6 +2,7 @@ import { openExternalLink } from "@/lib/legalLinks";
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { hasLink, isSafeWebUrl, linkify } from "@abonten/core/linkify";
 import { AppText, type AppTextProps } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
 import { Alert, type TextStyle } from "react-native";
@@ -38,6 +39,8 @@ export function LinkText({
   /** Colour / decoration for the link spans (defaults to underline). */
   linkStyle?: TextStyle;
 }) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const segments = useMemo(
     () => (hasLink(text) ? linkify(text) : null),
@@ -64,9 +67,9 @@ export function LinkText({
             ]}
             onPress={() => open(seg.href)}
             onLongPress={() =>
-              Alert.alert("Open link?", seg.href, [
-                { text: "Cancel", style: "cancel" },
-                { text: "Open", onPress: () => open(seg.href) },
+              Alert.alert(t("openLink"), seg.href, [
+                { text: t("cancel"), style: "cancel" },
+                { text: t("open"), onPress: () => open(seg.href) },
               ])
             }
           >

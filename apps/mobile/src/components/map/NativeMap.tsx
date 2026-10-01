@@ -1,4 +1,5 @@
 import { AppText } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import Constants from "expo-constants";
 import { Component, type ReactNode } from "react";
 import { Platform, View } from "react-native";
@@ -18,6 +19,18 @@ import { Platform, View } from "react-native";
 // JS error boundary CANNOT catch (it crashes the UI thread first). So the
 // screens must not mount a MapView at all unless `MapConfigured` is true.
 
+function MapUnavailable() {
+  const t = useTranslations("explore");
+  return (
+    <View className="flex-1 items-center justify-center gap-2 bg-background p-8">
+      <AppText variant="bodyStrong">{t("mapNeedsTheLatestApp")}</AppText>
+      <AppText variant="muted" className="text-center">
+        {t("updateAbontenToSeeTheMap")}
+      </AppText>
+    </View>
+  );
+}
+
 export class MapErrorBoundary extends Component<
   { children: ReactNode; fallback?: ReactNode },
   { failed: boolean }
@@ -30,16 +43,7 @@ export class MapErrorBoundary extends Component<
 
   render() {
     if (this.state.failed) {
-      return (
-        this.props.fallback ?? (
-          <View className="flex-1 items-center justify-center gap-2 bg-background p-8">
-            <AppText variant="bodyStrong">Map needs the latest app</AppText>
-            <AppText variant="muted" className="text-center">
-              Update Abonten (or rebuild the dev client) to see the map view.
-            </AppText>
-          </View>
-        )
-      );
+      return this.props.fallback ?? <MapUnavailable />;
     }
     return this.props.children;
   }

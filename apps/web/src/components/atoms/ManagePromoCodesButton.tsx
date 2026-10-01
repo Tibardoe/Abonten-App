@@ -2,6 +2,7 @@
 
 import ManagePromoCodesModal from "@/components/organisms/ManagePromoCodesModal";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { MdLocalOffer } from "react-icons/md";
 
@@ -20,6 +21,8 @@ export default function ManagePromoCodesButton({
   asMenuItem,
   onRequestClose,
 }: ManagePromoCodesButtonProps) {
+  const t = useTranslations("common");
+
   const [showModal, setShowModal] = useState(false);
 
   const closeModal = () => {
@@ -41,7 +44,7 @@ export default function ManagePromoCodesButton({
           className="gap-2"
         >
           <MdLocalOffer className="text-xl" />
-          Manage Promo Codes
+          {t("managePromoCodes")}
         </DropdownMenuItem>
       ) : (
         <button
@@ -50,7 +53,7 @@ export default function ManagePromoCodesButton({
           onClick={() => setShowModal(true)}
         >
           <MdLocalOffer className="text-xl" />
-          Manage Promo Codes
+          {t("managePromoCodes")}
         </button>
       )}
 

@@ -36,6 +36,7 @@ import {
   Refresher,
   Spinner,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, View } from "react-native";
@@ -47,6 +48,8 @@ const MODE_SUBTITLE = {
 } as const;
 
 export default function Messages() {
+  const t = useTranslations("messaging");
+
   const router = useRouter();
   const listPadding = useTabBarListPadding();
   const { session } = useSession();
@@ -166,13 +169,12 @@ export default function Messages() {
       <View className="flex-1 bg-background">
         <AppHeader variant="branded" />
         <View className="flex-1 items-center justify-center gap-4 px-8">
-          <AppText variant="sectionTitle">Sign in to Messages</AppText>
+          <AppText variant="sectionTitle">{t("signInToMessages")}</AppText>
           <AppText variant="muted" className="text-center">
-            Message event organizers and places without sharing your phone
-            number.
+            {t("messageEventOrganizersAndPlacesWithout")}
           </AppText>
           <Button
-            title="Sign In"
+            title={t("signIn")}
             onPress={() => router.push("/(auth)/sign-in")}
           />
         </View>
@@ -237,25 +239,25 @@ export default function Messages() {
               icon={searching ? "search-outline" : "chatbubbles-outline"}
               title={
                 searching
-                  ? "No conversations found"
+                  ? t("noConversationsFound")
                   : roleScope === "business"
-                    ? "No organizer conversations yet"
+                    ? t("noOrganizerConversationsYet")
                     : filtered
-                      ? "Nothing matches these filters"
-                      : "No conversations yet"
+                      ? t("nothingMatchesTheseFilters2")
+                      : t("noConversationsYet")
               }
               description={
                 searching
-                  ? "Try another name, event, or place."
+                  ? t("tryAnotherNameEventOrPlace")
                   : roleScope === "business"
-                    ? "When people reach out about your events or places, you'll find them here."
+                    ? t("whenPeopleReachOutAboutYour")
                     : filtered
-                      ? "Remove a filter to see more."
-                      : "Chat with an organizer or place when you have a question about an event, venue, or experience."
+                      ? t("removeAFilterToSeeMore")
+                      : t("chatWithAnOrganizerOrPlace")
               }
               actionLabel={
                 !searching && !filtered && roleScope !== "business"
-                  ? "Explore events"
+                  ? t("exploreEvents")
                   : undefined
               }
               onAction={

@@ -2,6 +2,7 @@ import { listFieldOpsLeadTeam } from "@/actions/fieldOps/listFieldOpsLeadTeam";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import LeadTeamPanel from "@/fieldOps/organisms/LeadTeamPanel";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,8 @@ export const dynamic = "force-dynamic";
 const MANAGEABLE = new Set(["draft", "active", "paused"]);
 
 export default async function FieldLeadTeamPage() {
+  const t = await getTranslations("fieldOps");
+
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
   if (!current?.isLead) notFound();
@@ -18,10 +21,11 @@ export default async function FieldLeadTeamPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Team</PageTitle>
+        <PageTitle>{t("team")}</PageTitle>
         <SupportingText>
-          Everyone on {current.campaign.name}. Payout details are handled by the
-          finance team, not here.
+          {t("everyoneOnPayoutDetailsAreHandled", {
+            name: current.campaign.name,
+          })}
         </SupportingText>
       </div>
       <LeadTeamPanel

@@ -3,6 +3,7 @@
 import { getEventPromoterOffer } from "@/actions/getEventPromoterOffer";
 import { useReferralCode } from "@/hooks/useReferralCode";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 /**
  * "Share and earn": shown under an event's share button when the organizer
@@ -10,6 +11,8 @@ import { useQuery } from "@tanstack/react-query";
  * referral code (signed in, capture on).
  */
 export default function PromoterEarnHint({ eventId }: { eventId: string }) {
+  const t = useTranslations("events");
+
   const code = useReferralCode();
   const { data } = useQuery({
     queryKey: ["promoter-offer", eventId],
@@ -21,11 +24,12 @@ export default function PromoterEarnHint({ eventId }: { eventId: string }) {
   if (!code || !rate) return null;
   return (
     <p className="mt-2 text-center text-xs text-muted-foreground">
-      The organizer pays promoters{" "}
-      <span className="font-semibold text-foreground">
-        {Number((rate / 100).toFixed(2))}%
-      </span>{" "}
-      of every ticket sold through their link, as credit after the event.
+      {t.rich("organizerPaysPromotersRate", {
+        rate: Number((rate / 100).toFixed(2)),
+        strong: (chunks) => (
+          <span className="font-semibold text-foreground">{chunks}</span>
+        ),
+      })}
     </p>
   );
 }

@@ -21,6 +21,7 @@ import {
   Skeleton,
   StatusPill,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { shadow } from "@abonten/ui-native/theme";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -70,15 +71,17 @@ function GlassButton({
 // to a bounded number of lines with a tail ellipsis and letting the text flex
 // inside its row so it can never widen the card.
 
-function priceLabel(event: UserPostType): string {
+function priceLabel(
+  event: UserPostType,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string {
   const price = event.min_price ?? event.ticket_price;
-  if (price == null || price === 0) return "Free entry";
+  if (price == null || price === 0) return t("freeEntry");
   const currency = event.currency ?? event.ticket_currency ?? "";
-  const from =
-    event.min_price != null && event.min_price !== event.ticket_price
-      ? "From "
-      : "";
-  return `${from}${formatMoney(currency, price, { trimZeroFraction: true })}`;
+  const amount = formatMoney(currency, price, { trimZeroFraction: true });
+  return event.min_price != null && event.min_price !== event.ticket_price
+    ? t("fromPrice", { price: amount })
+    : amount;
 }
 
 function spotsLeft(event: UserPostType, attendees: number): number | null {
@@ -119,6 +122,10 @@ function statusFor(event: UserPostType): CardStatus {
 }
 
 export function EventCard({ event }: { event: UserPostType }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("common");
+
   const router = useRouter();
   const qc = useQueryClient();
   const attendingIds = useAttendingEventIds();
@@ -145,6 +152,7 @@ export function EventCard({ event }: { event: UserPostType }) {
     event.ends_at,
     event.occurrences,
     event.timezone,
+    locale,
   );
   const attendees = event.attendanceCount ?? event.attendance_count ?? 0;
   const remaining = spotsLeft(event, attendees);
@@ -201,7 +209,7 @@ export function EventCard({ event }: { event: UserPostType }) {
               className="text-[12px] font-semibold text-success-foreground"
               numberOfLines={1}
             >
-              You're going
+              {t("youReGoing")}
             </AppText>
           </View>
         ) : null}
@@ -210,7 +218,7 @@ export function EventCard({ event }: { event: UserPostType }) {
           <FavoriteButton kind="event" id={event.id} onSurface size={20} />
           <GlassButton
             icon="ellipsis-horizontal"
-            label="More options"
+            label={t("moreOptions")}
             onPress={() => setMenuOpen(true)}
           />
         </View>
@@ -232,7 +240,7 @@ export function EventCard({ event }: { event: UserPostType }) {
           <AppText variant="metaStrong" className="flex-1" numberOfLines={1}>
             {dt.date}
             {dt.time ? `  ·  ${dt.time}` : ""}
-            {dt.extraDates > 0 ? `  ·  +${dt.extraDates} more` : ""}
+            {dt.extraDates > 0 ? t("more", { extraDates: dt.extraDates }) : ""}
           </AppText>
         </View>
 
@@ -246,7 +254,7 @@ export function EventCard({ event }: { event: UserPostType }) {
         <View className="flex-row items-center gap-1.5">
           <Icon name="pricetag-outline" size={14} tone="foreground" />
           <AppText variant="metaStrong" className="flex-1" numberOfLines={1}>
-            {priceLabel(event)}
+            {priceLabel(event, t)}
             {approx ? ` · ${approx}` : ""}
           </AppText>
         </View>
@@ -258,7 +266,7 @@ export function EventCard({ event }: { event: UserPostType }) {
             <Icon name="people-outline" size={14} tone="muted" />
             {attendees > 0 ? (
               <AppText variant="meta" numberOfLines={1}>
-                {attendees.toLocaleString()} going
+                {t("going", { toLocaleString: attendees.toLocaleString() })}
               </AppText>
             ) : null}
             {attendees > 0 && fewLeft ? (
@@ -271,7 +279,7 @@ export function EventCard({ event }: { event: UserPostType }) {
                 className="shrink font-semibold"
                 numberOfLines={1}
               >
-                Only {remaining.toLocaleString()} left
+                {t("onlyLeft2", { toLocaleString: remaining.toLocaleString() })}
               </AppText>
             ) : null}
           </View>

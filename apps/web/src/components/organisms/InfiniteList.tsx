@@ -5,6 +5,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { isValidElement, useCallback } from "react";
 
 type InfiniteListProps<T> = {
@@ -39,6 +40,8 @@ export default function InfiniteList<T>({
   wrapItems = false,
   loadingSkeleton,
 }: InfiniteListProps<T>) {
+  const t = useTranslations("common");
+
   const {
     data,
     fetchNextPage,
@@ -77,7 +80,7 @@ export default function InfiniteList<T>({
   if (isError && items.length === 0) {
     return (
       <InlineErrorRetry
-        message="We couldn't load this list."
+        message={t("weCouldnTLoadThisList")}
         onRetry={() => refetch()}
       />
     );

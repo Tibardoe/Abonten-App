@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 import type { UserTicketType } from "@abonten/types/ticketType";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 
 // Dynamically imported so the PDF-generation library (@react-pdf/renderer)
@@ -16,6 +17,8 @@ type ViewTicketBtnProps = {
 };
 
 export default function ViewTicketBtn({ event }: ViewTicketBtnProps) {
+  const t = useTranslations("common");
+
   const [showTicket, setShowTicket] = useState(false);
 
   // const { transactionId } = useParams();
@@ -35,7 +38,7 @@ export default function ViewTicketBtn({ event }: ViewTicketBtnProps) {
         onClick={() => handleShowTicket(true)}
         className="bg-primary text-primary-foreground text-sm px-4 py-2 rounded-lg"
       >
-        View Ticket
+        {t("viewTicket")}
       </button>
     </>
   );

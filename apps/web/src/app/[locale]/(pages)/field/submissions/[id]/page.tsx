@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/ui/typography";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import OnboardingDetailView from "@/fieldOps/organisms/OnboardingDetailView";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -13,6 +14,8 @@ export default async function FieldSubmissionDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations("fieldOps");
+
   const { id } = await params;
   const me = await loadFieldOpsMe();
   const current = me.data?.current;
@@ -30,12 +33,14 @@ export default async function FieldSubmissionDetailPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <PageTitle>
-          {res.data.onboarding.businessName ?? "Onboarding"}
+          {res.data.onboarding.businessName ?? t("onboarding")}
         </PageTitle>
         {status === "draft" || status === "needs_changes" ? (
           <Button asChild size="sm">
             <Link href={`/field/onboard/${id}`}>
-              {status === "needs_changes" ? "Fix and resubmit" : "Continue"}
+              {status === "needs_changes"
+                ? t("fixAndResubmit")
+                : t("continueText")}
             </Link>
           </Button>
         ) : null}
@@ -45,7 +50,7 @@ export default async function FieldSubmissionDetailPage({
         href="/field/submissions"
         className="text-sm text-primary hover:underline"
       >
-        All submissions
+        {t("allSubmissions")}
       </Link>
     </div>
   );

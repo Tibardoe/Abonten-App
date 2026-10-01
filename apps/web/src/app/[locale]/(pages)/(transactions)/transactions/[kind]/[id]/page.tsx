@@ -9,6 +9,7 @@ import type {
   TransactionKind,
   TransactionStatus,
 } from "@abonten/types/transactions";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -33,6 +34,11 @@ export default async function Page({
 }: {
   params: Promise<{ kind: string; id: string }>;
 }) {
+  const locale = await getLocale();
+
+  const t = await getTranslations("transactions");
+  const tc = await getTranslations("common");
+
   const { kind, id } = await params;
 
   if (kind !== "ticket" && kind !== "subscription") {
@@ -99,7 +105,7 @@ export default async function Page({
           cancelledTickets[0].transaction.refund_requested_at,
         )
       : null;
-  const { label: statusLabel } = getTransactionStatusMeta(row.status);
+  const statusLabel = tc(getTransactionStatusMeta(row.status).labelKey);
   const contextualDate =
     row.status === "paid"
       ? row.completed_at
@@ -108,15 +114,15 @@ export default async function Page({
         : row.created_at;
   const contextualDateLabel =
     row.status === "paid"
-      ? "Completed"
+      ? t("completed")
       : row.status === "pending"
-        ? "Expires"
-        : "Date";
+        ? t("expires")
+        : t("date");
 
   return (
     <div className="space-y-10 text-sm mb-5 md:mb-0 w-full">
       <div className="font-bold text-muted-foreground flex justify-between items-center bg-muted rounded-md p-5">
-        <p>Amount</p>
+        <p>{t("amount")}</p>
         <p>
           {formatMoney(
             currency,
@@ -136,8 +142,9 @@ export default async function Page({
           <p className="font-bold">{statusLabel}</p>
           {contextualDate && (
             <p className="text-muted-foreground text-xs">
-              {contextualDateLabel}: {formatSingleDateTime(contextualDate).date}{" "}
-              {formatSingleDateTime(contextualDate).time}
+              {contextualDateLabel}:{" "}
+              {formatSingleDateTime(contextualDate, undefined, locale).date}{" "}
+              {formatSingleDateTime(contextualDate, undefined, locale).time}
             </p>
           )}
         </div>
@@ -146,53 +153,53 @@ export default async function Page({
       <div className="font-semibold text-muted-foreground bg-muted rounded-md p-5 space-y-5">
         {row.kind === "ticket" ? (
           <>
-            <DetailRow label="Event" value={row.event?.title} />
-            <DetailRow label="Ticket Type" value={row.ticket_type?.type} />
-            <DetailRow label="Quantity" value={row.quantity} />
+            <DetailRow label={t("event")} value={row.event?.title} />
+            <DetailRow label={t("ticketType")} value={row.ticket_type?.type} />
+            <DetailRow label={t("quantity")} value={row.quantity} />
             <DetailRow
-              label="Unit Price"
+              label={t("unitPrice")}
               value={formatMoney(currency, row.unit_price)}
             />
             {row.discount > 0 && (
               <DetailRow
-                label="Discount"
+                label={t("discount")}
                 value={`-${formatMoney(currency, row.discount)}`}
               />
             )}
             <DetailRow
-              label="Ticket Price"
+              label={t("ticketPrice")}
               value={formatMoney(currency, row.total_price)}
             />
             {typeof row.serviceFee === "number" && row.serviceFee > 0 && (
               <DetailRow
-                label="Service fee"
+                label={t("serviceFee")}
                 value={formatMoney(currency, row.serviceFee)}
               />
             )}
             {typeof row.totalPaid === "number" &&
               row.totalPaid !== row.total_price && (
                 <DetailRow
-                  label="Total Paid"
+                  label={t("totalPaid")}
                   value={formatMoney(currency, row.totalPaid)}
                 />
               )}
             <DetailRow
-              label="Date/Time"
-              value={`${formatSingleDateTime(row.created_at).date} ${formatSingleDateTime(row.created_at).time}`}
+              label={t("dateTime")}
+              value={`${formatSingleDateTime(row.created_at, undefined, locale).date} ${formatSingleDateTime(row.created_at, undefined, locale).time}`}
             />
             <DetailRow
-              label="Order Reference"
+              label={t("orderReference")}
               value={row.checkout_session_id ?? id}
             />
             {cancelledTickets.length > 0 && (
               <DetailRow
-                label="Cancelled"
+                label={t("cancelled")}
                 value={`${cancelledTickets.length} of ${row.quantity}`}
               />
             )}
             {refundBadge && (
               <DetailRow
-                label="Refund"
+                label={t("refund")}
                 value={
                   <span className={refundBadge.className}>
                     {refundBadge.label}
@@ -203,26 +210,26 @@ export default async function Page({
           </>
         ) : (
           <>
-            <DetailRow label="Plan" value={row.subscription_plan_name} />
+            <DetailRow label={t("plan")} value={row.subscription_plan_name} />
             <DetailRow
-              label="Unit Price"
+              label={t("unitPrice")}
               value={formatMoney(currency, row.unit_price)}
             />
             {row.discount > 0 && (
               <DetailRow
-                label="Discount"
+                label={t("discount")}
                 value={`-${formatMoney(currency, row.discount)}`}
               />
             )}
             <DetailRow
-              label="Total Price"
+              label={t("totalPrice")}
               value={formatMoney(currency, row.total_price)}
             />
             <DetailRow
-              label="Date/Time"
-              value={`${formatSingleDateTime(row.created_at).date} ${formatSingleDateTime(row.created_at).time}`}
+              label={t("dateTime")}
+              value={`${formatSingleDateTime(row.created_at, undefined, locale).date} ${formatSingleDateTime(row.created_at, undefined, locale).time}`}
             />
-            <DetailRow label="Reference" value={id} />
+            <DetailRow label={t("reference")} value={id} />
           </>
         )}
       </div>

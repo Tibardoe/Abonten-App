@@ -1,5 +1,6 @@
 import SpotlightFeed from "@/spotlight/organisms/SpotlightFeed";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -9,10 +10,13 @@ import { Suspense } from "react";
 // Spotlight: the short-video feed. Everything here is personal (ranking,
 // Following, Nearby, the viewer's likes), so it renders on the client after
 // the programme check. Nothing is cached per visitor on the server.
-export const metadata: Metadata = {
-  title: "Spotlight",
-  description: "Short videos from the events and places around you.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("spotlight");
+  return {
+    title: t("spotlight"),
+    description: t("shortVideosFromTheEventsAnd"),
+  };
+}
 
 export default function SpotlightPage() {
   return (

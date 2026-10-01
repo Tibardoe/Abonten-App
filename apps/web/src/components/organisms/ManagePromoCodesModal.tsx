@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 
@@ -36,6 +37,8 @@ export default function ManagePromoCodesModal({
   eventId,
   handleClosePopup,
 }: ManagePromoCodesModalProps) {
+  const t = useTranslations("common");
+
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -68,13 +71,12 @@ export default function ManagePromoCodesModal({
         setEditingId(null);
         setEditState(null);
         invalidate();
-        toast.success(result.message ?? "Promo code updated.");
+        toast.success(result.message ?? t("promoCodeUpdated"));
       } else {
-        toast.error(result.message ?? "We couldn't update that promo code.");
+        toast.error(result.message ?? t("weCouldnTUpdateThatPromo"));
       }
     },
-    onError: () =>
-      toast.error("We couldn't update that promo code. Please try again."),
+    onError: () => toast.error(t("weCouldnTUpdateThatPromo2")),
   });
 
   const deleteMutation = useMutation({
@@ -83,13 +85,12 @@ export default function ManagePromoCodesModal({
       if (result.status === 200) {
         setDeletingId(null);
         invalidate();
-        toast.success(result.message ?? "Promo code deleted.");
+        toast.success(result.message ?? t("promoCodeDeleted"));
       } else {
-        toast.error(result.message ?? "We couldn't delete that promo code.");
+        toast.error(result.message ?? t("weCouldnTDeleteThatPromo"));
       }
     },
-    onError: () =>
-      toast.error("We couldn't delete that promo code. Please try again."),
+    onError: () => toast.error(t("weCouldnTDeleteThatPromo2")),
   });
 
   const startEdit = (code: EventPromoCode) => {
@@ -124,26 +125,26 @@ export default function ManagePromoCodesModal({
       <ModalShell
         open
         onClose={() => handleClosePopup(false)}
-        title="Manage Promo Codes"
+        title={t("managePromoCodes")}
         className="bg-background md:bg-transparent"
       >
         <div className="flex flex-col h-full w-full md:h-[85%] md:w-[50%] lg:w-[40%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground p-4 overflow-y-auto space-y-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold">Manage Promo Codes</h1>
+            <h1 className="text-lg font-bold">{t("managePromoCodes")}</h1>
             <button
               type="button"
               onClick={() => handleClosePopup(false)}
               className="font-bold"
             >
-              Close
+              {t("close")}
             </button>
           </div>
 
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <p className="text-sm text-muted-foreground">{t("loading")}</p>
           ) : promoCodes.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              This event has no promo codes.
+              {t("thisEventHasNoPromoCodes")}
             </p>
           ) : (
             <ul className="space-y-3">
@@ -156,10 +157,12 @@ export default function ManagePromoCodesModal({
                     <div>
                       <p className="font-semibold">{code.promoCode}</p>
                       <p className="text-xs text-muted-foreground">
-                        {code.timesUsed} use{code.timesUsed === 1 ? "" : "s"}
                         {code.maxUses !== null
-                          ? ` of ${code.maxUses} max`
-                          : " (unlimited)"}
+                          ? t("usesOfMax", {
+                              count: code.timesUsed,
+                              maxUses: code.maxUses,
+                            })
+                          : t("usesUnlimited", { count: code.timesUsed })}
                       </p>
                     </div>
                     <span
@@ -169,7 +172,7 @@ export default function ManagePromoCodesModal({
                           : "text-xs font-semibold text-muted-foreground shrink-0"
                       }
                     >
-                      {code.isActive ? "Active" : "Inactive"}
+                      {code.isActive ? t("active") : t("inactive")}
                     </span>
                   </div>
 
@@ -185,7 +188,7 @@ export default function ManagePromoCodesModal({
                               discountPercentage: Number(e.target.value),
                             })
                           }
-                          placeholder="Discount %"
+                          placeholder={t("discount4")}
                         />
                         <Input
                           type="number"
@@ -199,7 +202,7 @@ export default function ManagePromoCodesModal({
                                   : Number(e.target.value),
                             })
                           }
-                          placeholder="Max uses (blank = unlimited)"
+                          placeholder={t("maxUsesBlankUnlimited")}
                         />
                       </div>
 
@@ -225,7 +228,7 @@ export default function ManagePromoCodesModal({
                             })
                           }
                         />
-                        Active
+                        {t("active")}
                       </label>
 
                       <div className="flex gap-2">
@@ -237,7 +240,7 @@ export default function ManagePromoCodesModal({
                           }
                           onClick={() => saveEdit(code.id)}
                         >
-                          {updateMutation.isPending ? "Saving..." : "Save"}
+                          {updateMutation.isPending ? t("saving") : t("save")}
                         </Button>
                         <button
                           type="button"
@@ -245,7 +248,7 @@ export default function ManagePromoCodesModal({
                           onClick={cancelEdit}
                           disabled={updateMutation.isPending}
                         >
-                          Cancel
+                          {t("cancel")}
                         </button>
                       </div>
                     </div>
@@ -253,15 +256,15 @@ export default function ManagePromoCodesModal({
                     <>
                       <div className="space-y-1 text-sm text-muted-foreground">
                         <div className="flex justify-between">
-                          <p>Discount</p>
+                          <p>{t("discount2")}</p>
                           <p>{code.discountPercentage}%</p>
                         </div>
                         <div className="flex justify-between">
-                          <p>Expires</p>
+                          <p>{t("expires")}</p>
                           <p>
                             {code.expiresAt
                               ? new Date(code.expiresAt).toLocaleString()
-                              : "Never"}
+                              : t("never")}
                           </p>
                         </div>
                       </div>
@@ -272,14 +275,14 @@ export default function ManagePromoCodesModal({
                           className="flex-1 rounded-md border border-border px-3 py-1 text-sm hover:bg-accent transition-colors"
                           onClick={() => startEdit(code)}
                         >
-                          Edit
+                          {t("edit")}
                         </button>
                         <button
                           type="button"
                           className="flex-1 rounded-md border border-destructive text-destructive px-3 py-1 text-sm hover:bg-destructive/10 transition-colors"
                           onClick={() => setDeletingId(code.id)}
                         >
-                          Delete
+                          {t("deleteText")}
                         </button>
                       </div>
                     </>
@@ -293,9 +296,9 @@ export default function ManagePromoCodesModal({
 
       {deletingId && (
         <ConfirmDeleteModal
-          title="Delete this promo code?"
-          message="Delete this promo code? If it's already been used, it will be deactivated instead so redemption history is preserved."
-          confirmLabel="Delete Code"
+          title={t("deleteThisPromoCode")}
+          message={t("deleteThisPromoCodeIfIt")}
+          confirmLabel={t("deleteCode")}
           isLoading={deleteMutation.isPending}
           onConfirm={() => deleteMutation.mutate(deletingId)}
           onCancel={() => setDeletingId(null)}

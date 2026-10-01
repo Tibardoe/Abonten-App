@@ -10,6 +10,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type NotificationProps = {
   toasts: ToastEntry[];
@@ -54,6 +55,8 @@ const VARIANT_STYLES: Record<
 };
 
 export default function Notification({ toasts, onDismiss }: NotificationProps) {
+  const t = useTranslations("common");
+
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -80,7 +83,7 @@ export default function Notification({ toasts, onDismiss }: NotificationProps) {
               <button
                 type="button"
                 onClick={() => onDismiss(toast.id)}
-                aria-label="Dismiss notification"
+                aria-label={t("dismissNotification")}
                 className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
               >
                 <X className="size-4" />

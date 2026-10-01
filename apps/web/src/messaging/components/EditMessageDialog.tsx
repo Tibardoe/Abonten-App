@@ -11,6 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { MESSAGE_MAX_LENGTH } from "@abonten/types/messagingType";
 import type { MessageRow } from "@abonten/types/messagingType";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 export function EditMessageDialog({
@@ -24,6 +25,8 @@ export function EditMessageDialog({
   onSave: (content: string) => void;
   saving: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const [text, setText] = useState("");
 
   useEffect(() => {
@@ -34,7 +37,7 @@ export function EditMessageDialog({
     <Dialog open={!!message} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit message</DialogTitle>
+          <DialogTitle>{t("editMessage")}</DialogTitle>
         </DialogHeader>
         <Textarea
           value={text}
@@ -45,7 +48,7 @@ export function EditMessageDialog({
         />
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             onClick={() => onSave(text.trim())}
@@ -53,7 +56,7 @@ export function EditMessageDialog({
               saving || !text.trim() || text.trim() === message?.content
             }
           >
-            {saving ? "Saving…" : "Save"}
+            {saving ? t("saving") : t("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

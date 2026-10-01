@@ -23,6 +23,7 @@ import { useReviewPhotoUpload } from "@/hooks/useReviewPhotoUpload";
 import { useToast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -57,18 +58,16 @@ type PlaceReviewModalProps = {
 // draft support (Places reviews have no review_drafts-equivalent table --
 // confirmed Phase 1 simplification), so this modal skips
 // SaveDraftConfirmDialog entirely: Cancel just closes.
-const placeReviewSchema = z.object({
-  title: z
-    .string()
-    .max(150, { message: "Title must be less than 150 characters" })
-    .optional(),
-  comment: z
-    .string()
-    .max(500, { message: "Comment must be less than 500 characters" })
-    .optional(),
-});
+const buildPlaceReviewSchema = (m: {
+  titleTooLong: string;
+  commentTooLong: string;
+}) =>
+  z.object({
+    title: z.string().max(150, { message: m.titleTooLong }).optional(),
+    comment: z.string().max(500, { message: m.commentTooLong }).optional(),
+  });
 
-type PlaceReviewFormValues = z.infer<typeof placeReviewSchema>;
+type PlaceReviewFormValues = z.infer<ReturnType<typeof buildPlaceReviewSchema>>;
 
 export default function PlaceReviewModal({
   placeId,
@@ -76,6 +75,9 @@ export default function PlaceReviewModal({
   onReviewSubmitted,
   existingReview,
 }: PlaceReviewModalProps) {
+  const t = useTranslations("places");
+  const tc = useTranslations("common");
+
   const isEditing = !!existingReview;
   const queryClient = useQueryClient();
 
@@ -96,7 +98,12 @@ export default function PlaceReviewModal({
   };
 
   const form = useForm<PlaceReviewFormValues>({
-    resolver: zodResolver(placeReviewSchema),
+    resolver: zodResolver(
+      buildPlaceReviewSchema({
+        titleTooLong: tc("validation.titleTooLong"),
+        commentTooLong: tc("validation.commentTooLong"),
+      }),
+    ),
     defaultValues: {
       title: existingReview?.title ?? undefined,
       comment: existingReview?.comment ?? undefined,
@@ -146,12 +153,12 @@ export default function PlaceReviewModal({
 
   const onSubmit = (formData: PlaceReviewFormValues) => {
     if (rating <= 0) {
-      toast.error("Please select a rating.");
+      toast.error(t("pleaseSelectARating"));
       return;
     }
 
     if (photoUpload.isUploading) {
-      toast.error("Please wait for photos to finish uploading.");
+      toast.error(t("pleaseWaitForPhotosToFinish"));
       return;
     }
 
@@ -162,7 +169,7 @@ export default function PlaceReviewModal({
     <ModalShell
       open
       onClose={() => handleShowReviewModal(false)}
-      title={isEditing ? "Edit Review" : "Add Review"}
+      title={isEditing ? t("editReview") : t("addReview")}
     >
       <div className="w-full self-end md:self-center h-[95%] md:h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
         {/* header */}
@@ -172,11 +179,11 @@ export default function PlaceReviewModal({
             className="md:hidden font-bold"
             onClick={() => handleShowReviewModal(false)}
           >
-            Cancel
+            {t("cancel")}
           </button>
 
           <h1 className="mx-auto text-xl md:text-2xl font-bold">
-            {isEditing ? "Edit Review" : "Add Review"}
+            {isEditing ? t("editReview") : t("addReview")}
           </h1>
 
           <button
@@ -185,7 +192,7 @@ export default function PlaceReviewModal({
             disabled={isPending || photoUpload.isUploading}
             onClick={handleSubmit(onSubmit)}
           >
-            {isPending ? "Submitting..." : "Submit"}
+            {isPending ? t("submitting") : t("submit")}
           </button>
 
           <button
@@ -195,7 +202,7 @@ export default function PlaceReviewModal({
           >
             <MaskIcon
               src="/assets/images/circularCancel.svg"
-              alt="Cancel"
+              alt={t("cancel")}
               className="w-[25px] h-[25px] bg-foreground"
             />
           </button>
@@ -204,11 +211,11 @@ export default function PlaceReviewModal({
         {/* Content */}
         <div className="space-y-4">
           <div className="flex items-center justify-between md:flex-col md:justify-start md:items-start md:gap-2">
-            <p className="font-normal">Rate</p>
+            <p className="font-normal">{t("rate")}</p>
             <StarRatingInput onChange={setRating} initialRating={rating} />
           </div>
           {rating <= 0 && (
-            <p className="text-destructive text-sm">Rating required</p>
+            <p className="text-destructive text-sm">{t("ratingRequired")}</p>
           )}
 
           <Form {...form}>
@@ -224,7 +231,7 @@ export default function PlaceReviewModal({
                     <FormControl>
                       <Input
                         type="text"
-                        placeholder="Title (optional)"
+                        placeholder={t("titleOptional")}
                         className="rounded-lg px-2 py-4 font-normal"
                         {...field}
                       />
@@ -242,7 +249,7 @@ export default function PlaceReviewModal({
                     <FormControl>
                       <Textarea
                         rows={10}
-                        placeholder="Review (optional)"
+                        placeholder={t("reviewOptional")}
                         className="rounded-lg px-2 py-4 font-normal"
                         {...field}
                       />
@@ -273,11 +280,11 @@ export default function PlaceReviewModal({
               >
                 {isPending
                   ? isEditing
-                    ? "Saving changes..."
-                    : "Adding review..."
+                    ? t("savingChanges")
+                    : t("addingReview")
                   : isEditing
-                    ? "Save Changes"
-                    : "Add"}
+                    ? t("saveChanges2")
+                    : t("add")}
               </Button>
             </form>
           </Form>

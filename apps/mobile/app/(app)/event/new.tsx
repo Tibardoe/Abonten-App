@@ -20,6 +20,7 @@ import {
   Overline,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -35,29 +36,44 @@ import { Pressable, View } from "react-native";
 // per-step gates come from `w.canAdvance`, except Basics which validates on
 // Next-press.
 
+// Catalog keys in the events namespace.
 const STEPS: { title: string; subtitle: string }[] = [
   {
-    title: "Event flyer",
-    subtitle: "A striking image is what sells the event — add it first.",
+    title: "wizardSteps.flyer.title",
+    subtitle: "wizardSteps.flyer.subtitle",
   },
   {
-    title: "Basic info",
-    subtitle: "Name, description, category and capacity.",
+    title: "wizardSteps.basics.title",
+    subtitle: "wizardSteps.basics.subtitle",
   },
-  { title: "Date & time", subtitle: "When the event happens." },
-  { title: "Location", subtitle: "Where guests should go." },
   {
-    title: "Tickets & pricing",
-    subtitle: "Free entry, one price, or multiple tiers.",
+    title: "wizardSteps.dateTime.title",
+    subtitle: "wizardSteps.dateTime.subtitle",
   },
-  { title: "Promo codes", subtitle: "Optional discount codes." },
-  { title: "Review & publish", subtitle: "Check everything, then go live." },
+  {
+    title: "wizardSteps.location.title",
+    subtitle: "wizardSteps.location.subtitle",
+  },
+  {
+    title: "wizardSteps.tickets.title",
+    subtitle: "wizardSteps.tickets.subtitle",
+  },
+  {
+    title: "wizardSteps.promoCodes.title",
+    subtitle: "wizardSteps.promoCodes.subtitle",
+  },
+  {
+    title: "wizardSteps.review.title",
+    subtitle: "wizardSteps.review.subtitle",
+  },
 ];
 const LAST_STEP = STEPS.length - 1;
 const BASICS_STEP = 1;
 const PROMOS_STEP = 5;
 
 export default function CreateEventScreen() {
+  const t = useTranslations("events");
+
   const router = useRouter();
   const { draftId, placeId } = useLocalSearchParams<{
     draftId?: string;
@@ -84,15 +100,15 @@ export default function CreateEventScreen() {
       // a toast rather than an alert the organiser has to dismiss before
       // they can see what they just made.
       router.replace(`/(app)/event/${res.eventId}`);
-      toast.success("Event published", {
-        description: "It is live and discoverable now.",
+      toast.success(t("eventPublished"), {
+        description: t("itIsLiveAndDiscoverableNow"),
       });
       return;
     }
 
-    toast.error(res.message ?? "We couldn't publish your event.", {
-      description: "Everything you entered is still here. Try again.",
-      action: { label: "Retry", onPress: onPublish },
+    toast.error(res.message ?? t("weCouldnTPublishYourEvent"), {
+      description: t("everythingYouEnteredIsStillHere"),
+      action: { label: t("retry"), onPress: onPublish },
     });
   }
 
@@ -127,13 +143,13 @@ export default function CreateEventScreen() {
   async function onSaveDraft() {
     const res = await w.saveDraft();
     if (res.status === 200) {
-      toast.success("Draft saved", {
-        description: "Pick it back up any time from Event drafts.",
+      toast.success(t("draftSaved"), {
+        description: t("pickItBackUpAnyTime"),
       });
     } else {
-      toast.error(res.message ?? "We couldn't save your draft.", {
-        description: "Nothing was lost — try again.",
-        action: { label: "Retry", onPress: onSaveDraft },
+      toast.error(res.message ?? t("weCouldnTSaveYourDraft"), {
+        description: t("nothingWasLostTryAgain"),
+        action: { label: t("retry"), onPress: onSaveDraft },
       });
     }
   }
@@ -141,7 +157,7 @@ export default function CreateEventScreen() {
   const header = (
     <AppHeader
       variant="form"
-      title="Create Event"
+      title={t("createEvent")}
       onBack={goBack}
       onNext={goNext}
       nextLabel={
@@ -188,17 +204,18 @@ export default function CreateEventScreen() {
               className="active:opacity-60 disabled:opacity-50"
             >
               <AppText variant="small" tone="brand" className="font-semibold">
-                {w.isSavingDraft ? "Saving…" : "Save as draft"}
+                {w.isSavingDraft ? t("saving2") : t("saveAsDraft")}
               </AppText>
             </Pressable>
           </View>
 
           <View className="gap-1">
             <Overline>
-              Step {visibleSteps.indexOf(w.step) + 1} of {visibleSteps.length}
+              {t("step")} {visibleSteps.indexOf(w.step) + 1}{" "}
+              {t("ofText", { length: visibleSteps.length })}
             </Overline>
-            <Hero>{stepInfo.title}</Hero>
-            <AppText variant="muted">{stepInfo.subtitle}</AppText>
+            <Hero>{t(stepInfo.title)}</Hero>
+            <AppText variant="muted">{t(stepInfo.subtitle)}</AppText>
           </View>
         </View>
 
@@ -216,10 +233,11 @@ export default function CreateEventScreen() {
           <Link href="/(app)/organizer/event-drafts" asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText variant="body">
-                You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
+                {t("youHaveSavedDraft", { draftCount: draftCount })}
+                {draftCount === 1 ? "" : "s"}
               </AppText>
               <AppText variant="small" tone="brand" className="font-semibold">
-                Resume ›
+                {t("resume")}
               </AppText>
             </Pressable>
           </Link>

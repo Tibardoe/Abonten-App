@@ -23,6 +23,7 @@ import type {
   SuggestionItem,
   SuggestionSection,
 } from "@abonten/types/searchSuggestionType";
+import { useTranslations } from "next-intl";
 // import Image from "next/image";
 import Link from "next/link";
 import {
@@ -82,6 +83,8 @@ export default function FilterSearchBar({
 }
 
 function FilterSearchBarFallback({ filterOnly }: { filterOnly?: boolean }) {
+  const t = useTranslations("common");
+
   if (filterOnly) {
     return (
       <span className="shrink-0 text-muted-foreground">
@@ -94,7 +97,7 @@ function FilterSearchBarFallback({ filterOnly }: { filterOnly?: boolean }) {
       <div className="flex items-center gap-2">
         <IoSearch className="text-2xl text-muted-foreground" />
         <span className="text-lg text-muted-foreground mr-5">
-          Search events, places, restaurants, activities...
+          {t("searchEventsPlacesRestaurantsActivities")}
         </span>
       </div>
       <VscSettings className="text-3xl md:text-4xl text-muted-foreground" />
@@ -103,6 +106,8 @@ function FilterSearchBarFallback({ filterOnly }: { filterOnly?: boolean }) {
 }
 
 function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
+  const t = useTranslations("common");
+
   const [showPopup, setShowPopup] = useState(false);
 
   const [searchText, setSearchText] = useState("");
@@ -324,7 +329,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
       }));
 
     if (recentItems.length > 0) {
-      sections.push({ label: "Recent", items: recentItems });
+      sections.push({ label: t("recent"), items: recentItems });
     } else {
       const shortcutItems: SuggestionItem[] = EVENT_CATEGORY_NAMES.slice(
         0,
@@ -334,7 +339,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
         key: `browse:${encodeURIComponent(category)}`,
         category,
       }));
-      sections.push({ label: "Browse categories", items: shortcutItems });
+      sections.push({ label: t("browseCategories"), items: shortcutItems });
     }
   } else if (unified) {
     const hits = (list: typeof discovery.events): SuggestionItem[] =>
@@ -359,15 +364,15 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
         }));
 
     if (organizerHits.length > 0 && organizerQuery)
-      sections.push({ label: "Organizers", items: organizerHits });
+      sections.push({ label: t("organizers"), items: organizerHits });
     if (eventHits.length > 0)
-      sections.push({ label: "Events", items: eventHits });
+      sections.push({ label: t("events"), items: eventHits });
     if (placeHits.length > 0)
-      sections.push({ label: "Places", items: placeHits });
+      sections.push({ label: t("places"), items: placeHits });
     if (organizerHits.length > 0 && !organizerQuery)
-      sections.push({ label: "Organizers", items: organizerHits });
+      sections.push({ label: t("organizers"), items: organizerHits });
     if (categoryItems.length > 0)
-      sections.push({ label: "Categories", items: categoryItems });
+      sections.push({ label: t("categories"), items: categoryItems });
 
     const stillDebouncing =
       debouncedQuery !== parseSearchQuery(searchText).normalized;
@@ -428,11 +433,11 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
     ];
 
     if (eventItems.length > 0)
-      sections.push({ label: "Events", items: eventItems });
+      sections.push({ label: t("events"), items: eventItems });
     if (placeItems.length > 0)
-      sections.push({ label: "Places", items: placeItems });
+      sections.push({ label: t("places"), items: placeItems });
     if (categoryItems.length > 0)
-      sections.push({ label: "Categories", items: categoryItems });
+      sections.push({ label: t("categories"), items: categoryItems });
 
     // Still waiting for the debounce to catch up with what's actually in the
     // box -- hold off on "no matches" until the results we have actually
@@ -583,7 +588,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
       type="button"
       onClick={() => handleShowPopup(true)}
       className="relative shrink-0"
-      aria-label={hasActiveFilters ? "Filters (active)" : "Filters"}
+      aria-label={hasActiveFilters ? t("filtersActive") : t("filters")}
     >
       <VscSettings className="text-3xl md:text-4xl text-muted-foreground" />
       {hasActiveFilters && (
@@ -631,7 +636,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
         <Link
           href={searchHref}
           onClick={() => recordRecentSearch(searchText)}
-          aria-label="Show results"
+          aria-label={t("showResults")}
         >
           <IoSearch className="text-2xl text-muted-foreground" />
         </Link>
@@ -644,11 +649,11 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
           aria-activedescendant={highlightedKey ?? undefined}
           aria-autocomplete="list"
           autoComplete="off"
-          aria-label="Search"
+          aria-label={t("search")}
           placeholder={
             unified
-              ? "Search events, places or @handle"
-              : "Search events and places"
+              ? t("searchEventsPlacesOrHandle")
+              : t("searchEventsAndPlaces")
           }
           value={searchText}
           onChange={(e) => {

@@ -7,6 +7,7 @@ import { PageTitle } from "@/components/ui/typography";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import MyEventsTabs from "./MyEventsTabs";
 import { isMyEventsTab } from "./myEventsTab";
 
@@ -19,9 +20,12 @@ import { isMyEventsTab } from "./myEventsTab";
 // Hub | Connecting people to experiences" title, which is what actually
 // shows in the browser tab here despite the on-page heading already saying
 // "My Tickets".
-export const metadata: Metadata = {
-  title: "My Tickets",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("manage");
+  return {
+    title: t("myTickets"),
+  };
+}
 
 async function fetchActivePage(cursor: string | null) {
   "use server";
@@ -56,6 +60,8 @@ export default async function page({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
+  const t = await getTranslations("manage");
+
   const { tab } = await searchParams;
   const initialTab = isMyEventsTab(tab) ? tab : "active";
 
@@ -89,7 +95,7 @@ export default async function page({
 
   return (
     <div className="space-y-5">
-      <PageTitle>My Tickets</PageTitle>
+      <PageTitle>{t("myTickets")}</PageTitle>
 
       <MyEventsTabs
         initialTab={initialTab}

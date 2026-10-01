@@ -1,6 +1,11 @@
 import { getRequestConfig } from "next-intl/server";
 import { locale as rootLocale } from "next/root-params";
-import { type Locale, SERVER_TIME_ZONE, isLocale } from "./config";
+import {
+  type Locale,
+  SERVER_TIME_ZONE,
+  defaultLocale,
+  isLocale,
+} from "./config";
 import { getUserLocale } from "./locale";
 import { loadMessages } from "./messages";
 
@@ -19,9 +24,18 @@ export default getRequestConfig(async () => {
   } catch {
     fromRoute = undefined;
   }
-  const locale: Locale = isLocale(fromRoute)
-    ? fromRoute
-    : await getUserLocale();
+  let locale: Locale;
+  if (isLocale(fromRoute)) {
+    locale = fromRoute;
+  } else {
+    // Server Actions and route handlers: the cookie the proxy maintains.
+    // A static render with neither (the prerendered 404 page) is English.
+    try {
+      locale = await getUserLocale();
+    } catch {
+      locale = defaultLocale;
+    }
+  }
 
   return {
     locale,

@@ -3,6 +3,7 @@ import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import PromotionDetails from "@/settings/organisms/PromotionDetails";
 import SettingsDesktopSideBar from "@/settings/organisms/SettingsDesktopSidebar";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -10,6 +11,8 @@ import Link from "next/link";
 // export const instant = false;
 
 export default function page() {
+  const t = useTranslations("settings");
+
   return (
     <>
       <div className="w-full flex md:hidden">
@@ -20,15 +23,15 @@ export default function page() {
         <PromotionDetails />
 
         <div className="space-y-2">
-          <h1>Quick Links</h1>
+          <h1>{t("quickLinks")}</h1>
 
           <DetailsContainer>
             <div className="flex justify-between items-center">
-              <p className="font-medium text-lg">Manage payment method</p>
+              <p className="font-medium text-lg">{t("managePaymentMethod")}</p>
               <Link href="/wallet">
                 <MaskIcon
                   src="/assets/images/arrowRight.svg"
-                  alt="Arrow right"
+                  alt={t("arrowRight")}
                   className="w-[30px] h-[30px]"
                 />
               </Link>
@@ -37,11 +40,13 @@ export default function page() {
             <hr />
 
             <div className="flex justify-between items-center">
-              <p className="font-medium text-lg">View transaction history</p>
+              <p className="font-medium text-lg">
+                {t("viewTransactionHistory")}
+              </p>
               <Link href="/transactions">
                 <MaskIcon
                   src="/assets/images/arrowRight.svg"
-                  alt="Arrow right"
+                  alt={t("arrowRight")}
                   className="w-[30px] h-[30px]"
                 />
               </Link>

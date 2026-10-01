@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Membership" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("settings");
+  return { title: t("membership") };
+}
 
 // The Membership product was removed — see /settings/overview's Promotion
 // Details section, and Manage → Events/Places → Promotion for the current

@@ -31,6 +31,7 @@ import {
   ScreenError,
   Skeleton,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 
@@ -40,6 +41,10 @@ import { ScrollView, View, useWindowDimensions } from "react-native";
 // shown; never a dead end when nothing is out.
 
 function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("weekly");
+
   const router = useRouter();
   const { width } = useWindowDimensions();
   const e = doc.edition;
@@ -73,7 +78,7 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
             <WeeklyChip strong>
               ✨ {WEEKLY_PRODUCT_NAME} · {e.scopeName}
             </WeeklyChip>
-            <WeeklyChip>{formatWeekRange(e.weekStart)}</WeeklyChip>
+            <WeeklyChip>{formatWeekRange(e.weekStart, locale)}</WeeklyChip>
           </>
         }
       >
@@ -95,14 +100,14 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
           className="mt-3 text-[12px] font-semibold uppercase tracking-widest"
           style={{ color: "rgba(255,255,255,0.7)" }}
         >
-          {pickCount} {pickCount === 1 ? "pick" : "picks"} this week
+          {pickCount} {pickCount === 1 ? t("pick") : t("picks")} {t("thisWeek")}
         </AppText>
       </WeeklyBanner>
 
       {intro.length > 0 ? (
         <View className="mx-4 gap-2 rounded-3xl border border-border bg-card p-5">
           <AppText variant="overline" tone="brand">
-            From the editors
+            {t("fromTheEditors")}
           </AppText>
           {intro.map((p) => (
             <AppText key={p} variant="bodyLg">
@@ -127,8 +132,10 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
 }
 
 function WeeklySkeleton() {
+  const t = useTranslations("weekly");
+
   return (
-    <View className="gap-6 pt-4" accessibilityLabel="Loading Abonten Weekly">
+    <View className="gap-6 pt-4" accessibilityLabel={t("loadingAbontenWeekly")}>
       <View className="mx-4 overflow-hidden rounded-3xl">
         <Skeleton width="100%" height={440} radius={24} />
       </View>
@@ -147,6 +154,8 @@ export function WeeklyScreen({
   scope?: string;
   week?: string;
 }) {
+  const t = useTranslations("weekly");
+
   const router = useRouter();
   const { area } = useExploreLocation();
   const shareLink = useShareLink();
@@ -182,7 +191,7 @@ export function WeeklyScreen({
             <HeaderIconButton
               name="share-outline"
               onPress={share}
-              accessibilityLabel="Share this edition"
+              accessibilityLabel={t("shareThisEdition")}
             />
           ) : undefined
         }
@@ -220,21 +229,21 @@ export function WeeklyScreen({
                 icon="sparkles-outline"
                 title={
                   !state?.available || state.notFound
-                    ? "This edition isn't available"
-                    : "This week's edition is on its way"
+                    ? t("thisEditionIsnTAvailable")
+                    : t("thisWeekSEditionIsOn")
                 }
                 description={
                   !state?.available || state.notFound
-                    ? "It may have been taken down, or it isn't out yet."
+                    ? t("itMayHaveBeenTakenDown")
                     : WEEKLY_TAGLINE
                 }
-                actionLabel="Explore events and places"
+                actionLabel={t("exploreEventsAndPlaces")}
                 onAction={() => router.replace("/(app)/(tabs)")}
               />
               {(state?.fallbackEvents ?? []).length > 0 ? (
                 <View className="gap-3 px-4">
                   <AppText variant="sectionTitle" accessibilityRole="header">
-                    Happening this week
+                    {t("happeningThisWeek")}
                   </AppText>
                   {state?.fallbackEvents.map((event) => (
                     <EventCard key={event.id} event={event} />

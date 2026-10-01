@@ -6,6 +6,7 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import LeadTerritoryForm from "@/fieldOps/organisms/LeadTerritoryForm";
 import { useToast } from "@/hooks/useToast";
 import type { FieldOpsTerritory } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -22,12 +23,14 @@ export default function LeadTerritoryList({
   territories: FieldOpsTerritory[];
   editable: boolean;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const router = useRouter();
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const towns = territories.filter((t) => t.kind === "town");
+  const towns = territories.filter((territory) => territory.kind === "town");
 
   const setStatus = (id: string, status: "active" | "completed") =>
     start(async () => {
@@ -37,10 +40,10 @@ export default function LeadTerritoryList({
         status,
       });
       if (res.status === 200) {
-        toast.success(res.message ?? "Saved.");
+        toast.success(res.message ?? t("saved"));
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't do that.");
+        toast.error(res.message ?? t("couldnTDoThat"));
       }
     });
 
@@ -56,74 +59,77 @@ export default function LeadTerritoryList({
           />
         ) : (
           <Button onClick={() => setAdding(true)} className="w-full md:w-auto">
-            Add a town or area
+            {t("addATownOrArea")}
           </Button>
         )
       ) : null}
 
       {territories.length === 0 ? (
         <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-          No territories yet.
+          {t("noTerritoriesYet")}
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {territories.map((t) =>
-            editing === t.id ? (
-              <li key={t.id}>
+          {territories.map((territory) =>
+            editing === territory.id ? (
+              <li key={territory.id}>
                 <LeadTerritoryForm
                   campaignId={campaignId}
                   placeContext={placeContext}
                   towns={towns}
-                  initial={t}
+                  initial={territory}
                   onDone={() => setEditing(null)}
                 />
               </li>
             ) : (
-              <li key={t.id} className="rounded-xl border p-4">
+              <li key={territory.id} className="rounded-xl border p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <Link
-                      href={`/field/territory/${t.id}`}
+                      href={`/field/territory/${territory.id}`}
                       className="font-medium hover:underline"
                     >
-                      {t.name}
+                      {territory.name}
                     </Link>
                     <p className="text-sm text-muted-foreground">
-                      {t.kind === "town" ? "Town" : "Area"} ·{" "}
-                      {t.boundary
-                        ? "mapped boundary"
-                        : `${Math.round(t.radiusM / 100) / 10} km radius`}{" "}
-                      · {t.centre.lat.toFixed(4)}, {t.centre.lng.toFixed(4)}
+                      {territory.kind === "town" ? t("town") : t("area")} ·{" "}
+                      {territory.boundary
+                        ? t("mappedBoundary")
+                        : t("kmRadius", {
+                            value: Math.round(territory.radiusM / 100) / 10,
+                          })}{" "}
+                      · {territory.centre.lat.toFixed(4)},{" "}
+                      {territory.centre.lng.toFixed(4)}
                     </p>
                   </div>
-                  <StatusChip status={t.status} />
+                  <StatusChip status={territory.status} />
                 </div>
                 {editable ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setEditing(t.id)}
+                      onClick={() => setEditing(territory.id)}
                     >
-                      Edit
+                      {t("edit")}
                     </Button>
-                    {t.status === "active" ? (
+                    {territory.status === "active" ? (
                       <Button
                         size="sm"
                         variant="ghost"
                         disabled={pending}
-                        onClick={() => setStatus(t.id, "completed")}
+                        onClick={() => setStatus(territory.id, "completed")}
                       >
-                        Mark completed
+                        {t("markCompleted")}
                       </Button>
                     ) : (
                       <Button
                         size="sm"
                         variant="ghost"
                         disabled={pending}
-                        onClick={() => setStatus(t.id, "active")}
+                        onClick={() => setStatus(territory.id, "active")}
                       >
-                        Reopen
+                        {t("reopen")}
                       </Button>
                     )}
                   </div>

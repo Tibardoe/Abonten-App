@@ -20,6 +20,7 @@ import type {
 } from "@abonten/types/contentType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -72,6 +73,8 @@ export default function StoryViewer({
   startStoryId?: string | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("spotlight");
+
   const qc = useQueryClient();
   const [entryIndex, setEntryIndex] = useState(startIndex);
   const entry = queue[entryIndex];
@@ -118,7 +121,7 @@ export default function StoryViewer({
     <ModalShell
       open
       onClose={close}
-      title="Stories"
+      title={t("stories")}
       overlayClassName="bg-black/95"
       className="fixed inset-0 z-50 flex items-center justify-center outline-none"
     >
@@ -129,13 +132,13 @@ export default function StoryViewer({
           </div>
         ) : sequence.isError || !sequence.data ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-white">
-            <p className="text-sm">Couldn't load these Stories.</p>
+            <p className="text-sm">{t("couldnTLoadTheseStories")}</p>
             <button
               type="button"
               onClick={nextEntry}
               className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-black"
             >
-              Continue
+              {t("continueText")}
             </button>
           </div>
         ) : (
@@ -153,7 +156,7 @@ export default function StoryViewer({
         <button
           type="button"
           onClick={close}
-          aria-label="Close Stories"
+          aria-label={t("closeStories")}
           className="absolute right-2 top-7 z-30 rounded-full p-2 text-white hover:bg-white/10"
         >
           <IoClose className="text-2xl" />
@@ -251,6 +254,8 @@ function StorySlide({
   publisherKind: ContentPublisherKind;
   publisherId: string;
 }) {
+  const t = useTranslations("spotlight");
+
   const { program } = useContentProgram();
   const { data: user } = useCurrentUser();
   const toast = useToast();
@@ -365,17 +370,21 @@ function StorySlide({
   const muteStories = async () => {
     const res = await setStoryMute({ publisherKind, publisherId, muted: true });
     if (res.status !== 200) {
-      toast.error(messageOf(res, "Couldn't mute these Stories."));
+      toast.error(messageOf(res, t("couldnTMuteTheseStories")));
       return;
     }
-    toast.success(`Stories from ${publisherLabel(story.publisher)} muted.`);
+    toast.success(
+      t("storiesFromMuted", {
+        publisherLabel: publisherLabel(story.publisher),
+      }),
+    );
     onClose();
   };
 
   const share = async () => {
     const channel = await shareContent("story", story.id, "Story on Abonten");
     if (!channel) return;
-    if (channel === "copy_link") toast.success("Link copied.");
+    if (channel === "copy_link") toast.success(t("linkCopied"));
     engagement.recordShare(channel);
   };
 
@@ -404,15 +413,15 @@ function StorySlide({
       });
       const data = dataOf(res);
       if (!data) {
-        toast.error(messageOf(res, "Couldn't send your reply."));
+        toast.error(messageOf(res, t("couldnTSendYourReply")));
         return;
       }
       replyAttempt.current = null;
       setDraft("");
       replyInput.current?.blur();
-      setSent({ conversationId: data.conversationId, label: "Reply sent" });
+      setSent({ conversationId: data.conversationId, label: t("replySent") });
     } catch {
-      toast.error("No connection. Your reply wasn't sent.");
+      toast.error(t("noConnectionYourReplyWasnT"));
     } finally {
       setReplySending(false);
     }
@@ -432,11 +441,11 @@ function StorySlide({
     });
     const data = dataOf(res);
     if (!data) {
-      toast.error(messageOf(res, "Couldn't send your reaction."));
+      toast.error(messageOf(res, t("couldnTSendYourReaction")));
       return;
     }
     engagement.setReaction(emoji);
-    setSent({ conversationId: data.conversationId, label: "Reaction sent" });
+    setSent({ conversationId: data.conversationId, label: t("reactionSent") });
   };
 
   return (
@@ -477,7 +486,7 @@ function StorySlide({
           ) : (
             <Image
               src={media.mediaUrl}
-              alt={story.caption?.slice(0, 120) ?? "Story"}
+              alt={story.caption?.slice(0, 120) ?? t("story")}
               fill
               sizes="480px"
               className="object-contain"
@@ -496,7 +505,7 @@ function StorySlide({
       <div className="absolute inset-0 z-10 flex">
         <button
           type="button"
-          aria-label="Previous Story"
+          aria-label={t("previousStory")}
           className="h-full w-1/3 cursor-default"
           onPointerDown={startHold}
           onPointerUp={endHold}
@@ -505,7 +514,7 @@ function StorySlide({
         />
         <button
           type="button"
-          aria-label="Next Story"
+          aria-label={t("nextStory")}
           className="h-full w-2/3 cursor-default"
           onPointerDown={startHold}
           onPointerUp={endHold}
@@ -569,7 +578,7 @@ function StorySlide({
             <button
               type="button"
               onClick={() => setUserPaused((v) => !v)}
-              aria-label={userPaused ? "Play" : "Pause"}
+              aria-label={userPaused ? t("play") : t("pause")}
               className="rounded-full p-2 text-white hover:bg-white/10"
             >
               {userPaused ? <IoPlay /> : <IoPause />}
@@ -578,7 +587,7 @@ function StorySlide({
               <button
                 type="button"
                 onClick={() => setMuted(!muted)}
-                aria-label={muted ? "Turn sound on" : "Turn sound off"}
+                aria-label={muted ? t("turnSoundOn") : t("turnSoundOff")}
                 className="rounded-full p-2 text-white hover:bg-white/10"
               >
                 {muted ? <IoVolumeMuteOutline /> : <IoVolumeHighOutline />}
@@ -592,7 +601,9 @@ function StorySlide({
                 !isAuthor && user
                   ? [
                       {
-                        label: `Mute Stories from ${publisherLabel(story.publisher)}`,
+                        label: t("muteStoriesFrom", {
+                          publisherLabel: publisherLabel(story.publisher),
+                        }),
                         onSelect: muteStories,
                       },
                     ]
@@ -628,7 +639,7 @@ function StorySlide({
               onClick={onClose}
               className="font-bold text-primary hover:underline"
             >
-              View chat
+              {t("viewChat")}
             </Link>
           </div>
         ) : null}
@@ -641,7 +652,7 @@ function StorySlide({
                 // Keep the reply field focused while picking a reaction.
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => sendReaction(emoji)}
-                aria-label={`React ${emoji}`}
+                aria-label={t("react", { emoji: emoji })}
                 aria-pressed={engagement.reaction === emoji}
                 className={cn(
                   "flex h-11 w-11 items-center justify-center rounded-full text-2xl transition-transform hover:scale-110",
@@ -657,7 +668,9 @@ function StorySlide({
           {isAuthor ? (
             <span className="flex flex-1 items-center gap-1 text-sm text-white">
               <IoEyeOutline aria-hidden />
-              {engagement.counts.views.toLocaleString()} viewed
+              {t("viewed", {
+                toLocaleString: engagement.counts.views.toLocaleString(),
+              })}
             </span>
           ) : repliesPossible ? (
             canReply ? (
@@ -675,7 +688,7 @@ function StorySlide({
                   onFocus={() => {
                     if (!user) {
                       replyInput.current?.blur();
-                      toast.error("Sign in to reply to Stories.");
+                      toast.error(t("signInToReplyToStories"));
                       return;
                     }
                     setReplying(true);
@@ -685,8 +698,12 @@ function StorySlide({
                     if (e.key === "Escape") replyInput.current?.blur();
                   }}
                   maxLength={1000}
-                  placeholder={`Reply to ${publisherLabel(story.publisher)}…`}
-                  aria-label={`Reply privately to ${publisherLabel(story.publisher)}`}
+                  placeholder={t("replyTo", {
+                    publisherLabel: publisherLabel(story.publisher),
+                  })}
+                  aria-label={t("replyPrivatelyTo", {
+                    publisherLabel: publisherLabel(story.publisher),
+                  })}
                   className={cn(
                     "h-11 min-w-0 flex-1 rounded-full border bg-black/30 px-4 text-sm text-white outline-none placeholder:text-white/75",
                     replying ? "border-white" : "border-white/60",
@@ -698,7 +715,7 @@ function StorySlide({
                     disabled={replySending}
                     // Submit without the blur swallowing the click.
                     onMouseDown={(e) => e.preventDefault()}
-                    aria-label="Send reply"
+                    aria-label={t("sendReply")}
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-black disabled:opacity-60"
                   >
                     {replySending ? (
@@ -713,8 +730,8 @@ function StorySlide({
                     onClick={() => sendReaction("❤️")}
                     aria-label={
                       engagement.reaction === "❤️"
-                        ? "Remove your heart"
-                        : "Send a heart"
+                        ? t("removeYourHeart")
+                        : t("sendAHeart")
                     }
                     aria-pressed={engagement.reaction === "❤️"}
                     className="rounded-full p-2 text-white hover:bg-white/10"
@@ -729,7 +746,7 @@ function StorySlide({
               </form>
             ) : (
               <span className="flex h-11 flex-1 items-center rounded-full border border-white/30 px-4 text-sm text-white/70">
-                Replies are off for this Story
+                {t("repliesAreOffForThisStory")}
               </span>
             )
           ) : (
@@ -739,7 +756,7 @@ function StorySlide({
             <button
               type="button"
               onClick={share}
-              aria-label="Share"
+              aria-label={t("share")}
               className="rounded-full p-2 text-white hover:bg-white/10"
             >
               <IoPaperPlaneOutline className="text-xl" />

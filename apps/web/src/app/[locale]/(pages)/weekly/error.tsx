@@ -2,6 +2,7 @@
 
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { reportClientError } from "@/lib/reportClientError";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -14,6 +15,8 @@ export default function WeeklyError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("weekly");
+
   useEffect(() => {
     reportClientError(error, { route: "/weekly" });
   }, [error]);
@@ -21,12 +24,12 @@ export default function WeeklyError({
   return (
     <div className="mx-auto w-full max-w-3xl space-y-4">
       <InlineErrorRetry
-        message="Abonten Weekly couldn't be loaded right now."
+        message={t("abontenWeeklyCouldnTBeLoaded")}
         onRetry={reset}
       />
       <p className="text-center text-sm">
         <Link href="/explore" className="text-primary underline">
-          Explore events and places instead
+          {t("exploreEventsAndPlacesInstead")}
         </Link>
       </p>
     </div>

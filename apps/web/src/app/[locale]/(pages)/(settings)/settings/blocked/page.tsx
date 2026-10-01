@@ -3,7 +3,10 @@ import BlockedAccountsList from "@/settings/organisms/BlockedAccountsList";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = { title: "Blocked accounts" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("settings");
+  return { title: t("blockedAccounts") };
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

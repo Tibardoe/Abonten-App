@@ -62,6 +62,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -75,6 +76,8 @@ function canEdit(m: MessageRow, myId: string | undefined): boolean {
 }
 
 export default function ConversationScreen() {
+  const t = useTranslations("messaging");
+
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const valid = isUuid(conversationId);
   const { session } = useSession();
@@ -386,10 +389,10 @@ export default function ConversationScreen() {
   }
 
   function confirmDelete(m: MessageRow) {
-    Alert.alert("Delete this message?", "This can't be undone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteThisMessage"), t("thisCanTBeUndone"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("deleteText"),
         style: "destructive",
         onPress: () =>
           deleteMsg.mutate(m.id, {
@@ -412,7 +415,9 @@ export default function ConversationScreen() {
           onMenu={() => {}}
         />
         <View className="flex-1 items-center justify-center px-8">
-          <AppText variant="muted">This conversation link is invalid.</AppText>
+          <AppText variant="muted">
+            {t("thisConversationLinkIsInvalid")}
+          </AppText>
         </View>
       </View>
     );
@@ -442,7 +447,7 @@ export default function ConversationScreen() {
           <View className="flex-1 items-center justify-center gap-3 px-8">
             <Icon name="lock-closed-outline" size={26} tone="muted" />
             <AppText variant="muted" className="text-center">
-              This conversation isn't available.
+              {t("thisConversationIsnTAvailable")}
             </AppText>
           </View>
         ) : noThreadYet ? (
@@ -475,14 +480,18 @@ export default function ConversationScreen() {
                 <Icon name="chatbubbles-outline" size={26} tone="primary" />
               </View>
               <AppText variant="bodyStrong" className="text-center">
-                Start the conversation
+                {t("startTheConversation")}
               </AppText>
               <AppText variant="muted" className="text-center">
                 {context?.subject.event
-                  ? `Ask about ${context.subject.event.title} — tickets, timing, anything.`
+                  ? t("askAboutTicketsTimingAnything", {
+                      title: context.subject.event.title,
+                    })
                   : context?.subject.place
-                    ? `Ask ${context.subject.place.name} about a visit, a booking or their services.`
-                    : "Say hello — your messages stay in the app."}
+                    ? t("askAboutAVisitABooking", {
+                        name: context.subject.place.name,
+                      })
+                    : t("sayHelloYourMessagesStayIn")}
               </AppText>
             </View>
           )
@@ -600,7 +609,7 @@ export default function ConversationScreen() {
         items={[
           {
             key: "mute",
-            label: context?.my_participant.muted ? "Unmute" : "Mute",
+            label: context?.my_participant.muted ? t("unmute") : t("mute"),
             icon: context?.my_participant.muted
               ? "notifications-outline"
               : "notifications-off-outline",
@@ -612,7 +621,9 @@ export default function ConversationScreen() {
           },
           {
             key: "archive",
-            label: context?.my_participant.archived ? "Unarchive" : "Archive",
+            label: context?.my_participant.archived
+              ? t("unarchive")
+              : t("archive"),
             icon: context?.my_participant.archived
               ? "arrow-undo-outline"
               : "archive-outline",
@@ -626,7 +637,7 @@ export default function ConversationScreen() {
             ? [
                 {
                   key: "block",
-                  label: iBlockedThem ? "Unblock" : "Block",
+                  label: iBlockedThem ? t("unblock") : t("block"),
                   icon: (iBlockedThem
                     ? "person-add-outline"
                     : "hand-left-outline") as IoniconName,
@@ -641,7 +652,7 @@ export default function ConversationScreen() {
             : []),
           {
             key: "report",
-            label: "Report conversation",
+            label: t("reportConversation"),
             icon: "flag-outline",
             destructive: true,
             onPress: () => setReportOpen(true),
@@ -653,10 +664,10 @@ export default function ConversationScreen() {
       <Sheet
         open={!!editing}
         onClose={() => setEditing(null)}
-        title="Edit message"
+        title={t("editMessage")}
         footer={
           <Button
-            title="Save"
+            title={t("save")}
             fullWidth
             loading={editMsg.isPending}
             onPress={submitEdit}
@@ -685,7 +696,7 @@ export default function ConversationScreen() {
         label={
           context?.subject.event?.title ??
           context?.subject.place?.name ??
-          "Conversation"
+          t("conversation")
         }
       />
 

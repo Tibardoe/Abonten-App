@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { cn } from "../lib/utils";
@@ -15,6 +16,8 @@ export default function TicketType({
   checked,
   handleChecked,
 }: TicketProp) {
+  const t = useTranslations("common");
+
   const [showTicketDropdown, setShowTicketDropdown] = useState(false);
 
   return (
@@ -24,7 +27,7 @@ export default function TicketType({
         onClick={() => setShowTicketDropdown((prevState) => !prevState)}
         className="flex gap-2 justify-between w-full items-center"
       >
-        <h2>Ticketing</h2>
+        <h2>{t("ticketing")}</h2>
 
         {showTicketDropdown ? (
           <IoIosArrowUp className="text-2xl" />
@@ -41,7 +44,7 @@ export default function TicketType({
               onClick={() => handleTicket("Free")}
               className="flex justify-between items-center w-full text-sm"
             >
-              Free
+              {t("free")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
@@ -68,7 +71,7 @@ export default function TicketType({
                   </span>
                 </button>
                 <p className="text-xs">
-                  Require interested users to register for this event
+                  {t("requireInterestedUsersToRegisterFor")}
                 </p>
               </div>
             )}
@@ -80,7 +83,7 @@ export default function TicketType({
               onClick={() => handleTicket("Single Ticket Type")}
               className="flex justify-between items-center w-full text-sm"
             >
-              Single Ticket Type
+              {t("singleTicketType")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
@@ -98,7 +101,7 @@ export default function TicketType({
               onClick={() => handleTicket("Multiple Ticket Types")}
               className="flex justify-between items-center w-full text-sm"
             >
-              Multiple Ticket Types
+              {t("multipleTicketTypes")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {

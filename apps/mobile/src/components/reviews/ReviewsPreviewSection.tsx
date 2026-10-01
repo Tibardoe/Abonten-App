@@ -8,10 +8,7 @@ import {
 } from "@/features/reviews/useReviews";
 import { useQueryView } from "@/lib/useQueryView";
 import { roundRating } from "@abonten/core/ratings";
-import {
-  emptyReviewsMessage,
-  formatReviewCount,
-} from "@abonten/core/reviews/reviewList";
+import {} from "@abonten/core/reviews/reviewList";
 import {
   AppText,
   Button,
@@ -20,6 +17,7 @@ import {
   Skeleton,
   Stars,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 import { OwnReviewCard } from "./OwnReviewCard";
@@ -65,6 +63,8 @@ export function ReviewsPreviewSection({
 }: {
   subject: ReviewSubject;
 }) {
+  const t = useTranslations("reviews");
+
   const router = useRouter();
   const summary = useReviewSummary(subject.kind, subject.id);
   const preview = useReviewPreview(subject.kind, subject.id);
@@ -77,22 +77,30 @@ export function ReviewsPreviewSection({
   const reviews = preview.data ?? [];
   const shown = reviews.length + (own.state === "has_review" ? 1 : 0);
   const openAll = () => router.push(reviewsHref(subject));
-  const empty = emptyReviewsMessage(null, subject.kind);
+  const empty = {
+    title: t("noReviewsYet"),
+    description:
+      subject.kind === "event"
+        ? t("peopleWhoAttendedCanReview")
+        : t("beTheFirstToShare"),
+  };
 
   return (
     <View className="gap-3">
       <View className="flex-row items-center justify-between">
-        <SectionTitle>Reviews</SectionTitle>
+        <SectionTitle>{t("reviews")}</SectionTitle>
         {total > 0 ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`See all ${formatReviewCount(total)}`}
+            accessibilityLabel={t("seeAll2", {
+              reviews: t("reviewsCount", { count: total }),
+            })}
             hitSlop={8}
             onPress={openAll}
             className="flex-row items-center gap-0.5 active:opacity-60"
           >
             <AppText variant="small" tone="brand" className="font-semibold">
-              See all
+              {t("seeAll3")}
             </AppText>
             <Icon name="chevron-forward" size={14} tone="primary" />
           </Pressable>
@@ -102,7 +110,10 @@ export function ReviewsPreviewSection({
       {total > 0 ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Rated ${average.toFixed(1)} out of 5 from ${formatReviewCount(total)}. See the rating breakdown.`}
+          accessibilityLabel={t("ratedOutOf5FromSee", {
+            toFixed: average.toFixed(1),
+            reviews: t("reviewsCount", { count: total }),
+          })}
           onPress={openAll}
           className="flex-row items-center gap-3 active:opacity-70"
         >
@@ -111,7 +122,9 @@ export function ReviewsPreviewSection({
           </AppText>
           <View className="gap-0.5">
             <Stars rating={summary.data?.average ?? 0} size={14} />
-            <AppText variant="caption">{formatReviewCount(total)}</AppText>
+            <AppText variant="caption">
+              {t("reviewsCount", { count: total })}
+            </AppText>
           </View>
         </Pressable>
       ) : null}
@@ -119,7 +132,7 @@ export function ReviewsPreviewSection({
       {own.state === "can_review" ||
       (own.state === "signed_out" && subject.kind === "place") ? (
         <Button
-          title="Write a review"
+          title={t("writeAReview")}
           variant="outline"
           leftIcon="create-outline"
           onPress={() => interactions.openComposer()}
@@ -146,16 +159,14 @@ export function ReviewsPreviewSection({
           ))}
         </View>
       ) : previewView.kind === "offline" ? (
-        <AppText variant="muted">
-          Reviews will load when you're back online.
-        </AppText>
+        <AppText variant="muted">{t("reviewsWillLoadWhenYouRe")}</AppText>
       ) : previewView.kind === "error" ? (
         <View className="flex-row items-center justify-between gap-3">
           <AppText variant="muted" className="flex-1">
-            Couldn't load reviews.
+            {t("couldnTLoadReviews")}
           </AppText>
           <Button
-            title="Try again"
+            title={t("tryAgain")}
             variant="outline"
             size="sm"
             onPress={() => {
@@ -171,7 +182,7 @@ export function ReviewsPreviewSection({
             {own.state === "not_eligible"
               ? own.message
               : own.state === "owner"
-                ? `Reviews will appear here as people review your ${subject.kind}.`
+                ? t("reviewsWillAppearHereAsPeople", { kind: subject.kind })
                 : empty.description}
           </AppText>
         </View>
@@ -179,7 +190,7 @@ export function ReviewsPreviewSection({
 
       {total > shown ? (
         <Button
-          title={`See all ${formatReviewCount(total)}`}
+          title={t("seeAll2", { reviews: t("reviewsCount", { count: total }) })}
           variant="outline"
           rightIcon="chevron-forward"
           onPress={openAll}

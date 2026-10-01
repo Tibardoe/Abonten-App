@@ -13,6 +13,7 @@ import {
   Skeleton,
   Stars,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { shadow } from "@abonten/ui-native/theme";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -46,6 +47,10 @@ export function PlaceCard({
   /** Featured (paid-placement) slot — shows a neutral "Sponsored" pill. */
   sponsored?: boolean;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("common");
+
   const router = useRouter();
   const qc = useQueryClient();
   const [imageFailed, setImageFailed] = useState(false);
@@ -105,7 +110,7 @@ export function PlaceCard({
             style={{ backgroundColor: "rgba(17,24,32,0.72)" }}
           >
             <AppText className="text-[11px] font-semibold text-white">
-              Sponsored
+              {t("sponsored")}
             </AppText>
           </View>
         ) : null}
@@ -179,6 +184,7 @@ export function PlaceCard({
                   {formatDistance(
                     (place.distance_km as number) * 1000,
                     context?.distanceUnit ?? "km",
+                    locale,
                   )}
                 </AppText>
               </View>

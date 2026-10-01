@@ -1,4 +1,5 @@
 import { AppText, Icon, type IoniconName, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The ⋯ menu on a review. Your own review: edit, delete, share. Someone
@@ -12,11 +13,11 @@ const ROWS: Record<
   ReviewAction,
   { icon: IoniconName; label: string; destructive?: boolean }
 > = {
-  edit: { icon: "create-outline", label: "Edit review" },
-  delete: { icon: "trash-outline", label: "Delete review", destructive: true },
-  share: { icon: "share-outline", label: "Share review" },
-  report: { icon: "flag-outline", label: "Report review" },
-  block: { icon: "ban-outline", label: "Block", destructive: true },
+  edit: { icon: "create-outline", label: "actions.edit" },
+  delete: { icon: "trash-outline", label: "actions.delete", destructive: true },
+  share: { icon: "share-outline", label: "actions.share" },
+  report: { icon: "flag-outline", label: "actions.report" },
+  block: { icon: "ban-outline", label: "actions.block", destructive: true },
 };
 
 export function ReviewActionsSheet({
@@ -35,13 +36,14 @@ export function ReviewActionsSheet({
   blockLabel?: string;
   onAction: (action: ReviewAction) => void;
 }) {
+  const t = useTranslations("reviews");
   return (
     <Sheet open={open} onClose={onClose} onDismiss={onDismiss}>
       <View className="gap-1 pb-2">
         {actions.map((action) => {
           const row = ROWS[action];
           const label =
-            action === "block" && blockLabel ? blockLabel : row.label;
+            action === "block" && blockLabel ? blockLabel : t(row.label);
           return (
             <Pressable
               key={action}

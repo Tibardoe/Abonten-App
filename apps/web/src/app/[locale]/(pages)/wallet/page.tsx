@@ -2,8 +2,12 @@ import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import WalletManager from "@/wallet/organisms/WalletManager";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = { title: "Payment methods" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("wallet");
+  return { title: t("paymentMethods") };
+}
 
 // Per-user, request-time data (this user's saved payment methods) — same
 // force-dynamic precedent as manage/my-events/page.tsx. Independent of any
@@ -12,16 +16,16 @@ export const metadata: Metadata = { title: "Payment methods" };
 export const dynamic = "force-dynamic";
 
 export default async function page() {
+  const t = await getTranslations("wallet");
+
   const response = await getUserPaymentMethods();
   const paymentMethods = response.status === 200 ? response.data : [];
 
   return (
     <div className="flex flex-col justify-center gap-5">
       <div>
-        <PageTitle>Wallets</PageTitle>
-        <SupportingText>
-          Save a payment method so you don't have to enter it every time.
-        </SupportingText>
+        <PageTitle>{t("wallets")}</PageTitle>
+        <SupportingText>{t("saveAPaymentMethodSoYou")}</SupportingText>
       </div>
 
       <WalletManager initialPaymentMethods={paymentMethods} />

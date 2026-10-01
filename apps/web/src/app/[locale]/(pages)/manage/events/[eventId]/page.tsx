@@ -7,6 +7,7 @@ import ManageEventView from "@/events/organisms/ManageEventView";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 // The tab names what is being managed. RLS limits the read to rows this
 // person may see; anyone else just gets the section's own title.
@@ -15,6 +16,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ eventId: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("manage");
+
   const { eventId } = await params;
   const supabase = await createClient();
   const { data } = await supabase
@@ -23,7 +26,7 @@ export async function generateMetadata({
     .eq("id", eventId)
     .maybeSingle();
   const name = data?.title;
-  return { title: name ? `Manage · ${name}` : "Manage event" };
+  return { title: name ? t("manage", { name: name }) : t("manageEvent") };
 }
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -41,6 +44,8 @@ export default async function page({
 }: {
   params: Promise<{ eventId: string }>;
 }) {
+  const t = await getTranslations("manage");
+
   const { eventId } = await params;
   const supabase = await createClient();
 
@@ -51,7 +56,7 @@ export default async function page({
   if (!user) {
     return (
       <p className="p-8 text-center text-muted-foreground">
-        Sign in to manage this event.
+        {t("signInToManageThisEvent")}
       </p>
     );
   }
@@ -66,14 +71,16 @@ export default async function page({
 
   if (eventError || !event) {
     return (
-      <p className="p-8 text-center text-muted-foreground">Event not found.</p>
+      <p className="p-8 text-center text-muted-foreground">
+        {t("eventNotFound")}
+      </p>
     );
   }
 
   if (event.organizer_id !== user.id) {
     return (
       <p className="p-8 text-center text-muted-foreground">
-        You're not authorized to manage this event.
+        {t("youReNotAuthorizedToManage")}
       </p>
     );
   }

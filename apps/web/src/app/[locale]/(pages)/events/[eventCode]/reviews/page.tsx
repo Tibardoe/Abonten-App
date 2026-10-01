@@ -6,6 +6,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { reviewsPath } from "@abonten/core/reviews/reviewList";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -36,16 +37,19 @@ export async function generateMetadata({
   params: Promise<{ eventCode: string }>;
   searchParams: Promise<{ review?: string | string[] }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("events");
+
   const [{ eventCode }, { review }] = await Promise.all([params, searchParams]);
   const event = await loadEvent(eventCode);
-  if (!event) return { title: "Event not found" };
+  if (!event) return { title: t("eventNotFound") };
 
-  const title = `Reviews of ${event.title}`;
+  const title = t("reviewsOf", { title: event.title });
   const description = await reviewsPageDescription(
     "event",
     event.id,
     event.title,
     review,
+    await getLocale(),
   );
   const image =
     event.flyer_public_id && event.flyer_version
@@ -80,6 +84,8 @@ export default async function page({
   params: Promise<{ eventCode: string }>;
   searchParams: Promise<{ review?: string | string[] }>;
 }) {
+  const t = await getTranslations("events");
+
   const [{ eventCode }, { review }] = await Promise.all([params, searchParams]);
   const event = await loadEvent(eventCode);
   if (!event) notFound();
@@ -96,7 +102,7 @@ export default async function page({
           <ChevronLeft className="h-4 w-4" aria-hidden />
           {event.title}
         </Link>
-        <h1 className="text-2xl font-bold md:text-3xl">Reviews</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">{t("reviews")}</h1>
       </div>
 
       <ReviewsBrowser

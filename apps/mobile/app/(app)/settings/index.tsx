@@ -92,7 +92,7 @@ export default function SettingsHub() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Settings"
+        title={t("settings")}
         backFallback="/(app)/account"
       />
       <ScrollView

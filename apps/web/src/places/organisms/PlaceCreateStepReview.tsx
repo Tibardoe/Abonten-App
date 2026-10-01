@@ -2,6 +2,7 @@ import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import ImagePreviewPane from "@/components/molecules/ImagePreviewPane";
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 const DAY_LABELS: Record<number, string> = {
   0: "Sunday",
@@ -32,6 +33,8 @@ export default function PlaceCreateStepReview({
   coverPreview,
   className,
 }: PlaceCreateStepReviewProps) {
+  const t = useTranslations("places");
+
   const values = getValues();
 
   // Same query key as PlaceCategoryPicker — this reads from that cache
@@ -53,7 +56,7 @@ export default function PlaceCreateStepReview({
         <div className="relative w-full aspect-video rounded-lg overflow-hidden">
           <ImagePreviewPane
             src={coverPreview}
-            alt="Place cover photo"
+            alt={t("placeCoverPhoto")}
             className="w-full h-full"
           />
         </div>
@@ -61,13 +64,13 @@ export default function PlaceCreateStepReview({
 
       <div className="space-y-1">
         <h2 className="text-lg font-bold text-foreground">
-          {values.name || "Untitled place"}
+          {values.name || t("untitledPlace")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {categoryName ?? "No category selected"}
+          {categoryName ?? t("noCategorySelected")}
         </p>
         <p className="text-sm text-foreground">
-          {selectedAddress || "No address selected"}
+          {selectedAddress || t("noAddressSelected")}
         </p>
       </div>
 
@@ -77,14 +80,18 @@ export default function PlaceCreateStepReview({
 
       {(values.website_url || values.phone || values.whatsapp) && (
         <div className="text-sm text-foreground space-y-1">
-          {values.website_url && <p>Website: {values.website_url}</p>}
-          {values.phone && <p>Phone: {values.phone}</p>}
-          {values.whatsapp && <p>WhatsApp: {values.whatsapp}</p>}
+          {values.website_url && (
+            <p>{t("website", { website_url: values.website_url })}</p>
+          )}
+          {values.phone && <p>{t("phone", { phone: values.phone })}</p>}
+          {values.whatsapp && (
+            <p>{t("whatsapp", { whatsapp: values.whatsapp })}</p>
+          )}
         </div>
       )}
 
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold text-foreground">Hours</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t("hours")}</h3>
         <ul className="text-sm text-foreground space-y-0.5">
           {DISPLAY_ORDER.map((dayOfWeek) => {
             const hour = openingHours.find((h) => h.dayOfWeek === dayOfWeek);
@@ -95,7 +102,7 @@ export default function PlaceCreateStepReview({
                 <span>{DAY_LABELS[dayOfWeek]}</span>
                 <span className="text-muted-foreground">
                   {hour.isClosed
-                    ? "Closed"
+                    ? t("closed")
                     : `${hour.openTime} - ${hour.closeTime}`}
                 </span>
               </li>

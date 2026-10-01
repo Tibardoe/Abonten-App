@@ -33,22 +33,26 @@ import {
   Search,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { ConversationListRow } from "./ConversationListRow";
 
 const ROLE_CHIPS: { key: ConversationRoleScope; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "member", label: "As Customer" },
-  { key: "business", label: "As Organizer" },
+  { key: "all", label: "roleChips.all" },
+  { key: "member", label: "roleChips.asCustomer" },
+  { key: "business", label: "roleChips.asOrganizer" },
 ];
 
+// Catalog keys in the messaging namespace.
 const MODE_SUBTITLE: Record<ConversationRoleScope, string> = {
-  all: "All your conversations",
-  member: "Chats about events and places you're attending",
-  business: "Messages from people interested in your events and places",
+  all: "modeSubtitle.all",
+  member: "modeSubtitle.member",
+  business: "modeSubtitle.business",
 };
 
 export function ConversationList({ activeId }: { activeId?: string }) {
+  const t = useTranslations("messaging");
+
   const { data: user } = useCurrentUser();
   const openSupport = useOpenConversation();
   const { roleScope, customFilters, setRoleScope, toggleCustomFilter } =
@@ -109,13 +113,13 @@ export function ConversationList({ activeId }: { activeId?: string }) {
             type="button"
             onClick={() => setView("inbox")}
             className="-ml-1 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-            aria-label="Back to messages"
+            aria-label={t("backToMessages")}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
         ) : null}
         <h1 className="text-base font-semibold">
-          {archived ? "Archived" : "Messages"}
+          {archived ? t("archived") : t("messages")}
         </h1>
       </div>
 
@@ -129,16 +133,16 @@ export function ConversationList({ activeId }: { activeId?: string }) {
           <input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder={archived ? "Search archived" : "Search messages"}
+            placeholder={archived ? t("searchArchived") : t("searchMessages")}
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            aria-label="Search messages"
+            aria-label={t("searchMessages")}
           />
           {searchInput ? (
             <button
               type="button"
               onClick={() => setSearchInput("")}
               className="shrink-0 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
+              aria-label={t("clearSearch")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -163,7 +167,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
                     : "border-border bg-muted text-muted-foreground hover:bg-accent",
                 )}
               >
-                {chip.label}
+                {t(chip.label)}
               </button>
             ))}
             {customFilters.length > 0 ? (
@@ -174,7 +178,9 @@ export function ConversationList({ activeId }: { activeId?: string }) {
                 key={key}
                 type="button"
                 onClick={() => toggleCustomFilter(key)}
-                aria-label={`${CUSTOM_FILTER_LABEL[key]} filter, active. Click to remove.`}
+                aria-label={t("filterActiveClickToRemove", {
+                  item: CUSTOM_FILTER_LABEL[key],
+                })}
                 className="flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition hover:opacity-90"
               >
                 {CUSTOM_FILTER_LABEL[key]}
@@ -183,14 +189,14 @@ export function ConversationList({ activeId }: { activeId?: string }) {
             ))}
             <Popover open={addOpen} onOpenChange={setAddOpen}>
               <PopoverTrigger
-                aria-label="Add filter"
+                aria-label={t("addFilter")}
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-foreground transition hover:bg-accent"
               >
                 <Plus className="h-3.5 w-3.5" />
               </PopoverTrigger>
               <PopoverContent align="start" className="w-64 p-1">
                 <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                  Add filter
+                  {t("addFilter")}
                 </p>
                 {CUSTOM_FILTER_KEYS.map((key) => {
                   const on = customFilters.includes(key);
@@ -227,7 +233,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
           </div>
           {!searching ? (
             <p className="px-3 pb-2 text-[11px] text-muted-foreground">
-              {MODE_SUBTITLE[roleScope]}
+              {t(MODE_SUBTITLE[roleScope])}
             </p>
           ) : null}
         </div>
@@ -244,7 +250,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground">
               <Archive className="h-4 w-4" />
             </span>
-            <span className="flex-1 text-sm">Archived</span>
+            <span className="flex-1 text-sm">{t("archived")}</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
         ) : null}
@@ -258,16 +264,16 @@ export function ConversationList({ activeId }: { activeId?: string }) {
             <MessageSquare className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
               {q.isError
-                ? "Couldn't load your messages."
+                ? t("couldnTLoadYourMessages")
                 : searching
-                  ? "No conversations found. Try another name, event, or place."
+                  ? t("noConversationsFoundTryAnotherName")
                   : archived
-                    ? "No archived conversations."
+                    ? t("noArchivedConversations")
                     : roleScope === "business"
-                      ? "No organizer conversations yet. They'll appear here when people reach out about your events or places."
+                      ? t("noOrganizerConversationsYetTheyLl")
                       : filtered
-                        ? "Nothing matches these filters."
-                        : "No conversations yet. Open an event or place and click Message to start one."}
+                        ? t("nothingMatchesTheseFilters")
+                        : t("noConversationsYetOpenAnEvent")}
             </p>
             {q.isError ? (
               <button
@@ -275,7 +281,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
                 onClick={() => q.refetch()}
                 className="text-sm font-medium text-primary hover:underline"
               >
-                Retry
+                {t("retry")}
               </button>
             ) : !archived && !searching && !filtered ? (
               <button
@@ -284,7 +290,7 @@ export function ConversationList({ activeId }: { activeId?: string }) {
                 onClick={() => openSupport.mutate({ type: "support" })}
                 className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
               >
-                Contact Abonten Support
+                {t("contactAbontenSupport")}
               </button>
             ) : null}
           </div>

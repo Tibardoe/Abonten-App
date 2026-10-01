@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import EventUploadModal from "../organisms/EventUploadModal";
 
@@ -15,6 +16,8 @@ import EventUploadModal from "../organisms/EventUploadModal";
 // opens PlaceUploadModal directly, since a place's cover photo is picked
 // inside that modal's own Photos step, not before it.
 export default function EventUploadButton() {
+  const t = useTranslations("common");
+
   const [showPopup, setShowPopup] = useState(false);
   const [showPlaceModal, setShowPlaceModal] = useState(false);
   const toast = useToast();
@@ -58,7 +61,7 @@ export default function EventUploadButton() {
       />
 
       <CreateMenu
-        label="Create"
+        label={t("create")}
         onSelectEvent={openFilePicker}
         onSelectPlace={() => setShowPlaceModal(true)}
         iconClassName="text-3xl"

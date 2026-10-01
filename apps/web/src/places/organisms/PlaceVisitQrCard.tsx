@@ -4,6 +4,7 @@ import { getPlaceVisitPanel } from "@/actions/getPlaceVisitPanel";
 import { Button } from "@/components/ui/button";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { IoClose, IoExpandOutline } from "react-icons/io5";
@@ -19,6 +20,8 @@ export default function PlaceVisitQrCard({
   placeId: string;
   placeName: string;
 }) {
+  const t = useTranslations("places");
+
   const { data } = useQuery({
     queryKey: ["place-visit-panel", placeId],
     queryFn: () => getPlaceVisitPanel(placeId),
@@ -63,7 +66,7 @@ export default function PlaceVisitQrCard({
     qr ? (
       <img
         src={qr}
-        alt={`Check-in code for ${placeName}`}
+        alt={t("checkInCodeFor", { placeName: placeName })}
         className={`${size} aspect-square rounded-lg bg-white p-2`}
       />
     ) : (
@@ -74,18 +77,20 @@ export default function PlaceVisitQrCard({
     <section className="mb-6 rounded-xl border border-border bg-card p-5 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold">Visitor check-in</h2>
+          <h2 className="font-semibold">{t("visitorCheckIn")}</h2>
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-            Show this code at your counter or entrance. Visitors scan it with
-            their phone while they&apos;re here to check in (once a day).
+            {t("showThisCodeAtYourCounter")}{" "}
             {panel.verified
-              ? ` Every different person who checks in during a month earns you ${formatCredit(panel.perVisitorMinor, panel.currency)} of promotion credit (up to ${panel.maxVisitors} a month).`
-              : " Visits are counted now; only verified places earn promotion credit from them."}
+              ? t("everyDifferentPersonWhoChecksIn", {
+                  amount: formatCredit(panel.perVisitorMinor, panel.currency),
+                  maxVisitors: panel.maxVisitors,
+                })
+              : t("visitsAreCountedNowOnlyVerified")}
           </p>
         </div>
         <Button variant="outline" onClick={() => setFullScreen(true)}>
           <IoExpandOutline className="mr-1" />
-          Show on a screen
+          {t("showOnAScreen")}
         </Button>
       </div>
 
@@ -93,23 +98,23 @@ export default function PlaceVisitQrCard({
         {code("w-40")}
         <dl className="grid flex-1 grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-muted-foreground">Today</dt>
+            <dt className="text-muted-foreground">{t("today")}</dt>
             <dd className="text-lg font-semibold tabular-nums">{s.today}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Visitors this month</dt>
+            <dt className="text-muted-foreground">{t("visitorsThisMonth")}</dt>
             <dd className="text-lg font-semibold tabular-nums">
               {s.thisMonthVisitors}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Last month</dt>
+            <dt className="text-muted-foreground">{t("lastMonth")}</dt>
             <dd className="text-lg font-semibold tabular-nums">
               {s.lastMonthVisitors}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Credit earned</dt>
+            <dt className="text-muted-foreground">{t("creditEarned")}</dt>
             <dd className="text-lg font-semibold tabular-nums">
               {formatCredit(s.earnedMinor, panel.currency)}
             </dd>
@@ -117,32 +122,31 @@ export default function PlaceVisitQrCard({
         </dl>
       </div>
       <p className="text-xs text-muted-foreground">
-        New code in {secondsLeft}s. Credit for a month is added early the next
-        month.
+        {t("newCodeInSCreditFor", { secondsLeft: secondsLeft })}
       </p>
 
       {fullScreen ? (
         <dialog
           open
           aria-modal="true"
-          aria-label={`Check-in code for ${placeName}`}
+          aria-label={t("checkInCodeFor", { placeName: placeName })}
           className="fixed inset-0 z-50 m-0 flex h-full max-h-none w-full max-w-none flex-col items-center justify-center gap-6 border-0 bg-background p-6 text-center text-foreground"
         >
           <button
             type="button"
             onClick={() => setFullScreen(false)}
             className="absolute right-4 top-4 rounded-full p-2 text-2xl hover:bg-muted"
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <IoClose />
           </button>
           <p className="text-2xl font-bold md:text-4xl">{placeName}</p>
           {code("w-[min(80vw,70vh)]")}
           <p className="max-w-md text-lg text-muted-foreground">
-            Scan with your phone camera or the Abonten app to check in.
+            {t("scanWithYourPhoneCameraOr")}
           </p>
           <p className="text-sm text-muted-foreground tabular-nums">
-            New code in {secondsLeft}s
+            {t("newCodeInS", { secondsLeft: secondsLeft })}
           </p>
         </dialog>
       ) : null}

@@ -7,6 +7,7 @@ import {
   useCheckoutCountdown,
 } from "@/hooks/useCheckoutCountdown";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { RiDeleteBin6Line } from "react-icons/ri";
 
@@ -33,6 +34,8 @@ export default function TicketCheckoutSessionCard({
   pendingLineIds,
   isRemoving,
 }: TicketCheckoutSessionCardProps) {
+  const t = useTranslations("common");
+
   const { secondsLeft, isExpired, isWarning } = useCheckoutCountdown(
     session.expiresAt,
   );
@@ -71,7 +74,7 @@ export default function TicketCheckoutSessionCard({
           onClick={() => onRemoveSession(session.checkoutSessionId)}
           className="text-xs text-destructive underline disabled:opacity-40 whitespace-nowrap"
         >
-          {isRemoving ? "Removing..." : "Remove checkout"}
+          {isRemoving ? t("removing") : t("removeCheckout")}
         </button>
       </div>
 
@@ -87,8 +90,8 @@ export default function TicketCheckoutSessionCard({
         {secondsLeft === null
           ? null
           : isExpired
-            ? "This checkout has expired."
-            : `Expires in ${formatCountdown(secondsLeft)}`}
+            ? t("thisCheckoutHasExpired")
+            : t("expiresIn", { formatCountdown: formatCountdown(secondsLeft) })}
       </div>
 
       <div className="space-y-3">
@@ -114,14 +117,14 @@ export default function TicketCheckoutSessionCard({
                   disabled={isLinePending}
                   onClick={() => onDeleteLine(line.ticketCheckoutId)}
                   className="hover:opacity-70 transition-opacity disabled:opacity-40"
-                  aria-label={`Remove ${line.type} tickets`}
+                  aria-label={t("removeTickets", { type: line.type })}
                 >
                   <RiDeleteBin6Line className="text-destructive" aria-hidden />
                 </button>
               </div>
 
               <QuantityStepper
-                label={`${line.type} tickets`}
+                label={t("tickets3", { type: line.type })}
                 quantity={line.quantity}
                 minQuantity={1}
                 maxQuantity={maxQuantity}
@@ -135,19 +138,19 @@ export default function TicketCheckoutSessionCard({
               />
 
               <div className="flex justify-between text-xs text-muted-foreground">
-                <p>Unit price:</p>
+                <p>{t("unitPrice")}</p>
                 <p>{formatMoney(line.currency, line.unitPrice)}</p>
               </div>
 
               {line.discount > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <p>Discount:</p>
+                  <p>{t("discount3")}</p>
                   <p>−{formatMoney(line.currency, line.discount)}</p>
                 </div>
               )}
 
               <div className="flex justify-between text-xs font-semibold text-foreground">
-                <p>Subtotal:</p>
+                <p>{t("subtotal2")}</p>
                 <p>{formatMoney(line.currency, line.amount)}</p>
               </div>
             </div>
@@ -156,7 +159,7 @@ export default function TicketCheckoutSessionCard({
       </div>
 
       <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
-        <p>Checkout total</p>
+        <p>{t("checkoutTotal")}</p>
         <p>
           {formatMoney(session.lines[0]?.currency, session.sessionSubtotal)}
         </p>

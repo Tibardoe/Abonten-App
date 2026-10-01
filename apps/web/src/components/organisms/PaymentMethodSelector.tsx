@@ -27,7 +27,7 @@ import {
 } from "@/utils/mutationQueryInvalidation";
 import PaymentMethodCard, {
   getPaymentMethodDisplay,
-  NO_PAYMENT_METHODS_MESSAGE,
+  NO_PAYMENT_METHODS_KEY,
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
@@ -37,6 +37,7 @@ import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { creditMinorToMajor } from "@abonten/core/rewards/creditAmount";
 import type { CheckoutInit } from "@abonten/services/payments/providers/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useState } from "react";
@@ -135,6 +136,8 @@ const DIRECT_CHARGE_POLL_INTERVAL_MS = 4000;
 export default function PaymentMethodSelector(
   props: PaymentMethodSelectorProps,
 ) {
+  const t = useTranslations("common");
+
   const queryClient = useQueryClient();
   const router = useRouter();
   const toast = useToast();
@@ -304,7 +307,10 @@ export default function PaymentMethodSelector(
     props.onStatusChange?.({
       phase: uiState.phase,
       selectedMethodLabel: selectedMethod
-        ? getPaymentMethodDisplay(selectedMethod).title
+        ? getPaymentMethodDisplay(selectedMethod, {
+            mobileMoney: t("mobileMoney"),
+            exp: t("exp"),
+          }).title
         : (hostedMethods.find((m) => m.method === selectedHostedMethod)
             ?.label ?? null),
     });
@@ -395,7 +401,7 @@ export default function PaymentMethodSelector(
         applyVerification(response.data.verification, primaryAttemptId);
       }
     },
-    onError: () => toast.error("Failed to start payment. Please try again."),
+    onError: () => toast.error(t("failedToStartPaymentPleaseTry")),
   });
 
   // Event and place promotions share one service (and one mutation). With
@@ -424,7 +430,7 @@ export default function PaymentMethodSelector(
         applyVerification(response.data.verification, response.data.attempt.id);
       }
     },
-    onError: () => toast.error("Failed to start payment. Please try again."),
+    onError: () => toast.error(t("failedToStartPaymentPleaseTry")),
   });
 
   const payMutation =
@@ -487,8 +493,8 @@ export default function PaymentMethodSelector(
         primaryAttemptId,
         message:
           response.data.finalized === "pending"
-            ? "Your mobile money payment is still awaiting authorization."
-            : "We're finishing up your payment.",
+            ? t("yourMobileMoneyPaymentIsStill")
+            : t("weReFinishingUpYourPayment"),
       });
       return;
     }
@@ -502,7 +508,7 @@ export default function PaymentMethodSelector(
     }
     setUiState({
       phase: "failed",
-      message: response.message ?? "Your payment could not be verified.",
+      message: response.message ?? t("yourPaymentCouldNotBeVerified"),
     });
   };
 
@@ -513,7 +519,7 @@ export default function PaymentMethodSelector(
     onError: () =>
       setUiState({
         phase: "failed",
-        message: "The payment could not be verified. Please try again.",
+        message: t("thePaymentCouldNotBeVerified"),
       }),
   });
 
@@ -537,19 +543,16 @@ export default function PaymentMethodSelector(
         return;
       }
       if (response.status === 202) {
-        toast.error(
-          "We're finishing up your payment. Please check back in a moment.",
-        );
+        toast.error(t("weReFinishingUpYourPayment2"));
         return;
       }
       toast.error(
         "message" in response && response.message
           ? response.message
-          : "Still couldn't finish this. Please contact support.",
+          : t("stillCouldnTFinishThisPlease"),
       );
     },
-    onError: () =>
-      toast.error("Still couldn't finish this. Please contact support."),
+    onError: () => toast.error(t("stillCouldnTFinishThisPlease")),
   });
 
   const otpMutation = useMutation({
@@ -563,8 +566,7 @@ export default function PaymentMethodSelector(
       setUiState({ phase: "verifying" });
       verifyMutation.mutate(primaryAttemptId);
     },
-    onError: () =>
-      toast.error("That code didn't work. Please check and try again."),
+    onError: () => toast.error(t("thatCodeDidnTWorkPlease")),
   });
 
   useResumePaystackPopup(
@@ -631,13 +633,13 @@ export default function PaymentMethodSelector(
   if (isError) {
     return (
       <div className="space-y-3 text-center text-muted-foreground py-4">
-        <p>Couldn't load your payment methods.</p>
+        <p>{t("couldnTLoadYourPaymentMethods")}</p>
         <button
           type="button"
           onClick={() => refetch()}
           className="underline font-medium"
         >
-          Try again
+          {t("tryAgain")}
         </button>
       </div>
     );
@@ -663,7 +665,7 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
-          <p>Verifying your payment…</p>
+          <p>{t("verifyingYourPayment")}</p>
         </div>
       </>
     );
@@ -674,16 +676,13 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
-          <p>
-            {uiState.message ??
-              "Your payment is still processing. This page stays reserved until it expires."}
-          </p>
+          <p>{uiState.message ?? t("yourPaymentIsStillProcessingThis")}</p>
           <button
             type="button"
             onClick={() => verifyMutation.mutate(uiState.primaryAttemptId)}
             className="underline font-medium"
           >
-            Check status
+            {t("checkStatus")}
           </button>
         </div>
       </>
@@ -698,16 +697,13 @@ export default function PaymentMethodSelector(
         <>
           {paystackScript}
           <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-center">
-            <p>
-              {uiState.displayMessage ??
-                "Enter the OTP sent to your phone to approve this payment."}
-            </p>
+            <p>{uiState.displayMessage ?? t("enterTheOtpSentToYour")}</p>
             <Input
               type="text"
               inputMode="numeric"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              placeholder="Enter OTP"
+              placeholder={t("enterOtp")}
               className="text-center"
             />
             <button
@@ -716,7 +712,7 @@ export default function PaymentMethodSelector(
               onClick={() => otpMutation.mutate(primaryAttemptId)}
               className="w-full rounded-md p-3 font-bold text-primary-foreground bg-primary text-center disabled:opacity-50"
             >
-              {otpMutation.isPending ? "Submitting…" : "Submit code"}
+              {otpMutation.isPending ? t("submitting2") : t("submitCode")}
             </button>
           </div>
         </>
@@ -727,16 +723,13 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
-          <p>
-            {uiState.displayMessage ??
-              "Approve this payment on your phone to continue."}
-          </p>
+          <p>{uiState.displayMessage ?? t("approveThisPaymentOnYourPhone")}</p>
           <button
             type="button"
             onClick={() => verifyMutation.mutate(primaryAttemptId)}
             className="underline font-medium"
           >
-            I've approved — check now
+            {t("iVeApprovedCheckNow")}
           </button>
         </div>
       </>
@@ -748,7 +741,7 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
-          <p>Complete your payment in the secure payment window…</p>
+          <p>{t("completeYourPaymentInTheSecure")}</p>
         </div>
       </>
     );
@@ -761,7 +754,7 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-center">
-          <p className="font-semibold">Payment successful</p>
+          <p className="font-semibold">{t("paymentSuccessful")}</p>
           <p>{uiState.message}</p>
           <button
             type="button"
@@ -769,7 +762,7 @@ export default function PaymentMethodSelector(
             onClick={() => retryFulfillmentMutation.mutate(paymentAttemptId)}
             className="w-full rounded-md p-3 font-bold text-primary-foreground bg-primary text-center disabled:opacity-50"
           >
-            {retryFulfillmentMutation.isPending ? "Retrying…" : "Retry"}
+            {retryFulfillmentMutation.isPending ? t("retrying") : t("retry")}
           </button>
         </div>
       </>
@@ -780,7 +773,7 @@ export default function PaymentMethodSelector(
     const message =
       uiState.phase === "failed"
         ? uiState.message
-        : "Payment cancelled — you can try again.";
+        : t("paymentCancelledYouCanTryAgain");
 
     return (
       <>
@@ -805,7 +798,7 @@ export default function PaymentMethodSelector(
             }}
             className="underline font-medium"
           >
-            Try again
+            {t("tryAgain")}
           </button>
         </div>
       </>
@@ -828,12 +821,12 @@ export default function PaymentMethodSelector(
       {creditCoversAll ? null : (
         <>
           <p className="font-semibold text-sm">
-            {useCredit ? "Pay the rest with" : "Payment method"}
+            {useCredit ? t("payTheRestWith") : t("paymentMethod")}
           </p>
 
           {methods.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              {NO_PAYMENT_METHODS_MESSAGE}
+              {t(NO_PAYMENT_METHODS_KEY)}
             </p>
           ) : (
             <div className="space-y-2">
@@ -867,7 +860,7 @@ export default function PaymentMethodSelector(
           {hostedMethods.length > 0 ? (
             <fieldset className="space-y-2">
               <legend className="mb-1 text-xs font-medium text-muted-foreground">
-                {methods.length > 0 ? "Or pay another way" : "Ways to pay"}
+                {methods.length > 0 ? t("orPayAnotherWay") : t("waysToPay")}
               </legend>
               {hostedMethods.map((m) => (
                 <label
@@ -889,7 +882,7 @@ export default function PaymentMethodSelector(
                   </span>
                   {m.recommended ? (
                     <span className="text-xs text-muted-foreground">
-                      Recommended
+                      {t("recommended")}
                     </span>
                   ) : null}
                 </label>
@@ -897,7 +890,9 @@ export default function PaymentMethodSelector(
             </fieldset>
           ) : paymentOptions && !paymentOptions.transacting ? (
             <p className="text-xs text-muted-foreground">
-              Sales are paused in {paymentOptions.marketName} right now.
+              {t("salesArePausedInRightNow", {
+                marketName: paymentOptions.marketName,
+              })}
             </p>
           ) : null}
 
@@ -934,11 +929,11 @@ export default function PaymentMethodSelector(
       >
         {payMutation.isPending
           ? creditCoversAll
-            ? "Confirming…"
-            : "Starting payment…"
+            ? t("confirming")
+            : t("startingPayment")
           : creditCoversAll
-            ? "Confirm and pay with credit"
-            : `Pay ${formatMoney(currency, amount)}`}
+            ? t("confirmAndPayWithCredit")
+            : t("pay", { formatMoney: formatMoney(currency, amount) })}
       </button>
     </div>
   );

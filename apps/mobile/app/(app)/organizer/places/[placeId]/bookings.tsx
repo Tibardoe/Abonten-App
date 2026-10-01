@@ -10,6 +10,7 @@ import type { BookingStatus, OwnerPlaceBooking } from "@abonten/api-client";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { resolveBookingState } from "@abonten/core/placeBooking";
 import { AppText, Chip, Refresher, useToast } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -26,11 +27,11 @@ import {
 // respondable.
 
 const FILTERS: { id: BookingFilter; label: string }[] = [
-  { id: "pending", label: "Pending" },
-  { id: "accepted", label: "Accepted" },
-  { id: "declined", label: "Declined" },
-  { id: "cancelled", label: "Cancelled" },
-  { id: "all", label: "All" },
+  { id: "pending", label: "bookingFilters.pending" },
+  { id: "accepted", label: "bookingFilters.accepted" },
+  { id: "declined", label: "bookingFilters.declined" },
+  { id: "cancelled", label: "bookingFilters.cancelled" },
+  { id: "all", label: "bookingFilters.all" },
 ];
 
 // "expired" is derived, not stored: a request nobody answered before its
@@ -69,9 +70,17 @@ function BookingRow({
   booking: OwnerPlaceBooking;
   placeId: string;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const respond = useRespondToPlaceBooking(placeId);
-  const { date, time } = formatSingleDateTime(booking.requested_time);
+  const { date, time } = formatSingleDateTime(
+    booking.requested_time,
+    undefined,
+    locale,
+  );
   const customer = booking.user_info?.username ?? "A customer";
   const state = resolveBookingState(
     booking.status,
@@ -84,12 +93,12 @@ function BookingRow({
       {
         onSuccess: (res) => {
           if (res.status !== 200) {
-            toast.error("Couldn't update", { description: res.message });
+            toast.error(t("couldnTUpdate"), { description: res.message });
           }
         },
         onError: () =>
-          toast.error("Couldn't update", {
-            description: "Please try again in a moment.",
+          toast.error(t("couldnTUpdate"), {
+            description: t("pleaseTryAgainInAMoment"),
           }),
       },
     );
@@ -97,12 +106,12 @@ function BookingRow({
 
   const confirmDecline = () => {
     Alert.alert(
-      "Decline this booking request?",
-      `Decline this booking request from ${customer}?`,
+      t("declineThisBookingRequest"),
+      t("declineThisBookingRequestFrom", { customer: customer }),
       [
-        { text: "Keep request", style: "cancel" },
+        { text: t("keepRequest"), style: "cancel" },
         {
-          text: "Decline request",
+          text: t("declineRequest"),
           style: "destructive",
           onPress: () => send("decline"),
         },
@@ -116,21 +125,21 @@ function BookingRow({
         <View className="flex-1">
           <AppText className="font-bold text-foreground">{customer}</AppText>
           <AppText className="text-sm text-muted-foreground">
-            {date} at {time}
+            {t("at", { date: date, time: time })}
           </AppText>
           {booking.place_service?.name ? (
             <AppText className="text-sm text-muted-foreground">
-              Service: {booking.place_service.name}
+              {t("service", { name: booking.place_service.name })}
             </AppText>
           ) : null}
           {booking.party_size != null ? (
             <AppText className="text-sm text-muted-foreground">
-              Party size: {booking.party_size}
+              {t("partySize", { party_size: booking.party_size })}
             </AppText>
           ) : null}
           {booking.note ? (
             <AppText className="mt-1 text-sm text-foreground">
-              &ldquo;{booking.note}&rdquo;
+              {t("text", { note: booking.note })}
             </AppText>
           ) : null}
         </View>
@@ -155,7 +164,7 @@ function BookingRow({
             className="rounded-md bg-primary px-3 py-1.5 active:opacity-90 disabled:opacity-60"
           >
             <AppText className="text-sm font-semibold text-primary-foreground">
-              {respond.isPending ? "Working…" : "Accept"}
+              {respond.isPending ? t("working") : t("accept")}
             </AppText>
           </Pressable>
           <Pressable
@@ -164,12 +173,14 @@ function BookingRow({
             onPress={confirmDecline}
             className="rounded-md border border-border px-3 py-1.5 active:opacity-70 disabled:opacity-60"
           >
-            <AppText className="text-sm text-foreground">Decline</AppText>
+            <AppText className="text-sm text-foreground">
+              {t("decline")}
+            </AppText>
           </Pressable>
         </View>
       ) : state === "lapsed" ? (
         <AppText variant="caption" className="pt-1">
-          This request expired — its date has passed.
+          {t("thisRequestExpiredItsDateHas")}
         </AppText>
       ) : null}
     </View>
@@ -177,6 +188,8 @@ function BookingRow({
 }
 
 export default function PlaceBookingsScreen() {
+  const t = useTranslations("manage");
+
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const id = placeId ?? "";
   const [filter, setFilter] = useState<BookingFilter>("pending");
@@ -204,12 +217,12 @@ export default function PlaceBookingsScreen() {
       contentContainerClassName="gap-2 p-4 pb-16"
       ListHeaderComponent={
         <View className="mb-2 gap-3">
-          <AppText variant="screenTitle">Bookings</AppText>
+          <AppText variant="screenTitle">{t("bookings")}</AppText>
           <View className="flex-row flex-wrap gap-2">
             {FILTERS.map((f) => (
               <Chip
                 key={f.id}
-                label={f.label}
+                label={t(f.label)}
                 selected={filter === f.id}
                 onPress={() => setFilter(f.id)}
               />
@@ -223,11 +236,11 @@ export default function PlaceBookingsScreen() {
       ListEmptyComponent={
         forbidden ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            You're not authorized to manage this place.
+            {t("youReNotAuthorizedToManage2")}
           </AppText>
         ) : view.kind === "empty" ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            {`No ${filter === "all" ? "" : `${filter} `}bookings.`}
+            {t("noBookings", { value: filter === "all" ? "" : `${filter} ` })}
           </AppText>
         ) : (
           <QueryUnavailable

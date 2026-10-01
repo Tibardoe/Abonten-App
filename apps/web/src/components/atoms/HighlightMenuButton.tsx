@@ -3,6 +3,7 @@
 import HighlightMenu, {
   type HighlightMenuAction,
 } from "@/components/molecules/HighlightMenu";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import type { RefObject } from "react";
 
@@ -21,6 +22,8 @@ export default function HighlightMenuButton({
   excludeRefs,
   menuRef,
 }: HighlightMenuButtonProps) {
+  const t = useTranslations("common");
+
   return (
     <div className="relative flex-shrink-0">
       <button
@@ -32,7 +35,7 @@ export default function HighlightMenuButton({
       >
         <Image
           src="/assets/images/menuDots.svg"
-          alt="Highlight options"
+          alt={t("highlightOptions")}
           width={20}
           height={20}
           className="invert"

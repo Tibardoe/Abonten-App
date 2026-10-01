@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { MdOutlineDateRange } from "react-icons/md";
@@ -14,8 +15,8 @@ type DateRangePickerSheetProps = {
   disabledBefore?: Date;
 };
 
-const formatShort = (date: Date) =>
-  date.toLocaleDateString(undefined, {
+const formatShort = (date: Date, locale: string) =>
+  date.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -31,11 +32,15 @@ const formatShort = (date: Date) =>
 // onChange when "Done" is pressed, so navigating the calendar never mutates
 // the applied filter until the user confirms.
 export default function DateRangePickerSheet({
-  label = "Date range",
+  label: labelProp,
   value,
   onChange,
   disabledBefore,
 }: DateRangePickerSheetProps) {
+  const t = useTranslations("common");
+  const locale = useLocale();
+  const label = labelProp ?? t("dateRange");
+
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<DateRange | undefined>(value);
 
@@ -51,9 +56,9 @@ export default function DateRangePickerSheet({
 
   const summary = value?.from
     ? value.to
-      ? `${formatShort(value.from)} – ${formatShort(value.to)}`
-      : formatShort(value.from)
-    : "Any dates";
+      ? `${formatShort(value.from, locale)} – ${formatShort(value.to, locale)}`
+      : formatShort(value.from, locale)
+    : t("anyDates");
 
   return (
     <div className="grid gap-1.5">
@@ -83,7 +88,7 @@ export default function DateRangePickerSheet({
               }}
               className="flex-1 rounded-md border border-input bg-background px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
             >
-              Clear
+              {t("clear")}
             </button>
             <button
               type="button"
@@ -93,7 +98,7 @@ export default function DateRangePickerSheet({
               }}
               className="flex-1 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Done
+              {t("done")}
             </button>
           </div>
         }
@@ -107,9 +112,9 @@ export default function DateRangePickerSheet({
                 : "border-input bg-background",
             )}
           >
-            <p className="text-xs text-muted-foreground">Start</p>
+            <p className="text-xs text-muted-foreground">{t("start")}</p>
             <p className="text-sm font-medium">
-              {draft?.from ? formatShort(draft.from) : "Select"}
+              {draft?.from ? formatShort(draft.from, locale) : t("select")}
             </p>
           </div>
           <div
@@ -120,9 +125,9 @@ export default function DateRangePickerSheet({
                 : "border-input bg-background",
             )}
           >
-            <p className="text-xs text-muted-foreground">End</p>
+            <p className="text-xs text-muted-foreground">{t("end")}</p>
             <p className="text-sm font-medium">
-              {draft?.to ? formatShort(draft.to) : "Select"}
+              {draft?.to ? formatShort(draft.to, locale) : t("select")}
             </p>
           </div>
         </div>

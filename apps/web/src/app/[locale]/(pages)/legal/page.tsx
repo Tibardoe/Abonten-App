@@ -1,6 +1,8 @@
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import { LEGAL_DOCUMENTS, loadLegalDocument } from "@/utils/publicContent";
 import type { Metadata } from "next";
+import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -9,13 +11,17 @@ import Link from "next/link";
 
 export const dynamic = "force-static";
 
-export const metadata: Metadata = {
-  title: "Legal",
-  description:
-    "Abonten Hub's Terms and Conditions, Privacy Policy, Cookie Policy and security overview.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("legal");
+  return {
+    title: t("legal"),
+    description: t("abontenHubSTermsAndConditions"),
+  };
+}
 
 export default function LegalIndexPage() {
+  const t = useTranslations("legal");
+
   const docs = (
     Object.keys(LEGAL_DOCUMENTS) as Array<keyof typeof LEGAL_DOCUMENTS>
   ).map((slug) => ({ slug, doc: loadLegalDocument(slug) }));
@@ -23,11 +29,8 @@ export default function LegalIndexPage() {
   return (
     <section className="mx-auto flex max-w-3xl flex-col gap-6 py-6">
       <div className="flex flex-col gap-2">
-        <PageTitle>Legal</PageTitle>
-        <SupportingText>
-          The documents that govern your use of Abonten Hub on the web and in
-          the mobile app.
-        </SupportingText>
+        <PageTitle>{t("legal")}</PageTitle>
+        <SupportingText>{t("theDocumentsThatGovernYourUse")}</SupportingText>
       </div>
       <ul className="grid gap-3 sm:grid-cols-2">
         {docs.map(({ slug, doc }) => (
@@ -43,8 +46,10 @@ export default function LegalIndexPage() {
                 </span>
               ) : null}
               <span className="mt-auto pt-2 text-xs text-muted-foreground">
-                {doc.version ? `Version ${doc.version}` : null}
-                {doc.effectiveDate ? ` · Effective ${doc.effectiveDate}` : null}
+                {doc.version ? t("version", { version: doc.version }) : null}
+                {doc.effectiveDate
+                  ? t("effective2", { effectiveDate: doc.effectiveDate })
+                  : null}
               </span>
             </Link>
           </li>

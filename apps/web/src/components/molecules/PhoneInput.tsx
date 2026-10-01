@@ -3,6 +3,7 @@
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import { matchCountry, phoneCountries } from "@abonten/core/countries";
+import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -20,6 +21,8 @@ export default function PhoneInput({
   onSelectCountry,
   onChange,
 }: Props) {
+  const t = useTranslations("common");
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -44,7 +47,7 @@ export default function PhoneInput({
           type="button"
           onClick={() => setShowDropdown((prev) => !prev)}
           className="focus-visible:outline-none"
-          aria-label="Country code"
+          aria-label={t("countryCode")}
           aria-haspopup="true"
           aria-expanded={showDropdown}
         >
@@ -58,13 +61,13 @@ export default function PhoneInput({
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search country or code"
-            aria-label="Search countries"
+            placeholder={t("searchCountryOrCode")}
+            aria-label={t("searchCountries")}
             className="sticky top-0 border-b border-border bg-popover px-3 py-2 text-sm outline-none"
           />
           {results.length === 0 ? (
             <p className="px-3 py-2 text-sm text-muted-foreground">
-              No country matches “{query}”.
+              {t("noCountryMatches", { query: query })}
             </p>
           ) : null}
           {results.map((country) => (
@@ -92,8 +95,8 @@ export default function PhoneInput({
         <input
           type="tel"
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Phone number"
-          aria-label="Phone number"
+          placeholder={t("phoneNumber")}
+          aria-label={t("phoneNumber")}
           className="w-full bg-transparent py-2 text-base outline-none placeholder:text-muted-foreground md:text-sm"
         />
       </div>

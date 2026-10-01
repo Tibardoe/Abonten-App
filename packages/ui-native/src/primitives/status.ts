@@ -43,34 +43,75 @@ export type StatusEntry = {
   kind: StatusKind;
   tone: StatusTone;
   icon: IoniconName;
-  /** Sentence-case label, kept identical to the web copy. */
+  /** A catalog key in the common namespace ("status.pending"), or "" for
+   * an unknown state; the override in ResolveOptions is already text. */
   label: string;
 };
 
 const REGISTRY: Record<StatusKind, Omit<StatusEntry, "kind">> = {
-  success: { tone: "success", icon: "checkmark-circle", label: "Successful" },
-  approved: { tone: "success", icon: "checkmark-circle", label: "Approved" },
-  pending: { tone: "warning", icon: "time-outline", label: "Pending" },
-  processing: { tone: "warning", icon: "sync-outline", label: "Processing" },
+  success: {
+    tone: "success",
+    icon: "checkmark-circle",
+    label: "status.successful",
+  },
+  approved: {
+    tone: "success",
+    icon: "checkmark-circle",
+    label: "status.approved",
+  },
+  pending: { tone: "warning", icon: "time-outline", label: "status.pending" },
+  processing: {
+    tone: "warning",
+    icon: "sync-outline",
+    label: "status.processing",
+  },
   refundPending: {
     tone: "warning",
     icon: "arrow-undo-outline",
-    label: "Refund pending",
+    label: "status.refundPending",
   },
-  failed: { tone: "danger", icon: "close-circle", label: "Failed" },
-  cancelled: { tone: "danger", icon: "close-circle", label: "Cancelled" },
-  rejected: { tone: "danger", icon: "close-circle", label: "Rejected" },
-  reversed: { tone: "danger", icon: "arrow-undo-outline", label: "Reversed" },
-  refunded: { tone: "neutral", icon: "arrow-undo-outline", label: "Refunded" },
-  expired: { tone: "neutral", icon: "time-outline", label: "Expired" },
-  used: { tone: "neutral", icon: "checkmark-done-circle", label: "Used" },
-  inactive: { tone: "neutral", icon: "ellipse-outline", label: "Inactive" },
-  draft: { tone: "neutral", icon: "document-outline", label: "Draft" },
-  ended: { tone: "neutral", icon: "flag-outline", label: "Ended" },
-  active: { tone: "brand", icon: "checkmark-circle", label: "Active" },
-  upcoming: { tone: "brand", icon: "calendar-outline", label: "Upcoming" },
-  ongoing: { tone: "brand", icon: "radio-outline", label: "Ongoing" },
-  soldOut: { tone: "neutral", icon: "pricetag-outline", label: "Sold out" },
+  failed: { tone: "danger", icon: "close-circle", label: "status.failed" },
+  cancelled: {
+    tone: "danger",
+    icon: "close-circle",
+    label: "status.cancelled",
+  },
+  rejected: { tone: "danger", icon: "close-circle", label: "status.rejected" },
+  reversed: {
+    tone: "danger",
+    icon: "arrow-undo-outline",
+    label: "status.reversed",
+  },
+  refunded: {
+    tone: "neutral",
+    icon: "arrow-undo-outline",
+    label: "status.refunded",
+  },
+  expired: { tone: "neutral", icon: "time-outline", label: "status.expired" },
+  used: {
+    tone: "neutral",
+    icon: "checkmark-done-circle",
+    label: "status.used",
+  },
+  inactive: {
+    tone: "neutral",
+    icon: "ellipse-outline",
+    label: "status.inactive",
+  },
+  draft: { tone: "neutral", icon: "document-outline", label: "status.draft" },
+  ended: { tone: "neutral", icon: "flag-outline", label: "status.ended" },
+  active: { tone: "brand", icon: "checkmark-circle", label: "status.active" },
+  upcoming: {
+    tone: "brand",
+    icon: "calendar-outline",
+    label: "status.upcoming",
+  },
+  ongoing: { tone: "brand", icon: "radio-outline", label: "status.ongoing" },
+  soldOut: {
+    tone: "neutral",
+    icon: "pricetag-outline",
+    label: "status.soldOut",
+  },
   unknown: { tone: "neutral", icon: "ellipse-outline", label: "" },
 };
 

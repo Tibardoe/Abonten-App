@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { TimeInput } from "./TimeInput";
 
@@ -35,6 +36,8 @@ export function InlineTimeField({
   onChange,
   seedValue,
 }: InlineTimeFieldProps) {
+  const t = useTranslations("common");
+
   const [revealed, setRevealed] = useState(!!date);
 
   const handleTimeChange = (value: string) => {
@@ -69,7 +72,7 @@ export function InlineTimeField({
           }}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-left text-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
-          Select time
+          {t("selectTime")}
         </button>
       )}
     </div>

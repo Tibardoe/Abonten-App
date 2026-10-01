@@ -8,6 +8,7 @@ import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalida
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import PendingEarningsList from "../molecules/PendingEarningsList";
 import PromotionCreditCard from "../molecules/PromotionCreditCard";
@@ -36,6 +37,8 @@ type FinancesOverviewProps = {
 export default function FinancesOverview({
   initialOverview,
 }: FinancesOverviewProps) {
+  const t = useTranslations("finances");
+
   const queryClient = useQueryClient();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
 
@@ -76,13 +79,14 @@ export default function FinancesOverview({
     <div className="flex flex-col gap-8">
       <section className="rounded-2xl border border-border bg-card text-card-foreground p-5 md:p-6 space-y-4">
         <div>
-          <p className="text-sm text-muted-foreground">Available to withdraw</p>
+          <p className="text-sm text-muted-foreground">
+            {t("availableToWithdraw")}
+          </p>
           <p className="font-bold text-2xl md:text-3xl">
             {formatMoney(primary.currency, primary.available_balance)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Money available after eligible event proceeds, refunds, and previous
-            withdrawals are accounted for.
+            {t("moneyAvailableAfterEligibleEventProceeds")}
           </p>
         </div>
 
@@ -92,19 +96,21 @@ export default function FinancesOverview({
             onClick={() => setIsWithdrawOpen(true)}
             className="font-semibold rounded-md px-6 py-5"
           >
-            Withdraw
+            {t("withdraw")}
           </Button>
         )}
 
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
           <div>
-            <p className="text-sm text-muted-foreground">Pending</p>
+            <p className="text-sm text-muted-foreground">{t("pending2")}</p>
             <p className="font-semibold text-lg">
               {formatMoney(primary.currency, primary.pending_balance)}
             </p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Total earnings</p>
+            <p className="text-sm text-muted-foreground">
+              {t("totalEarnings")}
+            </p>
             <p className="font-semibold text-lg">
               {formatMoney(primary.currency, primary.total_earnings)}
             </p>
@@ -115,8 +121,11 @@ export default function FinancesOverview({
           <div className="pt-2 border-t border-border space-y-1">
             {otherCurrencies.map((row) => (
               <p key={row.currency} className="text-xs text-muted-foreground">
-                {row.currency}: {row.available_balance.toLocaleString()}{" "}
-                available · {row.pending_balance.toLocaleString()} pending
+                {t("availablePending", {
+                  currency: row.currency,
+                  toLocaleString: row.available_balance.toLocaleString(),
+                  toLocaleString2: row.pending_balance.toLocaleString(),
+                })}
               </p>
             ))}
           </div>

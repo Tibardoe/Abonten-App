@@ -1,6 +1,7 @@
 import { getFieldOpsConsentView } from "@/actions/fieldOps/getFieldOpsConsentView";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import ConsentForm from "@/fieldOps/organisms/ConsentForm";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -14,6 +15,8 @@ export default async function FieldConsentPage({
 }: {
   params: Promise<{ token: string }>;
 }) {
+  const t = await getTranslations("fieldOps");
+
   const { token } = await params;
   const res = await getFieldOpsConsentView(token);
   if (res.status !== 200 || !res.data) notFound();
@@ -23,33 +26,35 @@ export default async function FieldConsentPage({
     <div className="mx-auto flex w-full max-w-md flex-col gap-5">
       <div>
         <PageTitle>
-          List {v.businessName ?? "your business"} on Abonten
+          {t("listBusinessOnAbonten", {
+            name: v.businessName ?? t("yourBusiness"),
+          })}
         </PageTitle>
         <SupportingText>
-          An Abonten team member is adding your business to Abonten, where
-          people nearby find places to go. Enter the code we sent to{" "}
-          {v.ownerPhoneMasked ?? "your phone"} to agree. The listing will belong
-          to you: sign in with this phone any time to manage it.
+          {t("teamMemberIsAddingYourBusiness", {
+            phone: v.ownerPhoneMasked ?? t("yourPhone"),
+          })}
         </SupportingText>
       </div>
       {v.verified ? (
         <p className="rounded-xl border bg-emerald-500/10 p-4 text-sm">
-          Already confirmed. Thank you.
+          {t("alreadyConfirmedThankYou")}
         </p>
       ) : v.expired ? (
         <p className="rounded-xl border p-4 text-sm text-muted-foreground">
-          This link has expired. Ask the team member to send a new code.
+          {t("thisLinkHasExpiredAskThe")}
         </p>
       ) : (
         <ConsentForm token={token} />
       )}
       <p className="text-xs text-muted-foreground">
-        By entering the code you agree to list your business on Abonten and to
-        the{" "}
-        <Link href="/legal/terms" className="underline underline-offset-4">
-          Abonten Terms and Conditions
-        </Link>
-        . Nothing is charged.
+        {t.rich("byEnteringTheCodeYouAgree", {
+          link: (chunks) => (
+            <Link href="/legal/terms" className="underline underline-offset-4">
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     </div>
   );

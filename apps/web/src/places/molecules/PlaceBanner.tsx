@@ -3,6 +3,7 @@
 import StarRatingDisplay from "@/components/atoms/Rating";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PlaceType } from "@abonten/types/placeType";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { FaArrowRightLong } from "react-icons/fa6";
@@ -19,6 +20,8 @@ type PlaceBannerProps = {
 // date/time/price. Used by FeaturedPlacesSlider both for the lone-item case
 // (no carousel) and as each slide's content when there are 2+ places.
 export default function PlaceBanner({ place }: PlaceBannerProps) {
+  const t = useTranslations("places");
+
   const fullAddress =
     (place.address as { full_address?: string })?.full_address ??
     "Location not specified";
@@ -31,7 +34,7 @@ export default function PlaceBanner({ place }: PlaceBannerProps) {
             width: 900,
             height: 350,
           })}
-          alt={`Cover photo for ${place.name}`}
+          alt={t("coverPhotoFor", { name: place.name })}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           priority
@@ -81,7 +84,7 @@ export default function PlaceBanner({ place }: PlaceBannerProps) {
               href={`/places/${place.slug}`}
               className="px-3 py-1.5 md:px-4 md:py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
             >
-              View Place
+              {t("viewPlace")}
               <FaArrowRightLong />
             </Link>
           </div>

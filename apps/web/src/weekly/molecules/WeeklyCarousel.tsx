@@ -2,6 +2,7 @@
 
 import usePrefersReducedMotion from "@/hooks/usePrefersReducedMotion";
 import type { WeeklyItem } from "@abonten/types/weeklyType";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaArrowLeftLong, FaArrowRightLong } from "react-icons/fa6";
 import WeeklyItemFrame from "./WeeklyItemFrame";
@@ -20,6 +21,8 @@ export default function WeeklyCarousel({
   label: string;
   eagerCount?: number;
 }) {
+  const t = useTranslations("weekly");
+
   const scrollRef = useRef<HTMLUListElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
@@ -61,7 +64,7 @@ export default function WeeklyCarousel({
           type="button"
           onClick={() => scroll(-1)}
           className="absolute left-2 top-1/3 z-30 hidden rounded-full bg-popover/90 p-3 shadow-md backdrop-blur-sm transition-transform hover:scale-110 hover:bg-popover md:flex"
-          aria-label={`Scroll ${label} left`}
+          aria-label={t("scrollLeft", { label: label })}
         >
           <FaArrowLeftLong className="text-xl text-popover-foreground" />
         </button>
@@ -86,7 +89,7 @@ export default function WeeklyCarousel({
           type="button"
           onClick={() => scroll(1)}
           className="absolute right-2 top-1/3 z-30 hidden rounded-full bg-popover/90 p-3 shadow-lg backdrop-blur-sm transition-transform hover:scale-110 hover:bg-popover md:flex"
-          aria-label={`Scroll ${label} right`}
+          aria-label={t("scrollRight", { label: label })}
         >
           <FaArrowRightLong className="text-xl text-popover-foreground" />
         </button>

@@ -1,5 +1,9 @@
-import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import {
+  displayAreaLabel,
+  useExploreLocation,
+} from "@/features/discovery/ExploreLocationProvider";
 import { AppText, Button, Icon, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -11,6 +15,8 @@ import { Pressable, View } from "react-native";
 // a row in the page, never a toast or an alert, so it interrupts nothing.
 
 export function AreaSuggestionCard() {
+  const t = useTranslations("explore");
+
   const { area, suggestion, followDevice, dismissSuggestion } =
     useExploreLocation();
   const toast = useToast();
@@ -23,8 +29,7 @@ export function AreaSuggestionCard() {
     setBusy(true);
     const outcome = await followDevice();
     setBusy(false);
-    if (outcome !== "ok")
-      toast.error("We couldn't get your location right now.");
+    if (outcome !== "ok") toast.error(t("weCouldntGetYourLocation"));
   }
 
   return (
@@ -34,16 +39,16 @@ export function AreaSuggestionCard() {
         <View>
           <AppText variant="bodyStrong" numberOfLines={2}>
             {suggestion.label
-              ? `You're now in ${suggestion.label}`
-              : "You're somewhere new"}
+              ? t("youReNowIn", { label: suggestion.label })
+              : t("youReSomewhereNew")}
           </AppText>
           <AppText variant="meta" numberOfLines={1}>
-            Still browsing {area.label}
+            {t("stillBrowsing", { label: displayAreaLabel(area.label, t) })}
           </AppText>
         </View>
         <View className="flex-row">
           <Button
-            title="Use my location"
+            title={t("useMyLocation")}
             size="sm"
             onPress={useCurrent}
             loading={busy}
@@ -53,7 +58,7 @@ export function AreaSuggestionCard() {
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Dismiss"
+        accessibilityLabel={t("dismiss")}
         hitSlop={10}
         onPress={dismissSuggestion}
         className="active:opacity-60"

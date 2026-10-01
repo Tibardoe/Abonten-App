@@ -3,12 +3,15 @@
 import { bindReferralCode } from "@/actions/bindReferralCode";
 import { bindResultMessage } from "@abonten/core/rewards/invite";
 import { normalizeReferralCode } from "@abonten/core/rewards/referralCode";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 // For a new account that signed up without the invite link: typing a
 // friend's code joins their invite (first week only; the server decides).
 export default function EnterInviteCode() {
+  const t = useTranslations("rewards");
+
   const router = useRouter();
   const inputId = useId();
   const [code, setCode] = useState("");
@@ -21,7 +24,7 @@ export default function EnterInviteCode() {
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!normalizeReferralCode(code)) {
-      setMessage({ tone: "error", text: "Enter the 7-character invite code." });
+      setMessage({ tone: "error", text: t("enterThe7CharacterInviteCode") });
       return;
     }
     setPending(true);
@@ -29,7 +32,7 @@ export default function EnterInviteCode() {
     try {
       const res = await bindReferralCode({ code });
       if (!res.data) {
-        setMessage({ tone: "error", text: res.message ?? "Please sign in." });
+        setMessage({ tone: "error", text: res.message ?? t("pleaseSignIn") });
         return;
       }
       setMessage(bindResultMessage(res.data));
@@ -37,7 +40,7 @@ export default function EnterInviteCode() {
     } catch {
       setMessage({
         tone: "error",
-        text: "We couldn't apply the invite. Please try again.",
+        text: t("weCouldnTApplyTheInvite"),
       });
     } finally {
       setPending(false);
@@ -47,7 +50,7 @@ export default function EnterInviteCode() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-2">
       <label htmlFor={inputId} className="text-sm font-medium">
-        Joined because a friend invited you? Enter their code
+        {t("joinedBecauseAFriendInvitedYou")}
       </label>
       <div className="flex gap-2">
         <input
@@ -67,7 +70,7 @@ export default function EnterInviteCode() {
           disabled={pending || code.trim().length === 0}
           className="rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {pending ? "Applying…" : "Apply"}
+          {pending ? t("applying") : t("apply")}
         </button>
       </div>
       {message ? (

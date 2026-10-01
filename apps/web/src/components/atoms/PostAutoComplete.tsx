@@ -7,6 +7,7 @@ import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddress
 import type { AutoCompletePlaceholderType } from "@abonten/types/autoCompletePlaceholderType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { forwardRef, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
 import {
@@ -46,6 +47,8 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
     { placeholderText, address, value, onSelectCoordinates },
     ref,
   ) {
+    const t = useTranslations("common");
+
     const {
       googleMapsApiKey,
       isLoaded,
@@ -199,7 +202,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
               aria-hidden
               className="shrink-0 animate-spin text-muted-foreground"
             />
-            <span className="sr-only">Loading location search</span>
+            <span className="sr-only">{t("loadingLocationSearch")}</span>
           </>
         ) : (
           <IoLocationOutline className="text-2xl shrink-0" />
@@ -212,7 +215,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
               onClick={handleSelectCurrentLocation}
               className="p-2 w-full text-start font-semibold hover:bg-accent border-b border-border"
             >
-              📍 Use my current location
+              {t("useMyCurrentLocation")}
             </button>
 
             {searchResults.map((result) => (

@@ -1,6 +1,7 @@
 import { ImageCropModal } from "@/components/profile/ImageCropModal";
 import type { PlaceWizard } from "@/features/places/usePlaceWizard";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useState } from "react";
 import { View } from "react-native";
@@ -15,6 +16,8 @@ const isLocal = (uri: string | null): boolean =>
 // ImageCropper step. The section title/subtitle is drawn by the wizard
 // screen.
 export function PlaceWizardCover({ w }: { w: PlaceWizard }) {
+  const t = useTranslations("places");
+
   const [editing, setEditing] = useState<{
     uri: string;
     width: number;
@@ -48,20 +51,20 @@ export function PlaceWizardCover({ w }: { w: PlaceWizard }) {
         <View className="aspect-[16/9] w-full items-center justify-center rounded-xl border border-border border-dashed bg-muted">
           <Icon name="image-outline" size={28} tone="muted" />
           <AppText variant="meta" className="mt-2">
-            No photo yet
+            {t("noPhotoYet")}
           </AppText>
         </View>
       )}
 
       <View className="gap-2">
         <Button
-          title={w.coverUri ? "Replace photo" : "Choose photo"}
+          title={w.coverUri ? t("replacePhoto") : t("choosePhoto")}
           variant="outline"
           onPress={choose}
         />
         {w.coverUri && isLocal(w.coverUri) && w.coverSize ? (
           <Button
-            title="Crop, rotate or flip"
+            title={t("cropRotateOrFlip")}
             variant="ghost"
             onPress={editCurrent}
           />

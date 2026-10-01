@@ -292,30 +292,6 @@ export function ratingShares(
   return out;
 }
 
-export function formatReviewCount(total: number): string {
-  return `${total.toLocaleString("en-US")} ${total === 1 ? "review" : "reviews"}`;
-}
-
-/** Empty-list wording for a star filter or no filter. */
-export function emptyReviewsMessage(
-  rating: ReviewRatingFilter,
-  kind: ReviewSubjectKind,
-): { title: string; description: string } {
-  if (rating) {
-    return {
-      title: `No ${rating}-star reviews yet`,
-      description: "Try another rating, or show all reviews.",
-    };
-  }
-  return {
-    title: "No reviews yet",
-    description:
-      kind === "event"
-        ? "People who attended can review this event once it has ended."
-        : "Be the first to share what this place is like.",
-  };
-}
-
 // ---------------------------------------------------------------------------
 // Links
 // ---------------------------------------------------------------------------

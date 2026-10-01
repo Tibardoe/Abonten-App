@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import PlaceSearchSelect from "@/places/molecules/PlaceSearchSelect";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
 type EventUploadFormFieldsProps = Pick<
@@ -115,6 +116,8 @@ export default function EventUploadFormFields({
   invalidSection,
   className,
 }: EventUploadFormFieldsProps) {
+  const t = useTranslations("common");
+
   const dateSectionRef = useRef<HTMLDivElement>(null);
   const locationSectionRef = useRef<HTMLDivElement>(null);
   const ticketSectionRef = useRef<HTMLDivElement>(null);
@@ -144,7 +147,7 @@ export default function EventUploadFormFields({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">
-                    Event name
+                    {t("eventName")}
                   </FormLabel>
                   <FormControl>
                     <PostInput
@@ -164,7 +167,7 @@ export default function EventUploadFormFields({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">
-                    Description
+                    {t("description")}
                   </FormLabel>
                   <FormControl>
                     <PostInput
@@ -180,7 +183,9 @@ export default function EventUploadFormFields({
 
             <CategoryFilter handleCategory={setCategory} category={category} />
             {hasAttemptedSubmit && category === "" && (
-              <p className="text-destructive text-sm">Select event category</p>
+              <p className="text-destructive text-sm">
+                {t("selectEventCategory")}
+              </p>
             )}
 
             <TypeFilter
@@ -190,28 +195,28 @@ export default function EventUploadFormFields({
             />
             {hasAttemptedSubmit && types.length === 0 && (
               <p className="text-destructive text-sm">
-                Select at least one type for event
+                {t("selectAtLeastOneTypeFor")}
               </p>
             )}
           </div>
 
           {/* Date and time -- when is it? */}
           <div ref={dateSectionRef} className="space-y-4 text-sm">
-            <h2>Date & Time</h2>
+            <h2>{t("dateTime")}</h2>
             <div className="grid grid-cols-2 gap-4">
               <DateTimeSelectorBtn
                 dateType="single"
                 currentType={dateType}
-                title="Single/Range"
-                text="One date or continuous range"
+                title={t("singleRange")}
+                text={t("oneDateOrContinuousRange")}
                 onClick={setDateType}
               />
 
               <DateTimeSelectorBtn
                 dateType="specific"
                 currentType={dateType}
-                title="Multiple Dates"
-                text="Set specific non-consecutive dates"
+                title={t("multipleDates")}
+                text={t("setSpecificNonConsecutiveDates")}
                 onClick={setDateType}
               />
             </div>
@@ -226,7 +231,7 @@ export default function EventUploadFormFields({
 
           {/* Location -- where is it? */}
           <div ref={locationSectionRef} className="space-y-4 text-sm">
-            <h2>Location</h2>
+            <h2>{t("location")}</h2>
 
             <PostAutoComplete
               ref={addressInputRef}
@@ -234,12 +239,14 @@ export default function EventUploadFormFields({
               onSelectCoordinates={handleSelectCoordinates}
               value={selectedAddress}
               placeholderText={{
-                text: "Location",
+                text: t("location"),
                 svgUrl: "/assets/images/location.svg",
               }}
             />
             {hasAttemptedSubmit && selectedAddress === "" && (
-              <p className="text-destructive text-sm">Location required</p>
+              <p className="text-destructive text-sm">
+                {t("locationRequired")}
+              </p>
             )}
 
             {/* Venue / Place (optional) -- an alternative to typing the address
@@ -259,7 +266,7 @@ export default function EventUploadFormFields({
 
           {/* Event details -- capacity and website */}
           <div className="space-y-4 text-sm">
-            <h2>Event Details</h2>
+            <h2>{t("eventDetails")}</h2>
 
             <FormField
               control={control}
@@ -267,7 +274,7 @@ export default function EventUploadFormFields({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">
-                    Capacity
+                    {t("capacity")}
                   </FormLabel>
                   <FormControl>
                     <PostInput
@@ -282,7 +289,7 @@ export default function EventUploadFormFields({
                     />
                   </FormControl>
                   <p className="text-xs text-muted-foreground">
-                    Leave blank for unlimited capacity
+                    {t("leaveBlankForUnlimitedCapacity")}
                   </p>
                   <FormMessage className="text-sm" />
                 </FormItem>
@@ -295,7 +302,7 @@ export default function EventUploadFormFields({
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-sm font-medium">
-                    Website (optional)
+                    {t("websiteOptional")}
                   </FormLabel>
                   <FormControl>
                     <PostInput
@@ -312,7 +319,7 @@ export default function EventUploadFormFields({
 
           {/* Tickets -- how can people attend? */}
           <div ref={ticketSectionRef} className="space-y-3 text-sm font-normal">
-            <h2>Tickets</h2>
+            <h2>{t("tickets")}</h2>
 
             <TicketType
               handleTicket={setTicket}
@@ -356,7 +363,7 @@ export default function EventUploadFormFields({
               offered at all (and the hook drops any drafted codes). */}
           {ticket === "Free" ? (
             <p className="text-xs text-muted-foreground">
-              Promo codes aren&apos;t available on a free event.
+              {t("promoCodesArenTAvailableOn")}
             </p>
           ) : (
             <div className="space-y-2 text-sm font-normal">

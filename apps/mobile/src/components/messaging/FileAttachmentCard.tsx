@@ -1,6 +1,7 @@
 import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import * as WebBrowser from "expo-web-browser";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -30,6 +31,8 @@ export function FileAttachmentCard({
   attachment: MessageAttachmentRow;
   isMine: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const toast = useToast();
   const c = useThemeColors();
   const signed = useAttachmentUrl(attachment.storage_path);
@@ -40,8 +43,8 @@ export function FileAttachmentCard({
     try {
       await WebBrowser.openBrowserAsync(signed.data);
     } catch {
-      toast.error("Couldn't open", {
-        description: "This file couldn't be opened.",
+      toast.error(t("couldnTOpen"), {
+        description: t("thisFileCouldnTBeOpened"),
       });
     }
   }
@@ -51,7 +54,9 @@ export function FileAttachmentCard({
       onPress={open}
       disabled={!signed.data}
       accessibilityRole="button"
-      accessibilityLabel={`Open ${attachment.file_name ?? "file"}`}
+      accessibilityLabel={t("open", {
+        value: attachment.file_name ?? t("file2"),
+      })}
       className="flex-row items-center gap-2.5 py-0.5"
       style={{ minWidth: 180 }}
     >
@@ -79,13 +84,13 @@ export function FileAttachmentCard({
           numberOfLines={1}
           className={isMine ? "text-primary-foreground" : "text-foreground"}
         >
-          {attachment.file_name ?? "Attachment"}
+          {attachment.file_name ?? t("attachment")}
         </AppText>
         <AppText
           variant="caption"
           className={isMine ? "text-primary-foreground" : undefined}
         >
-          {signed.isError ? "Unavailable" : (size ?? "Tap to open")}
+          {signed.isError ? t("unavailable") : (size ?? t("tapToOpen"))}
         </AppText>
       </View>
     </Pressable>

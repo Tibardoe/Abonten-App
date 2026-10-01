@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 // A caption that clamps to two lines until the visitor expands it. Hashtags
@@ -13,6 +14,8 @@ export default function ContentCaption({
   caption: string | null;
   className?: string;
 }) {
+  const t = useTranslations("spotlight");
+
   const [expanded, setExpanded] = useState(false);
   const text = caption?.trim();
   if (!text) return null;
@@ -44,7 +47,7 @@ export default function ContentCaption({
           onClick={() => setExpanded((v) => !v)}
           className="mt-0.5 text-xs font-semibold text-white/80 hover:text-white"
         >
-          {expanded ? "Less" : "More"}
+          {expanded ? t("less") : t("more")}
         </button>
       ) : null}
     </div>

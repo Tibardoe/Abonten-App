@@ -25,6 +25,7 @@ import {
   REPORT_ATTACHMENT_MIME_TYPES,
 } from "@abonten/validation/reportSchema";
 import { AlertTriangle, CheckCircle2, Loader2, Paperclip } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 // User-facing "Report this content" flow (spec §3/§4). Works for any
@@ -46,6 +47,8 @@ export function ReportDialog({
   /** short human label of what's being reported (title/name) */
   targetLabel: string;
 }) {
+  const t = useTranslations("common");
+
   const { data: user } = useCurrentUser();
   const categories = REPORTABLE_CATEGORIES[targetType];
 
@@ -73,11 +76,11 @@ export function ReportDialog({
     setError(null);
     if (!f) return setFile(null);
     if (!REPORT_ATTACHMENT_MIME_TYPES.includes(f.type as never)) {
-      setError("Attachments must be an image or PDF.");
+      setError(t("attachmentsMustBeAnImageOr"));
       return;
     }
     if (f.size > REPORT_ATTACHMENT_MAX_BYTES) {
-      setError("Attachment must be under 10 MB.");
+      setError(t("attachmentMustBeUnder10Mb"));
       return;
     }
     setFile(f);
@@ -103,7 +106,7 @@ export function ReportDialog({
           .upload(path, file, { contentType: file.type, upsert: false });
         if (upErr) {
           setBusy(false);
-          setError("Couldn't upload that file. Try submitting without it.");
+          setError(t("couldnTUploadThatFileTry"));
           return;
         }
         attachment = {
@@ -125,11 +128,11 @@ export function ReportDialog({
       if (res.status === 200) {
         setDone(true);
       } else {
-        setError(res.message ?? "Couldn't submit your report.");
+        setError(res.message ?? t("couldnTSubmitYourReport"));
       }
     } catch {
       setBusy(false);
-      setError("Something went wrong. Please try again.");
+      setError(t("somethingWentWrongPleaseTryAgain2"));
     }
   }
 
@@ -141,18 +144,20 @@ export function ReportDialog({
         {done ? (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <CheckCircle2 className="h-11 w-11 text-primary" />
-            <DialogTitle>Report submitted</DialogTitle>
+            <DialogTitle>{t("reportSubmitted")}</DialogTitle>
             <DialogDescription>
-              Thank you — our team will review this {targetWord}.
+              {t("thankYouOurTeamWillReview", { targetWord: targetWord })}
             </DialogDescription>
             <Button className="mt-2 w-full" onClick={() => onOpenChange(false)}>
-              Done
+              {t("done")}
             </Button>
           </div>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Report this {targetWord}</DialogTitle>
+              <DialogTitle>
+                {t("reportThis", { targetWord: targetWord })}
+              </DialogTitle>
               <DialogDescription className="line-clamp-2">
                 {targetLabel}
               </DialogDescription>
@@ -161,7 +166,7 @@ export function ReportDialog({
             {step === 0 && (
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium">
-                  Why are you reporting this?
+                  {t("whyAreYouReportingThis")}
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {categories.map((c) => (
@@ -186,22 +191,22 @@ export function ReportDialog({
               <div className="flex flex-col gap-3">
                 <div>
                   <p className="mb-1 text-sm font-medium">
-                    Add detail{" "}
+                    {t("addDetail")}
                     <span className="font-normal text-muted-foreground">
-                      (optional)
+                      {t("optional")}
                     </span>
                   </p>
                   <Textarea
                     value={details}
                     onChange={(e) => setDetails(e.target.value.slice(0, 2000))}
-                    placeholder="Anything that helps us understand the problem"
+                    placeholder={t("anythingThatHelpsUsUnderstandThe")}
                     rows={4}
                   />
                 </div>
                 <div>
                   <label className="flex cursor-pointer items-center gap-2 text-sm text-primary hover:underline">
                     <Paperclip className="h-4 w-4" />
-                    {file ? file.name : "Attach a screenshot or PDF (optional)"}
+                    {file ? file.name : t("attachAScreenshotOrPdfOptional")}
                     <input
                       type="file"
                       className="hidden"
@@ -215,7 +220,7 @@ export function ReportDialog({
                       className="mt-1 text-xs text-muted-foreground hover:underline"
                       onClick={() => setFile(null)}
                     >
-                      Remove attachment
+                      {t("removeAttachment")}
                     </button>
                   )}
                 </div>
@@ -226,23 +231,27 @@ export function ReportDialog({
               <div className="flex flex-col gap-2 text-sm">
                 <div className="rounded-md border border-border p-3">
                   <p>
-                    <span className="text-muted-foreground">Reason: </span>
+                    <span className="text-muted-foreground">
+                      {t("reason")}{" "}
+                    </span>
                     {category ? REPORT_CATEGORY_LABEL[category] : ""}
                   </p>
                   {details.trim() && (
                     <p className="mt-1 whitespace-pre-wrap">
-                      <span className="text-muted-foreground">Detail: </span>
+                      <span className="text-muted-foreground">
+                        {t("detail")}{" "}
+                      </span>
                       {details.trim()}
                     </p>
                   )}
                   {file && (
                     <p className="mt-1 text-muted-foreground">
-                      Attachment: {file.name}
+                      {t("attachment", { name: file.name })}
                     </p>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Submitting a false report may affect your account.
+                  {t("submittingAFalseReportMayAffect")}
                 </p>
               </div>
             )}
@@ -261,7 +270,7 @@ export function ReportDialog({
                   onClick={() => setStep((s) => (s - 1) as 0 | 1 | 2)}
                   disabled={busy}
                 >
-                  Back
+                  {t("back")}
                 </Button>
               )}
               {step < 2 ? (
@@ -269,12 +278,12 @@ export function ReportDialog({
                   onClick={() => setStep((s) => (s + 1) as 0 | 1 | 2)}
                   disabled={step === 0 && !category}
                 >
-                  Next
+                  {t("next")}
                 </Button>
               ) : (
                 <Button onClick={submit} disabled={busy}>
                   {busy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-                  Submit report
+                  {t("submitReport")}
                 </Button>
               )}
             </DialogFooter>

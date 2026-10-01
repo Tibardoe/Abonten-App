@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerPayoutRow } from "@abonten/types/organizerFinance";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import FinanceLineIcon, {
@@ -26,6 +27,10 @@ type FinancesPayoutsListProps = {
 export default function FinancesPayoutsList({
   initialPayouts,
 }: FinancesPayoutsListProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("finances");
+
   const [payouts, setPayouts] = useState(initialPayouts);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(initialPayouts.length === PAGE_SIZE);
@@ -44,7 +49,7 @@ export default function FinancesPayoutsList({
   if (payouts.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-8 text-center">
-        No payouts yet
+        {t("noPayoutsYet")}
       </p>
     );
   }
@@ -53,8 +58,12 @@ export default function FinancesPayoutsList({
     <div className="flex flex-col">
       <ul>
         {payouts.map((payout) => {
-          const { date } = formatSingleDateTime(payout.requested_at);
-          const { label } = getFinanceStatusMeta(payout.status);
+          const { date } = formatSingleDateTime(
+            payout.requested_at,
+            undefined,
+            locale,
+          );
+          const label = t(getFinanceStatusMeta(payout.status).labelKey);
 
           return (
             <li key={payout.id}>
@@ -90,7 +99,7 @@ export default function FinancesPayoutsList({
           onClick={loadMore}
           className="self-center mt-4"
         >
-          {isLoadingMore ? "Loading…" : "Load more"}
+          {isLoadingMore ? t("loading") : t("loadMore")}
         </Button>
       )}
     </div>

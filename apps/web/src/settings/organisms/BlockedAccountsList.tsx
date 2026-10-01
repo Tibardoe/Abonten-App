@@ -14,6 +14,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -26,6 +27,10 @@ import { useState } from "react";
 const QUERY_KEY = ["blocked-accounts"];
 
 function BlockedRow({ account }: { account: BlockedAccount }) {
+  const locale = useLocale();
+
+  const t = useTranslations("settings");
+
   const toast = useToast();
   const queryClient = useQueryClient();
   const [done, setDone] = useState(false);
@@ -35,13 +40,13 @@ function BlockedRow({ account }: { account: BlockedAccount }) {
     onSuccess: (res) => {
       if (res.status === 200) {
         setDone(true);
-        toast.success(`${name} is unblocked`);
+        toast.success(t("isUnblocked", { name: name }));
         queryClient.invalidateQueries({ queryKey: ["reviews"] });
       } else {
-        toast.error(res.message ?? "Couldn't unblock. Try again.");
+        toast.error(res.message ?? t("couldnTUnblockTryAgain"));
       }
     },
-    onError: () => toast.error("Couldn't unblock. Try again."),
+    onError: () => toast.error(t("couldnTUnblockTryAgain")),
   });
 
   return (
@@ -67,7 +72,13 @@ function BlockedRow({ account }: { account: BlockedAccount }) {
           {account.fullName && account.username
             ? `@${account.username} · `
             : ""}
-          Blocked {getRelativeTime(account.blockedAt)}
+          {t("blocked", {
+            getRelativeTime: getRelativeTime(
+              account.blockedAt,
+              undefined,
+              locale,
+            ),
+          })}
         </p>
       </div>
       <Button
@@ -75,15 +86,21 @@ function BlockedRow({ account }: { account: BlockedAccount }) {
         size="sm"
         disabled={done || unblock.isPending}
         onClick={() => unblock.mutate()}
-        aria-label={`Unblock ${name}`}
+        aria-label={t("unblock2", { name: name })}
       >
-        {done ? "Unblocked" : unblock.isPending ? "Unblocking…" : "Unblock"}
+        {done
+          ? t("unblocked")
+          : unblock.isPending
+            ? t("unblocking")
+            : t("unblock")}
       </Button>
     </li>
   );
 }
 
 export default function BlockedAccountsList() {
+  const t = useTranslations("settings");
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
@@ -96,8 +113,7 @@ export default function BlockedAccountsList() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        People you block can&apos;t message you, and you won&apos;t see their
-        reviews, Spotlights or comments. They aren&apos;t told.
+        {t("peopleYouBlockCanTMessage")}
       </p>
       {isLoading ? (
         <div className="space-y-2">
@@ -106,15 +122,15 @@ export default function BlockedAccountsList() {
         </div>
       ) : isError ? (
         <InlineErrorRetry
-          message="We couldn't load your blocked accounts."
+          message={t("weCouldnTLoadYourBlocked")}
           onRetry={() => refetch()}
         />
       ) : !data || data.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border p-10 text-center">
           <ShieldCheck className="h-8 w-8 text-muted-foreground" aria-hidden />
-          <p className="font-semibold">You haven&apos;t blocked anyone</p>
+          <p className="font-semibold">{t("youHavenTBlockedAnyone")}</p>
           <p className="text-sm text-muted-foreground">
-            You can block someone from their review, message or Spotlight.
+            {t("youCanBlockSomeoneFromTheir")}
           </p>
         </div>
       ) : (

@@ -7,6 +7,7 @@ import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { ANDROID_APP_LISTED, playStoreUrl } from "@abonten/core/rewards/invite";
 import { resolveReferralCodeCore } from "@abonten/services/rewards/inviteCore";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,15 +43,19 @@ export async function generateMetadata({
 }: {
   params: Promise<{ code: string }>;
 }): Promise<Metadata> {
+  const t = await getTranslations("rewards");
+
   const { code } = await params;
   const { data } = await resolve(code);
-  if (!data?.valid) return { title: "Join Abonten" };
+  if (!data?.valid) return { title: t("joinAbonten") };
 
-  const title = `${data.referrerName ?? "A friend"} invited you to Abonten`;
+  const title = t("invitedYouToAbonten2", {
+    value: data.referrerName ?? "A friend",
+  });
   const description =
     (data.programOn
       ? offerLine(data.welcomeMinor, data.minOrderMinor, data.currency)
-      : null) ?? "Find events and places near you.";
+      : null) ?? t("findEventsAndPlacesNearYou2");
   return {
     title,
     description,
@@ -64,6 +69,8 @@ export default async function InvitePage({
 }: {
   params: Promise<{ code: string }>;
 }) {
+  const t = await getTranslations("rewards");
+
   const { code } = await params;
   const [{ status, data }, supabase] = await Promise.all([
     resolve(code),
@@ -76,8 +83,8 @@ export default async function InvitePage({
   if (status === 429) {
     return (
       <section className="mx-auto flex max-w-md flex-col gap-3 py-10 text-center">
-        <PageTitle>Too many requests</PageTitle>
-        <SupportingText>Wait a minute and open the link again.</SupportingText>
+        <PageTitle>{t("tooManyRequests")}</PageTitle>
+        <SupportingText>{t("waitAMinuteAndOpenThe")}</SupportingText>
       </section>
     );
   }
@@ -85,13 +92,10 @@ export default async function InvitePage({
   if (!data?.valid) {
     return (
       <section className="mx-auto flex max-w-md flex-col items-center gap-3 py-10 text-center">
-        <PageTitle>This invite link isn&apos;t valid</PageTitle>
-        <SupportingText>
-          Check the link with the person who sent it. You can still explore
-          what&apos;s on near you.
-        </SupportingText>
+        <PageTitle>{t("thisInviteLinkIsnTValid")}</PageTitle>
+        <SupportingText>{t("checkTheLinkWithThePerson")}</SupportingText>
         <Button asChild className="mt-2">
-          <Link href="/">Explore Abonten</Link>
+          <Link href="/">{t("exploreAbonten")}</Link>
         </Button>
       </section>
     );
@@ -130,19 +134,16 @@ export default async function InvitePage({
 
       <div className="flex flex-col gap-2">
         <PageTitle className="text-balance">
-          {name} invited you to Abonten
+          {t("invitedYouToAbonten", { name: name })}
         </PageTitle>
-        <SupportingText>
-          Find events and places near you, buy tickets in a few taps, and keep
-          them on your phone.
-        </SupportingText>
+        <SupportingText>{t("findEventsAndPlacesNearYou")}</SupportingText>
       </div>
 
       {offer ? (
         <p className="rounded-xl border bg-card px-4 py-3 text-sm font-medium">
           {offer}{" "}
           <span className="font-normal text-muted-foreground">
-            Verify your phone number after you sign up to get it.
+            {t("verifyYourPhoneNumberAfterYou")}
           </span>
         </p>
       ) : null}
@@ -152,15 +153,15 @@ export default async function InvitePage({
       ) : (
         <div className="flex w-full flex-col gap-3">
           <Button asChild size="lg" className="w-full">
-            <Link href="/auth/signin">Sign up to join</Link>
+            <Link href="/auth/signin">{t("signUpToJoin")}</Link>
           </Button>
           {ANDROID_APP_LISTED ? (
             <Button asChild size="lg" variant="outline" className="w-full">
-              <a href={playStoreUrl(data.code)}>Get the Android app</a>
+              <a href={playStoreUrl(data.code)}>{t("getTheAndroidApp")}</a>
             </Button>
           ) : null}
           <p className="text-xs text-muted-foreground">
-            Invite codes work for new accounts, in their first week.
+            {t("inviteCodesWorkForNewAccounts")}
           </p>
         </div>
       )}

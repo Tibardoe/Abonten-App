@@ -3,6 +3,7 @@
 import { getEventAttendanceCount } from "@/actions/getAttendace";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 type TicketTypeQuantity = {
   quantity: number | null;
@@ -57,6 +58,8 @@ export function EventAttendanceHeroBadges({
   ticketTypes,
   initialCount,
 }: EventAttendanceStatsProps) {
+  const t = useTranslations("common");
+
   const attendanceCount = useLiveAttendanceCount(eventId, initialCount);
   const soldOut = getEventSoldOutStatus({
     capacity,
@@ -68,12 +71,12 @@ export function EventAttendanceHeroBadges({
     <>
       {attendanceCount > 0 && (
         <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/30 backdrop-blur-sm rounded-full text-white text-sm md:text-base">
-          {attendanceCount} going
+          {t("going2", { attendanceCount: attendanceCount })}
         </span>
       )}
       {soldOut && (
         <span className="px-3 py-1.5 md:px-4 md:py-2 bg-destructive rounded-full text-destructive-foreground font-bold text-sm md:text-base">
-          Sold out
+          {t("soldOut")}
         </span>
       )}
     </>
@@ -87,6 +90,8 @@ export function EventCapacityCard({
   ticketTypes,
   initialCount,
 }: EventAttendanceStatsProps) {
+  const t = useTranslations("common");
+
   const attendanceCount = useLiveAttendanceCount(eventId, initialCount);
 
   if (capacity == null || capacity <= 0) return null;
@@ -95,8 +100,10 @@ export function EventCapacityCard({
     <div>
       <div className="space-y-2">
         <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Capacity {capacity}</span>
-          <span>{Math.max(capacity - attendanceCount, 0)} spots left</span>
+          <span>{t("capacity2", { capacity: capacity })}</span>
+          <span>
+            {t("spotsLeft", { max: Math.max(capacity - attendanceCount, 0) })}
+          </span>
         </div>
         <div className="relative pt-1">
           <div className="overflow-hidden h-2 bg-muted rounded-full">

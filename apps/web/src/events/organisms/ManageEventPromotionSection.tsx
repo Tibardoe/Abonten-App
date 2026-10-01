@@ -6,6 +6,7 @@ import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { EventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { EventPromotionTier } from "@abonten/types/postsType";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoMegaphoneOutline } from "react-icons/io5";
@@ -39,6 +40,10 @@ export default function ManageEventPromotionSection({
   derivedStatus,
   soldOut,
 }: ManageEventPromotionSectionProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("events");
+
   const router = useRouter();
   const [selectedTierId, setSelectedTierId] = useState<number | null>(
     tiers[0]?.id ?? null,
@@ -48,11 +53,11 @@ export default function ManageEventPromotionSection({
 
   const ineligibleReason =
     eventStatus === "canceled"
-      ? "This event was cancelled and can't be promoted."
+      ? t("thisEventWasCancelledAndCan")
       : eventStatus === "completed" || derivedStatus === "ended"
-        ? "This event has already ended and can't be promoted."
+        ? t("thisEventHasAlreadyEndedAnd")
         : soldOut
-          ? "This event is sold out and can't be promoted."
+          ? t("thisEventIsSoldOutAnd")
           : null;
 
   const handlePromote = async () => {
@@ -66,7 +71,7 @@ export default function ManageEventPromotionSection({
       );
 
       if (response.status !== 200 || !response.data) {
-        toast.error(response.message ?? "Something went wrong!");
+        toast.error(response.message ?? t("somethingWentWrong"));
         return;
       }
 
@@ -81,15 +86,15 @@ export default function ManageEventPromotionSection({
       <div className="rounded-2xl border border-primary/40 bg-primary/10 p-6 space-y-2">
         <div className="flex items-center gap-2 text-primary font-semibold">
           <IoMegaphoneOutline className="text-lg" />
-          <p>This event is currently featured</p>
+          <p>{t("thisEventIsCurrentlyFeatured")}</p>
         </div>
         <p className="text-sm text-muted-foreground">
           {currentPromotion.tier_label
-            ? `${currentPromotion.tier_label} placement, active`
-            : "Active"}{" "}
-          until{" "}
+            ? t("placementActive", { tier_label: currentPromotion.tier_label })
+            : t("active")}
+          {t("until")}
           <span className="font-medium text-foreground">
-            {formatDateWithSuffix(currentPromotion.ends_at)}
+            {formatDateWithSuffix(currentPromotion.ends_at, undefined, locale)}
           </span>
           .
         </p>
@@ -100,10 +105,9 @@ export default function ManageEventPromotionSection({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-semibold text-lg">Feature this Event</h2>
+        <h2 className="font-semibold text-lg">{t("featureThisEvent")}</h2>
         <p className="text-sm text-muted-foreground">
-          Get a paid, randomly-rotated slot in the Featured Events banner for
-          your event's location.
+          {t("getAPaidRandomlyRotatedSlot")}
         </p>
       </div>
 
@@ -115,7 +119,7 @@ export default function ManageEventPromotionSection({
         <>
           {tiers.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No promotion tiers are available right now.
+              {t("noPromotionTiersAreAvailableRight")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -145,7 +149,7 @@ export default function ManageEventPromotionSection({
             onClick={handlePromote}
             className="w-full rounded-md p-4 font-bold text-primary-foreground bg-primary text-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Starting…" : "Feature this event"}
+            {isSubmitting ? t("starting") : t("featureThisEvent2")}
           </button>
         </>
       )}

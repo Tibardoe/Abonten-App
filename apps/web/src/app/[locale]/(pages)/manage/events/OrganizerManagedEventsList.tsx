@@ -6,18 +6,19 @@ import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
+  draft: { label: "status.draft", className: "bg-muted text-muted-foreground" },
   canceled: {
-    label: "Cancelled",
+    label: "status.cancelled",
     className: "bg-destructive/10 text-destructive",
   },
   completed: {
-    label: "Completed",
+    label: "status.completed",
     className: "bg-muted text-muted-foreground",
   },
 };
@@ -38,6 +39,10 @@ export default function OrganizerManagedEventsList({
   fetchPage: (cursor: string | null) => Promise<PaginatedResult<UserPostType>>;
   emptyState: React.ReactNode;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("manage");
+
   return (
     <InfiniteList<UserPostType>
       queryKey={queryKey}
@@ -51,6 +56,7 @@ export default function OrganizerManagedEventsList({
           event.ends_at,
           event.occurrences,
           event.timezone,
+          locale,
         );
         const overlayStatus = getEventStatusOverlay(
           event.starts_at,
@@ -87,14 +93,14 @@ export default function OrganizerManagedEventsList({
               <div className="flex-1 min-w-0">
                 <h2 className="font-bold truncate">{event.title}</h2>
                 <p className="text-sm text-muted-foreground truncate">
-                  {dateTime?.date ?? "Date not available"}
+                  {dateTime?.date ?? t("dateNotAvailable")}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   {draftOrTerminalStatus && (
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-semibold ${draftOrTerminalStatus.className}`}
                     >
-                      {draftOrTerminalStatus.label}
+                      {t(draftOrTerminalStatus.label)}
                     </span>
                   )}
                   {!draftOrTerminalStatus && overlayStatus && (
@@ -104,7 +110,7 @@ export default function OrganizerManagedEventsList({
                   )}
                   {event.capacity ? (
                     <span className="text-xs text-muted-foreground">
-                      Capacity: {event.capacity}
+                      {t("capacity", { capacity: event.capacity })}
                     </span>
                   ) : null}
                 </div>

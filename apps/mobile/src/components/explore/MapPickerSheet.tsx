@@ -9,6 +9,7 @@ import {
   useExploreLocation,
 } from "@/features/discovery/ExploreLocationProvider";
 import { AppText, BottomBar, Button, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRef, useState } from "react";
 import { Modal, Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -45,6 +46,8 @@ export function MapPickerSheet({
     label: string;
   }) => void | Promise<void>;
 }) {
+  const t = useTranslations("explore");
+
   const { chooseArea } = useExploreLocation();
   const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(false);
@@ -88,7 +91,7 @@ export function MapPickerSheet({
       <Pressable accessibilityRole="button" onPress={onClose} hitSlop={10}>
         <Icon name="close" size={24} tone="foreground" />
       </Pressable>
-      <AppText variant="bodyStrong">Choose on map</AppText>
+      <AppText variant="bodyStrong">{t("chooseOnMap")}</AppText>
     </View>
   );
 
@@ -99,13 +102,12 @@ export function MapPickerSheet({
           {header}
           <View className="flex-1 items-center justify-center gap-2 p-8">
             <Icon name="map-outline" size={32} tone="muted" />
-            <AppText variant="bodyStrong">Map picker unavailable</AppText>
+            <AppText variant="bodyStrong">{t("mapPickerUnavailable")}</AppText>
             <AppText variant="muted" className="text-center">
-              This build doesn't have maps enabled. Search for the address or
-              use your current location instead.
+              {t("thisBuildDoesnTHaveMaps")}
             </AppText>
             <View className="pt-2">
-              <Button title="Close" variant="outline" onPress={onClose} />
+              <Button title={t("close")} variant="outline" onPress={onClose} />
             </View>
           </View>
         </View>
@@ -140,7 +142,7 @@ export function MapPickerSheet({
 
           <BottomBar className="border-t border-border bg-background px-4 pt-4">
             <Button
-              title={busy ? "Setting…" : "Use this location"}
+              title={busy ? t("setting") : t("useThisLocation")}
               onPress={confirm}
               disabled={busy}
             />

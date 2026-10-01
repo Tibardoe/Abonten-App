@@ -1,6 +1,7 @@
 import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type { MessageReplyPreview } from "@abonten/types/messagingType";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { Pressable, View, useWindowDimensions } from "react-native";
@@ -51,6 +52,8 @@ export function ReplyQuote({
   /** Rendered inside an own (primary-coloured) bubble — lighten rail/text. */
   onPrimary?: boolean;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const { width: screenW } = useWindowDimensions();
   const deleted = !!reply.deleted_at;
@@ -110,7 +113,7 @@ export function ReplyQuote({
       disabled={!onPress}
       accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={
-        onPress ? `Replying to ${kind}. Tap to go to it.` : undefined
+        onPress ? t("replyingToTapToGoTo", { kind: kind }) : undefined
       }
       className="mb-1.5 flex-row items-stretch self-stretch overflow-hidden rounded-[10px]"
       // A bubble sizes to its widest child, and this panel's children are all
@@ -149,7 +152,7 @@ export function ReplyQuote({
             numberOfLines={2}
             className={`text-[13.5px] leading-[18px] ${bodyClass}`}
           >
-            {reply.content ?? "Message"}
+            {reply.content ?? t("message")}
           </AppText>
         )}
       </View>

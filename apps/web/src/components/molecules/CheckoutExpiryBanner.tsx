@@ -5,6 +5,7 @@ import {
   formatCountdown,
   useCheckoutCountdown,
 } from "@/hooks/useCheckoutCountdown";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -24,6 +25,8 @@ type CheckoutExpiryBannerProps = {
 export default function CheckoutExpiryBanner({
   expiresAt,
 }: CheckoutExpiryBannerProps) {
+  const t = useTranslations("common");
+
   const { secondsLeft, isExpired, isWarning } = useCheckoutCountdown(expiresAt);
   const router = useRouter();
   const hasRefreshed = useRef(false);
@@ -49,8 +52,10 @@ export default function CheckoutExpiryBanner({
       )}
     >
       {isExpired
-        ? "This checkout has expired."
-        : `Checkout expires in ${formatCountdown(secondsLeft)}`}
+        ? t("thisCheckoutHasExpired")
+        : t("checkoutExpiresIn", {
+            formatCountdown: formatCountdown(secondsLeft),
+          })}
     </div>
   );
 }

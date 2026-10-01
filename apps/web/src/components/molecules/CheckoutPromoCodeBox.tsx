@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Input } from "../ui/input";
 
 type AppliedPromo = {
@@ -31,16 +32,18 @@ export default function CheckoutPromoCodeBox({
   onRemove,
   promoEligibility,
 }: CheckoutPromoCodeBoxProps) {
+  const t = useTranslations("common");
+
   return (
     <div className="flex flex-col text-sm gap-2">
-      <span>Promo code</span>
+      <span>{t("promoCode")}</span>
 
       <div className="space-y-2 flex flex-col">
         <div className="flex h-10 items-center justify-between gap-3 rounded-md border border-input bg-background pr-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
           <Input
             type="text"
             className="h-full flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
-            placeholder="Enter code"
+            placeholder={t("enterCode")}
             value={promoCodeInput}
             disabled={!!appliedPromo}
             onChange={(e) => onPromoCodeInputChange(e.target.value)}
@@ -52,7 +55,7 @@ export default function CheckoutPromoCodeBox({
             disabled={isApplying || !promoCodeInput || !!appliedPromo}
             onClick={onApply}
           >
-            {isApplying ? "Loading..." : "Apply"}
+            {isApplying ? t("loading") : t("apply")}
           </button>
         </div>
 
@@ -62,17 +65,20 @@ export default function CheckoutPromoCodeBox({
             onClick={onRemove}
             className="self-end font-bold border border-border rounded-md p-2"
           >
-            Remove
+            {t("remove")}
           </button>
         )}
 
         {promoEligibility?.isPartial && (
           <p className="text-xs text-muted-foreground">
-            Promo code applies to {promoEligibility.eligibleTotal} of{" "}
-            {promoEligibility.totalQuantity} selected tickets — its usage limit
-            has been reached. The remaining{" "}
-            {promoEligibility.totalQuantity - promoEligibility.eligibleTotal}{" "}
-            ticket(s) are charged at full price.
+            {t("promoCodeAppliesToOfSelected", {
+              eligibleTotal: promoEligibility.eligibleTotal,
+              totalQuantity: promoEligibility.totalQuantity,
+            })}
+            {t("ticketsChargedAtFullPrice", {
+              count:
+                promoEligibility.totalQuantity - promoEligibility.eligibleTotal,
+            })}
           </p>
         )}
       </div>
