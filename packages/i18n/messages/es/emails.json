@@ -2,60 +2,60 @@
   "cancellation": {
     "event": "Evento",
     "heading": "Evento cancelado",
-    "intro": "{greeting} the organizer has cancelled <strong>{eventTitle}</strong>. Your ticket is no longer valid.",
-    "preview": "{eventTitle} has been cancelled — here's what happens to your ticket",
+    "intro": "{greeting} el organizador ha cancelado <strong>{eventTitle}</strong>. Tu entrada ya no es válida.",
+    "preview": "{eventTitle} se ha cancelado — esto es lo que pasa con tu entrada",
     "processing": "Procesando",
-    "questions": "If you have any questions about this cancellation or your refund, contact us through the Abonten app.",
-    "refund": "A refund will be issued to the payment method used for your ticket. This can take a few days to complete — you can check its status anytime from My Tickets.",
-    "refundAmount": "Refund amount",
-    "refundStatus": "Refund status",
-    "subject": "Event cancelled — {eventTitle}",
-    "viewRefundStatus": "View Refund Status"
+    "questions": "Si tienes alguna pregunta sobre esta cancelación o tu reembolso, contáctanos a través de la app de Abonten.",
+    "refund": "Se hará un reembolso al método de pago usado para tu entrada. Puede tardar unos días en completarse — puedes consultar su estado cuando quieras desde Mis entradas.",
+    "refundAmount": "Importe del reembolso",
+    "refundStatus": "Estado del reembolso",
+    "subject": "Evento cancelado — {eventTitle}",
+    "viewRefundStatus": "Ver estado del reembolso"
   },
   "common": {
-    "contactUsThroughTheApp": "If you have any questions, contact us through the Abonten app.",
+    "contactUsThroughTheApp": "Si tienes alguna pregunta, contáctanos a través de la app de Abonten.",
     "copyright": "© {year} {entity}",
-    "hi": "Hi {name},",
-    "there": "there"
+    "hi": "Hola, {name}:",
+    "there": "de nuevo"
   },
   "digest": {
-    "intro": "{greeting} here {count, plural, one {is a pick} other {are # picks}} based on what you asked to hear about.",
+    "intro": "{greeting} aquí {count, plural, one {tienes una sugerencia} other {tienes # sugerencias}} según lo que pediste que te contáramos.",
     "reason": {
-      "organizer": "From an organizer you follow",
-      "organizerNamed": "New from @{username}",
-      "place": "At a place you follow",
-      "similarEvents": "Similar to events you liked",
-      "similarPlaces": "Similar to places you liked"
+      "organizer": "De un organizador que sigues",
+      "organizerNamed": "Novedad de @{username}",
+      "place": "En un lugar que sigues",
+      "similarEvents": "Similar a eventos que te gustaron",
+      "similarPlaces": "Similar a lugares que te gustaron"
     },
-    "seeAll": "See all your picks",
-    "unsubscribe": "Don't want these emails? <unsubscribe>Unsubscribe</unsubscribe> or <settings>change your settings</settings>. Tickets, payments and account emails aren't affected.",
-    "why": "You're getting this because you turned on emails about picks and alerts in your Abonten Hub notification settings. At most one a day."
+    "seeAll": "Ver todas tus sugerencias",
+    "unsubscribe": "¿No quieres estos correos? <unsubscribe>Darte de baja</unsubscribe> o <settings>cambiar tus ajustes</settings>. Los correos de entradas, pagos y cuenta no se ven afectados.",
+    "why": "Recibes este correo porque activaste los correos de sugerencias y alertas en los ajustes de notificaciones de tu cuenta de Abonten Hub. Como máximo uno al día."
   },
   "rewards": {
-    "headingMany": "Your rewards update",
-    "intro": "{greeting} here's what's new with your Abonten Credit.",
-    "open": "Open Abonten Rewards",
-    "subjectMany": "Abonten Rewards: {count} updates",
-    "unsubscribe": "Don't want these emails? <link>Unsubscribe</link>. You'll still see your credit in the app.",
-    "why": "You're getting this because you earned Abonten Credit on your Abonten Hub account. Credit can be spent on Abonten and can't be exchanged for cash."
+    "headingMany": "Novedades de tus recompensas",
+    "intro": "{greeting} estas son las novedades de tu Crédito Abonten.",
+    "open": "Abrir Abonten Rewards",
+    "subjectMany": "Abonten Rewards: {count} novedades",
+    "unsubscribe": "¿No quieres estos correos? <link>Darte de baja</link>. Seguirás viendo tu crédito en la app.",
+    "why": "Recibes este correo porque has ganado Crédito Abonten en tu cuenta de Abonten Hub. El crédito se puede gastar en Abonten y no se puede canjear por dinero."
   },
   "ticket": {
-    "amountPaid": "Amount paid",
-    "attached": "Your ticket is attached to this email as a PDF. You can also open it anytime from My Tickets in Abonten.",
+    "amountPaid": "Importe pagado",
+    "attached": "Tu entrada va adjunta a este correo en PDF. También puedes abrirla cuando quieras desde Mis entradas en Abonten.",
     "date": "Fecha",
-    "detailsLabel": "Ticket details",
+    "detailsLabel": "Detalles de la entrada",
     "event": "Evento",
     "free": "Gratis",
-    "heading": "Congratulations! 🎟️",
-    "intro": "{greeting} your ticket for <strong>{eventTitle}</strong> has been successfully purchased.",
-    "keepSafe": "Please keep your ticket safe — you'll need it (or the attached PDF) for entry at the venue. If you have any questions, contact us through the Abonten app.",
-    "preview": "Your Abonten ticket for {eventTitle} is ready — see details inside",
-    "purchaseDate": "Purchase date",
+    "heading": "¡Enhorabuena! 🎟️",
+    "intro": "{greeting} tu entrada para <strong>{eventTitle}</strong> se ha comprado correctamente.",
+    "keepSafe": "Guarda bien tu entrada — la necesitarás (o el PDF adjunto) para entrar al recinto. Si tienes alguna pregunta, contáctanos a través de la app de Abonten.",
+    "preview": "Tu entrada de Abonten para {eventTitle} está lista — consulta los detalles dentro",
+    "purchaseDate": "Fecha de compra",
     "quantity": "Cantidad",
-    "quantityValue": "{count, plural, one {# ticket} other {# tickets}}",
-    "subject": "Your Abonten Ticket Is Ready 🎟️ — {eventTitle}",
-    "time": "Time",
-    "venue": "Venue",
-    "viewMyTickets": "View My Tickets"
+    "quantityValue": "{count, plural, one {# entrada} other {# entradas}}",
+    "subject": "Tu entrada de Abonten está lista 🎟️ — {eventTitle}",
+    "time": "Hora",
+    "venue": "Lugar",
+    "viewMyTickets": "Ver mis entradas"
   }
 }
