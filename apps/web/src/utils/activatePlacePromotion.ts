@@ -1,8 +1,8 @@
 import createNotification from "@/actions/createNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
-import { revalidatePath } from "next/cache";
 import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
 /**
@@ -158,9 +158,9 @@ export default async function activatePlacePromotion(
   // payment-completion step with no revalidatePath, leaving the
   // organizer's own /manage/places/[placeId] promotion tab able to show
   // stale "pick a tier" state after a Back-button navigation post-payment.
-  revalidatePath(`/manage/places/${checkout.place_id}`);
+  revalidateAppPath(`/manage/places/${checkout.place_id}`);
   if (place?.slug) {
-    revalidatePath(`/places/${place.slug}`);
+    revalidateAppPath(`/places/${place.slug}`);
   }
 
   return {

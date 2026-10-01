@@ -2,7 +2,7 @@ import getActivePromotedEventIds from "@/actions/getActivePromotedEventIds";
 import { filterEventsByWindow } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
-import AllEventsList from "@/app/(pages)/events/location/[location]/AllEventsList";
+import AllEventsList from "@/app/[locale]/(pages)/events/location/[location]/AllEventsList";
 import ViewToggle from "@/components/molecules/ViewToggle";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";

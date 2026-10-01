@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { deleteEventReviewResponseCore } from "@abonten/services/reviews/reviewResponseCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Organizer-only removal of their reply to an event review. Thin wrapper:
@@ -28,7 +28,7 @@ export async function deleteEventReviewResponse(reviewId: string) {
   );
 
   if (result.status === 200 && result.data?.eventCode) {
-    revalidatePath(`/events/${result.data.eventCode.toLowerCase()}`);
+    revalidateAppPath(`/events/${result.data.eventCode.toLowerCase()}`);
   }
 
   return result;

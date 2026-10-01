@@ -78,6 +78,8 @@ jobs:
 
       - run: npm run check:i18n
 
+      - run: npm run check:locale-routing
+
   # Documentation validation (docs/** and the public legal/help content):
   # required files, metadata, internal links, code references, placeholder
   # and social links, secret patterns, public/internal separation. No

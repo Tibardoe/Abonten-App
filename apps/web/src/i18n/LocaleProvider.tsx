@@ -1,63 +1,49 @@
 "use client";
 
-import { NextIntlClientProvider } from "next-intl";
+import { setUserLocale } from "@/actions/setUserLocale";
+import { useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
-  useRef,
-  useState,
+  useMemo,
+  useTransition,
 } from "react";
 import {
   LOCALE_COOKIE_MAX_AGE,
-  LOCALE_COOKIE_NAME,
   type Locale,
   TIME_ZONE_COOKIE_NAME,
-  defaultLocale,
-  isLocale,
 } from "./config";
-import { type Messages, loadMessages } from "./messages";
 
 type LocaleContextValue = {
   locale: Locale;
+  /** Saves the choice and re-renders the page in that language. */
   setLocale: (locale: Locale) => Promise<void>;
+  isPending: boolean;
 };
 
 const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
 
-function readCookieLocale(): Locale | null {
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${LOCALE_COOKIE_NAME}=([^;]+)`),
-  );
-  const value = match ? decodeURIComponent(match[1]) : undefined;
-  return isLocale(value) ? value : null;
-}
-
-// The root layout always server-renders `defaultLocale` (see layout.tsx) so
-// it — and every page under it — can be statically generated/ISR'd instead
-// of being forced dynamic by a per-request cookie read. This provider
-// corrects to the visitor's saved locale on the client right after mount,
-// and lets Language.tsx apply a locale instantly on selection. Trade-off:
-// non-default-locale visitors see a brief flash of the default locale
-// before it switches.
+// The language is decided on the server for every request (see
+// i18n/routing.ts): the page arrives already translated, with the right
+// `lang` on <html>, so there is no English first paint to correct here.
+// This provider does two small client-side jobs: remember the visitor's
+// time zone for Server Actions, and switch language on request.
 export default function LocaleProvider({
-  defaultMessages,
   children,
 }: {
-  defaultMessages: Messages;
   children: React.ReactNode;
 }) {
-  const [locale, setLocaleState] = useState<Locale>(defaultLocale);
-  // next-intl formats in this zone. The server render cannot know the
-  // visitor's, so it starts on UTC and switches to theirs after mount
-  // (event times are formatted in the EVENT's zone by @abonten/core anyway).
-  const [timeZone, setTimeZone] = useState("UTC");
+  const locale = useLocale() as Locale;
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   useEffect(() => {
     try {
       const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (zone) {
-        setTimeZone(zone);
         // Lets Server Actions count days in the visitor's own calendar.
         const cookie = `${TIME_ZONE_COOKIE_NAME}=${encodeURIComponent(zone)}`;
         if (!document.cookie.split("; ").includes(cookie)) {
@@ -67,61 +53,34 @@ export default function LocaleProvider({
         }
       }
     } catch {
-      // Keep UTC.
+      // No Intl support: Server Actions fall back to the default zone.
     }
   }, []);
-  const [messages, setMessages] = useState<Messages>(defaultMessages);
-
-  // Guards against two overlapping setLocale calls (the mount effect's
-  // cookie-correction and a manual pick from Language.tsx) resolving out of
-  // order — without this, a slower earlier call can overwrite a faster,
-  // newer one after it already resolved.
-  const generationRef = useRef(0);
 
   const setLocale = useCallback(
     async (next: Locale) => {
-      const generation = ++generationRef.current;
-
-      if (next === defaultLocale) {
-        setLocaleState(next);
-        setMessages(defaultMessages);
-        return;
+      if (next === locale) return;
+      const response = await setUserLocale(next);
+      if (response.status !== 200) {
+        throw new Error(response.message);
       }
-
-      const nextMessages = await loadMessages(next);
-
-      if (generation !== generationRef.current) return;
-
-      setLocaleState(next);
-      setMessages(nextMessages);
+      // The cookie now names the new language; a refresh re-runs every
+      // Server Component through the proxy, which rewrites to the new
+      // locale's route tree. Client state (open menus, form drafts) stays.
+      startTransition(() => {
+        router.refresh();
+      });
     },
-    [defaultMessages],
+    [locale, router],
   );
 
-  useEffect(() => {
-    const cookieLocale = readCookieLocale();
-    if (cookieLocale && cookieLocale !== defaultLocale) {
-      setLocale(cookieLocale);
-    }
-    // setLocale is stable (useCallback, only depends on the defaultMessages
-    // prop) — this only needs to run once, on mount, to correct from the
-    // server's default-locale render to the visitor's saved locale.
-  }, [setLocale]);
-
-  useEffect(() => {
-    document.documentElement.lang = locale;
-  }, [locale]);
+  const value = useMemo(
+    () => ({ locale, setLocale, isPending }),
+    [locale, setLocale, isPending],
+  );
 
   return (
-    <LocaleContext.Provider value={{ locale, setLocale }}>
-      <NextIntlClientProvider
-        locale={locale}
-        messages={messages}
-        timeZone={timeZone}
-      >
-        {children}
-      </NextIntlClientProvider>
-    </LocaleContext.Provider>
+    <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
   );
 }
 

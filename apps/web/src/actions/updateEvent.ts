@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   type UpdateEventCoreResult,
   updateEventCore,
 } from "@abonten/services/events/updateEventCore";
-import { revalidatePath } from "next/cache";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
 export type UpdateEventInput = {
@@ -90,12 +90,12 @@ export async function updateEvent(
   });
 
   if (result.status === 200) {
-    revalidatePath("/manage/my-events");
-    revalidatePath(`/manage/events/${formData.eventId}`);
-    revalidatePath("/manage/dashboard");
+    revalidateAppPath("/manage/my-events");
+    revalidateAppPath(`/manage/events/${formData.eventId}`);
+    revalidateAppPath("/manage/dashboard");
     // The public event page is ISR-cached and shows the title/description/
     // capacity/schedule/flyer this action just changed.
-    revalidatePath(`/events/${result.eventCode.toLowerCase()}`);
+    revalidateAppPath(`/events/${result.eventCode.toLowerCase()}`);
   }
 
   return result;

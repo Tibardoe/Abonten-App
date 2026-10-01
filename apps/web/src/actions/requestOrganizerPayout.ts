@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   type RequestOrganizerPayoutResult,
   requestOrganizerPayoutCore,
 } from "@abonten/services/organizer/requestOrganizerPayoutCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Requests a withdrawal. All authorization/validation is server-side inside
@@ -40,10 +40,10 @@ export default async function requestOrganizerPayout(
   });
 
   if (result.status === 200) {
-    revalidatePath("/finances");
-    revalidatePath("/finances/payouts");
-    revalidatePath("/finances/transactions");
-    revalidatePath("/manage/dashboard");
+    revalidateAppPath("/finances");
+    revalidateAppPath("/finances/payouts");
+    revalidateAppPath("/finances/transactions");
+    revalidateAppPath("/manage/dashboard");
   }
 
   return result;

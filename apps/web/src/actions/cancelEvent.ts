@@ -2,12 +2,12 @@
 
 import eventCancellationNotification from "@/actions/eventCancellationNotification";
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
 import {
   type CancelEventResult,
   cancelEventCore,
 } from "@abonten/services/events/cancelEventCore";
-import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 /**
@@ -53,11 +53,11 @@ export default async function cancelEvent(
   // the resulting refunds change the organizer's own ledger balance, which
   // nothing was invalidating either.
   if (result.status === 200) {
-    revalidatePath("/manage/my-events");
-    revalidatePath(`/manage/events/${eventId}`);
-    revalidatePath("/manage/dashboard");
-    revalidatePath("/finances");
-    revalidatePath("/transactions");
+    revalidateAppPath("/manage/my-events");
+    revalidateAppPath(`/manage/events/${eventId}`);
+    revalidateAppPath("/manage/dashboard");
+    revalidateAppPath("/finances");
+    revalidateAppPath("/transactions");
   }
 
   return result;

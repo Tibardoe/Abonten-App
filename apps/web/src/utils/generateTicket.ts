@@ -1,6 +1,7 @@
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
@@ -13,7 +14,6 @@ import {
 import { saveEventQrCodeToCloudinary } from "@abonten/services/tickets/saveEventQrCodeToCloudinary";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import type { Database } from "@abonten/types/database.types";
-import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 type CheckoutRow = {
@@ -306,13 +306,13 @@ export default async function generateTicket(
   // Establish the successful-purchase state before the caller redirects
   // anywhere: without this, browser Back to the wallet pages could keep
   // showing the pre-payment "pending" render until a manual refresh.
-  revalidatePath("/checkout");
-  revalidatePath(`/checkout/${checkoutSessionId}`);
-  revalidatePath("/manage/my-events");
-  revalidatePath(`/manage/events/${eventId}`);
-  revalidatePath("/manage/dashboard");
-  revalidatePath("/transactions");
-  revalidatePath(`/events/${event.event_code.toLowerCase()}`);
+  revalidateAppPath("/checkout");
+  revalidateAppPath(`/checkout/${checkoutSessionId}`);
+  revalidateAppPath("/manage/my-events");
+  revalidateAppPath(`/manage/events/${eventId}`);
+  revalidateAppPath("/manage/dashboard");
+  revalidateAppPath("/transactions");
+  revalidateAppPath(`/events/${event.event_code.toLowerCase()}`);
 
   // A pure idempotent replay (webhook redelivery after the first run already
   // issued + notified) — don't re-send the receipt email or a duplicate

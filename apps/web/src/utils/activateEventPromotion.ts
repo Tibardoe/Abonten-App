@@ -1,8 +1,8 @@
 import createNotification from "@/actions/createNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
-import { revalidatePath } from "next/cache";
 import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
 /**
@@ -159,9 +159,9 @@ export default async function activateEventPromotion(
   // /manage/events/[eventId] promotion tab (server-rendered, not a client
   // query) could still show "pick a tier" instead of "Currently featured"
   // if they hit the browser Back button right after paying.
-  revalidatePath(`/manage/events/${checkout.event_id}`);
+  revalidateAppPath(`/manage/events/${checkout.event_id}`);
   if (event?.event_code) {
-    revalidatePath(`/events/${event.event_code.toLowerCase()}`);
+    revalidateAppPath(`/events/${event.event_code.toLowerCase()}`);
   }
 
   return {

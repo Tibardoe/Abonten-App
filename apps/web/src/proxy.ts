@@ -9,10 +9,14 @@ import {
   addTouchToCookie,
   referralKeyForPath,
 } from "@abonten/services/rewards/referralCookie";
-import type { NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "./config/supabase/middleware";
 import { LOCALE_COOKIE_MAX_AGE, LOCALE_COOKIE_NAME } from "./i18n/config";
-import { getPreferredLocale } from "./i18n/negotiateLocale";
+import {
+  isLocalizedPath,
+  localizedPathname,
+  resolveRequestLocale,
+} from "./i18n/routing";
 
 // Built once per server process: every input is a build-time public value.
 // The policy itself is documented in @abonten/core/security.
@@ -24,7 +28,35 @@ const CONTENT_SECURITY_POLICY = buildWebCsp({
 });
 
 export async function proxy(request: NextRequest) {
-  const response = await updateSession(request);
+  const session = await updateSession(request);
+
+  // The visitor's language, decided once per request: the preference
+  // cookie, else the browser's Accept-Language, else English. Every page
+  // lives under app/[locale], so a page request is rewritten to its
+  // language's route ("/plans" → "/fr/plans") while the address bar keeps
+  // the public URL. Redirects (sign-in bounce, restricted account) and the
+  // JSON refusal for a restricted account's Server Action pass through
+  // untouched, as do API routes, short links and static files.
+  const locale = resolveRequestLocale(request);
+  const pathname = request.nextUrl.pathname;
+  const continuesToPage =
+    session.headers.get("x-middleware-next") === "1" &&
+    isLocalizedPath(pathname);
+
+  let response = session;
+  if (continuesToPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = localizedPathname(pathname, locale);
+    // updateSession may have refreshed the session cookies on the request;
+    // forwarding its headers hands the new tokens to the Server Components.
+    response = NextResponse.rewrite(url, {
+      request: { headers: request.headers },
+    });
+    for (const cookie of session.cookies.getAll()) {
+      response.cookies.set(cookie);
+    }
+  }
+
   response.headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
 
   // Get stored country from cookies
@@ -48,15 +80,13 @@ export async function proxy(request: NextRequest) {
   }
 
   // Only set the locale cookie on first visit — never overwrite an
-  // explicit choice the user already made via Language Settings.
+  // explicit choice the user already made via Language Settings. The
+  // value is the language this very response was rendered in, so the
+  // next request (and every Server Action) agrees with it.
   const storedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
 
   if (!storedLocale) {
-    const preferredLocale = getPreferredLocale(
-      request.headers.get("accept-language"),
-    );
-
-    response.cookies.set(LOCALE_COOKIE_NAME, preferredLocale, {
+    response.cookies.set(LOCALE_COOKIE_NAME, locale, {
       path: "/",
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",

@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { respondToPlaceReviewCore } from "@abonten/services/reviews/reviewResponseCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Owner reply to a place review — create OR edit (the core detects which
@@ -30,7 +30,7 @@ export async function respondToPlaceReview(reviewId: string, response: string) {
   );
 
   if (result.status === 200 && result.data?.placeSlug) {
-    revalidatePath(`/places/${result.data.placeSlug}`);
+    revalidateAppPath(`/places/${result.data.placeSlug}`);
   }
 
   return result;

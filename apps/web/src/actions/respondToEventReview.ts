@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { respondToEventReviewCore } from "@abonten/services/reviews/reviewResponseCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Organizer reply to an event review — create OR edit. Thin wrapper: auth
@@ -29,7 +29,7 @@ export async function respondToEventReview(reviewId: string, response: string) {
   );
 
   if (result.status === 200 && result.data?.eventCode) {
-    revalidatePath(`/events/${result.data.eventCode.toLowerCase()}`);
+    revalidateAppPath(`/events/${result.data.eventCode.toLowerCase()}`);
   }
 
   return result;

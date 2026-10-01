@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   type CheckInTicketCoreResult,
   checkInTicketCore,
 } from "@abonten/services/tickets/checkInTicketCore";
-import { revalidatePath } from "next/cache";
 
 // Thin wrapper: auth, delegate to the shared body (also used by the mobile
 // POST /api/mobile/organizer/tickets/:id/check-in route), then revalidate
@@ -35,7 +35,7 @@ export default async function checkInTicket(
   );
 
   if (result.status === 200 && result.eventId) {
-    revalidatePath(`/manage/events/${result.eventId}`);
+    revalidateAppPath(`/manage/events/${result.eventId}`);
   }
 
   return result;

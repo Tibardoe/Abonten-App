@@ -1,22 +1,24 @@
 // Framework-agnostic access to the translation catalogs in ../messages.
-// The web app wraps this with next-intl (src/i18n/messages.ts); a native
-// app can call loadAllNamespaces directly.
+// The web app wraps this with next-intl (src/i18n/messages.ts); the native
+// app uses the static map in @abonten/ui-native (Metro cannot bundle the
+// templated import below). The locale and namespace lists are generated
+// from the messages directory by scripts/i18n/gen-catalog-index.mjs.
 
-export const I18N_LOCALES = ["en", "fr", "es", "de", "pt", "ak"] as const;
-export type I18nLocale = (typeof I18N_LOCALES)[number];
+import {
+  I18N_NAMESPACES,
+  type I18nLocale,
+  type I18nNamespace,
+} from "./namespaces";
 
-export const I18N_NAMESPACES = [
-  "common",
-  "navigation",
-  "auth",
-  "settings",
-  "events",
-  "places",
-] as const;
-export type I18nNamespace = (typeof I18N_NAMESPACES)[number];
+export {
+  I18N_LOCALES,
+  type I18nLocale,
+  I18N_NAMESPACES,
+  type I18nNamespace,
+} from "./namespaces";
 
 // Static prefix + template so the bundler can split one lazy chunk per
-// (locale, namespace) — the same shape the web app used before extraction.
+// (locale, namespace).
 export async function loadNamespace(
   locale: I18nLocale,
   namespace: I18nNamespace,

@@ -1,12 +1,12 @@
 "use server";
 
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   parseVerificationInput,
   resolveVerificationCaller,
 } from "@/utils/verificationAction";
 import { submitVerificationCaseCore } from "@abonten/services/verification/verificationCaseCore";
 import { submitVerificationSchema } from "@abonten/validation/verificationSchemas";
-import { revalidatePath } from "next/cache";
 
 /**
  * Sends a draft, or a case sent back for more information, to review. The
@@ -26,6 +26,6 @@ export async function submitVerificationCase(
     caller.userId,
     parsed.data,
   );
-  if (res.status === 200) revalidatePath("/manage", "layout");
+  if (res.status === 200) revalidateAppPath("/manage", "layout");
   return res;
 }

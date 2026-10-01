@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { deletePlaceReviewResponseCore } from "@abonten/services/reviews/reviewResponseCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Owner-only removal of their reply to a place review. Thin wrapper: auth
@@ -29,7 +29,7 @@ export async function deletePlaceReviewResponse(reviewId: string) {
   );
 
   if (result.status === 200 && result.data?.placeSlug) {
-    revalidatePath(`/places/${result.data.placeSlug}`);
+    revalidateAppPath(`/places/${result.data.placeSlug}`);
   }
 
   return result;

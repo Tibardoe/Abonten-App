@@ -2,9 +2,9 @@
 
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
 import { registerForFreeEventCore } from "@abonten/services/checkout/registerForFreeEventCore";
-import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 /**
@@ -48,12 +48,12 @@ export default async function registerForFreeEvent(
   );
 
   if (result.status === 200) {
-    revalidatePath("/manage/my-events");
-    revalidatePath(`/manage/events/${eventId}`);
-    revalidatePath("/manage/dashboard");
+    revalidateAppPath("/manage/my-events");
+    revalidateAppPath(`/manage/events/${eventId}`);
+    revalidateAppPath("/manage/dashboard");
     // See generateTicket.ts for why the public event page also needs this.
     if (result.eventCode) {
-      revalidatePath(`/events/${result.eventCode.toLowerCase()}`);
+      revalidateAppPath(`/events/${result.eventCode.toLowerCase()}`);
     }
   }
 

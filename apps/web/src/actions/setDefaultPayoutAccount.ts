@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   type MutatePayoutAccountResult,
   setDefaultPayoutAccountCore,
 } from "@abonten/services/organizer/payoutAccountCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Marks one payout account as the organizer's default, unsetting any
@@ -34,7 +34,7 @@ export default async function setDefaultPayoutAccount(
   );
 
   if (result.status === 200) {
-    revalidatePath("/finances/payout-accounts");
+    revalidateAppPath("/finances/payout-accounts");
   }
 
   return result;

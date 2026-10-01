@@ -1,12 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type RequestPlaceBookingInput,
   requestPlaceBookingCore,
 } from "@abonten/services/places/requestPlaceBookingCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Thin web transport over `requestPlaceBookingCore` — resolves the cookie
@@ -39,7 +39,7 @@ export async function requestPlaceBooking(formData: RequestPlaceBookingInput) {
     // Surface the new pending request on the owner's manage dashboard
     // without a manual refresh (the requester's own list is React-Query
     // driven and refetches on its own).
-    revalidatePath(`/manage/places/${formData.placeId}`);
+    revalidateAppPath(`/manage/places/${formData.placeId}`);
   }
 
   return result;

@@ -15,7 +15,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/app/(pages)/(settings)/settings/membership",
+    "src/app/[locale]/(pages)/(settings)/settings/membership",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

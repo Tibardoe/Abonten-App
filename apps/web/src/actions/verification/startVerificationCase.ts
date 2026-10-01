@@ -1,12 +1,12 @@
 "use server";
 
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   parseVerificationInput,
   resolveVerificationCaller,
 } from "@/utils/verificationAction";
 import { startVerificationCaseCore } from "@abonten/services/verification/verificationCaseCore";
 import { startVerificationSchema } from "@abonten/validation/verificationSchemas";
-import { revalidatePath } from "next/cache";
 
 /**
  * Opens a draft verification request. The service checks the programme
@@ -28,7 +28,7 @@ export async function startVerificationCase(input: unknown): Promise<{
     parsed.data,
   );
   if (res.status === 200) {
-    revalidatePath(
+    revalidateAppPath(
       parsed.data.subjectType === "place"
         ? `/manage/places/${parsed.data.subjectId}`
         : "/manage/verification",

@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Cancels one of the caller's tickets. If it was paid and this makes every
@@ -34,16 +34,16 @@ export default async function cancelUserTicket(
   );
 
   if (result.status === 200) {
-    revalidatePath("/manage/my-events");
+    revalidateAppPath("/manage/my-events");
     if (result.eventId) {
-      revalidatePath(`/manage/events/${result.eventId}`);
+      revalidateAppPath(`/manage/events/${result.eventId}`);
     }
-    revalidatePath("/manage/dashboard");
-    revalidatePath("/transactions");
+    revalidateAppPath("/manage/dashboard");
+    revalidateAppPath("/transactions");
     // See generateTicket.ts for why the public event page also needs this —
     // cancelling restores a spot, and that must be visible without a refresh.
     if (result.eventCode) {
-      revalidatePath(`/events/${result.eventCode.toLowerCase()}`);
+      revalidateAppPath(`/events/${result.eventCode.toLowerCase()}`);
     }
   }
 

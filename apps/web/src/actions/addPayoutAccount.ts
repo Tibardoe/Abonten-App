@@ -1,12 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   type AddPayoutAccountResult,
   addPayoutAccountCore,
 } from "@abonten/services/organizer/payoutAccountCore";
 import type { AddPayoutAccountInput } from "@abonten/validation/payoutAccountSchema";
-import { revalidatePath } from "next/cache";
 
 /**
  * Saves a new organizer payout destination. The first account an organizer
@@ -30,7 +30,7 @@ export default async function addPayoutAccount(
   const result = await addPayoutAccountCore(supabase, user.id, input);
 
   if (result.status === 200) {
-    revalidatePath("/finances/payout-accounts");
+    revalidateAppPath("/finances/payout-accounts");
   }
 
   return result;

@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   type MutatePayoutAccountResult,
   removePayoutAccountCore,
 } from "@abonten/services/organizer/payoutAccountCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Soft-removes a payout account (status -> 'removed'), matching
@@ -38,7 +38,7 @@ export default async function removePayoutAccount(
   );
 
   if (result.status === 200) {
-    revalidatePath("/finances/payout-accounts");
+    revalidateAppPath("/finances/payout-accounts");
   }
 
   return result;

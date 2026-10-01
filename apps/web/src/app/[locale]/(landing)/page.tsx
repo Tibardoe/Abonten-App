@@ -3,7 +3,7 @@ import LandingLocationSearch from "@/landingPage/organisms/LandingLocationSearch
 import { SIGN_OFF } from "@abonten/core/brand/signOff";
 import Image from "next/image";
 import Link from "next/link";
-import landingHero from "../../../public/assets/images/landing-hero.jpg";
+import landingHero from "../../../../public/assets/images/landing-hero.jpg";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
