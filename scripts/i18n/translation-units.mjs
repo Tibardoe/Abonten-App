@@ -147,7 +147,8 @@ function shape(message) {
     }
   };
   walk();
-  return out.sort().join(" ");
+  // A language may say a branch twice (gender agreement inside a select).
+  return [...new Set(out)].sort().join(" ");
 }
 
 const tags = (message) =>

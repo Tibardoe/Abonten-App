@@ -144,7 +144,7 @@
   "thatIsnTAPlaceCheck": "That isn't a place check-in code.",
   "theFirstTimeOneOfYour": "The first time one of your events sells to {uniqueBuyers} different people, you get {formatCredit}.",
   "theseAreTheEmailsWeSend": "These are the emails we send when credit is ready for you to use. Your credit and the app's notifications aren't affected.",
-  "theyGetOffThatTicket": " They get {formatCredit} off that ticket.",
+  "theyGetOffThatTicket": "They get {amount} off that ticket.",
   "theyGetOffThatTicket2": " They get {formatCredit} off that ticket.",
   "thisInvite": "this invite",
   "thisInviteLinkIsnTValid": "This invite link isn't valid",

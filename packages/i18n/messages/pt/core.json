@@ -1,158 +1,158 @@
 {
   "accountSetup": {
-    "addEmail": "Add your email so you can pay for tickets and get them by email.",
-    "confirmEmail": "Confirm your email so you can pay for tickets and get them by email.",
-    "generic": "A few quick steps left.",
-    "phone": "Add a phone number as a second way to sign in if you can't get into your email or Google account.",
-    "profile": "Add your name, a username and a photo so people recognise you on your profile and reviews.",
-    "title": "Finish setting up your account"
+    "addEmail": "Adicione o seu e-mail para poder pagar bilhetes e recebê-los por e-mail.",
+    "confirmEmail": "Confirme o seu e-mail para poder pagar bilhetes e recebê-los por e-mail.",
+    "generic": "Faltam apenas alguns passos rápidos.",
+    "phone": "Adicione um número de telefone como segunda forma de iniciar sessão, caso não consiga aceder ao seu e-mail ou à sua conta Google.",
+    "profile": "Adicione o seu nome, um nome de utilizador e uma foto para que as pessoas o reconheçam no seu perfil e nas suas avaliações.",
+    "title": "Conclua a configuração da sua conta"
   },
   "checkoutLimits": {
-    "maxPerOrder": "You can buy at most {max} tickets in one order.",
-    "maxPerType": "You can buy at most {max} of the same ticket type in one order.",
-    "selectOne": "Please select at least one ticket."
+    "maxPerOrder": "Pode comprar no máximo {max} bilhetes numa encomenda.",
+    "maxPerType": "Pode comprar no máximo {max} bilhetes do mesmo tipo numa encomenda.",
+    "selectOne": "Selecione pelo menos um bilhete."
   },
   "content": {
     "campaignObjective": {
-      "event_views": "More event views",
-      "place_views": "More place views",
-      "profile_visits": "More profile visits",
-      "reservations": "More reservations",
-      "ticket_sales": "More ticket sales",
-      "views": "More views"
+      "event_views": "Mais visualizações do evento",
+      "place_views": "Mais visualizações do local",
+      "profile_visits": "Mais visitas ao perfil",
+      "reservations": "Mais reservas",
+      "ticket_sales": "Mais vendas de bilhetes",
+      "views": "Mais visualizações"
     },
     "campaignStatus": {
-      "active": "Active",
-      "cancelled": "Cancelled",
-      "completed": "Completed",
-      "draft": "Draft",
-      "paused": "Paused",
-      "payment_confirmed": "Paid",
-      "pending_payment": "Awaiting payment",
-      "pending_review": "In review",
-      "refunded": "Refunded",
-      "rejected": "Rejected",
-      "scheduled": "Scheduled"
+      "active": "Ativo",
+      "cancelled": "Cancelado",
+      "completed": "Concluído",
+      "draft": "Rascunho",
+      "paused": "Em pausa",
+      "payment_confirmed": "Pago",
+      "pending_payment": "A aguardar pagamento",
+      "pending_review": "Em revisão",
+      "refunded": "Reembolsado",
+      "rejected": "Rejeitado",
+      "scheduled": "Agendado"
     },
     "cta": {
-      "eventCancelled": "Event cancelled",
-      "eventEnded": "Event has ended",
-      "eventUnavailable": "Event unavailable",
-      "permanentlyClosed": "Permanently closed",
-      "placeUnavailable": "Place unavailable",
-      "soldOut": "Sold out",
-      "viewEvent": "View event",
-      "viewPlace": "View place",
-      "viewProfile": "View profile"
+      "eventCancelled": "Evento cancelado",
+      "eventEnded": "O evento terminou",
+      "eventUnavailable": "Evento indisponível",
+      "permanentlyClosed": "Encerrado permanentemente",
+      "placeUnavailable": "Local indisponível",
+      "soldOut": "Esgotado",
+      "viewEvent": "Ver evento",
+      "viewPlace": "Ver local",
+      "viewProfile": "Ver perfil"
     },
     "feedSurface": {
-      "following": "Following",
-      "for_you": "For you",
-      "happening_soon": "Happening soon",
-      "nearby": "Nearby",
-      "trending": "Trending"
+      "following": "A seguir",
+      "for_you": "Para si",
+      "happening_soon": "Em breve",
+      "nearby": "Perto",
+      "trending": "Tendências"
     },
     "promotion": {
-      "billingNote": "You pay the budget up front. It is used only as your Spotlight is shown as sponsored, and the promotion stops when the budget is used or the run ends, whichever comes first. If it ends before the budget is used, the unused amount is shown on the promotion page.",
-      "cashNote": "Paid by card or mobile money. Abonten Credit can't be used for promotions.",
+      "billingNote": "Paga o orçamento antecipadamente. Só é utilizado quando o seu Spotlight é mostrado como patrocinado, e a promoção termina quando o orçamento se esgota ou o período acaba, o que acontecer primeiro. Se terminar antes de o orçamento se esgotar, o montante não utilizado é indicado na página da promoção.",
+      "cashNote": "Pago por cartão ou mobile money. O Crédito Abonten não pode ser utilizado em promoções.",
       "endReason": {
-        "budget_delivered": "Budget fully used",
-        "run_ended": "Run ended before the budget was used"
+        "budget_delivered": "Orçamento totalmente utilizado",
+        "run_ended": "O período terminou antes de o orçamento ser utilizado"
       },
       "estimateBasis": {
-        "assumed": "Based on our planning figures while Spotlight is new.",
-        "no_data": "We can't estimate reach yet.",
-        "observed": "Based on recent Spotlight activity."
+        "assumed": "Com base nos nossos valores de planeamento enquanto o Spotlight é novo.",
+        "no_data": "Ainda não conseguimos estimar o alcance.",
+        "observed": "Com base na atividade recente do Spotlight."
       },
-      "estimateNote": "This is an estimate, not a guarantee. Actual reach depends on how many people in your audience open Spotlight, how often, and what else is being promoted at the same time.",
-      "intro": "Promoting shows your Spotlight to more people in their feeds, marked “Sponsored”. You choose a budget and who should see it; we estimate how many people it could reach.",
-      "reviewNote": "Every promotion is reviewed before it runs. If it isn't approved, you're refunded in full."
+      "estimateNote": "Trata-se de uma estimativa, não de uma garantia. O alcance real depende de quantas pessoas do seu público abrem o Spotlight, com que frequência e do que mais está a ser promovido ao mesmo tempo.",
+      "intro": "Promover mostra o seu Spotlight a mais pessoas no respetivo feed, com a indicação «Patrocinado». Escolhe um orçamento e quem o deve ver; nós estimamos quantas pessoas poderá alcançar.",
+      "reviewNote": "Todas as promoções são revistas antes de serem exibidas. Se não for aprovada, é reembolsado na totalidade."
     },
-    "rightsAcknowledgement": "I own this content or have permission to share it, and it follows Abonten's content rules.",
-    "sponsored": "Sponsored",
-    "spotlightTagline": "Short videos from the events and places around you.",
-    "storiesTagline": "What the organizers and places you follow are up to right now.",
-    "storyExpired": "This Story has ended.",
-    "yourStory": "Your Story"
+    "rightsAcknowledgement": "Este conteúdo é meu ou tenho autorização para o partilhar, e respeita as regras de conteúdo do Abonten.",
+    "sponsored": "Patrocinado",
+    "spotlightTagline": "Vídeos curtos dos eventos e locais à sua volta.",
+    "storiesTagline": "O que os organizadores e locais que segue estão a fazer neste momento.",
+    "storyExpired": "Esta Story terminou.",
+    "yourStory": "A sua Story"
   },
   "coverage": {
-    "body": "We're still bringing events and places here. Anything already listed nearby still shows.",
-    "browseElsewhere": "Explore what's happening elsewhere",
-    "distanceAway": "{distance} away",
-    "exploreCity": "Explore {city}",
-    "joinWaitlist": "Tell me when it launches",
-    "leaveWaitlist": "Stop waiting",
-    "notLaunchedHere": "Abonten isn't here yet",
-    "notLaunchedIn": "Abonten isn't in {area} yet",
+    "body": "Ainda estamos a trazer eventos e locais para aqui. Tudo o que já está publicado nas proximidades continua visível.",
+    "browseElsewhere": "Explore o que acontece noutros lugares",
+    "distanceAway": "a {distance}",
+    "exploreCity": "Explorar {city}",
+    "joinWaitlist": "Avisem-me quando for lançado",
+    "leaveWaitlist": "Deixar de aguardar",
+    "notLaunchedHere": "O Abonten ainda não está aqui",
+    "notLaunchedIn": "O Abonten ainda não está em {area}",
     "reason": {
-      "most_active": "Most listings",
-      "nearest": "Nearest",
-      "recommended": "Suggested"
+      "most_active": "Mais páginas",
+      "nearest": "Mais próxima",
+      "recommended": "Sugerida"
     },
     "strategy": {
       "choose": {
-        "help": "Show a short list of launched cities, nearest first, and let the person pick.",
-        "label": "Let people choose"
+        "help": "Mostrar uma lista curta de cidades lançadas, da mais próxima para a mais distante, e deixar a pessoa escolher.",
+        "label": "Deixar as pessoas escolher"
       },
       "fixed": {
-        "help": "Always suggest the city you pick, marked “Suggested”. If it is later made coming soon, deactivated or removed, the nearest launched city is suggested instead.",
-        "label": "A city you choose"
+        "help": "Sugerir sempre a cidade que escolher, com a indicação «Sugerida». Se mais tarde passar a «em breve», for desativada ou removida, é sugerida em alternativa a cidade lançada mais próxima.",
+        "label": "Uma cidade à sua escolha"
       },
       "most_active": {
-        "help": "Suggest the launched city with the most upcoming events and places listed in its area (the counts under each city below), marked “Most listings”. A tie goes to the nearer city; if no city has any listings, the nearest is suggested.",
-        "label": "Most active launched city"
+        "help": "Sugerir a cidade lançada com mais eventos futuros e locais publicados na sua zona (os números por baixo de cada cidade), com a indicação «Mais páginas». Em caso de empate, ganha a cidade mais próxima; se nenhuma cidade tiver páginas, é sugerida a mais próxima.",
+        "label": "Cidade lançada mais ativa"
       },
       "nearest": {
-        "help": "Suggest the closest launched city, marked “Nearest”.",
-        "label": "Nearest launched city"
+        "help": "Sugerir a cidade lançada mais próxima, com a indicação «Mais próxima».",
+        "label": "Cidade lançada mais próxima"
       }
     },
-    "supplyPromptHere": "Run events or a place here? List them on Abonten.",
-    "supplyPromptIn": "Run events or a place in {area}? List them on Abonten.",
-    "waitingHere": "We'll tell you when Abonten launches here.",
-    "waitingIn": "We'll tell you when Abonten launches in {area}."
+    "supplyPromptHere": "Organiza eventos ou gere um local aqui? Publique-os no Abonten.",
+    "supplyPromptIn": "Organiza eventos ou gere um local em {area}? Publique-os no Abonten.",
+    "waitingHere": "Iremos avisá-lo quando o Abonten for lançado aqui.",
+    "waitingIn": "Iremos avisá-lo quando o Abonten for lançado em {area}."
   },
   "creditActivity": {
-    "bonusCredit": "Bonus credit",
-    "creditAddedByAbonten": "Credit added by Abonten",
-    "creditExpired": "Credit expired",
-    "creditRemovedByAbonten": "Credit removed by Abonten",
-    "creditReturned": "Credit returned",
-    "creditUpdate": "Credit update",
-    "expired": "Expired",
-    "fromPending": "From {label} · pending",
-    "labelExpired": "{label} · expired",
-    "pending": "Pending",
-    "promotionCredit": "Promotion credit",
-    "reversed": "Removed because the order was refunded or cancelled",
-    "reward": "Reward",
-    "rewardReversed": "Reward reversed",
-    "usedAtCheckout": "Used at checkout",
-    "usedOn": "Used on {label}",
-    "welcomeCredit": "Welcome credit",
-    "withdrawal": "Withdrawal"
+    "bonusCredit": "Crédito de bónus",
+    "creditAddedByAbonten": "Crédito adicionado pelo Abonten",
+    "creditExpired": "Crédito expirado",
+    "creditRemovedByAbonten": "Crédito removido pelo Abonten",
+    "creditReturned": "Crédito devolvido",
+    "creditUpdate": "Atualização de crédito",
+    "expired": "Expirado",
+    "fromPending": "De {label} · pendente",
+    "labelExpired": "{label} · expirado",
+    "pending": "Pendente",
+    "promotionCredit": "Crédito de promoção",
+    "reversed": "Removido porque a encomenda foi reembolsada ou cancelada",
+    "reward": "Recompensa",
+    "rewardReversed": "Recompensa revertida",
+    "usedAtCheckout": "Utilizado no pagamento",
+    "usedOn": "Utilizado em {label}",
+    "welcomeCredit": "Crédito de boas-vindas",
+    "withdrawal": "Levantamento"
   },
   "earn": {
-    "eventReferral": "Share an event. When someone buys a ticket with your link, you earn {percent} of the ticket price in credit after the event.",
-    "friendReferral": "Invite a friend. When they buy their first ticket, you get {amount}.",
-    "friendReferralBoth": "Invite a friend. When they buy their first ticket, you get {amount} and they get {friendAmount} off.",
-    "loyalty": "Keep going out. Buy tickets to {orders} different events within {days} days and the service fee on the last order comes back as credit after the event (up to {cap}).",
-    "organizerMilestone": "The first time one of your events sells to {buyers} different people, you get {amount} of promotion credit.",
-    "organizerRebate": "Organize events. Each month you get {percent} of what Abonten earned on your events that ended the month before, as promotion credit to feature your next one.",
-    "placeVisits": "Own a verified place? Show your check-in code: every different person who checks in during a month earns you {amount} of promotion credit (up to {max} a month).",
-    "promoterCommission": "Promote events. When an organizer offers a commission, every ticket sold through your share link earns you that share of the price, paid by the organizer as credit after the event.",
-    "venueRebate": "Own a verified place? When other organizers hold ticketed events there, you get {percent} of what Abonten earned on them, as promotion credit."
+    "eventReferral": "Partilhe um evento. Quando alguém compra um bilhete com a sua ligação, ganha {percent} do preço do bilhete em crédito depois do evento.",
+    "friendReferral": "Convide um amigo. Quando ele comprar o primeiro bilhete, recebe {amount}.",
+    "friendReferralBoth": "Convide um amigo. Quando ele comprar o primeiro bilhete, recebe {amount} e ele tem {friendAmount} de desconto.",
+    "loyalty": "Continue a sair. Compre bilhetes para {orders} eventos diferentes em {days} dias e a taxa de serviço da última encomenda regressa como crédito depois do evento (até {cap}).",
+    "organizerMilestone": "A primeira vez que um dos seus eventos vender a {buyers} pessoas diferentes, recebe {amount} de crédito de promoção.",
+    "organizerRebate": "Organize eventos. Todos os meses recebe {percent} do que o Abonten ganhou com os seus eventos terminados no mês anterior, como crédito de promoção para destacar o próximo.",
+    "placeVisits": "Tem um local verificado? Mostre o seu código de check-in: cada pessoa diferente que fizer check-in durante um mês dá-lhe {amount} de crédito de promoção (até {max} por mês).",
+    "promoterCommission": "Promova eventos. Quando um organizador oferece uma comissão, cada bilhete vendido através da sua ligação de partilha dá-lhe essa parte do preço, paga pelo organizador em crédito depois do evento.",
+    "venueRebate": "Tem um local verificado? Quando outros organizadores realizam lá eventos com bilhetes, recebe {percent} do que o Abonten ganhou com eles, como crédito de promoção."
   },
   "emailOtp": {
-    "codeSent": "If that email can receive mail, we've sent a {length}-digit code.",
-    "generic": "Something went wrong. Please try again.",
-    "invalidEmail": "Enter a valid email address.",
-    "invalidFormat": "Enter the {length}-digit code we emailed you.",
-    "invalidOrExpired": "That code is incorrect or has expired. Try again, or request a new one.",
-    "rateLimited": "Too many requests. Please wait a moment and try again."
+    "codeSent": "Se esse e-mail puder receber mensagens, enviámos um código de {length} dígitos.",
+    "generic": "Algo correu mal. Tente novamente.",
+    "invalidEmail": "Introduza um endereço de e-mail válido.",
+    "invalidFormat": "Introduza o código de {length} dígitos que lhe enviámos por e-mail.",
+    "invalidOrExpired": "Esse código está incorreto ou expirou. Tente novamente ou peça um novo.",
+    "rateLimited": "Demasiados pedidos. Aguarde um momento e tente novamente."
   },
   "errors": {
-    "generic": "Something went wrong. Please try again."
+    "generic": "Algo correu mal. Tente novamente."
   },
   "eventCategories": {
     "artsCultureAndTheatre": "Arts, Culture & Theatre",
@@ -176,27 +176,27 @@
     "techAndInnovation": "Tech & Innovation"
   },
   "eventCta": {
-    "buy": "Buy tickets",
-    "canceled": "Event canceled",
-    "ended": "Event ended",
-    "going": "View my ticket",
-    "in_progress": "Ticket sales closed",
-    "no_tickets": "Tickets not available yet",
-    "rsvp": "Reserve spot",
-    "sold_out": "Sold out"
+    "buy": "Comprar bilhetes",
+    "canceled": "Evento cancelado",
+    "ended": "Evento terminado",
+    "going": "Ver o meu bilhete",
+    "in_progress": "Venda de bilhetes encerrada",
+    "no_tickets": "Bilhetes ainda não disponíveis",
+    "rsvp": "Reservar lugar",
+    "sold_out": "Esgotado"
   },
   "eventDates": {
-    "notice": "Start or end time must be at least {hours} hours from now",
-    "nthNotice": "Date {n} must be at least {hours} hours from now",
-    "nthStartBeforeEnd": "Date {n}: start time must be earlier than end time",
-    "oneNotice": "The selected date must be at least {hours} hours from now",
-    "selectBoth": "Please select both start and end date",
-    "selectOne": "Please select at least one date",
-    "startBeforeEnd": "Start time must be earlier than end time"
+    "notice": "A hora de início ou de fim tem de ser pelo menos daqui a {hours} horas",
+    "nthNotice": "A data {n} tem de ser pelo menos daqui a {hours} horas",
+    "nthStartBeforeEnd": "Data {n}: a hora de início tem de ser anterior à hora de fim",
+    "oneNotice": "A data selecionada tem de ser pelo menos daqui a {hours} horas",
+    "selectBoth": "Selecione a data de início e a de fim",
+    "selectOne": "Selecione pelo menos uma data",
+    "startBeforeEnd": "A hora de início tem de ser anterior à hora de fim"
   },
   "eventStatus": {
-    "ended": "Event ended",
-    "ongoing": "Ongoing"
+    "ended": "Evento terminado",
+    "ongoing": "A decorrer"
   },
   "eventTypes": {
     "academicSeminars": "Academic Seminars",
@@ -422,216 +422,216 @@
     "zumbaClasses": "Zumba Classes"
   },
   "expires": {
-    "days": "Expires in {days}d",
-    "daysHours": "Expires in {days}d {hours}h",
-    "expired": "Expired",
-    "hours": "Expires in {hours}h",
-    "minutes": "Expires in {minutes}m"
+    "days": "Expira em {days} d",
+    "daysHours": "Expira em {days} d {hours} h",
+    "expired": "Expirado",
+    "hours": "Expira em {hours} h",
+    "minutes": "Expira em {minutes} min"
   },
   "fieldOpsCampaign": {
     "action": {
-      "activate": "Activate",
-      "archive": "Archive",
-      "complete": "Complete",
-      "pause": "Pause",
-      "resume": "Resume",
-      "wind_down": "Start winding down"
+      "activate": "Ativar",
+      "archive": "Arquivar",
+      "complete": "Concluir",
+      "pause": "Pausar",
+      "resume": "Retomar",
+      "wind_down": "Iniciar o encerramento gradual"
     },
     "status": {
-      "active": "Active",
-      "archived": "Archived",
-      "completed": "Completed",
-      "draft": "Draft",
-      "paused": "Paused",
-      "winding_down": "Winding down"
+      "active": "Ativo",
+      "archived": "Arquivado",
+      "completed": "Concluído",
+      "draft": "Rascunho",
+      "paused": "Em pausa",
+      "winding_down": "Em encerramento gradual"
     }
   },
   "filters": {
-    "anyDistance": "Any distance",
-    "customRange": "Custom range",
-    "pickDates": "Pick dates",
-    "priceFrom": "From {amount}",
+    "anyDistance": "Qualquer distância",
+    "customRange": "Intervalo personalizado",
+    "pickDates": "Escolher datas",
+    "priceFrom": "A partir de {amount}",
     "range": "{from} – {to}",
-    "ratingFrom": "From {rating}",
-    "upTo": "Up to {distance}"
+    "ratingFrom": "A partir de {rating}",
+    "upTo": "Até {distance}"
   },
   "fulfillment": {
-    "promotion": "Payment successful. Activating your promotion…",
-    "spotlightPromotion": "Payment successful. Sending your Spotlight promotion for review…",
-    "ticket": "Payment successful. Preparing your tickets…"
+    "promotion": "Pagamento efetuado. A ativar a sua promoção…",
+    "spotlightPromotion": "Pagamento efetuado. A enviar a sua promoção de Spotlight para revisão…",
+    "ticket": "Pagamento efetuado. A preparar os seus bilhetes…"
   },
   "invite": {
-    "alreadyBound": "You already joined with an invite.",
-    "alreadyBoundWith": "You already joined with {name}'s invite.",
-    "circular": "You can't join with the invite of someone you invited.",
-    "failed": "We couldn't apply the invite. Please try again.",
-    "invalid": "Enter the 7-character invite code.",
-    "joinedWith": "You joined with {name}'s invite.",
-    "joinedWithFriend": "You joined with a friend's invite.",
-    "notNew": "Invite codes are only for new accounts.",
-    "ownCode": "That's your own invite code.",
-    "rateLimited": "Too many tries. Wait a few minutes and try again.",
-    "referrerRestricted": "This invite code can't be used right now.",
-    "share": "Join me on Abonten to find events and places near you: {url}",
-    "shareWithOffer": "Join me on Abonten to find events and places near you and get {amount} off your first ticket: {url}",
-    "shareWithOfferMin": "Join me on Abonten to find events and places near you and get {amount} off your first ticket of {min} or more: {url}",
-    "tooLate": "Invite codes can only be used in your first week on Abonten.",
-    "unavailable": "Invites aren't available right now.",
-    "unknownCode": "We couldn't find that invite code. Check it and try again.",
-    "welcomeNeedsPhone": "{joined} Verify your phone number to get {amount} off your first ticket.",
-    "welcomeReady": "{joined} {amount} welcome credit is ready for your first ticket."
+    "alreadyBound": "Já aderiu com um convite.",
+    "alreadyBoundWith": "Já aderiu com o convite de {name}.",
+    "circular": "Não pode aderir com o convite de alguém que convidou.",
+    "failed": "Não foi possível aplicar o convite. Tente novamente.",
+    "invalid": "Introduza o código de convite de 7 caracteres.",
+    "joinedWith": "Aderiu com o convite de {name}.",
+    "joinedWithFriend": "Aderiu com o convite de um amigo.",
+    "notNew": "Os códigos de convite são apenas para contas novas.",
+    "ownCode": "Esse é o seu próprio código de convite.",
+    "rateLimited": "Demasiadas tentativas. Aguarde alguns minutos e tente novamente.",
+    "referrerRestricted": "Este código de convite não pode ser utilizado neste momento.",
+    "share": "Junte-se a mim no Abonten para encontrar eventos e locais perto de si: {url}",
+    "shareWithOffer": "Junte-se a mim no Abonten para encontrar eventos e locais perto de si e receba {amount} de desconto no seu primeiro bilhete: {url}",
+    "shareWithOfferMin": "Junte-se a mim no Abonten para encontrar eventos e locais perto de si e receba {amount} de desconto no seu primeiro bilhete de {min} ou mais: {url}",
+    "tooLate": "Os códigos de convite só podem ser utilizados na sua primeira semana no Abonten.",
+    "unavailable": "Os convites não estão disponíveis neste momento.",
+    "unknownCode": "Não encontrámos esse código de convite. Verifique-o e tente novamente.",
+    "welcomeNeedsPhone": "{joined} Verifique o seu número de telefone para receber {amount} de desconto no seu primeiro bilhete.",
+    "welcomeReady": "{joined} Tem {amount} de crédito de boas-vindas prontos para o seu primeiro bilhete."
   },
   "location": {
-    "invalid": "Location details are missing or invalid. Please try again."
+    "invalid": "Os dados de localização estão em falta ou são inválidos. Tente novamente."
   },
   "loyalty": {
-    "done": "Your service fee on the last order comes back as credit after that event (up to {cap}).",
-    "headline": "{counted} of {required} events",
-    "more": "{left} more ticket orders to different events within {days} days and we give you back the service fee on the last one as credit (up to {cap}).",
-    "moreMin": "{left} more ticket orders of {min} or more to different events within {days} days and we give you back the service fee on the last one as credit (up to {cap}).",
-    "oneMore": "One more ticket order to a different event within {days} days and we give you back its service fee as credit (up to {cap}).",
-    "oneMoreMin": "One more ticket order of {min} or more to a different event within {days} days and we give you back its service fee as credit (up to {cap})."
+    "done": "A sua taxa de serviço da última encomenda regressa como crédito depois desse evento (até {cap}).",
+    "headline": "{counted} de {required} eventos",
+    "more": "Mais {left} encomendas de bilhetes para eventos diferentes em {days} dias e devolvemos-lhe a taxa de serviço da última em crédito (até {cap}).",
+    "moreMin": "Mais {left} encomendas de bilhetes de {min} ou mais para eventos diferentes em {days} dias e devolvemos-lhe a taxa de serviço da última em crédito (até {cap}).",
+    "oneMore": "Mais uma encomenda de bilhetes para um evento diferente em {days} dias e devolvemos-lhe a respetiva taxa de serviço em crédito (até {cap}).",
+    "oneMoreMin": "Mais uma encomenda de bilhetes de {min} ou mais para um evento diferente em {days} dias e devolvemos-lhe a respetiva taxa de serviço em crédito (até {cap})."
   },
   "member": {
-    "former": "Former Abonten member",
-    "generic": "Abonten member"
+    "former": "Antigo membro do Abonten",
+    "generic": "Membro do Abonten"
   },
   "noticeWords": {
     "someone": "Someone"
   },
   "notices": {
     "area_launched": {
-      "body": "Events and places in {area} are on Abonten. Take a look.",
-      "title": "Abonten is now in {area}"
+      "body": "Os eventos e locais de {area} estão no Abonten. Dê uma vista de olhos.",
+      "title": "O Abonten já está em {area}"
     },
     "commission_pending": {
-      "body": "{amount} in commission is pending from {orders, plural, one {# ticket order} other {# ticket orders}} sold through your link. The organizer pays it as credit after the {orders, plural, one {event} other {events}}.",
-      "title": "You sold tickets as a promoter"
+      "body": "{amount} de comissão estão pendentes de {orders, plural, one {# encomenda de bilhetes vendida} other {# encomendas de bilhetes vendidas}} através da sua ligação. O organizador paga-a em crédito depois {orders, plural, one {do evento} other {dos eventos}}.",
+      "title": "Vendeu bilhetes como promotor"
     },
     "content_campaign": {
-      "title": "{status, select, pending_review {Your Spotlight promotion is in review} scheduled {Your Spotlight promotion is approved and scheduled} active {Your Spotlight promotion is live} rejected {Your Spotlight promotion was not approved} paused {Your Spotlight promotion is paused} completed {Your Spotlight promotion has finished} refunded {Your Spotlight promotion refund is on its way} other {Your Spotlight promotion is {status}}}"
+      "title": "{status, select, pending_review {A sua promoção de Spotlight está em revisão} scheduled {A sua promoção de Spotlight está aprovada e agendada} active {A sua promoção de Spotlight está ativa} rejected {A sua promoção de Spotlight não foi aprovada} paused {A sua promoção de Spotlight está em pausa} completed {A sua promoção de Spotlight terminou} refunded {O reembolso da sua promoção de Spotlight está a caminho} other {Estado da sua promoção de Spotlight: {status}}}"
     },
     "content_comment": {
-      "title": "{name} commented on your {kind, select, story {Story} other {Spotlight}}"
+      "title": "{actor} comentou {kind, select, story {a sua Story} other {o seu Spotlight}}"
     },
     "content_follow": {
-      "title": "{others, plural, =0 {{name} started following {target}} one {{name} and # other started following {target}} other {{name} and # others started following {target}}}"
+      "title": "{others, plural, =0 {{actor} começou a seguir {target}} one {{actor} e mais # pessoa começaram a seguir {target}} other {{actor} e mais # pessoas começaram a seguir {target}}}"
     },
     "content_like": {
-      "title": "{others, plural, =0 {{name} liked your {kind, select, story {Story} other {Spotlight}}} one {{name} and # other liked your {kind, select, story {Story} other {Spotlight}}} other {{name} and # others liked your {kind, select, story {Story} other {Spotlight}}}}"
+      "title": "{others, plural, =0 {{actor} gostou {kind, select, story {da sua Story} other {do seu Spotlight}}} one {{actor} e mais # pessoa gostaram {kind, select, story {da sua Story} other {do seu Spotlight}}} other {{actor} e mais # pessoas gostaram {kind, select, story {da sua Story} other {do seu Spotlight}}}}"
     },
     "content_moderation": {
-      "body": "It no longer appears in feeds. Contact support if you think this is a mistake.",
-      "title": "Your {kind, select, story {Story} other {Spotlight}} has been {state, select, restricted {restricted} hidden {hidden} other {removed}}"
+      "body": "Já não aparece nos feeds. Contacte o apoio se achar que se trata de um erro.",
+      "title": "{kind, select, story {A sua Story foi {state, select, restricted {restringida} hidden {ocultada} other {removida}}} other {O seu Spotlight foi {state, select, restricted {restringido} hidden {ocultado} other {removido}}}}"
     },
     "content_moderation_visible": {
-      "title": "Your {kind, select, story {Story} other {Spotlight}} is visible again"
+      "title": "{kind, select, story {A sua Story está novamente visível} other {O seu Spotlight está novamente visível}}"
     },
     "content_reaction": {
-      "title": "{others, plural, =0 {{name} reacted to your {kind, select, story {Story} other {Spotlight}}} one {{name} and # other reacted to your {kind, select, story {Story} other {Spotlight}}} other {{name} and # others reacted to your {kind, select, story {Story} other {Spotlight}}}}"
+      "title": "{others, plural, =0 {{actor} reagiu {emoji} {kind, select, story {à sua Story} other {ao seu Spotlight}}} one {{actor} e mais # pessoa reagiram {emoji} {kind, select, story {à sua Story} other {ao seu Spotlight}}} other {{actor} e mais # pessoas reagiram {emoji} {kind, select, story {à sua Story} other {ao seu Spotlight}}}}"
     },
     "content_reply": {
-      "title": "{name} replied to your comment"
+      "title": "{actor} respondeu ao seu comentário"
     },
     "digest_event": {
-      "body": "{title} · {when}",
-      "title": "An event you might like"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Um evento de que poderá gostar"
     },
     "digest_many": {
-      "body": "{first} and {more, plural, one {# more} other {# more}}",
-      "title": "{count} picks for you"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}} e {more, plural, one {mais #} other {mais #}}",
+      "title": "{count} sugestões para si"
     },
     "digest_organizer": {
-      "body": "{title} · {when}",
-      "title": "New event from @{username}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Novo evento de @{username}"
     },
     "digest_organizer_unknown": {
-      "body": "{title} · {when}",
-      "title": "New event from an organizer you follow"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Novo evento de um organizador que segue"
     },
     "digest_place": {
-      "body": "{title} · {when}",
-      "title": "New event at {place}"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Novo evento em {place}"
     },
     "digest_place_pick": {
-      "body": "{name}{category, select, other { · {category}}}",
-      "title": "A place you might like"
+      "body": "{hasCategory, select, yes {{name} · {category}} other {{name}}}",
+      "title": "Um local de que poderá gostar"
     },
     "digest_place_unknown": {
-      "body": "{title} · {when}",
-      "title": "New event at a place you follow"
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Novo evento num local que segue"
     },
     "event_cancelled_free": {
-      "body": "The organizer has cancelled {title}. Your registration has been cancelled.",
-      "title": "Event cancelled"
+      "body": "O organizador cancelou {title}. A sua inscrição foi cancelada.",
+      "title": "Evento cancelado"
     },
     "event_cancelled_paid": {
-      "body": "The organizer has cancelled {title}. Your ticket is no longer valid. A refund will be issued to the payment method used for your ticket.",
-      "title": "Event cancelled"
+      "body": "O organizador cancelou {title}. O seu bilhete já não é válido. Será feito um reembolso no método de pagamento utilizado no seu bilhete.",
+      "title": "Evento cancelado"
     },
     "event_reminder": {
-      "body": "{address, select, other {Starts {dayTime} at {address}. Your ticket is in My Events.}}",
-      "title": "Tomorrow: {title}"
+      "body": "{hasAddress, select, yes {Começa {dayTime} em {address}. O seu bilhete está em Os meus eventos.} other {Começa {dayTime}. O seu bilhete está em Os meus eventos.}}",
+      "title": "Amanhã: {title}"
     },
     "fieldops_assignment_changed": {
-      "title": "Assignment cancelled: {territory}"
+      "title": "{hasTerritory, select, yes {Atribuição cancelada: {territory}} other {Atribuição cancelada}}"
     },
     "fieldops_assignment_created": {
-      "body": "Open Field work to see your assignments.",
-      "title": "New assignment: {territory}"
+      "body": "{sameDay, select, yes {Está em {territory} no dia {from}.} other {Está em {territory} de {from} a {to}.}}",
+      "title": "Nova atribuição: {territory}"
     },
     "fieldops_claim_received": {
-      "body": "A member helped an owner claim a listing that was already on Abonten.",
-      "title": "Claim help: {place}"
+      "body": "Um membro ajudou um proprietário a reivindicar uma página que já estava no Abonten.",
+      "title": "Ajuda na reivindicação: {place}"
     },
     "fieldops_commission_reversed": {
       "title": "A commission was taken back"
     },
     "fieldops_confirmed": {
-      "body": "Your commission is confirmed and waiting for the next payout.",
-      "title": "Confirmed: {name}"
+      "body": "A sua comissão está confirmada e aguarda o próximo pagamento.",
+      "title": "{hasName, select, yes {Confirmado: {name}} other {Confirmado: a sua integração}}"
     },
     "fieldops_content_approved": {
-      "body": "Your post was approved. The commission is confirmed after the holding period.",
-      "title": "Content approved"
+      "body": "A sua publicação foi aprovada. A comissão é confirmada após o período de retenção.",
+      "title": "Conteúdo aprovado"
     },
     "fieldops_content_brief": {
-      "title": "New brief: {title}"
+      "title": "Novo briefing: {title}"
     },
     "fieldops_content_commission_confirmed": {
-      "body": "Your approved post is confirmed and waiting for the next payout.",
-      "title": "Content commission confirmed"
+      "body": "A sua publicação aprovada está confirmada e aguarda o próximo pagamento.",
+      "title": "Comissão de conteúdo confirmada"
     },
     "fieldops_content_received": {
-      "body": "The content creator sent in a deliverable.",
-      "title": "New content to review"
+      "body": "O criador de conteúdo enviou uma entrega.",
+      "title": "Novo conteúdo para rever"
     },
     "fieldops_content_rejected": {
-      "title": "Content not accepted"
+      "title": "Conteúdo não aceite"
     },
     "fieldops_event_received": {
-      "body": "A member onboarded an event. It pays once the event has run.",
-      "title": "Event: {title}"
+      "body": "Um membro integrou um evento. É pago depois de o evento se realizar.",
+      "title": "Evento: {title}"
     },
     "fieldops_flag_raised": {
-      "body": "An automatic check flagged this submission for an admin.",
-      "title": "Needs a look: {name}"
+      "body": "Uma verificação automática sinalizou esta submissão para um administrador.",
+      "title": "{hasName, select, yes {Precisa de atenção: {name}} other {Precisa de atenção: uma integração}}"
     },
     "fieldops_membership_added": {
-      "body": "Open Field work to see your assignments.",
-      "title": "You've joined {campaign}"
+      "body": "Abra Trabalho de campo para ver as suas atribuições.",
+      "title": "Juntou-se a {campaign}"
     },
     "fieldops_not_eligible": {
-      "body": "An automatic check after the holding period did not pass. Open it to see why.",
-      "title": "Not eligible: {name}"
+      "body": "Uma verificação automática após o período de retenção não foi aprovada. Abra para ver porquê.",
+      "title": "{hasName, select, yes {Não elegível: {name}} other {Não elegível: a sua integração}}"
     },
     "fieldops_onboarding_received": {
-      "body": "A member onboarded a place. Open it to review the submission.",
-      "title": "Review: {place}"
+      "body": "{hasMember, select, yes {{member} submeteu um novo negócio.} other {Um membro submeteu um novo negócio.}}",
+      "title": "Rever: {place}"
     },
     "fieldops_paid": {
-      "body": "Your Field Ops earnings have been sent to your mobile money number.",
-      "title": "You have been paid"
+      "body": "Os seus ganhos de Field Ops foram enviados para o seu número de mobile money.",
+      "title": "Recebeu o seu pagamento"
     },
     "fieldops_review_needs_changes": {
       "title": "{hasName, select, yes {Changes needed: {name}} other {Changes needed: your onboarding}}"
@@ -644,452 +644,452 @@
       "title": "{hasName, select, yes {Verified: {name}} other {Verified: your onboarding}}"
     },
     "fieldops_stipend": {
-      "body": "Your stipend for {monthYear} is ready for the next payout.",
-      "title": "Monthly stipend added"
+      "body": "O seu subsídio de {monthYear} está pronto para o próximo pagamento.",
+      "title": "Subsídio mensal adicionado"
     },
     "loyalty_reward": {
-      "body": "You've bought tickets to {required} different events. The {amount} service fee on this order comes back as credit after {event}.",
-      "title": "Your service fee is coming back"
+      "body": "{hasEvent, select, yes {Comprou bilhetes para {required} eventos diferentes. A taxa de serviço de {amount} desta encomenda regressa como crédito depois de {event}.} other {Comprou bilhetes para {required} eventos diferentes. A taxa de serviço de {amount} desta encomenda regressa como crédito depois do evento.}}",
+      "title": "A sua taxa de serviço vai regressar"
     },
     "milestone_reached": {
       "body": "Here's {amount} of promotion credit to feature your next event.",
-      "title": "{buyers} people bought tickets to your event"
+      "title": "{buyers} pessoas compraram bilhetes para o seu evento"
     },
     "orphan_refund": {
-      "body": "Your payment of {amount} arrived after the order had closed, so nothing was issued for it. We've asked for the full amount to go back to your payment method.",
-      "title": "We're refunding a payment"
+      "body": "O seu pagamento de {amount} chegou depois de a encomenda ter sido fechada, pelo que nada foi emitido. Pedimos que o montante total regresse ao seu método de pagamento.",
+      "title": "Estamos a reembolsar um pagamento"
     },
     "place_booking_accepted": {
-      "body": "Your booking request for {place} was accepted.",
-      "title": "Your booking was accepted"
+      "body": "{hasPlace, select, yes {O seu pedido de reserva para {place} foi aceite.} other {O seu pedido de reserva foi aceite.}}",
+      "title": "A sua reserva foi aceite"
     },
     "place_booking_cancelled": {
-      "body": "A customer cancelled their booking for {place}.",
-      "title": "A booking was cancelled"
+      "body": "{hasPlace, select, yes {Um cliente cancelou a reserva em {place}.} other {Um cliente cancelou a reserva no seu local.}}",
+      "title": "Uma reserva foi cancelada"
     },
     "place_booking_declined": {
-      "body": "Your booking request for {place} was declined.",
-      "title": "Your booking was declined"
+      "body": "{hasPlace, select, yes {O seu pedido de reserva para {place} foi recusado.} other {O seu pedido de reserva foi recusado.}}",
+      "title": "A sua reserva foi recusada"
     },
     "place_booking_requested": {
-      "body": "You have a new booking request for {place}.",
-      "title": "New booking request"
+      "body": "Tem um novo pedido de reserva para {place}.",
+      "title": "Novo pedido de reserva"
     },
     "place_claim_approved": {
-      "body": "You now manage {place}.",
-      "title": "Your claim was approved"
+      "body": "{hasPlace, select, yes {Passa agora a gerir {place}.} other {Passa agora a gerir o local.}}",
+      "title": "A sua reivindicação foi aprovada"
     },
     "place_claim_rejected": {
-      "body": "Your request to claim {place} was rejected.",
-      "title": "Your claim request was not approved"
+      "body": "{hasPlace, select, yes {O seu pedido para reivindicar {place} foi rejeitado.} other {O seu pedido para reivindicar o local foi rejeitado.}}",
+      "title": "O seu pedido de reivindicação não foi aprovado"
     },
     "promotion_credit_earned": {
-      "body": "{amount} of promotion credit from events that ended in {month}. Use it to feature an event or place.",
-      "title": "You earned promotion credit"
+      "body": "{amount} de crédito de promoção de eventos que terminaram em {month}. Utilize-o para destacar um evento ou um local.",
+      "title": "Ganhou crédito de promoção"
     },
     "promotion_credit_visits": {
       "body": "{visitors, plural, one {# verified visitor} other {# verified visitors}} checked in at your place in {month}. Here's {amount} of promotion credit to feature it.",
       "title": "Visitors earned you promotion credit"
     },
     "promotion_started_event": {
-      "body": "{title} is now featured ({duration}).",
-      "title": "Your event is now featured"
+      "body": "{title} está agora em destaque ({duration}).",
+      "title": "O seu evento está agora em destaque"
     },
     "promotion_started_generic": {
-      "body": "Your promotion is now active ({duration}).",
-      "title": "Your listing is now featured"
+      "body": "A sua promoção está agora ativa ({duration}).",
+      "title": "A sua página está agora em destaque"
     },
     "promotion_started_place": {
-      "body": "{title} is now featured ({duration}).",
-      "title": "Your place is now featured"
+      "body": "{title} está agora em destaque ({duration}).",
+      "title": "O seu local está agora em destaque"
     },
     "referral_joined": {
-      "body": "{name} joined Abonten with your invite. You'll get {amount} once they buy a ticket of {min} or more.",
-      "title": "A friend joined with your invite"
+      "body": "{name} aderiu ao Abonten com o seu convite. Receberá {amount} quando essa pessoa comprar um bilhete de {min} ou mais.",
+      "title": "Um amigo aderiu com o seu convite"
     },
     "referral_qualified": {
-      "body": "{name} qualified. {amount} is pending for you and unlocks {unlocks}.",
-      "title": "{path, select, first_order {Your friend bought a ticket} organizer_sales {Your friend's event is selling} other {Your friend claimed their place}}"
+      "body": "{name} cumpriu os requisitos. {amount} estão pendentes para si e ficam disponíveis {unlocks, select, event {depois do evento} other {dentro de cerca de duas semanas}}.",
+      "title": "{path, select, first_order {O seu amigo comprou um bilhete} organizer_sales {O evento do seu amigo está a vender} other {O seu amigo reivindicou o respetivo local}}"
     },
     "refund_completed": {
-      "body": "Your refund has been sent back to your payment method.",
-      "title": "Refund completed"
+      "body": "O seu reembolso foi devolvido ao seu método de pagamento.",
+      "title": "Reembolso concluído"
     },
     "refund_completed_credit": {
-      "body": "{credit} is back in your Abonten Credit.",
-      "title": "Refund completed"
+      "body": "{credit} regressaram ao seu Crédito Abonten.",
+      "title": "Reembolso concluído"
     },
     "refund_completed_plain": {
       "body": "Your refund is complete.",
-      "title": "Refund completed"
+      "title": "Reembolso concluído"
     },
     "refund_failed": {
-      "body": "We couldn't process your refund automatically. Our team will follow up.",
-      "title": "Refund couldn't be completed"
+      "body": "Não foi possível processar o seu reembolso automaticamente. A nossa equipa irá dar seguimento.",
+      "title": "Não foi possível concluir o reembolso"
     },
     "refund_failed_credit": {
-      "body": "Your {credit} of Abonten Credit is back, but we couldn't return the rest to your payment method automatically. Our team will follow up.",
-      "title": "Refund couldn't be completed"
+      "body": "Os seus {credit} de Crédito Abonten regressaram, mas não foi possível devolver automaticamente o restante ao seu método de pagamento. A nossa equipa irá dar seguimento.",
+      "title": "Não foi possível concluir o reembolso"
     },
     "refund_requested": {
-      "body": "We've requested a refund for your cancelled ticket. You'll be notified once it's completed.",
-      "title": "Refund requested"
+      "body": "Pedimos o reembolso do seu bilhete cancelado. Será avisado quando estiver concluído.",
+      "title": "Reembolso pedido"
     },
     "refund_requested_credit": {
-      "body": "{credit} is back in your Abonten Credit. We've requested the rest back to your payment method — you'll be notified once it's completed.",
-      "title": "Refund requested"
+      "body": "{credit} regressaram ao seu Crédito Abonten. Pedimos que o restante regresse ao seu método de pagamento — será avisado quando estiver concluído.",
+      "title": "Reembolso pedido"
     },
     "review_received_event": {
-      "body": "Someone left a {rating}-star review on {title}.",
-      "title": "New review"
+      "body": "{hasTitle, select, yes {Alguém deixou uma avaliação de {rating} estrelas em {title}.} other {Alguém deixou uma nova avaliação no seu evento.}}",
+      "title": "Nova avaliação"
     },
     "review_received_place": {
-      "body": "Someone left a {rating}-star review on {name}.",
-      "title": "New review"
+      "body": "{hasName, select, yes {Alguém deixou uma avaliação de {rating} estrelas em {name}.} other {Alguém deixou uma nova avaliação no seu local.}}",
+      "title": "Nova avaliação"
     },
     "review_reply_event": {
-      "body": "{name, select, other {See the reply on your review of {name}.}}",
-      "title": "The organizer replied to your review"
+      "body": "{hasName, select, yes {Veja a resposta à sua avaliação de {name}.} other {Veja a resposta à sua avaliação do evento.}}",
+      "title": "O organizador respondeu à sua avaliação"
     },
     "review_reply_place": {
-      "body": "{name, select, other {See the reply on your review of {name}.}}",
-      "title": "The owner replied to your review"
+      "body": "{hasName, select, yes {Veja a resposta à sua avaliação de {name}.} other {Veja a resposta à sua avaliação do local.}}",
+      "title": "O proprietário respondeu à sua avaliação"
     },
     "reward_available": {
-      "body": "{amount} in Abonten Credit is ready to use.",
-      "title": "Your credit is ready"
+      "body": "{amount} de Crédito Abonten estão prontos a utilizar.",
+      "title": "O seu crédito está pronto"
     },
     "reward_pending": {
-      "body": "{amount} is pending from {tickets, plural, one {# referred ticket} other {# referred tickets}}. It unlocks after the {tickets, plural, one {event} other {events}}.",
-      "title": "You have a reward on the way"
+      "body": "{amount} estão pendentes de {tickets, plural, one {# bilhete referenciado} other {# bilhetes referenciados}}. Ficam disponíveis depois {tickets, plural, one {do evento} other {dos eventos}}.",
+      "title": "Tem uma recompensa a caminho"
     },
     "ticket_confirmed": {
-      "body": "{title, select, other {Your ticket for {title} is confirmed.}}",
-      "title": "Ticket confirmed"
+      "body": "{hasTitle, select, yes {O seu bilhete para {title} está confirmado.} other {O seu bilhete está confirmado.}}",
+      "title": "Bilhete confirmado"
     },
     "verification_approved": {
-      "body": "{subject} is now verified on Abonten.",
-      "title": "Verified"
+      "body": "{hasSubject, select, yes {{subject}} other {{subjectKind, select, place {Este local} other {O seu perfil de organizador}}}} está agora verificado no Abonten.",
+      "title": "Verificado"
     },
     "verification_info_requested": {
-      "body": "To verify {subject}, we need: {reason}",
-      "title": "More information needed"
+      "body": "Para verificar {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {este local} other {o seu perfil de organizador}}}}, precisamos de: {reason}",
+      "title": "São necessárias mais informações"
     },
     "verification_rejected": {
-      "body": "Your verification request for {subject} was not approved. {reason}",
-      "title": "Verification not approved"
+      "body": "O seu pedido de verificação para {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {este local} other {o seu perfil de organizador}}}} não foi aprovado. {reason}",
+      "title": "Verificação não aprovada"
     },
     "verification_revoked": {
-      "body": "The verified badge for {subject} was removed. {reason}",
-      "title": "Verification removed"
+      "body": "O selo Verificado de {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {este local} other {o seu perfil de organizador}}}} foi removido. {reason}",
+      "title": "Verificação removida"
     },
     "verification_submitted": {
-      "body": "We have your verification request for {subject}. We will notify you when it has been reviewed.",
-      "title": "Verification request received"
+      "body": "Temos o seu pedido de verificação para {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {este local} other {o seu perfil de organizador}}}}. Iremos avisá-lo quando tiver sido analisado.",
+      "title": "Pedido de verificação recebido"
     },
     "welcome_credit": {
-      "body": "{amount} off your first ticket order of {min} or more. Use it within {days} days.",
-      "title": "You have welcome credit"
+      "body": "{amount} de desconto na sua primeira encomenda de bilhetes de {min} ou mais. Utilize-o no prazo de {days} dias.",
+      "title": "Tem crédito de boas-vindas"
     }
   },
   "openStatus": {
-    "closed": "Closed",
-    "closedOpensAt": "Closed · Opens at {time}",
-    "closedToday": "Closed today",
-    "openClosesAt": "Open now · Closes at {time}",
-    "openNow": "Open now",
-    "permanentlyClosed": "Permanently closed",
-    "temporarilyClosed": "Temporarily closed"
+    "closed": "Fechado",
+    "closedOpensAt": "Fechado · Abre às {time}",
+    "closedToday": "Fechado hoje",
+    "openClosesAt": "Aberto agora · Fecha às {time}",
+    "openNow": "Aberto agora",
+    "permanentlyClosed": "Encerrado permanentemente",
+    "temporarilyClosed": "Temporariamente encerrado"
   },
   "otp": {
-    "expired": "That code has expired. Please request a new one.",
-    "invalidFormat": "Enter the code we sent you.",
-    "tooManyAttempts": "Too many incorrect attempts. Please request a new code."
+    "expired": "Esse código expirou. Peça um novo.",
+    "invalidFormat": "Introduza o código que lhe enviámos.",
+    "tooManyAttempts": "Demasiadas tentativas incorretas. Peça um novo código."
   },
   "paymentMethods": {
     "apple_pay": "Apple Pay",
-    "bank_redirect": "Pay by bank",
-    "bank_transfer": "Bank transfer",
-    "card": "Card",
-    "eft": "Instant EFT",
+    "bank_redirect": "Pagar pelo banco",
+    "bank_transfer": "Transferência bancária",
+    "card": "Cartão",
+    "eft": "EFT instantânea",
     "google_pay": "Google Pay",
-    "mobile_money": "Mobile Money",
-    "qr": "QR code",
+    "mobile_money": "Mobile money",
+    "qr": "Código QR",
     "ussd": "USSD",
-    "wallet": "Wallet"
+    "wallet": "Carteira"
   },
   "periods": {
     "comparison": {
-      "30d": "vs previous 30 days",
-      "7d": "vs previous 7 days",
-      "today": "vs yesterday"
+      "30d": "face aos 30 dias anteriores",
+      "7d": "face aos 7 dias anteriores",
+      "today": "face a ontem"
     },
     "dashboard": {
-      "30d": "Last 30 days",
-      "7d": "Last 7 days",
-      "all": "All time",
-      "today": "Today"
+      "30d": "Últimos 30 dias",
+      "7d": "Últimos 7 dias",
+      "all": "Desde sempre",
+      "today": "Hoje"
     },
     "transactions": {
-      "all": "All time",
-      "last3Months": "Last 3 months",
-      "lastMonth": "Last month",
-      "thisMonth": "This month",
-      "today": "Today"
+      "all": "Desde sempre",
+      "last3Months": "Últimos 3 meses",
+      "lastMonth": "Mês passado",
+      "thisMonth": "Este mês",
+      "today": "Hoje"
     }
   },
   "phone": {
-    "empty": "Enter a phone number.",
-    "invalid": "Enter a valid phone number.",
-    "invalid_country": "Select a country code.",
-    "too_long": "That phone number is too long.",
-    "too_short": "That phone number is too short."
+    "empty": "Introduza um número de telefone.",
+    "invalid": "Introduza um número de telefone válido.",
+    "invalid_country": "Selecione um indicativo de país.",
+    "too_long": "Esse número de telefone é demasiado longo.",
+    "too_short": "Esse número de telefone é demasiado curto."
   },
   "placeCategories": {
     "cinema": "Cinema",
-    "entertainment": "Entertainment",
-    "food-spot": "Food spot",
-    "gaming-center": "Gaming centre",
-    "go-karting": "Go-karting",
-    "gym-fitness": "Gym / Fitness",
+    "entertainment": "Entretenimento",
+    "food-spot": "Local de comida",
+    "gaming-center": "Centro de jogos",
+    "go-karting": "Karting",
+    "gym-fitness": "Ginásio / Fitness",
     "hotel": "Hotel",
-    "nightclub": "Nightclub",
-    "other": "Other",
+    "nightclub": "Discoteca",
+    "other": "Outro",
     "pub": "Pub",
-    "recreation": "Recreation",
-    "restaurant": "Restaurant",
-    "skating": "Skating",
-    "supermarket": "Supermarket"
+    "recreation": "Lazer",
+    "restaurant": "Restaurante",
+    "skating": "Patinagem",
+    "supermarket": "Supermercado"
   },
   "placeSetup": {
-    "contact": "Add a phone number or website",
-    "hours": "Set your opening hours",
-    "photos": "Add at least {count} photos",
-    "services": "List what you offer",
-    "verification": "Verify your place"
+    "contact": "Adicione um número de telefone ou um website",
+    "hours": "Defina o seu horário de funcionamento",
+    "photos": "Adicione pelo menos {count} fotos",
+    "services": "Indique o que oferece",
+    "verification": "Verifique o seu local"
   },
   "profileCompletion": {
     "avatar": {
-      "description": "Shown on your profile and next to your reviews and messages.",
-      "done": "Profile photo added",
-      "label": "Add a profile photo"
+      "description": "Apresentada no seu perfil e junto às suas avaliações e mensagens.",
+      "done": "Foto de perfil adicionada",
+      "label": "Adicione uma foto de perfil"
     },
     "email": {
-      "confirm": "Confirm your email",
-      "description": "Needed to pay for tickets and promotions — your tickets and receipts are emailed to you. You can also sign in with a code sent there.",
-      "done": "Email verified",
-      "label": "Add your email",
-      "verify": "Verify your email"
+      "confirm": "Confirme o seu e-mail",
+      "description": "Necessário para pagar bilhetes e promoções — os seus bilhetes e recibos são-lhe enviados por e-mail. Também pode iniciar sessão com um código enviado para lá.",
+      "done": "E-mail verificado",
+      "label": "Adicione o seu e-mail",
+      "verify": "Verifique o seu e-mail"
     },
     "group": {
-      "account": "Sign-in & contact",
-      "profile": "Your profile"
+      "account": "Início de sessão e contacto",
+      "profile": "O seu perfil"
     },
     "name": {
-      "description": "Shown on your profile so people know who you are.",
-      "done": "Name added",
-      "label": "Add your name"
+      "description": "Apresentado no seu perfil para que as pessoas saibam quem é.",
+      "done": "Nome adicionado",
+      "label": "Adicione o seu nome"
     },
     "phone": {
-      "description": "Lets you sign in with a code sent by text — a way back in if you can't get into your email or Google account.",
-      "done": "Phone number verified",
-      "label": "Add your phone number",
-      "verify": "Verify your phone number"
+      "description": "Permite iniciar sessão com um código enviado por SMS — uma forma de voltar a entrar se não conseguir aceder ao seu e-mail ou à sua conta Google.",
+      "done": "Número de telefone verificado",
+      "label": "Adicione o seu número de telefone",
+      "verify": "Verifique o seu número de telefone"
     },
     "username": {
-      "description": "Your @handle — it's shown on your reviews and in your profile link. The one you have now was made up for you.",
-      "done": "Username chosen",
-      "label": "Choose a username"
+      "description": "O seu @identificador — aparece nas suas avaliações e na ligação do seu perfil. O que tem agora foi criado automaticamente.",
+      "done": "Nome de utilizador escolhido",
+      "label": "Escolha um nome de utilizador"
     }
   },
   "promotionBudget": {
-    "choose": "Choose a budget.",
-    "chooseDuration": "Choose how long the promotion can run.",
-    "largest": "The largest budget is {amount}.",
-    "smallest": "The smallest budget is {amount}.",
-    "step": "Budgets go up in steps of {amount}."
+    "choose": "Escolha um orçamento.",
+    "chooseDuration": "Escolha durante quanto tempo a promoção pode decorrer.",
+    "largest": "O orçamento máximo é {amount}.",
+    "smallest": "O orçamento mínimo é {amount}.",
+    "step": "Os orçamentos aumentam em incrementos de {amount}."
   },
   "promotionSummary": {
     "duration": {
-      "days": "{count, plural, one {# day} other {# days}}",
-      "hours": "{count, plural, one {# hour} other {# hours}}",
-      "months": "{count, plural, one {# month} other {# months}}",
-      "weeks": "{count, plural, one {# week} other {# weeks}}"
+      "days": "{count, plural, one {# dia} other {# dias}}",
+      "hours": "{count, plural, one {# hora} other {# horas}}",
+      "months": "{count, plural, one {# mês} other {# meses}}",
+      "weeks": "{count, plural, one {# semana} other {# semanas}}"
     },
     "kind": {
-      "event": "Featured event",
-      "place": "Featured place",
-      "spotlight": "Promoted Spotlight"
+      "event": "Evento em destaque",
+      "place": "Local em destaque",
+      "spotlight": "Spotlight promovido"
     },
     "state": {
-      "active": "Active",
-      "in_review": "In review",
-      "paused": "Paused",
-      "scheduled": "Starts soon"
+      "active": "Ativo",
+      "in_review": "Em revisão",
+      "paused": "Em pausa",
+      "scheduled": "Começa em breve"
     },
-    "statusLine": "{tier} package · {state}"
+    "statusLine": "Pacote de {tier} · {state}"
   },
   "refundStatus": {
-    "failed": "Refund failed",
-    "issued": "Refund issued",
-    "none": "No refund yet",
-    "noneDescription": "Issued once every ticket in this order is cancelled.",
-    "pending": "Refund pending"
+    "failed": "Reembolso falhou",
+    "issued": "Reembolso emitido",
+    "none": "Ainda sem reembolso",
+    "noneDescription": "Emitido quando todos os bilhetes desta encomenda forem cancelados.",
+    "pending": "Reembolso pendente"
   },
   "reviewSort": {
-    "helpful": "Most helpful",
-    "recent": "Most recent"
+    "helpful": "Mais úteis",
+    "recent": "Mais recentes"
   },
   "searchFilters": {
-    "anyRating": "Any rating",
-    "anywhere": "Anywhere",
-    "category": "Category",
-    "minStars": "{rating}+ stars",
-    "openNow": "Open now",
+    "anyRating": "Qualquer classificação",
+    "anywhere": "Em qualquer lugar",
+    "category": "Categoria",
+    "minStars": "{rating}+ estrelas",
+    "openNow": "Aberto agora",
     "price": {
-      "any": "Any price",
-      "free": "Free",
-      "under": "Under {amount}"
+      "any": "Qualquer preço",
+      "free": "Grátis",
+      "under": "Menos de {amount}"
     },
     "when": {
-      "any": "Any time",
-      "month": "Next 30 days",
-      "today": "Today",
-      "tomorrow": "Tomorrow",
-      "week": "Next 7 days",
-      "weekend": "This weekend"
+      "any": "A qualquer momento",
+      "month": "Próximos 30 dias",
+      "today": "Hoje",
+      "tomorrow": "Amanhã",
+      "week": "Próximos 7 dias",
+      "weekend": "Este fim de semana"
     },
-    "within": "Within {distance}",
-    "withinOf": "Within {distance} of {location}"
+    "within": "A menos de {distance}",
+    "withinOf": "A menos de {distance} de {location}"
   },
   "storyReply": {
-    "nameReacted": "{name} reacted to your story",
-    "nameReplied": "{name} replied to your story",
-    "notifReacted": "Reacted {text} to your story",
-    "notifReplied": "Replied to your story: {text}",
-    "reacted": "Reacted to your story",
-    "replied": "Replied to your story",
-    "youReacted": "You reacted to their story",
-    "youReplied": "You replied to their story"
+    "nameReacted": "{name} reagiu à sua story",
+    "nameReplied": "{name} respondeu à sua story",
+    "notifReacted": "Reagiu {text} à sua story",
+    "notifReplied": "Respondeu à sua story: {text}",
+    "reacted": "Reagiu à sua story",
+    "replied": "Respondeu à sua story",
+    "youReacted": "Reagiu à story desta pessoa",
+    "youReplied": "Respondeu à story desta pessoa"
   },
   "ticketCapacity": {
-    "allShared": "{capacity, plural, one {The one seat is shared across your ticket types.} other {All # seats are shared across your ticket types.}}",
-    "exceeds": "Ticket quantities total {reserved}, which exceeds the event capacity of {capacity}.",
-    "reservedShared": "{reserved, plural, one {# seat} other {# seats}} reserved by the quantities you set; the remaining {pool, plural, one {# seat is} other {# seats are}} shared by the {types, plural, one {type} other {# types}} without a quantity.",
-    "usesAll": "{capacity, plural, one {Ticket quantities use the one seat.} other {Ticket quantities use all # seats.}}",
-    "usesSome": "Ticket quantities use {reserved} of {capacity, plural, one {# seat} other {# seats}}; {left} will stay unsold unless you raise a quantity."
+    "allShared": "{capacity, plural, one {O único lugar é partilhado pelos seus tipos de bilhete.} other {Os # lugares são partilhados pelos seus tipos de bilhete.}}",
+    "exceeds": "As quantidades de bilhetes totalizam {reserved}, o que excede a lotação do evento, de {capacity}.",
+    "reservedShared": "{reserved, plural, one {# lugar reservado} other {# lugares reservados}} pelas quantidades que definiu; {pool, plural, one {o # lugar restante é partilhado} other {os # lugares restantes são partilhados}} {types, plural, one {pelo tipo} other {pelos # tipos}} sem quantidade.",
+    "usesAll": "{capacity, plural, one {As quantidades de bilhetes ocupam o único lugar.} other {As quantidades de bilhetes ocupam os # lugares.}}",
+    "usesSome": "As quantidades de bilhetes ocupam {reserved} de {capacity, plural, one {# lugar} other {# lugares}}; {left} ficarão por vender, a menos que aumente uma quantidade."
   },
   "ticketTiers": {
-    "freeEventPromoCodes": "Promo codes aren't available on a free event. Remove them, or make the event paid.",
-    "freeReserved": "“{name}” is reserved for free events. Give this ticket type another name.",
-    "paidNeedsPrice": "Paid tickets need a price greater than zero. To let people in for free, make the event free."
+    "freeEventPromoCodes": "Os códigos promocionais não estão disponíveis num evento gratuito. Remova-os ou torne o evento pago.",
+    "freeReserved": "«{name}» está reservado a eventos gratuitos. Dê outro nome a este tipo de bilhete.",
+    "paidNeedsPrice": "Os bilhetes pagos precisam de um preço superior a zero. Para deixar entrar gratuitamente, torne o evento gratuito."
   },
   "verification": {
     "badgeExplanation": {
-      "organizer": "Abonten reviewed documents supporting this organizer's identity or registration and their link to this account. Verification is not a guarantee of any event, its delivery, safety or quality.",
-      "place": "Abonten reviewed documents supporting this business's registration and its link to the account that manages this listing. Verification is not a guarantee of the business, its service, safety or quality."
+      "organizer": "O Abonten analisou documentos que comprovam a identidade ou o registo deste organizador e a sua ligação a esta conta. A verificação não é uma garantia de qualquer evento, da sua realização, da sua segurança ou da sua qualidade.",
+      "place": "O Abonten analisou documentos que comprovam o registo deste negócio e a sua ligação à conta que gere esta página. A verificação não é uma garantia do negócio, do seu serviço, da sua segurança ou da sua qualidade."
     },
     "badgeLabel": {
-      "organizer": "Verified organizer",
-      "place": "Verified place"
+      "organizer": "Organizador verificado",
+      "place": "Local verificado"
     },
     "chip": {
-      "approved": "Verified",
-      "draft": "Draft",
-      "needs_info": "Action needed",
-      "pending_review": "In review",
-      "rejected": "Not approved",
-      "revoked": "Removed",
-      "withdrawn": "Withdrawn"
+      "approved": "Verificado",
+      "draft": "Rascunho",
+      "needs_info": "Ação necessária",
+      "pending_review": "Em revisão",
+      "rejected": "Não aprovado",
+      "revoked": "Removido",
+      "withdrawn": "Retirado"
     },
     "howReviewWorks": {
-      "1": "Submitting documents does not verify you on its own. An Abonten reviewer looks at what you send.",
-      "2": "We may come back and ask for something else before deciding.",
-      "3": "You will get a notification when a decision is made, and the reason if it is not approved.",
-      "4": "Your documents are private. Only Abonten reviewers can open them, and they are deleted once they are no longer needed."
+      "1": "Enviar documentos não o verifica por si só. Um revisor do Abonten analisa o que envia.",
+      "2": "Podemos voltar a contactá-lo para pedir algo mais antes de decidir.",
+      "3": "Receberá uma notificação quando for tomada uma decisão, com o motivo caso não seja aprovada.",
+      "4": "Os seus documentos são privados. Só os revisores do Abonten os podem abrir, e são eliminados quando deixam de ser necessários."
     },
     "organizerType": {
-      "business": "Registered business",
-      "individual": "Individual or informal organizer",
-      "organisation": "Organisation, church, school or association"
+      "business": "Empresa registada",
+      "individual": "Organizador individual ou informal",
+      "organisation": "Organização, igreja, escola ou associação"
     },
     "organizerTypeDescription": {
-      "business": "You run events through a registered company or business name. Send your business registration certificate, and an operating permit or licence if you have one.",
-      "individual": "You organise events in your own name and have no registered company. Send anything that shows the events are really yours, such as a venue booking, an event permit, or flyers and tickets from events you ran.",
-      "organisation": "You organise on behalf of a church, school, NGO, association or similar. Send the body's registration document, plus a letter on its letterhead if you are not the person named on it."
+      "business": "Organiza eventos através de uma empresa ou nome comercial registado. Envie a sua certidão de registo comercial e, se tiver, um alvará ou licença de funcionamento.",
+      "individual": "Organiza eventos em nome próprio e não tem uma empresa registada. Envie qualquer coisa que mostre que os eventos são realmente seus, como uma reserva de espaço, uma licença do evento ou cartazes e bilhetes de eventos que organizou.",
+      "organisation": "Organiza em nome de uma igreja, escola, ONG, associação ou entidade semelhante. Envie o documento de registo da entidade e uma carta em papel timbrado da mesma, caso não seja a pessoa nele indicada."
     },
     "owner": {
-      "approvedOrganizerBody": "Your Verified badge is showing on your events and profile.",
-      "approvedOrganizerTitle": "Verified organizer",
-      "approvedPlaceBody": "Your Verified badge is showing on your listing.",
-      "approvedPlaceTitle": "Verified place",
-      "draftBody": "Add at least one document, then send it for review.",
-      "draftTitle": "Finish your request",
-      "needsInfoBody": "A reviewer has asked for something else before they can decide.",
-      "needsInfoTitle": "We need more information",
-      "pendingBody": "We have your request for {name}. We will notify you when it has been reviewed.",
-      "pendingTitle": "In review",
-      "rejectedBody": "Your request was not approved. You can send a new one with different documents.",
-      "rejectedTitle": "Not approved",
-      "revokedBody": "This verification was removed. You can send a new request.",
-      "revokedTitle": "Verification removed",
-      "thisPlace": "this place",
-      "withdrawnBody": "This request was cancelled. You can start a new one any time.",
-      "withdrawnTitle": "Request withdrawn",
-      "yourOrganizerProfile": "your organizer profile"
+      "approvedOrganizerBody": "O seu selo Verificado está visível nos seus eventos e no seu perfil.",
+      "approvedOrganizerTitle": "Organizador verificado",
+      "approvedPlaceBody": "O seu selo Verificado está visível na sua página.",
+      "approvedPlaceTitle": "Local verificado",
+      "draftBody": "Adicione pelo menos um documento e envie-o para revisão.",
+      "draftTitle": "Conclua o seu pedido",
+      "needsInfoBody": "Um revisor pediu algo mais antes de poder decidir.",
+      "needsInfoTitle": "Precisamos de mais informações",
+      "pendingBody": "Temos o seu pedido para {name}. Iremos avisá-lo quando tiver sido analisado.",
+      "pendingTitle": "Em revisão",
+      "rejectedBody": "O seu pedido não foi aprovado. Pode enviar um novo com outros documentos.",
+      "rejectedTitle": "Não aprovado",
+      "revokedBody": "Esta verificação foi removida. Pode enviar um novo pedido.",
+      "revokedTitle": "Verificação removida",
+      "thisPlace": "este local",
+      "withdrawnBody": "Este pedido foi cancelado. Pode iniciar um novo quando quiser.",
+      "withdrawnTitle": "Pedido retirado",
+      "yourOrganizerProfile": "o seu perfil de organizador"
     },
     "status": {
-      "approved": "Verified",
-      "draft": "Not submitted",
-      "needs_info": "More information needed",
-      "pending_review": "In review",
-      "rejected": "Not approved",
-      "revoked": "Verification removed",
-      "withdrawn": "Withdrawn"
+      "approved": "Verificado",
+      "draft": "Não enviado",
+      "needs_info": "São necessárias mais informações",
+      "pending_review": "Em revisão",
+      "rejected": "Não aprovado",
+      "revoked": "Verificação removida",
+      "withdrawn": "Retirado"
     },
     "whyVerify": {
       "organizer": {
-        "1": "A Verified badge shows next to your name on your events and your profile.",
-        "2": "Ticket buyers can see that Abonten has checked who is behind the event.",
-        "3": "Verification is optional. You can create and publish events without it."
+        "1": "Um selo Verificado aparece junto ao seu nome nos seus eventos e no seu perfil.",
+        "2": "Quem compra bilhetes pode ver que o Abonten verificou quem está por detrás do evento.",
+        "3": "A verificação é opcional. Pode criar e publicar eventos sem ela."
       },
       "place": {
-        "1": "A Verified badge shows on your listing, in search results and on the map.",
-        "2": "People are more willing to book and visit a business Abonten has checked.",
-        "3": "Some Abonten programmes, such as promotion credit for visits, are open only to verified places."
+        "1": "Um selo Verificado aparece na sua página, nos resultados de pesquisa e no mapa.",
+        "2": "As pessoas estão mais dispostas a reservar e a visitar um negócio que o Abonten analisou.",
+        "3": "Alguns programas do Abonten, como o crédito de promoção por visitas, estão abertos apenas a locais verificados."
       }
     }
   },
   "weekly": {
-    "defaultTitle": "This week on Abonten",
+    "defaultTitle": "Esta semana no Abonten",
     "editionStatus": {
-      "archived": "Archived",
-      "draft": "Draft",
-      "published": "Published",
-      "scheduled": "Scheduled"
+      "archived": "Arquivado",
+      "draft": "Rascunho",
+      "published": "Publicado",
+      "scheduled": "Agendado"
     },
     "issue": {
-      "duplicate_subjects": "Some listings appear in more than one section.",
-      "empty_sections": "Some sections have no listings and will be hidden.",
-      "invalid_items": "Some listings will not be shown.",
-      "no_valid_items": "Add at least one listing that can be shown.",
-      "organizer_concentration": "One organizer has several events in the same section.",
-      "recently_featured": "Some listings were in recent editions for this area.",
-      "scope_retired": "This edition's area has been retired.",
-      "week_over": "This week has already ended."
+      "duplicate_subjects": "Algumas páginas aparecem em mais do que uma secção.",
+      "empty_sections": "Algumas secções não têm páginas e serão ocultadas.",
+      "invalid_items": "Algumas páginas não serão mostradas.",
+      "no_valid_items": "Adicione pelo menos uma página que possa ser mostrada.",
+      "organizer_concentration": "Um organizador tem vários eventos na mesma secção.",
+      "recently_featured": "Algumas páginas estiveram em edições recentes desta zona.",
+      "scope_retired": "A zona desta edição foi descontinuada.",
+      "week_over": "Esta semana já terminou."
     },
-    "tagline": "The events, places and experiences worth discovering this week.",
+    "tagline": "Os eventos, locais e experiências que vale a pena descobrir esta semana.",
     "validity": {
-      "archived": "Archived",
-      "canceled": "Event cancelled",
-      "ended": "Event has ended",
-      "hidden": "Hidden by moderation",
-      "missing": "Listing no longer exists",
-      "not_published": "Not published",
-      "permanently_closed": "Permanently closed",
-      "removed": "Removed by moderation",
-      "restricted": "Restricted by moderation",
-      "unsupported": "Not supported yet"
+      "archived": "Arquivado",
+      "canceled": "Evento cancelado",
+      "ended": "O evento terminou",
+      "hidden": "Ocultado pela moderação",
+      "missing": "A página já não existe",
+      "not_published": "Não publicado",
+      "permanently_closed": "Encerrado permanentemente",
+      "removed": "Removido pela moderação",
+      "restricted": "Restringido pela moderação",
+      "unsupported": "Ainda não suportado"
     }
   }
 }

@@ -182,7 +182,10 @@ function buildDbIndex(): DbIndex {
       exact.set(english, key);
     }
   }
-  for (const [key, english] of Object.entries(db ?? {})) {
+  for (const [key, quoted] of Object.entries(db ?? {})) {
+    // The catalog quotes a literal `<id>` for ICU ('<id>'); the database
+    // sends it bare.
+    const english = quoted.replace(/'(<[^<>']*>)'/g, "$1");
     if (!/\{\d+\}/.test(english)) {
       exact.set(english, `db.${key}`);
       continue;

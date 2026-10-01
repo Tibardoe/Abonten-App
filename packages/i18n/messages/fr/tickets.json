@@ -1,11 +1,11 @@
 {
-  "aRefundOfTheTicketPrice": "A refund of the ticket price will be issued to your original payment method. The Abonten service fee is not refunded.",
-  "areYouSureYouWantTo": "Are you sure you want to cancel this ticket?",
-  "cancelThisTicket": "Cancel this ticket?",
-  "cancelTicket": "Cancel ticket",
+  "aRefundOfTheTicketPrice": "Le prix du billet sera remboursé sur votre moyen de paiement d'origine. Les frais de service Abonten ne sont pas remboursés.",
+  "areYouSureYouWantTo": "Voulez-vous vraiment annuler ce billet ?",
+  "cancelThisTicket": "Annuler ce billet ?",
+  "cancelTicket": "Annuler le billet",
   "cancelTicketRequestRefund": "Cancel ticket & request refund",
-  "cancelling": "Cancelling…",
-  "checkedIn": "Checked in",
+  "cancelling": "Annulation…",
+  "checkedIn": "Enregistré à l'entrée",
   "couldnTCancel": "Annulation impossible",
   "couldnTCreateTheReceipt": "Couldn't create the receipt",
   "downloadReceiptPdf": "Download receipt (PDF)",
@@ -27,7 +27,7 @@
       "title": "No refunds yet"
     }
   },
-  "keepTicket": "Keep ticket",
+  "keepTicket": "Garder le billet",
   "locationUnavailable": "Location unavailable",
   "noQrCode": "No QR code",
   "pleaseTryAgainInAMoment": "Veuillez réessayer dans un instant.",
@@ -40,8 +40,8 @@
   "thisTicket": "this ticket",
   "thisTicketCouldNotBeFound": "This ticket could not be found.",
   "ticket": "Ticket",
-  "ticketCancelled": "Ticket cancelled",
+  "ticketCancelled": "Billet annulé",
   "ticketReference": "Ticket reference",
-  "viewEvent": "View event",
+  "viewEvent": "Voir l'événement",
   "yourTickets": "your tickets"
 }

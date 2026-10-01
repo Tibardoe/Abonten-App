@@ -5,7 +5,7 @@
   "addEmail": "Add email",
   "addPhoneNumber": "Add phone number",
   "alertsAndPicks": "Alerts and picks",
-  "alertsAndPicksArePausedUntil": "Alerts and picks are paused until {toLocaleDateString}.",
+  "alertsAndPicksArePausedUntil": "Alerts and picks are paused until {date}.",
   "alertsAndPicksArePausedUntil2": "Alerts and picks are paused until {toLocaleDateString}.",
   "alertsTurnedOff": "Alerts turned off.",
   "alwaysOn": "Always on",

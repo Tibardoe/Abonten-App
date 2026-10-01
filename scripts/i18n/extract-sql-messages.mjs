@@ -65,7 +65,10 @@ function slug(text) {
 
 function icu(text) {
   let n = 0;
-  return text.replace(/%/g, () => `{${n++}}`);
+  // `<id>` in a message is text, not a rich-text tag: ICU quotes it.
+  return text
+    .replace(/<[^<>']*>/g, (tag) => `'${tag}'`)
+    .replace(/%/g, () => `{${n++}}`);
 }
 
 const sorted = [...texts].sort((a, b) => a.localeCompare(b));

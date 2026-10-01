@@ -1,12 +1,12 @@
 {
-  "aRefundOfTheTicketPrice": "A refund of the ticket price will be issued to your original payment method. The Abonten service fee is not refunded.",
-  "areYouSureYouWantTo": "Are you sure you want to cancel this ticket?",
-  "cancelThisTicket": "Cancel this ticket?",
-  "cancelTicket": "Cancel ticket",
+  "aRefundOfTheTicketPrice": "O preço do bilhete será reembolsado no seu método de pagamento original. A taxa de serviço do Abonten não é reembolsada.",
+  "areYouSureYouWantTo": "Tem a certeza de que quer cancelar este bilhete?",
+  "cancelThisTicket": "Cancelar este bilhete?",
+  "cancelTicket": "Cancelar bilhete",
   "cancelTicketRequestRefund": "Cancel ticket & request refund",
-  "cancelling": "Cancelling…",
-  "checkedIn": "Checked in",
-  "couldnTCancel": "Couldn't cancel",
+  "cancelling": "A cancelar…",
+  "checkedIn": "Entrada registada",
+  "couldnTCancel": "Não foi possível cancelar",
   "couldnTCreateTheReceipt": "Couldn't create the receipt",
   "downloadReceiptPdf": "Download receipt (PDF)",
   "empty": {
@@ -27,10 +27,10 @@
       "title": "No refunds yet"
     }
   },
-  "keepTicket": "Keep ticket",
+  "keepTicket": "Manter bilhete",
   "locationUnavailable": "Location unavailable",
   "noQrCode": "No QR code",
-  "pleaseTryAgainInAMoment": "Please try again in a moment.",
+  "pleaseTryAgainInAMoment": "Tente novamente dentro de momentos.",
   "preparingReceipt": "Preparing receipt…",
   "receiptReady": "Receipt ready",
   "seat": "Seat {seat_number}",
@@ -40,8 +40,8 @@
   "thisTicket": "this ticket",
   "thisTicketCouldNotBeFound": "This ticket could not be found.",
   "ticket": "Ticket",
-  "ticketCancelled": "Ticket cancelled",
+  "ticketCancelled": "Bilhete cancelado",
   "ticketReference": "Ticket reference",
-  "viewEvent": "View event",
+  "viewEvent": "Ver evento",
   "yourTickets": "your tickets"
 }
