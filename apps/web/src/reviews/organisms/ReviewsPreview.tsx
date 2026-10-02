@@ -4,6 +4,7 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewListItem from "@/components/molecules/ReviewListItem";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewListRow,
@@ -12,7 +13,7 @@ import {
   reviewsPath,
 } from "@abonten/core/reviews/reviewList";
 import { ChevronRight } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import OrganizerReplyControls from "../molecules/OrganizerReplyControls";
@@ -49,6 +50,7 @@ export default function ReviewsPreview({
   addReviewButton: ReactNode;
 }) {
   const t = useTranslations("reviews");
+  const locale = useLocale();
 
   const { data: user } = useCurrentUser();
   const viewerId = user?.id ?? null;
@@ -89,7 +91,7 @@ export default function ReviewsPreview({
               className="mt-1 flex items-center gap-2 hover:underline"
             >
               <span className="text-lg font-semibold">
-                {average.toFixed(1)}
+                {formatRating(average, locale)}
               </span>
               <StarRatingDisplay rating={summary.data?.average ?? 0} />
               <span className="text-sm text-muted-foreground">

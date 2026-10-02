@@ -1,8 +1,9 @@
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { SearchOrganizerHit } from "@abonten/types/searchType";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -32,7 +33,7 @@ export function OrganizerRow({
       ? t("placesCount", { count: organizer.placeCount })
       : null,
     organizer.ratingCount > 0 && organizer.avgRating != null
-      ? `★ ${organizer.avgRating.toFixed(1)} (${organizer.ratingCount})`
+      ? `★ ${formatRating(organizer.avgRating, getCurrentLocale())} (${organizer.ratingCount})`
       : null,
   ].filter(Boolean);
 

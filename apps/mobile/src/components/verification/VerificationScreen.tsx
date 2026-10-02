@@ -11,6 +11,7 @@ import {
 } from "@/features/verification/useVerification";
 import { useQueryView } from "@/lib/useQueryView";
 import { uuidv4 } from "@/lib/uuid";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import {
   howReviewWorks,
   organizerTypeDescription,
@@ -36,7 +37,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import * as DocumentPicker from "expo-document-picker";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -62,11 +63,8 @@ const STATUS_TONE: Record<
   revoked: "warning",
 };
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+const humanSize = (bytes: number): string =>
+  formatFileSize(bytes, getCurrentLocale());
 
 function DocRow({
   doc,

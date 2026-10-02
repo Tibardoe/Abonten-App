@@ -14,7 +14,10 @@ import { weeklyShareUrl } from "@/lib/share";
 import { useQueryView } from "@/lib/useQueryView";
 import { useShareLink } from "@/lib/useShareLink";
 import { signOff } from "@abonten/core/brand/signOff";
-import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
+import {
+  WEEKLY_BANNER_MAX_SLIDES,
+  weeklyBannerSlides,
+} from "@abonten/core/weekly/bannerSlides";
 import {
   WEEKLY_PRODUCT_NAME,
   WEEKLY_TAGLINE_KEY,
@@ -49,7 +52,11 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const e = doc.edition;
-  const slides = weeklyBannerSlides(doc.sections);
+  const slides = weeklyBannerSlides(
+    doc.sections,
+    WEEKLY_BANNER_MAX_SLIDES,
+    locale,
+  );
   const intro = weeklyParagraphs(e.intro);
   const pickCount = doc.sections.reduce((n, s) => n + s.items.length, 0);
   const height = Math.round(Math.min(Math.max(width * 1.15, 420), 560));

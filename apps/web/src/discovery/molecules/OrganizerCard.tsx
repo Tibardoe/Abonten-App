@@ -2,8 +2,9 @@
 
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { SearchOrganizerHit } from "@abonten/types/searchType";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -24,6 +25,7 @@ export default function OrganizerCard({
   organizer: SearchOrganizerHit;
 }) {
   const t = useTranslations("discovery");
+  const locale = useLocale();
 
   const href = `/user/${organizer.username}/posts`;
   const avatar = buildCloudinaryUrl(
@@ -79,7 +81,8 @@ export default function OrganizerCard({
             {organizer.ratingCount > 0 && organizer.avgRating != null ? (
               <span className="inline-flex items-center gap-1">
                 <IoStar aria-hidden className="text-primary" />
-                {organizer.avgRating.toFixed(1)} ({organizer.ratingCount})
+                {formatRating(organizer.avgRating, locale)} (
+                {organizer.ratingCount})
               </span>
             ) : null}
             {organizer.isNew ? (

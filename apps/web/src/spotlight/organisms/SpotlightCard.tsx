@@ -3,12 +3,13 @@
 import { cn } from "@/components/lib/utils";
 import { useToast } from "@/hooks/useToast";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
+import { formatCompactCount } from "@abonten/core/i18n/format";
 import type {
   ContentFeedItem,
   ContentMediaItem,
   ContentViewSurface,
 } from "@abonten/types/contentType";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -38,12 +39,6 @@ import ContentCtaButton from "../molecules/ContentCtaButton";
 import ContentMoreMenu from "../molecules/ContentMoreMenu";
 import FollowButton from "../molecules/FollowButton";
 import ContentCommentsSheet from "./ContentCommentsSheet";
-
-function compact(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
 
 function videoSource(media: ContentMediaItem): string {
   return media.playbackStatus === "ready" && media.playbackUrl
@@ -463,6 +458,7 @@ function RailButton({
   count?: number;
   children: React.ReactNode;
 }) {
+  const locale = useLocale();
   return (
     <button
       type="button"
@@ -473,7 +469,9 @@ function RailButton({
     >
       {children}
       {count !== undefined ? (
-        <span className="text-xs font-semibold">{compact(count)}</span>
+        <span className="text-xs font-semibold">
+          {formatCompactCount(count, locale)}
+        </span>
       ) : null}
     </button>
   );

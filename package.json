@@ -17,6 +17,7 @@
     "check:action-calls": "node scripts/check-action-calls.mjs --check",
     "check:docs": "node scripts/check-docs.mjs",
     "check:mobile-a11y": "node scripts/check-mobile-a11y.mjs",
+    "check:mobile-boot": "node scripts/check-mobile-boot.mjs",
     "check:deep-link-decoder": "node scripts/check-deep-link-decoder.mjs",
     "check:i18n": "node scripts/check-i18n.mjs && node scripts/i18n/check-keys.mjs --check && node scripts/i18n/gen-catalog-index.mjs --check && node scripts/i18n/extract-strings.mjs --target web --check && node scripts/i18n/extract-strings.mjs --target mobile --check && node scripts/i18n/check-literals.mjs --target web --check && node scripts/i18n/check-literals.mjs --target mobile --check && node scripts/i18n/extract-strings.mjs --target server --check && node scripts/i18n/check-literals.mjs --target server --check && node scripts/i18n/check-literals.mjs --target core --check && node scripts/i18n/check-literals.mjs --target shared --check && node scripts/i18n/extract-sql-messages.mjs --check && node scripts/i18n/extract-validation-messages.mjs --check && node scripts/i18n/check-code-values.mjs --check && node scripts/i18n/check-label-logic.mjs --check && node scripts/i18n/check-formats.mjs --check && node scripts/i18n/check-fragments.mjs --check && node scripts/i18n/gen-route-messages.mjs --check",
     "check:locale-routing": "node scripts/check-locale-routing.mjs",

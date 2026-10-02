@@ -24,7 +24,7 @@ import {
   useModalHandoff,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Fragment, useState } from "react";
@@ -306,7 +306,7 @@ export function ContentOptionsSheet({
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
                       accessibilityLabel={t("speed", {
-                        formatSpeed: formatSpeed(rate),
+                        formatSpeed: formatSpeed(rate, getCurrentLocale()),
                       })}
                       className={[
                         "min-h-[40px] flex-1 items-center justify-center rounded-xl border",
@@ -322,7 +322,9 @@ export function ContentOptionsSheet({
                           selected ? "text-primary-foreground" : "",
                         ].join(" ")}
                       >
-                        {rate === 1 ? t("normal") : formatSpeed(rate)}
+                        {rate === 1
+                          ? t("normal")
+                          : formatSpeed(rate, getCurrentLocale())}
                       </AppText>
                     </Pressable>
                   );

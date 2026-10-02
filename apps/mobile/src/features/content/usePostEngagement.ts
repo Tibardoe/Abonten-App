@@ -39,8 +39,8 @@ function makeSwitch(
   field: "liked" | "saved",
   countField: "likes" | "saves",
   send: (postId: string, value: boolean) => Promise<Envelope<CountsResult>>,
-  /** A key in the `spotlight` namespace, worded when it is shown. */
-  failure: string,
+  /** A key of the `spotlight` catalog, worded when it is shown. */
+  failure: "couldnTUpdateThatLike" | "couldnTUpdateYourSavedSpotlights",
   afterSettle?: () => void,
 ) {
   const baselines = new Map<string, Baseline>();

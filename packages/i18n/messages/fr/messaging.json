@@ -94,7 +94,7 @@
   "messageNotSentTapToRetry": "Message non envoyé. Touchez pour réessayer",
   "messages": "Messages",
   "messagesFromPeopleInterestedInYour": "Messages de personnes intéressées par vos événements et vos lieux",
-  "messagesUnread": "Messages, {unread} non lus",
+  "messagesUnread": "Messages, {unread, plural, one {# non lu} other {# non lus}}",
   "microphoneAccessIsNeededToRecord": "L'accès au micro est nécessaire pour enregistrer un message vocal.",
   "microphoneEnabled": "Micro activé",
   "microphoneNeeded": "Micro requis",

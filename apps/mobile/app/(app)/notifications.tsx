@@ -17,7 +17,10 @@ import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Pressable, SectionList, View } from "react-native";
 
-type Section = { title: string; data: NotificationType[] };
+const DAYS = ["today", "yesterday", "earlier"] as const;
+type Day = (typeof DAYS)[number];
+
+type Section = { day: Day; data: NotificationType[] };
 
 function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -28,26 +31,24 @@ function startOfDay(d: Date): number {
 function groupByDay(items: NotificationType[]): Section[] {
   const today = startOfDay(new Date());
   const yesterday = today - 86_400_000;
-  const buckets: Record<string, NotificationType[]> = {
-    Today: [],
-    Yesterday: [],
-    Earlier: [],
+  // Sorted by what the day IS; its name is chosen where it is shown. The
+  // buckets were once filled under English names and read back under the
+  // translated ones, so the screen crashed in every other language.
+  const buckets: Record<Day, NotificationType[]> = {
+    today: [],
+    yesterday: [],
+    earlier: [],
   };
   for (const n of items) {
     const day = startOfDay(new Date(n.created_at));
-    if (day >= today) buckets.Today.push(n);
-    else if (day >= yesterday) buckets.Yesterday.push(n);
-    else buckets.Earlier.push(n);
+    if (day >= today) buckets.today.push(n);
+    else if (day >= yesterday) buckets.yesterday.push(n);
+    else buckets.earlier.push(n);
   }
-  return (
-    [
-      translatorFor("notifications")("today"),
-      translatorFor("notifications")("yesterday"),
-      translatorFor("notifications")("earlier"),
-    ] as const
-  )
-    .filter((k) => buckets[k].length > 0)
-    .map((k) => ({ title: k, data: buckets[k] }));
+  return DAYS.filter((day) => buckets[day].length > 0).map((day) => ({
+    day,
+    data: buckets[day],
+  }));
 }
 
 export default function Notifications() {
@@ -114,7 +115,7 @@ export default function Notifications() {
           stickySectionHeadersEnabled={false}
           renderSectionHeader={({ section }) => (
             <AppText variant="overline" className="px-4 pb-1.5 pt-4">
-              {section.title}
+              {t(section.day)}
             </AppText>
           )}
           renderItem={({ item }) => (

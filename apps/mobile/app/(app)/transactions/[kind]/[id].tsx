@@ -14,6 +14,7 @@ import {
   ScreenError,
   StatusPill,
   resolveStatus,
+  statusLabel,
 } from "@abonten/ui-native";
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
@@ -62,6 +63,7 @@ function dt(value: string, locale: string) {
 export default function TransactionDetailScreen() {
   const t = useTranslations("transactions");
   const tc = useTranslations("core");
+  const tCommon = useTranslations("common");
   const { locale } = useLocale();
 
   const { kind, id } = useLocalSearchParams<{ kind: string; id: string }>();
@@ -150,7 +152,9 @@ export default function TransactionDetailScreen() {
           tone={STATUS_ICON_TONE[statusInfo.tone]}
         />
         <View>
-          <AppText variant="bodyStrong">{statusInfo.label}</AppText>
+          <AppText variant="bodyStrong">
+            {statusLabel(tCommon, statusInfo)}
+          </AppText>
           {contextualDate ? (
             <AppText variant="caption">
               {contextualLabel}: {dt(contextualDate, locale)}

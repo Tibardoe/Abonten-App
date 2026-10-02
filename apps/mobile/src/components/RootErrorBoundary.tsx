@@ -1,6 +1,6 @@
 import { reportClientError } from "@/lib/reportClientError";
 import { Sentry } from "@/lib/sentry";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import type { ErrorBoundaryProps } from "expo-router";
 import { usePathname } from "expo-router";
 import { useEffect } from "react";
@@ -22,7 +22,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // It therefore uses only bare react-native primitives + hardcoded colours;
 // pulling in a themed component (AppText / Button from @abonten/ui-native)
 // made the error screen itself crash with "useTheme must be used within
-// <ThemeProvider>", masking the real error.
+// <ThemeProvider>", masking the real error. Its words come from
+// translatorFor(), which reads the catalogs without a provider and speaks
+// the language the app was showing (the device's, if it never got that
+// far); useTranslations() here crashed the error screen the same way.
+// scripts/check-mobile-boot.mjs keeps both files free of provider hooks.
 
 const PALETTE = {
   light: { bg: "#ffffff", fg: "#0b0f14", muted: "#5b6570", accent: "#0f9d8f" },
@@ -30,7 +34,7 @@ const PALETTE = {
 };
 
 export function RootErrorBoundary({ error, retry }: ErrorBoundaryProps) {
-  const t = useTranslations("common");
+  const t = translatorFor("common");
 
   const pathname = usePathname();
   const scheme = useColorScheme() === "dark" ? "dark" : "light";

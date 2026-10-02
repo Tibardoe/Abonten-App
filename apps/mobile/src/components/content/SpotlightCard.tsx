@@ -27,7 +27,7 @@ import {
 } from "@abonten/core/content/feedPlayback";
 import { formatSpeed, holdRate } from "@abonten/core/content/playbackControls";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
-import { formatCount } from "@abonten/core/i18n/format";
+import { formatCompactCount, formatCount } from "@abonten/core/i18n/format";
 import type {
   ContentFeedItem,
   ContentViewSurface,
@@ -39,7 +39,11 @@ import {
   type IoniconName,
   useReducedMotion,
 } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -68,11 +72,8 @@ import { SpotlightCommentsPanel } from "./SpotlightCommentsPanel";
 import { SpotlightTimeline } from "./SpotlightTimeline";
 import { type SpotlightPlayback, SpotlightVideo } from "./SpotlightVideo";
 
-function compact(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
+const compact = (n: number): string =>
+  formatCompactCount(n, getCurrentLocale());
 
 // Comments shrink the video to this share of the card.
 const COMPACT_VIDEO_RATIO = 0.34;
@@ -442,7 +443,9 @@ export const SpotlightCard = memo(function SpotlightCard({
           <View className="flex-row items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5">
             <Icon name="play-forward" size={14} color="#fff" />
             <AppText className="text-[13px] font-semibold text-white">
-              {t("speed", { formatSpeed: formatSpeed(rate) })}
+              {t("speed", {
+                formatSpeed: formatSpeed(rate, getCurrentLocale()),
+              })}
             </AppText>
           </View>
         </Animated.View>

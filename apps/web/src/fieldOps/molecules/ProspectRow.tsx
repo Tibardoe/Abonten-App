@@ -13,11 +13,13 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-const KIND_LABEL: Record<FieldOpsProspect["kind"], string> = {
+// Keys of the fieldOps catalog. ("Event", the word itself, sat here in
+// place of its key and was printed as "fieldOps.Event".)
+const KIND_LABEL = {
   place: "business",
-  event: "Event",
+  event: "event",
   organizer: "organizer",
-};
+} as const satisfies Record<FieldOpsProspect["kind"], string>;
 
 /**
  * One logged business with its contact history. The member who logged it

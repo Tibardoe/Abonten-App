@@ -39,80 +39,121 @@ export type StatusKind =
   | "soldOut"
   | "unknown";
 
-export type StatusEntry = {
-  kind: StatusKind;
+type RegistryEntry = {
   tone: StatusTone;
   icon: IoniconName;
-  /** A catalog key in the common namespace ("status.pending"), or "" for
-   * an unknown state; the override in ResolveOptions is already text. */
-  label: string;
+  /** The state's name: a key of the `common` catalog, or null for a state
+   * the registry has no name for. */
+  labelKey: string | null;
 };
 
-const REGISTRY: Record<StatusKind, Omit<StatusEntry, "kind">> = {
+const REGISTRY = {
   success: {
     tone: "success",
     icon: "checkmark-circle",
-    label: "status.successful",
+    labelKey: "status.successful",
   },
   approved: {
     tone: "success",
     icon: "checkmark-circle",
-    label: "status.approved",
+    labelKey: "status.approved",
   },
-  pending: { tone: "warning", icon: "time-outline", label: "status.pending" },
+  pending: {
+    tone: "warning",
+    icon: "time-outline",
+    labelKey: "status.pending",
+  },
   processing: {
     tone: "warning",
     icon: "sync-outline",
-    label: "status.processing",
+    labelKey: "status.processing",
   },
   refundPending: {
     tone: "warning",
     icon: "arrow-undo-outline",
-    label: "status.refundPending",
+    labelKey: "status.refundPending",
   },
-  failed: { tone: "danger", icon: "close-circle", label: "status.failed" },
+  failed: { tone: "danger", icon: "close-circle", labelKey: "status.failed" },
   cancelled: {
     tone: "danger",
     icon: "close-circle",
-    label: "status.cancelled",
+    labelKey: "status.cancelled",
   },
-  rejected: { tone: "danger", icon: "close-circle", label: "status.rejected" },
+  rejected: {
+    tone: "danger",
+    icon: "close-circle",
+    labelKey: "status.rejected",
+  },
   reversed: {
     tone: "danger",
     icon: "arrow-undo-outline",
-    label: "status.reversed",
+    labelKey: "status.reversed",
   },
   refunded: {
     tone: "neutral",
     icon: "arrow-undo-outline",
-    label: "status.refunded",
+    labelKey: "status.refunded",
   },
-  expired: { tone: "neutral", icon: "time-outline", label: "status.expired" },
+  expired: {
+    tone: "neutral",
+    icon: "time-outline",
+    labelKey: "status.expired",
+  },
   used: {
     tone: "neutral",
     icon: "checkmark-done-circle",
-    label: "status.used",
+    labelKey: "status.used",
   },
   inactive: {
     tone: "neutral",
     icon: "ellipse-outline",
-    label: "status.inactive",
+    labelKey: "status.inactive",
   },
-  draft: { tone: "neutral", icon: "document-outline", label: "status.draft" },
-  ended: { tone: "neutral", icon: "flag-outline", label: "status.ended" },
-  active: { tone: "brand", icon: "checkmark-circle", label: "status.active" },
+  draft: {
+    tone: "neutral",
+    icon: "document-outline",
+    labelKey: "status.draft",
+  },
+  ended: { tone: "neutral", icon: "flag-outline", labelKey: "status.ended" },
+  active: {
+    tone: "brand",
+    icon: "checkmark-circle",
+    labelKey: "status.active",
+  },
   upcoming: {
     tone: "brand",
     icon: "calendar-outline",
-    label: "status.upcoming",
+    labelKey: "status.upcoming",
   },
-  ongoing: { tone: "brand", icon: "radio-outline", label: "status.ongoing" },
+  ongoing: { tone: "brand", icon: "radio-outline", labelKey: "status.ongoing" },
   soldOut: {
     tone: "neutral",
     icon: "pricetag-outline",
-    label: "status.soldOut",
+    labelKey: "status.soldOut",
   },
-  unknown: { tone: "neutral", icon: "ellipse-outline", label: "" },
+  unknown: { tone: "neutral", icon: "ellipse-outline", labelKey: null },
+} as const satisfies Record<StatusKind, RegistryEntry>;
+
+/** Every name the registry can give a state: keys of the `common` catalog. */
+export type StatusLabelKey = NonNullable<
+  (typeof REGISTRY)[StatusKind]["labelKey"]
+>;
+
+export type StatusEntry = {
+  kind: StatusKind;
+  tone: StatusTone;
+  icon: IoniconName;
+  /**
+   * The state's name as a key of the `common` catalog ("status.pending"):
+   * translate it. Null when `text` says it instead.
+   */
+  labelKey: StatusLabelKey | null;
+  /**
+   * Words to show as they are: a caller's own label, or a state the
+   * registry does not know, made readable. Never a catalog key. Null when
+   * `labelKey` names the state.
+   */
+  text: string | null;
 };
 
 /**
@@ -197,18 +238,45 @@ export function resolveStatus(
     .replace(/[\s-]+/g, "_");
   const kind = NORMALISE[key] ?? opts.fallback ?? "unknown";
   const base = REGISTRY[kind];
-  const label =
+  const text =
     opts.label ??
-    (base.label ||
-      // Unknown status: title-case the raw value so nothing renders blank.
-      key
-        .split("_")
-        .filter(Boolean)
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" "));
-  return { kind, tone: base.tone, icon: base.icon, label };
+    (base.labelKey
+      ? null
+      : // Unknown status: title-case the raw value so nothing renders blank.
+        key
+          .split("_")
+          .filter(Boolean)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" "));
+  return {
+    kind,
+    tone: base.tone,
+    icon: base.icon,
+    labelKey: text === null ? base.labelKey : null,
+    text,
+  };
 }
 
 export function statusEntry(kind: StatusKind): StatusEntry {
-  return { kind, ...REGISTRY[kind] };
+  const base = REGISTRY[kind];
+  return {
+    kind,
+    tone: base.tone,
+    icon: base.icon,
+    labelKey: base.labelKey,
+    text: null,
+  };
+}
+
+/**
+ * The words for a resolved status. `t` is a translator of the `common`
+ * catalog. Printing `entry.labelKey` itself shows "status.pending" to a
+ * person, which the transaction screen did.
+ */
+export function statusLabel(
+  t: (key: StatusLabelKey) => string,
+  entry: StatusEntry,
+): string {
+  if (entry.text !== null) return entry.text;
+  return entry.labelKey ? t(entry.labelKey) : "";
 }

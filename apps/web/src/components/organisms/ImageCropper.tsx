@@ -1,5 +1,6 @@
 import { useToast } from "@/hooks/useToast";
 import { canvasPreview, downscaleCanvas } from "@/utils/canvasPreview";
+import { formatDecimal } from "@abonten/core/i18n/format";
 import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import ReactCrop, {
@@ -10,7 +11,7 @@ import ReactCrop, {
   convertToPixelCrop,
 } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 
@@ -57,6 +58,7 @@ export default function ImageCropper({
   maxOutputDimension,
 }: ImageCropType) {
   const t = useTranslations("common");
+  const locale = useLocale();
   const toast = useToast();
 
   const imgRef = useRef<HTMLImageElement>(null);
@@ -211,7 +213,7 @@ export default function ImageCropper({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="block text-sm font-medium text-muted-foreground mb-1">
-                    {t("zoomX", { toFixed: scale.toFixed(1) })}
+                    {t("zoomX", { toFixed: formatDecimal(scale, locale, 1) })}
                   </span>
                   <Slider
                     min={0.1}

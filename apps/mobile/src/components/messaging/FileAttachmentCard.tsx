@@ -1,7 +1,8 @@
 import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type { MessageRow } from "@abonten/api-client";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import { AppText, Icon, useToast } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import * as WebBrowser from "expo-web-browser";
 import { ActivityIndicator, Pressable, View } from "react-native";
@@ -10,9 +11,7 @@ type MessageAttachmentRow = MessageRow["attachments"][number];
 
 function formatBytes(n: number | null): string | null {
   if (!n) return null;
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  return formatFileSize(n, getCurrentLocale());
 }
 
 function iconFor(mime: string | null) {

@@ -8,6 +8,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { WeeklyItem } from "@abonten/types/weeklyType";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
@@ -80,7 +81,7 @@ export default function WeeklyHeroItem({
   const rating =
     place?.avg_rating != null && Number(place.avg_rating) > 0
       ? t("ratingWithReviews", {
-          rating: Number(place.avg_rating).toFixed(1),
+          rating: formatRating(place.avg_rating, locale),
           count: place.review_count ?? 0,
         })
       : null;

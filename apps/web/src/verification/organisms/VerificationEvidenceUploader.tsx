@@ -5,12 +5,13 @@ import { requestVerificationEvidenceUpload } from "@/actions/verification/reques
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { actionUnreachable } from "@/utils/actionUnreachable";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import {
   VERIFICATION_EVIDENCE_MIME_TYPES,
   type VerificationEvidenceSummary,
   type VerificationEvidenceType,
 } from "@abonten/types/verificationType";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import {
   IoCheckmarkCircle,
@@ -38,12 +39,6 @@ type Staged = {
 
 const ACCEPT = VERIFICATION_EVIDENCE_MIME_TYPES.join(",");
 
-function readableSize(bytes: number): string {
-  return bytes >= 1024 * 1024
-    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-
 export default function VerificationEvidenceUploader({
   caseId,
   evidenceTypes,
@@ -62,6 +57,7 @@ export default function VerificationEvidenceUploader({
   onChanged: () => void;
 }) {
   const t = useTranslations("verification");
+  const locale = useLocale();
 
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -212,7 +208,8 @@ export default function VerificationEvidenceUploader({
                     {d.evidenceTypeLabel ?? d.evidenceType}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {d.fileName ?? t("document")} · {readableSize(d.sizeBytes)}
+                    {d.fileName ?? t("document")} ·{" "}
+                    {formatFileSize(d.sizeBytes, locale)}
                   </p>
                 </div>
               </div>
@@ -244,7 +241,7 @@ export default function VerificationEvidenceUploader({
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{s.file.name}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {readableSize(s.file.size)} ·{" "}
+                  {formatFileSize(s.file.size, locale)} ·{" "}
                   {s.status === "queued"
                     ? t("readyToSend")
                     : s.status === "uploading"

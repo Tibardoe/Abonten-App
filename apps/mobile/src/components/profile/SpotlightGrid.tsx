@@ -2,18 +2,16 @@ import {
   type SpotlightTile,
   spotlightBadgeLabel,
 } from "@abonten/core/content/profileContent";
+import { formatCompactCount } from "@abonten/core/i18n/format";
 import { AppText, Icon } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo } from "react";
 import { Pressable, View } from "react-native";
 
-function compact(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
+const compact = (n: number): string =>
+  formatCompactCount(n, getCurrentLocale());
 
 // One row of the profile's Spotlights grid: three 9:16 tiles edge to edge
 // with a hairline gap, the way short-video profiles read. A short row keeps

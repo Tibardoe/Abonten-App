@@ -74,6 +74,8 @@ jobs:
 
       - run: npm run check:mobile-a11y
 
+      - run: npm run check:mobile-boot
+
       - run: npm run check:deep-link-decoder
 
       - run: npm run check:i18n

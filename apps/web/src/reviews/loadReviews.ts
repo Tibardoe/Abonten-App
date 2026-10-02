@@ -1,3 +1,4 @@
+import { formatRating } from "@abonten/core/i18n/format";
 import "server-only";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
@@ -103,7 +104,7 @@ export async function reviewsPageDescription(
   const s = summary.data ?? EMPTY_REVIEW_SUMMARY;
   return s.total > 0
     ? t("ratedFromReviews", {
-        average: s.average.toFixed(1),
+        average: formatRating(s.average, locale),
         reviews: t("reviewsCount", { count: s.total }),
       })
     : t("reviewsOfOnAbonten", { title: subjectTitle });

@@ -1,13 +1,14 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
+import { formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewRatingFilter,
   type ReviewSummary,
   ratingShares,
 } from "@abonten/core/reviews/reviewList";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 
 const LEVELS = [5, 4, 3, 2, 1] as const;
 
@@ -24,6 +25,7 @@ export default function ReviewSummaryBars({
   onSelect?: (rating: ReviewRatingFilter) => void;
 }) {
   const t = useTranslations("reviews");
+  const locale = useLocale();
   const format = useFormatter();
 
   const shares = ratingShares(summary);
@@ -33,7 +35,7 @@ export default function ReviewSummaryBars({
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:gap-6">
       <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-1 sm:min-w-[120px]">
         <span className="text-4xl font-bold leading-none">
-          {average.toFixed(1)}
+          {formatRating(average, locale)}
         </span>
         <div className="flex flex-col sm:items-center">
           <StarRatingDisplay rating={summary.average} />

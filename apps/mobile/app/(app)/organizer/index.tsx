@@ -2,6 +2,7 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { DashboardWidgets } from "@/components/organizer/DashboardWidgets";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
+import { useMarket } from "@/features/markets/MarketProvider";
 import {
   useOrganizerDashboardWidgets,
   useOrganizerOverview,
@@ -227,7 +228,11 @@ export default function OrganizerDashboard() {
   // and identical on every row.
   const moneyRows = rows.filter((r) => r.currency != null);
   const prevMoney = prevRows?.filter((r) => r.currency != null) ?? null;
-  const primaryCurrency = moneyRows[0]?.currency ?? "";
+  // Before the first sale no row names a currency: zero is shown in the
+  // market's own ("GH₵0.00"), not as a bare "0.00".
+  const { market } = useMarket();
+  const primaryCurrency =
+    moneyRows[0]?.currency ?? market?.defaultCurrency ?? "";
   // Match the primary currency row across periods so the delta compares
   // like with like rather than "row 0" against "row 0".
   const prevPrimaryMoney =

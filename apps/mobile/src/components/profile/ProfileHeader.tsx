@@ -8,8 +8,9 @@ import {
 } from "@/components/verification/VerifiedPill";
 import type { PublicProfile } from "@/features/profile/usePublicProfile";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { formatCompactCount } from "@abonten/core/i18n/format";
 import { AppText, Avatar, Button } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -20,11 +21,8 @@ import { Pressable, View } from "react-native";
 // itself is the screen's centred nav title (set from the profile screen),
 // so it isn't repeated here. Tapping the avatar opens it full-screen.
 
-function compactCount(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
+const compactCount = (n: number): string =>
+  formatCompactCount(n, getCurrentLocale());
 
 function Stat({
   value,

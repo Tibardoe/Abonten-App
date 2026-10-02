@@ -3,7 +3,11 @@ import type {
   OrganizerTimelineRow,
 } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { formatDate, formatDateTime } from "@abonten/core/i18n/format";
+import {
+  formatCompactCount,
+  formatDate,
+  formatDateTime,
+} from "@abonten/core/i18n/format";
 import { AppText, Overline } from "@abonten/ui-native";
 import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
@@ -31,13 +35,8 @@ function money(currency: string, amount: number): string {
   });
 }
 
-function compact(amount: number): string {
-  if (amount >= 1_000_000)
-    return `${(amount / 1_000_000).toFixed(amount >= 10_000_000 ? 0 : 1)}M`;
-  if (amount >= 1_000)
-    return `${(amount / 1_000).toFixed(amount >= 10_000 ? 0 : 1)}k`;
-  return `${Math.round(amount)}`;
-}
+const compact = (amount: number): string =>
+  formatCompactCount(Math.round(amount), getCurrentLocale());
 
 function bucketLabel(bucketStart: string, bucket: DashboardBucket): string {
   const d = new Date(bucketStart);

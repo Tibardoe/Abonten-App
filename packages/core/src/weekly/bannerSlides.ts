@@ -3,6 +3,7 @@ import type {
   WeeklySection,
 } from "@abonten/types/weeklyType";
 import { getEventCardDateTime } from "../dateFormatter";
+import { formatRating } from "../i18n/format";
 
 export const WEEKLY_BANNER_MAX_SLIDES = 6;
 
@@ -15,6 +16,8 @@ export const WEEKLY_BANNER_MAX_SLIDES = 6;
 export function weeklyBannerSlides(
   sections: WeeklySection[],
   max: number = WEEKLY_BANNER_MAX_SLIDES,
+  /** The reader's language: the date and the rating on a slide are words. */
+  locale?: string | null,
 ): WeeklyBannerSlide[] {
   const ordered = [
     ...sections.filter((s) => s.layout === "hero"),
@@ -37,6 +40,7 @@ export function weeklyBannerSlides(
           event.ends_at,
           event.occurrences,
           event.timezone,
+          locale,
         );
         seen.add(subjectKey);
         slides.push({
@@ -53,7 +57,7 @@ export function weeklyBannerSlides(
       } else if (place?.cover_public_id) {
         const rating =
           place.avg_rating != null && Number(place.avg_rating) > 0
-            ? `${Number(place.avg_rating).toFixed(1)} ★`
+            ? `${formatRating(place.avg_rating, locale)} ★`
             : null;
         seen.add(subjectKey);
         slides.push({

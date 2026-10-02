@@ -7,12 +7,17 @@ import { logPlacePromotionImpression } from "@/features/places/placeEngagement";
 import { hapticLight } from "@/lib/haptics";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { CoreTranslator } from "@abonten/core/i18n/translator";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { WeeklyBannerSlide } from "@abonten/types/weeklyType";
 import { AppText } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useRef } from "react";
 import { View, useWindowDimensions } from "react-native";
@@ -64,7 +69,9 @@ function placeSlide(
   tc: CoreTranslator,
 ): WeeklyBannerSlide {
   const rating =
-    (p.review_count ?? 0) > 0 ? `${(p.avg_rating ?? 0).toFixed(1)} ★` : null;
+    (p.review_count ?? 0) > 0
+      ? `${formatRating(p.avg_rating ?? 0, getCurrentLocale())} ★`
+      : null;
   const meta = [
     placeCategoryLabel(tc, { slug: p.category_slug, name: p.category_name }),
     rating,

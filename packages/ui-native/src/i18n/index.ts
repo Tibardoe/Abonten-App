@@ -3,6 +3,7 @@ export {
   I18nProvider,
   getCurrentLocale,
   onLocaleChosen,
+  setIntlErrorReporter,
   translatorFor,
   useFormatter,
   useLocale,

@@ -9,6 +9,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
+import { formatRating } from "@abonten/core/i18n/format";
 import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import type { WeeklyItem, WeeklySection } from "@abonten/types/weeklyType";
@@ -111,7 +112,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
   const rating =
     place?.avg_rating != null && Number(place.avg_rating) > 0
       ? t("ratingAndReviews", {
-          rating: Number(place.avg_rating).toFixed(1),
+          rating: formatRating(place.avg_rating, locale),
           count: place.review_count ?? 0,
         })
       : null;

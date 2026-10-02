@@ -1,4 +1,4 @@
-import { formatCount } from "@abonten/core/i18n/format";
+import { formatCount, formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewRatingFilter,
@@ -6,7 +6,11 @@ import {
   ratingShares,
 } from "@abonten/core/reviews/reviewList";
 import { AppText, Stars } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The overall picture before the individual reviews: the average, how many
@@ -37,10 +41,10 @@ export function ReviewSummaryCard({
         <AppText
           className="text-[36px] font-bold leading-[42px]"
           accessibilityLabel={t("averageRatingOutOf5", {
-            toFixed: average.toFixed(1),
+            toFixed: formatRating(average, getCurrentLocale()),
           })}
         >
-          {average.toFixed(1)}
+          {formatRating(average, getCurrentLocale())}
         </AppText>
         <Stars rating={summary.average} size={13} />
         <AppText variant="caption" className="mt-1 text-center">

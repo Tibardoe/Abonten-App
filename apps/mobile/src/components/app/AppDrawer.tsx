@@ -138,6 +138,7 @@ export function AppDrawer() {
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { width, height: windowHeight } = useWindowDimensions();
@@ -546,7 +547,7 @@ export function AppDrawer() {
                   onPress={() => openExternal(url)}
                   className="active:opacity-60"
                 >
-                  <AppText variant="muted">{t(label)}</AppText>
+                  <AppText variant="muted">{tCommon(label)}</AppText>
                 </Pressable>
               ))}
               <Pressable

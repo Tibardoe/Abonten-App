@@ -1,5 +1,5 @@
 import { BRAND_MARK, BrandArtworkPaths, brandColors } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import Svg from "react-native-svg";
 
@@ -21,13 +21,16 @@ import Svg from "react-native-svg";
 // BEFORE the providers mount (app/_layout.tsx shows it while fonts load),
 // and AbontenLogo reads the theme context, which does not exist yet — that
 // threw "useTheme must be used within <ThemeProvider>" on a cold start.
+// For the same reason its one word comes from translatorFor(), which needs
+// no provider: useTranslations() here threw on every cold start, and the
+// error screen below it did the same (scripts/check-mobile-boot.mjs).
 
 const SPLASH_BG = brandColors.night;
 /** Must match app.json › expo-splash-screen › imageWidth. */
 const SPLASH_MARK_WIDTH = 192;
 
 export function BrandedSplash() {
-  const t = useTranslations("common");
+  const t = translatorFor("common");
 
   return (
     <View style={styles.root} accessibilityLabel={t("abonten")} accessible>

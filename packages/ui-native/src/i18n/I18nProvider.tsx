@@ -1,3 +1,5 @@
+// First: what the engine lacks of Intl (see the file).
+import "./polyfills";
 import { translateValidation } from "@abonten/i18n/validation";
 import * as SecureStore from "expo-secure-store";
 import {
@@ -85,9 +87,45 @@ function messagesFor(locale: I18nLocale): Messages {
   return merged;
 }
 
-// Stable identities: use-intl rebuilds every translator when these change,
+// A message that is missing or cannot be formatted is not a crash: the
+// screen shows its key path and keeps rendering. It is not nothing either.
+// It used to be dropped here without a word, which is how every plural in
+// the app could fail on a phone (the engine had no Intl.PluralRules) while
+// each check on a computer passed. Now it is said once per message: in the
+// developer's console, and to whoever the app registers below (its error
+// reporting), so a build in people's hands tells us.
+type IntlProblem = {
+  code?: string;
+  message?: string;
+  originalMessage?: string;
+};
+
+let intlErrorReporter: ((error: unknown) => void) | null = null;
+const reportedIntlProblems = new Set<string>();
+
+/** The app's hook for translation failures (once per message). */
+export function setIntlErrorReporter(
+  reporter: ((error: unknown) => void) | null,
+): void {
+  intlErrorReporter = reporter;
+}
+
+// A stable identity: use-intl rebuilds every translator when this changes,
 // and a translator that changes identity re-runs each effect that lists it.
-function ignoreIntlError(): void {}
+function onIntlError(error: unknown): void {
+  const problem = error as IntlProblem;
+  const id = `${problem.code ?? "error"}:${problem.originalMessage ?? problem.message ?? ""}`;
+  if (reportedIntlProblems.has(id)) return;
+  reportedIntlProblems.add(id);
+  if (typeof __DEV__ !== "undefined" && __DEV__) {
+    console.warn(`[i18n] ${problem.code ?? "error"}: ${problem.message ?? ""}`);
+  }
+  try {
+    intlErrorReporter?.(error);
+  } catch {
+    // reporting must never break rendering
+  }
+}
 
 function keyPathFallback({
   namespace,
@@ -101,7 +139,10 @@ function keyPathFallback({
 
 // The language the app is showing right now, for code outside React (the
 // API client sends it with every request so the server answers in it).
-let currentLocale: I18nLocale = DEFAULT_LOCALE;
+// Before the provider has mounted it is the device's language: that is what
+// the splash and the root error screen, which render without any provider,
+// are worded in.
+let currentLocale: I18nLocale = deviceLocale();
 
 export function getCurrentLocale(): I18nLocale {
   return currentLocale;
@@ -129,7 +170,7 @@ export function translatorFor(namespace: string): ModuleTranslator {
         locale: intlTag(currentLocale),
         messages: messagesFor(currentLocale),
         namespace,
-        onError: ignoreIntlError,
+        onError: onIntlError,
         getMessageFallback: keyPathFallback,
       }) as unknown as ModuleTranslator;
       moduleTranslators.set(id, translate);
@@ -156,6 +197,12 @@ export function onLocaleChosen(listener: LocaleChangeListener): () => void {
 type LocaleContextValue = {
   locale: I18nLocale;
   setLocale: (next: I18nLocale) => void;
+  /**
+   * False until the saved choice has been read back. The app holds its
+   * splash for it, so nobody sees a screen in one language turn into
+   * another a moment after launch.
+   */
+  ready: boolean;
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -167,7 +214,10 @@ function intlTag(locale: I18nLocale): string {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<I18nLocale>(DEFAULT_LOCALE);
+  // The device's language until the saved choice is read: for most people
+  // they are the same, so nothing changes on screen when it arrives.
+  const [locale, setLocaleState] = useState<I18nLocale>(deviceLocale);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -180,12 +230,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
           (I18N_LOCALES as readonly string[]).includes(saved)
         ) {
           setLocaleState(saved as I18nLocale);
-          return;
         }
       } catch {
-        // fall through to the device default
+        // keep the device's language
       }
-      if (!cancelled) setLocaleState(deviceLocale());
+      if (!cancelled) setReady(true);
     })();
     return () => {
       cancelled = true;
@@ -201,8 +250,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   currentLocale = locale;
 
   const value = useMemo<LocaleContextValue>(
-    () => ({ locale, setLocale }),
-    [locale, setLocale],
+    () => ({ locale, setLocale, ready }),
+    [locale, setLocale, ready],
   );
 
   const messages = useMemo(() => messagesFor(locale), [locale]);
@@ -215,7 +264,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         // A missing key is a catalog bug, not a crash: show the key path
         // (which the catalog parity check in CI would have refused) and
         // keep rendering.
-        onError={ignoreIntlError}
+        onError={onIntlError}
         getMessageFallback={keyPathFallback}
       >
         {children}

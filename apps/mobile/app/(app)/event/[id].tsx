@@ -43,6 +43,7 @@ import { resolveEventCta } from "@abonten/core/eventCta";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import {
@@ -442,7 +443,7 @@ export default function EventDetailScreen() {
                   <View className="mt-0.5 flex-row items-center gap-1">
                     <Stars rating={organizerRating.average} size={12} />
                     <AppText variant="caption">
-                      {organizerRating.average.toFixed(1)} (
+                      {formatRating(organizerRating.average, locale)} (
                       {organizerRating.count})
                     </AppText>
                   </View>

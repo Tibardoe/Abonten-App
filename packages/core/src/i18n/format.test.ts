@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatCompactCount,
   formatCount,
   formatDate,
   formatDateTime,
+  formatDecimal,
+  formatFileSize,
   formatPercent,
+  formatRating,
 } from "./format";
 
 // The separators differ by language and some are non-breaking spaces:
@@ -122,5 +126,84 @@ describe("formatDateTime", () => {
     expect(
       formatDate(moment, "en", { timeZone: "UTC", dateStyle: "medium" }),
     ).toBe("3 Oct 2026");
+  });
+});
+
+describe("formatDecimal and formatRating", () => {
+  it("uses the reader's decimal mark", () => {
+    expect(formatRating(4.5, "en")).toBe("4.5");
+    expect(formatRating(4.5, "fr")).toBe("4,5");
+    expect(formatRating(4.5, "de")).toBe("4,5");
+    expect(formatRating(4.5, "es")).toBe("4,5");
+    expect(formatRating(4.5, "pt")).toBe("4,5");
+  });
+
+  it("always shows the decimals it was asked for", () => {
+    expect(formatRating(4, "en")).toBe("4.0");
+    expect(formatRating(0, "fr")).toBe("0,0");
+    expect(formatDecimal(1.5, "en", 2)).toBe("1.50");
+    expect(formatDecimal(1.26, "en", 1)).toBe("1.3");
+    expect(formatDecimal(12, "en", 0)).toBe("12");
+  });
+
+  it("takes a number written as text, and never prints NaN", () => {
+    expect(formatRating("4.25", "en")).toBe("4.3");
+    expect(formatRating("abc", "en")).toBe("0.0");
+    expect(formatRating(null, "en")).toBe("0.0");
+    expect(formatRating(undefined, "fr")).toBe("0,0");
+  });
+
+  it("follows English for Akan and for no language at all", () => {
+    expect(formatRating(4.5, "ak")).toBe("4.5");
+    expect(formatRating(4.5)).toBe("4.5");
+  });
+});
+
+describe("formatCompactCount", () => {
+  it("leaves a small count as it is", () => {
+    expect(formatCompactCount(0, "en")).toBe("0");
+    expect(formatCompactCount(987, "en")).toBe("987");
+    expect(formatCompactCount(999, "fr")).toBe("999");
+  });
+
+  it("shortens thousands and millions", () => {
+    expect(formatCompactCount(1000, "en")).toBe("1K");
+    expect(formatCompactCount(1200, "en")).toBe("1.2K");
+    expect(formatCompactCount(15_000, "en")).toBe("15K");
+    expect(formatCompactCount(15_400, "en")).toBe("15K");
+    expect(formatCompactCount(1_200_000, "en")).toBe("1.2M");
+  });
+
+  it("writes them the reader's way", () => {
+    expect(plain(formatCompactCount(1200, "fr"))).toBe("1,2 k");
+    expect(plain(formatCompactCount(1_200_000, "fr"))).toBe("1,2 M");
+    expect(plain(formatCompactCount(1_200_000, "de"))).toBe("1,2 Mio.");
+  });
+
+  it("never prints NaN", () => {
+    expect(formatCompactCount("abc", "en")).toBe("0");
+    expect(formatCompactCount(null, "en")).toBe("0");
+  });
+});
+
+describe("formatFileSize", () => {
+  it("writes megabytes with one decimal", () => {
+    expect(plain(formatFileSize(2.3 * 1024 * 1024, "en"))).toBe("2.3 MB");
+    expect(plain(formatFileSize(10 * 1024 * 1024, "en"))).toBe("10.0 MB");
+  });
+
+  it("uses the reader's decimal mark and unit", () => {
+    expect(plain(formatFileSize(2.3 * 1024 * 1024, "fr"))).toBe("2,3 Mo");
+    expect(plain(formatFileSize(2.3 * 1024 * 1024, "de"))).toBe("2,3 MB");
+  });
+
+  it("writes kilobytes below a megabyte, at least one", () => {
+    expect(plain(formatFileSize(300 * 1024, "en"))).toBe("300 kB");
+    expect(plain(formatFileSize(10, "en"))).toBe("1 kB");
+  });
+
+  it("is zero for nothing", () => {
+    expect(plain(formatFileSize(0, "en"))).toBe("0 kB");
+    expect(plain(formatFileSize(null, "en"))).toBe("0 kB");
   });
 });

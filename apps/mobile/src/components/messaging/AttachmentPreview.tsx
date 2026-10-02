@@ -1,6 +1,7 @@
 import type { StagedAttachment } from "@/features/messaging/attachments";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import { AppText, Icon, Sheet } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
@@ -12,11 +13,8 @@ import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 // field with an inline circular send button. A multi-photo gallery pick
 // skips this and stages in the composer strip instead.
 
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-}
+const formatBytes = (n: number): string =>
+  formatFileSize(n, getCurrentLocale());
 
 export function AttachmentPreview({
   attachment,

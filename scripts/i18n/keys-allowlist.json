@@ -1,0 +1,3 @@
+{
+  "packages/services/src/i18n/requestLocale.ts": "tr(key, values) passes its caller's key on; every tr(\"…\") call is checked where it is written."
+}

@@ -31,6 +31,7 @@ import {
   placeLocalNow,
 } from "@abonten/core/computePlaceOpenStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatRating } from "@abonten/core/i18n/format";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import { getMarketOrDefault } from "@abonten/services/markets/marketConfig";
 import type { Metadata } from "next";
@@ -273,7 +274,7 @@ export default async function page({
                   <StarRatingDisplay rating={place.avgRating} />
                 </span>
                 <span className="tabular-nums">
-                  {place.avgRating.toFixed(1)} ({place.reviewCount})
+                  {formatRating(place.avgRating, locale)} ({place.reviewCount})
                 </span>
               </span>
             ) : (

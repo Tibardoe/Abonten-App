@@ -2,6 +2,7 @@
 
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCompactCount } from "@abonten/core/i18n/format";
 import type { DashboardBucket } from "@abonten/core/organizerDashboardDateRange";
 import type { OrganizerSalesTimelinePoint } from "@abonten/types/eventAnalytics";
 import { useLocale, useTranslations } from "next-intl";
@@ -144,9 +145,7 @@ export default function OrganizerSalesTimelineChart({
             tickLine={false}
             axisLine={false}
             width={48}
-            tickFormatter={(value: number) =>
-              value >= 1000 ? `${(value / 1000).toFixed(0)}k` : String(value)
-            }
+            tickFormatter={(value: number) => formatCompactCount(value, locale)}
           />
           <Tooltip
             content={<TimelineTooltip currency={currency} />}

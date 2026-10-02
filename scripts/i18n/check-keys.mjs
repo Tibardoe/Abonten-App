@@ -16,29 +16,46 @@
 //   tr("key")                                    → server
 //   words.t("key") / emailT(locale)("key")       → emails / server
 //
-// A key built at run time (t(`status.${code}`)) is checked by its fixed
-// prefix: at least one catalog key must start with it. A translator that
-// arrives as a parameter (@abonten/core's helpers) is checked by that
-// package's own tests with a strict translator.
+// A key that is not written out at the call is followed to where its value
+// comes from (lib/key-strings.mjs): t(STATUS_LABEL[status]), t(tab.label)
+// and t(cond ? "a" : "b") name a few known keys, and each one is checked.
+// A key built at run time (t(`status.${code}`)) whose parts are not known
+// is checked by its fixed prefix: at least one catalog key must start with
+// it. A key that cannot be followed at all (a plain `string`) is a finding
+// too: nothing can say it exists, and one that did not showed
+// "navigation.termsConditions" in the app's menu. Give the value a type
+// that names its keys (`as const`, a union), or, for a function that only
+// passes a caller's key on, list it in keys-allowlist.json.
+//
+// A translator that arrives as a parameter (@abonten/core's helpers) is
+// checked by that package's own tests with a strict translator.
 
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { createKeyResolver } from "./lib/key-strings.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const MESSAGES = join(ROOT, "packages/i18n/messages/en");
 const CHECK = process.argv.includes("--check");
 
+// Each root with the project whose types its files are checked in.
 const ROOTS = [
-  "apps/web/src",
-  "apps/mobile/app",
-  "apps/mobile/src",
-  "apps/admin/src",
-  "packages/ui-native/src",
-  "packages/services/src",
-  "packages/core/src",
+  ["apps/web/src", "apps/web"],
+  ["apps/mobile/app", "apps/mobile"],
+  ["apps/mobile/src", "apps/mobile"],
+  ["apps/admin/src", "apps/admin"],
+  ["packages/ui-native/src", "packages/ui-native"],
+  ["packages/services/src", "packages/services"],
+  ["packages/core/src", "packages/core"],
 ];
+
+// Lookups whose key is a caller's, passed on: { "file": "why" }.
+const ALLOWLIST_FILE = join(ROOT, "scripts/i18n/keys-allowlist.json");
+const ALLOWED = existsSync(ALLOWLIST_FILE)
+  ? JSON.parse(readFileSync(ALLOWLIST_FILE, "utf8"))
+  : {};
 const SKIP = ["node_modules", ".next", ".expo", "dist", "__integration__"];
 
 // ── catalogs ─────────────────────────────────────────────────────────
@@ -248,20 +265,56 @@ function walk(dir, out) {
 
 const missing = [];
 let checked = 0;
+let followed = 0;
 
-for (const abs of ROOTS.flatMap((r) => walk(join(ROOT, r), []))) {
+// One program per project, made when its first file is reached: following
+// a key to its source needs the project's types.
+const projects = new Map();
+function projectOf(dir) {
+  if (projects.has(dir)) return projects.get(dir);
+  const config = ts.getParsedCommandLineOfConfigFile(
+    join(ROOT, dir, "tsconfig.json"),
+    {},
+    { ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => {} },
+  );
+  let project = null;
+  if (config) {
+    const program = ts.createProgram({
+      rootNames: config.fileNames,
+      options: { ...config.options, noEmit: true },
+    });
+    project = {
+      program,
+      resolver: createKeyResolver(program.getTypeChecker()),
+    };
+  }
+  projects.set(dir, project);
+  return project;
+}
+
+const files = ROOTS.flatMap(([root, project]) =>
+  walk(join(ROOT, root), []).map((abs) => ({ abs, project })),
+);
+
+for (const { abs, project } of files) {
   const file = relative(ROOT, abs).split(sep).join("/");
   if (file.includes(".test.")) continue;
   const source = readFileSync(abs, "utf8");
   if (!/Translations|translatorFor|\btr\(|emailT|trFor|coreT/.test(source))
     continue;
-  const sf = ts.createSourceFile(
-    abs,
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-  );
+  const owner = projectOf(project);
+  const known = owner?.program.getSourceFile(abs.split(sep).join("/"));
+  // A file its project does not compile is still read, without types.
+  const resolver = known ? owner.resolver : null;
+  const sf =
+    known ??
+    ts.createSourceFile(
+      abs,
+      source,
+      ts.ScriptTarget.Latest,
+      true,
+      file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    );
 
   const report = (node, namespace, givenKey, exact, valuesArg, method) => {
     // useTranslations("settings.security.phone"): a group inside a catalog
@@ -330,9 +383,9 @@ for (const abs of ROOTS.flatMap((r) => walk(join(ROOT, r), []))) {
         callee = callee.expression;
       }
       const valuesArg = node.arguments[1];
-      const arg = keyArgument(node.arguments[0]);
-      if (arg) {
-        let ns = null;
+      const keyNode = node.arguments[0];
+      let ns = null;
+      if (keyNode) {
         if (ts.isIdentifier(callee)) {
           if (callee.text === "tr") {
             const binding = findBinding("tr", node);
@@ -346,20 +399,48 @@ for (const abs of ROOTS.flatMap((r) => walk(join(ROOT, r), []))) {
           // coreT()("key"), emailT(locale)("key"), translatorFor("ns")("key")
           ns = namespaceOfFactory(callee);
         }
-        if (ns !== null && ns !== undefined) {
+      }
+      if (ns !== null && ns !== undefined) {
+        const ask = (key, exact) => {
           if (ns === "") {
-            const dot = arg.key.indexOf(".");
+            const dot = key.indexOf(".");
             if (dot > 0) {
               report(
                 node,
-                arg.key.slice(0, dot),
-                arg.key.slice(dot + 1),
-                arg.exact,
+                key.slice(0, dot),
+                key.slice(dot + 1),
+                exact,
                 valuesArg,
                 method,
               );
             }
-          } else report(node, ns, arg.key, arg.exact, valuesArg, method);
+          } else report(node, ns, key, exact, valuesArg, method);
+        };
+        const written = keyArgument(keyNode);
+        if (written?.exact) ask(written.key, true);
+        else {
+          // Not written out here: follow it to where its value comes from.
+          let found = resolver ? resolver.strings(keyNode) : null;
+          // "anything at all" is not an answer.
+          if (found?.some((item) => item.open && !item.text)) found = null;
+          if (found) {
+            followed++;
+            for (const { text, open } of found) {
+              // "" in a table means "no label": never asked for.
+              if (text || open) ask(text, !open);
+            }
+          } else if (written) {
+            ask(written.key, false); // a template: its fixed prefix
+          } else if (!ALLOWED[file]) {
+            missing.push({
+              file,
+              line:
+                sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1,
+              ns: ns || "*",
+              key: keyNode.getText(sf).replace(/\s+/g, " ").slice(0, 60),
+              why: "is a key that cannot be followed to its value, so nothing says it exists",
+            });
+          }
         }
       }
     }
@@ -376,7 +457,7 @@ for (const abs of ROOTS.flatMap((r) => walk(join(ROOT, r), []))) {
 
 if (missing.length === 0) {
   console.log(
-    `i18n keys: ${checked} lookups, every key exists and gets its values.`,
+    `i18n keys: ${checked} lookups (${followed} followed to their value), every key exists and gets its values.`,
   );
   process.exit(0);
 }

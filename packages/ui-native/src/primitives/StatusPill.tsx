@@ -4,7 +4,12 @@ import { useTheme } from "../theme/ThemeProvider";
 import { tintBackground, tintBorder } from "../theme/color";
 import { Icon } from "./Icon";
 import { AppText } from "./Typography";
-import { type ResolveOptions, type StatusTone, resolveStatus } from "./status";
+import {
+  type ResolveOptions,
+  type StatusTone,
+  resolveStatus,
+  statusLabel,
+} from "./status";
 
 // The one status chip for the whole app. Give it a raw backend string and it
 // renders a soft tinted pill with an icon + label — the tint is derived from
@@ -61,9 +66,10 @@ export function StatusPill({
 
   const { colors: c, scheme } = useTheme();
   const entry = resolveStatus(status, options);
-  if (!entry.label) return null;
-  // The registry hands back a catalog key; a caller's override is text.
-  const label = options?.label ?? t(entry.label);
+  // The registry names a state by a catalog key; a caller's override and
+  // an unknown state's raw value are text (statusLabel tells them apart).
+  const label = statusLabel(t, entry);
+  if (!label) return null;
 
   const accent = c[TONE_TOKEN[entry.tone]];
   const bg = variant === "plain" ? c.muted : tintBackground(accent, scheme);

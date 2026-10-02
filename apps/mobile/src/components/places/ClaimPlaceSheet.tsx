@@ -9,6 +9,7 @@ import {
   validateClaimDoc,
 } from "@/features/places/usePlaceClaim";
 import { uuidv4 } from "@/lib/uuid";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import {
   AppText,
   Button,
@@ -19,7 +20,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import * as DocumentPicker from "expo-document-picker";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -37,9 +38,7 @@ type Phase = "form" | "uploading" | "done";
 
 function humanSize(bytes: number | null): string {
   if (bytes == null) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return formatFileSize(bytes, getCurrentLocale());
 }
 
 function DocRow({

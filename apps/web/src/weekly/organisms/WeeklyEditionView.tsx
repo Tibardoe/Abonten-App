@@ -1,5 +1,8 @@
 import { signOff } from "@abonten/core/brand/signOff";
-import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
+import {
+  WEEKLY_BANNER_MAX_SLIDES,
+  weeklyBannerSlides,
+} from "@abonten/core/weekly/bannerSlides";
 import {
   WEEKLY_PRODUCT_NAME,
   WEEKLY_TAGLINE_KEY,
@@ -33,7 +36,11 @@ export default function WeeklyEditionView({
 
   const e = doc.edition;
   const intro = weeklyParagraphs(e.intro);
-  const slides = weeklyBannerSlides(doc.sections);
+  const slides = weeklyBannerSlides(
+    doc.sections,
+    WEEKLY_BANNER_MAX_SLIDES,
+    locale,
+  );
   const pickCount = doc.sections.reduce((n, s) => n + s.items.length, 0);
 
   const notices = [

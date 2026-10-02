@@ -7,6 +7,7 @@ import {
   useReviewSummary,
 } from "@/features/reviews/useReviews";
 import { useQueryView } from "@/lib/useQueryView";
+import { formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {} from "@abonten/core/reviews/reviewList";
 import {
@@ -17,7 +18,7 @@ import {
   Skeleton,
   Stars,
 } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 import { OwnReviewCard } from "./OwnReviewCard";
@@ -111,14 +112,14 @@ export function ReviewsPreviewSection({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t("ratedOutOf5FromSee", {
-            toFixed: average.toFixed(1),
+            toFixed: formatRating(average, getCurrentLocale()),
             reviews: t("reviewsCount", { count: total }),
           })}
           onPress={openAll}
           className="flex-row items-center gap-3 active:opacity-70"
         >
           <AppText className="text-[28px] font-bold leading-[34px]">
-            {average.toFixed(1)}
+            {formatRating(average, getCurrentLocale())}
           </AppText>
           <View className="gap-0.5">
             <Stars rating={summary.data?.average ?? 0} size={14} />

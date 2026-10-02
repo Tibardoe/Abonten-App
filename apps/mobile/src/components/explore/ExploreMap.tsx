@@ -9,6 +9,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { CoreTranslator } from "@abonten/core/i18n/translator";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import {
@@ -17,7 +18,11 @@ import {
 } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useMemo } from "react";
 
 // Adapter: the current Explore tab's filtered rows -> SocialMap markers.
@@ -143,7 +148,7 @@ function placeItem(p: PlaceType, tc: CoreTranslator): SocialMapItem | null {
         : null,
     point,
     lines,
-    tag: rating > 0 ? `★ ${rating.toFixed(1)}` : null,
+    tag: rating > 0 ? `★ ${formatRating(rating, getCurrentLocale())}` : null,
   };
 }
 

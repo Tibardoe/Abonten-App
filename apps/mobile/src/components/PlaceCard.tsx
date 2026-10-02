@@ -5,6 +5,7 @@ import { prefetchPlaceDetail } from "@/features/places/usePlaceDetail";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { formatRating } from "@abonten/core/i18n/format";
 import { formatDistance } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
@@ -176,7 +177,9 @@ export function PlaceCard({
             {hasRating ? (
               <View className="flex-row items-center gap-1">
                 <Stars rating={rating} size={13} />
-                <AppText variant="metaStrong">{rating.toFixed(1)}</AppText>
+                <AppText variant="metaStrong">
+                  {formatRating(rating, locale)}
+                </AppText>
                 <AppText variant="meta">({place.review_count ?? 0})</AppText>
               </View>
             ) : null}

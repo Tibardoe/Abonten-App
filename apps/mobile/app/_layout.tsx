@@ -21,10 +21,15 @@ import {
   applyPersistedQueryDefaults,
   useIsRestoringCache,
 } from "@/lib/queryPersistence";
+import { reportClientError } from "@/lib/reportClientError";
 import { Sentry, initSentry, navigationIntegration } from "@/lib/sentry";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
 import { ToastProvider } from "@abonten/ui-native";
-import { I18nProvider } from "@abonten/ui-native/i18n";
+import {
+  I18nProvider,
+  setIntlErrorReporter,
+  useLocale,
+} from "@abonten/ui-native/i18n";
 import { ThemeProvider, useTheme } from "@abonten/ui-native/theme";
 import { PortalProvider } from "@gorhom/portal";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -47,6 +52,17 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 // Initialise Sentry before the first render so its global JS error handler
 // is installed ahead of installGlobalErrorHandler()'s chained one.
 initSentry();
+
+// A message that is missing or cannot be formatted shows its key path on
+// the screen. The provider says so once per message; this sends it to both
+// error pipelines, so it is known from the first phone that meets it.
+setIntlErrorReporter((error) => {
+  reportClientError(error, {
+    severity: "warning",
+    extra: { boundary: "i18n" },
+  });
+  Sentry.captureException(error, { level: "warning" });
+});
 
 // Root render/effect crashes anywhere in the navigation tree land here
 // (Expo Router picks up the `ErrorBoundary` export on this route module).
@@ -117,7 +133,11 @@ function RootNavigator() {
   // the first screen renders what was there last time — even offline —
   // instead of a spinner followed by the same content.
   const restoringCache = useIsRestoringCache();
-  const booting = initializing || !themeReady || restoringCache;
+  // And until the saved language is known: a first screen in the device's
+  // language that turns into the chosen one a moment later reads as a
+  // glitch.
+  const { ready: localeReady } = useLocale();
+  const booting = initializing || !themeReady || restoringCache || !localeReady;
 
   useEffect(() => {
     if (!booting) SplashScreen.hideAsync().catch(() => {});

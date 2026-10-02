@@ -1,4 +1,17 @@
-import { expect, test } from "@playwright/test";
+import { type Page, expect, test } from "@playwright/test";
+
+// A link only navigates in place once React has attached to it; before
+// that a click loads the whole page and no progress bar is involved.
+// Waiting for that is quicker and steadier than waiting for the network
+// to go quiet.
+async function hydrated(page: Page, selector: string) {
+  await page.waitForFunction((sel) => {
+    const el = document.querySelector(sel);
+    return (
+      !!el && Object.keys(el).some((key) => key.startsWith("__reactFiber"))
+    );
+  }, selector);
+}
 
 // What a visitor sees when the network is slow or gone. Nothing here needs
 // an account: the pieces under test sit in the shell every page shares.
@@ -33,7 +46,7 @@ test("a slow navigation shows the progress bar until the page arrives", async ({
   page,
 }) => {
   await page.goto("/help");
-  await page.waitForLoadState("networkidle");
+  await hydrated(page, 'footer a[href="/legal/terms"]');
 
   // The footer's links are not prefetched, so this page is fetched when the
   // link is clicked; hold the answer back as a slow connection would.
@@ -60,7 +73,7 @@ test("a navigation to the page already open starts no progress bar", async ({
   page,
 }) => {
   await page.goto("/help");
-  await page.waitForLoadState("networkidle");
+  await hydrated(page, 'a[href="/help"]');
   await page.locator('a[href="/help"]').first().click();
   await page.waitForTimeout(600);
   await expect(page.locator(".navigation-progress-running")).toHaveCount(0);

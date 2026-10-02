@@ -37,6 +37,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { dayName, getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCount, formatRating } from "@abonten/core/i18n/format";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
@@ -376,12 +377,23 @@ export default function PlaceDetailScreen() {
                   {openStatus.label}
                 </AppText>
               </View>
-              <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
-                <Icon name="star" size={12} tone="warning" />
-                <AppText className="text-[12px] font-semibold text-white">
-                  {place.avgRating.toFixed(1)} ({place.reviewCount})
-                </AppText>
-              </View>
+              {/* Until someone reviews it the place is "New", not "0.0"
+                  (which reads as a bad rating); the website says the same. */}
+              {place.reviewCount > 0 ? (
+                <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
+                  <Icon name="star" size={12} tone="warning" />
+                  <AppText className="text-[12px] font-semibold text-white">
+                    {formatRating(place.avgRating, locale)} (
+                    {formatCount(place.reviewCount, locale)})
+                  </AppText>
+                </View>
+              ) : (
+                <View className="rounded-full bg-black/40 px-3 py-1">
+                  <AppText className="text-[12px] font-semibold text-white">
+                    {t("newText")}
+                  </AppText>
+                </View>
+              )}
             </View>
             {address ? (
               <View className="flex-row items-start gap-1">

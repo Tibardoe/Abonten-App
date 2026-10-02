@@ -30,6 +30,7 @@ import {
 import { readEventAddress } from "@abonten/core/eventAddress";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { asWkbHex, parseWKBHex } from "@abonten/core/parseWKBHex";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
@@ -399,7 +400,7 @@ export default async function page({
                       ))}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {averageRating.averageRating.toFixed(1)} (
+                      {formatRating(averageRating.averageRating, locale)} (
                       {averageRating.totalRatings})
                     </span>
                   </div>

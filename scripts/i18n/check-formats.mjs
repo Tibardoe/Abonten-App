@@ -17,11 +17,17 @@
 //     language;
 //   - writes a percentage by hand ({rate}% or `${rate}%`): French and
 //     German put a space before the sign and use a decimal comma. Use
-//     formatPercent.
+//     formatPercent;
+//   - writes decimals by hand (`rating.toFixed(1)`): that is always the
+//     English "4.5", and French, German, Spanish and Portuguese read
+//     "4,5". Use formatRating / formatDecimal / formatCompactCount /
+//     formatFileSize. A value that is worked with rather than read
+//     (Number(x.toFixed(2)), a coordinate, a whole number) is left alone.
 //
-// Use @abonten/core/i18n/format (formatCount, formatDate, formatDateTime)
-// and pass `locale` (web `useLocale()` / `await getLocale()`, native
-// `useLocale().locale`, or `getCurrentLocale()` outside a component).
+// Use @abonten/core/i18n/format (formatCount, formatDate, formatDateTime,
+// formatRating, …) and pass `locale` (web `useLocale()` / `await
+// getLocale()`, native `useLocale().locale`, or `getCurrentLocale()`
+// outside a component).
 //
 //   node scripts/i18n/check-formats.mjs            # report
 //   node scripts/i18n/check-formats.mjs --check    # CI
@@ -66,6 +72,10 @@ const FORMATTERS = {
   formatPercent: { at: 1 },
   formatDate: { at: 1 },
   formatDateTime: { at: 1 },
+  formatDecimal: { at: 1 },
+  formatRating: { at: 1 },
+  formatCompactCount: { at: 1 },
+  formatFileSize: { at: 1 },
 };
 
 function walk(dir, out) {
@@ -90,7 +100,11 @@ const findings = [];
 for (const file of files) {
   const abs = join(ROOT, file);
   const source = readFileSync(abs, "utf8");
-  if (!/toLocale(Date|Time)?String\(|\bformat[A-Z]\w*\(|\}%/.test(source))
+  if (
+    !/toLocale(Date|Time)?String\(|\bformat[A-Z]\w*\(|\}%|\.toFixed\(/.test(
+      source,
+    )
+  )
     continue;
   const sf = ts.createSourceFile(
     abs,
@@ -118,7 +132,10 @@ for (const file of files) {
         const minorUnit =
           name === "formatMoney" &&
           st.moduleSpecifier.text === "@abonten/core/money/formatMoney";
-        imported.set(el.name.text, minorUnit ? { at: 1, inOptions: true } : spec);
+        imported.set(
+          el.name.text,
+          minorUnit ? { at: 1, inOptions: true } : spec,
+        );
       }
     }
   }
@@ -157,6 +174,14 @@ for (const file of files) {
           report(node, "formats in the device's language");
         }
       }
+      // rating.toFixed(1): decimals written the English way
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        callee.name.text === "toFixed" &&
+        isReadDecimal(node)
+      ) {
+        report(node, "writes decimals by hand");
+      }
       if (ts.isIdentifier(callee) && imported.has(callee.text)) {
         const spec = imported.get(callee.text);
         const arg = node.arguments[spec.at];
@@ -192,6 +217,33 @@ for (const file of files) {
     }
     ts.forEachChild(node, visit);
   };
+
+  // A number someone will read, with a decimal mark in it. Not: a whole
+  // number (toFixed(0)), a value worked with further (Number(x.toFixed(2))),
+  // a coordinate (which is written with a point everywhere), structured
+  // data for a machine.
+  function isReadDecimal(call) {
+    const digits = call.arguments[0];
+    if (!digits || digits.getText(sf) === "0") return false;
+    const receiver = call.expression.expression.getText(sf);
+    if (/\b(lat|lng|lon|latitude|longitude|coords)\b/i.test(receiver)) {
+      return false;
+    }
+    if (file.endsWith("utils/structuredData.ts")) return false;
+    let parent = call.parent;
+    while (parent && ts.isParenthesizedExpression(parent))
+      parent = parent.parent;
+    if (
+      parent &&
+      ts.isCallExpression(parent) &&
+      /^(Number|parseFloat|Number\.parseFloat)$/.test(
+        parent.expression.getText(sf),
+      )
+    ) {
+      return false;
+    }
+    return true;
+  }
 
   // width: `${n}%`, style={{ left: `${n}%` }}, className, an SVG attribute.
   const LAYOUT =

@@ -13,6 +13,7 @@ import OrganizerSalesTimelineChart from "@/components/molecules/OrganizerSalesTi
 import OrganizerUpcomingEvents from "@/components/molecules/OrganizerUpcomingEvents";
 import { PageTitle, SectionTitle } from "@/components/ui/typography";
 import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
+import { useMarketContext } from "@/hooks/useMarketContext";
 import type {
   DashboardBucket,
   DashboardPeriod,
@@ -84,7 +85,13 @@ export default function OrganizerDashboard() {
     overview !== null &&
     Number(overview.current[0]?.total_events_count ?? 0) === 0;
 
-  const primaryCurrency = overview?.current?.[0]?.currency ?? "";
+  // Before the first sale no row names a currency: zero is shown in the
+  // market's own ("GH₵0.00"), not as a bare "0.00".
+  const { market } = useMarketContext();
+  const primaryCurrency =
+    overview?.current?.find((row) => row.currency)?.currency ??
+    market?.defaultCurrency ??
+    "";
 
   const timelineData: OrganizerSalesTimelinePoint[] =
     dashboard?.timeline.rows ?? [];

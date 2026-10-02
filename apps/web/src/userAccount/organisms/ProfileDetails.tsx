@@ -4,6 +4,7 @@ import AddReviewButton from "@/components/atoms/AddReviewButton";
 import ReportButton from "@/components/atoms/ReportButton";
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import { buildAvatarUrl } from "@abonten/core/cloudinaryUrl";
+import { formatRating } from "@abonten/core/i18n/format";
 import Link from "next/link";
 import { MdOutlineSettings } from "react-icons/md";
 import ProfileFollowerCount from "../molecules/ProfileFollowerCount";
@@ -14,7 +15,7 @@ import { getOrganizerVerified } from "@/actions/verification/getOrganizerVerifie
 import SubscribeBell from "@/discovery/molecules/SubscribeBell";
 import FollowButton from "@/spotlight/molecules/FollowButton";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 type LayoutUserProp = {
   username: string;
   userDetails?: Awaited<ReturnType<typeof getUserProfileDetails>>;
@@ -29,6 +30,7 @@ export default async function ProfileDetails({
   userDetails: prefetchedUserDetails,
 }: LayoutUserProp) {
   const t = await getTranslations("account");
+  const locale = await getLocale();
 
   const userDetails =
     prefetchedUserDetails ?? (await getUserProfileDetails(username));
@@ -135,7 +137,7 @@ export default async function ProfileDetails({
                   <>
                     <span className="text-warning">★</span>{" "}
                     <span className="font-semibold tabular-nums text-foreground">
-                      {rating.averageRating.toFixed(1)}
+                      {formatRating(rating.averageRating, locale)}
                     </span>{" "}
                     · {t("reviewsCount", { count: rating.totalRatings })}
                   </>
