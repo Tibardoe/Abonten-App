@@ -4,7 +4,6 @@
   "abonten": "Abonten",
   "abontenFees": "Frais Abonten",
   "abontenHub": "{getFullYear} Abonten Hub",
-  "abontenOn": "Abonten sur {label}",
   "abontenOnSocialMedia": "Abonten sur les réseaux sociaux",
   "accountNumber": "Numéro de compte",
   "accountSetupOfStepsDone": "Configuration du compte : {completedCount, plural, one {# étape terminée} other {# étapes terminées}} sur {total}",
@@ -900,5 +899,10 @@
     "restricted": "Votre compte a été restreint. Contactez l'assistance si vous pensez qu'il s'agit d'une erreur.",
     "unexpected": "L'opération n'a pas abouti. Réessayez dans un instant."
   },
-  "couldnTLoadYourPendingCheckouts": "Impossible de charger vos commandes en attente."
+  "couldnTLoadYourPendingCheckouts": "Impossible de charger vos commandes en attente.",
+  "abontenOnNetwork": {
+    "x": "Abonten sur X (anciennement Twitter)",
+    "instagram": "Abonten sur Instagram",
+    "tiktok": "Abonten sur TikTok"
+  }
 }

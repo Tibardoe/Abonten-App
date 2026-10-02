@@ -344,7 +344,6 @@
     "abonten": "acfdb324",
     "abontenFees": "3f2b4f0d",
     "abontenHub": "b4792dcc",
-    "abontenOn": "8c3d9442",
     "abontenOnSocialMedia": "b42a256f",
     "accountNumber": "0bd62e3d",
     "accountSetupOfStepsDone": "0520e53e",
@@ -1222,7 +1221,10 @@
     "actionFailed.updated": "c2c804fa",
     "actionFailed.restricted": "238fb30e",
     "actionFailed.unexpected": "3241dc2b",
-    "couldnTLoadYourPendingCheckouts": "83022787"
+    "couldnTLoadYourPendingCheckouts": "83022787",
+    "abontenOnNetwork.x": "31e167a9",
+    "abontenOnNetwork.instagram": "35cf3471",
+    "abontenOnNetwork.tiktok": "e7f0a610"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -4252,7 +4254,6 @@
   "navigation": {
     "abonten": "acfdb324",
     "abontenHome": "4264af8e",
-    "abontenOn": "8c3d9442",
     "abontenWeekly": "a40c167f",
     "account": "85dfa32c",
     "accountMenu": "60f5a30c",

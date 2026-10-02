@@ -66,12 +66,19 @@ function rowContent(item: SuggestionItem, t: Translate, tc: CoreTranslator) {
           ) : undefined,
         };
       }
+      // The second line is the listing's category, which the database
+      // returns by its stored English name: worded here in the reader's
+      // language, like every other category on the site.
       return {
         title: hit.label,
         subtitle:
           hit.entityType === "place"
-            ? (hit.sublabel ?? t("placeKind"))
-            : (hit.sublabel ?? undefined),
+            ? hit.sublabel
+              ? placeCategoryLabel(tc, { name: hit.sublabel })
+              : t("placeKind")
+            : hit.sublabel
+              ? eventCategoryLabel(tc, hit.sublabel)
+              : undefined,
         imageSrc: hitImage(hit.imagePublicId, hit.imageVersion),
         icon:
           hit.entityType === "place" ? (

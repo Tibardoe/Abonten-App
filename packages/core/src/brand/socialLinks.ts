@@ -5,7 +5,9 @@
 // is worse than none.
 
 export type SocialLink = {
+  /** Picks the icon and the accessible name (`common:abontenOnNetwork.<key>`). */
   key: "x" | "instagram" | "tiktok";
+  /** The network's own name. Shown nowhere by itself; the name read out is the catalog's. */
   label: string;
   href: string;
 };
@@ -13,7 +15,7 @@ export type SocialLink = {
 export const SOCIAL_LINKS: readonly SocialLink[] = [
   {
     key: "x",
-    label: "X (formerly Twitter)",
+    label: "X",
     href: "https://x.com/abontenhub?s=11&t=gZ2B02snHyBqRmj-V9sbhg",
   },
   {
