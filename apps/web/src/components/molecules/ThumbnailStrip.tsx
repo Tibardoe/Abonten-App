@@ -3,6 +3,7 @@
 import formatDuration from "@abonten/core/formatVideoDuration";
 import type { MediaItem } from "@abonten/types/mediaItemType";
 import { Trash2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState } from "react";
 
@@ -28,6 +29,8 @@ export default function ThumbnailStrip({
   onDelete,
   onReorder,
 }: ThumbnailStripTypes) {
+  const t = useTranslations("common");
+
   const itemRefs = useRef(new Map<string, HTMLDivElement>());
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOffsetX, setDragOffsetX] = useState(0);
@@ -181,7 +184,11 @@ export default function ThumbnailStrip({
               <button
                 type="button"
                 onClick={() => handleClick(item.id)}
-                aria-label={`View ${item.type} ${index + 1} of ${mediaItems.length}`}
+                aria-label={t("viewOf", {
+                  type: item.type,
+                  value: index + 1,
+                  length: mediaItems.length,
+                })}
                 aria-current={isActive}
                 className="w-full h-full"
               >
@@ -213,7 +220,10 @@ export default function ThumbnailStrip({
                 <button
                   type="button"
                   onClick={() => onDelete(item.id)}
-                  aria-label={`Remove ${item.type} ${index + 1}`}
+                  aria-label={t("remove3", {
+                    type: item.type,
+                    index: index + 1,
+                  })}
                   className="absolute -top-1.5 -right-1.5 h-7 w-7 flex items-center justify-center bg-black text-white rounded-full ring-2 ring-background"
                 >
                   <Trash2Icon className="w-3.5 h-3.5" />

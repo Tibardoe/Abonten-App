@@ -22,6 +22,7 @@ import {
   fetchWithTimeout,
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
+import { tr } from "../../i18n/requestLocale";
 import {
   deriveSigningKey,
   hmacBase64Url,
@@ -71,7 +72,7 @@ function codeHash(requestId: string, code: string): string {
 /** Plain ASCII keeps it one GSM-7 segment (an en dash or curly quote would double the price). */
 export function otpMessage(code: string): string {
   const minutes = Math.round(PENDING_OTP_TTL_MS / 60_000);
-  return `Your Abonten code is ${code}. It expires in ${minutes} minutes. Don't share it with anyone.`;
+  return tr("yourAbontenCodeIsItExpires", { code: code, minutes: minutes });
 }
 
 // Hubtel's numeric `status`: 0 accepted, 1 accepted for delivery. It says
@@ -113,7 +114,7 @@ export const hubtelOtpProvider: OtpProvider = {
       return {
         ok: false,
         reason: "not_configured",
-        message: "Something went wrong. Please try again.",
+        message: tr("somethingWentWrongPleaseTryAgain"),
       };
     }
     const code = String(randomInt(0, 10 ** CODE_LENGTH)).padStart(
@@ -153,7 +154,7 @@ export const hubtelOtpProvider: OtpProvider = {
       return {
         ok: false,
         reason: "provider_error",
-        message: "Couldn't send the verification code. Please try again.",
+        message: tr("couldnTSendTheVerificationCode"),
         detail,
       };
     }
@@ -165,7 +166,7 @@ export const hubtelOtpProvider: OtpProvider = {
       return {
         ok: false,
         reason: "provider_error",
-        message: "Couldn't send the verification code. Please try again.",
+        message: tr("couldnTSendTheVerificationCode"),
         detail,
       };
     }
@@ -179,11 +180,11 @@ export const hubtelOtpProvider: OtpProvider = {
     if (!prefix.startsWith(HASH_VERSION)) {
       return {
         ok: false,
-        message: "That code has expired. Request a new one.",
+        message: tr("thatCodeHasExpiredRequestA"),
       };
     }
     return signaturesMatch(codeHash(requestId, code), prefix)
       ? { ok: true }
-      : { ok: false, message: "That code is incorrect." };
+      : { ok: false, message: tr("thatCodeIsIncorrect") };
   },
 };

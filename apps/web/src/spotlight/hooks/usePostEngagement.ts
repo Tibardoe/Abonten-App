@@ -7,6 +7,7 @@ import { setContentReaction } from "@/actions/content/setContentReaction";
 import { setContentSave } from "@/actions/content/setContentSave";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type {
   ContentCounts,
   ContentPostDocument,
@@ -14,6 +15,7 @@ import type {
   ContentShareChannel,
 } from "@abonten/types/contentType";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
 
@@ -22,6 +24,8 @@ import { dataOf, messageOf } from "../lib/result";
 // idempotent on the server; a failure puts the previous state back.
 
 export function usePostEngagement(post: ContentPostDocument) {
+  const t = useTranslations("spotlight");
+
   const requireAuth = useRequireAuth();
   const toast = useToast();
   const qc = useQueryClient();
@@ -62,7 +66,7 @@ export function usePostEngagement(post: ContentPostDocument) {
       onData?.(res);
     } catch {
       undo();
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
     } finally {
       pending.current -= 1;
     }
@@ -85,7 +89,10 @@ export function usePostEngagement(post: ContentPostDocument) {
           }));
         };
       },
-      () => setContentLike({ postId: post.id, liked: next }),
+      () =>
+        setContentLike({ postId: post.id, liked: next }).catch(
+          actionUnreachable,
+        ),
       (res) => {
         const data = dataOf(res as Awaited<ReturnType<typeof setContentLike>>);
         if (data) setCounts(data.counts);
@@ -100,12 +107,15 @@ export function usePostEngagement(post: ContentPostDocument) {
         setSaved(next);
         return () => setSaved(!next);
       },
-      () => setContentSave({ postId: post.id, saved: next }),
+      () =>
+        setContentSave({ postId: post.id, saved: next }).catch(
+          actionUnreachable,
+        ),
       (res) => {
         const data = dataOf(res as Awaited<ReturnType<typeof setContentSave>>);
         if (data) setCounts(data.counts);
         qc.invalidateQueries({ queryKey: ["content", "saved"] });
-        toast.success(next ? "Saved." : "Removed from saved.");
+        toast.success(next ? t("saved") : t("removedFromSaved2"));
       },
     );
   };
@@ -118,7 +128,10 @@ export function usePostEngagement(post: ContentPostDocument) {
         setReaction(next);
         return () => setReaction(previous);
       },
-      () => setContentReaction({ postId: post.id, emoji: next }),
+      () =>
+        setContentReaction({ postId: post.id, emoji: next }).catch(
+          actionUnreachable,
+        ),
     );
   };
 
@@ -128,10 +141,14 @@ export function usePostEngagement(post: ContentPostDocument) {
         setNotInterested(value);
         return () => setNotInterested(!value);
       },
-      () => setContentNotInterested({ postId: post.id, notInterested: value }),
+      () =>
+        setContentNotInterested({
+          postId: post.id,
+          notInterested: value,
+        }).catch(actionUnreachable),
       () => {
         if (value) {
-          toast.success("Got it. You'll see fewer posts like this.");
+          toast.success(t("gotItYouLlSeeFewer"));
         }
       },
     );

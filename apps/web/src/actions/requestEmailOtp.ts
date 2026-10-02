@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   type RequestEmailOtpResult,
   requestEmailOtpCore,
@@ -16,7 +17,7 @@ export type { RequestEmailOtpResult };
 // POST /api/mobile/auth/email/request route runs the identical logic.
 //
 // Thin wrapper: resolve caller IP -> delegate.
-export default async function requestEmailOtp(
+export default withActionLocale(async function requestEmailOtp(
   email: string,
 ): Promise<RequestEmailOtpResult> {
   const headerList = await headers();
@@ -26,4 +27,4 @@ export default async function requestEmailOtp(
     null;
 
   return requestEmailOtpCore(publicSupabase, { email, ip });
-}
+});

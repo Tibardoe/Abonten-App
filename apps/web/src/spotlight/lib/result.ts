@@ -1,3 +1,5 @@
+import { translatorFor } from "@/i18n/clientTranslator";
+
 // Server Actions answer with an envelope instead of throwing. These narrow
 // one to its data, or to a message a toast can show.
 
@@ -16,7 +18,11 @@ export function dataOf<R extends AnyResult>(
 
 export function messageOf(
   res: AnyResult | null | undefined,
-  fallback = "Something went wrong. Please try again.",
+  fallback?: string,
 ): string {
-  return res?.message ?? fallback;
+  return (
+    res?.message ??
+    fallback ??
+    translatorFor("common")("somethingWentWrongPleaseTryAgain2")
+  );
 }

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type SubmitChargeOtpCoreResult,
   submitChargeOtpCore,
@@ -11,7 +13,7 @@ import {
  * that returned Paystack's "send_otp" status). Ownership-checked against the
  * payment_attempt the OTP is for, same as verifyPaystackPayment.ts.
  */
-export default async function submitPaystackChargeOtp(
+export default withActionLocale(async function submitPaystackChargeOtp(
   paymentAttemptId: string,
   otp: string,
 ): Promise<SubmitChargeOtpCoreResult | { status: 401; message: string }> {
@@ -23,8 +25,8 @@ export default async function submitPaystackChargeOtp(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return submitChargeOtpCore(supabase, user.id, paymentAttemptId, otp);
-}
+});

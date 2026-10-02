@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 
 type AvatarUrlProp = {
@@ -11,6 +12,8 @@ export default function UserAvatar({
   width,
   height,
 }: AvatarUrlProp) {
+  const t = useTranslations("common");
+
   return (
     <div
       className="relative rounded-full overflow-hidden flex flex-shrink-0"
@@ -18,7 +21,7 @@ export default function UserAvatar({
     >
       <Image
         src={avatarUrl}
-        alt="User Avatar"
+        alt={t("userAvatar")}
         fill
         className="object-cover object-center"
         sizes={`${width}px`}

@@ -3,6 +3,7 @@
 import { bindReferralCode } from "@/actions/bindReferralCode";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { translatorFor } from "@/i18n/clientTranslator";
 import {
   INVITE_FLAG_COOKIE_NAME,
   bindResultMessage,
@@ -42,7 +43,9 @@ export default function InviteBinder() {
       const { result } = res.data;
       if (result === "already_bound" || result === "capture_off") return;
       if (result === "program_off" || result === "error") return;
-      const { tone, text } = bindResultMessage(res.data);
+      // Worded when it is shown, from the handful of messages every page
+      // brings for this (the invite group of `core`, not all of it).
+      const { tone, text } = bindResultMessage(translatorFor("core"), res.data);
       const show = toastRef.current;
       if (tone === "success") show.success(text, { durationMs: 8000 });
       else if (tone === "info") show.info(text);

@@ -4,6 +4,7 @@ import type {
   GeoJsonPolygon,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -63,7 +64,7 @@ export async function listLeadTerritoriesCore(
     .order("status")
     .order("priority", { ascending: false })
     .order("name");
-  if (error) return dbErr(error, "Could not load territories");
+  if (error) return dbErr(error, tr("couldNotLoadTerritories"));
   return {
     status: 200,
     data: ((data ?? []) as TerritoryRow[]).map(mapTerritory),
@@ -86,7 +87,7 @@ export async function upsertLeadTerritoryCore(
     return fieldOpsError(e);
   }
   if (!EDITABLE_STATUSES.has(campaignStatus)) {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
   if (input.boundary) {
     const problem = validatePolygon(input.boundary);
@@ -94,7 +95,7 @@ export async function upsertLeadTerritoryCore(
   }
   if (input.parentTerritoryId) {
     if (input.parentTerritoryId === input.id) {
-      return { status: 400, message: "A territory can't be its own parent." };
+      return { status: 400, message: tr("aTerritoryCanTBeIts") };
     }
     const { data: parent } = await supabase
       .from("fieldops_territory")
@@ -103,7 +104,7 @@ export async function upsertLeadTerritoryCore(
       .eq("region_id", regionId)
       .maybeSingle();
     if (!parent) {
-      return { status: 400, message: "The parent town isn't in this region." };
+      return { status: 400, message: tr("theParentTownIsnTIn") };
     }
   }
   const values = {
@@ -126,11 +127,11 @@ export async function upsertLeadTerritoryCore(
       .neq("status", "retired")
       .select(TERRITORY_COLUMNS)
       .maybeSingle();
-    if (error) return dbErr(error, "Could not save the territory");
-    if (!data) return { status: 404, message: "Territory not found" };
+    if (error) return dbErr(error, tr("couldNotSaveTheTerritory"));
+    if (!data) return { status: 404, message: tr("territoryNotFound") };
     return {
       status: 200,
-      message: "Territory saved.",
+      message: tr("territorySaved"),
       data: mapTerritory(data as TerritoryRow),
     };
   }
@@ -143,17 +144,17 @@ export async function upsertLeadTerritoryCore(
     if (error?.code === "23505") {
       return {
         status: 409,
-        message: "A territory with that name already exists in this region.",
+        message: tr("aTerritoryWithThatNameAlready"),
       };
     }
     return dbErr(
-      error ?? { message: "insert failed" },
-      "Could not add the territory",
+      error ?? { message: tr("insertFailed") },
+      tr("couldNotAddTheTerritory"),
     );
   }
   return {
     status: 200,
-    message: "Territory added.",
+    message: tr("territoryAdded"),
     data: mapTerritory(data as TerritoryRow),
   };
 }
@@ -178,7 +179,7 @@ export async function setLeadTerritoryStatusCore(
     return fieldOpsError(e);
   }
   if (!EDITABLE_STATUSES.has(campaignStatus)) {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
   const { data, error } = await supabase
     .from("fieldops_territory")
@@ -188,14 +189,14 @@ export async function setLeadTerritoryStatusCore(
     .neq("status", "retired")
     .select(TERRITORY_COLUMNS)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not update the territory");
-  if (!data) return { status: 404, message: "Territory not found" };
+  if (error) return dbErr(error, tr("couldNotUpdateTheTerritory"));
+  if (!data) return { status: 404, message: tr("territoryNotFound") };
   return {
     status: 200,
     message:
       input.status === "completed"
-        ? "Territory marked completed."
-        : "Territory reopened.",
+        ? tr("territoryMarkedCompleted")
+        : tr("territoryReopened"),
     data: mapTerritory(data as TerritoryRow),
   };
 }

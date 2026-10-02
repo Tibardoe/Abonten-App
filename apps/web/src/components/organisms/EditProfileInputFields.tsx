@@ -6,6 +6,7 @@ import type { UserDetailsFormType } from "@abonten/types/userProfileType";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
 import { Button } from "../ui/button";
@@ -26,6 +27,8 @@ type InitialDataProps = {
 export default function EditProfileInputFields({
   initialData,
 }: InitialDataProps) {
+  const t = useTranslations("common");
+
   const form = useForm<UserDetailsFormType>({
     defaultValues: initialData,
     resolver: zodResolver(editProfileSchema),
@@ -67,7 +70,7 @@ export default function EditProfileInputFields({
     // {status, message} even on failure, so a rejected update is handled
     // here rather than in onError below.
     onSuccess: (profileData, formData, context) => {
-      const message = profileData?.message || "Profile updated successfully.";
+      const message = profileData?.message || t("profileUpdatedSuccessfully");
 
       if (profileData?.status === 200) {
         toast.success(message);
@@ -98,7 +101,7 @@ export default function EditProfileInputFields({
       if (context?.previousDetails) {
         queryClient.setQueryData(userDetailsQueryKey, context.previousDetails);
       }
-      toast.error(error?.message || "Something went wrong.");
+      toast.error(error?.message || t("somethingWentWrong2"));
     },
   });
 
@@ -109,17 +112,17 @@ export default function EditProfileInputFields({
   return (
     <div className="space-y-3">
       <div>
-        <h2 className="font-semibold">Public profile</h2>
+        <h2 className="font-semibold">{t("publicProfile")}</h2>
         <p className="text-sm text-muted-foreground">
-          This information is visible to anyone who views your profile.
+          {t("thisInformationIsVisibleToAnyone")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
         <div className="space-y-1.5">
           <Input
-            title="Username"
-            inputPlaceholder="Username"
+            title={t("username")}
+            inputPlaceholder={t("username")}
             {...register("username")}
           />
           {errors.username && (
@@ -131,8 +134,8 @@ export default function EditProfileInputFields({
 
         <div className="space-y-1.5">
           <Input
-            title="Name"
-            inputPlaceholder="Name"
+            title={t("name")}
+            inputPlaceholder={t("name")}
             {...register("full_name")}
           />
           {errors.full_name && (
@@ -144,8 +147,8 @@ export default function EditProfileInputFields({
 
         <div className="space-y-1.5">
           <Input
-            title="Website"
-            inputPlaceholder="Website"
+            title={t("website")}
+            inputPlaceholder={t("website")}
             {...register("website")}
           />
           {errors.website && (
@@ -156,7 +159,11 @@ export default function EditProfileInputFields({
         </div>
 
         <div className="space-y-1.5">
-          <Input title="Bio" inputPlaceholder="Bio" {...register("bio")} />
+          <Input
+            title={t("bio")}
+            inputPlaceholder={t("bio")}
+            {...register("bio")}
+          />
           {errors.bio && (
             <p className="text-[0.8rem] font-medium text-destructive">
               {errors.bio.message}
@@ -167,14 +174,14 @@ export default function EditProfileInputFields({
         <div className="flex items-center justify-end gap-3 mb-5 md:mb-0">
           {isDirty && !isPending && (
             <span className="text-sm text-muted-foreground">
-              Unsaved changes
+              {t("unsavedChanges")}
             </span>
           )}
           <Button
             className="font-bold"
             disabled={isPending || !isDirty || !isValid}
           >
-            {isPending ? "Submitting..." : "Submit"}
+            {isPending ? t("submitting") : t("submit")}
           </Button>
         </div>
       </form>

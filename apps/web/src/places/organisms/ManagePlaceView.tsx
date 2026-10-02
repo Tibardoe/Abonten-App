@@ -1,7 +1,8 @@
 "use client";
 
-import EventUploadModal from "@/components/organisms/EventUploadModal";
+import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { useToast } from "@/hooks/useToast";
 import ManagePlaceBookingsSection from "@/places/organisms/ManagePlaceBookingsSection";
 import ManagePlaceDetailsSection from "@/places/organisms/ManagePlaceDetailsSection";
 import ManagePlaceHoursSection from "@/places/organisms/ManagePlaceHoursSection";
@@ -32,6 +33,7 @@ import PlaceSetupChecklist from "@/places/molecules/PlaceSetupChecklist";
 import VerificationSection from "@/verification/organisms/VerificationSection";
 import { computePlaceSetup } from "@abonten/core/placeSetup";
 import type { SubjectVerificationView } from "@abonten/types/verificationType";
+import { useTranslations } from "next-intl";
 type ManagedPlace = ManagedPlaceRow;
 type PlaceReviewRow = PlaceReviewListItem;
 
@@ -93,15 +95,15 @@ type Tab =
   | "verification";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "details", label: "Details & Location" },
-  { id: "photos", label: "Photos" },
-  { id: "hours", label: "Hours & Status" },
-  { id: "services", label: "Services" },
-  { id: "bookings", label: "Bookings" },
-  { id: "reviews", label: "Reviews" },
-  { id: "insights", label: "Insights" },
-  { id: "promotion", label: "Promotion" },
-  { id: "verification", label: "Verification" },
+  { id: "details", label: "tabs.details" },
+  { id: "photos", label: "tabs.photos" },
+  { id: "hours", label: "tabs.hours" },
+  { id: "services", label: "tabs.services" },
+  { id: "bookings", label: "tabs.bookings" },
+  { id: "reviews", label: "tabs.reviews" },
+  { id: "insights", label: "tabs.insights" },
+  { id: "promotion", label: "tabs.promotion" },
+  { id: "verification", label: "tabs.verification" },
 ];
 
 // Top-level management view for a single place, tabbed across the sections
@@ -125,6 +127,9 @@ export default function ManagePlaceView({
   verification,
   setup,
 }: ManagePlaceViewProps) {
+  const t = useTranslations("places");
+  const toast = useToast();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   // A verification notification deep-links straight to its tab.
@@ -145,8 +150,8 @@ export default function ManagePlaceView({
   // rather than changing EventUploadModal's own step-1 assumptions.
   const { imagePreview, selectedFile, fileInputRef, handleFileChange } =
     useImageSelection({
-      invalidFileMessage: "Please select an image file for your event flyer.",
-      onInvalidFile: (message) => alert(message),
+      invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
+      onInvalidFile: (message) => toast.error(message),
       onSelect: () => setShowEventModal(true),
     });
 
@@ -164,7 +169,7 @@ export default function ManagePlaceView({
           className="flex items-center gap-2 bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm hover:bg-primary/90 transition-colors shrink-0"
         >
           <IoAddOutline className="text-lg" />
-          Add Upcoming Event
+          {t("addUpcomingEvent")}
         </button>
 
         <input
@@ -200,7 +205,7 @@ export default function ManagePlaceView({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
       </div>

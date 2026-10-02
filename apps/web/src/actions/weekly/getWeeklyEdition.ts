@@ -1,10 +1,12 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseDiscoveryInput,
   resolveDiscoveryCaller,
 } from "@/utils/discoveryAction";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type WeeklyEditionResponse,
   getWeeklyEditionCore,
@@ -16,18 +18,20 @@ import { weeklyEditionRequestSchema } from "@abonten/validation/weeklySchemas";
  * programme is not open to everyone). The cached public pages call the
  * service directly instead; this is the session-aware path.
  */
-export async function getWeeklyEdition(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: WeeklyEditionResponse;
-}> {
-  const parsed = parseDiscoveryInput(weeklyEditionRequestSchema, input);
-  if (parsed.error) return parsed.error;
-  try {
-    const caller = await resolveDiscoveryCaller();
-    return await getWeeklyEditionCore(caller.svc, caller.userId, parsed.data);
-  } catch (error) {
-    logger.error("getWeeklyEdition failed", error);
-    return { status: 500, message: "Couldn't load Abonten Weekly." };
-  }
-}
+export const getWeeklyEdition = withActionLocale(
+  async function getWeeklyEdition(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: WeeklyEditionResponse;
+  }> {
+    const parsed = parseDiscoveryInput(weeklyEditionRequestSchema, input);
+    if (parsed.error) return parsed.error;
+    try {
+      const caller = await resolveDiscoveryCaller();
+      return await getWeeklyEditionCore(caller.svc, caller.userId, parsed.data);
+    } catch (error) {
+      logger.error("getWeeklyEdition failed", error);
+      return { status: 500, message: tr("couldnTLoadAbontenWeekly") };
+    }
+  },
+);

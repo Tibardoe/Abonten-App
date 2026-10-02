@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { calendarZoneOrDefault } from "@abonten/services/markets/calendarZone";
 import { fetchOrganizerDashboardOverview } from "@abonten/services/organizer/organizerReadQuery";
 
@@ -9,8 +13,9 @@ const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];
 
 // GET /api/mobile/organizer/overview?period=today|7d|30d|all&tz=<IANA zone>
 // The signed-in organizer's dashboard KPIs for the period (and the
-// comparison window). Same body as the getOrganizerDashboardOverview action.
+// comparison window). The web page reads the same numbers through getOrganizerDashboard.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -31,6 +36,9 @@ export async function GET(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile GET /organizer/overview failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

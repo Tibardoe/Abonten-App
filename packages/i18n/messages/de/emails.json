@@ -1,0 +1,61 @@
+{
+  "cancellation": {
+    "event": "Event",
+    "heading": "Event abgesagt",
+    "intro": "{greeting} der Veranstalter hat <strong>{eventTitle}</strong> abgesagt. Dein Ticket ist nicht mehr gültig.",
+    "preview": "{eventTitle} wurde abgesagt — das passiert mit deinem Ticket",
+    "processing": "In Bearbeitung",
+    "questions": "Bei Fragen zu dieser Absage oder deiner Erstattung erreichst du uns über die Abonten-App.",
+    "refund": "Eine Erstattung erfolgt auf die für dein Ticket verwendete Zahlungsmethode. Das kann einige Tage dauern — den Status kannst du jederzeit unter „Meine Tickets“ einsehen.",
+    "refundAmount": "Erstattungsbetrag",
+    "refundStatus": "Erstattungsstatus",
+    "subject": "Event abgesagt — {eventTitle}",
+    "viewRefundStatus": "Erstattungsstatus ansehen"
+  },
+  "common": {
+    "contactUsThroughTheApp": "Bei Fragen erreichst du uns über die Abonten-App.",
+    "copyright": "© {year} {entity}",
+    "hi": "Hallo {name},",
+    "there": "zusammen"
+  },
+  "digest": {
+    "intro": "{greeting} hier {count, plural, one {ist ein Tipp} other {sind # Tipps}} auf Basis dessen, worüber du informiert werden wolltest.",
+    "reason": {
+      "organizer": "Von einem Veranstalter, dem du folgst",
+      "organizerNamed": "Neu von @{username}",
+      "place": "An einem Ort, dem du folgst",
+      "similarEvents": "Ähnlich wie Events, die dir gefallen haben",
+      "similarPlaces": "Ähnlich wie Orte, die dir gefallen haben"
+    },
+    "seeAll": "Alle deine Tipps ansehen",
+    "unsubscribe": "Du möchtest diese E-Mails nicht? <unsubscribe>Abbestellen</unsubscribe> oder <settings>Einstellungen ändern</settings>. E-Mails zu Tickets, Zahlungen und deinem Konto sind nicht betroffen.",
+    "why": "Du erhältst diese E-Mail, weil du in den Benachrichtigungseinstellungen deines Abonten-Hub-Kontos E-Mails zu Tipps und Benachrichtigungen aktiviert hast. Höchstens eine pro Tag."
+  },
+  "rewards": {
+    "headingMany": "Neues zu deinen Prämien",
+    "intro": "{greeting} das gibt es Neues zu deinem Abonten-Guthaben.",
+    "open": "Abonten Rewards öffnen",
+    "subjectMany": "Abonten Rewards: {count} Neuigkeiten",
+    "unsubscribe": "Du möchtest diese E-Mails nicht? <link>Abbestellen</link>. Dein Guthaben siehst du weiterhin in der App.",
+    "why": "Du erhältst diese E-Mail, weil du in deinem Abonten-Hub-Konto Abonten-Guthaben verdient hast. Guthaben kann auf Abonten ausgegeben und nicht gegen Bargeld getauscht werden."
+  },
+  "ticket": {
+    "amountPaid": "Gezahlter Betrag",
+    "attached": "Dein Ticket hängt dieser E-Mail als PDF an. Du kannst es auch jederzeit unter „Meine Tickets“ in Abonten öffnen.",
+    "date": "Datum",
+    "detailsLabel": "Ticketdetails",
+    "event": "Event",
+    "free": "Kostenlos",
+    "heading": "Herzlichen Glückwunsch! 🎟️",
+    "intro": "{greeting} dein Ticket für <strong>{eventTitle}</strong> wurde erfolgreich gekauft.",
+    "keepSafe": "Bewahre dein Ticket gut auf — du brauchst es (oder das angehängte PDF) für den Einlass. Bei Fragen erreichst du uns über die Abonten-App.",
+    "preview": "Dein Abonten-Ticket für {eventTitle} ist bereit — Details findest du in dieser E-Mail",
+    "purchaseDate": "Kaufdatum",
+    "quantity": "Menge",
+    "quantityValue": "{count, plural, one {# Ticket} other {# Tickets}}",
+    "subject": "Dein Abonten-Ticket ist bereit 🎟️ — {eventTitle}",
+    "time": "Uhrzeit",
+    "venue": "Location",
+    "viewMyTickets": "Meine Tickets ansehen"
+  }
+}

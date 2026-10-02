@@ -6,6 +6,7 @@ import {
   scrubTarget,
 } from "@abonten/core/content/playbackControls";
 import { AppText, useReducedMotion } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -63,6 +64,8 @@ export function SpotlightTimeline({
   bottom: number;
   onScrubbing: (scrubbing: boolean) => void;
 }) {
+  const t = useTranslations("spotlight");
+
   const reduceMotion = useReducedMotion();
   // Destructured: a worklet must capture the shared values themselves, not
   // the object holding the mutable `seek` ref (Reanimated freezes anything
@@ -210,7 +213,7 @@ export function SpotlightTimeline({
             }}
             accessible
             accessibilityRole="adjustable"
-            accessibilityLabel="Video position"
+            accessibilityLabel={t("videoPosition")}
           >
             <Animated.View style={[styles.track, trackStyle]}>
               <Animated.View style={[styles.fill, fillStyle]} />
@@ -232,6 +235,8 @@ export function SpotlightTimeline({
  * while the player waits. With reduce-motion on, the line pulses instead.
  */
 function LoadingSweep({ reduceMotion }: { reduceMotion: boolean }) {
+  const t = useTranslations("spotlight");
+
   const x = useSharedValue(0);
   const visible = useSharedValue(0);
   useEffect(() => {
@@ -258,7 +263,7 @@ function LoadingSweep({ reduceMotion }: { reduceMotion: boolean }) {
   return (
     <Animated.View
       pointerEvents="none"
-      accessibilityLabel="Loading video"
+      accessibilityLabel={t("loadingVideo")}
       style={[styles.sweep, style]}
     />
   );

@@ -5,6 +5,7 @@ import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
+import { formatCount } from "@abonten/core/i18n/format";
 import {
   AppText,
   Icon,
@@ -12,6 +13,7 @@ import {
   Refresher,
   SectionTitle,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Link, useLocalSearchParams } from "expo-router";
 import {
@@ -29,12 +31,12 @@ import {
 // pre-selected), plus links to the other tabs.
 
 const TILES: { key: string; label: string }[] = [
-  { key: "view", label: "Place Views" },
-  { key: "direction_click", label: "Directions" },
-  { key: "phone_click", label: "Phone Calls" },
-  { key: "whatsapp_click", label: "WhatsApp" },
-  { key: "favorites", label: "Favorites" },
-  { key: "reviews", label: "Reviews" },
+  { key: "view", label: "placeTiles.views" },
+  { key: "direction_click", label: "placeTiles.directions" },
+  { key: "phone_click", label: "placeTiles.phoneCalls" },
+  { key: "whatsapp_click", label: "placeTiles.whatsapp" },
+  { key: "favorites", label: "placeTiles.favorites" },
+  { key: "reviews", label: "placeTiles.reviews" },
 ];
 
 function StatTile({ label, value }: { label: string; value: string }) {
@@ -47,6 +49,9 @@ function StatTile({ label, value }: { label: string; value: string }) {
 }
 
 export default function PlaceManageScreen() {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const id = placeId ?? "";
   const q = usePlaceInsights(id);
@@ -78,7 +83,7 @@ export default function PlaceManageScreen() {
       {!definiteFailure && view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="this place's insights"
+          subject={t("thisPlaceSInsights")}
           onRetry={() => q.refetch()}
           loading={
             <View className="items-center py-12">
@@ -89,7 +94,7 @@ export default function PlaceManageScreen() {
       ) : definiteFailure ? (
         <View className="items-center gap-3 py-12">
           <AppText className="text-center text-muted-foreground">
-            {result.message || "Couldn't load this place's insights."}
+            {result.message || t("couldnTLoadThisPlaceS")}
           </AppText>
           <Pressable
             accessibilityRole="button"
@@ -97,17 +102,17 @@ export default function PlaceManageScreen() {
             onPress={() => q.refetch()}
           >
             <AppText className="font-semibold text-primary-foreground">
-              Retry
+              {t("retry")}
             </AppText>
           </Pressable>
         </View>
       ) : (
         <View className="flex-row flex-wrap gap-2">
-          {TILES.map((t) => (
+          {TILES.map((tile) => (
             <StatTile
-              key={t.key}
-              label={t.label}
-              value={(insights?.[t.key] ?? 0).toLocaleString()}
+              key={tile.key}
+              label={t(tile.label)}
+              value={formatCount(insights?.[tile.key] ?? 0, locale)}
             />
           ))}
         </View>
@@ -116,19 +121,19 @@ export default function PlaceManageScreen() {
       {id ? (
         <View className="gap-3">
           <View className="flex-row items-center justify-between">
-            <SectionTitle>Upcoming events</SectionTitle>
+            <SectionTitle>{t("upcomingEvents")}</SectionTitle>
             <Link
               href={{ pathname: "/(app)/event/new", params: { placeId: id } }}
               asChild
             >
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Add an event at this place"
+                accessibilityLabel={t("addAnEventAtThisPlace")}
                 className="min-h-[36px] flex-row items-center gap-1 rounded-lg bg-primary px-3 py-1.5 active:opacity-90"
               >
                 <Icon name="add" size={16} tone="inverse" />
                 <AppText className="text-[13px] font-semibold text-primary-foreground">
-                  Add event
+                  {t("addEvent")}
                 </AppText>
               </Pressable>
             </Link>
@@ -161,11 +166,10 @@ export default function PlaceManageScreen() {
           ) : (
             <View className="gap-1 rounded-xl border border-dashed border-border p-4">
               <AppText variant="bodyStrong">
-                No upcoming events here yet
+                {t("noUpcomingEventsHereYet")}
               </AppText>
               <AppText variant="muted">
-                Events you or other organizers pin to this place show up on its
-                public page. Tap Add event to post one.
+                {t("eventsYouOrOtherOrganizersPin")}
               </AppText>
             </View>
           )}
@@ -177,7 +181,7 @@ export default function PlaceManageScreen() {
           <Link href={`/(app)/organizer/places/${id}/edit`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base font-semibold text-primary">
-                Edit place
+                {t("editPlace")}
               </AppText>
               <AppText className="text-primary">›</AppText>
             </Pressable>
@@ -185,20 +189,24 @@ export default function PlaceManageScreen() {
           <Link href={`/(app)/organizer/places/${id}/photos`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base text-foreground">
-                Manage photos
+                {t("managePhotos")}
               </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/places/${id}/bookings`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <AppText className="text-base text-foreground">Bookings</AppText>
+              <AppText className="text-base text-foreground">
+                {t("bookings")}
+              </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/places/${id}/reviews`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <AppText className="text-base text-foreground">Reviews</AppText>
+              <AppText className="text-base text-foreground">
+                {t("reviews")}
+              </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
@@ -206,7 +214,7 @@ export default function PlaceManageScreen() {
             <Link href={`/(app)/organizer/places/${id}/check-in`} asChild>
               <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
                 <AppText className="text-base text-foreground">
-                  Visitor check-in code
+                  {t("visitorCheckInCode")}
                 </AppText>
                 <AppText className="text-muted-foreground">›</AppText>
               </Pressable>
@@ -215,7 +223,7 @@ export default function PlaceManageScreen() {
           <Link href={`/(app)/organizer/places/${id}/verification`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base text-foreground">
-                Verification
+                {t("verification")}
               </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
@@ -224,7 +232,7 @@ export default function PlaceManageScreen() {
             <Link href={`/(app)/organizer/places/${id}/promote`} asChild>
               <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
                 <AppText className="text-base font-semibold text-primary">
-                  Feature this place
+                  {t("featureThisPlace")}
                 </AppText>
                 <AppText className="text-primary">›</AppText>
               </Pressable>
@@ -233,7 +241,7 @@ export default function PlaceManageScreen() {
           <Link href={`/(app)/place/${id}`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base text-foreground">
-                View public place page
+                {t("viewPublicPlacePage")}
               </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>

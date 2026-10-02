@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import {
   Badge,
@@ -12,6 +13,7 @@ import {
   cn,
   timeAgo,
 } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   deleteSearchConcept,
   previewSearchConcept,
@@ -86,6 +88,7 @@ export function VocabularyManager({
   const [filter, setFilter] = useState("");
   const [preview, setPreview] = useState<SearchConceptPreview | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const confirm = useConfirm();
   const editable = canConfigure && stepUpFresh;
 
   const words = parseConceptWords(draft.words, draft.term);
@@ -117,7 +120,7 @@ export function VocabularyManager({
         term: draft.term,
         expandsTo: words,
         appliesTo: draft.appliesTo,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res && res.data) setPreview(res.data);
       else setMsg({ ok: false, text: res.message ?? "Couldn't preview." });
     });
@@ -134,7 +137,7 @@ export function VocabularyManager({
         enabled: draft.enabled,
         note: draft.note.trim() || null,
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text: res.message ?? (res.status === 200 ? "Saved." : "Couldn't save."),
@@ -150,16 +153,17 @@ export function VocabularyManager({
     start(async () => {
       if (!draft.id) return;
       if (
-        !window.confirm(
+        !(await confirm(
           `Remove “${draft.term}”? Searches stop matching its words at once. Switching it off keeps it for later instead.`,
-        )
+          { confirmLabel: "Remove", danger: true },
+        ))
       ) {
         return;
       }
       const res = await deleteSearchConcept({
         id: draft.id,
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text:

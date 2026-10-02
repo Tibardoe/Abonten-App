@@ -16,6 +16,7 @@ import {
 import { logger } from "@abonten/core/logger";
 import type { RateTable } from "@abonten/core/money/conversion";
 import { isKnownCurrency } from "@abonten/core/money/currencies";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 const CACHE_TTL_MS = 60_000;
@@ -103,7 +104,9 @@ export async function refreshExchangeRates(): Promise<RefreshResult> {
   if (config.provider !== "openexchangerates") {
     return {
       ok: false,
-      message: `Automatic refresh is off (provider: ${config.provider}).`,
+      message: tr("automaticRefreshIsOffProvider", {
+        provider: config.provider,
+      }),
     };
   }
   // The named value is sent to Open Exchange Rates: only its own variable
@@ -111,7 +114,9 @@ export async function refreshExchangeRates(): Promise<RefreshResult> {
   if (!/^OPEN_EXCHANGE_RATES_APP_ID(?:_[A-Z0-9]+)?$/.test(config.appIdEnv)) {
     return {
       ok: false,
-      message: `${config.appIdEnv} is not an Open Exchange Rates variable`,
+      message: tr("isNotAnOpenExchangeRates", {
+        appIdEnv: config.appIdEnv,
+      }),
     };
   }
   const appId = process.env[config.appIdEnv];
@@ -185,10 +190,10 @@ export async function setManualExchangeRate(input: {
   actorId: string;
 }): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!isKnownCurrency(input.base) || !isKnownCurrency(input.quote)) {
-    return { ok: false, message: "Unknown currency." };
+    return { ok: false, message: tr("unknownCurrency") };
   }
   if (!Number.isFinite(input.rate) || input.rate <= 0) {
-    return { ok: false, message: "Enter a rate greater than zero." };
+    return { ok: false, message: tr("enterARateGreaterThanZero") };
   }
   const { error } = await getSupabaseServiceClient()
     .from("exchange_rate")

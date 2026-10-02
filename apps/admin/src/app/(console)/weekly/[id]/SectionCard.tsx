@@ -1,6 +1,8 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Badge, Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   deleteWeeklySection,
   reorderWeeklyItems,
@@ -57,6 +59,7 @@ export function SectionCard({
   const [layout, setLayout] = useState<WeeklyLayout>(section.layout);
   const [iconKey, setIconKey] = useState(section.iconKey ?? "");
   const [scope, setScope] = useState<WeeklySubjectScope>(section.subjectScope);
+  const confirm = useConfirm();
 
   useEffect(() => {
     setTitle(section.title);
@@ -83,7 +86,7 @@ export function SectionCard({
           expectedVersion: version,
           sectionId: section.id,
           patch,
-        }),
+        }).catch(actionUnreachable),
       { success },
     );
 
@@ -99,7 +102,7 @@ export function SectionCard({
           expectedVersion: version,
           sectionId: section.id,
           itemIds: ids,
-        }),
+        }).catch(actionUnreachable),
       { success: "Listing moved." },
     );
   };
@@ -167,11 +170,12 @@ export function SectionCard({
                 variant="ghost"
                 className="text-destructive"
                 disabled={pending}
-                onClick={() => {
+                onClick={async () => {
                   if (
-                    !window.confirm(
+                    !(await confirm(
                       `Delete the section “${section.title}” and its ${section.items.length} listing(s)?`,
-                    )
+                      { confirmLabel: "Delete section", danger: true },
+                    ))
                   ) {
                     return;
                   }
@@ -181,7 +185,7 @@ export function SectionCard({
                         editionId,
                         expectedVersion: version,
                         sectionId: section.id,
-                      }),
+                      }).catch(actionUnreachable),
                     { success: "Section deleted." },
                   );
                 }}

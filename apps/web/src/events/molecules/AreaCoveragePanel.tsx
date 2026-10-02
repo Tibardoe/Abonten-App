@@ -5,13 +5,14 @@ import leaveAreaWaitlist from "@/actions/leaveAreaWaitlist";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import type { BrowseSuggestions } from "@abonten/core/market/coverage";
 import {
-  BROWSE_ELSEWHERE_TITLE,
-  JOIN_WAITLIST_LABEL,
-  LEAVE_WAITLIST_LABEL,
-  NOT_LAUNCHED_BODY,
+  BROWSE_ELSEWHERE_TITLE_KEY,
+  JOIN_WAITLIST_LABEL_KEY,
+  LEAVE_WAITLIST_LABEL_KEY,
+  NOT_LAUNCHED_BODY_KEY,
   browseReasonLabel,
   cityDistanceText,
   notLaunchedTitle,
@@ -19,6 +20,7 @@ import {
   waitingText,
 } from "@abonten/core/market/coverageCopy";
 import type { DistanceUnit } from "@abonten/core/units/distance";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -47,6 +49,9 @@ export default function AreaCoveragePanel({
   distanceUnit: DistanceUnit;
   autoJoin: boolean;
 }) {
+  const t = useTranslations("events");
+  const tc = useTranslations("core");
+
   const [waiting, setWaiting] = useState(initiallyWaiting);
   const [pending, startTransition] = useTransition();
   const toast = useToast();
@@ -71,24 +76,26 @@ export default function AreaCoveragePanel({
         router.push(getSignInUrl(currentQuery({ [JOIN_PARAM]: "1" })));
         return;
       }
-      const res = await joinAreaWaitlist({ ...point, label: areaName });
+      const res = await joinAreaWaitlist({ ...point, label: areaName }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200) {
         setWaiting(true);
-        toast.success(waitingText(res.data?.areaName ?? areaName));
+        toast.success(waitingText(tc, res.data?.areaName ?? areaName));
       } else if (res.status === 409) {
-        toast.success("Abonten is already open here. Have a look around.");
+        toast.success(t("abontenIsAlreadyOpenHereHave"));
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't add you to the list.");
+        toast.error(res.message ?? t("couldnTAddYouToThe"));
       }
     });
   }
 
   function leave() {
     startTransition(async () => {
-      const res = await leaveAreaWaitlist(point);
+      const res = await leaveAreaWaitlist(point).catch(actionUnreachable);
       if (res.status === 200) setWaiting(false);
-      else toast.error(res.message ?? "Couldn't take you off the list.");
+      else toast.error(res.message ?? t("couldnTTakeYouOffThe"));
     });
   }
 
@@ -101,8 +108,8 @@ export default function AreaCoveragePanel({
     if (!initiallyWaiting) join();
   }, [autoJoin]);
 
-  const title = notLaunchedTitle(areaName);
-  const reason = browseReasonLabel(browse.reason);
+  const title = notLaunchedTitle(tc, areaName);
+  const reason = browseReasonLabel(tc, browse.reason);
 
   return (
     <section
@@ -116,7 +123,7 @@ export default function AreaCoveragePanel({
             {title}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {waiting ? waitingText(areaName) : NOT_LAUNCHED_BODY}
+            {waiting ? waitingText(tc, areaName) : tc(NOT_LAUNCHED_BODY_KEY)}
           </p>
         </div>
       </div>
@@ -130,19 +137,21 @@ export default function AreaCoveragePanel({
             onClick={leave}
             disabled={pending}
           >
-            {pending ? "Removing you…" : LEAVE_WAITLIST_LABEL}
+            {pending ? t("removingYou") : tc(LEAVE_WAITLIST_LABEL_KEY)}
           </Button>
         ) : (
           <Button type="button" size="sm" onClick={join} disabled={pending}>
             <FiBell aria-hidden className="h-4 w-4" />
-            {pending ? "Adding you…" : JOIN_WAITLIST_LABEL}
+            {pending ? t("addingYou") : tc(JOIN_WAITLIST_LABEL_KEY)}
           </Button>
         )}
       </div>
 
       {browse.cities.length > 0 ? (
         <div className="mt-4 border-t border-border pt-3 md:pl-8">
-          <h3 className="text-sm font-medium">{BROWSE_ELSEWHERE_TITLE}</h3>
+          <h3 className="text-sm font-medium">
+            {tc(BROWSE_ELSEWHERE_TITLE_KEY)}
+          </h3>
           <ul className="mt-1">
             {browse.cities.map((city) => (
               <li key={city.region.id}>
@@ -163,7 +172,7 @@ export default function AreaCoveragePanel({
                     </span>
                   ) : null}
                   <span className="text-xs text-muted-foreground">
-                    {cityDistanceText(city, distanceUnit)}
+                    {cityDistanceText(tc, city, distanceUnit)}
                   </span>
                   <FiChevronRight
                     aria-hidden
@@ -177,19 +186,19 @@ export default function AreaCoveragePanel({
       ) : null}
 
       <p className="mt-4 border-t border-border pt-3 text-sm text-muted-foreground md:pl-8">
-        {supplyPrompt(areaName)}{" "}
+        {supplyPrompt(tc, areaName)}{" "}
         <Link
           href="/help/organizers/creating-and-publishing-events"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          How to list an event
+          {t("howToListAnEvent")}
         </Link>
         {" · "}
         <Link
           href="/help/place-owners/managing-your-place"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          How to add a place
+          {t("howToAddAPlace")}
         </Link>
       </p>
     </section>

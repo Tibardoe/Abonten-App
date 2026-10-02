@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import { upsertFieldOpsCampaign } from "@/server/actions/fieldOps";
 import type { FieldOpsCampaign, FieldOpsRegion } from "@abonten/types/fieldOps";
@@ -66,7 +67,7 @@ export function CampaignForm({
         holdingDaysOverride:
           holding.trim() === "" ? null : Math.round(Number(holding)),
         description: description.trim() || null,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         if (!campaign) {

@@ -3,6 +3,7 @@ import type {
   FieldOpsAssignmentStatus,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -51,7 +52,7 @@ export async function listLeadAssignmentsCore(
   }
   if (input.status) query = query.eq("status", input.status);
   const { data, error } = await query;
-  if (error) return dbErr(error, "Could not load assignments");
+  if (error) return dbErr(error, tr("couldNotLoadAssignments"));
   return {
     status: 200,
     data: await mapAssignments(supabase, (data ?? []) as AssignmentRow[]),
@@ -87,12 +88,12 @@ export async function createAssignmentCore(
       status: 409,
       message:
         campaignStatus === "paused"
-          ? "The campaign is paused; no new assignments until it resumes."
-          : "The campaign isn't taking new assignments.",
+          ? tr("theCampaignIsPausedNoNew")
+          : tr("theCampaignIsnTTakingNew"),
     };
   }
   if (input.endsOn < todayIso()) {
-    return { status: 400, message: "The end date is in the past." };
+    return { status: 400, message: tr("theEndDateIsInThe") };
   }
   const { data: member } = await supabase
     .from("fieldops_team_member")
@@ -100,14 +101,14 @@ export async function createAssignmentCore(
     .eq("id", input.memberId)
     .eq("team_id", teamId)
     .maybeSingle();
-  if (!member) return { status: 404, message: "Member not found on your team" };
+  if (!member) return { status: 404, message: tr("memberNotFoundOnYourTeam") };
   if (member.status !== "active" || !member.user_id) {
-    return { status: 409, message: "That member isn't active." };
+    return { status: 409, message: tr("thatMemberIsnTActive") };
   }
   if (member.role !== "offline_member" && member.role !== "online_member") {
     return {
       status: 409,
-      message: "Only offline and online members take territory assignments.",
+      message: tr("onlyOfflineAndOnlineMembersTake"),
     };
   }
   const { data: territory } = await supabase
@@ -115,9 +116,9 @@ export async function createAssignmentCore(
     .select("id, name, status")
     .eq("id", input.territoryId)
     .maybeSingle();
-  if (!territory) return { status: 404, message: "Territory not found" };
+  if (!territory) return { status: 404, message: tr("territoryNotFound") };
   if (territory.status !== "active") {
-    return { status: 409, message: "That territory isn't active." };
+    return { status: 409, message: tr("thatTerritoryIsnTActive") };
   }
 
   const { data, error } = await supabase
@@ -140,25 +141,36 @@ export async function createAssignmentCore(
     if (error?.code === "23505") {
       return {
         status: 409,
-        message: `${member.full_name_snapshot ?? "This member"} already has an open assignment in ${territory.name}. Cancel it first to reassign.`,
+        message: tr("alreadyHasAnOpenAssignmentIn", {
+          member: member.full_name_snapshot ?? tr("thisMember"),
+          name: territory.name,
+        }),
       };
     }
     return dbErr(
-      error ?? { message: "insert failed" },
-      "Could not create the assignment",
+      error ?? { message: tr("insertFailed") },
+      tr("couldNotCreateTheAssignment"),
     );
   }
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
   await notifyFieldOps(supabase, [member.user_id], {
     type: "fieldops_assignment_created",
-    title: `New assignment: ${territory.name}`,
-    body:
-      input.startsOn === input.endsOn
-        ? `You're on ${territory.name} on ${input.startsOn}.`
-        : `You're on ${territory.name} from ${input.startsOn} to ${input.endsOn}.`,
+    template: {
+      id: "fieldops_assignment_created",
+      params: {
+        territory: territory.name,
+        sameDay: input.startsOn === input.endsOn ? "yes" : "no",
+        fromDate: input.startsOn,
+        toDate: input.endsOn,
+      },
+    },
     route: "/field",
   });
-  return { status: 200, message: "Assignment created.", data: mapped };
+  return {
+    status: 200,
+    message: tr("assignmentCreated"),
+    data: mapped,
+  };
 }
 
 export async function cancelAssignmentCore(
@@ -176,7 +188,7 @@ export async function cancelAssignmentCore(
     return fieldOpsError(e);
   }
   if (campaignStatus === "archived") {
-    return { status: 409, message: "The campaign is archived." };
+    return { status: 409, message: tr("theCampaignIsArchived") };
   }
   const { data: current } = await supabase
     .from("fieldops_assignment")
@@ -184,9 +196,12 @@ export async function cancelAssignmentCore(
     .eq("id", input.assignmentId)
     .eq("campaign_id", input.campaignId)
     .maybeSingle();
-  if (!current) return { status: 404, message: "Assignment not found" };
+  if (!current) return { status: 404, message: tr("assignmentNotFound") };
   if (current.status !== "assigned" && current.status !== "started") {
-    return { status: 409, message: "This assignment is already closed." };
+    return {
+      status: 409,
+      message: tr("thisAssignmentIsAlreadyClosed"),
+    };
   }
   const { data, error } = await supabase
     .from("fieldops_assignment")
@@ -199,17 +214,23 @@ export async function cancelAssignmentCore(
     .in("status", ["assigned", "started"])
     .select(ASSIGNMENT_COLUMNS)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not cancel the assignment");
-  if (!data) return { status: 409, message: "This assignment just changed." };
+  if (error) return dbErr(error, tr("couldNotCancelTheAssignment"));
+  if (!data) return { status: 409, message: tr("thisAssignmentJustChanged") };
   const [mapped] = await mapAssignments(supabase, [data as AssignmentRow]);
   const territoryName =
     (current.fieldops_territory as unknown as { name: string } | null)?.name ??
-    "a territory";
+    null;
   await notifyFieldOps(supabase, [current.member_user_id], {
     type: "fieldops_assignment_changed",
-    title: `Assignment cancelled: ${territoryName}`,
-    body: input.reason,
+    template: {
+      id: "fieldops_assignment_changed",
+      params: { territory: territoryName, reason: input.reason },
+    },
     route: "/field/assignments",
   });
-  return { status: 200, message: "Assignment cancelled.", data: mapped };
+  return {
+    status: 200,
+    message: tr("assignmentCancelled"),
+    data: mapped,
+  };
 }

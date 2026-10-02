@@ -7,6 +7,7 @@ import { announcePlaceInteraction } from "@/discovery/placeInteraction";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 
 type PlaceProp = {
@@ -24,6 +25,8 @@ export default function AddPlaceToFavoriteButton({
   placeId,
   compact,
 }: PlaceProp) {
+  const t = useTranslations("places");
+
   const toast = useToast();
 
   const requireAuth = useRequireAuth();
@@ -78,7 +81,7 @@ export default function AddPlaceToFavoriteButton({
         ["place-favorited", placeId],
         context?.previousState,
       );
-      toast.error("Something went wrong. Please try again later.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
     },
 
     onSuccess: (response, adding) => {
@@ -97,7 +100,7 @@ export default function AddPlaceToFavoriteButton({
     },
   });
 
-  const buttonText = isFavorite ? "Saved" : "Save";
+  const buttonText = isFavorite ? t("saved") : t("save");
 
   const handleClick = async () => {
     if (await requireAuth()) mutate(!isFavorite);
@@ -112,7 +115,7 @@ export default function AddPlaceToFavoriteButton({
         disabled={isPending}
         aria-pressed={isFavorite}
         aria-label={
-          isFavorite ? "Saved to your favourites" : "Save to your favourites"
+          isFavorite ? t("savedToYourFavourites") : t("saveToYourFavourites")
         }
       >
         {isFavorite ? (

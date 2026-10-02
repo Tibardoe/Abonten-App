@@ -1,6 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslations } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { type ExploreTab, isExploreTab } from "../exploreTab";
 
@@ -19,6 +20,8 @@ export default function ExploreTabs({
   eventsContent: React.ReactNode;
   placesContent: React.ReactNode;
 }) {
+  const t = useTranslations("places");
+
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -41,8 +44,8 @@ export default function ExploreTabs({
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange}>
       <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:min-w-[240px]">
-        <TabsTrigger value="events">Events</TabsTrigger>
-        <TabsTrigger value="places">Places</TabsTrigger>
+        <TabsTrigger value="events">{t("events")}</TabsTrigger>
+        <TabsTrigger value="places">{t("places")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="events">{eventsContent}</TabsContent>

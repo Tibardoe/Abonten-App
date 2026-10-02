@@ -1,8 +1,10 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PlaceType } from "@abonten/types/placeType";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { FaArrowRightLong } from "react-icons/fa6";
@@ -19,9 +21,12 @@ type PlaceBannerProps = {
 // date/time/price. Used by FeaturedPlacesSlider both for the lone-item case
 // (no carousel) and as each slide's content when there are 2+ places.
 export default function PlaceBanner({ place }: PlaceBannerProps) {
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+
   const fullAddress =
     (place.address as { full_address?: string })?.full_address ??
-    "Location not specified";
+    t("locationNotSpecified");
 
   return (
     <div className="group relative w-full h-[250px] md:h-[350px] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
@@ -31,7 +36,7 @@ export default function PlaceBanner({ place }: PlaceBannerProps) {
             width: 900,
             height: 350,
           })}
-          alt={`Cover photo for ${place.name}`}
+          alt={t("coverPhotoFor", { name: place.name })}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           priority
@@ -49,7 +54,10 @@ export default function PlaceBanner({ place }: PlaceBannerProps) {
         <div className="w-fit space-y-1 xs:space-y-1.5 sm:space-y-2 md:space-y-3 lg:space-y-4">
           <div className="mb-1 xs:mb-1.5 sm:mb-2">
             <span className="inline-block px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs xs:text-sm font-medium">
-              {place.category_name}
+              {placeCategoryLabel(tc, {
+                slug: place.category_slug,
+                name: place.category_name,
+              })}
             </span>
           </div>
 
@@ -81,7 +89,7 @@ export default function PlaceBanner({ place }: PlaceBannerProps) {
               href={`/places/${place.slug}`}
               className="px-3 py-1.5 md:px-4 md:py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
             >
-              View Place
+              {t("viewPlace")}
               <FaArrowRightLong />
             </Link>
           </div>

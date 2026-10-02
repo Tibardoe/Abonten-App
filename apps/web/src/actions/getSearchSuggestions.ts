@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import type {
   EventSuggestion,
@@ -18,40 +19,42 @@ const PLACE_SUGGESTION_LIMIT = 4;
 // for a results page, not a per-keystroke call. `includePlaces` is false on
 // events-only routes (/search, /search/[searchTitle]) so the places RPC
 // isn't called at all there.
-export async function getSearchSuggestions(
-  searchText: string,
-  { includePlaces = true }: { includePlaces?: boolean } = {},
-): Promise<SearchSuggestionsResult> {
-  const trimmed = searchText.trim();
-  if (!trimmed) {
-    return { status: 200, events: [], places: [] };
-  }
+export const getSearchSuggestions = withActionLocale(
+  async function getSearchSuggestions(
+    searchText: string,
+    { includePlaces = true }: { includePlaces?: boolean } = {},
+  ): Promise<SearchSuggestionsResult> {
+    const trimmed = searchText.trim();
+    if (!trimmed) {
+      return { status: 200, events: [], places: [] };
+    }
 
-  const supabase = publicSupabase;
+    const supabase = publicSupabase;
 
-  const [eventsResponse, placesResponse] = await Promise.all([
-    supabase.rpc("get_event_suggestions", {
-      p_search_text: trimmed,
-      p_limit: EVENT_SUGGESTION_LIMIT,
-    }),
-    includePlaces
-      ? supabase.rpc("get_place_suggestions", {
-          p_search_text: trimmed,
-          p_limit: PLACE_SUGGESTION_LIMIT,
-        })
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+    const [eventsResponse, placesResponse] = await Promise.all([
+      supabase.rpc("get_event_suggestions", {
+        p_search_text: trimmed,
+        p_limit: EVENT_SUGGESTION_LIMIT,
+      }),
+      includePlaces
+        ? supabase.rpc("get_place_suggestions", {
+            p_search_text: trimmed,
+            p_limit: PLACE_SUGGESTION_LIMIT,
+          })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
 
-  if (eventsResponse.error) {
-    logger.error("Error fetching event suggestions:", eventsResponse.error);
-  }
-  if (placesResponse.error) {
-    logger.error("Error fetching place suggestions:", placesResponse.error);
-  }
+    if (eventsResponse.error) {
+      logger.error("Error fetching event suggestions:", eventsResponse.error);
+    }
+    if (placesResponse.error) {
+      logger.error("Error fetching place suggestions:", placesResponse.error);
+    }
 
-  return {
-    status: 200,
-    events: (eventsResponse.data ?? []) as EventSuggestion[],
-    places: (placesResponse.data ?? []) as PlaceSuggestion[],
-  };
-}
+    return {
+      status: 200,
+      events: (eventsResponse.data ?? []) as EventSuggestion[],
+      places: (placesResponse.data ?? []) as PlaceSuggestion[],
+    };
+  },
+);

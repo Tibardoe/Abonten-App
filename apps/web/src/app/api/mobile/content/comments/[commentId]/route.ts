@@ -3,6 +3,7 @@ import {
   deleteContentCommentCore,
   setContentCommentLikeCore,
 } from "@abonten/services/content/contentEngagementCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   contentCommentIdSchema,
   contentCommentLikeSchema,
@@ -13,6 +14,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ commentId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { commentId } = await params;
   return discoveryRoute(
     req,
@@ -31,6 +33,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ commentId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { commentId } = await params;
   return discoveryRoute(
     req,

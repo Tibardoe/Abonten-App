@@ -1,4 +1,5 @@
 import { Pressable, View } from "react-native";
+import { useTranslations } from "../i18n";
 import { Icon } from "./Icon";
 import { AppText } from "./Typography";
 
@@ -20,6 +21,8 @@ export function Stepper({
   max = Number.POSITIVE_INFINITY,
   step = 1,
 }: StepperProps) {
+  const t = useTranslations("common");
+
   const canDec = value - step >= min;
   const canInc = value + step <= max;
 
@@ -27,7 +30,7 @@ export function Stepper({
     <View className="flex-row items-center gap-3">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Decrease"
+        accessibilityLabel={t("decrease")}
         disabled={!canDec}
         onPress={() => onChange(value - step)}
         className={`h-8 w-8 items-center justify-center rounded-full border border-border ${
@@ -43,7 +46,7 @@ export function Stepper({
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Increase"
+        accessibilityLabel={t("increase")}
         disabled={!canInc}
         onPress={() => onChange(value + step)}
         className={`h-8 w-8 items-center justify-center rounded-full border border-border ${

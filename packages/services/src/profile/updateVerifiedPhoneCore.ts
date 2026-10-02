@@ -1,5 +1,5 @@
 import { logger } from "@abonten/core/logger";
-import { OTP_MESSAGES } from "@abonten/core/otpMessages";
+import { otpMessage } from "@abonten/core/otpMessages";
 import { verifyPendingOtp } from "@abonten/services/profile/phoneOtpSendCore";
 import {
   clearPendingOtp,
@@ -7,6 +7,7 @@ import {
   registerVerifyAttempt,
 } from "@abonten/services/profile/phoneOtpStore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { coreT, tr } from "../i18n/requestLocale";
 
 export type UpdateVerifiedPhoneResult =
   | { status: 200; message: string }
@@ -26,23 +27,23 @@ export async function updateVerifiedPhoneCore(
   // The exact length depends on the provider that sent the code; the
   // provider check below enforces it.
   if (!/^\d{4,8}$/.test(code)) {
-    return { status: 400, message: OTP_MESSAGES.invalidFormat };
+    return { status: 400, message: otpMessage(coreT(), "invalidFormat") };
   }
 
   if (!(await getPendingOtp("phone-update", phoneE164))) {
-    return { status: 401, message: OTP_MESSAGES.expired };
+    return { status: 401, message: otpMessage(coreT(), "expired") };
   }
 
   const attemptAllowed = await registerVerifyAttempt("phone-update", phoneE164);
 
   if (!attemptAllowed) {
-    return { status: 429, message: OTP_MESSAGES.tooManyAttempts };
+    return { status: 429, message: otpMessage(coreT(), "tooManyAttempts") };
   }
 
   const pending = await getPendingOtp("phone-update", phoneE164);
 
   if (!pending) {
-    return { status: 401, message: OTP_MESSAGES.expired };
+    return { status: 401, message: otpMessage(coreT(), "expired") };
   }
 
   const verifyResult = await verifyPendingOtp(pending, code);
@@ -72,12 +73,18 @@ export async function updateVerifiedPhoneCore(
       /already.*(registered|exists)/i.test(updateError.message);
 
     if (isConflict) {
-      return { status: 409, message: "That phone number can't be used." };
+      return { status: 409, message: tr("thatPhoneNumberCanTBe") };
     }
 
     logger.error(`updateVerifiedPhone: update failed: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
 
-  return { status: 200, message: "Phone number updated successfully." };
+  return {
+    status: 200,
+    message: tr("phoneNumberUpdatedSuccessfully"),
+  };
 }

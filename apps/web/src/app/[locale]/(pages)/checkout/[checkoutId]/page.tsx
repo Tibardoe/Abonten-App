@@ -1,0 +1,432 @@
+import { getContentCampaignCheckout } from "@/actions/content/getContentCampaignCheckout";
+import getEventPromotionCheckout from "@/actions/getEventPromotionCheckout";
+import getPlacePromotionCheckout from "@/actions/getPlacePromotionCheckout";
+import getTicketCheckout from "@/actions/getTicketCheckout";
+import getUserPendingTicketCheckouts from "@/actions/getUserPendingTicketCheckouts";
+import CancelPendingCheckoutButton from "@/components/molecules/CancelPendingCheckoutButton";
+import CheckoutExpiryBanner from "@/components/molecules/CheckoutExpiryBanner";
+import FulfillmentRecoveryBanner from "@/components/molecules/FulfillmentRecoveryBanner";
+import OrderSummary from "@/components/molecules/OrderSummary";
+import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
+import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
+import { PageTitle } from "@/components/ui/typography";
+import { createClient } from "@/config/supabase/server";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
+import { getLatestPaymentAttemptStatus } from "@abonten/services/payments/paymentAttempt";
+import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
+import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
+import type { CheckoutSessionStatus } from "@abonten/types/ticketType";
+import { getTranslations } from "next-intl/server";
+import Link from "next/link";
+
+// Per-user, request-time data (this specific session's status plus every
+// other pending checkout) — see checkout/page.tsx for why force-dynamic.
+export const dynamic = "force-dynamic";
+
+export default async function page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ checkoutId: string }>;
+  searchParams: Promise<{ type: string }>;
+}) {
+  const t = await getTranslations("checkout");
+  const tc = await getTranslations("core");
+
+  const { checkoutId } = await params;
+  const checkoutType = (await searchParams).type;
+  const supabase = await createClient();
+
+  // Featured Places promotions are a single, standalone purchase — not part
+  // of the ticket basket.
+  if (checkoutType === "promotion") {
+    const response = await getPlacePromotionCheckout(checkoutId);
+
+    if (response.status !== 200 || !response.data?.length) {
+      return (
+        <div>
+          <p>{t("orderProcessedSuccessfully")}</p>
+        </div>
+      );
+    }
+
+    const data = response.data[0];
+    const sessionStatus: CheckoutSessionStatus =
+      data.status === "pending"
+        ? "pending"
+        : data.status === "paid"
+          ? "paid"
+          : "expired";
+    const expiresAt = sessionStatus === "pending" ? data.expires_at : null;
+
+    const orderSummary: PlacePromotionSummaryProps = {
+      type: "promotion",
+      placeName: data.place?.name ?? "",
+      tierLabel: promotionDurationLabel(
+        tc,
+        data.place_promotion_tier?.duration_label,
+      ),
+      amount: data.unit_price,
+      totalAmount: data.total_price,
+      currency: data.currency,
+      status: sessionStatus,
+      expiresAt,
+    };
+
+    // A payment_attempt can be stuck "fulfillment_failed" here even though
+    // the checkout row itself still reads "pending" (activatePlacePromotion
+    // never flips it to "paid" on failure) — check for that before trusting
+    // the plain pending/paid/expired banners above.
+    const latestAttempt =
+      sessionStatus === "pending"
+        ? await getLatestPaymentAttemptStatus(
+            supabase,
+            "place_promotion_checkout_id",
+            checkoutId,
+          )
+        : null;
+    const isFulfillmentStuck = latestAttempt?.status === "fulfillment_failed";
+
+    return (
+      <div className="flex flex-col justify-center gap-5">
+        <div>
+          <PageTitle>{t("orderSummary")}</PageTitle>
+        </div>
+
+        {sessionStatus === "paid" && (
+          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
+            {t.rich("purchaseCompleteYourPlaceIsNow", {
+              link: (chunks) => (
+                <Link
+                  href={`/manage/places/${data.place_id}`}
+                  className="underline"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </div>
+        )}
+
+        {sessionStatus === "expired" && (
+          <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
+            <p>{t("thisCheckoutHasExpiredAndCan")}</p>
+            <Link
+              href={`/manage/places/${data.place_id}`}
+              className="inline-block underline font-medium"
+            >
+              {t("startANewPromotion")}
+            </Link>
+          </div>
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && expiresAt && (
+          <CheckoutExpiryBanner expiresAt={expiresAt} />
+        )}
+
+        <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
+
+        {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
+          <FulfillmentRecoveryBanner
+            paymentAttemptId={latestAttempt.id}
+            initialMessage={t("yourPaymentWasSuccessfulWeRe")}
+          />
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && (
+          <>
+            <PaymentMethodSelector
+              kind="promotion"
+              placePromotionCheckoutId={checkoutId}
+              amount={orderSummary.totalAmount}
+              currency={data.currency}
+            />
+            <CancelPendingCheckoutButton
+              checkoutId={checkoutId}
+              kind="promotion"
+            />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Promoted Spotlight campaigns: one standalone purchase, cash only, and
+  // the campaign goes to review (not live) once paid.
+  if (checkoutType === "spotlight-promotion") {
+    const response = await getContentCampaignCheckout({ checkoutId });
+
+    if (response.status !== 200 || !response.data) {
+      return (
+        <p className="p-8 text-center text-muted-foreground">
+          {t("checkoutNotFound")}
+        </p>
+      );
+    }
+
+    const data = response.data;
+    const sessionStatus: CheckoutSessionStatus =
+      data.status === "pending"
+        ? "pending"
+        : data.status === "paid"
+          ? "paid"
+          : "expired";
+    const expiresAt = sessionStatus === "pending" ? data.expiresAt : null;
+
+    const latestAttempt =
+      sessionStatus === "pending"
+        ? await getLatestPaymentAttemptStatus(
+            supabase,
+            "content_campaign_checkout_id",
+            checkoutId,
+          )
+        : null;
+    const isFulfillmentStuck = latestAttempt?.status === "fulfillment_failed";
+    const campaignHref = `/manage/spotlight/campaigns/${data.campaignId}`;
+
+    return (
+      <div className="flex flex-col justify-center gap-5">
+        <div>
+          <PageTitle>{t("orderSummary")}</PageTitle>
+        </div>
+
+        {sessionStatus === "paid" && (
+          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
+            {t.rich("paymentReceivedYourPromotionIsWaiting", {
+              link: (chunks) => (
+                <Link href={campaignHref} className="underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </div>
+        )}
+
+        {sessionStatus === "expired" && (
+          <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
+            <p>{t("thisCheckoutIsNoLongerOpen")}</p>
+            <Link
+              href="/manage/spotlight"
+              className="inline-block underline font-medium"
+            >
+              {t("backToSpotlight")}
+            </Link>
+          </div>
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && expiresAt && (
+          <CheckoutExpiryBanner expiresAt={expiresAt} />
+        )}
+
+        <OrderSummary
+          orderSummary={{
+            type: "spotlight-promotion",
+            postCaption: data.postCaption,
+            summaryLabel: data.summaryLabel,
+            estimatedReachLow: data.estimatedReachLow,
+            estimatedReachHigh: data.estimatedReachHigh,
+            totalAmount: data.totalPrice,
+            currency: data.currency,
+          }}
+          checkoutId={checkoutId}
+        />
+
+        {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
+          <FulfillmentRecoveryBanner
+            paymentAttemptId={latestAttempt.id}
+            initialMessage={t("yourPaymentWasSuccessfulWeRe2")}
+          />
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && (
+          <>
+            <PaymentMethodSelector
+              kind="spotlight-promotion"
+              contentCampaignCheckoutId={checkoutId}
+              amount={data.totalPrice}
+              currency={data.currency}
+            />
+            <CancelPendingCheckoutButton
+              checkoutId={checkoutId}
+              kind="spotlight-promotion"
+            />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Event promotions are a single, standalone purchase — same reasoning as
+  // the place-promotion branch above.
+  if (checkoutType === "event-promotion") {
+    const response = await getEventPromotionCheckout(checkoutId);
+
+    if (response.status !== 200 || !response.data?.length) {
+      return (
+        <div>
+          <p>{t("orderProcessedSuccessfully")}</p>
+        </div>
+      );
+    }
+
+    const data = response.data[0];
+    const sessionStatus: CheckoutSessionStatus =
+      data.status === "pending"
+        ? "pending"
+        : data.status === "paid"
+          ? "paid"
+          : "expired";
+    const expiresAt = sessionStatus === "pending" ? data.expires_at : null;
+
+    const orderSummary: EventPromotionSummaryProps = {
+      type: "event-promotion",
+      eventTitle: data.event?.title ?? "",
+      tierLabel: promotionDurationLabel(
+        tc,
+        data.event_promotion_tier?.duration_label,
+      ),
+      amount: data.unit_price,
+      totalAmount: data.total_price,
+      currency: data.currency,
+      status: sessionStatus,
+      expiresAt,
+    };
+
+    // See the place-promotion branch above for why this check exists.
+    const latestAttempt =
+      sessionStatus === "pending"
+        ? await getLatestPaymentAttemptStatus(
+            supabase,
+            "event_promotion_checkout_id",
+            checkoutId,
+          )
+        : null;
+    const isFulfillmentStuck = latestAttempt?.status === "fulfillment_failed";
+
+    return (
+      <div className="flex flex-col justify-center gap-5">
+        <div>
+          <PageTitle>{t("orderSummary")}</PageTitle>
+        </div>
+
+        {sessionStatus === "paid" && (
+          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
+            {t.rich("purchaseCompleteYourEventIsNow", {
+              link: (chunks) => (
+                <Link
+                  href={`/manage/events/${data.event_id}`}
+                  className="underline"
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </div>
+        )}
+
+        {sessionStatus === "expired" && (
+          <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
+            <p>{t("thisCheckoutHasExpiredAndCan")}</p>
+            <Link
+              href={`/manage/events/${data.event_id}`}
+              className="inline-block underline font-medium"
+            >
+              {t("startANewPromotion")}
+            </Link>
+          </div>
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && expiresAt && (
+          <CheckoutExpiryBanner expiresAt={expiresAt} />
+        )}
+
+        <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
+
+        {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
+          <FulfillmentRecoveryBanner
+            paymentAttemptId={latestAttempt.id}
+            initialMessage={t("yourPaymentWasSuccessfulWeRe")}
+          />
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && (
+          <>
+            <PaymentMethodSelector
+              kind="event-promotion"
+              eventPromotionCheckoutId={checkoutId}
+              amount={orderSummary.totalAmount}
+              currency={data.currency}
+            />
+            <CancelPendingCheckoutButton
+              checkoutId={checkoutId}
+              kind="event-promotion"
+            />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Resolve THIS session's status purely to show a transient "just now"
+  // expired banner — pending and paid both show no page-level banner here:
+  // pending because each basket card already has its own countdown, paid
+  // because PendingCheckoutsBasket shows its own success panel the moment
+  // fulfillment completes (a page-level banner here would double up with
+  // it, since both render on this same page). The basket (not this page)
+  // owns all "how do I pay for a pending session"/"payment just succeeded"
+  // UI.
+  let sessionStatus: CheckoutSessionStatus | null = null;
+  let eventCode = "";
+
+  const res = await getTicketCheckout(checkoutId);
+  if (res.status === 200 && res.data?.length) {
+    const allRows = res.data;
+    const pendingRows = allRows.filter((row) => row.status === "pending");
+    const paidRows = allRows.filter((row) => row.status === "paid");
+
+    // "expired" (a real timeout — worth an alarm banner) and "cancelled"
+    // (the user removed it on purpose, e.g. via the basket's "Remove
+    // checkout"/delete-line actions) both leave zero pending/paid rows, but
+    // they mean very different things to the user — don't lump them together.
+    sessionStatus =
+      pendingRows.length > 0
+        ? "pending"
+        : paidRows.length > 0
+          ? "paid"
+          : allRows.some((row) => row.status === "expired")
+            ? "expired"
+            : "cancelled";
+    eventCode = allRows[0]?.event?.event_code ?? "";
+  }
+
+  const basketResponse = await getUserPendingTicketCheckouts();
+  const sessions = basketResponse.status === 200 ? basketResponse.sessions : [];
+
+  return (
+    <div className="flex flex-col justify-center gap-5">
+      <div>
+        <PageTitle>{t("orderSummary")}</PageTitle>
+      </div>
+
+      {sessionStatus === "expired" && (
+        <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
+          <p>{t("thisCheckoutHasExpiredAndCan")}</p>
+          {eventCode && (
+            <Link
+              href={`/events/${eventCode.toLowerCase()}`}
+              className="inline-block underline font-medium"
+            >
+              {t("startANewCheckout")}
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* sessionStatus === "cancelled" means the user removed this exact
+          checkout on purpose (e.g. from the basket below) — nothing to
+          alarm them about, and the basket already reflects current reality. */}
+
+      <PendingCheckoutsBasket initialSessions={sessions} />
+    </div>
+  );
+}

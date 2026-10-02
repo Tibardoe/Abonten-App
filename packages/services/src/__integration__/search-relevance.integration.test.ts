@@ -27,7 +27,14 @@ const anon = createClient<Database>(
   { auth: { persistSession: false } },
 );
 
-const TOKEN = `zr${Date.now().toString(36)}`;
+// Short on purpose. The typo fallback of the search compares the whole
+// query with a title by trigram similarity (threshold 0.45), and a long
+// shared token is most of both: with ten characters, "<token> jazz
+// december" and "<token> Rainy Season Jazz" scored 0.44 or 0.46 depending
+// on the letters the clock happened to give, so the June fixture slipped
+// into a December search on some runs and not on others (red twice on
+// 2026-10-01). Six characters keep the token under a third of the query.
+const TOKEN = `zr${Date.now().toString(36).slice(-4)}`;
 const LAT = 5.6037;
 const LNG = -0.187;
 

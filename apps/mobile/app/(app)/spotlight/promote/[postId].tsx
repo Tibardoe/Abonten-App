@@ -14,13 +14,13 @@ import { useQueryView } from "@/lib/useQueryView";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   CAMPAIGN_OBJECTIVES,
-  CAMPAIGN_OBJECTIVE_LABEL,
-  PROMOTION_BILLING_NOTE,
-  PROMOTION_CASH_NOTE,
-  PROMOTION_ESTIMATE_BASIS_LABEL,
-  PROMOTION_ESTIMATE_NOTE,
-  PROMOTION_INTRO,
-  PROMOTION_REVIEW_NOTE,
+  PROMOTION_BILLING_NOTE_KEY,
+  PROMOTION_CASH_NOTE_KEY,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  PROMOTION_INTRO_KEY,
+  PROMOTION_REVIEW_NOTE_KEY,
+  campaignObjectiveLabel,
+  promotionEstimateBasisLabel,
 } from "@abonten/core/content/copy";
 import {
   budgetProblem,
@@ -42,6 +42,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -60,6 +61,10 @@ type Reserved = {
 // reach range (never a promise); nothing runs until payment is confirmed
 // and the promotion passes review.
 export default function PromoteSpotlightScreen() {
+  const { locale } = useLocale();
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+
   const { postId } = useLocalSearchParams<{ postId: string }>();
   const toast = useToast();
   const invalidate = useInvalidateContent();
@@ -103,7 +108,7 @@ export default function PromoteSpotlightScreen() {
 
   const budgetMinor = Math.round(Number(budgetText) * factor);
   const budgetError =
-    opts && budgetText !== "" ? budgetProblem(opts, budgetMinor) : null;
+    opts && budgetText !== "" ? budgetProblem(tc, opts, budgetMinor) : null;
   const targeting: ContentPromotionTargetingInput =
     area === "near_post" ? { area, radiusKm } : { area: "everywhere" };
   // Debounce a string: a new object every render would never settle.
@@ -116,9 +121,9 @@ export default function PromoteSpotlightScreen() {
       targeting: ContentPromotionTargetingInput;
     };
     if (!postId || !opts || r.durationDays === null) return null;
-    if (budgetProblem(opts, r.budgetMinor)) return null;
+    if (budgetProblem(tc, opts, r.budgetMinor)) return null;
     return { postId, ...r, durationDays: r.durationDays };
-  }, [requestKey, postId, opts]);
+  }, [requestKey, postId, opts, tc]);
   const estimate = usePromotionEstimate(request);
   const est = estimate.data;
   const stale = estimate.isFetching || requestKey !== liveKey;
@@ -126,7 +131,7 @@ export default function PromoteSpotlightScreen() {
   const header = (
     <AppHeader
       variant="detail"
-      title="Promote"
+      title={t("promote")}
       backFallback="/(app)/spotlight/manage"
     />
   );
@@ -137,8 +142,8 @@ export default function PromoteSpotlightScreen() {
         {header}
         <EmptyState
           icon="megaphone-outline"
-          title="Promotions aren't available yet"
-          description="Check back soon."
+          title={t("promotionsArenTAvailableYet")}
+          description={t("checkBackSoon")}
         />
       </View>
     );
@@ -157,7 +162,7 @@ export default function PromoteSpotlightScreen() {
         {header}
         <QueryUnavailable
           view={blocked}
-          subject="this Spotlight"
+          subject={t("thisSpotlight")}
           onRetry={() => {
             post.refetch();
             options.refetch();
@@ -178,7 +183,7 @@ export default function PromoteSpotlightScreen() {
     ? (doc.place?.name ??
       doc.event?.title ??
       (doc.publisher.kind === "place" ? doc.publisher.name : null) ??
-      "this Spotlight's location")
+      t("thisSpotlightSLocation"))
     : null;
 
   const start = async () => {
@@ -196,8 +201,8 @@ export default function PromoteSpotlightScreen() {
         targeting,
       });
       if (res.status !== 200 || !res.data) {
-        toast.error("Couldn't start", {
-          description: res.message ?? "Please try again.",
+        toast.error(t("couldnTStart"), {
+          description: res.message ?? t("pleaseTryAgain"),
         });
         return;
       }
@@ -207,13 +212,13 @@ export default function PromoteSpotlightScreen() {
         amount: res.data.checkout.totalPrice,
         currency: res.data.checkout.currency,
         summary: res.data.checkout.summaryLabel,
-        reach: formatReachRange({
+        reach: formatReachRange(tc, {
           reachLow: res.data.checkout.estimatedReachLow,
           reachHigh: res.data.checkout.estimatedReachHigh,
         }),
       });
     } catch {
-      toast.error("Couldn't start", { description: "Check your connection." });
+      toast.error(t("couldnTStart"), { description: t("checkYourConnection") });
     } finally {
       setStarting(false);
     }
@@ -223,19 +228,21 @@ export default function PromoteSpotlightScreen() {
     <View className="flex-1 bg-background">
       {header}
       <KeyboardAwareScrollView contentContainerClassName="gap-5 p-4 pb-16">
-        <AppText variant="muted">{PROMOTION_INTRO}</AppText>
+        <AppText variant="muted">{tc(PROMOTION_INTRO_KEY)}</AppText>
 
         {reserved ? (
           <View className="gap-3">
             <View className="gap-1 rounded-xl border border-border bg-card p-4">
               <AppText variant="bodyStrong">{reserved.summary}</AppText>
               <AppText variant="meta">
-                {CAMPAIGN_OBJECTIVE_LABEL[objective]} · Estimated reach{" "}
-                {reserved.reach}
+                {t("estimatedReach2", {
+                  item: campaignObjectiveLabel(tc, objective),
+                  reach: reserved.reach,
+                })}
               </AppText>
             </View>
             <AppText variant="caption" tone="muted">
-              {PROMOTION_CASH_NOTE}
+              {tc(PROMOTION_CASH_NOTE_KEY)}
             </AppText>
             <PromotionPaymentSection
               kind="spotlight"
@@ -250,17 +257,17 @@ export default function PromoteSpotlightScreen() {
           <AppText variant="muted">
             {options.error instanceof Error
               ? options.error.message
-              : "Promotions aren't available right now."}
+              : t("promotionsArenTAvailableRightNow")}
           </AppText>
         ) : (
           <>
             <View className="gap-2">
-              <AppText variant="label">Goal</AppText>
+              <AppText variant="label">{t("goal")}</AppText>
               <View className="flex-row flex-wrap gap-2">
                 {objectives.map((o) => (
                   <Chip
                     key={o}
-                    label={CAMPAIGN_OBJECTIVE_LABEL[o]}
+                    label={campaignObjectiveLabel(tc, o)}
                     selected={objective === o}
                     onPress={() => setObjective(o)}
                   />
@@ -269,16 +276,16 @@ export default function PromoteSpotlightScreen() {
             </View>
 
             <View className="gap-2">
-              <AppText variant="label">Who should see it</AppText>
+              <AppText variant="label">{t("whoShouldSeeIt")}</AppText>
               <View className="flex-row flex-wrap gap-2">
                 <Chip
-                  label="Everyone on Spotlight"
+                  label={t("everyoneOnSpotlight")}
                   selected={area === "everywhere"}
                   onPress={() => setArea("everywhere")}
                 />
                 {locationLabel ? (
                   <Chip
-                    label="People nearby"
+                    label={t("peopleNearby")}
                     selected={area === "near_post"}
                     onPress={() => setArea("near_post")}
                   />
@@ -286,12 +293,14 @@ export default function PromoteSpotlightScreen() {
               </View>
               {area === "near_post" && locationLabel ? (
                 <>
-                  <AppText variant="meta">Near {locationLabel}</AppText>
+                  <AppText variant="meta">
+                    {t("near", { locationLabel: locationLabel })}
+                  </AppText>
                   <View className="flex-row flex-wrap gap-2">
                     {opts.radiusOptionsKm.map((km) => (
                       <Chip
                         key={km}
-                        label={`Within ${km} km`}
+                        label={t("withinKm", { km: km })}
                         selected={radiusKm === km}
                         onPress={() => setRadiusKm(km)}
                       />
@@ -300,18 +309,18 @@ export default function PromoteSpotlightScreen() {
                 </>
               ) : !locationLabel ? (
                 <AppText variant="caption" tone="muted">
-                  Link an event or place to show it to people nearby.
+                  {t("linkAnEventOrPlaceTo")}
                 </AppText>
               ) : null}
             </View>
 
             <View className="gap-2">
-              <AppText variant="label">Budget</AppText>
+              <AppText variant="label">{t("budget")}</AppText>
               <View className="flex-row flex-wrap gap-2">
                 {opts.suggestedBudgetsMinor.map((b) => (
                   <Chip
                     key={b}
-                    label={formatMinor(b, opts.currency)}
+                    label={formatMinor(b, opts.currency, locale)}
                     selected={budgetMinor === b}
                     onPress={() => setBudgetText(String(b / factor))}
                   />
@@ -327,22 +336,33 @@ export default function PromoteSpotlightScreen() {
                   onChangeText={setBudgetText}
                   keyboardType="decimal-pad"
                   invalid={!!budgetError}
-                  accessibilityLabel="Budget in cedis"
+                  accessibilityLabel={t("budgetInCedis")}
                 />
               </View>
               <AppText variant="caption" tone={budgetError ? "error" : "muted"}>
                 {budgetError ??
-                  `${formatMinor(opts.minBudgetMinor, opts.currency)} to ${formatMinor(opts.maxBudgetMinor, opts.currency)}.`}
+                  t("to", {
+                    formatMinor: formatMinor(
+                      opts.minBudgetMinor,
+                      opts.currency,
+                      locale,
+                    ),
+                    formatMinor2: formatMinor(
+                      opts.maxBudgetMinor,
+                      opts.currency,
+                      locale,
+                    ),
+                  })}
               </AppText>
             </View>
 
             <View className="gap-2">
-              <AppText variant="label">Run for up to</AppText>
+              <AppText variant="label">{t("runForUpTo")}</AppText>
               <View className="flex-row flex-wrap gap-2">
                 {opts.durationOptionsDays.map((d) => (
                   <Chip
                     key={d}
-                    label={`${d} days`}
+                    label={t("days", { d: d })}
                     selected={durationDays === d}
                     onPress={() => setDurationDays(d)}
                   />
@@ -354,16 +374,14 @@ export default function PromoteSpotlightScreen() {
               className="gap-1 rounded-xl border border-border bg-card p-4"
               accessibilityLiveRegion="polite"
             >
-              <AppText variant="overline">Estimated reach</AppText>
+              <AppText variant="overline">{t("estimatedReach")}</AppText>
               {!request ? (
-                <AppText variant="muted">
-                  Choose a budget to see an estimate.
-                </AppText>
+                <AppText variant="muted">{t("chooseABudgetToSeeAn")}</AppText>
               ) : estimate.isError ? (
                 <AppText tone="error">
                   {estimate.error instanceof Error
                     ? estimate.error.message
-                    : "Couldn't estimate reach."}
+                    : t("couldnTEstimateReach")}
                 </AppText>
               ) : !est ? (
                 <ActivityIndicator />
@@ -371,15 +389,18 @@ export default function PromoteSpotlightScreen() {
                 <View style={{ opacity: stale ? 0.6 : 1 }}>
                   <AppText variant="sectionTitle">
                     {est.deliverable
-                      ? formatReachRange(est)
-                      : "Not enough audience"}
+                      ? formatReachRange(tc, est)
+                      : t("notEnoughAudience")}
                   </AppText>
                   <AppText variant="meta">
                     {est.deliverable
-                      ? `About ${est.estimatedImpressions.toLocaleString("en-GB")} sponsored impressions. ${PROMOTION_ESTIMATE_BASIS_LABEL[est.basis]}`
+                      ? t("aboutSponsoredImpressions2", {
+                          count: est.estimatedImpressions,
+                          item: promotionEstimateBasisLabel(tc, est.basis),
+                        })
                       : est.basis === "no_data"
-                        ? PROMOTION_ESTIMATE_BASIS_LABEL.no_data
-                        : "This audience is too small for this budget right now. Lower the budget, run it longer or show it to more people."}
+                        ? promotionEstimateBasisLabel(tc, "no_data")
+                        : t("thisAudienceIsTooSmallFor")}
                   </AppText>
                 </View>
               )}
@@ -387,18 +408,24 @@ export default function PromoteSpotlightScreen() {
 
             <View className="gap-2">
               <AppText variant="caption" tone="muted">
-                {PROMOTION_ESTIMATE_NOTE}
+                {tc(PROMOTION_ESTIMATE_NOTE_KEY)}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {PROMOTION_BILLING_NOTE}
+                {tc(PROMOTION_BILLING_NOTE_KEY)}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {PROMOTION_REVIEW_NOTE} {PROMOTION_CASH_NOTE}
+                {tc(PROMOTION_REVIEW_NOTE_KEY)} {tc(PROMOTION_CASH_NOTE_KEY)}
               </AppText>
             </View>
 
             <Button
-              title={`Continue with ${formatMinor(Number.isFinite(budgetMinor) ? budgetMinor : 0, opts.currency)}`}
+              title={t("continueWith", {
+                formatMinor: formatMinor(
+                  Number.isFinite(budgetMinor) ? budgetMinor : 0,
+                  opts.currency,
+                  locale,
+                ),
+              })}
               loading={starting}
               disabled={!est?.deliverable || stale}
               onPress={start}

@@ -1,3 +1,4 @@
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 // Native echo of the web usePlacesAutocomplete hook. The web uses the
@@ -37,6 +38,8 @@ function newSessionToken(): string {
 export function usePlacesAutocomplete(
   near: { lat: number; lng: number } | null = null,
 ) {
+  const t = useTranslations("discovery");
+
   const [query, setQuery] = useState("");
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   // A request for the current text is on its way (debounce included).
@@ -125,13 +128,15 @@ export function usePlacesAutocomplete(
           lat: loc.lat,
           lng: loc.lng,
           address:
-            json.result?.formatted_address ?? json.result?.name ?? "Selected",
+            json.result?.formatted_address ??
+            json.result?.name ??
+            t("selected"),
         };
       } catch {
         return null;
       }
     },
-    [],
+    [t],
   );
 
   return {

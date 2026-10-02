@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { createMarket } from "@/server/actions/markets";
 import { COUNTRIES } from "@abonten/core/geo/countries";
 import { COUNTRY_DEFAULTS } from "@abonten/core/geo/countryDefaults";
@@ -32,7 +33,9 @@ export function CreateMarketForm() {
           e.preventDefault();
           setMsg(null);
           start(async () => {
-            const res = await createMarket({ countryCode: code });
+            const res = await createMarket({ countryCode: code }).catch(
+              actionUnreachable,
+            );
             if (res.status === 200 && "data" in res && res.data) {
               router.push(`/markets/${res.data.countryCode}`);
             } else {

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import {
   type AddMobileMoneyPayoutAccountInput,
@@ -19,6 +20,7 @@ import {
 } from "@abonten/validation/payoutAccountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -29,6 +31,8 @@ type PopupCloseProp = {
 // Mirrors AddMomoWallet.tsx's exact form shape/flow, applied to organizer
 // payout destinations instead of buyer payment methods.
 export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
+  const t = useTranslations("finances");
+
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -69,7 +73,7 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
       ...values,
       // Sent as typed: the service parses it for the account's market.
       phone: values.phone.trim(),
-    });
+    }).catch(actionUnreachable);
 
     if (response.status !== 200) {
       setServerError(response.message);
@@ -82,7 +86,7 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Add an account you'll withdraw your earnings to.
+        {t("addAnAccountYouLlWithdraw")}
       </p>
 
       <Form {...form}>
@@ -93,14 +97,14 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="accountHolderName" className="text-sm">
-                  Account Holder Name
+                  {t("accountHolderName")}
                 </label>
                 <FormControl>
                   <Input
                     id="accountHolderName"
                     type="text"
                     {...field}
-                    placeholder="Eg. Kwame Mensah"
+                    placeholder={t("egKwameMensah")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -114,7 +118,7 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="networkCode" className="text-sm">
-                  Mobile Money Network
+                  {t("mobileMoneyNetwork")}
                 </label>
                 <FormControl>
                   <Select
@@ -133,10 +137,10 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
                   >
                     <option value="" disabled>
                       {isNetworksPending
-                        ? "Loading networks…"
+                        ? t("loadingNetworks")
                         : isNetworksError
-                          ? "Couldn't load networks"
-                          : "Select mobile network"}
+                          ? t("couldnTLoadNetworks")
+                          : t("selectMobileNetwork")}
                     </option>
                     {networks.map((network) => (
                       <option key={network.code} value={network.code}>
@@ -156,14 +160,14 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2 space-y-0">
                 <label htmlFor="phone" className="text-sm">
-                  Mobile Money Number
+                  {t("mobileMoneyNumber")}
                 </label>
                 <FormControl>
                   <Input
                     id="phone"
                     type="tel"
                     {...field}
-                    placeholder="Eg. 0244123456"
+                    placeholder={t("eg0244123456")}
                   />
                 </FormControl>
                 <FormMessage />
@@ -180,7 +184,7 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
             disabled={isSubmitting || isNetworksPending || isNetworksError}
             className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
           >
-            {isSubmitting ? "Saving..." : "Save Payout Account"}
+            {isSubmitting ? t("saving") : t("savePayoutAccount")}
           </Button>
         </form>
       </Form>

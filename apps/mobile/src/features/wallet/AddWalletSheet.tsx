@@ -14,6 +14,7 @@ import {
   Sheet,
   SheetOption,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -47,6 +48,8 @@ export function AddWalletSheet({
   /** Show an "All set" step before closing. */
   showConfirmation?: boolean;
 }) {
+  const t = useTranslations("wallet");
+
   const { markets, context } = useMarket();
   const homeDialCode =
     markets.find((m) => m.countryCode === context?.marketCountry)?.dialCode ??
@@ -96,11 +99,11 @@ export function AddWalletSheet({
     setFormError(null);
     const net = networkList.find((n) => n.code === networkCode);
     if (!net) {
-      setFormError("Choose your mobile money network.");
+      setFormError(t("chooseYourMobileMoneyNetwork"));
       return;
     }
     if (!walletPhoneLooksValid(phone, homeDialCode)) {
-      setFormError("Enter a valid mobile money number.");
+      setFormError(t("enterAValidMobileMoneyNumber"));
       return;
     }
     const res = await addMomo.mutateAsync({
@@ -109,35 +112,30 @@ export function AddWalletSheet({
       phone: phone.trim(),
     });
     if (res.status === 200) {
-      await added(res.data, "Mobile money wallet added.");
+      await added(res.data, t("mobileMoneyWalletAdded"));
       return;
     }
     // Covers duplicate-wallet and any server-side validation failure.
-    setFormError(
-      res.message ?? "We couldn't add that wallet. Please try again.",
-    );
+    setFormError(res.message ?? t("weCouldnTAddThatWallet"));
   }
 
   async function startCardVerification() {
     setFormError(null);
     const res = await addCard.mutateAsync(undefined);
     if (res.status === 200) {
-      await added(res.data, "Card added.");
+      await added(res.data, t("cardAdded"));
       return;
     }
-    setFormError(
-      res.message ??
-        "We couldn't verify that card. You won't have been charged.",
-    );
+    setFormError(res.message ?? t("weCouldnTVerifyThatCard"));
   }
 
   const title = success
-    ? "All set"
+    ? t("allSet")
     : step === "choose"
-      ? "Add a wallet"
+      ? t("addAWallet")
       : step === "momo"
-        ? "Add mobile money"
-        : "Add debit / credit card";
+        ? t("addMobileMoney")
+        : t("addDebitCreditCard");
 
   return (
     <Sheet
@@ -162,33 +160,33 @@ export function AddWalletSheet({
           <AppText variant="body" className="text-center">
             {success}
           </AppText>
-          <Button title="Done" fullWidth onPress={close} />
+          <Button title={t("done")} fullWidth onPress={close} />
         </View>
       ) : step === "choose" ? (
         <View className="gap-3">
           <SheetOption
             icon="phone-portrait-outline"
-            title="Mobile Money"
-            subtitle="MTN, Telecel, AT Money, G-Money"
+            title={t("mobileMoney")}
+            subtitle={t("mtnTelecelAtMoneyGMoney")}
             onPress={() => setStep("momo")}
           />
           <SheetOption
             icon="card-outline"
-            title="Card"
-            subtitle="Debit or credit — Visa, Mastercard"
+            title={t("card")}
+            subtitle={t("debitOrCreditVisaMastercard")}
             onPress={() => setStep("card")}
           />
         </View>
       ) : step === "momo" ? (
         <View className="gap-3">
-          <AppText variant="label">Network</AppText>
+          <AppText variant="label">{t("network")}</AppText>
           {networksFailed ? (
             <View className="gap-2 rounded-xl border border-border bg-card p-3">
               <AppText variant="small" tone="muted">
-                Couldn't load the mobile money networks.
+                {t("couldnTLoadTheMobileMoney")}
               </AppText>
               <Button
-                title="Retry"
+                title={t("retry")}
                 size="sm"
                 variant="outline"
                 onPress={() => networks.refetch()}
@@ -226,7 +224,7 @@ export function AddWalletSheet({
           <Input
             value={phone}
             onChangeText={setPhone}
-            placeholder="024XXXXXXX"
+            placeholder={t("n024xxxxxxx")}
             keyboardType="phone-pad"
             autoCapitalize="none"
             invalid={!!formError}
@@ -239,7 +237,7 @@ export function AddWalletSheet({
           ) : null}
 
           <Button
-            title="Save wallet"
+            title={t("saveWallet")}
             fullWidth
             loading={addMomo.isPending || finishing}
             disabled={
@@ -250,11 +248,7 @@ export function AddWalletSheet({
         </View>
       ) : (
         <View className="gap-3">
-          <AppText variant="muted">
-            Adding a card runs a small verification charge in your currency that
-            is refunded immediately. Your card number is never stored — only a
-            reusable token from the payment provider.
-          </AppText>
+          <AppText variant="muted">{t("addingACardRunsASmall")}</AppText>
 
           {formError ? (
             <AppText variant="small" tone="error">
@@ -263,12 +257,17 @@ export function AddWalletSheet({
           ) : null}
 
           <Button
-            title="Start card verification"
+            title={t("startCardVerification")}
             fullWidth
             loading={addCard.isPending || finishing}
             onPress={startCardVerification}
           />
-          <Button title="Cancel" variant="outline" fullWidth onPress={close} />
+          <Button
+            title={t("cancel")}
+            variant="outline"
+            fullWidth
+            onPress={close}
+          />
         </View>
       )}
     </Sheet>

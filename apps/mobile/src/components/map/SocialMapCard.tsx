@@ -4,6 +4,7 @@ import {
   type IoniconName,
   PressableScale,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -69,6 +70,8 @@ export function SocialMapCard({
   /** The card's measured height, so the map can keep a pin clear of it. */
   onHeight?: (height: number) => void;
 }) {
+  const t = useTranslations("explore");
+
   const router = useRouter();
   const c = useThemeColors();
   const reduceMotion = useReducedMotion();
@@ -183,8 +186,8 @@ export function SocialMapCard({
       <GestureDetector gesture={pan}>
         <PressableScale
           activeScale={0.98}
-          accessibilityLabel={`Open ${current.title}`}
-          accessibilityHint="Shows the full details"
+          accessibilityLabel={t("open", { title: current.title })}
+          accessibilityHint={t("showsTheFullDetails")}
           onPress={openDetails}
           className="rounded-3xl border border-border bg-card px-3 pb-3 pt-2"
           style={{
@@ -235,7 +238,7 @@ export function SocialMapCard({
                 </AppText>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Close"
+                  accessibilityLabel={t("close")}
                   hitSlop={10}
                   onPress={onRequestClose}
                   className="-mr-0.5 h-7 w-7 items-center justify-center rounded-full bg-muted active:opacity-70"
@@ -281,7 +284,7 @@ export function SocialMapCard({
                     tone="brand"
                     className="font-semibold"
                   >
-                    {current.kind === "event" ? "View event" : "View place"}
+                    {current.kind === "event" ? t("viewEvent") : t("viewPlace")}
                   </AppText>
                   <Icon
                     name="chevron-forward"

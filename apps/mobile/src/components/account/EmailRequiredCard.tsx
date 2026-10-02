@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppText, Button, Icon, Sheet, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { View } from "react-native";
 import { EmailVerificationForm } from "./EmailVerificationForm";
@@ -22,6 +23,8 @@ export function EmailRequiredCard({
 }: {
   purpose?: "tickets" | "promotion";
 }) {
+  const t = useTranslations("account");
+
   const toast = useToast();
   const needsEmail = useNeedsEmailToPay();
   const [open, setOpen] = useState(false);
@@ -32,27 +35,31 @@ export function EmailRequiredCard({
       <View className="flex-row gap-3">
         <Icon name="mail-outline" size={22} tone="warning" />
         <View className="flex-1 gap-0.5">
-          <AppText variant="bodyStrong">Add your email to pay</AppText>
+          <AppText variant="bodyStrong">{t("addYourEmailToPay")}</AppText>
           <AppText variant="meta">
             {purpose === "tickets"
-              ? "Card and mobile money payments need an email. Your tickets and receipt are sent there."
-              : "Card and mobile money payments need an email. Your receipt is sent there."}
+              ? t("cardAndMobileMoneyPaymentsNeed")
+              : t("cardAndMobileMoneyPaymentsNeed2")}
           </AppText>
         </View>
       </View>
       <Button
-        title="Add email"
+        title={t("addEmail")}
         variant="outline"
         leftIcon="add-outline"
         onPress={() => setOpen(true)}
       />
-      <Sheet open={open} onClose={() => setOpen(false)} title="Add your email">
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title={t("addYourEmail")}
+      >
         {open ? (
           <EmailVerificationForm
             onDone={(message) => {
               setOpen(false);
               toast.success(message, {
-                description: "You can pay now.",
+                description: t("youCanPayNow"),
               });
             }}
             onCancel={() => setOpen(false)}

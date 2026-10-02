@@ -1,5 +1,6 @@
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRef, useState } from "react";
 import { type LayoutChangeEvent, View } from "react-native";
@@ -38,6 +39,9 @@ export function PriceRangeField({
   max: number | null;
   onChange: (next: { min: number | null; max: number | null }) => void;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("explore");
+
   const c = useThemeColors();
   const factor = Number.isFinite(scale) && scale > 0 ? scale : 1;
   const MAX = BASE_MAX * factor;
@@ -45,7 +49,7 @@ export function PriceRangeField({
   const ANY_THRESHOLD = BASE_ANY_THRESHOLD * factor;
   const snap = (v: number) => Math.round(v / STEP) * STEP;
   const amount = (v: number) =>
-    formatMoney(currency, v, { trimZeroFraction: true });
+    formatMoney(currency, v, { trimZeroFraction: true, locale });
   const [trackWidth, setTrackWidth] = useState(0);
 
   const lo = min ?? 0;
@@ -114,7 +118,7 @@ export function PriceRangeField({
       <View className="flex-row justify-between">
         <AppText variant="metaStrong">{amount(lo)}</AppText>
         <AppText variant="metaStrong">
-          {hi >= ANY_THRESHOLD ? "Any" : amount(hi)}
+          {hi >= ANY_THRESHOLD ? t("any") : amount(hi)}
         </AppText>
       </View>
 
@@ -122,9 +126,12 @@ export function PriceRangeField({
         className="h-9 justify-center"
         onLayout={onLayout}
         accessibilityRole="adjustable"
-        accessibilityLabel="Price range"
+        accessibilityLabel={t("priceRange")}
         accessibilityValue={{
-          text: `${amount(lo)} to ${hi >= ANY_THRESHOLD ? "any" : amount(hi)}`,
+          text: t("to", {
+            amount: amount(lo),
+            value: hi >= ANY_THRESHOLD ? t("any2") : amount(hi),
+          }),
         }}
       >
         <View

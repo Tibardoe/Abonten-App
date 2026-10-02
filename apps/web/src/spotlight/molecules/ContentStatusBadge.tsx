@@ -1,31 +1,35 @@
 import { cn } from "@/components/lib/utils";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
+import { campaignStatusLabel } from "@abonten/core/content/copy";
 import type {
   ContentCampaignStatus,
   ContentOwnPost,
 } from "@abonten/types/contentType";
+import { useTranslations } from "next-intl";
 
+// `label` is a catalog key in the spotlight namespace.
 export function postStatusLabel(post: ContentOwnPost): {
   label: string;
   tone: "live" | "muted" | "warn" | "bad";
 } {
   if (post.moderationState === "removed")
-    return { label: "Removed", tone: "bad" };
+    return { label: "postStatus.removed", tone: "bad" };
   if (post.moderationState === "hidden")
-    return { label: "Hidden", tone: "bad" };
-  if (post.status === "draft") return { label: "Draft", tone: "muted" };
-  if (post.status === "archived") return { label: "Archived", tone: "muted" };
+    return { label: "postStatus.hidden", tone: "bad" };
+  if (post.status === "draft")
+    return { label: "postStatus.draft", tone: "muted" };
+  if (post.status === "archived")
+    return { label: "postStatus.archived", tone: "muted" };
   if (
     post.kind === "story" &&
     post.expiresAt &&
     Date.parse(post.expiresAt) <= Date.now()
   ) {
-    return { label: "Ended", tone: "muted" };
+    return { label: "postStatus.ended", tone: "muted" };
   }
   if (post.moderationState === "restricted") {
-    return { label: "Limited", tone: "warn" };
+    return { label: "postStatus.limited", tone: "warn" };
   }
-  return { label: "Live", tone: "live" };
+  return { label: "postStatus.live", tone: "live" };
 }
 
 const TONE: Record<"live" | "muted" | "warn" | "bad", string> = {
@@ -75,9 +79,10 @@ export function CampaignStatusPill({
 }: {
   status: ContentCampaignStatus;
 }) {
+  const tc = useTranslations("core");
   return (
     <StatusPill
-      label={CAMPAIGN_STATUS_LABEL[status]}
+      label={campaignStatusLabel(tc, status)}
       tone={campaignTone(status)}
     />
   );

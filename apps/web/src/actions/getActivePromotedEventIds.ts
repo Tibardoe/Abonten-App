@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 
 /**
@@ -14,18 +15,18 @@ import { logger } from "@abonten/core/logger";
  * itself — a promoted event is simply treated the same as an event whose
  * organizer self-toggled `featured`.
  */
-export default async function getActivePromotedEventIds(): Promise<
-  Set<string>
-> {
-  const { data, error } = await publicSupabase
-    .from("event_promotion")
-    .select("event_id")
-    .gt("ends_at", new Date().toISOString());
+export default withActionLocale(
+  async function getActivePromotedEventIds(): Promise<Set<string>> {
+    const { data, error } = await publicSupabase
+      .from("event_promotion")
+      .select("event_id")
+      .gt("ends_at", new Date().toISOString());
 
-  if (error) {
-    logger.error(`Error fetching active event promotions: ${error.message}`);
-    return new Set();
-  }
+    if (error) {
+      logger.error(`Error fetching active event promotions: ${error.message}`);
+      return new Set();
+    }
 
-  return new Set((data ?? []).map((row) => row.event_id as string));
-}
+    return new Set((data ?? []).map((row) => row.event_id as string));
+  },
+);

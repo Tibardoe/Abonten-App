@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   type CheckoutPaymentTarget,
   getCheckoutPaymentOptionsCore,
 } from "@abonten/services/payments/checkoutPaymentOptionsCore";
@@ -16,6 +20,7 @@ const PROMOTION_KINDS = new Set(["event", "place", "spotlight"]);
 // entry says whether it works there. Same service as the web
 // getCheckoutPaymentOptions action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -30,18 +35,18 @@ export async function GET(req: Request) {
         .filter(Boolean)
         .slice(0, 20);
       if (ids.length === 0) {
-        return apiJson({ status: 400, message: "ids is required" });
+        return apiJson({ status: 400, message: tr("idsIsRequired") });
       }
       target = { kind: "ticket", checkoutSessionIds: ids };
     } else if (PROMOTION_KINDS.has(kind)) {
       const id = url.searchParams.get("id");
-      if (!id) return apiJson({ status: 400, message: "id is required" });
+      if (!id) return apiJson({ status: 400, message: tr("idIsRequired") });
       target = {
         kind: kind as "event" | "place" | "spotlight",
         checkoutId: id,
       };
     } else {
-      return apiJson({ status: 400, message: "Unknown kind" });
+      return apiJson({ status: 400, message: tr("unknownKind") });
     }
 
     const platform =
@@ -55,6 +60,9 @@ export async function GET(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile GET /payments/options failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

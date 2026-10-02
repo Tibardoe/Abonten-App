@@ -1,11 +1,16 @@
 import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // POST /api/mobile/auth/phone/request  { "dialCode": "+233", "rawPhone": "24..." }
 // Unauthenticated by design (pre-login), same as the web AuthModal. The
 // per-phone resend cooldown and per-IP send cap live inside the action.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   try {
     const body = (await req.json().catch(() => null)) as {
       dialCode?: unknown;
@@ -18,7 +23,7 @@ export async function POST(req: Request) {
     if (typeof dialCode !== "string" || typeof rawPhone !== "string") {
       return apiJson({
         status: 400,
-        message: "dialCode and rawPhone are required",
+        message: tr("dialcodeAndRawphoneAreRequired"),
       });
     }
 
@@ -38,6 +43,9 @@ export async function POST(req: Request) {
     return apiJson({ status: result.status, message: result.message });
   } catch (error) {
     logger.error("mobile POST /auth/phone/request failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type UploadSignatureResult,
   buildCloudinaryUploadSignature,
@@ -15,17 +17,22 @@ import {
 // action should check against (publicId must start with this same folder)
 // to enforce ownership on write, same as uploadHighlight.ts does today.
 // Shared body: @abonten/services/uploads/cloudinaryUploadSignature.
-export default async function getPlacePhotoUploadSignature(): Promise<UploadSignatureResult> {
-  const supabase = await createClient();
+export default withActionLocale(
+  async function getPlacePhotoUploadSignature(): Promise<UploadSignatureResult> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (!user || userError) {
-    return { status: 401, message: "Sign in to upload place photos!" };
-  }
+    if (!user || userError) {
+      return {
+        status: 401,
+        message: tr("signInToUploadPlacePhotos"),
+      };
+    }
 
-  return buildCloudinaryUploadSignature(user.id, "place_photo");
-}
+    return buildCloudinaryUploadSignature(user.id, "place_photo");
+  },
+);

@@ -3,7 +3,13 @@ import type {
   OrganizerTimelineRow,
 } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import {
+  formatCompactCount,
+  formatDate,
+  formatDateTime,
+} from "@abonten/core/i18n/format";
 import { AppText, Overline } from "@abonten/ui-native";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo, useState } from "react";
 import { type LayoutChangeEvent, Pressable, View } from "react-native";
@@ -23,24 +29,23 @@ const CHART_H = 176;
 const TOP_PAD = 12; // headroom above the tallest bar
 
 function money(currency: string, amount: number): string {
-  return formatMoney(currency, amount, { trimZeroFraction: true });
+  return formatMoney(currency, amount, {
+    trimZeroFraction: true,
+    locale: getCurrentLocale(),
+  });
 }
 
-function compact(amount: number): string {
-  if (amount >= 1_000_000)
-    return `${(amount / 1_000_000).toFixed(amount >= 10_000_000 ? 0 : 1)}M`;
-  if (amount >= 1_000)
-    return `${(amount / 1_000).toFixed(amount >= 10_000 ? 0 : 1)}k`;
-  return `${Math.round(amount)}`;
-}
+const compact = (amount: number): string =>
+  formatCompactCount(Math.round(amount), getCurrentLocale());
 
 function bucketLabel(bucketStart: string, bucket: DashboardBucket): string {
   const d = new Date(bucketStart);
-  if (bucket === "hour")
-    return d.toLocaleTimeString("en-US", { hour: "numeric" });
-  if (bucket === "month")
-    return d.toLocaleDateString("en-US", { month: "short" });
-  return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+  // The axis reads in the app's language ("14 h", "sept."), like the rest
+  // of the dashboard.
+  const locale = getCurrentLocale();
+  if (bucket === "hour") return formatDateTime(d, locale, { hour: "numeric" });
+  if (bucket === "month") return formatDate(d, locale, { month: "short" });
+  return formatDate(d, locale, { day: "numeric", month: "short" });
 }
 
 export function SalesTimelineChart({
@@ -52,6 +57,8 @@ export function SalesTimelineChart({
   bucket: DashboardBucket;
   currency: string;
 }) {
+  const t = useTranslations("manage");
+
   const c = useThemeColors();
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
@@ -68,11 +75,11 @@ export function SalesTimelineChart({
   if (data.length === 0) {
     return (
       <View className="gap-2">
-        <Overline>Sales over time</Overline>
+        <Overline>{t("salesOverTime")}</Overline>
         <View className="items-center gap-1 rounded-xl border border-border bg-card px-3 py-6">
-          <AppText variant="bodyStrong">No sales yet</AppText>
+          <AppText variant="bodyStrong">{t("noSalesYet")}</AppText>
           <AppText variant="meta" className="text-center">
-            Gross sales for this period will chart here once tickets sell.
+            {t("grossSalesForThisPeriodWill")}
           </AppText>
         </View>
       </View>
@@ -91,17 +98,21 @@ export function SalesTimelineChart({
   return (
     <View className="gap-2">
       <View className="flex-row items-baseline justify-between">
-        <Overline>Sales over time</Overline>
+        <Overline>{t("salesOverTime")}</Overline>
         {sel ? (
           <AppText variant="metaStrong" tone="brand">
-            {bucketLabel(sel.bucket_start, bucket)} ·{" "}
-            {money(currency, n(sel.gross))} · {n(sel.orders)} order
-            {n(sel.orders) === 1 ? "" : "s"}
+            {t("order2", {
+              bucketLabel: bucketLabel(sel.bucket_start, bucket),
+              money: money(currency, n(sel.gross)),
+              n: n(sel.orders),
+            })}
           </AppText>
         ) : (
           <AppText variant="metaStrong">
-            {money(currency, periodTotal)} · {periodOrders} order
-            {periodOrders === 1 ? "" : "s"}
+            {t("order3", {
+              money: money(currency, periodTotal),
+              periodOrders: periodOrders,
+            })}
           </AppText>
         )}
       </View>

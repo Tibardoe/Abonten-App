@@ -3,9 +3,11 @@
 import { listPublisherContent } from "@/actions/content/listPublisherContent";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { spotlightPath } from "@abonten/core/content/links";
+import { formatCount } from "@abonten/core/i18n/format";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { IoPlay } from "react-icons/io5";
@@ -26,7 +28,7 @@ export default function PublisherSpotlightGrid({
   publisherId,
   title,
   hideWhenEmpty = false,
-  emptyText = "No Spotlights yet.",
+  emptyText: emptyTextProp,
 }: {
   publisherKind: "organizer" | "place";
   publisherId: string;
@@ -34,6 +36,10 @@ export default function PublisherSpotlightGrid({
   hideWhenEmpty?: boolean;
   emptyText?: string;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("spotlight");
+  const emptyText = emptyTextProp ?? t("noSpotlightsYet");
+
   const { program, ready } = useContentProgram();
   const { data: user } = useCurrentUser();
 
@@ -77,7 +83,7 @@ export default function PublisherSpotlightGrid({
         </div>
       ) : query.isError ? (
         <p className="text-sm text-muted-foreground">
-          Couldn't load Spotlights.
+          {t("couldnTLoadSpotlights")}
         </p>
       ) : posts.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
@@ -100,7 +106,7 @@ export default function PublisherSpotlightGrid({
                   {src ? (
                     <Image
                       src={src}
-                      alt={post.caption?.slice(0, 80) ?? "Spotlight"}
+                      alt={post.caption?.slice(0, 80) ?? t("spotlight")}
                       fill
                       sizes="(max-width: 768px) 33vw, 200px"
                       className="object-cover"
@@ -108,7 +114,7 @@ export default function PublisherSpotlightGrid({
                   ) : null}
                   <span className="absolute bottom-1 left-1 flex items-center gap-0.5 text-xs font-semibold text-white drop-shadow">
                     <IoPlay aria-hidden />
-                    {post.counts.views.toLocaleString()}
+                    {formatCount(post.counts.views, locale)}
                   </span>
                 </Link>
               </li>
@@ -123,7 +129,7 @@ export default function PublisherSpotlightGrid({
           onClick={() => query.fetchNextPage()}
           className="w-full text-center text-sm font-medium text-primary hover:underline disabled:opacity-60"
         >
-          {query.isFetchingNextPage ? "Loading…" : "Show more"}
+          {query.isFetchingNextPage ? t("loading") : t("showMore")}
         </button>
       ) : null}
     </section>

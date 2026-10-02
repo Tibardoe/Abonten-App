@@ -9,6 +9,7 @@ import {
   Overline,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { View } from "react-native";
@@ -21,6 +22,9 @@ const pct = (bps: number) => Number((bps / 100).toFixed(2));
 // and it comes off the organizer's payout for that sale. Hidden while
 // commissions aren't switched on (and the event has no offer).
 export function PromoterCommissionSection({ eventId }: { eventId: string }) {
+  const { locale } = useLocale();
+  const t = useTranslations("rewards");
+
   const toast = useToast();
   const qc = useQueryClient();
   const key = ["mobile", "organizer", "promoter-commission", eventId];
@@ -44,18 +48,18 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
         setRate("");
         toast.success(
           rateBps === null
-            ? "Commission stopped"
-            : `Promoters now earn ${pct(rateBps)}% of each ticket`,
+            ? t("commissionStopped")
+            : t("promotersNowEarnOfEachTicket", { pct: pct(rateBps) }),
         );
       } else {
-        toast.error("Couldn't save the commission", {
-          description: res.message ?? "Please try again.",
+        toast.error(t("couldnTSaveTheCommission"), {
+          description: res.message ?? t("pleaseTryAgain"),
         });
       }
     },
     onError: () =>
-      toast.error("Couldn't save the commission", {
-        description: "Please try again.",
+      toast.error(t("couldnTSaveTheCommission"), {
+        description: t("pleaseTryAgain"),
       }),
   });
 
@@ -72,34 +76,39 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
 
   return (
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
-      <Overline>Promoter commission</Overline>
-      <AppText variant="small">
-        Reward people who sell your tickets. Anyone who shares this event and
-        sells a ticket through their link gets your chosen share of the ticket
-        price as Abonten Credit once the event is over. It comes off your payout
-        for that sale; refunded or cancelled tickets earn nothing.
-      </AppText>
+      <Overline>{t("promoterCommission")}</Overline>
+      <AppText variant="small">{t("rewardPeopleWhoSellYourTickets")}</AppText>
       {data.rateBps !== null ? (
         <AppText variant="bodyStrong">
-          Promoters earn {pct(data.rateBps)}% of each ticket.
+          {t("promotersEarnOfEachTicket", { pct: pct(data.rateBps) })}
         </AppText>
       ) : null}
       {data.available ? (
         <View className="gap-2">
           <Field
-            label={`${data.rateBps !== null ? "Change to" : "Commission"} (${pct(data.minRateBps)}–${pct(data.maxRateBps)}%)`}
+            label={
+              data.rateBps !== null
+                ? t("changeToRange", {
+                    min: pct(data.minRateBps),
+                    max: pct(data.maxRateBps),
+                  })
+                : t("commissionRange", {
+                    min: pct(data.minRateBps),
+                    max: pct(data.maxRateBps),
+                  })
+            }
           >
             <Input
               value={rate}
               onChangeText={setRate}
               keyboardType="decimal-pad"
               placeholder="10"
-              accessibilityLabel="Commission percent"
+              accessibilityLabel={t("commissionPercent")}
             />
           </Field>
           <View className="flex-row gap-2">
             <Button
-              title={data.rateBps !== null ? "Update" : "Offer commission"}
+              title={data.rateBps !== null ? t("update") : t("offerCommission")}
               className="flex-1"
               disabled={!valid}
               loading={save.isPending}
@@ -107,7 +116,7 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
             />
             {data.rateBps !== null ? (
               <Button
-                title="Stop"
+                title={t("stop")}
                 variant="outline"
                 disabled={save.isPending}
                 onPress={() => save.mutate(null)}
@@ -117,20 +126,23 @@ export function PromoterCommissionSection({ eventId }: { eventId: string }) {
         </View>
       ) : (
         <AppText variant="small" tone="muted">
-          Promoter commissions are paused on Abonten, so tickets sold now don't
-          earn one.
+          {t("promoterCommissionsArePausedOnAbonten")}
         </AppText>
       )}
       {s.sales > 0 ? (
         <View className="gap-1 border-t border-border pt-3">
           <AppText variant="small">
-            {s.sales} order{s.sales === 1 ? "" : "s"} by {s.promoters} promoter
-            {s.promoters === 1 ? "" : "s"} ·{" "}
-            {formatCredit(s.revenueMinor, data.currency)} in ticket sales
+            {t("salesSummary", {
+              sales: s.sales,
+              promoters: s.promoters,
+              amount: formatCredit(s.revenueMinor, data.currency, locale),
+            })}
           </AppText>
           <AppText variant="small" tone="muted">
-            {formatCredit(s.pendingMinor, data.currency)} commission pending ·{" "}
-            {formatCredit(s.paidMinor, data.currency)} paid
+            {t("commissionPendingPaid", {
+              formatCredit: formatCredit(s.pendingMinor, data.currency, locale),
+              formatCredit2: formatCredit(s.paidMinor, data.currency, locale),
+            })}
           </AppText>
         </View>
       ) : null}

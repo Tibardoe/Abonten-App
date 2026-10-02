@@ -42,12 +42,17 @@ import { useFilteredEvents } from "@/features/discovery/useFilteredEvents";
 import { useFilteredPlaces } from "@/features/discovery/useFilteredPlaces";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import { useWarmDetails } from "@/features/discovery/useWarmDetails";
+import { useCoreI18n } from "@/features/i18n/useCoreI18n";
 import {
   MARKET_CONTEXT_KEY,
   useMarket,
 } from "@/features/markets/MarketProvider";
 import { useAreaCoverage } from "@/features/markets/useAreaCoverage";
 import { useQueryView } from "@/lib/useQueryView";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import { distanceMetres } from "@abonten/core/fieldOps/territory";
 import { waitlistAreaKey } from "@abonten/core/market/coverage";
@@ -63,6 +68,7 @@ import {
   SectionTitle,
   SegmentedTabs,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -77,6 +83,9 @@ type Tab = "events" | "places";
 // Today-Week-Month / Top Rated), and the filterable "All events" / "All
 // places" list with filter-aware empty states.
 export default function Explore() {
+  const t = useTranslations("explore");
+  const i18n = useCoreI18n();
+
   const router = useRouter();
   const listPadding = useTabBarListPadding();
   const tabBarOverlap = useTabBarOverlap();
@@ -234,29 +243,36 @@ export default function Explore() {
     () =>
       eventCategoriesAndTypes.map((c) => ({
         key: c.category,
-        label: c.category,
+        label: eventCategoryLabel(i18n.t, c.category),
       })),
-    [],
+    [i18n],
   );
   const placeCategoryChips = useMemo(
-    () => placeCategories.map((c) => ({ key: String(c.id), label: c.name })),
-    [placeCategories],
+    () =>
+      placeCategories.map((c) => ({
+        key: String(c.id),
+        label: placeCategoryLabel(i18n.t, c),
+      })),
+    [placeCategories, i18n],
   );
 
-  const selectedPlaceCategoryName =
+  const selectedPlaceCategory =
     placeFilters.categoryId != null
-      ? (placeCategories.find((c) => c.id === placeFilters.categoryId)?.name ??
-        null)
-      : null;
+      ? placeCategories.find((c) => c.id === placeFilters.categoryId)
+      : undefined;
+  const selectedPlaceCategoryName = selectedPlaceCategory
+    ? placeCategoryLabel(i18n.t, selectedPlaceCategory)
+    : null;
 
   const activeChips =
     tab === "events"
       ? describeEventFilters(
+          i18n,
           eventFilters,
           market?.defaultCurrency ?? "",
           market?.priceScale ?? 1,
         )
-      : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
+      : describePlaceFilters(i18n, placeFilters, selectedPlaceCategoryName);
 
   const activeCount = tab === "events" ? eventFilterCount : placeFilterCount;
 
@@ -303,41 +319,49 @@ export default function Explore() {
     tab === "events" ? (
       curatedEventsSuppressed ? (
         <Caption className="px-4 pt-4">
-          Rating filter applied — showing the full matching list below.
+          {t("ratingFilterAppliedShowingTheFull")}
         </Caption>
       ) : eventCuratedEmpty ? null : (
         <View>
           <EventSliderRow
-            title="Around you"
+            title={t("aroundYou")}
             events={eventSlidersFiltered.aroundYou}
-            onViewAll={() => openSection("event", "aroundYou", "Around you")}
+            onViewAll={() => openSection("event", "aroundYou", t("aroundYou"))}
           />
           <EventSliderRow
-            title="Top-rated organizers"
+            title={t("topRatedOrganizers")}
             events={eventSlidersFiltered.topRatedOrganizers}
             onViewAll={() =>
-              openSection("event", "topRatedOrganizers", "Top-rated organizers")
+              openSection(
+                "event",
+                "topRatedOrganizers",
+                t("topRatedOrganizers"),
+              )
             }
           />
           <EventSliderRow
-            title="Happening today"
+            title={t("happeningToday")}
             events={eventSlidersFiltered.happeningToday}
             onViewAll={() =>
-              openSection("event", "happeningToday", "Happening today")
+              openSection("event", "happeningToday", t("happeningToday"))
             }
           />
           <EventSliderRow
-            title="Happening this week"
+            title={t("happeningThisWeek")}
             events={eventSlidersFiltered.happeningThisWeek}
             onViewAll={() =>
-              openSection("event", "happeningThisWeek", "Happening this week")
+              openSection("event", "happeningThisWeek", t("happeningThisWeek"))
             }
           />
           <EventSliderRow
-            title="Happening this month"
+            title={t("happeningThisMonth")}
             events={eventSlidersFiltered.happeningThisMonth}
             onViewAll={() =>
-              openSection("event", "happeningThisMonth", "Happening this month")
+              openSection(
+                "event",
+                "happeningThisMonth",
+                t("happeningThisMonth"),
+              )
             }
           />
         </View>
@@ -345,19 +369,19 @@ export default function Explore() {
     ) : placeCuratedEmpty ? null : (
       <View>
         <PlaceSliderRow
-          title="Around you"
+          title={t("aroundYou")}
           places={placeSlidersFiltered.aroundYou}
-          onViewAll={() => openSection("place", "aroundYou", "Around you")}
+          onViewAll={() => openSection("place", "aroundYou", t("aroundYou"))}
         />
         <PlaceSliderRow
-          title="Open now"
+          title={t("openNow")}
           places={placeSlidersFiltered.openNow}
-          onViewAll={() => openSection("place", "openNow", "Open now")}
+          onViewAll={() => openSection("place", "openNow", t("openNow"))}
         />
         <PlaceSliderRow
-          title="Top rated"
+          title={t("topRated")}
           places={placeSlidersFiltered.topRated}
-          onViewAll={() => openSection("place", "topRated", "Top rated")}
+          onViewAll={() => openSection("place", "topRated", t("topRated"))}
         />
       </View>
     );
@@ -424,7 +448,7 @@ export default function Explore() {
       {sliders}
 
       <SectionTitle className="px-4 pb-1 pt-2">
-        {tab === "events" ? "All events" : "All places"}
+        {tab === "events" ? t("allEvents") : t("allPlaces")}
       </SectionTitle>
     </View>
   );
@@ -445,11 +469,15 @@ export default function Explore() {
         <View>
           <EmptyState
             icon={tab === "events" ? "calendar-outline" : "location-outline"}
-            title={`Nothing listed ${areaName ? `in ${areaName}` : whereText(area)} yet`}
+            title={t("nothingListedYet", {
+              value: areaName
+                ? t("inArea", { area: areaName })
+                : whereText(area),
+            })}
             description={
               notLaunched.browse.cities.length > 0
-                ? "Abonten hasn't launched here yet. Explore a city that's open, or check back soon."
-                : "Abonten hasn't launched here yet. Check back soon."
+                ? t("abontenHasnTLaunchedHereYet")
+                : t("abontenHasnTLaunchedHereYet2")
             }
           />
           <BrowseElsewhereList
@@ -462,22 +490,22 @@ export default function Explore() {
           icon={tab === "events" ? "calendar-outline" : "location-outline"}
           title={
             activeCount > 0
-              ? `No ${tab} match your filters`
-              : `No ${tab} ${whereText(area)}`
+              ? t("noMatchYourFilters", { tab: tab })
+              : t("no", { tab: tab, whereText: whereText(area) })
           }
           description={
             activeCount > 0
-              ? "Try widening or clearing your filters."
-              : "Check back soon, or change your location."
+              ? t("tryWideningOrClearingYourFilters")
+              : t("checkBackSoonOrChangeYour")
           }
-          actionLabel={activeCount > 0 ? "Clear filters" : undefined}
+          actionLabel={activeCount > 0 ? t("clearFilters") : undefined}
           onAction={activeCount > 0 ? clearAllChips : undefined}
         />
       )
     ) : (
       <QueryUnavailable
         view={activeView}
-        subject={tab === "events" ? "events here" : "places here"}
+        subject={tab === "events" ? t("eventsHere") : t("placesHere")}
         onRetry={() => activeQuery.refetch()}
         loading={
           <View className="gap-4 px-4 pt-2">
@@ -506,14 +534,16 @@ export default function Explore() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
-            activeCount > 0 ? `Filters (${activeCount} active)` : "Filters"
+            activeCount > 0
+              ? t("filtersActive", { activeCount: activeCount })
+              : t("filters")
           }
           onPress={() => setFilterOpen(true)}
           className="min-h-[36px] flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
         >
           <Icon name="options-outline" size={18} tone="foreground" />
           <AppText variant="small" className="font-medium">
-            Filters
+            {t("filters")}
           </AppText>
           {activeCount > 0 ? (
             <View className="ml-0.5 min-w-[18px] items-center rounded-full bg-primary px-1">
@@ -544,8 +574,8 @@ export default function Explore() {
       <View className="px-4 pb-1">
         <SegmentedTabs
           options={[
-            { key: "events", label: "Events" },
-            { key: "places", label: "Places" },
+            { key: "events", label: t("events") },
+            { key: "places", label: t("places") },
           ]}
           value={tab}
           onChange={setTab}
@@ -560,7 +590,7 @@ export default function Explore() {
       <View className="flex-row justify-end px-4 pb-1 pt-1">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={view === "list" ? "Show map" : "Show list"}
+          accessibilityLabel={view === "list" ? t("showMap") : t("showList")}
           onPress={() => setView((v) => (v === "list" ? "map" : "list"))}
           className="min-h-[36px] flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
         >
@@ -570,7 +600,7 @@ export default function Explore() {
             tone="foreground"
           />
           <AppText variant="small" className="font-medium">
-            {view === "list" ? "Map" : "List"}
+            {view === "list" ? t("map") : t("list")}
           </AppText>
         </Pressable>
       </View>
@@ -591,7 +621,7 @@ export default function Explore() {
           ) : (
             <QueryUnavailable
               view={activeView}
-              subject={tab === "events" ? "events here" : "places here"}
+              subject={tab === "events" ? t("eventsHere") : t("placesHere")}
               onRetry={() => activeQuery.refetch()}
             />
           )}

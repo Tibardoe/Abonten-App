@@ -8,6 +8,7 @@ import {
 import { useClickOutside } from "@/hooks/useClickOutside";
 import type { PlaceType } from "@abonten/types/placeType";
 import debounce from "lodash.debounce";
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { IoStorefrontOutline } from "react-icons/io5";
 
@@ -33,6 +34,8 @@ export default function PlaceSearchSelect({
   onSelect,
   onClear,
 }: PlaceSearchSelectProps) {
+  const t = useTranslations("places");
+
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlaceType[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -78,14 +81,14 @@ export default function PlaceSearchSelect({
       <div className="flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
         <span className="flex items-center gap-2 text-foreground truncate">
           <IoStorefrontOutline className="shrink-0 text-lg" />
-          At <span className="font-medium">{selectedPlaceName}</span>
+          {t("at")} <span className="font-medium">{selectedPlaceName}</span>
         </span>
         <button
           type="button"
           onClick={onClear}
           className="shrink-0 text-primary hover:underline"
         >
-          Change
+          {t("change")}
         </button>
       </div>
     );
@@ -99,7 +102,7 @@ export default function PlaceSearchSelect({
           type="text"
           value={query}
           onChange={handleInputChange}
-          placeholder="Search an existing Abonten Place (optional)"
+          placeholder={t("searchAnExistingAbontenPlaceOptional")}
           className={searchFieldInputClassName}
         />
       </div>
@@ -107,7 +110,9 @@ export default function PlaceSearchSelect({
       {(results.length > 0 || isSearching) && (
         <ul className="absolute top-full left-0 w-full max-h-60 bg-popover text-popover-foreground border border-border rounded shadow-md mt-1 z-10 overflow-y-auto">
           {isSearching && (
-            <li className="p-2 text-sm text-muted-foreground">Searching...</li>
+            <li className="p-2 text-sm text-muted-foreground">
+              {t("searching")}
+            </li>
           )}
           {results.map((place) => (
             <button

@@ -1,4 +1,5 @@
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The "Archived ›" row (spec §12–14). A navigation destination, not a
@@ -11,13 +12,15 @@ export function ArchivedEntryRow({
   count?: number;
   onPress: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
         count && count > 0
-          ? `Archived, ${count} conversations`
-          : "Archived conversations"
+          ? t("archivedConversations", { count: count })
+          : t("archivedConversations2")
       }
       onPress={onPress}
       className="flex-row items-center gap-3 border-b border-border/60 px-4 py-3 active:bg-muted"
@@ -26,7 +29,7 @@ export function ArchivedEntryRow({
         <Icon name="archive-outline" size={18} tone="muted" />
       </View>
       <AppText variant="body" className="flex-1">
-        Archived
+        {t("archived")}
       </AppText>
       {count && count > 0 ? (
         <AppText variant="meta">{count > 99 ? "99+" : count}</AppText>

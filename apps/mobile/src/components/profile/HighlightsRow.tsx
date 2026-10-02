@@ -7,6 +7,7 @@ import {
   useHighlights,
 } from "@/features/profile/useHighlights";
 import { Icon, runAfterModalDismissal, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -33,6 +34,8 @@ export function HighlightsRow({
   avatarPublicId?: string | null;
   avatarVersion?: number | string | null;
 }) {
+  const t = useTranslations("profile");
+
   const toast = useToast();
   const router = useRouter();
   const { session } = useSession();
@@ -50,10 +53,10 @@ export function HighlightsRow({
   // and the toast offers a retry — the UI is never left claiming a delete
   // that did not happen.
   function confirmDeleteGroup(groupId: string) {
-    Alert.alert("Delete highlight?", "This removes every slide in it.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteHighlight"), t("thisRemovesEverySlideInIt"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("deleteText"),
         style: "destructive",
         onPress: () => runDelete(groupId),
       },
@@ -62,11 +65,11 @@ export function HighlightsRow({
 
   function runDelete(groupId: string) {
     deleteGroup.mutate(groupId, {
-      onSuccess: () => toast.success("Highlight deleted"),
+      onSuccess: () => toast.success(t("highlightDeleted")),
       onError: (e) =>
-        toast.error("Couldn't delete highlight", {
-          description: e instanceof Error ? e.message : "Please try again.",
-          action: { label: "Retry", onPress: () => runDelete(groupId) },
+        toast.error(t("couldnTDeleteHighlight"), {
+          description: e instanceof Error ? e.message : t("pleaseTryAgain"),
+          action: { label: t("retry"), onPress: () => runDelete(groupId) },
         }),
     });
   }
@@ -87,7 +90,7 @@ export function HighlightsRow({
             className="items-center justify-center active:opacity-80"
             style={{ opacity: isUploading ? 0.4 : 1 }}
             accessibilityRole="button"
-            accessibilityLabel="Add highlight"
+            accessibilityLabel={t("addHighlight")}
           >
             <View className="h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-dashed border-border">
               <Icon name="add" size={26} tone="muted" />
@@ -151,7 +154,7 @@ export function HighlightsRow({
         onClose={() => setReportSlideId(null)}
         targetType="highlight"
         targetId={reportSlideId ?? ""}
-        label={`Highlight by @${username}`}
+        label={t("highlightBy", { username: username })}
       />
     </View>
   );

@@ -111,10 +111,22 @@ function fallbackArea(): BrowsingArea {
     isFallback: true,
   };
 }
-/** The label of a following area whose town could not be named. */
+/** The label of a following area whose town could not be named. Stored as
+ * is (older installs persisted it), shown through displayAreaLabel(). */
 export const UNNAMED_AREA_LABEL = "Your location";
 /** The label of a chosen point whose place could not be named. */
 export const UNNAMED_CHOICE_LABEL = "Selected location";
+
+/** What to show for an area label: the two unnamed sentinels read from the
+ * catalog, anything else is the town's own name. */
+export function displayAreaLabel(
+  label: string | null | undefined,
+  t: (key: string) => string,
+): string {
+  if (label === UNNAMED_AREA_LABEL) return t("yourLocation");
+  if (label === UNNAMED_CHOICE_LABEL) return t("selectedLocation");
+  return label ?? "";
+}
 
 // v3: `{ area, anchor }`. v2 (`{ …, source }`) is read once and migrated so
 // an area chosen before the upgrade is kept; v1 is deleted — it could have

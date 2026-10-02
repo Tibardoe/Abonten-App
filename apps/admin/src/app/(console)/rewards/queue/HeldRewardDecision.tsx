@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { decideHeldReward } from "@/server/actions/rewards";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -34,7 +35,7 @@ export function HeldRewardDecision({
         rewardEventId,
         approve,
         note: note.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) router.refresh();
     });

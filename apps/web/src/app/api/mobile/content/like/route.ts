@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { setContentLikeCore } from "@abonten/services/content/contentEngagementCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { contentLikeSchema } from "@abonten/validation/contentSchemas";
 
 // POST /api/mobile/content/like — like / unlike
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: contentLikeSchema, label: "POST /content/like" },

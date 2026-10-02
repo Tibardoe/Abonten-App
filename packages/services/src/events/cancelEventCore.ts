@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -71,13 +72,13 @@ export async function getEventCancellationImpactCore(
     return {
       status: notOwned ? 403 : 500,
       message: notOwned
-        ? "Not authorized to view this event"
-        : "Could not load cancellation details. Please try again.",
+        ? tr("notAuthorizedToViewThisEvent")
+        : tr("couldNotLoadCancellationDetailsPlease"),
     };
   }
 
   if (!data) {
-    return { status: 404, message: "Event not found" };
+    return { status: 404, message: tr("eventNotFound") };
   }
 
   const row = data as unknown as EventCancellationImpactRow;
@@ -109,19 +110,24 @@ export async function cancelEventCore(
     logger.error(`Error cancelling event: ${rpcError.message}`);
 
     if (rpcError.message?.includes("already cancelled")) {
-      return { status: 409, message: "This event has already been cancelled." };
+      return {
+        status: 409,
+        message: tr("thisEventHasAlreadyBeenCancelled"),
+      };
     }
     if (rpcError.message?.includes("not owned")) {
-      return { status: 403, message: "Not authorized to cancel this event" };
+      return {
+        status: 403,
+        message: tr("notAuthorizedToCancelThisEvent"),
+      };
     }
     if (rpcError.message?.includes("cannot be cancelled")) {
-      return { status: 409, message: "This event can't be cancelled." };
+      return { status: 409, message: tr("thisEventCanTBeCancelled") };
     }
 
     return {
       status: 500,
-      message:
-        "We couldn't cancel this event right now. No refunds have been issued yet.",
+      message: tr("weCouldnTCancelThisEvent"),
     };
   }
 
@@ -158,10 +164,13 @@ export async function cancelEventCore(
 
   const message =
     refundsFailedToStart > 0
-      ? `Event cancelled. ${refundsInitiated} refund(s) started, but ${refundsFailedToStart} couldn't be started and will need a manual retry.`
+      ? tr("eventCancelledRefundSStartedBut", {
+          started: refundsInitiated,
+          failed: refundsFailedToStart,
+        })
       : refundsInitiated > 0
-        ? `Event cancelled. ${refundsInitiated} refund(s) have been started.`
-        : "Event cancelled successfully.";
+        ? tr("eventCancelledRefundSHaveBeen", { started: refundsInitiated })
+        : tr("eventCancelledSuccessfully");
 
   return {
     status: 200,

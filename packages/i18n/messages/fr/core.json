@@ -1,0 +1,1179 @@
+{
+  "accountSetup": {
+    "addEmail": "Ajoutez votre adresse e-mail pour pouvoir payer des billets et les recevoir par e-mail.",
+    "confirmEmail": "Confirmez votre adresse e-mail pour pouvoir payer des billets et les recevoir par e-mail.",
+    "generic": "Plus que quelques étapes rapides.",
+    "phone": "Ajoutez un numéro de téléphone comme second moyen de connexion si vous ne pouvez plus accéder à votre e-mail ou à votre compte Google.",
+    "profile": "Ajoutez votre nom, un nom d'utilisateur et une photo pour que l'on vous reconnaisse sur votre profil et vos avis.",
+    "title": "Terminez la configuration de votre compte"
+  },
+  "checkoutLimits": {
+    "maxPerOrder": "Vous pouvez acheter au maximum {max} billets par commande.",
+    "maxPerType": "Vous pouvez acheter au maximum {max} billets du même type par commande.",
+    "selectOne": "Veuillez sélectionner au moins un billet."
+  },
+  "content": {
+    "campaignObjective": {
+      "event_views": "Plus de vues de l'événement",
+      "place_views": "Plus de vues du lieu",
+      "profile_visits": "Plus de visites du profil",
+      "reservations": "Plus de réservations",
+      "ticket_sales": "Plus de ventes de billets",
+      "views": "Plus de vues"
+    },
+    "campaignStatus": {
+      "active": "Actif",
+      "cancelled": "Annulé",
+      "completed": "Terminé",
+      "draft": "Brouillon",
+      "paused": "En pause",
+      "payment_confirmed": "Payé",
+      "pending_payment": "En attente de paiement",
+      "pending_review": "En cours d'examen",
+      "refunded": "Remboursé",
+      "rejected": "Refusé",
+      "scheduled": "Programmé"
+    },
+    "cta": {
+      "eventCancelled": "Événement annulé",
+      "eventEnded": "L'événement est terminé",
+      "eventUnavailable": "Événement indisponible",
+      "permanentlyClosed": "Définitivement fermé",
+      "placeUnavailable": "Lieu indisponible",
+      "soldOut": "Complet",
+      "viewEvent": "Voir l'événement",
+      "viewPlace": "Voir le lieu",
+      "viewProfile": "Voir le profil"
+    },
+    "feedSurface": {
+      "following": "Abonnements",
+      "for_you": "Pour vous",
+      "happening_soon": "Bientôt",
+      "nearby": "À proximité",
+      "trending": "Tendances"
+    },
+    "promotion": {
+      "billingNote": "Vous payez le budget à l'avance. Il n'est utilisé que lorsque votre Spotlight est affiché comme sponsorisé, et la promotion s'arrête quand le budget est épuisé ou que la diffusion se termine, selon ce qui arrive en premier. Si elle se termine avant que le budget soit épuisé, le montant non utilisé est indiqué sur la page de la promotion.",
+      "cashNote": "Paiement par carte ou mobile money. Le Crédit Abonten ne peut pas être utilisé pour les promotions.",
+      "endReason": {
+        "budget_delivered": "Budget entièrement utilisé",
+        "run_ended": "Diffusion terminée avant l'utilisation complète du budget"
+      },
+      "estimateBasis": {
+        "assumed": "D'après nos chiffres prévisionnels, Spotlight étant encore récent.",
+        "no_data": "Nous ne pouvons pas encore estimer la portée.",
+        "observed": "D'après l'activité récente sur Spotlight."
+      },
+      "estimateNote": "Il s'agit d'une estimation, pas d'une garantie. La portée réelle dépend du nombre de personnes de votre audience qui ouvrent Spotlight, de la fréquence, et des autres promotions diffusées au même moment.",
+      "intro": "La promotion montre votre Spotlight à plus de personnes dans leur fil, avec la mention « Sponsorisé ». Vous choisissez un budget et le public visé ; nous estimons le nombre de personnes qu'elle pourrait toucher.",
+      "reviewNote": "Chaque promotion est examinée avant sa diffusion. Si elle n'est pas approuvée, vous êtes remboursé intégralement."
+    },
+    "rightsAcknowledgement": "Ce contenu m'appartient ou j'ai l'autorisation de le partager, et il respecte les règles de contenu d'Abonten.",
+    "sponsored": "Sponsorisé",
+    "spotlightTagline": "De courtes vidéos des événements et des lieux autour de vous.",
+    "storiesTagline": "Ce que font en ce moment les organisateurs et les lieux que vous suivez.",
+    "storyExpired": "Cette Story est terminée.",
+    "yourStory": "Votre Story"
+  },
+  "coverage": {
+    "body": "Nous sommes encore en train d'y référencer des événements et des lieux. Tout ce qui est déjà référencé à proximité reste visible.",
+    "browseElsewhere": "Explorer ce qui se passe ailleurs",
+    "distanceAway": "à {distance}",
+    "exploreCity": "Explorer {city}",
+    "joinWaitlist": "Me prévenir au lancement",
+    "leaveWaitlist": "Ne plus attendre",
+    "notLaunchedHere": "Abonten n'est pas encore disponible ici",
+    "notLaunchedIn": "Abonten n'est pas encore disponible à {area}",
+    "reason": {
+      "most_active": "Le plus de fiches",
+      "nearest": "La plus proche",
+      "recommended": "Suggéré"
+    },
+    "strategy": {
+      "choose": {
+        "help": "Afficher une courte liste des villes lancées, de la plus proche à la plus lointaine, et laisser la personne choisir.",
+        "label": "Laisser les gens choisir"
+      },
+      "fixed": {
+        "help": "Toujours suggérer la ville que vous choisissez, avec la mention « Suggéré ». Si elle repasse ensuite en « bientôt disponible », est désactivée ou supprimée, la ville lancée la plus proche est suggérée à la place.",
+        "label": "Une ville de votre choix"
+      },
+      "most_active": {
+        "help": "Suggérer la ville lancée qui compte le plus d'événements à venir et de lieux référencés dans sa zone (les chiffres sous chaque ville ci-dessous), avec la mention « Le plus de fiches ». En cas d'égalité, la ville la plus proche l'emporte ; si aucune ville n'a de fiches, la plus proche est suggérée.",
+        "label": "Ville lancée la plus active"
+      },
+      "nearest": {
+        "help": "Suggérer la ville lancée la plus proche, avec la mention « La plus proche ».",
+        "label": "Ville lancée la plus proche"
+      }
+    },
+    "supplyPromptHere": "Vous organisez des événements ou gérez un lieu ici ? Référencez-les sur Abonten.",
+    "supplyPromptIn": "Vous organisez des événements ou gérez un lieu à {area} ? Référencez-les sur Abonten.",
+    "waitingHere": "Nous vous préviendrons quand Abonten sera lancé ici.",
+    "waitingIn": "Nous vous préviendrons quand Abonten sera lancé à {area}."
+  },
+  "creditActivity": {
+    "bonusCredit": "Crédit bonus",
+    "creditAddedByAbonten": "Crédit ajouté par Abonten",
+    "creditExpired": "Crédit expiré",
+    "creditRemovedByAbonten": "Crédit retiré par Abonten",
+    "creditReturned": "Crédit restitué",
+    "creditUpdate": "Mise à jour du crédit",
+    "expired": "Expiré",
+    "fromPending": "De {label} · en attente",
+    "labelExpired": "{label} · expiré",
+    "pending": "En attente",
+    "promotionCredit": "Crédit promotionnel",
+    "reversed": "Retiré car la commande a été remboursée ou annulée",
+    "reward": "Récompense",
+    "rewardReversed": "Récompense annulée",
+    "usedAtCheckout": "Utilisé lors du paiement",
+    "usedOn": "Utilisé pour {label}",
+    "welcomeCredit": "Crédit de bienvenue",
+    "withdrawal": "Retrait"
+  },
+  "earn": {
+    "eventReferral": "Partagez un événement. Quand quelqu'un achète un billet avec votre lien, vous gagnez {percent} du prix du billet en crédit après l'événement.",
+    "friendReferral": "Invitez un ami. Quand il achète son premier billet, vous recevez {amount}.",
+    "friendReferralBoth": "Invitez un ami. Quand il achète son premier billet, vous recevez {amount} et il bénéficie de {friendAmount} de réduction.",
+    "loyalty": "Continuez à sortir. Achetez des billets pour {orders} événements différents en {days} jours et les frais de service de la dernière commande vous reviennent en crédit après l'événement (jusqu'à {cap}).",
+    "organizerMilestone": "La première fois que l'un de vos événements vend des billets à {buyers} personnes différentes, vous recevez {amount} de crédit promotionnel.",
+    "organizerRebate": "Organisez des événements. Chaque mois, vous recevez {percent} de ce qu'Abonten a gagné sur vos événements terminés le mois précédent, sous forme de crédit promotionnel pour mettre en avant le prochain.",
+    "placeVisits": "Vous possédez un lieu vérifié ? Affichez votre code d'enregistrement : chaque personne différente qui s'enregistre au cours d'un mois vous rapporte {amount} de crédit promotionnel (jusqu'à {max} par mois).",
+    "promoterCommission": "Faites la promotion d'événements. Quand un organisateur propose une commission, chaque billet vendu via votre lien de partage vous rapporte cette part du prix, versée par l'organisateur sous forme de crédit après l'événement.",
+    "venueRebate": "Vous possédez un lieu vérifié ? Quand d'autres organisateurs y tiennent des événements avec billetterie, vous recevez {percent} de ce qu'Abonten y a gagné, sous forme de crédit promotionnel."
+  },
+  "emailOtp": {
+    "codeSent": "Si cette adresse peut recevoir des e-mails, nous y avons envoyé un code à {length} chiffres.",
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "invalidEmail": "Saisissez une adresse e-mail valide.",
+    "invalidFormat": "Saisissez le code à {length} chiffres que nous vous avons envoyé par e-mail.",
+    "invalidOrExpired": "Ce code est incorrect ou a expiré. Réessayez ou demandez-en un nouveau.",
+    "rateLimited": "Trop de demandes. Veuillez patienter un instant et réessayer."
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "eventCategories": {
+    "artsCultureAndTheatre": "Arts, culture et théâtre",
+    "businessAndProfessional": "Affaires et vie professionnelle",
+    "charityAndCauses": "Solidarité et causes",
+    "civicAndGovernment": "Vie civique et institutions",
+    "educationAndTraining": "Éducation et formation",
+    "entertainmentAndShows": "Divertissement et spectacles",
+    "familyAndKids": "Famille et enfants",
+    "fashionAndBeauty": "Mode et beauté",
+    "foodAndDrink": "Gastronomie et boissons",
+    "lifeEventsAndCeremonies": "Événements de la vie et cérémonies",
+    "lifestyleAndHobbies": "Art de vivre et loisirs",
+    "loveDatingAndRelationships": "Amour, rencontres et relations",
+    "musicAndConcerts": "Musique et concerts",
+    "natureTravelAndAdventure": "Nature, voyage et aventure",
+    "partiesAndSocialEvents": "Fêtes et événements sociaux",
+    "personalDevelopment": "Développement personnel",
+    "spiritualityAndReligion": "Spiritualité et religion",
+    "sportsAndFitness": "Sport et fitness",
+    "techAndInnovation": "Technologie et innovation"
+  },
+  "eventCta": {
+    "buy": "Acheter des billets",
+    "canceled": "Événement annulé",
+    "ended": "Événement terminé",
+    "going": "Voir mon billet",
+    "in_progress": "Vente de billets fermée",
+    "no_tickets": "Billets pas encore disponibles",
+    "rsvp": "Réserver une place",
+    "sold_out": "Complet"
+  },
+  "eventDates": {
+    "notice": "L'heure de début ou de fin doit être dans au moins {hours} heures",
+    "nthNotice": "La date {n} doit être dans au moins {hours} heures",
+    "nthStartBeforeEnd": "Date {n} : l'heure de début doit être antérieure à l'heure de fin",
+    "oneNotice": "La date sélectionnée doit être dans au moins {hours} heures",
+    "selectBoth": "Veuillez sélectionner une date de début et une date de fin",
+    "selectOne": "Veuillez sélectionner au moins une date",
+    "startBeforeEnd": "L'heure de début doit être antérieure à l'heure de fin"
+  },
+  "eventStatus": {
+    "ended": "Événement terminé",
+    "ongoing": "En cours"
+  },
+  "eventTypes": {
+    "academicSeminars": "Séminaires universitaires",
+    "aiAndMlConferences": "Conférences IA et machine learning",
+    "albumLaunches": "Lancements d'albums",
+    "animalRescueFundraisers": "Collectes pour le sauvetage d'animaux",
+    "anniversaryCelebrations": "Fêtes d'anniversaire de mariage",
+    "antiqueMarkets": "Marchés d'antiquités",
+    "appProductDemos": "Démos d'applications et de produits",
+    "artExhibitions": "Expositions d'art",
+    "artistTours": "Tournées d'artistes",
+    "babyShowers": "Fêtes prénatales",
+    "bachelorBacheloretteParties": "Enterrements de vie de garçon et de jeune fille",
+    "backpackingMeetups": "Rencontres de voyageurs sac au dos",
+    "bakingEvents": "Événements de pâtisserie",
+    "battleOfTheBands": "Tremplins musicaux",
+    "bbqEvents": "Barbecues",
+    "beachParties": "Fêtes sur la plage",
+    "beautyMasterclasses": "Masterclass beauté",
+    "bibleStudyCamps": "Camps d'étude biblique",
+    "bikeRaces": "Courses cyclistes",
+    "birdwatchingTours": "Sorties d'observation des oiseaux",
+    "birthdayParties": "Fêtes d'anniversaire",
+    "blockchainConferences": "Conférences blockchain",
+    "bloodDonationDrives": "Collectes de sang",
+    "boardGameNights": "Soirées jeux de société",
+    "boatCruises": "Croisières en bateau",
+    "bodybuildingCompetitions": "Compétitions de culturisme",
+    "bookClubs": "Clubs de lecture",
+    "bookReadings": "Lectures publiques",
+    "boutiqueOpenings": "Ouvertures de boutiques",
+    "brewTastings": "Dégustations de bières",
+    "bridalShowers": "Enterrements de vie de jeune fille",
+    "buddhistTeachings": "Enseignements bouddhistes",
+    "businessExpos": "Salons professionnels",
+    "calligraphyEvents": "Événements de calligraphie",
+    "campingTrips": "Séjours en camping",
+    "campusEvents": "Événements sur le campus",
+    "carShows": "Salons automobiles",
+    "careerFairs": "Salons des carrières",
+    "charityWalksAndRuns": "Marches et courses solidaires",
+    "chefCompetitions": "Concours de chefs",
+    "childrenSShows": "Spectacles pour enfants",
+    "childrenSWorkshops": "Ateliers pour enfants",
+    "choirPerformances": "Concerts de chorale",
+    "christeningEvents": "Baptêmes",
+    "churchConferences": "Conférences d'église",
+    "circusActs": "Numéros de cirque",
+    "citizenshipDrives": "Campagnes de citoyenneté",
+    "cleanUpCampaigns": "Campagnes de nettoyage",
+    "climbingEvents": "Événements d'escalade",
+    "clothingPopUps": "Boutiques éphémères de vêtements",
+    "clubNights": "Soirées en club",
+    "coWorkingMeetups": "Rencontres de coworking",
+    "cocktailParties": "Cocktails",
+    "codingCompetitions": "Concours de programmation",
+    "comedyShows": "Spectacles d'humour",
+    "communityOutreach": "Actions de proximité",
+    "companyAnniversaryParties": "Fêtes d'anniversaire d'entreprise",
+    "conferencesAndSummits": "Conférences et sommets",
+    "confidenceBuildingWorkshops": "Ateliers de confiance en soi",
+    "continuingEducationCourses": "Cours de formation continue",
+    "cookingClasses": "Cours de cuisine",
+    "corporateRetreats": "Séminaires d'entreprise",
+    "cosmeticsExpos": "Salons de la cosmétique",
+    "coupleRetreats": "Retraites pour couples",
+    "craftFairs": "Salons d'artisanat",
+    "crossfitChallenges": "Défis CrossFit",
+    "culturalFestivals": "Festivals culturels",
+    "dancePerformances": "Spectacles de danse",
+    "danceWorkouts": "Entraînements de danse",
+    "dedications": "Cérémonies de consécration",
+    "developerBootcamps": "Bootcamps pour développeurs",
+    "disasterReliefAppeals": "Appels aux dons après une catastrophe",
+    "diyCraftEvents": "Événements de loisirs créatifs",
+    "djParties": "Soirées DJ",
+    "dramaAndTheatreShows": "Pièces et spectacles de théâtre",
+    "ecoTourismEvents": "Événements d'écotourisme",
+    "educationalWebinars": "Webinaires éducatifs",
+    "engagementCeremonies": "Cérémonies de fiançailles",
+    "engagementParties": "Fêtes de fiançailles",
+    "entrepreneurshipBootcamps": "Bootcamps d'entrepreneuriat",
+    "esportsTournaments": "Tournois d'esport",
+    "familyCampingEvents": "Camping en famille",
+    "familyFunDays": "Journées en famille",
+    "fanMeetups": "Rencontres de fans",
+    "fashionDesignTalks": "Conférences sur le stylisme",
+    "fashionShows": "Défilés de mode",
+    "fastingPrayerCamps": "Camps de jeûne et de prière",
+    "financialLiteracyEvents": "Événements d'éducation financière",
+    "fitnessBootcamps": "Bootcamps de fitness",
+    "folkloreEvents": "Événements folkloriques",
+    "foodDrives": "Collectes alimentaires",
+    "foodFestivals": "Festivals gastronomiques",
+    "franchiseShows": "Salons de la franchise",
+    "fundraisingEvents": "Collectes de fonds",
+    "funeralsAndMemorials": "Funérailles et commémorations",
+    "gadgetLaunches": "Lancements de gadgets",
+    "galleryTours": "Visites de galeries",
+    "gameShowsLive": "Jeux télévisés (en public)",
+    "gamingEvents": "Événements de jeux vidéo",
+    "gardeningWorkshops": "Ateliers de jardinage",
+    "glampingEvents": "Événements de glamping",
+    "gospelConcerts": "Concerts de gospel",
+    "gospelMusicEvents": "Événements de musique gospel",
+    "governmentTrainings": "Formations gouvernementales",
+    "graduationEvents": "Cérémonies de remise de diplômes",
+    "graduationParties": "Fêtes de remise de diplômes",
+    "groomingWorkshops": "Ateliers de soins personnels",
+    "hackathons": "Hackathons",
+    "hairStylingWorkshops": "Ateliers de coiffure",
+    "healingServices": "Cultes de guérison",
+    "hikingTours": "Randonnées guidées",
+    "hinduFestivals": "Fêtes hindoues",
+    "homeCookingWorkshops": "Ateliers de cuisine maison",
+    "homeDCorEvents": "Événements de décoration intérieure",
+    "houseParties": "Fêtes à la maison",
+    "housewarmingEvents": "Pendaisons de crémaillère",
+    "illusionShows": "Spectacles d'illusion",
+    "improvNights": "Soirées d'improvisation",
+    "indieMusicShows": "Concerts de musique indépendante",
+    "instrumentalPerformances": "Concerts instrumentaux",
+    "interfaithDialogues": "Dialogues interreligieux",
+    "investorMeetups": "Rencontres d'investisseurs",
+    "jobFairs": "Salons de l'emploi",
+    "journalingRetreats": "Retraites d'écriture",
+    "karaokeEvents": "Soirées karaoké",
+    "kidsTalentShows": "Concours de talents pour enfants",
+    "knittingCircles": "Cercles de tricot",
+    "languageLearningEvents": "Événements d'apprentissage des langues",
+    "leadershipWorkshops": "Ateliers de leadership",
+    "legalAidEvents": "Événements d'aide juridique",
+    "lifeCoachingSessions": "Séances de coaching de vie",
+    "listeningParties": "Soirées d'écoute",
+    "liveConcerts": "Concerts live",
+    "loveLanguageWorkshops": "Ateliers sur les langages de l'amour",
+    "magicShows": "Spectacles de magie",
+    "makeupTutorials": "Tutoriels de maquillage",
+    "marathonsAndRuns": "Marathons et courses",
+    "martialArtsEvents": "Événements d'arts martiaux",
+    "matchmakingEvents": "Événements de mise en relation",
+    "meditationRetreats": "Retraites de méditation",
+    "meetAndGreets": "Rencontres avec des personnalités",
+    "mentalHealthAwareness": "Sensibilisation à la santé mentale",
+    "mindfulnessSessions": "Séances de pleine conscience",
+    "minimalismWorkshops": "Ateliers de minimalisme",
+    "modelingAuditions": "Castings de mannequins",
+    "motivationalTalks": "Conférences de motivation",
+    "mountaineeringEvents": "Événements d'alpinisme",
+    "musicFestivals": "Festivals de musique",
+    "musicalTheatre": "Comédies musicales",
+    "namingCeremonies": "Cérémonies de dation du nom",
+    "natureRetreats": "Retraites en pleine nature",
+    "networkingEvents": "Événements de réseautage",
+    "nonprofitGalas": "Galas d'associations",
+    "openMicNights": "Soirées scène ouverte",
+    "parentingSeminars": "Séminaires sur la parentalité",
+    "pettingZooEvents": "Mini-fermes",
+    "photographyMeetups": "Rencontres de photographie",
+    "pilgrimageInfoEvents": "Réunions d'information sur les pèlerinages",
+    "playdatesAndPlaygroups": "Rencontres et groupes de jeu",
+    "poetrySlams": "Slams de poésie",
+    "policyDiscussionForums": "Forums de discussion sur les politiques publiques",
+    "politicalRallies": "Rassemblements politiques",
+    "poolParties": "Fêtes au bord de la piscine",
+    "productLaunches": "Lancements de produits",
+    "publicLectures": "Conférences publiques",
+    "publicSafetyEvents": "Événements de sécurité publique",
+    "publicSpeakingClasses": "Cours de prise de parole en public",
+    "puppetShows": "Spectacles de marionnettes",
+    "puppetryShows": "Spectacles de marionnettes",
+    "quranRecitationEvents": "Récitations du Coran",
+    "relationshipSeminars": "Séminaires sur les relations",
+    "restaurantLaunches": "Ouvertures de restaurants",
+    "retirementCelebrations": "Fêtes de départ à la retraite",
+    "revivalMeetings": "Réunions de réveil",
+    "roboticsFairs": "Salons de la robotique",
+    "safariAdventures": "Safaris",
+    "salesAndMarketingSummits": "Sommets ventes et marketing",
+    "schoolEvents": "Événements scolaires",
+    "selfHelpRetreats": "Retraites de développement personnel",
+    "singlesMixers": "Soirées pour célibataires",
+    "skatingEvents": "Événements de patinage",
+    "soccerFootballMatches": "Matchs de football",
+    "socialJusticeRallies": "Rassemblements pour la justice sociale",
+    "socialMixers": "Soirées de rencontre",
+    "speedDating": "Speed dating",
+    "spiritualCounselingSessions": "Séances d'accompagnement spirituel",
+    "spiritualWorkshops": "Ateliers spirituels",
+    "startupPitches": "Pitchs de start-up",
+    "startupShowcases": "Vitrines de start-up",
+    "stemEvents": "Événements STEM",
+    "storytellingNights": "Soirées de contes",
+    "streetFoodEvents": "Événements de street food",
+    "streetPerformances": "Spectacles de rue",
+    "studyAbroadInfoSessions": "Réunions d'information sur les études à l'étranger",
+    "sunsetSessions": "Sessions au coucher du soleil",
+    "swimmingCompetitions": "Compétitions de natation",
+    "talentShows": "Concours de talents",
+    "techExpos": "Salons technologiques",
+    "techMeetups": "Rencontres tech",
+    "themedCostumeParties": "Soirées déguisées à thème",
+    "thesisPresentations": "Soutenances de thèse",
+    "timeManagementTraining": "Formations à la gestion du temps",
+    "townHallMeetings": "Réunions publiques",
+    "toyAndBookFairs": "Salons du jouet et du livre",
+    "traditionalDances": "Danses traditionnelles",
+    "travelExpos": "Salons du voyage",
+    "tvShowRecordings": "Enregistrements d'émissions de télévision",
+    "varietyShows": "Spectacles de variétés",
+    "veganVegetarianEvents": "Événements véganes et végétariens",
+    "visionBoardWorkshops": "Ateliers de tableaux de visualisation",
+    "volunteeringEvents": "Événements de bénévolat",
+    "voterRegistrationCampaigns": "Campagnes d'inscription sur les listes électorales",
+    "web3Events": "Événements Web3",
+    "weddingExpos": "Salons du mariage",
+    "weddings": "Mariages",
+    "wineTastings": "Dégustations de vin",
+    "workshopsAndBootcamps": "Ateliers et bootcamps",
+    "worshipNights": "Soirées de louange",
+    "yogaSessions": "Séances de yoga",
+    "zenRetreats": "Retraites zen",
+    "zumbaClasses": "Cours de zumba"
+  },
+  "expires": {
+    "days": "Expire dans {days} j",
+    "daysHours": "Expire dans {days} j {hours} h",
+    "expired": "Expiré",
+    "hours": "Expire dans {hours} h",
+    "minutes": "Expire dans {minutes} min"
+  },
+  "fieldOpsCampaign": {
+    "action": {
+      "activate": "Activer",
+      "archive": "Archiver",
+      "complete": "Terminer",
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "wind_down": "Commencer la clôture progressive"
+    },
+    "status": {
+      "active": "Actif",
+      "archived": "Archivé",
+      "completed": "Terminé",
+      "draft": "Brouillon",
+      "paused": "En pause",
+      "winding_down": "En cours de clôture"
+    }
+  },
+  "fieldOpsEligibility": {
+    "category": "Catégorie renseignée",
+    "contact": "Un numéro de téléphone ou WhatsApp",
+    "description": "Description de {count} caractères ou plus",
+    "descriptionChars": "{count, plural, one {# caractère} other {# caractères}}",
+    "distanceAway": "à {distance} m",
+    "distanceAwayAccuracy": "à {distance} m (±{accuracy} m)",
+    "duplicateDifferent": "le membre a indiqué qu'il s'agit d'un autre commerce",
+    "duplicateUnacknowledged": "correspondance non confirmée",
+    "holding": "Période de retenue de {days, plural, one {# jour} other {# jours}} écoulée",
+    "insideTerritory": "Le repère se trouve dans le territoire attribué",
+    "leadVerified": "Vérifié par le responsable d'équipe",
+    "moderation": "modération : {state}",
+    "noListingYet": "pas encore de fiche",
+    "noPosition": "aucune position enregistrée",
+    "notDuplicate": "Aucune correspondance forte avec une fiche existante",
+    "onSite": "Soumis à moins de {max} m du commerce",
+    "openingHours": "Horaires d'ouverture renseignés",
+    "ownerMatches": "La fiche appartient toujours au propriétaire vérifié",
+    "ownerNotMember": "Le propriétaire ne fait pas partie d'une équipe Field Ops",
+    "ownerVerified": "Le propriétaire a vérifié son téléphone",
+    "photos": "Au moins {count, plural, one {# photo} other {# photos}}",
+    "photosUploaded": "{count} envoyées",
+    "placeNotModerated": "La fiche n'est ni masquée ni retirée",
+    "placePublished": "La fiche est publiée",
+    "placeStatus": "statut : {status}"
+  },
+  "filters": {
+    "anyDistance": "Toutes distances",
+    "customRange": "Plage personnalisée",
+    "pickDates": "Choisir des dates",
+    "priceFrom": "À partir de {amount}",
+    "range": "{from} – {to}",
+    "ratingFrom": "À partir de {rating}",
+    "upTo": "Jusqu'à {distance}"
+  },
+  "fulfillment": {
+    "promotion": "Paiement réussi. Activation de votre promotion…",
+    "spotlightPromotion": "Paiement réussi. Envoi de votre promotion Spotlight en validation…",
+    "ticket": "Paiement réussi. Préparation de vos billets…"
+  },
+  "invite": {
+    "alreadyBound": "Vous avez déjà rejoint Abonten avec une invitation.",
+    "alreadyBoundWith": "Vous avez déjà rejoint Abonten avec l'invitation de {name}.",
+    "circular": "Vous ne pouvez pas utiliser l'invitation d'une personne que vous avez invitée.",
+    "failed": "Nous n'avons pas pu appliquer l'invitation. Veuillez réessayer.",
+    "invalid": "Saisissez le code d'invitation à 7 caractères.",
+    "joinedWith": "Vous avez rejoint Abonten grâce à l'invitation de {name}.",
+    "joinedWithFriend": "Vous avez rejoint Abonten grâce à l'invitation d'un ami.",
+    "notNew": "Les codes d'invitation sont réservés aux nouveaux comptes.",
+    "ownCode": "C'est votre propre code d'invitation.",
+    "rateLimited": "Trop de tentatives. Attendez quelques minutes et réessayez.",
+    "referrerRestricted": "Ce code d'invitation ne peut pas être utilisé pour le moment.",
+    "share": "Rejoignez-moi sur Abonten pour trouver des événements et des lieux près de chez vous : {url}",
+    "shareWithOffer": "Rejoignez-moi sur Abonten pour trouver des événements et des lieux près de chez vous et obtenir {amount} de réduction sur votre premier billet : {url}",
+    "shareWithOfferMin": "Rejoignez-moi sur Abonten pour trouver des événements et des lieux près de chez vous et obtenir {amount} de réduction sur votre premier billet de {min} ou plus : {url}",
+    "tooLate": "Les codes d'invitation ne peuvent être utilisés que pendant votre première semaine sur Abonten.",
+    "unavailable": "Les invitations ne sont pas disponibles pour le moment.",
+    "unknownCode": "Nous n'avons pas trouvé ce code d'invitation. Vérifiez-le et réessayez.",
+    "welcomeNeedsPhone": "{joined} Vérifiez votre numéro de téléphone pour obtenir {amount} de réduction sur votre premier billet.",
+    "welcomeReady": "{joined} {amount} de crédit de bienvenue vous attendent pour votre premier billet."
+  },
+  "location": {
+    "invalid": "Les informations de lieu sont manquantes ou non valides. Veuillez réessayer."
+  },
+  "loyalty": {
+    "done": "Vos frais de service sur la dernière commande vous reviennent en crédit après cet événement (jusqu'à {cap}).",
+    "headline": "{counted} événements sur {required}",
+    "more": "Encore {left} commandes de billets pour des événements différents dans les {days} jours et nous vous rendons les frais de service de la dernière en crédit (jusqu'à {cap}).",
+    "moreMin": "Encore {left} commandes de billets de {min} ou plus pour des événements différents dans les {days} jours et nous vous rendons les frais de service de la dernière en crédit (jusqu'à {cap}).",
+    "oneMore": "Encore une commande de billets pour un événement différent dans les {days} jours et nous vous rendons ses frais de service en crédit (jusqu'à {cap}).",
+    "oneMoreMin": "Encore une commande de billets de {min} ou plus pour un événement différent dans les {days} jours et nous vous rendons ses frais de service en crédit (jusqu'à {cap})."
+  },
+  "member": {
+    "former": "Ancien membre d'Abonten",
+    "generic": "Membre d'Abonten"
+  },
+  "messagePreview": {
+    "attachment": "Pièce jointe",
+    "photo": "Photo",
+    "voice": "Message vocal",
+    "you": "Vous : {preview}"
+  },
+  "noticeWords": {
+    "someone": "Quelqu'un"
+  },
+  "notices": {
+    "area_launched": {
+      "body": "Les événements et les lieux de {area} sont sur Abonten. Jetez-y un œil.",
+      "title": "Abonten est maintenant disponible à {area}"
+    },
+    "commission_pending": {
+      "body": "{amount} de commission sont en attente pour {orders, plural, one {# commande de billets vendue} other {# commandes de billets vendues}} via votre lien. L'organisateur la verse en crédit après {orders, plural, one {l'événement} other {les événements}}.",
+      "title": "Vous avez vendu des billets en tant que promoteur"
+    },
+    "content_campaign": {
+      "title": "{status, select, pending_review {Votre promotion Spotlight est en cours d'examen} scheduled {Votre promotion Spotlight est approuvée et programmée} active {Votre promotion Spotlight est en ligne} rejected {Votre promotion Spotlight n'a pas été approuvée} paused {Votre promotion Spotlight est en pause} completed {Votre promotion Spotlight est terminée} refunded {Le remboursement de votre promotion Spotlight est en route} other {Votre promotion Spotlight est : {status}}}"
+    },
+    "content_campaign_refunded": {
+      "body": "{amount} sont en cours de remboursement sur votre moyen de paiement.",
+      "title": "Le remboursement de votre promotion Spotlight est en cours"
+    },
+    "content_comment": {
+      "title": "{actor} a commenté votre {kind, select, story {Story} other {Spotlight}}"
+    },
+    "content_follow": {
+      "title": "{others, plural, =0 {{actor} a commencé à suivre {target}} one {{actor} et # autre personne ont commencé à suivre {target}} other {{actor} et # autres personnes ont commencé à suivre {target}}}"
+    },
+    "content_like": {
+      "title": "{others, plural, =0 {{actor} a aimé votre {kind, select, story {Story} other {Spotlight}}} one {{actor} et # autre personne ont aimé votre {kind, select, story {Story} other {Spotlight}}} other {{actor} et # autres personnes ont aimé votre {kind, select, story {Story} other {Spotlight}}}}"
+    },
+    "content_moderation": {
+      "body": "Ce contenu n'apparaît plus dans les fils. Contactez l'assistance si vous pensez qu'il s'agit d'une erreur.",
+      "title": "{kind, select, story {Votre Story a été {state, select, restricted {restreinte} hidden {masquée} other {supprimée}}} other {Votre Spotlight a été {state, select, restricted {restreint} hidden {masqué} other {supprimé}}}}"
+    },
+    "content_moderation_visible": {
+      "title": "Votre {kind, select, story {Story} other {Spotlight}} est de nouveau visible"
+    },
+    "content_reaction": {
+      "title": "{others, plural, =0 {{actor} a réagi {emoji} à votre {kind, select, story {Story} other {Spotlight}}} one {{actor} et # autre personne ont réagi {emoji} à votre {kind, select, story {Story} other {Spotlight}}} other {{actor} et # autres personnes ont réagi {emoji} à votre {kind, select, story {Story} other {Spotlight}}}}"
+    },
+    "content_reply": {
+      "title": "{actor} a répondu à votre commentaire"
+    },
+    "digest_event": {
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Un événement qui pourrait vous plaire"
+    },
+    "digest_many": {
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}} et {more, plural, one {# autre} other {# autres}}",
+      "title": "{count} suggestions pour vous"
+    },
+    "digest_organizer": {
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Nouvel événement de @{username}"
+    },
+    "digest_organizer_unknown": {
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Nouvel événement d'un organisateur que vous suivez"
+    },
+    "digest_place": {
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Nouvel événement : {place}"
+    },
+    "digest_place_pick": {
+      "body": "{hasCategory, select, yes {{name} · {category}} other {{name}}}",
+      "title": "Un lieu qui pourrait vous plaire"
+    },
+    "digest_place_unknown": {
+      "body": "{hasWhen, select, yes {{title} · {when}} other {{title}}}",
+      "title": "Nouvel événement dans un lieu que vous suivez"
+    },
+    "event_cancelled_free": {
+      "body": "L'organisateur a annulé {title}. Votre inscription a été annulée.",
+      "title": "Événement annulé"
+    },
+    "event_cancelled_paid": {
+      "body": "L'organisateur a annulé {title}. Votre billet n'est plus valable. Un remboursement sera effectué sur le moyen de paiement utilisé pour votre billet.",
+      "title": "Événement annulé"
+    },
+    "event_reminder": {
+      "body": "{hasAddress, select, yes {Début {dayTime}, {address}. Votre billet se trouve dans Mes événements.} other {Début {dayTime}. Votre billet se trouve dans Mes événements.}}",
+      "title": "Demain : {title}"
+    },
+    "fieldops_assignment_changed": {
+      "title": "{hasTerritory, select, yes {Mission annulée : {territory}} other {Mission annulée}}"
+    },
+    "fieldops_assignment_created": {
+      "body": "{sameDay, select, yes {Vous êtes à {territory} le {from}.} other {Vous êtes à {territory} du {from} au {to}.}}",
+      "title": "Nouvelle mission : {territory}"
+    },
+    "fieldops_claim_received": {
+      "body": "Un membre a aidé un propriétaire à revendiquer une fiche déjà présente sur Abonten.",
+      "title": "Aide à la revendication : {place}"
+    },
+    "fieldops_commission_reversed": {
+      "title": "Une commission a été reprise"
+    },
+    "fieldops_confirmed": {
+      "body": "Votre commission est confirmée et attend le prochain versement.",
+      "title": "{hasName, select, yes {Confirmé : {name}} other {Confirmé : votre intégration}}"
+    },
+    "fieldops_content_approved": {
+      "body": "Votre publication a été approuvée. La commission est confirmée après la période de retenue.",
+      "title": "Contenu approuvé"
+    },
+    "fieldops_content_brief": {
+      "title": "Nouveau brief : {title}"
+    },
+    "fieldops_content_commission_confirmed": {
+      "body": "Votre publication approuvée est confirmée et attend le prochain versement.",
+      "title": "Commission de contenu confirmée"
+    },
+    "fieldops_content_received": {
+      "body": "Le créateur de contenu a envoyé un livrable.",
+      "title": "Nouveau contenu à examiner"
+    },
+    "fieldops_content_rejected": {
+      "title": "Contenu non accepté"
+    },
+    "fieldops_event_received": {
+      "body": "Un membre a intégré un événement. Il est rémunéré une fois l'événement passé.",
+      "title": "Événement : {title}"
+    },
+    "fieldops_flag_raised": {
+      "body": "Un contrôle automatique a signalé cette soumission à un administrateur.",
+      "title": "{hasName, select, yes {À regarder : {name}} other {À regarder : une intégration}}"
+    },
+    "fieldops_membership_added": {
+      "body": "Ouvrez Travail de terrain pour voir vos missions.",
+      "title": "Vous avez rejoint {campaign}"
+    },
+    "fieldops_not_eligible": {
+      "body": "Un contrôle automatique après la période de retenue n'a pas été concluant. Ouvrez-le pour voir pourquoi.",
+      "title": "{hasName, select, yes {Non éligible : {name}} other {Non éligible : votre intégration}}"
+    },
+    "fieldops_onboarding_received": {
+      "body": "{hasMember, select, yes {{member} a soumis un nouveau commerce.} other {Un membre a soumis un nouveau commerce.}}",
+      "title": "À examiner : {place}"
+    },
+    "fieldops_paid": {
+      "body": "Vos gains Field Ops ont été envoyés sur votre numéro mobile money.",
+      "title": "Vous avez été payé"
+    },
+    "fieldops_review_needs_changes": {
+      "title": "{hasName, select, yes {Modifications demandées : {name}} other {Modifications demandées : votre intégration}}"
+    },
+    "fieldops_review_rejected": {
+      "title": "{hasName, select, yes {Non acceptée : {name}} other {Non acceptée : votre intégration}}"
+    },
+    "fieldops_review_verified": {
+      "body": "Votre responsable d'équipe l'a vérifiée. La commission est confirmée après la période de retenue.",
+      "title": "{hasName, select, yes {Vérifié : {name}} other {Vérifié : votre intégration}}"
+    },
+    "fieldops_stipend": {
+      "body": "Votre indemnité pour {monthYear} est prête pour le prochain versement.",
+      "title": "Indemnité mensuelle ajoutée"
+    },
+    "loyalty_reward": {
+      "body": "{hasEvent, select, yes {Vous avez acheté des billets pour {required} événements différents. Les frais de service de {amount} sur cette commande vous reviennent en crédit après {event}.} other {Vous avez acheté des billets pour {required} événements différents. Les frais de service de {amount} sur cette commande vous reviennent en crédit après l'événement.}}",
+      "title": "Vos frais de service vous reviennent"
+    },
+    "milestone_reached": {
+      "body": "Voici {amount} de crédit promotionnel pour mettre en avant votre prochain événement.",
+      "title": "{buyers} personnes ont acheté des billets pour votre événement"
+    },
+    "orphan_refund": {
+      "body": "Votre paiement de {amount} est arrivé après la clôture de la commande, donc rien n'a été émis. Nous avons demandé que le montant total soit renvoyé sur votre moyen de paiement.",
+      "title": "Nous remboursons un paiement"
+    },
+    "place_booking_accepted": {
+      "body": "{hasPlace, select, yes {Votre demande de réservation pour {place} a été acceptée.} other {Votre demande de réservation a été acceptée.}}",
+      "title": "Votre réservation a été acceptée"
+    },
+    "place_booking_cancelled": {
+      "body": "{hasPlace, select, yes {Un client a annulé sa réservation pour {place}.} other {Un client a annulé sa réservation dans votre lieu.}}",
+      "title": "Une réservation a été annulée"
+    },
+    "place_booking_declined": {
+      "body": "{hasPlace, select, yes {Votre demande de réservation pour {place} a été refusée.} other {Votre demande de réservation a été refusée.}}",
+      "title": "Votre réservation a été refusée"
+    },
+    "place_booking_requested": {
+      "body": "Vous avez une nouvelle demande de réservation pour {place}.",
+      "title": "Nouvelle demande de réservation"
+    },
+    "place_claim_approved": {
+      "body": "{hasPlace, select, yes {Vous gérez désormais {place}.} other {Vous gérez désormais le lieu.}}",
+      "title": "Votre revendication a été approuvée"
+    },
+    "place_claim_rejected": {
+      "body": "{hasPlace, select, yes {Votre demande de revendication de {place} a été rejetée.} other {Votre demande de revendication du lieu a été rejetée.}}",
+      "title": "Votre demande de revendication n'a pas été approuvée"
+    },
+    "promotion_credit_earned": {
+      "body": "{amount} de crédit promotionnel grâce aux événements terminés en {month}. Utilisez-le pour mettre en avant un événement ou un lieu.",
+      "title": "Vous avez gagné du crédit promotionnel"
+    },
+    "promotion_credit_visits": {
+      "body": "{visitors, plural, one {# visiteur vérifié s'est enregistré} other {# visiteurs vérifiés se sont enregistrés}} dans votre lieu en {month}. Voici {amount} de crédit promotionnel pour le mettre en avant.",
+      "title": "Vos visiteurs vous ont rapporté du crédit promotionnel"
+    },
+    "promotion_started_event": {
+      "body": "{title} est maintenant à la une ({duration}).",
+      "title": "Votre événement est maintenant à la une"
+    },
+    "promotion_started_generic": {
+      "body": "Votre promotion est maintenant active ({duration}).",
+      "title": "Votre fiche est maintenant à la une"
+    },
+    "promotion_started_place": {
+      "body": "{title} est maintenant à la une ({duration}).",
+      "title": "Votre lieu est maintenant à la une"
+    },
+    "referral_joined": {
+      "body": "{name} a rejoint Abonten avec votre invitation. Vous recevrez {amount} lorsqu'il achètera un billet de {min} ou plus.",
+      "title": "Un ami a rejoint Abonten avec votre invitation"
+    },
+    "referral_qualified": {
+      "body": "{name} remplit les conditions. {amount} sont en attente pour vous et seront débloqués {unlocks, select, event {après l'événement} other {dans environ deux semaines}}.",
+      "title": "{path, select, first_order {Votre ami a acheté un billet} organizer_sales {L'événement de votre ami se vend} other {Votre ami a revendiqué son lieu}}"
+    },
+    "refund_completed": {
+      "body": "Votre remboursement a été renvoyé sur votre moyen de paiement.",
+      "title": "Remboursement effectué"
+    },
+    "refund_completed_credit": {
+      "body": "{credit} sont de retour dans votre Crédit Abonten.",
+      "title": "Remboursement effectué"
+    },
+    "refund_completed_plain": {
+      "body": "Votre remboursement est terminé.",
+      "title": "Remboursement effectué"
+    },
+    "refund_failed": {
+      "body": "Nous n'avons pas pu traiter votre remboursement automatiquement. Notre équipe va s'en occuper.",
+      "title": "Le remboursement n'a pas pu être effectué"
+    },
+    "refund_failed_credit": {
+      "body": "Vos {credit} de Crédit Abonten sont de retour, mais nous n'avons pas pu renvoyer automatiquement le reste sur votre moyen de paiement. Notre équipe va s'en occuper.",
+      "title": "Le remboursement n'a pas pu être effectué"
+    },
+    "refund_requested": {
+      "body": "Nous avons demandé le remboursement de votre billet annulé. Vous serez prévenu une fois qu'il sera effectué.",
+      "title": "Remboursement demandé"
+    },
+    "refund_requested_credit": {
+      "body": "{credit} sont de retour dans votre Crédit Abonten. Nous avons demandé le remboursement du reste sur votre moyen de paiement — vous serez prévenu une fois qu'il sera effectué.",
+      "title": "Remboursement demandé"
+    },
+    "review_received_event": {
+      "body": "{hasTitle, select, yes {Quelqu'un a laissé un avis {rating} étoiles sur {title}.} other {Quelqu'un a laissé un nouvel avis sur votre événement.}}",
+      "title": "Nouvel avis"
+    },
+    "review_received_place": {
+      "body": "{hasName, select, yes {Quelqu'un a laissé un avis {rating} étoiles sur {name}.} other {Quelqu'un a laissé un nouvel avis sur votre lieu.}}",
+      "title": "Nouvel avis"
+    },
+    "review_reply_event": {
+      "body": "{hasName, select, yes {Consultez la réponse à votre avis sur {name}.} other {Consultez la réponse à votre avis sur l'événement.}}",
+      "title": "L'organisateur a répondu à votre avis"
+    },
+    "review_reply_place": {
+      "body": "{hasName, select, yes {Consultez la réponse à votre avis sur {name}.} other {Consultez la réponse à votre avis sur le lieu.}}",
+      "title": "Le propriétaire a répondu à votre avis"
+    },
+    "reward_available": {
+      "body": "{amount} de Crédit Abonten sont prêts à être utilisés.",
+      "title": "Votre crédit est prêt"
+    },
+    "reward_pending": {
+      "body": "{amount} sont en attente pour {tickets, plural, one {# billet parrainé} other {# billets parrainés}}. Le montant est débloqué après {tickets, plural, one {l'événement} other {les événements}}.",
+      "title": "Une récompense est en route"
+    },
+    "ticket_confirmed": {
+      "body": "{hasTitle, select, yes {Votre billet pour {title} est confirmé.} other {Votre billet est confirmé.}}",
+      "title": "Billet confirmé"
+    },
+    "verification_approved": {
+      "body": "{hasSubject, select, yes {{subject}} other {{subjectKind, select, place {Ce lieu} other {Votre profil d'organisateur}}}} est désormais vérifié sur Abonten.",
+      "title": "Vérifié"
+    },
+    "verification_info_requested": {
+      "body": "Pour vérifier {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {ce lieu} other {votre profil d'organisateur}}}}, il nous faut : {reason}",
+      "title": "Informations complémentaires requises"
+    },
+    "verification_rejected": {
+      "body": "Votre demande de vérification pour {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {ce lieu} other {votre profil d'organisateur}}}} n'a pas été approuvée. {reason}",
+      "title": "Vérification non approuvée"
+    },
+    "verification_revoked": {
+      "body": "Le badge Vérifié de {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {ce lieu} other {votre profil d'organisateur}}}} a été retiré. {reason}",
+      "title": "Vérification retirée"
+    },
+    "verification_submitted": {
+      "body": "Nous avons bien reçu votre demande de vérification pour {hasSubject, select, yes {{subject}} other {{subjectKind, select, place {ce lieu} other {votre profil d'organisateur}}}}. Nous vous préviendrons lorsqu'elle aura été examinée.",
+      "title": "Demande de vérification reçue"
+    },
+    "welcome_credit": {
+      "body": "{amount} de réduction sur votre première commande de billets de {min} ou plus. À utiliser dans les {days} jours.",
+      "title": "Vous avez un crédit de bienvenue"
+    }
+  },
+  "openStatus": {
+    "closed": "Fermé",
+    "closedOpensAt": "Fermé · Ouvre à {time}",
+    "closedToday": "Fermé aujourd'hui",
+    "openClosesAt": "Ouvert · Ferme à {time}",
+    "openNow": "Ouvert maintenant",
+    "permanentlyClosed": "Définitivement fermé",
+    "temporarilyClosed": "Temporairement fermé"
+  },
+  "otp": {
+    "expired": "Ce code a expiré. Veuillez en demander un nouveau.",
+    "invalidFormat": "Saisissez le code que nous vous avons envoyé.",
+    "tooManyAttempts": "Trop de tentatives incorrectes. Veuillez demander un nouveau code."
+  },
+  "paymentMethods": {
+    "apple_pay": "Apple Pay",
+    "bank_redirect": "Payer par banque",
+    "bank_transfer": "Virement bancaire",
+    "card": "Carte",
+    "eft": "Virement instantané (EFT)",
+    "google_pay": "Google Pay",
+    "mobile_money": "Mobile money",
+    "qr": "Code QR",
+    "ussd": "USSD",
+    "wallet": "Portefeuille"
+  },
+  "periods": {
+    "comparison": {
+      "30d": "par rapport aux 30 jours précédents",
+      "7d": "par rapport aux 7 jours précédents",
+      "today": "par rapport à hier"
+    },
+    "dashboard": {
+      "30d": "30 derniers jours",
+      "7d": "7 derniers jours",
+      "all": "Depuis le début",
+      "today": "Aujourd'hui"
+    },
+    "transactions": {
+      "all": "Depuis le début",
+      "last3Months": "3 derniers mois",
+      "lastMonth": "Le mois dernier",
+      "thisMonth": "Ce mois-ci",
+      "today": "Aujourd'hui"
+    }
+  },
+  "phone": {
+    "empty": "Saisissez un numéro de téléphone.",
+    "invalid": "Saisissez un numéro de téléphone valide.",
+    "invalid_country": "Sélectionnez un indicatif de pays.",
+    "too_long": "Ce numéro de téléphone est trop long.",
+    "too_short": "Ce numéro de téléphone est trop court."
+  },
+  "placeCategories": {
+    "cinema": "Cinéma",
+    "entertainment": "Divertissement",
+    "food-spot": "Restauration rapide",
+    "gaming-center": "Salle de jeux",
+    "go-karting": "Karting",
+    "gym-fitness": "Salle de sport / Fitness",
+    "hotel": "Hôtel",
+    "nightclub": "Boîte de nuit",
+    "other": "Autre",
+    "pub": "Pub",
+    "recreation": "Loisirs",
+    "restaurant": "Restaurant",
+    "skating": "Patinage",
+    "supermarket": "Supermarché"
+  },
+  "placeSetup": {
+    "contact": "Ajoutez un numéro de téléphone ou un site web",
+    "hours": "Définissez vos horaires d'ouverture",
+    "photos": "Ajoutez au moins {count} photos",
+    "services": "Indiquez ce que vous proposez",
+    "verification": "Faites vérifier votre lieu"
+  },
+  "profileCompletion": {
+    "avatar": {
+      "description": "Affichée sur votre profil et à côté de vos avis et messages.",
+      "done": "Photo de profil ajoutée",
+      "label": "Ajoutez une photo de profil"
+    },
+    "email": {
+      "confirm": "Confirmez votre adresse e-mail",
+      "description": "Nécessaire pour payer les billets et les promotions — vos billets et reçus vous sont envoyés par e-mail. Vous pouvez aussi vous connecter avec un code envoyé à cette adresse.",
+      "done": "Adresse e-mail vérifiée",
+      "label": "Ajoutez votre adresse e-mail",
+      "verify": "Vérifiez votre adresse e-mail"
+    },
+    "group": {
+      "account": "Connexion et contact",
+      "profile": "Votre profil"
+    },
+    "name": {
+      "description": "Affiché sur votre profil pour que l'on sache qui vous êtes.",
+      "done": "Nom ajouté",
+      "label": "Ajoutez votre nom"
+    },
+    "phone": {
+      "description": "Permet de vous connecter avec un code envoyé par SMS — un moyen de retrouver l'accès si vous ne pouvez plus accéder à votre e-mail ou à votre compte Google.",
+      "done": "Numéro de téléphone vérifié",
+      "label": "Ajoutez votre numéro de téléphone",
+      "verify": "Vérifiez votre numéro de téléphone"
+    },
+    "username": {
+      "description": "Votre @identifiant — il apparaît sur vos avis et dans le lien de votre profil. Celui que vous avez actuellement a été créé pour vous.",
+      "done": "Nom d'utilisateur choisi",
+      "label": "Choisissez un nom d'utilisateur"
+    }
+  },
+  "promotionBudget": {
+    "choose": "Choisissez un budget.",
+    "chooseDuration": "Choisissez la durée de diffusion de la promotion.",
+    "largest": "Le budget maximum est de {amount}.",
+    "reachAbout": "Environ {count, plural, one {# personne} other {# personnes}}",
+    "reachRange": "{low, number}–{high, number} personnes",
+    "smallest": "Le budget minimum est de {amount}.",
+    "step": "Les budgets augmentent par paliers de {amount}."
+  },
+  "promotionSummary": {
+    "duration": {
+      "days": "{count, plural, one {# jour} other {# jours}}",
+      "hours": "{count, plural, one {# heure} other {# heures}}",
+      "months": "{count, plural, one {# mois} other {# mois}}",
+      "weeks": "{count, plural, one {# semaine} other {# semaines}}"
+    },
+    "kind": {
+      "event": "Événement à la une",
+      "place": "Lieu à la une",
+      "spotlight": "Spotlight sponsorisé"
+    },
+    "state": {
+      "active": "Actif",
+      "in_review": "En cours d'examen",
+      "paused": "En pause",
+      "scheduled": "Commence bientôt"
+    },
+    "statusLine": "Formule {tier} · {state}"
+  },
+  "refundStatus": {
+    "failed": "Échec du remboursement",
+    "issued": "Remboursement effectué",
+    "none": "Pas encore de remboursement",
+    "noneDescription": "Émis une fois tous les billets de cette commande annulés.",
+    "pending": "Remboursement en attente"
+  },
+  "report": {
+    "category": {
+      "copyright": "Problème de droits d'auteur",
+      "fake_listing": "Faux événement / lieu",
+      "fraud_scam": "Fraude ou arnaque",
+      "harassment": "Harcèlement",
+      "impersonation": "Usurpation d'identité",
+      "inappropriate": "Contenu inapproprié",
+      "misleading": "Informations trompeuses",
+      "other": "Autre",
+      "safety": "Problème de sécurité",
+      "spam": "Spam"
+    },
+    "thanks": "Merci — notre équipe va examiner ce signalement.",
+    "title": "{target, select, event {Signaler cet événement} place {Signaler ce lieu} event_review {Signaler cet avis} place_review {Signaler cet avis} user_review {Signaler cet avis} user {Signaler ce profil} organizer {Signaler cet organisateur} highlight {Signaler ce temps fort} message {Signaler ce message} conversation {Signaler cette conversation} spotlight {Signaler ce Spotlight} story {Signaler cette Story} content_comment {Signaler ce commentaire} other {Signaler ceci}}"
+  },
+  "reviewSort": {
+    "helpful": "Les plus utiles",
+    "recent": "Les plus récents"
+  },
+  "reviewer": {
+    "attendee": "Participant",
+    "guest": "Invité"
+  },
+  "searchFilters": {
+    "anyRating": "Toutes les notes",
+    "anywhere": "Partout",
+    "category": "Catégorie",
+    "minStars": "{rating} étoiles et plus",
+    "openNow": "Ouvert maintenant",
+    "price": {
+      "any": "Tous les prix",
+      "free": "Gratuit",
+      "under": "Moins de {amount}"
+    },
+    "when": {
+      "any": "N'importe quand",
+      "month": "30 prochains jours",
+      "today": "Aujourd'hui",
+      "tomorrow": "Demain",
+      "week": "7 prochains jours",
+      "weekend": "Ce week-end"
+    },
+    "within": "Dans un rayon de {distance}",
+    "withinOf": "Dans un rayon de {distance} autour de {location}"
+  },
+  "spotlightBadge": {
+    "draft": "Brouillon",
+    "hidden": "Masqué",
+    "limited": "Limité",
+    "removed": "Retiré"
+  },
+  "storyReply": {
+    "nameReacted": "{name} a réagi à votre story",
+    "nameReplied": "{name} a répondu à votre story",
+    "notifReacted": "A réagi {text} à votre story",
+    "notifReplied": "A répondu à votre story : {text}",
+    "reacted": "A réagi à votre story",
+    "replied": "A répondu à votre story",
+    "youReacted": "Vous avez réagi à sa story",
+    "youReplied": "Vous avez répondu à sa story"
+  },
+  "ticketCapacity": {
+    "allShared": "{capacity, plural, one {L'unique place est partagée entre vos types de billets.} other {Les # places sont partagées entre vos types de billets.}}",
+    "exceeds": "Les quantités de billets totalisent {reserved}, ce qui dépasse la capacité de l'événement ({capacity}).",
+    "reservedShared": "{reserved, plural, one {# place réservée} other {# places réservées}} par les quantités que vous avez définies ; {pool, plural, one {la # place restante est partagée} other {les # places restantes sont partagées}} par {types, plural, one {le type} other {les # types}} sans quantité.",
+    "usesAll": "{capacity, plural, one {Les quantités de billets utilisent l'unique place.} other {Les quantités de billets utilisent les # places.}}",
+    "usesSome": "Les quantités de billets utilisent {reserved} sur {capacity, plural, one {# place} other {# places}} ; {left} resteront invendues à moins d'augmenter une quantité."
+  },
+  "ticketReceipt": {
+    "attendee": "Participant",
+    "date": "Date",
+    "issuedOn": "Émis le : {date}",
+    "location": "Lieu",
+    "qrCode": "QR code du billet",
+    "status": "Statut",
+    "statusValue": "{status, select, active {Actif} used {Enregistré à l'entrée} cancelled {Annulé} expired {Expiré} other {Inconnu}}",
+    "ticketCode": "Code du billet",
+    "ticketType": "Type de billet",
+    "title": "Reçu"
+  },
+  "ticketTiers": {
+    "freeEventPromoCodes": "Les codes promo ne sont pas disponibles pour un événement gratuit. Supprimez-les ou rendez l'événement payant.",
+    "freeName": "Gratuit",
+    "freeReserved": "« {name} » est réservé aux événements gratuits. Donnez un autre nom à ce type de billet.",
+    "paidNeedsPrice": "Les billets payants doivent avoir un prix supérieur à zéro. Pour laisser entrer les gens gratuitement, rendez l'événement gratuit.",
+    "singleName": "Billet standard"
+  },
+  "verification": {
+    "badgeExplanation": {
+      "organizer": "Abonten a examiné des documents attestant l'identité ou l'enregistrement de cet organisateur et son lien avec ce compte. La vérification ne constitue pas une garantie d'un événement, de son déroulement, de sa sécurité ou de sa qualité.",
+      "place": "Abonten a examiné des documents attestant l'enregistrement de cette entreprise et son lien avec le compte qui gère cette fiche. La vérification ne constitue pas une garantie de l'entreprise, de son service, de sa sécurité ou de sa qualité."
+    },
+    "badgeLabel": {
+      "organizer": "Organisateur vérifié",
+      "place": "Lieu vérifié"
+    },
+    "chip": {
+      "approved": "Vérifié",
+      "draft": "Brouillon",
+      "needs_info": "Action requise",
+      "pending_review": "En cours d'examen",
+      "rejected": "Non approuvé",
+      "revoked": "Retiré",
+      "withdrawn": "Retiré"
+    },
+    "howReviewWorks": {
+      "1": "Envoyer des documents ne suffit pas à vous faire vérifier. Un examinateur Abonten étudie ce que vous envoyez.",
+      "2": "Nous pouvons revenir vers vous pour demander autre chose avant de décider.",
+      "3": "Vous recevrez une notification lorsqu'une décision sera prise, avec le motif si la demande n'est pas approuvée.",
+      "4": "Vos documents sont privés. Seuls les examinateurs d'Abonten peuvent les ouvrir, et ils sont supprimés dès qu'ils ne sont plus nécessaires."
+    },
+    "organizerType": {
+      "business": "Entreprise enregistrée",
+      "individual": "Organisateur individuel ou informel",
+      "organisation": "Organisation, église, école ou association"
+    },
+    "organizerTypeDescription": {
+      "business": "Vous organisez des événements par l'intermédiaire d'une société ou d'un nom commercial enregistré. Envoyez votre certificat d'enregistrement et, si vous en avez un, un permis ou une licence d'exploitation.",
+      "individual": "Vous organisez des événements en votre nom propre, sans société enregistrée. Envoyez tout ce qui montre que les événements sont bien les vôtres, par exemple une réservation de salle, une autorisation d'événement, ou des affiches et billets d'événements que vous avez organisés.",
+      "organisation": "Vous organisez pour le compte d'une église, d'une école, d'une ONG, d'une association ou d'une structure similaire. Envoyez le document d'enregistrement de la structure, ainsi qu'une lettre à son en-tête si vous n'êtes pas la personne qui y est nommée."
+    },
+    "owner": {
+      "approvedOrganizerBody": "Votre badge Vérifié est affiché sur vos événements et votre profil.",
+      "approvedOrganizerTitle": "Organisateur vérifié",
+      "approvedPlaceBody": "Votre badge Vérifié est affiché sur votre fiche.",
+      "approvedPlaceTitle": "Lieu vérifié",
+      "draftBody": "Ajoutez au moins un document, puis envoyez-la pour examen.",
+      "draftTitle": "Terminez votre demande",
+      "needsInfoBody": "Un examinateur a demandé autre chose avant de pouvoir décider.",
+      "needsInfoTitle": "Nous avons besoin de plus d'informations",
+      "pendingBody": "Nous avons bien reçu votre demande pour {name}. Nous vous préviendrons lorsqu'elle aura été examinée.",
+      "pendingTitle": "En cours d'examen",
+      "rejectedBody": "Votre demande n'a pas été approuvée. Vous pouvez en envoyer une nouvelle avec d'autres documents.",
+      "rejectedTitle": "Non approuvé",
+      "revokedBody": "Cette vérification a été retirée. Vous pouvez envoyer une nouvelle demande.",
+      "revokedTitle": "Vérification retirée",
+      "thisPlace": "ce lieu",
+      "withdrawnBody": "Cette demande a été annulée. Vous pouvez en commencer une nouvelle à tout moment.",
+      "withdrawnTitle": "Demande retirée",
+      "yourOrganizerProfile": "votre profil d'organisateur"
+    },
+    "status": {
+      "approved": "Vérifié",
+      "draft": "Non envoyé",
+      "needs_info": "Informations complémentaires requises",
+      "pending_review": "En cours d'examen",
+      "rejected": "Non approuvé",
+      "revoked": "Vérification retirée",
+      "withdrawn": "Retiré"
+    },
+    "whyVerify": {
+      "organizer": {
+        "1": "Un badge Vérifié apparaît à côté de votre nom sur vos événements et votre profil.",
+        "2": "Les acheteurs de billets peuvent voir qu'Abonten a contrôlé qui se trouve derrière l'événement.",
+        "3": "La vérification est facultative. Vous pouvez créer et publier des événements sans elle."
+      },
+      "place": {
+        "1": "Un badge Vérifié apparaît sur votre fiche, dans les résultats de recherche et sur la carte.",
+        "2": "Les gens réservent et se rendent plus volontiers dans un établissement qu'Abonten a contrôlé.",
+        "3": "Certains programmes Abonten, comme le crédit promotionnel lié aux visites, sont réservés aux lieux vérifiés."
+      }
+    }
+  },
+  "weekly": {
+    "defaultTitle": "Cette semaine sur Abonten",
+    "editionStatus": {
+      "archived": "Archivé",
+      "draft": "Brouillon",
+      "published": "Publié",
+      "scheduled": "Programmé"
+    },
+    "issue": {
+      "duplicate_subjects": "Certaines fiches apparaissent dans plusieurs sections.",
+      "empty_sections": "Certaines sections n'ont aucune fiche et seront masquées.",
+      "invalid_items": "Certaines fiches ne seront pas affichées.",
+      "no_valid_items": "Ajoutez au moins une fiche qui peut être affichée.",
+      "organizer_concentration": "Un organisateur a plusieurs événements dans la même section.",
+      "recently_featured": "Certaines fiches figuraient dans des éditions récentes de cette zone.",
+      "scope_retired": "La zone de cette édition a été retirée.",
+      "week_over": "Cette semaine est déjà terminée."
+    },
+    "tagline": "Les événements, lieux et expériences à découvrir cette semaine.",
+    "validity": {
+      "archived": "Archivé",
+      "canceled": "Événement annulé",
+      "ended": "L'événement est terminé",
+      "hidden": "Masqué par la modération",
+      "missing": "La fiche n'existe plus",
+      "not_published": "Non publié",
+      "permanently_closed": "Définitivement fermé",
+      "removed": "Retiré par la modération",
+      "restricted": "Restreint par la modération",
+      "unsupported": "Pas encore pris en charge"
+    }
+  },
+  "needsAttention": {
+    "noSalesYet": "Commence le {date}, sans aucune vente pour l'instant.",
+    "lowSales": "Commence le {date} avec seulement {sold, plural, one {# billet vendu} other {# billets vendus}} pour l'instant.",
+    "nearlySoldOut": "{type} : presque complet ({remaining, plural, one {# billet restant} other {# billets restants}})."
+  }
+}

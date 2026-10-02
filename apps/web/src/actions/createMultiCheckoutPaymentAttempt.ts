@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type CreateMultiCheckoutPaymentAttemptCoreResult,
   createMultiCheckoutPaymentAttemptCore,
@@ -28,35 +30,38 @@ type CreateMultiCheckoutPaymentAttemptInput = {
  * writing anything. With `useCredit`, Abonten Credit pays part of the order
  * (or all of it, which finalizes the order before this returns).
  */
-export default async function createMultiCheckoutPaymentAttempt(
-  input: CreateMultiCheckoutPaymentAttemptInput,
-): Promise<
-  CreateMultiCheckoutPaymentAttemptCoreResult | { status: 401; message: string }
-> {
-  const supabase = await createClient();
+export default withActionLocale(
+  async function createMultiCheckoutPaymentAttempt(
+    input: CreateMultiCheckoutPaymentAttemptInput,
+  ): Promise<
+    | CreateMultiCheckoutPaymentAttemptCoreResult
+    | { status: 401; message: string }
+  > {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return createMultiCheckoutPaymentAttemptCore(
-    supabase,
-    user.id,
-    user.email,
-    {
-      checkoutSessionIds: input.checkoutSessionIds,
-      paymentMethodId: input.paymentMethodId ?? null,
-      method: input.method ?? null,
-      platform: "web",
-      useCredit: input.useCredit === true,
-    },
-    (checkoutSessionId) =>
-      `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${checkoutSessionId}?type=ticket`,
-    paymentFulfillmentDeps,
-  );
-}
+    return createMultiCheckoutPaymentAttemptCore(
+      supabase,
+      user.id,
+      user.email,
+      {
+        checkoutSessionIds: input.checkoutSessionIds,
+        paymentMethodId: input.paymentMethodId ?? null,
+        method: input.method ?? null,
+        platform: "web",
+        useCredit: input.useCredit === true,
+      },
+      (checkoutSessionId) =>
+        `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${checkoutSessionId}?type=ticket`,
+      paymentFulfillmentDeps,
+    );
+  },
+);

@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslations } from "../i18n";
 import { useTheme, useThemeColors } from "../theme/ThemeProvider";
 import { tintBackground, tintBorder } from "../theme/color";
 import { Icon, type IoniconName } from "./Icon";
@@ -169,6 +170,8 @@ function ToastHost({
   toast: ToastRecord | null;
   onDismiss: () => void;
 }) {
+  const t = useTranslations("common");
+
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
   const { scheme } = useTheme();
@@ -249,7 +252,7 @@ function ToastHost({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${shown.message}. Dismiss`}
+          accessibilityLabel={t("dismiss", { message: shown.message })}
           onPress={onDismiss}
           style={{
             flexDirection: "row",

@@ -8,6 +8,7 @@ import {
   storyReplyStoryLive,
 } from "@abonten/core/content/storyReply";
 import { Clock, Play } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -24,10 +25,13 @@ export function StoryReplyContext({
   systemData: Record<string, unknown> | null | undefined;
   isMine: boolean;
 }) {
+  const t = useTranslations("messaging");
+  const tc = useTranslations("core");
+
   const ctx = readStoryReplyContext(systemData);
   if (!ctx) return null;
   const live = storyReplyStoryLive(ctx);
-  const label = storyReplyLabel(ctx, isMine);
+  const label = storyReplyLabel(tc, ctx, isMine);
 
   return (
     <div
@@ -40,7 +44,7 @@ export function StoryReplyContext({
       {live && ctx.thumbnailUrl ? (
         <Link
           href={storyPath(ctx.postId)}
-          aria-label={`${label}. Open the story`}
+          aria-label={t("openTheStory", { label: label })}
           className="relative block h-[104px] w-[64px] overflow-hidden rounded-xl bg-muted hover:opacity-90"
         >
           <Image
@@ -57,7 +61,7 @@ export function StoryReplyContext({
       ) : (
         <span className="flex h-[52px] w-[64px] flex-col items-center justify-center rounded-xl border border-dashed text-[10px] text-muted-foreground">
           <Clock className="h-4 w-4" aria-hidden />
-          Story ended
+          {t("storyEnded")}
         </span>
       )}
     </div>

@@ -13,6 +13,7 @@ import {
 } from "@abonten/core/content/feedPlayback";
 import type { ContentMediaItem } from "@abonten/types/contentType";
 import { AppText, Icon, useReducedMotion } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { type BufferOptions, VideoView, useVideoPlayer } from "expo-video";
 import {
@@ -217,6 +218,8 @@ function LoadNotice({
   online: boolean;
   onRetry: () => void;
 }) {
+  const t = useTranslations("spotlight");
+
   return (
     <View
       style={[StyleSheet.absoluteFill, styles.center]}
@@ -225,7 +228,7 @@ function LoadNotice({
       <Pressable
         onPress={onRetry}
         accessibilityRole="button"
-        accessibilityLabel="Retry video"
+        accessibilityLabel={t("retryVideo")}
         className="items-center gap-2 rounded-2xl bg-black/60 px-5 py-4"
       >
         <Icon
@@ -234,10 +237,10 @@ function LoadNotice({
           color="#fff"
         />
         <AppText className="text-center text-[14px] font-semibold text-white">
-          {online ? "Couldn't play this video" : "You're offline"}
+          {online ? t("couldnTPlayThisVideo") : t("youReOffline")}
         </AppText>
         <AppText className="text-center text-[12px] text-white/75">
-          {online ? "Tap to try again" : "It will play when you're back online"}
+          {online ? t("tapToTryAgain") : t("itWillPlayWhenYouRe")}
         </AppText>
       </Pressable>
     </View>

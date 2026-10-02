@@ -14,6 +14,7 @@ import type {
 } from "@abonten/types/messagingType";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Newest-first, keyset-paginated page of one conversation's messages, shared
 // by the web getConversationMessages action and the
@@ -96,7 +97,7 @@ export async function fetchMessagesPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -125,7 +126,7 @@ export async function fetchMessagesPage(
         data: [],
         nextCursor: null,
         hasNextPage: false,
-        message: "Conversation not found.",
+        message: tr("conversationNotFound"),
       };
     }
   }

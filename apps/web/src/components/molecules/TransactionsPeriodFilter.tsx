@@ -1,9 +1,10 @@
 "use client";
 
 import {
-  TRANSACTION_PERIOD_LABELS,
   type TransactionPeriod,
+  transactionPeriodLabel,
 } from "@abonten/core/transactionsDateRange";
+import { useTranslations } from "next-intl";
 import { cn } from "../lib/utils";
 
 const PERIODS: TransactionPeriod[] = [
@@ -21,11 +22,14 @@ export default function TransactionsPeriodFilter({
   value: TransactionPeriod;
   onChange: (period: TransactionPeriod) => void;
 }) {
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   return (
     <div
       className="flex gap-2 overflow-x-scroll md:overflow-x-hidden"
       role="tablist"
-      aria-label="Transactions time period"
+      aria-label={t("transactionsTimePeriod")}
     >
       {PERIODS.map((period) => (
         <button
@@ -41,7 +45,7 @@ export default function TransactionsPeriodFilter({
               : "border-border text-muted-foreground hover:text-foreground",
           )}
         >
-          {TRANSACTION_PERIOD_LABELS[period]}
+          {transactionPeriodLabel(tc, period)}
         </button>
       ))}
     </div>

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { setDefaultPaymentMethodCore } from "@abonten/services/payments/paymentMethodCore";
 
 /**
@@ -12,7 +14,9 @@ import { setDefaultPaymentMethodCore } from "@abonten/services/payments/paymentM
  * last-write-wins outcome if a user fires two "set default" clicks at once,
  * not a constraint violation or data corruption.
  */
-export default async function setDefaultPaymentMethod(paymentMethodId: string) {
+export default withActionLocale(async function setDefaultPaymentMethod(
+  paymentMethodId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -21,8 +25,8 @@ export default async function setDefaultPaymentMethod(paymentMethodId: string) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return setDefaultPaymentMethodCore(supabase, user.id, paymentMethodId);
-}
+});

@@ -187,8 +187,10 @@ export async function reverseCommissionAdminCore(
 
   await notifyFieldOps(supabase, [before.member_user_id], {
     type: "fieldops_commission_reversed",
-    title: "A commission was taken back",
-    body: input.reason,
+    template: {
+      id: "fieldops_commission_reversed",
+      params: { reason: input.reason },
+    },
     route: "/field/earnings",
   });
 

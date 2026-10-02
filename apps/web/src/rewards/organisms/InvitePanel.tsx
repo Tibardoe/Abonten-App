@@ -7,27 +7,33 @@ import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { inviteShareMessage } from "@abonten/core/rewards/invite";
 import type { ReferralInvite } from "@abonten/types/rewards";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 const STATUS_LABEL: Record<ReferralInvite["recent"][number]["status"], string> =
   {
-    joined: "Joined",
-    qualified: "Bought a ticket · reward pending",
-    rewarded: "Reward earned",
-    expired: "Didn't buy in time",
+    joined: "joined",
+    qualified: "boughtATicketRewardPending",
+    rewarded: "rewardEarned",
+    expired: "didnTBuyInTime",
   };
 
 // Rewards › Invite friends: the personal invite link (WhatsApp first -- it's
 // how most people share in Ghana), what each side gets, and how it's going.
 // Friends are shown by first name and initial only.
 export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
+  const locale = useLocale();
+
+  const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   // Known only in the browser; rendering it on the server would mismatch.
   const [canShare, setCanShare] = useState(false);
   useEffect(() => setCanShare(typeof navigator.share === "function"), []);
   const url = invite.inviteUrl;
   const message = url
-    ? inviteShareMessage({
+    ? inviteShareMessage(tc, {
         url,
         refereeMinor: invite.refereeMinor,
         minOrderMinor: invite.minOrderMinor,
@@ -39,9 +45,9 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Invite link copied");
+      toast.success(t("inviteLinkCopied"));
     } catch {
-      toast.error("Couldn't copy. Select the link and copy it instead.");
+      toast.error(t("couldnTCopySelectTheLink"));
     }
   };
 
@@ -61,19 +67,34 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
       aria-labelledby="invite-friends-title"
       className="rounded-xl border p-5"
     >
-      <CardTitle id="invite-friends-title">Invite friends</CardTitle>
+      <CardTitle id="invite-friends-title">{t("inviteFriends")}</CardTitle>
       {invite.referrerMinor ? (
         <p className="mt-2 text-sm text-muted-foreground">
-          You get {formatCredit(invite.referrerMinor, invite.currency)} when a
-          friend you invite buys their first ticket
-          {invite.minOrderMinor
-            ? ` of ${formatCredit(invite.minOrderMinor, invite.currency)} or more`
-            : ""}{" "}
-          and their event has taken place.
+          {t(
+            invite.minOrderMinor
+              ? "youGetWhenFriendBuysMin"
+              : "youGetWhenFriendBuys",
+            {
+              amount: formatCredit(
+                invite.referrerMinor,
+                invite.currency,
+                locale,
+              ),
+              minimum: invite.minOrderMinor
+                ? formatCredit(invite.minOrderMinor, invite.currency, locale)
+                : "",
+            },
+          )}{" "}
           {invite.refereeMinor
-            ? ` They get ${formatCredit(invite.refereeMinor, invite.currency)} off that ticket.`
-            : ""}{" "}
-          Invites work for new accounts, in their first week.
+            ? `${t("theyGetOffThatTicket", {
+                amount: formatCredit(
+                  invite.refereeMinor,
+                  invite.currency,
+                  locale,
+                ),
+              })} `
+            : ""}
+          {t("invitesWorkForNewAccountsIn")}
         </p>
       ) : null}
 
@@ -88,7 +109,7 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
               onClick={copy}
               className="shrink-0 text-sm font-medium text-primary"
             >
-              Copy
+              {t("copy")}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -98,7 +119,7 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
               rel="noopener noreferrer"
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
             >
-              Share on WhatsApp
+              {t("shareOnWhatsapp")}
             </a>
             {canShare ? (
               <button
@@ -106,37 +127,37 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
                 onClick={shareNative}
                 className="rounded-md border px-4 py-2 text-sm font-medium"
               >
-                More ways to share
+                {t("moreWaysToShare")}
               </button>
             ) : null}
           </div>
           <p className="text-xs text-muted-foreground">
-            Your code: <span className="font-mono">{invite.code}</span>
+            {t("yourCode")} <span className="font-mono">{invite.code}</span>
           </p>
         </div>
       ) : null}
 
       <dl className="mt-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
         <div>
-          <dt className="text-muted-foreground">Friends joined</dt>
+          <dt className="text-muted-foreground">{t("friendsJoined")}</dt>
           <dd className="text-lg font-semibold tabular-nums">{stats.joined}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Bought a ticket</dt>
+          <dt className="text-muted-foreground">{t("boughtATicket")}</dt>
           <dd className="text-lg font-semibold tabular-nums">
             {stats.qualified}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Earned</dt>
+          <dt className="text-muted-foreground">{t("earned")}</dt>
           <dd className="text-lg font-semibold tabular-nums">
-            {formatCredit(stats.earnedMinor, invite.currency)}
+            {formatCredit(stats.earnedMinor, invite.currency, locale)}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Pending</dt>
+          <dt className="text-muted-foreground">{t("pending2")}</dt>
           <dd className="text-lg font-semibold tabular-nums">
-            {formatCredit(stats.pendingMinor, invite.currency)}
+            {formatCredit(stats.pendingMinor, invite.currency, locale)}
           </dd>
         </div>
       </dl>
@@ -150,8 +171,8 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
             >
               <span className="font-medium">{friend.name}</span>
               <span className="text-right text-muted-foreground">
-                {STATUS_LABEL[friend.status]} ·{" "}
-                {formatDateWithSuffix(friend.at)}
+                {t(STATUS_LABEL[friend.status])} ·{" "}
+                {formatDateWithSuffix(friend.at, undefined, locale)}
               </span>
             </li>
           ))}
@@ -160,7 +181,7 @@ export default function InvitePanel({ invite }: { invite: ReferralInvite }) {
 
       {invite.invitedBy ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          You joined with {invite.invitedBy.name}&apos;s invite.
+          {t("youJoinedWithSInvite", { name: invite.invitedBy.name })}
         </p>
       ) : invite.canBind ? (
         <div className="mt-5 border-t pt-4">

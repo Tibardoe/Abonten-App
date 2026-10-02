@@ -1,12 +1,17 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { listPayoutsCore } from "@abonten/services/organizer/payoutAccountCore";
 
 // GET /api/mobile/organizer/payouts?offset=<n>&limit=<n>
 // The organizer's withdrawal history, newest first. Same body as
 // getOrganizerPayouts (simple offset pagination).
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -30,6 +35,9 @@ export async function GET(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile GET /organizer/payouts failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

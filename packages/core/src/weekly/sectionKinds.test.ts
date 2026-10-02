@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import coreMessages from "@abonten/i18n/messages/en/core.json";
 import { describe, expect, it } from "vitest";
-import { WEEKLY_EDITION_STATUS_LABEL, weeklyEditionPath } from "./copy";
+import { weeklyEditionPath } from "./copy";
 import { WEEKLY_SECTION_ICON_KEYS, weeklySectionIcon } from "./sectionIcons";
 import {
   WEEKLY_DEFAULT_TEMPLATE,
@@ -82,7 +83,7 @@ describe("icons and copy", () => {
   });
 
   it("labels every status and builds encoded paths", () => {
-    expect(Object.keys(WEEKLY_EDITION_STATUS_LABEL).sort()).toEqual(
+    expect(Object.keys(coreMessages.weekly.editionStatus).sort()).toEqual(
       sqlCheckList("status", "draft").sort(),
     );
     expect(weeklyEditionPath("accra", "2026-09-14")).toBe(

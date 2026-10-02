@@ -3,6 +3,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { EventOverviewAnalytics } from "@abonten/types/eventAnalytics";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function EventOverviewCards({
   overview,
@@ -15,6 +16,9 @@ export default function EventOverviewCards({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("common");
+
   if (isLoading) {
     return <StatTilesSkeleton count={6} />;
   }
@@ -22,7 +26,7 @@ export default function EventOverviewCards({
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't load this event's overview stats."
+        message={t("weCouldnTLoadThisEvent2")}
         onRetry={() => onRetry?.()}
       />
     );
@@ -31,13 +35,14 @@ export default function EventOverviewCards({
   if (!overview) {
     return (
       <p className="text-sm text-muted-foreground">
-        No sales or registration data yet.
+        {t("noSalesOrRegistrationDataYet")}
       </p>
     );
   }
 
   const currency = overview.currency ?? "";
-  const money = (amount: number) => formatMoney(currency, Number(amount));
+  const money = (amount: number) =>
+    formatMoney(currency, Number(amount), { locale });
 
   // Free/RSVP events lead with registrations, not a sales figure that would
   // otherwise misleadingly read as "GHS 0" — Gross Sales is only shown if
@@ -45,28 +50,34 @@ export default function EventOverviewCards({
   if (overview.require_registration) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <StatTile label="Registrations" value={String(overview.tickets_sold)} />
         <StatTile
-          label="Attendees"
+          label={t("registrations")}
+          value={String(overview.tickets_sold)}
+        />
+        <StatTile
+          label={t("attendees2")}
           value={String(overview.distinct_attendees)}
         />
         <StatTile
-          label="Cancelled"
+          label={t("cancelled")}
           value={String(overview.tickets_cancelled)}
         />
         {overview.capacity != null && (
           <StatTile
-            label="Remaining"
+            label={t("remaining")}
             value={String(overview.capacity_remaining)}
-            sublabel={`of ${overview.capacity} capacity`}
+            sublabel={t("ofCapacity", { capacity: overview.capacity })}
           />
         )}
         {overview.gross_sales > 0 && (
-          <StatTile label="Gross Sales" value={money(overview.gross_sales)} />
+          <StatTile
+            label={t("grossSales")}
+            value={money(overview.gross_sales)}
+          />
         )}
         {overview.promo_purchase_count > 0 && (
           <StatTile
-            label="Promo Purchases"
+            label={t("promoPurchases")}
             value={String(overview.promo_purchase_count)}
           />
         )}
@@ -76,19 +87,28 @@ export default function EventOverviewCards({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      <StatTile label="Gross Sales" value={money(overview.gross_sales)} />
-      <StatTile label="Tickets Sold" value={String(overview.tickets_sold)} />
-      <StatTile label="Attendees" value={String(overview.distinct_attendees)} />
-      <StatTile label="Cancelled" value={String(overview.tickets_cancelled)} />
+      <StatTile label={t("grossSales")} value={money(overview.gross_sales)} />
       <StatTile
-        label="Promo Purchases"
+        label={t("ticketsSold")}
+        value={String(overview.tickets_sold)}
+      />
+      <StatTile
+        label={t("attendees2")}
+        value={String(overview.distinct_attendees)}
+      />
+      <StatTile
+        label={t("cancelled")}
+        value={String(overview.tickets_cancelled)}
+      />
+      <StatTile
+        label={t("promoPurchases")}
         value={String(overview.promo_purchase_count)}
       />
       {overview.capacity != null && (
         <StatTile
-          label="Remaining"
+          label={t("remaining")}
           value={String(overview.capacity_remaining)}
-          sublabel={`of ${overview.capacity} capacity`}
+          sublabel={t("ofCapacity", { capacity: overview.capacity })}
         />
       )}
     </div>

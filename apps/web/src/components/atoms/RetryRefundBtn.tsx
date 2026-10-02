@@ -4,6 +4,7 @@ import issueRefund from "@/actions/issueRefund";
 import { useToast } from "@/hooks/useToast";
 import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 type RetryRefundBtnProps = {
   transactionId: string;
@@ -25,6 +26,8 @@ export default function RetryRefundBtn({
   transactionId,
   queryKey,
 }: RetryRefundBtnProps) {
+  const t = useTranslations("common");
+
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -32,19 +35,17 @@ export default function RetryRefundBtn({
     mutationFn: () => issueRefund(transactionId),
     onSuccess: (response) => {
       if (response.status === 200) {
-        toast.success(response.message ?? "Refund requested again.");
+        toast.success(response.message ?? t("refundRequestedAgain"));
         queryClient.invalidateQueries({ queryKey });
         // Changes the organizer's own ledger balance -- refresh their
         // Finances screens too.
         invalidateOrganizerFinanceQueries(queryClient);
       } else {
-        toast.error(
-          response.message ?? "Couldn't retry the refund. Please try again.",
-        );
+        toast.error(response.message ?? t("couldnTRetryTheRefundPlease"));
       }
     },
     onError: () => {
-      toast.error("Couldn't retry the refund. Please try again.");
+      toast.error(t("couldnTRetryTheRefundPlease"));
     },
   });
 
@@ -55,7 +56,7 @@ export default function RetryRefundBtn({
       disabled={isPending}
       className="text-xs font-semibold text-primary hover:underline disabled:opacity-60"
     >
-      {isPending ? "Retrying…" : "Retry refund"}
+      {isPending ? t("retrying") : t("retryRefund")}
     </button>
   );
 }

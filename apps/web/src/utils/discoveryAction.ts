@@ -1,4 +1,5 @@
 import { createClient } from "@/config/supabase/server";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { headers } from "next/headers";
@@ -30,7 +31,7 @@ export async function requireDiscoveryUser(): Promise<
     return {
       userId: null,
       svc: null,
-      error: { status: 401, message: "Please sign in first." },
+      error: { status: 401, message: tr("pleaseSignInFirst") },
     };
   }
   return { userId: caller.userId, svc: caller.svc, error: null };
@@ -48,7 +49,7 @@ export function parseDiscoveryInput<T>(
       data: null,
       error: {
         status: 400,
-        message: parsed.error.issues[0]?.message ?? "Invalid input",
+        message: parsed.error.issues[0]?.message ?? tr("invalidInput"),
       },
     };
   }

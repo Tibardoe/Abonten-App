@@ -1,0 +1,15 @@
+{
+  "code": [
+    {
+      "file": "apps/mobile/app/(app)/spotlight/promote/[postId].tsx",
+      "text": "{tc(PROMOTION_REVIEW_NOTE_KEY)}",
+      "why": "Two whole sentences, one after the other; their keys are constants shared with the web app, which the check cannot look up."
+    }
+  ],
+  "messages": [
+    {
+      "ref": "fieldOps:eGTheInteriorPhotoIs",
+      "why": "An example inside a text box: it begins with \"e.g.\", not in the middle of a sentence."
+    }
+  ]
+}

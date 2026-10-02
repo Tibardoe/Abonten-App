@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { invalidateAfterTicketMutation } from "@/lib/ticketMutationInvalidation";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -47,28 +48,22 @@ const POLL_MS = 4000;
 const MAX_POLLS = 20;
 
 const PENDING_NOTE: Record<PaymentKind, string> = {
-  ticket:
-    "Your payment is still being confirmed. This usually clears within a minute.",
-  event_promotion:
-    "Your payment is still being confirmed. This usually clears within a minute.",
-  place_promotion:
-    "Your payment is still being confirmed. This usually clears within a minute.",
-  spotlight_promotion:
-    "Your payment is still being confirmed. This usually clears within a minute.",
+  ticket: "yourPaymentIsStillBeingConfirmed",
+  event_promotion: "yourPaymentIsStillBeingConfirmed",
+  place_promotion: "yourPaymentIsStillBeingConfirmed",
+  spotlight_promotion: "yourPaymentIsStillBeingConfirmed",
 };
 
 const FULFILMENT_NOTE: Record<PaymentKind, string> = {
-  ticket:
-    "Your payment went through, but we haven't issued your ticket yet. Retry now — you won't be charged again.",
-  event_promotion:
-    "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
-  place_promotion:
-    "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
-  spotlight_promotion:
-    "Your payment went through, but the promotion hasn't reached review yet. Retry now — you won't be charged again.",
+  ticket: "yourPaymentWentThroughButWe",
+  event_promotion: "yourPaymentWentThroughButThe",
+  place_promotion: "yourPaymentWentThroughButThe",
+  spotlight_promotion: "yourPaymentWentThroughButThe2",
 };
 
 export function usePaymentVerification(params: PaymentVerificationParams) {
+  const t = useTranslations("checkout");
+
   const { attemptId, kind, mode, authorizationUrl, deepLink, chargeStatus } =
     params;
   const qc = useQueryClient();
@@ -119,7 +114,7 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
         clearTimer();
         setState({
           status: "fulfillmentFailed",
-          message: res.message ?? FULFILMENT_NOTE[kind],
+          message: res.message ?? t(FULFILMENT_NOTE[kind]),
         });
         return "terminal";
       }
@@ -128,18 +123,18 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
         clearTimer();
         setState({
           status: "failed",
-          message: res.message ?? "Your payment could not be completed.",
+          message: res.message ?? t("yourPaymentCouldNotBeCompleted"),
         });
         return "terminal";
       }
       // 202 pending / 401 / 403 / 404 / 500 — transient from the client's POV.
       if (fromRetry) {
-        setState({ status: "pending", note: PENDING_NOTE[kind] });
+        setState({ status: "pending", note: t(PENDING_NOTE[kind]) });
         return "terminal";
       }
       return "continue";
     },
-    [kind, onSucceeded, clearTimer],
+    [kind, onSucceeded, clearTimer, t],
   );
 
   const poll = useCallback(async () => {
@@ -148,7 +143,7 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     try {
       res = await api.payments.verify(attemptId);
     } catch {
-      res = { status: 500, message: "Network error" };
+      res = { status: 500, message: t("networkError") };
     }
     if (settledRef.current || !aliveRef.current) return;
 
@@ -159,11 +154,11 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     if (pollsRef.current >= MAX_POLLS) {
       settledRef.current = true;
       clearTimer();
-      setState({ status: "pending", note: PENDING_NOTE[kind] });
+      setState({ status: "pending", note: t(PENDING_NOTE[kind]) });
       return;
     }
     timerRef.current = setTimeout(poll, POLL_MS);
-  }, [attemptId, applyVerifyResult, clearTimer, kind]);
+  }, [attemptId, applyVerifyResult, clearTimer, kind, t]);
 
   const startPolling = useCallback(() => {
     settledRef.current = false;
@@ -208,13 +203,13 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
       try {
         res = await api.payments.retry(attemptId);
       } catch {
-        res = { status: 500, message: "Network error" };
+        res = { status: 500, message: t("networkError") };
       }
       applyVerifyResult(res, { fromRetry: true });
     } finally {
       setChecking(false);
     }
-  }, [attemptId, checking, applyVerifyResult]);
+  }, [attemptId, checking, applyVerifyResult, t]);
 
   const submitOtp = useCallback(
     async (otp: string) => {
@@ -226,7 +221,7 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
         if (res.status !== 200) {
           setState({
             status: "otp",
-            error: res.message ?? "That code didn't work. Try again.",
+            error: res.message ?? t("thatCodeDidnTWorkTry"),
           });
           return;
         }
@@ -234,13 +229,13 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
       } catch {
         setState({
           status: "otp",
-          error: "Network error. Try again.",
+          error: t("networkErrorTryAgain"),
         });
       } finally {
         setOtpSubmitting(false);
       }
     },
-    [attemptId, otpSubmitting, startPolling],
+    [attemptId, otpSubmitting, startPolling, t],
   );
 
   return { state, checking, otpSubmitting, checkAgain, submitOtp };

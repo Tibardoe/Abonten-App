@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { IoGridOutline, IoMapOutline } from "react-icons/io5";
@@ -11,6 +12,8 @@ import { IoGridOutline, IoMapOutline } from "react-icons/io5";
 // component doesn't itself know about (category/openNow/rating/distance/q
 // for Places; eventCategory for Events) — only "view" changes.
 export default function ViewToggle({ view }: { view: "list" | "map" }) {
+  const t = useTranslations("common");
+
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -25,8 +28,8 @@ export default function ViewToggle({ view }: { view: "list" | "map" }) {
     label: string;
     icon: typeof IoGridOutline;
   }[] = [
-    { value: "list", label: "List", icon: IoGridOutline },
-    { value: "map", label: "Map", icon: IoMapOutline },
+    { value: "list", label: t("list"), icon: IoGridOutline },
+    { value: "map", label: t("map"), icon: IoMapOutline },
   ];
 
   return (

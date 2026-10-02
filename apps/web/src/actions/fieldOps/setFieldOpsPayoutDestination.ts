@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsPayoutDestinationSchema } from "@abonten/validation/fieldOpsSch
  * The member sets their own mobile-money destination. Same service as
  * PUT /api/mobile/field-ops/payout-destination.
  */
-export async function setFieldOpsPayoutDestination(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsPayoutDestination;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsPayoutDestinationSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return setPayoutDestinationCore(svc, userId, data);
-}
+export const setFieldOpsPayoutDestination = withActionLocale(
+  async function setFieldOpsPayoutDestination(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsPayoutDestination;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsPayoutDestinationSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return setPayoutDestinationCore(svc, userId, data);
+  },
+);

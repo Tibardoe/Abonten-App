@@ -39,6 +39,7 @@ import {
   Refresher,
   Skeleton,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, View } from "react-native";
@@ -51,11 +52,11 @@ import { FlatList, View } from "react-native";
 const STATE_BADGE: Partial<
   Record<CreditActivityState, { label: string; tone: BadgeTone }>
 > = {
-  pending: { label: "Pending", tone: "warning" },
-  available: { label: "Available", tone: "success" },
-  used: { label: "Used", tone: "muted" },
-  expired: { label: "Expired", tone: "muted" },
-  reversed: { label: "Reversed", tone: "destructive" },
+  pending: { label: "creditState.pending", tone: "warning" },
+  available: { label: "creditState.available", tone: "success" },
+  used: { label: "creditState.used", tone: "muted" },
+  expired: { label: "creditState.expired", tone: "muted" },
+  reversed: { label: "creditState.reversed", tone: "destructive" },
 };
 
 function BalanceCard({
@@ -65,63 +66,91 @@ function BalanceCard({
   summary: CreditSummary;
   welcomeMinOrderMinor: number | null;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("rewards");
+
   const welcomeMinor = summary.bySpendScope.first_order ?? 0;
   return (
     <Card elevated className="gap-1">
-      <AppText variant="meta">Available to spend</AppText>
+      <AppText variant="meta">{t("availableToSpend")}</AppText>
       <AppText
         variant="hero"
         tone={summary.inDebt ? "error" : "primary"}
         className="tabular-nums"
       >
-        {formatCredit(summary.availableMinor, summary.currency)}
+        {formatCredit(summary.availableMinor, summary.currency, locale)}
       </AppText>
       {summary.pendingMinor > 0 ? (
         <AppText variant="small" className="mt-2">
-          {formatCredit(summary.pendingMinor, summary.currency)} pending
+          {t("pending3", {
+            formatCredit: formatCredit(
+              summary.pendingMinor,
+              summary.currency,
+              locale,
+            ),
+          })}
           {summary.nextRelease
-            ? ` · next ${formatCredit(summary.nextRelease.amountMinor, summary.currency)} unlocks ${formatDateWithSuffix(summary.nextRelease.releaseAt)}`
+            ? t("nextUnlocks", {
+                formatCredit: formatCredit(
+                  summary.nextRelease.amountMinor,
+                  summary.currency,
+                  locale,
+                ),
+                formatDateWithSuffix: formatDateWithSuffix(
+                  summary.nextRelease.releaseAt,
+                  undefined,
+                  locale,
+                ),
+              })
             : ""}
         </AppText>
       ) : null}
       {summary.onHoldMinor > 0 ? (
         <AppText variant="meta">
-          {formatCredit(summary.onHoldMinor, summary.currency)} on hold for a
-          checkout in progress
+          {t("onHoldForACheckoutIn", {
+            formatCredit: formatCredit(
+              summary.onHoldMinor,
+              summary.currency,
+              locale,
+            ),
+          })}
         </AppText>
       ) : null}
       {welcomeMinor > 0 ? (
         <AppText variant="meta">
-          {formatCredit(welcomeMinor, summary.currency)} is welcome credit for
-          your first ticket order
-          {welcomeMinOrderMinor
-            ? ` of ${formatCredit(welcomeMinOrderMinor, summary.currency)} or more`
-            : ""}
-          .
+          {t("welcomeCredit", {
+            amount: formatCredit(welcomeMinor, summary.currency, locale),
+            minimum: welcomeMinOrderMinor
+              ? formatCredit(welcomeMinOrderMinor, summary.currency, locale)
+              : "none",
+          })}
         </AppText>
       ) : null}
       {summary.expiringSoon ? (
         <AppText variant="small" tone="warning" className="mt-1">
-          {formatCredit(summary.expiringSoon.amountMinor, summary.currency)}{" "}
-          expires on {formatDateWithSuffix(summary.expiringSoon.expiresAt)}. Use
-          it before then.
+          {t("expiresOnUseItBeforeThen", {
+            formatCredit: formatCredit(
+              summary.expiringSoon.amountMinor,
+              summary.currency,
+              locale,
+            ),
+            formatDateWithSuffix: formatDateWithSuffix(
+              summary.expiringSoon.expiresAt,
+              undefined,
+              locale,
+            ),
+          })}
         </AppText>
       ) : null}
       {summary.status === "frozen" ? (
         <View className="mt-3 rounded-xl bg-muted p-3">
-          <AppText variant="small">
-            Your credit is on hold while we review recent activity. You can
-            still earn, but you can&apos;t spend credit until the review is
-            finished.
-          </AppText>
+          <AppText variant="small">{t("yourCreditIsOnHoldWhile2")}</AppText>
         </View>
       ) : null}
       {summary.inDebt ? (
         <View className="mt-3 rounded-xl bg-muted p-3">
-          <AppText variant="small">
-            A reward was reversed after you had already used it. New credit you
-            earn goes towards this first.
-          </AppText>
+          <AppText variant="small">{t("aRewardWasReversedAfterYou")}</AppText>
         </View>
       ) : null}
     </Card>
@@ -134,17 +163,16 @@ function ReferralCodeCard({
   code,
   rateBps,
 }: { code: string; rateBps: number }) {
+  const t = useTranslations("rewards");
+
   return (
     <Card className="gap-1">
-      <AppText variant="cardTitle">Your referral code</AppText>
+      <AppText variant="cardTitle">{t("yourReferralCode")}</AppText>
       <AppText variant="hero" className="tracking-widest">
         {code}
       </AppText>
       <AppText variant="small">
-        When you share an event, the link carries this code. If someone buys a
-        ticket through it, you earn {(rateBps / 100).toFixed(0)}% of the ticket
-        price in credit once the event is over. Your own tickets and events you
-        organize don&apos;t count.
+        {t("whenYouShareAnEventThe2", { toFixed: (rateBps / 100).toFixed(0) })}
       </AppText>
     </Card>
   );
@@ -152,24 +180,42 @@ function ReferralCodeCard({
 
 // Invites have their own screen (code, QR, share sheet, friends list).
 function InviteCard({ invite }: { invite: ReferralInvite }) {
+  const { locale } = useLocale();
+  const t = useTranslations("rewards");
+
   const router = useRouter();
   return (
     <Card className="gap-2">
-      <AppText variant="cardTitle">Invite friends</AppText>
+      <AppText variant="cardTitle">{t("inviteFriends")}</AppText>
       <AppText variant="small">
         {invite.referrerMinor
-          ? `You get ${formatCredit(invite.referrerMinor, invite.currency)} when a friend buys their first ticket${
-              invite.refereeMinor
-                ? `, and they get ${formatCredit(invite.refereeMinor, invite.currency)} off it`
-                : ""
-            }.`
-          : "Invite friends to Abonten."}
+          ? invite.refereeMinor
+            ? t("youGetWhenAFriendBuysBoth", {
+                formatCredit: formatCredit(
+                  invite.referrerMinor,
+                  invite.currency,
+                  locale,
+                ),
+                friendCredit: formatCredit(
+                  invite.refereeMinor,
+                  invite.currency,
+                  locale,
+                ),
+              })
+            : t("youGetWhenAFriendBuys", {
+                formatCredit: formatCredit(
+                  invite.referrerMinor,
+                  invite.currency,
+                  locale,
+                ),
+              })
+          : t("inviteFriendsToAbonten")}
         {invite.stats.joined > 0
-          ? ` ${invite.stats.joined} joined so far.`
+          ? ` ${t("joinedSoFar", { joined: invite.stats.joined })}`
           : ""}
       </AppText>
       <Button
-        title="Invite friends"
+        title={t("inviteFriends")}
         leftIcon="people-outline"
         variant="outline"
         onPress={() => router.push("/(app)/rewards/invite")}
@@ -182,11 +228,15 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
 // Invites have their own screen; this is the rest of "how to earn", from
 // the same shared wording as web (@abonten/core/rewards/earnCopy).
 function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
-  const copy = loyaltyProgressCopy(progress);
+  const { locale } = useLocale();
+  const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+
+  const copy = loyaltyProgressCopy(tc, progress);
   return (
     <Card className="gap-2">
       <View className="flex-row items-baseline justify-between">
-        <AppText variant="cardTitle">Service fee back</AppText>
+        <AppText variant="cardTitle">{t("serviceFeeBack")}</AppText>
         <AppText variant="metaStrong" className="tabular-nums">
           {copy.headline}
         </AppText>
@@ -207,8 +257,13 @@ function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
       </AppText>
       {progress.pendingMinor > 0 ? (
         <AppText variant="small">
-          {formatCredit(progress.pendingMinor, progress.currency)} of service
-          fees is on its way back to you.
+          {t("ofServiceFeesIsOnIts", {
+            formatCredit: formatCredit(
+              progress.pendingMinor,
+              progress.currency,
+              locale,
+            ),
+          })}
         </AppText>
       ) : null}
     </Card>
@@ -216,16 +271,19 @@ function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
 }
 
 function HowItWorks({ program }: { program: RewardsProgram }) {
-  const earn = rewardsEarnLines(program);
+  const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
+
+  const earn = rewardsEarnLines({ t: tc, locale }, program);
   const use: string[] = [];
-  if (program.redemption.promotions)
-    use.push("Feature your events and places.");
-  if (program.redemption.tickets) use.push("Pay for tickets at checkout.");
+  if (program.redemption.promotions) use.push(t("featureYourEventsAndPlaces"));
+  if (program.redemption.tickets) use.push(t("payForTicketsAtCheckout"));
 
   return (
     <Card className="gap-3">
       <View className="gap-1">
-        <AppText variant="cardTitle">How to earn</AppText>
+        <AppText variant="cardTitle">{t("howToEarn")}</AppText>
         {earn.length > 0 ? (
           earn.map((line) => (
             <AppText key={line} variant="small">
@@ -233,14 +291,11 @@ function HowItWorks({ program }: { program: RewardsProgram }) {
             </AppText>
           ))
         ) : (
-          <AppText variant="muted">
-            Ways to earn credit by sharing events and inviting friends are
-            coming soon.
-          </AppText>
+          <AppText variant="muted">{t("waysToEarnCreditBySharing")}</AppText>
         )}
       </View>
       <View className="gap-1">
-        <AppText variant="cardTitle">How to use credit</AppText>
+        <AppText variant="cardTitle">{t("howToUseCredit")}</AppText>
         {use.length > 0 ? (
           use.map((line) => (
             <AppText key={line} variant="small">
@@ -248,27 +303,32 @@ function HowItWorks({ program }: { program: RewardsProgram }) {
             </AppText>
           ))
         ) : (
-          <AppText variant="muted">
-            Soon you&apos;ll be able to use credit to feature your events and
-            places, and to pay for tickets.
-          </AppText>
+          <AppText variant="muted">{t("soonYouLlBeAbleTo")}</AppText>
         )}
       </View>
-      <AppText variant="caption">
-        Abonten Credit can only be used on Abonten. It can&apos;t be transferred
-        or exchanged for cash.
-      </AppText>
+      <AppText variant="caption">{t("abontenCreditCanOnlyBeUsed")}</AppText>
     </Card>
   );
 }
 
 function ActivityRow({ item }: { item: CreditActivityItem }) {
+  const { locale } = useLocale();
+  const t = useTranslations("rewards");
+
   const badge = STATE_BADGE[item.state];
   const detail =
     item.state === "pending" && item.releaseAt
-      ? `Unlocks ${formatDateWithSuffix(item.releaseAt)}`
+      ? t("unlocksOn", {
+          date: formatDateWithSuffix(item.releaseAt, undefined, locale),
+        })
       : item.state === "available" && item.expiresAt
-        ? `Expires ${formatDateWithSuffix(item.expiresAt)}`
+        ? t("expires", {
+            formatDateWithSuffix: formatDateWithSuffix(
+              item.expiresAt,
+              undefined,
+              locale,
+            ),
+          })
         : null;
   // A voided/expired grant never became spendable credit, so its amount is
   // struck through rather than shown as income (same rule as web).
@@ -285,7 +345,7 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
           </AppText>
         ) : null}
         <AppText variant="caption">
-          {formatDateWithSuffix(item.createdAt)}
+          {formatDateWithSuffix(item.createdAt, undefined, locale)}
           {detail ? ` · ${detail}` : ""}
         </AppText>
       </View>
@@ -295,10 +355,10 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
           tone={item.amountMinor < 0 || struck ? "muted" : "primary"}
           className={struck ? "tabular-nums line-through" : "tabular-nums"}
         >
-          {formatCreditDelta(item.amountMinor, item.currency)}
+          {formatCreditDelta(item.amountMinor, item.currency, locale)}
         </AppText>
         {badge ? (
-          <Badge label={badge.label} tone={badge.tone} uppercase={false} />
+          <Badge label={t(badge.label)} tone={badge.tone} uppercase={false} />
         ) : null}
       </View>
     </View>
@@ -306,6 +366,8 @@ function ActivityRow({ item }: { item: CreditActivityItem }) {
 }
 
 export default function Rewards() {
+  const t = useTranslations("rewards");
+
   const program = useRewardsProgram();
   const enabled = program.data?.enabled === true;
   const summary = useCreditSummary({ enabled });
@@ -341,12 +403,12 @@ export default function Rewards() {
       <View className="flex-1 bg-background">
         <AppHeader
           variant="title"
-          title="Rewards"
+          title={t("rewards")}
           backFallback="/(app)/account"
         />
         <QueryUnavailable
           view={programView}
-          subject="Rewards"
+          subject={t("rewards")}
           onRetry={() => program.refetch()}
           loading={
             <View className="gap-4 p-4">
@@ -364,13 +426,13 @@ export default function Rewards() {
       <View className="flex-1 bg-background">
         <AppHeader
           variant="title"
-          title="Rewards"
+          title={t("rewards")}
           backFallback="/(app)/account"
         />
         <EmptyState
           icon="gift-outline"
-          title="Rewards are coming soon"
-          description="Earn Abonten Credit by sharing events and inviting friends. We'll let you know when it's ready."
+          title={t("rewardsAreComingSoon")}
+          description={t("earnAbontenCreditBySharingEvents")}
         />
       </View>
     );
@@ -380,7 +442,7 @@ export default function Rewards() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Rewards"
+        title={t("rewards")}
         backFallback="/(app)/account"
       />
       <FlatList
@@ -402,8 +464,8 @@ export default function Rewards() {
               <Card>
                 <AppText variant="small">
                   {summaryView.kind === "offline"
-                    ? "You're offline. Your balance will load when you're back online."
-                    : "We couldn't load your balance. Pull down to try again."}
+                    ? t("youReOfflineYourBalanceWill")
+                    : t("weCouldnTLoadYourBalance2")}
                 </AppText>
               </Card>
             )}
@@ -420,7 +482,7 @@ export default function Rewards() {
             <HowItWorks program={program.data} />
             <RewardEmailCard />
             <AppText variant="overline" className="pt-2">
-              Activity
+              {t("activity")}
             </AppText>
           </View>
         }
@@ -431,13 +493,12 @@ export default function Rewards() {
         ListEmptyComponent={
           activityView.kind === "empty" ? (
             <AppText variant="muted" className="py-8 text-center">
-              No credit activity yet. Credit you earn or receive will show up
-              here.
+              {t("noCreditActivityYetCreditYou")}
             </AppText>
           ) : (
             <QueryUnavailable
               view={activityView}
-              subject="your credit activity"
+              subject={t("yourCreditActivity")}
               onRetry={() => activity.refetch()}
               loading={<Skeleton height={64} radius={12} />}
             />

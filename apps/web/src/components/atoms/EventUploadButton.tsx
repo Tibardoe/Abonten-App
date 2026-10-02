@@ -1,12 +1,15 @@
 "use client";
 
+import {
+  EventUploadModal,
+  PlaceUploadModal,
+} from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
-import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import EventUploadModal from "../organisms/EventUploadModal";
 
 // Desktop nav-link trigger for creating an Event or a Place (rendered only
 // inside the desktop header). "Create" replaces the old single-purpose
@@ -15,6 +18,8 @@ import EventUploadModal from "../organisms/EventUploadModal";
 // opens PlaceUploadModal directly, since a place's cover photo is picked
 // inside that modal's own Photos step, not before it.
 export default function EventUploadButton() {
+  const t = useTranslations("common");
+
   const [showPopup, setShowPopup] = useState(false);
   const [showPlaceModal, setShowPlaceModal] = useState(false);
   const toast = useToast();
@@ -26,7 +31,7 @@ export default function EventUploadButton() {
     openFilePicker,
     handleFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your event flyer.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
     onInvalidFile: (message) => toast.error(message),
     onSelect: () => setShowPopup(true),
@@ -58,7 +63,7 @@ export default function EventUploadButton() {
       />
 
       <CreateMenu
-        label="Create"
+        label={t("create")}
         onSelectEvent={openFilePicker}
         onSelectPlace={() => setShowPlaceModal(true)}
         iconClassName="text-3xl"

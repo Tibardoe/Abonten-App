@@ -1,3 +1,5 @@
+import type { EmailWords } from "@/lib/email/emailWords";
+import { richEmailText } from "@/lib/email/emailWords";
 import {
   EmailButton,
   EmailDetailRow,
@@ -16,7 +18,7 @@ export type EmailTicketLine = {
 };
 
 interface EmailTemplateProp {
-  username: string | null;
+  words: EmailWords;
   eventTitle: string;
   eventDate: string;
   eventTime: string;
@@ -29,11 +31,11 @@ interface EmailTemplateProp {
 
 /**
  * Purchase confirmation (the ticket PDFs are attached by
- * ticketPurchaseNotification.ts). Built from EmailParts, which keeps it
- * readable in Gmail, Outlook and dark mode.
+ * ticketPurchaseNotification.ts), in the buyer's language. Built from
+ * EmailParts, which keeps it readable in Gmail, Outlook and dark mode.
  */
 export default function TicketPurchaseEmailTemplate({
-  username,
+  words,
   eventTitle,
   eventDate,
   eventTime,
@@ -43,38 +45,38 @@ export default function TicketPurchaseEmailTemplate({
   amountLabel,
   myEventsUrl,
 }: EmailTemplateProp) {
+  const { t, locale, greeting } = words;
   const quantity = tickets.length;
 
   return (
     <EmailShell
-      preview={`Your Abonten ticket for ${eventTitle} is ready — see details inside`}
-      heading="Congratulations! 🎟️"
+      locale={locale}
+      preview={t("ticket.preview", { eventTitle })}
+      heading={t("ticket.heading")}
       intro={
         <>
           <EmailIntro>
-            Hi {username ?? "there"}, your ticket for{" "}
-            <strong>{eventTitle}</strong> has been successfully purchased.
+            {richEmailText(t("ticket.intro", { greeting, eventTitle }), {
+              strong: (chunk) => <strong>{chunk}</strong>,
+            })}
           </EmailIntro>
-          <EmailIntro spaced>
-            Your ticket is attached to this email as a PDF. You can also open it
-            anytime from My Tickets in Abonten.
-          </EmailIntro>
+          <EmailIntro spaced>{t("ticket.attached")}</EmailIntro>
         </>
       }
     >
       <EmailDivider />
       <EmailSection>
-        <EmailSectionLabel>Ticket details</EmailSectionLabel>
-        <EmailDetailRow label="Event" value={eventTitle} />
-        <EmailDetailRow label="Date" value={eventDate} />
-        <EmailDetailRow label="Time" value={eventTime} />
-        <EmailDetailRow label="Venue" value={eventAddress} />
+        <EmailSectionLabel>{t("ticket.detailsLabel")}</EmailSectionLabel>
+        <EmailDetailRow label={t("ticket.event")} value={eventTitle} />
+        <EmailDetailRow label={t("ticket.date")} value={eventDate} />
+        <EmailDetailRow label={t("ticket.time")} value={eventTime} />
+        <EmailDetailRow label={t("ticket.venue")} value={eventAddress} />
         <EmailDetailRow
-          label="Quantity"
-          value={`${quantity} ${quantity === 1 ? "ticket" : "tickets"}`}
+          label={t("ticket.quantity")}
+          value={t("ticket.quantityValue", { count: quantity })}
         />
-        <EmailDetailRow label="Purchase date" value={purchaseDate} />
-        <EmailDetailRow label="Amount paid" value={amountLabel} />
+        <EmailDetailRow label={t("ticket.purchaseDate")} value={purchaseDate} />
+        <EmailDetailRow label={t("ticket.amountPaid")} value={amountLabel} />
         {tickets.map((ticket) => (
           <EmailDetailRow
             key={ticket.ticketCode}
@@ -85,14 +87,10 @@ export default function TicketPurchaseEmailTemplate({
         ))}
       </EmailSection>
 
-      <EmailButton href={myEventsUrl}>View My Tickets</EmailButton>
+      <EmailButton href={myEventsUrl}>{t("ticket.viewMyTickets")}</EmailButton>
 
-      <EmailFooter>
-        <EmailFinePrint>
-          Please keep your ticket safe — you&apos;ll need it (or the attached
-          PDF) for entry at the venue. If you have any questions, contact us
-          through the Abonten app.
-        </EmailFinePrint>
+      <EmailFooter words={words}>
+        <EmailFinePrint>{t("ticket.keepSafe")}</EmailFinePrint>
       </EmailFooter>
     </EmailShell>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import type { HighlightUploadItem } from "@abonten/types/highlightUploadType";
+import { useTranslations } from "next-intl";
 
 type HighlightUploadStatusProps = {
   items: HighlightUploadItem[];
@@ -9,12 +10,13 @@ type HighlightUploadStatusProps = {
   onCancel: (id: string) => void;
 };
 
+// Catalog keys in the account namespace.
 const STATUS_LABEL: Record<HighlightUploadItem["status"], string> = {
-  signing: "Preparing upload...",
-  uploading: "Uploading highlight...",
-  saving: "Almost done...",
-  success: "Highlight uploaded",
-  error: "Upload failed",
+  signing: "uploadStatus.signing",
+  uploading: "uploadStatus.uploading",
+  saving: "uploadStatus.saving",
+  success: "uploadStatus.success",
+  error: "uploadStatus.error",
 };
 
 export default function HighlightUploadStatus({
@@ -23,6 +25,8 @@ export default function HighlightUploadStatus({
   onDismiss,
   onCancel,
 }: HighlightUploadStatusProps) {
+  const t = useTranslations("account");
+
   if (items.length === 0) return null;
 
   return (
@@ -34,25 +38,25 @@ export default function HighlightUploadStatus({
         >
           {item.status === "success" ? (
             <div className="flex items-center justify-center">
-              ✅ {STATUS_LABEL.success}
+              ✅ {t(STATUS_LABEL.success)}
             </div>
           ) : item.status === "error" ? (
             <div className="flex flex-col gap-2">
-              <span>⚠️ {item.errorMessage ?? STATUS_LABEL.error}</span>
+              <span>⚠️ {item.errorMessage ?? t(STATUS_LABEL.error)}</span>
               <div className="flex gap-2 justify-end">
                 <button
                   type="button"
                   onClick={() => onDismiss(item.id)}
                   className="text-sm text-muted-foreground hover:underline"
                 >
-                  Dismiss
+                  {t("dismiss")}
                 </button>
                 <button
                   type="button"
                   onClick={() => onRetry(item.id)}
                   className="text-sm text-primary font-medium hover:underline"
                 >
-                  Retry
+                  {t("retry")}
                 </button>
               </div>
             </div>
@@ -60,7 +64,7 @@ export default function HighlightUploadStatus({
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
                 <div className="border-2 border-primary border-t-transparent animate-spin rounded-full w-4 h-4 shrink-0" />
-                {STATUS_LABEL[item.status]}
+                {t(STATUS_LABEL[item.status])}
               </div>
               {item.status === "uploading" && (
                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -76,7 +80,7 @@ export default function HighlightUploadStatus({
                   onClick={() => onCancel(item.id)}
                   className="text-sm text-muted-foreground hover:underline self-end"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               )}
             </div>

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type DeletePromoCodeCoreResult,
   deletePromoCodeCore,
@@ -10,7 +12,7 @@ import {
 // mobile POST /api/mobile/organizer/promo-codes/delete route). A code that
 // has already been redeemed is deactivated, not deleted, so usage history
 // survives.
-export async function deletePromoCode(
+export const deletePromoCode = withActionLocale(async function deletePromoCode(
   promoCodeId: string,
 ): Promise<DeletePromoCodeCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
@@ -21,8 +23,8 @@ export async function deletePromoCode(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return deletePromoCodeCore(supabase, user.id, promoCodeId);
-}
+});

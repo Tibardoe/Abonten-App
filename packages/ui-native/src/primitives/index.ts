@@ -58,8 +58,10 @@ export {
 export { StatusPill, type StatusPillProps } from "./StatusPill";
 export {
   resolveStatus,
+  statusLabel,
   statusEntry,
   type StatusEntry,
+  type StatusLabelKey,
   type StatusKind,
   type StatusTone,
   type ResolveOptions,

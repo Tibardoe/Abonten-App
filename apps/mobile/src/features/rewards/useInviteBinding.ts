@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { bindResultMessage } from "@abonten/core/rewards/invite";
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { bindPendingInvite, captureInstallReferrer } from "./inviteCapture";
@@ -17,6 +18,9 @@ export function useInviteBinding() {
   const toast = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
+  const tc = useTranslations("core");
+  const tcRef = useRef(tc);
+  tcRef.current = tc;
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -39,7 +43,7 @@ export function useInviteBinding() {
       ) {
         return;
       }
-      const { tone, text } = bindResultMessage(outcome);
+      const { tone, text } = bindResultMessage(tcRef.current, outcome);
       if (tone === "success") {
         toastRef.current.success(text, { duration: 8000 });
         qc.invalidateQueries({ queryKey: ["mobile", "rewards"] });

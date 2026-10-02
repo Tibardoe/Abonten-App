@@ -3,6 +3,7 @@ import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { View } from "react-native";
@@ -11,6 +12,9 @@ import { View } from "react-native";
 // web review/publish step. Publish is the header's "Publish" button
 // (app/(app)/event/new.tsx).
 export function EventWizardReview({ w }: { w: EventWizard }) {
+  const { locale } = useLocale();
+  const t = useTranslations("events");
+
   const c = useThemeColors();
   const when =
     w.scheduleMode === "single"
@@ -23,16 +27,21 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
               w.rangeStartTime,
             )} – ${prettyTime(w.rangeEndTime)}`
         : "—"
-      : `${w.occurrences.length} date${w.occurrences.length === 1 ? "" : "s"}`;
+      : t("datesCount", { count: w.occurrences.length });
 
   const ticketing =
     w.ticketMode === "free"
-      ? "Free"
+      ? t("free")
       : w.ticketMode === "single"
-        ? `${formatMoney(w.currency, Number(w.ticketPrice || 0))}${
-            w.ticketQuantity ? ` · ${w.ticketQuantity} available` : ""
-          }`
-        : `${w.tiers.length} ticket type${w.tiers.length === 1 ? "" : "s"}`;
+        ? w.ticketQuantity
+          ? t("quantityAvailable", {
+              price: formatMoney(w.currency, Number(w.ticketPrice || 0), {
+                locale,
+              }),
+              count: w.ticketQuantity,
+            })
+          : formatMoney(w.currency, Number(w.ticketPrice || 0), { locale })
+        : t("ticketTypesCount", { count: w.tiers.length });
 
   return (
     <View className="gap-4">
@@ -51,20 +60,22 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
       ) : null}
 
       <View className="gap-2 rounded-xl border border-border bg-card p-4">
-        <Row label="Title" value={w.title} />
-        <Row label="Category" value={w.category ?? "—"} />
-        <Row label="Types" value={w.types.join(", ")} />
-        <Row label="When" value={when} />
-        {w.venuePlace ? <Row label="Venue" value={w.venuePlace.name} /> : null}
-        <Row label="Location" value={w.address} />
-        {w.capacity ? <Row label="Capacity" value={w.capacity} /> : null}
-        <Row label="Ticketing" value={ticketing} />
+        <Row label={t("title")} value={w.title} />
+        <Row label={t("category")} value={w.category ?? "—"} />
+        <Row label={t("types")} value={w.types.join(", ")} />
+        <Row label={t("when")} value={when} />
+        {w.venuePlace ? (
+          <Row label={t("venue")} value={w.venuePlace.name} />
+        ) : null}
+        <Row label={t("location")} value={w.address} />
+        {w.capacity ? <Row label={t("capacity2")} value={w.capacity} /> : null}
+        <Row label={t("ticketing")} value={ticketing} />
         {w.promos.length > 0 ? (
-          <Row label="Promo codes" value={String(w.promos.length)} />
+          <Row label={t("promoCodes2")} value={String(w.promos.length)} />
         ) : null}
         <Row
-          label="Registration"
-          value={w.requireRegistration ? "Required" : "Not required"}
+          label={t("registration")}
+          value={w.requireRegistration ? t("required") : t("notRequired")}
         />
       </View>
 
@@ -72,7 +83,7 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
 
       {w.isSubmitError ? (
         <AppText variant="small" tone="error">
-          We couldn't post your event. Please try again.
+          {t("weCouldnTPostYourEvent")}
         </AppText>
       ) : null}
     </View>

@@ -3,6 +3,7 @@
 import { StepUpButton } from "@/components/StepUpButton";
 import { CapNotice } from "@/components/metrics/CapNotice";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import { updateRewardsSettings } from "@/server/actions/rewards";
 import { currencySymbol } from "@abonten/core/money/formatMoney";
@@ -130,7 +131,7 @@ export function SettingsForm({
           notifyPushEnabled: notifyPush,
           notifyEmailEnabled: notifyEmail,
         },
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setReason("");

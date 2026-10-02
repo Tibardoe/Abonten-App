@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { createNotificationCore } from "../notifications/createNotification";
 
 // Post-auth bodies for the four review-response operations, shared by the
@@ -45,12 +46,14 @@ type NormalizedResponse =
 function normalizeResponse(raw: unknown): NormalizedResponse {
   const trimmed = typeof raw === "string" ? raw.trim() : "";
   if (!trimmed) {
-    return { ok: false, message: "Write a reply before posting it." };
+    return { ok: false, message: tr("writeAReplyBeforePostingIt") };
   }
   if (trimmed.length > MAX_RESPONSE_LENGTH) {
     return {
       ok: false,
-      message: `Keep your reply under ${MAX_RESPONSE_LENGTH} characters.`,
+      message: tr("keepYourReplyUnderCharacters", {
+        MAX_RESPONSE_LENGTH: MAX_RESPONSE_LENGTH,
+      }),
     };
   }
   return { ok: true, value: trimmed };
@@ -95,13 +98,16 @@ export async function respondToPlaceReviewCore(
     .maybeSingle();
 
   if (fetchError || !review) {
-    return { status: 404, message: "Review not found" };
+    return { status: 404, message: tr("reviewNotFound") };
   }
 
   const place = review.place;
 
   if (!place || place.owner_id !== userId) {
-    return { status: 403, message: "Not authorized to respond to this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToRespondToThis2"),
+    };
   }
 
   if (
@@ -110,14 +116,14 @@ export async function respondToPlaceReviewCore(
   ) {
     return {
       status: 409,
-      message: "This place is not available right now.",
+      message: tr("thisPlaceIsNotAvailableRight"),
     };
   }
 
   if (await isAccountRestricted(supabase, userId)) {
     return {
       status: 403,
-      message: "Your account can't post replies right now.",
+      message: tr("yourAccountCanTPostReplies"),
     };
   }
 
@@ -141,7 +147,10 @@ export async function respondToPlaceReviewCore(
   }
 
   if (!updated || updated.length === 0) {
-    return { status: 403, message: "Not authorized to respond to this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToRespondToThis2"),
+    };
   }
 
   // Notify the reviewer only on the FIRST reply — an edit shouldn't
@@ -150,10 +159,10 @@ export async function respondToPlaceReviewCore(
     await createNotificationCore(supabase, {
       userId: review.reviewer_id,
       type: "review_reply",
-      title: "The owner replied to your review",
-      body: place.name
-        ? `See the reply on your review of ${place.name}.`
-        : "See the reply on your place review.",
+      notice: {
+        id: "review_reply_place",
+        params: { name: place.name ?? null },
+      },
       link: place.slug ? `/places/${place.slug}` : null,
       data: {
         kind: "review_reply",
@@ -168,7 +177,7 @@ export async function respondToPlaceReviewCore(
 
   return {
     status: 200,
-    message: isEdit ? "Reply updated." : "Reply posted.",
+    message: isEdit ? tr("replyUpdated") : tr("replyPosted"),
     data: {
       response: normalized.value,
       respondedAt,
@@ -189,20 +198,23 @@ export async function deletePlaceReviewResponseCore(
     .maybeSingle();
 
   if (fetchError || !review) {
-    return { status: 404, message: "Review not found" };
+    return { status: 404, message: tr("reviewNotFound") };
   }
 
   const place = review.place;
 
   if (!place || place.owner_id !== userId) {
-    return { status: 403, message: "Not authorized to modify this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToModifyThisReview"),
+    };
   }
 
   // Already gone — idempotent success so a double-tap / retry converges.
   if (!review.owner_response) {
     return {
       status: 200,
-      message: "Reply removed.",
+      message: tr("replyRemoved"),
       data: {
         response: null,
         respondedAt: null,
@@ -225,12 +237,15 @@ export async function deletePlaceReviewResponseCore(
   }
 
   if (!updated || updated.length === 0) {
-    return { status: 403, message: "Not authorized to modify this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToModifyThisReview"),
+    };
   }
 
   return {
     status: 200,
-    message: "Reply removed.",
+    message: tr("replyRemoved"),
     data: {
       response: null,
       respondedAt: null,
@@ -259,26 +274,32 @@ export async function respondToEventReviewCore(
     .maybeSingle();
 
   if (fetchError || !review) {
-    return { status: 404, message: "Review not found" };
+    return { status: 404, message: tr("reviewNotFound") };
   }
 
   const event = review.event;
 
   if (!event || event.organizer_id !== userId) {
-    return { status: 403, message: "Not authorized to respond to this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToRespondToThis2"),
+    };
   }
 
   if (
     event.moderation_state === "hidden" ||
     event.moderation_state === "removed"
   ) {
-    return { status: 409, message: "This event is not available right now." };
+    return {
+      status: 409,
+      message: tr("thisEventIsNotAvailableRight"),
+    };
   }
 
   if (await isAccountRestricted(supabase, userId)) {
     return {
       status: 403,
-      message: "Your account can't post replies right now.",
+      message: tr("yourAccountCanTPostReplies"),
     };
   }
 
@@ -302,17 +323,20 @@ export async function respondToEventReviewCore(
   }
 
   if (!updated || updated.length === 0) {
-    return { status: 403, message: "Not authorized to respond to this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToRespondToThis2"),
+    };
   }
 
   if (!isEdit && review.reviewer_id && review.reviewer_id !== userId) {
     await createNotificationCore(supabase, {
       userId: review.reviewer_id,
       type: "review_reply",
-      title: "The organizer replied to your review",
-      body: event.title
-        ? `See the reply on your review of ${event.title}.`
-        : "See the reply on your event review.",
+      notice: {
+        id: "review_reply_event",
+        params: { name: event.title ?? null },
+      },
       link: event.event_code
         ? `/events/${String(event.event_code).toLowerCase()}`
         : null,
@@ -324,7 +348,7 @@ export async function respondToEventReviewCore(
 
   return {
     status: 200,
-    message: isEdit ? "Reply updated." : "Reply posted.",
+    message: isEdit ? tr("replyUpdated") : tr("replyPosted"),
     data: {
       response: normalized.value,
       respondedAt,
@@ -345,19 +369,22 @@ export async function deleteEventReviewResponseCore(
     .maybeSingle();
 
   if (fetchError || !review) {
-    return { status: 404, message: "Review not found" };
+    return { status: 404, message: tr("reviewNotFound") };
   }
 
   const event = review.event;
 
   if (!event || event.organizer_id !== userId) {
-    return { status: 403, message: "Not authorized to modify this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToModifyThisReview"),
+    };
   }
 
   if (!review.organizer_response) {
     return {
       status: 200,
-      message: "Reply removed.",
+      message: tr("replyRemoved"),
       data: {
         response: null,
         respondedAt: null,
@@ -381,12 +408,15 @@ export async function deleteEventReviewResponseCore(
   }
 
   if (!updated || updated.length === 0) {
-    return { status: 403, message: "Not authorized to modify this review" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToModifyThisReview"),
+    };
   }
 
   return {
     status: 200,
-    message: "Reply removed.",
+    message: tr("replyRemoved"),
     data: {
       response: null,
       respondedAt: null,

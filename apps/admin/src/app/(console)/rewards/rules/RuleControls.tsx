@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import {
   publishRewardRuleVersion,
@@ -70,7 +71,7 @@ export function ActivateRuleButton({
                 ruleKey: ruleKey as RuleKey,
                 ruleId,
                 reason: reason.trim(),
-              });
+              }).catch(actionUnreachable);
               setMsg(res.message ?? null);
               if (res.status === 200) {
                 setOpen(false);
@@ -169,7 +170,7 @@ export function NewRuleVersionForm({
         expiryDays: expiry.trim() === "" ? null : Math.round(Number(expiry)),
         note: note.trim(),
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setOpen(false);

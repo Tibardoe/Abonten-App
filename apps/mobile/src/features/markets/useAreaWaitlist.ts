@@ -9,6 +9,7 @@ import {
 import { waitingText } from "@abonten/core/market/coverageCopy";
 import type { AreaWaitlistStatus } from "@abonten/types/marketType";
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { MARKET_CONTEXT_KEY } from "./marketContextCache";
@@ -38,6 +39,9 @@ export function useAreaWaitlist(
   areaName: string | null,
   enabled: boolean,
 ) {
+  const t = useTranslations("explore");
+  const tc = useTranslations("core");
+
   const { session } = useSession();
   const qc = useQueryClient();
   const toast = useToast();
@@ -64,8 +68,8 @@ export function useAreaWaitlist(
     onSuccess: (res) => {
       if (res.status === 200 && res.data) {
         qc.setQueryData<AreaWaitlistStatus>(key, res.data);
-        toast.success("You're on the list", {
-          description: waitingText(res.data.areaName ?? areaName),
+        toast.success(t("youReOnTheList"), {
+          description: waitingText(tc, res.data.areaName ?? areaName),
         });
         return;
       }
@@ -73,18 +77,18 @@ export function useAreaWaitlist(
         // Launched since the market context was loaded: fetch it again so
         // the card goes away.
         qc.invalidateQueries({ queryKey: MARKET_CONTEXT_KEY });
-        toast.success("Abonten is already open here", {
-          description: "Have a look around.",
+        toast.success(t("abontenIsAlreadyOpenHere"), {
+          description: t("haveALookAround"),
         });
         return;
       }
-      toast.error("Couldn't add you to the list", {
-        description: res.message ?? "Please try again.",
+      toast.error(t("couldnTAddYouToThe"), {
+        description: res.message ?? t("pleaseTryAgain"),
       });
     },
     onError: () => {
-      toast.error("Couldn't add you to the list", {
-        description: "Check your connection and try again.",
+      toast.error(t("couldnTAddYouToThe"), {
+        description: t("checkYourConnectionAndTryAgain"),
       });
     },
   });
@@ -99,8 +103,8 @@ export function useAreaWaitlist(
         });
         return;
       }
-      toast.error("Couldn't take you off the list", {
-        description: res.message ?? "Please try again.",
+      toast.error(t("couldnTTakeYouOffThe"), {
+        description: res.message ?? t("pleaseTryAgain"),
       });
     },
   });

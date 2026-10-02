@@ -5,8 +5,10 @@ import { setEventPromoterCommission } from "@/actions/setEventPromoterCommission
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 const pct = (bps: number) => Number((bps / 100).toFixed(2));
@@ -22,6 +24,9 @@ export default function PromoterCommissionCard({
 }: {
   eventId: string;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("events");
+
   const toast = useToast();
   const qc = useQueryClient();
   const key = ["promoter-commission", eventId];
@@ -38,17 +43,19 @@ export default function PromoterCommissionCard({
 
   const save = (rateBps: number | null) =>
     start(async () => {
-      const res = await setEventPromoterCommission({ eventId, rateBps });
+      const res = await setEventPromoterCommission({ eventId, rateBps }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200 && res.data) {
         qc.setQueryData(key, res);
         setRate("");
         toast.success(
           rateBps === null
-            ? "Commission stopped. Tickets sold from now on don't earn it."
-            : `Promoters now earn ${pct(rateBps)}% of each ticket they sell.`,
+            ? t("commissionStoppedTicketsSoldFromNow")
+            : t("promotersNowEarnOfEachTicket", { pct: pct(rateBps) }),
         );
       } else {
-        toast.error(res.message ?? "Couldn't save the commission.");
+        toast.error(res.message ?? t("couldnTSaveTheCommission"));
       }
     });
 
@@ -64,21 +71,18 @@ export default function PromoterCommissionCard({
   return (
     <section className="mt-6 rounded-xl border border-border bg-card p-5 space-y-4">
       <div>
-        <h2 className="font-semibold">Promoter commission</h2>
+        <h2 className="font-semibold">{t("promoterCommission")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Reward people who sell your tickets. Anyone who shares this event and
-          sells a ticket through their link gets your chosen share of the ticket
-          price as Abonten Credit once the event is over. It comes off your
-          payout for that sale, and nothing is paid on refunded or cancelled
-          tickets.
+          {t("rewardPeopleWhoSellYourTickets")}
         </p>
       </div>
 
       {offer.rateBps !== null ? (
         <p className="text-sm">
-          Promoters earn{" "}
-          <span className="font-semibold">{pct(offer.rateBps)}%</span> of each
-          ticket they sell.
+          {t.rich("promotersEarnRate", {
+            rate: pct(offer.rateBps),
+            strong: (chunks) => <span className="font-semibold">{chunks}</span>,
+          })}
         </p>
       ) : null}
 
@@ -89,8 +93,10 @@ export default function PromoterCommissionCard({
               htmlFor={`promoter-rate-${eventId}`}
               className="block text-muted-foreground"
             >
-              {offer.rateBps !== null ? "Change to" : "Commission"} (
-              {pct(offer.minRateBps)}–{pct(offer.maxRateBps)}%)
+              {t(offer.rateBps !== null ? "changeToRange" : "commissionRange", {
+                min: pct(offer.minRateBps),
+                max: pct(offer.maxRateBps),
+              })}
             </label>
             <span className="mt-1 flex items-center gap-1">
               <Input
@@ -100,13 +106,13 @@ export default function PromoterCommissionCard({
                 inputMode="decimal"
                 placeholder="10"
                 className="w-24"
-                aria-label="Commission percent"
+                aria-label={t("commissionPercent")}
               />
               <span className="text-sm text-muted-foreground">%</span>
             </span>
           </div>
           <Button disabled={pending || !valid} onClick={() => save(typedBps)}>
-            {offer.rateBps !== null ? "Update" : "Offer commission"}
+            {offer.rateBps !== null ? t("update") : t("offerCommission")}
           </Button>
           {offer.rateBps !== null ? (
             <Button
@@ -114,39 +120,38 @@ export default function PromoterCommissionCard({
               disabled={pending}
               onClick={() => save(null)}
             >
-              Stop
+              {t("stop")}
             </Button>
           ) : null}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Promoter commissions are paused on Abonten, so tickets sold now
-          don&apos;t earn one.
+          {t("promoterCommissionsArePausedOnAbonten")}
         </p>
       )}
 
       {s.sales > 0 ? (
         <dl className="grid grid-cols-2 gap-3 border-t border-border pt-3 text-sm md:grid-cols-4">
           <div>
-            <dt className="text-muted-foreground">Orders by promoters</dt>
+            <dt className="text-muted-foreground">{t("ordersByPromoters")}</dt>
             <dd className="font-semibold tabular-nums">{s.sales}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Ticket sales</dt>
+            <dt className="text-muted-foreground">{t("ticketSales")}</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.revenueMinor, offer.currency)}
+              {formatCredit(s.revenueMinor, offer.currency, locale)}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Commission pending</dt>
+            <dt className="text-muted-foreground">{t("commissionPending")}</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.pendingMinor, offer.currency)}
+              {formatCredit(s.pendingMinor, offer.currency, locale)}
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Commission paid</dt>
+            <dt className="text-muted-foreground">{t("commissionPaid")}</dt>
             <dd className="font-semibold tabular-nums">
-              {formatCredit(s.paidMinor, offer.currency)}
+              {formatCredit(s.paidMinor, offer.currency, locale)}
             </dd>
           </div>
         </dl>

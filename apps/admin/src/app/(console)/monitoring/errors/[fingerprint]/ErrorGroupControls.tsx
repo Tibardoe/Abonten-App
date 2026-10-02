@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { setErrorGroupStatus } from "@/server/actions/observability";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -13,7 +14,9 @@ export function ErrorGroupControls({ fingerprint }: { fingerprint: string }) {
   function set(status: "acknowledged" | "resolved" | "ignored" | "open") {
     setMsg(null);
     start(async () => {
-      const res = await setErrorGroupStatus({ fingerprint, status });
+      const res = await setErrorGroupStatus({ fingerprint, status }).catch(
+        actionUnreachable,
+      );
       setMsg(res.message ?? null);
       if (res.status === 200) router.refresh();
     });

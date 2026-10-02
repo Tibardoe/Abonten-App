@@ -1,4 +1,5 @@
 import { CardTitle } from "@/components/ui/typography";
+import { useTranslations } from "next-intl";
 
 // The user's referral code. Event share buttons already add it to the link
 // (?ref=CODE), so there's nothing to copy -- this just says what happens.
@@ -11,18 +12,19 @@ export default function ReferralCodeCard({
   rateBps: number;
   windowDays: number;
 }) {
+  const t = useTranslations("rewards");
+
   return (
     <section className="rounded-xl border p-5">
-      <CardTitle>Your referral code</CardTitle>
+      <CardTitle>{t("yourReferralCode")}</CardTitle>
       <p className="mt-2 font-mono text-2xl font-semibold tracking-[0.2em]">
         {code}
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        When you share an event, the link carries this code. If someone buys a
-        ticket through it within {windowDays} days, you earn{" "}
-        {(rateBps / 100).toFixed(0)}% of the ticket price in credit once the
-        event is over. Your own tickets and events you organize don&apos;t
-        count.
+        {t("whenYouShareAnEventThe", {
+          windowDays: windowDays,
+          toFixed: (rateBps / 100).toFixed(0),
+        })}
       </p>
     </section>
   );

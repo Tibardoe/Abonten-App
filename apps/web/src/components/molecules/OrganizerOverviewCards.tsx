@@ -10,11 +10,13 @@ import {
   computeTrend,
 } from "@abonten/core/admin/computeTrend";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCount } from "@abonten/core/i18n/format";
 import {
-  DASHBOARD_PERIOD_COMPARISON_LABELS,
   type DashboardPeriod,
+  dashboardPeriodComparisonLabel,
 } from "@abonten/core/organizerDashboardDateRange";
 import type { OrganizerOverviewRow } from "@abonten/types/eventAnalytics";
+import { useLocale, useTranslations } from "next-intl";
 
 type Row = OrganizerOverviewRow;
 
@@ -31,9 +33,15 @@ function TrendLine({
   trend: TrendResult;
   comparisonLabel: string | null;
 }) {
+  const t = useTranslations("common");
+
   if (trend.kind === "none" || !comparisonLabel) return null;
   if (trend.kind === "new") {
-    return <p className="text-xs mt-1 text-primary">New {comparisonLabel}</p>;
+    return (
+      <p className="text-xs mt-1 text-primary">
+        {t("newText", { comparisonLabel: comparisonLabel })}
+      </p>
+    );
   }
   return <TrendIndicator percentChange={trend.value} label={comparisonLabel} />;
 }
@@ -51,6 +59,10 @@ export default function OrganizerOverviewCards({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   // No sales yet means no currency on the overview row; show zero in the
   // market's currency rather than as a bare "0.00".
   const { market } = useMarketContext();
@@ -63,7 +75,7 @@ export default function OrganizerOverviewCards({
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't load your overview stats."
+        message={t("weCouldnTLoadYourOverview")}
         onRetry={() => onRetry?.()}
       />
     );
@@ -78,17 +90,17 @@ export default function OrganizerOverviewCards({
   if (current.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        No dashboard data available.
+        {t("noDashboardDataAvailable")}
       </p>
     );
   }
 
   const primary = current[0];
   const primaryPrev = previous?.[0] ?? null;
-  const comparisonLabel = DASHBOARD_PERIOD_COMPARISON_LABELS[period];
+  const comparisonLabel = dashboardPeriodComparisonLabel(tc, period);
 
   const money = (amount: number, currency: string | null) =>
-    formatMoney(currency ?? fallbackCurrency, Number(amount));
+    formatMoney(currency ?? fallbackCurrency, Number(amount), { locale });
 
   const ticketsSold = Number(primary.tickets_sold ?? 0);
   const registrations = Number(primary.registrations ?? 0);
@@ -100,10 +112,10 @@ export default function OrganizerOverviewCards({
   // silently dropped.
   const ticketsLabel =
     ticketsSold > 0 && registrations > 0
-      ? "Ticket Holders / Registrations"
+      ? t("ticketHoldersRegistrations")
       : registrations > 0
-        ? "Registrations"
-        : "Tickets Sold";
+        ? t("registrations")
+        : t("ticketsSold");
   const ticketsValue =
     ticketsSold > 0 && registrations > 0
       ? ticketsSold + registrations
@@ -132,7 +144,7 @@ export default function OrganizerOverviewCards({
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile
-          label="Gross Sales"
+          label={t("grossSales")}
           value={money(grossSales, primary.currency)}
           footer={
             <TrendLine trend={grossTrend} comparisonLabel={comparisonLabel} />
@@ -141,31 +153,33 @@ export default function OrganizerOverviewCards({
 
         <StatTile
           label={ticketsLabel}
-          value={ticketsValue.toLocaleString()}
+          value={formatCount(ticketsValue, locale)}
           footer={
             <TrendLine trend={ticketsTrend} comparisonLabel={comparisonLabel} />
           }
         />
 
         <StatTile
-          label="Active Events"
+          label={t("activeEvents")}
           value={String(primary.active_events_count ?? 0)}
-          sublabel={`of ${primary.total_events_count ?? 0} published`}
+          sublabel={t("ofPublished", {
+            value: primary.total_events_count ?? 0,
+          })}
         />
 
         <StatTile
-          label="Ticket Holders"
+          label={t("ticketHolders")}
           value={String(primary.distinct_purchasers ?? 0)}
         />
       </div>
 
       {otherCurrencyRows.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Also sold in{" "}
-          {otherCurrencyRows
-            .map((row) => money(Number(row.gross_sales ?? 0), row.currency))
-            .join(", ")}
-          .
+          {t("alsoSoldIn", {
+            join: otherCurrencyRows
+              .map((row) => money(Number(row.gross_sales ?? 0), row.currency))
+              .join(", "),
+          })}
         </p>
       )}
     </div>

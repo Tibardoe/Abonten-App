@@ -1,4 +1,5 @@
 import { Chip } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { ScrollView } from "react-native";
 
 // Horizontal category-pill row for Explore — the native echo of the web
@@ -16,6 +17,8 @@ export function CategoryChipsRow({
   selectedKey: string | null;
   onSelect: (key: string | null) => void;
 }) {
+  const t = useTranslations("explore");
+
   return (
     <ScrollView
       horizontal
@@ -27,7 +30,7 @@ export function CategoryChipsRow({
       contentContainerClassName="gap-2 px-4 py-2"
     >
       <Chip
-        label="All"
+        label={t("all")}
         selected={selectedKey == null}
         onPress={() => onSelect(null)}
       />

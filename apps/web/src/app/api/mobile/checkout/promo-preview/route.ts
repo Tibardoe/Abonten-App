@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
 
 // POST /api/mobile/checkout/promo-preview
@@ -12,6 +16,7 @@ import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore
 // the code — that still happens server-side in validateCheckoutCore when the
 // user proceeds (`/api/mobile/checkout/validate`).
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -22,10 +27,13 @@ export async function POST(req: Request) {
     } | null;
 
     if (typeof body?.eventId !== "string" || body.eventId.length === 0) {
-      return apiJson({ status: 400, message: "eventId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("eventidIsRequired"),
+      });
     }
     if (typeof body?.code !== "string" || body.code.trim().length === 0) {
-      return apiJson({ status: 400, message: "Enter a promo code" });
+      return apiJson({ status: 400, message: tr("enterAPromoCode") });
     }
 
     const result = await getPromoCodeCore(
@@ -37,6 +45,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /checkout/promo-preview failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

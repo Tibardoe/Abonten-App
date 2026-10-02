@@ -8,6 +8,7 @@ import {
   areaStatus,
 } from "@abonten/core/location/browsingArea";
 import type { IoniconName } from "@abonten/ui-native";
+import { translatorFor } from "@abonten/ui-native/i18n";
 
 // The words for how the browsing area relates to the phone — one place, so
 // the location switcher, the location sheet and the Places screen never
@@ -29,10 +30,10 @@ export type AreaPresentation = {
  * area whose town could not be named is "near you", never "in Your location".
  */
 export function whereText(area: BrowsingArea | null): string {
-  if (!area) return "here";
+  if (!area) return translatorFor("explore")("here");
   if (area.mode === "following" && area.label === UNNAMED_AREA_LABEL)
-    return "near you";
-  return `in ${area.label}`;
+    return translatorFor("explore")("nearYou");
+  return translatorFor("explore")("inArea", { area: area.label });
 }
 
 export function describeArea(
@@ -40,41 +41,48 @@ export function describeArea(
   permission: DevicePermission,
 ): AreaPresentation {
   const status = areaStatus(area, permission);
-  const label = area?.label ?? "your area";
+  const label = area?.label ?? translatorFor("explore")("yourArea");
   switch (status) {
     case "near_you":
       return {
         status,
-        eyebrow: "Near you",
+        eyebrow: translatorFor("explore")("nearYou2"),
         icon: "navigate",
-        sentence: "Following your location — showing what's around you.",
+        sentence: translatorFor("explore")("followingYourLocationShowingWhatS"),
       };
     case "chosen":
       return {
         status,
-        eyebrow: "Browsing",
+        eyebrow: translatorFor("explore")("browsing"),
         icon: "location",
-        sentence: `You chose ${label}. It stays put wherever you go, until you change it.`,
+        sentence: translatorFor("explore")("youChoseItStaysPutWherever", {
+          label: label,
+        }),
       };
     case "location_off":
       return {
         status,
-        eyebrow: "Location off",
+        eyebrow: translatorFor("explore")("locationOff"),
         icon: "location-outline",
         sentence: area?.isFallback
-          ? `Showing ${label} for now. Turn on location to see what's near you, or choose an area.`
-          : `Showing ${
-              area?.label === UNNAMED_AREA_LABEL
-                ? "where you last were"
-                : `${label}, where you last were`
-            }. Turn on location to keep following you.`,
+          ? translatorFor("explore")("showingForNowTurnOnLocation", {
+              label: label,
+            })
+          : area?.label === UNNAMED_AREA_LABEL
+            ? translatorFor("explore")("showingWhereYouLastWere")
+            : translatorFor("explore")("showingAreaWhereYouLastWere", {
+                label,
+              }),
       };
     case "locating":
       return {
         status,
-        eyebrow: "Finding you…",
+        eyebrow: translatorFor("explore")("findingYou"),
         icon: "locate-outline",
-        sentence: `Showing ${label} until your location comes through.`,
+        sentence: translatorFor("explore")(
+          "showingUntilYourLocationComesThrough",
+          { label: label },
+        ),
       };
   }
 }

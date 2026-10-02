@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import {
   defaultDistanceUnit,
   formatDistance,
@@ -29,8 +30,8 @@ describe("distance", () => {
   it("converts both ways", () => {
     expect(metresToUnit(1609.344, "mi")).toBeCloseTo(1);
     expect(unitToMetres(2, "km")).toBe(2000);
-    expect(radiusOptions("km")).toHaveLength(10);
-    expect(radiusOptions("mi")[0]).toEqual({
+    expect(radiusOptions(t, "km")).toHaveLength(10);
+    expect(radiusOptions(t, "mi")[0]).toEqual({
       label: "Up to 1 mi",
       metres: 1609,
     });

@@ -10,7 +10,13 @@ import type {
 } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { organizerNeedsAttentionText } from "@abonten/core/organizerNeedsAttention";
 import { AppText, Icon, type IoniconName, Overline } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -23,10 +29,15 @@ import { Pressable, View } from "react-native";
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null | undefined, amount: number): string {
-  return formatMoney(currency, Math.round(amount), { trimZeroFraction: true });
+  return formatMoney(currency, Math.round(amount), {
+    trimZeroFraction: true,
+    locale: getCurrentLocale(),
+  });
 }
 
 function FinanceSummary() {
+  const t = useTranslations("manage");
+
   const q = useOrganizerFinance();
   const overview =
     q.data?.status === 200 && q.data.data.length > 0 ? q.data.data[0] : null;
@@ -38,20 +49,20 @@ function FinanceSummary() {
       <Pressable className="flex-row items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 active:opacity-80">
         <View className="flex-row gap-6">
           <View>
-            <AppText variant="caption">Available to withdraw</AppText>
+            <AppText variant="caption">{t("availableToWithdraw2")}</AppText>
             <AppText variant="cardTitle">
               {money(overview.currency, n(overview.available_balance))}
             </AppText>
           </View>
           <View>
-            <AppText variant="caption">Pending</AppText>
+            <AppText variant="caption">{t("pending")}</AppText>
             <AppText variant="cardTitle">
               {money(overview.currency, n(overview.pending_balance))}
             </AppText>
           </View>
         </View>
         <AppText variant="small" tone="brand" className="shrink-0 font-medium">
-          Finances ›
+          {t("finances2")}
         </AppText>
       </Pressable>
     </Link>
@@ -59,14 +70,16 @@ function FinanceSummary() {
 }
 
 function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-2.5">
-      <Overline>Event performance</Overline>
+      <Overline>{t("eventPerformance")}</Overline>
       {events.length === 0 ? (
         <View className="items-center gap-1 rounded-2xl border border-border bg-card px-3 py-6">
           <Icon name="bar-chart-outline" size={20} tone="muted" />
           <AppText variant="muted" className="text-center">
-            No event sales in this period yet.
+            {t("noEventSalesInThisPeriod")}
           </AppText>
         </View>
       ) : (
@@ -90,7 +103,7 @@ function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
           tone="brand"
           className="self-start font-medium"
         >
-          View all events
+          {t("viewAllEvents")}
         </AppText>
       </Link>
     </View>
@@ -98,14 +111,16 @@ function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
 }
 
 function UpcomingEvents({ events }: { events: OrganizerUpcomingRow[] }) {
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-2.5">
-      <Overline>Upcoming events</Overline>
+      <Overline>{t("upcomingEvents")}</Overline>
       {events.length === 0 ? (
         <View className="items-center gap-1 rounded-2xl border border-border bg-card px-3 py-6">
           <Icon name="calendar-outline" size={20} tone="muted" />
           <AppText variant="muted" className="text-center">
-            No upcoming events in the next while.
+            {t("noUpcomingEventsInTheNext")}
           </AppText>
         </View>
       ) : (
@@ -127,15 +142,17 @@ function UpcomingEvents({ events }: { events: OrganizerUpcomingRow[] }) {
 }
 
 function NeedsAttention({ items }: { items: OrganizerAttentionRow[] }) {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+  const tc = useTranslations("core");
+
   return (
     <View className="gap-2">
-      <Overline>Needs attention</Overline>
+      <Overline>{t("needsAttention")}</Overline>
       {items.length === 0 ? (
         <View className="flex-row items-center gap-2">
           <Icon name="checkmark-circle-outline" tone="primary" size={18} />
-          <AppText variant="muted">
-            You're all caught up — nothing needs attention right now.
-          </AppText>
+          <AppText variant="muted">{t("youReAllCaughtUpNothing")}</AppText>
         </View>
       ) : (
         items.map((item, i) => (
@@ -157,9 +174,11 @@ function NeedsAttention({ items }: { items: OrganizerAttentionRow[] }) {
                   className="font-medium"
                   numberOfLines={1}
                 >
-                  {item.event_title ?? "Event"}
+                  {item.event_title ?? t("event")}
                 </AppText>
-                <AppText variant="muted">{item.message}</AppText>
+                <AppText variant="muted">
+                  {organizerNeedsAttentionText(tc, item, locale)}
+                </AppText>
               </View>
             </Pressable>
           </Link>
@@ -175,18 +194,16 @@ const ACTIVITY_ICON: Record<string, IoniconName> = {
   registration: "person-add-outline",
 };
 
-function activityVerb(type: string): string {
-  if (type === "ticket_sold") return "Ticket sold for";
-  if (type === "ticket_cancelled") return "Ticket cancelled for";
-  return "New registration for";
-}
-
 function RecentActivity({ items }: { items: OrganizerActivityRow[] }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-2">
-      <Overline>Recent activity</Overline>
+      <Overline>{t("recentActivity")}</Overline>
       {items.length === 0 ? (
-        <AppText variant="muted">No recent activity yet.</AppText>
+        <AppText variant="muted">{t("noRecentActivityYet")}</AppText>
       ) : (
         <View className="overflow-hidden rounded-xl border border-border bg-card">
           {items.map((item, i) => (
@@ -202,11 +219,13 @@ function RecentActivity({ items }: { items: OrganizerActivityRow[] }) {
                 size={18}
               />
               <AppText variant="small" className="flex-1" numberOfLines={1}>
-                {activityVerb(item.activity_type)}{" "}
-                {item.event_title ?? "an event"}
+                {t("activityFor", {
+                  type: item.activity_type,
+                  event: item.event_title ?? t("anEvent"),
+                })}
               </AppText>
               <AppText variant="caption" className="shrink-0">
-                {getRelativeTime(item.occurred_at)}
+                {getRelativeTime(item.occurred_at, undefined, locale)}
               </AppText>
             </View>
           ))}

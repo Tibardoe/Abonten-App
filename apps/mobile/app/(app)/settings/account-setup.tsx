@@ -15,6 +15,7 @@ import {
   Sheet,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -30,6 +31,8 @@ import { ScrollView, View } from "react-native";
 // mandatory.
 
 export default function AccountSetupScreen() {
+  const t = useTranslations("settings");
+
   const router = useRouter();
   const toast = useToast();
   const completion = useProfileCompletion();
@@ -55,7 +58,7 @@ export default function AccountSetupScreen() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Account setup"
+        title={t("accountSetup")}
         backFallback="/(app)/settings"
       />
       {c ? (
@@ -69,28 +72,28 @@ export default function AccountSetupScreen() {
               <View className="flex-row items-center gap-3">
                 <Icon name="checkmark-circle" size={28} tone="success" />
                 <View className="flex-1">
-                  <AppText variant="bodyStrong">You're all set</AppText>
+                  <AppText variant="bodyStrong">{t("youReAllSet")}</AppText>
                   <AppText variant="meta">
-                    Your profile is complete and you have two ways to sign in.
+                    {t("yourProfileIsCompleteAndYou")}
                   </AppText>
                 </View>
               </View>
             ) : (
               <>
                 <AppText variant="bodyStrong">
-                  {c.total - c.completedCount === 1
-                    ? "One step left"
-                    : `${c.total - c.completedCount} steps left`}
+                  {t("stepsLeft", { left: c.total - c.completedCount })}
                 </AppText>
                 <AppText variant="meta">
-                  None of these are required to use Abonten. Each one says what
-                  it's for.
+                  {t("noneOfTheseAreRequiredTo")}
                 </AppText>
               </>
             )}
             <ProgressBar
               value={c.completedCount / c.total}
-              label={`${c.completedCount} of ${c.total} steps done`}
+              label={t("ofStepsDone", {
+                completedCount: c.completedCount,
+                total: c.total,
+              })}
             />
           </View>
 
@@ -99,7 +102,7 @@ export default function AccountSetupScreen() {
       ) : (
         <QueryUnavailable
           view={view}
-          subject="your account setup"
+          subject={t("yourAccountSetup")}
           onRetry={() => completion.refetch()}
           loading={<FormSkeleton fields={5} />}
           className="flex-1 justify-center"
@@ -109,13 +112,10 @@ export default function AccountSetupScreen() {
       <Sheet
         open={sheet === "email"}
         onClose={() => setSheet(null)}
-        title="Your email"
+        title={t("yourEmail")}
       >
         <View className="gap-3">
-          <AppText variant="meta">
-            Needed to pay for tickets and promotions — your tickets and receipts
-            are emailed to you. You can also sign in with a code sent there.
-          </AppText>
+          <AppText variant="meta">{t("neededToPayForTicketsAnd")}</AppText>
           {sheet === "email" ? (
             <EmailVerificationForm
               onDone={done}
@@ -128,14 +128,10 @@ export default function AccountSetupScreen() {
       <Sheet
         open={sheet === "phone"}
         onClose={() => setSheet(null)}
-        title="Your phone number"
+        title={t("yourPhoneNumber")}
       >
         <View className="gap-3">
-          <AppText variant="meta">
-            Lets you sign in with a code sent by text — a way back in if you
-            can't get into your email or Google account. We'll send a code to
-            check it's yours.
-          </AppText>
+          <AppText variant="meta">{t("letsYouSignInWithA")}</AppText>
           {sheet === "phone" ? (
             <PhoneVerificationForm
               onDone={done}

@@ -1,0 +1,51 @@
+import FieldOpsTabs from "@/fieldOps/atoms/FieldOpsTabs";
+import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
+import { tagFieldOpsRequest } from "@/fieldOps/lib/tagFieldOpsRequest";
+import SegmentMessages from "@/i18n/SegmentMessages";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+
+// Internal field-team pages: never indexed.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("fieldOps");
+  return {
+    // A layout that sets its own title must restate the template, or its
+    // pages' titles lose " | Abonten Hub".
+    title: { default: t("fieldOps"), template: "%s | Abonten Hub" },
+    robots: { index: false, follow: false },
+  };
+}
+
+// The Field Ops area for team leads and members. It doesn't exist for
+// anyone else: the programme must be on and the visitor must be on a team
+// (a stranger gets the same 404 a switched-off Rewards page gives).
+
+export default async function FieldLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const me = await loadFieldOpsMe();
+  if (me.status !== 200 || !me.data?.programEnabled || !me.data.current) {
+    notFound();
+  }
+  // So a field member's error is separable from the rest of the app's
+  // traffic. No names, no numbers -- just the campaign and the role.
+  tagFieldOpsRequest({
+    campaignId: me.data.current.campaign.id,
+    role: me.data.current.membership.role,
+    isLead: me.data.current.isLead,
+  });
+  return (
+    <SegmentMessages segment="field">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <FieldOpsTabs
+          isLead={me.data.current.isLead}
+          role={me.data.current.membership.role}
+        />
+        {children}
+      </div>
+    </SegmentMessages>
+  );
+}

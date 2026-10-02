@@ -4,6 +4,8 @@ import { recordPlaceVisit } from "@/actions/recordPlaceVisit";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { announcePlaceInteraction } from "@/discovery/placeInteraction";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -26,6 +28,8 @@ export default function PlaceCheckIn({
   placeName: string;
   ownerId: string;
 }) {
+  const t = useTranslations("places");
+
   const code = useSearchParams().get("visit");
   const pathname = usePathname();
   const { data: user, isLoading } = useCurrentUser();
@@ -38,7 +42,7 @@ export default function PlaceCheckIn({
       setState({
         kind: "done",
         ok: false,
-        message: "This browser can't share your location. Try the Abonten app.",
+        message: t("thisBrowserCanTShareYour"),
       });
       return;
     }
@@ -51,22 +55,21 @@ export default function PlaceCheckIn({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracyM: pos.coords.accuracy,
-        });
+        }).catch(actionUnreachable);
         if (res.status === 200) {
           announcePlaceInteraction({ placeId, trigger: "visit" });
         }
         setState({
           kind: "done",
           ok: res.status === 200,
-          message: res.message ?? "Couldn't check you in. Try again.",
+          message: res.message ?? t("couldnTCheckYouInTry"),
         });
       },
       () =>
         setState({
           kind: "done",
           ok: false,
-          message:
-            "We need your location to check you in. Allow location for this site and try again.",
+          message: t("weNeedYourLocationToCheck"),
         }),
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
     );
@@ -84,11 +87,11 @@ export default function PlaceCheckIn({
       ) : (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-semibold">Check in at {placeName}</p>
+            <p className="font-semibold">
+              {t("checkInAt", { placeName: placeName })}
+            </p>
             <p className="text-sm text-muted-foreground">
-              {user
-                ? "We'll use your location once to confirm you're here."
-                : "Sign in to check in."}
+              {user ? t("weLlUseYourLocationOnce") : t("signInToCheckIn")}
             </p>
             {state.kind === "done" && !state.ok ? (
               <p className="mt-1 text-sm text-destructive">{state.message}</p>
@@ -97,14 +100,14 @@ export default function PlaceCheckIn({
           {user ? (
             <Button onClick={checkIn} disabled={state.kind === "working"}>
               <IoLocationOutline className="mr-1" />
-              {state.kind === "working" ? "Checking you in…" : "Check in"}
+              {state.kind === "working" ? t("checkingYouIn") : t("checkIn")}
             </Button>
           ) : (
             <Link
               href={`/auth/signin?next=${encodeURIComponent(next)}`}
               className={buttonVariants()}
             >
-              Sign in
+              {t("signIn")}
             </Link>
           )}
         </div>

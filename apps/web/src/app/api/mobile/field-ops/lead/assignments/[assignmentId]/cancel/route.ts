@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { cancelAssignmentCore } from "@abonten/services/fieldOps/lead/leadAssignmentsCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsAssignmentCancelSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // POST /api/mobile/field-ops/lead/assignments/:assignmentId/cancel
@@ -11,6 +12,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ assignmentId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { assignmentId } = await routeParams(params);
   return fieldOpsRoute(
     req,

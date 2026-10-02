@@ -1,13 +1,16 @@
 "use client";
 
 import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import PendingEarningsList from "../molecules/PendingEarningsList";
 import PromotionCreditCard from "../molecules/PromotionCreditCard";
@@ -19,7 +22,8 @@ export const ORGANIZER_FINANCE_OVERVIEW_QUERY_KEY = [
 ];
 
 type FinancesOverviewProps = {
-  initialOverview: OrganizerFinanceOverviewRow[];
+  /** Left out when the server could not read it: the balance loads here. */
+  initialOverview?: OrganizerFinanceOverviewRow[];
 };
 
 /**
@@ -36,13 +40,16 @@ type FinancesOverviewProps = {
 export default function FinancesOverview({
   initialOverview,
 }: FinancesOverviewProps) {
+  const locale = useLocale();
+  const t = useTranslations("finances");
+
   const queryClient = useQueryClient();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ORGANIZER_FINANCE_OVERVIEW_QUERY_KEY,
     queryFn: async () => {
-      const response = await getOrganizerFinanceOverview();
+      const response = answerOrThrow(await getOrganizerFinanceOverview());
       return response.status === 200 ? response.data : [];
     },
     initialData: initialOverview,
@@ -72,17 +79,30 @@ export default function FinancesOverview({
     );
   }
 
+  // A balance that could not be read is not a balance of zero.
+  if (isError && !data) {
+    return (
+      <InlineErrorRetry
+        message={t("couldnTLoadYourBalance")}
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <section className="rounded-2xl border border-border bg-card text-card-foreground p-5 md:p-6 space-y-4">
         <div>
-          <p className="text-sm text-muted-foreground">Available to withdraw</p>
+          <p className="text-sm text-muted-foreground">
+            {t("availableToWithdraw")}
+          </p>
           <p className="font-bold text-2xl md:text-3xl">
-            {formatMoney(primary.currency, primary.available_balance)}
+            {formatMoney(primary.currency, primary.available_balance, {
+              locale,
+            })}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Money available after eligible event proceeds, refunds, and previous
-            withdrawals are accounted for.
+            {t("moneyAvailableAfterEligibleEventProceeds")}
           </p>
         </div>
 
@@ -92,21 +112,27 @@ export default function FinancesOverview({
             onClick={() => setIsWithdrawOpen(true)}
             className="font-semibold rounded-md px-6 py-5"
           >
-            Withdraw
+            {t("withdraw")}
           </Button>
         )}
 
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
           <div>
-            <p className="text-sm text-muted-foreground">Pending</p>
+            <p className="text-sm text-muted-foreground">{t("pending2")}</p>
             <p className="font-semibold text-lg">
-              {formatMoney(primary.currency, primary.pending_balance)}
+              {formatMoney(primary.currency, primary.pending_balance, {
+                locale,
+              })}
             </p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Total earnings</p>
+            <p className="text-sm text-muted-foreground">
+              {t("totalEarnings")}
+            </p>
             <p className="font-semibold text-lg">
-              {formatMoney(primary.currency, primary.total_earnings)}
+              {formatMoney(primary.currency, primary.total_earnings, {
+                locale,
+              })}
             </p>
           </div>
         </div>
@@ -115,8 +141,15 @@ export default function FinancesOverview({
           <div className="pt-2 border-t border-border space-y-1">
             {otherCurrencies.map((row) => (
               <p key={row.currency} className="text-xs text-muted-foreground">
-                {row.currency}: {row.available_balance.toLocaleString()}{" "}
-                available · {row.pending_balance.toLocaleString()} pending
+                {t("availablePending", {
+                  currency: row.currency,
+                  available: formatMoney(row.currency, row.available_balance, {
+                    locale,
+                  }),
+                  pending: formatMoney(row.currency, row.pending_balance, {
+                    locale,
+                  }),
+                })}
               </p>
             ))}
           </div>

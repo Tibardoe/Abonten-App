@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type SecurityDetails = {
   phone: string | null;
@@ -17,23 +19,26 @@ export type GetSecurityDetailsResult =
 // Settings -> Security reads phone/email straight off auth.users (via
 // getUser()) rather than a duplicated column on user_info -- Supabase Auth
 // is already the authoritative store for both.
-export default async function getSecurityDetails(): Promise<GetSecurityDetailsResult> {
-  const supabase = await createClient();
-  const { data: userData, error: userError } = await supabase.auth.getUser();
+export default withActionLocale(
+  async function getSecurityDetails(): Promise<GetSecurityDetailsResult> {
+    const supabase = await createClient();
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
-  if (userError || !userData.user) {
-    return { status: 401, message: "User not authenticated" };
-  }
+    if (userError || !userData.user) {
+      return { status: 401, message: tr("userNotAuthenticated") };
+    }
 
-  return {
-    status: 200,
-    details: {
-      phone: userData.user.phone || null,
-      phoneVerified: !!userData.user.phone_confirmed_at,
-      email: userData.user.email || null,
-      emailVerified: !!userData.user.email_confirmed_at,
-      hasGoogleIdentity:
-        userData.user.identities?.some((i) => i.provider === "google") ?? false,
-    },
-  };
-}
+    return {
+      status: 200,
+      details: {
+        phone: userData.user.phone || null,
+        phoneVerified: !!userData.user.phone_confirmed_at,
+        email: userData.user.email || null,
+        emailVerified: !!userData.user.email_confirmed_at,
+        hasGoogleIdentity:
+          userData.user.identities?.some((i) => i.provider === "google") ??
+          false,
+      },
+    };
+  },
+);

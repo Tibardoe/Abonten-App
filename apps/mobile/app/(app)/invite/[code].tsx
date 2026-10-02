@@ -19,6 +19,7 @@ import {
   EmptyState,
   Skeleton,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -28,6 +29,10 @@ import { ScrollView, View } from "react-native";
 // here by +native-intent). Signed out: the invite is kept on the device and
 // applied right after sign-up. Signed in: it's applied here.
 export default function InviteScreen() {
+  const { locale } = useLocale();
+  const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+
   const { code } = useLocalSearchParams<{ code: string }>();
   const { session } = useSession();
   const router = useRouter();
@@ -71,20 +76,35 @@ export default function InviteScreen() {
   const name = data?.referrerName ?? "A friend";
   const offer =
     data?.programOn && data.welcomeMinor
-      ? `Get ${formatCredit(data.welcomeMinor, data.currency)} off your first ticket${
-          data.minOrderMinor
-            ? ` of ${formatCredit(data.minOrderMinor, data.currency)} or more`
-            : ""
-        }.`
+      ? data.minOrderMinor
+        ? t("getOffYourFirstTicketOfOrMore", {
+            formatCredit: formatCredit(
+              data.welcomeMinor,
+              data.currency,
+              locale,
+            ),
+            min: formatCredit(data.minOrderMinor, data.currency, locale),
+          })
+        : t("getOffYourFirstTicket", {
+            formatCredit: formatCredit(
+              data.welcomeMinor,
+              data.currency,
+              locale,
+            ),
+          })
       : null;
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="title" title="Invite" backFallback="/(app)/(tabs)" />
+      <AppHeader
+        variant="title"
+        title={t("invite")}
+        backFallback="/(app)/(tabs)"
+      />
       {infoView.kind !== "content" && infoView.kind !== "empty" ? (
         <QueryUnavailable
           view={infoView}
-          subject="this invite"
+          subject={t("thisInvite")}
           onRetry={() => info.refetch()}
           loading={
             <View className="gap-4 p-4">
@@ -95,8 +115,8 @@ export default function InviteScreen() {
       ) : !data?.valid ? (
         <EmptyState
           icon="link-outline"
-          title="This invite link isn't valid"
-          description="Check the link with the person who sent it. You can still explore what's on near you."
+          title={t("thisInviteLinkIsnTValid")}
+          description={t("checkTheLinkWithThePerson")}
         />
       ) : (
         <ScrollView contentContainerClassName="gap-5 p-4 pb-16">
@@ -107,11 +127,10 @@ export default function InviteScreen() {
               size={72}
             />
             <AppText variant="sectionTitle" className="text-center">
-              {name} invited you to Abonten
+              {t("invitedYouToAbonten", { name: name })}
             </AppText>
             <AppText variant="muted" className="text-center">
-              Find events and places near you, buy tickets in a few taps, and
-              keep them on your phone.
+              {t("findEventsAndPlacesNearYou")}
             </AppText>
             {offer ? (
               <View className="mt-1 rounded-xl bg-muted px-4 py-3">
@@ -119,7 +138,7 @@ export default function InviteScreen() {
                   {offer}
                 </AppText>
                 <AppText variant="caption" className="text-center">
-                  Verify your phone number after you sign up to get it.
+                  {t("verifyYourPhoneNumberAfterYou")}
                 </AppText>
               </View>
             ) : null}
@@ -128,42 +147,41 @@ export default function InviteScreen() {
           {session ? (
             binding ? (
               <AppText variant="muted" className="text-center">
-                Applying the invite…
+                {t("applyingTheInvite")}
               </AppText>
             ) : outcome ? (
               <Card className="gap-3">
                 <AppText
                   variant="body"
                   tone={
-                    bindResultMessage(outcome).tone === "error"
+                    bindResultMessage(tc, outcome).tone === "error"
                       ? "error"
                       : undefined
                   }
                 >
-                  {bindResultMessage(outcome).text}
+                  {bindResultMessage(tc, outcome).text}
                 </AppText>
                 <Button
-                  title="Go to Rewards"
+                  title={t("goToRewards")}
                   variant="outline"
                   onPress={() => router.replace("/(app)/rewards")}
                 />
               </Card>
             ) : (
               <AppText variant="muted" className="text-center">
-                We couldn&apos;t apply the invite right now. It will be tried
-                again next time you open the app.
+                {t("weCouldnTApplyTheInvite2")}
               </AppText>
             )
           ) : (
             <View className="gap-3">
               <Button
-                title="Sign up to join"
+                title={t("signUpToJoin")}
                 size="lg"
                 fullWidth
                 onPress={() => router.push("/(auth)/sign-in")}
               />
               <AppText variant="caption" className="text-center">
-                Invite codes work for new accounts, in their first week.
+                {t("inviteCodesWorkForNewAccounts")}
               </AppText>
             </View>
           )}

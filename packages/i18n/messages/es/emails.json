@@ -1,0 +1,61 @@
+{
+  "cancellation": {
+    "event": "Evento",
+    "heading": "Evento cancelado",
+    "intro": "{greeting} el organizador ha cancelado <strong>{eventTitle}</strong>. Tu entrada ya no es válida.",
+    "preview": "{eventTitle} se ha cancelado — esto es lo que pasa con tu entrada",
+    "processing": "Procesando",
+    "questions": "Si tienes alguna pregunta sobre esta cancelación o tu reembolso, contáctanos a través de la app de Abonten.",
+    "refund": "Se hará un reembolso al método de pago usado para tu entrada. Puede tardar unos días en completarse — puedes consultar su estado cuando quieras desde Mis entradas.",
+    "refundAmount": "Importe del reembolso",
+    "refundStatus": "Estado del reembolso",
+    "subject": "Evento cancelado — {eventTitle}",
+    "viewRefundStatus": "Ver estado del reembolso"
+  },
+  "common": {
+    "contactUsThroughTheApp": "Si tienes alguna pregunta, contáctanos a través de la app de Abonten.",
+    "copyright": "© {year} {entity}",
+    "hi": "Hola, {name}:",
+    "there": "de nuevo"
+  },
+  "digest": {
+    "intro": "{greeting} aquí {count, plural, one {tienes una sugerencia} other {tienes # sugerencias}} según lo que pediste que te contáramos.",
+    "reason": {
+      "organizer": "De un organizador que sigues",
+      "organizerNamed": "Novedad de @{username}",
+      "place": "En un lugar que sigues",
+      "similarEvents": "Similar a eventos que te gustaron",
+      "similarPlaces": "Similar a lugares que te gustaron"
+    },
+    "seeAll": "Ver todas tus sugerencias",
+    "unsubscribe": "¿No quieres estos correos? <unsubscribe>Darte de baja</unsubscribe> o <settings>cambiar tus ajustes</settings>. Los correos de entradas, pagos y cuenta no se ven afectados.",
+    "why": "Recibes este correo porque activaste los correos de sugerencias y alertas en los ajustes de notificaciones de tu cuenta de Abonten Hub. Como máximo uno al día."
+  },
+  "rewards": {
+    "headingMany": "Novedades de tus recompensas",
+    "intro": "{greeting} estas son las novedades de tu Crédito Abonten.",
+    "open": "Abrir Abonten Rewards",
+    "subjectMany": "Abonten Rewards: {count} novedades",
+    "unsubscribe": "¿No quieres estos correos? <link>Darte de baja</link>. Seguirás viendo tu crédito en la app.",
+    "why": "Recibes este correo porque has ganado Crédito Abonten en tu cuenta de Abonten Hub. El crédito se puede gastar en Abonten y no se puede canjear por dinero."
+  },
+  "ticket": {
+    "amountPaid": "Importe pagado",
+    "attached": "Tu entrada va adjunta a este correo en PDF. También puedes abrirla cuando quieras desde Mis entradas en Abonten.",
+    "date": "Fecha",
+    "detailsLabel": "Detalles de la entrada",
+    "event": "Evento",
+    "free": "Gratis",
+    "heading": "¡Enhorabuena! 🎟️",
+    "intro": "{greeting} tu entrada para <strong>{eventTitle}</strong> se ha comprado correctamente.",
+    "keepSafe": "Guarda bien tu entrada — la necesitarás (o el PDF adjunto) para entrar al recinto. Si tienes alguna pregunta, contáctanos a través de la app de Abonten.",
+    "preview": "Tu entrada de Abonten para {eventTitle} está lista — consulta los detalles dentro",
+    "purchaseDate": "Fecha de compra",
+    "quantity": "Cantidad",
+    "quantityValue": "{count, plural, one {# entrada} other {# entradas}}",
+    "subject": "Tu entrada de Abonten está lista 🎟️ — {eventTitle}",
+    "time": "Hora",
+    "venue": "Lugar",
+    "viewMyTickets": "Ver mis entradas"
+  }
+}

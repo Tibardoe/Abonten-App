@@ -1,4 +1,5 @@
 import { ABONTEN_LOGO_EMAIL_TILE_URL } from "@/config/brandAssets";
+import type { EmailWords } from "@/lib/email/emailWords";
 import { LEGAL_ENTITY_NAME } from "@abonten/core/brand/legalEntity";
 import {
   Body,
@@ -55,18 +56,21 @@ export const emailText = {
 
 /** Html + Body + the bordered 600px card, with the logo and heading on top. */
 export function EmailShell({
+  locale,
   preview,
   heading,
   intro,
   children,
 }: {
+  /** The recipient's language, for assistive technology and translation tools. */
+  locale: string;
   preview: string;
   heading: string;
   intro: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <Html lang="en">
+    <Html lang={locale}>
       <Head>
         <meta name="color-scheme" content="light dark" />
         <meta name="supported-color-schemes" content="light dark" />
@@ -232,14 +236,23 @@ export function EmailButton({
 }
 
 /** Small print under a divider; every paragraph is centred. */
-export function EmailFooter({ children }: { children: ReactNode }) {
+export function EmailFooter({
+  words,
+  children,
+}: {
+  words: EmailWords;
+  children: ReactNode;
+}) {
   return (
     <>
       <EmailDivider />
       <Section style={{ padding: "20px 32px 24px", textAlign: "center" }}>
         {children}
         <EmailFinePrint>
-          © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}
+          {words.t("common.copyright", {
+            year: new Date().getFullYear(),
+            entity: LEGAL_ENTITY_NAME,
+          })}
         </EmailFinePrint>
       </Section>
     </>

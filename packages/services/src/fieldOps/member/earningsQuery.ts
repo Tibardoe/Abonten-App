@@ -4,6 +4,7 @@ import type {
   FieldOpsMyPayout,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   COMMISSION_COLUMNS,
   type CommissionRow,
@@ -84,8 +85,8 @@ export async function getMyEarningsCore(
         .order("created_at", { ascending: false })
         .limit(50),
     ]);
-  if (error) return dbErr(error, "Could not load your earnings");
-  if (!campaign) return { status: 404, message: "Campaign not found" };
+  if (error) return dbErr(error, tr("couldNotLoadYourEarnings"));
+  if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
 
   const commissions = ((data ?? []) as unknown as CommissionRow[]).map(
     mapCommission,

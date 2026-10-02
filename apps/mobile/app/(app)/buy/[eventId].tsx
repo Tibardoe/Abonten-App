@@ -21,6 +21,7 @@ import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import {
   AppText,
   BottomBar,
@@ -34,6 +35,11 @@ import {
   Stepper,
   useToast,
 } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -47,18 +53,18 @@ type AppliedPromo = {
 };
 
 function isOnSale(
-  t: { available_from: string | null; available_until: string | null },
+  tier: { available_from: string | null; available_until: string | null },
   now: number,
 ): boolean {
-  if (t.available_from && new Date(t.available_from).getTime() > now)
+  if (tier.available_from && new Date(tier.available_from).getTime() > now)
     return false;
-  if (t.available_until && new Date(t.available_until).getTime() < now)
+  if (tier.available_until && new Date(tier.available_until).getTime() < now)
     return false;
   return true;
 }
 
 function money(currency: string, n: number): string {
-  return formatMoney(currency, n);
+  return formatMoney(currency, n, { locale: getCurrentLocale() });
 }
 
 // The mobile "Buy tickets" screen: pick an occurrence + quantities, optionally
@@ -67,6 +73,11 @@ function money(currency: string, n: number): string {
 // Proceed. No money moves here — the code is claimed + the fee finalised by
 // api.checkout.validate on /checkout/[sessionId].
 export default function BuyTicketsScreen() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("checkout");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
@@ -118,10 +129,10 @@ export default function BuyTicketsScreen() {
   const lines = useMemo(
     () =>
       (event?.ticket_type ?? [])
-        .map((t) => ({
-          id: t.id,
-          quantity: quantities[t.id] ?? 0,
-          price: t.price,
+        .map((tier) => ({
+          id: tier.id,
+          quantity: quantities[tier.id] ?? 0,
+          price: tier.price,
         }))
         .filter((l) => l.quantity > 0),
     [event, quantities],
@@ -180,14 +191,14 @@ export default function BuyTicketsScreen() {
     applied != null && eligibleUnits > 0 && eligibleUnits < totalCount;
 
   const header = (
-    <AppHeader variant="title" title="Buy tickets" backFallback="/(app)" />
+    <AppHeader variant="title" title={t("buyTickets")} backFallback="/(app)" />
   );
 
   if (isError && isNotFoundError(error)) {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError message="This event could not be found." />
+        <ScreenError message={t("thisEventCouldNotBeFound")} />
       </View>
     );
   }
@@ -196,11 +207,11 @@ export default function BuyTicketsScreen() {
       <View className="flex-1 bg-background">
         {header}
         {detailView.kind === "content" || detailView.kind === "empty" ? (
-          <ScreenError message="This event could not be found." />
+          <ScreenError message={t("thisEventCouldNotBeFound")} />
         ) : (
           <QueryUnavailable
             view={detailView}
-            subject="this event"
+            subject={t("thisEvent")}
             onRetry={() => refetch()}
             loading={
               <View className="flex-1 items-center justify-center">
@@ -234,16 +245,16 @@ export default function BuyTicketsScreen() {
           <Icon name="ticket-outline" size={28} tone="muted" />
           <AppText variant="muted" className="text-center">
             {canceled
-              ? "This event was canceled."
+              ? t("thisEventWasCanceled")
               : salesClosed
                 ? occurrenceState.blockReason === "ended"
-                  ? "Ticket sales for this event have closed — it has ended."
-                  : "This event is in progress — ticket sales are closed."
+                  ? t("ticketSalesForThisEventHave")
+                  : t("thisEventIsInProgressTicket")
                 : soldOut
-                  ? "This event is sold out."
-                  : "No tickets are available for this event."}
+                  ? t("thisEventIsSoldOut")
+                  : t("noTicketsAreAvailableForThis")}
           </AppText>
-          <Button title="Back to event" onPress={() => router.back()} />
+          <Button title={t("backToEvent")} onPress={() => router.back()} />
         </View>
       </View>
     );
@@ -271,7 +282,7 @@ export default function BuyTicketsScreen() {
       setPromoInput("");
       return;
     }
-    setPromoError(res.message ?? "That promo code couldn't be applied.");
+    setPromoError(res.message ?? t("thatPromoCodeCouldnTBe"));
   }
 
   function removePromo() {
@@ -330,8 +341,8 @@ export default function BuyTicketsScreen() {
     // gate instead of leaving a dead "Proceed" button.
     if (res.status === 409) {
       refetch();
-      toast.error("Can't start checkout", {
-        description: res.message ?? "This event is no longer available.",
+      toast.error(t("canTStartCheckout"), {
+        description: res.message ?? t("thisEventIsNoLongerAvailable"),
       });
       return;
     }
@@ -339,11 +350,11 @@ export default function BuyTicketsScreen() {
       // The code passed preview but failed the authoritative claim — surface
       // it against the promo row and drop it so Proceed can succeed without.
       setApplied(null);
-      setPromoError(res.message ?? "That promo code couldn't be applied.");
+      setPromoError(res.message ?? t("thatPromoCodeCouldnTBe"));
       return;
     }
-    toast.error("Can't start checkout", {
-      description: res.message ?? "Please try again in a moment.",
+    toast.error(t("canTStartCheckout"), {
+      description: res.message ?? t("pleaseTryAgainInAMoment"),
     });
   }
 
@@ -359,14 +370,18 @@ export default function BuyTicketsScreen() {
           <AppText variant="sectionHeading">{event.title}</AppText>
           {occurrences.length <= 1 && occurrences[0]?.starts_at ? (
             <AppText variant="meta">
-              {formatDateWithSuffix(occurrences[0].starts_at)}
+              {formatDateWithSuffix(
+                occurrences[0].starts_at,
+                undefined,
+                locale,
+              )}
             </AppText>
           ) : null}
         </View>
 
         {occurrences.length > 1 ? (
           <View className="gap-2">
-            <AppText variant="overline">Date</AppText>
+            <AppText variant="overline">{t("date")}</AppText>
             <View className="flex-row flex-wrap gap-2">
               {occurrences.map((o) => {
                 const selectable = isOccurrenceSelectable(o);
@@ -376,17 +391,49 @@ export default function BuyTicketsScreen() {
                   <View
                     key={o.id}
                     className="opacity-40"
-                    accessibilityLabel={`${formatDateWithSuffix(o.starts_at)} — ${inProgress ? "in progress" : "this date has passed"}`}
+                    accessibilityLabel={
+                      inProgress
+                        ? t("dateInProgress", {
+                            date: formatDateWithSuffix(
+                              o.starts_at,
+                              undefined,
+                              locale,
+                            ),
+                          })
+                        : t("dateHasPassed", {
+                            date: formatDateWithSuffix(
+                              o.starts_at,
+                              undefined,
+                              locale,
+                            ),
+                          })
+                    }
                     accessibilityState={{ disabled: true }}
                   >
                     <Chip
-                      label={`${formatDateWithSuffix(o.starts_at)} · ${inProgress ? "in progress" : "past"}`}
+                      label={
+                        inProgress
+                          ? t("dateChipInProgress", {
+                              date: formatDateWithSuffix(
+                                o.starts_at,
+                                undefined,
+                                locale,
+                              ),
+                            })
+                          : t("dateChipPast", {
+                              date: formatDateWithSuffix(
+                                o.starts_at,
+                                undefined,
+                                locale,
+                              ),
+                            })
+                      }
                     />
                   </View>
                 ) : (
                   <Chip
                     key={o.id}
-                    label={formatDateWithSuffix(o.starts_at)}
+                    label={formatDateWithSuffix(o.starts_at, undefined, locale)}
                     selected={o.id === activeOccurrenceId}
                     onPress={() => setOccurrenceId(o.id)}
                   />
@@ -395,7 +442,7 @@ export default function BuyTicketsScreen() {
             </View>
             {firstFutureOccurrenceId == null ? (
               <AppText variant="caption" tone="error">
-                All dates for this event have passed.
+                {t("allDatesForThisEventHave")}
               </AppText>
             ) : null}
           </View>
@@ -403,43 +450,45 @@ export default function BuyTicketsScreen() {
 
         {/* Ticket types + quantity */}
         <View className="gap-2">
-          <AppText variant="overline">Tickets</AppText>
-          {event.ticket_type.map((t) => {
-            const onSale = isOnSale(t, now);
-            const stockOut = t.quantity != null && t.quantity <= 0;
-            const cap = Math.min(MAX_PER_TYPE, t.quantity ?? MAX_PER_TYPE);
-            const qty = quantities[t.id] ?? 0;
+          <AppText variant="overline">{t("tickets")}</AppText>
+          {event.ticket_type.map((tier) => {
+            const onSale = isOnSale(tier, now);
+            const stockOut = tier.quantity != null && tier.quantity <= 0;
+            const cap = Math.min(MAX_PER_TYPE, tier.quantity ?? MAX_PER_TYPE);
+            const qty = quantities[tier.id] ?? 0;
             const disabled = !onSale || stockOut;
             return (
               <View
-                key={t.id}
+                key={tier.id}
                 className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5"
               >
                 <View className="flex-1">
                   <AppText variant="body" className="font-medium">
-                    {t.type}
+                    {ticketTypeLabel(tc, tier.type)}
                   </AppText>
                   <AppText variant="meta">
-                    {t.price === 0 ? "Free" : money(t.currency, t.price)}
+                    {tier.price === 0
+                      ? t("free")
+                      : money(tier.currency, tier.price)}
                     {stockOut
-                      ? " · Sold out"
+                      ? t("soldOut")
                       : !onSale
-                        ? " · Not on sale"
-                        : t.quantity != null
-                          ? ` · ${t.quantity} left`
+                        ? t("notOnSale")
+                        : tier.quantity != null
+                          ? t("left", { quantity: tier.quantity })
                           : ""}
                   </AppText>
                 </View>
                 {disabled ? (
                   <AppText variant="caption" tone="muted">
-                    Unavailable
+                    {t("unavailable")}
                   </AppText>
                 ) : (
                   <Stepper
                     value={qty}
                     min={0}
                     max={cap}
-                    onChange={(n) => setQty(t.id, n, cap)}
+                    onChange={(n) => setQty(tier.id, n, cap)}
                   />
                 )}
               </View>
@@ -458,7 +507,9 @@ export default function BuyTicketsScreen() {
                     {applied.code}
                   </AppText>
                   <AppText variant="meta" tone="brand">
-                    {applied.discountPercentage}% off
+                    {t("off", {
+                      discountPercentage: applied.discountPercentage,
+                    })}
                   </AppText>
                 </View>
                 <Pressable
@@ -471,19 +522,22 @@ export default function BuyTicketsScreen() {
                     tone="brand"
                     className="font-semibold"
                   >
-                    Remove
+                    {t("remove")}
                   </AppText>
                 </Pressable>
               </View>
               {partialPromo ? (
                 <AppText variant="caption">
-                  Applies to {eligibleUnits} of {totalCount} tickets.
+                  {t("appliesToOfTickets", {
+                    eligibleUnits: eligibleUnits,
+                    totalCount: totalCount,
+                  })}
                 </AppText>
               ) : null}
             </View>
           ) : promoOpen ? (
             <View className="gap-2">
-              <AppText variant="overline">Promo code</AppText>
+              <AppText variant="overline">{t("promoCode")}</AppText>
               <View className="flex-row gap-2">
                 <Input
                   value={promoInput}
@@ -491,7 +545,7 @@ export default function BuyTicketsScreen() {
                     setPromoInput(v);
                     if (promoError) setPromoError(null);
                   }}
-                  placeholder="Enter code"
+                  placeholder={t("enterCode")}
                   autoCapitalize="characters"
                   autoCorrect={false}
                   className="flex-1"
@@ -499,7 +553,7 @@ export default function BuyTicketsScreen() {
                   returnKeyType="done"
                 />
                 <Button
-                  title="Apply"
+                  title={t("apply")}
                   onPress={applyPromo}
                   loading={promoPreview.isPending}
                   disabled={promoPreview.isPending || !promoInput.trim()}
@@ -519,7 +573,7 @@ export default function BuyTicketsScreen() {
             >
               <Icon name="pricetag-outline" size={15} tone="primary" />
               <AppText variant="small" tone="brand" className="font-semibold">
-                Have a promo code?
+                {t("haveAPromoCode")}
               </AppText>
             </Pressable>
           )}
@@ -532,31 +586,29 @@ export default function BuyTicketsScreen() {
 
         {/* Order summary */}
         <View className="gap-2 rounded-xl border border-border bg-card p-4">
-          <AppText variant="overline">Order summary</AppText>
+          <AppText variant="overline">{t("orderSummary2")}</AppText>
           <SummaryLine
-            label={`Subtotal · ${totalCount} ticket${totalCount === 1 ? "" : "s"}`}
+            label={t("subtotalTicket", { totalCount })}
             value={money(currency, subtotal)}
           />
           {discount > 0 ? (
             <SummaryLine
-              label="Discount"
+              label={t("discount")}
               value={`− ${money(currency, discount)}`}
               tone="brand"
             />
           ) : null}
           <SummaryLine
-            label="Service fee (est.)"
+            label={t("serviceFeeEst")}
             value={money(currency, feePreview)}
           />
           <View className="my-1 h-px bg-border" />
           <SummaryLine
-            label="Estimated total"
+            label={t("estimatedTotal")}
             value={money(currency, totalPreview)}
             strong
           />
-          <AppText variant="caption">
-            The final total is confirmed on the next screen before you pay.
-          </AppText>
+          <AppText variant="caption">{t("theFinalTotalIsConfirmedOn")}</AppText>
         </View>
       </KeyboardAwareScrollView>
 
@@ -564,8 +616,8 @@ export default function BuyTicketsScreen() {
         <Button
           title={
             validate.isPending || cancel.isPending
-              ? "Starting checkout…"
-              : "Proceed to checkout"
+              ? t("startingCheckout")
+              : t("proceedToCheckout")
           }
           fullWidth
           loading={validate.isPending || cancel.isPending}

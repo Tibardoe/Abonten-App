@@ -3,12 +3,16 @@
 import { bindReferralCode } from "@/actions/bindReferralCode";
 import { Button } from "@/components/ui/button";
 import { bindResultMessage } from "@abonten/core/rewards/invite";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
 // The invite page for someone already signed in: applying the invite is one
 // tap (the server decides whether this account can still use one).
 export default function InviteAcceptButton({ code }: { code: string }) {
+  const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{
     tone: "success" | "info" | "error";
@@ -21,13 +25,13 @@ export default function InviteAcceptButton({ code }: { code: string }) {
       const res = await bindReferralCode({ code });
       setMessage(
         res.data
-          ? bindResultMessage(res.data)
-          : { tone: "error", text: "Sign in first, then open the link again." },
+          ? bindResultMessage(tc, res.data)
+          : { tone: "error", text: t("signInFirstThenOpenThe") },
       );
     } catch {
       setMessage({
         tone: "error",
-        text: "We couldn't apply the invite. Please try again.",
+        text: t("weCouldnTApplyTheInvite"),
       });
     } finally {
       setPending(false);
@@ -48,7 +52,7 @@ export default function InviteAcceptButton({ code }: { code: string }) {
           {message.text}
         </p>
         <Button asChild variant="outline" className="w-full">
-          <Link href="/rewards">Go to Rewards</Link>
+          <Link href="/rewards">{t("goToRewards")}</Link>
         </Button>
       </div>
     );
@@ -56,7 +60,7 @@ export default function InviteAcceptButton({ code }: { code: string }) {
 
   return (
     <Button size="lg" className="w-full" disabled={pending} onClick={accept}>
-      {pending ? "Applying…" : "Use this invite"}
+      {pending ? t("applying") : t("useThisInvite")}
     </Button>
   );
 }

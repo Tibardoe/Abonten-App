@@ -9,12 +9,15 @@
 
 import {
   COUNTRIES,
-  matchCountries,
+  countryName,
+  findCountry,
+  foldForSearch,
   prioritiseCountries,
 } from "./geo/countries";
 import { COUNTRY_DEFAULTS } from "./geo/countryDefaults";
 
 export type Country = {
+  /** In the reader's language when the list was built with one. */
   name: string;
   /** ISO 3166-1 alpha-2. */
   countryCode: string;
@@ -26,9 +29,12 @@ export type Country = {
   flag: string;
 };
 
-function toCountry(c: (typeof COUNTRIES)[number]): Country {
+function toCountry(
+  c: (typeof COUNTRIES)[number],
+  locale?: string | null,
+): Country {
   return {
-    name: c.name,
+    name: countryName(c.code, locale),
     countryCode: c.code,
     callingCode: c.dialCode,
     currency: COUNTRY_DEFAULTS[c.code]?.currency ?? "",
@@ -36,32 +42,47 @@ function toCountry(c: (typeof COUNTRIES)[number]): Country {
   };
 }
 
-/** Every country, alphabetical. */
-export const countries: Country[] = COUNTRIES.map(toCountry);
+/** Every country, alphabetical, named in English. */
+export const countries: Country[] = COUNTRIES.map((c) => toCountry(c));
 
-/** The country for an ISO code, or null. */
+/** The country for an ISO code (named in `locale`), or null. */
 export function countryForCode(
   code: string | null | undefined,
+  locale?: string | null,
 ): Country | null {
-  if (!code) return null;
-  const upper = code.toUpperCase();
-  return countries.find((c) => c.countryCode === upper) ?? null;
+  const found = code ? findCountry(code) : null;
+  return found ? toCountry(found, locale) : null;
 }
 
-/** Countries with `first` (the open markets, then the viewer's) on top. */
-export function phoneCountries(first: readonly string[]): Country[] {
-  return prioritiseCountries(first, COUNTRIES).map(toCountry);
+/**
+ * Countries with `first` (the open markets, then the viewer's) on top and
+ * the rest alphabetical, named and sorted in the reader's language.
+ */
+export function phoneCountries(
+  first: readonly string[],
+  locale?: string | null,
+): Country[] {
+  return prioritiseCountries(first, COUNTRIES, locale).map((c) =>
+    toCountry(c, locale),
+  );
 }
 
-/** Case-insensitive match on country name, dial code (with/without "+") or ISO code. */
+/**
+ * Case- and accent-insensitive match on the country's name (as listed, and
+ * in English), dial code (with/without "+") or ISO code. Keeps the pool's
+ * order, so the open markets stay on top while someone types.
+ */
 export function matchCountry(
   query: string,
   pool: readonly Country[] = countries,
 ): Country[] {
-  const codes = new Set(pool.map((c) => c.countryCode));
-  const ordered = COUNTRIES.filter((c) => codes.has(c.code));
-  const byCode = new Map(pool.map((c) => [c.countryCode, c]));
-  return matchCountries(query, ordered).map(
-    (c) => byCode.get(c.code) as Country,
+  const q = foldForSearch(query.trim()).replace(/^\+/, "");
+  if (!q) return [...pool];
+  return pool.filter(
+    (c) =>
+      foldForSearch(c.name).includes(q) ||
+      foldForSearch(countryName(c.countryCode)).includes(q) ||
+      c.callingCode.replace("+", "").startsWith(q) ||
+      c.countryCode.toLowerCase() === q,
   );
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseDiscoveryInput,
   resolveDiscoveryCaller,
@@ -9,7 +10,9 @@ import type { WeeklyTeaser } from "@abonten/types/weeklyType";
 import { weeklyTeaserRequestSchema } from "@abonten/validation/weeklySchemas";
 
 /** The Explore teaser for this visitor and location, or null. Never throws. */
-export async function getWeeklyTeaser(input: unknown): Promise<{
+export const getWeeklyTeaser = withActionLocale(async function getWeeklyTeaser(
+  input: unknown,
+): Promise<{
   status: number;
   message?: string;
   data?: WeeklyTeaser | null;
@@ -22,4 +25,4 @@ export async function getWeeklyTeaser(input: unknown): Promise<{
   } catch {
     return { status: 200, data: null };
   }
-}
+});

@@ -1,4 +1,5 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { getPromptOfferCore } from "@abonten/services/notifications/promptCore";
 import { promptContextSchema } from "@abonten/validation/discoverySchemas";
 
@@ -6,6 +7,7 @@ import { promptContextSchema } from "@abonten/validation/discoverySchemas";
 //     /api/mobile/notifications/prompt?context=place&placeId=&trigger=favorite|review|visit
 // What an opt-in card may offer. Empty when nothing should be asked.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: promptContextSchema, label: "GET /notifications/prompt" },

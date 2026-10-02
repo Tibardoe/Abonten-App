@@ -8,28 +8,34 @@ import getUserPendingTicketCheckouts, {
 import issueFreeCheckoutTickets from "@/actions/issueFreeCheckoutTickets";
 import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
 import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPanel";
 import PaymentMethodSelector, {
   type PaymentSelectorStatus,
 } from "@/components/organisms/PaymentMethodSelector";
+import { Skeleton } from "@/components/ui/skeleton";
 import RecommendationPromptCard from "@/discovery/organisms/RecommendationPromptCard";
 import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   invalidateEventListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
 import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type PendingCheckoutsBasketProps = {
-  initialSessions: PendingCheckoutSession[];
+  /** Left out when the server could not read them: the list loads here. */
+  initialSessions?: PendingCheckoutSession[];
 };
 
 // Shared with PaymentMethodSelector.tsx via utils/queryKeys.ts so a
@@ -41,14 +47,17 @@ const QUERY_KEY = PENDING_CHECKOUTS_QUERY_KEY;
 export default function PendingCheckoutsBasket({
   initialSessions,
 }: PendingCheckoutsBasketProps) {
+  const locale = useLocale();
+  const t = useTranslations("common");
+
   const queryClient = useQueryClient();
   const router = useRouter();
   const toast = useToast();
 
-  const { data } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const response = await getUserPendingTicketCheckouts();
+      const response = answerOrThrow(await getUserPendingTicketCheckouts());
       return response.status === 200 ? response.sessions : [];
     },
     initialData: initialSessions,
@@ -57,7 +66,7 @@ export default function PendingCheckoutsBasket({
   const sessions = data ?? [];
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(initialSessions.map((s) => s.checkoutSessionId)),
+    () => new Set((initialSessions ?? []).map((s) => s.checkoutSessionId)),
   );
   const [pendingLineIds, setPendingLineIds] = useState<Set<string>>(new Set());
   const [removingSessionIds, setRemovingSessionIds] = useState<Set<string>>(
@@ -149,9 +158,7 @@ export default function PendingCheckoutsBasket({
       for (const id of invalidSessionIds) next.delete(id);
       return next;
     });
-    toast.warning(
-      "One of your selected checkouts has expired. Please review your order.",
-    );
+    toast.warning(t("oneOfYourSelectedCheckoutsHas"));
     queryClient.invalidateQueries({ queryKey: QUERY_KEY });
   };
 
@@ -192,7 +199,7 @@ export default function PendingCheckoutsBasket({
     },
 
     onError: (_err, { ticketCheckoutId }, context) => {
-      toast.error("Failed to update quantity. Please try again.");
+      toast.error(t("failedToUpdateQuantityPleaseTry"));
       setPendingLineIds((prev) => {
         const next = new Set(prev);
         next.delete(ticketCheckoutId);
@@ -211,7 +218,7 @@ export default function PendingCheckoutsBasket({
       });
 
       if (response.status !== 200) {
-        toast.error(response.message ?? "Failed to update quantity.");
+        toast.error(response.message ?? t("failedToUpdateQuantity"));
         if (context?.previousSessions) {
           queryClient.setQueryData(QUERY_KEY, context.previousSessions);
         }
@@ -294,7 +301,7 @@ export default function PendingCheckoutsBasket({
     },
 
     onError: (_err, _ticketCheckoutId, context) => {
-      toast.error("Failed to remove item. Please try again.");
+      toast.error(t("failedToRemoveItemPleaseTry"));
       if (context?.previousSessions) {
         queryClient.setQueryData(QUERY_KEY, context.previousSessions);
       }
@@ -302,7 +309,7 @@ export default function PendingCheckoutsBasket({
 
     onSuccess: (response, _ticketCheckoutId, context) => {
       if (response.status !== 200) {
-        toast.error(response.message ?? "Failed to remove item.");
+        toast.error(response.message ?? t("failedToRemoveItem"));
         if (context?.previousSessions) {
           queryClient.setQueryData(QUERY_KEY, context.previousSessions);
         }
@@ -352,7 +359,7 @@ export default function PendingCheckoutsBasket({
     },
 
     onError: (_err, checkoutSessionId, context) => {
-      toast.error("Failed to remove checkout. Please try again.");
+      toast.error(t("failedToRemoveCheckoutPleaseTry"));
       if (context?.previousSessions) {
         queryClient.setQueryData(QUERY_KEY, context.previousSessions);
       }
@@ -363,7 +370,7 @@ export default function PendingCheckoutsBasket({
 
     onSuccess: (response, checkoutSessionId, context) => {
       if (response.status !== 200) {
-        toast.error(response.message ?? "Failed to remove checkout.");
+        toast.error(response.message ?? t("failedToRemoveCheckout"));
         if (context?.previousSessions) {
           queryClient.setQueryData(QUERY_KEY, context.previousSessions);
         }
@@ -388,7 +395,7 @@ export default function PendingCheckoutsBasket({
   });
 
   const handleExpired = (checkoutSessionId: string) => {
-    toast.warning("A pending checkout just expired.");
+    toast.warning(t("aPendingCheckoutJustExpired"));
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(checkoutSessionId);
@@ -442,7 +449,7 @@ export default function PendingCheckoutsBasket({
   const selectedTax = authoritative
     ? authoritative.validSessions.reduce((sum, s) => sum + s.tax, 0)
     : 0;
-  const taxLabel = authoritative?.taxLabel || "Tax";
+  const taxLabel = authoritative?.taxLabel || t("tax");
   const selectedGrandTotal = authoritative
     ? authoritative.grandTotal
     : selectedTotal + selectedFee;
@@ -461,7 +468,7 @@ export default function PendingCheckoutsBasket({
     for (const session of selectedSessions) {
       const response = await issueFreeCheckoutTickets(
         session.checkoutSessionId,
-      );
+      ).catch(actionUnreachable);
       results.push({
         eventTitle: session.eventTitle,
         ok: response.status === 200,
@@ -502,11 +509,36 @@ export default function PendingCheckoutsBasket({
     // away, so the user can see what still needs attention.
     toast.error(
       failed.length === results.length
-        ? (failed[0].message ?? "Something went wrong.")
-        : `${succeeded.length} of ${results.length} completed. "${failed[0].eventTitle}" failed: ${failed[0].message ?? "unknown error"}`,
+        ? (failed[0].message ?? t("somethingWentWrong2"))
+        : t("ofCompletedFailed", {
+            succeeded: succeeded.length,
+            total: results.length,
+            eventTitle: failed[0].eventTitle,
+            reason: failed[0].message ?? t("unknownError"),
+          }),
     );
     router.refresh();
   };
+
+  // "Couldn't load" and "there is nothing" are different answers.
+  if (sessions.length === 0 && !completedCheckout) {
+    if (isPending) {
+      return (
+        <div className="space-y-3">
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl" />
+        </div>
+      );
+    }
+    if (isError) {
+      return (
+        <InlineErrorRetry
+          message={t("couldnTLoadYourPendingCheckouts")}
+          onRetry={() => refetch()}
+        />
+      );
+    }
+  }
 
   if (sessions.length === 0) {
     if (completedCheckout) {
@@ -520,7 +552,7 @@ export default function PendingCheckoutsBasket({
     }
     return (
       <div className="text-center text-muted-foreground py-8">
-        <p>No pending checkouts.</p>
+        <p>{t("noPendingCheckouts")}</p>
       </div>
     );
   }
@@ -537,7 +569,7 @@ export default function PendingCheckoutsBasket({
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold text-lg md:text-xl">
-          {sessions.length > 1 ? "Your checkouts" : "Your checkout"}
+          {t("yourCheckouts", { count: sessions.length })}
         </h2>
         {sessions.length > 1 && (
           <button
@@ -545,13 +577,13 @@ export default function PendingCheckoutsBasket({
             onClick={toggleSelectAll}
             className="text-xs font-medium text-primary underline"
           >
-            {allSelected ? "Deselect all" : "Select all"}
+            {allSelected ? t("deselectAll") : t("selectAll")}
           </button>
         )}
       </div>
       {sessions.length > 1 && (
         <p className="text-xs text-muted-foreground -mt-3">
-          Select the tickets you want to pay for.
+          {t("selectTheTicketsYouWantTo")}
         </p>
       )}
 
@@ -578,37 +610,37 @@ export default function PendingCheckoutsBasket({
 
       <div className="border border-border rounded-2xl shadow-lg p-6 space-y-2 bg-card text-card-foreground">
         <p className="text-xs text-muted-foreground">
-          {selectedSessions.length} checkout
-          {selectedSessions.length === 1 ? "" : "s"} selected (
-          {selectedLines.reduce((sum, line) => sum + line.quantity, 0)} ticket
-          {selectedLines.reduce((sum, line) => sum + line.quantity, 0) === 1
-            ? ""
-            : "s"}
-          )
+          {t("checkoutsSelected", {
+            checkouts: selectedSessions.length,
+            tickets: selectedLines.reduce(
+              (sum, line) => sum + line.quantity,
+              0,
+            ),
+          })}
         </p>
         <div className="flex justify-between text-sm text-muted-foreground">
-          <p>Selected subtotal</p>
-          <p>{formatMoney(currency, selectedGrossSubtotal)}</p>
+          <p>{t("selectedSubtotal")}</p>
+          <p>{formatMoney(currency, selectedGrossSubtotal, { locale })}</p>
         </div>
         {selectedDiscount > 0 && (
           <div className="flex justify-between text-sm text-muted-foreground">
-            <p>Discount</p>
-            <p>-{formatMoney(currency, selectedDiscount)}</p>
+            <p>{t("discount2")}</p>
+            <p>-{formatMoney(currency, selectedDiscount, { locale })}</p>
           </div>
         )}
         <div className="flex justify-between text-sm text-muted-foreground">
-          <p>Service fee</p>
-          <p>{formatMoney(currency, selectedFee)}</p>
+          <p>{t("serviceFee")}</p>
+          <p>{formatMoney(currency, selectedFee, { locale })}</p>
         </div>
         {selectedTax > 0 && (
           <div className="flex justify-between text-sm text-muted-foreground">
             <p>{taxLabel}</p>
-            <p>{formatMoney(currency, selectedTax)}</p>
+            <p>{formatMoney(currency, selectedTax, { locale })}</p>
           </div>
         )}
         <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
-          <p>Total</p>
-          <p>{formatMoney(currency, selectedGrandTotal)}</p>
+          <p>{t("total")}</p>
+          <p>{formatMoney(currency, selectedGrandTotal, { locale })}</p>
         </div>
       </div>
 
@@ -616,13 +648,13 @@ export default function PendingCheckoutsBasket({
         isExpanded={isPaymentPanelExpanded}
         onToggle={() => setIsPaymentPanelExpanded((prev) => !prev)}
         toggleDisabled={isPaymentInFlight}
-        totalLabel={formatMoney(currency, selectedGrandTotal)}
+        totalLabel={formatMoney(currency, selectedGrandTotal, { locale })}
         statusText={
           selectedSessions.length === 0
-            ? "No checkout selected"
+            ? t("noCheckoutSelected")
             : allSelectedAreFree
-              ? "Free — ready to confirm"
-              : (paymentStatus.selectedMethodLabel ?? "Select a payment method")
+              ? t("freeReadyToConfirm")
+              : (paymentStatus.selectedMethodLabel ?? t("selectAPaymentMethod"))
         }
       >
         {selectedSessions.length > 0 && !allSelectedAreFree ? (
@@ -653,7 +685,7 @@ export default function PendingCheckoutsBasket({
             onClick={handleProceed}
             className="w-full rounded-md p-4 font-bold text-primary-foreground bg-primary text-center mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isProceeding ? "One moment…" : "Continue to payment"}
+            {isProceeding ? t("oneMoment") : t("continueToPayment")}
           </button>
         )}
       </CollapsiblePaymentPanel>
@@ -676,19 +708,21 @@ function TicketPurchaseSuccessPanel({
   /** Tickets bought; the session count when unknown. */
   ticketCount?: number;
 }) {
+  const t = useTranslations("common");
+
   const plural = (ticketCount ?? sessionIds.length) !== 1;
   return (
     <div className="space-y-4">
       <div className="space-y-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-6 text-center">
-        <p className="text-lg font-semibold">Payment successful</p>
+        <p className="text-lg font-semibold">{t("paymentSuccessful")}</p>
         <p className="text-sm text-muted-foreground">
-          {plural ? "Your tickets are ready." : "Your ticket is ready."}
+          {plural ? t("yourTicketsAreReady") : t("yourTicketIsReady")}
         </p>
         <Link
           href="/manage/my-events"
           className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
         >
-          View tickets
+          {t("viewTickets")}
         </Link>
       </div>
       {/* Below the confirmation, never in its way; renders nothing unless the

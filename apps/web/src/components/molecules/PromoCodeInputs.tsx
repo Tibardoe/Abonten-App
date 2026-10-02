@@ -1,3 +1,5 @@
+import { formatPercent } from "@abonten/core/i18n/format";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import React from "react";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -46,6 +48,10 @@ export default function PromoCodeInputs({
   onPromoCodesChange,
   initialPromoCodes,
 }: PromoCodeInputProps) {
+  const locale = useLocale();
+  const t = useTranslations("common");
+  const format = useFormatter();
+
   const [promoCode, setPromoCode] = useState("");
 
   const [discount, setDiscount] = useState<number | null>(null);
@@ -90,7 +96,7 @@ export default function PromoCodeInputs({
       );
 
       if (isDuplicate) {
-        setDuplicateError("This promo code has already been added.");
+        setDuplicateError(t("thisPromoCodeHasAlreadyBeen"));
         return;
       }
 
@@ -134,7 +140,7 @@ export default function PromoCodeInputs({
       <div className="flex flex-col gap-2">
         <Input
           type="text"
-          placeholder="Promo code"
+          placeholder={t("promoCode")}
           value={promoCode}
           onChange={(e) => {
             setPromoCode(e.target.value);
@@ -150,7 +156,7 @@ export default function PromoCodeInputs({
           <Input
             type="number"
             min={0}
-            placeholder="Max use"
+            placeholder={t("maxUse")}
             value={maximumUse ?? ""}
             onChange={(e) => setMaximumUse(Number(e.target.value))}
           />
@@ -169,14 +175,14 @@ export default function PromoCodeInputs({
             overflows a narrow viewport the way a fixed-width popup would. */}
         <div className="grid gap-3 sm:grid-cols-2">
           <InlineDateField
-            label="Expiry date"
+            label={t("expiryDate")}
             date={expiryDate}
             onSelect={setExpiryDate}
             disabledBefore={new Date()}
-            formatDate={(d) => d.toLocaleDateString()}
+            formatDate={(d) => format.dateTime(d, { dateStyle: "medium" })}
           />
           <InlineTimeField
-            label="Expiry time"
+            label={t("expiryTime")}
             date={expiryTime}
             onChange={setExpiryTime}
             seedValue={endOfDay}
@@ -195,7 +201,7 @@ export default function PromoCodeInputs({
             discount === null
           }
         >
-          Add
+          {t("add")}
         </Button>
       </div>
 
@@ -208,7 +214,9 @@ export default function PromoCodeInputs({
             >
               <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm text-muted-foreground">Promo Code</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t("promoCode2")}
+                  </p>
 
                   <p className="text-sm font-semibold">
                     {promoCodes.promoCode}
@@ -225,26 +233,28 @@ export default function PromoCodeInputs({
 
               <div className="space-y-1">
                 <div className="flex justify-between items-center text-sm text-muted-foreground">
-                  <p>Discount</p>
+                  <p>{t("discount2")}</p>
 
-                  <p>{promoCodes.discount}%</p>
+                  <p>
+                    {formatPercent(promoCodes.discount, locale, {
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <p>Maximum usage</p>
+                  <p>{t("maximumUsage")}</p>
 
                   <p>{promoCodes.maximumUse}</p>
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <p> Expiry date </p>
+                  <p> {t("expiryDate")} </p>
 
                   <p>
-                    {promoCodes.expiryDate.toLocaleDateString()}{" "}
-                    {promoCodes.expiryDate.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
+                    {format.dateTime(promoCodes.expiryDate, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
                     })}
                   </p>
                 </div>

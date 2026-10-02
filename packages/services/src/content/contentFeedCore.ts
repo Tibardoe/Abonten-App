@@ -11,6 +11,7 @@ import type {
 } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { ContentFeedRequest } from "@abonten/validation/contentSchemas";
+import { tr } from "../i18n/requestLocale";
 import { deriveSigningKey, hmacBase64Url } from "../security/signing";
 import {
   isSpotlightPromotionsKillSwitchOn,
@@ -53,22 +54,25 @@ export async function getContentFeedCore(
   const { program, settings } = await resolveContentAccess(supabase, userId);
   const surface = input.surface as ContentFeedSurface;
   if (!program.spotlight || !settings) {
-    return { status: 403, message: "Spotlight isn't available yet." };
+    return { status: 403, message: tr("spotlightIsnTAvailableYet") };
   }
   if (surface === "following" && !userId) {
-    return { status: 401, message: "Sign in to see who you follow." };
+    return { status: 401, message: tr("signInToSeeWhoYou") };
   }
   if (
     surface === "nearby" &&
     (!program.nearby || input.lat == null || input.lng == null)
   ) {
-    return { status: 400, message: "Nearby needs a location." };
+    return { status: 400, message: tr("nearbyNeedsALocation") };
   }
   if (surface === "trending" && !program.trending) {
-    return { status: 403, message: "Trending isn't available yet." };
+    return { status: 403, message: tr("trendingIsnTAvailableYet") };
   }
   if (surface === "happening_soon" && !program.happeningSoon) {
-    return { status: 403, message: "Happening soon isn't available yet." };
+    return {
+      status: 403,
+      message: tr("happeningSoonIsnTAvailableYet"),
+    };
   }
 
   const cursor = decodeCursor<FeedCursor>(input.cursor);

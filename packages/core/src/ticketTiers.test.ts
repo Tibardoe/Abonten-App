@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { hasFreeRegistration, paidTierProblem } from "./ticketTiers";
+import { t } from "./i18n/testTranslator";
+import {
+  hasFreeRegistration,
+  paidTierProblem,
+  ticketTierProblemMessage,
+} from "./ticketTiers";
 
 describe("hasFreeRegistration", () => {
   it("is true only when the FREE tier exists", () => {
@@ -22,19 +27,23 @@ describe("paidTierProblem", () => {
   });
 
   it("refuses a zero, negative or non-numeric price", () => {
-    expect(paidTierProblem({ type: "VIP", price: 0 })).toMatch(
-      /greater than zero/,
+    expect(paidTierProblem({ type: "VIP", price: 0 })).toBe("paid_needs_price");
+    expect(paidTierProblem({ type: "VIP", price: -1 })).toBe(
+      "paid_needs_price",
     );
-    expect(paidTierProblem({ type: "VIP", price: -1 })).toMatch(
-      /greater than zero/,
+    expect(paidTierProblem({ type: "VIP", price: Number.NaN })).toBe(
+      "paid_needs_price",
     );
-    expect(paidTierProblem({ type: "VIP", price: Number.NaN })).toMatch(
+    expect(ticketTierProblemMessage(t, "paid_needs_price")).toMatch(
       /greater than zero/,
     );
   });
 
   it("refuses the reserved FREE name in any case", () => {
-    expect(paidTierProblem({ type: " free ", price: 20 })).toMatch(/reserved/);
-    expect(paidTierProblem({ type: "FREE", price: 20 })).toMatch(/reserved/);
+    expect(paidTierProblem({ type: " free ", price: 20 })).toBe(
+      "free_reserved",
+    );
+    expect(paidTierProblem({ type: "FREE", price: 20 })).toBe("free_reserved");
+    expect(ticketTierProblemMessage(t, "free_reserved")).toMatch(/reserved/);
   });
 });

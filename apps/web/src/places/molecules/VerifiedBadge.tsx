@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { IoCheckmarkCircle } from "react-icons/io5";
 
 type VerifiedBadgeProps = {
@@ -11,12 +12,14 @@ type VerifiedBadgeProps = {
 // "verified" has no open/closed-style two-state color pairing to reuse --
 // same "never rely on color alone" reasoning as that template.
 export default function VerifiedBadge({ className }: VerifiedBadgeProps) {
+  const t = useTranslations("places");
+
   return (
     <span
       className={`inline-flex items-center gap-1 text-sm font-medium text-primary ${className ?? ""}`}
     >
       <IoCheckmarkCircle aria-hidden className="text-base" />
-      Verified
+      {t("verified")}
     </span>
   );
 }

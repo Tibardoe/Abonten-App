@@ -30,6 +30,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 // Web's review queries. Everything for one event or place sits under
 // ["reviews", kind, subjectId, ...] so a new / edited / deleted review, an
@@ -68,9 +69,11 @@ const PUBLIC = "public";
 
 /**
  * Whose view of the reviews to show. "public" until the session is known —
- * the view the server rendered the page with, so hydration matches — then
- * the visitor's id, whose own view (their votes, their blocks) replaces the
- * public one in place (keepPreviousData, no flash).
+ * the view the server rendered the page with, so hydration matches
+ * (useCurrentUser answers "not known yet" until the page is attached to
+ * its HTML, even when the answer is already cached) — then the visitor's
+ * id, whose own view (their votes, their blocks) replaces the public one
+ * in place (keepPreviousData, no flash).
  */
 function useViewerKey(): string {
   const { data: user } = useCurrentUser();
@@ -181,6 +184,8 @@ export function useSharedReview(
  * database, so a double click can never count twice.
  */
 export function useSetReviewHelpful(kind: ReviewSubjectKind) {
+  const t = useTranslations("reviews");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const prefix = ["reviews", kind];
@@ -216,7 +221,7 @@ export function useSetReviewHelpful(kind: ReviewSubjectKind) {
         queryClient.setQueryData(key, data);
       }
       toast.error(
-        error instanceof Error ? error.message : "Couldn't save that.",
+        error instanceof Error ? error.message : t("couldnTSaveThat2"),
       );
     },
   });

@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 type SponsoredBadgeProps = {
   className?: string;
 };
@@ -8,11 +9,13 @@ type SponsoredBadgeProps = {
 // never be mistaken for a quality signal ("highest rated"/"most popular").
 // It only ever means "this placement was paid for".
 export default function SponsoredBadge({ className }: SponsoredBadgeProps) {
+  const t = useTranslations("places");
+
   return (
     <span
       className={`inline-flex items-center rounded-full bg-foreground/80 px-2.5 py-1 text-xs font-medium text-background backdrop-blur-sm ${className ?? ""}`}
     >
-      Sponsored
+      {t("sponsored")}
     </span>
   );
 }

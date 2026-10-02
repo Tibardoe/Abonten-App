@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { FieldOpsOnboarding } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -17,6 +18,7 @@ import {
   appendTimeline,
   mapOnboarding,
 } from "../shared/onboardingRows";
+import { TIMELINE_NOTE } from "../shared/timelineNotes";
 
 // Claim assistance: the business is already on Abonten, but the listing is
 // unclaimed (or claimed by the wrong person). Rather than creating a second
@@ -60,7 +62,7 @@ export async function submitClaimAssistCore(
   if (!SUBMITTING.has(campaignStatus)) {
     return {
       status: 409,
-      message: "The campaign isn't taking submissions right now.",
+      message: tr("theCampaignIsnTTakingSubmissions"),
     };
   }
 
@@ -72,15 +74,17 @@ export async function submitClaimAssistCore(
     .eq("member_user_id", userId)
     .maybeSingle();
   const row = data as unknown as OnboardingRow | null;
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "draft" && row.status !== "needs_changes") {
-    return { status: 409, message: "This onboarding has already been sent." };
+    return {
+      status: 409,
+      message: tr("thisOnboardingHasAlreadyBeenSent"),
+    };
   }
   if (!row.owner_user_id) {
     return {
       status: 409,
-      message:
-        "The owner has to verify their phone before you can file the claim.",
+      message: tr("theOwnerHasToVerifyTheir"),
     };
   }
 
@@ -90,21 +94,20 @@ export async function submitClaimAssistCore(
     .eq("id", input.placeId)
     .maybeSingle();
   if (!place || place.status !== "published") {
-    return { status: 404, message: "That listing isn't available to claim." };
+    return { status: 404, message: tr("thatListingIsnTAvailableTo") };
   }
   // Nothing to assist with if the owner already holds it.
   if (place.owner_id === row.owner_user_id) {
     return {
       status: 409,
-      message:
-        "This owner already holds that listing, so there is nothing to claim.",
+      message: tr("thisOwnerAlreadyHoldsThatListing"),
     };
   }
   // The member must never end up owning what they onboarded.
   if (place.owner_id === userId) {
     return {
       status: 403,
-      message: "You can't file a claim against your own listing.",
+      message: tr("youCanTFileAClaim"),
     };
   }
 
@@ -129,11 +132,10 @@ export async function submitClaimAssistCore(
       if (claimErr.code === "23505") {
         return {
           status: 409,
-          message:
-            "Someone has already filed a claim on this listing. It is waiting for an admin.",
+          message: tr("someoneHasAlreadyFiledAClaim"),
         };
       }
-      return dbErr(claimErr, "Could not file the claim");
+      return dbErr(claimErr, tr("couldNotFileTheClaim"));
     }
     claimId = claim?.id as string;
   }
@@ -162,10 +164,10 @@ export async function submitClaimAssistCore(
     if (updErr.code === "23505") {
       return {
         status: 409,
-        message: "This listing is already part of another onboarding.",
+        message: tr("thisListingIsAlreadyPartOf"),
       };
     }
-    return dbErr(updErr, "Could not save the claim");
+    return dbErr(updErr, tr("couldNotSaveTheClaim"));
   }
 
   const { error: trErr } = await supabase.rpc(
@@ -179,14 +181,14 @@ export async function submitClaimAssistCore(
       p_details: { claim_request_id: claimId, place_id: input.placeId },
     },
   );
-  if (trErr) return dbErr(trErr, "Could not submit");
+  if (trErr) return dbErr(trErr, tr("couldNotSubmit"));
 
   await appendTimeline(supabase, {
     onboardingId: row.id,
     status: "submitted",
     actorUserId: userId,
     actorKind: "member",
-    note: `Claim filed for ${place.name}`,
+    note: TIMELINE_NOTE.claimFiledFor(place.name),
     details: { claimRequestId: claimId },
   });
 
@@ -205,8 +207,10 @@ export async function submitClaimAssistCore(
       .filter((id): id is string => Boolean(id)),
     {
       type: "fieldops_submission_received",
-      title: `Claim help: ${place.name}`,
-      body: "A member helped an owner claim a listing that was already on Abonten.",
+      template: {
+        id: "fieldops_claim_received",
+        params: { place: place.name },
+      },
       route: `/field/lead/review/${row.id}`,
     },
   );
@@ -219,8 +223,7 @@ export async function submitClaimAssistCore(
     .maybeSingle();
   return {
     status: 200,
-    message:
-      "Claim filed. You'll be paid once an admin approves it for the owner.",
+    message: tr("claimFiledYouLlBePaid"),
     data: mapOnboarding((fresh ?? row) as unknown as OnboardingRow),
   };
 }

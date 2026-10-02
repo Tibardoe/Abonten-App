@@ -1,13 +1,21 @@
+import {
+  eventCategoryLabel,
+  eventTypeLabel,
+} from "@abonten/core/categoryLabels";
 import type { EventFilters, PlaceFilters } from "@abonten/core/exploreFilters";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { intlLocale } from "@abonten/core/i18n/coreStrings";
+import type { CoreI18n, CoreTranslator } from "@abonten/core/i18n/translator";
 import {
-  SEARCH_RATING_OPTIONS,
-  SEARCH_WHEN_OPTIONS,
+  SEARCH_WHEN_VALUES,
   type SearchPrice,
   type SearchWhen,
   searchPriceCaps,
   searchPriceOptions,
+  searchRatingOptions,
+  searchWhenOptions,
 } from "@abonten/core/search/searchFilters";
+import { formatDistance } from "@abonten/core/units";
 
 // The Explore Filter modal's field set + predicates now live in
 // @abonten/core/exploreFilters (shared verbatim with the web Explore page).
@@ -16,6 +24,9 @@ import {
 // Rating choices as the Search sheet, turned into Explore's dates and
 // amounts), the removable-chip descriptors and the per-key clear helpers
 // the FilterSheet / ActiveFilterChips use.
+//
+// Everything that produces words takes the reader's translator (the `core`
+// namespace) and language: `useCoreI18n()` hands both to a component.
 
 export {
   type EventFilters,
@@ -43,10 +54,14 @@ export type ExploreTab = "events" | "places";
 
 export type ExploreWhen = SearchWhen | "dates";
 
-export const EXPLORE_WHEN_OPTIONS: { value: ExploreWhen; label: string }[] = [
-  ...SEARCH_WHEN_OPTIONS,
-  { value: "dates", label: "Pick dates" },
-];
+export function exploreWhenOptions(
+  t: CoreTranslator,
+): { value: ExploreWhen; label: string }[] {
+  return [
+    ...searchWhenOptions(t),
+    { value: "dates", label: t("filters.pickDates") },
+  ];
+}
 
 function isoDay(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
@@ -70,8 +85,8 @@ export function exploreWhenRange(
     case "today":
       return { startDate: isoDay(today), endDate: isoDay(today) };
     case "tomorrow": {
-      const t = isoDay(addDays(today, 1));
-      return { startDate: t, endDate: t };
+      const tomorrow = isoDay(addDays(today, 1));
+      return { startDate: tomorrow, endDate: tomorrow };
     }
     case "weekend": {
       // Friday to Sunday: this week's, or the one under way.
@@ -93,10 +108,10 @@ export function exploreWhenFor(
   now: Date = new Date(),
 ): ExploreWhen {
   if (!f.startDate && !f.endDate) return "any";
-  for (const o of SEARCH_WHEN_OPTIONS) {
-    const r = exploreWhenRange(o.value, now);
+  for (const value of SEARCH_WHEN_VALUES) {
+    const r = exploreWhenRange(value, now);
     if (r && r.startDate === f.startDate && r.endDate === f.endDate) {
-      return o.value;
+      return value;
     }
   }
   return "dates";
@@ -105,12 +120,13 @@ export function exploreWhenFor(
 export type ExplorePrice = SearchPrice | "custom";
 
 export function explorePriceOptions(
+  t: CoreTranslator,
   currency: string,
   priceScale = 1,
 ): { value: ExplorePrice; label: string }[] {
   return [
-    ...searchPriceOptions(currency, priceScale),
-    { value: "custom", label: "Custom range" },
+    ...searchPriceOptions(t, currency, priceScale),
+    { value: "custom", label: t("filters.customRange") },
   ];
 }
 
@@ -148,57 +164,70 @@ export function explorePriceFor(
 
 // Explore browses one area (10 km for events, 20 km for places unless a
 // distance is chosen), so its distances stay inside that.
-export const EXPLORE_EVENT_DISTANCE_OPTIONS: {
-  value: number | null;
-  label: string;
-}[] = [
-  { value: null, label: "Any distance" },
-  { value: 1, label: "Within 1 km" },
-  { value: 2, label: "Within 2 km" },
-  { value: 5, label: "Within 5 km" },
-];
+const EVENT_DISTANCES_KM: readonly (number | null)[] = [null, 1, 2, 5];
+const PLACE_DISTANCES_KM: readonly (number | null)[] = [null, 1, 2, 5, 10];
 
-export const EXPLORE_PLACE_DISTANCE_OPTIONS: {
-  value: number | null;
-  label: string;
-}[] = [...EXPLORE_EVENT_DISTANCE_OPTIONS, { value: 10, label: "Within 10 km" }];
+type DistanceOption = { value: number | null; label: string };
+
+function distanceLabel({ t, locale }: CoreI18n, km: number | null): string {
+  return km === null
+    ? t("filters.anyDistance")
+    : t("searchFilters.within", {
+        distance: formatDistance(km * 1000, "km", intlLocale(locale)),
+      });
+}
+
+export function exploreEventDistanceOptions(i18n: CoreI18n): DistanceOption[] {
+  return EVENT_DISTANCES_KM.map((value) => ({
+    value,
+    label: distanceLabel(i18n, value),
+  }));
+}
+
+export function explorePlaceDistanceOptions(i18n: CoreI18n): DistanceOption[] {
+  return PLACE_DISTANCES_KM.map((value) => ({
+    value,
+    label: distanceLabel(i18n, value),
+  }));
+}
 
 /** The options, plus the current value when it isn't one of them. */
 export function withCurrentDistance(
-  options: { value: number | null; label: string }[],
+  i18n: CoreI18n,
+  options: DistanceOption[],
   current: number | null,
-): { value: number | null; label: string }[] {
+): DistanceOption[] {
   if (current == null || options.some((o) => o.value === current)) {
     return options;
   }
-  return [...options, { value: current, label: `Within ${current} km` }];
+  return [...options, { value: current, label: distanceLabel(i18n, current) }];
 }
 
-export const EXPLORE_RATING_OPTIONS = SEARCH_RATING_OPTIONS;
+export function exploreRatingOptions(i18n: CoreI18n) {
+  return searchRatingOptions(i18n);
+}
 
-const SHORT_MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+/** "5 Oct" / "5 oct." — a filter day in the reader's language. */
+function shortDay(iso: string, locale: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(y, m - 1, d)));
+}
 
-function shortDay(iso: string): string {
-  const [, m, d] = iso.split("-").map(Number);
-  return `${d} ${SHORT_MONTHS[m - 1] ?? ""}`.trim();
+function starsLabel({ t, locale }: CoreI18n, rating: number): string {
+  return t("searchFilters.minStars", {
+    rating: new Intl.NumberFormat(intlLocale(locale)).format(rating),
+  });
 }
 
 export type FilterChip = { key: string; label: string };
 
 export function describeEventFilters(
+  i18n: CoreI18n,
   f: EventFilters,
   /** The browsed market's currency, for the price chip. */
   currency: string,
@@ -206,59 +235,76 @@ export function describeEventFilters(
   priceScale = 1,
   now: Date = new Date(),
 ): FilterChip[] {
+  const { t, locale } = i18n;
   const chips: FilterChip[] = [];
   if (f.startDate || f.endDate) {
     const when = exploreWhenFor(f, now);
-    const named =
-      when === "dates"
-        ? null
-        : EXPLORE_WHEN_OPTIONS.find((o) => o.value === when);
     chips.push({
       key: "date",
-      label: named
-        ? named.label
-        : f.startDate && f.endDate && f.startDate !== f.endDate
-          ? `${shortDay(f.startDate)} – ${shortDay(f.endDate)}`
-          : shortDay((f.startDate ?? f.endDate) as string),
+      label:
+        when !== "dates"
+          ? t(`searchFilters.when.${when}`)
+          : f.startDate && f.endDate && f.startDate !== f.endDate
+            ? t("filters.range", {
+                from: shortDay(f.startDate, locale),
+                to: shortDay(f.endDate, locale),
+              })
+            : shortDay((f.startDate ?? f.endDate) as string, locale),
     });
   }
   if (f.maxDistanceKm != null)
-    chips.push({ key: "distance", label: `Within ${f.maxDistanceKm} km` });
+    chips.push({
+      key: "distance",
+      label: distanceLabel(i18n, f.maxDistanceKm),
+    });
   if (f.minPrice != null || f.maxPrice != null) {
     const price = explorePriceFor(f, priceScale);
     const fmt = (v: number) =>
-      formatMoney(currency, v, { trimZeroFraction: true });
+      formatMoney(currency, v, { trimZeroFraction: true, locale });
     chips.push({
       key: "price",
       label:
         price !== "custom"
-          ? (explorePriceOptions(currency, priceScale).find(
+          ? (explorePriceOptions(t, currency, priceScale).find(
               (o) => o.value === price,
             )?.label ?? "")
           : f.maxPrice == null
-            ? `From ${fmt(f.minPrice ?? 0)}`
-            : `${fmt(f.minPrice ?? 0)} – ${fmt(f.maxPrice)}`,
+            ? t("filters.priceFrom", { amount: fmt(f.minPrice ?? 0) })
+            : t("filters.range", {
+                from: fmt(f.minPrice ?? 0),
+                to: fmt(f.maxPrice),
+              }),
     });
   }
-  if (f.category) chips.push({ key: "category", label: f.category });
-  for (const type of f.types) chips.push({ key: `type:${type}`, label: type });
+  if (f.category) {
+    chips.push({ key: "category", label: eventCategoryLabel(t, f.category) });
+  }
+  for (const type of f.types) {
+    chips.push({ key: `type:${type}`, label: eventTypeLabel(t, type) });
+  }
   if (f.minRating != null)
-    chips.push({ key: "rating", label: `${f.minRating}+ stars` });
+    chips.push({ key: "rating", label: starsLabel(i18n, f.minRating) });
   return chips;
 }
 
 export function describePlaceFilters(
+  i18n: CoreI18n,
   f: PlaceFilters,
+  /** The chosen category's name, already in the reader's language. */
   categoryName: string | null,
 ): FilterChip[] {
   const chips: FilterChip[] = [];
   if (f.maxDistanceKm != null)
-    chips.push({ key: "distance", label: `Within ${f.maxDistanceKm} km` });
+    chips.push({
+      key: "distance",
+      label: distanceLabel(i18n, f.maxDistanceKm),
+    });
   if (f.categoryId != null && categoryName)
     chips.push({ key: "category", label: categoryName });
-  if (f.openNow) chips.push({ key: "openNow", label: "Open now" });
+  if (f.openNow)
+    chips.push({ key: "openNow", label: i18n.t("searchFilters.openNow") });
   if (f.minRating != null)
-    chips.push({ key: "rating", label: `${f.minRating}+ stars` });
+    chips.push({ key: "rating", label: starsLabel(i18n, f.minRating) });
   return chips;
 }
 
@@ -268,7 +314,7 @@ export function clearEventFilterKey(
 ): EventFilters {
   if (key === "category") return { ...f, category: null };
   if (key.startsWith("type:"))
-    return { ...f, types: f.types.filter((t) => `type:${t}` !== key) };
+    return { ...f, types: f.types.filter((type) => `type:${type}` !== key) };
   if (key === "price") return { ...f, minPrice: null, maxPrice: null };
   if (key === "date") return { ...f, startDate: null, endDate: null };
   if (key === "rating") return { ...f, minRating: null };

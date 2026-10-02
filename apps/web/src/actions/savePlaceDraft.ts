@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type SavePlaceDraftCoreResult,
   savePlaceDraftCore,
@@ -22,7 +24,7 @@ type SavePlaceDraftInput = {
 // placeDraftPayloadSchema validation + the drafts/place_drafts writes +
 // replaced-cover cleanup in savePlaceDraftCore (shared with /api/mobile,
 // which passes an already-uploaded cover instead of a File).
-export async function savePlaceDraft({
+export const savePlaceDraft = withActionLocale(async function savePlaceDraft({
   draftId,
   payload,
   expectedUpdatedAt,
@@ -44,7 +46,10 @@ export async function savePlaceDraft({
     };
   }
   if (!user) {
-    return { status: 401 as const, message: "User not authenticated" };
+    return {
+      status: 401 as const,
+      message: tr("userNotAuthenticated"),
+    };
   }
 
   let coverPublicId: string | undefined;
@@ -56,7 +61,7 @@ export async function savePlaceDraft({
       return {
         status: 500 as const,
         message:
-          (upload as { error?: string })?.error ?? "Cover photo upload failed.",
+          (upload as { error?: string })?.error ?? tr("coverPhotoUploadFailed"),
       };
     }
     coverPublicId = upload.public_id;
@@ -70,4 +75,4 @@ export async function savePlaceDraft({
     coverPublicId,
     coverVersion,
   });
-}
+});

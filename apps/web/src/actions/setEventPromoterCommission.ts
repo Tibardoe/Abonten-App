@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { setEventPromoterCommissionCore } from "@abonten/services/rewards/promoterCommissionCore";
 import type { EventPromoterCommission } from "@abonten/types/rewards";
 
@@ -9,25 +11,27 @@ import type { EventPromoterCommission } from "@abonten/types/rewards";
  * or stops it (null). Same service as
  * PUT /api/mobile/organizer/events/[eventId]/promoter-commission.
  */
-export async function setEventPromoterCommission(input: {
-  eventId: string;
-  rateBps: number | null;
-}): Promise<{
-  status: number;
-  message?: string;
-  data?: EventPromoterCommission;
-}> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { status: 401, message: "User not logged in" };
-  if (
-    typeof input?.eventId !== "string" ||
-    (input.rateBps !== null && typeof input.rateBps !== "number")
-  ) {
-    return { status: 400, message: "Invalid request" };
-  }
+export const setEventPromoterCommission = withActionLocale(
+  async function setEventPromoterCommission(input: {
+    eventId: string;
+    rateBps: number | null;
+  }): Promise<{
+    status: number;
+    message?: string;
+    data?: EventPromoterCommission;
+  }> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { status: 401, message: tr("userNotLoggedIn") };
+    if (
+      typeof input?.eventId !== "string" ||
+      (input.rateBps !== null && typeof input.rateBps !== "number")
+    ) {
+      return { status: 400, message: tr("invalidRequest2") };
+    }
 
-  return setEventPromoterCommissionCore(supabase, user.id, input);
-}
+    return setEventPromoterCommissionCore(supabase, user.id, input);
+  },
+);

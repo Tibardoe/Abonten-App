@@ -2,6 +2,7 @@ import type {
   FieldOpsCampaignAction,
   FieldOpsCampaignStatus,
 } from "@abonten/types/fieldOps";
+import type { CoreTranslator } from "../i18n/translator";
 
 // The Field Ops campaign state machine, as a pure function so the admin UI
 // can show only the moves that exist and unit tests can pin the table down.
@@ -30,23 +31,20 @@ const TRANSITIONS: Record<
   archived: {},
 };
 
-export const CAMPAIGN_ACTION_LABEL: Record<FieldOpsCampaignAction, string> = {
-  activate: "Activate",
-  pause: "Pause",
-  resume: "Resume",
-  wind_down: "Start winding down",
-  complete: "Complete",
-  archive: "Archive",
-};
+/** Words live under `fieldOpsCampaign.*` of the core namespace. */
+export function campaignActionLabel(
+  t: CoreTranslator,
+  action: FieldOpsCampaignAction,
+): string {
+  return t(`fieldOpsCampaign.action.${action}`);
+}
 
-export const CAMPAIGN_STATUS_LABEL: Record<FieldOpsCampaignStatus, string> = {
-  draft: "Draft",
-  active: "Active",
-  paused: "Paused",
-  winding_down: "Winding down",
-  completed: "Completed",
-  archived: "Archived",
-};
+export function fieldOpsCampaignStatusLabel(
+  t: CoreTranslator,
+  status: FieldOpsCampaignStatus,
+): string {
+  return t(`fieldOpsCampaign.status.${status}`);
+}
 
 /** The status an action leads to from `current`, or null if not allowed. */
 export function nextCampaignStatus(

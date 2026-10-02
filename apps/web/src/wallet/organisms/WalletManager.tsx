@@ -9,14 +9,17 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
 import PaymentMethodCard, {
-  NO_PAYMENT_METHODS_MESSAGE,
+  NO_PAYMENT_METHODS_KEY,
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type WalletManagerProps = {
-  initialPaymentMethods: PaymentMethodRow[];
+  /** Left out when the server could not read them: the list loads here. */
+  initialPaymentMethods?: PaymentMethodRow[];
 };
 
 export const PAYMENT_METHODS_QUERY_KEY = ["payment-methods"];
@@ -32,6 +35,8 @@ export const PAYMENT_METHODS_QUERY_KEY = ["payment-methods"];
 export default function WalletManager({
   initialPaymentMethods,
 }: WalletManagerProps) {
+  const t = useTranslations("wallet");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -41,7 +46,7 @@ export default function WalletManager({
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: PAYMENT_METHODS_QUERY_KEY,
     queryFn: async () => {
-      const response = await getUserPaymentMethods();
+      const response = answerOrThrow(await getUserPaymentMethods());
       return response.status === 200 ? response.data : [];
     },
     initialData: initialPaymentMethods,
@@ -77,12 +82,9 @@ export default function WalletManager({
             context.previousMethods,
           );
         }
-        toast.error(
-          response.message ??
-            "We couldn't remove that payment method. Please try again.",
-        );
+        toast.error(response.message ?? t("weCouldnTRemoveThatPayment"));
       } else {
-        toast.success("Payment method removed.");
+        toast.success(t("paymentMethodRemoved"));
       }
     },
 
@@ -93,7 +95,7 @@ export default function WalletManager({
           context.previousMethods,
         );
       }
-      toast.error("We couldn't remove that payment method. Please try again.");
+      toast.error(t("weCouldnTRemoveThatPayment"));
     },
 
     onSettled: () => {
@@ -135,9 +137,7 @@ export default function WalletManager({
             context.previousMethods,
           );
         }
-        toast.error(
-          response.message ?? "We couldn't update your default payment method.",
-        );
+        toast.error(response.message ?? t("weCouldnTUpdateYourDefault"));
       }
     },
 
@@ -148,7 +148,7 @@ export default function WalletManager({
           context.previousMethods,
         );
       }
-      toast.error("We couldn't update your default payment method.");
+      toast.error(t("weCouldnTUpdateYourDefault"));
     },
 
     onSettled: () => {
@@ -169,13 +169,13 @@ export default function WalletManager({
   if (isError) {
     return (
       <div className="space-y-3 text-center text-muted-foreground py-8">
-        <p>Couldn't load your payment methods.</p>
+        <p>{t("couldnTLoadYourPaymentMethods")}</p>
         <button
           type="button"
           onClick={() => refetch()}
           className="underline font-medium"
         >
-          Try again
+          {t("tryAgain")}
         </button>
       </div>
     );
@@ -185,7 +185,7 @@ export default function WalletManager({
     <div className="space-y-4">
       {methods.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {NO_PAYMENT_METHODS_MESSAGE}
+          {t(NO_PAYMENT_METHODS_KEY)}
         </p>
       ) : (
         <div className="space-y-3">
@@ -210,10 +210,10 @@ export default function WalletManager({
 
       {pendingRemoveId && (
         <ConfirmDeleteModal
-          title="Remove this payment method?"
-          message="You can add it again later if you change your mind."
-          confirmLabel="Remove"
-          loadingLabel="Removing…"
+          title={t("removeThisPaymentMethod")}
+          message={t("youCanAddItAgainLater")}
+          confirmLabel={t("remove")}
+          loadingLabel={t("removing2")}
           isLoading={removeMutation.isPending}
           onConfirm={() => removeMutation.mutate(pendingRemoveId)}
           onCancel={() => setPendingRemoveId(null)}

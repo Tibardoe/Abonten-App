@@ -4,27 +4,36 @@ import { advertiserCampaignAction } from "@/actions/content/advertiserCampaignAc
 import { getOwnCampaign } from "@/actions/content/getOwnCampaign";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachine";
 import {
-  CAMPAIGN_OBJECTIVE_LABEL,
-  CAMPAIGN_STATUS_LABEL,
-  PROMOTION_END_REASON_LABEL,
-  PROMOTION_ESTIMATE_NOTE,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  campaignObjectiveLabel,
+  campaignStatusLabel,
+  isCampaignStatus,
+  promotionEndReasonLabel,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
+import { formatDateTime } from "@abonten/core/i18n/format";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
 import { CampaignStatusPill } from "../molecules/ContentStatusBadge";
 
-function when(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleString() : "—";
+function when(iso: string | null, locale: string): string {
+  return iso ? formatDateTime(iso, locale) : "—";
 }
 
 export default function ManageCampaign({ campaignId }: { campaignId: string }) {
+  const locale = useLocale();
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+  const format = useFormatter();
+
   const toast = useToast();
   const qc = useQueryClient();
   const [busy, setBusy] = useState<"pause" | "resume" | "cancel" | null>(null);
@@ -50,7 +59,7 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
   if (query.isError || !query.data) {
     return (
       <p className="py-20 text-center text-sm text-muted-foreground">
-        This promotion isn't available.
+        {t("thisPromotionIsnTAvailable")}
       </p>
     );
   }
@@ -59,19 +68,22 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
 
   const act = async (action: "pause" | "resume" | "cancel") => {
     setBusy(action);
-    const res = await advertiserCampaignAction({ campaignId: c.id, action });
+    const res = await advertiserCampaignAction({
+      campaignId: c.id,
+      action,
+    }).catch(actionUnreachable);
     setBusy(null);
     setConfirmCancel(false);
     if (res.status !== 200) {
-      toast.error(messageOf(res, "Couldn't update this promotion."));
+      toast.error(messageOf(res, t("couldnTUpdateThisPromotion")));
       return;
     }
     toast.success(
       action === "pause"
-        ? "Promotion paused."
+        ? t("promotionPaused")
         : action === "resume"
-          ? "Promotion resumed."
-          : "Promotion cancelled.",
+          ? t("promotionResumed")
+          : t("promotionCancelled"),
     );
     qc.invalidateQueries({ queryKey: ["content", "campaigns"] });
   };
@@ -85,38 +97,41 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
   const canCancel = canTransitionCampaign(c.status, "cancelled", "advertiser");
 
   const m = c.metrics;
-  const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GB");
+  const n = (v: number | undefined) => format.number(v ?? 0);
   const unused = Math.max(0, c.paidMinor - c.spentMinor - c.refundedMinor);
   const budget: [string, string][] = [
-    ["Budget", formatMinor(c.budgetMinor, c.currency)],
-    ["Used so far", formatMinor(c.spentMinor, c.currency)],
-    ["Unused", formatMinor(unused, c.currency)],
-    ["Refunded", formatMinor(c.refundedMinor, c.currency)],
-    ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
-    ["Runs for up to", `${c.durationDays} days`],
-    ["Starts", when(c.startsAt)],
-    ["Ends by", when(c.endsAt)],
+    [t("budget"), formatMinor(c.budgetMinor, c.currency, locale)],
+    [t("usedSoFar"), formatMinor(c.spentMinor, c.currency, locale)],
+    [t("unused"), formatMinor(unused, c.currency, locale)],
+    [t("refunded"), formatMinor(c.refundedMinor, c.currency, locale)],
+    [t("goal"), campaignObjectiveLabel(tc, c.objective)],
+    [
+      t("runsForUpTo"),
+      tc("promotionSummary.duration.days", { count: c.durationDays }),
+    ],
+    [t("starts"), when(c.startsAt, locale)],
+    [t("endsBy"), when(c.endsAt, locale)],
   ];
   // Reach is people; impressions are times shown. Kept apart on purpose.
   const delivery: [string, string][] = [
     [
-      "Estimated reach",
-      formatReachRange({
+      t("estimatedReach"),
+      formatReachRange(tc, {
         reachLow: c.estimatedReachLow,
         reachHigh: c.estimatedReachHigh,
       }),
     ],
-    ["People reached", n(m?.reach ?? c.reach)],
+    [t("peopleReached"), n(m?.reach ?? c.reach)],
     [
-      "Sponsored impressions",
+      t("sponsoredImpressions"),
       `${n(m?.impressions ?? c.impressions)} of ${n(c.impressionGoal)}`,
     ],
-    ["Meaningful views", n(m?.meaningfulViews ?? c.views)],
-    ["Completed views", n(m?.completions ?? c.completions)],
-    ["Profile visits", n(m?.clicks.profile)],
-    ["Event taps", n(m?.clicks.event)],
-    ["Place taps", n(m?.clicks.place)],
-    ["New followers", n(m?.follows)],
+    [t("meaningfulViews"), n(m?.meaningfulViews ?? c.views)],
+    [t("completedViews"), n(m?.completions ?? c.completions)],
+    [t("profileVisits"), n(m?.clicks.profile)],
+    [t("eventTaps"), n(m?.clicks.event)],
+    [t("placeTaps"), n(m?.clicks.place)],
+    [t("newFollowers"), n(m?.follows)],
     [
       "Tickets / reservations",
       `${n(m?.conversions.ticketPurchases)} / ${n(m?.conversions.reservations)}`,
@@ -129,14 +144,14 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
         href="/manage/spotlight?tab=campaigns"
         className="text-sm font-medium text-muted-foreground hover:text-foreground"
       >
-        ← Promotions
+        {t("promotions2")}
       </Link>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold">Spotlight promotion</h1>
+          <h1 className="text-2xl font-bold">{t("spotlightPromotion")}</h1>
           <p className="line-clamp-1 text-sm text-muted-foreground">
-            {c.post?.caption?.trim() || "Spotlight"}
+            {c.post?.caption?.trim() || t("spotlight")}
           </p>
         </div>
         <CampaignStatusPill status={c.status} />
@@ -144,44 +159,46 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
 
       {c.status === "pending_payment" && c.checkoutId ? (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
-          Waiting for payment.{" "}
+          {t("waitingForPayment")}
           <Link
             href={`/checkout/${c.checkoutId}?type=spotlight-promotion`}
             className="font-semibold underline"
           >
-            Finish paying
+            {t("finishPaying")}
           </Link>
         </div>
       ) : null}
       {c.status === "pending_review" ? (
         <p className="rounded-md border p-3 text-sm text-muted-foreground">
-          Payment received. Our team reviews every promotion before it runs. If
-          it isn't approved, you're refunded in full.
+          {t("paymentReceivedOurTeamReviewsEvery")}
         </p>
       ) : null}
       {c.status === "rejected" && c.reviewReason ? (
         <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          Not approved: {c.reviewReason}
+          {t("notApproved", { reviewReason: c.reviewReason })}
         </p>
       ) : null}
       {c.status === "paused" && c.pauseSource !== "advertiser" ? (
         <p className="rounded-md bg-amber-500/10 p-3 text-sm">
-          Paused by Abonten{c.pauseReason ? `: ${c.pauseReason}` : "."}
+          {t("pausedByAbonten")}
+          {c.pauseReason ? `: ${c.pauseReason}` : "."}
         </p>
       ) : null}
 
       {c.status === "completed" && c.endReason ? (
         <p className="rounded-md border p-3 text-sm text-muted-foreground">
-          {PROMOTION_END_REASON_LABEL[c.endReason]}.
+          {promotionEndReasonLabel(tc, c.endReason)}.
           {unused > 0
-            ? ` ${formatMinor(unused, c.currency)} of the budget wasn't used.`
+            ? ` ${t("ofTheBudgetWasnTUsed", {
+                amount: formatMinor(unused, c.currency, locale),
+              })}`
             : ""}
         </p>
       ) : null}
 
       {[
-        { title: "Budget", rows: budget },
-        { title: "Delivery", rows: delivery },
+        { title: t("budget"), rows: budget },
+        { title: t("delivery"), rows: delivery },
       ].map((group) => (
         <section key={group.title} className="space-y-2">
           <h2 className="text-lg font-semibold">{group.title}</h2>
@@ -195,7 +212,9 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
           </dl>
         </section>
       ))}
-      <p className="text-xs text-muted-foreground">{PROMOTION_ESTIMATE_NOTE}</p>
+      <p className="text-xs text-muted-foreground">
+        {tc(PROMOTION_ESTIMATE_NOTE_KEY)}
+      </p>
 
       <div className="flex flex-wrap gap-2">
         {canPause ? (
@@ -205,7 +224,7 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
             onClick={() => act("pause")}
             className="rounded-md border px-4 py-2 text-sm font-semibold hover:bg-accent disabled:opacity-50"
           >
-            {busy === "pause" ? "Pausing…" : "Pause"}
+            {busy === "pause" ? t("pausing") : t("pause")}
           </button>
         ) : null}
         {canResume ? (
@@ -215,7 +234,7 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
             onClick={() => act("resume")}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {busy === "resume" ? "Resuming…" : "Resume"}
+            {busy === "resume" ? t("resuming") : t("resume")}
           </button>
         ) : null}
         {canCancel ? (
@@ -225,24 +244,24 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
             onClick={() => setConfirmCancel(true)}
             className="rounded-md border border-destructive/40 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-50"
           >
-            Cancel promotion
+            {t("cancelPromotion")}
           </button>
         ) : null}
       </div>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-semibold">History</h2>
+        <h2 className="text-lg font-semibold">{t("history")}</h2>
         <ol className="space-y-2 border-l pl-4">
           {events.map((e) => (
             <li key={e.id} className="text-sm">
               <span className="font-medium">
-                {CAMPAIGN_STATUS_LABEL[
-                  e.toStatus as keyof typeof CAMPAIGN_STATUS_LABEL
-                ] ?? e.toStatus}
+                {isCampaignStatus(e.toStatus)
+                  ? campaignStatusLabel(tc, e.toStatus)
+                  : e.toStatus}
               </span>
               <span className="text-muted-foreground">
                 {" "}
-                · {new Date(e.createdAt).toLocaleString()}
+                · {formatDateTime(e.createdAt, locale)}
               </span>
               {e.reason ? (
                 <p className="text-xs text-muted-foreground">{e.reason}</p>
@@ -254,11 +273,11 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
 
       {confirmCancel ? (
         <ConfirmDeleteModal
-          title="Cancel this promotion?"
-          message="It stops showing straight away. Any unused budget is reviewed for a refund by our team."
-          confirmLabel="Cancel promotion"
-          cancelLabel="Keep it"
-          loadingLabel="Cancelling…"
+          title={t("cancelThisPromotion")}
+          message={t("itStopsShowingStraightAwayAny")}
+          confirmLabel={t("cancelPromotion")}
+          cancelLabel={t("keepIt")}
+          loadingLabel={t("cancelling")}
           isLoading={busy === "cancel"}
           onConfirm={() => act("cancel")}
           onCancel={() => setConfirmCancel(false)}

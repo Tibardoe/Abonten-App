@@ -2,6 +2,7 @@
 
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import { BottomSheet } from "@/components/atoms/BottomSheet";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import PaymentOptionCard from "../molecules/PaymentOptionCard";
 import AddBankCard from "./AddBankCard";
@@ -12,21 +13,26 @@ type PopupCloseProp = {
   onAdded: (method: PaymentMethodRow) => void;
 };
 
-const STEP_TITLES: Record<string, string> = {
-  "Mobile Money": "Add Mobile Money Wallet",
-  "Bank Card": "Add Bank Card",
-};
+// The option chosen in step 1, as a code: its title is worded when shown.
+type MethodOption = "mobile_money" | "card";
+
+const STEP_TITLES = {
+  mobile_money: "addMobileMoneyWallet",
+  card: "addBankCard",
+} as const;
 
 export default function AddPaymentMethodPopup({
   onclick,
   onAdded,
 }: PopupCloseProp) {
+  const t = useTranslations("wallet");
+
   const [step, setStep] = useState(1);
 
-  const [title, setTitle] = useState("");
+  const [option, setOption] = useState<MethodOption | null>(null);
 
-  const increaseStep = (title: string) => {
-    setTitle(title);
+  const increaseStep = (chosen: MethodOption) => {
+    setOption(chosen);
     setStep((prevState) => prevState + 1);
   };
 
@@ -36,8 +42,10 @@ export default function AddPaymentMethodPopup({
       onClose={onclick}
       title={
         step === 1
-          ? "Add a payment method"
-          : (STEP_TITLES[title] ?? "Add wallet")
+          ? t("addAPaymentMethod")
+          : option
+            ? t(STEP_TITLES[option])
+            : t("addWallet")
       }
       className="md:w-[30rem]"
     >
@@ -45,24 +53,24 @@ export default function AddPaymentMethodPopup({
         <div className="space-y-3">
           <PaymentOptionCard
             imgUrl="/assets/images/phone.svg"
-            optionTitle="Mobile Money"
-            optionDetails="MTN, Telecel, AT Money, G-Money"
-            handleStep={increaseStep}
+            optionTitle={t("mobileMoney2")}
+            optionDetails={t("mtnTelecelAtMoneyGMoney")}
+            handleStep={() => increaseStep("mobile_money")}
           />
 
           <PaymentOptionCard
             imgUrl="/assets/images/bankCard.svg"
-            optionTitle="Bank Card"
+            optionTitle={t("bankCard")}
             optionDetails="Visa, Mastercard"
-            handleStep={increaseStep}
+            handleStep={() => increaseStep("card")}
           />
         </div>
       )}
 
-      {step === 2 && title === "Mobile Money" && (
+      {step === 2 && option === "mobile_money" && (
         <AddMomoWallet onSaved={onAdded} />
       )}
-      {step === 2 && title === "Bank Card" && <AddBankCard onSaved={onAdded} />}
+      {step === 2 && option === "card" && <AddBankCard onSaved={onAdded} />}
     </BottomSheet>
   );
 }

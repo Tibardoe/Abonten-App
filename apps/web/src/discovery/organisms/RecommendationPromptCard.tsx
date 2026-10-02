@@ -5,8 +5,10 @@ import { markRecommendationPromptShown } from "@/actions/discovery/markRecommend
 import { respondToRecommendationPrompt } from "@/actions/discovery/respondToRecommendationPrompt";
 import { cn } from "@/components/lib/utils";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { PromptContext, PromptOffer } from "@abonten/types/discoveryType";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IoClose, IoNotificationsOutline } from "react-icons/io5";
@@ -32,6 +34,8 @@ export default function RecommendationPromptCard({
   className?: string;
   onClose?: () => void;
 }) {
+  const t = useTranslations("discovery");
+
   const toast = useToast();
   const [alsoOrganizer, setAlsoOrganizer] = useState(false);
   const [done, setDone] = useState<null | "accepted" | "dismissed">(null);
@@ -50,7 +54,7 @@ export default function RecommendationPromptCard({
   useEffect(() => {
     if (!isEmpty(offer) && !recorded.current) {
       recorded.current = true;
-      void markRecommendationPromptShown(context);
+      void markRecommendationPromptShown(context).catch(actionUnreachable);
     }
   }, [offer, context]);
 
@@ -66,13 +70,13 @@ export default function RecommendationPromptCard({
       }),
     onSuccess: (res, response) => {
       if (res.status !== 200) {
-        toast.error(res.message ?? "Couldn't save that. Please try again.");
+        toast.error(res.message ?? t("couldnTSaveThatPleaseTry"));
         return;
       }
       setDone(response);
       if (response === "dismissed") onClose?.();
     },
-    onError: () => toast.error("Couldn't save that. Please try again."),
+    onError: () => toast.error(t("couldnTSaveThatPleaseTry")),
   });
 
   if (isEmpty(offer) || done === "dismissed") return null;
@@ -85,15 +89,14 @@ export default function RecommendationPromptCard({
           className,
         )}
       >
-        <p className="font-medium">Notifications on.</p>
+        <p className="font-medium">{t("notificationsOn")}</p>
         <p className="mt-1 text-muted-foreground">
-          We'll only send what you asked for, and never more than one pick a
-          day.{" "}
+          {t("weLlOnlySendWhatYou2")}
           <Link
             href="/settings/notifications"
             className="text-primary hover:underline"
           >
-            Manage
+            {t("manage")}
           </Link>
         </p>
       </output>
@@ -104,12 +107,17 @@ export default function RecommendationPromptCard({
   const similar = offer?.similarEvents;
   const organizer = offer?.organizer;
 
-  const title = place ? "Like this place?" : "Enjoy events like this?";
+  const title = place ? t("likeThisPlace") : t("enjoyEventsLikeThis");
   const body = place
-    ? `Get updates from ${place.name} and discover similar places nearby.`
-    : `Get notified when similar ${similar?.category ?? ""} events are happening${
-        similar?.locality ? ` near ${similar.locality}` : " near you"
-      }.`;
+    ? t("getUpdatesFromAndDiscoverSimilar", { name: place.name })
+    : similar?.locality
+      ? t("getNotifiedWhenSimilarEventsNear", {
+          category: similar.category,
+          locality: similar.locality,
+        })
+      : t("getNotifiedWhenSimilarEventsNearYou", {
+          category: similar?.category ?? "",
+        });
 
   return (
     <section
@@ -121,7 +129,7 @@ export default function RecommendationPromptCard({
     >
       <button
         type="button"
-        aria-label="Dismiss"
+        aria-label={t("dismiss")}
         onClick={() => respond.mutate("dismissed")}
         disabled={respond.isPending}
         className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -145,7 +153,7 @@ export default function RecommendationPromptCard({
                 onChange={(e) => setAlsoOrganizer(e.target.checked)}
                 className="h-4 w-4 accent-[hsl(var(--primary))]"
               />
-              Also tell me when @{organizer.username} posts a new event
+              {t("alsoTellMeWhenPostsA", { username: organizer.username })}
             </label>
           ) : null}
         </div>
@@ -157,7 +165,7 @@ export default function RecommendationPromptCard({
           disabled={respond.isPending}
           className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
         >
-          Turn on notifications
+          {t("turnOnNotifications")}
         </button>
         <button
           type="button"
@@ -165,7 +173,7 @@ export default function RecommendationPromptCard({
           disabled={respond.isPending}
           className="rounded-md px-4 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-60"
         >
-          Not now
+          {t("notNow")}
         </button>
       </div>
     </section>

@@ -23,6 +23,7 @@ import {
   SheetOption,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
@@ -41,12 +42,17 @@ function walletPhoneLooksValid(raw: string, dialCode: string | null): boolean {
 // destinations. Reuses the existing useAddPayoutAccount API + validation.
 type SheetStep = "closed" | "choose" | "mobile_money" | "bank";
 
-function accountTitle(a: PayoutAccountRow): string {
-  const kind = a.account_type === "mobile_money" ? "Mobile money" : "Bank";
+function accountTitle(
+  a: PayoutAccountRow,
+  t: (key: "mobileMoney" | "bank") => string,
+): string {
+  const kind = a.account_type === "mobile_money" ? t("mobileMoney") : t("bank");
   return `${a.provider ?? kind} · ${a.account_number}`;
 }
 
 export default function PayoutAccountsScreen() {
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const { markets, context } = useMarket();
   const homeDialCode =
@@ -91,7 +97,7 @@ export default function PayoutAccountsScreen() {
   async function onAdd() {
     setFormError(null);
     if (holder.trim().length < 2) {
-      setFormError("Enter the account holder's name.");
+      setFormError(t("enterTheAccountHolderSName"));
       return;
     }
 
@@ -99,11 +105,11 @@ export default function PayoutAccountsScreen() {
     if (step === "mobile_money") {
       const net = networkList.find((n) => n.code === networkCode);
       if (!net) {
-        setFormError("Pick a mobile money network.");
+        setFormError(t("pickAMobileMoneyNetwork"));
         return;
       }
       if (!walletPhoneLooksValid(phone, homeDialCode)) {
-        setFormError("Enter a valid mobile money number.");
+        setFormError(t("enterAValidMobileMoneyNumber"));
         return;
       }
       body = {
@@ -115,11 +121,11 @@ export default function PayoutAccountsScreen() {
       };
     } else if (step === "bank") {
       if (bankName.trim().length < 2) {
-        setFormError("Enter the bank name.");
+        setFormError(t("enterTheBankName"));
         return;
       }
       if (!/^[0-9]{8,20}$/.test(accountNumber.trim())) {
-        setFormError("Enter a valid account number (8–20 digits).");
+        setFormError(t("enterAValidAccountNumber8"));
         return;
       }
       body = {
@@ -136,30 +142,28 @@ export default function PayoutAccountsScreen() {
     if (res.status === 200) {
       setSuccess(
         step === "mobile_money"
-          ? "Mobile money payout account added."
-          : "Bank payout account added.",
+          ? t("mobileMoneyPayoutAccountAdded")
+          : t("bankPayoutAccountAdded"),
       );
       return;
     }
-    setFormError(
-      res.message ?? "We couldn't add that account. Please try again.",
-    );
+    setFormError(res.message ?? t("weCouldnTAddThatAccount"));
   }
 
   function confirmRemove(id: string) {
-    Alert.alert("Remove this payout account?", undefined, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("removeThisPayoutAccount"), undefined, [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Remove",
+        text: t("remove"),
         style: "destructive",
         onPress: async () => {
           const res = await remove.mutateAsync(id);
           if (res.status === 200) {
-            toast.success("Payout account removed");
+            toast.success(t("payoutAccountRemoved"));
             return;
           }
-          toast.error(res.message ?? "We couldn't remove that account.", {
-            description: "It is still on your profile. Please try again.",
+          toast.error(res.message ?? t("weCouldnTRemoveThatAccount"), {
+            description: t("itIsStillOnYourProfile"),
           });
         },
       },
@@ -167,13 +171,13 @@ export default function PayoutAccountsScreen() {
   }
 
   const sheetTitle = success
-    ? "All set"
+    ? t("allSet")
     : step === "choose"
-      ? "Add a payout account"
+      ? t("addAPayoutAccount")
       : step === "mobile_money"
-        ? "Mobile money account"
+        ? t("mobileMoneyAccount")
         : step === "bank"
-          ? "Bank account"
+          ? t("bankAccount")
           : "";
 
   if (view.kind !== "content" && view.kind !== "empty") {
@@ -181,7 +185,7 @@ export default function PayoutAccountsScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={view}
-          subject="your payout accounts"
+          subject={t("yourPayoutAccounts")}
           onRetry={() => refetch()}
           loading={
             <View className="flex-1 items-center justify-center">
@@ -203,7 +207,7 @@ export default function PayoutAccountsScreen() {
           <View className="items-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-10">
             <Icon name="cash-outline" size={28} tone="muted" />
             <AppText className="text-center text-sm text-muted-foreground">
-              No payout accounts yet. Add one to withdraw your earnings.
+              {t("noPayoutAccountsYetAddOne")}
             </AppText>
           </View>
         ) : (
@@ -214,12 +218,12 @@ export default function PayoutAccountsScreen() {
             >
               <View className="flex-row items-center justify-between">
                 <AppText className="flex-1 text-sm font-medium text-foreground">
-                  {accountTitle(a)}
+                  {accountTitle(a, t)}
                 </AppText>
                 {a.is_default ? (
                   <View className="rounded-full bg-accent px-2 py-0.5">
                     <AppText className="text-[12px] font-semibold uppercase text-accent-foreground">
-                      Default
+                      {t("defaultText")}
                     </AppText>
                   </View>
                 ) : null}
@@ -237,7 +241,7 @@ export default function PayoutAccountsScreen() {
                       tone="brand"
                       className="font-semibold"
                     >
-                      Make default
+                      {t("makeDefault")}
                     </AppText>
                   </Pressable>
                 ) : null}
@@ -251,7 +255,7 @@ export default function PayoutAccountsScreen() {
                     tone="error"
                     className="font-semibold"
                   >
-                    Remove
+                    {t("remove")}
                   </AppText>
                 </Pressable>
               </View>
@@ -260,7 +264,7 @@ export default function PayoutAccountsScreen() {
         )}
 
         <Button
-          title="Add Payout Account"
+          title={t("addPayoutAccount")}
           leftIcon="add"
           onPress={() => setStep("choose")}
         />
@@ -287,36 +291,36 @@ export default function PayoutAccountsScreen() {
             <AppText variant="body" className="text-center">
               {success}
             </AppText>
-            <Button title="Done" fullWidth onPress={closeSheet} />
+            <Button title={t("done")} fullWidth onPress={closeSheet} />
           </View>
         ) : step === "choose" ? (
           <View className="gap-3">
             <SheetOption
               icon="phone-portrait-outline"
-              title="Mobile Money"
-              subtitle="MTN, Telecel, AT Money, G-Money"
+              title={t("mobileMoney")}
+              subtitle={t("mtnTelecelAtMoneyGMoney")}
               onPress={() => setStep("mobile_money")}
             />
             <SheetOption
               icon="business-outline"
-              title="Bank Account"
-              subtitle="Receive earnings directly into your bank"
+              title={t("bankAccount2")}
+              subtitle={t("receiveEarningsDirectlyIntoYourBank")}
               onPress={() => setStep("bank")}
             />
           </View>
         ) : (
           <View className="gap-3">
-            <AppText variant="label">Account holder name</AppText>
+            <AppText variant="label">{t("accountHolderName")}</AppText>
             <Input
               value={holder}
               onChangeText={setHolder}
-              placeholder="e.g. Ama Mensah"
+              placeholder={t("eGAmaMensah")}
               autoCapitalize="words"
             />
 
             {step === "mobile_money" ? (
               <>
-                <AppText variant="label">Network</AppText>
+                <AppText variant="label">{t("network")}</AppText>
                 <View className="flex-row flex-wrap gap-2">
                   {networkList.map((nw) => {
                     const selected = nw.code === networkCode;
@@ -348,25 +352,25 @@ export default function PayoutAccountsScreen() {
                 <Input
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="024XXXXXXX"
+                  placeholder={t("n024xxxxxxx")}
                   keyboardType="phone-pad"
                   autoCapitalize="none"
                 />
               </>
             ) : (
               <>
-                <AppText variant="label">Bank</AppText>
+                <AppText variant="label">{t("bank")}</AppText>
                 <Input
                   value={bankName}
                   onChangeText={setBankName}
-                  placeholder="Bank name"
+                  placeholder={t("bankName")}
                   autoCapitalize="words"
                 />
-                <AppText variant="label">Account number</AppText>
+                <AppText variant="label">{t("accountNumber")}</AppText>
                 <Input
                   value={accountNumber}
                   onChangeText={setAccountNumber}
-                  placeholder="Account number"
+                  placeholder={t("accountNumber")}
                   keyboardType="number-pad"
                 />
               </>
@@ -379,7 +383,7 @@ export default function PayoutAccountsScreen() {
             ) : null}
 
             <Button
-              title="Save account"
+              title={t("saveAccount")}
               fullWidth
               loading={add.isPending}
               onPress={onAdd}

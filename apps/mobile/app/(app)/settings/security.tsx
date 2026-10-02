@@ -13,6 +13,7 @@ import {
   Icon,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 
@@ -23,19 +24,23 @@ import { Alert, ScrollView, View } from "react-native";
 // Google identity is shown read-only.
 
 function VerifiedTag({ verified }: { verified: boolean }) {
+  const t = useTranslations("settings");
+
   return verified ? (
     <View className="flex-row items-center gap-1">
       <Icon name="checkmark-circle" size={16} tone="success" />
       <AppText variant="caption" tone="success" className="font-semibold">
-        Verified
+        {t("verified")}
       </AppText>
     </View>
   ) : (
-    <AppText variant="caption">Unverified</AppText>
+    <AppText variant="caption">{t("unverified")}</AppText>
   );
 }
 
 export default function Security() {
+  const t = useTranslations("settings");
+
   const toast = useToast();
   const { session, signOut } = useSession();
   const user = session?.user;
@@ -46,21 +51,21 @@ export default function Security() {
 
   function confirmDelete() {
     Alert.alert(
-      "Delete your account?",
-      "This permanently removes your account and can't be undone.",
+      t("deleteYourAccount"),
+      t("thisPermanentlyRemovesYourAccountAnd"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("cancel"), style: "cancel" },
         {
-          text: "Delete account",
+          text: t("deleteAccount"),
           style: "destructive",
           onPress: () => {
             Alert.alert(
-              "Are you sure?",
-              "Your profile, favourites and saved payment details are removed and you are signed out everywhere. Tickets you bought and payment records are kept for accounting. Places you own stay listed, unclaimed.",
+              t("areYouSure"),
+              t("yourProfileFavouritesAndSavedPayment"),
               [
-                { text: "Keep my account", style: "cancel" },
+                { text: t("keepMyAccount"), style: "cancel" },
                 {
-                  text: "Delete forever",
+                  text: t("deleteForever"),
                   style: "destructive",
                   onPress: runDelete,
                 },
@@ -77,15 +82,15 @@ export default function Security() {
     try {
       const res = await api.account.deleteAccount();
       if (res.status !== 200) {
-        toast.error("Couldn't delete", {
-          description: res.message ?? "Please try again.",
+        toast.error(t("couldnTDelete"), {
+          description: res.message ?? t("pleaseTryAgain"),
         });
         return;
       }
       await unregisterPushToken();
       await signOut();
     } catch {
-      toast.error("Network error", { description: "Please try again." });
+      toast.error(t("networkError"), { description: t("pleaseTryAgain") });
     } finally {
       setDeleteBusy(false);
     }
@@ -103,7 +108,7 @@ export default function Security() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Security"
+        title={t("securityTitle")}
         backFallback="/(app)/settings"
       />
       <ScrollView
@@ -114,9 +119,9 @@ export default function Security() {
         <Card padded>
           <View className="flex-row items-center justify-between py-1">
             <View className="flex-1">
-              <AppText variant="caption">Email</AppText>
+              <AppText variant="caption">{t("email")}</AppText>
               <AppText variant="body">
-                {user?.email || "No email added"}
+                {user?.email || t("noEmailAdded")}
               </AppText>
             </View>
             {user?.email ? (
@@ -126,7 +131,9 @@ export default function Security() {
 
           {pendingEmail && !emailOpen ? (
             <AppText variant="small" className="pb-2">
-              Waiting for the code sent to {maskEmail(pendingEmail)}.
+              {t("waitingForTheCodeSentTo", {
+                maskEmail: maskEmail(pendingEmail),
+              })}
             </AppText>
           ) : null}
           {emailOpen ? (
@@ -143,12 +150,12 @@ export default function Security() {
             <Button
               title={
                 pendingEmail
-                  ? "Enter the code"
+                  ? t("enterTheCode")
                   : user?.email && !user.email_confirmed_at
-                    ? "Verify email"
+                    ? t("verifyEmail")
                     : user?.email
-                      ? "Change email"
-                      : "Add email"
+                      ? t("changeEmail")
+                      : t("addEmail")
               }
               variant="outline"
               onPress={() => {
@@ -169,9 +176,9 @@ export default function Security() {
         <Card padded>
           <View className="flex-row items-center justify-between py-1">
             <View className="flex-1">
-              <AppText variant="caption">Phone</AppText>
+              <AppText variant="caption">{t("phone")}</AppText>
               <AppText variant="body">
-                {user?.phone || "No phone number added"}
+                {user?.phone || t("noPhoneNumberAdded")}
               </AppText>
             </View>
             {user?.phone ? (
@@ -191,7 +198,7 @@ export default function Security() {
             </View>
           ) : (
             <Button
-              title={user?.phone ? "Change phone number" : "Add phone number"}
+              title={user?.phone ? t("changePhoneNumber") : t("addPhoneNumber")}
               variant="outline"
               onPress={() => {
                 setPhoneOpen(true);
@@ -213,31 +220,27 @@ export default function Security() {
             <View className="flex-1">
               <AppText variant="caption">Google</AppText>
               <AppText variant="body">
-                {google ? "Linked" : "Not linked"}
+                {google ? t("linked") : t("notLinked")}
               </AppText>
             </View>
           </View>
         </Card>
 
         <Divider />
-        <AppText variant="caption">
-          Email and phone changes are each confirmed with a one-time code. You
-          stay signed in.
-        </AppText>
+        <AppText variant="caption">{t("emailAndPhoneChangesAreEach")}</AppText>
 
         {/* Danger zone */}
         <Card padded className="mt-4 border-destructive/40">
           <View className="gap-1 py-1">
             <AppText variant="bodyStrong" tone="error">
-              Delete account
+              {t("deleteAccount")}
             </AppText>
             <AppText variant="caption">
-              Permanently delete your account and all of its data. This can't be
-              undone.
+              {t("permanentlyDeleteYourAccountAndAll")}
             </AppText>
           </View>
           <Button
-            title={deleteBusy ? "Deleting…" : "Delete account"}
+            title={deleteBusy ? t("deleting") : t("deleteAccount")}
             variant="outline"
             className="border-destructive"
             disabled={deleteBusy}

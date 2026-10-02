@@ -3,12 +3,17 @@
 // matching Postgres's EXTRACT(DOW) and JS's Date.getDay(). Shared between
 // PlaceOpeningHoursEditor.tsx (creation flow) and the place details page's
 // opening-hours table, so the two never disagree on day ordering/labels.
-export const DISPLAY_DAYS: { dayOfWeek: number; label: string }[] = [
-  { dayOfWeek: 1, label: "Monday" },
-  { dayOfWeek: 2, label: "Tuesday" },
-  { dayOfWeek: 3, label: "Wednesday" },
-  { dayOfWeek: 4, label: "Thursday" },
-  { dayOfWeek: 5, label: "Friday" },
-  { dayOfWeek: 6, label: "Saturday" },
-  { dayOfWeek: 0, label: "Sunday" },
-];
+// Day names come from Intl in the reader's language (dateFormatter.dayName).
+
+import { dayName } from "./dateFormatter";
+
+export const DISPLAY_DAY_ORDER: readonly number[] = [1, 2, 3, 4, 5, 6, 0];
+
+export function displayDays(
+  locale?: string | null,
+): { dayOfWeek: number; label: string }[] {
+  return DISPLAY_DAY_ORDER.map((dayOfWeek) => ({
+    dayOfWeek,
+    label: dayName(dayOfWeek, "long", locale),
+  }));
+}

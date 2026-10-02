@@ -7,10 +7,12 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { RecommendationItem } from "@abonten/types/discoveryType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -30,6 +32,10 @@ function PickCard({
   onDismiss: () => void;
   dismissing: boolean;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("discovery");
+
   const isEvent = item.subjectType === "event" && item.event;
   const href = isEvent
     ? `/events/${item.event?.eventCode.toLowerCase()}`
@@ -43,7 +49,9 @@ function PickCard({
     : item.place?.coverVersion;
   const meta = isEvent
     ? [
-        item.event?.startsAt ? formatDateWithSuffix(item.event.startsAt) : null,
+        item.event?.startsAt
+          ? formatDateWithSuffix(item.event.startsAt, undefined, locale)
+          : null,
         item.event?.address,
       ]
     : [item.place?.category, item.place?.address];
@@ -56,7 +64,7 @@ function PickCard({
           void markRecommendationOpened({
             subjectType: item.subjectType,
             subjectId: item.subjectId,
-          })
+          }).catch(actionUnreachable)
         }
         className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-muted md:h-28 md:w-28"
       >
@@ -81,7 +89,7 @@ function PickCard({
             void markRecommendationOpened({
               subjectType: item.subjectType,
               subjectId: item.subjectId,
-            })
+            }).catch(actionUnreachable)
           }
           className="mt-0.5 line-clamp-2 font-medium hover:text-primary"
         >
@@ -97,7 +105,7 @@ function PickCard({
             disabled={dismissing}
             className="text-sm text-muted-foreground hover:text-foreground hover:underline disabled:opacity-50"
           >
-            Not interested
+            {t("notInterested")}
           </button>
         </div>
       </div>
@@ -106,6 +114,8 @@ function PickCard({
 }
 
 export default function ForYouList() {
+  const t = useTranslations("discovery");
+
   const toast = useToast();
   const qc = useQueryClient();
   const { data, isLoading, isError, refetch } = useQuery({
@@ -135,15 +145,15 @@ export default function ForYouList() {
     },
     onSuccess: (res, _item, context) => {
       if (res.status === 200) {
-        toast.success(res.message ?? "Got it.");
+        toast.success(res.message ?? t("gotIt"));
       } else {
         qc.setQueryData(KEY, context?.previous);
-        toast.error(res.message ?? "Couldn't save that.");
+        toast.error(res.message ?? t("couldnTSaveThat"));
       }
     },
     onError: (_e, _item, context) => {
       qc.setQueryData(KEY, context?.previous);
-      toast.error("Couldn't save that.");
+      toast.error(t("couldnTSaveThat"));
     },
   });
 
@@ -159,7 +169,7 @@ export default function ForYouList() {
   if (isError) {
     return (
       <InlineErrorRetry
-        message="Couldn't load your picks."
+        message={t("couldnTLoadYourPicks")}
         onRetry={() => refetch()}
       />
     );
@@ -167,10 +177,10 @@ export default function ForYouList() {
   if (!data || data.length === 0) {
     return (
       <NoEventsFound
-        heading="No picks yet"
-        description="Turn on alerts after you get a ticket, or tap “Notify me” on organizers and places you like. New picks show up here."
+        heading={t("noPicksYet")}
+        description={t("turnOnAlertsAfterYouGet")}
         action={{
-          label: "Manage notifications",
+          label: t("manageNotifications"),
           href: "/settings/notifications",
         }}
         compact
@@ -191,12 +201,12 @@ export default function ForYouList() {
         ))}
       </ul>
       <p className="text-center text-sm text-muted-foreground">
-        Picks come only from what you asked for.{" "}
+        {t("picksComeOnlyFromWhatYou2")}
         <Link
           href="/settings/notifications"
           className="text-primary hover:underline"
         >
-          Manage notifications
+          {t("manageNotifications")}
         </Link>
       </p>
     </div>

@@ -10,6 +10,7 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import type { PaymentMethodRow } from "@abonten/api-client";
 import { AppText, Button, Icon, Refresher, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 
@@ -17,15 +18,17 @@ import { Alert, Pressable, ScrollView, View } from "react-native";
 // opens <AddWalletSheet> (choose type -> fill form -> success), the same
 // sheet the checkout's payment picker opens.
 
-function methodTitle(m: PaymentMethodRow): string {
+function methodTitle(m: PaymentMethodRow, t: (key: string) => string): string {
   const d = m.details as Record<string, string>;
   if (m.method_type === "momo") {
-    return `${d.networkName ?? "Mobile money"} · ${d.phone ?? ""}`;
+    return `${d.networkName ?? t("mobileMoney")} · ${d.phone ?? ""}`;
   }
-  return `${d.brand ?? "Card"} ···· ${d.last4 ?? ""}`;
+  return `${d.brand ?? t("card")} ···· ${d.last4 ?? ""}`;
 }
 
 export default function WalletScreen() {
+  const t = useTranslations("wallet");
+
   const toast = useToast();
   const methodsQuery = usePaymentMethods();
   const { data, isRefetching, refetch } = methodsQuery;
@@ -42,19 +45,19 @@ export default function WalletScreen() {
   const methods = data?.status === 200 ? (data.data ?? []) : [];
 
   function confirmRemove(id: string) {
-    Alert.alert("Remove this payment method?", undefined, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("removeThisPaymentMethod"), undefined, [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Remove",
+        text: t("remove"),
         style: "destructive",
         onPress: async () => {
           const res = await removeMethod.mutateAsync(id);
           if (res.status === 200) {
-            toast.success("Payment method removed");
+            toast.success(t("paymentMethodRemoved2"));
             return;
           }
-          toast.error(res.message ?? "We couldn't remove that card.", {
-            description: "It is still on your account. Please try again.",
+          toast.error(res.message ?? t("weCouldnTRemoveThatCard"), {
+            description: t("itIsStillOnYourAccount"),
           });
         },
       },
@@ -66,12 +69,12 @@ export default function WalletScreen() {
       <View className="flex-1 bg-background">
         <AppHeader
           variant="title"
-          title="Wallets"
+          title={t("wallets")}
           backFallback="/(app)/account"
         />
         <QueryUnavailable
           view={view}
-          subject="your payment methods"
+          subject={t("yourPaymentMethods")}
           onRetry={() => refetch()}
           loading={<WalletSkeleton />}
         />
@@ -83,7 +86,7 @@ export default function WalletScreen() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Wallets"
+        title={t("wallets")}
         backFallback="/(app)/account"
       />
       <ScrollView
@@ -95,8 +98,7 @@ export default function WalletScreen() {
           <View className="items-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-10">
             <Icon name="wallet-outline" size={28} tone="muted" />
             <AppText variant="muted" className="text-center">
-              No wallets yet. Add a mobile money wallet or a card to check out
-              faster.
+              {t("noWalletsYetAddAMobile")}
             </AppText>
           </View>
         ) : (
@@ -111,12 +113,12 @@ export default function WalletScreen() {
                   className="flex-1 font-medium"
                   numberOfLines={1}
                 >
-                  {methodTitle(m)}
+                  {methodTitle(m, t)}
                 </AppText>
                 {m.is_default ? (
                   <View className="rounded-full bg-accent px-2 py-1">
                     <AppText className="text-[12px] font-semibold uppercase text-accent-foreground">
-                      Default
+                      {t("defaultText")}
                     </AppText>
                   </View>
                 ) : null}
@@ -129,14 +131,14 @@ export default function WalletScreen() {
                       setDefault.mutate(m.id, {
                         onSettled: (res) => {
                           if (res && res.status !== 200) {
-                            toast.error("Couldn't set default", {
-                              description: res.message ?? "Please try again.",
+                            toast.error(t("couldnTSetDefault"), {
+                              description: res.message ?? t("pleaseTryAgain"),
                             });
                           }
                         },
                         onError: () =>
-                          toast.error("Couldn't set default", {
-                            description: "Please try again.",
+                          toast.error(t("couldnTSetDefault"), {
+                            description: t("pleaseTryAgain"),
                           }),
                       })
                     }
@@ -147,7 +149,7 @@ export default function WalletScreen() {
                       tone="brand"
                       className="font-semibold"
                     >
-                      Make default
+                      {t("makeDefault")}
                     </AppText>
                   </Pressable>
                 ) : null}
@@ -161,7 +163,7 @@ export default function WalletScreen() {
                     tone="error"
                     className="font-semibold"
                   >
-                    Remove
+                    {t("remove")}
                   </AppText>
                 </Pressable>
               </View>
@@ -170,7 +172,7 @@ export default function WalletScreen() {
         )}
 
         <Button
-          title="Add Wallet"
+          title={t("addWallet2")}
           leftIcon="add"
           onPress={() => setAdding(true)}
         />

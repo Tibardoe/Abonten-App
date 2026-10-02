@@ -1,3 +1,4 @@
+import { formatRating } from "@abonten/core/i18n/format";
 import "server-only";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
@@ -8,7 +9,6 @@ import {
   type ReviewPage,
   type ReviewSubjectKind,
   type ReviewSummary,
-  formatReviewCount,
   parseSharedReviewId,
 } from "@abonten/core/reviews/reviewList";
 import {
@@ -16,6 +16,7 @@ import {
   fetchReviewPage,
   fetchReviewSummary,
 } from "@abonten/services/reviews/reviewListQuery";
+import { getTranslations } from "next-intl/server";
 
 // Server-side first data for the review surfaces on the (statically built,
 // viewer-independent) event and place pages: the public summary, the
@@ -79,7 +80,9 @@ export async function reviewsPageDescription(
   subjectId: string,
   subjectTitle: string,
   reviewParam: string | string[] | undefined,
+  locale: string,
 ): Promise<string> {
+  const t = await getTranslations({ locale, namespace: "reviews" });
   const reviewId = parseSharedReviewId(reviewParam);
   if (reviewId) {
     const review = await fetchReviewById(
@@ -91,15 +94,18 @@ export async function reviewsPageDescription(
     if (review) {
       const stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
       const text = [review.title, review.comment].filter(Boolean).join(" — ");
-      return `${stars} ${text || `A ${review.rating}-star review of ${subjectTitle}`}`.slice(
-        0,
-        200,
-      );
+      return `${stars} ${
+        text ||
+        t("starReviewOf", { rating: review.rating, title: subjectTitle })
+      }`.slice(0, 200);
     }
   }
   const summary = await fetchReviewSummary(publicSupabase, kind, subjectId);
   const s = summary.data ?? EMPTY_REVIEW_SUMMARY;
   return s.total > 0
-    ? `Rated ${s.average.toFixed(1)} out of 5 from ${formatReviewCount(s.total)} on Abonten Hub.`
-    : `Reviews of ${subjectTitle} on Abonten Hub.`;
+    ? t("ratedFromReviews", {
+        average: formatRating(s.average, locale),
+        reviews: t("reviewsCount", { count: s.total }),
+      })
+    : t("reviewsOfOnAbonten", { title: subjectTitle });
 }

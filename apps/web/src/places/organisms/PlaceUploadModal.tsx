@@ -6,10 +6,12 @@ import SaveDraftConfirmDialog from "@/components/organisms/SaveDraftConfirmDialo
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
+import { useToast } from "@/hooks/useToast";
 import { invalidatePlaceListQueries } from "@/utils/mutationQueryInvalidation";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { PlaceDraftPayload } from "@abonten/validation/placeDraftSchema";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -60,6 +62,9 @@ export default function PlaceUploadModal({
   existingCoverPreviewUrl,
   onDraftSaved,
 }: PlaceUploadModalProps) {
+  const t = useTranslations("places");
+  const toast = useToast();
+
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -74,9 +79,9 @@ export default function PlaceUploadModal({
     openFilePicker,
     handleFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your cover photo.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor"),
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
-    onInvalidFile: (message) => alert(message),
+    onInvalidFile: (message) => toast.error(message),
   });
 
   const { cropped, croppedPreview, handleCropped } = useCroppedImage({
@@ -103,26 +108,31 @@ export default function PlaceUploadModal({
     handleSubmit,
     onSubmit,
     resolveLocation,
+    validateBasicInfo,
+    onInvalidSubmit,
     hasMeaningfulContent,
     saveDraft,
     isSavingDraft,
   } = placeUploadForm;
 
   const publishButtonLabel = isResolvingLocation
-    ? "Resolving location..."
+    ? t("resolvingLocation")
     : isUploading
-      ? "Publishing..."
-      : "Publish";
+      ? t("publishing")
+      : t("publish");
 
   const basicInfoNextLabel = isResolvingLocation
-    ? "Resolving location..."
-    : "Next";
+    ? t("resolvingLocation")
+    : t("next");
 
   // The address field only exists while this step is mounted -- resolve it
   // now, before advancing, rather than at final Publish (step 4), where
   // PostAutoComplete has already unmounted and can no longer resolve
   // anything typed here.
   const handleBasicInfoNext = async () => {
+    // The step's own fields first (the messages appear under them), then
+    // the address, which needs a round trip to resolve.
+    if (!(await validateBasicInfo())) return;
     const resolved = await resolveLocation();
     if (resolved) setStep(2);
   };
@@ -152,7 +162,7 @@ export default function PlaceUploadModal({
       <ModalShell
         open
         onClose={requestClose}
-        title="Create Place"
+        title={t("createPlace")}
         className="bg-background md:bg-transparent"
       >
         {/* Matches EventUploadModal: px-4 gutters on mobile so nothing
@@ -170,7 +180,7 @@ export default function PlaceUploadModal({
             <>
               <UploadStepHeader
                 onBack={requestClose}
-                title="New Place · Basic Info"
+                title={t("newPlaceBasicInfo")}
                 primaryAction={{
                   label: basicInfoNextLabel,
                   onClick: handleBasicInfoNext,
@@ -198,9 +208,9 @@ export default function PlaceUploadModal({
                 <>
                   <UploadStepHeader
                     onBack={() => setStep(1)}
-                    title="New Place · Cover Photo"
+                    title={t("newPlaceCoverPhoto")}
                     primaryAction={{
-                      label: "Next",
+                      label: t("next"),
                       onClick: () => setStep(3),
                       disabled: isUploading || !coverPreview,
                     }}
@@ -219,9 +229,9 @@ export default function PlaceUploadModal({
             <>
               <UploadStepHeader
                 onBack={() => setStep(2)}
-                title="New Place · Hours"
+                title={t("newPlaceHours")}
                 primaryAction={{
-                  label: "Next",
+                  label: t("next"),
                   onClick: () => setStep(4),
                   disabled: isUploading,
                 }}
@@ -237,10 +247,13 @@ export default function PlaceUploadModal({
             <>
               <UploadStepHeader
                 onBack={() => setStep(3)}
-                title="New Place · Review"
+                title={t("newPlaceReview")}
                 primaryAction={{
                   label: publishButtonLabel,
-                  onClick: handleSubmit(onSubmit),
+                  onClick: handleSubmit(onSubmit, () => {
+                    onInvalidSubmit();
+                    setStep(1);
+                  }),
                   disabled: isUploading,
                 }}
               />
@@ -256,7 +269,7 @@ export default function PlaceUploadModal({
 
       {showCancelConfirm && (
         <SaveDraftConfirmDialog
-          message="You have unsaved changes to this place."
+          message={t("youHaveUnsavedChangesToThis")}
           isSaving={isSavingDraft}
           onSaveDraft={handleSaveDraftAndClose}
           onDiscard={() => {

@@ -6,6 +6,7 @@ import type {
   ContentKind,
   ContentPostDocument,
 } from "@abonten/types/contentType";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCallback, useRef, useState } from "react";
 
 export type PublishDetails = {
@@ -34,6 +35,8 @@ export type PublishState =
  * so "Try again" never duplicates anything.
  */
 export function useContentPublish() {
+  const t = useTranslations("spotlight");
+
   const [state, setState] = useState<PublishState>({ phase: "idle" });
   const registered = useRef(new Map<string, string>());
   const requestId = useRef(uuidv4());
@@ -132,12 +135,12 @@ export function useContentPublish() {
           message:
             error instanceof Error && error.message
               ? error.message
-              : "Something went wrong. Please try again.",
+              : t("somethingWentWrongPleaseTryAgain"),
         });
         return null;
       }
     },
-    [],
+    [t],
   );
 
   return { state, run, reset };

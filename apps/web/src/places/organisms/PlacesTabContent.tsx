@@ -7,6 +7,7 @@ import {
   type PlaceFilters,
   filterPlaceList,
 } from "@abonten/core/exploreFilters";
+import { getTranslations } from "next-intl/server";
 import NoPlacesEmptyState from "../molecules/NoPlacesEmptyState";
 import PlaceCategoryChips from "../molecules/PlaceCategoryChips";
 import AllPlacesList from "./AllPlacesList";
@@ -64,6 +65,8 @@ export default async function PlacesTabContent({
   searchText?: string | null;
   view?: "list" | "map";
 }) {
+  const t = await getTranslations("places");
+
   // Categories are a small, rarely-changing lookup table (see
   // getPlaceCategories.ts) — fetched first so the selected category's id can
   // be resolved from its slug before the filtered fetches below run.
@@ -186,15 +189,15 @@ export default async function PlacesTabContent({
           out of scope. */}
       <FeaturedPlacesSlider places={featuredPlaces} />
 
-      <PlacesSlider heading="Around You" places={aroundYouPlaces} />
+      <PlacesSlider heading={t("aroundYou")} places={aroundYouPlaces} />
 
-      <PlacesSlider heading="Open Now" places={openNowPlaces} />
+      <PlacesSlider heading={t("openNow")} places={openNowPlaces} />
 
-      <PlacesSlider heading="Top Rated" places={topRatedPlaces} />
+      <PlacesSlider heading={t("topRated")} places={topRatedPlaces} />
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">
-          <h2 className="text-xl font-bold">All Places</h2>
+          <h2 className="text-xl font-bold">{t("allPlaces")}</h2>
           <ViewToggle view={view} />
         </div>
 

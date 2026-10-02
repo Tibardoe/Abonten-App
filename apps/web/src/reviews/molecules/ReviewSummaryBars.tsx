@@ -1,13 +1,14 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
+import { formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewRatingFilter,
   type ReviewSummary,
-  formatReviewCount,
   ratingShares,
 } from "@abonten/core/reviews/reviewList";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 
 const LEVELS = [5, 4, 3, 2, 1] as const;
 
@@ -23,6 +24,10 @@ export default function ReviewSummaryBars({
   selected?: ReviewRatingFilter;
   onSelect?: (rating: ReviewRatingFilter) => void;
 }) {
+  const t = useTranslations("reviews");
+  const locale = useLocale();
+  const format = useFormatter();
+
   const shares = ratingShares(summary);
   const average = roundRating(summary.average);
 
@@ -30,12 +35,12 @@ export default function ReviewSummaryBars({
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:gap-6">
       <div className="flex items-center gap-3 sm:flex-col sm:items-center sm:gap-1 sm:min-w-[120px]">
         <span className="text-4xl font-bold leading-none">
-          {average.toFixed(1)}
+          {formatRating(average, locale)}
         </span>
         <div className="flex flex-col sm:items-center">
           <StarRatingDisplay rating={summary.average} />
           <span className="text-xs text-muted-foreground">
-            {formatReviewCount(summary.total)}
+            {t("reviewsCount", { count: summary.total })}
           </span>
         </div>
       </div>
@@ -57,7 +62,7 @@ export default function ReviewSummaryBars({
                 />
               </span>
               <span className="w-14 whitespace-nowrap text-right text-xs text-muted-foreground">
-                {summary.counts[star].toLocaleString("en-US")}
+                {format.number(summary.counts[star])}
               </span>
             </span>
           );
@@ -68,7 +73,11 @@ export default function ReviewSummaryBars({
                   type="button"
                   onClick={() => onSelect(active ? null : star)}
                   aria-pressed={active}
-                  aria-label={`${star} star: ${summary.counts[star]} reviews, ${shares[star]} percent`}
+                  aria-label={t("starReviewsPercent", {
+                    star: star,
+                    item: summary.counts[star],
+                    item2: shares[star],
+                  })}
                   className="w-full rounded hover:bg-accent/60"
                 >
                   {row}

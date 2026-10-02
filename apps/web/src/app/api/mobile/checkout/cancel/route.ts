@@ -2,12 +2,17 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { cancelTicketCheckoutSessionCore } from "@abonten/services/checkout/cancelTicketCheckoutSessionCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // POST /api/mobile/checkout/cancel  { checkoutSessionId: string }
 //
 // Cancels a whole pending checkout session and releases its reservations —
 // same cancelTicketCheckoutSessionCore the web action runs.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -20,7 +25,10 @@ export async function POST(req: Request) {
       typeof body?.checkoutSessionId !== "string" ||
       body.checkoutSessionId.length === 0
     ) {
-      return apiJson({ status: 400, message: "checkoutSessionId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("checkoutsessionidIsRequired"),
+      });
     }
 
     const result = await cancelTicketCheckoutSessionCore(
@@ -32,6 +40,9 @@ export async function POST(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile POST /checkout/cancel failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

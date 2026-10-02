@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type ReviewDraftDetail = {
   id: string;
@@ -20,7 +22,9 @@ export type ReviewDraftDetail = {
 // Full fetch for "Continue". Re-runs the same eligibility checks
 // postReview.ts enforces at submit time, because attendance/review state
 // can change between when a review draft was saved and when it's resumed.
-export async function getReviewDraft(draftId: string) {
+export const getReviewDraft = withActionLocale(async function getReviewDraft(
+  draftId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -32,7 +36,11 @@ export async function getReviewDraft(draftId: string) {
     return { status: 500, message: userError.message, data: null };
   }
   if (!user) {
-    return { status: 401, message: "User not authenticated", data: null };
+    return {
+      status: 401,
+      message: tr("userNotAuthenticated"),
+      data: null,
+    };
   }
 
   const { data: draft, error: draftError } = await supabase
@@ -46,10 +54,14 @@ export async function getReviewDraft(draftId: string) {
     return { status: 500, message: draftError.message, data: null };
   }
   if (!draft || draft.user_id !== user.id) {
-    return { status: 404, message: "Draft not found.", data: null };
+    return { status: 404, message: tr("draftNotFound"), data: null };
   }
   if (new Date(draft.expires_at) <= new Date()) {
-    return { status: 410, message: "This draft has expired.", data: null };
+    return {
+      status: 410,
+      message: tr("thisDraftHasExpired"),
+      data: null,
+    };
   }
 
   const { data: reviewDraft, error: reviewDraftError } = await supabase
@@ -61,7 +73,7 @@ export async function getReviewDraft(draftId: string) {
   if (reviewDraftError || !reviewDraft) {
     return {
       status: 500,
-      message: reviewDraftError?.message ?? "Draft data not found.",
+      message: reviewDraftError?.message ?? tr("draftDataNotFound"),
       data: null,
     };
   }
@@ -80,7 +92,7 @@ export async function getReviewDraft(draftId: string) {
     .eq("organizer_id", reviewDraft.reviewed_id);
 
   if (reviewedEventsError) {
-    ineligibleReason = "Could not verify this draft's eligibility right now.";
+    ineligibleReason = tr("couldNotVerifyThisDraftS");
   } else {
     const reviewedEventIds = (reviewedEvents ?? []).map((e) => e.id);
     let hasAttended = false;
@@ -95,8 +107,7 @@ export async function getReviewDraft(draftId: string) {
     }
 
     if (!hasAttended) {
-      ineligibleReason =
-        "You can only review organizers of events you've attended.";
+      ineligibleReason = tr("youCanOnlyReviewOrganizersOf2");
     } else {
       const { count: existingReviewCount } = await supabase
         .from("review")
@@ -105,7 +116,7 @@ export async function getReviewDraft(draftId: string) {
         .eq("reviewed_id", reviewDraft.reviewed_id);
 
       if ((existingReviewCount ?? 0) > 0) {
-        ineligibleReason = "You've already reviewed this organizer.";
+        ineligibleReason = tr("youVeAlreadyReviewedThisOrganizer");
       }
     }
   }
@@ -123,4 +134,4 @@ export async function getReviewDraft(draftId: string) {
   };
 
   return { status: 200, message: "OK", data: detail };
-}
+});

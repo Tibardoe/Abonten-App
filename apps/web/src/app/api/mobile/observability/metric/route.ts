@@ -2,6 +2,7 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { ingestMetricCore } from "@abonten/services/admin/observability/observabilityCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
 // POST /api/mobile/observability/metric
@@ -14,6 +15,7 @@ import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClie
 // to keep the endpoint from being open. Always answers 202 so a rejected
 // beacon never shows up as a client error.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 

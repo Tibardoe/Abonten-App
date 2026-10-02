@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Deliberately NOT a "use server" Server Action — see src/utils/ticketInventory.ts
@@ -43,7 +44,7 @@ export async function adjustPromoUsageUnits(
       .maybeSingle();
 
     if (promoCodeError || !promoCode || promoCode.times_used === null) {
-      return { status: 404, message: "Promo code no longer exists" };
+      return { status: 404, message: tr("promoCodeNoLongerExists") };
     }
 
     const newTimesUsed = Math.max(0, promoCode.times_used + unitsDelta);
@@ -55,7 +56,7 @@ export async function adjustPromoUsageUnits(
     ) {
       return {
         status: 409,
-        message: "Promo code has reached its usage limit!",
+        message: tr("promoCodeHasReachedItsUsage"),
       };
     }
 
@@ -68,7 +69,7 @@ export async function adjustPromoUsageUnits(
 
     if (updateError) {
       logger.error(`Failed adjusting promo usage: ${updateError.message}`);
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
 
     if (updated && updated.length > 0) {
@@ -80,8 +81,7 @@ export async function adjustPromoUsageUnits(
 
   return {
     status: 409,
-    message:
-      "This promo code was just claimed by someone else. Please try again.",
+    message: tr("thisPromoCodeWasJustClaimed"),
   };
 }
 

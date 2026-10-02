@@ -1,5 +1,6 @@
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 import { describeArea } from "./areaCopy";
 
@@ -11,14 +12,19 @@ import { describeArea } from "./areaCopy";
 // never mistaken for where the phone says the person is.
 
 export function AreaSwitcher({ onPress }: { onPress: () => void }) {
+  const t = useTranslations("explore");
+
   const { area, devicePermission } = useExploreLocation();
   const shown = describeArea(area, devicePermission);
-  const label = area?.label ?? "Set location";
+  const label = area?.label ?? t("setLocation");
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Change location. ${shown.eyebrow}: ${label}`}
+      accessibilityLabel={t("changeLocation", {
+        eyebrow: shown.eyebrow,
+        label: label,
+      })}
       onPress={onPress}
       className="flex-1 flex-row items-center gap-2 active:opacity-70"
     >

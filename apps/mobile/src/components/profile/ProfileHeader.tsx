@@ -8,7 +8,9 @@ import {
 } from "@/components/verification/VerifiedPill";
 import type { PublicProfile } from "@/features/profile/usePublicProfile";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { formatCompactCount } from "@abonten/core/i18n/format";
 import { AppText, Avatar, Button } from "@abonten/ui-native";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -19,11 +21,8 @@ import { Pressable, View } from "react-native";
 // itself is the screen's centred nav title (set from the profile screen),
 // so it isn't repeated here. Tapping the avatar opens it full-screen.
 
-function compactCount(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
+const compactCount = (n: number): string =>
+  formatCompactCount(n, getCurrentLocale());
 
 function Stat({
   value,
@@ -57,6 +56,8 @@ export function ProfileHeader({
   profile: PublicProfile;
   isOwn: boolean;
 }) {
+  const t = useTranslations("profile");
+
   const router = useRouter();
   const [viewerOpen, setViewerOpen] = useState(false);
 
@@ -73,7 +74,7 @@ export function ProfileHeader({
       <View className="flex-row items-center gap-4">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="View profile photo"
+          accessibilityLabel={t("viewProfilePhoto")}
           disabled={!fullPhoto}
           onPress={() => setViewerOpen(true)}
         >
@@ -95,21 +96,28 @@ export function ProfileHeader({
           {/* Followers is the number people look for first on a profile —
               yours included — so it sits next to Posts. */}
           <View className="flex-row justify-between gap-1">
-            <Stat value={compactCount(profile.total_posts)} label="Posts" />
+            <Stat
+              value={compactCount(profile.total_posts)}
+              label={t("posts")}
+            />
             <Stat
               value={compactCount(profile.follower_count)}
-              label={profile.follower_count === 1 ? "Follower" : "Followers"}
-              accessibilityLabel={`${profile.follower_count.toLocaleString()} ${
-                profile.follower_count === 1 ? "follower" : "followers"
-              }`}
+              label={t("followersLabel", { count: profile.follower_count })}
+              accessibilityLabel={t("followersCount", {
+                count: profile.follower_count,
+              })}
             />
             <Stat
               value={compactCount(profile.total_favorites)}
-              label="Favorites"
+              label={t("favorites")}
             />
             <Stat
               value={profile.average_rating || "—"}
-              label={`Rating${profile.total_ratings ? ` (${profile.total_ratings})` : ""}`}
+              label={t("rating", {
+                value: profile.total_ratings
+                  ? ` (${profile.total_ratings})`
+                  : "",
+              })}
             />
           </View>
         </View>
@@ -119,7 +127,7 @@ export function ProfileHeader({
 
       {isOwn ? (
         <Button
-          title="Edit profile"
+          title={t("editProfile")}
           variant="outline"
           onPress={() => router.push("/(app)/settings/edit-profile")}
         />

@@ -4,6 +4,7 @@ import type {
   FieldOpsReviewDecision,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import { recordPendingCommission } from "../shared/commissionRows";
 import {
   fieldOpsError,
@@ -57,7 +58,7 @@ export async function listReviewQueueCore(
     .limit(300);
   if (input.status) q = q.eq("status", input.status);
   const { data, error } = await q;
-  if (error) return dbErr(error, "Could not load the review queue");
+  if (error) return dbErr(error, tr("couldNotLoadTheReviewQueue"));
   const rows = (data ?? []) as unknown as OnboardingRow[];
   // Waiting on the lead first, then the rest newest-first.
   const rank = (s: string) => (s === "submitted" ? 0 : 1);
@@ -91,7 +92,7 @@ export async function reviewOnboardingCore(
     return fieldOpsError(e);
   }
   if (!REVIEWING_STATUSES.has(campaignStatus)) {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
   const { data } = await supabase
     .from("fieldops_onboarding")
@@ -101,15 +102,15 @@ export async function reviewOnboardingCore(
     .eq("team_id", teamId)
     .maybeSingle();
   const row = data as unknown as OnboardingRow | null;
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "submitted") {
     return {
       status: 409,
-      message: "This onboarding isn't waiting for review.",
+      message: tr("thisOnboardingIsnTWaitingFor"),
     };
   }
   if (row.member_user_id === userId) {
-    return { status: 403, message: "You can't review your own onboarding." };
+    return { status: 403, message: tr("youCanTReviewYourOwn2") };
   }
   if (
     input.decision !== "verified" &&
@@ -117,7 +118,7 @@ export async function reviewOnboardingCore(
   ) {
     return {
       status: 400,
-      message: "Tell the member what to change, or why it was rejected.",
+      message: tr("tellTheMemberWhatToChange"),
     };
   }
 
@@ -151,7 +152,7 @@ export async function reviewOnboardingCore(
       } as never)
       .eq("id", row.id)
       .eq("status", "submitted");
-    if (error) return dbErr(error, "Could not record the verification");
+    if (error) return dbErr(error, tr("couldNotRecordTheVerification"));
   }
 
   const { error: trErr } = await supabase.rpc(
@@ -168,7 +169,7 @@ export async function reviewOnboardingCore(
   if (trErr) {
     return trErr.code === "23514"
       ? { status: 409, message: trErr.message }
-      : dbErr(trErr, "Could not save the decision");
+      : dbErr(trErr, tr("couldNotSaveTheDecision"));
   }
 
   // Verification earns a PENDING commission at the rule's amount. It only
@@ -178,18 +179,17 @@ export async function reviewOnboardingCore(
     await recordPendingCommission(supabase, row.id);
   }
 
-  const titles: Record<FieldOpsReviewDecision, string> = {
-    verified: `Verified: ${row.business_name ?? "your onboarding"}`,
-    needs_changes: `Changes needed: ${row.business_name ?? "your onboarding"}`,
-    rejected: `Not accepted: ${row.business_name ?? "your onboarding"}`,
+  const reviewNotice: Record<FieldOpsReviewDecision, string> = {
+    verified: "fieldops_review_verified",
+    needs_changes: "fieldops_review_needs_changes",
+    rejected: "fieldops_review_rejected",
   };
   await notifyFieldOps(supabase, [row.member_user_id], {
     type: "fieldops_submission_reviewed",
-    title: titles[input.decision],
-    body:
-      input.decision === "verified"
-        ? "Your team lead verified it. The commission is confirmed after the holding period."
-        : (input.note ?? null),
+    template: {
+      id: reviewNotice[input.decision],
+      params: { name: row.business_name ?? null, note: input.note ?? null },
+    },
     route: `/field/submissions/${row.id}`,
   });
 
@@ -202,10 +202,10 @@ export async function reviewOnboardingCore(
     status: 200,
     message:
       input.decision === "verified"
-        ? "Verified. The holding period has started."
+        ? tr("verifiedTheHoldingPeriodHasStarted")
         : input.decision === "needs_changes"
-          ? "Returned to the member."
-          : "Rejected.",
+          ? tr("returnedToTheMember")
+          : tr("rejected"),
     data: mapOnboarding((fresh ?? row) as unknown as OnboardingRow),
   };
 }

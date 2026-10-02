@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsOnboardingSubmitSchema } from "@abonten/validation/fieldOpsSche
  * Creates the place under the verified owner and sends the onboarding to
  * the team lead. Same service as POST /api/mobile/field-ops/onboardings/[id]/submit.
  */
-export async function submitFieldOpsOnboarding(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsOnboarding;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsOnboardingSubmitSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return submitOnboardingCore(svc, userId, data);
-}
+export const submitFieldOpsOnboarding = withActionLocale(
+  async function submitFieldOpsOnboarding(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsOnboarding;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsOnboardingSubmitSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return submitOnboardingCore(svc, userId, data);
+  },
+);

@@ -15,12 +15,13 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import {
   EMAIL_OTP_CODE_LENGTH,
-  EMAIL_OTP_MESSAGES,
+  emailOtpMessage,
   isLikelyEmail,
   maskEmail,
 } from "@abonten/core/emailOtp";
 import { useQueryClient } from "@tanstack/react-query";
 import { Mail } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 // Asked at the moment it matters: every payment needs an email on the
@@ -41,6 +42,8 @@ export default function EmailRequiredToPay({
 }: {
   purpose?: "tickets" | "promotion";
 }) {
+  const t = useTranslations("common");
+
   const needsEmail = useNeedsEmailToPay();
   const [open, setOpen] = useState(false);
   if (!needsEmail) return null;
@@ -50,25 +53,22 @@ export default function EmailRequiredToPay({
       <div className="flex gap-3">
         <Mail className="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden />
         <div>
-          <p className="font-semibold">Add your email to pay</p>
+          <p className="font-semibold">{t("addYourEmailToPay")}</p>
           <p className="text-sm text-muted-foreground">
             {purpose === "tickets"
-              ? "Card and mobile money payments need an email. Your tickets and receipt are sent there."
-              : "Card and mobile money payments need an email. Your receipt is sent there."}
+              ? t("cardAndMobileMoneyPaymentsNeed")
+              : t("cardAndMobileMoneyPaymentsNeed2")}
           </p>
         </div>
       </div>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        Add email
+        {t("addEmail")}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add your email</DialogTitle>
-            <DialogDescription>
-              We&apos;ll send a 6-digit code to check it&apos;s yours. You stay
-              signed in.
-            </DialogDescription>
+            <DialogTitle>{t("addYourEmail")}</DialogTitle>
+            <DialogDescription>{t("weLlSendA6Digit")}</DialogDescription>
           </DialogHeader>
           {open ? <AddEmailForm onDone={() => setOpen(false)} /> : null}
         </DialogContent>
@@ -78,6 +78,9 @@ export default function EmailRequiredToPay({
 }
 
 function AddEmailForm({ onDone }: { onDone: () => void }) {
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
@@ -90,7 +93,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
     event?.preventDefault();
     const next = (pending ?? email).trim().toLowerCase();
     if (!isLikelyEmail(next)) {
-      setError("Enter a valid email address.");
+      setError(t("enterAValidEmailAddress"));
       return;
     }
     setBusy(true);
@@ -104,9 +107,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
           e.status === 422 ||
           /already.*(registered|exists|in use)/i.test(e.message);
         setError(
-          conflict
-            ? "That email can't be used."
-            : "Couldn't send a code. Please try again.",
+          conflict ? t("thatEmailCanTBeUsed") : t("couldnTSendACodePlease"),
         );
         return;
       }
@@ -129,7 +130,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
         type: "email_change",
       });
       if (e) {
-        setError(EMAIL_OTP_MESSAGES.invalidOrExpired);
+        setError(emailOtpMessage(tc, "invalidOrExpired"));
         return;
       }
       await supabase.auth.refreshSession();
@@ -137,7 +138,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
       queryClient.invalidateQueries({
         predicate: (q) => q.queryKey[0] === "profile-completion",
       });
-      toast.success("Email added. You can pay now.");
+      toast.success(t("emailAddedYouCanPayNow"));
       onDone();
     } finally {
       setBusy(false);
@@ -147,7 +148,9 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
   if (pending) {
     return (
       <form onSubmit={verify} className="space-y-3">
-        <p className="text-sm">Enter the code sent to {maskEmail(pending)}.</p>
+        <p className="text-sm">
+          {t("enterTheCodeSentTo", { maskEmail: maskEmail(pending) })}
+        </p>
         <OtpInput
           length={EMAIL_OTP_CODE_LENGTH}
           value={code}
@@ -160,7 +163,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
             type="submit"
             disabled={busy || code.length < EMAIL_OTP_CODE_LENGTH}
           >
-            {busy ? "Verifying…" : "Verify"}
+            {busy ? t("verifying") : t("verify")}
           </Button>
           <Button
             type="button"
@@ -168,7 +171,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
             disabled={busy}
             onClick={() => send()}
           >
-            Resend code
+            {t("resendCode")}
           </Button>
           <Button
             type="button"
@@ -179,7 +182,7 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
               setError(null);
             }}
           >
-            Use a different email
+            {t("useADifferentEmail")}
           </Button>
         </div>
       </form>
@@ -194,11 +197,11 @@ function AddEmailForm({ onDone }: { onDone: () => void }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="you@example.com"
-        aria-label="Email address"
+        aria-label={t("emailAddress")}
       />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       <Button type="submit" disabled={busy}>
-        {busy ? "Sending…" : "Send code"}
+        {busy ? t("sending") : t("sendCode")}
       </Button>
     </form>
   );

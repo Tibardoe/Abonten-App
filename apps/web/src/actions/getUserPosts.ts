@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,11 +11,12 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import { getEventAttendanceCounts } from "./getAttendace";
 
-export async function getUserPosts(
+export const getUserPosts = withActionLocale(async function getUserPosts(
   username: string,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<UserPostType>> {
@@ -36,7 +38,7 @@ export async function getUserPosts(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -110,4 +112,4 @@ export async function getUserPosts(
     nextCursor,
     hasNextPage,
   };
-}
+});

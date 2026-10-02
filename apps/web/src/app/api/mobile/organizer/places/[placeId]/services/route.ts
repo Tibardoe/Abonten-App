@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { addPlaceServiceCore } from "@abonten/services/places/placeServiceCore";
 
 // POST /api/mobile/organizer/places/:placeId/services
@@ -11,6 +15,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -23,7 +28,7 @@ export async function POST(
 
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     if (!name) {
-      return apiJson({ status: 400, message: "name is required" });
+      return apiJson({ status: 400, message: tr("nameIsRequired") });
     }
 
     const priceRaw = body?.price;
@@ -32,7 +37,10 @@ export async function POST(
         ? null
         : Number(priceRaw);
     if (price !== null && !Number.isFinite(price)) {
-      return apiJson({ status: 400, message: "price must be a number" });
+      return apiJson({
+        status: 400,
+        message: tr("priceMustBeANumber"),
+      });
     }
 
     const result = await addPlaceServiceCore(auth.supabase, auth.user.id, {
@@ -53,6 +61,9 @@ export async function POST(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/places/:id/services failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

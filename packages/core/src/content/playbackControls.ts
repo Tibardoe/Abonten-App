@@ -3,6 +3,8 @@
 // tested. The app's player (apps/mobile SpotlightCard / SpotlightTimeline)
 // applies them.
 
+import { intlLocale } from "../i18n/coreStrings";
+
 /** The speeds offered in the options sheet, slowest first. */
 export const SPOTLIGHT_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
 export type SpotlightSpeed = (typeof SPOTLIGHT_SPEEDS)[number];
@@ -21,9 +23,12 @@ export function holdRate(selected: number): number {
   return Math.max(selected, HOLD_SPEED);
 }
 
-/** "0.5×", "1×", "1.25×" — the label for a speed. */
-export function formatSpeed(rate: number): string {
-  return `${Number(rate.toFixed(2))}×`;
+/** "0.5×", "1×", "1.25×" — the label for a speed ("1,25×" in French). */
+export function formatSpeed(rate: number, locale?: string | null): string {
+  const speed = new Intl.NumberFormat(intlLocale(locale), {
+    maximumFractionDigits: 2,
+  }).format(rate);
+  return `${speed}×`;
 }
 
 /** "0:07", "1:05" — a playback position. Negative or unknown reads 0:00. */

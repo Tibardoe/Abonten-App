@@ -1,5 +1,8 @@
 import { logger } from "@abonten/core/logger";
-import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
+import {
+  WEEKLY_BANNER_MAX_SLIDES,
+  weeklyBannerSlides,
+} from "@abonten/core/weekly/bannerSlides";
 import { weeklyEditionPath } from "@abonten/core/weekly/copy";
 import { weekStartFor, weekWindow } from "@abonten/core/weekly/week";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -13,6 +16,7 @@ import type {
   WeeklyEditionRequest,
   WeeklyTeaserRequest,
 } from "@abonten/validation/weeklySchemas";
+import { requestLocale, tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { mapWeeklyDocument } from "./weeklyDocument";
 import { resolveWeeklyAccess } from "./weeklyProgram";
@@ -166,7 +170,7 @@ export async function getWeeklyEditionCore(
     });
     if (error) {
       logger.error(`weekly_edition_view failed: ${error.message}`);
-      return { status: 500, message: "Couldn't load Abonten Weekly." };
+      return { status: 500, message: tr("couldnTLoadAbontenWeekly") };
     }
 
     const edition = mapWeeklyDocument(data);
@@ -180,7 +184,7 @@ export async function getWeeklyEditionCore(
     if (input.week) {
       return {
         status: 404,
-        message: "This edition of Abonten Weekly is not available.",
+        message: tr("thisEditionOfAbontenWeeklyIs"),
         data: {
           available: true,
           edition: null,
@@ -194,7 +198,7 @@ export async function getWeeklyEditionCore(
     if (!fallback.scopeFound) {
       return {
         status: 404,
-        message: "Abonten Weekly is not available for this area.",
+        message: tr("abontenWeeklyIsNotAvailableFor"),
         data: {
           available: true,
           edition: null,
@@ -214,7 +218,7 @@ export async function getWeeklyEditionCore(
     };
   } catch (error) {
     logger.error("getWeeklyEditionCore failed", error);
-    return { status: 500, message: "Couldn't load Abonten Weekly." };
+    return { status: 500, message: tr("couldnTLoadAbontenWeekly") };
   }
 }
 
@@ -245,7 +249,11 @@ export async function getWeeklyTeaserCore(
     }
 
     const items = doc.sections.flatMap((s) => s.items);
-    const slides = weeklyBannerSlides(doc.sections);
+    const slides = weeklyBannerSlides(
+      doc.sections,
+      WEEKLY_BANNER_MAX_SLIDES,
+      requestLocale(),
+    );
     // Older app builds still read `images`; they show the first two or three.
     const images: WeeklyTeaser["images"] = slides.slice(0, 3).map((s) => ({
       publicId: s.publicId,

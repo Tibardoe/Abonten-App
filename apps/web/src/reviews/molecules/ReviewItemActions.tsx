@@ -26,6 +26,7 @@ import {
   reviewsPath,
 } from "@abonten/core/reviews/reviewList";
 import { Ban, Flag, MoreHorizontal, Share2, ThumbsUp } from "lucide-react";
+import { useFormatter, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useBlockReviewer, useSetReviewHelpful } from "../useReviewQueries";
@@ -53,6 +54,10 @@ export default function ReviewItemActions({
   /** The organizer / place owner. */
   ownerId: string | null;
 }) {
+  const t = useTranslations("reviews");
+  const tc = useTranslations("core");
+  const format = useFormatter();
+
   const toast = useToast();
   const router = useRouter();
   const pathname = usePathname();
@@ -63,7 +68,7 @@ export default function ReviewItemActions({
 
   const isOwn = !!viewerId && viewerId === review.reviewerId;
   const isOwner = !!viewerId && viewerId === ownerId;
-  const name = reviewerDisplayName(review.reviewer, kind);
+  const name = reviewerDisplayName(tc, review.reviewer, kind);
   const canVote = !isOwn && !isOwner;
 
   const toggleHelpful = () => {
@@ -79,25 +84,27 @@ export default function ReviewItemActions({
 
   const share = async () => {
     const url = `${window.location.origin}${reviewsPath(kind, subjectSlug, review.id)}`;
-    const title = `${review.rating}-star review of ${subjectTitle}`;
+    const title = t("starReviewOf", {
+      rating: review.rating,
+      title: subjectTitle,
+    });
     try {
       if (navigator.share) {
         await navigator.share({ title, url });
         return;
       }
       await navigator.clipboard.writeText(url);
-      toast.success("Link copied");
+      toast.success(t("linkCopied"));
     } catch (error) {
       // Closing the share sheet rejects with AbortError — not a failure.
       if (error instanceof DOMException && error.name === "AbortError") return;
-      toast.error("Couldn't share this review.");
+      toast.error(t("couldnTShareThisReview"));
     }
   };
 
-  const helpfulLabel =
-    review.helpfulCount === 1
-      ? "1 person found this helpful"
-      : `${review.helpfulCount.toLocaleString("en-US")} people found this helpful`;
+  const helpfulLabel = t("peopleFoundThisHelpful", {
+    count: review.helpfulCount,
+  });
 
   return (
     <div className="flex items-center gap-3">
@@ -108,8 +115,8 @@ export default function ReviewItemActions({
           aria-pressed={review.viewerFoundHelpful}
           aria-label={
             review.viewerFoundHelpful
-              ? "Marked as helpful. Click to undo."
-              : "Mark this review as helpful"
+              ? t("markedAsHelpfulClickToUndo")
+              : t("markThisReviewAsHelpful")
           }
           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
             review.viewerFoundHelpful
@@ -118,9 +125,9 @@ export default function ReviewItemActions({
           }`}
         >
           <ThumbsUp className="h-4 w-4" aria-hidden />
-          Helpful
+          {t("helpful")}
           {review.helpfulCount > 0
-            ? ` · ${review.helpfulCount.toLocaleString("en-US")}`
+            ? ` · ${format.number(review.helpfulCount)}`
             : ""}
         </button>
       ) : review.helpfulCount > 0 ? (
@@ -129,18 +136,18 @@ export default function ReviewItemActions({
 
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label="Review options"
+          aria-label={t("reviewOptions")}
           className="ml-auto rounded-full p-1.5 text-muted-foreground hover:bg-accent"
         >
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => void share()}>
-            <Share2 className="mr-2 h-4 w-4" /> Share review
+            <Share2 className="mr-2 h-4 w-4" /> {t("shareReview")}
           </DropdownMenuItem>
           {viewerId && !isOwn ? (
             <DropdownMenuItem onSelect={() => setReportOpen(true)}>
-              <Flag className="mr-2 h-4 w-4" /> Report review
+              <Flag className="mr-2 h-4 w-4" /> {t("reportReview")}
             </DropdownMenuItem>
           ) : null}
           {viewerId && !isOwn && !review.reviewer.deleted ? (
@@ -148,7 +155,7 @@ export default function ReviewItemActions({
               onSelect={() => setBlockOpen(true)}
               className="text-destructive focus:text-destructive"
             >
-              <Ban className="mr-2 h-4 w-4" /> Block {name}
+              <Ban className="mr-2 h-4 w-4" /> {t("block", { name: name })}
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuContent>
@@ -159,33 +166,32 @@ export default function ReviewItemActions({
         onOpenChange={setReportOpen}
         targetType={kind === "event" ? "event_review" : "place_review"}
         targetId={review.id}
-        targetLabel={`review by ${name}`}
+        targetLabel={t("reviewBy2", { name: name })}
       />
 
       <AlertDialog open={blockOpen} onOpenChange={setBlockOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Block {name}?</AlertDialogTitle>
+            <AlertDialogTitle>{t("block2", { name: name })}</AlertDialogTitle>
             <AlertDialogDescription>
-              You won&apos;t see their reviews, and neither of you can message
-              the other. You can unblock them any time in Settings › Blocked
-              accounts.
+              {t("youWonTSeeTheirReviews")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 block.mutate(review.reviewerId, {
-                  onSuccess: () => toast.success(`${name} is blocked`),
+                  onSuccess: () =>
+                    toast.success(t("isBlocked", { name: name })),
                   onError: (e) =>
                     toast.error(
-                      e instanceof Error ? e.message : "Couldn't block.",
+                      e instanceof Error ? e.message : t("couldnTBlock"),
                     ),
                 })
               }
             >
-              Block
+              {t("block3")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

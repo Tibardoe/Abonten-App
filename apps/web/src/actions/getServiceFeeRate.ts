@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { DEFAULT_SERVICE_FEE_RATE } from "@abonten/core/checkoutPricing";
 import { serviceFeeRateFor } from "@abonten/services/platform/platformFee";
 
@@ -16,7 +17,7 @@ type GetServiceFeeRateResult = { status: 200; data: number };
  * number (falls back to DEFAULT_SERVICE_FEE_RATE) so the preview never
  * breaks on a transient error.
  */
-export default async function getServiceFeeRate(
+export default withActionLocale(async function getServiceFeeRate(
   currency?: string | null,
   countryCode?: string | null,
 ): Promise<GetServiceFeeRateResult> {
@@ -30,4 +31,4 @@ export default async function getServiceFeeRate(
   } catch {
     return { status: 200, data: DEFAULT_SERVICE_FEE_RATE };
   }
-}
+});

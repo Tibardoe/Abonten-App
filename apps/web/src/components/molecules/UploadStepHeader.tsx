@@ -1,5 +1,6 @@
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 
 type PrimaryAction = {
   label: string;
@@ -24,6 +25,8 @@ export default function UploadStepHeader({
   primaryAction,
   className,
 }: UploadStepHeaderProps) {
+  const t = useTranslations("common");
+
   if (!onBack && !primaryAction) {
     return (
       <div className={cn("w-full space-y-3", className)}>
@@ -41,10 +44,10 @@ export default function UploadStepHeader({
     <div className={cn("w-full space-y-3", className)}>
       <div className="flex justify-between items-center w-[90%] mx-auto">
         {onBack ? (
-          <button type="button" onClick={onBack} aria-label="Back">
+          <button type="button" onClick={onBack} aria-label={t("back")}>
             <MaskIcon
               src="/assets/images/moveBack.svg"
-              alt="Back"
+              alt={t("back")}
               className="w-[30px] h-[30px]"
             />
           </button>

@@ -1,11 +1,17 @@
 "use client";
 
 import SearchSuggestionRow from "@/components/atoms/SearchSuggestionRow";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import type { CoreTranslator } from "@abonten/core/i18n/translator";
 import type {
   SuggestionItem,
   SuggestionSection,
 } from "@abonten/types/searchSuggestionType";
+import { useTranslations } from "next-intl";
 import {
   IoCalendarOutline,
   IoCheckmarkCircle,
@@ -37,18 +43,26 @@ function hitImage(publicId: string | null, version: string | null) {
     : undefined;
 }
 
-function rowContent(item: SuggestionItem) {
+type Translate = (
+  key: string,
+  values?: Record<string, string | number>,
+) => string;
+
+function rowContent(item: SuggestionItem, t: Translate, tc: CoreTranslator) {
   switch (item.kind) {
     case "hit": {
       const { hit } = item;
       if (hit.entityType === "organizer") {
         return {
           title: `@${hit.label}`,
-          subtitle: hit.sublabel ?? "Organizer",
+          subtitle: hit.sublabel ?? t("organizer"),
           imageSrc: hitImage(hit.imagePublicId, hit.imageVersion),
           icon: <IoPersonCircleOutline />,
           badge: hit.verified ? (
-            <IoCheckmarkCircle aria-label="Verified" className="text-primary" />
+            <IoCheckmarkCircle
+              aria-label={t("verified")}
+              className="text-primary"
+            />
           ) : undefined,
         };
       }
@@ -56,7 +70,7 @@ function rowContent(item: SuggestionItem) {
         title: hit.label,
         subtitle:
           hit.entityType === "place"
-            ? (hit.sublabel ?? "Place")
+            ? (hit.sublabel ?? t("placeKind"))
             : (hit.sublabel ?? undefined),
         imageSrc: hitImage(hit.imagePublicId, hit.imageVersion),
         icon:
@@ -70,7 +84,9 @@ function rowContent(item: SuggestionItem) {
     case "event":
       return {
         title: item.event.title,
-        subtitle: item.event.event_category,
+        subtitle: item.event.event_category
+          ? eventCategoryLabel(tc, item.event.event_category)
+          : undefined,
         imageSrc: item.event.flyer_public_id
           ? buildCloudinaryUrl(
               item.event.flyer_public_id,
@@ -86,7 +102,7 @@ function rowContent(item: SuggestionItem) {
     case "place":
       return {
         title: item.place.name,
-        subtitle: "Place",
+        subtitle: t("placeKind"),
         imageSrc: item.place.cover_public_id
           ? buildCloudinaryUrl(
               item.place.cover_public_id,
@@ -100,16 +116,22 @@ function rowContent(item: SuggestionItem) {
         icon: <IoStorefrontOutline />,
       };
     case "eventCategory":
-      return { title: item.category, icon: <IoPricetagOutline /> };
+      return {
+        title: eventCategoryLabel(tc, item.category),
+        icon: <IoPricetagOutline />,
+      };
     case "placeCategory":
-      return { title: item.category.name, icon: <IoPricetagOutline /> };
+      return {
+        title: placeCategoryLabel(tc, item.category),
+        icon: <IoPricetagOutline />,
+      };
     case "recent":
       return { title: item.text, icon: <IoTimeOutline /> };
     case "literal":
       return {
         title: item.organizers
-          ? `Search organizers for "${item.text}"`
-          : `Search for "${item.text}"`,
+          ? t("searchOrganizersFor", { text: item.text })
+          : t("searchFor", { text: item.text }),
         icon: <IoSearchOutline />,
       };
   }
@@ -130,6 +152,9 @@ export default function SearchSuggestionsDropdown({
   isLoading,
   noMatches,
 }: SearchSuggestionsDropdownProps) {
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   return (
     // A listbox of grouped, heterogeneous rows (thumbnails, remove buttons)
     // doesn't map cleanly onto <select>/<datalist> -- role="listbox" is the
@@ -141,12 +166,12 @@ export default function SearchSuggestionsDropdown({
     <div
       role="listbox"
       tabIndex={-1}
-      aria-label="Search suggestions"
+      aria-label={t("searchSuggestions")}
       className="absolute left-0 right-0 top-full z-20 mt-1 max-h-[70vh] overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-md md:max-h-96"
     >
       {isLoading && sections.length === 0 && (
         <div className="px-3 py-3 text-sm text-muted-foreground">
-          Searching…
+          {t("searching")}
         </div>
       )}
 
@@ -163,14 +188,14 @@ export default function SearchSuggestionsDropdown({
                   onClick={onClearRecent}
                   className="text-xs text-primary hover:underline"
                 >
-                  Clear all
+                  {t("clearAll")}
                 </button>
               )}
             </div>
           )}
           <ul>
             {section.items.map((item) => {
-              const content = rowContent(item);
+              const content = rowContent(item, t, tc);
               const { title, subtitle, imageSrc, icon } = content;
               const badge = "badge" in content ? content.badge : undefined;
               return (
@@ -189,7 +214,9 @@ export default function SearchSuggestionsDropdown({
                   {item.kind === "recent" && (
                     <button
                       type="button"
-                      aria-label={`Remove "${item.text}" from recent searches`}
+                      aria-label={t("removeFromRecentSearches", {
+                        text: item.text,
+                      })}
                       onClick={(event) => {
                         event.stopPropagation();
                         onRemoveRecent(item.text);
@@ -208,7 +235,7 @@ export default function SearchSuggestionsDropdown({
 
       {noMatches && (
         <div className="px-3 pb-2 pt-1 text-sm text-muted-foreground">
-          No matches. Press Enter to search anyway.
+          {t("noMatchesPressEnterToSearch")}
         </div>
       )}
     </div>

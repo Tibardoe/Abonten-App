@@ -1,6 +1,7 @@
 "use client";
 
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 import ReviewPhotoLightbox from "./ReviewPhotoLightbox";
@@ -21,6 +22,8 @@ type ReviewPhotoGridProps = {
 // position shape) -- shared by ReviewListItem (event and place reviews) and
 // ManagePlaceReviewsSection so review photo display stays one component.
 export default function ReviewPhotoGrid({ photos }: ReviewPhotoGridProps) {
+  const t = useTranslations("common");
+
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   if (!photos || photos.length === 0) return null;
@@ -35,7 +38,7 @@ export default function ReviewPhotoGrid({ photos }: ReviewPhotoGridProps) {
             key={photo.id}
             type="button"
             onClick={() => setOpenIndex(index)}
-            aria-label="View photo larger"
+            aria-label={t("viewPhotoLarger")}
             className="relative w-20 h-20 rounded-lg overflow-hidden border border-border"
           >
             <Image
@@ -43,7 +46,7 @@ export default function ReviewPhotoGrid({ photos }: ReviewPhotoGridProps) {
                 width: 80,
                 height: 80,
               })}
-              alt="Review photo"
+              alt={t("reviewPhoto")}
               fill
               sizes="80px"
               className="object-cover"

@@ -1,10 +1,12 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
+import { tc } from "@/lib/coreT";
 import { setFieldOpsCampaignStatus } from "@/server/actions/fieldOps";
 import {
-  CAMPAIGN_ACTION_LABEL,
   availableCampaignActions,
+  campaignActionLabel,
   campaignCapabilities,
 } from "@abonten/core/fieldOps/campaignLifecycle";
 import type {
@@ -76,7 +78,7 @@ export function CampaignStatusControls({
                 setMsg(null);
               }}
             >
-              {CAMPAIGN_ACTION_LABEL[a]}
+              {campaignActionLabel(tc, a)}
             </Button>
           ))}
         </div>
@@ -84,7 +86,7 @@ export function CampaignStatusControls({
         <div className="space-y-2">
           <p className="text-sm">
             <span className="font-medium">
-              {CAMPAIGN_ACTION_LABEL[action]}:
+              {campaignActionLabel(tc, action)}:
             </span>{" "}
             {CONSEQUENCE[action]}
           </p>
@@ -105,7 +107,7 @@ export function CampaignStatusControls({
                     campaignId,
                     action,
                     reason: reason.trim(),
-                  });
+                  }).catch(actionUnreachable);
                   setMsg(res.message ?? null);
                   if (res.status === 200) {
                     setAction(null);
@@ -117,7 +119,7 @@ export function CampaignStatusControls({
             >
               {pending
                 ? "Saving…"
-                : `Confirm: ${CAMPAIGN_ACTION_LABEL[action]}`}
+                : `Confirm: ${campaignActionLabel(tc, action)}`}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAction(null)}>
               Cancel

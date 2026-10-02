@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import generateTicket from "@/utils/generateTicket";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 /**
  * Client-facing entry point for issuing tickets on a **free** pending
@@ -17,7 +19,7 @@ import { logger } from "@abonten/core/logger";
  * re-verifies, as the caller's own session, that every row of the session is
  * pending, owned by the caller, and priced at exactly 0 before delegating.
  */
-export default async function issueFreeCheckoutTickets(
+export default withActionLocale(async function issueFreeCheckoutTickets(
   checkoutSessionId: string,
 ): Promise<{ status: number; message?: string }> {
   const supabase = await createClient();
@@ -28,7 +30,7 @@ export default async function issueFreeCheckoutTickets(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const { data: rows, error: rowsError } = await supabase
@@ -39,11 +41,11 @@ export default async function issueFreeCheckoutTickets(
 
   if (rowsError) {
     logger.error(`Failed loading free checkout session: ${rowsError.message}`);
-    return { status: 500, message: "Something went wrong" };
+    return { status: 500, message: tr("somethingWentWrong2") };
   }
 
   if (!rows || rows.length === 0) {
-    return { status: 404, message: "Checkout not found" };
+    return { status: 404, message: tr("checkoutNotFound") };
   }
 
   const allFreeAndPending = rows.every(
@@ -53,9 +55,9 @@ export default async function issueFreeCheckoutTickets(
   if (!allFreeAndPending) {
     return {
       status: 409,
-      message: "This checkout requires payment. Please use the payment flow.",
+      message: tr("thisCheckoutRequiresPaymentPleaseUse"),
     };
   }
 
   return generateTicket(checkoutSessionId);
-}
+});

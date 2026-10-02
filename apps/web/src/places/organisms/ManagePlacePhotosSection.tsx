@@ -6,6 +6,8 @@ import { setPlaceCoverFromPhoto } from "@/actions/setPlaceCoverFromPhoto";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { usePlaceGalleryUpload } from "@/hooks/usePlaceGalleryUpload";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { formatPercent } from "@abonten/core/i18n/format";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
@@ -34,6 +36,9 @@ export default function ManagePlacePhotosSection({
   photos,
   onChanged,
 }: ManagePlacePhotosSectionProps) {
+  const locale = useLocale();
+  const t = useTranslations("places");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPendingRemoval, setPhotoPendingRemoval] = useState<string | null>(
     null,
@@ -113,7 +118,7 @@ export default function ManagePlacePhotosSection({
         className="flex items-center gap-2 border border-dashed border-border rounded-lg px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:border-primary transition-colors disabled:opacity-60"
       >
         <IoCloudUploadOutline className="text-lg" />
-        Add photos
+        {t("addPhotos")}
       </button>
 
       {items.length > 0 && (
@@ -126,10 +131,10 @@ export default function ManagePlacePhotosSection({
               <span className="truncate">{item.fileName}</span>
               <span className="shrink-0 text-muted-foreground">
                 {item.status === "error"
-                  ? (item.errorMessage ?? "Failed")
+                  ? (item.errorMessage ?? t("failed"))
                   : item.status === "success"
-                    ? "Done"
-                    : `${item.progress}%`}
+                    ? t("done")
+                    : formatPercent(item.progress, locale)}
               </span>
               {item.status === "error" && (
                 <button
@@ -137,7 +142,7 @@ export default function ManagePlacePhotosSection({
                   onClick={() => dismiss(item.id)}
                   className="shrink-0 text-destructive"
                 >
-                  Dismiss
+                  {t("dismiss")}
                 </button>
               )}
             </li>
@@ -146,7 +151,9 @@ export default function ManagePlacePhotosSection({
       )}
 
       {photos.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No gallery photos yet.</p>
+        <p className="text-muted-foreground text-sm">
+          {t("noGalleryPhotosYet")}
+        </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {photos.map((photo, index) => (
@@ -157,7 +164,7 @@ export default function ManagePlacePhotosSection({
                     width: 300,
                     height: 300,
                   })}
-                  alt="Place gallery photo"
+                  alt={t("placeGalleryPhoto")}
                   fill
                   className="object-cover"
                 />
@@ -170,7 +177,7 @@ export default function ManagePlacePhotosSection({
                     onClick={() => movePhoto(index, -1)}
                     disabled={index === 0 || isReordering}
                     className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                    aria-label="Move earlier"
+                    aria-label={t("moveEarlier")}
                   >
                     <FaArrowLeft />
                   </button>
@@ -179,7 +186,7 @@ export default function ManagePlacePhotosSection({
                     onClick={() => movePhoto(index, 1)}
                     disabled={index === photos.length - 1 || isReordering}
                     className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                    aria-label="Move later"
+                    aria-label={t("moveLater")}
                   >
                     <FaArrowRight />
                   </button>
@@ -189,7 +196,7 @@ export default function ManagePlacePhotosSection({
                   type="button"
                   onClick={() => setPhotoPendingRemoval(photo.id)}
                   className="p-1 text-destructive hover:text-destructive/80"
-                  aria-label="Remove photo"
+                  aria-label={t("removePhoto")}
                 >
                   <IoTrashOutline />
                 </button>
@@ -201,7 +208,7 @@ export default function ManagePlacePhotosSection({
                 disabled={settingCoverId !== null}
                 className="text-xs font-semibold text-primary hover:underline disabled:opacity-50"
               >
-                {settingCoverId === photo.id ? "Setting…" : "Set as cover"}
+                {settingCoverId === photo.id ? t("setting") : t("setAsCover")}
               </button>
             </div>
           ))}
@@ -210,9 +217,9 @@ export default function ManagePlacePhotosSection({
 
       {photoPendingRemoval && (
         <ConfirmDeleteModal
-          title="Remove this photo?"
-          message="Remove this photo from your gallery? This can't be undone."
-          confirmLabel="Remove Photo"
+          title={t("removeThisPhoto")}
+          message={t("removeThisPhotoFromYourGallery")}
+          confirmLabel={t("removePhoto2")}
           isLoading={isRemoving}
           onConfirm={handleConfirmRemove}
           onCancel={() => setPhotoPendingRemoval(null)}

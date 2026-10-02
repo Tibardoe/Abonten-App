@@ -8,7 +8,9 @@ import {
 } from "@/features/checkout/useCheckoutCountdown";
 import type { PendingCheckoutSession } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Card, Icon, SectionTitle } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Alert, Pressable, View } from "react-native";
@@ -18,6 +20,8 @@ import { Alert, Pressable, View } from "react-native";
 // from the basket (web has it) is left to the checkout screen you resume
 // into; this surface is resume + release only.
 export function PendingCheckoutsSection() {
+  const t = useTranslations("checkout");
+
   const q = usePendingCheckouts();
   const clearAll = useCancelCheckout();
   const sessions =
@@ -29,12 +33,12 @@ export function PendingCheckoutsSection() {
 
   function onClearAll() {
     Alert.alert(
-      `Release all ${sessions.length} pending checkouts?`,
-      "The tickets they're holding go back on sale. You can start again anytime.",
+      t("releaseAllPendingCheckouts", { length: sessions.length }),
+      t("theTicketsTheyReHoldingGo"),
       [
-        { text: "Keep", style: "cancel" },
+        { text: t("keep"), style: "cancel" },
         {
-          text: "Release all",
+          text: t("releaseAll"),
           style: "destructive",
           onPress: () => {
             for (const s of sessions) {
@@ -49,7 +53,7 @@ export function PendingCheckoutsSection() {
   return (
     <View className="gap-3 pt-1 pb-1">
       <View className="flex-row items-center justify-between">
-        <SectionTitle>Continue checkout</SectionTitle>
+        <SectionTitle>{t("continueCheckout")}</SectionTitle>
         {sessions.length > 1 ? (
           <Pressable
             accessibilityRole="button"
@@ -58,7 +62,7 @@ export function PendingCheckoutsSection() {
             disabled={clearAll.isPending}
           >
             <AppText variant="small" tone="error" className="font-medium">
-              {clearAll.isPending ? "Releasing…" : "Release all"}
+              {clearAll.isPending ? t("releasing") : t("releaseAll")}
             </AppText>
           </Pressable>
         ) : null}
@@ -81,6 +85,10 @@ function SessionCard({
   session: PendingCheckoutSession;
   onExpired: () => void;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("checkout");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const release = useCancelCheckout();
   const { secondsLeft, isExpired, isWarning } = useCheckoutCountdown(
@@ -98,18 +106,14 @@ function SessionCard({
   const currency = session.lines[0]?.currency ?? "";
 
   function onRelease() {
-    Alert.alert(
-      "Release this checkout?",
-      "The tickets it's holding go back on sale. You can start again anytime.",
-      [
-        { text: "Keep", style: "cancel" },
-        {
-          text: "Release",
-          style: "destructive",
-          onPress: () => release.mutate(session.checkoutSessionId),
-        },
-      ],
-    );
+    Alert.alert(t("releaseThisCheckout"), t("theTicketsItSHoldingGo"), [
+      { text: t("keep"), style: "cancel" },
+      {
+        text: t("release"),
+        style: "destructive",
+        onPress: () => release.mutate(session.checkoutSessionId),
+      },
+    ]);
   }
 
   return (
@@ -130,7 +134,7 @@ function SessionCard({
           hitSlop={8}
         >
           <AppText variant="small" tone="error" className="font-medium">
-            {release.isPending ? "Releasing…" : "Release"}
+            {release.isPending ? t("releasing") : t("release")}
           </AppText>
         </Pressable>
       </View>
@@ -151,8 +155,10 @@ function SessionCard({
             }
           >
             {isExpired
-              ? "This checkout has expired."
-              : `Expires in ${formatCountdown(secondsLeft)}`}
+              ? t("thisCheckoutHasExpired")
+              : t("expiresIn", {
+                  formatCountdown: formatCountdown(secondsLeft),
+                })}
           </AppText>
         </View>
       ) : null}
@@ -164,13 +170,13 @@ function SessionCard({
             className="flex-row items-center justify-between"
           >
             <AppText variant="muted">
-              {line.type} × {line.quantity}
+              {ticketTypeLabel(tc, line.type)} × {line.quantity}
               {line.discount > 0
-                ? ` · −${formatMoney(line.currency, line.discount)}`
+                ? ` · −${formatMoney(line.currency, line.discount, { locale })}`
                 : ""}
             </AppText>
             <AppText variant="small">
-              {formatMoney(line.currency, line.amount)}
+              {formatMoney(line.currency, line.amount, { locale })}
             </AppText>
           </View>
         ))}
@@ -178,15 +184,15 @@ function SessionCard({
 
       <View className="flex-row items-center justify-between border-t border-border pt-2">
         <AppText className="text-sm font-semibold text-foreground">
-          Checkout total
+          {t("checkoutTotal")}
         </AppText>
         <AppText className="text-sm font-semibold text-foreground">
-          {formatMoney(currency, session.sessionSubtotal)}
+          {formatMoney(currency, session.sessionSubtotal, { locale })}
         </AppText>
       </View>
 
       <Button
-        title={isExpired ? "Expired" : "Resume checkout"}
+        title={isExpired ? t("expired") : t("resumeCheckout")}
         variant={isExpired ? "outline" : "primary"}
         size="sm"
         disabled={isExpired}

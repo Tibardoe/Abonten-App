@@ -1,5 +1,6 @@
 import { useRecentReactions } from "@/features/messaging/recentReactions";
 import type { MessageRow } from "@abonten/api-client";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { useWindowDimensions } from "react-native";
 import {
@@ -48,6 +49,8 @@ export function MessageActionOverlay({
   /** Scopes the remembered custom emoji to this account. */
   currentUserId: string | undefined;
 }) {
+  const t = useTranslations("messaging");
+
   const screen = useWindowDimensions();
   const message = target?.message ?? null;
   const { recents, emojis, remember } = useRecentReactions(currentUserId);
@@ -65,14 +68,14 @@ export function MessageActionOverlay({
   if (message) {
     actions.push({
       key: "reply",
-      label: "Reply",
+      label: t("reply"),
       icon: "arrow-undo-outline",
       onPress: () => onReply(message),
     });
     if (canCopy && message.message_type === "text" && message.content) {
       actions.push({
         key: "copy",
-        label: "Copy",
+        label: t("copy"),
         icon: "copy-outline",
         onPress: () => onCopy(message.content ?? ""),
       });
@@ -80,7 +83,7 @@ export function MessageActionOverlay({
     if (canEdit) {
       actions.push({
         key: "edit",
-        label: "Edit",
+        label: t("edit"),
         icon: "create-outline",
         onPress: () => onEdit(message),
       });
@@ -88,7 +91,7 @@ export function MessageActionOverlay({
     if (canDelete) {
       actions.push({
         key: "delete",
-        label: "Delete",
+        label: t("deleteText"),
         icon: "trash-outline",
         destructive: true,
         onPress: () => onDelete(message),
@@ -112,7 +115,7 @@ export function MessageActionOverlay({
         // so its text wraps identically and it keeps the bubble's exact
         // width and horizontal position (spec §8).
         maxPreviewWidth={(screen.width - 24) * 0.85}
-        a11yPreviewLabel="Selected message"
+        a11yPreviewLabel={t("selectedMessage")}
         renderAccessory={
           message
             ? (dismiss) => (

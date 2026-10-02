@@ -5,7 +5,6 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
-import { NOTIFICATION_COPY } from "@abonten/core/verification/copy";
 import type {
   AdminContext,
   AdminNoteEntry,
@@ -560,12 +559,12 @@ export async function decideVerificationCaseCore(
 
   const subjectName = await subjectDisplayName(supabase, row);
   const reason = input.reason?.trim() ?? "";
-  const copy =
+  const noticeId =
     input.decision === "approve"
-      ? NOTIFICATION_COPY.approved(subjectName)
+      ? "verification_approved"
       : input.decision === "request_info"
-        ? NOTIFICATION_COPY.infoRequested(subjectName, reason)
-        : NOTIFICATION_COPY.rejected(subjectName, reason);
+        ? "verification_info_requested"
+        : "verification_rejected";
 
   await createNotificationCore(supabase, {
     userId: row.requester_id,
@@ -575,8 +574,14 @@ export async function decideVerificationCaseCore(
         : input.decision === "request_info"
           ? "verification_info_requested"
           : "verification_rejected",
-    title: copy.title,
-    body: copy.body,
+    notice: {
+      id: noticeId,
+      params: {
+        subject: subjectName ?? null,
+        subjectKind: row.subject_type,
+        reason,
+      },
+    },
     link: verificationLink(row),
     data: verificationNotificationData(row),
   });
@@ -657,12 +662,17 @@ export async function revokeVerificationCore(
   if (rpcErr) return transitionError(rpcErr, "Something went wrong");
 
   const subjectName = await subjectDisplayName(supabase, row);
-  const copy = NOTIFICATION_COPY.revoked(subjectName, input.reason.trim());
   await createNotificationCore(supabase, {
     userId: row.requester_id,
     type: "verification_revoked",
-    title: copy.title,
-    body: copy.body,
+    notice: {
+      id: "verification_revoked",
+      params: {
+        subject: subjectName ?? null,
+        subjectKind: row.subject_type,
+        reason: input.reason.trim(),
+      },
+    },
     link: verificationLink(row),
     data: verificationNotificationData(row),
   });
@@ -687,17 +697,18 @@ export async function revokeVerificationCore(
   return { status: 200, message: "Verification revoked." };
 }
 
+/** The subject's own name, or null when it has none to show. */
 async function subjectDisplayName(
   supabase: ServiceRoleClient,
   row: CaseRow,
-): Promise<string> {
+): Promise<string | null> {
   if (row.subject_type === "place" && row.place_id) {
     const { data } = await supabase
       .from("place")
       .select("name")
       .eq("id", row.place_id)
       .maybeSingle();
-    return data?.name ?? "your place";
+    return data?.name ?? null;
   }
   if (row.organizer_user_id) {
     const { data } = await supabase
@@ -705,11 +716,12 @@ async function subjectDisplayName(
       .select("full_name, username")
       .eq("id", row.organizer_user_id)
       .maybeSingle();
-    return data?.full_name || data?.username || "your organizer profile";
+    return data?.full_name || data?.username || null;
   }
-  return "your listing";
+  return null;
 }
 
+/** "this place" / "your organizer profile", in the recipient's language. */
 export async function addVerificationNoteCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,

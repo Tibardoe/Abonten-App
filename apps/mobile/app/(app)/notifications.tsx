@@ -12,11 +12,15 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import type { NotificationType } from "@abonten/types/notificationType";
 import { AppText, EmptyState, ListFooter, Refresher } from "@abonten/ui-native";
+import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Pressable, SectionList, View } from "react-native";
 
-type Section = { title: string; data: NotificationType[] };
+const DAYS = ["today", "yesterday", "earlier"] as const;
+type Day = (typeof DAYS)[number];
+
+type Section = { day: Day; data: NotificationType[] };
 
 function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -27,23 +31,29 @@ function startOfDay(d: Date): number {
 function groupByDay(items: NotificationType[]): Section[] {
   const today = startOfDay(new Date());
   const yesterday = today - 86_400_000;
-  const buckets: Record<string, NotificationType[]> = {
-    Today: [],
-    Yesterday: [],
-    Earlier: [],
+  // Sorted by what the day IS; its name is chosen where it is shown. The
+  // buckets were once filled under English names and read back under the
+  // translated ones, so the screen crashed in every other language.
+  const buckets: Record<Day, NotificationType[]> = {
+    today: [],
+    yesterday: [],
+    earlier: [],
   };
   for (const n of items) {
     const day = startOfDay(new Date(n.created_at));
-    if (day >= today) buckets.Today.push(n);
-    else if (day >= yesterday) buckets.Yesterday.push(n);
-    else buckets.Earlier.push(n);
+    if (day >= today) buckets.today.push(n);
+    else if (day >= yesterday) buckets.yesterday.push(n);
+    else buckets.earlier.push(n);
   }
-  return (["Today", "Yesterday", "Earlier"] as const)
-    .filter((k) => buckets[k].length > 0)
-    .map((k) => ({ title: k, data: buckets[k] }));
+  return DAYS.filter((day) => buckets[day].length > 0).map((day) => ({
+    day,
+    data: buckets[day],
+  }));
 }
 
 export default function Notifications() {
+  const t = useTranslations("notifications");
+
   const router = useRouter();
   const q = useNotifications();
   const markAll = useMarkAllNotificationsRead();
@@ -76,20 +86,20 @@ export default function Notifications() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Notifications"
+        title={t("notifications")}
         backFallback="/(app)/account"
         rightAccessory={
           hasUnread ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Mark all read"
+              accessibilityLabel={t("markAllRead")}
               hitSlop={8}
               onPress={() => markAll.mutate()}
               disabled={markAll.isPending}
               className="px-2 active:opacity-60"
             >
               <AppText variant="small" tone="brand" className="font-medium">
-                Mark all read
+                {t("markAllRead")}
               </AppText>
             </Pressable>
           ) : null
@@ -105,7 +115,7 @@ export default function Notifications() {
           stickySectionHeadersEnabled={false}
           renderSectionHeader={({ section }) => (
             <AppText variant="overline" className="px-4 pb-1.5 pt-4">
-              {section.title}
+              {t(section.day)}
             </AppText>
           )}
           renderItem={({ item }) => (
@@ -121,13 +131,13 @@ export default function Notifications() {
             view.kind === "empty" ? (
               <EmptyState
                 icon="notifications-outline"
-                title="No notifications yet"
-                description="Updates about your tickets, events and messages show up here."
+                title={t("noNotificationsYet")}
+                description={t("updatesAboutYourTicketsEventsAnd")}
               />
             ) : (
               <QueryUnavailable
                 view={view}
-                subject="your notifications"
+                subject={t("yourNotifications")}
                 onRetry={() => q.refetch()}
               />
             )

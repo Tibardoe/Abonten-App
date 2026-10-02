@@ -1,10 +1,16 @@
 import { cn } from "@/components/lib/utils";
 import VerifiedBadge from "@/places/molecules/VerifiedBadge";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { WeeklyItem } from "@abonten/types/weeklyType";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { FiArrowRight, FiCalendar, FiMapPin, FiStar } from "react-icons/fi";
 import WeeklyCoverImage from "../atoms/WeeklyCoverImage";
@@ -23,6 +29,11 @@ export default function WeeklyHeroItem({
   /** "large" for a section's only hero, "medium" when heroes share a row. */
   size?: "large" | "medium";
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("weekly");
+  const tc = useTranslations("core");
+
   const event = item.event;
   const place = item.place;
   if (!event && !place) return null;
@@ -42,23 +53,37 @@ export default function WeeklyHeroItem({
         event.ends_at,
         event.occurrences,
         event.timezone,
+        locale,
       )
     : null;
   const overlay = event
     ? event.status === "canceled"
-      ? "Event cancelled"
-      : getEventStatusOverlay(event.starts_at, event.ends_at, event.occurrences)
+      ? t("eventCancelled")
+      : getEventStatusOverlay(
+          tc,
+          event.starts_at,
+          event.ends_at,
+          event.occurrences,
+        )
     : place?.temporary_status === "temporarily_closed"
-      ? "Temporarily closed"
+      ? t("temporarilyClosed")
       : null;
   const price = event
     ? event.min_price === 0 || event.min_price == null
-      ? "Free entry"
-      : `From ${formatMoney(event.currency, event.min_price, { trimZeroFraction: true })}`
+      ? t("freeEntry")
+      : t("from", {
+          formatMoney: formatMoney(event.currency, event.min_price, {
+            trimZeroFraction: true,
+            locale,
+          }),
+        })
     : null;
   const rating =
     place?.avg_rating != null && Number(place.avg_rating) > 0
-      ? `${Number(place.avg_rating).toFixed(1)} (${place.review_count} review${place.review_count === 1 ? "" : "s"})`
+      ? t("ratingWithReviews", {
+          rating: formatRating(place.avg_rating, locale),
+          count: place.review_count ?? 0,
+        })
       : null;
 
   return (
@@ -104,7 +129,7 @@ export default function WeeklyHeroItem({
         className="absolute inset-0 z-10 rounded-3xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-primary"
       >
         <span className="sr-only">
-          {event ? "View event" : "View place"}: {title}
+          {event ? t("viewEvent") : t("viewPlace")}: {title}
         </span>
       </Link>
 
@@ -124,7 +149,14 @@ export default function WeeklyHeroItem({
 
         <div className={cn(size === "large" ? "max-w-2xl" : "max-w-xl")}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/70">
-            {event ? (event.event_category ?? "Event") : place?.category_name}
+            {event
+              ? event.event_category
+                ? eventCategoryLabel(tc, event.event_category)
+                : t("event")
+              : placeCategoryLabel(tc, {
+                  slug: place?.category_slug,
+                  name: place?.category_name,
+                })}
           </p>
           <h3
             className={cn(
@@ -148,7 +180,9 @@ export default function WeeklyHeroItem({
                 <FiCalendar aria-hidden className="h-4 w-4 shrink-0" />
                 <span>
                   {[when.date, when.time].filter(Boolean).join(" · ")}
-                  {when.extraDates > 0 ? ` +${when.extraDates} more` : ""}
+                  {when.extraDates > 0
+                    ? ` ${t("moreDates", { count: when.extraDates })}`
+                    : ""}
                 </span>
               </li>
             ) : null}
@@ -180,7 +214,7 @@ export default function WeeklyHeroItem({
               aria-hidden
               className="inline-flex h-11 items-center gap-3 rounded-full bg-white pl-5 pr-1.5 text-sm font-semibold text-slate-950 shadow-lg shadow-black/20 transition-colors group-hover:bg-primary group-hover:text-primary-foreground"
             >
-              {event ? "View event" : "View place"}
+              {event ? t("viewEvent") : t("viewPlace")}
               <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-950 text-white transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none">
                 <FiArrowRight className="h-4 w-4" />
               </span>

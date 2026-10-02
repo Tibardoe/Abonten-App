@@ -1,3 +1,5 @@
+import type { EmailWords } from "@/lib/email/emailWords";
+import { richEmailText } from "@/lib/email/emailWords";
 import { Link, Section, Text } from "@react-email/components";
 import {
   EmailButton,
@@ -14,7 +16,7 @@ import {
 export type RewardUpdateEmailItem = { title: string; body: string | null };
 
 interface RewardUpdateEmailProps {
-  name: string | null;
+  words: EmailWords;
   items: RewardUpdateEmailItem[];
   rewardsUrl: string;
   unsubscribeUrl: string;
@@ -24,29 +26,27 @@ interface RewardUpdateEmailProps {
  * Abonten Rewards email: credit someone can use now (credit ready, welcome
  * credit, promotion credit). One email can carry several notices -- the
  * delivery queue batches a person's notices and sends at most one reward
- * email every 12 hours (sendRewardUpdateEmail.ts). The text is the same as
- * the in-app notification's, so the two never disagree. Every reward email
- * has an unsubscribe link (and List-Unsubscribe headers, added by the
- * sender). Built from EmailParts, which keeps it readable in Gmail, Outlook
- * and dark mode.
+ * email every 12 hours (sendRewardUpdateEmail.ts). The items are the in-app
+ * notices, already worded in the person's language, so the two never
+ * disagree. Every reward email has an unsubscribe link (and List-Unsubscribe
+ * headers, added by the sender). Built from EmailParts, which keeps it
+ * readable in Gmail, Outlook and dark mode.
  */
 export default function RewardUpdateEmailTemplate({
-  name,
+  words,
   items,
   rewardsUrl,
   unsubscribeUrl,
 }: RewardUpdateEmailProps) {
-  const heading = items.length === 1 ? items[0].title : "Your rewards update";
+  const { t, locale, greeting } = words;
+  const heading =
+    items.length === 1 ? items[0].title : t("rewards.headingMany");
   return (
     <EmailShell
+      locale={locale}
       preview={items[0]?.body ?? heading}
       heading={heading}
-      intro={
-        <EmailIntro>
-          Hi {name ?? "there"}, here&apos;s what&apos;s new with your Abonten
-          Credit.
-        </EmailIntro>
-      }
+      intro={<EmailIntro>{t("rewards.intro", { greeting })}</EmailIntro>}
     >
       <EmailDivider />
       <EmailSection>
@@ -75,20 +75,18 @@ export default function RewardUpdateEmailTemplate({
         ))}
       </EmailSection>
 
-      <EmailButton href={rewardsUrl}>Open Abonten Rewards</EmailButton>
+      <EmailButton href={rewardsUrl}>{t("rewards.open")}</EmailButton>
 
-      <EmailFooter>
+      <EmailFooter words={words}>
+        <EmailFinePrint>{t("rewards.why")}</EmailFinePrint>
         <EmailFinePrint>
-          You&apos;re getting this because you earned Abonten Credit on your
-          Abonten Hub account. Credit can be spent on Abonten and can&apos;t be
-          exchanged for cash.
-        </EmailFinePrint>
-        <EmailFinePrint>
-          Don&apos;t want these emails?{" "}
-          <Link href={unsubscribeUrl} style={emailFinePrintLink}>
-            Unsubscribe
-          </Link>
-          . You&apos;ll still see your credit in the app.
+          {richEmailText(t("rewards.unsubscribe"), {
+            link: (chunk) => (
+              <Link href={unsubscribeUrl} style={emailFinePrintLink}>
+                {chunk}
+              </Link>
+            ),
+          })}
         </EmailFinePrint>
       </EmailFooter>
     </EmailShell>

@@ -190,13 +190,15 @@ export async function decideOnboardingAdminCore(
   });
   await notifyFieldOps(supabase, [row.member_user_id], {
     type: "fieldops_submission_reviewed",
-    title:
-      input.decision === "verified"
-        ? `Verified: ${row.business_name ?? "your onboarding"}`
-        : input.decision === "needs_changes"
-          ? `Changes needed: ${row.business_name ?? "your onboarding"}`
-          : `Not accepted: ${row.business_name ?? "your onboarding"}`,
-    body: input.note,
+    template: {
+      id:
+        input.decision === "verified"
+          ? "fieldops_review_verified_noted"
+          : input.decision === "needs_changes"
+            ? "fieldops_review_needs_changes"
+            : "fieldops_review_rejected",
+      params: { name: row.business_name ?? null, note: input.note ?? null },
+    },
     route: `/field/submissions/${row.id}`,
   });
   const { data: fresh } = await supabase

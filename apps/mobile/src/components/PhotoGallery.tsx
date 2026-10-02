@@ -1,5 +1,6 @@
 import { MediaViewer, type MediaViewerItem } from "@/components/MediaViewer";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -18,6 +19,8 @@ export function PhotoGallery({
   photos: GalleryPhoto[] | null | undefined;
   thumbSize?: number;
 }) {
+  const t = useTranslations("common");
+
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const list = photos ?? [];
@@ -49,7 +52,7 @@ export function PhotoGallery({
             key={photo.id}
             onPress={() => setOpenIndex(index)}
             accessibilityRole="button"
-            accessibilityLabel="View photo larger"
+            accessibilityLabel={t("viewPhotoLarger")}
           >
             <Image
               source={{

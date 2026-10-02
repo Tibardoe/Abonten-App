@@ -1,6 +1,8 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { setUserStatus } from "@/server/actions/users";
 import type {
   AdminPermissionKey,
@@ -28,6 +30,7 @@ export function UserActions({
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
     null,
   );
+  const confirm = useConfirm();
   const can = (p: AdminPermissionKey) => permissions.includes(p);
 
   // A deleted account is an anonymised shell: nothing to suspend, ban or
@@ -41,17 +44,16 @@ export function UserActions({
     );
   }
 
-  function act(next: UserAccountStatus) {
+  async function act(next: UserAccountStatus) {
     if (!reason.trim()) {
       setMsg({ tone: "err", text: "A reason is required." });
       return;
     }
-    if (
-      !confirm(
-        `Set this account to "${next}"? This is recorded in the audit log.`,
-      )
-    )
-      return;
+    const confirmed = await confirm(
+      `Set this account to "${next}"? This is recorded in the audit log.`,
+      { confirmLabel: `Set to ${next}`, danger: next !== "Active" },
+    );
+    if (!confirmed) return;
     setMsg(null);
     start(async () => {
       const res = await setUserStatus({
@@ -59,7 +61,7 @@ export function UserActions({
         status: next,
         reason: reason.trim(),
         expectedStatus: status,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         setMsg({ tone: "ok", text: res.message ?? "Done." });
         setReason("");

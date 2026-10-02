@@ -1,4 +1,8 @@
 import { discoveryRoute } from "@/app/api/mobile/_lib/discoveryRoute";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { resolveDiscoveryAccess } from "@abonten/services/search/discoveryProgram";
 import { searchCore } from "@abonten/services/search/searchCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
@@ -9,6 +13,7 @@ import { searchRequestSchema } from "@abonten/validation/discoverySchemas";
 // directly). Signed-out use is allowed; rate-limited per user or per IP.
 // Same service as the web searchDiscovery Server Action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: searchRequestSchema, label: "GET /search", allowAnonymous: true },
@@ -17,7 +22,7 @@ export async function GET(req: Request) {
       if (!(await checkRateLimit(key, 60, 60))) {
         return {
           status: 429,
-          message: "You are searching very quickly. Try again in a moment.",
+          message: tr("youAreSearchingVeryQuicklyTry"),
         };
       }
       const { program, settings } = await resolveDiscoveryAccess(svc, userId);

@@ -7,6 +7,7 @@ import {
   placeDraftPayloadSchema,
 } from "@abonten/validation/placeDraftSchema";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of savePlaceDraft / getPlaceDrafts / getPlaceDraft /
 // deletePlaceDraft, lifted so the mobile place-drafts routes run the same
@@ -60,7 +61,7 @@ export async function savePlaceDraftCore(
 
   const parsed = placeDraftPayloadSchema.safeParse(input.payload);
   if (!parsed.success) {
-    return { status: 400, message: "Invalid draft data." };
+    return { status: 400, message: tr("invalidDraftData") };
   }
 
   let previousCoverPublicId: string | null = null;
@@ -80,13 +81,12 @@ export async function savePlaceDraftCore(
       };
     }
     if (!existingDraft || existingDraft.user_id !== userId) {
-      return { status: 404, message: "Draft not found." };
+      return { status: 404, message: tr("draftNotFound") };
     }
     if (expectedUpdatedAt && existingDraft.updated_at !== expectedUpdatedAt) {
       return {
         status: 409,
-        message:
-          "This draft was updated elsewhere — reload to see the latest version.",
+        message: tr("thisDraftWasUpdatedElsewhereReload"),
       };
     }
 
@@ -160,7 +160,7 @@ export async function savePlaceDraftCore(
 
     return {
       status: 200,
-      message: "Draft saved.",
+      message: tr("draftSaved"),
       data: { draftId, updatedAt: refreshedDraft?.updated_at },
     };
   }
@@ -174,9 +174,9 @@ export async function savePlaceDraftCore(
   if (insertDraftError || !newDraft) {
     return {
       status: 500,
-      message: `Failed to save draft: ${
-        insertDraftError?.message ?? "unknown error"
-      }`,
+      message: tr("failedToSaveDraft", {
+        reason: insertDraftError?.message ?? tr("unknownError"),
+      }),
     };
   }
 
@@ -201,7 +201,7 @@ export async function savePlaceDraftCore(
 
   return {
     status: 200,
-    message: "Draft saved.",
+    message: tr("draftSaved"),
     data: { draftId: newDraft.id, updatedAt: newDraft.updated_at },
   };
 }
@@ -223,7 +223,11 @@ export async function fetchPlaceDraftsList(
     .order("updated_at", { ascending: false });
 
   if (draftsError) {
-    return { status: 500, message: draftsError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Place draft", draftsError),
+      data: [],
+    };
   }
   if (!drafts || drafts.length === 0) {
     return { status: 200, data: [] };
@@ -237,7 +241,11 @@ export async function fetchPlaceDraftsList(
     .in("draft_id", draftIds);
 
   if (placeDraftsError) {
-    return { status: 500, message: placeDraftsError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Place draft", placeDraftsError),
+      data: [],
+    };
   }
 
   const coverByDraftId = new Map(
@@ -273,13 +281,13 @@ export async function fetchPlaceDraftDetail(
     .maybeSingle();
 
   if (draftError) {
-    return { status: 500, message: draftError.message };
+    return { status: 500, message: userFacingError("Place draft", draftError) };
   }
   if (!draft || draft.user_id !== userId) {
-    return { status: 404, message: "Draft not found." };
+    return { status: 404, message: tr("draftNotFound") };
   }
   if (new Date(draft.expires_at) <= new Date()) {
-    return { status: 410, message: "This draft has expired." };
+    return { status: 410, message: tr("thisDraftHasExpired") };
   }
 
   const { data: placeDraft, error: placeDraftError } = await supabase
@@ -291,7 +299,7 @@ export async function fetchPlaceDraftDetail(
   if (placeDraftError || !placeDraft) {
     return {
       status: 500,
-      message: placeDraftError?.message ?? "Draft data not found.",
+      message: placeDraftError?.message ?? tr("draftDataNotFound"),
     };
   }
 
@@ -328,10 +336,10 @@ export async function deletePlaceDraftCore(
     .maybeSingle();
 
   if (draftError) {
-    return { status: 500, message: draftError.message };
+    return { status: 500, message: userFacingError("Place draft", draftError) };
   }
   if (!draft || draft.user_id !== userId) {
-    return { status: 404, message: "Draft not found." };
+    return { status: 404, message: tr("draftNotFound") };
   }
 
   const { data: placeDraft } = await supabase
@@ -353,14 +361,14 @@ export async function deletePlaceDraftCore(
       if (result.result !== "ok" && result.result !== "not found") {
         return {
           status: 500,
-          message: "Failed to delete draft image. Please try again.",
+          message: tr("failedToDeleteDraftImagePlease"),
         };
       }
     } catch (cloudError) {
       logger.error("Cloudinary deletion failed:", cloudError);
       return {
         status: 500,
-        message: "Failed to delete draft image. Please try again.",
+        message: tr("failedToDeleteDraftImagePlease"),
       };
     }
   }
@@ -378,5 +386,5 @@ export async function deletePlaceDraftCore(
     };
   }
 
-  return { status: 200, message: "Draft deleted." };
+  return { status: 200, message: tr("draftDeleted") };
 }

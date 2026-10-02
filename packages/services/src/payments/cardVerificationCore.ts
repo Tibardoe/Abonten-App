@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { marketClosedForSales } from "./paymentChoice";
 import {
@@ -74,13 +75,13 @@ export async function initCardVerificationCore(
     if (error instanceof NoProviderError) {
       return {
         status: 400,
-        message: "Card payments aren't available in your market yet.",
+        message: tr("cardPaymentsArenTAvailableIn"),
       };
     }
     logger.error(`initCardVerification: provider resolution failed: ${error}`);
     return {
       status: 500,
-      message: "Couldn't start card verification. Please try again.",
+      message: tr("couldnTStartCardVerificationPlease"),
     };
   }
 
@@ -91,8 +92,7 @@ export async function initCardVerificationCore(
   if (!amount || !provider.capabilities(account).savedCards) {
     return {
       status: 400,
-      message:
-        "Saving a card isn't available in your market. You can still pay by card at checkout.",
+      message: tr("savingACardIsnTAvailable"),
     };
   }
 
@@ -106,20 +106,19 @@ export async function initCardVerificationCore(
       callbackUrl,
       methods: ["card"],
       metadata: { purpose: "card_verification", userId },
-      description: "Card verification (refunded)",
+      description: tr("cardVerificationRefunded"),
     });
   } catch (error) {
     logger.error(`Failed initializing card verification: ${error}`);
     return {
       status: 500,
-      message: "Couldn't start card verification. Please try again.",
+      message: tr("couldnTStartCardVerificationPlease"),
     };
   }
   if (init.mode !== "popup") {
     return {
       status: 400,
-      message:
-        "Saving a card isn't available in your market. You can still pay by card at checkout.",
+      message: tr("savingACardIsnTAvailable"),
     };
   }
 
@@ -155,7 +154,7 @@ export async function confirmCardVerificationCore(
     );
     return {
       status: 500,
-      message: "Couldn't verify your card. Please try again.",
+      message: tr("couldnTVerifyYourCardPlease"),
     };
   }
   const { provider, account } = resolved;
@@ -167,7 +166,7 @@ export async function confirmCardVerificationCore(
     logger.error(`Failed verifying card verification charge: ${error}`);
     return {
       status: 500,
-      message: "Couldn't verify your card. Please try again.",
+      message: tr("couldnTVerifyYourCardPlease"),
     };
   }
 
@@ -177,13 +176,13 @@ export async function confirmCardVerificationCore(
     logger.error(
       "confirmCardVerification: verified charge belongs to a different customer email",
     );
-    return { status: 401, message: "Not authorized" };
+    return { status: 401, message: tr("notAuthorized") };
   }
 
   if (verification.status !== "success") {
     return {
       status: 400,
-      message: "Your card could not be verified. Please try again.",
+      message: tr("yourCardCouldNotBeVerified"),
     };
   }
 
@@ -192,8 +191,7 @@ export async function confirmCardVerificationCore(
   if (!instrument || !instrument.reusable) {
     return {
       status: 400,
-      message:
-        "This card can't be saved for future payments. Please try a different card.",
+      message: tr("thisCardCanTBeSaved"),
     };
   }
 

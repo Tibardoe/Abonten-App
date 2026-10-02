@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsTerritory } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -30,6 +32,8 @@ export default function LeadTerritoryForm({
   initial?: FieldOpsTerritory;
   onDone?: () => void;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -44,7 +48,7 @@ export default function LeadTerritoryForm({
 
   const locate = async () => {
     if (!name.trim()) {
-      toast.error("Type the town's name first.");
+      toast.error(t("typeTheTownSNameFirst"));
       return;
     }
     setLocating(true);
@@ -58,14 +62,14 @@ export default function LeadTerritoryForm({
         error?: string;
       };
       if (!res.ok || data.lat === undefined || data.lng === undefined) {
-        toast.error(data.error ?? "Couldn't find that on the map.");
+        toast.error(data.error ?? t("couldnTFindThatOnThe"));
         return;
       }
       setLat(String(data.lat));
       setLng(String(data.lng));
-      toast.success("Found it. Check the pin, then save.");
+      toast.success(t("foundItCheckThePinThen"));
     } catch {
-      toast.error("Couldn't find that on the map.");
+      toast.error(t("couldnTFindThatOnThe"));
     } finally {
       setLocating(false);
     }
@@ -84,13 +88,13 @@ export default function LeadTerritoryForm({
         radiusM: Number(radius),
         boundary: initial?.boundary ?? null,
         notes: notes || null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
-        toast.success(res.message ?? "Saved.");
+        toast.success(res.message ?? t("saved"));
         onDone?.();
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't save that.");
+        toast.error(res.message ?? t("couldnTSaveThat"));
       }
     });
   };
@@ -102,7 +106,7 @@ export default function LeadTerritoryForm({
     >
       <div className="grid gap-3 md:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <Label htmlFor="t-name">Name</Label>
+          <Label htmlFor="t-name">{t("name")}</Label>
           <div className="flex gap-2">
             <Input
               id="t-name"
@@ -111,7 +115,7 @@ export default function LeadTerritoryForm({
               maxLength={80}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Ejisu"
+              placeholder={t("eGEjisu")}
             />
             <Button
               type="button"
@@ -119,30 +123,30 @@ export default function LeadTerritoryForm({
               onClick={locate}
               disabled={locating}
             >
-              {locating ? "Finding…" : "Find on the map"}
+              {locating ? t("finding") : t("findOnTheMap")}
             </Button>
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="t-kind">Kind</Label>
+          <Label htmlFor="t-kind">{t("kind")}</Label>
           <Select
             id="t-kind"
             value={kind}
             onChange={(e) => setKind(e.target.value as "town" | "area")}
           >
-            <option value="town">Town</option>
-            <option value="area">Area within a town</option>
+            <option value="town">{t("town")}</option>
+            <option value="area">{t("areaWithinATown")}</option>
           </Select>
         </div>
         {kind === "area" ? (
           <div className="flex flex-col gap-1">
-            <Label htmlFor="t-parent">Part of</Label>
+            <Label htmlFor="t-parent">{t("partOf")}</Label>
             <Select
               id="t-parent"
               value={parent}
               onChange={(e) => setParent(e.target.value)}
             >
-              <option value="">— none —</option>
+              <option value="">{t("none")}</option>
               {towns
                 .filter((t) => t.id !== initial?.id)
                 .map((t) => (
@@ -154,7 +158,7 @@ export default function LeadTerritoryForm({
           </div>
         ) : null}
         <div className="flex flex-col gap-1">
-          <Label htmlFor="t-lat">Latitude</Label>
+          <Label htmlFor="t-lat">{t("latitude")}</Label>
           <Input
             id="t-lat"
             required
@@ -164,7 +168,7 @@ export default function LeadTerritoryForm({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="t-lng">Longitude</Label>
+          <Label htmlFor="t-lng">{t("longitude")}</Label>
           <Input
             id="t-lng"
             required
@@ -174,7 +178,7 @@ export default function LeadTerritoryForm({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <Label htmlFor="t-radius">Radius (metres)</Label>
+          <Label htmlFor="t-radius">{t("radiusMetres")}</Label>
           <Input
             id="t-radius"
             required
@@ -188,7 +192,7 @@ export default function LeadTerritoryForm({
         </div>
       </div>
       <div className="flex flex-col gap-1">
-        <Label htmlFor="t-notes">Notes for the team</Label>
+        <Label htmlFor="t-notes">{t("notesForTheTeam")}</Label>
         <Textarea
           id="t-notes"
           rows={2}
@@ -199,11 +203,11 @@ export default function LeadTerritoryForm({
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
-          {initial ? "Save changes" : "Add territory"}
+          {initial ? t("saveChanges") : t("addTerritory")}
         </Button>
         {onDone ? (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {t("cancel")}
           </Button>
         ) : null}
       </div>

@@ -5,6 +5,10 @@ import {
   fetchEventDraftsList,
   saveEventDraftCore,
 } from "@abonten/services/events/eventDraftCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
 
 // GET  /api/mobile/organizer/event-drafts   -> the caller's non-expired event drafts
@@ -13,6 +17,7 @@ import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
 //   first (kind "event_flyer"); pass its public_id/version, or omit both.
 //   The payload is re-validated with the real draft-safe Zod schema in the core.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -21,11 +26,15 @@ export async function GET(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /organizer/event-drafts failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -39,7 +48,10 @@ export async function POST(req: Request) {
     } | null;
 
     if (!body || typeof body.payload !== "object" || body.payload === null) {
-      return apiJson({ status: 400, message: "payload is required" });
+      return apiJson({
+        status: 400,
+        message: tr("payloadIsRequired"),
+      });
     }
 
     const result = await saveEventDraftCore(auth.supabase, auth.user.id, {
@@ -62,6 +74,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/event-drafts failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

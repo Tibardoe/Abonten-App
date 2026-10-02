@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsProspectUpdateSchema } from "@abonten/validation/fieldOpsSchema
  * Updates the member's own prospect (status, a contact attempt, details).
  * Same service as PATCH /api/mobile/field-ops/prospects/[id].
  */
-export async function updateFieldOpsProspect(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsProspect;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsProspectUpdateSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return updateProspectCore(svc, userId, data);
-}
+export const updateFieldOpsProspect = withActionLocale(
+  async function updateFieldOpsProspect(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsProspect;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsProspectUpdateSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return updateProspectCore(svc, userId, data);
+  },
+);

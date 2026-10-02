@@ -7,6 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslations } from "next-intl";
 
 type ConfirmDeleteModalProps = {
   /** Short question naming the action, e.g. "Delete this event?" */
@@ -32,12 +33,14 @@ export default function ConfirmDeleteModal({
   title,
   message,
   confirmLabel,
-  cancelLabel = "Cancel",
+  cancelLabel: cancelLabelProp,
   loadingLabel,
   isLoading,
   onConfirm,
   onCancel,
 }: ConfirmDeleteModalProps) {
+  const t = useTranslations("common");
+  const cancelLabel = cancelLabelProp ?? t("buttons.cancel");
   return (
     <AlertDialog
       open

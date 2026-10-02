@@ -2,6 +2,7 @@ import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { isUuid } from "@/lib/uuid";
 import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { type QueryClient, useQuery } from "@tanstack/react-query";
 
 // Same select shape the web event detail page (`events/[eventCode]/page.tsx`)
@@ -64,7 +65,7 @@ async function fetchEventDetail(id: string): Promise<{
   attendanceCount: number;
   organizerRating: OrganizerRating;
 }> {
-  if (!isUuid(id)) throw new NotFoundError("Event");
+  if (!isUuid(id)) throw new NotFoundError(translatorFor("discovery")("event"));
 
   // The event row and its attendance count only need the id, so they go out
   // together; the organizer's rating needs the row's organizer_id.
@@ -81,7 +82,8 @@ async function fetchEventDetail(id: string): Promise<{
   ]);
 
   if (eventRes.error) throw eventRes.error;
-  if (!eventRes.data) throw new NotFoundError("Event");
+  if (!eventRes.data)
+    throw new NotFoundError(translatorFor("discovery")("event"));
 
   const event = eventRes.data as unknown as EventDetail;
 

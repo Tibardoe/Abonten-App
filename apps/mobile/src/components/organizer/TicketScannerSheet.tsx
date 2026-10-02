@@ -1,5 +1,6 @@
 import { useCheckInTicket } from "@/features/organizer/useAttendees";
 import { AppText, Button, Icon, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   type BarcodeScanningResult,
   CameraView,
@@ -44,6 +45,8 @@ export function TicketScannerSheet({
   onClose: () => void;
   eventId: string;
 }) {
+  const t = useTranslations("manage");
+
   const [permission, requestPermission] = useCameraPermissions();
   const checkIn = useCheckInTicket(eventId);
   const [outcome, setOutcome] = useState<Outcome>(null);
@@ -73,7 +76,7 @@ export function TicketScannerSheet({
       if (lockedRef.current || checkIn.isPending) return;
       const code = parseTicketCode(result.data);
       if (!code) {
-        setOutcome({ ok: false, message: "That isn't an Abonten ticket QR." });
+        setOutcome({ ok: false, message: t("thatIsnTAnAbontenTicket") });
         return;
       }
       lockedRef.current = true;
@@ -85,15 +88,15 @@ export function TicketScannerSheet({
             setOutcome({
               ok,
               message: ok
-                ? `${code} — checked in.`
-                : (res.message ?? "Couldn't check that ticket in."),
+                ? t("checkedIn2", { code: code })
+                : (res.message ?? t("couldnTCheckThatTicketIn")),
             });
             if (ok) setScannedCount((n) => n + 1);
           },
           onError: (e) =>
             setOutcome({
               ok: false,
-              message: e instanceof Error ? e.message : "Something went wrong.",
+              message: e instanceof Error ? e.message : t("somethingWentWrong"),
             }),
           onSettled: () => {
             cooldownRef.current = setTimeout(() => {
@@ -103,7 +106,7 @@ export function TicketScannerSheet({
         },
       );
     },
-    [checkIn],
+    [checkIn, t],
   );
 
   const denied = permission?.granted === false && !permission.canAskAgain;
@@ -112,11 +115,13 @@ export function TicketScannerSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title="Scan tickets"
+      title={t("scanTickets")}
       footer={
         <Button
           title={
-            scannedCount > 0 ? `Done — ${scannedCount} checked in` : "Done"
+            scannedCount > 0
+              ? t("doneCheckedIn", { scannedCount: scannedCount })
+              : t("done")
           }
           onPress={onClose}
         />
@@ -124,18 +129,18 @@ export function TicketScannerSheet({
     >
       <View className="gap-4">
         {!permission ? (
-          <AppText variant="muted">Preparing the camera…</AppText>
+          <AppText variant="muted">{t("preparingTheCamera")}</AppText>
         ) : denied ? (
           <View className="items-center gap-3 py-4">
             <Icon name="camera-outline" size={40} tone="muted" />
             <AppText variant="bodyStrong" className="text-center">
-              Camera access is off
+              {t("cameraAccessIsOff")}
             </AppText>
             <AppText variant="muted" className="text-center">
-              Turn on camera access for Abonten in Settings to scan tickets.
+              {t("turnOnCameraAccessForAbonten")}
             </AppText>
             <Button
-              title="Open settings"
+              title={t("openSettings")}
               variant="outline"
               size="sm"
               onPress={() =>
@@ -148,10 +153,10 @@ export function TicketScannerSheet({
         ) : !permission.granted ? (
           <View className="items-center gap-3 py-4">
             <AppText variant="muted" className="text-center">
-              Allow camera access to scan ticket QR codes.
+              {t("allowCameraAccessToScanTicket")}
             </AppText>
             <Button
-              title="Allow camera"
+              title={t("allowCamera")}
               size="sm"
               onPress={() => requestPermission()}
             />
@@ -170,7 +175,7 @@ export function TicketScannerSheet({
               />
             </View>
             <AppText variant="caption" className="text-center">
-              Point the camera at the QR on the attendee's ticket.
+              {t("pointTheCameraAtTheQr")}
             </AppText>
           </>
         )}
@@ -193,7 +198,7 @@ export function TicketScannerSheet({
               tone={outcome.ok ? "success" : "error"}
               className="flex-1 font-medium"
             >
-              {checkIn.isPending ? "Checking in…" : outcome.message}
+              {checkIn.isPending ? t("checkingIn") : outcome.message}
             </AppText>
           </View>
         ) : null}

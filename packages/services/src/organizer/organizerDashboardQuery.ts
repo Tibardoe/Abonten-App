@@ -14,6 +14,7 @@ import type {
   OrganizerUpcomingEventRow,
 } from "@abonten/types/eventAnalytics";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth query bodies for the organizer Dashboard's widget sections
 // (Sales Over Time · Event Performance · Upcoming Events · Needs Attention ·
@@ -29,7 +30,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Failed = { status: 500; message: string };
 
-const FAILED: Failed = { status: 500, message: "Something went wrong!" };
+const FAILED: Failed = {
+  status: 500,
+  message: tr("somethingWentWrong"),
+};
 
 export type SalesTimelineResult =
   | Failed

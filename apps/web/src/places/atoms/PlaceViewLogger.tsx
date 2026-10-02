@@ -1,6 +1,7 @@
 "use client";
 
 import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useEffect } from "react";
 
 type PlaceViewLoggerProps = {
@@ -15,7 +16,7 @@ type PlaceViewLoggerProps = {
 // Renders nothing.
 export default function PlaceViewLogger({ placeId }: PlaceViewLoggerProps) {
   useEffect(() => {
-    logPlaceEngagement(placeId, "view");
+    logPlaceEngagement(placeId, "view").catch(actionUnreachable);
   }, [placeId]);
 
   return null;

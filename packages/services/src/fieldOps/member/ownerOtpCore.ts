@@ -1,10 +1,11 @@
-import { OTP_MESSAGES } from "@abonten/core/otpMessages";
+import { otpMessage } from "@abonten/core/otpMessages";
 import { maskPhoneNumber } from "@abonten/core/phone/phone";
 import type {
   FieldOpsConsentView,
   FieldOpsOnboarding,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { coreT, tr } from "../../i18n/requestLocale";
 import { routeOtpForPhone } from "../../profile/otpProviders/otpRouter";
 import type {
   OtpSendResult,
@@ -38,6 +39,7 @@ import {
   appendTimeline,
   mapOnboarding,
 } from "../shared/onboardingRows";
+import { TIMELINE_NOTE } from "../shared/timelineNotes";
 
 // The business owner's consent: a code goes to THEIR phone (Hubtel, purpose
 // "fieldops-owner"); entering it proves the phone, records consent and
@@ -144,7 +146,7 @@ export async function requestOwnerOtpCore(
     if (m.campaignStatus !== "active") {
       return {
         status: 409,
-        message: "The campaign isn't taking new onboardings.",
+        message: tr("theCampaignIsnTTakingNew4"),
       };
     }
   } catch (e) {
@@ -156,17 +158,17 @@ export async function requestOwnerOtpCore(
     input.campaignId,
     input.onboardingId,
   );
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "draft" && row.status !== "needs_changes") {
     return {
       status: 409,
-      message: "This onboarding has already been submitted.",
+      message: tr("thisOnboardingHasAlreadyBeenSubmitted"),
     };
   }
   if (row.owner_user_id) {
     return {
       status: 409,
-      message: "The owner has already verified their phone.",
+      message: tr("theOwnerHasAlreadyVerifiedTheir"),
     };
   }
   const phone = `+${input.ownerPhoneE164.replace(/\D/g, "")}`;
@@ -177,7 +179,7 @@ export async function requestOwnerOtpCore(
   if (myDigits && myDigits === phone.replace(/\D/g, "")) {
     return {
       status: 400,
-      message: "That's your own phone number. The owner must use theirs.",
+      message: tr("thatSYourOwnPhoneNumber2"),
     };
   }
   const { data: isMember } = await supabase.rpc(
@@ -189,8 +191,7 @@ export async function requestOwnerOtpCore(
   if (isMember === true) {
     return {
       status: 409,
-      message:
-        "That phone belongs to a Field Ops team member and can't be a business owner here.",
+      message: tr("thatPhoneBelongsToAField"),
     };
   }
 
@@ -198,7 +199,7 @@ export async function requestOwnerOtpCore(
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many codes requested this hour. Try again later.",
+      message: tr("tooManyCodesRequestedThisHour"),
     };
   }
   // Tests inject a fake sender; production routes by the number's market.
@@ -232,18 +233,18 @@ export async function requestOwnerOtpCore(
       owner_phone_e164: phone,
     } as never)
     .eq("id", row.id);
-  if (error) return dbErr(error, "Could not save the owner's details");
+  if (error) return dbErr(error, tr("couldNotSaveTheOwnerS"));
   await appendTimeline(supabase, {
     onboardingId: row.id,
     status: row.status,
     actorUserId: userId,
     actorKind: "member",
-    note: "Owner code sent",
+    note: TIMELINE_NOTE.ownerCodeSent,
     details: { phone: maskPhoneNumber(phone) },
   });
   return {
     status: 200,
-    message: "Code sent to the owner's phone.",
+    message: tr("codeSentToTheOwnerS"),
     data: {
       ownerPhoneMasked: maskPhoneNumber(phone),
       resendInSeconds: 60,
@@ -266,17 +267,25 @@ async function confirmCode(
   },
 ): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
   if (!/^\d{4,8}$/.test(code)) {
-    return { ok: false, status: 400, message: OTP_MESSAGES.invalidFormat };
+    return {
+      ok: false,
+      status: 400,
+      message: otpMessage(coreT(), "invalidFormat"),
+    };
   }
   if (!(await getPendingOtp(OTP_PURPOSE, phone))) {
-    return { ok: false, status: 401, message: OTP_MESSAGES.expired };
+    return { ok: false, status: 401, message: otpMessage(coreT(), "expired") };
   }
   if (!(await registerVerifyAttempt(OTP_PURPOSE, phone))) {
-    return { ok: false, status: 429, message: OTP_MESSAGES.tooManyAttempts };
+    return {
+      ok: false,
+      status: 429,
+      message: otpMessage(coreT(), "tooManyAttempts"),
+    };
   }
   const pending = await getPendingOtp(OTP_PURPOSE, phone);
   if (!pending)
-    return { ok: false, status: 401, message: OTP_MESSAGES.expired };
+    return { ok: false, status: 401, message: otpMessage(coreT(), "expired") };
   const result = deps.verifyOtp
     ? await deps.verifyOtp(pending.requestId, pending.prefix, code)
     : await verifyPendingOtp(pending, code);
@@ -300,7 +309,7 @@ export async function attachOwnerCore(
   if (ownerUserId === row.member_user_id) {
     return {
       status: 400,
-      message: "The owner can't be the member submitting the onboarding.",
+      message: tr("theOwnerCanTBeThe"),
     };
   }
   const { data: memberRow } = await supabase
@@ -313,7 +322,7 @@ export async function attachOwnerCore(
   if (memberRow) {
     return {
       status: 409,
-      message: "That account belongs to a Field Ops team member.",
+      message: tr("thatAccountBelongsToAField"),
     };
   }
   const [{ count: places }, { count: events }] = await Promise.all([
@@ -343,19 +352,18 @@ export async function attachOwnerCore(
     if (error.code === "23505") {
       return {
         status: 409,
-        message:
-          "This owner already has an onboarding in this campaign. Ask your team lead.",
+        message: tr("thisOwnerAlreadyHasAnOnboarding"),
       };
     }
-    return dbErr(error, "Could not record the owner");
+    return dbErr(error, tr("couldNotRecordTheOwner"));
   }
-  if (!data) return { status: 409, message: "The owner was already recorded." };
+  if (!data) return { status: 409, message: tr("theOwnerWasAlreadyRecorded") };
   await appendTimeline(supabase, {
     onboardingId: row.id,
     status: row.status,
     actorUserId,
     actorKind: actorUserId ? "member" : "system",
-    note: "Owner verified their phone",
+    note: TIMELINE_NOTE.ownerVerified,
     details: {
       new_account: isNewUser,
       prior_places: places ?? 0,
@@ -364,7 +372,7 @@ export async function attachOwnerCore(
   });
   return {
     status: 200,
-    message: "Owner verified.",
+    message: tr("ownerVerified"),
     data: mapOnboarding(data as unknown as OnboardingRow),
   };
 }
@@ -393,18 +401,18 @@ export async function verifyOwnerOtpCore(
     input.campaignId,
     input.onboardingId,
   );
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.owner_user_id)
-    return { status: 409, message: "The owner is already verified." };
+    return { status: 409, message: tr("theOwnerIsAlreadyVerified") };
   if (!row.owner_phone_e164)
-    return { status: 409, message: "Send the owner a code first." };
+    return { status: 409, message: tr("sendTheOwnerACodeFirst") };
   const check = await confirmCode(row.owner_phone_e164, input.code, deps);
   if (!check.ok) return { status: check.status, message: check.message };
   const found = await findOrCreateUserByPhone(row.owner_phone_e164);
   if ("error" in found)
     return {
       status: 500,
-      message: "Something went wrong recording the owner.",
+      message: tr("somethingWentWrongRecordingTheOwner"),
     };
   return attachOwnerCore(supabase, row, found.userId, found.isNewUser, userId);
 }
@@ -416,14 +424,14 @@ export async function getConsentViewCore(
   token: string,
 ): Promise<FieldOpsEnvelope<FieldOpsConsentView>> {
   const parsed = readConsentToken(token);
-  if (!parsed) return { status: 404, message: "This link isn't valid." };
+  if (!parsed) return { status: 404, message: tr("thisLinkIsnTValid") };
   const { data } = await supabase
     .from("fieldops_onboarding")
     .select("id, business_name, owner_phone_e164, owner_user_id, status")
     .eq("id", parsed.onboardingId)
     .maybeSingle();
   if (!data || data.owner_phone_e164 !== parsed.phoneE164) {
-    return { status: 404, message: "This link isn't valid." };
+    return { status: 404, message: tr("thisLinkIsnTValid") };
   }
   return {
     status: 200,
@@ -448,11 +456,11 @@ export async function verifyConsentByTokenCore(
   } = {},
 ): Promise<FieldOpsEnvelope<{ verified: boolean }>> {
   const parsed = readConsentToken(input.token);
-  if (!parsed) return { status: 404, message: "This link isn't valid." };
+  if (!parsed) return { status: 404, message: tr("thisLinkIsnTValid") };
   if (parsed.expired)
     return {
       status: 410,
-      message: "This link has expired. Ask for a new code.",
+      message: tr("thisLinkHasExpiredAskFor"),
     };
   const { data } = await supabase
     .from("fieldops_onboarding")
@@ -461,12 +469,12 @@ export async function verifyConsentByTokenCore(
     .maybeSingle();
   const row = data as unknown as OnboardingRow | null;
   if (!row || row.owner_phone_e164 !== parsed.phoneE164) {
-    return { status: 404, message: "This link isn't valid." };
+    return { status: 404, message: tr("thisLinkIsnTValid") };
   }
   if (row.owner_user_id)
     return {
       status: 200,
-      message: "Already verified.",
+      message: tr("alreadyVerified"),
       data: { verified: true },
     };
   const check = await confirmCode(parsed.phoneE164, input.code, deps);
@@ -475,7 +483,7 @@ export async function verifyConsentByTokenCore(
   if ("error" in found)
     return {
       status: 500,
-      message: "Something went wrong recording your consent.",
+      message: tr("somethingWentWrongRecordingYourConsent"),
     };
   const attached = await attachOwnerCore(
     supabase,
@@ -488,7 +496,7 @@ export async function verifyConsentByTokenCore(
     return { status: attached.status, message: attached.message };
   return {
     status: 200,
-    message: "Thank you. Your business can now be listed.",
+    message: tr("thankYouYourBusinessCanNow"),
     data: { verified: true },
   };
 }

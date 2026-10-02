@@ -5,11 +5,12 @@ import {
 } from "@/components/filters/FilterSheetParts";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import { useMarket } from "@/features/markets/MarketProvider";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
-  SEARCH_RADIUS_OPTIONS,
-  SEARCH_RATING_OPTIONS,
-  SEARCH_WHEN_OPTIONS,
   type SearchFilterKey,
   type SearchFilters,
   activeSearchFilters,
@@ -17,9 +18,13 @@ import {
   clearSearchFiltersFor,
   searchFiltersFor,
   searchPriceOptions,
+  searchRadiusOptions,
+  searchRatingOptions,
+  searchWhenOptions,
 } from "@abonten/core/search/searchFilters";
 import type { SearchMode } from "@abonten/types/searchType";
 import { AppText, Button, Chip, Sheet, Skeleton } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useEffect, useState } from "react";
 import { Switch, View } from "react-native";
 
@@ -49,11 +54,16 @@ export function SearchFilterSheet({
   locationLabel: string | null;
   hasLocation: boolean;
 }) {
+  const t = useTranslations("search");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
+
   const [draft, setDraft] = useState(filters);
   const placeCategories = usePlaceCategories();
   // Price buckets read in the browsed market's currency ("Under ₦50").
   const { market } = useMarket();
   const priceOptions = searchPriceOptions(
+    tc,
     market?.defaultCurrency ?? "",
     market?.priceScale ?? 1,
   );
@@ -83,13 +93,13 @@ export function SearchFilterSheet({
   push("when", (first) => (
     <FilterSection
       key="when"
-      label="When"
+      label={t("when")}
       first={first}
       active={isActive("when")}
       onClear={() => clear("when")}
     >
       <FilterChoices
-        options={SEARCH_WHEN_OPTIONS}
+        options={searchWhenOptions(tc)}
         value={draft.when}
         onChange={(v) => set("when", v)}
       />
@@ -99,18 +109,18 @@ export function SearchFilterSheet({
   push("radiusKm", (first) => (
     <FilterSection
       key="radius"
-      label="Distance"
+      label={t("distance")}
       hint={
         hasLocation
-          ? `From ${locationLabel ?? "your location"}`
-          : "Set your location on Explore to search by distance."
+          ? t("from", { value: locationLabel ?? t("yourLocation") })
+          : t("setYourLocationOnExploreTo")
       }
       first={first}
       active={isActive("radiusKm")}
       onClear={() => clear("radiusKm")}
     >
       <FilterChoices
-        options={SEARCH_RADIUS_OPTIONS}
+        options={searchRadiusOptions({ t: tc, locale })}
         value={draft.radiusKm}
         onChange={(v) => set("radiusKm", v)}
         disabled={!hasLocation}
@@ -121,7 +131,7 @@ export function SearchFilterSheet({
   push("price", (first) => (
     <FilterSection
       key="price"
-      label="Price"
+      label={t("price")}
       first={first}
       active={isActive("price")}
       onClear={() => clear("price")}
@@ -137,7 +147,7 @@ export function SearchFilterSheet({
   push("eventCategory", (first) => (
     <FilterSection
       key="eventCategory"
-      label={mode === "all" ? "Event category" : "Category"}
+      label={mode === "all" ? t("eventCategory") : t("category")}
       first={first}
       active={isActive("eventCategory")}
       onClear={() => clear("eventCategory")}
@@ -146,7 +156,7 @@ export function SearchFilterSheet({
         {EVENT_CATEGORIES.map((name) => (
           <Chip
             key={name}
-            label={name}
+            label={eventCategoryLabel(tc, name)}
             selected={draft.eventCategory === name}
             onPress={() =>
               set("eventCategory", draft.eventCategory === name ? null : name)
@@ -160,7 +170,7 @@ export function SearchFilterSheet({
   push("placeCategoryId", (first) => (
     <FilterSection
       key="placeCategory"
-      label={mode === "all" ? "Place category" : "Category"}
+      label={mode === "all" ? t("placeCategory") : t("category")}
       first={first}
       active={isActive("placeCategoryId")}
       onClear={() => clear("placeCategoryId")}
@@ -172,15 +182,13 @@ export function SearchFilterSheet({
           ))}
         </View>
       ) : (placeCategories.data ?? []).length === 0 ? (
-        <AppText variant="caption">
-          Categories will load when you're online.
-        </AppText>
+        <AppText variant="caption">{t("categoriesWillLoadWhenYouRe")}</AppText>
       ) : (
         <View className="flex-row flex-wrap gap-2">
           {(placeCategories.data ?? []).map((c) => (
             <Chip
               key={c.id}
-              label={c.name}
+              label={placeCategoryLabel(tc, c)}
               selected={draft.placeCategoryId === c.id}
               onPress={() =>
                 setDraft((d) =>
@@ -189,7 +197,7 @@ export function SearchFilterSheet({
                     : {
                         ...d,
                         placeCategoryId: c.id,
-                        placeCategoryName: c.name,
+                        placeCategoryName: placeCategoryLabel(tc, c),
                       },
                 )
               }
@@ -203,19 +211,19 @@ export function SearchFilterSheet({
   push("openNow", (first) => (
     <FilterSection
       key="openNow"
-      label="Open now"
+      label={t("openNow")}
       first={first}
       active={isActive("openNow")}
       onClear={() => clear("openNow")}
     >
       <View className="min-h-[44px] flex-row items-center justify-between">
         <AppText variant="body" className="flex-1">
-          Only places open right now
+          {t("onlyPlacesOpenRightNow")}
         </AppText>
         <Switch
           value={draft.openNow}
           onValueChange={(v) => set("openNow", v)}
-          accessibilityLabel="Only places open right now"
+          accessibilityLabel={t("onlyPlacesOpenRightNow")}
         />
       </View>
     </FilterSection>
@@ -224,13 +232,13 @@ export function SearchFilterSheet({
   push("minRating", (first) => (
     <FilterSection
       key="rating"
-      label="Rating"
+      label={t("rating")}
       first={first}
       active={isActive("minRating")}
       onClear={() => clear("minRating")}
     >
       <FilterChoices
-        options={SEARCH_RATING_OPTIONS}
+        options={searchRatingOptions({ t: tc, locale })}
         value={draft.minRating}
         onChange={(v) => set("minRating", v)}
       />
@@ -241,7 +249,7 @@ export function SearchFilterSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title="Filter results"
+      title={t("filterResults")}
       minHeightRatio={0.6}
       maxHeightRatio={0.92}
       footer={
@@ -249,8 +257,8 @@ export function SearchFilterSheet({
           <Button
             title={
               activeCount > 0
-                ? `Show results · ${activeCount} filter${activeCount === 1 ? "" : "s"}`
-                : "Show results"
+                ? t("showResultsFilter", { activeCount })
+                : t("showResults")
             }
             onPress={() => {
               onApply(draft);
@@ -259,7 +267,7 @@ export function SearchFilterSheet({
           />
           {activeCount > 0 ? (
             <Button
-              title="Reset filters"
+              title={t("resetFilters")}
               variant="ghost"
               onPress={() => setDraft((d) => clearSearchFiltersFor(d, mode))}
             />
@@ -272,8 +280,7 @@ export function SearchFilterSheet({
           sections
         ) : (
           <AppText variant="muted">
-            Organizer results can't be filtered. Switch to Events or Places to
-            narrow them down.
+            {t("organizerResultsCanTBeFiltered")}
           </AppText>
         )}
       </View>

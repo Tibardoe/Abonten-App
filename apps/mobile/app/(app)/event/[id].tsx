@@ -31,6 +31,7 @@ import { isNotFoundError } from "@/lib/queryErrors";
 import { eventShareUrl } from "@/lib/share";
 import { useNowTick } from "@/lib/useNowTick";
 import { useQueryView } from "@/lib/useQueryView";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   formatDateWithSuffix,
@@ -42,6 +43,7 @@ import { resolveEventCta } from "@abonten/core/eventCta";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { formatRating } from "@abonten/core/i18n/format";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { hasFreeRegistration } from "@abonten/core/ticketTiers";
 import {
@@ -57,6 +59,12 @@ import {
   Stars,
   useToast,
 } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -71,12 +79,17 @@ import {
 } from "react-native";
 
 function priceRange(tickets: { price: number; currency: string }[]): string {
-  if (tickets.length === 0) return "Free";
+  if (tickets.length === 0) return translatorFor("events")("free");
   const prices = tickets.map((t) => t.price);
   const min = Math.min(...prices);
-  if (min === 0) return "Free entry";
+  if (min === 0) return translatorFor("events")("freeEntry");
   const currency = tickets[0]?.currency ?? "";
-  return `From ${formatMoney(currency, min, { trimZeroFraction: true })}`;
+  return translatorFor("events")("from", {
+    formatMoney: formatMoney(currency, min, {
+      trimZeroFraction: true,
+      locale: getCurrentLocale(),
+    }),
+  });
 }
 
 function InfoRow({
@@ -100,6 +113,11 @@ function InfoRow({
 }
 
 export default function EventDetailScreen() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("events");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -138,13 +156,13 @@ export default function EventDetailScreen() {
   const header = (
     <AppHeader
       variant="detail"
-      title={eventTitle ?? "Event"}
+      title={eventTitle ?? t("event")}
       backFallback="/(app)"
       rightAccessory={
         <DetailHeaderActions
           kind="event"
           id={id}
-          shareTitle={eventTitle ?? "Event"}
+          shareTitle={eventTitle ?? t("event")}
           shareUrl={eventCode ? eventShareUrl(eventCode, referralCode) : null}
           onShared={() => {
             if (session && data?.event.id) {
@@ -175,7 +193,7 @@ export default function EventDetailScreen() {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError message="This event is no longer available." />
+        <ScreenError message={t("thisEventIsNoLongerAvailable")} />
       </View>
     );
   }
@@ -185,7 +203,7 @@ export default function EventDetailScreen() {
         {header}
         <QueryUnavailable
           view={detailView}
-          subject="this event"
+          subject={t("thisEvent")}
           onRetry={() => refetch()}
           loading={<EventDetailSkeleton />}
           className="flex-1 justify-center"
@@ -227,6 +245,7 @@ export default function EventDetailScreen() {
     event.ends_at,
     event.event_occurrence,
     event.timezone,
+    locale,
   );
   const tags = parseEventTypes(event.event_type);
   const canceled = event.status === "canceled";
@@ -276,7 +295,7 @@ export default function EventDetailScreen() {
     },
   };
   // The page's one primary action, pinned to its foot (resolveEventCta).
-  const cta = resolveEventCta({
+  const cta = resolveEventCta(tc, {
     canceled,
     ended: hasEnded,
     inProgressNoFuture,
@@ -299,8 +318,8 @@ export default function EventDetailScreen() {
     void openMapsDirections({ label: event.title, address, coords }).then(
       (opened) => {
         if (!opened)
-          toast.error("Couldn't open maps", {
-            description: "No maps app is available on this device.",
+          toast.error(t("couldnTOpenMaps"), {
+            description: t("noMapsAppIsAvailableOn"),
           });
       },
     );
@@ -363,7 +382,9 @@ export default function EventDetailScreen() {
                 <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
                   <Icon name="people" size={13} color="#fff" />
                   <AppText className="text-[12px] font-semibold text-white">
-                    {attendanceCount.toLocaleString()} going
+                    {t("going", {
+                      count: attendanceCount,
+                    })}
                   </AppText>
                 </View>
               ) : null}
@@ -379,10 +400,10 @@ export default function EventDetailScreen() {
               className="text-center font-medium"
             >
               {canceled
-                ? "This event has been canceled."
+                ? t("thisEventHasBeenCanceled")
                 : hasEnded
-                  ? "This event has ended."
-                  : "This event is currently in progress."}
+                  ? t("thisEventHasEnded")
+                  : t("thisEventIsCurrentlyInProgress")}
             </AppText>
           </View>
         ) : null}
@@ -403,7 +424,7 @@ export default function EventDetailScreen() {
                 size={44}
               />
               <View className="flex-1">
-                <AppText variant="caption">Organized by</AppText>
+                <AppText variant="caption">{t("organizedBy")}</AppText>
                 <View className="flex-row items-center gap-1.5">
                   <AppText
                     variant="bodyStrong"
@@ -422,7 +443,7 @@ export default function EventDetailScreen() {
                   <View className="mt-0.5 flex-row items-center gap-1">
                     <Stars rating={organizerRating.average} size={12} />
                     <AppText variant="caption">
-                      {organizerRating.average.toFixed(1)} (
+                      {formatRating(organizerRating.average, locale)} (
                       {organizerRating.count})
                     </AppText>
                   </View>
@@ -430,7 +451,7 @@ export default function EventDetailScreen() {
               </View>
               <View className="items-end gap-1">
                 <AppText variant="caption">
-                  {getRelativeTime(event.created_at)}
+                  {getRelativeTime(event.created_at, undefined, locale)}
                 </AppText>
                 <Icon name="chevron-forward" size={16} tone="muted" />
               </View>
@@ -446,7 +467,7 @@ export default function EventDetailScreen() {
 
           {session && event.organizer_id !== session.user.id ? (
             <Button
-              title="Message organizer"
+              title={t("messageOrganizer")}
               variant="outline"
               leftIcon="chatbubble-ellipses-outline"
               loading={messageOrganizer.isPending}
@@ -456,14 +477,14 @@ export default function EventDetailScreen() {
                   {
                     onSuccess: (res) => {
                       if (res.status !== 200) {
-                        toast.error("Can't start a conversation", {
-                          description: res.message ?? "Please try again.",
+                        toast.error(t("canTStartAConversation"), {
+                          description: res.message ?? t("pleaseTryAgain"),
                         });
                       }
                     },
                     onError: () =>
-                      toast.error("Can't start a conversation", {
-                        description: "Please try again.",
+                      toast.error(t("canTStartAConversation"), {
+                        description: t("pleaseTryAgain"),
                       }),
                   },
                 )
@@ -483,13 +504,14 @@ export default function EventDetailScreen() {
                 />
                 <View className="flex-1 gap-1">
                   <AppText variant="body">
-                    {sortedOccurrences.length} dates
+                    {t("dates", { length: sortedOccurrences.length })}
                   </AppText>
                   {sortedOccurrences.map((o) => {
                     const w = formatFullDateTimeRange(
                       o.starts_at,
                       o.ends_at,
                       event.timezone,
+                      locale,
                     );
                     return (
                       <AppText key={o.id} variant="meta">
@@ -508,7 +530,7 @@ export default function EventDetailScreen() {
             )}
             <InfoRow
               icon="location-outline"
-              label={address ?? "Location unavailable"}
+              label={address ?? t("locationUnavailable")}
               sub={event.place ? `At ${event.place.name}` : undefined}
             />
             {/* Turnout once someone is going; before that, just the
@@ -516,13 +538,19 @@ export default function EventDetailScreen() {
             {attendanceCount > 0 ? (
               <InfoRow
                 icon="people-outline"
-                label={`${attendanceCount.toLocaleString()} going`}
-                sub={event.capacity ? `Capacity ${event.capacity}` : undefined}
+                label={t("going", {
+                  count: attendanceCount,
+                })}
+                sub={
+                  event.capacity
+                    ? t("capacity", { capacity: event.capacity })
+                    : undefined
+                }
               />
             ) : event.capacity ? (
               <InfoRow
                 icon="people-outline"
-                label={`Capacity ${event.capacity}`}
+                label={t("capacity", { capacity: event.capacity })}
               />
             ) : null}
 
@@ -536,7 +564,7 @@ export default function EventDetailScreen() {
 
             <View className="flex-row gap-2 pt-1">
               <Button
-                title="Get directions"
+                title={t("getDirections")}
                 variant="outline"
                 size="sm"
                 leftIcon="navigate-outline"
@@ -545,7 +573,7 @@ export default function EventDetailScreen() {
               />
               {event.place ? (
                 <Button
-                  title="View venue"
+                  title={t("viewVenue")}
                   variant="outline"
                   size="sm"
                   leftIcon="storefront-outline"
@@ -580,7 +608,7 @@ export default function EventDetailScreen() {
 
           {event.website_url ? (
             <Button
-              title="Visit website"
+              title={t("visitWebsite")}
               variant="outline"
               rightIcon="open-outline"
               onPress={() =>
@@ -596,7 +624,7 @@ export default function EventDetailScreen() {
           {/* About */}
           {event.description ? (
             <View className="gap-2">
-              <SectionTitle>About the event</SectionTitle>
+              <SectionTitle>{t("aboutTheEvent")}</SectionTitle>
               <AppText variant="body" tone="muted">
                 {event.description}
               </AppText>
@@ -605,10 +633,12 @@ export default function EventDetailScreen() {
 
           {/* Category + tags */}
           <View className="gap-2">
-            <SectionTitle>Category &amp; tags</SectionTitle>
+            <SectionTitle>{t("categoryTags")}</SectionTitle>
             <View className="flex-row flex-wrap gap-2">
               <View className="rounded-full bg-muted px-3 py-1">
-                <AppText variant="meta">{event.event_category}</AppText>
+                <AppText variant="meta">
+                  {eventCategoryLabel(tc, event.event_category)}
+                </AppText>
               </View>
               {tags.map((t) => (
                 <View key={t} className="rounded-full bg-muted px-3 py-1">
@@ -620,38 +650,36 @@ export default function EventDetailScreen() {
 
           {/* Tickets / checkout */}
           <View className="gap-3">
-            <SectionTitle>Tickets</SectionTitle>
+            <SectionTitle>{t("tickets")}</SectionTitle>
             {canceled ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
                 <AppText variant="muted" className="font-semibold">
-                  Tickets unavailable — this event was canceled.
+                  {t("ticketsUnavailableThisEventWasCanceled")}
                 </AppText>
               </View>
             ) : salesClosed ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
                 <AppText variant="muted" className="font-semibold">
                   {hasEnded
-                    ? "This event has ended."
-                    : "This event is in progress — ticket sales are closed."}
+                    ? t("thisEventHasEnded")
+                    : t("thisEventIsInProgressTicket")}
                 </AppText>
               </View>
             ) : soldOut ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
                 <AppText variant="muted" className="font-semibold">
-                  Sold out
+                  {t("soldOut")}
                 </AppText>
               </View>
             ) : event.ticket_type.length === 0 ? (
-              <AppText variant="muted">
-                No tickets have been set up for this event yet.
-              </AppText>
+              <AppText variant="muted">{t("noTicketsHaveBeenSetUp")}</AppText>
             ) : isFree ? (
               <FreeRsvpCard event={event} flow={rsvpFlow} showAction={false} />
             ) : (
               <View className="gap-3 rounded-xl border border-border bg-card p-4">
                 <View className="flex-row items-center justify-between">
                   <View>
-                    <AppText variant="caption">Tickets</AppText>
+                    <AppText variant="caption">{t("tickets")}</AppText>
                     <AppText variant="cardTitle">
                       {priceRange(event.ticket_type)}
                       {approxPrice ? ` · ${approxPrice}` : ""}
@@ -661,9 +689,9 @@ export default function EventDetailScreen() {
                 </View>
                 {/* The Buy button is the sticky bar at the foot of the page. */}
                 <AppText variant="meta">
-                  {event.ticket_type.length > 1
-                    ? `${event.ticket_type.length} ticket types — choose yours at checkout.`
-                    : "Choose how many at checkout."}
+                  {t("ticketTypesChooseYoursAtCheckout", {
+                    length: event.ticket_type.length,
+                  })}
                 </AppText>
               </View>
             )}
@@ -675,7 +703,7 @@ export default function EventDetailScreen() {
           {/* Similar events (item 13) */}
           {similar.data && similar.data.length > 0 ? (
             <View className="gap-3">
-              <SectionTitle>Similar events</SectionTitle>
+              <SectionTitle>{t("similarEvents")}</SectionTitle>
               <FlatList
                 horizontal
                 data={similar.data}
@@ -704,7 +732,7 @@ export default function EventDetailScreen() {
               }
             >
               <AppText variant="caption" tone="muted" className="font-medium">
-                Report this event
+                {t("reportThisEvent")}
               </AppText>
             </Pressable>
           ) : null}
@@ -730,7 +758,7 @@ export default function EventDetailScreen() {
             {cta.kind === "going" ? (
               <>
                 <AppText variant="caption" tone="success">
-                  You're going
+                  {t("youReGoing")}
                 </AppText>
                 <AppText variant="bodyStrong" numberOfLines={1}>
                   {when.date} · {when.time}
@@ -740,10 +768,16 @@ export default function EventDetailScreen() {
               <>
                 <AppText variant="caption" numberOfLines={1}>
                   {chosenDate
-                    ? `Date · ${formatDateWithSuffix(chosenDate.starts_at)}`
+                    ? t("date", {
+                        formatDateWithSuffix: formatDateWithSuffix(
+                          chosenDate.starts_at,
+                          undefined,
+                          locale,
+                        ),
+                      })
                     : cta.actionable
-                      ? "Tickets"
-                      : "Tickets unavailable"}
+                      ? t("tickets")
+                      : t("ticketsUnavailable")}
                 </AppText>
                 <AppText variant="cardTitle" numberOfLines={1}>
                   {event.ticket_type.length > 0
@@ -755,7 +789,9 @@ export default function EventDetailScreen() {
           </View>
           <Button
             title={
-              cta.kind === "rsvp" && rsvpFlow.pending ? "Reserving…" : cta.label
+              cta.kind === "rsvp" && rsvpFlow.pending
+                ? t("reserving")
+                : cta.label
             }
             variant={cta.kind === "going" ? "outline" : "primary"}
             disabled={!cta.actionable}
@@ -763,9 +799,9 @@ export default function EventDetailScreen() {
             onPress={onCta}
             accessibilityHint={
               cta.kind === "buy"
-                ? "Opens ticket selection"
+                ? t("opensTicketSelection")
                 : cta.kind === "rsvp"
-                  ? "Reserves a free ticket"
+                  ? t("reservesAFreeTicket")
                   : undefined
             }
           />

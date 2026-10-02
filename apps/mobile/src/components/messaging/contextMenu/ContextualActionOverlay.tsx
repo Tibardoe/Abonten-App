@@ -1,4 +1,5 @@
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Portal } from "@gorhom/portal";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
@@ -89,6 +90,8 @@ export function ContextualActionOverlay({
   maxPreviewWidth,
   a11yPreviewLabel,
 }: Props) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const screen = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -258,7 +261,7 @@ export function ContextualActionOverlay({
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Dismiss menu"
+          accessibilityLabel={t("dismissMenu")}
           onPress={() => close()}
           style={StyleSheet.absoluteFill}
         />

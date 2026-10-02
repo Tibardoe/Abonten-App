@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchNotificationsPage } from "@abonten/services/notifications/notificationsQuery";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult } from "@abonten/types/pagination";
@@ -14,26 +16,28 @@ import type { PaginatedResult } from "@abonten/types/pagination";
  * The query body lives in src/utils/notificationsQuery.ts so the mobile
  * HTTP route (Bearer session) runs the identical query.
  */
-export async function getUserNotifications(options?: {
-  cursor?: string | null;
-  pageSize?: number;
-}): Promise<PaginatedResult<NotificationType>> {
-  const supabase = await createClient();
+export const getUserNotifications = withActionLocale(
+  async function getUserNotifications(options?: {
+    cursor?: string | null;
+    pageSize?: number;
+  }): Promise<PaginatedResult<NotificationType>> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return {
-      status: 401,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: "User not logged in",
-    };
-  }
+    if (userError || !user) {
+      return {
+        status: 401,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: tr("userNotLoggedIn"),
+      };
+    }
 
-  return fetchNotificationsPage(supabase, user.id, options);
-}
+    return fetchNotificationsPage(supabase, user.id, options);
+  },
+);

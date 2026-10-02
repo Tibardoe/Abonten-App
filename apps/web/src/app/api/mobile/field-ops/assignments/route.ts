@@ -1,10 +1,12 @@
 import { fieldOpsRoute } from "@/app/api/mobile/field-ops/_lib/handler";
 import { listMyAssignmentsCore } from "@abonten/services/fieldOps/member/assignmentsCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsAssignmentListSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // GET /api/mobile/field-ops/assignments?campaignId=&status= -- the caller's own
 // assignments. Same service as listMyFieldOpsAssignments.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

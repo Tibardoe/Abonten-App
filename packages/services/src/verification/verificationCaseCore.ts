@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
-import { NOTIFICATION_COPY } from "@abonten/core/verification/copy";
 import {
   canStartNewCase,
   isEditable,
@@ -14,6 +13,7 @@ import type {
   VerificationSubjectType,
   VerificationUploadTicket,
 } from "@abonten/types/verificationType";
+import { tr } from "../i18n/requestLocale";
 import { createNotificationCore } from "../notifications/createNotification";
 import { checkRateLimit } from "../security/rateLimit";
 import {
@@ -90,16 +90,14 @@ async function resolveSubject(
       return {
         name: data.name,
         eligible: false,
-        blockedReason:
-          "Publish this place before asking for verification. Drafts and archived places can't be reviewed.",
+        blockedReason: tr("publishThisPlaceBeforeAskingFor"),
       };
     }
     if (hidden) {
       return {
         name: data.name,
         eligible: false,
-        blockedReason:
-          "This listing is currently hidden by Abonten, so it can't be verified.",
+        blockedReason: tr("thisListingIsCurrentlyHiddenBy"),
       };
     }
     return { name: data.name, eligible: true, blockedReason: null };
@@ -121,8 +119,7 @@ async function resolveSubject(
     return {
       name: data.full_name || data.username,
       eligible: false,
-      blockedReason:
-        "Your account is restricted, so verification isn't available right now.",
+      blockedReason: tr("yourAccountIsRestrictedSoVerification"),
     };
   }
   return {
@@ -170,7 +167,7 @@ export async function getSubjectVerificationCore(
 ): Promise<VerificationEnvelope<SubjectVerificationView>> {
   const facts = await resolveSubject(supabase, userId, subject);
   if (!facts) {
-    return { status: 404, message: "Not found" };
+    return { status: 404, message: tr("notFound") };
   }
 
   const [program, labels, evidenceTypes] = await Promise.all([
@@ -187,7 +184,7 @@ export async function getSubjectVerificationCore(
     .order("created_at", { ascending: false });
   if (error) {
     logger.error(`getSubjectVerificationCore failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const rows = (data ?? []) as CaseRow[];
@@ -221,8 +218,8 @@ export async function getSubjectVerificationCore(
   ) {
     canStart = false;
     blockedReason = approvedRow
-      ? "This is already verified."
-      : "You already have a request in progress.";
+      ? tr("thisIsAlreadyVerified")
+      : tr("youAlreadyHaveARequestIn");
   }
 
   return {
@@ -264,18 +261,27 @@ export async function startVerificationCaseCore(
   input: StartVerificationCoreInput,
 ): Promise<VerificationEnvelope<{ caseId: string }>> {
   if (isVerificationKillSwitchOn()) {
-    return { status: 403, message: "Verification isn't available right now." };
+    return {
+      status: 403,
+      message: tr("verificationIsnTAvailableRightNow"),
+    };
   }
 
   const facts = await resolveSubject(supabase, userId, input);
-  if (!facts) return { status: 404, message: "Not found" };
+  if (!facts) return { status: 404, message: tr("notFound") };
 
   const program = await getVerificationProgramCore(supabase, userId);
   if (!requestsEnabledFor(program, input.subjectType)) {
-    return { status: 403, message: "Verification isn't available right now." };
+    return {
+      status: 403,
+      message: tr("verificationIsnTAvailableRightNow"),
+    };
   }
   if (!facts.eligible) {
-    return { status: 409, message: facts.blockedReason ?? "Not eligible" };
+    return {
+      status: 409,
+      message: facts.blockedReason ?? tr("notEligible"),
+    };
   }
   if (
     input.subjectType === "organizer" &&
@@ -286,7 +292,7 @@ export async function startVerificationCaseCore(
   ) {
     return {
       status: 400,
-      message: "That organizer type isn't accepted at the moment.",
+      message: tr("thatOrganizerTypeIsnTAccepted"),
     };
   }
 
@@ -298,7 +304,7 @@ export async function startVerificationCaseCore(
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many verification requests. Try again later.",
+      message: tr("tooManyVerificationRequestsTryAgain"),
     };
   }
 
@@ -326,12 +332,11 @@ export async function startVerificationCaseCore(
     if (error.code === "23505") {
       return {
         status: 409,
-        message:
-          "There is already a verification request for this. Refresh to see it.",
+        message: tr("thereIsAlreadyAVerificationRequest"),
       };
     }
     logger.error(`startVerificationCaseCore failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   await supabase.from("verification_event").insert({
@@ -364,14 +369,17 @@ async function ownedEditableCase(
     logger.error(`ownedEditableCase failed: ${error.message}`);
     return {
       ok: false,
-      result: { status: 500, message: "Something went wrong!" },
+      result: { status: 500, message: tr("somethingWentWrong") },
     };
   }
   // Not yours reads exactly like not found.
   if (!data || (data as CaseRow).requester_id !== userId) {
     return {
       ok: false,
-      result: { status: 404, message: "Verification request not found" },
+      result: {
+        status: 404,
+        message: tr("verificationRequestNotFound"),
+      },
     };
   }
   const row = data as CaseRow;
@@ -380,7 +388,7 @@ async function ownedEditableCase(
       ok: false,
       result: {
         status: 409,
-        message: "This request can no longer be changed.",
+        message: tr("thisRequestCanNoLongerBe"),
       },
     };
   }
@@ -412,7 +420,7 @@ export async function updateVerificationCaseCore(
     ) {
       return {
         status: 400,
-        message: "Organizer type only applies to organizer verification.",
+        message: tr("organizerTypeOnlyAppliesToOrganizer"),
       };
     }
     patch.organizer_type = input.organizerType;
@@ -431,9 +439,9 @@ export async function updateVerificationCaseCore(
     .eq("id", input.caseId);
   if (error) {
     logger.error(`updateVerificationCaseCore failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
-  return { status: 200, message: "Saved." };
+  return { status: 200, message: tr("saved") };
 }
 
 /**
@@ -460,9 +468,9 @@ export async function requestVerificationEvidenceUploadCore(
   if (input.sizeBytes > program.maxFileBytes) {
     return {
       status: 400,
-      message: `That file is too large. The limit is ${Math.round(
-        program.maxFileBytes / (1024 * 1024),
-      )} MB.`,
+      message: tr("thatFileIsTooLargeThe", {
+        round: Math.round(program.maxFileBytes / (1024 * 1024)),
+      }),
     };
   }
 
@@ -471,7 +479,7 @@ export async function requestVerificationEvidenceUploadCore(
     row.subject_type as VerificationSubjectType,
   );
   if (!types.some((t) => t.key === input.evidenceType)) {
-    return { status: 400, message: "Choose a document type from the list." };
+    return { status: 400, message: tr("chooseADocumentTypeFromThe") };
   }
 
   const { count } = await supabase
@@ -482,7 +490,9 @@ export async function requestVerificationEvidenceUploadCore(
   if ((count ?? 0) >= program.maxEvidenceFiles) {
     return {
       status: 409,
-      message: `You can attach at most ${program.maxEvidenceFiles} documents.`,
+      message: tr("youCanAttachAtMostDocuments", {
+        maxEvidenceFiles: program.maxEvidenceFiles,
+      }),
     };
   }
 
@@ -492,7 +502,10 @@ export async function requestVerificationEvidenceUploadCore(
     3600,
   );
   if (!allowed) {
-    return { status: 429, message: "Too many uploads. Try again later." };
+    return {
+      status: 429,
+      message: tr("tooManyUploadsTryAgainLater"),
+    };
   }
 
   const evidenceId = randomUUID();
@@ -522,7 +535,10 @@ export async function requestVerificationEvidenceUploadCore(
     } as never);
   if (insErr) {
     logger.error(`verification evidence insert failed: ${insErr.message}`);
-    return { status: 500, message: "Could not prepare the upload. Try again." };
+    return {
+      status: 500,
+      message: tr("couldNotPrepareTheUploadTry"),
+    };
   }
 
   const { data: signed, error: signErr } = await supabase.storage
@@ -533,7 +549,10 @@ export async function requestVerificationEvidenceUploadCore(
     logger.error(
       `verification signed upload failed: ${signErr?.message ?? "no url"}`,
     );
-    return { status: 500, message: "Could not prepare the upload. Try again." };
+    return {
+      status: 500,
+      message: tr("couldNotPrepareTheUploadTry"),
+    };
   }
 
   return {
@@ -561,7 +580,7 @@ export async function removeVerificationEvidenceCore(
     .eq("id", input.evidenceId)
     .eq("case_id", input.caseId)
     .maybeSingle();
-  if (!ev) return { status: 404, message: "Document not found" };
+  if (!ev) return { status: 404, message: tr("documentNotFound") };
 
   await supabase.storage
     .from(VERIFICATION_EVIDENCE_BUCKET)
@@ -573,7 +592,7 @@ export async function removeVerificationEvidenceCore(
     .eq("id", ev.id);
   if (error) {
     logger.error(`removeVerificationEvidenceCore failed: ${error.message}`);
-    return { status: 500, message: "Could not remove the document." };
+    return { status: 500, message: tr("couldNotRemoveTheDocument") };
   }
 
   await supabase.from("verification_event").insert({
@@ -583,7 +602,7 @@ export async function removeVerificationEvidenceCore(
     event_type: "evidence_removed",
   } as never);
 
-  return { status: 200, message: "Document removed." };
+  return { status: 200, message: tr("documentRemoved") };
 }
 
 /**
@@ -597,7 +616,10 @@ export async function submitVerificationCaseCore(
   input: { caseId: string },
 ): Promise<VerificationEnvelope> {
   if (isVerificationKillSwitchOn()) {
-    return { status: 403, message: "Verification isn't available right now." };
+    return {
+      status: 403,
+      message: tr("verificationIsnTAvailableRightNow"),
+    };
   }
 
   const owned = await ownedEditableCase(supabase, userId, input.caseId);
@@ -639,9 +661,12 @@ export async function submitVerificationCaseCore(
       row.place_id ??
       row.organizer_user_id) as string,
   });
-  if (!facts) return { status: 404, message: "Not found" };
+  if (!facts) return { status: 404, message: tr("notFound") };
   if (!facts.eligible) {
-    return { status: 409, message: facts.blockedReason ?? "Not eligible" };
+    return {
+      status: 409,
+      message: facts.blockedReason ?? tr("notEligible"),
+    };
   }
 
   // Snapshot what is being claimed, so a reviewer can see whether the listing
@@ -666,19 +691,20 @@ export async function submitVerificationCaseCore(
   );
   if (error) return transitionError(error);
 
-  const copy = NOTIFICATION_COPY.submitted(facts.name ?? "your listing");
   await createNotificationCore(supabase, {
     userId,
     type: "verification_submitted",
-    title: copy.title,
-    body: copy.body,
+    notice: {
+      id: "verification_submitted",
+      params: { subject: facts.name ?? null, subjectKind: row.subject_type },
+    },
     link: verificationLink(row),
     data: verificationNotificationData(row),
   });
 
   return {
     status: 200,
-    message: "Sent for review. We'll let you know when it's been reviewed.",
+    message: tr("sentForReviewWeLlLet"),
   };
 }
 
@@ -694,10 +720,13 @@ export async function withdrawVerificationCaseCore(
     .maybeSingle();
   if (error) {
     logger.error(`withdrawVerificationCaseCore read failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   if (!data || (data as CaseRow).requester_id !== userId) {
-    return { status: 404, message: "Verification request not found" };
+    return {
+      status: 404,
+      message: tr("verificationRequestNotFound"),
+    };
   }
   const row = data as CaseRow;
 
@@ -713,7 +742,7 @@ export async function withdrawVerificationCaseCore(
   );
   if (rpcErr) return transitionError(rpcErr);
 
-  return { status: 200, message: "Request withdrawn." };
+  return { status: 200, message: tr("requestWithdrawn") };
 }
 
 async function buildSubjectSnapshot(

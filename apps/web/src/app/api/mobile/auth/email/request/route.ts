@@ -1,6 +1,10 @@
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { publicSupabase } from "@/config/supabase/publicClient";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { requestEmailOtpCore } from "@abonten/services/profile/emailAuthCore";
 
 // POST /api/mobile/auth/email/request  { "email": "ben@example.com" }
@@ -16,13 +20,14 @@ import { requestEmailOtpCore } from "@abonten/services/profile/emailAuthCore";
 // resulting session straight to expo-secure-store — the same asymmetry as
 // mobile Google sign-in.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   try {
     const body = (await req.json().catch(() => null)) as {
       email?: unknown;
     } | null;
 
     if (typeof body?.email !== "string") {
-      return apiJson({ status: 400, message: "email is required" });
+      return apiJson({ status: 400, message: tr("emailIsRequired") });
     }
 
     const ip =
@@ -42,6 +47,9 @@ export async function POST(req: Request) {
     return apiJson({ status: result.status, message: result.message });
   } catch (error) {
     logger.error("mobile POST /auth/email/request failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,7 +1,9 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   decideVerification,
   revokeVerification,
@@ -43,6 +45,7 @@ export function DecisionPanel({
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
     null,
   );
+  const confirm = useConfirm();
 
   const decidable = status === "pending_review" || status === "needs_info";
   const revocable = status === "approved";
@@ -113,10 +116,11 @@ export function DecisionPanel({
             <Button
               size="sm"
               disabled={pending || ownerChanged}
-              onClick={() => {
+              onClick={async () => {
                 if (
-                  confirm(
+                  await confirm(
                     `Approve verification for this ${subjectType}? The badge goes live immediately.`,
+                    { confirmLabel: "Approve" },
                   )
                 ) {
                   run(() =>
@@ -125,7 +129,7 @@ export function DecisionPanel({
                       decision: "approve",
                       reason: reason.trim() || undefined,
                       expectedStatus: status,
-                    }),
+                    }).catch(actionUnreachable),
                   );
                 }
               }}
@@ -144,7 +148,7 @@ export function DecisionPanel({
                       decision: "request_info",
                       reason: reason.trim(),
                       expectedStatus: status,
-                    }),
+                    }).catch(actionUnreachable),
                   )
                 }
               >
@@ -161,7 +165,7 @@ export function DecisionPanel({
                       decision: "reject",
                       reason: reason.trim(),
                       expectedStatus: status,
-                    }),
+                    }).catch(actionUnreachable),
                   )
                 }
               >
@@ -199,13 +203,18 @@ export function DecisionPanel({
                 size="sm"
                 variant="danger"
                 disabled={pending || !revokeReason.trim()}
-                onClick={() => {
-                  if (confirm("Remove this Verified badge?")) {
+                onClick={async () => {
+                  if (
+                    await confirm("Remove this Verified badge?", {
+                      confirmLabel: "Remove badge",
+                      danger: true,
+                    })
+                  ) {
                     run(() =>
                       revokeVerification({
                         caseId,
                         reason: revokeReason.trim(),
-                      }),
+                      }).catch(actionUnreachable),
                     );
                   }
                 }}

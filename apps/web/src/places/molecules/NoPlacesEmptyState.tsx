@@ -1,6 +1,7 @@
 "use client";
 
 import ChangeLocationModal from "@/components/organisms/ChangeLocationModal";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoStorefrontOutline } from "react-icons/io5";
 
@@ -11,6 +12,8 @@ import { IoStorefrontOutline } from "react-icons/io5";
 // emptyState prop. Drawn like the Events tab's empty state (NoEventsFound)
 // so the two tabs look like one page.
 export default function NoPlacesEmptyState() {
+  const t = useTranslations("places");
+
   const [showChangeLocationModal, setShowChangeLocationModal] = useState(false);
 
   const handleShowChangeLocationModal = (state: boolean) => {
@@ -34,10 +37,10 @@ export default function NoPlacesEmptyState() {
 
       <div className="max-w-sm space-y-1.5">
         <h2 className="text-lg font-semibold text-foreground">
-          No places found
+          {t("noPlacesFound")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Nothing listed here matches yet. Try another area, or clear a filter.
+          {t("nothingListedHereMatchesYetTry")}
         </p>
       </div>
 
@@ -46,7 +49,7 @@ export default function NoPlacesEmptyState() {
         onClick={() => setShowChangeLocationModal(true)}
         className="h-10 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
       >
-        Change location
+        {t("changeLocation")}
       </button>
     </div>
   );

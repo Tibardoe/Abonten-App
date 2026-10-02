@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type UploadSignatureResult,
   buildCloudinaryUploadSignature,
@@ -13,17 +15,19 @@ import {
 // -- this is what uploadHighlight.ts later checks against (publicId must
 // start with this same folder) to enforce ownership on write. Shared body:
 // @abonten/services/uploads/cloudinaryUploadSignature.
-export default async function getHighlightUploadSignature(): Promise<UploadSignatureResult> {
-  const supabase = await createClient();
+export default withActionLocale(
+  async function getHighlightUploadSignature(): Promise<UploadSignatureResult> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (!user || userError) {
-    return { status: 401, message: "Sign in to upload highlight!" };
-  }
+    if (!user || userError) {
+      return { status: 401, message: tr("signInToUploadHighlight") };
+    }
 
-  return buildCloudinaryUploadSignature(user.id, "highlight");
-}
+    return buildCloudinaryUploadSignature(user.id, "highlight");
+  },
+);

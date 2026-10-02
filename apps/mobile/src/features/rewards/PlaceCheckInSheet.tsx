@@ -1,4 +1,5 @@
 import { AppText, Button, Icon, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   type BarcodeScanningResult,
   CameraView,
@@ -19,6 +20,8 @@ export function PlaceCheckInSheet({
   onClose: () => void;
   onScanned: (visit: { slug: string; code: string }) => void;
 }) {
+  const t = useTranslations("rewards");
+
   const [permission, requestPermission] = useCameraPermissions();
   const [error, setError] = useState<string | null>(null);
   const lockedRef = useRef(false);
@@ -38,13 +41,13 @@ export function PlaceCheckInSheet({
       if (lockedRef.current) return;
       const visit = parseVisitQr(result.data);
       if (!visit) {
-        setError("That isn't a place check-in code.");
+        setError(t("thatIsnTAPlaceCheck"));
         return;
       }
       lockedRef.current = true;
       onScanned(visit);
     },
-    [onScanned],
+    [onScanned, t],
   );
 
   const denied = permission?.granted === false && !permission.canAskAgain;
@@ -53,23 +56,25 @@ export function PlaceCheckInSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title="Check in"
-      footer={<Button title="Cancel" variant="outline" onPress={onClose} />}
+      title={t("checkIn")}
+      footer={
+        <Button title={t("cancel")} variant="outline" onPress={onClose} />
+      }
     >
       <View className="gap-4">
         {!permission ? (
-          <AppText variant="muted">Preparing the camera…</AppText>
+          <AppText variant="muted">{t("preparingTheCamera")}</AppText>
         ) : denied ? (
           <View className="items-center gap-3 py-4">
             <Icon name="camera-outline" size={40} tone="muted" />
             <AppText variant="bodyStrong" className="text-center">
-              Camera access is off
+              {t("cameraAccessIsOff")}
             </AppText>
             <AppText variant="muted" className="text-center">
-              Turn on camera access for Abonten in Settings to scan the code.
+              {t("turnOnCameraAccessForAbonten")}
             </AppText>
             <Button
-              title="Open settings"
+              title={t("openSettings")}
               variant="outline"
               size="sm"
               onPress={() =>
@@ -82,10 +87,10 @@ export function PlaceCheckInSheet({
         ) : !permission.granted ? (
           <View className="items-center gap-3 py-4">
             <AppText variant="muted" className="text-center">
-              Allow camera access to scan the place's check-in code.
+              {t("allowCameraAccessToScanThe")}
             </AppText>
             <Button
-              title="Allow camera"
+              title={t("allowCamera")}
               size="sm"
               onPress={() => requestPermission()}
             />
@@ -104,8 +109,7 @@ export function PlaceCheckInSheet({
               />
             </View>
             <AppText variant="caption" className="text-center">
-              Point the camera at the code the place shows at its counter or
-              entrance.
+              {t("pointTheCameraAtTheCode")}
             </AppText>
           </>
         ) : null}

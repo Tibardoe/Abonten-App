@@ -4,6 +4,7 @@ import {
 } from "@/features/profile/useProfileCompletion";
 import { accountSetupPromptMessage } from "@abonten/core/accountSetupPrompt";
 import { AppText, Button, Icon, ProgressBar } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -29,6 +30,9 @@ export function AccountSetupCard({
   /** Outer spacing — applied only when the card is actually shown. */
   className?: string;
 }) {
+  const t = useTranslations("account");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const prompt = useAccountSetupPrompt();
   const completion = useProfileCompletion();
@@ -39,15 +43,21 @@ export function AccountSetupCard({
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Finish setting up your account. ${c.completedCount} of ${c.total} steps done.`}
+        accessibilityLabel={t("finishSettingUpYourAccountOf", {
+          completedCount: c.completedCount,
+          total: c.total,
+        })}
         onPress={() => router.push(SETUP_HREF)}
         className={`flex-row items-center gap-3 rounded-xl border border-primary/40 bg-card px-4 py-3 active:opacity-80 ${className ?? ""}`}
       >
         <Icon name="checkmark-done-outline" size={20} tone="primary" />
         <View className="flex-1">
-          <AppText variant="body">Finish setting up your account</AppText>
+          <AppText variant="body">{t("finishSettingUpYourAccount")}</AppText>
           <AppText variant="caption">
-            {c.completedCount} of {c.total} steps done
+            {t("ofStepsDone", {
+              completedCount: c.completedCount,
+              total: c.total,
+            })}
           </AppText>
         </View>
         <Icon name="chevron-forward" size={16} tone="muted" />
@@ -57,7 +67,7 @@ export function AccountSetupCard({
 
   if (!prompt.visible || !prompt.completion) return null;
   const c = prompt.completion;
-  const message = accountSetupPromptMessage(c);
+  const message = accountSetupPromptMessage(tc, c);
 
   return (
     <View
@@ -73,7 +83,7 @@ export function AccountSetupCard({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Not now — hide this reminder"
+          accessibilityLabel={t("notNowHideThisReminder")}
           hitSlop={10}
           onPress={() => prompt.dismiss()}
           className="h-8 w-8 items-center justify-center rounded-full active:bg-muted"
@@ -83,17 +93,20 @@ export function AccountSetupCard({
       </View>
       <ProgressBar
         value={c.completedCount / c.total}
-        label={`${c.completedCount} of ${c.total} steps done`}
+        label={t("ofStepsDone", {
+          completedCount: c.completedCount,
+          total: c.total,
+        })}
       />
       <View className="flex-row gap-2">
         <Button
-          title="Continue setup"
+          title={t("continueSetup")}
           size="sm"
           className="flex-1"
           onPress={() => router.push(SETUP_HREF)}
         />
         <Button
-          title="Not now"
+          title={t("notNow")}
           variant="ghost"
           size="sm"
           onPress={() => prompt.dismiss()}

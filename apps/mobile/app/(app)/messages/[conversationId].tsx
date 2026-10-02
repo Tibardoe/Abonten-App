@@ -62,6 +62,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -75,6 +76,8 @@ function canEdit(m: MessageRow, myId: string | undefined): boolean {
 }
 
 export default function ConversationScreen() {
+  const t = useTranslations("messaging");
+
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const valid = isUuid(conversationId);
   const { session } = useSession();
@@ -230,22 +233,25 @@ export default function ConversationScreen() {
           // The optimistic pill is applied/reverted in the mutation hook; the
           // screen just surfaces a lightweight failure note (spec §16).
           onSettled: (res) => {
-            if (!res || res.status !== 200) setToast("Couldn't add reaction");
+            if (!res || res.status !== 200) setToast(t("couldnTAddReaction"));
           },
         },
       ),
-    [toggleReaction],
+    [toggleReaction, t],
   );
 
-  const handleCopy = useCallback(async (text: string) => {
-    const ok = await copyText(text);
-    if (ok) {
-      hapticSelection();
-      setToast("Copied");
-    } else {
-      setToast("Couldn't copy");
-    }
-  }, []);
+  const handleCopy = useCallback(
+    async (text: string) => {
+      const ok = await copyText(text);
+      if (ok) {
+        hapticSelection();
+        setToast(t("copied"));
+      } else {
+        setToast(t("couldnTCopy"));
+      }
+    },
+    [t],
+  );
 
   // Jump to a message referenced by a reply quote (spec §11). If it isn't in
   // the loaded pages yet, page older messages in until it is (capped).
@@ -274,10 +280,10 @@ export default function ConversationScreen() {
         pendingScrollRef.current = { id: messageId, tries: 0 };
         messagesQ.fetchNextPage();
       } else {
-        setToast("Original message isn't loaded");
+        setToast(t("originalMessageIsnTLoaded"));
       }
     },
-    [scrollToLoaded, messagesQ],
+    [scrollToLoaded, messagesQ, t],
   );
 
   // Resolve a pending "scroll to reply target" as older pages arrive.
@@ -292,14 +298,14 @@ export default function ConversationScreen() {
     }
     if (pending.tries >= 6 || !messagesQ.hasNextPage) {
       pendingScrollRef.current = null;
-      setToast("Couldn't find that message");
+      setToast(t("couldnTFindThatMessage"));
       return;
     }
     if (!messagesQ.isFetchingNextPage) {
       pending.tries += 1;
       messagesQ.fetchNextPage();
     }
-  }, [scrollToLoaded, messagesQ]);
+  }, [scrollToLoaded, messagesQ, t]);
 
   useEffect(() => {
     if (!toast) return;
@@ -377,7 +383,7 @@ export default function ConversationScreen() {
       {
         onSettled: (res) => {
           if (res && res.status !== 200) {
-            setToast(res.message ?? "Couldn't edit that message");
+            setToast(res.message ?? t("couldnTEditThatMessage2"));
           }
           setEditing(null);
         },
@@ -386,16 +392,16 @@ export default function ConversationScreen() {
   }
 
   function confirmDelete(m: MessageRow) {
-    Alert.alert("Delete this message?", "This can't be undone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteThisMessage"), t("thisCanTBeUndone"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("deleteText"),
         style: "destructive",
         onPress: () =>
           deleteMsg.mutate(m.id, {
             onSettled: (res) => {
               if (res && res.status !== 200) {
-                setToast(res.message ?? "Couldn't delete that message");
+                setToast(res.message ?? t("couldnTDeleteThatMessage2"));
               }
             },
           }),
@@ -412,7 +418,9 @@ export default function ConversationScreen() {
           onMenu={() => {}}
         />
         <View className="flex-1 items-center justify-center px-8">
-          <AppText variant="muted">This conversation link is invalid.</AppText>
+          <AppText variant="muted">
+            {t("thisConversationLinkIsInvalid")}
+          </AppText>
         </View>
       </View>
     );
@@ -442,7 +450,7 @@ export default function ConversationScreen() {
           <View className="flex-1 items-center justify-center gap-3 px-8">
             <Icon name="lock-closed-outline" size={26} tone="muted" />
             <AppText variant="muted" className="text-center">
-              This conversation isn't available.
+              {t("thisConversationIsnTAvailable")}
             </AppText>
           </View>
         ) : noThreadYet ? (
@@ -465,7 +473,7 @@ export default function ConversationScreen() {
             <View className="flex-1 justify-center">
               <QueryUnavailable
                 view={threadView}
-                subject="this conversation"
+                subject={t("thisConversation")}
                 onRetry={() => messagesQ.refetch()}
               />
             </View>
@@ -475,14 +483,18 @@ export default function ConversationScreen() {
                 <Icon name="chatbubbles-outline" size={26} tone="primary" />
               </View>
               <AppText variant="bodyStrong" className="text-center">
-                Start the conversation
+                {t("startTheConversation")}
               </AppText>
               <AppText variant="muted" className="text-center">
                 {context?.subject.event
-                  ? `Ask about ${context.subject.event.title} — tickets, timing, anything.`
+                  ? t("askAboutTicketsTimingAnything", {
+                      title: context.subject.event.title,
+                    })
                   : context?.subject.place
-                    ? `Ask ${context.subject.place.name} about a visit, a booking or their services.`
-                    : "Say hello — your messages stay in the app."}
+                    ? t("askAboutAVisitABooking", {
+                        name: context.subject.place.name,
+                      })
+                    : t("sayHelloYourMessagesStayIn")}
               </AppText>
             </View>
           )
@@ -552,9 +564,9 @@ export default function ConversationScreen() {
           disabled={closed || iBlockedThem}
           disabledReason={
             closed
-              ? "This conversation is closed."
+              ? t("thisConversationIsClosed")
               : iBlockedThem
-                ? "You've blocked this person. Unblock them to send a message."
+                ? t("youVeBlockedThisPersonUnblock")
                 : undefined
           }
         />
@@ -600,7 +612,7 @@ export default function ConversationScreen() {
         items={[
           {
             key: "mute",
-            label: context?.my_participant.muted ? "Unmute" : "Mute",
+            label: context?.my_participant.muted ? t("unmute") : t("mute"),
             icon: context?.my_participant.muted
               ? "notifications-outline"
               : "notifications-off-outline",
@@ -612,7 +624,9 @@ export default function ConversationScreen() {
           },
           {
             key: "archive",
-            label: context?.my_participant.archived ? "Unarchive" : "Archive",
+            label: context?.my_participant.archived
+              ? t("unarchive")
+              : t("archive"),
             icon: context?.my_participant.archived
               ? "arrow-undo-outline"
               : "archive-outline",
@@ -626,7 +640,7 @@ export default function ConversationScreen() {
             ? [
                 {
                   key: "block",
-                  label: iBlockedThem ? "Unblock" : "Block",
+                  label: iBlockedThem ? t("unblock") : t("block"),
                   icon: (iBlockedThem
                     ? "person-add-outline"
                     : "hand-left-outline") as IoniconName,
@@ -641,7 +655,7 @@ export default function ConversationScreen() {
             : []),
           {
             key: "report",
-            label: "Report conversation",
+            label: t("reportConversation"),
             icon: "flag-outline",
             destructive: true,
             onPress: () => setReportOpen(true),
@@ -653,10 +667,10 @@ export default function ConversationScreen() {
       <Sheet
         open={!!editing}
         onClose={() => setEditing(null)}
-        title="Edit message"
+        title={t("editMessage")}
         footer={
           <Button
-            title="Save"
+            title={t("save")}
             fullWidth
             loading={editMsg.isPending}
             onPress={submitEdit}
@@ -685,7 +699,7 @@ export default function ConversationScreen() {
         label={
           context?.subject.event?.title ??
           context?.subject.place?.name ??
-          "Conversation"
+          t("conversation")
         }
       />
 

@@ -4,6 +4,7 @@ import { cn } from "@/components/lib/utils";
 import { Button } from "@/components/ui/button";
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
+import { useTranslations } from "next-intl";
 
 type PayoutAccountCardProps = {
   account: PayoutAccountRow;
@@ -25,11 +26,13 @@ export default function PayoutAccountCard({
   onRemove,
   removing,
 }: PayoutAccountCardProps) {
+  const t = useTranslations("finances");
+
   const isSelectable = Boolean(onSelect);
   const title =
     account.account_type === "mobile_money"
-      ? (account.provider ?? "Mobile Money")
-      : "Bank Account";
+      ? (account.provider ?? t("mobileMoney"))
+      : t("bankAccount");
 
   return (
     <div
@@ -73,7 +76,7 @@ export default function PayoutAccountCard({
 
         {account.is_default && (
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-            Default
+            {t("defaultText")}
           </span>
         )}
       </div>
@@ -90,7 +93,7 @@ export default function PayoutAccountCard({
                 onSetDefault();
               }}
             >
-              Set as default
+              {t("setAsDefault")}
             </Button>
           )}
           {onRemove && (
@@ -105,7 +108,7 @@ export default function PayoutAccountCard({
               }}
               className="text-destructive hover:text-destructive"
             >
-              {removing ? "Removing..." : "Remove"}
+              {removing ? t("removing") : t("remove")}
             </Button>
           )}
         </div>

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { storedToTouch } from "@abonten/core/rewards/referralAttribution";
 import {
@@ -8,6 +9,7 @@ import {
   type ValidateCheckoutResult,
   validateCheckoutCore,
 } from "@abonten/services/checkout/validateCheckoutCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   DEVICE_COOKIE_NAME,
   REFERRAL_COOKIE_NAME,
@@ -41,7 +43,7 @@ async function referralHintsFromCookie(): Promise<{
   }
 }
 
-export default async function validateCheckout(
+export default withActionLocale(async function validateCheckout(
   details: CheckoutDetailsProp,
 ): Promise<ValidateCheckoutResult> {
   const supabase = await createClient();
@@ -56,7 +58,7 @@ export default async function validateCheckout(
 
     return {
       status: 401,
-      message: "User not logged in",
+      message: tr("userNotLoggedIn"),
     };
   }
 
@@ -69,4 +71,4 @@ export default async function validateCheckout(
     // referral passed in by the browser.
     referralHints: hints,
   });
-}
+});

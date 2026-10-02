@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { resendNotification } from "@/server/actions/notifications";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -18,7 +19,9 @@ export function ResendButton({ id }: { id: string }) {
         onClick={() => {
           setMsg(null);
           start(async () => {
-            const res = await resendNotification({ id });
+            const res = await resendNotification({ id }).catch(
+              actionUnreachable,
+            );
             setMsg(
               res.message ?? (res.status === 200 ? "Re-sent." : "Failed."),
             );

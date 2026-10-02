@@ -15474,7 +15474,12 @@ export type Database = {
           event_id: string
           event_title: string
           message: string
+          remaining: number
           rule_type: string
+          sold: number
+          starts_at: string
+          ticket_type: string
+          timezone: string
         }[]
       }
       get_organizer_pending_earnings: {

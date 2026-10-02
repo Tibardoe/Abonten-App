@@ -14,6 +14,7 @@ import {
 } from "@/messaging/hooks/useMessagingActions";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { conversationPreviewText } from "@abonten/core/messagingInboxCache";
 import type {
   ConversationListItem,
   ConversationType,
@@ -32,6 +33,7 @@ import {
   MoreVertical,
   Store,
 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -63,6 +65,11 @@ export function ConversationListRow({
   active: boolean;
   archivedView?: boolean;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("messaging");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const setState = useSetConversationState();
   const markRead = useMarkConversationRead();
@@ -78,7 +85,7 @@ export function ConversationListRow({
     item.other_display_name ||
     item.subject_title ||
     item.title ||
-    "Conversation";
+    t("conversation");
   const context =
     (item.type === "event" || item.type === "place") &&
     item.subject_title &&
@@ -86,10 +93,8 @@ export function ConversationListRow({
       ? item.subject_title
       : null;
   const preview = !item.last_message_preview
-    ? "No messages yet"
-    : lastFromMe
-      ? `You: ${item.last_message_preview}`
-      : item.last_message_preview;
+    ? t("noMessagesYet")
+    : conversationPreviewText(tc, item.last_message_preview, lastFromMe);
 
   const showAvatar = item.type !== "support" && !!item.other_user_id;
   const avatarSrc = buildCloudinaryUrl(
@@ -149,7 +154,7 @@ export function ConversationListRow({
                   unread ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                {getRelativeTime(item.last_message_at)}
+                {getRelativeTime(item.last_message_at, undefined, locale)}
               </span>
             ) : null}
           </div>
@@ -184,7 +189,7 @@ export function ConversationListRow({
 
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger
-          aria-label="Conversation actions"
+          aria-label={t("conversationActions")}
           className="shrink-0 rounded-md p-1.5 text-muted-foreground opacity-0 transition hover:bg-accent hover:text-foreground focus:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
         >
           <MoreVertical className="h-4 w-4" />
@@ -196,7 +201,7 @@ export function ConversationListRow({
             ) : (
               <Circle className="mr-2 h-4 w-4" />
             )}
-            {unread ? "Mark as read" : "Mark as unread"}
+            {unread ? t("markAsRead") : t("markAsUnread")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={() =>
@@ -211,7 +216,7 @@ export function ConversationListRow({
             ) : (
               <BellOff className="mr-2 h-4 w-4" />
             )}
-            {item.muted ? "Unmute" : "Mute"}
+            {item.muted ? t("unmute") : t("mute")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={() => {
@@ -227,7 +232,7 @@ export function ConversationListRow({
             ) : (
               <Archive className="mr-2 h-4 w-4" />
             )}
-            {archivedView || item.archived ? "Unarchive" : "Archive"}
+            {archivedView || item.archived ? t("unarchive") : t("archive")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

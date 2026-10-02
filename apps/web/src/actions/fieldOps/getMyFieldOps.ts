@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { resolveFieldOpsCaller } from "@/utils/fieldOpsAction";
 import { getMyFieldOpsCore } from "@abonten/services/fieldOps/member/myFieldOpsQuery";
 import type { FieldOpsMe } from "@abonten/types/fieldOps";
@@ -9,13 +10,15 @@ import type { FieldOpsMe } from "@abonten/types/fieldOps";
  * the campaign /field shows (today's assignments + quick stats). Same
  * service as GET /api/mobile/field-ops/me.
  */
-export async function getMyFieldOps(): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsMe;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  return getMyFieldOpsCore(svc, userId);
-}
+export const getMyFieldOps = withActionLocale(
+  async function getMyFieldOps(): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsMe;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    return getMyFieldOpsCore(svc, userId);
+  },
+);

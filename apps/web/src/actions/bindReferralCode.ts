@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { isFinalBindResult } from "@abonten/core/rewards/invite";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { bindReferralCodeCore } from "@abonten/services/rewards/inviteCore";
 import {
   DEVICE_COOKIE_NAME,
@@ -20,58 +22,60 @@ import { cookies } from "next/headers";
  * (no code) the invite this browser holds from an /invite link. Once the
  * answer is final the browser forgets the invite, so it's only tried once.
  */
-export async function bindReferralCode(input?: { code?: string }): Promise<{
-  status: number;
-  message?: string;
-  data?: ReferralBindOutcome;
-}> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { status: 401, message: "User not logged in" };
+export const bindReferralCode = withActionLocale(
+  async function bindReferralCode(input?: { code?: string }): Promise<{
+    status: number;
+    message?: string;
+    data?: ReferralBindOutcome;
+  }> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { status: 401, message: tr("userNotLoggedIn") };
 
-  const cookieStore = await cookies();
-  const stored = inviteFromCookie(
-    cookieStore.get(REFERRAL_COOKIE_NAME)?.value,
-    Date.now(),
-  );
-  const typed = typeof input?.code === "string" ? input.code : null;
-
-  if (!typed && !stored) {
-    cookieStore.delete(INVITE_FLAG_COOKIE_NAME);
-    return { status: 204 };
-  }
-
-  // The fraud checks compare devices: note this browser before binding.
-  await recordDeviceInstallCore(
-    cookieStore.get(DEVICE_COOKIE_NAME)?.value ?? null,
-    user.id,
-    "web",
-  );
-
-  const result = await bindReferralCodeCore(user.id, {
-    code: typed ?? (stored?.code as string),
-    source: typed ? "typed" : (stored?.source ?? "link"),
-  });
-
-  if (!typed && isFinalBindResult(result.data.result)) {
-    const rest = removeInvitesFromCookie(
+    const cookieStore = await cookies();
+    const stored = inviteFromCookie(
       cookieStore.get(REFERRAL_COOKIE_NAME)?.value,
+      Date.now(),
     );
-    if (rest) {
-      cookieStore.set(REFERRAL_COOKIE_NAME, rest, {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: REFERRAL_COOKIE_MAX_AGE_SECONDS,
-      });
-    } else {
-      cookieStore.delete(REFERRAL_COOKIE_NAME);
-    }
-    cookieStore.delete(INVITE_FLAG_COOKIE_NAME);
-  }
+    const typed = typeof input?.code === "string" ? input.code : null;
 
-  return result;
-}
+    if (!typed && !stored) {
+      cookieStore.delete(INVITE_FLAG_COOKIE_NAME);
+      return { status: 204 };
+    }
+
+    // The fraud checks compare devices: note this browser before binding.
+    await recordDeviceInstallCore(
+      cookieStore.get(DEVICE_COOKIE_NAME)?.value ?? null,
+      user.id,
+      "web",
+    );
+
+    const result = await bindReferralCodeCore(user.id, {
+      code: typed ?? (stored?.code as string),
+      source: typed ? "typed" : (stored?.source ?? "link"),
+    });
+
+    if (!typed && isFinalBindResult(result.data.result)) {
+      const rest = removeInvitesFromCookie(
+        cookieStore.get(REFERRAL_COOKIE_NAME)?.value,
+      );
+      if (rest) {
+        cookieStore.set(REFERRAL_COOKIE_NAME, rest, {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: REFERRAL_COOKIE_MAX_AGE_SECONDS,
+        });
+      } else {
+        cookieStore.delete(REFERRAL_COOKIE_NAME);
+      }
+      cookieStore.delete(INVITE_FLAG_COOKIE_NAME);
+    }
+
+    return result;
+  },
+);

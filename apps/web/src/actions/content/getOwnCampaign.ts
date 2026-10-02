@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -9,10 +10,13 @@ import {
   getContentCampaignCore,
   getContentCampaignHistoryCore,
 } from "@abonten/services/content/campaigns/contentCampaignCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { contentCampaignIdSchema } from "@abonten/validation/contentSchemas";
 
 /** One of the advertiser's campaigns with its history. */
-export async function getOwnCampaign(input: unknown) {
+export const getOwnCampaign = withActionLocale(async function getOwnCampaign(
+  input: unknown,
+) {
   const caller = await requireContentUser();
   if (caller.error) return caller.error;
   const parsed = parseContentInput(contentCampaignIdSchema, input);
@@ -25,7 +29,7 @@ export async function getOwnCampaign(input: unknown) {
   if (campaign.status !== 200 || !campaign.data) {
     return {
       status: campaign.status,
-      message: campaign.message ?? "Campaign not found.",
+      message: campaign.message ?? tr("campaignNotFound"),
     };
   }
   const history = await getContentCampaignHistoryCore(
@@ -36,4 +40,4 @@ export async function getOwnCampaign(input: unknown) {
     status: 200 as const,
     data: { campaign: campaign.data, ...history },
   };
-}
+});

@@ -1,7 +1,9 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { updateWeeklySettings } from "@/server/actions/weekly";
 import type { WeeklyAudience, WeeklySettings } from "@abonten/types/weeklyType";
 import { useRouter } from "next/navigation";
@@ -85,6 +87,7 @@ export function WeeklySettingsForm({
     ) as Record<NumberKey, string>,
   );
   const [reason, setReason] = useState("");
+  const confirm = useConfirm();
   const editable = canConfigure && stepUpFresh;
 
   const save = () =>
@@ -94,9 +97,10 @@ export function WeeklySettingsForm({
         enabled &&
         audience === "all" &&
         (!settings.enabled || settings.audience !== "all") &&
-        !window.confirm(
-          "This makes published editions visible to everyone, including signed-out visitors, on web and in the app. Continue?",
-        )
+        !(await confirm(
+          "Show published editions to everyone? That includes signed-out visitors, on web and in the app.",
+          { confirmLabel: "Show to everyone" },
+        ))
       ) {
         return;
       }
@@ -115,7 +119,7 @@ export function WeeklySettingsForm({
             NUMBERS.map((n) => [n.key, Number(numbers[n.key])]),
           ),
         },
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text: res.message ?? (res.status === 200 ? "Saved." : "Couldn't save."),

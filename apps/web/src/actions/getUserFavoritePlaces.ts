@@ -1,8 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
-import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { isPlaceOpenNow } from "@abonten/core/computePlaceOpenStatus";
 import { readEventAddress } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import {
@@ -13,6 +14,7 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   fetchPlaceRatings,
   roundRating,
@@ -40,140 +42,146 @@ type RawFavoritePlaceRow = FavoritePlaceJoinRow;
 // codebase: a batched place_review aggregate (mirrors
 // getAttendace.ts's getEventAttendanceCounts batching) plus the joined
 // place_opening_hours rows.
-export async function getUserFavoritePlaces(options?: {
-  cursor?: string | null;
-  pageSize?: number;
-}): Promise<PaginatedResult<FavoritePlaces>> {
-  const supabase = await createClient();
-  const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
-  const cursor = decodeCursor<SimpleCursor>(options?.cursor);
+export const getUserFavoritePlaces = withActionLocale(
+  async function getUserFavoritePlaces(options?: {
+    cursor?: string | null;
+    pageSize?: number;
+  }): Promise<PaginatedResult<FavoritePlaces>> {
+    const supabase = await createClient();
+    const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
+    const cursor = decodeCursor<SimpleCursor>(options?.cursor);
 
-  const { data: user, error: userError } = await supabase.auth.getUser();
+    const { data: user, error: userError } = await supabase.auth.getUser();
 
-  if (userError) {
-    return {
-      status: 500,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: userFacingError("Failed fetching user", userError),
-    };
-  }
+    if (userError) {
+      return {
+        status: 500,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: userFacingError("Failed fetching user", userError),
+      };
+    }
 
-  if (!user) {
-    return {
-      status: 401,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: "User not logged in",
-    };
-  }
+    if (!user) {
+      return {
+        status: 401,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: tr("userNotLoggedIn"),
+      };
+    }
 
-  let query = supabase
-    .from("favorite_place")
-    .select(
-      "*, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed))",
-    )
-    .eq("user_id", user.user.id)
-    .order("created_at", { ascending: false })
-    .order("place_id", { ascending: false })
-    .limit(pageSize + 1);
+    let query = supabase
+      .from("favorite_place")
+      .select(
+        "*, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed))",
+      )
+      .eq("user_id", user.user.id)
+      .order("created_at", { ascending: false })
+      .order("place_id", { ascending: false })
+      .limit(pageSize + 1);
 
-  if (cursor) {
-    query = query.or(keysetOlderThan("created_at", "place_id", cursor));
-  }
+    if (cursor) {
+      query = query.or(keysetOlderThan("created_at", "place_id", cursor));
+    }
 
-  const { data, error } = await query;
+    const { data, error } = await query;
 
-  if (error) {
-    return {
-      status: 500,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: userFacingError("Failed fetching favorite places", error),
-    };
-  }
+    if (error) {
+      return {
+        status: 500,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: userFacingError("Failed fetching favorite places", error),
+      };
+    }
 
-  const { page, hasNextPage } = splitPage<RawFavoritePlaceRow>(data, pageSize);
-
-  // A favourite whose place RLS now hides (removed, unpublished) embeds as
-  // null: it is left out rather than shown as an empty card.
-  const visible = page.filter(
-    (
-      favorite,
-    ): favorite is typeof favorite & {
-      place: NonNullable<typeof favorite.place>;
-    } => favorite.place !== null,
-  );
-  const placeIds = visible.map((favorite) => favorite.place.id);
-
-  const ratingsByPlaceId =
-    placeIds.length > 0
-      ? await getPlaceRatingAggregates(supabase, placeIds)
-      : {};
-
-  const favoritesWithPlaceType: FavoritePlaces[] = visible.map((favorite) => {
-    const place = favorite.place;
-    const openingHours: PlaceOpeningHourRow[] = place.place_opening_hours ?? [];
-    const { isOpen } = computePlaceOpenStatus(
-      openingHours,
-      place.temporary_status,
-      new Date(),
-      (place as { timezone?: string | null }).timezone,
+    const { page, hasNextPage } = splitPage<RawFavoritePlaceRow>(
+      data,
+      pageSize,
     );
-    const rating = ratingsByPlaceId[place.id];
+
+    // A favourite whose place RLS now hides (removed, unpublished) embeds as
+    // null: it is left out rather than shown as an empty card.
+    const visible = page.filter(
+      (
+        favorite,
+      ): favorite is typeof favorite & {
+        place: NonNullable<typeof favorite.place>;
+      } => favorite.place !== null,
+    );
+    const placeIds = visible.map((favorite) => favorite.place.id);
+
+    const ratingsByPlaceId =
+      placeIds.length > 0
+        ? await getPlaceRatingAggregates(supabase, placeIds)
+        : {};
+
+    const favoritesWithPlaceType: FavoritePlaces[] = visible.map((favorite) => {
+      const place = favorite.place;
+      const openingHours: PlaceOpeningHourRow[] =
+        place.place_opening_hours ?? [];
+      const isOpen = isPlaceOpenNow(
+        openingHours,
+        place.temporary_status,
+        new Date(),
+        (place as { timezone?: string | null }).timezone,
+      );
+      const rating = ratingsByPlaceId[place.id];
+
+      return {
+        user_id: favorite.user_id,
+        place_id: favorite.place_id,
+        created_at: favorite.created_at,
+        place: {
+          id: place.id,
+          owner_id: place.owner_id,
+          name: place.name,
+          slug: place.slug,
+          description: place.description,
+          category_id: place.category_id,
+          category_name: place.place_category?.name ?? tr("uncategorized"),
+          category_slug: place.place_category?.slug ?? "",
+          location: typeof place.location === "string" ? place.location : "",
+          address: readEventAddress(place.address),
+          website_url: place.website_url,
+          phone: place.phone,
+          whatsapp: place.whatsapp,
+          cover_public_id: place.cover_public_id,
+          cover_version: place.cover_version,
+          status: place.status,
+          temporary_status: place.temporary_status,
+          claimed: place.claimed,
+          verified: place.verified,
+          created_at: place.created_at,
+          avg_rating: rating?.avgRating ?? null,
+          review_count: rating?.reviewCount ?? 0,
+          is_open: isOpen,
+          distance_km: null,
+        },
+      };
+    });
+
+    const last = page[page.length - 1];
+    const nextCursor =
+      hasNextPage && last
+        ? encodeCursor<SimpleCursor>({
+            sortValue: String(last.created_at),
+            id: last.place_id,
+          })
+        : null;
 
     return {
-      user_id: favorite.user_id,
-      place_id: favorite.place_id,
-      created_at: favorite.created_at,
-      place: {
-        id: place.id,
-        owner_id: place.owner_id,
-        name: place.name,
-        slug: place.slug,
-        description: place.description,
-        category_id: place.category_id,
-        category_name: place.place_category?.name ?? "Uncategorized",
-        category_slug: place.place_category?.slug ?? "",
-        location: typeof place.location === "string" ? place.location : "",
-        address: readEventAddress(place.address),
-        website_url: place.website_url,
-        phone: place.phone,
-        whatsapp: place.whatsapp,
-        cover_public_id: place.cover_public_id,
-        cover_version: place.cover_version,
-        status: place.status,
-        temporary_status: place.temporary_status,
-        claimed: place.claimed,
-        verified: place.verified,
-        created_at: place.created_at,
-        avg_rating: rating?.avgRating ?? null,
-        review_count: rating?.reviewCount ?? 0,
-        is_open: isOpen,
-        distance_km: null,
-      },
+      status: 200,
+      data: favoritesWithPlaceType,
+      nextCursor,
+      hasNextPage,
     };
-  });
-
-  const last = page[page.length - 1];
-  const nextCursor =
-    hasNextPage && last
-      ? encodeCursor<SimpleCursor>({
-          sortValue: String(last.created_at),
-          id: last.place_id,
-        })
-      : null;
-
-  return {
-    status: 200,
-    data: favoritesWithPlaceType,
-    nextCursor,
-    hasNextPage,
-  };
-}
+  },
+);
 
 // Single batched round trip for the whole page's rating data, same reasoning
 // as getEventAttendanceCounts (one round trip instead of one per place). The

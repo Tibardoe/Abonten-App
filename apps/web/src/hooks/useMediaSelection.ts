@@ -2,6 +2,7 @@ import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
 import { generateVideoThumbnailStrip } from "@/utils/generateVideoThumbnailStrip";
 import { logger } from "@abonten/core/logger";
 import type { MediaItem } from "@abonten/types/mediaItemType";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./useToast";
 
@@ -56,6 +57,8 @@ function getVideoDuration(url: string): Promise<number> {
 // All CRUD is id-based -- never array index -- so delete/select/trim can't
 // desync from a stale position.
 export function useMediaSelection() {
+  const t = useTranslations("common");
+
   const toast = useToast();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -96,36 +99,36 @@ export function useMediaSelection() {
         const isImage = file.type.startsWith("image");
 
         if (!isVideo && !isImage) {
-          toast.error(`"${file.name}" isn't a supported file type.`);
+          toast.error(t("isnTASupportedFileType", { name: file.name }));
           continue;
         }
 
         if (isVideo && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
-          toast.error(
-            `"${file.name}" isn't a supported video format. Please use MP4, MOV, or WebM.`,
-          );
+          toast.error(t("isnTASupportedVideoFormat", { name: file.name }));
           continue;
         }
 
         if (isImage && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
-          toast.error(`"${file.name}" isn't a supported image format.`);
+          toast.error(t("isnTASupportedImageFormat", { name: file.name }));
           continue;
         }
 
         if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
           toast.error(
-            `"${file.name}" is too large. Maximum video size is ${
-              MAX_VIDEO_SIZE_BYTES / (1024 * 1024)
-            }MB.`,
+            t("isTooLargeMaximumVideoSize", {
+              name: file.name,
+              value: MAX_VIDEO_SIZE_BYTES / (1024 * 1024),
+            }),
           );
           continue;
         }
 
         if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
           toast.error(
-            `"${file.name}" is too large. Maximum image size is ${
-              MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
-            }MB.`,
+            t("isTooLargeMaximumImageSize", {
+              name: file.name,
+              value: MAX_IMAGE_SIZE_BYTES / (1024 * 1024),
+            }),
           );
           continue;
         }
@@ -153,7 +156,11 @@ export function useMediaSelection() {
 
           if (duration > MAX_VIDEO_UPLOAD_DURATION) {
             toast.warning(
-              `Video "${file.name}" is longer than ${MAX_VIDEO_UPLOAD_DURATION} seconds and will be trimmed to the first ${MAX_VIDEO_UPLOAD_DURATION} seconds.`,
+              t("videoIsLongerThanSecondsAnd", {
+                name: file.name,
+                MAX_VIDEO_UPLOAD_DURATION: MAX_VIDEO_UPLOAD_DURATION,
+                MAX_VIDEO_UPLOAD_DURATION2: MAX_VIDEO_UPLOAD_DURATION,
+              }),
             );
             newMediaItems.push({
               id,
@@ -198,7 +205,7 @@ export function useMediaSelection() {
       setActiveId(newMediaItems[0].id);
       return true;
     },
-    [toast],
+    [toast, t],
   );
 
   const deleteMedia = useCallback((id: string) => {

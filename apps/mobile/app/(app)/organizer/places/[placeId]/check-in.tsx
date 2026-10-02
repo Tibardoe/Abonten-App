@@ -4,6 +4,7 @@ import { usePlaceVisitPanel } from "@/features/rewards/usePlaceVisits";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { AppText, Button, Overline, Refresher } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -28,6 +29,9 @@ function Tile({ label, value }: { label: string; value: string }) {
 }
 
 export default function PlaceCheckInScreen() {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const q = usePlaceVisitPanel(placeId ?? "");
   const { width } = useWindowDimensions();
@@ -65,13 +69,13 @@ export default function PlaceCheckInScreen() {
       ) : !panel ? (
         <View className="items-center gap-3 py-12">
           <AppText className="text-center text-muted-foreground">
-            Couldn't load the check-in code.
+            {t("couldnTLoadTheCheckIn")}
           </AppText>
-          <Button title="Retry" size="sm" onPress={() => q.refetch()} />
+          <Button title={t("retry")} size="sm" onPress={() => q.refetch()} />
         </View>
       ) : !panel.available || !panel.url ? (
         <AppText className="py-12 text-center text-muted-foreground">
-          Visitor check-in isn't available yet.
+          {t("visitorCheckInIsnTAvailable")}
         </AppText>
       ) : (
         <>
@@ -80,35 +84,45 @@ export default function PlaceCheckInScreen() {
               <QrCode
                 value={panel.url}
                 size={Math.min(width - 80, 320)}
-                accessibilityLabel="Check-in QR code for this place"
+                accessibilityLabel={t("checkInQrCodeForThis")}
               />
             </View>
             <AppText variant="caption" className="tabular-nums">
-              New code in {secondsLeft}s
+              {t("newCodeInS", { secondsLeft: secondsLeft })}
             </AppText>
           </View>
 
           <AppText variant="small" className="text-center">
-            Show this at your counter or entrance. Visitors scan it with their
-            phone while they're here to check in (once a day).
+            {t("showThisAtYourCounterOr")}{" "}
             {panel.verified
-              ? ` Every different person who checks in during a month earns you ${formatCredit(panel.perVisitorMinor, panel.currency)} of promotion credit (up to ${panel.maxVisitors} a month), added early the next month.`
-              : " Visits are counted now; only verified places earn promotion credit from them."}
+              ? t("everyDifferentPersonWhoChecksIn", {
+                  formatCredit: formatCredit(
+                    panel.perVisitorMinor,
+                    panel.currency,
+                    locale,
+                  ),
+                  maxVisitors: panel.maxVisitors,
+                })
+              : t("visitsAreCountedNowOnlyVerified")}
           </AppText>
 
           <View className="flex-row flex-wrap gap-2">
-            <Tile label="Today" value={String(panel.stats.today)} />
+            <Tile label={t("today")} value={String(panel.stats.today)} />
             <Tile
-              label="Visitors this month"
+              label={t("visitorsThisMonth")}
               value={String(panel.stats.thisMonthVisitors)}
             />
             <Tile
-              label="Last month"
+              label={t("lastMonth")}
               value={String(panel.stats.lastMonthVisitors)}
             />
             <Tile
-              label="Credit earned"
-              value={formatCredit(panel.stats.earnedMinor, panel.currency)}
+              label={t("creditEarned")}
+              value={formatCredit(
+                panel.stats.earnedMinor,
+                panel.currency,
+                locale,
+              )}
             />
           </View>
         </>

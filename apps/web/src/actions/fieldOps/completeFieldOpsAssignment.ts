@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsAssignmentCompleteSchema } from "@abonten/validation/fieldOpsSc
  * Marks a started assignment completed. Same service as
  * POST /api/mobile/field-ops/assignments/[id]/complete.
  */
-export async function completeFieldOpsAssignment(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsAssignment;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsAssignmentCompleteSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return completeAssignmentCore(svc, userId, data);
-}
+export const completeFieldOpsAssignment = withActionLocale(
+  async function completeFieldOpsAssignment(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsAssignment;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsAssignmentCompleteSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return completeAssignmentCore(svc, userId, data);
+  },
+);

@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of getEventHasConfirmedParticipation, lifted so the mobile
 // organizer routes (and updateEventCore / updateEventTicketTypesCore) can run
@@ -29,7 +30,10 @@ export async function getEventHasConfirmedParticipationCore(
     .maybeSingle();
 
   if (eventError || !event) {
-    return { status: 404, message: "Event not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("eventNotFoundOrUnauthorized"),
+    };
   }
 
   const { data: ticketTypes, error: ticketTypesError } = await supabase
@@ -41,7 +45,7 @@ export async function getEventHasConfirmedParticipationCore(
     logger.error(
       `Failed fetching ticket types for event ${eventId}: ${ticketTypesError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const ticketTypeIds = (ticketTypes ?? []).map((t) => t.id);
@@ -60,7 +64,7 @@ export async function getEventHasConfirmedParticipationCore(
     logger.error(
       `Failed checking confirmed tickets for event ${eventId}: ${ticketError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: (count ?? 0) > 0 };

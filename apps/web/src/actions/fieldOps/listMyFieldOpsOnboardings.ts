@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsOnboardingListSchema } from "@abonten/validation/fieldOpsSchema
  * The member's own onboardings. Same service as
  * GET /api/mobile/field-ops/onboardings.
  */
-export async function listMyFieldOpsOnboardings(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsOnboarding[];
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsOnboardingListSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return listMyOnboardingsCore(svc, userId, data);
-}
+export const listMyFieldOpsOnboardings = withActionLocale(
+  async function listMyFieldOpsOnboardings(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsOnboarding[];
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsOnboardingListSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return listMyOnboardingsCore(svc, userId, data);
+  },
+);

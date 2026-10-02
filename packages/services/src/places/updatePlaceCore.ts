@@ -8,6 +8,7 @@ import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { coreT, tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of updatePlace, lifted so the mobile
@@ -62,7 +63,11 @@ export async function updatePlaceCore(
     coverVersion,
   } = input;
 
-  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  const locationCheck = validateLocationInput(coreT(), {
+    address,
+    latitude,
+    longitude,
+  });
   if (!locationCheck.valid) {
     return { status: 400, message: locationCheck.message };
   }
@@ -82,11 +87,14 @@ export async function updatePlaceCore(
     .maybeSingle();
 
   if (fetchError || !existingPlace) {
-    return { status: 404, message: "Place not found" };
+    return { status: 404, message: tr("placeNotFound") };
   }
 
   if (existingPlace.owner_id !== userId) {
-    return { status: 403, message: "Not authorized to edit this place" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToEditThisPlace"),
+    };
   }
 
   const replacingCover = !!coverPublicId && !!coverVersion;
@@ -123,7 +131,7 @@ export async function updatePlaceCore(
     logger.error(`updatePlaceCore: update failed (${updateError.message})`);
     return {
       status: 500,
-      message: "We couldn't save your place. Please try again.",
+      message: tr("weCouldnTSaveYourPlace"),
     };
   }
 
@@ -140,7 +148,7 @@ export async function updatePlaceCore(
     );
     return {
       status: 500,
-      message: "We couldn't save your place. Please try again.",
+      message: tr("weCouldnTSaveYourPlace"),
     };
   }
 
@@ -157,5 +165,5 @@ export async function updatePlaceCore(
     }
   }
 
-  return { status: 200, message: "Place updated successfully!" };
+  return { status: 200, message: tr("placeUpdatedSuccessfully") };
 }

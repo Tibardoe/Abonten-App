@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveEventCta } from "./eventCta";
+import { t } from "./i18n/testTranslator";
 
 const open = {
   canceled: false,
@@ -13,8 +14,8 @@ const open = {
 
 describe("resolveEventCta", () => {
   it("offers buy or reserve while tickets are on sale", () => {
-    expect(resolveEventCta(open).kind).toBe("buy");
-    expect(resolveEventCta({ ...open, isFree: true })).toEqual({
+    expect(resolveEventCta(t, open).kind).toBe("buy");
+    expect(resolveEventCta(t, { ...open, isFree: true })).toEqual({
       kind: "rsvp",
       label: "Reserve spot",
       actionable: true,
@@ -22,28 +23,28 @@ describe("resolveEventCta", () => {
   });
 
   it("keeps a held ticket reachable, even after sales close", () => {
-    expect(resolveEventCta({ ...open, attending: true }).kind).toBe("going");
+    expect(resolveEventCta(t, { ...open, attending: true }).kind).toBe("going");
     expect(
-      resolveEventCta({ ...open, attending: true, ended: true }).kind,
+      resolveEventCta(t, { ...open, attending: true, ended: true }).kind,
     ).toBe("going");
     // Canceled wins: there is nothing to attend.
     expect(
-      resolveEventCta({ ...open, attending: true, canceled: true }).kind,
+      resolveEventCta(t, { ...open, attending: true, canceled: true }).kind,
     ).toBe("canceled");
   });
 
   it("shows why nothing can be bought, in priority order", () => {
-    expect(resolveEventCta({ ...open, ended: true, soldOut: true }).kind).toBe(
-      "ended",
-    );
-    expect(resolveEventCta({ ...open, inProgressNoFuture: true }).kind).toBe(
+    expect(
+      resolveEventCta(t, { ...open, ended: true, soldOut: true }).kind,
+    ).toBe("ended");
+    expect(resolveEventCta(t, { ...open, inProgressNoFuture: true }).kind).toBe(
       "in_progress",
     );
-    expect(resolveEventCta({ ...open, soldOut: true })).toMatchObject({
+    expect(resolveEventCta(t, { ...open, soldOut: true })).toMatchObject({
       kind: "sold_out",
       actionable: false,
     });
-    expect(resolveEventCta({ ...open, ticketTypeCount: 0 }).kind).toBe(
+    expect(resolveEventCta(t, { ...open, ticketTypeCount: 0 }).kind).toBe(
       "no_tickets",
     );
   });

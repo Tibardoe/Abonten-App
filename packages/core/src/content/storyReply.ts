@@ -1,3 +1,5 @@
+import type { CoreTranslator } from "../i18n/translator";
+
 // A reply or reaction to a Story is a private conversation message. The
 // send_story_reply RPC (migration 20260917120000) stamps the Story it came
 // from into message.system_data.story_reply; these helpers read that back
@@ -57,30 +59,38 @@ export function storyReplyStoryLive(
 
 /**
  * The line above the bubble. `mine` = the viewer sent it; `senderName` is
- * used when someone else did ("Ama replied to your story").
+ * used when someone else did ("Ama replied to your story"). Words live
+ * under `storyReply.*` of the core namespace.
  */
 export function storyReplyLabel(
+  t: CoreTranslator,
   ctx: Pick<StoryReplyContext, "kind">,
   mine: boolean,
   senderName?: string | null,
 ): string {
-  const verb = ctx.kind === "reaction" ? "reacted to" : "replied to";
-  if (mine) return `You ${verb} their story`;
-  const who = senderName?.trim();
-  return who
-    ? `${who} ${verb} your story`
-    : `${verb[0].toUpperCase()}${verb.slice(1)} your story`;
+  const reaction = ctx.kind === "reaction";
+  if (mine) {
+    return reaction ? t("storyReply.youReacted") : t("storyReply.youReplied");
+  }
+  const name = senderName?.trim();
+  if (name) {
+    return reaction
+      ? t("storyReply.nameReacted", { name })
+      : t("storyReply.nameReplied", { name });
+  }
+  return reaction ? t("storyReply.reacted") : t("storyReply.replied");
 }
 
-/** Notification body for the Story's publisher. */
+/** Notification body for the Story's publisher, in their language. */
 export function storyReplyNotificationBody(
+  t: CoreTranslator,
   kind: StoryReplyKind,
   content: string,
 ): string {
   const text = content.trim();
   return (
     kind === "reaction"
-      ? `Reacted ${text} to your story`
-      : `Replied to your story: ${text}`
+      ? t("storyReply.notifReacted", { text })
+      : t("storyReply.notifReplied", { text })
   ).slice(0, 140);
 }

@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { respondToPromptCore } from "@abonten/services/notifications/promptCore";
 import { promptResponseSchema } from "@abonten/validation/discoverySchemas";
 
 // POST /api/mobile/notifications/prompt/respond  { context, response, accept? }
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {

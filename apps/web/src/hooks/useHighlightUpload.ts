@@ -2,10 +2,15 @@
 
 import getHighlightUploadSignature from "@/actions/getHighlightUploadSignature";
 import uploadHighlight from "@/actions/uploadHighlight";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import {
+  isUploadCancelled,
+  uploadToCloudinary,
+} from "@/utils/uploadToCloudinary";
 import type { HighlightUploadItem } from "@abonten/types/highlightUploadType";
 import type { MediaItem } from "@abonten/types/mediaItemType";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 
 const SUCCESS_DISMISS_MS = 2500;
@@ -25,6 +30,8 @@ function patch(
 // state, so one file failing never hides another's success and a failed
 // file can be retried without re-uploading the rest of the batch.
 export function useHighlightUpload(username: string) {
+  const t = useTranslations("common");
+
   const queryClient = useQueryClient();
   const [items, setItems] = useState<HighlightUploadItem[]>([]);
 
@@ -43,12 +50,13 @@ export function useHighlightUpload(username: string) {
         errorMessage: null,
       });
 
-      const signatureResponse = await getHighlightUploadSignature();
+      const signatureResponse =
+        await getHighlightUploadSignature().catch(actionUnreachable);
 
       if (signatureResponse.status !== 200 || !signatureResponse.data) {
         patch(setItems, id, {
           status: "error",
-          errorMessage: signatureResponse.message ?? "Failed to start upload.",
+          errorMessage: signatureResponse.message ?? t("failedToStartUpload"),
         });
         return;
       }
@@ -85,7 +93,7 @@ export function useHighlightUpload(username: string) {
         cloudinaryResult = await promise;
       } catch (error) {
         // cancel() already removed this item from state -- nothing to patch.
-        if (error instanceof Error && error.message === "Upload cancelled.") {
+        if (isUploadCancelled(error)) {
           return;
         }
         patch(setItems, id, {
@@ -93,7 +101,7 @@ export function useHighlightUpload(username: string) {
           errorMessage:
             error instanceof Error
               ? error.message
-              : "We couldn't upload this highlight. Please try again.",
+              : t("weCouldnTUploadThisHighlight"),
         });
         return;
       } finally {
@@ -132,7 +140,7 @@ export function useHighlightUpload(username: string) {
         if (saveResponse.status !== 200) {
           patch(setItems, id, {
             status: "error",
-            errorMessage: saveResponse.message ?? "Failed to save highlight.",
+            errorMessage: saveResponse.message ?? t("failedToSaveHighlight"),
           });
           return;
         }
@@ -147,11 +155,11 @@ export function useHighlightUpload(username: string) {
           errorMessage:
             error instanceof Error
               ? error.message
-              : "We couldn't save this highlight. Please try again.",
+              : t("weCouldnTSaveThisHighlight"),
         });
       }
     },
-    [queryClient, username],
+    [queryClient, username, t],
   );
 
   const start = useCallback(

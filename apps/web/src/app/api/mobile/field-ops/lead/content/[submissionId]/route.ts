@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { reviewContentCore } from "@abonten/services/fieldOps/lead/contentLeadCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsContentReviewSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // POST /api/mobile/field-ops/lead/content/[submissionId] -- approve or reject
@@ -11,6 +12,7 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ submissionId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

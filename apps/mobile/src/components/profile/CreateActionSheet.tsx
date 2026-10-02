@@ -1,4 +1,5 @@
 import { Sheet, SheetOption } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
@@ -15,6 +16,8 @@ export function CreateActionSheet({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("profile");
+
   const router = useRouter();
 
   const go = (path: string) => {
@@ -23,18 +26,23 @@ export function CreateActionSheet({
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Create" minHeightRatio={0.42}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={t("create")}
+      minHeightRatio={0.42}
+    >
       <View className="gap-3">
         <SheetOption
           icon="calendar-outline"
-          title="Post event"
-          subtitle="Sell tickets or take RSVPs"
+          title={t("postEvent")}
+          subtitle={t("sellTicketsOrTakeRsvps")}
           onPress={() => go("/(app)/event/new")}
         />
         <SheetOption
           icon="storefront-outline"
-          title="Add place"
-          subtitle="List a venue, restaurant or spot"
+          title={t("addPlace")}
+          subtitle={t("listAVenueRestaurantOrSpot")}
           onPress={() => go("/(app)/place/new")}
         />
       </View>

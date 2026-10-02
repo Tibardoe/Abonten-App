@@ -21,6 +21,7 @@ import {
   Stars,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, View } from "react-native";
@@ -32,6 +33,10 @@ function ReviewCard({
   review: ManageEventReview;
   eventId: string;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const reply = useRespondToEventReview(eventId);
   const remove = useDeleteEventReviewResponse(eventId);
@@ -58,8 +63,8 @@ function ReviewCard({
           setText("");
         },
         onError: (e) =>
-          toast.error("Couldn't save reply", {
-            description: e instanceof Error ? e.message : "Please try again.",
+          toast.error(t("couldnTSaveReply"), {
+            description: e instanceof Error ? e.message : t("pleaseTryAgain"),
           }),
       },
     );
@@ -69,8 +74,8 @@ function ReviewCard({
     remove.mutate(review.id, {
       onSuccess: () => setConfirmingDelete(false),
       onError: (e) =>
-        toast.error("Couldn't remove reply", {
-          description: e instanceof Error ? e.message : "Please try again.",
+        toast.error(t("couldnTRemoveReply"), {
+          description: e instanceof Error ? e.message : t("pleaseTryAgain"),
         }),
     });
   }
@@ -85,10 +90,10 @@ function ReviewCard({
         />
         <View className="flex-1">
           <AppText variant="bodyStrong" numberOfLines={1}>
-            {review.reviewer?.username ?? "Attendee"}
+            {review.reviewer?.username ?? t("attendee")}
           </AppText>
           <AppText variant="caption">
-            {getRelativeTime(review.created_at)}
+            {getRelativeTime(review.created_at, undefined, locale)}
           </AppText>
         </View>
         <Stars rating={review.rating} size={14} />
@@ -98,7 +103,7 @@ function ReviewCard({
         <View className="flex-row items-center gap-1">
           <Icon name="checkmark-circle" size={12} tone="success" />
           <AppText variant="caption" tone="success">
-            Verified attendee
+            {t("verifiedAttendee")}
           </AppText>
         </View>
       ) : null}
@@ -120,7 +125,7 @@ function ReviewCard({
           <Input
             value={text}
             onChangeText={setText}
-            placeholder="Write a response…"
+            placeholder={t("writeAResponse")}
             multiline
             numberOfLines={3}
             maxLength={500}
@@ -131,10 +136,10 @@ function ReviewCard({
               <Button
                 title={
                   reply.isPending
-                    ? "Saving…"
+                    ? t("saving")
                     : hasResponse
-                      ? "Save changes"
-                      : "Post response"
+                      ? t("saveChanges")
+                      : t("postResponse")
                 }
                 onPress={submit}
                 loading={reply.isPending}
@@ -144,7 +149,7 @@ function ReviewCard({
             </View>
             <View className="flex-1">
               <Button
-                title="Cancel"
+                title={t("cancel")}
                 variant="outline"
                 onPress={() => {
                   setOpen(false);
@@ -160,27 +165,27 @@ function ReviewCard({
         <View className="gap-2">
           <View className="ml-3 mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
             <AppText variant="label" className="mb-1 text-primary">
-              Your response
+              {t("yourResponse")}
             </AppText>
             <AppText variant="small">{review.organizer_response}</AppText>
           </View>
           {confirmingDelete ? (
             <View className="flex-row items-center gap-3">
-              <AppText variant="caption">Remove this reply?</AppText>
+              <AppText variant="caption">{t("removeThisReply")}</AppText>
               <AppText
                 variant="small"
                 tone="error"
                 className="font-semibold"
                 onPress={remove.isPending ? undefined : confirmDelete}
               >
-                {remove.isPending ? "Removing…" : "Yes, remove"}
+                {remove.isPending ? t("removing") : t("yesRemove")}
               </AppText>
               <AppText
                 variant="small"
                 tone="muted"
                 onPress={() => setConfirmingDelete(false)}
               >
-                Keep
+                {t("keep")}
               </AppText>
             </View>
           ) : (
@@ -191,7 +196,7 @@ function ReviewCard({
                 className="font-semibold"
                 onPress={openEditor}
               >
-                Edit reply
+                {t("editReply")}
               </AppText>
               <AppText
                 variant="small"
@@ -199,7 +204,7 @@ function ReviewCard({
                 className="font-semibold"
                 onPress={() => setConfirmingDelete(true)}
               >
-                Delete reply
+                {t("deleteReply")}
               </AppText>
             </View>
           )}
@@ -211,7 +216,7 @@ function ReviewCard({
           className="mt-1 font-semibold"
           onPress={openEditor}
         >
-          Respond
+          {t("respond")}
         </AppText>
       )}
     </View>
@@ -219,6 +224,8 @@ function ReviewCard({
 }
 
 export default function ManageEventReviewsScreen() {
+  const t = useTranslations("manage");
+
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const id = eventId ?? "";
   const q = useEventReviewsManage(id);
@@ -244,7 +251,7 @@ export default function ManageEventReviewsScreen() {
         ListEmptyComponent={
           view.kind === "empty" ? (
             <AppText variant="muted" className="mt-10 text-center">
-              No reviews yet.
+              {t("noReviewsYet")}
             </AppText>
           ) : (
             <QueryUnavailable

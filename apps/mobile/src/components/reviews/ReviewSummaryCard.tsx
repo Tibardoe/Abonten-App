@@ -1,11 +1,16 @@
+import { formatCount, formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewRatingFilter,
   type ReviewSummary,
-  formatReviewCount,
   ratingShares,
 } from "@abonten/core/reviews/reviewList";
 import { AppText, Stars } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // The overall picture before the individual reviews: the average, how many
@@ -24,6 +29,9 @@ export function ReviewSummaryCard({
   /** When set, tapping a row filters the list to that rating (again clears it). */
   onSelect?: (rating: ReviewRatingFilter) => void;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("reviews");
+
   const shares = ratingShares(summary);
   const average = roundRating(summary.average);
 
@@ -32,13 +40,15 @@ export function ReviewSummaryCard({
       <View className="items-center justify-center" style={{ minWidth: 84 }}>
         <AppText
           className="text-[36px] font-bold leading-[42px]"
-          accessibilityLabel={`Average rating ${average.toFixed(1)} out of 5`}
+          accessibilityLabel={t("averageRatingOutOf5", {
+            toFixed: formatRating(average, getCurrentLocale()),
+          })}
         >
-          {average.toFixed(1)}
+          {formatRating(average, getCurrentLocale())}
         </AppText>
         <Stars rating={summary.average} size={13} />
         <AppText variant="caption" className="mt-1 text-center">
-          {formatReviewCount(summary.total)}
+          {t("reviewsCount", { count: summary.total })}
         </AppText>
       </View>
 
@@ -66,7 +76,7 @@ export function ReviewSummaryCard({
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
-                {summary.counts[star].toLocaleString("en-US")}
+                {formatCount(summary.counts[star], locale)}
               </AppText>
             </View>
           );
@@ -76,11 +86,14 @@ export function ReviewSummaryCard({
               key={star}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
-              accessibilityLabel={`${star} star: ${summary.counts[star]} reviews, ${shares[star]} percent. ${
-                active
-                  ? "Showing only these. Tap to show all."
-                  : "Tap to show only these."
-              }`}
+              accessibilityLabel={t("starReviewsPercent2", {
+                star: star,
+                item: summary.counts[star],
+                item2: shares[star],
+                value: active
+                  ? t("showingOnlyTheseTapToShow")
+                  : t("tapToShowOnlyThese"),
+              })}
               hitSlop={{ top: 4, bottom: 4 }}
               onPress={() => onSelect(active ? null : star)}
               className="rounded active:opacity-60"

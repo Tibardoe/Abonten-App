@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import {
   type CreditActivityRow,
   toCreditActivityItem,
@@ -24,6 +25,7 @@ function row(overrides: Partial<CreditActivityRow>): CreditActivityRow {
 describe("toCreditActivityItem", () => {
   it("shows a pending reward with its unlock date and source", () => {
     const item = toCreditActivityItem(
+      t,
       row({
         journal_type: "reward.accrue",
         lot_kind: "reward",
@@ -45,6 +47,7 @@ describe("toCreditActivityItem", () => {
 
   it("moves the same line to available once the lot is released", () => {
     const item = toCreditActivityItem(
+      t,
       row({
         journal_type: "reward.accrue",
         lot_kind: "reward",
@@ -58,6 +61,7 @@ describe("toCreditActivityItem", () => {
 
   it("marks a voided reward as reversed with an explanation", () => {
     const item = toCreditActivityItem(
+      t,
       row({
         journal_type: "reward.accrue",
         lot_kind: "reward",
@@ -71,12 +75,13 @@ describe("toCreditActivityItem", () => {
 
   it("marks a fully spent grant as completed, not available", () => {
     expect(
-      toCreditActivityItem(row({ lot_status: "exhausted" }), "GHS").state,
+      toCreditActivityItem(t, row({ lot_status: "exhausted" }), "GHS").state,
     ).toBe("completed");
   });
 
   it("describes spending and expiry as negative lines", () => {
     const spent = toCreditActivityItem(
+      t,
       row({
         journal_type: "redeem.capture",
         amount_minor: -300,
@@ -89,6 +94,7 @@ describe("toCreditActivityItem", () => {
     expect(spent.amountMinor).toBe(-300);
 
     const expired = toCreditActivityItem(
+      t,
       row({ journal_type: "expire", amount_minor: -200 }),
       "GHS",
     );
@@ -98,6 +104,7 @@ describe("toCreditActivityItem", () => {
 
   it("ignores unknown source types rather than linking to them", () => {
     const item = toCreditActivityItem(
+      t,
       row({ source_type: "adjustment_request", source_id: "r1" }),
       "GHS",
     );

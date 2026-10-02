@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type AttendanceRow,
   fetchEventAttendanceListPage,
@@ -10,7 +12,7 @@ import type { PaginatedResult } from "@abonten/types/pagination";
 // Thin wrapper: auth, then delegate to the shared query body used by the
 // mobile GET /api/mobile/organizer/events/:id/attendees route too — no
 // logic fork.
-export default async function getAttendanceList(
+export default withActionLocale(async function getAttendanceList(
   eventId: string,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<AttendanceRow>> {
@@ -27,9 +29,9 @@ export default async function getAttendanceList(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "User not logged in",
+      message: tr("userNotLoggedIn"),
     };
   }
 
   return fetchEventAttendanceListPage(supabase, user.id, eventId, options);
-}
+});

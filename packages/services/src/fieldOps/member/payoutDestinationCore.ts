@@ -1,12 +1,13 @@
 import { logger } from "@abonten/core/logger";
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
 import {
-  PHONE_ERROR_MESSAGE,
   dialCodeFor,
   parsePhoneWithDialCode,
+  phoneErrorMessage,
 } from "@abonten/core/phone/phone";
 import type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { coreT, tr } from "../../i18n/requestLocale";
 import { getMarketOrDefault } from "../../markets/marketConfig";
 import { listMobileMoneyNetworksCore } from "../../payments/mobileMoneyNetworksCore";
 import {
@@ -112,7 +113,7 @@ export async function getPayoutDestinationCore(
     )
     .eq("id", membershipId)
     .maybeSingle();
-  if (error) return dbErr(error, "Could not load your payout details");
+  if (error) return dbErr(error, tr("couldNotLoadYourPayoutDetails"));
   return {
     status: 200,
     data: {
@@ -156,19 +157,21 @@ export async function setPayoutDestinationCore(
   const country = await campaignCountry(supabase, regionId);
   const phone = parsePhoneWithDialCode(country.dialCode, input.momoNumber);
   if (!phone.ok) {
-    return { status: 400, message: PHONE_ERROR_MESSAGE[phone.error] };
+    return { status: 400, message: phoneErrorMessage(coreT(), phone.error) };
   }
   if (phone.country && phone.country !== country.countryCode) {
     return {
       status: 400,
-      message: "Use a mobile money number from the campaign's country.",
+      message: tr("useAMobileMoneyNumberFrom"),
     };
   }
   const listedNetwork = matchListedNetwork(country.networks, input.momoNetwork);
   if (country.networks.length > 0 && !listedNetwork) {
     return {
       status: 400,
-      message: `Choose one of: ${country.networks.map((n) => n.name).join(", ")}.`,
+      message: tr("chooseOneOf", {
+        join: country.networks.map((n) => n.name).join(", "),
+      }),
     };
   }
   const networkName = listedNetwork?.name ?? input.momoNetwork.trim();
@@ -186,8 +189,7 @@ export async function setPayoutDestinationCore(
   if ((pending ?? []).length > 0) {
     return {
       status: 409,
-      message:
-        "A payment to your current number is already being prepared. You can change this once it has been sent.",
+      message: tr("aPaymentToYourCurrentNumber"),
     };
   }
 
@@ -204,14 +206,14 @@ export async function setPayoutDestinationCore(
       "payout_momo_number, payout_momo_network, payout_holder_name, payout_updated_at",
     )
     .maybeSingle();
-  if (error) return dbErr(error, "Could not save your payout details");
+  if (error) return dbErr(error, tr("couldNotSaveYourPayoutDetails"));
   logger.info(
     `fieldOps payout destination updated for membership ${membershipId}`,
   );
 
   return {
     status: 200,
-    message: "Saved. Your earnings will be sent to this number.",
+    message: tr("savedYourEarningsWillBeSent"),
     data: {
       numberMasked: data?.payout_momo_number
         ? maskAccountNumber(data.payout_momo_number)

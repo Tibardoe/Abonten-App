@@ -21,6 +21,7 @@ import {
   MixedMarketCheckoutError,
   prepareCheckoutPayment,
 } from "../checkout/checkoutPaymentPreparation";
+import { tr } from "../i18n/requestLocale";
 import {
   type PromotionKind,
   loadPromotionOrder,
@@ -54,7 +55,11 @@ async function orderMarket(
 > {
   if (target.kind === "ticket") {
     if (target.checkoutSessionIds.length === 0) {
-      return { ok: false, status: 400, message: "No checkouts selected" };
+      return {
+        ok: false,
+        status: 400,
+        message: tr("noCheckoutsSelected"),
+      };
     }
     try {
       const prepared = await prepareCheckoutPayment(
@@ -66,7 +71,7 @@ async function orderMarket(
         return {
           ok: false,
           status: 409,
-          message: "These checkouts have expired. Please review your order.",
+          message: tr("theseCheckoutsHaveExpiredPleaseReview"),
         };
       }
       return {
@@ -79,12 +84,15 @@ async function orderMarket(
         return {
           ok: false,
           status: 409,
-          message:
-            "Tickets for events in different countries are paid separately.",
+          message: tr("ticketsForEventsInDifferentCountries"),
         };
       }
       logger.error(`checkoutPaymentOptions: ${String(error)}`);
-      return { ok: false, status: 500, message: "Something went wrong!" };
+      return {
+        ok: false,
+        status: 500,
+        message: tr("somethingWentWrong"),
+      };
     }
   }
   try {
@@ -95,7 +103,11 @@ async function orderMarket(
       target.checkoutId,
     );
     if (!order)
-      return { ok: false, status: 404, message: "Checkout not found" };
+      return {
+        ok: false,
+        status: 404,
+        message: tr("checkoutNotFound"),
+      };
     return {
       ok: true,
       countryCode: order.countryCode,
@@ -103,7 +115,11 @@ async function orderMarket(
     };
   } catch (error) {
     logger.error(`checkoutPaymentOptions: ${String(error)}`);
-    return { ok: false, status: 500, message: "Something went wrong!" };
+    return {
+      ok: false,
+      status: 500,
+      message: tr("somethingWentWrong"),
+    };
   }
 }
 
@@ -126,7 +142,7 @@ export async function getCheckoutPaymentOptionsCore(
     });
   } catch (error) {
     logger.error(`checkoutPaymentOptions: ${String(error)}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const { data: rows, error } = await supabase
@@ -136,7 +152,7 @@ export async function getCheckoutPaymentOptionsCore(
     .eq("status", "active");
   if (error) {
     logger.error(`checkoutPaymentOptions: wallet (${error.message})`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const saved: SavedInstrumentOption[] = [];

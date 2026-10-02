@@ -8,6 +8,7 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 // A drag past either threshold navigates; a slow-but-far drag clears the
@@ -64,6 +65,8 @@ export default function MediaStage({
   onNavigate,
   renderItem,
 }: MediaStageProps) {
+  const t = useTranslations("common");
+
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < mediaItemsLength - 1;
   const prefersReducedMotion = useReducedMotion();
@@ -91,7 +94,7 @@ export default function MediaStage({
     <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
       <button
         type="button"
-        aria-label="Previous media"
+        aria-label={t("previousMedia")}
         onClick={() => onNavigate(-1)}
         disabled={!canGoPrev}
         className={`hidden md:flex absolute h-24 my-auto inset-y-0 left-0 items-center justify-start pl-4 z-20 p-2 rounded-full bg-black bg-opacity-50 text-white ${
@@ -132,7 +135,7 @@ export default function MediaStage({
 
       <button
         type="button"
-        aria-label="Next media"
+        aria-label={t("nextMedia")}
         onClick={() => onNavigate(1)}
         disabled={!canGoNext}
         className={`hidden md:flex absolute h-24 my-auto inset-y-0 right-0 items-center justify-end pr-4 z-20 p-2 rounded-full bg-black bg-opacity-50 text-white ${

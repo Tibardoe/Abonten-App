@@ -1,10 +1,12 @@
 import MaskIcon from "@/components/atoms/MaskIcon";
+import { useTranslations } from "next-intl";
 
 type PaymentOptionCardProp = {
   imgUrl: string;
   optionTitle: string;
   optionDetails: string;
-  handleStep: (title: string) => void;
+  /** Called when this option is chosen. */
+  handleStep: () => void;
 };
 
 export default function PaymentOptionCard({
@@ -13,13 +15,15 @@ export default function PaymentOptionCard({
   optionDetails,
   handleStep,
 }: PaymentOptionCardProp) {
+  const t = useTranslations("wallet");
+
   return (
     <button
       type="button"
-      onClick={() => handleStep(optionTitle)}
+      onClick={handleStep}
       className="rounded-lg flex gap-3 border border-border w-full p-3"
     >
-      <MaskIcon src={imgUrl} alt="option icon" className="w-10 h-10" />
+      <MaskIcon src={imgUrl} alt={t("optionIcon")} className="w-10 h-10" />
 
       <div className="flex flex-col items-start">
         <h2 className="font-bold">{optionTitle}</h2>

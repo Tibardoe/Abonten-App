@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { getUserPendingTicketCheckoutsCore } from "@abonten/services/checkout/getUserPendingTicketCheckoutsCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // GET /api/mobile/checkout/pending
 //
@@ -9,6 +13,7 @@ import { getUserPendingTicketCheckoutsCore } from "@abonten/services/checkout/ge
 // all of their events — the "resume checkout" basket. Self-heals stale
 // rows first, same as the web getUserPendingTicketCheckouts action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -25,6 +30,9 @@ export async function GET(req: Request) {
     return apiJson({ status: result.status, message: result.message });
   } catch (error) {
     logger.error("mobile GET /checkout/pending failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -24,6 +24,7 @@ import {
   useModalHandoff,
   useToast,
 } from "@abonten/ui-native";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Fragment, useState } from "react";
@@ -72,6 +73,8 @@ export function ContentOptionsSheet({
   playbackSpeed?: SpotlightSpeed;
   onPlaybackSpeed?: (speed: SpotlightSpeed) => void;
 }) {
+  const t = useTranslations("spotlight");
+
   const { session } = useSession();
   const { program } = useContentProgram();
   const router = useRouter();
@@ -79,7 +82,7 @@ export function ContentOptionsSheet({
   const invalidate = useInvalidateContent();
   const handoff = useModalHandoff();
   const [reportOpen, setReportOpen] = useState(false);
-  const noun = post.kind === "story" ? "Story" : "Spotlight";
+  const noun = post.kind === "story" ? t("story") : t("spotlight");
   const isAuthor = post.viewer.isAuthor;
   const canDownload =
     post.kind === "spotlight" &&
@@ -101,18 +104,18 @@ export function ContentOptionsSheet({
   };
 
   const confirmDelete = () =>
-    Alert.alert(`Delete this ${noun}?`, "It disappears for everyone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteThis", { noun: noun }), t("itDisappearsForEveryone"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("deleteText2"),
         style: "destructive",
         onPress: async () => {
           const res = await api.content.deletePost(post.id);
           if (res.status !== 200) {
-            toast.error(res.message ?? `Couldn't delete this ${noun}.`);
+            toast.error(res.message ?? t("couldnTDeleteThis", { noun: noun }));
             return;
           }
-          toast.success(`${noun} deleted`);
+          toast.success(t("deleted3", { noun: noun }));
           invalidate();
           onDeleted?.();
         },
@@ -124,7 +127,7 @@ export function ContentOptionsSheet({
     tiles.push({
       key: "save",
       icon: saved ? "bookmark" : "bookmark-outline",
-      title: saved ? "Saved" : "Save",
+      title: saved ? t("saved2") : t("save"),
       onPress: () => then(onToggleSave),
     });
   }
@@ -132,31 +135,31 @@ export function ContentOptionsSheet({
     tiles.push({
       key: "share",
       icon: "paper-plane-outline",
-      title: "Share",
+      title: t("share"),
       onPress: () => then(onShare),
     });
   }
   tiles.push({
     key: "copy",
     icon: "link-outline",
-    title: "Copy link",
+    title: t("copyLink"),
     onPress: () =>
       then(async () => {
         const ok = await copyText(contentShareUrl(post.kind, post.id));
-        if (ok) toast.success("Link copied");
-        else toast.error("Couldn't copy the link");
+        if (ok) toast.success(t("linkCopied2"));
+        else toast.error(t("couldnTCopyTheLink2"));
       }),
   });
   if (canDownload) {
     tiles.push({
       key: "download",
       icon: "download-outline",
-      title: "Download",
+      title: t("download"),
       onPress: () =>
         then(async () => {
           const res = await api.content.download(post.id);
           if (res.status !== 200 || !res.data) {
-            toast.error(res.message ?? "This can't be downloaded.");
+            toast.error(res.message ?? t("thisCanTBeDownloaded"));
             return;
           }
           await Linking.openURL(res.data.url);
@@ -169,8 +172,8 @@ export function ContentOptionsSheet({
         {
           key: "insights",
           icon: "stats-chart-outline",
-          title: "Insights & manage",
-          subtitle: "Views, watch time, edits",
+          title: t("insightsManage"),
+          subtitle: t("viewsWatchTimeEdits"),
           onPress: () =>
             then(() => router.push(`/(app)/spotlight/post/${post.id}`)),
         },
@@ -179,8 +182,8 @@ export function ContentOptionsSheet({
               {
                 key: "promote",
                 icon: "megaphone-outline" as const,
-                title: "Promote",
-                subtitle: "Reach more people nearby",
+                title: t("promote"),
+                subtitle: t("reachMorePeopleNearby"),
                 onPress: () =>
                   then(() =>
                     router.push(`/(app)/spotlight/promote/${post.id}`),
@@ -196,8 +199,8 @@ export function ContentOptionsSheet({
     general.push({
       key: "not-interested",
       icon: "eye-off-outline",
-      title: "Not interested",
-      subtitle: "See fewer posts like this",
+      title: t("notInterested"),
+      subtitle: t("seeFewerPostsLikeThis"),
       onPress: () => then(onNotInterested),
     });
   }
@@ -207,7 +210,7 @@ export function ContentOptionsSheet({
     destructive.push({
       key: "report",
       icon: "flag-outline",
-      title: `Report ${noun}`,
+      title: t("report", { noun: noun }),
       destructive: true,
       onPress: () => then(() => setReportOpen(true)),
     });
@@ -216,7 +219,7 @@ export function ContentOptionsSheet({
     destructive.push({
       key: "delete",
       icon: "trash-outline",
-      title: `Delete ${noun}`,
+      title: t("deleteText", { noun: noun }),
       destructive: true,
       onPress: () => then(confirmDelete),
     });
@@ -244,7 +247,10 @@ export function ContentOptionsSheet({
             </View>
             <View className="flex-1">
               <AppText variant="bodyStrong" numberOfLines={1}>
-                {noun} by {publisherLabel(post.publisher)}
+                {t("by", {
+                  noun: noun,
+                  publisherLabel: publisherLabel(post.publisher),
+                })}
               </AppText>
               {post.caption ? (
                 <AppText variant="meta" numberOfLines={1}>
@@ -284,12 +290,12 @@ export function ContentOptionsSheet({
             <View className="gap-2">
               <View className="flex-row items-center gap-2 px-1">
                 <Icon name="speedometer-outline" size={18} tone="foreground" />
-                <AppText variant="bodyStrong">Playback speed</AppText>
+                <AppText variant="bodyStrong">{t("playbackSpeed")}</AppText>
               </View>
               <View
                 className="flex-row gap-1.5"
                 accessibilityRole="radiogroup"
-                accessibilityLabel="Playback speed"
+                accessibilityLabel={t("playbackSpeed")}
               >
                 {SPOTLIGHT_SPEEDS.map((rate) => {
                   const selected = rate === playbackSpeed;
@@ -299,7 +305,9 @@ export function ContentOptionsSheet({
                       onPress={() => then(() => onPlaybackSpeed(rate))}
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
-                      accessibilityLabel={`${formatSpeed(rate)} speed`}
+                      accessibilityLabel={t("speed", {
+                        formatSpeed: formatSpeed(rate, getCurrentLocale()),
+                      })}
                       className={[
                         "min-h-[40px] flex-1 items-center justify-center rounded-xl border",
                         selected
@@ -314,14 +322,16 @@ export function ContentOptionsSheet({
                           selected ? "text-primary-foreground" : "",
                         ].join(" ")}
                       >
-                        {rate === 1 ? "Normal" : formatSpeed(rate)}
+                        {rate === 1
+                          ? t("normal")
+                          : formatSpeed(rate, getCurrentLocale())}
                       </AppText>
                     </Pressable>
                   );
                 })}
               </View>
               <AppText variant="meta" className="px-1">
-                Tip: press and hold the video to play at 2× for a moment.
+                {t("tipPressAndHoldTheVideo")}
               </AppText>
             </View>
           ) : null}

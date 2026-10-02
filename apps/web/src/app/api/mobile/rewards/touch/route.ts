@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { recordReferralTouchCore } from "@abonten/services/rewards/referralCore";
 
 // POST /api/mobile/rewards/touch
@@ -12,6 +16,7 @@ import { recordReferralTouchCore } from "@abonten/services/rewards/referralCore"
 // Always answers 202 -- it's fire-and-forget and reveals nothing about the
 // code.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   let visitorUserId: string | null = null;
   if (req.headers.get("authorization")) {
     const auth = await getMobileAuth(req);
@@ -27,7 +32,7 @@ export async function POST(req: Request) {
       source?: unknown;
     } | null;
     if (typeof body?.code !== "string") {
-      return apiJson({ status: 400, message: "code is required" });
+      return apiJson({ status: 400, message: tr("codeIsRequired") });
     }
 
     const platform =

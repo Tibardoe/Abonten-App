@@ -10,6 +10,7 @@
 // crash, so a missing or unknown code shows the bare amount (with the code,
 // when there is one) instead of throwing.
 
+import { formatDecimal } from "./i18n/format";
 import { isKnownCurrency } from "./money/currencies";
 import { formatMajor } from "./money/formatMoney";
 
@@ -17,12 +18,12 @@ import { formatMajor } from "./money/formatMoney";
 export function formatMoney(
   currency: string | null | undefined,
   amount: number | string | null | undefined,
-  options: { trimZeroFraction?: boolean; locale?: string } = {},
+  options: { trimZeroFraction?: boolean; locale?: string | null } = {},
 ): string {
   if (!currency || !isKnownCurrency(currency)) {
-    const num = typeof amount === "string" ? Number(amount) : (amount ?? 0);
-    const safe = Number.isFinite(num) ? num : 0;
-    return `${currency ? `${currency} ` : ""}${safe.toFixed(2)}`;
+    // Still the reader's decimal mark: "0,00" in French, not "0.00".
+    const bare = formatDecimal(amount, options.locale, 2);
+    return `${currency ? `${currency} ` : ""}${bare}`;
   }
   return formatMajor(amount, currency, options);
 }

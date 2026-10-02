@@ -1,5 +1,6 @@
 import { markStaleTokenUsed, readStoredSession } from "@/auth/storedSession";
 import { createApiClient } from "@abonten/api-client";
+import { getCurrentLocale } from "@abonten/ui-native/i18n";
 import { Platform } from "react-native";
 import { getInstallId } from "./installId";
 import { handleAuthExpiry } from "./queryClient";
@@ -66,6 +67,8 @@ export const api = createApiClient({
   // Sample ~10% of calls into app_request_metric (Admin › Monitoring ›
   // Request telemetry). Off in dev so local traffic doesn't skew it.
   metricSampleRate: __DEV__ ? 0 : 0.1,
+  // The server words its messages in the language the app is showing.
+  getLocale: getCurrentLocale,
   // Rewards fraud signal only (see installId.ts).
   getInstallId,
   platform: Platform.OS === "ios" ? "ios" : "android",

@@ -2,7 +2,9 @@
 
 import { setFieldOpsPayoutDestination } from "@/actions/fieldOps/setFieldOpsPayoutDestination";
 import { Button } from "@/components/ui/button";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 const field =
@@ -20,6 +22,8 @@ export default function PayoutDestinationForm({
   campaignId: string;
   current: FieldOpsPayoutDestination | null;
 }) {
+  const t = useTranslations("fieldOps");
+
   const [pending, start] = useTransition();
   const [editing, setEditing] = useState(!current?.numberMasked);
   const [saved, setSaved] = useState(current);
@@ -39,7 +43,7 @@ export default function PayoutDestinationForm({
         momoNumber: number.trim(),
         momoNetwork: network,
         holderName: holder.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200 && res.data) {
         setSaved(res.data);
@@ -51,7 +55,7 @@ export default function PayoutDestinationForm({
   if (!editing && saved?.numberMasked) {
     return (
       <div className="rounded-xl border p-4">
-        <h3 className="font-medium">Where you get paid</h3>
+        <h3 className="font-medium">{t("whereYouGetPaid")}</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           {saved.network ?? "MoMo"} · {saved.numberMasked}
           {saved.holderName ? ` · ${saved.holderName}` : ""}
@@ -61,7 +65,7 @@ export default function PayoutDestinationForm({
           className="mt-3"
           onClick={() => setEditing(true)}
         >
-          Change
+          {t("change")}
         </Button>
         {msg ? (
           <p className="mt-2 text-sm text-muted-foreground">{msg}</p>
@@ -72,15 +76,14 @@ export default function PayoutDestinationForm({
 
   return (
     <div className="rounded-xl border p-4">
-      <h3 className="font-medium">Where you get paid</h3>
+      <h3 className="font-medium">{t("whereYouGetPaid")}</h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        Your earnings are sent to this mobile money number. Make sure the name
-        matches the account, or the transfer will fail.
+        {t("yourEarningsAreSentToThis")}
       </p>
       <div className="mt-3 flex flex-col gap-3">
         <div className="flex flex-col gap-1">
           <label htmlFor="payout-network" className="text-sm font-medium">
-            Network
+            {t("network")}
           </label>
           {networks.length > 0 ? (
             <select
@@ -101,28 +104,28 @@ export default function PayoutDestinationForm({
               className={field}
               value={network}
               onChange={(e) => setNetwork(e.target.value)}
-              placeholder="Your mobile money network"
+              placeholder={t("yourMobileMoneyNetwork")}
             />
           )}
         </div>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Mobile money number</span>
+          <span className="text-sm font-medium">{t("mobileMoneyNumber")}</span>
           <input
             className={field}
             inputMode="tel"
             autoComplete="tel"
-            placeholder="Your mobile money number"
+            placeholder={t("yourMobileMoneyNumber")}
             value={number}
             onChange={(e) => setNumber(e.target.value.replace(/[^\d+ ]/g, ""))}
             maxLength={20}
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Name on the account</span>
+          <span className="text-sm font-medium">{t("nameOnTheAccount")}</span>
           <input
             className={field}
             autoComplete="name"
-            placeholder="As it appears on the account"
+            placeholder={t("asItAppearsOnTheAccount")}
             value={holder}
             onChange={(e) => setHolder(e.target.value)}
           />
@@ -137,11 +140,11 @@ export default function PayoutDestinationForm({
               holder.trim().length < 2
             }
           >
-            Save
+            {t("save")}
           </Button>
           {saved?.numberMasked ? (
             <Button variant="outline" onClick={() => setEditing(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
           ) : null}
         </div>

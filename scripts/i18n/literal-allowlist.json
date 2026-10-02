@@ -1,0 +1,381 @@
+{
+  "notes": {
+    "Compiled": "Verb of the brand sign-off (@abonten/core/brand/signOff): fixed English brand wording, like the logo.",
+    "Abonten": "The product name.",
+    "Instagram": "Brand name.",
+    "Facebook": "Brand name.",
+    "%s | Abonten Hub": "Next.js title template: the page title followed by the brand.",
+    "{} | Abonten Hub": "The page title followed by the brand.",
+    "field ops context resolved": "A Sentry breadcrumb for engineers, never shown to a person.",
+    "'Courier New', Courier, monospace": "A CSS font stack.",
+    "not found": "Cloudinary's own result code for a missing asset, compared against.",
+    "Helvetica": "A PDF font name (the ticket receipt fallback font).",
+    "Abonten Hub": "The product name."
+  },
+  "texts": [
+    "Compiled",
+    "Abonten",
+    "Instagram",
+    "Facebook",
+    "%s | Abonten Hub",
+    "{} | Abonten Hub",
+    "field ops context resolved",
+    "'Courier New', Courier, monospace",
+    "not found",
+    "Helvetica",
+    "Abonten Hub"
+  ],
+  "files": [],
+  "entries": [
+    {
+      "file": "apps/mobile/src/features/discovery/ExploreLocationProvider.tsx",
+      "text": "Accra",
+      "reason": "The default market's first city: a place name, shown as stored."
+    },
+    {
+      "file": "apps/mobile/src/features/discovery/ExploreLocationProvider.tsx",
+      "text": "Your location",
+      "reason": "A stored sentinel (older installs persisted it); displayAreaLabel() shows the translated words."
+    },
+    {
+      "file": "apps/mobile/src/features/discovery/ExploreLocationProvider.tsx",
+      "text": "Selected location",
+      "reason": "A stored sentinel; displayAreaLabel() shows the translated words."
+    },
+    {
+      "file": "apps/mobile/src/lib/queryErrors.ts",
+      "text": "{} not found",
+      "reason": "An Error message for logs only; screens show their own not-found state."
+    },
+    {
+      "file": "packages/services/src/payments/webhookCore.ts",
+      "text": "Server error",
+      "reason": "A webhook's answer to the payment provider, never shown to a person."
+    },
+    {
+      "file": "apps/web/src/app/api/paystack/webhook/route.ts",
+      "text": "Server error",
+      "reason": "A webhook's answer to the payment provider, never shown to a person."
+    },
+    {
+      "file": "apps/web/src/app/api/payments/webhook/[provider]/[country]/route.ts",
+      "text": "Server error",
+      "reason": "A webhook's answer to the payment provider, never shown to a person."
+    },
+    {
+      "file": "packages/services/src/payments/webhookCore.ts",
+      "text": "Unknown provider",
+      "reason": "An answer to the payment provider's webhook call, read by the provider."
+    },
+    {
+      "file": "packages/services/src/payments/webhookCore.ts",
+      "text": "Webhook not configured",
+      "reason": "An answer to the payment provider's webhook call, read by the provider."
+    },
+    {
+      "file": "packages/services/src/payments/chargeInit.ts",
+      "text": "Replaced: the order changed after payment started",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/chargeInit.ts",
+      "text": "Payment could not be started",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/createMultiCheckoutPaymentAttemptCore.ts",
+      "text": "Credit could not be reserved",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/createMultiCheckoutPaymentAttemptCore.ts",
+      "text": "Payment could not be started",
+      "reason": "The reason an attempt was closed, stored on the row for staff (Admin › Finance); the payer is told through the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/finalizePayment.ts",
+      "text": "charge completed after the attempt was {}",
+      "reason": "The detail of an orphan capture record, read by staff."
+    },
+    {
+      "file": "packages/services/src/payments/finalizePayment.ts",
+      "text": "finalizePayment: verification mismatch for attempt {} (status={}, amount={} {} vs {} {})",
+      "reason": "The body of a reconciliation incident, read by staff."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "live keys are not allowed on a {} deployment",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "secret key is not a recognised test or live key",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "secret key is {} but PAYMENTS_MODE is {}",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "public key is not a recognised test or live key",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "webhook secret is not a recognised test or live key",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} is not a {} {} variable.",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} belongs to the default market's account; use one named for {}.",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} must hold the same value as {} (Paystack signs webhooks with the secret key)",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/fx/exchangeRateCore.ts",
+      "text": "{} is not set",
+      "reason": "A configuration problem reported to staff (readiness report, logs, incident), never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/paystackApi.ts",
+      "text": "Paystack charge failed",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/payments/providers/paystackApi.ts",
+      "text": "Paystack mobile money charge failed",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/profile/phoneAuthCore.ts",
+      "text": "Unknown error creating user",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/profile/phoneAuthCore.ts",
+      "text": "Existing user not found after conflict",
+      "reason": "The message of an error thrown for the caller's catch block and the log; the person gets the translated envelope."
+    },
+    {
+      "file": "packages/services/src/profile/otpProviders/hubtelOtpProvider.ts",
+      "text": "no readable body",
+      "reason": "A log detail about the provider's answer."
+    },
+    {
+      "file": "packages/services/src/profile/otpSendMonitoring.ts",
+      "text": "{} OTP send failed ({})",
+      "reason": "The title of a monitoring incident, read by staff."
+    },
+    {
+      "file": "packages/services/src/payments/providers/paystackProvider.ts",
+      "text": "côte d'ivoire",
+      "reason": "A country name as Paystack spells it, matched against its bank list."
+    },
+    {
+      "file": "apps/web/src/lib/email/sendEmail.ts",
+      "text": "Resend email send",
+      "reason": "The name of a tracing span."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Card",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Mobile Money",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Bank transfer",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Pay by bank",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Apple Pay",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Google Pay",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "QR code",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Instant EFT",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/market/types.ts",
+      "text": "Wallet",
+      "reason": "The English name the admin console and logs use; the apps word it through paymentMethodLabel()."
+    },
+    {
+      "file": "packages/core/src/messagingInboxCache.ts",
+      "text": "[Voice message]",
+      "reason": "The stand-in send_message stores in the shared row; conversationPreviewText() words it for the reader."
+    },
+    {
+      "file": "packages/core/src/notifications/notices.ts",
+      "text": "has{}{}",
+      "reason": "The name of a derived ICU argument (hasPlace), not words."
+    },
+    {
+      "file": "packages/core/src/distanceAndRating.ts",
+      "text": "Up to {}km",
+      "reason": "A filter value as it is written in the URL (?distance=, ?rating=); distanceFilterOptions() and ratingFilterOptions() give the words."
+    },
+    {
+      "file": "packages/core/src/distanceAndRating.ts",
+      "text": "From {}",
+      "reason": "A filter value as it is written in the URL (?distance=, ?rating=); distanceFilterOptions() and ratingFilterOptions() give the words."
+    },
+    {
+      "file": "packages/core/src/userFacingError.ts",
+      "text": "Something went wrong. Please try again.",
+      "reason": "The generic sentence; the response edge (translateServerText) and the apps translate it by its catalog key."
+    },
+    {
+      "file": "packages/api-client/src/client.ts",
+      "text": "Request to {} timed out after {}ms",
+      "reason": "The message of a transport error, logged and reported; screens show their own translated \"couldn't load\" text."
+    },
+    {
+      "file": "packages/api-client/src/client.ts",
+      "text": "Request to {} failed",
+      "reason": "The message of a transport error, logged and reported; screens show their own translated \"couldn't load\" text."
+    },
+    {
+      "file": "packages/api-client/src/client.ts",
+      "text": "Response from {} was not JSON (HTTP {})",
+      "reason": "The message of a transport error, logged and reported; screens show their own translated \"couldn't load\" text."
+    },
+    {
+      "file": "packages/services/src/payments/finalizePayment.ts",
+      "text": "{} failed",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/keyMode.ts",
+      "text": "keys mix test and live ({})",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "{} is named for another market ({}).",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "packages/services/src/payments/providers/registry.ts",
+      "text": "missing {}",
+      "reason": "A configuration problem or failure reason reported to staff, never to a customer."
+    },
+    {
+      "file": "apps/web/src/events/ticketMode.ts",
+      "text": "Free",
+      "reason": "A ticket-mode code kept in state and sent to postEvent; TicketType words it through the catalog."
+    },
+    {
+      "file": "apps/web/src/events/ticketMode.ts",
+      "text": "Single Ticket Type",
+      "reason": "A ticket-mode code kept in state and sent to postEvent; TicketType words it through the catalog."
+    },
+    {
+      "file": "apps/web/src/events/ticketMode.ts",
+      "text": "Multiple Ticket Types",
+      "reason": "A ticket-mode code kept in state and sent to postEvent; TicketType words it through the catalog."
+    },
+    {
+      "file": "apps/web/src/components/molecules/ReceivingAccountForms.tsx",
+      "text": "Mobile Money",
+      "reason": "The chosen option's code; the button shows the translated label."
+    },
+    {
+      "file": "apps/web/src/components/molecules/ReceivingAccountForms.tsx",
+      "text": "Bank",
+      "reason": "The chosen option's code; the button shows the translated label."
+    },
+    {
+      "file": "packages/core/src/reportError.ts",
+      "text": "Error",
+      "reason": "The fallback error type name in an error report for engineers."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "For customers",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "For organizers",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "For place owners",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "apps/web/src/utils/publicContent.ts",
+      "text": "Account, privacy and safety",
+      "reason": "A help-centre section title: the help articles are English Markdown (docs/INDEX.md), their section titles with them."
+    },
+    {
+      "file": "packages/services/src/profile/otpProviders/hubtelOtpProvider.ts",
+      "text": "Hubtel SMS send did not complete: {}",
+      "reason": "A log line and the failure detail stored for staff."
+    },
+    {
+      "file": "packages/services/src/profile/otpProviders/twilioVerifyProvider.ts",
+      "text": "Twilio Verify send did not complete: {}",
+      "reason": "A log line and the failure detail stored for staff."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Owner code sent",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Owner verified their phone",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Claim filed for {}",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Event listed for {}",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
+      "text": "Started",
+      "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    }
+  ]
+}

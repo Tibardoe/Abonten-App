@@ -8,6 +8,7 @@ import type {
   EventTicketTypeAnalyticsRow,
 } from "@abonten/types/eventAnalytics";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth query bodies for a single event's Insights surface (the
 // Details/Promotion/Insights management page's Insights tab). Shared by the
@@ -93,9 +94,12 @@ export type EventInsightsResult =
 
 const NOT_AUTHORIZED: Unauthorized = {
   status: 403,
-  message: "Not authorized to view this event",
+  message: tr("notAuthorizedToViewThisEvent"),
 };
-const FAILED: Failed = { status: 500, message: "Something went wrong!" };
+const FAILED: Failed = {
+  status: 500,
+  message: tr("somethingWentWrong"),
+};
 
 async function ownsEvent(
   supabase: SupabaseClient<Database>,

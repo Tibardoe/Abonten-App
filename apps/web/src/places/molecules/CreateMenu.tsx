@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslations } from "next-intl";
 import { GiPartyFlags } from "react-icons/gi";
 import { IoCreateOutline, IoStorefrontOutline } from "react-icons/io5";
 
@@ -34,6 +35,8 @@ export default function CreateMenu({
   triggerClassName,
   iconClassName = "text-2xl",
 }: CreateMenuProps) {
+  const t = useTranslations("places");
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,12 +52,12 @@ export default function CreateMenu({
       <DropdownMenuContent align="start" className="w-44">
         <DropdownMenuItem className="gap-2" onSelect={onSelectEvent}>
           <GiPartyFlags className="text-lg" />
-          Event
+          {t("event")}
         </DropdownMenuItem>
 
         <DropdownMenuItem className="gap-2" onSelect={onSelectPlace}>
           <IoStorefrontOutline className="text-lg" />
-          Place
+          {t("place")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

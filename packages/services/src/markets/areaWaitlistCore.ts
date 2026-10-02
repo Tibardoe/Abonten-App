@@ -23,6 +23,7 @@ import {
 import type { MarketConfig } from "@abonten/core/market/types";
 import type { AreaWaitlistStatus } from "@abonten/types/marketType";
 import { resolveLocation } from "../geo/locationResolution";
+import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getDefaultMarket, listOpenMarkets } from "./marketConfig";
@@ -158,7 +159,7 @@ export async function getAreaWaitlistStatusCore(
   input: { lat?: unknown; lng?: unknown },
 ): Promise<Envelope<AreaWaitlistStatus>> {
   const point = validPoint(input);
-  if (!point) return { status: 400, message: "Choose an area first." };
+  if (!point) return { status: 400, message: tr("chooseAnAreaFirst") };
   try {
     const rows = await rowsForArea(userId, point);
     return {
@@ -167,7 +168,7 @@ export async function getAreaWaitlistStatusCore(
     };
   } catch (error) {
     logger.error("getAreaWaitlistStatusCore failed", error);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 }
 
@@ -181,21 +182,21 @@ export async function joinAreaWaitlistCore(
   },
 ): Promise<Envelope<AreaWaitlistStatus>> {
   const point = validPoint(input);
-  if (!point) return { status: 400, message: "Choose an area first." };
+  if (!point) return { status: 400, message: tr("chooseAnAreaFirst") };
   try {
     if (
       !(await checkRateLimit(`area-waitlist:${userId}`, JOINS_PER_MINUTE, 60))
     )
       return {
         status: 429,
-        message: "Too many requests. Try again in a minute.",
+        message: tr("tooManyRequestsTryAgainIn"),
       };
 
     const coverage = await getAreaCoverageCore(point);
     if (coverage.kind === "open")
       return {
         status: 409,
-        message: "Abonten is already open here — have a look around.",
+        message: tr("abontenIsAlreadyOpenHereHave"),
       };
 
     const [existing, markets] = await Promise.all([
@@ -212,11 +213,13 @@ export async function joinAreaWaitlistCore(
       return { status: 200, data: { waiting: true, areaName: already.label } };
     const coarse = coarsePoint(point);
     const areaName =
-      coverage.region?.name ?? cleanLabel(input.label) ?? "Unnamed area";
+      coverage.region?.name ?? cleanLabel(input.label) ?? tr("unnamedArea");
     if (existing.length >= MAX_WAITING_AREAS)
       return {
         status: 400,
-        message: `You're already waiting for ${MAX_WAITING_AREAS} areas. Leave one to add another.`,
+        message: tr("youReAlreadyWaitingForAreas", {
+          MAX_WAITING_AREAS: MAX_WAITING_AREAS,
+        }),
       };
 
     const { error } = await getSupabaseServiceClient()
@@ -240,12 +243,12 @@ export async function joinAreaWaitlistCore(
       );
     if (error) {
       logger.error(`joinAreaWaitlistCore: insert failed (${error.message})`);
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
     return { status: 200, data: { waiting: true, areaName } };
   } catch (error) {
     logger.error("joinAreaWaitlistCore failed", error);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 }
 
@@ -254,7 +257,7 @@ export async function leaveAreaWaitlistCore(
   input: { lat?: unknown; lng?: unknown },
 ): Promise<Envelope<AreaWaitlistStatus>> {
   const point = validPoint(input);
-  if (!point) return { status: 400, message: "Choose an area first." };
+  if (!point) return { status: 400, message: tr("chooseAnAreaFirst") };
   try {
     const rows = await rowsForArea(userId, point);
     if (rows.length > 0) {
@@ -268,12 +271,12 @@ export async function leaveAreaWaitlistCore(
         );
       if (error) {
         logger.error(`leaveAreaWaitlistCore: delete failed (${error.message})`);
-        return { status: 500, message: "Something went wrong!" };
+        return { status: 500, message: tr("somethingWentWrong") };
       }
     }
     return { status: 200, data: { waiting: false, areaName: null } };
   } catch (error) {
     logger.error("leaveAreaWaitlistCore failed", error);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 }

@@ -1,10 +1,62 @@
 import { logger } from "@abonten/core/logger";
 import { notificationCategory } from "@abonten/core/notifications/categories";
+import { type Notice, renderNotice } from "@abonten/core/notifications/notices";
+import type { I18nLocale, ServerTranslator } from "@abonten/i18n/server";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { Database } from "@abonten/types/database.types";
-import type { CreateNotificationInput } from "@abonten/types/notificationType";
+import type {
+  CreateNotificationInput,
+  NotificationData,
+} from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreTFor, tr, trFor } from "../i18n/requestLocale";
+import { userLocale } from "../i18n/userLocale";
 import { sendPushToUser } from "./sendPushNotification";
+
+/** What a notice's wording is written with: the RECIPIENT's language. */
+export type NotificationWords = {
+  locale: I18nLocale;
+  /** The `server` namespace (notifications.* live there). */
+  t: ServerTranslator;
+  /** The `core` namespace, for @abonten/core's copy helpers. */
+  core: ServerTranslator;
+};
+
+export type NotificationText = { title: string; body?: string | null };
+
+/**
+ * A notice whose words are produced for the person who receives it. Every
+ * notice the product writes itself uses this; the plain `title`/`body` form
+ * of CreateNotificationInput is only for text a person typed (an admin
+ * broadcast, a message preview).
+ */
+export type LocalizedNotificationInput = Omit<
+  CreateNotificationInput,
+  "title" | "body"
+> & {
+  text: (words: NotificationWords) => NotificationText;
+};
+
+/**
+ * A notice from the registry (@abonten/core/notifications/notices): the
+ * row stores `data.notice = { id, params }` beside the words, so the push
+ * and the row are written in the recipient's language now and the inbox
+ * re-words it in whatever language they read it in later.
+ */
+export type NoticeNotificationInput = Omit<
+  CreateNotificationInput,
+  "title" | "body"
+> & {
+  notice: Notice;
+};
+
+/** The translators for one recipient (one lookup of their language). */
+export async function notificationWordsFor(
+  userId: string,
+): Promise<NotificationWords> {
+  const locale = await userLocale(userId);
+  return { locale, t: trFor(locale), core: coreTFor(locale) };
+}
 
 /**
  * Writes one notification row for `input.userId` and fires a best-effort
@@ -23,8 +75,33 @@ import { sendPushToUser } from "./sendPushNotification";
  */
 export async function createNotificationCore(
   supabase: SupabaseClient<Database>,
-  input: CreateNotificationInput,
+  request:
+    | CreateNotificationInput
+    | LocalizedNotificationInput
+    | NoticeNotificationInput,
 ): Promise<{ status: number; message?: string }> {
+  let input: CreateNotificationInput;
+  if ("notice" in request) {
+    const { notice, ...rest } = request;
+    const words = await notificationWordsFor(request.userId);
+    const rendered = renderNotice(
+      { t: words.core, locale: words.locale },
+      notice,
+    );
+    input = {
+      ...rest,
+      title: rendered?.title ?? "",
+      body: rendered?.body ?? null,
+      data: { ...(rest.data ?? {}), notice } as NotificationData,
+    };
+  } else if ("text" in request) {
+    const { text, ...rest } = request;
+    const words = text(await notificationWordsFor(request.userId));
+    input = { ...rest, title: words.title, body: words.body ?? null };
+  } else {
+    input = request;
+  }
+
   let db: SupabaseClient<Database>;
   try {
     db = getSupabaseServiceClient();
@@ -52,7 +129,7 @@ export async function createNotificationCore(
 
   if (error) {
     logger.error(`Failed creating notification: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // Social notices (messages, reviews, booking updates) respect the

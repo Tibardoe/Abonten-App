@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { fetchConversationsPage } from "@abonten/services/messaging/conversationsQuery";
 import {
   conversationFilterSchema,
@@ -12,6 +16,7 @@ import {
 // The signed-in user's inbox, newest activity first, with per-conversation
 // unread counts. Same body as the getConversations Server Action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -55,6 +60,9 @@ export async function GET(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /messages failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

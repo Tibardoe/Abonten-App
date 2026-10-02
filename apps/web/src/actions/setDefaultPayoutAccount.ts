@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type MutatePayoutAccountResult,
   setDefaultPayoutAccountCore,
 } from "@abonten/services/organizer/payoutAccountCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Marks one payout account as the organizer's default, unsetting any
@@ -13,7 +15,7 @@ import { revalidatePath } from "next/cache";
  * setDefaultPaymentMethod.ts, safe under the payout_account_one_default_per_organizer
  * partial unique index.
  */
-export default async function setDefaultPayoutAccount(
+export default withActionLocale(async function setDefaultPayoutAccount(
   payoutAccountId: string,
 ): Promise<MutatePayoutAccountResult> {
   const supabase = await createClient();
@@ -24,7 +26,7 @@ export default async function setDefaultPayoutAccount(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await setDefaultPayoutAccountCore(
@@ -34,8 +36,8 @@ export default async function setDefaultPayoutAccount(
   );
 
   if (result.status === 200) {
-    revalidatePath("/finances/payout-accounts");
+    revalidateAppPath("/finances/payout-accounts");
   }
 
   return result;
-}
+});

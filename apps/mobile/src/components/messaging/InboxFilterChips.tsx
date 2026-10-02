@@ -4,12 +4,13 @@ import {
 } from "@/features/messaging/inboxPrefs";
 import type { ConversationRoleScope } from "@abonten/api-client";
 import { AppText, Chip, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, ScrollView, View } from "react-native";
 
 const ROLE_CHIPS: { key: ConversationRoleScope; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "member", label: "As Customer" },
-  { key: "business", label: "As Organizer" },
+  { key: "all", label: "roleChips.all" },
+  { key: "member", label: "roleChips.asCustomer" },
+  { key: "business", label: "roleChips.asOrganizer" },
 ];
 
 // The horizontal chip row beneath the search bar (spec §4). One of the
@@ -29,6 +30,8 @@ export function InboxFilterChips({
   onRemoveCustomFilter: (key: CustomFilterKey) => void;
   onAddPress: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   return (
     // The horizontal ScrollView must not flex-grow: dropped straight into a
     // flex column it otherwise balloons to fill the free vertical space and
@@ -49,7 +52,7 @@ export function InboxFilterChips({
       {ROLE_CHIPS.map((chip) => (
         <Chip
           key={chip.key}
-          label={chip.label}
+          label={t(chip.label)}
           selected={roleScope === chip.key}
           showCheck
           onPress={() => onRoleScopeChange(chip.key)}
@@ -64,13 +67,15 @@ export function InboxFilterChips({
         <Pressable
           key={key}
           accessibilityRole="button"
-          accessibilityLabel={`${CUSTOM_FILTER_LABEL[key]} filter, active`}
-          accessibilityHint="Removes this filter"
+          accessibilityLabel={t("filterActive", {
+            item: t(CUSTOM_FILTER_LABEL[key]),
+          })}
+          accessibilityHint={t("removesThisFilter")}
           onPress={() => onRemoveCustomFilter(key)}
           className="flex-row items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 active:opacity-80"
         >
           <AppText className="text-[13px] font-semibold text-primary-foreground">
-            {CUSTOM_FILTER_LABEL[key]}
+            {t(CUSTOM_FILTER_LABEL[key])}
           </AppText>
           <Icon name="close" size={13} tone="inverse" />
         </Pressable>
@@ -78,7 +83,7 @@ export function InboxFilterChips({
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Add filter"
+        accessibilityLabel={t("addFilter")}
         onPress={onAddPress}
         className="h-9 w-9 items-center justify-center rounded-full border border-border bg-muted active:opacity-80"
       >

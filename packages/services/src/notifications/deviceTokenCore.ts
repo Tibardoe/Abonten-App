@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { tr } from "../i18n/requestLocale";
 
 // Register / unregister a mobile device's Expo push token for one user.
 // Called only from the /api/mobile/devices/* routes, which authenticate the
@@ -22,7 +23,7 @@ export async function registerDeviceTokenCore(
   const platform = typeof input.platform === "string" ? input.platform : "";
 
   if (!token || !PLATFORMS.has(platform)) {
-    return { status: 400, message: "A valid token and platform are required" };
+    return { status: 400, message: tr("aValidTokenAndPlatformAre") };
   }
 
   const supabase = getSupabaseServiceClient();
@@ -41,10 +42,10 @@ export async function registerDeviceTokenCore(
 
   if (error) {
     logger.error(`Failed registering device token: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  return { status: 200, message: "Device registered" };
+  return { status: 200, message: tr("deviceRegistered") };
 }
 
 export async function unregisterDeviceTokenCore(
@@ -52,7 +53,7 @@ export async function unregisterDeviceTokenCore(
   token: string,
 ): Promise<DeviceTokenResult> {
   if (!token) {
-    return { status: 400, message: "A token is required" };
+    return { status: 400, message: tr("aTokenIsRequired") };
   }
 
   const supabase = getSupabaseServiceClient();
@@ -65,8 +66,8 @@ export async function unregisterDeviceTokenCore(
 
   if (error) {
     logger.error(`Failed unregistering device token: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  return { status: 200, message: "Device unregistered" };
+  return { status: 200, message: tr("deviceUnregistered") };
 }

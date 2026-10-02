@@ -17,6 +17,7 @@ import {
   Refresher,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
@@ -48,6 +49,10 @@ function ReviewCard({
   review: OwnerPlaceReviewRow;
   placeId: string;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const reply = useRespondToPlaceReview(placeId);
   const remove = useDeletePlaceReviewResponse(placeId);
@@ -75,12 +80,12 @@ function ReviewCard({
             setOpen(false);
             setText("");
           } else {
-            toast.error("Couldn't save response", { description: res.message });
+            toast.error(t("couldnTSaveResponse"), { description: res.message });
           }
         },
         onError: () =>
-          toast.error("Couldn't save response", {
-            description: "Please try again in a moment.",
+          toast.error(t("couldnTSaveResponse"), {
+            description: t("pleaseTryAgainInAMoment"),
           }),
       },
     );
@@ -92,12 +97,12 @@ function ReviewCard({
         if (res.status === 200) {
           setConfirmingDelete(false);
         } else {
-          toast.error("Couldn't remove response", { description: res.message });
+          toast.error(t("couldnTRemoveResponse"), { description: res.message });
         }
       },
       onError: () =>
-        toast.error("Couldn't remove response", {
-          description: "Please try again in a moment.",
+        toast.error(t("couldnTRemoveResponse"), {
+          description: t("pleaseTryAgainInAMoment"),
         }),
     });
   };
@@ -122,10 +127,10 @@ function ReviewCard({
         )}
         <View className="flex-1">
           <AppText variant="bodyStrong" numberOfLines={1}>
-            {review.user_info?.username ?? "Anonymous"}
+            {review.user_info?.username ?? t("anonymous")}
           </AppText>
           <AppText variant="caption">
-            {getRelativeTime(review.created_at)}
+            {getRelativeTime(review.created_at, undefined, locale)}
           </AppText>
         </View>
         <Stars rating={review.rating} />
@@ -161,7 +166,7 @@ function ReviewCard({
           <Input
             value={text}
             onChangeText={setText}
-            placeholder="Write a response to this review…"
+            placeholder={t("writeAResponseToThisReview")}
             multiline
             numberOfLines={3}
             maxLength={500}
@@ -171,10 +176,10 @@ function ReviewCard({
               <Button
                 title={
                   reply.isPending
-                    ? "Saving…"
+                    ? t("saving")
                     : hasResponse
-                      ? "Save changes"
-                      : "Post response"
+                      ? t("saveChanges")
+                      : t("postResponse")
                 }
                 onPress={submit}
                 loading={reply.isPending}
@@ -184,7 +189,7 @@ function ReviewCard({
             </View>
             <View className="flex-1">
               <Button
-                title="Cancel"
+                title={t("cancel")}
                 variant="outline"
                 onPress={() => {
                   setOpen(false);
@@ -200,27 +205,27 @@ function ReviewCard({
         <View className="ml-4 gap-2">
           <View className="mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
             <AppText variant="label" className="mb-1 text-primary">
-              Response from owner
+              {t("responseFromOwner")}
             </AppText>
             <AppText variant="small">{review.owner_response}</AppText>
           </View>
           {confirmingDelete ? (
             <View className="flex-row items-center gap-3">
-              <AppText variant="caption">Remove this response?</AppText>
+              <AppText variant="caption">{t("removeThisResponse")}</AppText>
               <AppText
                 variant="small"
                 tone="error"
                 className="font-semibold"
                 onPress={remove.isPending ? undefined : confirmDelete}
               >
-                {remove.isPending ? "Removing…" : "Yes, remove"}
+                {remove.isPending ? t("removing") : t("yesRemove")}
               </AppText>
               <AppText
                 variant="small"
                 tone="muted"
                 onPress={() => setConfirmingDelete(false)}
               >
-                Keep
+                {t("keep")}
               </AppText>
             </View>
           ) : (
@@ -230,7 +235,7 @@ function ReviewCard({
                 className="font-semibold text-primary"
                 onPress={openEditor}
               >
-                Edit response
+                {t("editResponse")}
               </AppText>
               <AppText
                 variant="small"
@@ -238,7 +243,7 @@ function ReviewCard({
                 className="font-semibold"
                 onPress={() => setConfirmingDelete(true)}
               >
-                Delete response
+                {t("deleteResponse")}
               </AppText>
             </View>
           )}
@@ -249,7 +254,7 @@ function ReviewCard({
           className="mt-1 font-semibold text-primary"
           onPress={openEditor}
         >
-          Respond
+          {t("respond")}
         </AppText>
       )}
     </View>
@@ -257,6 +262,8 @@ function ReviewCard({
 }
 
 export default function PlaceReviewsScreen() {
+  const t = useTranslations("manage");
+
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const id = placeId ?? "";
   const q = usePlaceReviews(id);
@@ -287,11 +294,11 @@ export default function PlaceReviewsScreen() {
       ListEmptyComponent={
         forbidden ? (
           <AppText variant="muted" className="mt-10 text-center">
-            You're not authorized to manage this place.
+            {t("youReNotAuthorizedToManage2")}
           </AppText>
         ) : view.kind === "empty" ? (
           <AppText variant="muted" className="mt-10 text-center">
-            No reviews yet.
+            {t("noReviewsYet")}
           </AppText>
         ) : (
           <QueryUnavailable

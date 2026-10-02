@@ -7,17 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { FIELD_OPS_ROLE_LABEL } from "@/fieldOps/lib/roleLabel";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsTeamMember } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-
-const ROLE_LABEL: Record<FieldOpsTeamMember["role"], string> = {
-  team_lead: "Team lead",
-  content_creator: "Content creator",
-  offline_member: "Field member",
-  online_member: "Online member",
-};
 
 /** The lead's team: invite by phone; suspend / reactivate / remove. */
 export default function LeadTeamPanel({
@@ -29,6 +25,8 @@ export default function LeadTeamPanel({
   members: FieldOpsTeamMember[];
   canManage: boolean;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -51,14 +49,14 @@ export default function LeadTeamPanel({
         role,
         invitedPhoneE164: `+${phone.replace(/\D/g, "")}`,
         fullName,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
-        toast.success(res.message ?? "Invited.");
+        toast.success(res.message ?? t("invited"));
         setPhone("");
         setFullName("");
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't invite them.");
+        toast.error(res.message ?? t("couldnTInviteThem"));
       }
     });
   };
@@ -72,14 +70,14 @@ export default function LeadTeamPanel({
         memberId: acting.id,
         status: acting.status,
         reason,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
-        toast.success(res.message ?? "Updated.");
+        toast.success(res.message ?? t("updated"));
         setActing(null);
         setReason("");
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't do that.");
+        toast.error(res.message ?? t("couldnTDoThat"));
       }
     });
   };
@@ -92,9 +90,12 @@ export default function LeadTeamPanel({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span>
                 <span className="font-medium">
-                  {m.fullName ?? m.username ?? m.invitedPhoneMasked ?? "Member"}
+                  {m.fullName ??
+                    m.username ??
+                    m.invitedPhoneMasked ??
+                    t("member")}
                 </span>{" "}
-                · {ROLE_LABEL[m.role]}
+                · {t(FIELD_OPS_ROLE_LABEL[m.role])}
                 {m.status === "invited" && m.invitedPhoneMasked
                   ? ` · ${m.invitedPhoneMasked}`
                   : ""}
@@ -111,7 +112,7 @@ export default function LeadTeamPanel({
                           setActing({ id: m.id, status: "suspended" })
                         }
                       >
-                        Suspend
+                        {t("suspend")}
                       </Button>
                     ) : null}
                     {m.status === "suspended" ? (
@@ -122,7 +123,7 @@ export default function LeadTeamPanel({
                           setActing({ id: m.id, status: "active" })
                         }
                       >
-                        Reactivate
+                        {t("reactivate")}
                       </Button>
                     ) : null}
                     <Button
@@ -130,7 +131,7 @@ export default function LeadTeamPanel({
                       variant="ghost"
                       onClick={() => setActing({ id: m.id, status: "left" })}
                     >
-                      Remove
+                      {t("remove")}
                     </Button>
                   </>
                 ) : null}
@@ -138,7 +139,7 @@ export default function LeadTeamPanel({
             </div>
             {m.suspendedReason && m.status === "suspended" ? (
               <p className="text-xs text-muted-foreground">
-                Suspended: {m.suspendedReason}
+                {t("suspended", { suspendedReason: m.suspendedReason })}
               </p>
             ) : null}
             {acting?.id === m.id ? (
@@ -147,7 +148,7 @@ export default function LeadTeamPanel({
                   required
                   minLength={3}
                   maxLength={1000}
-                  placeholder="Reason (kept on record)"
+                  placeholder={t("reasonKeptOnRecord")}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="max-w-sm"
@@ -160,7 +161,7 @@ export default function LeadTeamPanel({
                   }
                   disabled={pending}
                 >
-                  Confirm
+                  {t("confirm")}
                 </Button>
                 <Button
                   type="button"
@@ -168,7 +169,7 @@ export default function LeadTeamPanel({
                   variant="ghost"
                   onClick={() => setActing(null)}
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
               </form>
             ) : null}
@@ -181,14 +182,13 @@ export default function LeadTeamPanel({
           onSubmit={invite}
           className="flex flex-col gap-3 rounded-xl border p-4"
         >
-          <h2 className="text-lg font-semibold">Invite a member</h2>
+          <h2 className="text-lg font-semibold">{t("inviteAMember")}</h2>
           <p className="text-sm text-muted-foreground">
-            They join the moment they sign in to Abonten with this phone number.
-            Team leads are appointed by an admin.
+            {t("theyJoinTheMomentTheySign")}
           </p>
           <div className="grid gap-3 md:grid-cols-3">
             <div className="flex flex-col gap-1">
-              <Label htmlFor="inv-name">Full name</Label>
+              <Label htmlFor="inv-name">{t("fullName")}</Label>
               <Input
                 id="inv-name"
                 required
@@ -199,7 +199,7 @@ export default function LeadTeamPanel({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="inv-phone">Phone (international)</Label>
+              <Label htmlFor="inv-phone">{t("phoneInternational")}</Label>
               <Input
                 id="inv-phone"
                 required
@@ -210,21 +210,23 @@ export default function LeadTeamPanel({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="inv-role">Role</Label>
+              <Label htmlFor="inv-role">{t("role")}</Label>
               <Select
                 id="inv-role"
                 value={role}
                 onChange={(e) => setRole(e.target.value as typeof role)}
               >
-                <option value="offline_member">Field member (in person)</option>
-                <option value="online_member">Online member</option>
-                <option value="content_creator">Content creator</option>
+                <option value="offline_member">
+                  {t("fieldMemberInPerson")}
+                </option>
+                <option value="online_member">{t("onlineMember")}</option>
+                <option value="content_creator">{t("contentCreator")}</option>
               </Select>
             </div>
           </div>
           <div>
             <Button type="submit" disabled={pending}>
-              Invite
+              {t("invite")}
             </Button>
           </div>
         </form>

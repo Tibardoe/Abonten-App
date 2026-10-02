@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { updatePromoCodeCore } from "@abonten/services/promo-codes/eventPromoCodeManageCore";
 
 // POST /api/mobile/organizer/promo-codes/update
@@ -9,6 +13,7 @@ import { updatePromoCodeCore } from "@abonten/services/promo-codes/eventPromoCod
 // Edits the terms of an existing promo code (never its text / event) —
 // same body as updatePromoCode. 403 unless the caller owns the code's event.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -46,8 +51,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message:
-          "promoCodeId, discountPercentage, expiresAt (ISO), isActive and maxUses (number | null) are required",
+        message: tr("promocodeidDiscountpercentageExpiresatIsoIsactiv"),
       });
     }
 
@@ -62,6 +66,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/promo-codes/update failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

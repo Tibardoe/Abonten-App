@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { reviewOnboardingCore } from "@abonten/services/fieldOps/lead/reviewCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsReviewSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // POST /api/mobile/field-ops/lead/review/:onboardingId { campaignId, decision,
@@ -11,6 +12,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ onboardingId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { onboardingId } = await routeParams(params);
   return fieldOpsRoute(
     req,

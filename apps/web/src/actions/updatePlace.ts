@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type UpdatePlaceCoreResult,
   updatePlaceCore,
@@ -35,7 +37,7 @@ export type UpdatePlaceInput = {
  * opening hours, services, or the photo gallery — those each have their
  * own dedicated actions.
  */
-export async function updatePlace(
+export const updatePlace = withActionLocale(async function updatePlace(
   formData: UpdatePlaceInput,
 ): Promise<UpdatePlaceCoreResult | { status: 401 | 500; message: string }> {
   const supabase = await createClient();
@@ -46,7 +48,10 @@ export async function updatePlace(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401 as const, message: "User not authenticated" };
+    return {
+      status: 401 as const,
+      message: tr("userNotAuthenticated"),
+    };
   }
 
   let coverPublicId: string | null | undefined;
@@ -60,7 +65,7 @@ export async function updatePlace(
         status: 500 as const,
         message:
           (coverUpload as { error?: string })?.error ??
-          "Cover photo upload to Cloudinary failed.",
+          tr("coverPhotoUploadToCloudinaryFailed"),
       };
     }
 
@@ -83,4 +88,4 @@ export async function updatePlace(
     coverPublicId,
     coverVersion,
   });
-}
+});

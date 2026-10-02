@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsOwnerOtpVerifySchema } from "@abonten/validation/fieldOpsSchema
  * Confirms the owner's code and records them as the owner. Same service
  * as POST /api/mobile/field-ops/onboardings/[id]/owner-otp/verify.
  */
-export async function verifyFieldOpsOwnerOtp(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsOnboarding;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsOwnerOtpVerifySchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return verifyOwnerOtpCore(svc, userId, data);
-}
+export const verifyFieldOpsOwnerOtp = withActionLocale(
+  async function verifyFieldOpsOwnerOtp(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsOnboarding;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsOwnerOtpVerifySchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return verifyOwnerOtpCore(svc, userId, data);
+  },
+);

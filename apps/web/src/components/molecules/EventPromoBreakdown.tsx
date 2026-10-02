@@ -3,20 +3,28 @@
 import getEventPromoAnalytics from "@/actions/getEventPromoAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function EventPromoBreakdown({
   eventId,
   period,
   startDate,
   endDate,
+  currency,
 }: {
   eventId: string;
+  /** The event's currency: a discount is an amount of money. */
+  currency: string | null;
   period: DashboardPeriod;
   startDate: string | null;
   endDate: string | null;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("common");
+
   const {
     data: response,
     isLoading,
@@ -33,9 +41,9 @@ export default function EventPromoBreakdown({
   if (!isLoading && isError) {
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Promo Codes</h2>
+        <h2 className="font-bold md:text-lg">{t("promoCodes")}</h2>
         <InlineErrorRetry
-          message="We couldn't load promo code usage."
+          message={t("weCouldnTLoadPromoCode")}
           onRetry={() => refetch()}
         />
       </section>
@@ -45,9 +53,9 @@ export default function EventPromoBreakdown({
   if (!isLoading && rows.length === 0) {
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Promo Codes</h2>
+        <h2 className="font-bold md:text-lg">{t("promoCodes")}</h2>
         <p className="text-sm text-muted-foreground">
-          No promo codes used yet.
+          {t("noPromoCodesUsedYet")}
         </p>
       </section>
     );
@@ -55,7 +63,7 @@ export default function EventPromoBreakdown({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-bold md:text-lg">Promo Codes</h2>
+      <h2 className="font-bold md:text-lg">{t("promoCodes")}</h2>
 
       {isLoading ? (
         <AnalyticsRowsSkeleton count={2} />
@@ -69,12 +77,18 @@ export default function EventPromoBreakdown({
               <div>
                 <h3 className="font-semibold">{row.promo_code}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {row.orders} orders · {row.units_discounted} tickets
-                  discounted
+                  {t("ordersTicketsDiscounted", {
+                    orders: row.orders,
+                    units_discounted: row.units_discounted,
+                  })}
                 </p>
               </div>
               <span className="text-sm font-medium shrink-0">
-                {Number(row.total_discount).toLocaleString()} discount
+                {t("discount", {
+                  amount: formatMoney(currency, Number(row.total_discount), {
+                    locale,
+                  }),
+                })}
               </span>
             </div>
           ))}

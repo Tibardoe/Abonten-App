@@ -6,11 +6,14 @@ import { getContentPost } from "@/actions/content/getContentPost";
 import { updateContentPost } from "@/actions/content/updateContentPost";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import { spotlightPath, storyPath } from "@abonten/core/content/links";
+import { formatCount } from "@abonten/core/i18n/format";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +25,8 @@ import CampaignCreateDialog from "./CampaignCreateDialog";
 const RANGES = [7, 28, 90] as const;
 
 export default function ManagePost({ postId }: { postId: string }) {
+  const t = useTranslations("spotlight");
+
   const { program } = useContentProgram();
   const query = useQuery({
     queryKey: ["content", "manage-post", postId],
@@ -41,13 +46,13 @@ export default function ManagePost({ postId }: { postId: string }) {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
         <p className="text-sm text-muted-foreground">
-          This post isn't available.
+          {t("thisPostIsnTAvailable")}
         </p>
         <Link
           href="/manage/spotlight"
           className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
         >
-          Back to Spotlight & Stories
+          {t("backToSpotlightStories")}
         </Link>
       </div>
     );
@@ -59,7 +64,7 @@ export default function ManagePost({ postId }: { postId: string }) {
         href={`/manage/spotlight${post.kind === "story" ? "?tab=story" : ""}`}
         className="text-sm font-medium text-muted-foreground hover:text-foreground"
       >
-        ← Spotlight & Stories
+        {t("spotlightStories2")}
       </Link>
       <div className="grid gap-6 md:grid-cols-[240px,1fr]">
         <PostPreview post={post} />
@@ -73,6 +78,8 @@ export default function ManagePost({ postId }: { postId: string }) {
 }
 
 function PostPreview({ post }: { post: ContentPostDocument }) {
+  const t = useTranslations("spotlight");
+
   const media = post.media[0];
   const src =
     media?.type === "video"
@@ -96,14 +103,15 @@ function PostPreview({ post }: { post: ContentPostDocument }) {
           }
           className="block text-center text-sm font-semibold text-primary hover:underline"
         >
-          View as others see it
+          {t("viewAsOthersSeeIt")}
         </Link>
       ) : null}
       {post.moderationState === "hidden" ||
       post.moderationState === "removed" ? (
         <p className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">
-          This post was {post.moderationState} by our moderation team and isn't
-          shown to anyone else. Check your notifications for the reason.
+          {t("thisPostWasByOurModeration", {
+            moderationState: post.moderationState,
+          })}
         </p>
       ) : null}
     </div>
@@ -111,6 +119,9 @@ function PostPreview({ post }: { post: ContentPostDocument }) {
 }
 
 function Insights({ postId }: { postId: string }) {
+  const locale = useLocale();
+  const t = useTranslations("spotlight");
+
   const [days, setDays] = useState<(typeof RANGES)[number]>(28);
   const query = useQuery({
     queryKey: ["content", "insights", postId, days],
@@ -121,27 +132,27 @@ function Insights({ postId }: { postId: string }) {
       return data;
     },
   });
-  const t = query.data?.totals;
+  const totals = query.data?.totals;
 
   const tiles: [string, number | undefined][] = [
-    ["Impressions", t?.impressions],
-    ["Views", t?.meaningfulViews],
-    ["Completions", t?.completions],
-    ["People reached", t?.uniqueViewers],
-    ["Likes", t?.likes],
-    ["Comments", t?.comments],
-    ["Shares", t?.shares],
-    ["Saves", t?.saves],
-    ["Profile taps", t?.profileClicks],
-    ["Event taps", t?.eventClicks],
-    ["Place taps", t?.placeClicks],
-    ["Tickets bought", query.data?.conversions.ticketPurchases],
+    [t("impressions"), totals?.impressions],
+    [t("views"), totals?.meaningfulViews],
+    [t("completions"), totals?.completions],
+    [t("peopleReached"), totals?.uniqueViewers],
+    [t("likes"), totals?.likes],
+    [t("comments"), totals?.comments],
+    [t("shares"), totals?.shares],
+    [t("saves"), totals?.saves],
+    [t("profileTaps"), totals?.profileClicks],
+    [t("eventTaps"), totals?.eventClicks],
+    [t("placeTaps"), totals?.placeClicks],
+    [t("ticketsBought"), query.data?.conversions.ticketPurchases],
   ];
 
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Insights</h2>
+        <h2 className="text-lg font-semibold">{t("insights")}</h2>
         <div className="flex gap-1">
           {RANGES.map((r) => (
             <button
@@ -155,28 +166,29 @@ function Insights({ postId }: { postId: string }) {
                   : "rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground hover:bg-accent"
               }
             >
-              {r} days
+              {t("days3", { r: r })}
             </button>
           ))}
         </div>
       </div>
       {query.isError ? (
-        <p className="text-sm text-muted-foreground">Couldn't load insights.</p>
+        <p className="text-sm text-muted-foreground">
+          {t("couldnTLoadInsights")}
+        </p>
       ) : (
         <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {tiles.map(([label, value]) => (
             <div key={label} className="rounded-lg border p-3">
               <dt className="text-xs text-muted-foreground">{label}</dt>
               <dd className="text-lg font-semibold">
-                {query.isLoading ? "…" : (value ?? 0).toLocaleString()}
+                {query.isLoading ? "…" : formatCount(value ?? 0, locale)}
               </dd>
             </div>
           ))}
         </dl>
       )}
       <p className="text-xs text-muted-foreground">
-        Counts update about once an hour. Views count after two seconds of
-        watching.
+        {t("countsUpdateAboutOnceAnHour")}
       </p>
     </section>
   );
@@ -189,6 +201,8 @@ function EditPost({
   post: ContentPostDocument;
   canPromote: boolean;
 }) {
+  const t = useTranslations("spotlight");
+
   const toast = useToast();
   const qc = useQueryClient();
   const router = useRouter();
@@ -214,25 +228,27 @@ function EditPost({
         allowComments,
         ...(post.kind === "spotlight" ? { allowDownload } : {}),
       },
-    });
+    }).catch(actionUnreachable);
     setSaving(false);
     if (res.status !== 200) {
-      toast.error(messageOf(res, "Couldn't save your changes."));
+      toast.error(messageOf(res, t("couldnTSaveYourChanges")));
       return;
     }
-    toast.success("Saved.");
+    toast.success(t("saved"));
     qc.invalidateQueries({ queryKey: ["content"] });
   };
 
   const remove = async () => {
     setDeleting(true);
-    const res = await deleteContentPost({ postId: post.id });
+    const res = await deleteContentPost({ postId: post.id }).catch(
+      actionUnreachable,
+    );
     setDeleting(false);
     if (res.status !== 200) {
-      toast.error(messageOf(res, "Couldn't delete this post."));
+      toast.error(messageOf(res, t("couldnTDeleteThisPost")));
       return;
     }
-    toast.success("Deleted.");
+    toast.success(t("deleted"));
     qc.invalidateQueries({ queryKey: ["content"] });
     router.push("/manage/spotlight");
   };
@@ -245,9 +261,9 @@ function EditPost({
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold">Details</h2>
+      <h2 className="text-lg font-semibold">{t("details")}</h2>
       <label className="block space-y-1 text-sm font-medium">
-        <span>Caption</span>
+        <span>{t("caption")}</span>
         <textarea
           value={caption}
           maxLength={MAX_CAPTION_LENGTH}
@@ -262,7 +278,7 @@ function EditPost({
           checked={allowComments}
           onChange={(e) => setAllowComments(e.target.checked)}
         />
-        Allow comments
+        {t("allowComments")}
       </label>
       {post.kind === "spotlight" ? (
         <label className="flex items-center gap-2 text-sm">
@@ -271,7 +287,7 @@ function EditPost({
             checked={allowDownload}
             onChange={(e) => setAllowDownload(e.target.checked)}
           />
-          Let people download this video
+          {t("letPeopleDownloadThisVideo")}
         </label>
       ) : null}
       <div className="flex flex-wrap gap-2">
@@ -281,7 +297,7 @@ function EditPost({
           onClick={save}
           className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? t("saving") : t("saveChanges")}
         </button>
         {promotable ? (
           <button
@@ -289,7 +305,7 @@ function EditPost({
             onClick={() => setPromoting(true)}
             className="rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10"
           >
-            Promote
+            {t("promote")}
           </button>
         ) : null}
         <button
@@ -297,16 +313,16 @@ function EditPost({
           onClick={() => setConfirmDelete(true)}
           className="rounded-md border border-destructive/40 px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/10"
         >
-          Delete
+          {t("deleteText2")}
         </button>
       </div>
 
       {confirmDelete ? (
         <ConfirmDeleteModal
-          title="Delete this post?"
-          message="It disappears for everyone straight away. This can't be undone. An active promotion is cancelled."
-          confirmLabel="Delete"
-          loadingLabel="Deleting…"
+          title={t("deleteThisPost")}
+          message={t("itDisappearsForEveryoneStraightAway2")}
+          confirmLabel={t("deleteText2")}
+          loadingLabel={t("deleting")}
           isLoading={deleting}
           onConfirm={remove}
           onCancel={() => setConfirmDelete(false)}
@@ -324,7 +340,7 @@ function EditPost({
                 (post.publisher.kind === "place"
                   ? post.publisher.name
                   : null) ??
-                "this Spotlight's location")
+                t("thisSpotlightSLocation"))
               : null
           }
           onClose={() => setPromoting(false)}

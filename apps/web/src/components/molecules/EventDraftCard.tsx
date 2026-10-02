@@ -4,9 +4,11 @@ import { deleteEventDraft } from "@/actions/deleteEventDraft";
 import type { EventDraftListItem } from "@/actions/getEventDrafts";
 import ContinueEventDraftButton from "@/components/molecules/ContinueEventDraftButton";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatExpiresIn } from "@abonten/core/formatExpiresIn";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -28,6 +30,11 @@ export default function EventDraftCard({
   onDeleteError,
   onDraftListChanged,
 }: EventDraftCardProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const thumbnailUrl = draft.flyerPublicId
@@ -44,12 +51,14 @@ export default function EventDraftCard({
     setShowDeleteConfirm(false);
     onDeleted(draft.id);
 
-    deleteEventDraft(draft.id).then((response) => {
-      if (response.status !== 200) {
-        onRestoreDraft(draft);
-        onDeleteError(response.message ?? "Couldn't delete this draft.");
-      }
-    });
+    deleteEventDraft(draft.id)
+      .catch(actionUnreachable)
+      .then((response) => {
+        if (response.status !== 200) {
+          onRestoreDraft(draft);
+          onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
+        }
+      });
   };
 
   return (
@@ -58,7 +67,7 @@ export default function EventDraftCard({
         {thumbnailUrl && (
           <Image
             src={thumbnailUrl}
-            alt={draft.title ?? "Draft flyer"}
+            alt={draft.title ?? t("draftFlyer")}
             fill
             className="object-cover"
           />
@@ -67,13 +76,19 @@ export default function EventDraftCard({
 
       <div className="flex-1 min-w-0">
         <p className="font-semibold truncate">
-          {draft.title || "Untitled event"}
+          {draft.title || t("untitledEvent")}
         </p>
         <p className="text-sm text-muted-foreground">
-          Last edited {getRelativeTime(draft.updatedAt)}
+          {t("lastEdited", {
+            getRelativeTime: getRelativeTime(
+              draft.updatedAt,
+              undefined,
+              locale,
+            ),
+          })}
         </p>
         <p className="text-xs text-muted-foreground">
-          {formatExpiresIn(draft.expiresAt)}
+          {formatExpiresIn(tc, draft.expiresAt)}
         </p>
       </div>
 
@@ -83,7 +98,7 @@ export default function EventDraftCard({
           className="rounded-md bg-primary text-primary-foreground px-3 py-1 text-sm hover:bg-primary/90 transition-colors"
           onDraftListChanged={onDraftListChanged}
         >
-          Continue
+          {t("continueText")}
         </ContinueEventDraftButton>
 
         <button
@@ -91,15 +106,15 @@ export default function EventDraftCard({
           className="rounded-md border border-destructive text-destructive px-3 py-1 text-sm hover:bg-destructive/10 transition-colors"
           onClick={() => setShowDeleteConfirm(true)}
         >
-          Delete
+          {t("deleteText")}
         </button>
       </div>
 
       {showDeleteConfirm && (
         <ConfirmDeleteModal
-          title="Delete this draft?"
-          message="Delete this draft? This cannot be undone."
-          confirmLabel="Delete Draft"
+          title={t("deleteThisDraft")}
+          message={t("deleteThisDraftThisCannotBe")}
+          confirmLabel={t("deleteDraft")}
           isLoading={false}
           onConfirm={handleDelete}
           onCancel={() => setShowDeleteConfirm(false)}

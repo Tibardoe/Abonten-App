@@ -1,5 +1,6 @@
 import type { QueryView } from "@abonten/core/query/queryView";
 import { AppText, Button, EmptyState, Icon, Spinner } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
@@ -33,6 +34,8 @@ export function QueryUnavailable({
   onMedia = false,
   className,
 }: Props) {
+  const t = useTranslations("common");
+
   if (view.kind === "loading") {
     if (loading) return <>{loading}</>;
     return (
@@ -44,12 +47,14 @@ export function QueryUnavailable({
   if (view.kind !== "offline" && view.kind !== "error") return null;
 
   const offline = view.kind === "offline";
-  const title = offline ? "You're offline" : `Couldn't load ${subject}`;
+  const title = offline
+    ? t("youReOffline")
+    : t("couldnTLoad", { subject: subject });
   // Worded to read right for singular and plural subjects alike
   // ("this event", "your tickets").
   const description = offline
-    ? `Not saved on this phone yet. ${capitalise(subject)} will load when you're back online.`
-    : "Check your connection and try again.";
+    ? t("notSavedOnThisPhoneYet", { capitalise: capitalise(subject) })
+    : t("checkYourConnectionAndTryAgain");
 
   if (onMedia) {
     return (
@@ -69,7 +74,7 @@ export function QueryUnavailable({
         </AppText>
         <AppText className="text-center text-white/75">{description}</AppText>
         {!offline && onRetry ? (
-          <Button title="Retry" size="sm" onPress={onRetry} />
+          <Button title={t("retry")} size="sm" onPress={onRetry} />
         ) : null}
       </View>
     );
@@ -82,7 +87,7 @@ export function QueryUnavailable({
       title={title}
       description={description}
       // Offline, a retry can't succeed; the reconnect retries by itself.
-      actionLabel={!offline && onRetry ? "Retry" : undefined}
+      actionLabel={!offline && onRetry ? t("retry") : undefined}
       onAction={!offline ? onRetry : undefined}
     />
   );

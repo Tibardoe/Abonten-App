@@ -4,8 +4,8 @@ purpose: Index of the technical architecture documents for developers and techni
 audience: Engineering
 scope: Monorepo, database, APIs, jobs, integrations
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -23,6 +23,8 @@ complianceReviewRequired: no
 | [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md) | Unified search and ranking, `@handle`, opt-in alerts, recommendation digests, preference centre, switches |
 | [weekly-highlights.md](weekly-highlights.md) | Abonten Weekly: editions, sections and items, read-time validity, caching, editorial workflow, jobs, switches, rollout |
 | [mobile-offline-media-and-sync.md](mobile-offline-media-and-sync.md) | Mobile offline query cache, Spotlight player lifecycle, live comments and likes, search vocabulary and date parsing, search filters, follower counts |
+| [internationalisation.md](internationalisation.md) | The six languages: shared catalogs, how each surface picks a language, server and database text, number and date formatting, per-page messages on the website, the native app's Intl polyfills, the checks |
+| [web-resilience.md](web-resilience.md) | What people see when a request fails or the database is unreachable (website, admin console, app start-up), 404 against 500, timed rebuilds, confirmations, and how few requests a page opens with |
 | [perf/discovery-2026-09.md](perf/discovery-2026-09.md) | Measured search and recommendation cost on a 100,000-event synthetic catalogue |
 | [data-model-overview.md](data-model-overview.md) | Table groups, key relationships, status columns, partitions, unused tables |
 | [integrations.md](integrations.md) | Each external service: what, where in code, config, failure behaviour |

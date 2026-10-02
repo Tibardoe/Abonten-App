@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of checkInTicket, lifted so the mobile
 // POST /api/mobile/organizer/tickets/:id/check-in route runs the exact same
@@ -63,9 +64,7 @@ export async function checkInTicketCore(
   if (ticketError || !rawTicket) {
     return {
       status: 404,
-      message: byCode
-        ? "That code doesn't match a ticket for this event."
-        : "Ticket not found",
+      message: byCode ? tr("thatCodeDoesnTMatchA") : tr("ticketNotFound"),
     };
   }
 
@@ -73,13 +72,13 @@ export async function checkInTicketCore(
   const organizerId = ticket.ticket_type?.event?.organizer_id;
 
   if (!organizerId || organizerId !== userId) {
-    return { status: 403, message: "Not authorized to check in this ticket" };
+    return { status: 403, message: tr("notAuthorizedToCheckInThis") };
   }
 
   if (expectedEventId && ticket.ticket_type?.event?.id !== expectedEventId) {
     return {
       status: 404,
-      message: "That ticket is for a different event.",
+      message: tr("thatTicketIsForADifferent"),
     };
   }
 
@@ -88,8 +87,8 @@ export async function checkInTicketCore(
       status: 400,
       message:
         ticket.status === "used"
-          ? "This ticket is already checked in."
-          : "Only active tickets can be checked in.",
+          ? tr("thisTicketIsAlreadyCheckedIn")
+          : tr("onlyActiveTicketsCanBeChecked"),
     };
   }
 
@@ -105,19 +104,19 @@ export async function checkInTicketCore(
     if (starts - now > 12 * HOUR_MS) {
       return {
         status: 400,
-        message: "This ticket is for a later date of this event.",
+        message: tr("thisTicketIsForALater"),
       };
     }
     if (now - ends > 6 * HOUR_MS) {
       return {
         status: 400,
-        message: "This ticket was for an earlier date of this event.",
+        message: tr("thisTicketWasForAnEarlier"),
       };
     }
   }
 
   if (!checkedIn && ticket.status !== "used") {
-    return { status: 400, message: "This ticket isn't checked in." };
+    return { status: 400, message: tr("thisTicketIsnTCheckedIn") };
   }
 
   // Conditional on the status just read: two doors scanning the same code
@@ -138,8 +137,8 @@ export async function checkInTicketCore(
     return {
       status: 400,
       message: checkedIn
-        ? "This ticket is already checked in."
-        : "This ticket isn't checked in.",
+        ? tr("thisTicketIsAlreadyCheckedIn")
+        : tr("thisTicketIsnTCheckedIn"),
     };
   }
 
@@ -147,12 +146,12 @@ export async function checkInTicketCore(
     logger.error(
       `Error updating ticket check-in status: ${updateError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return {
     status: 200,
-    message: checkedIn ? "Checked in successfully" : "Check-in undone",
+    message: checkedIn ? tr("checkedInSuccessfully") : tr("checkInUndone"),
     eventId: ticket.ticket_type?.event?.id ?? null,
   };
 }

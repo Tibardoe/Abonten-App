@@ -6,6 +6,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function EventDateBreakdown({
   eventId,
@@ -18,6 +19,10 @@ export default function EventDateBreakdown({
   startDate: string | null;
   endDate: string | null;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   const {
     data: response,
     isLoading,
@@ -42,20 +47,25 @@ export default function EventDateBreakdown({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-bold md:text-lg">Attendance by Date</h2>
+      <h2 className="font-bold md:text-lg">{t("attendanceByDate")}</h2>
 
       {isLoading ? (
         <AnalyticsRowsSkeleton count={2} />
       ) : isError ? (
         <InlineErrorRetry
-          message="We couldn't load the per-date breakdown."
+          message={t("weCouldnTLoadThePer")}
           onRetry={() => refetch()}
         />
       ) : (
         <div className="flex flex-col gap-2">
           {rows.map((row) => {
             const label = row.starts_at
-              ? formatFullDateTimeRange(row.starts_at, row.ends_at)
+              ? formatFullDateTimeRange(
+                  row.starts_at,
+                  row.ends_at,
+                  undefined,
+                  locale,
+                )
               : null;
 
             return (
@@ -65,7 +75,7 @@ export default function EventDateBreakdown({
               >
                 <div>
                   <h3 className="font-semibold">
-                    {label ? label.date : "Before date-tracking"}
+                    {label ? label.date : t("beforeDateTracking")}
                   </h3>
                   {label && (
                     <p className="text-xs text-muted-foreground">
@@ -75,11 +85,13 @@ export default function EventDateBreakdown({
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-medium">
-                    {row.tickets_sold} attendees
+                    {t("attendees", { tickets_sold: row.tickets_sold })}
                   </p>
                   {row.tickets_cancelled > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      {row.tickets_cancelled} cancelled
+                      {t("cancelled2", {
+                        tickets_cancelled: row.tickets_cancelled,
+                      })}
                     </p>
                   )}
                 </div>

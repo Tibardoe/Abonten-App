@@ -1,18 +1,23 @@
 "use client";
 
 import { useUnreadMessageCount } from "@/messaging/hooks/useUnreadMessageCount";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 
 // Desktop-header entry point for Messages, sitting next to the notification
 // bell. Badges the unread-conversation count from the dedicated action.
 export function MessagesNavLink() {
+  const t = useTranslations("messaging");
+
   const { data: unread = 0 } = useUnreadMessageCount();
 
   return (
     <Link
       href="/messages"
-      aria-label={unread > 0 ? `Messages, ${unread} unread` : "Messages"}
+      aria-label={
+        unread > 0 ? t("messagesUnread", { unread: unread }) : t("messages")
+      }
       className="relative flex items-center transition-colors hover:text-primary"
     >
       <IoChatbubbleEllipsesOutline className="text-2xl" />

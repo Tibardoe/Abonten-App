@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@abonten/core": "*",
+    "@abonten/i18n": "*",
     "@abonten/services": "*",
     "@abonten/types": "*",
     "@abonten/validation": "*",
@@ -25,7 +26,8 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "recharts": "^3.10.1",
-    "tailwind-merge": "^3.0.2"
+    "tailwind-merge": "^3.0.2",
+    "use-intl": "^4.14.5"
   },
   "devDependencies": {
     "@abonten/config": "*",

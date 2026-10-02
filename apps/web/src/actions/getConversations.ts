@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchConversationsPage } from "@abonten/services/messaging/conversationsQuery";
 import type {
   ConversationFilter,
@@ -14,30 +16,32 @@ import type {
  * against the caller's last_read_at). Shares its body with
  * GET /api/mobile/messages.
  */
-export async function getConversations(options?: {
-  filter?: ConversationFilter;
-  roleScope?: ConversationRoleScope;
-  cursor?: string | null;
-  pageSize?: number;
-  search?: string | null;
-  type?: ConversationType | null;
-  muted?: boolean | null;
-}) {
-  const supabase = await createClient();
+export const getConversations = withActionLocale(
+  async function getConversations(options?: {
+    filter?: ConversationFilter;
+    roleScope?: ConversationRoleScope;
+    cursor?: string | null;
+    pageSize?: number;
+    search?: string | null;
+    type?: ConversationType | null;
+    muted?: boolean | null;
+  }) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    return {
-      status: 401,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: "User not logged in",
-    };
-  }
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return {
+        status: 401,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: tr("userNotLoggedIn"),
+      };
+    }
 
-  return fetchConversationsPage(supabase, user.id, options);
-}
+    return fetchConversationsPage(supabase, user.id, options);
+  },
+);

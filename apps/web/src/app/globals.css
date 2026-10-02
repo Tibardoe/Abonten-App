@@ -243,3 +243,40 @@
 .animate-floatMid {
   animation: floatMid 5s ease-in-out infinite;
 }
+
+/* The bar at the top of the window while a page is on its way
+   (components/atoms/NavigationProgress.tsx). It moves fast at first and
+   slows down without ever arriving: how long the page takes is not known. */
+@keyframes navigationProgress {
+  0% {
+    transform: scaleX(0);
+  }
+  20% {
+    transform: scaleX(0.4);
+  }
+  60% {
+    transform: scaleX(0.75);
+  }
+  100% {
+    transform: scaleX(0.92);
+  }
+}
+
+.navigation-progress-running {
+  animation: navigationProgress 8s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
+}
+
+.navigation-progress-done {
+  transform: scaleX(1);
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No movement: a steady bar says "working" just as well. */
+  .navigation-progress-running {
+    animation: none;
+    transform: scaleX(1);
+    opacity: 0.6;
+  }
+}

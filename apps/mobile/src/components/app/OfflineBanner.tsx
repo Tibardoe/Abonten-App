@@ -1,5 +1,6 @@
 import { offlineStartedAt, useIsOnline } from "@/lib/network";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useTheme } from "@abonten/ui-native/theme";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
@@ -32,6 +33,8 @@ const RECONNECTED_MS = 2200;
 type Phase = "hidden" | "reconnecting" | "offline" | "reconnected";
 
 export function OfflineBanner() {
+  const t = useTranslations("common");
+
   const online = useIsOnline();
   const wasOffline = useRef(false);
   const [phase, setPhase] = useState<Phase>("hidden");
@@ -70,20 +73,20 @@ export function OfflineBanner() {
           bg: c.success,
           fg: c["success-foreground"],
           icon: "cloud-done-outline",
-          label: "Back online",
+          label: t("backOnline"),
         }
       : phase === "reconnecting"
         ? {
             bg: c.warning,
             fg: c["warning-foreground"],
             icon: "sync-outline",
-            label: "Reconnecting…",
+            label: t("reconnecting"),
           }
         : {
             bg: c.destructive,
             fg: c["destructive-foreground"],
             icon: "cloud-offline-outline",
-            label: "You're offline — showing saved data",
+            label: t("youReOfflineShowingSavedData"),
           };
 
   // Mounted only while there is something to say, with enter / exit

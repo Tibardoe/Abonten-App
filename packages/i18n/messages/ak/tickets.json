@@ -1,0 +1,48 @@
+{
+  "aRefundOfTheTicketPrice": "A refund of the ticket price will be issued to your original payment method. The Abonten service fee is not refunded.",
+  "areYouSureYouWantTo": "Are you sure you want to cancel this ticket?",
+  "cancelThisTicket": "Cancel this ticket?",
+  "cancelTicket": "Cancel ticket",
+  "cancelTicketRequestRefund": "Cancel ticket & request refund",
+  "cancelling": "Cancelling…",
+  "checkedIn": "Checked in",
+  "couldnTCancel": "Couldn't cancel",
+  "couldnTCreateTheReceipt": "Couldn't create the receipt",
+  "downloadReceiptPdf": "Download receipt (PDF)",
+  "empty": {
+    "active": {
+      "description": "Tickets you buy will show up here.",
+      "title": "No active tickets"
+    },
+    "cancelled": {
+      "description": "Cancelled tickets show up here.",
+      "title": "No cancelled tickets"
+    },
+    "past": {
+      "description": "Tickets for events that have ended or were cancelled.",
+      "title": "No past tickets"
+    },
+    "refunds": {
+      "description": "Refunds for cancelled paid tickets will appear here when applicable.",
+      "title": "No refunds yet"
+    }
+  },
+  "keepTicket": "Keep ticket",
+  "locationUnavailable": "Location unavailable",
+  "noQrCode": "No QR code",
+  "pleaseTryAgainInAMoment": "Please try again in a moment.",
+  "preparingReceipt": "Preparing receipt…",
+  "receiptReady": "Receipt ready",
+  "seat": "Seat {seat_number}",
+  "shareReceiptTitle": "Abonten ticket receipt",
+  "sharingIsnTAvailableOnThis": "Sharing isn't available on this device, but the receipt PDF was generated.",
+  "showThisAtEntry": "Show this at entry",
+  "somethingWentWrongGeneratingThePdf": "Something went wrong generating the PDF. Please try again.",
+  "thisTicket": "this ticket",
+  "thisTicketCouldNotBeFound": "This ticket could not be found.",
+  "ticket": "Ticket",
+  "ticketCancelled": "Ticket cancelled",
+  "ticketReference": "Ticket reference",
+  "viewEvent": "View event",
+  "yourTickets": "your tickets"
+}

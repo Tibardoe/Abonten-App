@@ -32,10 +32,12 @@ import { openDirections as openMapsDirections } from "@/lib/directions";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { placeShareUrl } from "@/lib/share";
 import { useQueryView } from "@/lib/useQueryView";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
-import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { dayName, getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCount, formatRating } from "@abonten/core/i18n/format";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
@@ -51,6 +53,7 @@ import {
   Stars,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
@@ -64,8 +67,6 @@ import {
   ScrollView,
   View,
 } from "react-native";
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function timeLabel(t: string | null): string {
   if (!t) return "";
@@ -109,6 +110,10 @@ function ContactRow({
 }
 
 export default function PlaceDetailScreen() {
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
+
   const toast = useToast();
   // `visit`: opened from a place's check-in QR code (Rewards Phase 8).
   const { id, visit } = useLocalSearchParams<{ id: string; visit?: string }>();
@@ -150,14 +155,14 @@ export default function PlaceDetailScreen() {
             announcePlaceInteraction({ placeId: place.id, trigger: "visit" });
           }
         } else {
-          toast.error("Couldn't check you in", {
+          toast.error(t("couldnTCheckYouIn"), {
             description: outcome.message,
           });
         }
       },
       onError: () =>
-        toast.error("Couldn't check you in", {
-          description: "Please try again.",
+        toast.error(t("couldnTCheckYouIn"), {
+          description: t("pleaseTryAgain"),
         }),
     });
 
@@ -165,7 +170,7 @@ export default function PlaceDetailScreen() {
   const header = (
     <AppHeader
       variant="detail"
-      title={place?.name ?? "Place"}
+      title={place?.name ?? t("place")}
       backFallback="/(app)"
       rightAccessory={
         <View className="flex-row items-center gap-1">
@@ -173,19 +178,19 @@ export default function PlaceDetailScreen() {
             kind="place"
             targetId={place?.id}
             ownerId={place?.owner_id}
-            label={place?.name ?? "this place"}
+            label={place?.name ?? t("thisPlace")}
           />
           <SubscribeBell
             kind="place"
             targetId={place?.id}
             ownerId={place?.owner_id}
-            label={place?.name ?? "this place"}
+            label={place?.name ?? t("thisPlace")}
             compact
           />
           <DetailHeaderActions
             kind="place"
             id={id}
-            shareTitle={place?.name ?? "Place"}
+            shareTitle={place?.name ?? t("place")}
             shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
             onReport={
               session && place?.owner_id && place.owner_id !== session.user.id
@@ -234,7 +239,7 @@ export default function PlaceDetailScreen() {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError message="This place is no longer available." />
+        <ScreenError message={t("thisPlaceIsNoLongerAvailable")} />
       </View>
     );
   }
@@ -244,7 +249,7 @@ export default function PlaceDetailScreen() {
         {header}
         <QueryUnavailable
           view={detailView}
-          subject="this place"
+          subject={t("thisPlace")}
           onRetry={() => refetch()}
           loading={<PlaceDetailSkeleton />}
           className="flex-1 justify-center"
@@ -269,6 +274,7 @@ export default function PlaceDetailScreen() {
         })
       : null;
   const openStatus = computePlaceOpenStatus(
+    { t: tc, locale },
     place.openingHours,
     place.temporary_status,
     new Date(),
@@ -288,8 +294,8 @@ export default function PlaceDetailScreen() {
     void openMapsDirections({ label: place.name, address, coords }).then(
       (opened) => {
         if (!opened)
-          toast.error("Couldn't open maps", {
-            description: "No maps app is available on this device.",
+          toast.error(t("couldnTOpenMaps"), {
+            description: t("noMapsAppIsAvailableOn"),
           });
       },
     );
@@ -359,7 +365,8 @@ export default function PlaceDetailScreen() {
             <View className="flex-row flex-wrap items-center gap-2">
               <View className="rounded-full bg-black/40 px-3 py-1">
                 <AppText className="text-[12px] font-semibold text-white">
-                  {place.place_category?.name ?? "Place"}
+                  {placeCategoryLabel(tc, place.place_category ?? {}) ||
+                    t("place")}
                 </AppText>
               </View>
               {place.verified ? (
@@ -370,12 +377,23 @@ export default function PlaceDetailScreen() {
                   {openStatus.label}
                 </AppText>
               </View>
-              <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
-                <Icon name="star" size={12} tone="warning" />
-                <AppText className="text-[12px] font-semibold text-white">
-                  {place.avgRating.toFixed(1)} ({place.reviewCount})
-                </AppText>
-              </View>
+              {/* Until someone reviews it the place is "New", not "0.0"
+                  (which reads as a bad rating); the website says the same. */}
+              {place.reviewCount > 0 ? (
+                <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
+                  <Icon name="star" size={12} tone="warning" />
+                  <AppText className="text-[12px] font-semibold text-white">
+                    {formatRating(place.avgRating, locale)} (
+                    {formatCount(place.reviewCount, locale)})
+                  </AppText>
+                </View>
+              ) : (
+                <View className="rounded-full bg-black/40 px-3 py-1">
+                  <AppText className="text-[12px] font-semibold text-white">
+                    {t("newText")}
+                  </AppText>
+                </View>
+              )}
             </View>
             {address ? (
               <View className="flex-row items-start gap-1">
@@ -397,24 +415,22 @@ export default function PlaceDetailScreen() {
               <View className="flex-row items-center gap-2">
                 <Icon name="location" size={18} tone="primary" />
                 <AppText variant="bodyStrong" className="flex-1">
-                  Check in at {place.name}
+                  {t("checkInAt2", { name: place.name })}
                 </AppText>
               </View>
               <AppText variant="small" tone="muted">
-                {session
-                  ? "We'll use your location once to confirm you're here."
-                  : "Sign in to check in."}
+                {session ? t("weLlUseYourLocationOnce") : t("signInToCheckIn")}
               </AppText>
               {session ? (
                 <Button
-                  title="Check in"
+                  title={t("checkIn")}
                   leftIcon="checkmark-circle-outline"
                   loading={checkIn.isPending}
                   onPress={() => runCheckIn({ placeId: place.id, code: visit })}
                 />
               ) : (
                 <Button
-                  title="Sign in"
+                  title={t("signIn")}
                   onPress={() => router.push("/(auth)/sign-in")}
                 />
               )}
@@ -423,7 +439,7 @@ export default function PlaceDetailScreen() {
 
           {session && place.owner_id !== session.user.id ? (
             <Button
-              title="Message this place"
+              title={t("messageThisPlace")}
               variant="outline"
               fullWidth
               leftIcon="chatbubble-ellipses-outline"
@@ -434,14 +450,14 @@ export default function PlaceDetailScreen() {
                   {
                     onSuccess: (res) => {
                       if (res.status !== 200) {
-                        toast.error("Can't start a conversation", {
-                          description: res.message ?? "Please try again.",
+                        toast.error(t("canTStartAConversation"), {
+                          description: res.message ?? t("pleaseTryAgain"),
                         });
                       }
                     },
                     onError: () =>
-                      toast.error("Can't start a conversation", {
-                        description: "Please try again.",
+                      toast.error(t("canTStartAConversation"), {
+                        description: t("pleaseTryAgain"),
                       }),
                   },
                 )
@@ -456,7 +472,7 @@ export default function PlaceDetailScreen() {
             <View className="flex-row gap-2">
               {place.phone ? (
                 <Button
-                  title="Call"
+                  title={t("call")}
                   variant="outline"
                   size="sm"
                   leftIcon="call-outline"
@@ -488,7 +504,7 @@ export default function PlaceDetailScreen() {
             <View className="flex-row items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2.5">
               <Icon name="hourglass-outline" size={16} tone="muted" />
               <AppText variant="small" tone="muted" className="flex-1">
-                Your claim for this place is awaiting review.
+                {t("yourClaimForThisPlaceIs")}
               </AppText>
             </View>
           ) : claim?.canClaim ? (
@@ -503,9 +519,9 @@ export default function PlaceDetailScreen() {
                 tone="foreground"
               />
               <View className="flex-1">
-                <AppText variant="bodyStrong">Own this place?</AppText>
+                <AppText variant="bodyStrong">{t("ownThisPlace")}</AppText>
                 <AppText variant="meta">
-                  Claim it to manage its details, hours and photos.
+                  {t("claimItToManageItsDetails")}
                 </AppText>
               </View>
               <Icon name="chevron-forward" size={16} tone="muted" />
@@ -516,10 +532,10 @@ export default function PlaceDetailScreen() {
           <View className="gap-3 rounded-xl border border-border bg-card p-4">
             <View className="flex-row items-center gap-2">
               <Icon name="location-outline" size={18} tone="foreground" />
-              <AppText variant="bodyStrong">Location</AppText>
+              <AppText variant="bodyStrong">{t("location")}</AppText>
             </View>
             <AppText variant="muted">
-              {address ?? "Address not specified"}
+              {address ?? t("addressNotSpecified")}
             </AppText>
             {coords ? (
               <StaticMapPreview
@@ -531,7 +547,7 @@ export default function PlaceDetailScreen() {
 
             <View className="flex-row gap-2 pt-1">
               <Button
-                title="Directions"
+                title={t("directions")}
                 variant="outline"
                 size="sm"
                 leftIcon="navigate-outline"
@@ -540,7 +556,7 @@ export default function PlaceDetailScreen() {
               />
               {session && isVisitor && visitsOn ? (
                 <Button
-                  title="Check in"
+                  title={t("checkIn")}
                   variant="outline"
                   size="sm"
                   leftIcon="qr-code-outline"
@@ -556,7 +572,7 @@ export default function PlaceDetailScreen() {
           {place.phone || place.whatsapp || place.website_url ? (
             <View className="gap-1 rounded-xl border border-border bg-card p-4">
               <AppText variant="bodyStrong" className="mb-1">
-                Contact
+                {t("contact")}
               </AppText>
               {place.phone ? (
                 <ContactRow
@@ -597,7 +613,7 @@ export default function PlaceDetailScreen() {
           {/* About */}
           {place.description ? (
             <View className="gap-2">
-              <SectionTitle>About</SectionTitle>
+              <SectionTitle>{t("about")}</SectionTitle>
               <AppText variant="body" tone="muted">
                 {place.description}
               </AppText>
@@ -607,7 +623,7 @@ export default function PlaceDetailScreen() {
           {/* Opening hours */}
           {place.openingHours.length > 0 ? (
             <View className="gap-2">
-              <SectionTitle>Opening hours</SectionTitle>
+              <SectionTitle>{t("openingHours")}</SectionTitle>
               <View className="rounded-xl border border-border bg-card">
                 {[...place.openingHours]
                   .sort((a, b) => a.day_of_week - b.day_of_week)
@@ -619,11 +635,11 @@ export default function PlaceDetailScreen() {
                       }`}
                     >
                       <AppText variant="small">
-                        {DAY_LABELS[h.day_of_week]}
+                        {dayName(h.day_of_week, "short", locale)}
                       </AppText>
                       <AppText variant="muted">
                         {h.is_closed || !h.open_time || !h.close_time
-                          ? "Closed"
+                          ? t("closed")
                           : `${timeLabel(h.open_time)} – ${timeLabel(h.close_time)}`}
                       </AppText>
                     </View>
@@ -635,7 +651,7 @@ export default function PlaceDetailScreen() {
           {/* Services */}
           {place.services.length > 0 ? (
             <View className="gap-2">
-              <SectionTitle>Services</SectionTitle>
+              <SectionTitle>{t("services")}</SectionTitle>
               {place.services.map((s) => (
                 <View
                   key={s.id}
@@ -649,6 +665,7 @@ export default function PlaceDetailScreen() {
                       <AppText variant="muted">
                         {formatMoney(placeCurrency, s.price, {
                           trimZeroFraction: true,
+                          locale,
                         })}
                         {s.price_unit ? ` / ${s.price_unit}` : ""}
                       </AppText>
@@ -667,7 +684,7 @@ export default function PlaceDetailScreen() {
           {/* Photos */}
           {place.photos.length > 0 ? (
             <View className="gap-2">
-              <SectionTitle>Photos</SectionTitle>
+              <SectionTitle>{t("photos")}</SectionTitle>
               <PhotoGallery photos={place.photos} />
             </View>
           ) : null}
@@ -684,7 +701,7 @@ export default function PlaceDetailScreen() {
           {/* Upcoming events (item 13) */}
           {upcomingEvents.length > 0 ? (
             <View className="gap-3">
-              <SectionTitle>Upcoming events here</SectionTitle>
+              <SectionTitle>{t("upcomingEventsHere")}</SectionTitle>
               <FlatList
                 horizontal
                 data={upcomingEvents}
@@ -703,7 +720,7 @@ export default function PlaceDetailScreen() {
           {/* Similar places (item 13) */}
           {similarPlaces.length > 0 ? (
             <View className="gap-3">
-              <SectionTitle>Similar places</SectionTitle>
+              <SectionTitle>{t("similarPlaces")}</SectionTitle>
               <FlatList
                 horizontal
                 data={similarPlaces}
@@ -732,7 +749,7 @@ export default function PlaceDetailScreen() {
               }
             >
               <AppText variant="caption" tone="muted" className="font-medium">
-                Report this place
+                {t("reportThisPlace")}
               </AppText>
             </Pressable>
           ) : null}
@@ -780,17 +797,18 @@ export default function PlaceDetailScreen() {
           <View className="flex-row items-center gap-3">
             <View className="flex-1">
               <AppText variant="caption" numberOfLines={1}>
-                {place.place_category?.name ?? "Place"}
+                {placeCategoryLabel(tc, place.place_category ?? {}) ||
+                  t("place")}
               </AppText>
               <AppText variant="bodyStrong" numberOfLines={1}>
                 {openStatus.label}
               </AppText>
             </View>
             <Button
-              title={session ? "Book" : "Sign in to book"}
+              title={session ? t("book") : t("signInToBook")}
               leftIcon="calendar-outline"
               onPress={onBook}
-              accessibilityHint="Request a booking with this place"
+              accessibilityHint={t("requestABookingWithThisPlace")}
             />
           </View>
         </BottomBar>

@@ -14,7 +14,6 @@ import { MdOutlineReceipt } from "react-icons/md";
 import { RiSearchLine } from "react-icons/ri";
 import { VscAccount } from "react-icons/vsc";
 import MobileNavButton from "../atoms/MobileNavButton";
-import MobileAuthPopup from "./AuthModal";
 
 export default function MobileNavBar() {
   const t = useTranslations("navigation");

@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -9,10 +10,12 @@ import { createContentCampaignCore } from "@abonten/services/content/campaigns/c
 import { createContentCampaignSchema } from "@abonten/validation/contentSchemas";
 
 /** Starts a promoted Spotlight campaign and its checkout. */
-export async function createContentCampaign(input: unknown) {
-  const caller = await requireContentUser();
-  if (caller.error) return caller.error;
-  const parsed = parseContentInput(createContentCampaignSchema, input);
-  if (parsed.error) return parsed.error;
-  return createContentCampaignCore(caller.svc, caller.userId, parsed.data);
-}
+export const createContentCampaign = withActionLocale(
+  async function createContentCampaign(input: unknown) {
+    const caller = await requireContentUser();
+    if (caller.error) return caller.error;
+    const parsed = parseContentInput(createContentCampaignSchema, input);
+    if (parsed.error) return parsed.error;
+    return createContentCampaignCore(caller.svc, caller.userId, parsed.data);
+  },
+);

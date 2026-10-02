@@ -6,9 +6,10 @@ import {
 } from "@/features/transactions/useTransactions";
 import { useQueryView } from "@/lib/useQueryView";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatDate } from "@abonten/core/i18n/format";
 import {
-  TRANSACTION_PERIOD_LABELS,
   type TransactionPeriod,
+  transactionPeriodLabel,
 } from "@abonten/core/transactionsDateRange";
 import type { UserTransactionRow } from "@abonten/types/transactions";
 import {
@@ -21,6 +22,11 @@ import {
   Spinner,
   StatusPill,
 } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, ScrollView, View } from "react-native";
@@ -40,7 +46,9 @@ const PERIODS: TransactionPeriod[] = [
 ];
 
 function money(amount: number, currency: string) {
-  return formatMoney(currency, Number(amount ?? 0));
+  return formatMoney(currency, Number(amount ?? 0), {
+    locale: getCurrentLocale(),
+  });
 }
 
 function Tile({ label, value }: { label: string; value: string }) {
@@ -59,16 +67,19 @@ function TransactionRow({
   row: UserTransactionRow;
   onPress: () => void;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("transactions");
+
   const hasRefund = !!row.refund_status && row.refund_status !== "none";
   // A cancelled ticket whose transaction still reads "successful" but has a
   // refund request on file = the refund attempt failed (see refundStatus.ts).
   const refundLabel =
     row.refund_status === "refunded"
-      ? "Refund issued"
+      ? t("refundIssued")
       : row.refund_status === "refund_pending"
-        ? "Refund pending"
+        ? t("refundPending")
         : row.refund_status === "successful" && row.refund_requested_at
-          ? "Refund failed"
+          ? t("refundFailed")
           : undefined;
 
   return (
@@ -77,7 +88,7 @@ function TransactionRow({
       accessibilityRole="button"
       accessibilityLabel={`${
         row.title ??
-        (row.kind === "ticket" ? "Ticket purchase" : "Subscription")
+        (row.kind === "ticket" ? t("ticketPurchase") : t("subscription"))
       }, ${money(row.total_paid ?? row.amount, row.currency)}, ${row.status}`}
       className="gap-2 rounded-2xl border border-border bg-card p-3 active:opacity-90"
     >
@@ -92,7 +103,9 @@ function TransactionRow({
           <View className="flex-1">
             <AppText variant="bodyStrong" numberOfLines={1}>
               {row.title ??
-                (row.kind === "ticket" ? "Ticket purchase" : "Subscription")}
+                (row.kind === "ticket"
+                  ? t("ticketPurchase2")
+                  : t("subscription"))}
             </AppText>
             <AppText variant="caption" numberOfLines={1}>
               {row.subtitle ?? row.reference}
@@ -105,7 +118,9 @@ function TransactionRow({
           </AppText>
           {row.credit_used ? (
             <AppText variant="caption">
-              incl. {money(Number(row.credit_used), row.currency)} credit
+              {t("inclCredit2", {
+                money: money(Number(row.credit_used), row.currency),
+              })}
             </AppText>
           ) : null}
         </View>
@@ -122,7 +137,7 @@ function TransactionRow({
           ) : null}
         </View>
         <AppText variant="caption">
-          {new Date(row.created_at).toLocaleDateString()}
+          {formatDate(row.created_at, locale)}
         </AppText>
       </View>
     </Pressable>
@@ -130,6 +145,9 @@ function TransactionRow({
 }
 
 export default function Transactions() {
+  const t = useTranslations("transactions");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const [period, setPeriod] = useState<TransactionPeriod>("thisMonth");
   const summaryQuery = useTransactionSummary(period);
@@ -163,7 +181,7 @@ export default function Transactions() {
         {PERIODS.map((p) => (
           <Chip
             key={p}
-            label={TRANSACTION_PERIOD_LABELS[p]}
+            label={transactionPeriodLabel(tc, p)}
             selected={period === p}
             onPress={() => setPeriod(p)}
           />
@@ -175,7 +193,7 @@ export default function Transactions() {
           nothing". */}
       <View className="flex-row gap-3 px-4">
         <Tile
-          label="Spent"
+          label={t("spent")}
           value={
             summary
               ? money(summary.amount_spent ?? 0, summary.currency ?? "")
@@ -183,17 +201,17 @@ export default function Transactions() {
           }
         />
         <Tile
-          label="Transactions"
+          label={t("transactions")}
           value={summary ? String(summary.total_transactions ?? 0) : "—"}
         />
       </View>
       <View className="flex-row gap-3 px-4">
         <Tile
-          label="Tickets"
+          label={t("tickets")}
           value={summary ? String(summary.tickets_purchased ?? 0) : "—"}
         />
         <Tile
-          label="Successful"
+          label={t("successful")}
           value={summary ? String(summary.successful_count ?? 0) : "—"}
         />
       </View>
@@ -228,13 +246,13 @@ export default function Transactions() {
         historyView.kind === "empty" ? (
           <EmptyState
             icon="swap-horizontal-outline"
-            title="No transactions for this period"
-            description="Purchases and promotions you pay for show up here."
+            title={t("noTransactionsForThisPeriod2")}
+            description={t("purchasesAndPromotionsYouPayFor")}
           />
         ) : (
           <QueryUnavailable
             view={historyView}
-            subject="your transactions"
+            subject={t("yourTransactions")}
             onRetry={() => historyQuery.refetch()}
             loading={<Spinner className="mt-6" />}
           />

@@ -3,9 +3,10 @@
 import { getStoryTray } from "@/actions/content/getStoryTray";
 import { cn } from "@/components/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { YOUR_STORY_LABEL } from "@abonten/core/content/copy";
+import { YOUR_STORY_LABEL_KEY } from "@abonten/core/content/copy";
 import type { StoryTrayEntry } from "@abonten/types/contentType";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -19,6 +20,9 @@ import StoryViewer, { type StoryQueueEntry } from "./StoryViewer";
 // visitor can publish, then the organizers and places they follow, unseen
 // first. Renders nothing while Stories is off for this visitor.
 export default function StoriesRow({ className }: { className?: string }) {
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+
   const { program } = useContentProgram();
   const { data: user } = useCurrentUser();
   const [open, setOpen] = useState<{
@@ -64,7 +68,7 @@ export default function StoriesRow({ className }: { className?: string }) {
   return (
     <>
       <ul
-        aria-label="Stories"
+        aria-label={t("stories")}
         className={cn(
           "flex gap-3 overflow-x-auto px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           className,
@@ -73,7 +77,7 @@ export default function StoriesRow({ className }: { className?: string }) {
         {self ? (
           <StoryBubble
             entry={self}
-            label={YOUR_STORY_LABEL}
+            label={tc(YOUR_STORY_LABEL_KEY)}
             onOpen={() =>
               setOpen({
                 queue: [
@@ -97,7 +101,7 @@ export default function StoriesRow({ className }: { className?: string }) {
                 <IoAdd className="text-2xl" />
               </span>
               <span className="w-full truncate text-center text-[11px]">
-                {YOUR_STORY_LABEL}
+                {tc(YOUR_STORY_LABEL_KEY)}
               </span>
             </Link>
           </li>
@@ -135,12 +139,16 @@ function StoryBubble({
   onOpen: () => void;
   addHref?: string;
 }) {
+  const t = useTranslations("spotlight");
+
   return (
     <li className="relative flex w-16 shrink-0 flex-col items-center gap-1">
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`${label} Stories${entry.hasUnseen ? ", new" : ""}`}
+        aria-label={t(entry.hasUnseen ? "storiesOfNew" : "storiesOf", {
+          label,
+        })}
         className={cn(
           "rounded-full p-[2px]",
           entry.hasUnseen
@@ -163,7 +171,7 @@ function StoryBubble({
       {addHref ? (
         <Link
           href={addHref}
-          aria-label="Add to your Story"
+          aria-label={t("addToYourStory")}
           className="absolute right-0 top-9 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground"
         >
           <IoAdd className="text-xs" />

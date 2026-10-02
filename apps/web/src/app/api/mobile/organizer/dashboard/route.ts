@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { calendarZoneOrDefault } from "@abonten/services/markets/calendarZone";
 import { fetchOrganizerDashboard } from "@abonten/services/organizer/organizerDashboardQuery";
 
@@ -16,6 +20,7 @@ const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];
 // database round trip via get_organizer_dashboard; the web page keeps its
 // per-section actions for its interactive sort.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -36,6 +41,9 @@ export async function GET(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile GET /organizer/dashboard failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

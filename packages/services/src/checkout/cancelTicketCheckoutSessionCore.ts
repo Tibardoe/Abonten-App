@@ -4,6 +4,7 @@ import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventor
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of cancelTicketCheckoutSession — shared with
@@ -42,13 +43,13 @@ export async function cancelTicketCheckoutSessionCore(
 
   if (fetchError) {
     logger.error(`Failed fetching checkout session: ${fetchError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const rows = (rawRows ?? []) as PendingRow[];
 
   if (rows.length === 0) {
-    return { status: 404, message: "Checkout not found" };
+    return { status: 404, message: tr("checkoutNotFound") };
   }
 
   // Phase 12 race guard — see deleteTicketSummaryCheckout.ts.
@@ -61,8 +62,7 @@ export async function cancelTicketCheckoutSessionCore(
   ) {
     return {
       status: 409,
-      message:
-        "Payment is currently being processed for this order. Please wait a moment and try again.",
+      message: tr("paymentIsCurrentlyBeingProcessedFor"),
     };
   }
 
@@ -75,7 +75,7 @@ export async function cancelTicketCheckoutSessionCore(
 
   if (updateError) {
     logger.error(`Failed cancelling checkout session: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   for (const row of rows) {
@@ -123,5 +123,5 @@ export async function cancelTicketCheckoutSessionCore(
     }
   }
 
-  return { status: 200, message: "Checkout removed successfully!" };
+  return { status: 200, message: tr("checkoutRemovedSuccessfully") };
 }

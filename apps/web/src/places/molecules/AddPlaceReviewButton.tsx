@@ -6,6 +6,7 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import PlaceReviewModal from "../organisms/PlaceReviewModal";
 
@@ -25,6 +26,8 @@ export default function AddPlaceReviewButton({
   placeId,
   ownerId,
 }: AddPlaceReviewButtonProps) {
+  const t = useTranslations("places");
+
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const queryClient = useQueryClient();
@@ -62,7 +65,7 @@ export default function AddPlaceReviewButton({
       <div className="flex flex-col items-start md:items-end gap-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-card-foreground">
-            Your Review
+            {t("yourReview")}
           </span>
           <StarRatingDisplay rating={ownReview.rating} />
         </div>
@@ -72,14 +75,14 @@ export default function AddPlaceReviewButton({
             onClick={() => setShowReviewModal(true)}
             className="text-sm text-primary hover:underline"
           >
-            Edit
+            {t("edit")}
           </button>
           <button
             type="button"
             onClick={() => setShowDeleteConfirm(true)}
             className="text-sm text-destructive hover:underline"
           >
-            Delete
+            {t("deleteText")}
           </button>
         </div>
 
@@ -95,9 +98,9 @@ export default function AddPlaceReviewButton({
         {showDeleteConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4">
             <div className="bg-card text-card-foreground rounded-lg p-6 w-full max-w-sm space-y-4 shadow-lg">
-              <p className="font-medium">Delete your review?</p>
+              <p className="font-medium">{t("deleteYourReview")}</p>
               <p className="text-sm text-muted-foreground">
-                This can&apos;t be undone.
+                {t("thisCanTBeUndone")}
               </p>
               <div className="flex justify-end gap-2">
                 <button
@@ -105,7 +108,7 @@ export default function AddPlaceReviewButton({
                   onClick={() => setShowDeleteConfirm(false)}
                   className="px-3 py-1.5 rounded-md text-sm border border-border hover:bg-accent transition-colors"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="button"
@@ -113,7 +116,7 @@ export default function AddPlaceReviewButton({
                   onClick={() => deleteReview(ownReview.id)}
                   className="px-3 py-1.5 rounded-md text-sm bg-destructive text-destructive-foreground disabled:opacity-60"
                 >
-                  {isDeleting ? "Deleting..." : "Delete"}
+                  {isDeleting ? t("deleting") : t("deleteText")}
                 </button>
               </div>
             </div>
@@ -137,7 +140,7 @@ export default function AddPlaceReviewButton({
         className="p-3 rounded-md font-semibold"
         onClick={() => setShowReviewModal(true)}
       >
-        Add Review
+        {t("addReview")}
       </Button>
     </>
   );

@@ -1,15 +1,18 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { TICKET_MODE } from "@/events/ticketMode";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
 import {
   type PostEventCoreResult,
   postEventCore,
 } from "@abonten/services/events/postEventCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { PostsType } from "@abonten/types/postsType";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
-export async function postEvent(
+export const postEvent = withActionLocale(async function postEvent(
   formData: PostsType,
 ): Promise<PostEventCoreResult | { status: 400 | 401 | 500; message: string }> {
   const supabase = await createClient();
@@ -27,7 +30,7 @@ export async function postEvent(
   }
 
   if (!user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   const { selectedFile, existingFlyer } = formData;
@@ -48,14 +51,14 @@ export async function postEvent(
         status: 500,
         message:
           (flyerUpload as { error?: string })?.error ??
-          "Flyer upload to Cloudinary failed.",
+          tr("flyerUploadToCloudinaryFailed"),
       };
     }
 
     flyerPublicId = flyerUpload.public_id;
     flyerVersion = flyerUpload.version;
   } else {
-    return { status: 400, message: "An event flyer is required." };
+    return { status: 400, message: tr("anEventFlyerIsRequired") };
   }
 
   return postEventCore(supabase, user.id, {
@@ -72,7 +75,7 @@ export async function postEvent(
     startsAt: formData.starts_at ?? null,
     endsAt: formData.ends_at ?? null,
     specificDates: formData.specific_dates ?? null,
-    freeEvent: formData.freeEvents === "Free",
+    freeEvent: formData.freeEvents === TICKET_MODE.free,
     singleTicket:
       formData.singleTicket != null
         ? {
@@ -94,4 +97,4 @@ export async function postEvent(
     placeId: formData.placeId ?? null,
     draftId: formData.draftId ?? null,
   });
-}
+});

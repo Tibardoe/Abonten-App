@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   type EventCancellationImpact,
   type EventCancellationImpactResult,
   getEventCancellationImpactCore,
 } from "@abonten/services/events/cancelEventCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type { EventCancellationImpact };
 
@@ -16,7 +18,7 @@ export type { EventCancellationImpact };
  * be SECURITY DEFINER since ticket/attendance RLS is scoped to the ticket
  * holder's own user_id, not the organizer.
  */
-export default async function getEventCancellationImpact(
+export default withActionLocale(async function getEventCancellationImpact(
   eventId: string,
 ): Promise<EventCancellationImpactResult | { status: 401; message: string }> {
   const supabase = await createClient();
@@ -27,8 +29,8 @@ export default async function getEventCancellationImpact(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return getEventCancellationImpactCore(supabase, eventId);
-}
+});

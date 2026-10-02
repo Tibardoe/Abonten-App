@@ -10,6 +10,7 @@ import type {
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { FieldOpsPlaceDetailsInput } from "@abonten/validation/fieldOpsSchemas";
+import { tr } from "../../i18n/requestLocale";
 import { getDefaultMarket } from "../../markets/marketConfig";
 import { postPlaceCore } from "../../places/postPlaceCore";
 import { getResendCooldownRemainingMs } from "../../profile/phoneOtpStore";
@@ -38,6 +39,7 @@ import {
   mapOnboarding,
   readProgramSettings,
 } from "../shared/onboardingRows";
+import { TIMELINE_NOTE } from "../shared/timelineNotes";
 import { consentPathFor } from "./ownerOtpCore";
 
 // The onboarding wizard, server side: start a draft, look for duplicates,
@@ -119,7 +121,7 @@ export async function startOnboardingCore(
   if (m.campaignStatus !== "active") {
     return {
       status: 409,
-      message: "The campaign isn't taking new onboardings.",
+      message: tr("theCampaignIsnTTakingNew4"),
     };
   }
   if (input.clientRequestId) {
@@ -149,7 +151,7 @@ export async function startOnboardingCore(
   if (!assignment) {
     return {
       status: 409,
-      message: "You need an open assignment in this territory to onboard here.",
+      message: tr("youNeedAnOpenAssignmentIn"),
     };
   }
   let prospect: {
@@ -172,7 +174,10 @@ export async function startOnboardingCore(
       data.member_user_id !== userId ||
       data.territory_id !== input.territoryId
     ) {
-      return { status: 404, message: "Business not found in this territory" };
+      return {
+        status: 404,
+        message: tr("businessNotFoundInThisTerritory"),
+      };
     }
     if (data.onboarding_id) {
       const { data: open } = await supabase
@@ -188,7 +193,7 @@ export async function startOnboardingCore(
       ) {
         return {
           status: 200,
-          message: "Continuing the onboarding you already started.",
+          message: tr("continuingTheOnboardingYouAlreadyStarted"),
           data: mapOnboarding(open as unknown as OnboardingRow),
         };
       }
@@ -218,8 +223,8 @@ export async function startOnboardingCore(
     .single();
   if (error || !data) {
     return dbErr(
-      error ?? { message: "insert failed" },
-      "Could not start the onboarding",
+      error ?? { message: tr("insertFailed") },
+      tr("couldNotStartTheOnboarding"),
     );
   }
   const row = data as unknown as OnboardingRow;
@@ -234,7 +239,7 @@ export async function startOnboardingCore(
     status: "draft",
     actorUserId: userId,
     actorKind: "member",
-    note: "Started",
+    note: TIMELINE_NOTE.started,
   });
   return { status: 200, data: mapOnboarding(row) };
 }
@@ -276,7 +281,7 @@ export async function getOnboardingDraftCore(
     input.campaignId,
     input.onboardingId,
   );
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   const [evidence, settings, cooldownMs, dialCode] = await Promise.all([
     loadEvidence(supabase, row.id, { sign: true }),
     readProgramSettings(supabase),
@@ -323,7 +328,7 @@ export async function listMyOnboardingsCore(
     .limit(200);
   if (input.status) q = q.eq("status", input.status);
   const { data, error } = await q;
-  if (error) return dbErr(error, "Could not load your onboardings");
+  if (error) return dbErr(error, tr("couldNotLoadYourOnboardings"));
   return {
     status: 200,
     data: ((data ?? []) as unknown as OnboardingRow[]).map((r) =>
@@ -355,11 +360,11 @@ export async function getOnboardingDetailCore(
     .eq("campaign_id", input.campaignId)
     .maybeSingle();
   const row = data as unknown as OnboardingRow | null;
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   const allowed = isLead
     ? row.team_id === teamId
     : row.member_user_id === userId;
-  if (!allowed) return { status: 404, message: "Onboarding not found" };
+  if (!allowed) return { status: 404, message: tr("onboardingNotFound") };
   return {
     status: 200,
     data: await buildOnboardingDetail(supabase, row, {
@@ -393,7 +398,7 @@ export async function searchSimilarPlacesCore(
     input.campaignId,
     input.onboardingId,
   );
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   const settings = await readProgramSettings(supabase);
   const matches = await findSimilarPlaces(
     supabase,
@@ -443,30 +448,29 @@ export async function submitOnboardingCore(
     input.campaignId,
     input.onboardingId,
   );
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "draft" && row.status !== "needs_changes") {
     return {
       status: 409,
-      message: "This onboarding has already been submitted.",
+      message: tr("thisOnboardingHasAlreadyBeenSubmitted"),
     };
   }
   if (!SUBMITTING_STATUSES.has(m.campaignStatus)) {
     return {
       status: 409,
-      message: "The campaign isn't taking submissions right now.",
+      message: tr("theCampaignIsnTTakingSubmissions"),
     };
   }
   if (m.campaignStatus === "winding_down" && row.status !== "needs_changes") {
     return {
       status: 409,
-      message:
-        "The campaign is winding down: only fixes to returned onboardings can be sent.",
+      message: tr("theCampaignIsWindingDownOnly"),
     };
   }
   if (!row.owner_user_id) {
     return {
       status: 409,
-      message: "The owner has to verify their phone before you can submit.",
+      message: tr("theOwnerHasToVerifyTheir2"),
     };
   }
   const settings = await readProgramSettings(supabase);
@@ -482,7 +486,7 @@ export async function submitOnboardingCore(
   if ((submittedToday ?? 0) >= Number(settings.daily_submission_cap)) {
     return {
       status: 429,
-      message: "You've reached today's submission limit. Continue tomorrow.",
+      message: tr("youVeReachedTodaySSubmission"),
     };
   }
 
@@ -495,7 +499,7 @@ export async function submitOnboardingCore(
   if (photoIds.some((id) => !id.startsWith(folder))) {
     return {
       status: 403,
-      message: "One of the photos wasn't uploaded from this account.",
+      message: tr("oneOfThePhotosWasnT"),
     };
   }
 
@@ -503,7 +507,7 @@ export async function submitOnboardingCore(
   if (row.mode === "offline" && !input.submissionLocation) {
     return {
       status: 400,
-      message: "Turn on location so we can record that you're at the business.",
+      message: tr("turnOnLocationSoWeCan3"),
     };
   }
 
@@ -518,8 +522,7 @@ export async function submitOnboardingCore(
     if (!kinds.has("storefront") || !kinds.has("interior")) {
       return {
         status: 400,
-        message:
-          "Add a storefront photo and an interior photo before submitting.",
+        message: tr("addAStorefrontPhotoAndAn"),
       };
     }
   }
@@ -541,7 +544,9 @@ export async function submitOnboardingCore(
   if (strong.length > 0 && !input.duplicateAcknowledged) {
     return {
       status: 409,
-      message: `This looks like ${strong[0]?.name} which is already on Abonten. If it's a different business, confirm and submit again.`,
+      message: tr("thisLooksLikeWhichIsAlready", {
+        name: strong[0]?.name ?? "",
+      }),
     };
   }
   if (strong.some((x) => x.phoneMatch)) {
@@ -549,7 +554,9 @@ export async function submitOnboardingCore(
     // The member's way forward is claim assistance, not a second listing.
     return {
       status: 409,
-      message: `${strong.find((x) => x.phoneMatch)?.name} already uses this phone number on Abonten. Help the owner claim that listing instead.`,
+      message: tr("alreadyUsesThisPhoneNumberOn", {
+        name: strong.find((x) => x.phoneMatch)?.name ?? "",
+      }),
     };
   }
 
@@ -641,10 +648,10 @@ export async function submitOnboardingCore(
     if (updErr.code === "23505") {
       return {
         status: 409,
-        message: "This business has already been onboarded.",
+        message: tr("thisBusinessHasAlreadyBeenOnboarded"),
       };
     }
-    return dbErr(updErr, "Could not save the submission");
+    return dbErr(updErr, tr("couldNotSaveTheSubmission"));
   }
 
   const { data: moved, error: trErr } = await supabase.rpc(
@@ -662,7 +669,7 @@ export async function submitOnboardingCore(
       },
     },
   );
-  if (trErr) return dbErr(trErr, "Could not submit");
+  if (trErr) return dbErr(trErr, tr("couldNotSubmit"));
 
   if (row.prospect_id) {
     await supabase
@@ -681,8 +688,13 @@ export async function submitOnboardingCore(
     (leads ?? []).map((l) => l.user_id).filter((id): id is string => !!id),
     {
       type: "fieldops_submission_received",
-      title: `Review: ${input.place.name}`,
-      body: `${row.fieldops_team_member?.full_name_snapshot ?? "A member"} submitted a new business.`,
+      template: {
+        id: "fieldops_onboarding_received",
+        params: {
+          place: input.place.name,
+          member: row.fieldops_team_member?.full_name_snapshot ?? null,
+        },
+      },
       route: `/field/lead/review/${row.id}`,
     },
   );
@@ -695,7 +707,7 @@ export async function submitOnboardingCore(
   );
   return {
     status: 200,
-    message: "Submitted. Your team lead will review it.",
+    message: tr("submittedYourTeamLeadWillReview"),
     data: mapOnboarding(
       (fresh ?? (moved as unknown as OnboardingRow)) as OnboardingRow,
     ),
@@ -720,11 +732,11 @@ export async function withdrawOnboardingCore(
     input.campaignId,
     input.onboardingId,
   );
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (!["draft", "submitted", "needs_changes"].includes(row.status)) {
     return {
       status: 409,
-      message: "This onboarding can no longer be withdrawn.",
+      message: tr("thisOnboardingCanNoLongerBe"),
     };
   }
   const { data, error } = await supabase.rpc("fieldops_transition_onboarding", {
@@ -735,7 +747,7 @@ export async function withdrawOnboardingCore(
     p_note: input.reason ?? undefined,
     p_details: {},
   });
-  if (error) return dbErr(error, "Could not withdraw");
+  if (error) return dbErr(error, tr("couldNotWithdraw"));
   if (row.prospect_id) {
     await supabase
       .from("fieldops_prospect")
@@ -751,7 +763,7 @@ export async function withdrawOnboardingCore(
   );
   return {
     status: 200,
-    message: "Withdrawn.",
+    message: tr("withdrawn"),
     data: mapOnboarding(
       (fresh ?? (data as unknown as OnboardingRow)) as OnboardingRow,
     ),

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { evaluateEventReviewEligibility } from "@abonten/core/eventReviewEligibility";
 import { logger } from "@abonten/core/logger";
 import type { Occurrence } from "@abonten/types/occurrenceType";
@@ -46,70 +47,73 @@ type TicketRow = { ticket_type: { event_id: string } | null };
 // re-enforces the same two checks server-side, independent of this action.
 // The decision itself is @abonten/core/eventReviewEligibility, shared
 // verbatim with the mobile useEventReviews hook.
-export async function getEventReviewEligibility(
-  eventId: string,
-  organizerId: string,
-  eventStatus: string,
-  startsAt: string | null,
-  endsAt: string | null,
-  occurrences: Occurrence[] | null,
-): Promise<EventReviewEligibility> {
-  const supabase = await createClient();
+export const getEventReviewEligibility = withActionLocale(
+  async function getEventReviewEligibility(
+    eventId: string,
+    organizerId: string,
+    eventStatus: string,
+    startsAt: string | null,
+    endsAt: string | null,
+    occurrences: Occurrence[] | null,
+  ): Promise<EventReviewEligibility> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) return { canReview: false, reason: "signed_out" };
-  if (user.id === organizerId) return { canReview: false, reason: "organizer" };
+    if (!user) return { canReview: false, reason: "signed_out" };
+    if (user.id === organizerId)
+      return { canReview: false, reason: "organizer" };
 
-  const { data: ownReview } = await supabase
-    .from("event_review")
-    .select(
-      "id, rating, title, comment, event_review_photo(id, public_id, version, position)",
-    )
-    .eq("event_id", eventId)
-    .eq("reviewer_id", user.id)
-    .maybeSingle();
+    const { data: ownReview } = await supabase
+      .from("event_review")
+      .select(
+        "id, rating, title, comment, event_review_photo(id, public_id, version, position)",
+      )
+      .eq("event_id", eventId)
+      .eq("reviewer_id", user.id)
+      .maybeSingle();
 
-  if (ownReview) {
-    return {
-      canReview: false,
-      reason: "has_review",
-      ownReview: ownReview as unknown as Extract<
-        EventReviewEligibility,
-        { reason: "has_review" }
-      >["ownReview"],
-    };
-  }
+    if (ownReview) {
+      return {
+        canReview: false,
+        reason: "has_review",
+        ownReview: ownReview as unknown as Extract<
+          EventReviewEligibility,
+          { reason: "has_review" }
+        >["ownReview"],
+      };
+    }
 
-  const { data: rawTickets, error: ticketsError } = await supabase
-    .from("ticket")
-    .select("ticket_type:ticket_type_id(event_id)")
-    .eq("user_id", user.id)
-    .eq("status", "used");
+    const { data: rawTickets, error: ticketsError } = await supabase
+      .from("ticket")
+      .select("ticket_type:ticket_type_id(event_id)")
+      .eq("user_id", user.id)
+      .eq("status", "used");
 
-  if (ticketsError) {
-    logger.error(
-      `Failed checking verified attendance: ${ticketsError.message}`,
-    );
-    return { canReview: false, reason: "not_attended" };
-  }
+    if (ticketsError) {
+      logger.error(
+        `Failed checking verified attendance: ${ticketsError.message}`,
+      );
+      return { canReview: false, reason: "not_attended" };
+    }
 
-  const hasVerifiedAttendance = !!(
-    rawTickets as unknown as TicketRow[] | null
-  )?.some((t) => t.ticket_type?.event_id === eventId);
+    const hasVerifiedAttendance = !!(
+      rawTickets as unknown as TicketRow[] | null
+    )?.some((t) => t.ticket_type?.event_id === eventId);
 
-  const result = evaluateEventReviewEligibility({
-    viewerUserId: user.id,
-    organizerId,
-    eventStatus,
-    startsAt,
-    endsAt,
-    occurrences,
-    hasOwnReview: false,
-    hasVerifiedAttendance,
-  });
+    const result = evaluateEventReviewEligibility({
+      viewerUserId: user.id,
+      organizerId,
+      eventStatus,
+      startsAt,
+      endsAt,
+      occurrences,
+      hasOwnReview: false,
+      hasVerifiedAttendance,
+    });
 
-  return result as EventReviewEligibility;
-}
+    return result as EventReviewEligibility;
+  },
+);

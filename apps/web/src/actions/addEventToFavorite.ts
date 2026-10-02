@@ -1,28 +1,32 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
-export async function addEventToFavorite(eventId: string) {
-  const supabase = await createClient();
+export const addEventToFavorite = withActionLocale(
+  async function addEventToFavorite(eventId: string) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (!user || userError) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  const { error: insertError } = await supabase.from("favorite").insert({
-    user_id: user.id,
-    event_id: eventId,
-    created_at: new Date().toISOString(),
-  });
+    const { error: insertError } = await supabase.from("favorite").insert({
+      user_id: user.id,
+      event_id: eventId,
+      created_at: new Date().toISOString(),
+    });
 
-  if (insertError) {
-    throw insertError;
-  }
+    if (insertError) {
+      throw insertError;
+    }
 
-  return { status: 200, message: "Event posted successfully!" };
-}
+    return { status: 200, message: tr("eventPostedSuccessfully") };
+  },
+);

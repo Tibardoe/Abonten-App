@@ -1,5 +1,8 @@
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
-import type { TicketPdfData } from "@abonten/core/ticketPdfData";
+import type {
+  TicketPdfData,
+  TicketPdfLabels,
+} from "@abonten/core/ticketPdfData";
 
 // The stacked Abonten logo as a PNG — the same asset the web ticket PDF uses.
 // Mirrors apps/web/src/config/brandAssets.ts `ABONTEN_PDF_LOGO_URL`; kept in
@@ -20,11 +23,14 @@ function escapeHtml(value: string): string {
  * layout, colours and fields as the emailed attachment and the web
  * "Download As PDF" button, so the three can't drift into different designs.
  */
-export function buildTicketReceiptHtml(ticket: TicketPdfData): string {
+export function buildTicketReceiptHtml(
+  ticket: TicketPdfData,
+  /** The same words as the web ticket PDF (ticketPdfLabels). */
+  labels: TicketPdfLabels,
+): string {
   const activeStatus = ticket.status === "active" || ticket.status === "used";
-  const statusText = ticket.status === "used" ? "Checked in" : ticket.status;
   const attendeeRow = ticket.attendeeName
-    ? `<div class="row"><span class="label">Attendee</span><span class="value">${escapeHtml(
+    ? `<div class="row"><span class="label">${escapeHtml(labels.attendee)}</span><span class="value">${escapeHtml(
         ticket.attendeeName,
       )}</span></div>`
     : "";
@@ -52,8 +58,8 @@ export function buildTicketReceiptHtml(ticket: TicketPdfData): string {
   .row { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
   .label { color: #6b7280; }
   .value { font-weight: 700; text-align: right; }
-  .status-active { font-weight: 700; color: #16a34a; text-transform: capitalize; }
-  .status-other { font-weight: 700; color: #dc2626; text-transform: capitalize; }
+  .status-active { font-weight: 700; color: #16a34a; }
+  .status-other { font-weight: 700; color: #dc2626; }
   .qr-wrap { margin-top: 16px; text-align: center; }
   .qr { width: 180px; height: 180px; }
   .footer { margin-top: 16px; font-size: 10px; color: #6b7280; text-align: right; }
@@ -61,8 +67,8 @@ export function buildTicketReceiptHtml(ticket: TicketPdfData): string {
 </head>
 <body>
   <img class="logo" src="${ABONTEN_LOGO_URL}" alt="Abonten" />
-  <div class="heading">Receipt</div>
-  <div class="issued">Issued on: ${escapeHtml(ticket.issuedAt)}</div>
+  <div class="heading">${escapeHtml(labels.title)}</div>
+  <div class="issued">${escapeHtml(labels.issuedOn)}</div>
 
   <div class="card">
     <img class="flyer" src="${escapeHtml(ticket.flyerImageUrl)}" alt="${escapeHtml(
@@ -71,24 +77,24 @@ export function buildTicketReceiptHtml(ticket: TicketPdfData): string {
     <div class="card-body">
       <div class="title">${escapeHtml(ticket.eventTitle)}</div>
       ${attendeeRow}
-      <div class="row"><span class="label">Ticket Type</span><span class="value">${escapeHtml(
-        ticket.ticketTypeName,
+      <div class="row"><span class="label">${escapeHtml(labels.ticketType)}</span><span class="value">${escapeHtml(
+        labels.ticketTypeValue,
       )}</span></div>
-      <div class="row"><span class="label">Ticket Code</span><span class="value">${escapeHtml(
+      <div class="row"><span class="label">${escapeHtml(labels.ticketCode)}</span><span class="value">${escapeHtml(
         ticket.ticketCode,
       )}</span></div>
-      <div class="row"><span class="label">Status</span><span class="${
+      <div class="row"><span class="label">${escapeHtml(labels.status)}</span><span class="${
         activeStatus ? "status-active" : "status-other"
-      }">${escapeHtml(statusText)}</span></div>
-      <div class="row"><span class="label">Location</span><span class="value">${escapeHtml(
+      }">${escapeHtml(labels.statusValue)}</span></div>
+      <div class="row"><span class="label">${escapeHtml(labels.location)}</span><span class="value">${escapeHtml(
         ticket.eventAddress,
       )}</span></div>
-      <div class="row"><span class="label">Date</span><span class="value">${escapeHtml(
+      <div class="row"><span class="label">${escapeHtml(labels.date)}</span><span class="value">${escapeHtml(
         `${ticket.eventDate} ${ticket.eventTime}`.trim(),
       )}</span></div>
       <div class="qr-wrap"><img class="qr" src="${escapeHtml(
         ticket.qrImageUrl,
-      )}" alt="Ticket QR code" /></div>
+      )}" alt="${escapeHtml(labels.qrCode)}" /></div>
       <div class="footer">www.abontenhub.com</div>
     </div>
   </div>

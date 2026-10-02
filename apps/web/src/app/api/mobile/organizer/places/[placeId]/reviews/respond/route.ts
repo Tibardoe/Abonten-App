@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   deletePlaceReviewResponseCore,
   respondToPlaceReviewCore,
 } from "@abonten/services/reviews/reviewResponseCore";
@@ -14,6 +18,7 @@ export async function POST(
   req: Request,
   _ctx: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -30,7 +35,10 @@ export async function POST(
     const response = typeof body?.response === "string" ? body.response : "";
 
     if (!reviewId) {
-      return apiJson({ status: 400, message: "reviewId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("reviewidIsRequired"),
+      });
     }
 
     const result = await respondToPlaceReviewCore(
@@ -46,7 +54,10 @@ export async function POST(
       "mobile POST /organizer/places/:id/reviews/respond failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 
@@ -54,6 +65,7 @@ export async function DELETE(
   req: Request,
   _ctx: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -61,7 +73,10 @@ export async function DELETE(
     const reviewId = new URL(req.url).searchParams.get("reviewId");
 
     if (!reviewId) {
-      return apiJson({ status: 400, message: "reviewId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("reviewidIsRequired"),
+      });
     }
 
     const result = await deletePlaceReviewResponseCore(
@@ -76,6 +91,9 @@ export async function DELETE(
       "mobile DELETE /organizer/places/:id/reviews/respond failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

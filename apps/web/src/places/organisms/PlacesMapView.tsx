@@ -2,11 +2,14 @@
 
 import StarRatingDisplay from "@/components/atoms/Rating";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import type { RefObject } from "react";
@@ -14,8 +17,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoClose, IoLocationOutline } from "react-icons/io5";
 import PlaceOpenStatusBadge from "../molecules/PlaceOpenStatusBadge";
 import VerifiedBadge from "../molecules/VerifiedBadge";
-
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
 
 const containerClass =
   "w-full h-[500px] md:h-[600px] rounded-lg overflow-hidden";
@@ -29,25 +30,19 @@ type PlaceMarker = { place: PlaceType; lat: number; lng: number };
 // cursor-paginated, since a map can't usefully "load more" the way an
 // infinite list scroll can.
 //
-// Follows MapPicker.tsx's useJsApiLoader/API-key wiring, but unlike that
+// Loads the map the way MapPicker.tsx does (useGoogleMaps), but unlike that
 // component (single draggable marker, fixed zoom/panTo) this renders one
 // static Marker per place and auto-fits the viewport to all of them via
 // map.fitBounds — a small, justified addition not used elsewhere in this
 // codebase, since MapPicker never has more than one point to frame.
 export default function PlacesMapView({ places }: { places: PlaceType[] }) {
+  const t = useTranslations("places");
+
   const [selectedPlace, setSelectedPlace] = useState<PlaceType | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Google Maps API key is missing.");
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   // Parsed once per `places` change -- PlaceType.location is a raw PostGIS
   // WKB hex string (see parseWKBHex.ts, already used by GetDirectionBtn.tsx
@@ -121,12 +116,12 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
     if (mapRef.current) fitToMarkers(mapRef.current);
   }, [fitToMarkers]);
 
-  if (!isLoaded) return <p>Loading map...</p>;
+  if (!isLoaded) return <p>{t("loadingMap")}</p>;
 
   if (markers.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[40vh] text-muted-foreground text-sm">
-        No places to show on the map.
+        {t("noPlacesToShowOnThe")}
       </div>
     );
   }
@@ -153,6 +148,7 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
           <Marker
             key={place.id}
             position={{ lat, lng }}
+            title={place.name}
             onClick={() => setSelectedPlace(place)}
           />
         ))}
@@ -187,13 +183,17 @@ function PlacePreviewPanel({
   panelRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
 }) {
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+
   const openStatus = derivePlaceCardOpenStatus(
+    tc,
     place.is_open,
     place.temporary_status,
   );
   const fullAddress =
     (place.address as { full_address?: string })?.full_address ??
-    "Location not specified";
+    t("locationNotSpecified");
 
   return (
     <div
@@ -203,7 +203,7 @@ function PlacePreviewPanel({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close preview"
+        aria-label={t("closePreview")}
         className="absolute top-2 right-2 z-10 grid place-items-center rounded-full bg-popover text-popover-foreground p-1.5 shadow"
       >
         <IoClose className="text-lg" />
@@ -220,7 +220,7 @@ function PlacePreviewPanel({
                 height: 128,
               },
             )}
-            alt={`Cover photo for ${place.name}`}
+            alt={t("coverPhotoFor", { name: place.name })}
             fill
             className="object-cover"
             sizes="320px"
@@ -235,7 +235,10 @@ function PlacePreviewPanel({
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded-full text-xs">
-              {place.category_name}
+              {placeCategoryLabel(tc, {
+                slug: place.category_slug,
+                name: place.category_name,
+              })}
             </span>
             <PlaceOpenStatusBadge status={openStatus} className="text-xs" />
           </div>

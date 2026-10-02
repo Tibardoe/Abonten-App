@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   applyModeration,
   clearReviewResponse,
@@ -119,7 +120,7 @@ export function ActionPanel({
                     reportId,
                     assigneeId: assignedTo === selfId ? null : selfId,
                     expectedUpdatedAt: updatedAt,
-                  }),
+                  }).catch(actionUnreachable),
                 )
               }
             >
@@ -139,7 +140,7 @@ export function ActionPanel({
                     reportId,
                     status: "under_review",
                     expectedUpdatedAt: updatedAt,
-                  }),
+                  }).catch(actionUnreachable),
                 )
               }
             >
@@ -159,7 +160,7 @@ export function ActionPanel({
                     reportId,
                     status: "escalated",
                     expectedUpdatedAt: updatedAt,
-                  }),
+                  }).catch(actionUnreachable),
                 )
               }
             >
@@ -187,7 +188,7 @@ export function ActionPanel({
                       reportId,
                       message: infoMsg.trim(),
                       expectedUpdatedAt: updatedAt,
-                    }),
+                    }).catch(actionUnreachable),
                   )
                 }
               >
@@ -218,7 +219,7 @@ export function ActionPanel({
                   targetType: "report",
                   targetId: reportId,
                   body: note.trim(),
-                });
+                }).catch(actionUnreachable);
                 if (res.status === 200) setNote("");
                 return res;
               })
@@ -257,7 +258,7 @@ export function ActionPanel({
                         action: "hide",
                         reason: reason.trim(),
                         reportId,
-                      }),
+                      }).catch(actionUnreachable),
                     )
                   }
                 >
@@ -277,7 +278,7 @@ export function ActionPanel({
                         action: "restrict",
                         reason: reason.trim(),
                         reportId,
-                      }),
+                      }).catch(actionUnreachable),
                     )
                   }
                 >
@@ -297,7 +298,7 @@ export function ActionPanel({
                         action: "remove",
                         reason: reason.trim(),
                         reportId,
-                      }),
+                      }).catch(actionUnreachable),
                     )
                   }
                 >
@@ -317,7 +318,7 @@ export function ActionPanel({
                         action: "restore",
                         reason: reason.trim(),
                         reportId,
-                      }),
+                      }).catch(actionUnreachable),
                     )
                   }
                 >
@@ -340,7 +341,7 @@ export function ActionPanel({
                         reviewId: targetId,
                         reason: reason.trim() || undefined,
                         reportId,
-                      }),
+                      }).catch(actionUnreachable),
                     )
                   }
                 >
@@ -387,7 +388,7 @@ export function ActionPanel({
                       status: "resolved",
                       resolution: resolution.trim(),
                       expectedUpdatedAt: updatedAt,
-                    }),
+                    }).catch(actionUnreachable),
                   )
                 }
               >
@@ -406,7 +407,7 @@ export function ActionPanel({
                       status: "dismissed",
                       resolution: resolution.trim(),
                       expectedUpdatedAt: updatedAt,
-                    }),
+                    }).catch(actionUnreachable),
                   )
                 }
               >
@@ -425,7 +426,7 @@ export function ActionPanel({
                       status: "false_report",
                       resolution: resolution.trim(),
                       expectedUpdatedAt: updatedAt,
-                    }),
+                    }).catch(actionUnreachable),
                   )
                 }
               >

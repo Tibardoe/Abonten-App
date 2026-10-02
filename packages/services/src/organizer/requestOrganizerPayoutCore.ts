@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of requestOrganizerPayout, shared by the Server Action
 // (cookie session) and the mobile HTTP route (Bearer session). All
@@ -21,7 +22,10 @@ export async function requestOrganizerPayoutCore(
   const { payoutAccountId, amount, currency } = input;
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    return { status: 400, message: "Enter an amount greater than zero" };
+    return {
+      status: 400,
+      message: tr("enterAnAmountGreaterThanZero"),
+    };
   }
 
   const { data, error } = await supabase
@@ -36,16 +40,20 @@ export async function requestOrganizerPayoutCore(
     logger.error(`Failed requesting payout: ${error.message}`);
     const balanceStale = error.message.includes("exceeds available balance");
     const message = balanceStale
-      ? "Your available balance has changed. Please review your updated balance before withdrawing."
+      ? tr("yourAvailableBalanceHasChangedPlease")
       : error.message.includes("Invalid payout account currency")
-        ? `Choose a payout account that receives ${currency.toUpperCase()}.`
+        ? tr("chooseAPayoutAccountThatReceives", {
+            currency: currency.toUpperCase(),
+          })
         : error.message.includes("Invalid payout account")
-          ? "Select a valid payout account"
+          ? tr("selectAValidPayoutAccount")
           : error.message.includes("precision")
-            ? `That amount has too many decimal places for ${currency.toUpperCase()}.`
+            ? tr("thatAmountHasTooManyDecimal", {
+                currency: currency.toUpperCase(),
+              })
             : error.message.includes("Account restricted")
-              ? "Your account is restricted. Contact support."
-              : "Something went wrong. Please try again";
+              ? tr("yourAccountIsRestrictedContactSupport")
+              : tr("somethingWentWrongPleaseTryAgain2");
 
     return { status: 400, message, balanceStale };
   }

@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -35,6 +36,9 @@ export default function EventFinanceSummary({
   startDate: string | null;
   endDate: string | null;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("common");
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["event-finance-summary", eventId, period],
     queryFn: () => getEventFinanceSummary(eventId, startDate, endDate),
@@ -50,9 +54,9 @@ export default function EventFinanceSummary({
   if (isError) {
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Event Revenue</h2>
+        <h2 className="font-bold md:text-lg">{t("eventRevenue")}</h2>
         <InlineErrorRetry
-          message="We couldn't load this event's revenue."
+          message={t("weCouldnTLoadThisEvent")}
           onRetry={() => refetch()}
         />
       </section>
@@ -62,9 +66,9 @@ export default function EventFinanceSummary({
   if (!summary) {
     return (
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Event Revenue</h2>
+        <h2 className="font-bold md:text-lg">{t("eventRevenue")}</h2>
         <p className="text-sm text-muted-foreground">
-          No revenue data available yet.
+          {t("noRevenueDataAvailableYet")}
         </p>
       </section>
     );
@@ -72,81 +76,97 @@ export default function EventFinanceSummary({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-bold md:text-lg">Event Revenue</h2>
+      <h2 className="font-bold md:text-lg">{t("eventRevenue")}</h2>
 
       <div className="rounded-xl border border-border bg-card text-card-foreground p-4 space-y-3">
         <Row
-          label="Ticket sales"
-          value={formatMoney(summary.currency, summary.ticketSales)}
+          label={t("ticketSales")}
+          value={formatMoney(summary.currency, summary.ticketSales, { locale })}
         />
         {/* Under the customer-paid-service-fee model the organizer keeps
             100% of the ticket price, so there is no fee to deduct here.
             Older sales that did carry a 2% deduction still show this row. */}
         {summary.platformFee !== 0 && (
           <Row
-            label="Abonten fees"
-            value={`-${formatMoney(summary.currency, summary.platformFee)}`}
+            label={t("abontenFees")}
+            value={`-${formatMoney(summary.currency, summary.platformFee, { locale })}`}
           />
         )}
         {summary.refunds !== 0 && (
           <div className="space-y-1">
             <Row
-              label="Refunds"
-              value={`-${formatMoney(summary.currency, Math.abs(summary.refunds))}`}
+              label={t("refunds")}
+              value={`-${formatMoney(summary.currency, Math.abs(summary.refunds), { locale })}`}
             />
             {(summary.pendingRefunds > 0 || summary.completedRefunds > 0) && (
               <p className="text-xs text-muted-foreground">
-                {summary.refundRequestCount} request
-                {summary.refundRequestCount === 1 ? "" : "s"} ·{" "}
-                {formatMoney(summary.currency, summary.pendingRefunds)} pending
-                · {formatMoney(summary.currency, summary.completedRefunds)}{" "}
-                completed
+                {t("refundRequestsSummary", {
+                  count: summary.refundRequestCount,
+                  pending: formatMoney(
+                    summary.currency,
+                    summary.pendingRefunds,
+                    { locale },
+                  ),
+                  completed: formatMoney(
+                    summary.currency,
+                    summary.completedRefunds,
+                    { locale },
+                  ),
+                })}
               </p>
             )}
           </div>
         )}
         <Row
-          label="Net sales"
-          value={formatMoney(summary.currency, summary.netSales)}
+          label={t("netSales")}
+          value={formatMoney(summary.currency, summary.netSales, { locale })}
         />
         {summary.promoterCommissions !== 0 && (
           <Row
-            label="Promoter commissions"
-            value={`-${formatMoney(summary.currency, Math.abs(summary.promoterCommissions))}`}
+            label={t("promoterCommissions")}
+            value={`-${formatMoney(summary.currency, Math.abs(summary.promoterCommissions), { locale })}`}
           />
         )}
         <hr className="border-border" />
         <Row
-          label="Organizer earnings"
-          value={formatMoney(summary.currency, summary.organizerEarnings)}
+          label={t("organizerEarnings")}
+          value={formatMoney(summary.currency, summary.organizerEarnings, {
+            locale,
+          })}
         />
 
         <hr className="border-border" />
 
         {period !== "all" && (
           <p className="text-xs text-muted-foreground">
-            Refund breakdown and settlement status below are all-time, not
-            limited to the selected period.
+            {t("refundBreakdownAndSettlementStatusBelow")}
           </p>
         )}
 
         {summary.settled ? (
           <div className="space-y-1">
-            <p className="text-sm font-medium">Settlement status: Settled</p>
+            <p className="text-sm font-medium">
+              {t("settlementStatusSettled")}
+            </p>
             <p className="text-xs text-muted-foreground">
-              {formatMoney(summary.currency, summary.organizerEarnings)} is now
-              available in your Finances balance.
+              {t("isNowAvailableInYourFinances", {
+                formatMoney: formatMoney(
+                  summary.currency,
+                  summary.organizerEarnings,
+                  { locale },
+                ),
+              })}
             </p>
             <Link
               href="/finances"
               className="text-xs font-medium text-primary hover:underline"
             >
-              View Finances
+              {t("viewFinances")}
             </Link>
           </div>
         ) : (
           <p className="text-sm font-medium">
-            Settlement status: Pending settlement
+            {t("settlementStatusPendingSettlement")}
           </p>
         )}
       </div>

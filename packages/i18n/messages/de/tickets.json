@@ -1,0 +1,48 @@
+{
+  "aRefundOfTheTicketPrice": "Der Ticketpreis wird auf deine ursprüngliche Zahlungsmethode erstattet. Die Abonten-Servicegebühr wird nicht erstattet.",
+  "areYouSureYouWantTo": "Möchtest du dieses Ticket wirklich stornieren?",
+  "cancelThisTicket": "Dieses Ticket stornieren?",
+  "cancelTicket": "Ticket stornieren",
+  "cancelTicketRequestRefund": "Ticket stornieren & Erstattung anfordern",
+  "cancelling": "Wird storniert…",
+  "checkedIn": "Eingecheckt",
+  "couldnTCancel": "Abbrechen nicht möglich",
+  "couldnTCreateTheReceipt": "Der Beleg konnte nicht erstellt werden",
+  "downloadReceiptPdf": "Beleg herunterladen (PDF)",
+  "empty": {
+    "active": {
+      "description": "Tickets, die du kaufst, erscheinen hier.",
+      "title": "Keine aktiven Tickets"
+    },
+    "cancelled": {
+      "description": "Stornierte Tickets erscheinen hier.",
+      "title": "Keine stornierten Tickets"
+    },
+    "past": {
+      "description": "Tickets für Events, die beendet sind oder abgesagt wurden.",
+      "title": "Keine vergangenen Tickets"
+    },
+    "refunds": {
+      "description": "Erstattungen für stornierte bezahlte Tickets erscheinen gegebenenfalls hier.",
+      "title": "Noch keine Erstattungen"
+    }
+  },
+  "keepTicket": "Ticket behalten",
+  "locationUnavailable": "Ort nicht verfügbar",
+  "noQrCode": "Kein QR-Code",
+  "pleaseTryAgainInAMoment": "Bitte versuche es gleich noch einmal.",
+  "preparingReceipt": "Beleg wird vorbereitet…",
+  "receiptReady": "Beleg bereit",
+  "seat": "Platz {seat_number}",
+  "shareReceiptTitle": "Abonten-Ticketbeleg",
+  "sharingIsnTAvailableOnThis": "Teilen ist auf diesem Gerät nicht verfügbar, aber der PDF-Beleg wurde erstellt.",
+  "showThisAtEntry": "Zeige das am Einlass",
+  "somethingWentWrongGeneratingThePdf": "Beim Erstellen der PDF ist etwas schiefgelaufen. Bitte versuche es erneut.",
+  "thisTicket": "dieses Ticket",
+  "thisTicketCouldNotBeFound": "Dieses Ticket wurde nicht gefunden.",
+  "ticket": "Ticket",
+  "ticketCancelled": "Ticket storniert",
+  "ticketReference": "Ticketreferenz",
+  "viewEvent": "Event ansehen",
+  "yourTickets": "deine Tickets"
+}

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type CheckoutPaymentOptionsResult,
   type CheckoutPaymentTarget,
@@ -12,7 +14,7 @@ import {
  * saved instruments work there. Same service as the mobile
  * GET /api/mobile/payments/options.
  */
-export default async function getCheckoutPaymentOptions(
+export default withActionLocale(async function getCheckoutPaymentOptions(
   target: CheckoutPaymentTarget,
 ): Promise<CheckoutPaymentOptionsResult | { status: 401; message: string }> {
   const supabase = await createClient();
@@ -20,7 +22,7 @@ export default async function getCheckoutPaymentOptions(
     data: { user },
     error,
   } = await supabase.auth.getUser();
-  if (error || !user) return { status: 401, message: "User not logged in" };
+  if (error || !user) return { status: 401, message: tr("userNotLoggedIn") };
 
   return getCheckoutPaymentOptionsCore(supabase, user.id, target, "web");
-}
+});

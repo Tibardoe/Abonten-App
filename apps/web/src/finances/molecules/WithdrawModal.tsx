@@ -11,10 +11,12 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { buildWithdrawAmountSchema } from "@abonten/validation/payoutSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -49,6 +51,9 @@ export default function WithdrawModal({
   onSuccess,
   onBalanceStale,
 }: WithdrawModalProps) {
+  const locale = useLocale();
+  const t = useTranslations("finances");
+
   const [step, setStep] = useState<Step>("form");
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,13 +102,13 @@ export default function WithdrawModal({
       payoutAccountId,
       Number(amount),
       currency,
-    );
+    ).catch(actionUnreachable);
 
     setIsSubmitting(false);
 
     if (response.status !== 200) {
       setServerError(response.message);
-      if (response.balanceStale) {
+      if ("balanceStale" in response && response.balanceStale) {
         onBalanceStale();
       }
       return;
@@ -118,7 +123,7 @@ export default function WithdrawModal({
     <BottomSheet
       open
       onClose={onClose}
-      title={step === "success" ? "Withdrawal requested" : "Withdraw funds"}
+      title={step === "success" ? t("withdrawalRequested") : t("withdrawFunds")}
       className="md:w-[28rem]"
     >
       <div className="space-y-5">
@@ -126,9 +131,9 @@ export default function WithdrawModal({
           <Form {...form}>
             <form onSubmit={goToConfirm} className="flex flex-col gap-5">
               <div className="rounded-md bg-muted p-3 text-sm">
-                Available:{" "}
+                {t("available")}
                 <span className="font-semibold">
-                  {formatMoney(currency, availableBalance)}
+                  {formatMoney(currency, availableBalance, { locale })}
                 </span>
               </div>
 
@@ -138,7 +143,7 @@ export default function WithdrawModal({
                 render={({ field }) => (
                   <FormItem className="flex flex-col gap-2 space-y-0">
                     <label htmlFor="amount" className="text-sm">
-                      Amount
+                      {t("amount")}
                     </label>
                     <div className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
                       <span className="text-muted-foreground text-sm">
@@ -166,24 +171,26 @@ export default function WithdrawModal({
                 name="payoutAccountId"
                 render={({ field }) => (
                   <FormItem className="flex flex-col gap-2 space-y-0">
-                    <p className="text-sm">Send to</p>
+                    <p className="text-sm">{t("sendTo")}</p>
 
                     {accountsPending ? (
                       <p className="text-sm text-muted-foreground">
-                        Loading accounts…
+                        {t("loadingAccounts")}
                       </p>
                     ) : accounts.length === 0 ? (
                       <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground space-y-2">
                         <p>
                           {allAccounts.length === 0
-                            ? "You haven't added a payout account yet."
-                            : `None of your payout accounts receives ${currency}.`}
+                            ? t("youHavenTAddedAPayout")
+                            : t("noneOfYourPayoutAccountsReceives", {
+                                currency: currency,
+                              })}
                         </p>
                         <Link
                           href="/finances/payout-accounts"
                           className="font-medium text-primary hover:underline"
                         >
-                          Add a payout account
+                          {t("addAPayoutAccount")}
                         </Link>
                       </div>
                     ) : (
@@ -208,7 +215,7 @@ export default function WithdrawModal({
                 disabled={accounts.length === 0}
                 className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
               >
-                Continue
+                {t("continueText")}
               </Button>
             </form>
           </Form>
@@ -218,25 +225,24 @@ export default function WithdrawModal({
           <div className="flex flex-col gap-5">
             <div className="rounded-md border border-border p-4 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Amount</span>
+                <span className="text-muted-foreground">{t("amount")}</span>
                 <span className="font-semibold">
-                  {formatMoney(currency, Number(amount))}
+                  {formatMoney(currency, Number(amount), { locale })}
                 </span>
               </div>
               <hr className="border-border" />
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Send to</span>
+                <span className="text-muted-foreground">{t("sendTo")}</span>
                 <span className="font-semibold">
                   {selectedAccount.account_type === "mobile_money"
                     ? selectedAccount.provider
-                    : "Bank Account"}
+                    : t("bankAccount")}
                 </span>
               </div>
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Your withdrawal will move to "Processing" while it's reviewed — it
-              won't be marked complete until it's actually paid out.
+              {t("yourWithdrawalWillMoveToProcessing")}
             </p>
 
             {serverError && (
@@ -251,7 +257,7 @@ export default function WithdrawModal({
                 onClick={() => setStep("form")}
                 className="rounded-md py-6 text-lg md:py-2 md:text-sm"
               >
-                Back
+                {t("back")}
               </Button>
               <Button
                 type="button"
@@ -260,8 +266,12 @@ export default function WithdrawModal({
                 className="font-semibold rounded-md py-6 text-lg md:py-2 md:text-sm"
               >
                 {isSubmitting
-                  ? "Submitting…"
-                  : `Withdraw ${formatMoney(currency, Number(amount))}`}
+                  ? t("submitting")
+                  : t("withdraw2", {
+                      formatMoney: formatMoney(currency, Number(amount), {
+                        locale,
+                      }),
+                    })}
               </Button>
             </div>
           </div>
@@ -270,18 +280,16 @@ export default function WithdrawModal({
         {step === "success" && (
           <div className="flex flex-col gap-4 items-center text-center py-6">
             <p className="text-sm text-muted-foreground">
-              We've received your withdrawal request. Reference:{" "}
+              {t("weVeReceivedYourWithdrawalRequest")}
               <span className="font-mono">{reference}</span>
             </p>
-            <p className="text-sm">
-              Track its status any time on the Payouts page.
-            </p>
+            <p className="text-sm">{t("trackItsStatusAnyTimeOn")}</p>
             <Button
               type="button"
               onClick={onClose}
               className="rounded-md py-6 text-lg md:py-2 md:text-sm"
             >
-              Done
+              {t("done")}
             </Button>
           </div>
         )}

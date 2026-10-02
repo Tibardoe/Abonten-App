@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsOnboardingWithdrawSchema } from "@abonten/validation/fieldOpsSc
  * Withdraws a draft or submitted onboarding. Same service as
  * POST /api/mobile/field-ops/onboardings/[id]/withdraw.
  */
-export async function withdrawFieldOpsOnboarding(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsOnboarding;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsOnboardingWithdrawSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return withdrawOnboardingCore(svc, userId, data);
-}
+export const withdrawFieldOpsOnboarding = withActionLocale(
+  async function withdrawFieldOpsOnboarding(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsOnboarding;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsOnboardingWithdrawSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return withdrawOnboardingCore(svc, userId, data);
+  },
+);

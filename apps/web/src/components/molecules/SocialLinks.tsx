@@ -1,4 +1,5 @@
 import { SOCIAL_LINKS } from "@abonten/core/brand/socialLinks";
+import { useTranslations } from "next-intl";
 import MaskIcon from "../atoms/MaskIcon";
 
 // The official Abonten accounts, in one place for both footers. URLs come
@@ -25,8 +26,10 @@ export default function SocialLinks({
   className?: string;
   large?: boolean;
 }) {
+  const t = useTranslations("common");
+
   return (
-    <nav aria-label="Abonten on social media" className={className}>
+    <nav aria-label={t("abontenOnSocialMedia")} className={className}>
       <ul className="flex items-center gap-3">
         {SOCIAL_LINKS.map((link) => {
           const icon = ICONS[link.key];
@@ -36,7 +39,7 @@ export default function SocialLinks({
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`Abonten on ${link.label}`}
+                aria-label={t("abontenOn", { label: link.label })}
                 className="inline-flex hover:opacity-80"
               >
                 <MaskIcon

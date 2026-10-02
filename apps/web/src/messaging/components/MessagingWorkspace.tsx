@@ -3,6 +3,7 @@
 import { cn } from "@/components/lib/utils";
 import { useInboxRealtime } from "@/messaging/hooks/useInboxRealtime";
 import { MessageSquare } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ChatThread } from "./ChatThread";
 import { ConversationList } from "./ConversationList";
 
@@ -10,6 +11,8 @@ import { ConversationList } from "./ConversationList";
 // side. Mobile: the list OR the thread, depending on whether a conversation
 // is selected (the route drives `activeId`).
 export function MessagingWorkspace({ activeId }: { activeId?: string }) {
+  const t = useTranslations("messaging");
+
   // Mounted here (not just in the list) so the nav badge + list stay live
   // even while the user is reading a thread.
   useInboxRealtime(activeId);
@@ -30,7 +33,7 @@ export function MessagingWorkspace({ activeId }: { activeId?: string }) {
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
             <MessageSquare className="h-8 w-8" />
-            Select a conversation to start reading.
+            {t("selectAConversationToStartReading")}
           </div>
         )}
       </div>

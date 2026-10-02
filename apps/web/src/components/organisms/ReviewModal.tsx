@@ -7,8 +7,9 @@ import { useToast } from "@/hooks/useToast";
 import { logger } from "@abonten/core/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import StarRatingInput from "../atoms/StarRatingInput";
@@ -42,14 +43,23 @@ type ShowReviewModalProp = {
   onDraftSaved?: () => void;
 };
 
-const eventSchema = z.object({
-  title: z
-    .string()
-    .min(1, { message: "Title is required" })
-    .max(150, { message: "Title must be less than 150 characters" }),
+// Validation messages come from the catalog, so the schema is built inside
+// the component once the translator is known.
+const buildEventSchema = (m: {
+  titleRequired: string;
+  titleTooLong: string;
+  descriptionRequired: string;
+}) =>
+  z.object({
+    title: z
+      .string()
+      .min(1, { message: m.titleRequired })
+      .max(150, { message: m.titleTooLong }),
 
-  review: z.string().min(1, { message: "Description is required" }),
-});
+    review: z.string().min(1, { message: m.descriptionRequired }),
+  });
+
+type EventSchemaValues = z.infer<ReturnType<typeof buildEventSchema>>;
 
 export default function ReviewModal({
   handleShowReviewModal,
@@ -60,6 +70,8 @@ export default function ReviewModal({
   onReviewSubmitted,
   onDraftSaved,
 }: ShowReviewModalProp) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -73,7 +85,17 @@ export default function ReviewModal({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
 
-  const form = useForm<z.infer<typeof eventSchema>>({
+  const eventSchema = useMemo(
+    () =>
+      buildEventSchema({
+        titleRequired: t("validation.titleRequired"),
+        titleTooLong: t("validation.titleTooLong"),
+        descriptionRequired: t("validation.descriptionRequired"),
+      }),
+    [t],
+  );
+
+  const form = useForm<EventSchemaValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: initialValues?.title ?? undefined,
@@ -111,7 +133,7 @@ export default function ReviewModal({
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (formData: z.infer<typeof eventSchema>) => {
+    mutationFn: async (formData: EventSchemaValues) => {
       if (!reviewedId) {
         throw new Error("Could not resolve the reviewed user. Try again.");
       }
@@ -142,9 +164,9 @@ export default function ReviewModal({
     },
   });
 
-  const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
+  const onSubmit = async (formData: EventSchemaValues) => {
     if (!reviewedId) {
-      toast.error("User ID not found yet. Please wait...");
+      toast.error(t("userIdNotFoundYetPlease"));
       return;
     }
 
@@ -156,7 +178,7 @@ export default function ReviewModal({
 
   const handleSaveDraft = async () => {
     if (!reviewedId) {
-      toast.error("User ID not found yet. Please wait...");
+      toast.error(t("userIdNotFoundYetPlease"));
       return null;
     }
 
@@ -204,7 +226,7 @@ export default function ReviewModal({
 
   return (
     <>
-      <ModalShell open onClose={requestClose} title="Add Review">
+      <ModalShell open onClose={requestClose} title={t("addReview")}>
         <div className="w-full self-end md:self-center h-[95%] md:h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
           {/* header */}
           <div className="flex justify-between items-center">
@@ -213,11 +235,11 @@ export default function ReviewModal({
               className="md:hidden font-bold"
               onClick={requestClose}
             >
-              Cancel
+              {t("cancel")}
             </button>
 
             <h1 className="mx-auto text-xl md:text-2xl font-bold">
-              Add Review
+              {t("addReview")}
             </h1>
 
             <button
@@ -225,7 +247,7 @@ export default function ReviewModal({
               className="md:hidden font-bold"
               onClick={handleSubmit(onSubmit)}
             >
-              Submit
+              {t("submit")}
             </button>
 
             <button
@@ -235,7 +257,7 @@ export default function ReviewModal({
             >
               <MaskIcon
                 src="/assets/images/circularCancel.svg"
-                alt="Cancel"
+                alt={t("cancel")}
                 className="w-[25px] h-[25px] bg-foreground"
               />
             </button>
@@ -245,14 +267,14 @@ export default function ReviewModal({
 
           <div className="space-y-4">
             <div className="flex items-center justify-between md:flex-col md:justify-start md:items-start md:gap-2">
-              <p className="font-normal">Rate</p>
+              <p className="font-normal">{t("rate")}</p>
               <StarRatingInput
                 initialRating={initialValues?.rating ?? 0}
                 onChange={handleRatingChange}
               />
             </div>
             {rating <= 0 && (
-              <p className="text-destructive text-sm">Rating required</p>
+              <p className="text-destructive text-sm">{t("ratingRequired")}</p>
             )}
 
             <Form {...form}>
@@ -268,7 +290,7 @@ export default function ReviewModal({
                       <FormControl>
                         <Input
                           type="text"
-                          placeholder="Title"
+                          placeholder={t("title")}
                           className="rounded-lg px-2 py-4 font-normal"
                           {...field}
                         />
@@ -286,7 +308,7 @@ export default function ReviewModal({
                       <FormControl>
                         <Textarea
                           rows={10}
-                          placeholder="Review"
+                          placeholder={t("review")}
                           className="rounded-lg px-2 py-4 font-normal"
                           {...field}
                         />
@@ -301,7 +323,7 @@ export default function ReviewModal({
                   disabled={isPending}
                   className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
                 >
-                  {isPending ? "Adding review..." : "Add"}
+                  {isPending ? t("addingReview") : t("add")}
                 </Button>
               </form>
             </Form>
@@ -311,7 +333,7 @@ export default function ReviewModal({
 
       {showCancelConfirm && (
         <SaveDraftConfirmDialog
-          message="You have unsaved changes to this review."
+          message={t("youHaveUnsavedChangesToThis2")}
           isSaving={isSavingDraft}
           onSaveDraft={handleSaveDraftAndClose}
           onDiscard={() => {

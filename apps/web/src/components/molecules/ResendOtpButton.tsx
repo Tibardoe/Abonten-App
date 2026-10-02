@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 type Props = {
@@ -16,9 +17,15 @@ export default function ResendOtpButton({
   onResend,
   cooldownSeconds = 60,
   disabled = false,
-  readyLabel = "Resend code",
-  cooldownLabel = (secondsLeft) => `Resend code in ${secondsLeft}s`,
+  readyLabel: readyLabelProp,
+  cooldownLabel: cooldownLabelProp,
 }: Props) {
+  const t = useTranslations("common");
+  const readyLabel = readyLabelProp ?? t("resendCode");
+  const cooldownLabel =
+    cooldownLabelProp ??
+    ((secondsLeft: number) => t("resendCodeIn", { seconds: secondsLeft }));
+
   const [secondsLeft, setSecondsLeft] = useState(cooldownSeconds);
   const [isResending, setIsResending] = useState(false);
 
@@ -50,7 +57,7 @@ export default function ResendOtpButton({
       className="text-sm md:text-base font-medium text-primary disabled:text-muted-foreground disabled:cursor-not-allowed"
     >
       {isResending
-        ? "Resending..."
+        ? t("resending")
         : secondsLeft > 0
           ? cooldownLabel(secondsLeft)
           : readyLabel}

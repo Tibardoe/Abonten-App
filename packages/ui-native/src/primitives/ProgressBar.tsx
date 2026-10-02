@@ -1,5 +1,7 @@
+import { formatPercent } from "@abonten/core/i18n/format";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, View } from "react-native";
+import { useLocale } from "../i18n";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { AppText } from "./Typography";
 import { useReducedMotion } from "./useReducedMotion";
@@ -82,6 +84,7 @@ export function ProgressBar({
   }, [indeterminate, reducedMotion, sweep]);
 
   const percent = Math.round(clamped * 100);
+  const { locale } = useLocale();
 
   return (
     <View
@@ -104,7 +107,7 @@ export function ProgressBar({
           )}
           {showPercent && !indeterminate ? (
             <AppText variant="small" className="font-semibold tabular-nums">
-              {percent}%
+              {formatPercent(percent, locale)}
             </AppText>
           ) : null}
         </View>

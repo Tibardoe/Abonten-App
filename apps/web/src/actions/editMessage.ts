@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { editMessageCore } from "@abonten/services/messaging/messageMutationsCore";
 import { editMessageSchema } from "@abonten/validation/messageSchema";
 
@@ -10,7 +12,7 @@ import { editMessageSchema } from "@abonten/validation/messageSchema";
  * (enforced in the edit_message RPC). Shares its body with
  * PATCH /api/mobile/messages/:messageId.
  */
-export async function editMessage(input: {
+export const editMessage = withActionLocale(async function editMessage(input: {
   messageId: string;
   content: string;
 }) {
@@ -21,14 +23,14 @@ export async function editMessage(input: {
     error: userError,
   } = await supabase.auth.getUser();
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const parsed = editMessageSchema.safeParse(input);
   if (!parsed.success) {
     return {
       status: 400,
-      message: parsed.error.issues[0]?.message ?? "Invalid message.",
+      message: parsed.error.issues[0]?.message ?? tr("invalidMessage"),
     };
   }
 
@@ -36,6 +38,9 @@ export async function editMessage(input: {
     return await editMessageCore(supabase, user.id, parsed.data);
   } catch (error) {
     logger.error("editMessage failed", error);
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
-}
+});

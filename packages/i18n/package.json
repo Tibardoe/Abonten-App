@@ -5,11 +5,19 @@
   "description": "Shared translation catalogs (en, fr, es, de, pt, ak) and a framework-agnostic namespace loader.",
   "type": "module",
   "exports": {
+    "./browser": "./src/browserCatalog.generated.ts",
     "./catalog": "./src/catalog.ts",
+    "./locales": "./src/locales.ts",
+    "./namespaces": "./src/namespaces.ts",
+    "./server": "./src/server.ts",
+    "./validation": "./src/validation.ts",
     "./messages/*": "./messages/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "use-intl": "^4.14.5"
   },
   "devDependencies": {
     "@abonten/config": "*",

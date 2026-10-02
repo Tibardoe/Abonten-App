@@ -1,0 +1,12 @@
+{
+  "texts": [
+    "{title} | Abonten Hub",
+    "YouTube",
+    "Accra",
+    "Your location",
+    "Selected location",
+    "field ops context resolved",
+    "EuclidCircularB-Regular"
+  ],
+  "files": ["apps/web/src/app/global-error.tsx"]
+}

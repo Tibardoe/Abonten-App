@@ -8,18 +8,23 @@ import { logger } from "@abonten/core/logger";
 import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
 import {
+  SINGLE_TICKET_TYPE,
   freeEventPromoCodeProblem,
+  freeEventPromoCodesMessage,
   paidTierProblem,
+  ticketTierProblemMessage,
 } from "@abonten/core/ticketTiers";
 import { parseEventTimestamp } from "@abonten/core/time/timeZone";
 import { formatTitle } from "@abonten/core/titleCase";
+import { userFacingError } from "@abonten/core/userFacingError";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { coreT, tr } from "../i18n/requestLocale";
 import {
-  RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
+  restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -105,16 +110,19 @@ export async function postEventCore(
   // 20260925110100); the restricted-account check the database applies to
   // a person's own writes is made here instead.
   if (await isAccountRestricted(userId)) {
-    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+    return { status: 403, message: restrictedAccountMessage() };
   }
 
-  const locationCheck = validateLocationInput({
+  const locationCheck = validateLocationInput(coreT(), {
     address: input.address,
     latitude: input.latitude,
     longitude: input.longitude,
   });
   if (!locationCheck.valid) {
-    return { status: 400, message: locationCheck.message };
+    return {
+      status: 400,
+      message: userFacingError("Create event", locationCheck),
+    };
   }
 
   // Where the venue is decides the market, and with it the currency the
@@ -125,7 +133,8 @@ export async function postEventCore(
     lng: input.longitude,
     countryHint: input.addressDetails?.country_code ?? null,
   });
-  if (!resolved.ok) return { status: 400, message: resolved.message };
+  if (!resolved.ok)
+    return { status: 400, message: userFacingError("Create event", resolved) };
   const { location } = resolved;
   const currency = location.market?.defaultCurrency as string;
   const toInstant = (value: DateInput | null | undefined): Date | null =>
@@ -144,7 +153,9 @@ export async function postEventCore(
     !!input.freeEvent,
     input.promoCodes,
   );
-  if (promoProblem) return { status: 400, message: promoProblem };
+  if (promoProblem) {
+    return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
+  }
 
   if (!input.freeEvent) {
     const tiers = [
@@ -153,9 +164,18 @@ export async function postEventCore(
     ];
     for (const tier of tiers) {
       const problem = paidTierProblem(tier);
-      if (problem) return { status: 400, message: problem };
+      if (problem) {
+        return {
+          status: 400,
+          message: ticketTierProblemMessage(coreT(), problem),
+        };
+      }
     }
-    const capacityProblem = ticketCapacityProblem(input.capacity, tiers);
+    const capacityProblem = ticketCapacityProblem(
+      coreT(),
+      input.capacity,
+      tiers,
+    );
     if (capacityProblem) return { status: 400, message: capacityProblem };
   }
 
@@ -167,7 +187,7 @@ export async function postEventCore(
   const eventStartDate = isSpecificEvent ? null : toInstant(input.startsAt);
   const eventEndDate = isSpecificEvent ? null : toInstant(input.endsAt);
   if (!isSpecificEvent && (!eventStartDate || !eventEndDate)) {
-    return { status: 400, message: "Enter a valid start and end time." };
+    return { status: 400, message: tr("enterAValidStartAndEnd") };
   }
 
   const specificDatesPayload = isSpecificEvent
@@ -180,7 +200,7 @@ export async function postEventCore(
   if (specificDatesPayload?.some((d) => !d.start || !d.end)) {
     return {
       status: 400,
-      message: "Enter a valid start and end time for every date.",
+      message: tr("enterAValidStartAndEnd2"),
     };
   }
 
@@ -205,7 +225,7 @@ export async function postEventCore(
         ...(input.singleTicket
           ? [
               {
-                type: "SINGLE TICKET",
+                type: SINGLE_TICKET_TYPE,
                 price: input.singleTicket.price,
                 currency,
                 quantity: input.singleTicket.quantity,
@@ -303,7 +323,10 @@ export async function postEventCore(
     if (createEventError.code === CHECK_VIOLATION) {
       // The capacity / free-event guards raise check_violation with a
       // message written for the organizer (see the migration).
-      return { status: 400, message: createEventError.message };
+      return {
+        status: 400,
+        message: userFacingError("Create event", createEventError),
+      };
     }
     if (createEventError.code === UNIQUE_VIOLATION) {
       if (
@@ -313,20 +336,19 @@ export async function postEventCore(
       ) {
         return {
           status: 409,
-          message:
-            "One of your promo codes is already used for this event. Please use a different code.",
+          message: tr("oneOfYourPromoCodesIs"),
         };
       }
       return {
         status: 500,
-        message: "We couldn't post your event. Please try again.",
+        message: tr("weCouldnTPostYourEvent"),
       };
     }
 
     logger.error(`Error creating event: ${createEventError.message}`);
     return {
       status: 500,
-      message: "We couldn't post your event. Please try again.",
+      message: tr("weCouldnTPostYourEvent"),
     };
   }
 
@@ -346,7 +368,7 @@ export async function postEventCore(
 
   return {
     status: 200,
-    message: "Event posted successfully!",
+    message: tr("eventPostedSuccessfully"),
     eventId: eventId as string,
   };
 }

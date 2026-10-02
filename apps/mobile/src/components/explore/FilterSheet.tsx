@@ -6,10 +6,6 @@ import {
 import {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
-  EXPLORE_EVENT_DISTANCE_OPTIONS,
-  EXPLORE_PLACE_DISTANCE_OPTIONS,
-  EXPLORE_RATING_OPTIONS,
-  EXPLORE_WHEN_OPTIONS,
   type EventFilters,
   type ExplorePrice,
   type ExploreWhen,
@@ -18,17 +14,28 @@ import {
   clearPlaceFilterKey,
   countActiveEventFilters,
   countActivePlaceFilters,
+  exploreEventDistanceOptions,
+  explorePlaceDistanceOptions,
   explorePriceFor,
   explorePriceOptions,
   explorePriceRange,
+  exploreRatingOptions,
   exploreWhenFor,
+  exploreWhenOptions,
   exploreWhenRange,
   withCurrentDistance,
 } from "@/features/discovery/exploreFilters";
+import { useCoreI18n } from "@/features/i18n/useCoreI18n";
 import { useMarket } from "@/features/markets/MarketProvider";
+import {
+  eventCategoryLabel,
+  eventTypeLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceCategory } from "@abonten/types/placeType";
 import { AppText, Button, Chip, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useEffect, useState } from "react";
 import { Switch, View } from "react-native";
 import { DateRangeField } from "./DateRangeField";
@@ -68,6 +75,9 @@ export function FilterSheet({
   /** The area being browsed, for the distance hint ("From Osu"). */
   areaLabel?: string | null;
 }) {
+  const t = useTranslations("explore");
+  const i18n = useCoreI18n();
+
   const [eDraft, setEDraft] = useState<EventFilters>(eventFilters);
   const [pDraft, setPDraft] = useState<PlaceFilters>(placeFilters);
   // The When chip tapped in this sheet: dates alone can't tell "Today"
@@ -102,7 +112,9 @@ export function FilterSheet({
   const selectedCategoryTypes =
     eventCategoriesAndTypes.find((c) => c.category === eDraft.category)
       ?.types ?? [];
-  const distanceHint = areaLabel ? `From ${areaLabel}` : undefined;
+  const distanceHint = areaLabel
+    ? t("from", { areaLabel: areaLabel })
+    : undefined;
 
   function chooseWhen(next: ExploreWhen) {
     setWhenChoice(next);
@@ -141,7 +153,7 @@ export function FilterSheet({
     <>
       <FilterSection
         first
-        label="When"
+        label={t("when")}
         active={!!(eDraft.startDate || eDraft.endDate) || when === "dates"}
         onClear={() => {
           setWhenChoice(null);
@@ -149,7 +161,7 @@ export function FilterSheet({
         }}
       >
         <FilterChoices
-          options={EXPLORE_WHEN_OPTIONS}
+          options={exploreWhenOptions(i18n.t)}
           value={when}
           onChange={chooseWhen}
         />
@@ -167,14 +179,15 @@ export function FilterSheet({
       </FilterSection>
 
       <FilterSection
-        label="Distance"
+        label={t("distance")}
         hint={distanceHint}
         active={eDraft.maxDistanceKm != null}
         onClear={() => setEDraft((d) => clearEventFilterKey(d, "distance"))}
       >
         <FilterChoices
           options={withCurrentDistance(
-            EXPLORE_EVENT_DISTANCE_OPTIONS,
+            i18n,
+            exploreEventDistanceOptions(i18n),
             eDraft.maxDistanceKm,
           )}
           value={eDraft.maxDistanceKm}
@@ -183,7 +196,7 @@ export function FilterSheet({
       </FilterSection>
 
       <FilterSection
-        label="Price"
+        label={t("price")}
         active={
           eDraft.minPrice != null ||
           eDraft.maxPrice != null ||
@@ -195,7 +208,7 @@ export function FilterSheet({
         }}
       >
         <FilterChoices
-          options={explorePriceOptions(currency, priceScale)}
+          options={explorePriceOptions(i18n.t, currency, priceScale)}
           value={price}
           onChange={choosePrice}
         />
@@ -215,7 +228,7 @@ export function FilterSheet({
       </FilterSection>
 
       <FilterSection
-        label="Category"
+        label={t("category")}
         active={eDraft.category != null}
         onClear={() =>
           setEDraft((d) => ({
@@ -228,7 +241,7 @@ export function FilterSheet({
           {eventCategoriesAndTypes.map((c) => (
             <Chip
               key={c.category}
-              label={c.category}
+              label={eventCategoryLabel(i18n.t, c.category)}
               selected={eDraft.category === c.category}
               onPress={() =>
                 setEDraft((d) => ({
@@ -244,8 +257,10 @@ export function FilterSheet({
 
       {eDraft.category && selectedCategoryTypes.length > 0 ? (
         <FilterSection
-          label="Type"
-          hint={`Any number within ${eDraft.category}`}
+          label={t("type")}
+          hint={t("anyNumberWithin", {
+            category: eventCategoryLabel(i18n.t, eDraft.category),
+          })}
           active={eDraft.types.length > 0}
           onClear={() => setEDraft((d) => ({ ...d, types: [] }))}
         >
@@ -255,7 +270,7 @@ export function FilterSheet({
               return (
                 <Chip
                   key={type}
-                  label={type}
+                  label={eventTypeLabel(i18n.t, type)}
                   selected={on}
                   onPress={() =>
                     setEDraft((d) => ({
@@ -273,12 +288,12 @@ export function FilterSheet({
       ) : null}
 
       <FilterSection
-        label="Rating"
+        label={t("rating")}
         active={eDraft.minRating != null}
         onClear={() => setEDraft((d) => clearEventFilterKey(d, "rating"))}
       >
         <FilterChoices
-          options={EXPLORE_RATING_OPTIONS}
+          options={exploreRatingOptions(i18n)}
           value={eDraft.minRating}
           onChange={(v) => setEDraft((d) => ({ ...d, minRating: v }))}
         />
@@ -290,14 +305,15 @@ export function FilterSheet({
     <>
       <FilterSection
         first
-        label="Distance"
+        label={t("distance")}
         hint={distanceHint}
         active={pDraft.maxDistanceKm != null}
         onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "distance"))}
       >
         <FilterChoices
           options={withCurrentDistance(
-            EXPLORE_PLACE_DISTANCE_OPTIONS,
+            i18n,
+            explorePlaceDistanceOptions(i18n),
             pDraft.maxDistanceKm,
           )}
           value={pDraft.maxDistanceKm}
@@ -306,20 +322,20 @@ export function FilterSheet({
       </FilterSection>
 
       <FilterSection
-        label="Category"
+        label={t("category")}
         active={pDraft.categoryId != null}
         onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "category"))}
       >
         {placeCategories.length === 0 ? (
           <AppText variant="caption">
-            Categories will load when you're online.
+            {t("categoriesWillLoadWhenYouRe")}
           </AppText>
         ) : (
           <FilterChipRow>
             {placeCategories.map((c) => (
               <Chip
                 key={c.id}
-                label={c.name}
+                label={placeCategoryLabel(i18n.t, c)}
                 selected={pDraft.categoryId === c.id}
                 onPress={() =>
                   setPDraft((d) => ({
@@ -334,29 +350,29 @@ export function FilterSheet({
       </FilterSection>
 
       <FilterSection
-        label="Open now"
+        label={t("openNow")}
         active={pDraft.openNow}
         onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "openNow"))}
       >
         <View className="min-h-[44px] flex-row items-center justify-between">
           <AppText variant="body" className="flex-1">
-            Only places open right now
+            {t("onlyPlacesOpenRightNow")}
           </AppText>
           <Switch
             value={pDraft.openNow}
             onValueChange={(v) => setPDraft((d) => ({ ...d, openNow: v }))}
-            accessibilityLabel="Only places open right now"
+            accessibilityLabel={t("onlyPlacesOpenRightNow")}
           />
         </View>
       </FilterSection>
 
       <FilterSection
-        label="Rating"
+        label={t("rating")}
         active={pDraft.minRating != null}
         onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "rating"))}
       >
         <FilterChoices
-          options={EXPLORE_RATING_OPTIONS}
+          options={exploreRatingOptions(i18n)}
           value={pDraft.minRating}
           onChange={(v) => setPDraft((d) => ({ ...d, minRating: v }))}
         />
@@ -368,7 +384,7 @@ export function FilterSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={isEvents ? "Filter events" : "Filter places"}
+      title={isEvents ? t("filterEvents") : t("filterPlaces")}
       minHeightRatio={0.6}
       maxHeightRatio={0.92}
       footer={
@@ -376,13 +392,13 @@ export function FilterSheet({
           <Button
             title={
               activeCount > 0
-                ? `Show results · ${activeCount} filter${activeCount === 1 ? "" : "s"}`
-                : "Show results"
+                ? t("showResultsFilter", { activeCount })
+                : t("showResults")
             }
             onPress={apply}
           />
           {activeCount > 0 ? (
-            <Button title="Reset filters" variant="ghost" onPress={reset} />
+            <Button title={t("resetFilters")} variant="ghost" onPress={reset} />
           ) : null}
         </View>
       }

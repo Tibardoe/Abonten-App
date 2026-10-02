@@ -1,3 +1,5 @@
+import { intlLocale } from "./i18n/coreStrings";
+import type { CoreTranslator } from "./i18n/translator";
 import { instantToWallClock, isValidTimeZone } from "./time/timeZone";
 
 // Client-safe TypeScript mirror of the SQL `place_is_open_now` function
@@ -6,6 +8,8 @@ import { instantToWallClock, isValidTimeZone } from "./time/timeZone";
 // Opening hours are the PLACE's wall-clock times: pass place.timezone and
 // they are read on its clock (as the SQL function does); without a zone the
 // caller's local time is used, which is only right for a viewer beside it.
+// Labels come from `openStatus.*` of the core namespace, the clock time
+// from Intl in the reader's language.
 
 export type PlaceOpeningHourRow = {
   day_of_week: number; // 0 (Sunday) .. 6 (Saturday) — matches Date.getDay()
@@ -19,14 +23,17 @@ export type PlaceOpenStatus = {
   isOpen: boolean;
 };
 
-const TEMPORARY_STATUS_LABELS: Record<string, string> = {
-  temporarily_closed: "Temporarily closed",
-  permanently_closed: "Permanently closed",
-};
+/** The reader's translator and language, for the label and its clock time. */
+export type OpenStatusI18n = { t: CoreTranslator; locale?: string | null };
 
-function temporaryStatusLabel(status: string | null): string | null {
+function temporaryStatusLabel(
+  t: CoreTranslator,
+  status: string | null,
+): string | null {
   if (!status) return null;
-  return TEMPORARY_STATUS_LABELS[status] ?? "Closed";
+  if (status === "temporarily_closed") return t("openStatus.temporarilyClosed");
+  if (status === "permanently_closed") return t("openStatus.permanentlyClosed");
+  return t("openStatus.closed");
 }
 
 function parseTimeToMinutes(time: string): number {
@@ -34,13 +41,40 @@ function parseTimeToMinutes(time: string): number {
   return hours * 60 + (minutes ?? 0);
 }
 
-function formatTime(time: string): string {
+const clockCache = new Map<string, Intl.DateTimeFormat>();
+
+/** "5:00 PM" in English, "17:00" in French — a wall-clock time, no zone. */
+export function formatClockTime(time: string, locale?: string | null): string {
   const totalMinutes = parseTimeToMinutes(time);
   const hours24 = Math.floor(totalMinutes / 60) % 24;
   const minutes = totalMinutes % 60;
-  const period = hours24 >= 12 ? "PM" : "AM";
-  const hours12 = hours24 % 12 || 12;
-  return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
+  const tag = intlLocale(locale);
+  let f = clockCache.get(tag);
+  if (!f) {
+    try {
+      f = new Intl.DateTimeFormat(tag, {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "UTC",
+        // British English would otherwise print "17:00"; the product's
+        // English clock is 12-hour.
+        ...(tag === "en-GB" ? { hour12: true } : {}),
+      });
+    } catch {
+      f = new Intl.DateTimeFormat("en-GB", {
+        hour: "numeric",
+        minute: "2-digit",
+        timeZone: "UTC",
+        hour12: true,
+      });
+    }
+    clockCache.set(tag, f);
+  }
+  const text = f.format(new Date(Date.UTC(2024, 0, 1, hours24, minutes)));
+  // en-GB with hour12 gives "5:00 pm"; the product writes "5:00 PM".
+  return tag === "en-GB"
+    ? text.replace(/\s?(am|pm)$/i, (m) => m.toUpperCase())
+    : text;
 }
 
 /** Weekday (0 Sunday) and minutes past midnight at the place. */
@@ -63,14 +97,8 @@ export function placeLocalNow(
   };
 }
 
-/**
- * Full detail-page version — needs the place's weekly `place_opening_hours`
- * rows (getPlaceBySlug.ts already fetches these). Mirrors place_is_open_now
- * exactly, including the overnight-range case (close_time <= open_time,
- * either today's range spilling past midnight, or yesterday's range still
- * open into today).
- */
 export function computePlaceOpenStatus(
+  i18n: OpenStatusI18n,
   openingHours: PlaceOpeningHourRow[],
   temporaryStatus: string | null,
   now: Date = new Date(),
@@ -81,7 +109,8 @@ export function computePlaceOpenStatus(
    */
   timeZone?: string | null,
 ): PlaceOpenStatus {
-  const temporaryLabel = temporaryStatusLabel(temporaryStatus);
+  const { t, locale } = i18n;
+  const temporaryLabel = temporaryStatusLabel(t, temporaryStatus);
   if (temporaryLabel) {
     return { isOpen: false, label: temporaryLabel };
   }
@@ -94,6 +123,19 @@ export function computePlaceOpenStatus(
   const todayRow = openingHours.find((h) => h.day_of_week === dow);
   const yesterdayRow = openingHours.find((h) => h.day_of_week === yesterdayDow);
 
+  const openUntil = (close: string) => ({
+    isOpen: true,
+    label: t("openStatus.openClosesAt", {
+      time: formatClockTime(close, locale),
+    }),
+  });
+  const closedUntil = (open: string) => ({
+    isOpen: false,
+    label: t("openStatus.closedOpensAt", {
+      time: formatClockTime(open, locale),
+    }),
+  });
+
   // Still open from yesterday's overnight range spilling past midnight into
   // today (mirrors place_is_open_now's second EXISTS clause).
   if (
@@ -105,10 +147,7 @@ export function computePlaceOpenStatus(
     const yOpen = parseTimeToMinutes(yesterdayRow.open_time);
     const yClose = parseTimeToMinutes(yesterdayRow.close_time);
     if (yClose <= yOpen && nowMinutes < yClose) {
-      return {
-        isOpen: true,
-        label: `Open now · Closes at ${formatTime(yesterdayRow.close_time)}`,
-      };
+      return openUntil(yesterdayRow.close_time);
     }
   }
 
@@ -118,7 +157,7 @@ export function computePlaceOpenStatus(
     !todayRow.open_time ||
     !todayRow.close_time
   ) {
-    return { isOpen: false, label: "Closed today" };
+    return { isOpen: false, label: t("openStatus.closedToday") };
   }
 
   const openMin = parseTimeToMinutes(todayRow.open_time);
@@ -126,33 +165,36 @@ export function computePlaceOpenStatus(
   const isOvernight = closeMin <= openMin;
 
   if (isOvernight) {
-    if (nowMinutes >= openMin) {
-      return {
-        isOpen: true,
-        label: `Open now · Closes at ${formatTime(todayRow.close_time)}`,
-      };
-    }
-    return {
-      isOpen: false,
-      label: `Closed · Opens at ${formatTime(todayRow.open_time)}`,
-    };
+    if (nowMinutes >= openMin) return openUntil(todayRow.close_time);
+    return closedUntil(todayRow.open_time);
   }
 
   if (nowMinutes >= openMin && nowMinutes <= closeMin) {
-    return {
-      isOpen: true,
-      label: `Open now · Closes at ${formatTime(todayRow.close_time)}`,
-    };
+    return openUntil(todayRow.close_time);
   }
 
-  if (nowMinutes < openMin) {
-    return {
-      isOpen: false,
-      label: `Closed · Opens at ${formatTime(todayRow.open_time)}`,
-    };
-  }
+  if (nowMinutes < openMin) return closedUntil(todayRow.open_time);
 
-  return { isOpen: false, label: "Closed" };
+  return { isOpen: false, label: t("openStatus.closed") };
+}
+
+/**
+ * Whether the place is open right now, without any wording — for code that
+ * sorts or filters (a list action, a map pin) and never shows the label.
+ */
+export function isPlaceOpenNow(
+  openingHours: PlaceOpeningHourRow[],
+  temporaryStatus: string | null,
+  now: Date = new Date(),
+  timeZone?: string | null,
+): boolean {
+  return computePlaceOpenStatus(
+    { t: (key) => key },
+    openingHours,
+    temporaryStatus,
+    now,
+    timeZone,
+  ).isOpen;
 }
 
 /**
@@ -165,15 +207,16 @@ export function computePlaceOpenStatus(
  * disagree on wording.
  */
 export function derivePlaceCardOpenStatus(
+  t: CoreTranslator,
   isOpen: boolean,
   temporaryStatus: string | null,
 ): PlaceOpenStatus {
-  const temporaryLabel = temporaryStatusLabel(temporaryStatus);
+  const temporaryLabel = temporaryStatusLabel(t, temporaryStatus);
   if (temporaryLabel) {
     return { isOpen: false, label: temporaryLabel };
   }
 
   return isOpen
-    ? { isOpen: true, label: "Open now" }
-    : { isOpen: false, label: "Closed" };
+    ? { isOpen: true, label: t("openStatus.openNow") }
+    : { isOpen: false, label: t("openStatus.closed") };
 }

@@ -10,6 +10,7 @@ import {
   useResumePaystackPopup,
 } from "@/hooks/usePaystackPopup";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Script from "next/script";
 import { useState } from "react";
 
@@ -33,6 +34,8 @@ type CardFlowState =
  * or CVV is ever collected by this form — there is no form.
  */
 export default function AddBankCard({ onSaved }: PopupCloseProp) {
+  const t = useTranslations("wallet");
+
   const [label, setLabel] = useState("");
   const [state, setState] = useState<CardFlowState>({ phase: "idle" });
 
@@ -52,7 +55,7 @@ export default function AddBankCard({ onSaved }: PopupCloseProp) {
     onError: () =>
       setState({
         phase: "error",
-        message: "Couldn't start card verification. Please try again.",
+        message: t("couldnTStartCardVerificationPlease"),
       }),
   });
 
@@ -69,7 +72,7 @@ export default function AddBankCard({ onSaved }: PopupCloseProp) {
     onError: () =>
       setState({
         phase: "error",
-        message: "Couldn't verify your card. Please try again.",
+        message: t("couldnTVerifyYourCardPlease"),
       }),
   });
 
@@ -95,40 +98,37 @@ export default function AddBankCard({ onSaved }: PopupCloseProp) {
       <Script src={PAYSTACK_INLINE_SCRIPT_SRC} strategy="afterInteractive" />
 
       <p className="text-sm text-muted-foreground">
-        Save your Visa or Mastercard for faster checkout.
+        {t("saveYourVisaOrMastercardFor")}
       </p>
 
       <div className="flex flex-col gap-5">
         <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-          We'll make a small charge in your currency through the payment
-          provider's secure window to verify your card, then refund it
-          immediately. We never see or store your card number or CVV — only the
-          provider does.
+          {t("weLlMakeASmallCharge")}
         </p>
 
         <div className="flex flex-col gap-2">
           <label htmlFor="label" className="text-sm">
-            Label (optional)
+            {t("labelOptional")}
           </label>
           <Input
             id="label"
             type="text"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder="Eg. My Visa"
+            placeholder={t("egMyVisa")}
             disabled={isBusy}
           />
         </div>
 
         {state.phase === "awaiting-popup" && (
           <p className="text-sm text-muted-foreground text-center">
-            Complete the verification in the secure payment window…
+            {t("completeTheVerificationInTheSecure")}
           </p>
         )}
 
         {state.phase === "confirming" && (
           <p className="text-sm text-muted-foreground text-center">
-            Verifying and saving your card…
+            {t("verifyingAndSavingYourCard")}
           </p>
         )}
 
@@ -145,7 +145,7 @@ export default function AddBankCard({ onSaved }: PopupCloseProp) {
           }}
           className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
         >
-          {isBusy ? "Processing…" : "Verify & Save Card"}
+          {isBusy ? t("processing") : t("verifySaveCard")}
         </Button>
       </div>
     </div>

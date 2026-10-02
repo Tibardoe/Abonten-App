@@ -24,6 +24,7 @@ import type {
 } from "@abonten/types/searchType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Unified search across events, places and organizers (Discovery). The
@@ -174,7 +175,11 @@ export async function searchCore(
   };
 
   if (!options.program.searchV2) {
-    return { ...base, status: 403, message: "Search is not available." };
+    return {
+      ...base,
+      status: 403,
+      message: tr("searchIsNotAvailable"),
+    };
   }
 
   const lat = finite(input.lat);
@@ -321,7 +326,7 @@ export async function searchCore(
     return {
       ...result,
       status: 500,
-      message: "Search is unavailable right now.",
+      message: tr("searchIsUnavailableRightNow"),
     };
   }
 
@@ -386,7 +391,11 @@ export async function suggestCore(
     organizers: [],
   };
   if (!program.searchV2) {
-    return { ...empty, status: 403, message: "Search is not available." };
+    return {
+      ...empty,
+      status: 403,
+      message: tr("searchIsNotAvailable"),
+    };
   }
   if (!isSearchableQuery(query)) return empty;
 
@@ -408,7 +417,7 @@ export async function suggestCore(
     return {
       ...empty,
       status: 500,
-      message: "Suggestions are unavailable right now.",
+      message: tr("suggestionsAreUnavailableRightNow"),
     };
   }
   const rows = ((data ?? []) as SuggestRow[]).map(toSuggestion);
@@ -472,7 +481,7 @@ export async function recordSearchClickCore(
   input: SearchClickInput,
 ): Promise<{ status: 200 | 400 | 500; message?: string }> {
   if (!Number.isSafeInteger(input.searchId) || input.searchId <= 0) {
-    return { status: 400, message: "Invalid search." };
+    return { status: 400, message: tr("invalidSearch") };
   }
   const { error } = await service.rpc("search_log_click", {
     p_id: input.searchId,
@@ -482,7 +491,7 @@ export async function recordSearchClickCore(
   });
   if (error) {
     logger.error(`search_log_click failed: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return { status: 200 };
 }

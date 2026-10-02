@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { insertEventPromotionCheckoutCore } from "@abonten/services/promotions/insertEventPromotionCheckoutCore";
 
 /**
@@ -12,7 +14,7 @@ import { insertEventPromotionCheckoutCore } from "@abonten/services/promotions/i
  * POST /api/mobile/organizer/events/:id/promote route via
  * @/utils/insertEventPromotionCheckoutCore.
  */
-export default async function insertEventPromotionCheckout(
+export default withActionLocale(async function insertEventPromotionCheckout(
   eventId: string,
   tierId: number,
 ) {
@@ -31,7 +33,10 @@ export default async function insertEventPromotionCheckout(
   }
 
   if (!user) {
-    return { status: 401 as const, message: "User not authenticated" };
+    return {
+      status: 401 as const,
+      message: tr("userNotAuthenticated"),
+    };
   }
 
   const result = await insertEventPromotionCheckoutCore(
@@ -47,4 +52,4 @@ export default async function insertEventPromotionCheckout(
     return { status: 200 as const, data: { id: result.checkoutId } };
   }
   return result;
-}
+});

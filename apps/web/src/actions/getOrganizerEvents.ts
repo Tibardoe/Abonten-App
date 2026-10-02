@@ -1,12 +1,14 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerEventsPage } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 
-export default async function getOrganizerEvents(options?: {
+export default withActionLocale(async function getOrganizerEvents(options?: {
   cursor?: string | null;
   pageSize?: number;
 }): Promise<PaginatedResult<UserPostType>> {
@@ -24,9 +26,9 @@ export default async function getOrganizerEvents(options?: {
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "User not logged in",
+      message: tr("userNotLoggedIn"),
     };
   }
 
   return fetchOrganizerEventsPage(supabase, user.id, options);
-}
+});

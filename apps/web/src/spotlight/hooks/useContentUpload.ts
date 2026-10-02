@@ -2,8 +2,13 @@
 
 import getContentUploadSignature from "@/actions/content/getContentUploadSignature";
 import { registerContentMedia } from "@/actions/content/registerContentMedia";
-import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import {
+  isUploadCancelled,
+  uploadToCloudinary,
+} from "@/utils/uploadToCloudinary";
 import type { ContentKind, ContentMediaItem } from "@abonten/types/contentType";
+import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
 
@@ -28,6 +33,8 @@ export type ComposerFile = {
  * error so one failure never loses the others.
  */
 export function useContentUpload(kind: ContentKind) {
+  const t = useTranslations("spotlight");
+
   const [files, setFiles] = useState<ComposerFile[]>([]);
   const xhrs = useRef(new Map<string, XMLHttpRequest>());
 
@@ -96,11 +103,12 @@ export function useContentUpload(kind: ContentKind) {
       if (item.media) return item.media;
       patch(item.id, { status: "uploading", progress: 0, error: null });
 
-      const signature = await getContentUploadSignature();
+      const signature =
+        await getContentUploadSignature().catch(actionUnreachable);
       if (signature.status !== 200 || !signature.data) {
         patch(item.id, {
           status: "error",
-          error: signature.message ?? "Couldn't start the upload.",
+          error: signature.message ?? t("couldnTStartTheUpload"),
         });
         return null;
       }
@@ -122,12 +130,12 @@ export function useContentUpload(kind: ContentKind) {
         xhrs.current.set(item.id, xhr);
         uploaded = await promise;
       } catch (error) {
-        if (error instanceof Error && error.message === "Upload cancelled.") {
+        if (isUploadCancelled(error)) {
           return null;
         }
         patch(item.id, {
           status: "error",
-          error: error instanceof Error ? error.message : "Upload failed.",
+          error: error instanceof Error ? error.message : t("uploadFailed"),
         });
         return null;
       } finally {
@@ -147,19 +155,19 @@ export function useContentUpload(kind: ContentKind) {
         trimEndSeconds: trimmed
           ? (item.trimEnd ?? item.durationSeconds ?? undefined)
           : undefined,
-      });
+      }).catch(actionUnreachable);
       const media = dataOf(res);
       if (!media) {
         patch(item.id, {
           status: "error",
-          error: messageOf(res, "We couldn't process this file."),
+          error: messageOf(res, t("weCouldnTProcessThisFile")),
         });
         return null;
       }
       patch(item.id, { status: "done", media });
       return media;
     },
-    [kind, patch],
+    [kind, patch, t],
   );
 
   /** Uploads every file not yet uploaded, in order. Null if any failed. */

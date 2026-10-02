@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   type MarketContextResult,
   getMarketContextCore,
@@ -14,7 +15,7 @@ import { cookies, headers } from "next/headers";
  * (when known); the request's IP country and the "country" cookie the
  * proxy keeps are the fallbacks.
  */
-export default async function getMarketContext(
+export default withActionLocale(async function getMarketContext(
   input: {
     browsingCountry?: string | null;
     viewerTimeZone?: string | null;
@@ -45,4 +46,4 @@ export default async function getMarketContext(
       null,
     platform: "web",
   });
-}
+});

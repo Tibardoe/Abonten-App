@@ -8,6 +8,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useCallback, useMemo, useState } from "react";
 
 import { useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 
 // Single source of truth for the highlight compose/edit flow's media
 // selection — the native echo of the web `useMediaSelection` hook. Items
@@ -36,6 +37,8 @@ const MB = 1024 * 1024;
 const MAX_COMPOSER_ITEMS = 10;
 
 export function useHighlightComposer() {
+  const t = useTranslations("profile");
+
   const toast = useToast();
   const [items, setItems] = useState<EditableMedia[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -46,8 +49,8 @@ export function useHighlightComposer() {
   const pickFromLibrary = useCallback(async (): Promise<boolean> => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to add highlights.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToAddHighlights"),
       });
       return false;
     }
@@ -57,8 +60,10 @@ export function useHighlightComposer() {
     // never replace it. Only offer the slots that are still free.
     const remaining = MAX_COMPOSER_ITEMS - items.length;
     if (remaining <= 0) {
-      toast.error("Highlight is full", {
-        description: `A highlight can hold up to ${MAX_COMPOSER_ITEMS} photos and videos.`,
+      toast.error(t("highlightIsFull"), {
+        description: t("aHighlightCanHoldUpTo", {
+          MAX_COMPOSER_ITEMS: MAX_COMPOSER_ITEMS,
+        }),
       });
       return false;
     }
@@ -85,9 +90,10 @@ export function useHighlightComposer() {
 
       if (typeof asset.fileSize === "number" && asset.fileSize > maxBytes) {
         skipped.push(
-          `One ${isVideo ? "video" : "image"} is over ${Math.round(
-            maxBytes / MB,
-          )}MB.`,
+          t("oneIsOverMb", {
+            value: isVideo ? t("video") : t("image"),
+            round: Math.round(maxBytes / MB),
+          }),
         );
         continue;
       }
@@ -121,7 +127,7 @@ export function useHighlightComposer() {
     }
 
     if (skipped.length > 0) {
-      toast.error("Some items were skipped", {
+      toast.error(t("someItemsWereSkipped"), {
         description: [...new Set(skipped)].join("\n"),
       });
     }
@@ -131,7 +137,7 @@ export function useHighlightComposer() {
     // Jump to the first newly-added item so the pick visibly "took".
     setActiveId(accepted[0].id);
     return true;
-  }, [items, toast]);
+  }, [items, toast, t]);
 
   const select = useCallback((id: string) => setActiveId(id), []);
 

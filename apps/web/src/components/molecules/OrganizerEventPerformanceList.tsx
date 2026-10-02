@@ -4,6 +4,7 @@ import { useMarketContext } from "@/hooks/useMarketContext";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerEventPerformanceRow } from "@abonten/types/eventAnalytics";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import AnalyticsRowsSkeleton from "./AnalyticsRowsSkeleton";
 import InlineErrorRetry from "./InlineErrorRetry";
@@ -11,9 +12,9 @@ import InlineErrorRetry from "./InlineErrorRetry";
 type Row = OrganizerEventPerformanceRow;
 
 const STATUS_LABEL: Record<string, string> = {
-  upcoming: "Upcoming",
-  ongoing: "Ongoing",
-  ended: "Ended",
+  upcoming: "upcoming",
+  ongoing: "ongoing",
+  ended: "ended",
 };
 
 export default function OrganizerEventPerformanceList({
@@ -31,6 +32,10 @@ export default function OrganizerEventPerformanceList({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   // An event with no sales yet has no currency in its revenue row; show its
   // zero in the market's currency rather than as a bare "0.00".
   const { market } = useMarketContext();
@@ -38,7 +43,7 @@ export default function OrganizerEventPerformanceList({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold md:text-lg">Event Performance</h2>
+        <h2 className="font-bold md:text-lg">{t("eventPerformance")}</h2>
         <div className="flex gap-1 text-xs">
           <button
             type="button"
@@ -49,7 +54,7 @@ export default function OrganizerEventPerformanceList({
                 : "text-muted-foreground"
             }
           >
-            Revenue
+            {t("revenue2")}
           </button>
           <span className="text-muted-foreground">&middot;</span>
           <button
@@ -61,7 +66,7 @@ export default function OrganizerEventPerformanceList({
                 : "text-muted-foreground"
             }
           >
-            Tickets Sold
+            {t("ticketsSold")}
           </button>
         </div>
       </div>
@@ -70,12 +75,12 @@ export default function OrganizerEventPerformanceList({
         <AnalyticsRowsSkeleton count={5} />
       ) : isError ? (
         <InlineErrorRetry
-          message="We couldn't load event performance."
+          message={t("weCouldnTLoadEventPerformance")}
           onRetry={() => onRetry?.()}
         />
       ) : events.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No event sales in this period yet.
+          {t("noEventSalesInThisPeriod")}
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -89,9 +94,12 @@ export default function OrganizerEventPerformanceList({
                 <p className="font-medium truncate">{event.title}</p>
                 <p className="text-xs text-muted-foreground">
                   {event.starts_at
-                    ? formatDateWithSuffix(event.starts_at)
-                    : "Date not set"}{" "}
-                  &middot; {STATUS_LABEL[event.status] ?? event.status}
+                    ? formatDateWithSuffix(event.starts_at, undefined, locale)
+                    : t("dateNotSet")}{" "}
+                  &middot;{" "}
+                  {STATUS_LABEL[event.status]
+                    ? t(STATUS_LABEL[event.status])
+                    : event.status}
                 </p>
               </div>
               <div className="text-right shrink-0">
@@ -99,10 +107,13 @@ export default function OrganizerEventPerformanceList({
                   {formatMoney(
                     event.currency ?? fallbackCurrency,
                     Number(event.revenue),
+                    { locale },
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {Number(event.tickets_sold).toLocaleString()} tickets
+                  {t("tickets2", {
+                    count: Number(event.tickets_sold),
+                  })}
                 </p>
               </div>
             </Link>
@@ -111,7 +122,7 @@ export default function OrganizerEventPerformanceList({
       )}
 
       <Link href="/manage/events" className="text-sm text-primary self-start">
-        View all events
+        {t("viewAllEvents")}
       </Link>
     </section>
   );

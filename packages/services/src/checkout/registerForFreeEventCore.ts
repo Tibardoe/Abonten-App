@@ -6,6 +6,7 @@ import {
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import {
   generateQRCodeDataURL,
@@ -54,7 +55,7 @@ export async function registerForFreeEventCore(
 
   if (ticketDataError || !rawTicketData) {
     logger.error(`Error fetching ticket data: ${ticketDataError?.message}`);
-    return { status: 500, message: "Something went wrong" };
+    return { status: 500, message: tr("somethingWentWrong2") };
   }
 
   const ticketData = rawTicketData as unknown as TicketWithEvent[];
@@ -66,7 +67,10 @@ export async function registerForFreeEventCore(
   );
 
   if (alreadyBought) {
-    return { status: 300, message: "Ticket for this event already bought" };
+    return {
+      status: 300,
+      message: tr("ticketForThisEventAlreadyBought"),
+    };
   }
 
   const { data: event, error: eventFetchError } = await supabase
@@ -79,14 +83,17 @@ export async function registerForFreeEventCore(
 
   if (eventFetchError || !event) {
     logger.error(`Failed fetching event: ${eventFetchError?.message}`);
-    return { status: 500, message: "Something went wrong" };
+    return { status: 500, message: tr("somethingWentWrong2") };
   }
 
   // Fast-fail on the obvious cases before spending a Cloudinary upload — the
   // issue_free_ticket RPC re-checks all of this against now() as the
   // authoritative gate.
   if (event.status !== "published") {
-    return { status: 409, message: "This event is no longer accepting RSVPs." };
+    return {
+      status: 409,
+      message: tr("thisEventIsNoLongerAccepting"),
+    };
   }
 
   const occurrenceState = resolveOccurrenceState(
@@ -97,17 +104,20 @@ export async function registerForFreeEventCore(
 
   if (occurrenceState.blockReason === "no_dates") {
     logger.error(`Event ${eventId} has no resolvable start/end date`);
-    return { status: 500, message: "This event has no scheduled date" };
+    return {
+      status: 500,
+      message: tr("thisEventHasNoScheduledDate"),
+    };
   }
 
   if (occurrenceState.blockReason === "ended") {
-    return { status: 409, message: "This event has ended." };
+    return { status: 409, message: tr("thisEventHasEnded") };
   }
 
   if (occurrenceState.blockReason === "ongoing_no_future") {
     return {
       status: 409,
-      message: "This event is currently in progress and has no upcoming dates.",
+      message: tr("thisEventIsCurrentlyInProgress"),
     };
   }
 
@@ -119,7 +129,10 @@ export async function registerForFreeEventCore(
 
   if (!eventEndDate) {
     logger.error(`Event ${eventId} has no resolvable start/end date`);
-    return { status: 500, message: "This event has no scheduled date" };
+    return {
+      status: 500,
+      message: tr("thisEventHasNoScheduledDate"),
+    };
   }
 
   if (occurrenceId) {
@@ -130,10 +143,10 @@ export async function registerForFreeEventCore(
 
     if (!occurrenceCheck.ok) {
       return occurrenceCheck.reason === "unknown"
-        ? { status: 400, message: "Invalid event date" }
+        ? { status: 400, message: tr("invalidEventDate") }
         : {
             status: 409,
-            message: "That date has already started — pick an upcoming date.",
+            message: tr("thatDateHasAlreadyStartedPick"),
           };
     }
   }
@@ -147,7 +160,7 @@ export async function registerForFreeEventCore(
 
   if ("error" in uploadResponse) {
     logger.error(`Error saving QR code to cloudinary:${uploadResponse.error}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // One atomic transaction: reserve 1 free unit, re-check the sales window +
@@ -175,11 +188,14 @@ export async function registerForFreeEventCore(
     const message = issueError?.message ?? "";
     // The RPC's own exception messages are user-safe.
     if (/already bought/i.test(message)) {
-      return { status: 300, message: "Ticket for this event already bought" };
+      return {
+        status: 300,
+        message: tr("ticketForThisEventAlreadyBought"),
+      };
     }
     return {
       status: 409,
-      message: message || "Something went wrong!",
+      message: message || tr("somethingWentWrong"),
     };
   }
 
@@ -189,7 +205,7 @@ export async function registerForFreeEventCore(
 
   return {
     status: 200,
-    message: "Event registered successfully",
+    message: tr("eventRegisteredSuccessfully"),
     eventCode: event.event_code,
   };
 }

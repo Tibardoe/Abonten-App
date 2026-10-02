@@ -1,3 +1,6 @@
+import { formatDate } from "@abonten/core/i18n/format";
+import { getCurrentLocale } from "@abonten/ui-native/i18n";
+
 // Small date/time helpers shared by the creation wizards. Kept dependency-
 // free — the pure-JS DateRangeField gives yyyy-mm-dd strings, and times are
 // entered as "HH:MM" text, so this file just stitches the two into a Date.
@@ -41,7 +44,8 @@ export function combineDateAndTime(
 /** "Fri, 5 Sep 2026" — a compact human date for review screens. */
 export function prettyDate(dateIso: string): string {
   const [y, m, d] = dateIso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+  // In the app's language, not the phone's.
+  return formatDate(new Date(y, m - 1, d), getCurrentLocale(), {
     weekday: "short",
     day: "numeric",
     month: "short",

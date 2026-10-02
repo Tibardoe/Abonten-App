@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { updatePlaceCore } from "@abonten/services/places/updatePlaceCore";
 
 // PATCH /api/mobile/organizer/places/:placeId
@@ -15,6 +19,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -44,8 +49,7 @@ export async function PATCH(
     ) {
       return apiJson({
         status: 400,
-        message:
-          "name, description, categoryId, address, latitude and longitude are required",
+        message: tr("nameDescriptionCategoryidAddressLatitudeAnd"),
       });
     }
 
@@ -76,6 +80,9 @@ export async function PATCH(
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile PATCH /organizer/places/:id failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

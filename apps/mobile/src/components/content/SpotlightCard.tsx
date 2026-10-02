@@ -19,7 +19,7 @@ import {
 } from "@/features/content/useContentTelemetry";
 import { hapticLight } from "@/lib/haptics";
 import { useAppActive } from "@/lib/useAppActive";
-import { SPONSORED_LABEL } from "@abonten/core/content/copy";
+import { SPONSORED_LABEL_KEY } from "@abonten/core/content/copy";
 import {
   type FeedPlaybackMode,
   feedPosterUrl,
@@ -27,6 +27,7 @@ import {
 } from "@abonten/core/content/feedPlayback";
 import { formatSpeed, holdRate } from "@abonten/core/content/playbackControls";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
+import { formatCompactCount, formatCount } from "@abonten/core/i18n/format";
 import type {
   ContentFeedItem,
   ContentViewSurface,
@@ -38,6 +39,11 @@ import {
   type IoniconName,
   useReducedMotion,
 } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -66,11 +72,8 @@ import { SpotlightCommentsPanel } from "./SpotlightCommentsPanel";
 import { SpotlightTimeline } from "./SpotlightTimeline";
 import { type SpotlightPlayback, SpotlightVideo } from "./SpotlightVideo";
 
-function compact(n: number): string {
-  if (n < 1000) return String(n);
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}K`;
-  return `${(n / 1_000_000).toFixed(1)}M`;
-}
+const compact = (n: number): string =>
+  formatCompactCount(n, getCurrentLocale());
 
 // Comments shrink the video to this share of the card.
 const COMPACT_VIDEO_RATIO = 0.34;
@@ -125,6 +128,9 @@ export const SpotlightCard = memo(function SpotlightCard({
    */
   onGestureLockChange?: (locked: boolean) => void;
 }) {
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+
   const { post, sponsored } = item;
   const campaignId = sponsored?.campaignId ?? null;
   const router = useRouter();
@@ -324,14 +330,16 @@ export const SpotlightCard = memo(function SpotlightCard({
         className="items-center justify-center gap-3 bg-black px-8"
       >
         <AppText className="text-center text-white">
-          Thanks. You'll see fewer posts like this.
+          {t("thanksYouLlSeeFewerPosts")}
         </AppText>
         <Pressable
           onPress={() => engagement.markNotInterested(false)}
           hitSlop={10}
           accessibilityRole="button"
         >
-          <AppText className="font-semibold text-white underline">Undo</AppText>
+          <AppText className="font-semibold text-white underline">
+            {t("undo")}
+          </AppText>
         </Pressable>
       </View>
     );
@@ -370,17 +378,15 @@ export const SpotlightCard = memo(function SpotlightCard({
           onPressOut={() => setBoosting(false)}
           accessibilityLabel={
             commentsOpen
-              ? "Close comments"
+              ? t("closeComments")
               : isVideo
                 ? paused
-                  ? "Play"
-                  : "Pause"
-                : "Spotlight photo"
+                  ? t("play")
+                  : t("pause")
+                : t("spotlightPhoto")
           }
           accessibilityHint={
-            isVideo && !commentsOpen
-              ? "Press and hold to play faster"
-              : undefined
+            isVideo && !commentsOpen ? t("pressAndHoldToPlayFaster") : undefined
           }
         >
           {isVideo && media ? (
@@ -437,7 +443,9 @@ export const SpotlightCard = memo(function SpotlightCard({
           <View className="flex-row items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5">
             <Icon name="play-forward" size={14} color="#fff" />
             <AppText className="text-[13px] font-semibold text-white">
-              {formatSpeed(rate)} speed
+              {t("speed", {
+                formatSpeed: formatSpeed(rate, getCurrentLocale()),
+              })}
             </AppText>
           </View>
         </Animated.View>
@@ -465,7 +473,7 @@ export const SpotlightCard = memo(function SpotlightCard({
           {sponsored ? (
             <View className="rounded bg-white/90 px-1.5 py-0.5">
               <AppText className="text-[11px] font-bold uppercase text-black">
-                {SPONSORED_LABEL}
+                {tc(SPONSORED_LABEL_KEY)}
               </AppText>
             </View>
           ) : (
@@ -476,7 +484,7 @@ export const SpotlightCard = memo(function SpotlightCard({
               onPress={toggleSpotlightMuted}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel={muted ? "Turn sound on" : "Turn sound off"}
+              accessibilityLabel={muted ? t("turnSoundOn") : t("turnSoundOff")}
               className="h-10 w-10 items-center justify-center rounded-full bg-black/35"
             >
               <Icon
@@ -506,7 +514,7 @@ export const SpotlightCard = memo(function SpotlightCard({
                   onPress={openProfile}
                   hitSlop={6}
                   accessibilityRole={profileHref ? "link" : undefined}
-                  accessibilityLabel={`${name}, open profile`}
+                  accessibilityLabel={t("openProfile", { name: name })}
                   className="rounded-full border-[1.5px] border-white"
                 >
                   <Avatar
@@ -522,7 +530,7 @@ export const SpotlightCard = memo(function SpotlightCard({
                       onPress={openProfile}
                       hitSlop={{ top: 8, bottom: 8 }}
                       accessibilityRole={profileHref ? "link" : undefined}
-                      accessibilityLabel={`${name}, open profile`}
+                      accessibilityLabel={t("openProfile", { name: name })}
                       className="shrink flex-row items-center gap-1"
                     >
                       <AppText
@@ -562,8 +570,8 @@ export const SpotlightCard = memo(function SpotlightCard({
                   accessibilityRole="button"
                   accessibilityHint={
                     expanded
-                      ? "Shows less of the caption"
-                      : "Shows the full caption"
+                      ? t("showsLessOfTheCaption")
+                      : t("showsTheFullCaption")
                   }
                 >
                   <AppText
@@ -582,7 +590,7 @@ export const SpotlightCard = memo(function SpotlightCard({
               <RailButton
                 icon={engagement.liked ? "heart" : "heart-outline"}
                 color={engagement.liked ? "#ff3b5c" : "#fff"}
-                label={engagement.liked ? "Unlike" : "Like"}
+                label={engagement.liked ? t("unlike") : t("like")}
                 count={engagement.counts.likes}
                 selected={engagement.liked}
                 onPress={() => {
@@ -593,21 +601,21 @@ export const SpotlightCard = memo(function SpotlightCard({
               {post.allowComments ? (
                 <RailButton
                   icon="chatbubble-ellipses-outline"
-                  label="Comments"
+                  label={t("comments")}
                   count={engagement.counts.comments}
                   onPress={openComments}
                 />
               ) : null}
               <RailButton
                 icon="paper-plane-outline"
-                label="Share"
+                label={t("share")}
                 count={engagement.counts.shares}
                 onPress={share}
               />
               <RailButton
                 icon={engagement.saved ? "bookmark" : "bookmark-outline"}
                 color={engagement.saved ? "#ffc53d" : "#fff"}
-                label={engagement.saved ? "Remove from saved" : "Save"}
+                label={engagement.saved ? t("removeFromSaved") : t("save")}
                 count={engagement.counts.saves}
                 selected={engagement.saved}
                 onPress={() => {
@@ -618,8 +626,8 @@ export const SpotlightCard = memo(function SpotlightCard({
               {post.viewer.isAuthor ? (
                 <RailButton
                   icon="stats-chart"
-                  label="Insights"
-                  caption="Insights"
+                  label={t("insights")}
+                  caption={t("insights")}
                   onPress={() =>
                     router.push(`/(app)/spotlight/post/${post.id}`)
                   }
@@ -627,7 +635,7 @@ export const SpotlightCard = memo(function SpotlightCard({
               ) : null}
               <RailButton
                 icon="ellipsis-horizontal"
-                label="More options"
+                label={t("moreOptions")}
                 onPress={() => setOptionsOpen(true)}
               />
             </View>
@@ -659,7 +667,7 @@ export const SpotlightCard = memo(function SpotlightCard({
         <Pressable
           onPress={closeComments}
           accessibilityRole="button"
-          accessibilityLabel="Close comments"
+          accessibilityLabel={t("closeComments")}
           style={{
             position: "absolute",
             top: 0,
@@ -756,6 +764,7 @@ function RailButton({
   selected?: boolean;
   onPress: () => void;
 }) {
+  const { locale } = useLocale();
   const text = caption ?? (count !== undefined ? compact(count) : null);
   return (
     <Pressable
@@ -763,7 +772,7 @@ function RailButton({
       hitSlop={4}
       accessibilityRole="button"
       accessibilityLabel={
-        count !== undefined ? `${label}, ${count.toLocaleString()}` : label
+        count !== undefined ? `${label}, ${formatCount(count, locale)}` : label
       }
       accessibilityState={selected === undefined ? undefined : { selected }}
       className="min-h-[48px] w-[56px] items-center justify-center active:opacity-60"

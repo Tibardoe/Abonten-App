@@ -9,38 +9,42 @@ import { MdCancel } from "react-icons/md";
 // transactions page.
 const STATUS_META: Record<
   string,
-  { Icon: IconType; colorClass: string; label: string }
+  { Icon: IconType; colorClass: string; labelKey: string }
 > = {
   successful: {
     Icon: IoMdCheckmarkCircle,
     colorClass: "text-primary",
-    label: "Successful",
+    labelKey: "status.successful",
   },
   completed: {
     Icon: IoMdCheckmarkCircle,
     colorClass: "text-primary",
-    label: "Completed",
+    labelKey: "status.completed",
   },
   processed: {
     Icon: IoMdCheckmarkCircle,
     colorClass: "text-primary",
-    label: "Processed",
+    labelKey: "status.processed",
   },
   processing: {
     Icon: IoMdTime,
     colorClass: "text-muted-foreground",
-    label: "Processing",
+    labelKey: "status.processing",
   },
   pending: {
     Icon: IoMdTime,
     colorClass: "text-muted-foreground",
-    label: "Pending until the event settles",
+    labelKey: "status.pendingUntilTheEventSettles",
   },
-  failed: { Icon: MdCancel, colorClass: "text-destructive", label: "Failed" },
+  failed: {
+    Icon: MdCancel,
+    colorClass: "text-destructive",
+    labelKey: "status.failed",
+  },
   cancelled: {
     Icon: BsFillDashCircleFill,
     colorClass: "text-muted-foreground",
-    label: "Cancelled",
+    labelKey: "status.cancelled",
   },
 };
 
@@ -48,15 +52,16 @@ export function getFinanceStatusMeta(status: string) {
   return STATUS_META[status] ?? STATUS_META.processing;
 }
 
-export const LINE_LABELS: Record<OrganizerLedgerTransactionLine, string> = {
-  ticket_sale: "Ticket sale",
-  platform_fee: "Abonten fee",
-  refund: "Refund",
-  refund_release: "Refund reversed",
-  payout: "Organizer payout",
-  payout_release: "Payout returned",
-  promoter_commission: "Promoter commission",
-  promoter_commission_reversal: "Promoter commission returned",
+// Catalog keys in the finances namespace.
+export const LINE_LABEL_KEYS: Record<OrganizerLedgerTransactionLine, string> = {
+  ticket_sale: "line.ticketSale",
+  platform_fee: "line.platformFee",
+  refund: "line.refund",
+  refund_release: "line.refundRelease",
+  payout: "line.payout",
+  payout_release: "line.payoutRelease",
+  promoter_commission: "line.promoterCommission",
+  promoter_commission_reversal: "line.promoterCommissionReversal",
 };
 
 export default function FinanceLineIcon({

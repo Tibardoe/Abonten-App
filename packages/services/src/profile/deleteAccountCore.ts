@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of the web deleteUser action, lifted so the mobile
@@ -44,16 +45,16 @@ type Blockers = {
 /** The reason a person must act before deleting, or null when they may. */
 export function describeDeletionBlockers(b: Blockers): string | null {
   if (b.is_admin) {
-    return "Admin accounts can't be deleted from here. Ask another admin to remove your admin access first.";
+    return tr("adminAccountsCanTBeDeleted");
   }
   if (Number(b.upcoming_events_with_attendees) > 0) {
-    return "You still have upcoming events with attendees. Cancel those events first so your attendees are refunded and told, then delete your account.";
+    return tr("youStillHaveUpcomingEventsWith");
   }
   if (Number(b.payouts_in_flight) > 0) {
-    return "A payout to you is still being processed. Once it has completed you can delete your account.";
+    return tr("aPayoutToYouIsStill");
   }
   if (Number(b.balance_owed) > 0.005) {
-    return "You still have earnings waiting to be paid out. Request a payout from Finances first, then delete your account once it has completed.";
+    return tr("youStillHaveEarningsWaitingTo");
   }
   return null;
 }
@@ -72,7 +73,7 @@ export async function deleteAccountCore(
     logger.error(
       `deleteAccountCore: account_deletion_blockers failed for ${userId}: ${blockersError?.message}`,
     );
-    return { status: 500, message: "Something went wrong! Try again" };
+    return { status: 500, message: tr("somethingWentWrongTryAgain") };
   }
 
   const blocked = describeDeletionBlockers(blockers as unknown as Blockers);
@@ -100,7 +101,7 @@ export async function deleteAccountCore(
     logger.error(
       `deleteAccountCore: anonymize_deleted_account failed for ${userId}: ${anonError.message}`,
     );
-    return { status: 500, message: "Something went wrong! Try again" };
+    return { status: 500, message: tr("somethingWentWrongTryAgain") };
   }
 
   // Soft delete: sessions, identities, email and phone go; the row stays so
@@ -110,8 +111,8 @@ export async function deleteAccountCore(
 
   if (error) {
     logger.error(`Error deleting user: ${error.message}`);
-    return { status: 500, message: "Something went wrong! Try again" };
+    return { status: 500, message: tr("somethingWentWrongTryAgain") };
   }
 
-  return { status: 200, message: "Your account has been deleted." };
+  return { status: 200, message: tr("yourAccountHasBeenDeleted") };
 }

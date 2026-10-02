@@ -2,6 +2,7 @@ import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { useVenuePlaces } from "@/features/events/useVenuePlaces";
 import { AppText, Field, Icon, Input } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -12,16 +13,15 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 // address fills in from the place and the event is linked to it, so it
 // shows under "Upcoming events here" on the place's page.
 export function EventWizardLocation({ w }: { w: EventWizard }) {
+  const t = useTranslations("events");
+
   const [mapOpen, setMapOpen] = useState(false);
   const venues = useVenuePlaces();
 
   return (
     <View className="gap-4">
       {venues.length > 0 ? (
-        <Field
-          label="At one of your places?"
-          hint="Pin the event to a place you manage and it appears on that place's page."
-        >
+        <Field label={t("atOneOfYourPlaces")} hint={t("pinTheEventToAPlace")}>
           <View className="flex-row flex-wrap gap-2">
             {venues.map((v) => {
               const selected = w.venuePlace?.id === v.id;
@@ -58,11 +58,11 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
       ) : null}
 
       <Field
-        label={w.venuePlace ? "Address" : "Location"}
+        label={w.venuePlace ? t("address") : t("location")}
         hint={
           w.venuePlace
-            ? `Filled in from ${w.venuePlace.name}. Editing it unpins the place.`
-            : "Search, choose on the map, or use your current location."
+            ? t("filledInFromEditingItUnpins", { name: w.venuePlace.name })
+            : t("searchChooseOnTheMapOr")
         }
       >
         <Input
@@ -71,13 +71,13 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
             if (w.venuePlace) w.setVenuePlace(null);
             w.autocomplete.setQuery(v);
           }}
-          placeholder="Start typing an address…"
+          placeholder={t("startTypingAnAddress")}
           autoCorrect={false}
         />
         {w.resolvingLocation ? (
           <View className="flex-row items-center gap-2 py-1">
             <ActivityIndicator size="small" />
-            <AppText variant="meta">Resolving location…</AppText>
+            <AppText variant="meta">{t("resolvingLocation2")}</AppText>
           </View>
         ) : null}
         {w.autocomplete.predictions.length > 0 ? (
@@ -105,7 +105,7 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
           >
             <Icon name="map-outline" size={16} tone="primary" />
             <AppText variant="small" tone="brand">
-              Choose on map
+              {t("chooseOnMap")}
             </AppText>
           </Pressable>
           <Pressable
@@ -115,12 +115,14 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
           >
             <Icon name="locate-outline" size={16} tone="primary" />
             <AppText variant="small" tone="brand">
-              Current location
+              {t("currentLocation")}
             </AppText>
           </Pressable>
         </View>
         {w.address && w.coords ? (
-          <AppText variant="meta">Selected: {w.address}</AppText>
+          <AppText variant="meta">
+            {t("selected2", { address: w.address })}
+          </AppText>
         ) : null}
       </Field>
 

@@ -7,15 +7,27 @@
 // SECURITY INVOKER). Everything either side needs to turn a row into what
 // the screen shows lives here so the two can't drift.
 
+import type { CoreTranslator } from "../i18n/translator";
+
 export type ReviewSubjectKind = "event" | "place";
 
 /** "Most helpful" ties fall back to newest first, so with no votes yet it reads as "most recent". */
 export type ReviewSort = "helpful" | "recent";
 
-export const REVIEW_SORTS: { value: ReviewSort; label: string }[] = [
-  { value: "helpful", label: "Most helpful" },
-  { value: "recent", label: "Most recent" },
-];
+export const REVIEW_SORT_VALUES: readonly ReviewSort[] = [
+  "helpful",
+  "recent",
+] as const;
+
+/** Words live under `reviewSort.*` of the core namespace. */
+export function reviewSortOptions(
+  t: CoreTranslator,
+): { value: ReviewSort; label: string }[] {
+  return REVIEW_SORT_VALUES.map((value) => ({
+    value,
+    label: t(`reviewSort.${value}`),
+  }));
+}
 
 export type ReviewRatingFilter = 1 | 2 | 3 | 4 | 5 | null;
 
@@ -124,11 +136,15 @@ export function parseReviewRow(row: ReviewListRpcRow): ReviewListRow {
 
 /** The name a review is shown under. */
 export function reviewerDisplayName(
+  t: CoreTranslator,
   reviewer: ReviewListRow["reviewer"],
   kind: ReviewSubjectKind,
 ): string {
-  if (reviewer.deleted) return "Former Abonten member";
-  return reviewer.username ?? (kind === "event" ? "Attendee" : "Guest");
+  if (reviewer.deleted) return t("member.former");
+  return (
+    reviewer.username ??
+    t(kind === "event" ? "reviewer.attendee" : "reviewer.guest")
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -290,30 +306,6 @@ export function ratingShares(
     if (star) out[star] += 1;
   }
   return out;
-}
-
-export function formatReviewCount(total: number): string {
-  return `${total.toLocaleString("en-US")} ${total === 1 ? "review" : "reviews"}`;
-}
-
-/** Empty-list wording for a star filter or no filter. */
-export function emptyReviewsMessage(
-  rating: ReviewRatingFilter,
-  kind: ReviewSubjectKind,
-): { title: string; description: string } {
-  if (rating) {
-    return {
-      title: `No ${rating}-star reviews yet`,
-      description: "Try another rating, or show all reviews.",
-    };
-  }
-  return {
-    title: "No reviews yet",
-    description:
-      kind === "event"
-        ? "People who attended can review this event once it has ended."
-        : "Be the first to share what this place is like.",
-  };
 }
 
 // ---------------------------------------------------------------------------

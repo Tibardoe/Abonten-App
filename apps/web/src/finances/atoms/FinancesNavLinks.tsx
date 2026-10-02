@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { FinancesNavItem } from "../financesNavItems";
@@ -9,6 +10,7 @@ import type { FinancesNavItem } from "../financesNavItems";
 // src/settings/atoms/SettingsNavLinks.tsx, adapted for Finances' simple
 // text nav (no matching custom SVG icon set exists for these sections yet).
 export default function FinancesNavLinks({ item }: { item: FinancesNavItem }) {
+  const t = useTranslations("finances");
   const pathname = usePathname();
   const isActive = item.exact
     ? pathname === item.href
@@ -24,7 +26,7 @@ export default function FinancesNavLinks({ item }: { item: FinancesNavItem }) {
           : "text-foreground",
       )}
     >
-      {item.label}
+      {t(item.label)}
     </Link>
   );
 }

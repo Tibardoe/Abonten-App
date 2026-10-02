@@ -1,5 +1,7 @@
 import CategoryChipsRow from "@/components/molecules/CategoryChipsRow";
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
+import { useTranslations } from "next-intl";
 
 // Horizontal category-pill row for the Explore page's Events tab — mirrors
 // PlaceCategoryChips.tsx's UX via the shared CategoryChipsRow, but sources
@@ -19,6 +21,7 @@ export default function EventCategoryChips({
   location: string;
   selectedCategory: string | null;
 }) {
+  const tc = useTranslations("core");
   const basePath = `/explore/${location}?tab=events`;
 
   return (
@@ -27,7 +30,7 @@ export default function EventCategoryChips({
       allSelected={!selectedCategory}
       items={eventCategoriesAndTypes.map(({ category }) => ({
         key: category,
-        label: category,
+        label: eventCategoryLabel(tc, category),
         href: `${basePath}&eventCategory=${encodeURIComponent(category)}`,
         selected: selectedCategory === category,
       }))}

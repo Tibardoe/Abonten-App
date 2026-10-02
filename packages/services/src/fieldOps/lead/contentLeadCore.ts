@@ -3,6 +3,7 @@ import type {
   FieldOpsContentSubmission,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   BRIEF_COLUMNS,
   type BriefRow,
@@ -56,7 +57,7 @@ export async function upsertContentBriefCore(
     return fieldOpsError(e);
   }
   if (!PLANNING.has(campaignStatus)) {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
 
   // An assignment has to point at someone on this lead's own team.
@@ -67,11 +68,11 @@ export async function upsertContentBriefCore(
       .eq("id", input.assignedMemberId)
       .eq("team_id", teamId)
       .maybeSingle();
-    if (!member) return { status: 404, message: "Member not found" };
+    if (!member) return { status: 404, message: tr("memberNotFound") };
     if (member.role !== "content_creator") {
       return {
         status: 409,
-        message: "Briefs go to the content creator.",
+        message: tr("briefsGoToTheContentCreator"),
       };
     }
   }
@@ -101,8 +102,8 @@ export async function upsertContentBriefCore(
         .select(BRIEF_COLUMNS)
         .single();
   const { data, error } = await q;
-  if (error) return dbErr(error, "Could not save the brief");
-  if (!data) return { status: 404, message: "Brief not found" };
+  if (error) return dbErr(error, tr("couldNotSaveTheBrief"));
+  if (!data) return { status: 404, message: tr("briefNotFound") };
 
   // Tell the creator there is something new to make.
   if (!input.briefId && input.assignedMemberId) {
@@ -114,8 +115,13 @@ export async function upsertContentBriefCore(
     if (creator?.user_id) {
       await notifyFieldOps(supabase, [creator.user_id], {
         type: "fieldops_content_brief",
-        title: `New brief: ${input.title}`,
-        body: input.description ?? null,
+        template: {
+          id: "fieldops_content_brief",
+          params: {
+            title: input.title,
+            description: input.description ?? null,
+          },
+        },
         route: "/field/content",
       });
     }
@@ -123,7 +129,7 @@ export async function upsertContentBriefCore(
 
   return {
     status: 200,
-    message: input.briefId ? "Brief updated." : "Brief added.",
+    message: input.briefId ? tr("briefUpdated") : tr("briefAdded"),
     data: mapBrief(data as unknown as BriefRow),
   };
 }
@@ -160,7 +166,7 @@ export async function listTeamContentCore(
       .order("created_at", { ascending: false })
       .limit(200),
   ]);
-  if (error) return dbErr(error, "Could not load the team's content");
+  if (error) return dbErr(error, tr("couldNotLoadTheTeamS"));
 
   const rows = ((subs ?? []) as unknown as ContentSubmissionRow[]).map(
     mapContentSubmission,
@@ -200,7 +206,7 @@ export async function reviewContentCore(
     return fieldOpsError(e);
   }
   if (!REVIEWING.has(campaignStatus)) {
-    return { status: 409, message: "The campaign is closed." };
+    return { status: 409, message: tr("theCampaignIsClosed") };
   }
 
   const { data: existing } = await supabase
@@ -210,10 +216,10 @@ export async function reviewContentCore(
     .eq("campaign_id", input.campaignId)
     .maybeSingle();
   if (!existing || existing.team_id !== teamId) {
-    return { status: 404, message: "Deliverable not found" };
+    return { status: 404, message: tr("deliverableNotFound") };
   }
   if (existing.member_user_id === userId) {
-    return { status: 403, message: "You can't review your own content." };
+    return { status: 403, message: tr("youCanTReviewYourOwn") };
   }
 
   const { error } = await supabase.rpc("fieldops_review_content", {
@@ -225,7 +231,7 @@ export async function reviewContentCore(
   if (error) {
     return error.code === "23514"
       ? { status: 409, message: error.message }
-      : dbErr(error, "Could not save the decision");
+      : dbErr(error, tr("couldNotSaveTheDecision"));
   }
 
   const { data: fresh } = await supabase
@@ -237,8 +243,8 @@ export async function reviewContentCore(
     status: 200,
     message:
       input.decision === "approved"
-        ? "Approved. The commission is confirmed after the holding period."
-        : "Rejected.",
+        ? tr("approvedTheCommissionIsConfirmedAfter")
+        : tr("rejected"),
     data: mapContentSubmission(fresh as unknown as ContentSubmissionRow),
   };
 }

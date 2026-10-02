@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Button, Card, cn } from "@/components/ui";
 import { reviewClaim } from "@/server/actions/claims";
 import { useRouter } from "next/navigation";
@@ -29,6 +30,7 @@ export function ReviewPanel({
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
     null,
   );
+  const confirm = useConfirm();
 
   function run(decision: "approve" | "reject") {
     setMsg(null);
@@ -122,16 +124,16 @@ export function ReviewPanel({
             <Button
               size="sm"
               disabled={pending}
-              onClick={() => {
-                if (
-                  confirm(
-                    alsoVerify
-                      ? "Approve this claim, transfer ownership AND verify the place?"
-                      : "Approve this claim and transfer ownership?",
-                  )
-                ) {
-                  run("approve");
-                }
+              onClick={async () => {
+                const confirmed = await confirm(
+                  alsoVerify
+                    ? "Approve this claim, transfer ownership AND verify the place?"
+                    : "Approve this claim and transfer ownership?",
+                  {
+                    confirmLabel: alsoVerify ? "Approve and verify" : "Approve",
+                  },
+                );
+                if (confirmed) run("approve");
               }}
             >
               Approve

@@ -2,6 +2,7 @@ import { firstEmojiCluster } from "@/features/messaging/emojiOnly";
 import { hapticSelection } from "@/lib/haptics";
 import { isValidReactionEmoji } from "@abonten/core/messagingReactions";
 import { AppText, Input, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -37,6 +38,8 @@ export function EmojiPickerSheet({
   onPick: (emoji: string) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const [value, setValue] = useState("");
   const [rejected, setRejected] = useState(false);
@@ -69,9 +72,9 @@ export function EmojiPickerSheet({
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="React with any emoji">
+    <Sheet open={open} onClose={onClose} title={t("reactWithAnyEmoji")}>
       <AppText variant="meta" tone="muted" className="text-[13px]">
-        Switch your keyboard to emoji and tap one.
+        {t("switchYourKeyboardToEmojiAnd")}
       </AppText>
 
       {recents.length > 0 ? (
@@ -80,7 +83,7 @@ export function EmojiPickerSheet({
             <Pressable
               key={e}
               accessibilityRole="button"
-              accessibilityLabel={`React ${e}`}
+              accessibilityLabel={t("react", { e: e })}
               onPress={() => confirm(e)}
               style={({ pressed }) => ({
                 width: 44,
@@ -107,13 +110,13 @@ export function EmojiPickerSheet({
         // A short field reads as "one emoji", not a message composer.
         maxLength={16}
         placeholder="🙂"
-        accessibilityLabel="Type or pick an emoji"
+        accessibilityLabel={t("typeOrPickAnEmoji")}
         className="mt-3.5 h-[52px] rounded-[14px] text-center text-[26px]"
       />
 
       {rejected ? (
         <AppText variant="caption" tone="error" className="mt-2 text-center">
-          That isn't an emoji — try the emoji panel on your keyboard.
+          {t("thatIsnTAnEmojiTry")}
         </AppText>
       ) : null}
     </Sheet>

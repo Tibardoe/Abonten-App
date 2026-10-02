@@ -15,15 +15,20 @@ import type {
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, Chip, Overline, Refresher } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "7d", label: "7 days" },
-  { key: "30d", label: "30 days" },
-  { key: "all", label: "All time" },
+  { key: "today", label: "periods.today" },
+  { key: "7d", label: "periods.7d" },
+  { key: "30d", label: "periods.30d" },
+  { key: "all", label: "periods.all" },
 ];
 
 // PostgREST can serialise the analytics RPCs' bigint/numeric columns as
@@ -31,7 +36,7 @@ const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null | undefined, amount: number): string {
-  return formatMoney(currency, amount);
+  return formatMoney(currency, amount, { locale: getCurrentLocale() });
 }
 
 function SectionTitle({ children }: { children: string }) {
@@ -68,10 +73,12 @@ function Row({ label, value }: { label: string; value: string }) {
 function OverviewCards({
   overview,
 }: { overview: EventInsightsOverview | null }) {
+  const t = useTranslations("manage");
+
   if (!overview) {
     return (
       <AppText className="text-sm text-muted-foreground">
-        No sales or registration data yet.
+        {t("noSalesOrRegistrationDataYet")}
       </AppText>
     );
   }
@@ -86,50 +93,50 @@ function OverviewCards({
   if (overview.require_registration) {
     // Free/RSVP events lead with registrations, not a "GHS 0" sales figure.
     tiles.push({
-      label: "Registrations",
+      label: t("registrations"),
       value: String(n(overview.tickets_sold)),
     });
     tiles.push({
-      label: "Attendees",
+      label: t("attendees"),
       value: String(n(overview.distinct_attendees)),
     });
     tiles.push({
-      label: "Cancelled",
+      label: t("cancelled"),
       value: String(n(overview.tickets_cancelled)),
     });
     if (overview.capacity != null) {
       tiles.push({
-        label: "Remaining",
+        label: t("remaining"),
         value: String(n(overview.capacity_remaining)),
-        sublabel: `of ${overview.capacity} capacity`,
+        sublabel: t("ofCapacity", { capacity: overview.capacity }),
       });
     }
     if (grossSales > 0) {
-      tiles.push({ label: "Gross Sales", value: m(grossSales) });
+      tiles.push({ label: t("grossSales"), value: m(grossSales) });
     }
     if (promoCount > 0) {
-      tiles.push({ label: "Promo Purchases", value: String(promoCount) });
+      tiles.push({ label: t("promoPurchases"), value: String(promoCount) });
     }
   } else {
-    tiles.push({ label: "Gross Sales", value: m(grossSales) });
+    tiles.push({ label: t("grossSales"), value: m(grossSales) });
     tiles.push({
-      label: "Tickets Sold",
+      label: t("ticketsSold"),
       value: String(n(overview.tickets_sold)),
     });
     tiles.push({
-      label: "Attendees",
+      label: t("attendees"),
       value: String(n(overview.distinct_attendees)),
     });
     tiles.push({
-      label: "Cancelled",
+      label: t("cancelled"),
       value: String(n(overview.tickets_cancelled)),
     });
-    tiles.push({ label: "Promo Purchases", value: String(promoCount) });
+    tiles.push({ label: t("promoPurchases"), value: String(promoCount) });
     if (overview.capacity != null) {
       tiles.push({
-        label: "Remaining",
+        label: t("remaining"),
         value: String(n(overview.capacity_remaining)),
-        sublabel: `of ${overview.capacity} capacity`,
+        sublabel: t("ofCapacity", { capacity: overview.capacity }),
       });
     }
   }
@@ -155,17 +162,19 @@ function FinanceSection({
   finance: EventInsightsFinance | null;
   period: OrganizerDashboardPeriod;
 }) {
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-3">
-      <SectionTitle>Event Revenue</SectionTitle>
+      <SectionTitle>{t("eventRevenue")}</SectionTitle>
       {!finance ? (
         <AppText className="text-sm text-muted-foreground">
-          No revenue data available yet.
+          {t("noRevenueDataAvailableYet")}
         </AppText>
       ) : (
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Row
-            label="Ticket sales"
+            label={t("ticketSales")}
             value={money(finance.currency, n(finance.ticketSales))}
           />
           {/* Under the customer-paid-service-fee model the organizer keeps
@@ -173,58 +182,61 @@ function FinanceSection({
               deduction still show this row. */}
           {n(finance.platformFee) !== 0 ? (
             <Row
-              label="Abonten fees"
+              label={t("abontenFees")}
               value={`-${money(finance.currency, n(finance.platformFee))}`}
             />
           ) : null}
           {n(finance.refunds) !== 0 ? (
             <View className="gap-1">
               <Row
-                label="Refunds"
+                label={t("refunds")}
                 value={`-${money(finance.currency, Math.abs(n(finance.refunds)))}`}
               />
               {n(finance.pendingRefunds) > 0 ||
               n(finance.completedRefunds) > 0 ? (
                 <AppText variant="muted">
-                  {n(finance.refundRequestCount)} request
-                  {n(finance.refundRequestCount) === 1 ? "" : "s"} ·{" "}
-                  {money(finance.currency, n(finance.pendingRefunds))} pending ·{" "}
-                  {money(finance.currency, n(finance.completedRefunds))}{" "}
-                  completed
+                  {t("refundRequestsSummary", {
+                    count: n(finance.refundRequestCount),
+                    pending: money(finance.currency, n(finance.pendingRefunds)),
+                    completed: money(
+                      finance.currency,
+                      n(finance.completedRefunds),
+                    ),
+                  })}
                 </AppText>
               ) : null}
             </View>
           ) : null}
           <Row
-            label="Net sales"
+            label={t("netSales")}
             value={money(finance.currency, n(finance.netSales))}
           />
           {n(finance.promoterCommissions) !== 0 ? (
             <Row
-              label="Promoter commissions"
+              label={t("promoterCommissions")}
               value={`-${money(finance.currency, Math.abs(n(finance.promoterCommissions)))}`}
             />
           ) : null}
           <View className="h-px bg-border" />
           <Row
-            label="Organizer earnings"
+            label={t("organizerEarnings")}
             value={money(finance.currency, n(finance.organizerEarnings))}
           />
           <View className="h-px bg-border" />
           {period !== "all" ? (
             <AppText variant="muted">
-              Refund breakdown and settlement status are all-time, not limited
-              to the selected period.
+              {t("refundBreakdownAndSettlementStatusAre")}
             </AppText>
           ) : null}
           <AppText className="text-sm font-medium text-foreground">
-            Settlement status:{" "}
-            {finance.settled ? "Settled" : "Pending settlement"}
+            {t("settlementStatus")}
+            {finance.settled ? t("settled") : t("pendingSettlement")}
           </AppText>
           {finance.settled ? (
             <AppText variant="muted">
-              {money(finance.currency, n(finance.organizerEarnings))} is now
-              available in your Finances balance.
+              {t("isNowAvailableInYourFinances", {
+                money: money(finance.currency, n(finance.organizerEarnings)),
+              })}
             </AppText>
           ) : null}
         </View>
@@ -238,12 +250,15 @@ function TicketTypesSection({
 }: {
   rows: EventInsightsTicketTypeRow[];
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-3">
-      <SectionTitle>Ticket Types</SectionTitle>
+      <SectionTitle>{t("ticketTypes2")}</SectionTitle>
       {rows.length === 0 ? (
         <AppText className="text-sm text-muted-foreground">
-          No ticket types set up yet.
+          {t("noTicketTypesSetUpYet")}
         </AppText>
       ) : (
         <View className="gap-2">
@@ -263,7 +278,7 @@ function TicketTypesSection({
                     {row.type}
                   </AppText>
                   <AppText className="shrink-0 text-sm text-muted-foreground">
-                    {n(row.sold)} sold
+                    {t("sold", { n: n(row.sold) })}
                     {capped ? ` / ${row.quantity_capacity}` : " / Unlimited"}
                   </AppText>
                 </View>
@@ -278,16 +293,20 @@ function TicketTypesSection({
                 <View className="flex-row justify-between">
                   <AppText variant="muted">
                     {price > 0
-                      ? `${row.currency ?? ""} ${price.toLocaleString()}`.trim()
-                      : "Free"}
+                      ? formatMoney(row.currency, price, { locale })
+                      : t("free")}
                   </AppText>
                   {revenue > 0 ? (
                     <AppText variant="muted">
-                      {row.currency ?? ""} {revenue.toLocaleString()} revenue
+                      {t("revenue", {
+                        amount: formatMoney(row.currency, revenue, { locale }),
+                      })}
                     </AppText>
                   ) : null}
                   {cancelled > 0 ? (
-                    <AppText variant="muted">{cancelled} cancelled</AppText>
+                    <AppText variant="muted">
+                      {t("cancelled2", { cancelled: cancelled })}
+                    </AppText>
                   ) : null}
                 </View>
               </View>
@@ -299,13 +318,23 @@ function TicketTypesSection({
   );
 }
 
-function PromoSection({ rows }: { rows: EventInsightsPromoRow[] }) {
+function PromoSection({
+  rows,
+  currency,
+}: {
+  rows: EventInsightsPromoRow[];
+  /** The event's currency: a discount is an amount of money. */
+  currency: string | null;
+}) {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-3">
-      <SectionTitle>Promo Codes</SectionTitle>
+      <SectionTitle>{t("promoCodes2")}</SectionTitle>
       {rows.length === 0 ? (
         <AppText className="text-sm text-muted-foreground">
-          No promo codes used yet.
+          {t("noPromoCodesUsedYet")}
         </AppText>
       ) : (
         <View className="gap-2">
@@ -319,12 +348,18 @@ function PromoSection({ rows }: { rows: EventInsightsPromoRow[] }) {
                   {row.promo_code}
                 </AppText>
                 <AppText variant="muted">
-                  {n(row.orders)} orders · {n(row.units_discounted)} tickets
-                  discounted
+                  {t("ordersTicketsDiscounted", {
+                    n: n(row.orders),
+                    n2: n(row.units_discounted),
+                  })}
                 </AppText>
               </View>
               <AppText className="shrink-0 text-sm font-medium text-foreground">
-                {n(row.total_discount).toLocaleString()} discount
+                {t("discount", {
+                  amount: formatMoney(currency, n(row.total_discount), {
+                    locale,
+                  }),
+                })}
               </AppText>
             </View>
           ))}
@@ -335,13 +370,22 @@ function PromoSection({ rows }: { rows: EventInsightsPromoRow[] }) {
 }
 
 function DateSection({ rows }: { rows: EventInsightsDateRow[] }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   return (
     <View className="gap-3">
-      <SectionTitle>Attendance by Date</SectionTitle>
+      <SectionTitle>{t("attendanceByDate")}</SectionTitle>
       <View className="gap-2">
         {rows.map((row) => {
           const label = row.starts_at
-            ? formatFullDateTimeRange(row.starts_at, row.ends_at)
+            ? formatFullDateTimeRange(
+                row.starts_at,
+                row.ends_at,
+                undefined,
+                locale,
+              )
             : null;
           return (
             <View
@@ -350,17 +394,17 @@ function DateSection({ rows }: { rows: EventInsightsDateRow[] }) {
             >
               <View className="flex-1">
                 <AppText className="font-semibold text-foreground">
-                  {label ? label.date : "Before date-tracking"}
+                  {label ? label.date : t("beforeDateTracking")}
                 </AppText>
                 {label ? <AppText variant="muted">{label.time}</AppText> : null}
               </View>
               <View className="shrink-0 items-end">
                 <AppText className="text-sm font-medium text-foreground">
-                  {n(row.tickets_sold)} attendees
+                  {t("attendees2", { n: n(row.tickets_sold) })}
                 </AppText>
                 {n(row.tickets_cancelled) > 0 ? (
                   <AppText variant="muted">
-                    {n(row.tickets_cancelled)} cancelled
+                    {t("cancelled3", { n: n(row.tickets_cancelled) })}
                   </AppText>
                 ) : null}
               </View>
@@ -377,16 +421,18 @@ function ReturningSection({
 }: {
   returning: EventInsightsReturning;
 }) {
+  const t = useTranslations("manage");
+
   const ret = n(returning.returning_count);
   const first = n(returning.first_time_count);
   const total = ret + first;
 
   return (
     <View className="gap-3">
-      <SectionTitle>Attendee Behavior</SectionTitle>
+      <SectionTitle>{t("attendeeBehavior")}</SectionTitle>
       {total === 0 ? (
         <AppText className="text-sm text-muted-foreground">
-          Not enough attendees yet to calculate returning vs. first-time.
+          {t("notEnoughAttendeesYetToCalculate")}
         </AppText>
       ) : (
         <View className="gap-2">
@@ -398,11 +444,11 @@ function ReturningSection({
           </View>
           <View className="flex-row justify-between">
             <AppText className="text-sm text-foreground">
-              Returning: {Math.round((ret / total) * 100)}%{" "}
+              {t("returning", { round: Math.round((ret / total) * 100) })}
               <AppText className="text-muted-foreground">({ret})</AppText>
             </AppText>
             <AppText className="text-sm text-foreground">
-              First-time: {Math.round((first / total) * 100)}%{" "}
+              {t("firstTime", { round: Math.round((first / total) * 100) })}
               <AppText className="text-muted-foreground">({first})</AppText>
             </AppText>
           </View>
@@ -413,6 +459,10 @@ function ReturningSection({
 }
 
 export default function EventInsightsScreen() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("all");
   const q = useEventInsights(eventId ?? "", period);
@@ -429,6 +479,8 @@ export default function EventInsightsScreen() {
     ? formatFullDateTimeRange(
         insights.overview.starts_at,
         insights.overview.ends_at,
+        undefined,
+        locale,
       )
     : null;
 
@@ -440,7 +492,7 @@ export default function EventInsightsScreen() {
     >
       <View>
         <AppText variant="screenTitle">
-          {insights?.overview?.event_title ?? "Event insights"}
+          {insights?.overview?.event_title ?? t("eventInsights2")}
         </AppText>
         {dateRange ? (
           <AppText className="mt-1 text-sm text-muted-foreground">
@@ -454,7 +506,7 @@ export default function EventInsightsScreen() {
           <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
             <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
               <AppText className="text-sm font-semibold text-primary">
-                Edit event
+                {t("editEvent")}
               </AppText>
             </Pressable>
           </Link>
@@ -462,7 +514,7 @@ export default function EventInsightsScreen() {
             <Link href={`/(app)/organizer/events/${eventId}/promote`} asChild>
               <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
                 <AppText className="text-sm font-semibold text-primary">
-                  Promote
+                  {t("promote")}
                 </AppText>
               </Pressable>
             </Link>
@@ -475,7 +527,7 @@ export default function EventInsightsScreen() {
           <Link href={`/(app)/organizer/events/${eventId}/attendees`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base text-foreground">
-                Attendees &amp; check-in
+                {t("attendeesCheckIn")}
               </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
@@ -483,7 +535,7 @@ export default function EventInsightsScreen() {
           <Link href={`/(app)/organizer/events/${eventId}/promo-codes`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base text-foreground">
-                Manage promo codes
+                {t("managePromoCodes")}
               </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
@@ -491,7 +543,7 @@ export default function EventInsightsScreen() {
           <Link href={`/(app)/organizer/events/${eventId}/reviews`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base text-foreground">
-                Reviews &amp; replies
+                {t("reviewsReplies")}
               </AppText>
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
@@ -505,7 +557,7 @@ export default function EventInsightsScreen() {
         {PERIODS.map((p) => (
           <Chip
             key={p.key}
-            label={p.label}
+            label={t(p.label)}
             selected={p.key === period}
             onPress={() => setPeriod(p.key)}
           />
@@ -515,7 +567,7 @@ export default function EventInsightsScreen() {
       {!definiteFailure && view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="this event's insights"
+          subject={t("thisEventSInsights")}
           onRetry={() => q.refetch()}
           loading={
             <View className="items-center py-12">
@@ -526,7 +578,7 @@ export default function EventInsightsScreen() {
       ) : definiteFailure ? (
         <View className="items-center gap-3 py-12">
           <AppText className="text-center text-muted-foreground">
-            {result.message || "Couldn't load this event's insights."}
+            {result.message || t("couldnTLoadThisEventS")}
           </AppText>
           <Pressable
             accessibilityRole="button"
@@ -534,20 +586,23 @@ export default function EventInsightsScreen() {
             onPress={() => q.refetch()}
           >
             <AppText className="font-semibold text-primary-foreground">
-              Retry
+              {t("retry")}
             </AppText>
           </Pressable>
         </View>
       ) : insights ? (
         <>
           <View className="gap-3">
-            <SectionTitle>Overview</SectionTitle>
+            <SectionTitle>{t("overview")}</SectionTitle>
             <OverviewCards overview={insights.overview} />
           </View>
 
           <FinanceSection finance={insights.finance} period={period} />
           <TicketTypesSection rows={insights.ticketTypes} />
-          <PromoSection rows={insights.promos} />
+          <PromoSection
+            rows={insights.promos}
+            currency={insights.overview?.currency ?? null}
+          />
           {insights.dates.hasOccurrences ? (
             <DateSection rows={insights.dates.rows} />
           ) : null}
@@ -559,7 +614,7 @@ export default function EventInsightsScreen() {
         <Link href={`/(app)/event/${eventId}`} asChild>
           <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
             <AppText className="text-base text-foreground">
-              View public event page
+              {t("viewPublicEventPage")}
             </AppText>
             <AppText className="text-muted-foreground">›</AppText>
           </Pressable>

@@ -5,6 +5,7 @@ import {
   usePaymentVerification,
 } from "@/features/checkout/usePaymentVerification";
 import { AppText, Button, Icon, OtpInput, Spinner } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -31,6 +32,8 @@ type Params = {
 };
 
 export default function PaymentVerificationScreen() {
+  const t = useTranslations("wallet");
+
   const p = useLocalSearchParams<Params>();
   const router = useRouter();
   const [otp, setOtp] = useState("");
@@ -61,7 +64,7 @@ export default function PaymentVerificationScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="title" title="Payment" />
+      <AppHeader variant="title" title={t("payment")} />
       <ScrollView
         className="flex-1"
         contentContainerClassName="grow justify-center gap-6 p-6"
@@ -70,7 +73,7 @@ export default function PaymentVerificationScreen() {
         {p.contextTitle ? (
           <View className="items-center gap-1">
             <AppText variant="caption">
-              {p.kind === "ticket" ? "Order" : "Promotion"}
+              {p.kind === "ticket" ? t("order") : t("promotion")}
             </AppText>
             <AppText variant="sectionHeading" className="text-center">
               {p.contextTitle}
@@ -85,12 +88,10 @@ export default function PaymentVerificationScreen() {
           <View className="items-center gap-4 rounded-2xl border border-border bg-card p-8">
             <Spinner />
             <AppText variant="bodyStrong" className="text-center">
-              Verifying your payment
+              {t("verifyingYourPayment")}
             </AppText>
             <AppText variant="muted" className="text-center">
-              {state.note ??
-                p.displayMessage ??
-                "This can take a few seconds — please don't close the app."}
+              {state.note ?? p.displayMessage ?? t("thisCanTakeAFewSeconds")}
             </AppText>
           </View>
         ) : null}
@@ -98,10 +99,8 @@ export default function PaymentVerificationScreen() {
         {state.status === "otp" ? (
           <View className="gap-4 rounded-2xl border border-border bg-card p-6">
             <View className="gap-1">
-              <AppText variant="bodyStrong">Enter the OTP</AppText>
-              <AppText variant="muted">
-                We sent a one-time code to your phone to approve this payment.
-              </AppText>
+              <AppText variant="bodyStrong">{t("enterTheOtp")}</AppText>
+              <AppText variant="muted">{t("weSentAOneTimeCode")}</AppText>
             </View>
             <OtpInput
               value={otp}
@@ -120,7 +119,7 @@ export default function PaymentVerificationScreen() {
               </View>
             ) : null}
             <Button
-              title="Submit code"
+              title={t("submitCode")}
               fullWidth
               loading={otpSubmitting}
               disabled={otpSubmitting || otp.trim().length < 6}
@@ -133,17 +132,17 @@ export default function PaymentVerificationScreen() {
           <View className="items-center gap-4 rounded-2xl border border-border bg-card p-8">
             <Icon name="checkmark-circle" size={56} tone="success" />
             <AppText variant="sectionHeading" className="text-center">
-              Payment successful
+              {t("paymentSuccessful")}
             </AppText>
             <AppText variant="muted" className="text-center">
               {p.kind === "ticket"
-                ? "Your ticket is confirmed and ready in Tickets."
+                ? t("yourTicketIsConfirmedAndReady")
                 : p.kind === "spotlight_promotion"
-                  ? "Your promotion is waiting for review. If it isn't approved, you're refunded in full."
-                  : "Your listing is now featured."}
+                  ? t("yourPromotionIsWaitingForReview")
+                  : t("yourListingIsNowFeatured")}
             </AppText>
             <Button
-              title={p.successCtaLabel ?? "View my tickets"}
+              title={p.successCtaLabel ?? t("viewMyTickets")}
               fullWidth
               onPress={goSuccess}
             />
@@ -160,20 +159,20 @@ export default function PaymentVerificationScreen() {
           <View className="items-center gap-4 rounded-2xl border border-border bg-card p-8">
             <Icon name="time-outline" size={52} tone="warning" />
             <AppText variant="sectionHeading" className="text-center">
-              Still confirming
+              {t("stillConfirming")}
             </AppText>
             <AppText variant="muted" className="text-center">
               {state.note}
             </AppText>
             <Button
-              title="Check again"
+              title={t("checkAgain")}
               fullWidth
               loading={checking}
               disabled={checking}
               onPress={checkAgain}
             />
             <Button
-              title={p.kind === "ticket" ? "Go to Tickets" : "Go back"}
+              title={p.kind === "ticket" ? t("goToTickets") : t("goBack")}
               variant="outline"
               fullWidth
               onPress={goSuccess}
@@ -185,13 +184,13 @@ export default function PaymentVerificationScreen() {
           <View className="items-center gap-4 rounded-2xl border border-border bg-card p-8">
             <Icon name="hourglass-outline" size={48} tone="warning" />
             <AppText variant="sectionHeading" className="text-center">
-              Payment received — finishing up
+              {t("paymentReceivedFinishingUp")}
             </AppText>
             <AppText variant="muted" className="text-center">
               {state.message}
             </AppText>
             <Button
-              title="Retry"
+              title={t("retry")}
               fullWidth
               loading={checking}
               disabled={checking}
@@ -204,13 +203,13 @@ export default function PaymentVerificationScreen() {
           <View className="items-center gap-4 rounded-2xl border border-destructive/40 bg-destructive/10 p-8">
             <Icon name="close-circle" size={52} tone="destructive" />
             <AppText variant="sectionHeading" className="text-center">
-              Payment not completed
+              {t("paymentNotCompleted")}
             </AppText>
             <AppText variant="muted" className="text-center">
               {state.message}
             </AppText>
             <Button
-              title="Back to checkout"
+              title={t("backToCheckout")}
               fullWidth
               onPress={() => router.back()}
             />

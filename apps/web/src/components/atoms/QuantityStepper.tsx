@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { IoAddSharp } from "react-icons/io5";
 import { TfiMinus } from "react-icons/tfi";
 
@@ -25,15 +26,18 @@ export default function QuantityStepper({
   disabled = false,
   onIncrement,
   onDecrement,
-  label = "tickets",
+  label: labelProp,
 }: QuantityStepperProps) {
+  const t = useTranslations("common");
+  const label = labelProp ?? t("ticketsUnit");
+
   return (
     <fieldset className="flex items-center gap-4" aria-label={label}>
       <button
         type="button"
         disabled={disabled || quantity <= minQuantity}
         onClick={onDecrement}
-        aria-label={`Remove one from ${label}`}
+        aria-label={t("removeOneFrom", { label: label })}
         className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-muted border border-border text-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <TfiMinus aria-hidden />
@@ -47,7 +51,7 @@ export default function QuantityStepper({
         type="button"
         disabled={disabled || (maxQuantity !== null && quantity >= maxQuantity)}
         onClick={onIncrement}
-        aria-label={`Add one to ${label}`}
+        aria-label={t("addOneTo", { label: label })}
         className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <IoAddSharp aria-hidden />

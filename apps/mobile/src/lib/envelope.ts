@@ -1,3 +1,5 @@
+import { translatorFor } from "@abonten/ui-native/i18n";
+
 // The typed /api/mobile client returns HTTP failures as data
 // (`{ status, message }`) instead of throwing. That suits mutations, which
 // branch on the status, but in a QUERY it means React Query records the
@@ -16,7 +18,7 @@ export class EnvelopeError extends Error {
   /** Read by queryClient's auth-expiry check and retry policy. */
   readonly status: number;
   constructor(status: number, message?: string) {
-    super(message ?? `Request failed (${status})`);
+    super(message ?? translatorFor("common")("requestFailed", { status }));
     this.name = "EnvelopeError";
     this.status = status;
   }

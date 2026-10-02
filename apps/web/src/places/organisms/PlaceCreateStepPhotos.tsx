@@ -1,4 +1,5 @@
 import ImagePreviewPane from "@/components/molecules/ImagePreviewPane";
+import { useTranslations } from "next-intl";
 
 type PlaceCreateStepPhotosProps = {
   coverPreview: string | null;
@@ -15,6 +16,8 @@ export default function PlaceCreateStepPhotos({
   onPickPhoto,
   onCropToggle,
 }: PlaceCreateStepPhotosProps) {
+  const t = useTranslations("places");
+
   if (!coverPreview) {
     return (
       <div className="flex flex-1 min-h-0 items-center justify-center">
@@ -23,7 +26,7 @@ export default function PlaceCreateStepPhotos({
           onClick={onPickPhoto}
           className="border border-dashed border-border rounded-lg px-8 py-12 text-muted-foreground hover:text-foreground hover:border-primary transition-colors"
         >
-          Tap to select a cover photo
+          {t("tapToSelectACoverPhoto")}
         </button>
       </div>
     );
@@ -33,7 +36,7 @@ export default function PlaceCreateStepPhotos({
     <div className="relative flex-1 min-h-0 w-full md:w-[40%] mx-auto">
       <ImagePreviewPane
         src={coverPreview}
-        alt="Place cover photo"
+        alt={t("placeCoverPhoto")}
         className="w-full h-full"
         onCropToggle={onCropToggle}
       />
@@ -43,7 +46,7 @@ export default function PlaceCreateStepPhotos({
         onClick={onPickPhoto}
         className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full"
       >
-        Choose a different photo
+        {t("chooseADifferentPhoto")}
       </button>
     </div>
   );

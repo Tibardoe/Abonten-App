@@ -1,8 +1,9 @@
 "use client";
 
-import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import TileSelector from "@/components/molecules/TileSelector";
-import { useQuery } from "@tanstack/react-query";
+import { usePlaceCategories } from "@/hooks/usePlaceCategories";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
+import { useTranslations } from "next-intl";
 
 type PlaceCategoryPickerProps = {
   categoryId: number | null;
@@ -17,23 +18,19 @@ export default function PlaceCategoryPicker({
   categoryId,
   onSelect,
 }: PlaceCategoryPickerProps) {
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ["place-categories"],
-    queryFn: async () => {
-      const response = await getPlaceCategories();
-      return response.status === 200 ? (response.data ?? []) : [];
-    },
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+
+  const { data: categories, isLoading } = usePlaceCategories();
 
   return (
     <TileSelector
-      label="Category"
+      label={t("category")}
       mode="single"
       loading={isLoading}
       options={(categories ?? []).map((cat) => ({
         id: String(cat.id),
-        label: cat.name,
+        label: placeCategoryLabel(tc, cat),
       }))}
       value={categoryId === null ? "" : String(categoryId)}
       onChange={(id) => onSelect(Number(id))}

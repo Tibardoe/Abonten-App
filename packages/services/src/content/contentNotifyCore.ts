@@ -1,6 +1,10 @@
 import { logger } from "@abonten/core/logger";
+import { type Notice, renderNotice } from "@abonten/core/notifications/notices";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { createNotificationCore } from "../notifications/createNotification";
+import {
+  createNotificationCore,
+  notificationWordsFor,
+} from "../notifications/createNotification";
 
 // Social notices for Spotlight + Stories through the existing notification
 // system (in-app row + push honouring `social_push`). Likes and reactions
@@ -22,7 +26,8 @@ async function actorName(
     .select("username, full_name")
     .eq("id", userId)
     .maybeSingle();
-  return data?.full_name ?? (data?.username as string | null) ?? "Someone";
+  // No name on file: the notice words it ("Someone") in the reader's language.
+  return data?.full_name ?? (data?.username as string | null) ?? "";
 }
 
 async function blocked(
@@ -44,8 +49,12 @@ type PostTarget = {
   thumbnailUrl?: string | null;
 };
 
-function postWord(kind: "spotlight" | "story"): string {
-  return kind === "story" ? "Story" : "Spotlight";
+/** An aggregated notice's new title, in its recipient's language. */
+async function noticeTitle(userId: string, notice: Notice): Promise<string> {
+  const words = await notificationWordsFor(userId);
+  return (
+    renderNotice({ t: words.core, locale: words.locale }, notice)?.title ?? ""
+  );
 }
 
 function linkFor(post: PostTarget): string {
@@ -64,7 +73,7 @@ async function notifyAggregated(
   post: PostTarget,
   actor: Actor,
   type: "content_like" | "content_reaction",
-  verb: string,
+  emoji?: string,
 ): Promise<void> {
   if (actor.id === post.authorId) return;
   if (await blocked(supabase, actor.id, post.authorId)) return;
@@ -89,12 +98,20 @@ async function notifyAggregated(
       : [];
     if (actors.includes(actor.id)) return;
     const nextActors = [...actors, actor.id];
-    const others = nextActors.length - 1;
+    const notice: Notice = {
+      id: type,
+      params: {
+        actor: actor.name,
+        others: nextActors.length - 1,
+        kind: post.kind,
+        emoji: emoji ?? null,
+      },
+    };
     await supabase
       .from("notification")
       .update({
-        title: `${actor.name} and ${others} ${others === 1 ? "other" : "others"} ${verb} your ${postWord(post.kind)}`,
-        data: { ...data, actorIds: nextActors },
+        title: await noticeTitle(post.authorId, notice),
+        data: { ...data, actorIds: nextActors, notice } as never,
       })
       .eq("id", recent.id);
     return;
@@ -103,8 +120,15 @@ async function notifyAggregated(
   await createNotificationCore(supabase, {
     userId: post.authorId,
     type,
-    title: `${actor.name} ${verb} your ${postWord(post.kind)}`,
-    body: null,
+    notice: {
+      id: type,
+      params: {
+        actor: actor.name,
+        others: 0,
+        kind: post.kind,
+        emoji: emoji ?? null,
+      },
+    },
     link: linkFor(post),
     data: {
       kind: post.kind,
@@ -126,7 +150,6 @@ export async function notifyContentLike(
       post,
       { id: actorId, name },
       "content_like",
-      "liked",
     );
   } catch (error) {
     logger.error(`notifyContentLike failed: ${error}`);
@@ -146,7 +169,7 @@ export async function notifyContentReaction(
       post,
       { id: actorId, name },
       "content_reaction",
-      `reacted ${emoji} to`,
+      emoji,
     );
   } catch (error) {
     logger.error(`notifyContentReaction failed: ${error}`);
@@ -177,10 +200,10 @@ export async function notifyContentComment(
       await createNotificationCore(supabase, {
         userId,
         type: isReply ? "content_reply" : "content_comment",
-        title: isReply
-          ? `${name} replied to your comment`
-          : `${name} commented on your ${postWord(post.kind)}`,
-        body: snippet,
+        notice: {
+          id: isReply ? "content_reply" : "content_comment",
+          params: { actor: name, kind: post.kind, snippet },
+        },
         link: linkFor(post),
         data: {
           kind: post.kind,
@@ -221,12 +244,19 @@ export async function notifyFollow(
         : [];
       if (actors.includes(actorId)) return;
       const nextActors = [...actors, actorId];
-      const others = nextActors.length - 1;
+      const notice: Notice = {
+        id: "content_follow",
+        params: {
+          actor: name,
+          others: nextActors.length - 1,
+          target: target.label,
+        },
+      };
       await supabase
         .from("notification")
         .update({
-          title: `${name} and ${others} ${others === 1 ? "other" : "others"} started following ${target.label}`,
-          data: { ...data, actorIds: nextActors },
+          title: await noticeTitle(target.ownerId, notice),
+          data: { ...data, actorIds: nextActors, notice } as never,
         })
         .eq("id", recent.id);
       return;
@@ -234,8 +264,10 @@ export async function notifyFollow(
     await createNotificationCore(supabase, {
       userId: target.ownerId,
       type: "content_follow",
-      title: `${name} started following ${target.label}`,
-      body: null,
+      notice: {
+        id: "content_follow",
+        params: { actor: name, others: 0, target: target.label },
+      },
       link: "/spotlight",
       data: { kind: "follow", actorIds: [actorId] } as never,
     });
@@ -250,23 +282,16 @@ export async function notifyModeration(
   newState: string,
 ): Promise<void> {
   try {
-    const word = postWord(post.kind);
-    const title =
-      newState === "visible"
-        ? `Your ${word} is visible again`
-        : newState === "restricted"
-          ? `Your ${word} has been restricted`
-          : newState === "hidden"
-            ? `Your ${word} has been hidden`
-            : `Your ${word} has been removed`;
     await createNotificationCore(supabase, {
       userId: post.authorId,
       type: "content_moderation",
-      title,
-      body:
+      notice:
         newState === "visible"
-          ? null
-          : "It no longer appears in feeds. Contact support if you think this is a mistake.",
+          ? { id: "content_moderation_visible", params: { kind: post.kind } }
+          : {
+              id: "content_moderation",
+              params: { kind: post.kind, state: newState },
+            },
       link: "/manage/spotlight",
       data: { kind: post.kind, postId: post.id } as never,
     });
@@ -282,30 +307,23 @@ export async function notifyCampaign(
     advertiserId: string;
     status: string;
     reason?: string | null;
+    /** A refund on its way back: said in the advertiser's own language. */
+    refund?: { amountMinor: number; currency: string };
   },
 ): Promise<void> {
   try {
-    const title =
-      campaign.status === "pending_review"
-        ? "Your Spotlight promotion is in review"
-        : campaign.status === "scheduled"
-          ? "Your Spotlight promotion is approved and scheduled"
-          : campaign.status === "active"
-            ? "Your Spotlight promotion is live"
-            : campaign.status === "rejected"
-              ? "Your Spotlight promotion was not approved"
-              : campaign.status === "paused"
-                ? "Your Spotlight promotion is paused"
-                : campaign.status === "completed"
-                  ? "Your Spotlight promotion has finished"
-                  : campaign.status === "refunded"
-                    ? "Your Spotlight promotion refund is on its way"
-                    : `Your Spotlight promotion is ${campaign.status}`;
     await createNotificationCore(supabase, {
       userId: campaign.advertiserId,
       type: "content_campaign",
-      title,
-      body: campaign.reason ?? null,
+      notice: campaign.refund
+        ? { id: "content_campaign_refunded", params: campaign.refund }
+        : {
+            id: "content_campaign",
+            params: {
+              status: campaign.status,
+              reason: campaign.reason ?? null,
+            },
+          },
       link: `/manage/spotlight/campaigns/${campaign.id}`,
       data: { kind: "content_campaign", campaignId: campaign.id } as never,
     });

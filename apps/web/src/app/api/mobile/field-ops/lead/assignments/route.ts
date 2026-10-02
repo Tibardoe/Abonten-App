@@ -3,6 +3,7 @@ import {
   createAssignmentCore,
   listLeadAssignmentsCore,
 } from "@abonten/services/fieldOps/lead/leadAssignmentsCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   fieldOpsAssignmentCreateSchema,
   fieldOpsAssignmentListSchema,
@@ -11,6 +12,7 @@ import {
 // GET /api/mobile/field-ops/lead/assignments?campaignId=&date=&status=
 // Same service as listFieldOpsLeadAssignments.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {
@@ -24,6 +26,7 @@ export async function GET(req: Request) {
 // POST /api/mobile/field-ops/lead/assignments -- assign a member to a
 // territory for a date range. Same service as createFieldOpsAssignment.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

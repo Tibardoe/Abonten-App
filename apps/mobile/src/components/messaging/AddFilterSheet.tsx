@@ -11,13 +11,14 @@ import {
   type IoniconName,
   Sheet,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 const HELP: Record<CustomFilterKey, string> = {
-  unread: "Only conversations with new messages",
-  events: "Conversations about events",
-  places: "Conversations about places",
-  muted: "Conversations you've muted",
+  unread: "onlyConversationsWithNewMessages",
+  events: "conversationsAboutEvents",
+  places: "conversationsAboutPlaces",
+  muted: "conversationsYouVeMuted",
 };
 
 // The "+" chip's target (spec §9–10). Not arbitrary queries — a fixed set
@@ -34,12 +35,14 @@ export function AddFilterSheet({
   active: CustomFilterKey[];
   onToggle: (key: CustomFilterKey) => void;
 }) {
+  const t = useTranslations("messaging");
+
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      title="Add filter"
-      footer={<Button title="Done" onPress={onClose} />}
+      title={t("addFilter")}
+      footer={<Button title={t("done")} onPress={onClose} />}
     >
       <View className="gap-2">
         {CUSTOM_FILTER_KEYS.map((key) => {
@@ -49,7 +52,7 @@ export function AddFilterSheet({
               key={key}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on }}
-              accessibilityLabel={CUSTOM_FILTER_LABEL[key]}
+              accessibilityLabel={t(CUSTOM_FILTER_LABEL[key])}
               onPress={() => onToggle(key)}
               className="min-h-[60px] flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
             >
@@ -62,9 +65,9 @@ export function AddFilterSheet({
               </View>
               <View className="flex-1">
                 <AppText variant="bodyStrong">
-                  {CUSTOM_FILTER_LABEL[key]}
+                  {t(CUSTOM_FILTER_LABEL[key])}
                 </AppText>
-                <AppText variant="meta">{HELP[key]}</AppText>
+                <AppText variant="meta">{t(HELP[key])}</AppText>
               </View>
               <View
                 className={`h-6 w-6 items-center justify-center rounded-full border ${

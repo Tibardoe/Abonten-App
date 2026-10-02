@@ -45,6 +45,7 @@ import {
   useReducedMotion,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { onlineManager, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -116,6 +117,8 @@ export function StoryViewer({
   onClose: () => void;
   onReport?: (story: ContentPostDocument) => void;
 }) {
+  const t = useTranslations("spotlight");
+
   const qc = useQueryClient();
   const [entryIndex, setEntryIndex] = useState(startIndex);
   const entry = queue[entryIndex];
@@ -160,7 +163,7 @@ export function StoryViewer({
         <View className="flex-1 pb-16">
           <QueryUnavailable
             view={sequenceView}
-            subject="these Stories"
+            subject={t("theseStories")}
             onRetry={() => sequence.refetch()}
             onMedia
           />
@@ -171,7 +174,7 @@ export function StoryViewer({
             className="items-center"
           >
             <AppText className="font-semibold text-white underline">
-              Continue
+              {t("continueText")}
             </AppText>
           </Pressable>
         </View>
@@ -294,6 +297,8 @@ function StorySlide({
   publisherKind: ContentPublisherKind;
   publisherId: string;
 }) {
+  const t = useTranslations("spotlight");
+
   const { story, mediaIndex } = slide;
   const media = story.media[mediaIndex] ?? story.media[0];
   const isVideo = media?.type === "video";
@@ -562,15 +567,15 @@ function StorySlide({
 
   const deleteStory = () => {
     setMenuOpen(false);
-    Alert.alert("Delete this Story?", "It disappears for everyone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteThisStory"), t("itDisappearsForEveryone"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("deleteText2"),
         style: "destructive",
         onPress: async () => {
           const res = await api.content.deletePost(story.id);
           if (res.status !== 200) {
-            toast.error(res.message ?? "Couldn't delete this Story.");
+            toast.error(res.message ?? t("couldnTDeleteThisStory"));
             return;
           }
           invalidate();
@@ -584,10 +589,14 @@ function StorySlide({
     setMenuOpen(false);
     const res = await api.content.muteStories(publisherKind, publisherId, true);
     if (res.status !== 200) {
-      toast.error(res.message ?? "Couldn't mute these Stories.");
+      toast.error(res.message ?? t("couldnTMuteTheseStories"));
       return;
     }
-    toast.success(`Stories from ${publisherLabel(story.publisher)} muted`);
+    toast.success(
+      t("storiesFromMuted2", {
+        publisherLabel: publisherLabel(story.publisher),
+      }),
+    );
     onClose();
   };
 
@@ -614,7 +623,7 @@ function StorySlide({
     setDraft("");
     input.current?.blur();
     Keyboard.dismiss();
-    setSent({ conversationId: outcome.conversationId, label: "Reply sent" });
+    setSent({ conversationId: outcome.conversationId, label: t("replySent") });
   };
 
   const sendReaction = async (emoji: ContentReactionEmoji) => {
@@ -634,7 +643,10 @@ function StorySlide({
       toast.error(outcome.message);
       return;
     }
-    setSent({ conversationId: outcome.conversationId, label: "Reaction sent" });
+    setSent({
+      conversationId: outcome.conversationId,
+      label: t("reactionSent"),
+    });
   };
 
   const openConversation = (conversationId: string) => {
@@ -658,24 +670,24 @@ function StorySlide({
   }[] = [
     {
       icon: "link-outline",
-      label: "Copy link",
+      label: t("copyLink"),
       onPress: async () => {
         setMenuOpen(false);
         const ok = await copyText(contentShareUrl("story", story.id));
-        if (ok) toast.success("Link copied");
+        if (ok) toast.success(t("linkCopied2"));
       },
     },
   ];
   if (!isAuthor && session) {
     menuItems.push({
       icon: "volume-mute-outline",
-      label: `Mute ${name}`,
+      label: t("mute", { name: name }),
       onPress: muteStories,
     });
     if (onReport) {
       menuItems.push({
         icon: "flag-outline",
-        label: "Report Story",
+        label: t("reportStory"),
         destructive: true,
         onPress: () => {
           setMenuOpen(false);
@@ -687,7 +699,7 @@ function StorySlide({
   if (isAuthor) {
     menuItems.push({
       icon: "stats-chart-outline",
-      label: "Insights",
+      label: t("insights"),
       onPress: () => {
         setMenuOpen(false);
         onClose();
@@ -696,7 +708,7 @@ function StorySlide({
     });
     menuItems.push({
       icon: "trash-outline",
-      label: "Delete Story",
+      label: t("deleteStory"),
       destructive: true,
       onPress: deleteStory,
     });
@@ -750,11 +762,10 @@ function StorySlide({
                 <View className="items-center gap-2 rounded-2xl bg-black/60 px-6 py-5">
                   <Icon name="cloud-offline-outline" size={28} color="#fff" />
                   <AppText className="text-center text-[15px] font-semibold text-white">
-                    You're offline
+                    {t("youReOffline")}
                   </AppText>
                   <AppText className="text-center text-[13px] text-white/75">
-                    This Story hasn't been saved on this phone. It will play
-                    when you're back online.
+                    {t("thisStoryHasnTBeenSaved")}
                   </AppText>
                 </View>
               ) : (
@@ -778,7 +789,7 @@ function StorySlide({
           <Pressable
             style={{ flex: 1 }}
             accessibilityRole="button"
-            accessibilityLabel="Stop replying"
+            accessibilityLabel={t("stopReplying")}
             onPress={() => {
               input.current?.blur();
               Keyboard.dismiss();
@@ -836,7 +847,7 @@ function StorySlide({
           <Pressable
             className="shrink flex-row items-center gap-2"
             accessibilityRole="link"
-            accessibilityLabel={`${name}, open profile`}
+            accessibilityLabel={t("openProfile", { name: name })}
             onPress={() => {
               const route =
                 story.publisher.kind === "place"
@@ -880,7 +891,7 @@ function StorySlide({
             onPress={() => setMenuOpen((v) => !v)}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Story options"
+            accessibilityLabel={t("storyOptions")}
             className="h-9 w-9 items-center justify-center"
           >
             <Icon name="ellipsis-vertical" size={20} color="#fff" />
@@ -889,7 +900,7 @@ function StorySlide({
             onPress={onClose}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Close Stories"
+            accessibilityLabel={t("closeStories")}
             className="h-9 w-9 items-center justify-center"
           >
             <Icon name="close" size={26} color="#fff" />
@@ -927,10 +938,10 @@ function StorySlide({
               onPress={() => openConversation(sent.conversationId)}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="View the conversation"
+              accessibilityLabel={t("viewTheConversation")}
             >
               <AppText className="text-[13px] font-bold text-[#0F9D8F]">
-                View chat
+                {t("viewChat")}
               </AppText>
             </Pressable>
           </Animated.View>
@@ -955,7 +966,7 @@ function StorySlide({
                 key={emoji}
                 onPress={() => sendReaction(emoji)}
                 accessibilityRole="button"
-                accessibilityLabel={`React ${emoji}`}
+                accessibilityLabel={t("react", { emoji: emoji })}
                 accessibilityState={{ selected: engagement.reaction === emoji }}
                 hitSlop={4}
                 className={[
@@ -981,12 +992,16 @@ function StorySlide({
               );
             }}
             accessibilityRole="button"
-            accessibilityLabel={`${engagement.counts.views.toLocaleString()} viewed. Open insights`}
+            accessibilityLabel={t("viewedOpenInsights", {
+              count: engagement.counts.views,
+            })}
             className="flex-row items-center gap-1.5 self-start rounded-full bg-black/35 px-3 py-2"
           >
             <Icon name="eye-outline" size={16} color="#fff" />
             <AppText className="text-[13px] font-semibold text-white">
-              {engagement.counts.views.toLocaleString()} viewed
+              {t("viewed", {
+                count: engagement.counts.views,
+              })}
             </AppText>
             <Icon name="chevron-forward" size={14} color="#fff" />
           </Pressable>
@@ -1016,10 +1031,10 @@ function StorySlide({
                   onBlur={() => setReplyFocused(false)}
                   maxLength={MAX_REPLY_LENGTH}
                   multiline
-                  placeholder={`Reply to ${name}…`}
+                  placeholder={t("replyTo2", { name: name })}
                   placeholderTextColor="rgba(255,255,255,0.75)"
-                  accessibilityLabel={`Reply privately to ${name}`}
-                  accessibilityHint="Sends a message with this Story attached"
+                  accessibilityLabel={t("replyPrivatelyTo2", { name: name })}
+                  accessibilityHint={t("sendsAMessageWithThisStory")}
                   selectionColor="#fff"
                   style={{
                     flex: 1,
@@ -1034,7 +1049,7 @@ function StorySlide({
             ) : (
               <View className="min-h-[46px] flex-1 justify-center rounded-3xl border border-white/30 px-4">
                 <AppText className="text-[14px] text-white/70">
-                  Replies are off for this Story
+                  {t("repliesAreOffForThisStory")}
                 </AppText>
               </View>
             )}
@@ -1044,7 +1059,7 @@ function StorySlide({
                 onPress={sendReply}
                 disabled={replies.sending}
                 accessibilityRole="button"
-                accessibilityLabel="Send reply"
+                accessibilityLabel={t("sendReply")}
                 accessibilityState={{ busy: replies.sending }}
                 className="h-[46px] w-[46px] items-center justify-center rounded-full bg-white"
               >
@@ -1062,8 +1077,8 @@ function StorySlide({
                     accessibilityRole="button"
                     accessibilityLabel={
                       engagement.reaction === "❤️"
-                        ? "Remove your heart"
-                        : "Send a heart"
+                        ? t("removeYourHeart")
+                        : t("sendAHeart")
                     }
                     accessibilityState={{
                       selected: engagement.reaction === "❤️",
@@ -1089,7 +1104,7 @@ function StorySlide({
                         engagement.recordShare("native");
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel="Share"
+                    accessibilityLabel={t("share")}
                     className="h-[46px] w-[42px] items-center justify-center"
                   >
                     <Icon name="paper-plane-outline" size={26} color="#fff" />
@@ -1108,7 +1123,7 @@ function StorySlide({
                 if (outcome.kind === "shared") engagement.recordShare("native");
               }}
               accessibilityRole="button"
-              accessibilityLabel="Share"
+              accessibilityLabel={t("share")}
               className="h-[46px] w-[46px] items-center justify-center"
             >
               <Icon name="paper-plane-outline" size={26} color="#fff" />
@@ -1123,7 +1138,7 @@ function StorySlide({
             accessibilityRole="button"
             style={StyleSheet.absoluteFill}
             onPress={() => setMenuOpen(false)}
-            accessibilityLabel="Close menu"
+            accessibilityLabel={t("closeMenu")}
           />
           <Animated.View
             entering={reduceMotion ? undefined : FadeIn.duration(120)}

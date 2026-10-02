@@ -3,6 +3,7 @@
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
 import { MAX_AVATAR_SOURCE_SIZE_BYTES } from "@abonten/core/uploadLimits";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import AvatarUploadModal from "../organisms/AvatarUploadModal";
 import { Button } from "../ui/button";
@@ -11,13 +12,14 @@ import { Button } from "../ui/button";
 // previous pair of desktop-only/mobile-only buttons (which only differed by
 // which one Tailwind's `hidden`/`flex` classes showed).
 export default function AvatarUploadButton() {
+  const t = useTranslations("common");
+
   const [showPopup, setShowPopup] = useState(false);
   const toast = useToast();
 
   const { imagePreview, fileInputRef, openFilePicker, handleFileChange } =
     useImageSelection({
-      invalidFileMessage:
-        "Please select an image file for your profile picture.",
+      invalidFileMessage: t("pleaseSelectAnImageFileFor"),
       // Sanity ceiling on the original picked file -- the real size gate
       // applies after cropping/compression (see useAvatarUpload.ts).
       maxSizeBytes: MAX_AVATAR_SOURCE_SIZE_BYTES,
@@ -45,7 +47,7 @@ export default function AvatarUploadButton() {
       />
 
       <Button className="font-bold" onClick={openFilePicker}>
-        Change Photo
+        {t("changePhoto")}
       </Button>
     </>
   );

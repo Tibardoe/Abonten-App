@@ -7,9 +7,10 @@
 // address. Deliberately NOT a "use server" file.
 
 import {
-  PHONE_ERROR_MESSAGE,
   parsePhoneWithDialCode,
+  phoneErrorMessage,
 } from "@abonten/core/phone/phone";
+import { coreT, tr } from "../i18n/requestLocale";
 import { routeOtpForPhone } from "./otpProviders/otpRouter";
 import type { OtpSendResult } from "./otpProviders/types";
 import { recordOtpSendFailure } from "./otpSendMonitoring";
@@ -32,7 +33,7 @@ export async function sendPhoneOtpCore(input: {
 }): Promise<PhoneOtpSendResult> {
   const parsed = parsePhoneWithDialCode(input.dialCode, input.rawPhone);
   if (!parsed.ok) {
-    return { status: 400, message: PHONE_ERROR_MESSAGE[parsed.error] };
+    return { status: 400, message: phoneErrorMessage(coreT(), parsed.error) };
   }
   const phoneE164 = parsed.e164;
 
@@ -61,7 +62,7 @@ export async function sendPhoneOtpCore(input: {
     sent = {
       ok: false,
       reason: "provider_error",
-      message: "Couldn't send the verification code. Please try again.",
+      message: tr("couldnTSendTheVerificationCode"),
       detail: `${route.provider.code} OTP send threw: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
@@ -109,12 +110,14 @@ export async function verifyPendingOtp(
   const { getOtpProvider } = await import("./otpProviders/otpRouter");
   const provider = getOtpProvider(pending.provider);
   if (!provider) {
-    return { ok: false, message: "That code has expired. Request a new one." };
+    return { ok: false, message: tr("thatCodeHasExpiredRequestA") };
   }
   if (!new RegExp(`^\\d{${provider.codeLength()}}$`).test(code)) {
     return {
       ok: false,
-      message: `Enter the ${provider.codeLength()}-digit code.`,
+      message: tr("enterTheDigitCode", {
+        codeLength: provider.codeLength(),
+      }),
     };
   }
   return provider.verify(pending.requestId, pending.prefix, code);

@@ -1,14 +1,20 @@
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
 import { hapticLight } from "@/lib/haptics";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
+import { formatRating } from "@abonten/core/i18n/format";
 import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import type { WeeklyItem, WeeklySection } from "@abonten/types/weeklyType";
 import { AppText, Icon, PressableScale } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import {
   shadow,
   useCarouselCardWidth,
@@ -72,6 +78,11 @@ const WHITE_85 = "rgba(255,255,255,0.85)";
 // The listing a "hero" section gives the most room: its photo fills the card
 // and the text sits over it, like the banner at the top of the screen.
 function HeroItem({ item }: { item: WeeklyItem }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("weekly");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [imageFailed, setImageFailed] = useState(false);
@@ -87,29 +98,48 @@ function HeroItem({ item }: { item: WeeklyItem }) {
         event.ends_at,
         event.occurrences,
         event.timezone,
+        locale,
       )
     : null;
   const kicker = event
-    ? (event.event_category ?? "Event")
-    : place?.category_name;
+    ? event.event_category
+      ? eventCategoryLabel(tc, event.event_category)
+      : t("event")
+    : placeCategoryLabel(tc, {
+        slug: place?.category_slug,
+        name: place?.category_name,
+      });
   const rating =
     place?.avg_rating != null && Number(place.avg_rating) > 0
-      ? `${Number(place.avg_rating).toFixed(1)} · ${place.review_count} review${place.review_count === 1 ? "" : "s"}`
+      ? t("ratingAndReviews", {
+          rating: formatRating(place.avg_rating, locale),
+          count: place.review_count ?? 0,
+        })
       : null;
   const address = (
     (event?.address ?? place?.address) as { full_address?: string } | undefined
   )?.full_address;
   const price = event
     ? event.min_price === 0 || event.min_price == null
-      ? "Free entry"
-      : `From ${formatMoney(event.currency, event.min_price, { trimZeroFraction: true })}`
+      ? t("freeEntry")
+      : t("from", {
+          formatMoney: formatMoney(event.currency, event.min_price, {
+            trimZeroFraction: true,
+            locale,
+          }),
+        })
     : null;
   const status = event
     ? event.status === "canceled"
-      ? "Event cancelled"
-      : getEventStatusOverlay(event.starts_at, event.ends_at, event.occurrences)
+      ? t("eventCancelled")
+      : getEventStatusOverlay(
+          tc,
+          event.starts_at,
+          event.ends_at,
+          event.occurrences,
+        )
     : place?.temporary_status === "temporarily_closed"
-      ? "Temporarily closed"
+      ? tc("openStatus.temporarilyClosed")
       : null;
   const height = Math.round(Math.min(Math.max(width * 1.1, 400), 520));
   const open = () => {
@@ -124,7 +154,9 @@ function HeroItem({ item }: { item: WeeklyItem }) {
       onPress={open}
       activeScale={0.985}
       accessibilityRole="button"
-      accessibilityLabel={`${event ? "Open event" : "Open place"}: ${title}`}
+      accessibilityLabel={
+        event ? t("openEventNamed", { title }) : t("openPlaceNamed", { title })
+      }
       style={[shadow.card, { height }]}
       className="overflow-hidden rounded-3xl bg-slate-950"
     >
@@ -190,7 +222,9 @@ function HeroItem({ item }: { item: WeeklyItem }) {
             {when ? (
               <MetaLine icon="calendar-outline">
                 {[when.date, when.time].filter(Boolean).join(" · ")}
-                {when.extraDates > 0 ? ` +${when.extraDates} more` : ""}
+                {when.extraDates > 0
+                  ? ` ${t("more", { extraDates: when.extraDates })}`
+                  : ""}
               </MetaLine>
             ) : null}
             {rating ? <MetaLine icon="star">{rating}</MetaLine> : null}
@@ -210,7 +244,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
           <View className="mt-4 flex-row flex-wrap items-center gap-2">
             <View className="flex-row items-center gap-2.5 rounded-full bg-white py-1.5 pl-4 pr-1.5">
               <AppText className="text-[14px] font-semibold text-slate-950">
-                {event ? "View event" : "View place"}
+                {event ? t("viewEvent") : t("viewPlace")}
               </AppText>
               <View className="h-7 w-7 items-center justify-center rounded-full bg-slate-950">
                 <Icon name="arrow-forward" size={15} color="#fff" />
@@ -320,13 +354,19 @@ function HeroScrim() {
 
 function ListRow({ item }: { item: WeeklyItem }) {
   const router = useRouter();
+  const tc = useTranslations("core");
   const event = item.event;
   const place = item.place;
   if (!event && !place) return null;
   const title = event ? event.title : (place?.name ?? "");
   const imageId = event ? event.flyer_public_id : place?.cover_public_id;
   const imageVersion = event ? event.flyer_version : place?.cover_version;
-  const meta = event ? event.address?.full_address : place?.category_name;
+  const meta = event
+    ? event.address?.full_address
+    : placeCategoryLabel(tc, {
+        slug: place?.category_slug,
+        name: place?.category_name,
+      });
   return (
     <PressableScale
       onPress={() =>

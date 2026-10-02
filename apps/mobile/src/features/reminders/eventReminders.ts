@@ -1,3 +1,4 @@
+import { translatorFor } from "@abonten/ui-native/i18n";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
@@ -17,12 +18,21 @@ import { Platform } from "react-native";
 
 export const ANDROID_CHANNEL_ID = "event-reminders";
 
+/** The offsets a person can choose; `label` is a key in `events`. */
 export const REMINDER_OFFSETS: { minutes: number; label: string }[] = [
-  { minutes: 10, label: "10 minutes before" },
-  { minutes: 30, label: "30 minutes before" },
-  { minutes: 60, label: "1 hour before" },
-  { minutes: 1440, label: "1 day before" },
+  { minutes: 10, label: "reminderOffsets.m10" },
+  { minutes: 30, label: "reminderOffsets.m30" },
+  { minutes: 60, label: "reminderOffsets.h1" },
+  { minutes: 1440, label: "reminderOffsets.d1" },
 ];
+
+/** "30 minutes" / "1 hour": how long before the start, for the notice. */
+const LEAD_KEY: Record<number, string> = {
+  10: "reminderLead.m10",
+  30: "reminderLead.m30",
+  60: "reminderLead.h1",
+  1440: "reminderLead.d1",
+};
 
 export type EventReminderRecord = {
   eventId: string;
@@ -100,11 +110,10 @@ export function sameOffsets(a: number[], b: number[]): boolean {
   return [...a].sort((x, y) => x - y).every((v, i) => v === sb[i]);
 }
 
-function offsetLabel(minutes: number): string {
-  return (
-    REMINDER_OFFSETS.find((o) => o.minutes === minutes)?.label ??
-    `${minutes} minutes before`
-  );
+function leadText(minutes: number): string {
+  const t = translatorFor("events");
+  const key = LEAD_KEY[minutes];
+  return key ? t(key) : t("reminderLead.minutes", { minutes });
 }
 
 /**
@@ -138,11 +147,11 @@ export async function setEventReminders(input: {
 
     const id = await Notifications.scheduleNotificationAsync({
       content: {
-        title: "Upcoming event",
-        body: `${input.eventTitle} starts ${offsetLabel(minutes).replace(
-          " before",
-          "",
-        )} from now.`,
+        title: translatorFor("events")("reminderNoticeTitle"),
+        body: translatorFor("events")("reminderNoticeBody", {
+          title: input.eventTitle,
+          lead: leadText(minutes),
+        }),
         data: { link: `/(app)/event/${input.eventId}` },
       },
       trigger: {

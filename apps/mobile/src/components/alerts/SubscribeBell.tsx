@@ -7,6 +7,7 @@ import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { hapticSelection } from "@/lib/haptics";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
 import { Pressable } from "react-native";
 
@@ -31,6 +32,8 @@ export function SubscribeBell({
   /** Where the bell is shown, recorded on the subscription for analytics. */
   source?: "profile" | "search";
 }) {
+  const t = useTranslations("notifications");
+
   const { session } = useSession();
   const { program } = useDiscoveryProgram();
   const router = useRouter();
@@ -62,8 +65,8 @@ export function SubscribeBell({
       accessibilityState={{ selected: on, busy: toggle.isPending }}
       accessibilityLabel={
         on
-          ? `Notifying you about new posts from ${label}`
-          : `Notify me about new posts from ${label}`
+          ? t("notifyingYouAboutNewPostsFrom", { label: label })
+          : t("notifyMeAboutNewPostsFrom", { label: label })
       }
       hitSlop={8}
       disabled={toggle.isPending}
@@ -89,7 +92,7 @@ export function SubscribeBell({
       />
       {compact ? null : (
         <AppText variant="label" tone={on ? "brand" : "primary"}>
-          {on ? "Notifying" : "Notify me"}
+          {on ? t("notifying") : t("notifyMe")}
         </AppText>
       )}
     </Pressable>

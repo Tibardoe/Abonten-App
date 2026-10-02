@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import type { UploadSignatureKind } from "@abonten/api-client";
+import { translatorFor } from "@abonten/ui-native/i18n";
 
 // Shared "direct upload straight to Cloudinary with a short-lived server
 // signature" path — the native echo of the web get*UploadSignature Server
@@ -79,7 +80,7 @@ function postForm(
         // surface that verbatim instead of a generic status-code message.
         const message =
           (body as { error?: { message?: string } } | null)?.error?.message ??
-          "The upload failed. Please try again.";
+          translatorFor("common")("theUploadFailedPleaseTryAgain");
         reject(new Error(message));
       }
     };

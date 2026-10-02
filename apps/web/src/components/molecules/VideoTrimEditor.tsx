@@ -6,6 +6,7 @@ import {
 } from "@/hooks/useMediaSelection";
 import formatDuration from "@abonten/core/formatVideoDuration";
 import type { MediaItem } from "@abonten/types/mediaItemType";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 type DragHandle = "start" | "end" | "middle" | null;
@@ -28,6 +29,8 @@ export default function VideoTrimEditor({
   timelineStatus,
   onTrimChange,
 }: VideoTrimEditorProps) {
+  const t = useTranslations("common");
+
   const trackRef = useRef<HTMLDivElement>(null);
   const dragOffsetRef = useRef(0);
   const [dragHandle, setDragHandle] = useState<DragHandle>(null);
@@ -181,9 +184,15 @@ export default function VideoTrimEditor({
   return (
     <div className="px-2">
       <div className="flex justify-between text-white text-sm mb-2">
-        <span>Start: {formatDuration(startTime)}</span>
-        <span>End: {formatDuration(endTime)}</span>
-        <span>Duration: {formatDuration(endTime - startTime)}</span>
+        <span>
+          {t("start2", { formatDuration: formatDuration(startTime) })}
+        </span>
+        <span>{t("end2", { formatDuration: formatDuration(endTime) })}</span>
+        <span>
+          {t("duration2", {
+            formatDuration: formatDuration(endTime - startTime),
+          })}
+        </span>
       </div>
 
       <div
@@ -251,7 +260,7 @@ export default function VideoTrimEditor({
         <button
           type="button"
           role="slider"
-          aria-label="Trim start"
+          aria-label={t("trimStart")}
           aria-valuemin={0}
           aria-valuemax={endTime}
           aria-valuenow={startTime}
@@ -271,7 +280,7 @@ export default function VideoTrimEditor({
         <button
           type="button"
           role="slider"
-          aria-label="Trim end"
+          aria-label={t("trimEnd")}
           aria-valuemin={startTime}
           aria-valuemax={duration}
           aria-valuenow={endTime}

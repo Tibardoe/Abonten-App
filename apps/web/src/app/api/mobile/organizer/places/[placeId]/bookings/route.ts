@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { fetchPlaceBookingsPage } from "@abonten/services/places/placeBookingsReviewsCore";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 
@@ -18,6 +22,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ placeId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -51,6 +56,9 @@ export async function GET(
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /organizer/places/:id/bookings failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

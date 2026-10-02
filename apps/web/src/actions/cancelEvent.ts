@@ -2,12 +2,14 @@
 
 import eventCancellationNotification from "@/actions/eventCancellationNotification";
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
 import {
   type CancelEventResult,
   cancelEventCore,
 } from "@abonten/services/events/cancelEventCore";
-import { revalidatePath } from "next/cache";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { after } from "next/server";
 
 /**
@@ -19,7 +21,7 @@ import { after } from "next/server";
  * /api/mobile/organizer/events/cancel route runs the identical path. See
  * cancelEventCore's header for the service-role / idempotency rationale.
  */
-export default async function cancelEvent(
+export default withActionLocale(async function cancelEvent(
   eventId: string,
 ): Promise<CancelEventResult | { status: 401; message: string }> {
   const supabase = await createClient();
@@ -30,7 +32,7 @@ export default async function cancelEvent(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not Logged in" };
+    return { status: 401, message: tr("userNotLoggedIn2") };
   }
 
   const result = await cancelEventCore(
@@ -53,12 +55,12 @@ export default async function cancelEvent(
   // the resulting refunds change the organizer's own ledger balance, which
   // nothing was invalidating either.
   if (result.status === 200) {
-    revalidatePath("/manage/my-events");
-    revalidatePath(`/manage/events/${eventId}`);
-    revalidatePath("/manage/dashboard");
-    revalidatePath("/finances");
-    revalidatePath("/transactions");
+    revalidateAppPath("/manage/my-events");
+    revalidateAppPath(`/manage/events/${eventId}`);
+    revalidateAppPath("/manage/dashboard");
+    revalidateAppPath("/finances");
+    revalidateAppPath("/transactions");
   }
 
   return result;
-}
+});

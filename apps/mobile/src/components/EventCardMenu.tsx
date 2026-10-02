@@ -21,6 +21,7 @@ import {
   Sheet,
   useModalHandoff,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Linking, Pressable, View } from "react-native";
@@ -56,6 +57,8 @@ function ReminderMenuRow({
   startsAtIso: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("common");
+
   const { offsets, saving, save } = useEventReminder(
     event.id,
     startsAtIso,
@@ -82,11 +85,11 @@ function ReminderMenuRow({
     }
     if (res.reason === "permission") {
       Alert.alert(
-        "Notifications are off",
-        "Turn on notifications for Abonten to get event reminders.",
+        t("notificationsAreOff"),
+        t("turnOnNotificationsForAbontenTo"),
         [
-          { text: "Not now", style: "cancel" },
-          { text: "Open settings", onPress: () => Linking.openSettings() },
+          { text: t("notNow"), style: "cancel" },
+          { text: t("openSettings"), onPress: () => Linking.openSettings() },
         ],
       );
     }
@@ -101,7 +104,7 @@ function ReminderMenuRow({
     <>
       <MenuRow
         icon={active ? "notifications" : "notifications-outline"}
-        label={active ? "Reminder set" : "Set reminder"}
+        label={active ? t("reminderSet") : t("setReminder")}
         onPress={() => setOpen(true)}
       />
       <ReminderOptionsSheet
@@ -170,6 +173,8 @@ export function EventCardMenu({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const pathname = usePathname();
   const { session } = useSession();
@@ -220,7 +225,7 @@ export function EventCardMenu({
         ) : null}
         <MenuRow
           icon={favorited ? "heart" : "heart-outline"}
-          label={favorited ? "Remove from favourites" : "Add to favourites"}
+          label={favorited ? t("removeFromFavourites") : t("addToFavourites")}
           onPress={() => {
             if (!requireAuth()) return;
             toggle.mutate(!favorited);
@@ -229,7 +234,7 @@ export function EventCardMenu({
         />
         <MenuRow
           icon="share-outline"
-          label="Share"
+          label={t("share")}
           onPress={() => {
             const url = eventShareUrl(event.event_code, referralCode);
             handoff.after(() => {
@@ -248,25 +253,25 @@ export function EventCardMenu({
             <View className="my-1 h-px bg-border" />
             <MenuRow
               icon="create-outline"
-              label="Edit event"
+              label={t("editEvent2")}
               onPress={() => go(`/(app)/organizer/events/${event.id}/edit`)}
             />
             {isCancelled ? (
               <AppText variant="muted" className="px-1 py-2">
-                This event has been cancelled
+                {t("thisEventHasBeenCancelled")}
               </AppText>
             ) : (
               <>
                 <MenuRow
                   icon="pricetag-outline"
-                  label="Manage promo codes"
+                  label={t("managePromoCodes2")}
                   onPress={() =>
                     go(`/(app)/organizer/events/${event.id}/promo-codes`)
                   }
                 />
                 <MenuRow
                   icon="close-circle-outline"
-                  label="Cancel event"
+                  label={t("cancelEvent2")}
                   destructive
                   onPress={() => {
                     onClose();

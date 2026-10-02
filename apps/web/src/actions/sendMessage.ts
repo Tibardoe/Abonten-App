@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { sendMessageCore } from "@abonten/services/messaging/sendMessageCore";
 import type { SendMessageInput } from "@abonten/types/messagingType";
 import { sendMessageSchema } from "@abonten/validation/messageSchema";
@@ -14,7 +16,9 @@ import { sendMessageSchema } from "@abonten/validation/messageSchema";
  * notification + push out to the other participants. Shares its body with
  * POST /api/mobile/messages/send.
  */
-export async function sendMessage(input: SendMessageInput) {
+export const sendMessage = withActionLocale(async function sendMessage(
+  input: SendMessageInput,
+) {
   const supabase = await createClient();
 
   const {
@@ -22,14 +26,14 @@ export async function sendMessage(input: SendMessageInput) {
     error: userError,
   } = await supabase.auth.getUser();
   if (userError || !user) {
-    return { status: 401, message: "Please sign in to send a message." };
+    return { status: 401, message: tr("pleaseSignInToSendA") };
   }
 
   const parsed = sendMessageSchema.safeParse(input);
   if (!parsed.success) {
     return {
       status: 400,
-      message: parsed.error.issues[0]?.message ?? "Invalid message.",
+      message: parsed.error.issues[0]?.message ?? tr("invalidMessage"),
     };
   }
 
@@ -44,6 +48,9 @@ export async function sendMessage(input: SendMessageInput) {
     });
   } catch (error) {
     logger.error("sendMessage failed", error);
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
-}
+});

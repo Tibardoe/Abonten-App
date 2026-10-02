@@ -1,4 +1,5 @@
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useRef } from "react";
 import { Animated, Pressable, View } from "react-native";
@@ -51,6 +52,8 @@ export function VoiceRecorderBar({
   onCancel: () => void;
   onSend: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const pulse = useRef(new Animated.Value(1)).current;
 
@@ -77,14 +80,16 @@ export function VoiceRecorderBar({
     <View
       className="flex-row items-center gap-2.5 px-3 py-2"
       accessibilityLiveRegion="polite"
-      accessibilityLabel={`Recording voice message, ${clock(durationMs)}`}
+      accessibilityLabel={t("recordingVoiceMessage", {
+        clock: clock(durationMs),
+      })}
     >
       {/* Always tappable — the escape hatch if the hold gesture misbehaves. */}
       <Pressable
         onPress={onCancel}
         hitSlop={10}
         accessibilityRole="button"
-        accessibilityLabel="Cancel recording"
+        accessibilityLabel={t("cancelRecording")}
         className="h-9 w-9 items-center justify-center rounded-full active:opacity-60"
       >
         <Icon name="trash-outline" size={20} tone="destructive" />
@@ -112,7 +117,7 @@ export function VoiceRecorderBar({
           onPress={onSend}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Send voice message"
+          accessibilityLabel={t("sendVoiceMessage")}
           className="h-9 w-9 items-center justify-center rounded-full bg-primary active:opacity-80"
         >
           <Icon name="arrow-up" size={20} tone="inverse" />
@@ -129,7 +134,7 @@ export function VoiceRecorderBar({
             tone={cancelArmed ? "error" : "muted"}
             className="font-medium"
           >
-            {cancelArmed ? "Release to cancel" : "Slide to cancel"}
+            {cancelArmed ? t("releaseToCancel") : t("slideToCancel")}
           </AppText>
         </View>
       )}

@@ -1,4 +1,5 @@
 import type { MessageReactionSummary } from "@abonten/types/messagingType";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -17,6 +18,8 @@ export const MessageReactions = memo(function MessageReactions({
   isMine: boolean;
   onToggle: (emoji: string) => void;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   if (!reactions.length) return null;
 
@@ -34,7 +37,11 @@ export const MessageReactions = memo(function MessageReactions({
         <Animated.View key={r.emoji} entering={FadeIn.duration(140)}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`${r.emoji} ${r.count}${r.reacted_by_me ? ", including you" : ""}. Tap to ${r.reacted_by_me ? "remove" : "add"}`}
+            accessibilityLabel={t("tapTo", {
+              emoji: r.emoji,
+              count: r.count,
+              mine: r.reacted_by_me ? "yes" : "no",
+            })}
             hitSlop={6}
             onPress={() => onToggle(r.emoji)}
             style={{

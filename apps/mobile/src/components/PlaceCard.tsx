@@ -2,8 +2,10 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { prefetchPlaceDetail } from "@/features/places/usePlaceDetail";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
+import { formatRating } from "@abonten/core/i18n/format";
 import { formatDistance } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
 import {
@@ -13,6 +15,7 @@ import {
   Skeleton,
   Stars,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { shadow } from "@abonten/ui-native/theme";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -46,6 +49,11 @@ export function PlaceCard({
   /** Featured (paid-placement) slot — shows a neutral "Sponsored" pill. */
   sponsored?: boolean;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const qc = useQueryClient();
   const [imageFailed, setImageFailed] = useState(false);
@@ -63,6 +71,7 @@ export function PlaceCard({
   // Same derivation as the web PlaceCard / PlaceOpenStatusBadge:
   // temporary_status wins over the SQL-computed is_open boolean.
   const openStatus = derivePlaceCardOpenStatus(
+    tc,
     place.is_open,
     place.temporary_status ?? null,
   );
@@ -105,7 +114,7 @@ export function PlaceCard({
             style={{ backgroundColor: "rgba(17,24,32,0.72)" }}
           >
             <AppText className="text-[11px] font-semibold text-white">
-              Sponsored
+              {t("sponsored")}
             </AppText>
           </View>
         ) : null}
@@ -132,7 +141,10 @@ export function PlaceCard({
 
         {place.category_name ? (
           <AppText variant="meta" numberOfLines={1}>
-            {place.category_name}
+            {placeCategoryLabel(tc, {
+              slug: place.category_slug,
+              name: place.category_name,
+            })}
           </AppText>
         ) : null}
 
@@ -165,7 +177,9 @@ export function PlaceCard({
             {hasRating ? (
               <View className="flex-row items-center gap-1">
                 <Stars rating={rating} size={13} />
-                <AppText variant="metaStrong">{rating.toFixed(1)}</AppText>
+                <AppText variant="metaStrong">
+                  {formatRating(rating, locale)}
+                </AppText>
                 <AppText variant="meta">({place.review_count ?? 0})</AppText>
               </View>
             ) : null}
@@ -179,6 +193,7 @@ export function PlaceCard({
                   {formatDistance(
                     (place.distance_km as number) * 1000,
                     context?.distanceUnit ?? "km",
+                    locale,
                   )}
                 </AppText>
               </View>

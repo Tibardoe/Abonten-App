@@ -1,6 +1,7 @@
 "use client";
 
 import { undoSlug } from "@abonten/core/geerateSlug";
+import { useTranslations } from "next-intl";
 // import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -9,6 +10,8 @@ import FilterSearchBar from "../molecules/FilterSearchBar";
 import ChangeLocationModal from "./ChangeLocationModal";
 
 export default function LocationAndFilterSection() {
+  const t = useTranslations("common");
+
   const params = useParams();
   const locationParam = params?.location;
 
@@ -21,7 +24,7 @@ export default function LocationAndFilterSection() {
   const location =
     typeof locationParam === "string"
       ? undoSlug(locationParam)
-      : "Choose a location"; // no location in the URL yet
+      : t("chooseALocation"); // no location in the URL yet
 
   return (
     <>

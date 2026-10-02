@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { insertPlacePromotionCheckoutCore } from "@abonten/services/places/placePromotionCore";
 
 /**
@@ -12,7 +14,7 @@ import { insertPlacePromotionCheckoutCore } from "@abonten/services/places/place
  * POST /api/mobile/organizer/places/:placeId/promote route via
  * @/utils/placePromotionCore.
  */
-export default async function insertPlacePromotionCheckout(
+export default withActionLocale(async function insertPlacePromotionCheckout(
   placeId: string,
   tierId: number,
 ) {
@@ -31,7 +33,10 @@ export default async function insertPlacePromotionCheckout(
   }
 
   if (!user) {
-    return { status: 401 as const, message: "User not authenticated" };
+    return {
+      status: 401 as const,
+      message: tr("userNotAuthenticated"),
+    };
   }
 
   const result = await insertPlacePromotionCheckoutCore(
@@ -47,4 +52,4 @@ export default async function insertPlacePromotionCheckout(
     return { status: 200 as const, data: { id: result.checkoutId } };
   }
   return result;
-}
+});

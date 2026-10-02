@@ -2,8 +2,10 @@
 
 import { ReportDialog } from "@/components/organisms/ReportDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { reportTitle } from "@abonten/core/reportCopy";
 import type { ReportTargetType } from "@abonten/types/adminTypes";
 import { Flag } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 // Drop-in "Report" affordance for public detail pages (event, place,
@@ -25,6 +27,9 @@ export default function ReportButton({
   variant?: "link" | "icon";
   className?: string;
 }) {
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   const { data: user } = useCurrentUser();
   const [open, setOpen] = useState(false);
 
@@ -36,7 +41,7 @@ export default function ReportButton({
       {variant === "icon" ? (
         <button
           type="button"
-          aria-label={`Report this ${targetType}`}
+          aria-label={reportTitle(tc, targetType)}
           onClick={() => setOpen(true)}
           className={
             className ??
@@ -55,7 +60,7 @@ export default function ReportButton({
           }
         >
           <Flag className="h-4 w-4" />
-          Report
+          {t("report")}
         </button>
       )}
       <ReportDialog

@@ -1,6 +1,7 @@
 import { hapticSelection } from "@/lib/haptics";
 import type { ListingKind } from "@abonten/core/content/profileContent";
 import { AppText, Icon, useReducedMotion } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { shadow } from "@abonten/ui-native/theme";
 import { useEffect } from "react";
 import { BackHandler, Pressable, StyleSheet, View } from "react-native";
@@ -28,6 +29,8 @@ export function ListingKindMenu({
   onSelect: (kind: ListingKind) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("profile");
+
   const reduceMotion = useReducedMotion();
   const presence = useSharedValue(0);
   const open = !!anchor;
@@ -67,7 +70,7 @@ export function ListingKindMenu({
         accessibilityRole="button"
         style={StyleSheet.absoluteFill}
         onPress={onClose}
-        accessibilityLabel="Close menu"
+        accessibilityLabel={t("closeMenu")}
       />
       <Animated.View
         accessibilityRole="menu"
@@ -91,7 +94,7 @@ export function ListingKindMenu({
               key={kind}
               accessibilityRole="menuitem"
               accessibilityState={{ selected }}
-              accessibilityLabel={`Show ${LISTING_LABEL[kind]}`}
+              accessibilityLabel={t("show", { item: t(LISTING_LABEL[kind]) })}
               onPress={() => {
                 hapticSelection();
                 onSelect(kind);
@@ -107,7 +110,7 @@ export function ListingKindMenu({
                 variant="bodyStrong"
                 className={`flex-1 ${selected ? "text-primary" : ""}`}
               >
-                {LISTING_LABEL[kind]}
+                {t(LISTING_LABEL[kind])}
               </AppText>
               {selected ? (
                 <Icon name="checkmark" size={18} tone="primary" />

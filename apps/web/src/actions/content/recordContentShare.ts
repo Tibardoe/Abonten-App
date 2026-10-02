@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -9,11 +10,13 @@ import { recordContentShareCore } from "@abonten/services/content/contentEngagem
 import { contentShareSchema } from "@abonten/validation/contentSchemas";
 
 /** Counts a share (signed in or not). */
-export async function recordContentShare(input: unknown) {
-  const caller = await resolveContentCaller();
-  const parsed = parseContentInput(contentShareSchema, input);
-  if (parsed.error) return parsed.error;
-  return recordContentShareCore(caller.svc, caller.userId, parsed.data, {
-    ip: await contentRequestIp(),
-  });
-}
+export const recordContentShare = withActionLocale(
+  async function recordContentShare(input: unknown) {
+    const caller = await resolveContentCaller();
+    const parsed = parseContentInput(contentShareSchema, input);
+    if (parsed.error) return parsed.error;
+    return recordContentShareCore(caller.svc, caller.userId, parsed.data, {
+      ip: await contentRequestIp(),
+    });
+  },
+);

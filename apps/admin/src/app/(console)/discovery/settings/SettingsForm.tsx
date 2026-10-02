@@ -1,7 +1,9 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { updateDiscoverySettings } from "@/server/actions/discovery";
 import type {
   DiscoveryAudience,
@@ -212,6 +214,7 @@ export function SettingsForm({
   );
   const [resetWatermark, setResetWatermark] = useState(false);
   const [reason, setReason] = useState("");
+  const confirm = useConfirm();
   const editable = canConfigure && stepUpFresh;
   const set = <K extends keyof DiscoverySettings>(
     key: K,
@@ -231,17 +234,19 @@ export function SettingsForm({
       setMsg(null);
       if (
         goingLive &&
-        !window.confirm(
-          "This turns shadow mode off: real pushes will be sent to the chosen audience. Continue?",
-        )
+        !(await confirm(
+          "Turn shadow mode off? Real pushes will be sent to the chosen audience.",
+          { confirmLabel: "Turn shadow mode off" },
+        ))
       ) {
         return;
       }
       if (
         emailTurningOn &&
-        !window.confirm(
-          "Recommendation email is promotional email. Only continue if legal item G1 (consent and opt-out under Act 843) is marked Decided in docs/LEGAL_REVIEW_REQUIRED.md. People still have to switch the emails on themselves. Continue?",
-        )
+        !(await confirm(
+          "Turn recommendation email on? It is promotional email. Only continue if legal item G1 (consent and opt-out under Act 843) is marked Decided in docs/LEGAL_REVIEW_REQUIRED.md. People still have to switch the emails on themselves.",
+          { confirmLabel: "Turn email on" },
+        ))
       ) {
         return;
       }
@@ -269,7 +274,7 @@ export function SettingsForm({
             NUMBERS.map((n) => [n.key, Number(numbers[n.key])]),
           ),
         },
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text: res.message ?? (res.status === 200 ? "Saved." : "Couldn't save."),

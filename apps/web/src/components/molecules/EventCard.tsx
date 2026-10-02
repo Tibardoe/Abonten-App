@@ -9,6 +9,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
+import { useLocale, useTranslations } from "next-intl";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdConfirmationNumber, MdOutlineDateRange } from "react-icons/md";
 import EventCardMenuBtn from "../atoms/EventCardMenuBtn";
@@ -35,6 +36,11 @@ export default function EventCard({
   timezone,
   priority,
 }: UserPostType & { priority?: boolean }) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   // "≈ £12" beside a price in another currency, when estimates are on.
   const { estimate } = useMarketContext();
   const approx = estimate(min_price, currency);
@@ -43,8 +49,14 @@ export default function EventCard({
     ends_at,
     occurrences,
     timezone,
+    locale,
   );
-  const overlayMessage = getEventStatusOverlay(starts_at, ends_at, occurrences);
+  const overlayMessage = getEventStatusOverlay(
+    tc,
+    starts_at,
+    ends_at,
+    occurrences,
+  );
   const attendees = attendanceCount ?? attendance_count ?? 0;
   const soldOut = getEventSoldOutStatus({
     capacity,
@@ -83,13 +95,13 @@ export default function EventCard({
           width: 420,
           height: 256,
         })}
-        alt={`Flyer for ${title}`}
+        alt={t("flyerFor", { title: title })}
         priority={priority}
         cornerBadge={
           showAttendingBadge && (
             <span className="inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-success-foreground shadow-md">
               <MdConfirmationNumber className="text-sm" />
-              You're going
+              {t("youReGoing")}
             </span>
           )
         }
@@ -105,9 +117,9 @@ export default function EventCard({
               backdrop-blur-sm text-mint font-bold text-lg md:text-xl p-4 text-center`}
             >
               {status === "canceled"
-                ? "Cancelled"
+                ? t("cancelled")
                 : soldOut
-                  ? "Sold out"
+                  ? t("soldOut")
                   : overlayMessage}
             </div>
           )
@@ -137,7 +149,7 @@ export default function EventCard({
           <div className="flex items-start gap-2 text-foreground">
             <IoLocationOutline className="mt-0.5 flex-shrink-0 text-lg text-muted-foreground" />
             <p className="text-sm line-clamp-2">
-              {address?.full_address || "Location not specified"}
+              {address?.full_address || t("locationNotSpecified")}
             </p>
           </div>
 
@@ -146,14 +158,14 @@ export default function EventCard({
             <div className="flex items-center gap-2 text-foreground">
               <MdOutlineDateRange className="text-lg text-muted-foreground" />
               <span className="text-sm">
-                {dateTime?.date || "Date not available"}
+                {dateTime?.date || t("dateNotAvailable")}
               </span>
             </div>
 
             <div className="flex items-center gap-2 text-foreground">
               <IoTimeOutline className="text-lg text-muted-foreground" />
               <span className="text-sm">
-                {dateTime?.time || "Time not available"}
+                {dateTime?.time || t("timeNotAvailable")}
               </span>
             </div>
           </div>
@@ -163,12 +175,12 @@ export default function EventCard({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {fewSpotsLeft && (
                 <span className="px-2 py-1 rounded-full bg-warning/15 font-medium text-warning-foreground dark:text-warning">
-                  Only {spotsLeft} left
+                  {t("onlyLeft", { spotsLeft: spotsLeft })}
                 </span>
               )}
               {attendees > 0 && (
                 <span className="px-2 py-1 bg-muted rounded-full">
-                  {attendees} going
+                  {t("going3", { attendees: attendees })}
                 </span>
               )}
             </div>
@@ -176,8 +188,8 @@ export default function EventCard({
             {/* Price Badge */}
             <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground">
               {min_price === 0 || min_price === null
-                ? "Free"
-                : `${formatMoney(currency, min_price, { trimZeroFraction: true })}${
+                ? t("free")
+                : `${formatMoney(currency, min_price, { trimZeroFraction: true, locale })}${
                     approx ? ` · ${approx}` : ""
                   }`}
             </span>

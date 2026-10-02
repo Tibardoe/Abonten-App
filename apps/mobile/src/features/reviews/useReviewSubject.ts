@@ -1,4 +1,5 @@
 import type { ReviewSubjectKind } from "@abonten/core/reviews/reviewList";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   type EventForReview,
   type ReviewPhotoRow,
@@ -48,15 +49,16 @@ export type OwnReviewState =
   | { state: "not_eligible"; message: string };
 
 const EVENT_REASON_COPY: Record<string, string> = {
-  cancelled: "This event was cancelled, so it can't be reviewed.",
-  not_ended: "You can review this event once it has ended.",
-  not_attended:
-    "Only people whose ticket was checked in at this event can review it.",
+  cancelled: "thisEventWasCancelledSoIt",
+  not_ended: "youCanReviewThisEventOnce",
+  not_attended: "onlyPeopleWhoseTicketWasChecked",
 };
 
 export function useOwnReview(
   subject: ReviewSubject | undefined,
 ): OwnReviewState {
+  const t = useTranslations("reviews");
+
   const isEvent = subject?.kind === "event";
   const event = useEventReviewEligibility(isEvent ? subject?.event : undefined);
   const place = usePlaceReviewEligibility(
@@ -101,8 +103,9 @@ export function useOwnReview(
     default:
       return {
         state: "not_eligible",
-        message:
-          EVENT_REASON_COPY[data.reason] ?? "You can't review this right now.",
+        message: EVENT_REASON_COPY[data.reason]
+          ? t(EVENT_REASON_COPY[data.reason])
+          : t("youCanTReviewThisRight"),
       };
   }
 }

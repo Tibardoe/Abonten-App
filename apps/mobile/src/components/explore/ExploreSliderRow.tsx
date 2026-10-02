@@ -3,6 +3,7 @@ import { PlaceCard } from "@/components/PlaceCard";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { AppText, Icon, Overline } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { FlatList, Pressable, View } from "react-native";
 
@@ -26,19 +27,21 @@ function Header({
   onViewAll?: () => void;
   count: number;
 }) {
+  const t = useTranslations("explore");
+
   return (
     <View className="flex-row items-center justify-between px-4">
       <Overline>{title}</Overline>
       {onViewAll && count > 0 ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`View all ${title}`}
+          accessibilityLabel={t("viewAll", { title: title })}
           onPress={onViewAll}
           hitSlop={8}
           className="flex-row items-center gap-0.5 active:opacity-60"
         >
           <AppText variant="small" tone="brand" className="font-semibold">
-            View all
+            {t("viewAll2")}
           </AppText>
           <Icon name="chevron-forward" size={16} tone="primary" />
         </Pressable>

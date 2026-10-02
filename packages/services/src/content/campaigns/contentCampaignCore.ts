@@ -19,6 +19,7 @@ import type { Database } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { CreateContentCampaignInput } from "@abonten/validation/contentSchemas";
 import { cancelPromotionCheckout } from "../../checkout/checkoutCancellation";
+import { requestLocale, tr } from "../../i18n/requestLocale";
 import { checkRateLimit } from "../../security/rateLimit";
 import { notifyCampaign } from "../contentNotifyCore";
 import { type Envelope, FAIL } from "../contentShared";
@@ -146,7 +147,7 @@ export async function createContentCampaignCore(
   if (!(await checkRateLimit(`content-campaign:${userId}`, 20, 3600))) {
     return {
       status: 429,
-      message: "Too many campaigns started. Please try again later.",
+      message: tr("tooManyCampaignsStartedPleaseTry"),
     };
   }
   const quote = await quotePromotion(supabase, userId, input);
@@ -174,17 +175,17 @@ export async function createContentCampaignCore(
   if (live) {
     return {
       status: 409,
-      message: "This Spotlight already has a campaign in progress.",
+      message: tr("thisSpotlightAlreadyHasACampaign"),
     };
   }
 
   const startsAt = new Date(input.startsAt);
   const now = Date.now();
   if (Number.isNaN(startsAt.getTime())) {
-    return { status: 400, message: "Choose a start time." };
+    return { status: 400, message: tr("chooseAStartTime") };
   }
   if (startsAt.getTime() > now + 30 * 24 * 3600 * 1000) {
-    return { status: 400, message: "Start within the next 30 days." };
+    return { status: 400, message: tr("startWithinTheNext30Days") };
   }
   const effectiveStart = new Date(Math.max(startsAt.getTime(), now));
   const endsAt = new Date(
@@ -312,7 +313,7 @@ export async function getContentCampaignCheckoutCore(
     logger.error(`getContentCampaignCheckoutCore failed: ${error.message}`);
     return FAIL;
   }
-  if (!data) return { status: 404, message: "Checkout not found." };
+  if (!data) return { status: 404, message: tr("checkoutNotFound2") };
   const campaign = await getContentCampaignCore(
     supabase,
     userId,
@@ -361,7 +362,7 @@ export async function getContentCampaignCore(
     logger.error(`getContentCampaignCore failed: ${error.message}`);
     return FAIL;
   }
-  if (!data) return { status: 404, message: "Campaign not found." };
+  if (!data) return { status: 404, message: tr("campaignNotFound") };
   const campaign = mapCampaign(withTargeting(data as never));
   campaign.metrics = await loadCampaignMetrics(supabase, campaignId);
   return { status: 200, data: campaign };
@@ -389,9 +390,9 @@ export function summaryLabel(
 ): string {
   const amount = formatMoney(
     { amountMinor: budgetMinor, currency },
-    { trimZeroFraction: true },
+    { trimZeroFraction: true, locale: requestLocale() },
   );
-  return `${amount} budget · up to ${durationDays} day${durationDays === 1 ? "" : "s"}`;
+  return tr("budgetUpToDay", { amount, days: durationDays });
 }
 
 // PostgREST returns the geography column as WKB hex; the same parser the
@@ -491,7 +492,7 @@ export async function advertiserCampaignActionCore(
     .eq("id", input.campaignId)
     .maybeSingle();
   if (!campaign || campaign.advertiser_id !== userId) {
-    return { status: 404, message: "Campaign not found." };
+    return { status: 404, message: tr("campaignNotFound") };
   }
   // Cancelling an unpaid order goes through the checkout, so its pending
   // checkout can't still be paid afterwards (a charge against a cancelled
@@ -549,7 +550,7 @@ export async function advertiserCampaignActionCore(
       id: input.campaignId,
       advertiserId: userId,
       status: "cancelled",
-      reason: "Any unspent budget can be refunded by our team.",
+      reason: tr("anyUnspentBudgetCanBeRefunded"),
     });
   }
   return getContentCampaignCore(supabase, userId, input.campaignId);

@@ -15,7 +15,6 @@
 // redelivers and the refund is tried again; Finance sees every open row.
 
 import { logger } from "@abonten/core/logger";
-import { formatMoney } from "@abonten/core/money/formatMoney";
 import { toMajor } from "@abonten/core/money/money";
 import { createNotificationCore } from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -142,8 +141,13 @@ export async function refundOrphanCapture(input: {
   await createNotificationCore(supabase, {
     userId: attempt.user_id,
     type: "refund_requested",
-    title: "We're refunding a payment",
-    body: `Your payment of ${formatMoney(verification.amount)} arrived after the order had closed, so nothing was issued for it. We've asked for the full amount to go back to your payment method.`,
+    notice: {
+      id: "orphan_refund",
+      params: {
+        amountMinor: verification.amount.amountMinor,
+        currency: verification.amount.currency,
+      },
+    },
     link: "/transactions",
     data: { kind: "ticket" },
   }).catch((error) => {

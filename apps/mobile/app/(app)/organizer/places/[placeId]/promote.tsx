@@ -8,7 +8,9 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import { AppText, useToast } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
@@ -26,6 +28,11 @@ type Reserved = {
 };
 
 export default function PromotePlaceScreen() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("manage");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const id = placeId ?? "";
@@ -64,7 +71,7 @@ export default function PromotePlaceScreen() {
       <View className="flex-1 items-center justify-center gap-3 bg-background p-6">
         <AppText className="text-center text-muted-foreground">
           {(q.data && q.data.status !== 200 && q.data.message) ||
-            "Couldn't load promotion options."}
+            t("couldnTLoadPromotionOptions")}
         </AppText>
         <Pressable
           accessibilityRole="button"
@@ -72,7 +79,7 @@ export default function PromotePlaceScreen() {
           className="rounded-lg bg-primary px-4 py-2"
         >
           <AppText className="font-semibold text-primary-foreground">
-            Retry
+            {t("retry")}
           </AppText>
         </Pressable>
       </View>
@@ -86,8 +93,8 @@ export default function PromotePlaceScreen() {
       tierId: selectedTierId,
     });
     if (res.status !== 200) {
-      toast.error("Couldn't start", {
-        description: res.message ?? "Please try again.",
+      toast.error(t("couldnTStart"), {
+        description: res.message ?? t("pleaseTryAgain"),
       });
       return;
     }
@@ -100,25 +107,33 @@ export default function PromotePlaceScreen() {
       contentContainerClassName="gap-5 p-4 pb-16"
     >
       <View>
-        <AppText variant="screenTitle">Feature this place</AppText>
+        <AppText variant="screenTitle">{t("featureThisPlace")}</AppText>
         <AppText className="mt-1 text-sm text-muted-foreground">
-          Get a paid, randomly-rotated slot in the Featured Places section on
-          the Explore page, clearly labeled "Sponsored".
+          {t("getAPaidRandomlyRotatedSlot2")}
         </AppText>
       </View>
 
       {ctx.currentPromotion ? (
         <View className="gap-2 rounded-2xl border border-primary/40 bg-primary/10 p-5">
           <AppText className="font-semibold text-primary">
-            This place is currently featured
+            {t("thisPlaceIsCurrentlyFeatured")}
           </AppText>
           <AppText className="text-sm text-muted-foreground">
             {ctx.currentPromotion.tierLabel
-              ? `${ctx.currentPromotion.tierLabel} placement, active`
-              : "Active"}{" "}
-            until{" "}
+              ? t("placementActive", {
+                  tierLabel: promotionDurationLabel(
+                    tc,
+                    ctx.currentPromotion.tierLabel,
+                  ),
+                })
+              : t("active")}
+            {t("until")}
             <AppText className="font-medium text-foreground">
-              {formatDateWithSuffix(ctx.currentPromotion.ends_at)}
+              {formatDateWithSuffix(
+                ctx.currentPromotion.ends_at,
+                undefined,
+                locale,
+              )}
             </AppText>
             .
           </AppText>
@@ -126,13 +141,17 @@ export default function PromotePlaceScreen() {
       ) : reserved ? (
         <View className="gap-4">
           <View className="gap-1 rounded-xl border border-border bg-card p-4">
-            <AppText className="text-sm text-muted-foreground">Order</AppText>
+            <AppText className="text-sm text-muted-foreground">
+              {t("order")}
+            </AppText>
             <View className="flex-row justify-between">
               <AppText className="text-sm text-foreground">
-                {reserved.tierLabel} placement
+                {t("placement", {
+                  tierLabel: promotionDurationLabel(tc, reserved.tierLabel),
+                })}
               </AppText>
               <AppText className="text-sm font-semibold text-foreground">
-                {formatMoney(reserved.currency, reserved.amount)}
+                {formatMoney(reserved.currency, reserved.amount, { locale })}
               </AppText>
             </View>
           </View>
@@ -149,7 +168,7 @@ export default function PromotePlaceScreen() {
         <View className="gap-3">
           {ctx.tiers.length === 0 ? (
             <AppText className="text-sm text-muted-foreground">
-              No promotion tiers are available right now.
+              {t("noPromotionTiersAreAvailableRight")}
             </AppText>
           ) : (
             ctx.tiers.map((tier) => {
@@ -164,10 +183,10 @@ export default function PromotePlaceScreen() {
                   }`}
                 >
                   <AppText className="font-medium text-foreground">
-                    {tier.duration_label}
+                    {promotionDurationLabel(tc, tier.duration_label)}
                   </AppText>
                   <AppText className="text-sm text-muted-foreground">
-                    {formatMoney(tier.currency, tier.price)}
+                    {formatMoney(tier.currency, tier.price, { locale })}
                   </AppText>
                 </Pressable>
               );
@@ -195,7 +214,7 @@ export default function PromotePlaceScreen() {
                   : "text-primary-foreground"
               }`}
             >
-              {promote.isPending ? "Starting…" : "Continue to payment"}
+              {promote.isPending ? t("starting") : t("continueToPayment")}
             </AppText>
           </Pressable>
         </View>

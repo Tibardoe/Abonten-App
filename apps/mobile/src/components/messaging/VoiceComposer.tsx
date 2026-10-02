@@ -3,6 +3,7 @@ import type { OutboxDraft } from "@/features/messaging/useMessageOutbox";
 import { uploadVoiceNote, useVoiceRecorder } from "@/features/messaging/voice";
 import { hapticLight } from "@/lib/haptics";
 import { Icon, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import * as Linking from "expo-linking";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -41,6 +42,8 @@ export default function VoiceComposer({
   onSend: (draft: OutboxDraft) => void;
   onCancelReply: () => void;
 }) {
+  const t = useTranslations("messaging");
+
   const toast = useToast();
   const c = useThemeColors();
   const rec = useVoiceRecorder();
@@ -79,13 +82,13 @@ export default function VoiceComposer({
       });
       onCancelReply();
     } catch (e) {
-      toast.error("Couldn't send voice message", {
-        description: e instanceof Error ? e.message : "Please try again.",
+      toast.error(t("couldnTSendVoiceMessage"), {
+        description: e instanceof Error ? e.message : t("pleaseTryAgain"),
       });
     } finally {
       setUploading(false);
     }
-  }, [conversationId, replyingTo, onSend, onCancelReply, toast]);
+  }, [conversationId, replyingTo, onSend, onCancelReply, toast, t]);
 
   const discard = useCallback(() => {
     setCancelArmed(false);
@@ -99,19 +102,18 @@ export default function VoiceComposer({
     try {
       const res = await recRef.current.start();
       if (res === "permission-requested") {
-        toast.success("Microphone enabled", {
-          description:
-            "Press and hold the mic again to record a voice message.",
+        toast.success(t("microphoneEnabled"), {
+          description: t("pressAndHoldTheMicAgain"),
         });
         return;
       }
       if (res === "denied") {
         Alert.alert(
-          "Microphone needed",
-          "Enable microphone access for Abonten to record voice messages.",
+          t("microphoneNeeded"),
+          t("enableMicrophoneAccessForAbontenTo"),
           [
-            { text: "Not now", style: "cancel" },
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
+            { text: t("notNow"), style: "cancel" },
+            { text: t("openSettings"), onPress: () => Linking.openSettings() },
           ],
         );
         return;
@@ -123,17 +125,17 @@ export default function VoiceComposer({
       }
     } catch (e) {
       if (e instanceof AttachmentPermissionError) {
-        Alert.alert("Microphone needed", e.message, [
-          { text: "Not now", style: "cancel" },
-          { text: "Open Settings", onPress: () => Linking.openSettings() },
+        Alert.alert(t("microphoneNeeded"), e.message, [
+          { text: t("notNow"), style: "cancel" },
+          { text: t("openSettings"), onPress: () => Linking.openSettings() },
         ]);
       } else {
-        toast.error("Can't record", {
-          description: e instanceof Error ? e.message : "Please try again.",
+        toast.error(t("canTRecord"), {
+          description: e instanceof Error ? e.message : t("pleaseTryAgain"),
         });
       }
     }
-  }, [toast]);
+  }, [toast, t]);
 
   const releaseGesture = useCallback(() => {
     gestureHeldRef.current = false;
@@ -203,8 +205,8 @@ export default function VoiceComposer({
           className="items-center justify-center"
           style={{ width: 44, height: 44 }}
           accessibilityRole="button"
-          accessibilityLabel="Hold to record a voice message"
-          accessibilityHint="Press and hold to record, release to send, slide left to cancel, slide up to lock"
+          accessibilityLabel={t("holdToRecordAVoiceMessage")}
+          accessibilityHint={t("pressAndHoldToRecordRelease")}
         >
           <View className="h-9 w-9 items-center justify-center rounded-full bg-primary">
             {uploading ? (

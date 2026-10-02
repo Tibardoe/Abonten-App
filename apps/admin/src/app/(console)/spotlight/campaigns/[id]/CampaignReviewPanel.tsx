@@ -1,7 +1,9 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   contentCampaignAction,
   refundContentCampaign,
@@ -47,6 +49,7 @@ export function CampaignReviewPanel({
   const [pending, start] = useTransition();
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const confirm = useConfirm();
 
   const canReview = permissions.includes("spotlight.campaigns.review");
   const canRefund = canReview && permissions.includes("finance.refund");
@@ -90,9 +93,10 @@ export function CampaignReviewPanel({
       }
       if (
         action === "reject" &&
-        !window.confirm(
+        !(await confirm(
           "Reject this promotion? The advertiser is told why and refunded in full.",
-        )
+          { confirmLabel: "Reject and refund", danger: true },
+        ))
       ) {
         return;
       }
@@ -101,7 +105,7 @@ export function CampaignReviewPanel({
         expectedVersion: campaign.version,
         action,
         reason: reason.trim() || undefined,
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text: res.message ?? (res.status === 200 ? "Done." : "Action failed."),
@@ -119,10 +123,12 @@ export function CampaignReviewPanel({
         setMsg({ ok: false, text: "Give a short reason for the refund." });
         return;
       }
+      const amount = formatMinor(campaign.refundableMinor, campaign.currency);
       if (
-        !window.confirm(
-          `Refund ${formatMinor(campaign.refundableMinor, campaign.currency)} to the advertiser's original payment method through Paystack?`,
-        )
+        !(await confirm(
+          `Refund ${amount} to the advertiser's original payment method through Paystack?`,
+          { confirmLabel: `Refund ${amount}`, danger: true },
+        ))
       ) {
         return;
       }
@@ -130,7 +136,7 @@ export function CampaignReviewPanel({
         campaignId: campaign.id,
         expectedVersion: campaign.version,
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text:

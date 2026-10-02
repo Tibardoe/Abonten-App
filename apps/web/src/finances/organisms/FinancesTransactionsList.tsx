@@ -3,12 +3,14 @@
 import { getOrganizerLedgerTransactions } from "@/actions/getOrganizerLedgerTransactions";
 import TransactionRowSkeleton from "@/components/molecules/TransactionRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerLedgerTransactionRow } from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
+import { useLocale, useTranslations } from "next-intl";
 import FinanceLineIcon, {
-  LINE_LABELS,
+  LINE_LABEL_KEYS,
   getFinanceStatusMeta,
 } from "../atoms/FinanceLineIcon";
 
@@ -25,9 +27,9 @@ function TransactionsListSkeleton() {
 // Positive lines (money coming in) are prefixed "+", negative lines
 // (fees/refunds/payouts) show their natural minus sign — never relying on
 // color alone, per the task's explicit "not color-only" requirement.
-function formatSignedAmount(amount: number, currency: string) {
+function formatSignedAmount(amount: number, currency: string, locale: string) {
   const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
-  return `${sign}${formatMoney(currency, Math.abs(amount))}`;
+  return `${sign}${formatMoney(currency, Math.abs(amount), { locale })}`;
 }
 
 type FinancesTransactionsListProps = {
@@ -37,6 +39,10 @@ type FinancesTransactionsListProps = {
 export default function FinancesTransactionsList({
   initialPage,
 }: FinancesTransactionsListProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("finances");
+
   return (
     <InfiniteList
       queryKey={["organizer-ledger-transactions"]}
@@ -44,13 +50,17 @@ export default function FinancesTransactionsList({
       fetchPage={(cursor) => getOrganizerLedgerTransactions({ cursor })}
       emptyState={
         <p className="text-sm text-muted-foreground py-8 text-center">
-          No financial transactions yet.
+          {t("noFinancialTransactionsYet")}
         </p>
       }
       loadingSkeleton={<TransactionsListSkeleton />}
       renderItem={(item: OrganizerLedgerTransactionRow) => {
-        const { date } = formatSingleDateTime(item.created_at);
-        const { label: statusLabel } = getFinanceStatusMeta(item.status);
+        const { date } = formatSingleDateTime(
+          item.created_at,
+          undefined,
+          locale,
+        );
+        const statusLabel = t(getFinanceStatusMeta(item.status).labelKey);
 
         return (
           <li
@@ -58,7 +68,7 @@ export default function FinancesTransactionsList({
             className="flex justify-between border-b border-border py-5"
           >
             <div className="space-y-1">
-              <h2 className="font-bold">{LINE_LABELS[item.line]}</h2>
+              <h2 className="font-bold">{t(LINE_LABEL_KEYS[item.line])}</h2>
               {item.event_title && (
                 <p className="text-sm font-bold text-muted-foreground">
                   {item.event_title}
@@ -74,7 +84,7 @@ export default function FinancesTransactionsList({
 
             <div className="flex items-center gap-2 md:gap-3 font-bold">
               <div className="text-right">
-                <p>{formatSignedAmount(item.amount, item.currency)}</p>
+                <p>{formatSignedAmount(item.amount, item.currency, locale)}</p>
                 <p className="text-xs font-medium text-muted-foreground">
                   {statusLabel}
                 </p>

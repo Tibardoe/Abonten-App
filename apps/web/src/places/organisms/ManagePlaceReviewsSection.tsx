@@ -14,6 +14,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -41,6 +42,10 @@ export default function ManagePlaceReviewsSection({
   initialPage,
   fetchPage,
 }: ManagePlaceReviewsSectionProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("places");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
@@ -101,7 +106,7 @@ export default function ManagePlaceReviewsSection({
 
     onSuccess: (response, vars, context) => {
       if (response.status === 200) {
-        toast.success("✅ Response saved");
+        toast.success(t("responseSaved"));
         invalidate();
       } else {
         if (context?.previousReviews) {
@@ -117,7 +122,7 @@ export default function ManagePlaceReviewsSection({
       if (context?.previousReviews) {
         queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
       }
-      toast.error("❌ Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain2"));
       setDraftText(vars);
       setRespondingToId(vars.reviewId);
     },
@@ -139,7 +144,7 @@ export default function ManagePlaceReviewsSection({
 
     onSuccess: (response, _reviewId, context) => {
       if (response.status === 200) {
-        toast.success("Response removed");
+        toast.success(t("responseRemoved"));
         invalidate();
       } else {
         if (context?.previousReviews) {
@@ -153,7 +158,7 @@ export default function ManagePlaceReviewsSection({
       if (context?.previousReviews) {
         queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
       }
-      toast.error("❌ Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain2"));
     },
   });
 
@@ -165,7 +170,9 @@ export default function ManagePlaceReviewsSection({
         fetchPage={fetchPage}
         listClassName="flex flex-col gap-6"
         emptyState={
-          <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
+          <p className="text-muted-foreground text-sm py-4">
+            {t("noReviewsYet")}
+          </p>
         }
         renderItem={(review: PlaceReviewRow) => {
           const isEditing = respondingToId === review.id;
@@ -188,7 +195,7 @@ export default function ManagePlaceReviewsSection({
                       review.user_info.avatar_version,
                       { width: 40, height: 40 },
                     )}
-                    alt={review.user_info?.username ?? "Reviewer"}
+                    alt={review.user_info?.username ?? t("reviewer")}
                     width={40}
                     height={40}
                     className="rounded-full border border-border"
@@ -199,10 +206,10 @@ export default function ManagePlaceReviewsSection({
 
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-card-foreground truncate">
-                    {review.user_info?.username ?? "Anonymous"}
+                    {review.user_info?.username ?? t("anonymous")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {getRelativeTime(review.created_at)}
+                    {getRelativeTime(review.created_at, undefined, locale)}
                   </p>
                 </div>
 
@@ -227,7 +234,7 @@ export default function ManagePlaceReviewsSection({
                 <>
                   <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">
                     <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
-                      Response from owner
+                      {t("responseFromOwner")}
                     </p>
                     <p className="text-sm text-foreground">
                       {review.owner_response}
@@ -239,12 +246,12 @@ export default function ManagePlaceReviewsSection({
                       onClick={() => setRespondingToId(review.id)}
                       className="text-primary hover:underline"
                     >
-                      Edit response
+                      {t("editResponse")}
                     </button>
                     {confirmingDeleteId === review.id ? (
                       <>
                         <span className="text-muted-foreground">
-                          Remove this response?
+                          {t("removeThisResponse")}
                         </span>
                         <button
                           type="button"
@@ -252,7 +259,7 @@ export default function ManagePlaceReviewsSection({
                           onClick={() => deleteMutation.mutate(review.id)}
                           className="text-destructive font-medium hover:underline disabled:opacity-60"
                         >
-                          {isDeleting ? "Removing…" : "Yes, remove"}
+                          {isDeleting ? t("removing") : t("yesRemove")}
                         </button>
                         <button
                           type="button"
@@ -260,7 +267,7 @@ export default function ManagePlaceReviewsSection({
                           onClick={() => setConfirmingDeleteId(null)}
                           className="text-muted-foreground hover:underline"
                         >
-                          Keep
+                          {t("keep")}
                         </button>
                       </>
                     ) : (
@@ -269,7 +276,7 @@ export default function ManagePlaceReviewsSection({
                         onClick={() => setConfirmingDeleteId(review.id)}
                         className="text-destructive hover:underline"
                       >
-                        Delete response
+                        {t("deleteResponse")}
                       </button>
                     )}
                   </div>
@@ -297,7 +304,7 @@ export default function ManagePlaceReviewsSection({
                   onClick={() => setRespondingToId(review.id)}
                   className="mt-2 text-sm text-primary hover:underline"
                 >
-                  Respond
+                  {t("respond")}
                 </button>
               )}
             </li>
@@ -321,6 +328,8 @@ function RespondForm({
   onCancel: () => void;
   onSubmit: (text: string) => void;
 }) {
+  const t = useTranslations("places");
+
   const [response, setResponse] = useState(initialText);
 
   const handleSubmit = () => {
@@ -334,7 +343,7 @@ function RespondForm({
       <textarea
         value={response}
         onChange={(e) => setResponse(e.target.value)}
-        placeholder="Write a response to this review..."
+        placeholder={t("writeAResponseToThisReview")}
         maxLength={500}
         className="w-full rounded-md border border-input bg-background p-2 text-sm"
         rows={2}
@@ -347,10 +356,10 @@ function RespondForm({
           className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
           {isSubmitting
-            ? "Saving..."
+            ? t("saving")
             : isEdit
-              ? "Save changes"
-              : "Post response"}
+              ? t("saveChanges")
+              : t("postResponse")}
         </button>
         <button
           type="button"
@@ -358,7 +367,7 @@ function RespondForm({
           disabled={isSubmitting}
           className="border border-border px-3 py-1.5 rounded-md text-sm hover:bg-accent transition-colors"
         >
-          Cancel
+          {t("cancel")}
         </button>
       </div>
     </div>

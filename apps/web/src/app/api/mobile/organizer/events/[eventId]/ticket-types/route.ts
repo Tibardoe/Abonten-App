@@ -5,6 +5,10 @@ import {
   type UpdateEventTicketTypesCoreInput,
   updateEventTicketTypesCore,
 } from "@abonten/services/events/updateEventTicketTypesCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // PUT /api/mobile/organizer/events/:eventId/ticket-types
 //   { currency?, freeEvent?, singleTicket?: { price, quantity } | null,
@@ -18,13 +22,14 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ eventId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
   try {
     const { eventId } = await params;
     if (!eventId) {
-      return apiJson({ status: 400, message: "Missing event id" });
+      return apiJson({ status: 400, message: tr("missingEventId") });
     }
 
     const body = (await req.json().catch(() => null)) as Record<
@@ -33,7 +38,10 @@ export async function PUT(
     > | null;
 
     if (!body) {
-      return apiJson({ status: 400, message: "Invalid request body" });
+      return apiJson({
+        status: 400,
+        message: tr("invalidRequestBody"),
+      });
     }
 
     const str = (v: unknown): string | null =>
@@ -86,6 +94,9 @@ export async function PUT(
       "mobile PUT /organizer/events/:eventId/ticket-types failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -4,6 +4,7 @@
 // No comparison ("previous period") window here — unlike the organizer
 // dashboard, this page's stat tiles have no trend/vs-previous requirement.
 
+import type { CoreTranslator } from "./i18n/translator";
 import { startOfDayInZone, startOfMonthInZone } from "./time/timeZone";
 
 export type TransactionPeriod =
@@ -40,10 +41,18 @@ export function getTransactionPeriodRange(
   }
 }
 
-export const TRANSACTION_PERIOD_LABELS: Record<TransactionPeriod, string> = {
-  today: "Today",
-  thisMonth: "This Month",
-  lastMonth: "Last Month",
-  last3Months: "Last 3 Months",
-  all: "All Time",
-};
+export const TRANSACTION_PERIODS: readonly TransactionPeriod[] = [
+  "today",
+  "thisMonth",
+  "lastMonth",
+  "last3Months",
+  "all",
+] as const;
+
+/** Words live under `periods.transactions.*` of the core namespace. */
+export function transactionPeriodLabel(
+  t: CoreTranslator,
+  period: TransactionPeriod,
+): string {
+  return t(`periods.transactions.${period}`);
+}

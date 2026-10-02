@@ -1,3 +1,5 @@
+import type { CoreTranslator } from "./i18n/translator";
+
 // How an event's capacity and its ticket-type quantities fit together,
 // decided once for every client form and every server write path. The
 // database enforces the same rule (migration
@@ -70,15 +72,20 @@ export function planTicketCapacity(
 
 /**
  * Why this capacity / quantity combination cannot be saved, or null when it
- * can. The one message every form and every server write path shows.
+ * can. The one message every form and every server write path shows. Words
+ * live under `ticketCapacity.*` of the core namespace.
  */
 export function ticketCapacityProblem(
+  t: CoreTranslator,
   capacity: number | null | undefined,
   ticketTypes: readonly TicketQuantityInput[],
 ): string | null {
   const plan = planTicketCapacity(capacity, ticketTypes);
   if (plan.capacity === null || plan.reserved <= plan.capacity) return null;
-  return `Ticket quantities total ${plan.reserved}, which exceeds the event capacity of ${plan.capacity}.`;
+  return t("ticketCapacity.exceeds", {
+    reserved: plan.reserved,
+    capacity: plan.capacity,
+  });
 }
 
 /**
@@ -86,21 +93,29 @@ export function ticketCapacityProblem(
  * Null when there is nothing worth saying (no capacity, or nothing set).
  */
 export function ticketCapacityHint(
+  t: CoreTranslator,
   capacity: number | null | undefined,
   ticketTypes: readonly TicketQuantityInput[],
 ): string | null {
   const plan = planTicketCapacity(capacity, ticketTypes);
   if (plan.capacity === null || ticketTypes.length === 0) return null;
   if (plan.reserved > plan.capacity) return null; // the problem message covers it
-  const seats = (n: number) => `${n} ${n === 1 ? "seat" : "seats"}`;
   if (plan.reserved === 0) {
-    return `All ${seats(plan.capacity)} are shared across your ticket types.`;
+    return t("ticketCapacity.allShared", { capacity: plan.capacity });
   }
   if (plan.sharedTypeCount === 0) {
     const left = plan.capacity - plan.reserved;
     return left === 0
-      ? `Ticket quantities use all ${seats(plan.capacity)}.`
-      : `Ticket quantities use ${plan.reserved} of ${seats(plan.capacity)}; ${left} will stay unsold unless you raise a quantity.`;
+      ? t("ticketCapacity.usesAll", { capacity: plan.capacity })
+      : t("ticketCapacity.usesSome", {
+          reserved: plan.reserved,
+          capacity: plan.capacity,
+          left,
+        });
   }
-  return `${seats(plan.reserved)} reserved by the quantities you set; the remaining ${seats(plan.sharedPool ?? 0)} are shared by the ${plan.sharedTypeCount === 1 ? "type" : `${plan.sharedTypeCount} types`} without a quantity.`;
+  return t("ticketCapacity.reservedShared", {
+    reserved: plan.reserved,
+    pool: plan.sharedPool ?? 0,
+    types: plan.sharedTypeCount,
+  });
 }

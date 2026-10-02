@@ -9,6 +9,7 @@ import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { settleEnvelope } from "@/lib/envelope";
 import { useQueryView } from "@/lib/useQueryView";
 import type { EventPromoCode } from "@abonten/api-client";
+import { formatDateTime, formatPercent } from "@abonten/core/i18n/format";
 import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -18,6 +19,7 @@ import {
   Refresher,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -56,6 +58,9 @@ function PromoCodeCard({
   code: EventPromoCode;
   eventId: string;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const update = useUpdatePromoCode(eventId);
   const del = useDeletePromoCode(eventId);
@@ -70,22 +75,22 @@ function PromoCodeCard({
   const save = () => {
     const discount = Number(s.discountPercentage);
     if (!Number.isFinite(discount) || discount <= 0 || discount > 100) {
-      toast.error("Check the discount", {
-        description: "Enter a percentage between 1 and 100.",
+      toast.error(t("checkTheDiscount"), {
+        description: t("enterAPercentageBetween1And"),
       });
       return;
     }
     const maxUses = s.maxUses.trim() === "" ? null : Number(s.maxUses);
     if (maxUses != null && (!Number.isInteger(maxUses) || maxUses < 1)) {
-      toast.error("Check the usage cap", {
-        description: "Leave it blank for unlimited, or enter a whole number.",
+      toast.error(t("checkTheUsageCap"), {
+        description: t("leaveItBlankForUnlimitedOr"),
       });
       return;
     }
     const expiry = combineDateAndTime(s.expiryDate, s.expiryTime);
     if (!expiry) {
-      toast.error("Check the expiry", {
-        description: "Enter the date as YYYY-MM-DD and the time as HH:MM.",
+      toast.error(t("checkTheExpiry"), {
+        description: t("enterTheDateAsYyyyMm"),
       });
       return;
     }
@@ -102,48 +107,44 @@ function PromoCodeCard({
           if (res.status === 200) {
             setEditing(false);
           } else {
-            toast.error("Couldn't update", { description: res.message });
+            toast.error(t("couldnTUpdate"), { description: res.message });
           }
         },
         onError: () =>
-          toast.error("Couldn't update", {
-            description: "Please try again in a moment.",
+          toast.error(t("couldnTUpdate"), {
+            description: t("pleaseTryAgainInAMoment"),
           }),
       },
     );
   };
 
   const confirmDelete = () => {
-    Alert.alert(
-      "Delete this promo code?",
-      "If it has already been used it will be deactivated instead, so redemption history is kept.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () =>
-            del.mutate(code.id, {
-              onSuccess: (res) => {
-                if (res.status === 200) {
-                  toast.success(
-                    res.deactivatedOnly
-                      ? "Promo code deactivated"
-                      : "Promo code deleted",
-                    { description: res.message },
-                  );
-                } else {
-                  toast.error("Couldn't delete", { description: res.message });
-                }
-              },
-              onError: () =>
-                toast.error("Couldn't delete", {
-                  description: "Please try again in a moment.",
-                }),
-            }),
-        },
-      ],
-    );
+    Alert.alert(t("deleteThisPromoCode"), t("ifItHasAlreadyBeenUsed"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("deleteText"),
+        style: "destructive",
+        onPress: () =>
+          del.mutate(code.id, {
+            onSuccess: (res) => {
+              if (res.status === 200) {
+                toast.success(
+                  res.deactivatedOnly
+                    ? t("promoCodeDeactivated")
+                    : t("promoCodeDeleted"),
+                  { description: res.message },
+                );
+              } else {
+                toast.error(t("couldnTDelete"), { description: res.message });
+              }
+            },
+            onError: () =>
+              toast.error(t("couldnTDelete"), {
+                description: t("pleaseTryAgainInAMoment"),
+              }),
+          }),
+      },
+    ]);
   };
 
   return (
@@ -154,8 +155,9 @@ function PromoCodeCard({
             {code.promoCode}
           </AppText>
           <AppText className="text-xs text-muted-foreground">
-            {code.timesUsed} use{code.timesUsed === 1 ? "" : "s"}
-            {code.maxUses != null ? ` of ${code.maxUses} max` : " (unlimited)"}
+            {code.maxUses != null
+              ? t("usesOfMax", { used: code.timesUsed, max: code.maxUses })
+              : t("usesUnlimited", { used: code.timesUsed })}
           </AppText>
         </View>
         <AppText
@@ -165,7 +167,7 @@ function PromoCodeCard({
               : "shrink-0 text-xs font-semibold text-muted-foreground"
           }
         >
-          {code.isActive ? "Active" : "Inactive"}
+          {code.isActive ? t("active") : t("inactive")}
         </AppText>
       </View>
 
@@ -173,7 +175,7 @@ function PromoCodeCard({
         <View className="gap-3 pt-1">
           <View className="flex-row gap-2">
             <View className="flex-1">
-              <Field label="Discount %">
+              <Field label={t("discount2")}>
                 <Input
                   keyboardType="number-pad"
                   value={s.discountPercentage}
@@ -185,12 +187,12 @@ function PromoCodeCard({
               </Field>
             </View>
             <View className="flex-1">
-              <Field label="Max uses" hint="Blank = unlimited">
+              <Field label={t("maxUses")} hint={t("blankUnlimited")}>
                 <Input
                   keyboardType="number-pad"
                   value={s.maxUses}
                   onChangeText={(v) => setS((p) => ({ ...p, maxUses: v }))}
-                  placeholder="Unlimited"
+                  placeholder={t("unlimited")}
                 />
               </Field>
             </View>
@@ -198,17 +200,17 @@ function PromoCodeCard({
 
           <View className="flex-row gap-2">
             <View className="flex-1">
-              <Field label="Expiry date">
+              <Field label={t("expiryDate")}>
                 <Input
                   autoCapitalize="none"
                   value={s.expiryDate}
                   onChangeText={(v) => setS((p) => ({ ...p, expiryDate: v }))}
-                  placeholder="YYYY-MM-DD"
+                  placeholder={t("yyyyMmDd")}
                 />
               </Field>
             </View>
             <View className="w-28">
-              <Field label="Time">
+              <Field label={t("time")}>
                 <Input
                   value={s.expiryTime}
                   onChangeText={(v) => setS((p) => ({ ...p, expiryTime: v }))}
@@ -219,7 +221,7 @@ function PromoCodeCard({
           </View>
 
           <View className="flex-row items-center justify-between">
-            <AppText className="text-sm text-foreground">Active</AppText>
+            <AppText className="text-sm text-foreground">{t("active")}</AppText>
             <Switch
               value={s.isActive}
               onValueChange={(v) => setS((p) => ({ ...p, isActive: v }))}
@@ -229,7 +231,7 @@ function PromoCodeCard({
           <View className="flex-row gap-2">
             <View className="flex-1">
               <Button
-                title={update.isPending ? "Saving…" : "Save"}
+                title={update.isPending ? t("saving") : t("save")}
                 onPress={save}
                 loading={update.isPending}
                 disabled={update.isPending}
@@ -237,7 +239,7 @@ function PromoCodeCard({
             </View>
             <View className="flex-1">
               <Button
-                title="Cancel"
+                title={t("cancel")}
                 variant="outline"
                 onPress={() => setEditing(false)}
                 disabled={update.isPending}
@@ -250,31 +252,33 @@ function PromoCodeCard({
           <View className="gap-1 pt-1">
             <View className="flex-row justify-between">
               <AppText className="text-sm text-muted-foreground">
-                Discount
+                {t("discount3")}
               </AppText>
               <AppText className="text-sm text-foreground">
-                {code.discountPercentage ?? 0}%
+                {formatPercent(code.discountPercentage ?? 0, locale, {
+                  maximumFractionDigits: 2,
+                })}
               </AppText>
             </View>
             <View className="flex-row justify-between">
               <AppText className="text-sm text-muted-foreground">
-                Expires
+                {t("expires")}
               </AppText>
               <AppText className="text-sm text-foreground">
                 {code.expiresAt
-                  ? new Date(code.expiresAt).toLocaleString()
-                  : "Never"}
+                  ? formatDateTime(code.expiresAt, locale)
+                  : t("never")}
               </AppText>
             </View>
           </View>
 
           <View className="flex-row gap-2 pt-1">
             <View className="flex-1">
-              <Button title="Edit" variant="outline" onPress={beginEdit} />
+              <Button title={t("edit")} variant="outline" onPress={beginEdit} />
             </View>
             <View className="flex-1">
               <Button
-                title="Delete"
+                title={t("deleteText")}
                 variant="destructive"
                 onPress={confirmDelete}
                 loading={del.isPending}
@@ -289,6 +293,8 @@ function PromoCodeCard({
 }
 
 export default function EventPromoCodesScreen() {
+  const t = useTranslations("manage");
+
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const id = eventId ?? "";
   const q = useEventPromoCodes(id);
@@ -321,16 +327,16 @@ export default function EventPromoCodesScreen() {
       contentContainerClassName="gap-3 p-4 pb-16"
       refreshControl={<Refresher onRefresh={() => q.refetch()} />}
     >
-      <AppText variant="screenTitle">Promo codes</AppText>
+      <AppText variant="screenTitle">{t("promoCodes")}</AppText>
 
       {forbidden ? (
         <AppText className="text-center text-muted-foreground">
-          {result.message || "You're not authorized to manage this event."}
+          {result.message || t("youReNotAuthorizedToManage")}
         </AppText>
       ) : view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="this event's promo codes"
+          subject={t("thisEventSPromoCodes")}
           onRetry={() => q.refetch()}
           loading={
             <View className="items-center py-12">
@@ -341,15 +347,14 @@ export default function EventPromoCodesScreen() {
       ) : codes.length === 0 ? (
         <AppText className="text-sm text-muted-foreground">
           {isFree
-            ? "Promo codes aren't available on a free event. Make the event paid to offer discount codes."
-            : "This event has no promo codes. Add them when you create an event."}
+            ? t("promoCodesArenTAvailableOn")
+            : t("thisEventHasNoPromoCodes")}
         </AppText>
       ) : (
         <>
           {isFree ? (
             <AppText className="text-sm text-muted-foreground">
-              This event is free, so its promo codes can&apos;t be active. They
-              stay here for their history.
+              {t("thisEventIsFreeSoIts")}
             </AppText>
           ) : null}
           {codes.map((code) => (

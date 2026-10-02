@@ -1,11 +1,17 @@
+import { formatDate } from "@abonten/core/i18n/format";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { PromotionCredit } from "@abonten/types/rewards";
 import { AppText, Button, Overline } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 const monthOf = (period: string) =>
-  new Date(`${period}T00:00:00Z`).toLocaleDateString(undefined, {
+  formatDate(`${period}T00:00:00Z`, getCurrentLocale(), {
     month: "long",
     timeZone: "UTC",
   });
@@ -15,68 +21,95 @@ const monthOf = (period: string) =>
 // a way to spend it on featuring. Separate from the withdrawable balance --
 // credit is never paid out as money.
 export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
+  const { locale } = useLocale();
+  const t = useTranslations("rewards");
+
   const router = useRouter();
   const { organizerShareBps, venueShareBps, milestone, visits, expiryDays } =
     credit.rates;
 
   const lines: string[] = [];
   if (organizerShareBps) {
-    lines.push(
-      `Each month you get ${organizerShareBps / 100}% of what Abonten earned on your events that ended the month before.`,
-    );
+    lines.push(t("eachMonthYouGetOfWhat", { value: organizerShareBps / 100 }));
   }
   if (venueShareBps) {
-    lines.push(
-      `Own a verified place? You get ${venueShareBps / 100}% when other organizers hold ticketed events there.`,
-    );
+    lines.push(t("ownAVerifiedPlaceYouGet", { value: venueShareBps / 100 }));
   }
   if (visits) {
     lines.push(
-      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor, credit.currency)} (up to ${visits.maxVisitors} a month).`,
+      t("ownAVerifiedPlaceEveryDifferent", {
+        formatCredit: formatCredit(
+          visits.perVisitorMinor,
+          credit.currency,
+          locale,
+        ),
+        maxVisitors: visits.maxVisitors,
+      }),
     );
   }
   if (milestone) {
     lines.push(
-      `The first time one of your events sells to ${milestone.uniqueBuyers} different people, you get ${formatCredit(milestone.amountMinor, credit.currency)}.`,
+      t("theFirstTimeOneOfYour", {
+        uniqueBuyers: milestone.uniqueBuyers,
+        formatCredit: formatCredit(
+          milestone.amountMinor,
+          credit.currency,
+          locale,
+        ),
+      }),
     );
   }
 
   return (
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <View className="gap-1">
-        <Overline>Promotion credit</Overline>
+        <Overline>{t("promotionCredit")}</Overline>
         <AppText variant="hero" className="tabular-nums">
-          {formatCredit(credit.promotionOnlyMinor, credit.currency)}
+          {formatCredit(credit.promotionOnlyMinor, credit.currency, locale)}
         </AppText>
         {credit.pendingMinor > 0 ? (
           <AppText variant="small" tone="muted">
-            {formatCredit(credit.pendingMinor, credit.currency)} pending
+            {t("pending3", {
+              formatCredit: formatCredit(
+                credit.pendingMinor,
+                credit.currency,
+                locale,
+              ),
+            })}
           </AppText>
         ) : null}
         {credit.last ? (
           <AppText variant="small" tone="muted">
-            +{formatCredit(credit.last.amountMinor, credit.currency)} for events
-            that ended in {monthOf(credit.last.periodStart)}
+            {t("forEventsThatEndedIn", {
+              formatCredit: formatCredit(
+                credit.last.amountMinor,
+                credit.currency,
+                locale,
+              ),
+              monthOf: monthOf(credit.last.periodStart),
+            })}
           </AppText>
         ) : null}
       </View>
 
       {credit.canRedeem && credit.spendableMinor > credit.promotionOnlyMinor ? (
         <AppText variant="small">
-          You can put {formatCredit(credit.spendableMinor, credit.currency)}{" "}
-          towards featuring an event or place, including your other Abonten
-          Credit.
+          {t("youCanPutTowardsFeaturingAn", {
+            formatCredit: formatCredit(
+              credit.spendableMinor,
+              credit.currency,
+              locale,
+            ),
+          })}
         </AppText>
       ) : null}
       {!credit.canRedeem && credit.promotionOnlyMinor > 0 ? (
-        <AppText variant="small">
-          Soon you&apos;ll be able to use it to feature your events and places.
-        </AppText>
+        <AppText variant="small">{t("soonYouLlBeAbleTo3")}</AppText>
       ) : null}
 
       {credit.canRedeem && credit.spendableMinor > 0 ? (
         <Button
-          title="Feature an event"
+          title={t("featureAnEvent")}
           leftIcon="megaphone-outline"
           fullWidth
           onPress={() => router.push("/(app)/organizer/events")}
@@ -94,11 +127,7 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
       ) : null}
 
       <AppText variant="caption">
-        Promotion credit only pays for featuring events and places
-        {expiryDays
-          ? `, and lasts ${expiryDays} days from when you get it`
-          : ""}
-        . It can&apos;t be withdrawn.
+        {t("promotionCreditRules", { days: expiryDays ?? 0 })}
       </AppText>
     </View>
   );

@@ -5,6 +5,7 @@ import type {
   NotificationType,
 } from "@abonten/types/notificationType";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
+import { useLocale } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -71,6 +72,8 @@ export function NotificationItem({
   item: NotificationType;
   onPress: () => void;
 }) {
+  const { locale } = useLocale();
+
   const unread = !item.read_at;
   return (
     <Pressable
@@ -100,7 +103,7 @@ export function NotificationItem({
           </AppText>
         ) : null}
         <AppText variant="caption">
-          {formatDateWithSuffix(item.created_at)}
+          {formatDateWithSuffix(item.created_at, undefined, locale)}
         </AppText>
       </View>
     </Pressable>

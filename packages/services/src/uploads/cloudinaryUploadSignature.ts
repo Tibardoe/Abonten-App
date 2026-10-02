@@ -4,6 +4,7 @@ import {
 } from "@abonten/core/uploadLimits";
 import { cloudinary } from "@abonten/services/media/cloudinaryClient";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
+import { tr } from "../i18n/requestLocale";
 
 // A signature costs nothing server-side to produce but authorizes one real
 // Cloudinary upload -- unbounded requests here is unbounded upload volume
@@ -148,7 +149,7 @@ export async function buildCloudinaryUploadSignature(
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many upload requests. Please try again shortly.",
+      message: tr("tooManyUploadRequestsPleaseTry"),
     };
   }
 

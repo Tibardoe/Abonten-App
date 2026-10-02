@@ -1,6 +1,7 @@
 import { ReminderOptionsSheet } from "@/components/reminders/ReminderOptionsSheet";
 import { useEventReminder } from "@/features/reminders/useEventReminder";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { Alert, Linking, Pressable, View } from "react-native";
 
@@ -20,6 +21,8 @@ export function EventReminderButton({
   startsAtIso: string;
   status?: string | null;
 }) {
+  const t = useTranslations("common");
+
   const { offsets, loading, saving, save } = useEventReminder(
     eventId,
     startsAtIso,
@@ -36,11 +39,11 @@ export function EventReminderButton({
     }
     if (res.reason === "permission") {
       Alert.alert(
-        "Notifications are off",
-        "Turn on notifications for Abonten to get event reminders.",
+        t("notificationsAreOff"),
+        t("turnOnNotificationsForAbontenTo"),
         [
-          { text: "Not now", style: "cancel" },
-          { text: "Open settings", onPress: () => Linking.openSettings() },
+          { text: t("notNow"), style: "cancel" },
+          { text: t("openSettings"), onPress: () => Linking.openSettings() },
         ],
       );
     }
@@ -53,16 +56,16 @@ export function EventReminderButton({
 
   const active = offsets.length > 0;
   const summary = active
-    ? offsets.length === 1
-      ? "1 reminder set"
-      : `${offsets.length} reminders set`
-    : "Get a reminder before it starts";
+    ? t("remindersSet", { length: offsets.length })
+    : t("getAReminderBeforeItStarts");
 
   return (
     <>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={active ? "Edit event reminders" : "Set a reminder"}
+        accessibilityLabel={
+          active ? t("editEventReminders") : t("setAReminder")
+        }
         onPress={() => setOpen(true)}
         disabled={loading}
         className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-4 active:opacity-80"
@@ -74,7 +77,7 @@ export function EventReminderButton({
         />
         <View className="flex-1">
           <AppText variant="bodyStrong">
-            {active ? "Reminder on" : "Remind me"}
+            {active ? t("reminderOn") : t("remindMe")}
           </AppText>
           <AppText variant="meta">{summary}</AppText>
         </View>

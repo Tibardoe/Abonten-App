@@ -3,6 +3,7 @@ import type {
   VerificationStatus,
   VerificationSubjectType,
 } from "@abonten/types/verificationType";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   IoAlertCircle,
   IoCheckmarkCircle,
@@ -59,7 +60,14 @@ export default function VerificationStatusCard({
   submittedAt?: string | null;
   verifiedAt?: string | null;
 }) {
-  const copy = ownerStatusCopy(status, subjectType, { subjectName, reason });
+  const t = useTranslations("verification");
+  const tc = useTranslations("core");
+  const format = useFormatter();
+
+  const copy = ownerStatusCopy(tc, status, subjectType, {
+    subjectName,
+    reason,
+  });
   const Icon = ICON[status];
   const stamp = status === "approved" ? verifiedAt : submittedAt;
 
@@ -72,11 +80,12 @@ export default function VerificationStatusCard({
           <p className="text-sm text-muted-foreground">{copy.body}</p>
           {stamp ? (
             <p className="text-xs text-muted-foreground">
-              {status === "approved" ? "Verified on " : "Sent on "}
-              {new Date(stamp).toLocaleDateString(undefined, {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
+              {t(status === "approved" ? "verifiedOnDate" : "sentOnDate", {
+                date: format.dateTime(new Date(stamp), {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                }),
               })}
             </p>
           ) : null}

@@ -3,6 +3,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth bodies for the per-place Promotion tab (paid "Feature this
@@ -42,10 +43,13 @@ export async function fetchPlacePromotionContext(
     .maybeSingle();
 
   if (placeError || !place) {
-    return { status: 404, message: "Place not found" };
+    return { status: 404, message: tr("placeNotFound") };
   }
   if (place.owner_id !== userId) {
-    return { status: 403, message: "Not authorized to promote this place" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToPromoteThisPlace"),
+    };
   }
 
   const nowIso = new Date().toISOString();
@@ -75,7 +79,7 @@ export async function fetchPlacePromotionContext(
         tierError?.message ?? promoError?.message
       }`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // postgrest-js infers the embed as an array here although the relationship is many-to-one; it's a
@@ -130,10 +134,13 @@ export async function insertPlacePromotionCheckoutCore(
     .maybeSingle();
 
   if (placeError || !place) {
-    return { status: 404, message: "Place not found" };
+    return { status: 404, message: tr("placeNotFound") };
   }
   if (place.owner_id !== userId) {
-    return { status: 403, message: "Not authorized to promote this place" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToPromoteThisPlace"),
+    };
   }
 
   const { data: tier, error: tierError } = await supabase
@@ -144,7 +151,7 @@ export async function insertPlacePromotionCheckoutCore(
     .maybeSingle();
 
   if (tierError || !tier) {
-    return { status: 404, message: "Promotion tier not found" };
+    return { status: 404, message: tr("promotionTierNotFound") };
   }
 
   const { data: checkout, error: insertError } =
@@ -167,7 +174,7 @@ export async function insertPlacePromotionCheckoutCore(
     logger.error(
       `Error inserting place promotion checkout: ${insertError?.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return {

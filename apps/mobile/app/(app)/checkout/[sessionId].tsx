@@ -19,6 +19,7 @@ import type { PreparedCheckoutSession } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText, useToast } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
@@ -30,6 +31,8 @@ function CheckoutExpiryBanner({
   expiresAt: string | null;
   onExpired: () => void;
 }) {
+  const t = useTranslations("checkout");
+
   const { secondsLeft, isExpired, isWarning } = useCheckoutCountdown(expiresAt);
   const firedRef = useRef(false);
 
@@ -57,8 +60,10 @@ function CheckoutExpiryBanner({
         }`}
       >
         {isExpired
-          ? "This checkout has expired."
-          : `Checkout expires in ${formatCountdown(secondsLeft)}`}
+          ? t("thisCheckoutHasExpired")
+          : t("checkoutExpiresIn", {
+              formatCountdown: formatCountdown(secondsLeft),
+            })}
       </AppText>
     </View>
   );
@@ -98,6 +103,8 @@ function Line({
 }
 
 export default function CheckoutReviewScreen() {
+  const t = useTranslations("checkout");
+
   const toast = useToast();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
@@ -127,7 +134,7 @@ export default function CheckoutReviewScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={prepareView}
-          subject="this checkout"
+          subject={t("thisCheckout")}
           onRetry={() => refetch()}
           loading={
             <View className="flex-1 items-center justify-center">
@@ -143,7 +150,7 @@ export default function CheckoutReviewScreen() {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
         <AppText className="text-center text-muted-foreground">
-          {data?.message ?? "This checkout could not be loaded."}
+          {data?.message ?? t("thisCheckoutCouldNotBeLoaded")}
         </AppText>
         <Pressable
           accessibilityRole="button"
@@ -151,7 +158,7 @@ export default function CheckoutReviewScreen() {
           onPress={() => refetch()}
         >
           <AppText className="font-semibold text-primary-foreground">
-            Retry
+            {t("retry")}
           </AppText>
         </Pressable>
       </View>
@@ -169,8 +176,8 @@ export default function CheckoutReviewScreen() {
       router.back();
       return;
     }
-    toast.error("Couldn't cancel", {
-      description: res.message ?? "Please try again.",
+    toast.error(t("couldnTCancel"), {
+      description: res.message ?? t("pleaseTryAgain"),
     });
   }
 
@@ -178,8 +185,7 @@ export default function CheckoutReviewScreen() {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
         <AppText className="text-center text-muted-foreground">
-          This checkout has expired and the seats it was holding went back on
-          sale. You can pick your tickets again.
+          {t("thisCheckoutHasExpiredAndThe")}
         </AppText>
         <Pressable
           accessibilityRole="button"
@@ -187,7 +193,7 @@ export default function CheckoutReviewScreen() {
           onPress={() => router.back()}
         >
           <AppText className="font-semibold text-primary-foreground">
-            Choose tickets again
+            {t("chooseTicketsAgain")}
           </AppText>
         </Pressable>
       </View>
@@ -241,6 +247,9 @@ function CheckoutReady({
   onCancel: () => void;
   cancelling: boolean;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("checkout");
+
   const payment = useTicketPayment({
     sessionId,
     currency,
@@ -253,7 +262,7 @@ function CheckoutReady({
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="title" title="Checkout" backFallback="/(app)" />
+      <AppHeader variant="title" title={t("checkout")} backFallback="/(app)" />
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4 pb-6"
@@ -261,41 +270,43 @@ function CheckoutReady({
         <CheckoutExpiryBanner expiresAt={expiresAt} onExpired={onExpired} />
 
         <View>
-          <AppText variant="caption">Order summary</AppText>
+          <AppText variant="caption">{t("orderSummary2")}</AppText>
           <AppText variant="sectionHeading">{session.eventTitle}</AppText>
         </View>
 
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Line
-            label="Subtotal"
-            value={formatMoney(currency, session.subtotal)}
+            label={t("subtotal")}
+            value={formatMoney(currency, session.subtotal, { locale })}
           />
           {session.discount > 0 ? (
             <Line
-              label="Discount"
-              value={`− ${formatMoney(currency, session.discount)}`}
+              label={t("discount")}
+              value={`− ${formatMoney(currency, session.discount, { locale })}`}
             />
           ) : null}
           <Line
-            label="Service fee"
-            value={formatMoney(currency, session.fee)}
+            label={t("serviceFee")}
+            value={formatMoney(currency, session.fee, { locale })}
           />
           <View className="my-1 h-px bg-border" />
           <Line
-            label="Total"
-            value={formatMoney(currency, session.total)}
+            label={t("total")}
+            value={formatMoney(currency, session.total, { locale })}
             strong
           />
         </View>
 
         {grandTotal !== session.total ? (
           <AppText variant="muted">
-            Group total: {formatMoney(currency, grandTotal)}
+            {t("groupTotal", {
+              formatMoney: formatMoney(currency, grandTotal, { locale }),
+            })}
           </AppText>
         ) : null}
 
         <AppText variant="caption" className="-mb-2">
-          Payment
+          {t("payment")}
         </AppText>
         <PaymentSection state={payment} />
 
@@ -309,13 +320,13 @@ function CheckoutReady({
             <ActivityIndicator />
           ) : (
             <AppText className="text-sm font-semibold text-destructive">
-              Cancel checkout
+              {t("cancelCheckout")}
             </AppText>
           )}
         </Pressable>
 
         <AppText variant="caption" className="text-center">
-          Your seats are held for a limited time.
+          {t("yourSeatsAreHeldForA")}
         </AppText>
       </ScrollView>
 

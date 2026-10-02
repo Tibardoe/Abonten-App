@@ -8,6 +8,7 @@ import { setPendingRedirect } from "@/lib/authRedirect";
 import { hapticSelection } from "@/lib/haptics";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
 import { useRef } from "react";
 import { Animated, Pressable } from "react-native";
@@ -30,6 +31,8 @@ export function FavoriteButton({
   /** true when placed over a photo — uses a translucent chip for contrast. */
   onSurface?: boolean;
 }) {
+  const t = useTranslations("common");
+
   const { session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -74,7 +77,7 @@ export function FavoriteButton({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
-        favorited ? "Remove from favourites" : "Add to favourites"
+        favorited ? t("removeFromFavourites") : t("addToFavourites")
       }
       accessibilityState={{ selected: favorited }}
       hitSlop={8}

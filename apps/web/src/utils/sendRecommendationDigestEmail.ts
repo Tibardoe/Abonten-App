@@ -1,7 +1,9 @@
 import RecommendationDigestEmailTemplate from "@/components/organisms/RecommendationDigestEmailTemplate";
+import { type EmailWords, emailWordsFor } from "@/lib/email/emailWords";
 import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { SUPPORT_EMAIL } from "@abonten/core/brand/contacts";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { intlLocale, isEnglishLike } from "@abonten/core/i18n/coreStrings";
 import { logger } from "@abonten/core/logger";
 import { isValidTimeZone } from "@abonten/core/time/timeZone";
 import type {
@@ -12,33 +14,41 @@ import type {
 import { recommendationEmailUnsubscribeLinks } from "@abonten/services/notifications/recommendationEmailPreferenceCore";
 
 // The event's own wall-clock time, the same wording as the push
-// ("Sat 20 Sep, 7:30pm"). An event without a zone (none today — every
-// event has one) falls back to UTC rather than the server's zone.
-function when(startsAt: string, timeZone: string | null): string {
+// ("Sat 20 Sep, 7:30pm"), in the reader's language. An event without a
+// zone (none today — every event has one) falls back to UTC rather than
+// the server's zone.
+function when(
+  startsAt: string,
+  timeZone: string | null,
+  locale: string,
+): string {
   const zone = timeZone && isValidTimeZone(timeZone) ? timeZone : "UTC";
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     timeZone: zone,
     weekday: "short",
     day: "numeric",
     month: "short",
     hour: "numeric",
     minute: "2-digit",
-    hour12: true,
+    ...(isEnglishLike(locale) ? { hour12: true } : {}),
   }).format(new Date(startsAt));
 }
 
-function reason(item: RecommendationEmailItem): string {
+function reason(words: EmailWords, item: RecommendationEmailItem): string {
+  const { t } = words;
   switch (item.reason) {
     case "organizer":
       return item.organizerUsername
-        ? `New from @${item.organizerUsername}`
-        : "From an organizer you follow";
+        ? t("digest.reason.organizerNamed", {
+            username: item.organizerUsername,
+          })
+        : t("digest.reason.organizer");
     case "place":
-      return "At a place you follow";
+      return t("digest.reason.place");
     case "similar_places":
-      return "Similar to places you liked";
+      return t("digest.reason.similarPlaces");
     default:
-      return "Similar to events you liked";
+      return t("digest.reason.similarEvents");
   }
 }
 
@@ -62,6 +72,7 @@ export async function sendRecommendationDigestEmail(
     `${base}/notifications/open?id=${encodeURIComponent(email.notificationId)}&to=${encodeURIComponent(path)}`;
 
   try {
+    const words = await emailWordsFor(email.userId, email.name);
     const unsubscribe = recommendationEmailUnsubscribeLinks(email.userId, base);
     const { error } = await sendEmail({
       from: "Abonten Hub <picks@abontenhub.com>",
@@ -74,17 +85,20 @@ export async function sendRecommendationDigestEmail(
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
       react: RecommendationDigestEmailTemplate({
-        name: email.name,
+        words,
         headline: email.headline,
         items: email.items.map((item) => ({
           title: item.title,
           detail:
             item.subjectType === "event" && item.startsAt
-              ? [when(item.startsAt, item.timeZone), item.subtitle]
+              ? [
+                  when(item.startsAt, item.timeZone, words.locale),
+                  item.subtitle,
+                ]
                   .filter(Boolean)
                   .join(" · ")
               : item.subtitle,
-          reason: reason(item),
+          reason: reason(words, item),
           // Plain JPEG: some mail clients can't show the WebP/AVIF that
           // f_auto would pick.
           imageUrl: item.imagePublicId

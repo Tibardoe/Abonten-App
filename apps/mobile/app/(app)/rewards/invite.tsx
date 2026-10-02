@@ -22,6 +22,7 @@ import {
   Skeleton,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -35,13 +36,16 @@ import { Linking, ScrollView, Share, TextInput, View } from "react-native";
 
 const STATUS_LABEL: Record<ReferralInvite["recent"][number]["status"], string> =
   {
-    joined: "Joined",
-    qualified: "Bought a ticket · reward pending",
-    rewarded: "Reward earned",
-    expired: "Didn't buy in time",
+    joined: "joined",
+    qualified: "boughtATicketRewardPending",
+    rewarded: "rewardEarned",
+    expired: "didnTBuyInTime",
   };
 
 function EnterInviteCode() {
+  const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+
   const c = useThemeColors();
   const qc = useQueryClient();
   const [code, setCode] = useState("");
@@ -54,7 +58,7 @@ function EnterInviteCode() {
   async function apply() {
     const normalized = normalizeReferralCode(code);
     if (!normalized) {
-      setMessage({ tone: "error", text: "Enter the 7-character invite code." });
+      setMessage({ tone: "error", text: t("enterThe7CharacterInviteCode") });
       return;
     }
     setBusy(true);
@@ -64,17 +68,17 @@ function EnterInviteCode() {
         source: "typed",
       });
       if (res.data) {
-        setMessage(bindResultMessage(res.data));
+        setMessage(bindResultMessage(tc, res.data));
         if (res.data.result === "bound") {
           qc.invalidateQueries({ queryKey: ["mobile", "rewards"] });
         }
       } else {
-        setMessage({ tone: "error", text: res.message ?? "Please try again." });
+        setMessage({ tone: "error", text: res.message ?? t("pleaseTryAgain") });
       }
     } catch {
       setMessage({
         tone: "error",
-        text: "Network error. Check your connection and try again.",
+        text: t("networkErrorCheckYourConnectionAnd"),
       });
     } finally {
       setBusy(false);
@@ -83,9 +87,7 @@ function EnterInviteCode() {
 
   return (
     <Card className="gap-2">
-      <AppText variant="label">
-        Joined because a friend invited you? Enter their code
-      </AppText>
+      <AppText variant="label">{t("joinedBecauseAFriendInvitedYou")}</AppText>
       <View className="flex-row gap-2">
         <TextInput
           className="h-[48px] flex-1 rounded-xl border border-input bg-background px-3 text-[16px] tracking-[3px] text-foreground"
@@ -99,14 +101,14 @@ function EnterInviteCode() {
           autoCapitalize="characters"
           autoCorrect={false}
           maxLength={9}
-          accessibilityLabel="Friend's invite code"
+          accessibilityLabel={t("friendSInviteCode")}
           onSubmitEditing={apply}
           returnKeyType="done"
         />
         <Button
-          title="Apply"
+          title={t("apply")}
           loading={busy}
-          loadingTitle="Applying…"
+          loadingTitle={t("applying")}
           disabled={code.trim().length === 0}
           onPress={apply}
         />
@@ -124,6 +126,11 @@ function EnterInviteCode() {
 }
 
 export default function InviteFriends() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("rewards");
+  const tc = useTranslations("core");
+
   const invite = useReferralInvite();
   const toast = useToast();
   const data = invite.data;
@@ -133,7 +140,7 @@ export default function InviteFriends() {
 
   const message =
     data?.inviteUrl != null
-      ? inviteShareMessage({
+      ? inviteShareMessage(tc, {
           currency: data.currency,
           url: data.inviteUrl,
           refereeMinor: data.refereeMinor,
@@ -164,7 +171,7 @@ export default function InviteFriends() {
 
   async function copyCode() {
     if (!data?.code) return;
-    if (await copyText(data.code)) toast.success("Invite code copied");
+    if (await copyText(data.code)) toast.success(t("inviteCodeCopied"));
     else await shareAny();
   }
 
@@ -172,13 +179,13 @@ export default function InviteFriends() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Invite friends"
+        title={t("inviteFriends")}
         backFallback="/(app)/rewards"
       />
       {view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="your invites"
+          subject={t("yourInvites")}
           onRetry={() => invite.refetch()}
           loading={
             <View className="gap-4 p-4">
@@ -190,8 +197,8 @@ export default function InviteFriends() {
       ) : !data || (!data.enabled && !data.invitedBy) ? (
         <EmptyState
           icon="people-outline"
-          title="Invites aren't available yet"
-          description="Soon you'll be able to invite friends and earn credit when they buy their first ticket."
+          title={t("invitesArenTAvailableYet")}
+          description={t("soonYouLlBeAbleTo2")}
         />
       ) : (
         <ScrollView
@@ -202,14 +209,24 @@ export default function InviteFriends() {
             <Card elevated className="items-center gap-3">
               {data.referrerMinor ? (
                 <AppText variant="body" className="text-center">
-                  You get {formatCredit(data.referrerMinor, data.currency)} when
-                  a friend you invite buys their first ticket
-                  {data.minOrderMinor
-                    ? ` of ${formatCredit(data.minOrderMinor, data.currency)} or more`
-                    : ""}{" "}
-                  and their event has taken place.
+                  {t("inviteTerms", {
+                    amount: formatCredit(
+                      data.referrerMinor,
+                      data.currency,
+                      locale,
+                    ),
+                    minimum: data.minOrderMinor
+                      ? formatCredit(data.minOrderMinor, data.currency, locale)
+                      : "none",
+                  })}
                   {data.refereeMinor
-                    ? ` They get ${formatCredit(data.refereeMinor, data.currency)} off that ticket.`
+                    ? ` ${t("friendGetsOff", {
+                        amount: formatCredit(
+                          data.refereeMinor,
+                          data.currency,
+                          locale,
+                        ),
+                      })}`
                     : ""}
                 </AppText>
               ) : null}
@@ -217,16 +234,16 @@ export default function InviteFriends() {
                 <QrCode
                   value={data.inviteUrl}
                   size={184}
-                  accessibilityLabel="QR code of your invite link"
+                  accessibilityLabel={t("qrCodeOfYourInviteLink")}
                 />
               </View>
-              <AppText variant="caption">Your code</AppText>
+              <AppText variant="caption">{t("yourCode2")}</AppText>
               <AppText variant="hero" className="tracking-widest">
                 {data.code}
               </AppText>
               <View className="w-full gap-2">
                 <Button
-                  title="Share on WhatsApp"
+                  title={t("shareOnWhatsapp")}
                   leftIcon="logo-whatsapp"
                   size="lg"
                   fullWidth
@@ -235,7 +252,7 @@ export default function InviteFriends() {
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Button
-                      title="Share link"
+                      title={t("shareLink")}
                       variant="outline"
                       leftIcon="share-outline"
                       fullWidth
@@ -244,7 +261,7 @@ export default function InviteFriends() {
                   </View>
                   <View className="flex-1">
                     <Button
-                      title="Copy code"
+                      title={t("copyCode")}
                       variant="outline"
                       leftIcon="copy-outline"
                       fullWidth
@@ -254,7 +271,7 @@ export default function InviteFriends() {
                 </View>
               </View>
               <AppText variant="caption" className="text-center">
-                Invites work for new accounts, in their first week.
+                {t("invitesWorkForNewAccountsIn")}
               </AppText>
             </Card>
           ) : null}
@@ -262,12 +279,15 @@ export default function InviteFriends() {
           <Card className="gap-3">
             <View className="flex-row flex-wrap gap-y-3">
               {[
-                ["Friends joined", String(data.stats.joined)],
-                ["Bought a ticket", String(data.stats.qualified)],
-                ["Earned", formatCredit(data.stats.earnedMinor, data.currency)],
+                [t("friendsJoined"), String(data.stats.joined)],
+                [t("boughtATicket"), String(data.stats.qualified)],
                 [
-                  "Pending",
-                  formatCredit(data.stats.pendingMinor, data.currency),
+                  t("earned"),
+                  formatCredit(data.stats.earnedMinor, data.currency, locale),
+                ],
+                [
+                  t("pending2"),
+                  formatCredit(data.stats.pendingMinor, data.currency, locale),
                 ],
               ].map(([label, value]) => (
                 <View key={label} className="w-1/2 gap-0.5">
@@ -287,22 +307,22 @@ export default function InviteFriends() {
                   >
                     <AppText variant="bodyStrong">{friend.name}</AppText>
                     <AppText variant="meta" className="flex-1 text-right">
-                      {STATUS_LABEL[friend.status]} ·{" "}
-                      {formatDateWithSuffix(friend.at)}
+                      {t(STATUS_LABEL[friend.status])} ·{" "}
+                      {formatDateWithSuffix(friend.at, undefined, locale)}
                     </AppText>
                   </View>
                 ))}
               </View>
             ) : (
               <AppText variant="muted">
-                Friends who join with your invite show up here.
+                {t("friendsWhoJoinWithYourInvite")}
               </AppText>
             )}
           </Card>
 
           {data.invitedBy ? (
             <AppText variant="muted" className="text-center">
-              You joined with {data.invitedBy.name}&apos;s invite.
+              {t("youJoinedWithSInvite", { name: data.invitedBy.name })}
             </AppText>
           ) : data.canBind ? (
             <EnterInviteCode />

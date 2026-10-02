@@ -1,78 +1,70 @@
 "use client";
 
-import { setUserLocale } from "@/actions/setUserLocale";
-import { languages } from "@/data/languages";
 import { useToast } from "@/hooks/useToast";
 import { useLocaleSwitcher } from "@/i18n/LocaleProvider";
-import type { Locale } from "@/i18n/config";
+import { type Locale, localeNames, locales } from "@/i18n/config";
+import { isPartialLocale } from "@abonten/i18n/locales";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
-type LanguageProps = {
-  currentLocale: Locale;
-};
-
-export default function Language({ currentLocale }: LanguageProps) {
+// The language picker. Each language is written in itself (a person who
+// cannot read the current language must still find their own), the choice
+// is saved in the preference cookie, and the page re-renders in the new
+// language straight away — every string, including this list's title.
+export default function Language() {
   const t = useTranslations("common");
-  const { setLocale } = useLocaleSwitcher();
-  const [isPending, startTransition] = useTransition();
-  // Selected instantly on click rather than waiting on the server round-trip,
-  // so the radio reflects the choice immediately; rolled back on failure.
-  const [selectedLocale, setSelectedLocale] = useState<Locale>(currentLocale);
+  const { locale, setLocale, isPending } = useLocaleSwitcher();
   const toast = useToast();
-  const router = useRouter();
+  // Selected the moment it is clicked, so the radio does not wait for the
+  // server round-trip; the provider's locale catches up when the page has
+  // re-rendered in the new language.
+  const [selectedLocale, setSelectedLocale] = useState<Locale>(locale);
 
-  const handleSelect = (code: Locale) => {
+  const handleSelect = async (code: Locale) => {
     if (code === selectedLocale || isPending) return;
-
-    const previousLocale = selectedLocale;
+    const previous = selectedLocale;
     setSelectedLocale(code);
-
-    startTransition(async () => {
-      const response = await setUserLocale(code);
-
-      if (response.status !== 200) {
-        setSelectedLocale(previousLocale);
-        toast.error(t("errors.generic"));
-        return;
-      }
-
-      // The root layout no longer re-reads the locale cookie per request
-      // (see layout.tsx), so it won't pick up the change on its own —
-      // apply it to the shared client provider directly. router.refresh()
-      // still re-runs this route's own server-rendered translations
-      // (e.g. this page's nav title, fetched via getTranslations()).
+    try {
       await setLocale(code);
-      router.refresh();
-    });
+    } catch {
+      setSelectedLocale(previous);
+      toast.error(t("errors.generic"));
+    }
   };
 
   return (
-    <>
-      <ul className="flex flex-col space-y-5 mb-5">
-        {languages.map(({ code, name }) => (
-          <li key={code}>
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() => handleSelect(code)}
-              className="flex items-center justify-between w-full md:text-lg disabled:opacity-50"
-            >
-              <span>{name}</span>
+    <ul className="flex flex-col space-y-5 mb-5" aria-busy={isPending}>
+      {locales.map((code) => (
+        <li key={code}>
+          <button
+            type="button"
+            lang={code}
+            disabled={isPending}
+            onClick={() => handleSelect(code)}
+            className="flex items-center justify-between w-full md:text-lg disabled:opacity-50"
+          >
+            <span className="flex flex-col items-start text-left">
+              <span>{localeNames[code]}</span>
+              {/* Said in the language being read now, so the person choosing
+                  can understand it before they switch. */}
+              {isPartialLocale(code) ? (
+                <span lang={locale} className="text-sm text-muted-foreground">
+                  {t("languagePartial")}
+                </span>
+              ) : null}
+            </span>
 
-              <input
-                type="radio"
-                name="language"
-                value={code}
-                checked={selectedLocale === code}
-                readOnly
-                className="accent-primary w-5 h-5"
-              />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </>
+            <input
+              type="radio"
+              name="language"
+              value={code}
+              checked={selectedLocale === code}
+              readOnly
+              className="accent-primary w-5 h-5"
+            />
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }

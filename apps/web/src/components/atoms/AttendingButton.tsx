@@ -14,6 +14,7 @@ import {
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { FiCheck } from "react-icons/fi";
 
@@ -42,6 +43,8 @@ export default function AttendingButton({
   eventDates,
   soldOut,
 }: AttendingButtonProps) {
+  const t = useTranslations("common");
+
   const toast = useToast();
 
   const requireAuth = useRequireAuth();
@@ -81,7 +84,7 @@ export default function AttendingButton({
     // look like a cancellation.
     mutationFn: async (action: "register" | "cancel") => {
       if (action === "cancel") {
-        if (!ticketId) return { status: 500, message: "Something went wrong" };
+        if (!ticketId) return { status: 500, message: t("somethingWentWrong") };
         return await cancelUserTicket(ticketId, null);
       }
 
@@ -128,15 +131,13 @@ export default function AttendingButton({
         ["attendance-count", eventId],
         context?.previousCount,
       );
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain2"));
     },
 
     onSuccess: (response, action) => {
       if (response.status === 200) setJustRegistered(action === "register");
       if (response.status !== 200) {
-        toast.error(
-          response.message ?? "Something went wrong. Please try again.",
-        );
+        toast.error(response.message ?? t("somethingWentWrongPleaseTryAgain2"));
       }
     },
 
@@ -168,13 +169,13 @@ export default function AttendingButton({
 
   const ineligibleLabel =
     eventStatusRaw === "canceled"
-      ? "Event cancelled"
+      ? t("eventCancelled")
       : rsvpState.blockReason === "ended"
-        ? "Event ended"
+        ? t("eventEnded")
         : rsvpState.blockReason === "ongoing_no_future"
-          ? "Event in progress"
+          ? t("eventInProgress")
           : soldOut && !isAttending
-            ? "Sold out"
+            ? t("soldOut")
             : null;
 
   if (ineligibleLabel) {
@@ -194,7 +195,7 @@ export default function AttendingButton({
       {isAttending ? (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-success/20 bg-success/10 p-4">
           <span className="flex items-center gap-2 font-bold text-success">
-            <FiCheck className="text-xl" /> You&apos;re going
+            <FiCheck className="text-xl" /> {t("youReGoing")}
           </span>
           <button
             type="button"
@@ -202,7 +203,7 @@ export default function AttendingButton({
             disabled={isPending}
             className="text-sm font-semibold text-destructive hover:underline disabled:opacity-50 disabled:no-underline shrink-0"
           >
-            {isPending ? "Cancelling…" : "Can't make it"}
+            {isPending ? t("cancelling") : t("canTMakeIt")}
           </button>
         </div>
       ) : (
@@ -212,7 +213,7 @@ export default function AttendingButton({
           disabled={isPending}
           className="h-12 w-full rounded-lg text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-70"
         >
-          {isPending ? "Registering…" : "Register for free"}
+          {isPending ? t("registering") : t("registerForFree")}
         </button>
       )}
 
@@ -222,8 +223,7 @@ export default function AttendingButton({
 
       {attendanceCount !== null && attendanceCount > 0 && (
         <p className="text-sm text-muted-foreground text-center">
-          {attendanceCount} {attendanceCount === 1 ? "person is" : "people are"}{" "}
-          going
+          {t("peopleGoing", { count: attendanceCount })}
         </p>
       )}
     </div>

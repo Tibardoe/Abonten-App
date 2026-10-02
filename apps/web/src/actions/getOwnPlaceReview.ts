@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 
 export type OwnPlaceReview = {
   id: string;
@@ -21,25 +22,27 @@ export type OwnPlaceReview = {
 // on submit (postPlaceReview.ts's 409). Places have no attendance/timing
 // gate the way events do, so this is a plain existence check, not a full
 // eligibility computation like getEventReviewEligibility.ts.
-export async function getOwnPlaceReview(
-  placeId: string,
-): Promise<OwnPlaceReview | null> {
-  const supabase = await createClient();
+export const getOwnPlaceReview = withActionLocale(
+  async function getOwnPlaceReview(
+    placeId: string,
+  ): Promise<OwnPlaceReview | null> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (!user) return null;
+    if (!user) return null;
 
-  const { data } = await supabase
-    .from("place_review")
-    .select(
-      "id, rating, title, comment, place_review_photo(id, public_id, version, position)",
-    )
-    .eq("place_id", placeId)
-    .eq("reviewer_id", user.id)
-    .maybeSingle();
+    const { data } = await supabase
+      .from("place_review")
+      .select(
+        "id, rating, title, comment, place_review_photo(id, public_id, version, position)",
+      )
+      .eq("place_id", placeId)
+      .eq("reviewer_id", user.id)
+      .maybeSingle();
 
-  return data as unknown as OwnPlaceReview | null;
-}
+    return data as unknown as OwnPlaceReview | null;
+  },
+);

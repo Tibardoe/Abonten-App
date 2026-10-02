@@ -9,6 +9,7 @@
 // pages already show as an unresolved location rather than an error.
 
 import { logger } from "@abonten/core/logger";
+import { tr } from "../i18n/requestLocale";
 import { listOpenMarkets } from "../markets/marketConfig";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -61,7 +62,7 @@ export async function geocodePlaceName(input: {
   lookup: GeocodeLookup;
 }): Promise<PlaceNameGeocode> {
   const key = normalizePlaceQuery(input.query);
-  if (!key) return { lat: null, lng: null, error: "No address" };
+  if (!key) return { lat: null, lng: null, error: tr("noAddress") };
 
   // 1. A market city or region.
   try {
@@ -92,7 +93,7 @@ export async function geocodePlaceName(input: {
   if (cached) {
     return cached.found && cached.lat !== null && cached.lng !== null
       ? { lat: cached.lat, lng: cached.lng }
-      : { lat: null, lng: null, error: "Location not found" };
+      : { lat: null, lng: null, error: tr("locationNotFound") };
   }
 
   // 3. Google, within budget.
@@ -104,7 +105,7 @@ export async function geocodePlaceName(input: {
       GEOCODE_PER_ADDRESS_WINDOW_SECONDS,
     ))
   ) {
-    return { lat: null, lng: null, error: "Location lookup unavailable" };
+    return { lat: null, lng: null, error: tr("locationLookupUnavailable") };
   }
   if (
     !(await checkRateLimit(
@@ -116,12 +117,12 @@ export async function geocodePlaceName(input: {
     logger.warn("geocodePlaceName: global hourly budget spent", {
       security: { event: "geocode_budget_spent" },
     });
-    return { lat: null, lng: null, error: "Location lookup unavailable" };
+    return { lat: null, lng: null, error: tr("locationLookupUnavailable") };
   }
 
   const answer = await input.lookup(key);
   if (answer === "unavailable") {
-    return { lat: null, lng: null, error: "Location lookup unavailable" };
+    return { lat: null, lng: null, error: tr("locationLookupUnavailable") };
   }
   const found = answer !== "not_found";
   const { error } = await service.from("geocode_cache").upsert(
@@ -138,5 +139,5 @@ export async function geocodePlaceName(input: {
     logger.warn(`geocodePlaceName: cache write failed: ${error.message}`);
   return found
     ? { lat: answer.lat, lng: answer.lng }
-    : { lat: null, lng: null, error: "Location not found" };
+    : { lat: null, lng: null, error: tr("locationNotFound") };
 }

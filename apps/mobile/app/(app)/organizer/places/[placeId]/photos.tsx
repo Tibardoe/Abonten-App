@@ -4,10 +4,13 @@ import { usePlaceManageContext } from "@/features/organizer/useManagePlace";
 import { useQueryView } from "@/lib/useQueryView";
 import type { PlacePhotoRow } from "@abonten/api-client";
 import { AppText } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 export default function PlacePhotosScreen() {
+  const t = useTranslations("manage");
+
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const id = placeId ?? "";
   const q = usePlaceManageContext(id);
@@ -24,7 +27,7 @@ export default function PlacePhotosScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={view}
-          subject="this place's photos"
+          subject={t("thisPlaceSPhotos")}
           onRetry={() => q.refetch()}
           loading={
             <View className="flex-1 items-center justify-center">
@@ -41,7 +44,7 @@ export default function PlacePhotosScreen() {
       <View className="flex-1 items-center justify-center gap-3 bg-background p-6">
         <AppText className="text-center text-muted-foreground">
           {(q.data && q.data.status === 403 && q.data.message) ||
-            "Couldn't load this place's photos."}
+            t("couldnTLoadThisPlaceS2")}
         </AppText>
         <Pressable
           accessibilityRole="button"
@@ -49,7 +52,7 @@ export default function PlacePhotosScreen() {
           onPress={() => q.refetch()}
         >
           <AppText className="font-semibold text-primary-foreground">
-            Retry
+            {t("retry")}
           </AppText>
         </Pressable>
       </View>

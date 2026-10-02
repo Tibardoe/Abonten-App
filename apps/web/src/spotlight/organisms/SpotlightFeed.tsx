@@ -4,8 +4,8 @@ import { cn } from "@/components/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   FEED_SURFACES,
-  FEED_SURFACE_LABEL,
-  SPOTLIGHT_TAGLINE,
+  SPOTLIGHT_TAGLINE_KEY,
+  feedSurfaceLabel,
 } from "@abonten/core/content/copy";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import type {
@@ -13,6 +13,7 @@ import type {
   ContentProgram,
 } from "@abonten/types/contentType";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -126,6 +127,9 @@ function useSilentCoords(wanted: boolean) {
 }
 
 export default function SpotlightFeed() {
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+
   const { program, ready } = useContentProgram();
   const { data: user } = useCurrentUser();
   const router = useRouter();
@@ -268,9 +272,9 @@ export default function SpotlightFeed() {
   if (!program.spotlight) {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
-        <h1 className="text-xl font-bold">Spotlight isn't available yet</h1>
+        <h1 className="text-xl font-bold">{t("spotlightIsnTAvailableYet")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          We're rolling it out gradually. Check back soon.
+          {t("weReRollingItOutGradually")}
         </p>
       </div>
     );
@@ -280,37 +284,37 @@ export default function SpotlightFeed() {
   if (needsSignIn) {
     emptyState = (
       <EmptyPanel
-        title="Follow organizers and places"
-        body="Sign in to see Spotlights from the people you follow."
+        title={t("followOrganizersAndPlaces")}
+        body={t("signInToSeeSpotlightsFrom")}
         action={{
           href: getSignInUrl("/spotlight?tab=following"),
-          label: "Sign in",
+          label: t("signIn"),
         }}
       />
     );
   } else if (surface === "nearby" && geoState === "denied") {
     emptyState = (
       <EmptyPanel
-        title="Location is off"
-        body="Allow location in your browser to see Spotlights near you."
+        title={t("locationIsOff")}
+        body={t("allowLocationInYourBrowserTo")}
       />
     );
   } else if (feed.isError) {
     emptyState = (
       <EmptyPanel
-        title="Couldn't load Spotlight"
-        body="Check your connection and try again."
+        title={t("couldnTLoadSpotlight")}
+        body={t("checkYourConnectionAndTryAgain")}
         onRetry={() => feed.refetch()}
       />
     );
   } else if (!feed.isLoading && !waitingForCoords && items.length === 0) {
     emptyState = (
       <EmptyPanel
-        title="Nothing here yet"
+        title={t("nothingHereYet")}
         body={
           surface === "following"
-            ? "Follow organizers and places to fill this tab."
-            : "New Spotlights will show up here."
+            ? t("followOrganizersAndPlacesToFill")
+            : t("newSpotlightsWillShowUpHere")
         }
       />
     );
@@ -320,9 +324,9 @@ export default function SpotlightFeed() {
     <div className="mx-auto flex w-full max-w-[480px] flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold">Spotlight</h1>
+          <h1 className="text-xl font-bold">{t("spotlight")}</h1>
           <p className="hidden text-xs text-muted-foreground sm:block">
-            {SPOTLIGHT_TAGLINE}
+            {tc(SPOTLIGHT_TAGLINE_KEY)}
           </p>
         </div>
         {program.canPublish && program.spotlightPosting ? (
@@ -331,14 +335,14 @@ export default function SpotlightFeed() {
             className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
             <IoAddCircleOutline aria-hidden className="text-lg" />
-            Create
+            {t("create")}
           </Link>
         ) : null}
       </div>
 
       <div
         role="tablist"
-        aria-label="Spotlight feeds"
+        aria-label={t("spotlightFeeds")}
         className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {surfaces.map((s) => (
@@ -355,7 +359,7 @@ export default function SpotlightFeed() {
                 : "border-border bg-muted text-muted-foreground hover:bg-accent",
             )}
           >
-            {FEED_SURFACE_LABEL[s]}
+            {feedSurfaceLabel(tc, s)}
           </button>
         ))}
       </div>
@@ -399,7 +403,7 @@ export default function SpotlightFeed() {
       </div>
 
       <p className="hidden text-center text-xs text-muted-foreground md:block">
-        Use ↑ ↓ to move, Space to pause, M for sound, L to like.
+        {t("useToMoveSpaceToPause")}
       </p>
     </div>
   );
@@ -416,6 +420,8 @@ function EmptyPanel({
   action?: { href: string; label: string };
   onRetry?: () => void;
 }) {
+  const t = useTranslations("spotlight");
+
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 px-8 text-center text-white">
       <p className="text-lg font-semibold">{title}</p>
@@ -434,7 +440,7 @@ function EmptyPanel({
           onClick={onRetry}
           className="mt-2 rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-black"
         >
-          Retry
+          {t("retry")}
         </button>
       ) : null}
     </div>

@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { prepareHighlightVideoDelivery } from "@abonten/services/uploads/highlightVideoDelivery";
 
 // POST /api/mobile/highlights/playback
@@ -18,6 +22,7 @@ import { prepareHighlightVideoDelivery } from "@abonten/services/uploads/highlig
 // A null playbackUrl is a normal, successful outcome: it means the source was
 // already within the playback profile and the original should be served as-is.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -33,14 +38,20 @@ export async function POST(req: Request) {
     } | null;
 
     if (typeof body?.publicId !== "string" || body.publicId.length === 0) {
-      return apiJson({ status: 400, message: "publicId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("publicidIsRequired"),
+      });
     }
 
     // Same ownership rule the web uploadHighlight action enforces: the signed
     // upload bound the folder to the caller's own user id, so a publicId
     // outside that folder could not have come from a legitimate upload.
     if (!body.publicId.startsWith(`highlight_media/${auth.user.id}/`)) {
-      return apiJson({ status: 403, message: "Not authorized for this media" });
+      return apiJson({
+        status: 403,
+        message: tr("notAuthorizedForThisMedia"),
+      });
     }
 
     const num = (v: unknown): number | null =>
@@ -66,6 +77,9 @@ export async function POST(req: Request) {
     return apiJson({ status: 200, data: delivery });
   } catch (error) {
     logger.error("mobile POST /highlights/playback failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

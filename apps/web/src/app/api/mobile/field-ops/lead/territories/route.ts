@@ -3,6 +3,7 @@ import {
   listLeadTerritoriesCore,
   upsertLeadTerritoryCore,
 } from "@abonten/services/fieldOps/lead/leadTerritoriesCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   fieldOpsCampaignIdSchema,
   fieldOpsLeadTerritorySchema,
@@ -11,6 +12,7 @@ import {
 // GET /api/mobile/field-ops/lead/territories?campaignId= -- every territory in
 // the campaign's region. Same service as listFieldOpsLeadTerritories.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {
@@ -25,6 +27,7 @@ export async function GET(req: Request) {
 // POST /api/mobile/field-ops/lead/territories -- add (no id) or edit (id) a
 // town/area. Same service as upsertFieldOpsLeadTerritory.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return fieldOpsRoute(
     req,
     {

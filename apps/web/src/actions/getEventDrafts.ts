@@ -1,14 +1,16 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { fetchEventDraftsList } from "@abonten/services/events/eventDraftCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 export type { EventDraftListItem } from "@abonten/services/events/eventDraftCore";
 
 // List-page query: only list-display columns, never the full jsonb payload,
 // bounded to this user's own non-expired event drafts. Body shared with the
 // mobile GET /api/mobile/organizer/event-drafts route.
-export async function getEventDrafts() {
+export const getEventDrafts = withActionLocale(async function getEventDrafts() {
   const supabase = await createClient();
 
   const {
@@ -22,7 +24,7 @@ export async function getEventDrafts() {
   if (!user) {
     return {
       status: 401 as const,
-      message: "User not authenticated",
+      message: tr("userNotAuthenticated"),
       data: [],
     };
   }
@@ -34,4 +36,4 @@ export async function getEventDrafts() {
   }
 
   return { status: 200 as const, message: "OK", data: result.data };
-}
+});

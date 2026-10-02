@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseDiscoveryInput,
   requestIp,
@@ -8,6 +9,7 @@ import {
 } from "@/utils/discoveryAction";
 import { logger } from "@abonten/core/logger";
 import { parseSearchQuery } from "@abonten/core/search/parseSearchQuery";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { resolveDiscoveryAccess } from "@abonten/services/search/discoveryProgram";
 import { searchCore } from "@abonten/services/search/searchCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
@@ -26,7 +28,9 @@ const emptyResults = (status: number, message: string): SearchResults => ({
 });
 
 /** Unified search results for /search (events, places, organizers). */
-export async function searchDiscovery(input: unknown): Promise<SearchResults> {
+export const searchDiscovery = withActionLocale(async function searchDiscovery(
+  input: unknown,
+): Promise<SearchResults> {
   const parsed = parseDiscoveryInput(searchRequestSchema, input);
   if (parsed.error) return emptyResults(400, parsed.error.message);
 
@@ -36,10 +40,7 @@ export async function searchDiscovery(input: unknown): Promise<SearchResults> {
       ? `search:user:${caller.userId}`
       : `search:ip:${await requestIp()}`;
     if (!(await checkRateLimit(key, 60, 60))) {
-      return emptyResults(
-        429,
-        "You are searching very quickly. Try again in a moment.",
-      );
+      return emptyResults(429, tr("youAreSearchingVeryQuicklyTry"));
     }
     const { program, settings } = await resolveDiscoveryAccess(
       caller.svc,
@@ -53,6 +54,6 @@ export async function searchDiscovery(input: unknown): Promise<SearchResults> {
     });
   } catch (error) {
     logger.error("searchDiscovery failed", error);
-    return emptyResults(500, "Search is unavailable right now.");
+    return emptyResults(500, tr("searchIsUnavailableRightNow"));
   }
-}
+});

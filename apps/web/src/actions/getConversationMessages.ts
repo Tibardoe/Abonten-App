@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchMessagesPage } from "@abonten/services/messaging/messagesQuery";
 
 /**
@@ -12,28 +14,30 @@ import { fetchMessagesPage } from "@abonten/services/messaging/messagesQuery";
  * back with content/attachments stripped. Shares its body with
  * GET /api/mobile/messages/:id/messages.
  */
-export async function getConversationMessages(
-  conversationId: string,
-  options?: { cursor?: string | null; pageSize?: number },
-) {
-  const supabase = await createClient();
+export const getConversationMessages = withActionLocale(
+  async function getConversationMessages(
+    conversationId: string,
+    options?: { cursor?: string | null; pageSize?: number },
+  ) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    return {
-      status: 401,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: "User not logged in",
-    };
-  }
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return {
+        status: 401,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: tr("userNotLoggedIn"),
+      };
+    }
 
-  return fetchMessagesPage(supabase, conversationId, {
-    ...options,
-    callerId: user.id,
-  });
-}
+    return fetchMessagesPage(supabase, conversationId, {
+      ...options,
+      callerId: user.id,
+    });
+  },
+);

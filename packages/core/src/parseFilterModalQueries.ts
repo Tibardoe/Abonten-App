@@ -1,4 +1,5 @@
 import { formatMoney } from "./formatMoney";
+import type { CoreTranslator } from "./i18n/translator";
 
 type FilterParams = {
   price?: string;
@@ -97,12 +98,15 @@ export function isAnyPriceParam(raw: string | null | undefined): boolean {
 
 /** "GH₵20 – GH₵250" / "From GH₵20" for a chip, in the market's currency. */
 export function describePriceParam(
+  t: CoreTranslator,
   raw: string | null | undefined,
   currency: string | null | undefined,
 ): string | null {
   if (isAnyPriceParam(raw)) return null;
   const { minPrice, maxPrice } = parseFilters({ price: raw ?? "" });
   const f = (n: number) => formatMoney(currency, n, { trimZeroFraction: true });
-  if (maxPrice == null) return `From ${f(minPrice ?? 0)}`;
+  if (maxPrice == null) {
+    return t("filters.priceFrom", { amount: f(minPrice ?? 0) });
+  }
   return `${f(minPrice ?? 0)} – ${f(maxPrice)}`;
 }

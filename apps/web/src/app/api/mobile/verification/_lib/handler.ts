@@ -1,6 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { ZodSchema } from "zod";
@@ -44,7 +45,7 @@ export async function verificationRoute<T>(
     if (!parsed.success) {
       return apiJson({
         status: 400,
-        message: parsed.error.issues[0]?.message ?? "Invalid input",
+        message: parsed.error.issues[0]?.message ?? tr("invalidInput"),
       });
     }
     const result = await run(
@@ -56,7 +57,10 @@ export async function verificationRoute<T>(
   } catch (error) {
     // Case ids only — never file names, notes or document contents.
     logger.error(`mobile ${opts.label} failed`, error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 

@@ -10,6 +10,7 @@
 // "25 000,00"); the sign comes from our currency table (see currencies.ts
 // for why). Symbols are never guessed from the code.
 
+import { intlLocale } from "../i18n/coreStrings";
 import {
   type CurrencyCode,
   currencyMinorUnits,
@@ -19,8 +20,12 @@ import {
 import type { Money } from "./money";
 
 export type FormatMoneyOptions = {
-  /** BCP 47 locale for digit grouping and the decimal separator. */
-  locale?: string;
+  /**
+   * The reader's language, for digit grouping and the decimal separator
+   * ("1 500,00" in French). Every screen passes the app's language; left
+   * out, the amount is written the British English way.
+   */
+  locale?: string | null;
   /** "symbol" (default): "GH₵50.00". "code": "GHS 50.00". */
   display?: "symbol" | "code";
   /** Drop ".00" when the amount is whole: "GH₵50". Cards and chips. */
@@ -84,7 +89,9 @@ export function formatMinorDigits(
   currency: CurrencyCode,
   options: Pick<FormatMoneyOptions, "locale" | "trimZeroFraction"> = {},
 ): string {
-  const locale = options.locale ?? DEFAULT_LOCALE;
+  // The app's language ("fr", "ak") or a full tag: Akan and English follow
+  // the product's British conventions.
+  const locale = options.locale ? intlLocale(options.locale) : DEFAULT_LOCALE;
   const exponent = currencyMinorUnits(currency);
   const factor = 10 ** exponent;
   const abs = Math.abs(Math.round(amountMinor));

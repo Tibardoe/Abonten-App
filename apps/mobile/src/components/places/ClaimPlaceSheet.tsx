@@ -1,8 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
-import {
-  QUEUED_WRITE_LABEL,
-  QueuedWriteNotice,
-} from "@/components/QueuedWriteNotice";
+import { QueuedWriteNotice } from "@/components/QueuedWriteNotice";
 import {
   CLAIM_DOC_MAX_FILES,
   type StagedClaimDoc,
@@ -12,6 +9,7 @@ import {
   validateClaimDoc,
 } from "@/features/places/usePlaceClaim";
 import { uuidv4 } from "@/lib/uuid";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import {
   AppText,
   Button,
@@ -22,6 +20,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import * as DocumentPicker from "expo-document-picker";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -39,9 +38,7 @@ type Phase = "form" | "uploading" | "done";
 
 function humanSize(bytes: number | null): string {
   if (bytes == null) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return formatFileSize(bytes, getCurrentLocale());
 }
 
 function DocRow({
@@ -53,6 +50,8 @@ function DocRow({
   onRemove: () => void;
   onRetry: () => void;
 }) {
+  const t = useTranslations("places");
+
   return (
     <View className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-2.5">
       {doc.isImage ? (
@@ -72,11 +71,11 @@ function DocRow({
         </AppText>
         <AppText variant="caption">
           {doc.status === "uploading"
-            ? "Uploading…"
+            ? t("uploading")
             : doc.status === "done"
-              ? "Uploaded"
+              ? t("uploaded")
               : doc.status === "error"
-                ? (doc.error ?? "Upload failed")
+                ? (doc.error ?? t("uploadFailed"))
                 : humanSize(doc.sizeBytes)}
         </AppText>
       </View>
@@ -87,7 +86,7 @@ function DocRow({
       ) : doc.status === "error" ? (
         <Pressable onPress={onRetry} hitSlop={8} accessibilityRole="button">
           <AppText variant="small" tone="brand" className="font-semibold">
-            Retry
+            {t("retry")}
           </AppText>
         </Pressable>
       ) : (
@@ -95,7 +94,7 @@ function DocRow({
           onPress={onRemove}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`Remove ${doc.name}`}
+          accessibilityLabel={t("remove", { name: doc.name })}
         >
           <Icon name="close" size={18} tone="muted" />
         </Pressable>
@@ -115,6 +114,8 @@ export function ClaimPlaceSheet({
   placeId: string;
   placeName: string;
 }) {
+  const t = useTranslations("places");
+
   const toast = useToast();
   const { session } = useSession();
   const userId = session?.user.id;
@@ -141,7 +142,11 @@ export function ClaimPlaceSheet({
   function stage(candidate: Omit<StagedClaimDoc, "key" | "status">) {
     setError(null);
     if (docs.length >= CLAIM_DOC_MAX_FILES) {
-      setError(`You can attach up to ${CLAIM_DOC_MAX_FILES} documents.`);
+      setError(
+        t("youCanAttachUpToDocuments", {
+          CLAIM_DOC_MAX_FILES: CLAIM_DOC_MAX_FILES,
+        }),
+      );
       return;
     }
     const problem = validateClaimDoc(candidate);
@@ -158,8 +163,8 @@ export function ClaimPlaceSheet({
   async function addPhoto() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Photo access needed", {
-        description: "Allow photo access to attach a document photo.",
+      toast.error(t("photoAccessNeeded"), {
+        description: t("allowPhotoAccessToAttachA"),
       });
       return;
     }
@@ -232,7 +237,7 @@ export function ClaimPlaceSheet({
                   ...d,
                   status: "error",
                   error:
-                    e instanceof Error ? e.message : "Upload failed — retry.",
+                    e instanceof Error ? e.message : t("uploadFailedRetry"),
                 }
               : d,
           ),
@@ -262,7 +267,7 @@ export function ClaimPlaceSheet({
           }
         },
         onError: (e) =>
-          setError(e instanceof Error ? e.message : "Something went wrong."),
+          setError(e instanceof Error ? e.message : t("somethingWentWrong2")),
       },
     );
   }
@@ -274,23 +279,23 @@ export function ClaimPlaceSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={`Claim ${placeName}`}
+      title={t("claim", { placeName: placeName })}
       minHeightRatio={0.6}
       footer={
         phase === "done" ? (
-          <Button title="Done" onPress={onClose} />
+          <Button title={t("done")} onPress={onClose} />
         ) : (
           <View className="gap-2">
             {submit.isPaused ? <QueuedWriteNotice /> : null}
             <Button
               title={
                 submit.isPaused
-                  ? QUEUED_WRITE_LABEL
+                  ? t("waitingForConnection")
                   : submit.isPending
-                    ? "Submitting…"
+                    ? t("submitting2")
                     : uploadingBusy
-                      ? "Uploading documents…"
-                      : "Submit claim"
+                      ? t("uploadingDocuments")
+                      : t("submitClaim2")
               }
               onPress={onSubmit}
               disabled={submit.isPending || uploadingBusy}
@@ -303,18 +308,17 @@ export function ClaimPlaceSheet({
         <View className="items-center gap-3 py-4">
           <Icon name="checkmark-circle" size={44} tone="success" />
           <AppText variant="bodyStrong" className="text-center">
-            Claim request submitted
+            {t("claimRequestSubmitted")}
           </AppText>
           <AppText variant="muted" className="text-center">
-            An admin will review your request
-            {docs.length > 0 ? " and your documents" : ""}. You'll be notified
-            once it's been looked at — ownership only changes after an approval.
+            {t("claimReviewNote", {
+              documents: docs.length > 0 ? "yes" : "no",
+            })}
           </AppText>
           {failedCount > 0 ? (
             <View className="w-full gap-2 pt-2">
               <AppText variant="small" tone="error" className="text-center">
-                {failedCount} document
-                {failedCount === 1 ? "" : "s"} didn't upload.
+                {t("document", { failedCount })}
               </AppText>
               {docs
                 .filter((d) => d.status === "error")
@@ -334,16 +338,15 @@ export function ClaimPlaceSheet({
           <View className="flex-row gap-2 rounded-xl border border-border bg-card p-3">
             <Icon name="shield-checkmark-outline" size={18} tone="muted" />
             <AppText variant="small" tone="muted" className="flex-1">
-              Claiming lets you manage this place if you're its rightful owner.
-              An admin reviews every request before anything changes.
+              {t("claimingLetsYouManageThisPlace")}
             </AppText>
           </View>
 
-          <Field label="Why are you the owner? (optional)">
+          <Field label={t("whyAreYouTheOwnerOptional")}>
             <Input
               value={note}
               onChangeText={setNote}
-              placeholder="Tell us how you're connected to this place"
+              placeholder={t("tellUsHowYouReConnected")}
               multiline
               numberOfLines={4}
               maxLength={1000}
@@ -354,13 +357,12 @@ export function ClaimPlaceSheet({
           {/* §12 — supporting documents */}
           <View className="gap-2">
             <AppText variant="label">
-              Proof of ownership / authorization (optional)
+              {t("proofOfOwnershipAuthorizationOptional")}
             </AppText>
             <AppText variant="caption">
-              A business registration, a utility bill in the business name, or a
-              signed authorization letter. JPG, PNG or PDF, up to 10 MB each,{" "}
-              {CLAIM_DOC_MAX_FILES} max. Only you and the reviewer can see these
-              — they're stored privately and removed after review.
+              {t("aBusinessRegistrationAUtilityBill", {
+                CLAIM_DOC_MAX_FILES: CLAIM_DOC_MAX_FILES,
+              })}
             </AppText>
 
             {docs.map((d) => (
@@ -376,7 +378,7 @@ export function ClaimPlaceSheet({
               <View className="flex-row gap-2">
                 <View className="flex-1">
                   <Button
-                    title="Add photo"
+                    title={t("addPhoto")}
                     variant="outline"
                     size="sm"
                     onPress={addPhoto}
@@ -384,7 +386,7 @@ export function ClaimPlaceSheet({
                 </View>
                 <View className="flex-1">
                   <Button
-                    title="Add file"
+                    title={t("addFile")}
                     variant="outline"
                     size="sm"
                     onPress={addFile}
@@ -394,16 +396,16 @@ export function ClaimPlaceSheet({
             ) : null}
           </View>
 
-          <Field label="Contact phone (optional)">
+          <Field label={t("contactPhoneOptional")}>
             <Input
               value={phone}
               onChangeText={setPhone}
-              placeholder="e.g. 024 000 0000"
+              placeholder={t("eG0240000000")}
               keyboardType="phone-pad"
             />
           </Field>
 
-          <Field label="Contact email (optional)">
+          <Field label={t("contactEmailOptional")}>
             <Input
               value={email}
               onChangeText={setEmail}

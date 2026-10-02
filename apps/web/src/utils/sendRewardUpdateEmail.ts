@@ -1,4 +1,5 @@
 import RewardUpdateEmailTemplate from "@/components/organisms/RewardUpdateEmailTemplate";
+import { emailWordsFor } from "@/lib/email/emailWords";
 import { emailIsConfigured, sendEmail } from "@/lib/email/sendEmail";
 import { logger } from "@abonten/core/logger";
 import type {
@@ -22,10 +23,11 @@ export async function sendRewardUpdateEmail(
     return { ok: false, error: "email_not_configured", outcome: "skip" };
   }
 
+  const words = await emailWordsFor(email.userId, email.name);
   const subject =
     email.items.length === 1
       ? email.items[0].title
-      : `Abonten Rewards: ${email.items.length} updates`;
+      : words.t("rewards.subjectMany", { count: email.items.length });
 
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://abontenhub.com";
 
@@ -42,7 +44,7 @@ export async function sendRewardUpdateEmail(
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
       react: RewardUpdateEmailTemplate({
-        name: email.name,
+        words,
         items: email.items,
         rewardsUrl: `${base}/rewards`,
         unsubscribeUrl: unsubscribe.page,

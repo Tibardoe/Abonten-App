@@ -12,6 +12,7 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
@@ -21,6 +22,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -48,6 +50,10 @@ type NotificationBellProps = {
 export default function NotificationBell({
   align = "right",
 }: NotificationBellProps = {}) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   const [open, setOpen] = useState(false);
   const toast = useToast();
   // Guards against a double-click/double-tap firing markNotificationRead
@@ -132,7 +138,7 @@ export default function NotificationBell({
           context.previousCount,
         );
       }
-      toast.error("Couldn't mark that notification as read. Please try again.");
+      toast.error(t("couldnTMarkThatNotificationAs"));
     },
 
     onSettled: (_data, _error, notificationId) => {
@@ -205,7 +211,7 @@ export default function NotificationBell({
           context.previousCount,
         );
       }
-      toast.error("Couldn't mark all notifications as read. Please try again.");
+      toast.error(t("couldnTMarkAllNotificationsAs"));
     },
 
     onSettled: () => {
@@ -242,7 +248,7 @@ export default function NotificationBell({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Notifications"
+          aria-label={t("notifications")}
           className="relative flex items-center hover:text-primary transition-colors"
         >
           <IoNotificationsOutline className="text-2xl" />
@@ -262,7 +268,7 @@ export default function NotificationBell({
         className="w-80 max-w-[calc(100vw-2rem)] p-0"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-popover">
-          <span className="font-medium text-sm">Notifications</span>
+          <span className="font-medium text-sm">{t("notifications")}</span>
           <button
             type="button"
             onClick={handleMarkAllRead}
@@ -270,8 +276,8 @@ export default function NotificationBell({
             className="text-xs font-medium text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none"
           >
             {markAllReadMutation.isPending
-              ? "Marking as read..."
-              : "Mark all as read"}
+              ? t("markingAsRead")
+              : t("markAllAsRead")}
           </button>
         </div>
 
@@ -289,7 +295,7 @@ export default function NotificationBell({
           }
           emptyState={
             <p className="text-muted-foreground text-sm py-6 text-center">
-              No notifications yet.
+              {t("noNotificationsYet")}
             </p>
           }
           renderItem={(notification) => {
@@ -348,7 +354,11 @@ export default function NotificationBell({
                     )}
 
                     <span className="block text-muted-foreground text-[11px] mt-1">
-                      {getRelativeTime(notification.created_at)}
+                      {getRelativeTime(
+                        notification.created_at,
+                        undefined,
+                        locale,
+                      )}
                     </span>
                   </span>
                 </button>

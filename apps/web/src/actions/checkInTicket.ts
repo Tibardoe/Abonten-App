@@ -1,16 +1,18 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type CheckInTicketCoreResult,
   checkInTicketCore,
 } from "@abonten/services/tickets/checkInTicketCore";
-import { revalidatePath } from "next/cache";
 
 // Thin wrapper: auth, delegate to the shared body (also used by the mobile
 // POST /api/mobile/organizer/tickets/:id/check-in route), then revalidate
 // the management page on success.
-export default async function checkInTicket(
+export default withActionLocale(async function checkInTicket(
   ticketId: string,
   checkedIn: boolean,
   expectedEventId?: string | null,
@@ -23,7 +25,7 @@ export default async function checkInTicket(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await checkInTicketCore(
@@ -35,8 +37,8 @@ export default async function checkInTicket(
   );
 
   if (result.status === 200 && result.eventId) {
-    revalidatePath(`/manage/events/${result.eventId}`);
+    revalidateAppPath(`/manage/events/${result.eventId}`);
   }
 
   return result;
-}
+});

@@ -1,10 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { TICKET_MODE } from "@/events/ticketMode";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   type UpdateEventTicketTypesCoreResult,
   updateEventTicketTypesCore,
 } from "@abonten/services/events/updateEventTicketTypesCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { Ticket } from "@abonten/types/ticketType";
 
 export type UpdateEventTicketTypesInput = {
@@ -25,7 +28,7 @@ export type UpdateEventTicketTypesInput = {
  * @/utils/updateEventTicketTypesCore; this wrapper only adds auth and maps
  * ManageEventDetailsSection's string-mode form shape onto the core input.
  */
-export default async function updateEventTicketTypes(
+export default withActionLocale(async function updateEventTicketTypes(
   input: UpdateEventTicketTypesInput,
 ): Promise<
   UpdateEventTicketTypesCoreResult | { status: 401; message: string }
@@ -38,13 +41,13 @@ export default async function updateEventTicketTypes(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   return updateEventTicketTypesCore(supabase, user.id, {
     eventId: input.eventId,
     currency: input.currency,
-    freeEvent: input.freeEvents === "Free",
+    freeEvent: input.freeEvents === TICKET_MODE.free,
     singleTicket:
       input.singleTicket != null
         ? { price: input.singleTicket, quantity: input.singleTicketQuantity }
@@ -57,4 +60,4 @@ export default async function updateEventTicketTypes(
       availableUntil: ticket.availableUntil ?? ticket.available_until ?? null,
     })),
   });
-}
+});

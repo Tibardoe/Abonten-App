@@ -2,6 +2,10 @@
 
 import UserAvatar from "@/components/atoms/UserAvatar";
 import ManageMenu from "@/components/molecules/ManageMenu";
+import {
+  EventUploadModal,
+  PlaceUploadModal,
+} from "@/components/organisms/LazyUploadModals";
 import { Skeleton } from "@/components/ui/skeleton";
 import FieldOpsNavLink from "@/fieldOps/atoms/FieldOpsNavLink";
 import {
@@ -12,7 +16,6 @@ import {
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
-import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
 import SpotlightNavLink from "@/spotlight/atoms/SpotlightNavLink";
@@ -26,7 +29,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoSettingsOutline } from "react-icons/io5";
-import EventUploadModal from "./EventUploadModal";
 import MobileFooter from "./MobileFooter";
 
 type SideBarProps = {
@@ -66,7 +68,7 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
   // an oversized flyer is refused here too, before the upload form opens.
   const { imagePreview, selectedFile, fileInputRef, handleFileChange } =
     useImageSelection({
-      invalidFileMessage: "Please select an image file for your event flyer.",
+      invalidFileMessage: t("pleaseSelectAnImageFileFor"),
       maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
       onInvalidFile: (message) => toast.error(message),
       onSelect: () => setShowPostModal(true),

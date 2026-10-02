@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { submitReportCore } from "@abonten/services/reports/submitReportCore";
 import type {
   ReportCategory,
@@ -14,58 +16,63 @@ import { submitReportSchema } from "@abonten/validation/reportSchema";
 // submitReportCore, which ignores anything the client says about who is
 // reporting (spec §5). Shares its body verbatim with
 // POST /api/mobile/reports.
-export async function submitReport(input: {
-  targetType: ReportTargetType;
-  targetId: string;
-  category: ReportCategory;
-  details?: string | null;
-  attachment?: {
-    storagePath: string;
-    fileName: string | null;
-    mimeType: string | null;
-    sizeBytes: number | null;
-  } | null;
-}) {
-  const supabase = await createClient();
+export const submitReport = withActionLocale(
+  async function submitReport(input: {
+    targetType: ReportTargetType;
+    targetId: string;
+    category: ReportCategory;
+    details?: string | null;
+    attachment?: {
+      storagePath: string;
+      fileName: string | null;
+      mimeType: string | null;
+      sizeBytes: number | null;
+    } | null;
+  }) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "Please sign in to report content." };
-  }
+    if (userError || !user) {
+      return {
+        status: 401,
+        message: tr("pleaseSignInToReportContent"),
+      };
+    }
 
-  const parsed = submitReportSchema.safeParse({
-    targetType: input.targetType,
-    targetId: input.targetId,
-    category: input.category,
-    details: input.details ?? "",
-    attachment: input.attachment ?? null,
-  });
-  if (!parsed.success) {
-    return {
-      status: 400,
-      message: parsed.error.issues[0]?.message ?? "Please check your report.",
-    };
-  }
-
-  try {
-    return await submitReportCore(supabase, user.id, {
-      targetType: parsed.data.targetType,
-      targetId: parsed.data.targetId,
-      category: parsed.data.category,
-      details:
-        typeof parsed.data.details === "string" ? parsed.data.details : null,
-      source: "web",
+    const parsed = submitReportSchema.safeParse({
+      targetType: input.targetType,
+      targetId: input.targetId,
+      category: input.category,
+      details: input.details ?? "",
       attachment: input.attachment ?? null,
     });
-  } catch (error) {
-    logger.error("submitReport failed", error);
-    return {
-      status: 500,
-      message: "Couldn't submit your report. Please try again.",
-    };
-  }
-}
+    if (!parsed.success) {
+      return {
+        status: 400,
+        message: parsed.error.issues[0]?.message ?? tr("pleaseCheckYourReport"),
+      };
+    }
+
+    try {
+      return await submitReportCore(supabase, user.id, {
+        targetType: parsed.data.targetType,
+        targetId: parsed.data.targetId,
+        category: parsed.data.category,
+        details:
+          typeof parsed.data.details === "string" ? parsed.data.details : null,
+        source: "web",
+        attachment: input.attachment ?? null,
+      });
+    } catch (error) {
+      logger.error("submitReport failed", error);
+      return {
+        status: 500,
+        message: tr("couldnTSubmitYourReportPlease"),
+      };
+    }
+  },
+);

@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Cancels one of the caller's tickets. If it was paid and this makes every
@@ -11,7 +13,7 @@ import { revalidatePath } from "next/cache";
  * Post-auth logic lives in cancelUserTicketCore so the mobile API route
  * shares it.
  */
-export default async function cancelUserTicket(
+export default withActionLocale(async function cancelUserTicket(
   ticketId: string,
   transactionId: string | null,
 ) {
@@ -23,7 +25,7 @@ export default async function cancelUserTicket(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await cancelUserTicketCore(
@@ -34,18 +36,18 @@ export default async function cancelUserTicket(
   );
 
   if (result.status === 200) {
-    revalidatePath("/manage/my-events");
+    revalidateAppPath("/manage/my-events");
     if (result.eventId) {
-      revalidatePath(`/manage/events/${result.eventId}`);
+      revalidateAppPath(`/manage/events/${result.eventId}`);
     }
-    revalidatePath("/manage/dashboard");
-    revalidatePath("/transactions");
+    revalidateAppPath("/manage/dashboard");
+    revalidateAppPath("/transactions");
     // See generateTicket.ts for why the public event page also needs this —
     // cancelling restores a spot, and that must be visible without a refresh.
     if (result.eventCode) {
-      revalidatePath(`/events/${result.eventCode.toLowerCase()}`);
+      revalidateAppPath(`/events/${result.eventCode.toLowerCase()}`);
     }
   }
 
   return { status: result.status, message: result.message };
-}
+});

@@ -12,16 +12,17 @@ import {
 } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   CAMPAIGN_OBJECTIVES,
-  CAMPAIGN_OBJECTIVE_LABEL,
-  PROMOTION_BILLING_NOTE,
-  PROMOTION_CASH_NOTE,
-  PROMOTION_ESTIMATE_BASIS_LABEL,
-  PROMOTION_ESTIMATE_NOTE,
-  PROMOTION_INTRO,
-  PROMOTION_REVIEW_NOTE,
+  PROMOTION_BILLING_NOTE_KEY,
+  PROMOTION_CASH_NOTE_KEY,
+  PROMOTION_ESTIMATE_NOTE_KEY,
+  PROMOTION_INTRO_KEY,
+  PROMOTION_REVIEW_NOTE_KEY,
+  campaignObjectiveLabel,
+  promotionEstimateBasisLabel,
 } from "@abonten/core/content/copy";
 import {
   budgetProblem,
@@ -35,6 +36,7 @@ import type {
 } from "@abonten/types/contentType";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 import { dataOf, messageOf } from "../lib/result";
@@ -73,6 +75,11 @@ export default function CampaignCreateDialog({
   locationLabel: string | null;
   onClose: () => void;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+  const format = useFormatter();
+
   const router = useRouter();
   const toast = useToast();
   const ids = useId();
@@ -119,7 +126,7 @@ export default function CampaignCreateDialog({
 
   const budgetMinor = Math.round(Number(budgetCedis) * factor);
   const budgetError =
-    opts && budgetCedis !== "" ? budgetProblem(opts, budgetMinor) : null;
+    opts && budgetCedis !== "" ? budgetProblem(tc, opts, budgetMinor) : null;
   const targeting: ContentPromotionTargetingInput =
     area === "near_post" ? { area, radiusKm } : { area: "everywhere" };
   // Debounce a string, not an object: a fresh object every render would
@@ -154,7 +161,7 @@ export default function CampaignCreateDialog({
         targeting: request.targeting,
       });
       const data = dataOf(res);
-      if (!data) throw new Error(messageOf(res, "Couldn't estimate reach."));
+      if (!data) throw new Error(messageOf(res, t("couldnTEstimateReach")));
       return data;
     },
     retry: false,
@@ -166,7 +173,7 @@ export default function CampaignCreateDialog({
     if (!est || !durationDays || submitting || stale) return;
     const start = new Date(startsAt);
     if (Number.isNaN(start.getTime())) {
-      toast.error("Choose a start date.");
+      toast.error(t("chooseAStartDate"));
       return;
     }
     setSubmitting(true);
@@ -177,11 +184,11 @@ export default function CampaignCreateDialog({
       objective,
       startsAt: start.toISOString(),
       targeting,
-    });
+    }).catch(actionUnreachable);
     const data = dataOf(res);
     if (!data) {
       setSubmitting(false);
-      toast.error(messageOf(res, "Couldn't start this promotion."));
+      toast.error(messageOf(res, t("couldnTStartThisPromotion")));
       return;
     }
     router.push(`/checkout/${data.checkout.id}?type=spotlight-promotion`);
@@ -190,8 +197,8 @@ export default function CampaignCreateDialog({
   return (
     <Dialog open onOpenChange={(open) => !open && !submitting && onClose()}>
       <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto">
-        <DialogTitle>Promote this Spotlight</DialogTitle>
-        <DialogDescription>{PROMOTION_INTRO}</DialogDescription>
+        <DialogTitle>{t("promoteThisSpotlight")}</DialogTitle>
+        <DialogDescription>{tc(PROMOTION_INTRO_KEY)}</DialogDescription>
 
         {options.isLoading ? (
           <div className="flex justify-center py-6">
@@ -201,12 +208,12 @@ export default function CampaignCreateDialog({
           <p className="text-sm text-muted-foreground">
             {options.error instanceof Error
               ? options.error.message
-              : "Promotions aren't available right now."}
+              : t("promotionsArenTAvailableRightNow")}
           </p>
         ) : (
           <div className="space-y-5">
             <div className="space-y-1 text-sm font-medium">
-              <label htmlFor={`${ids}-goal`}>Goal</label>
+              <label htmlFor={`${ids}-goal`}>{t("goal")}</label>
               <Select
                 id={`${ids}-goal`}
                 value={objective}
@@ -216,14 +223,16 @@ export default function CampaignCreateDialog({
               >
                 {objectives.map((o) => (
                   <option key={o} value={o}>
-                    {CAMPAIGN_OBJECTIVE_LABEL[o]}
+                    {campaignObjectiveLabel(tc, o)}
                   </option>
                 ))}
               </Select>
             </div>
 
             <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Who should see it</legend>
+              <legend className="text-sm font-medium">
+                {t("whoShouldSeeIt")}
+              </legend>
               <label className="flex cursor-pointer items-center gap-2 text-sm">
                 <input
                   type="radio"
@@ -231,7 +240,7 @@ export default function CampaignCreateDialog({
                   checked={area === "everywhere"}
                   onChange={() => setArea("everywhere")}
                 />
-                Everyone on Spotlight
+                {t("everyoneOnSpotlight")}
               </label>
               <label
                 className={cn(
@@ -247,8 +256,8 @@ export default function CampaignCreateDialog({
                   onChange={() => setArea("near_post")}
                 />
                 {locationLabel
-                  ? `People near ${locationLabel}`
-                  : "People nearby (link an event or place first)"}
+                  ? t("peopleNear", { locationLabel: locationLabel })
+                  : t("peopleNearbyLinkAnEventOr")}
               </label>
               {area === "near_post" ? (
                 <div className="flex flex-wrap gap-2 pl-6">
@@ -265,7 +274,7 @@ export default function CampaignCreateDialog({
                           : "hover:bg-accent",
                       )}
                     >
-                      Within {km} km
+                      {t("withinKm", { km: km })}
                     </button>
                   ))}
                 </div>
@@ -277,7 +286,7 @@ export default function CampaignCreateDialog({
                 htmlFor={`${ids}-budget`}
                 className="block text-sm font-medium"
               >
-                Budget
+                {t("budget")}
               </label>
               <div className="flex flex-wrap gap-2">
                 {opts.suggestedBudgetsMinor.map((b) => (
@@ -293,7 +302,7 @@ export default function CampaignCreateDialog({
                         : "hover:bg-accent",
                     )}
                   >
-                    {formatMinor(b, opts.currency)}
+                    {formatMinor(b, opts.currency, locale)}
                   </button>
                 ))}
               </div>
@@ -323,12 +332,23 @@ export default function CampaignCreateDialog({
                 )}
               >
                 {budgetError ??
-                  `${formatMinor(opts.minBudgetMinor, opts.currency)} to ${formatMinor(opts.maxBudgetMinor, opts.currency)}.`}
+                  t("to", {
+                    formatMinor: formatMinor(
+                      opts.minBudgetMinor,
+                      opts.currency,
+                      locale,
+                    ),
+                    formatMinor2: formatMinor(
+                      opts.maxBudgetMinor,
+                      opts.currency,
+                      locale,
+                    ),
+                  })}
               </p>
             </div>
 
             <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">Run for up to</legend>
+              <legend className="text-sm font-medium">{t("runForUpTo")}</legend>
               <div className="flex flex-wrap gap-2">
                 {opts.durationOptionsDays.map((d) => (
                   <button
@@ -343,7 +363,7 @@ export default function CampaignCreateDialog({
                         : "hover:bg-accent",
                     )}
                   >
-                    {d} days
+                    {t("days", { d: d })}
                   </button>
                 ))}
               </div>
@@ -354,17 +374,17 @@ export default function CampaignCreateDialog({
               className="space-y-1 rounded-lg border bg-muted/40 p-3"
             >
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Estimated reach
+                {t("estimatedReach")}
               </p>
               {!canEstimate ? (
                 <p className="text-sm text-muted-foreground">
-                  Choose a budget to see an estimate.
+                  {t("chooseABudgetToSeeAn")}
                 </p>
               ) : estimate.isError ? (
                 <p className="text-sm text-destructive">
                   {estimate.error instanceof Error
                     ? estimate.error.message
-                    : "Couldn't estimate reach."}
+                    : t("couldnTEstimateReach")}
                 </p>
               ) : !est ? (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -372,22 +392,25 @@ export default function CampaignCreateDialog({
                 <div className={cn(stale && "opacity-60")}>
                   <p className="text-xl font-bold">
                     {est.deliverable
-                      ? formatReachRange(est)
-                      : "Not enough audience"}
+                      ? formatReachRange(tc, est)
+                      : t("notEnoughAudience")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {est.deliverable
-                      ? `About ${est.estimatedImpressions.toLocaleString("en-GB")} sponsored impressions. ${PROMOTION_ESTIMATE_BASIS_LABEL[est.basis]}`
+                      ? t("aboutSponsoredImpressions", {
+                          impressions: format.number(est.estimatedImpressions),
+                          item: promotionEstimateBasisLabel(tc, est.basis),
+                        })
                       : est.basis === "no_data"
-                        ? PROMOTION_ESTIMATE_BASIS_LABEL.no_data
-                        : "This audience is too small for this budget right now. Lower the budget, run it longer or show it to more people."}
+                        ? promotionEstimateBasisLabel(tc, "no_data")
+                        : t("thisAudienceIsTooSmallFor")}
                   </p>
                 </div>
               )}
             </section>
 
             <label className="block space-y-1 text-sm font-medium">
-              <span>Start (after approval)</span>
+              <span>{t("startAfterApproval")}</span>
               <input
                 type="datetime-local"
                 value={startsAt}
@@ -398,10 +421,10 @@ export default function CampaignCreateDialog({
             </label>
 
             <div className="space-y-2 text-xs text-muted-foreground">
-              <p>{PROMOTION_ESTIMATE_NOTE}</p>
-              <p>{PROMOTION_BILLING_NOTE}</p>
-              <p>{PROMOTION_REVIEW_NOTE}</p>
-              <p>{PROMOTION_CASH_NOTE}</p>
+              <p>{tc(PROMOTION_ESTIMATE_NOTE_KEY)}</p>
+              <p>{tc(PROMOTION_BILLING_NOTE_KEY)}</p>
+              <p>{tc(PROMOTION_REVIEW_NOTE_KEY)}</p>
+              <p>{tc(PROMOTION_CASH_NOTE_KEY)}</p>
             </div>
 
             <div className="flex justify-end gap-2">
@@ -411,7 +434,7 @@ export default function CampaignCreateDialog({
                 disabled={submitting}
                 className="rounded-md border px-4 py-2 text-sm font-semibold hover:bg-accent"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -420,8 +443,14 @@ export default function CampaignCreateDialog({
                 className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 {submitting
-                  ? "Starting…"
-                  : `Pay ${formatMinor(Number.isFinite(budgetMinor) ? budgetMinor : 0, opts.currency)}`}
+                  ? t("starting")
+                  : t("pay", {
+                      formatMinor: formatMinor(
+                        Number.isFinite(budgetMinor) ? budgetMinor : 0,
+                        opts.currency,
+                        locale,
+                      ),
+                    })}
               </button>
             </div>
           </div>

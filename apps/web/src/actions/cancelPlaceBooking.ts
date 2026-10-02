@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { cancelPlaceBookingCore } from "@abonten/services/places/requestPlaceBookingCore";
 
 /**
@@ -10,17 +12,19 @@ import { cancelPlaceBookingCore } from "@abonten/services/places/requestPlaceBoo
  * mobile `POST /api/mobile/places/[placeId]/bookings/cancel` route runs it
  * verbatim.
  */
-export async function cancelPlaceBooking(bookingId: string) {
-  const supabase = await createClient();
+export const cancelPlaceBooking = withActionLocale(
+  async function cancelPlaceBooking(bookingId: string) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not authenticated" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotAuthenticated") };
+    }
 
-  return cancelPlaceBookingCore(supabase, user.id, bookingId);
-}
+    return cancelPlaceBookingCore(supabase, user.id, bookingId);
+  },
+);

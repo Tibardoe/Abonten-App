@@ -1,8 +1,9 @@
 "use client";
 
 import { getUnreadMessageCount } from "@/actions/getUnreadMessageCount";
+import { takeShellSlice } from "@/hooks/shellBootstrap";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { messagingKeys } from "./keys";
 
 // Powers the Messages nav badge. A dedicated count action (not derived from
@@ -10,11 +11,18 @@ import { messagingKeys } from "./keys";
 // message; the poll is the backstop for a dropped socket.
 export function useUnreadMessageCount() {
   const { data: user } = useCurrentUser();
-
+  const client = useQueryClient();
   return useQuery({
     queryKey: [...messagingKeys.unreadCount(), user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
+      const shared = await takeShellSlice(
+        client,
+        "unreadMessages",
+        user?.id,
+        queryKey,
+      );
+      if (shared !== undefined) return shared;
       const res = await getUnreadMessageCount();
       return res.status === 200 ? res.count : 0;
     },

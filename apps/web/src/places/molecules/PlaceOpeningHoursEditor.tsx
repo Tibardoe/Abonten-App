@@ -1,8 +1,9 @@
 "use client";
 
 import { TimeInput } from "@/components/atoms/TimeInput";
-import { DISPLAY_DAYS } from "@abonten/core/dayOfWeek";
+import { displayDays } from "@abonten/core/dayOfWeek";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
+import { useLocale, useTranslations } from "next-intl";
 
 type PlaceOpeningHoursEditorProps = {
   openingHours: PlaceOpeningHoursInput[];
@@ -18,6 +19,9 @@ export default function PlaceOpeningHoursEditor({
   openingHours,
   onChange,
 }: PlaceOpeningHoursEditorProps) {
+  const t = useTranslations("places");
+  const locale = useLocale();
+
   const updateDay = (
     dayOfWeek: number,
     patch: Partial<PlaceOpeningHoursInput>,
@@ -54,11 +58,11 @@ export default function PlaceOpeningHoursEditor({
         onClick={copyMondayToAll}
         className="text-sm text-primary hover:underline"
       >
-        Copy Monday's hours to all days
+        {t("copyMondaySHoursToAll")}
       </button>
 
       <div className="space-y-2">
-        {DISPLAY_DAYS.map(({ dayOfWeek, label }) => {
+        {displayDays(locale).map(({ dayOfWeek, label }) => {
           const hour = openingHours.find((h) => h.dayOfWeek === dayOfWeek);
           if (!hour) return null;
 
@@ -78,22 +82,22 @@ export default function PlaceOpeningHoursEditor({
                   }
                   className="h-4 w-4 accent-primary"
                 />
-                Closed
+                {t("closed")}
               </label>
 
               {!hour.isClosed && (
                 <div className="flex items-center gap-2 text-foreground">
                   <TimeInput
-                    aria-label={`${label} opening time`}
+                    aria-label={t("openingTime", { label: label })}
                     value={hour.openTime ?? ""}
                     onChange={(value) =>
                       updateDay(dayOfWeek, { openTime: value })
                     }
                     className="w-auto"
                   />
-                  <span className="text-muted-foreground">to</span>
+                  <span className="text-muted-foreground">{t("to")}</span>
                   <TimeInput
-                    aria-label={`${label} closing time`}
+                    aria-label={t("closingTime", { label: label })}
                     value={hour.closeTime ?? ""}
                     onChange={(value) =>
                       updateDay(dayOfWeek, { closeTime: value })

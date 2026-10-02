@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { tr } from "../i18n/requestLocale";
 
 // Deliberately NOT a "use server" Server Action: every exported function in
 // a "use server" file gets a directly POST-able public endpoint regardless
@@ -43,7 +44,7 @@ export async function reserveTicketQuantity(
   if (ticketTypeError || !ticketType) {
     logger.error(`Failed fetching ticket type: ${ticketTypeError?.message}`);
 
-    return { status: 404, message: "Ticket type not found" };
+    return { status: 404, message: tr("ticketTypeNotFound") };
   }
 
   if (ticketType.quantity === null) {
@@ -53,7 +54,7 @@ export async function reserveTicketQuantity(
   if (ticketType.quantity < requestedQuantity) {
     return {
       status: 409,
-      message: "This ticket type is sold out.",
+      message: tr("thisTicketTypeIsSoldOut"),
     };
   }
 
@@ -67,14 +68,13 @@ export async function reserveTicketQuantity(
   if (updateError) {
     logger.error(`Failed reserving ticket quantity: ${updateError.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!updated || updated.length === 0) {
     return {
       status: 409,
-      message:
-        "This ticket was just claimed by someone else. Please try again.",
+      message: tr("thisTicketWasJustClaimedBy"),
     };
   }
 

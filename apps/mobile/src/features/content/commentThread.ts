@@ -22,6 +22,7 @@ import {
 } from "@abonten/core/messagingRealtime";
 import type { ContentCommentsPage } from "@abonten/types/contentType";
 import { type ToastApi, useToast } from "@abonten/ui-native";
+import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   type QueryClient,
@@ -167,7 +168,7 @@ const commentLike = createLatestIntentToggle<{ likeCount: number }>({
         })),
       );
     }
-    toastHost?.error("Couldn't update that like.");
+    toastHost?.error(translatorFor("spotlight")("couldnTUpdateThatLike"));
   },
 });
 
@@ -176,6 +177,8 @@ export function isCommentLikePending(commentId: string): boolean {
 }
 
 export function useToggleCommentLike(requireSignIn: () => boolean) {
+  const t = useTranslations("spotlight");
+
   const toast = useToast();
   toastHost = toast;
   return useCallback(
@@ -183,7 +186,7 @@ export function useToggleCommentLike(requireSignIn: () => boolean) {
       if (comment.localState) return;
       if (!requireSignIn()) return;
       if (!onlineManager.isOnline()) {
-        toast.info("You're offline. Try again when you're connected.");
+        toast.info(t("youReOfflineTryAgainWhen"));
         return;
       }
       let base = likeBaselines.get(comment.id);
@@ -205,7 +208,7 @@ export function useToggleCommentLike(requireSignIn: () => boolean) {
       );
       commentLike.set(comment.id, desired, base.liked);
     },
-    [requireSignIn, toast],
+    [requireSignIn, toast, t],
   );
 }
 
@@ -228,6 +231,8 @@ function currentAuthor(qc: QueryClient, userId: string) {
  * Resolves true when the server accepted it.
  */
 export function useSendComment(postId: string) {
+  const t = useTranslations("spotlight");
+
   const qc = useQueryClient();
   const toast = useToast();
   const { session } = useSession();
@@ -247,7 +252,7 @@ export function useSendComment(postId: string) {
         const res = await api.content.comment(postId, row.body, row.parentId);
         if (res.status !== 200 || !res.data) {
           markFailed();
-          toast.error(res.message ?? "Couldn't post your comment.");
+          toast.error(res.message ?? t("couldnTPostYourComment"));
           return false;
         }
         const confirmed: CachedComment = {
@@ -260,11 +265,11 @@ export function useSendComment(postId: string) {
         return true;
       } catch {
         markFailed();
-        toast.error("Couldn't post your comment. Check your connection.");
+        toast.error(t("couldnTPostYourCommentCheck"));
         return false;
       }
     },
-    [qc, postId, toast],
+    [qc, postId, toast, t],
   );
 
   const send = useCallback(
@@ -324,13 +329,15 @@ export function useSendComment(postId: string) {
 }
 
 export function useDeleteComment(postId: string) {
+  const t = useTranslations("spotlight");
+
   const qc = useQueryClient();
   const toast = useToast();
   return useCallback(
     async (comment: CachedComment) => {
       if (comment.localState) return;
       if (!onlineManager.isOnline()) {
-        toast.info("You're offline. Try again when you're connected.");
+        toast.info(t("youReOfflineTryAgainWhen"));
         return;
       }
       const snapshot = qc.getQueriesData<CommentsCache>({
@@ -354,7 +361,7 @@ export function useDeleteComment(postId: string) {
         patchPostCounts(qc, postId, (n) => ({
           comments: n.comments + removed,
         }));
-        toast.error("Couldn't delete this comment.");
+        toast.error(t("couldnTDeleteThisComment"));
       };
       try {
         const res = await api.content.deleteComment(comment.id);
@@ -363,7 +370,7 @@ export function useDeleteComment(postId: string) {
         restore();
       }
     },
-    [qc, postId, toast],
+    [qc, postId, toast, t],
   );
 }
 

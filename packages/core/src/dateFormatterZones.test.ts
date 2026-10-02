@@ -6,6 +6,7 @@ import {
   zoneHint,
 } from "./dateFormatter";
 import { formatMoney } from "./formatMoney";
+import { t } from "./i18n/testTranslator";
 import {
   describePriceParam,
   isAnyPriceParam,
@@ -106,7 +107,7 @@ describe("currency-neutral price filter", () => {
     });
     expect(isAnyPriceParam("0-999")).toBe(true);
     expect(isAnyPriceParam(undefined)).toBe(true);
-    expect(describePriceParam("20-250", "NGN")).toBe("₦20 – ₦250");
-    expect(describePriceParam("0-999", "NGN")).toBeNull();
+    expect(describePriceParam(t, "20-250", "NGN")).toBe("₦20 – ₦250");
+    expect(describePriceParam(t, "0-999", "NGN")).toBeNull();
   });
 });

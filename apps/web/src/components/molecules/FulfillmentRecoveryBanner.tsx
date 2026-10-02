@@ -2,6 +2,7 @@
 
 import retryPaymentFulfillment from "@/actions/retryPaymentFulfillment";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -22,6 +23,8 @@ export default function FulfillmentRecoveryBanner({
   paymentAttemptId,
   initialMessage,
 }: FulfillmentRecoveryBannerProps) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const [message, setMessage] = useState(initialMessage);
 
@@ -39,16 +42,15 @@ export default function FulfillmentRecoveryBanner({
       setMessage(
         "message" in response && response.message
           ? response.message
-          : "Still couldn't finish this. Please contact support.",
+          : t("stillCouldnTFinishThisPlease"),
       );
     },
-    onError: () =>
-      setMessage("Still couldn't finish this. Please contact support."),
+    onError: () => setMessage(t("stillCouldnTFinishThisPlease")),
   });
 
   return (
     <div className="space-y-3 rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-center">
-      <p className="font-semibold">Payment successful</p>
+      <p className="font-semibold">{t("paymentSuccessful")}</p>
       <p>{message}</p>
       <button
         type="button"
@@ -56,7 +58,7 @@ export default function FulfillmentRecoveryBanner({
         onClick={() => mutate()}
         className="w-full rounded-md p-3 font-bold text-primary-foreground bg-primary text-center disabled:opacity-50"
       >
-        {isPending ? "Retrying…" : "Retry"}
+        {isPending ? t("retrying") : t("retry")}
       </button>
     </div>
   );

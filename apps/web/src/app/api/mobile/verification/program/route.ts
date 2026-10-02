@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { getVerificationProgramForUser } from "@abonten/services/verification/verificationCaseCore";
 
@@ -9,6 +13,7 @@ import { getVerificationProgramForUser } from "@abonten/services/verification/ve
 // the app hides the verification entry points when both are false.
 // Same service as the web getVerificationProgram Server Action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -20,6 +25,9 @@ export async function GET(req: Request) {
     return apiJson({ status: 200, data: res.data });
   } catch (error) {
     logger.error("mobile GET /verification/program failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { openConversationCore } from "@abonten/services/messaging/openConversationCore";
 import type { OpenConversationInput } from "@abonten/types/messagingType";
 import { openConversationSchema } from "@abonten/validation/messageSchema";
@@ -15,29 +17,34 @@ import { openConversationSchema } from "@abonten/validation/messageSchema";
  * Shares its body with POST /api/mobile/messages/open via
  * @abonten/services/messaging/openConversationCore.
  */
-export async function openConversation(input: OpenConversationInput) {
-  const supabase = await createClient();
+export const openConversation = withActionLocale(
+  async function openConversation(input: OpenConversationInput) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-  if (userError || !user) {
-    return { status: 401, message: "Please sign in to send a message." };
-  }
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return { status: 401, message: tr("pleaseSignInToSendA") };
+    }
 
-  const parsed = openConversationSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      status: 400,
-      message: parsed.error.issues[0]?.message ?? "Invalid request.",
-    };
-  }
+    const parsed = openConversationSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        status: 400,
+        message: parsed.error.issues[0]?.message ?? tr("invalidRequest"),
+      };
+    }
 
-  try {
-    return await openConversationCore(supabase, user.id, parsed.data);
-  } catch (error) {
-    logger.error("openConversation failed", error);
-    return { status: 500, message: "Something went wrong. Please try again." };
-  }
-}
+    try {
+      return await openConversationCore(supabase, user.id, parsed.data);
+    } catch (error) {
+      logger.error("openConversation failed", error);
+      return {
+        status: 500,
+        message: tr("somethingWentWrongPleaseTryAgain"),
+      };
+    }
+  },
+);

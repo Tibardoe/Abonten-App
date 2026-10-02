@@ -15,6 +15,7 @@
 
 import { logger } from "@abonten/core/logger";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { tr } from "../i18n/requestLocale";
 import type { OtpSenderCode } from "./otpProviders/types";
 
 // "fieldops-owner": the business owner's consent code in a Field Ops
@@ -69,7 +70,7 @@ export async function claimOtpSend(
     return {
       ok: false,
       status: 500,
-      message: "Something went wrong. Please try again.",
+      message: tr("somethingWentWrongPleaseTryAgain"),
     };
   }
   const claim = data as {
@@ -82,21 +83,22 @@ export async function claimOtpSend(
     return {
       ok: false,
       status: 429,
-      message: `Please wait ${claim.retry_after_seconds ?? 60}s before requesting another code.`,
+      message: tr("pleaseWaitSBeforeRequestingAnother", {
+        seconds: claim.retry_after_seconds ?? 60,
+      }),
     };
   }
   if (claim.reason === "ip_hour") {
     return {
       ok: false,
       status: 429,
-      message: "Too many verification codes requested. Please try again later.",
+      message: tr("tooManyVerificationCodesRequestedPlease"),
     };
   }
   return {
     ok: false,
     status: 429,
-    message:
-      "Too many codes have been sent to this number. Please try again later, or sign in with Google or email.",
+    message: tr("tooManyCodesHaveBeenSent"),
   };
 }
 

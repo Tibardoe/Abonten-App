@@ -10,10 +10,11 @@ import {
   Th,
   timeAgo,
 } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import { loadFieldOpsCampaign } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/fieldOps/campaignLifecycle";
+import { fieldOpsCampaignStatusLabel } from "@abonten/core/fieldOps/campaignLifecycle";
 import { ACTIVITY_LABEL } from "@abonten/services/admin/fieldOps/fieldOpsAdminShared";
 import { getDefaultMarket } from "@abonten/services/markets/marketConfig";
 import Link from "next/link";
@@ -86,7 +87,7 @@ export default async function FieldOpsCampaignPage({
               Figures
             </Link>
             <Badge tone={campaignStatusTone(campaign.status)}>
-              {CAMPAIGN_STATUS_LABEL[campaign.status]}
+              {fieldOpsCampaignStatusLabel(tc, campaign.status)}
             </Badge>
           </div>
         }

@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
+import {
   fetchPlaceDraftsList,
   savePlaceDraftCore,
 } from "@abonten/services/places/placeDraftCore";
@@ -13,6 +17,7 @@ import type { PlaceDraftPayload } from "@abonten/validation/placeDraftSchema";
 //   first (kind "place_photo"); pass its public_id/version, or omit both.
 //   The payload is re-validated with the real draft-safe Zod schema in the core.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -21,11 +26,15 @@ export async function GET(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /organizer/place-drafts failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -39,7 +48,10 @@ export async function POST(req: Request) {
     } | null;
 
     if (!body || typeof body.payload !== "object" || body.payload === null) {
-      return apiJson({ status: 400, message: "payload is required" });
+      return apiJson({
+        status: 400,
+        message: tr("payloadIsRequired"),
+      });
     }
 
     const result = await savePlaceDraftCore(auth.supabase, auth.user.id, {
@@ -62,6 +74,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/place-drafts failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

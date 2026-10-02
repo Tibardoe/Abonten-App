@@ -1,9 +1,8 @@
 "use client";
 
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
-
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+import { GoogleMap, Marker } from "@react-google-maps/api";
 
 const containerClass =
   "w-full h-[180px] md:h-[220px] rounded-lg overflow-hidden";
@@ -12,6 +11,8 @@ type LocationMapPreviewProps = {
   // Raw PostGIS WKB hex string -- same format event.location/place.location
   // already carry, parsed the same way GetDirectionBtn.tsx does.
   location: string;
+  /** What the pin marks (the address): its name for a screen reader. */
+  label?: string;
   className?: string;
 };
 
@@ -22,17 +23,10 @@ type LocationMapPreviewProps = {
 // interaction beyond the map's own default pan/zoom.
 export default function LocationMapPreview({
   location,
+  label,
   className,
 }: LocationMapPreviewProps) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Google Maps API key is missing.");
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   let center: { lat: number; lng: number };
   try {
@@ -62,7 +56,7 @@ export default function LocationMapPreview({
         gestureHandling: "cooperative",
       }}
     >
-      <Marker position={center} />
+      <Marker position={center} title={label} />
     </GoogleMap>
   );
 }

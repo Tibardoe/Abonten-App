@@ -8,6 +8,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
+import { useTranslations } from "next-intl";
 import PlaceCategoryPicker from "../molecules/PlaceCategoryPicker";
 
 type PlaceCreateStepBasicInfoProps = Pick<
@@ -18,6 +19,7 @@ type PlaceCreateStepBasicInfoProps = Pick<
   | "setCategoryId"
   | "selectedAddress"
   | "setSelectedAddress"
+  | "hasAttemptedBasicInfo"
   | "addressInputRef"
   | "handleSelectCoordinates"
 > & { className?: string };
@@ -35,10 +37,13 @@ export default function PlaceCreateStepBasicInfo({
   setCategoryId,
   selectedAddress,
   setSelectedAddress,
+  hasAttemptedBasicInfo,
   addressInputRef,
   handleSelectCoordinates,
   className,
 }: PlaceCreateStepBasicInfoProps) {
+  const t = useTranslations("places");
+
   return (
     <Form {...form}>
       <div className={className}>
@@ -48,7 +53,11 @@ export default function PlaceCreateStepBasicInfo({
           render={({ field }) => (
             <FormItem className="space-y-0">
               <FormControl>
-                <PostInput type="text" inputPlaceholder="Name" {...field} />
+                <PostInput
+                  type="text"
+                  inputPlaceholder={t("name")}
+                  {...field}
+                />
               </FormControl>
               <FormMessage className="text-sm" />
             </FormItem>
@@ -56,8 +65,10 @@ export default function PlaceCreateStepBasicInfo({
         />
 
         <PlaceCategoryPicker categoryId={categoryId} onSelect={setCategoryId} />
-        {categoryId === null && (
-          <p className="text-destructive text-sm">Select a category</p>
+        {hasAttemptedBasicInfo && categoryId === null && (
+          <p role="alert" className="text-destructive text-sm">
+            {t("selectACategory")}
+          </p>
         )}
 
         <FormField
@@ -68,7 +79,7 @@ export default function PlaceCreateStepBasicInfo({
               <FormControl>
                 <PostInput
                   type="text"
-                  inputPlaceholder="Description"
+                  inputPlaceholder={t("description")}
                   {...field}
                 />
               </FormControl>
@@ -82,12 +93,14 @@ export default function PlaceCreateStepBasicInfo({
           address={{ address: setSelectedAddress }}
           onSelectCoordinates={handleSelectCoordinates}
           placeholderText={{
-            text: "Address",
+            text: t("address"),
             svgUrl: "/assets/images/location.svg",
           }}
         />
-        {selectedAddress === "" && (
-          <p className="text-destructive text-sm">Address is required</p>
+        {hasAttemptedBasicInfo && selectedAddress === "" && (
+          <p role="alert" className="text-destructive text-sm">
+            {t("addressIsRequired")}
+          </p>
         )}
 
         <FormField
@@ -98,7 +111,7 @@ export default function PlaceCreateStepBasicInfo({
               <FormControl>
                 <PostInput
                   type="text"
-                  inputPlaceholder="Website (optional)"
+                  inputPlaceholder={t("websiteOptional")}
                   {...field}
                 />
               </FormControl>
@@ -115,7 +128,7 @@ export default function PlaceCreateStepBasicInfo({
               <FormControl>
                 <PostInput
                   type="text"
-                  inputPlaceholder="Phone (optional)"
+                  inputPlaceholder={t("phoneOptional")}
                   {...field}
                 />
               </FormControl>
@@ -132,7 +145,7 @@ export default function PlaceCreateStepBasicInfo({
               <FormControl>
                 <PostInput
                   type="text"
-                  inputPlaceholder="WhatsApp (optional)"
+                  inputPlaceholder={t("whatsappOptional")}
                   {...field}
                 />
               </FormControl>

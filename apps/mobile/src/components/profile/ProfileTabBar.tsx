@@ -3,6 +3,7 @@ import type {
   ProfileTab,
 } from "@abonten/core/content/profileContent";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useRef, useState } from "react";
 import { type LayoutChangeEvent, Pressable, View } from "react-native";
@@ -33,14 +34,14 @@ const ICONS: Record<Exclude<ProfileTab, "listings">, IoniconName> = {
 };
 
 const LABELS: Record<Exclude<ProfileTab, "listings">, string> = {
-  spotlights: "Spotlights",
-  favorites: "Favorites",
-  reviews: "Reviews",
+  spotlights: "spotlights",
+  favorites: "favorites",
+  reviews: "reviews",
 };
 
 export const LISTING_LABEL: Record<ListingKind, string> = {
-  events: "Events",
-  places: "Places",
+  events: "events",
+  places: "places",
 };
 export const LISTING_ICON: Record<ListingKind, IoniconName> = {
   events: "calendar-outline",
@@ -62,6 +63,8 @@ export function ProfileTabBar({
   listingMenuOpen: boolean;
   onOpenListingMenu: (anchor: Rect) => void;
 }) {
+  const t = useTranslations("profile");
+
   const c = useThemeColors();
   const reduceMotion = useReducedMotion();
   const [barWidth, setBarWidth] = useState(0);
@@ -114,7 +117,7 @@ export function ProfileTabBar({
         {tabs.map((key) => {
           const active = key === value;
           if (key === "listings") {
-            const label = LISTING_LABEL[listingKind];
+            const label = t(LISTING_LABEL[listingKind]);
             return (
               <Pressable
                 key={key}
@@ -124,7 +127,12 @@ export function ProfileTabBar({
                   selected: active,
                   expanded: listingMenuOpen,
                 }}
-                accessibilityLabel={`${label}. Double tap ${active ? "to switch between Events and Places" : "to show"}`}
+                accessibilityLabel={t("doubleTap", {
+                  label: label,
+                  value: active
+                    ? t("toSwitchBetweenEventsAndPlaces")
+                    : t("toShow"),
+                })}
                 onPress={() => {
                   if (active) openMenu();
                   else onChange(key);
@@ -151,7 +159,7 @@ export function ProfileTabBar({
                     onPress={openMenu}
                     hitSlop={{ top: 12, bottom: 12, left: 6, right: 12 }}
                     accessibilityRole="button"
-                    accessibilityLabel="Switch between Events and Places"
+                    accessibilityLabel={t("switchBetweenEventsAndPlaces")}
                   >
                     <Animated.View style={chevronStyle}>
                       <Icon
@@ -170,7 +178,7 @@ export function ProfileTabBar({
               key={key}
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
-              accessibilityLabel={LABELS[key]}
+              accessibilityLabel={t(LABELS[key])}
               onPress={() => onChange(key)}
               className="min-h-[52px] flex-1 items-center justify-center gap-1 py-2 active:opacity-70"
             >
@@ -186,7 +194,7 @@ export function ProfileTabBar({
                     : "font-medium text-muted-foreground"
                 }`}
               >
-                {LABELS[key]}
+                {t(LABELS[key])}
               </AppText>
             </Pressable>
           );

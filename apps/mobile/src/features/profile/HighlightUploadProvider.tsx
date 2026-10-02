@@ -2,6 +2,7 @@ import {
   type HighlightMediaPick,
   useUploadHighlights,
 } from "@/features/profile/useHighlights";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   type ReactNode,
   createContext,
@@ -40,6 +41,8 @@ export function HighlightUploadProvider({
 }: {
   children: ReactNode;
 }) {
+  const t = useTranslations("profile");
+
   const [userId, setUserId] = useState<string | undefined>();
   const [media, setMedia] = useState<HighlightMediaPick[] | null>(null);
   const [progress, setProgress] = useState(0);
@@ -69,11 +72,11 @@ export function HighlightUploadProvider({
       onError: (e) => {
         setStatus("error");
         setError(
-          e instanceof Error ? e.message : "Upload failed. Please try again.",
+          e instanceof Error ? e.message : t("uploadFailedPleaseTryAgain"),
         );
       },
     });
-  }, [media, userId, upload.mutate]);
+  }, [media, userId, upload.mutate, t]);
 
   const start = useCallback((uid: string, batch: HighlightMediaPick[]) => {
     firedFor.current = null;

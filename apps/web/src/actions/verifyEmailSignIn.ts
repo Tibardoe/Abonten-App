@@ -2,7 +2,10 @@
 
 import ensureProfileCompletionNotification from "@/actions/ensureProfileCompletionNotification";
 import { createClient } from "@/config/supabase/server";
+import { getUserLocale } from "@/i18n/locale";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import { verifyEmailOtpCore } from "@abonten/services/profile/emailAuthCore";
 
 export type VerifyEmailSignInResult =
@@ -15,7 +18,7 @@ export type VerifyEmailSignInResult =
 // signInWithPassword does for phone. Supabase owns the code lifecycle
 // (single-use, expiry, per-IP verification cap); this only maps the result
 // and fires the idempotent profile-completion nudge.
-export default async function verifyEmailSignIn(
+export default withActionLocale(async function verifyEmailSignIn(
   email: string,
   token: string,
 ): Promise<VerifyEmailSignInResult> {
@@ -27,6 +30,11 @@ export default async function verifyEmailSignIn(
     return { status: result.status, message: result.message };
   }
 
+  // The language they signed in with, before anything is written for them.
+  await saveUserLocale(result.userId, await getUserLocale(), {
+    onlyIfUnset: true,
+  });
+
   // Safe on every sign-in: the helper checks completion + existing state and
   // never duplicates. Covers both a brand-new email user and an existing
   // Google/phone user whose email identity just auto-linked.
@@ -36,4 +44,4 @@ export default async function verifyEmailSignIn(
   });
 
   return { status: 200 };
-}
+});

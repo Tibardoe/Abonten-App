@@ -18,6 +18,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { listFeatureFlags } from "../flags/featureFlagCore";
 import { getDisplayRateTable } from "../fx/exchangeRateCore";
 import { resolveLocation } from "../geo/locationResolution";
+import { tr } from "../i18n/requestLocale";
 import { serviceFeeRateFor } from "../platform/platformFee";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getDefaultMarket, listPublicMarkets } from "./marketConfig";
@@ -152,19 +153,19 @@ export async function getListingMarketCore(input: {
     Math.abs(input.lat) > 90 ||
     Math.abs(input.lng) > 180
   ) {
-    return { ok: false, message: "Choose a location first." };
+    return { ok: false, message: tr("chooseALocationFirst") };
   }
   const location = await resolveLocation(input);
   if (!location.countryCode) {
     return {
       ok: false,
-      message: "We couldn't tell which country this location is in.",
+      message: tr("weCouldnTTellWhichCountry2"),
     };
   }
   if (!location.market) {
     return {
       ok: false,
-      message: "Abonten isn't available in this country yet.",
+      message: tr("abontenIsnTAvailableInThis"),
     };
   }
   return {

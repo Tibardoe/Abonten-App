@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -26,79 +28,84 @@ type UpdateEventReviewInput = {
 // an existing review always stay editable. Rating/comment bounds mirror
 // postEventReview.ts's DB constraints (event_review_rating_check,
 // event_review_comment_check).
-export async function updateEventReview(formData: UpdateEventReviewInput) {
-  const supabase = await createClient();
+export const updateEventReview = withActionLocale(
+  async function updateEventReview(formData: UpdateEventReviewInput) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not authenticated" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotAuthenticated") };
+    }
 
-  const { reviewId, rating, title, comment, removedPhotoIds, newPhotos } =
-    formData;
+    const { reviewId, rating, title, comment, removedPhotoIds, newPhotos } =
+      formData;
 
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    return { status: 400, message: "Rating must be between 1 and 5." };
-  }
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return { status: 400, message: tr("ratingMustBeBetween1And") };
+    }
 
-  if (comment && comment.length > 500) {
-    return { status: 400, message: "Comment must be 500 characters or fewer." };
-  }
+    if (comment && comment.length > 500) {
+      return {
+        status: 400,
+        message: tr("commentMustBe500CharactersOr"),
+      };
+    }
 
-  const formattedTitle = title ? formatTitle(title) : null;
+    const formattedTitle = title ? formatTitle(title) : null;
 
-  const { data: updated, error: updateError } = await supabase
-    .from("event_review")
-    .update({
-      rating,
-      title: formattedTitle,
-      comment: comment ?? null,
-    })
-    .eq("id", reviewId)
-    .eq("reviewer_id", user.id)
-    .select("id");
+    const { data: updated, error: updateError } = await supabase
+      .from("event_review")
+      .update({
+        rating,
+        title: formattedTitle,
+        comment: comment ?? null,
+      })
+      .eq("id", reviewId)
+      .eq("reviewer_id", user.id)
+      .select("id");
 
-  if (updateError) {
-    logger.error(`Error updating event review: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
+    if (updateError) {
+      logger.error(`Error updating event review: ${updateError.message}`);
+      return { status: 500, message: tr("somethingWentWrong") };
+    }
 
-  if (!updated || updated.length === 0) {
-    return { status: 404, message: "Review not found" };
-  }
+    if (!updated || updated.length === 0) {
+      return { status: 404, message: tr("reviewNotFound") };
+    }
 
-  // The update above already proved reviewId belongs to this user (it was
-  // scoped by .eq("reviewer_id", user.id)), so these photo operations don't
-  // need their own separate ownership check -- they're additionally scoped
-  // by event_review_id as defense-in-depth against a tampered id list.
-  if (removedPhotoIds?.length) {
-    await supabase
-      .from("event_review_photo")
-      .delete()
-      .eq("event_review_id", reviewId)
-      .in("id", removedPhotoIds);
-  }
+    // The update above already proved reviewId belongs to this user (it was
+    // scoped by .eq("reviewer_id", user.id)), so these photo operations don't
+    // need their own separate ownership check -- they're additionally scoped
+    // by event_review_id as defense-in-depth against a tampered id list.
+    if (removedPhotoIds?.length) {
+      await supabase
+        .from("event_review_photo")
+        .delete()
+        .eq("event_review_id", reviewId)
+        .in("id", removedPhotoIds);
+    }
 
-  if (newPhotos?.length) {
-    const { count } = await supabase
-      .from("event_review_photo")
-      .select("id", { count: "exact", head: true })
-      .eq("event_review_id", reviewId);
+    if (newPhotos?.length) {
+      const { count } = await supabase
+        .from("event_review_photo")
+        .select("id", { count: "exact", head: true })
+        .eq("event_review_id", reviewId);
 
-    await insertReviewPhotos(
-      supabase,
-      "event_review_photo",
-      "event_review_id",
-      reviewId,
-      `event_review_photos/${user.id}/`,
-      newPhotos,
-      count ?? 0,
-    );
-  }
+      await insertReviewPhotos(
+        supabase,
+        "event_review_photo",
+        "event_review_id",
+        reviewId,
+        `event_review_photos/${user.id}/`,
+        newPhotos,
+        count ?? 0,
+      );
+    }
 
-  return { status: 200, message: "Review updated successfully!" };
-}
+    return { status: 200, message: tr("reviewUpdatedSuccessfully") };
+  },
+);

@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import { settleEnvelope } from "@/lib/envelope";
 import type { RewardEmailPreference } from "@abonten/types/rewards";
 import { AppText, Card, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Pressable, Switch, View } from "react-native";
@@ -13,6 +14,8 @@ const KEY = ["mobile", "rewards", "reward-emails"] as const;
 // changes. Phone-only accounts have no email address, so it's shown off
 // and disabled with a note.
 export function RewardEmailCard() {
+  const t = useTranslations("rewards");
+
   const router = useRouter();
   const toast = useToast();
   const qc = useQueryClient();
@@ -36,17 +39,17 @@ export function RewardEmailCard() {
     onSuccess: (res, _enabled, context) => {
       if (res.status === 200 && res.data) {
         qc.setQueryData(KEY, res.data);
-        toast.success(res.message ?? "Saved");
+        toast.success(res.message ?? t("saved"));
       } else {
         qc.setQueryData(KEY, context?.previous ?? null);
-        toast.error("Couldn't save that", {
-          description: res.message ?? "Please try again.",
+        toast.error(t("couldnTSaveThat"), {
+          description: res.message ?? t("pleaseTryAgain"),
         });
       }
     },
     onError: (_e, _enabled, context) => {
       qc.setQueryData(KEY, context?.previous ?? null);
-      toast.error("Couldn't save that", { description: "Please try again." });
+      toast.error(t("couldnTSaveThat"), { description: t("pleaseTryAgain") });
     },
   });
 
@@ -57,11 +60,11 @@ export function RewardEmailCard() {
     <Card className="gap-1">
       <View className="flex-row items-center justify-between gap-3">
         <View className="flex-1 gap-1">
-          <AppText variant="cardTitle">Email me when credit is ready</AppText>
+          <AppText variant="cardTitle">{t("emailMeWhenCreditIsReady")}</AppText>
           <AppText variant="small" tone="muted">
             {hasEmail
-              ? `To ${data.email}. At most one email every 12 hours.`
-              : "Your account has no email address, so you'll get these in the app only."}
+              ? t("toAtMostOneEmailEvery", { email: data.email ?? "" })
+              : t("yourAccountHasNoEmailAddress")}
           </AppText>
           {!hasEmail ? (
             <Pressable
@@ -70,13 +73,13 @@ export function RewardEmailCard() {
               className="self-start py-1 active:opacity-60"
             >
               <AppText variant="small" tone="brand" className="font-semibold">
-                Add an email address
+                {t("addAnEmailAddress")}
               </AppText>
             </Pressable>
           ) : null}
         </View>
         <Switch
-          accessibilityLabel="Email me when credit is ready"
+          accessibilityLabel={t("emailMeWhenCreditIsReady")}
           value={hasEmail && data.rewardEmails}
           disabled={!hasEmail || save.isPending}
           onValueChange={(v) => save.mutate(v)}

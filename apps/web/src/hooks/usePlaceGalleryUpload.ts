@@ -2,9 +2,11 @@
 
 import { addPlacePhoto } from "@/actions/addPlacePhoto";
 import getPlacePhotoUploadSignature from "@/actions/getPlacePhotoUploadSignature";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { isImageFile } from "@abonten/core/isImageFile";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
 export type GalleryUploadItem = {
@@ -34,6 +36,8 @@ const SUCCESS_DISMISS_MS = 2000;
 // useHighlightUpload.ts since the gallery is images-only (no video
 // trim/duration handling needed).
 export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
+  const t = useTranslations("common");
+
   const [items, setItems] = useState<GalleryUploadItem[]>([]);
 
   const runItem = useCallback(
@@ -44,12 +48,13 @@ export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
         errorMessage: null,
       });
 
-      const signatureResponse = await getPlacePhotoUploadSignature();
+      const signatureResponse =
+        await getPlacePhotoUploadSignature().catch(actionUnreachable);
 
       if (signatureResponse.status !== 200 || !signatureResponse.data) {
         patch(setItems, id, {
           status: "error",
-          errorMessage: signatureResponse.message ?? "Failed to start upload.",
+          errorMessage: signatureResponse.message ?? t("failedToStartUpload"),
         });
         return;
       }
@@ -89,7 +94,7 @@ export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
           errorMessage:
             error instanceof Error
               ? error.message
-              : "We couldn't upload this photo. Please try again.",
+              : t("weCouldnTUploadThisPhoto"),
         });
         return;
       }
@@ -106,7 +111,7 @@ export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
         if (saveResponse.status !== 200) {
           patch(setItems, id, {
             status: "error",
-            errorMessage: saveResponse.message ?? "Failed to save photo.",
+            errorMessage: saveResponse.message ?? t("failedToSavePhoto"),
           });
           return;
         }
@@ -122,11 +127,11 @@ export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
           errorMessage:
             error instanceof Error
               ? error.message
-              : "We couldn't save this photo. Please try again.",
+              : t("weCouldnTSaveThisPhoto"),
         });
       }
     },
-    [placeId, onUploaded],
+    [placeId, onUploaded, t],
   );
 
   const start = useCallback(

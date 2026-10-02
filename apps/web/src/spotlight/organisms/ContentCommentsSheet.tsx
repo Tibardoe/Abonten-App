@@ -14,6 +14,7 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { MAX_COMMENT_LENGTH } from "@abonten/core/content/limits";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type {
@@ -27,6 +28,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 import { IoHeart, IoHeartOutline } from "react-icons/io5";
@@ -75,6 +77,8 @@ export default function ContentCommentsSheet({
   commentsAllowed,
   onCountChange,
 }: Props) {
+  const t = useTranslations("spotlight");
+
   const { data: user } = useCurrentUser();
   const requireAuth = useRequireAuth();
   const toast = useToast();
@@ -95,7 +99,7 @@ export default function ContentCommentsSheet({
     onSuccess: (res) => {
       const created = dataOf(res);
       if (!created) {
-        toast.error(messageOf(res, "Couldn't post your comment."));
+        toast.error(messageOf(res, t("couldnTPostYourComment")));
         return;
       }
       setBody("");
@@ -103,7 +107,7 @@ export default function ContentCommentsSheet({
       onCountChange?.(1);
       qc.invalidateQueries({ queryKey: ["content", "comments", postId] });
     },
-    onError: () => toast.error("Couldn't post your comment. Please try again."),
+    onError: () => toast.error(t("couldnTPostYourCommentPlease")),
   });
 
   const submit = async () => {
@@ -119,9 +123,9 @@ export default function ContentCommentsSheet({
         className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
       >
         <div className="border-b px-4 py-3">
-          <SheetTitle className="text-base">Comments</SheetTitle>
+          <SheetTitle className="text-base">{t("comments")}</SheetTitle>
           <SheetDescription className="sr-only">
-            Read and write comments on this post.
+            {t("readAndWriteCommentsOnThis")}
           </SheetDescription>
         </div>
 
@@ -132,20 +136,20 @@ export default function ContentCommentsSheet({
             </div>
           ) : top.isError ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              <p>Couldn't load comments.</p>
+              <p>{t("couldnTLoadComments")}</p>
               <button
                 type="button"
                 onClick={() => top.refetch()}
                 className="mt-2 font-medium text-primary hover:underline"
               >
-                Retry
+                {t("retry")}
               </button>
             </div>
           ) : comments.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
               {commentsAllowed
-                ? "No comments yet. Start the conversation."
-                : "Comments are turned off."}
+                ? t("noCommentsYetStartTheConversation")
+                : t("commentsAreTurnedOff")}
             </p>
           ) : (
             <ul className="space-y-4">
@@ -167,7 +171,7 @@ export default function ContentCommentsSheet({
               onClick={() => top.fetchNextPage()}
               className="mt-4 w-full text-center text-sm font-medium text-primary hover:underline disabled:opacity-60"
             >
-              {top.isFetchingNextPage ? "Loading…" : "Load more comments"}
+              {top.isFetchingNextPage ? t("loading") : t("loadMoreComments")}
             </button>
           ) : null}
         </div>
@@ -183,9 +187,9 @@ export default function ContentCommentsSheet({
             {replyTo ? (
               <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
                 <span>
-                  Replying to{" "}
+                  {t("replyingTo")}
                   <span className="font-semibold">
-                    {replyTo.author.username ?? "comment"}
+                    {replyTo.author.username ?? t("comment")}
                   </span>
                 </span>
                 <button
@@ -193,7 +197,7 @@ export default function ContentCommentsSheet({
                   onClick={() => setReplyTo(null)}
                   className="hover:text-foreground"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             ) : null}
@@ -203,8 +207,8 @@ export default function ContentCommentsSheet({
                 onChange={(e) => setBody(e.target.value)}
                 maxLength={MAX_COMMENT_LENGTH}
                 rows={1}
-                placeholder={user ? "Add a comment…" : "Sign in to comment"}
-                aria-label="Write a comment"
+                placeholder={user ? t("addAComment") : t("signInToComment")}
+                aria-label={t("writeAComment")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -218,7 +222,7 @@ export default function ContentCommentsSheet({
                 disabled={!body.trim() || send.isPending}
                 className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
               >
-                {send.isPending ? "Posting…" : "Post"}
+                {send.isPending ? t("posting") : t("post")}
               </button>
             </div>
           </form>
@@ -241,6 +245,8 @@ function CommentRow({
   onDeleted: () => void;
   isReply?: boolean;
 }) {
+  const t = useTranslations("spotlight");
+
   const requireAuth = useRequireAuth();
   const toast = useToast();
   const qc = useQueryClient();
@@ -259,7 +265,7 @@ function CommentRow({
     const res = await setContentCommentLike({
       commentId: comment.id,
       liked: next,
-    });
+    }).catch(actionUnreachable);
     const data = dataOf(res);
     if (!data) {
       setLiked(!next);
@@ -271,9 +277,11 @@ function CommentRow({
   };
 
   const remove = async () => {
-    const res = await deleteContentComment({ commentId: comment.id });
+    const res = await deleteContentComment({ commentId: comment.id }).catch(
+      actionUnreachable,
+    );
     if (res.status !== 200) {
-      toast.error(messageOf(res, "Couldn't delete this comment."));
+      toast.error(messageOf(res, t("couldnTDeleteThisComment")));
       return;
     }
     qc.setQueriesData<InfiniteData<ContentCommentsPage>>(
@@ -292,7 +300,8 @@ function CommentRow({
     onDeleted();
   };
 
-  const name = comment.author.username ?? comment.author.fullName ?? "Someone";
+  const name =
+    comment.author.username ?? comment.author.fullName ?? t("someone");
 
   return (
     <li className={isReply ? "ml-10" : undefined}>
@@ -321,7 +330,7 @@ function CommentRow({
                 onClick={() => onReply(comment)}
                 className="font-medium hover:text-foreground"
               >
-                Reply
+                {t("reply")}
               </button>
             ) : null}
             {comment.isMine || comment.canModerate ? (
@@ -330,7 +339,7 @@ function CommentRow({
                 onClick={remove}
                 className="font-medium hover:text-destructive"
               >
-                Delete
+                {t("deleteText2")}
               </button>
             ) : user ? (
               <button
@@ -338,7 +347,7 @@ function CommentRow({
                 onClick={() => setReportOpen(true)}
                 className="font-medium hover:text-destructive"
               >
-                Report
+                {t("report2")}
               </button>
             ) : null}
           </div>
@@ -349,8 +358,8 @@ function CommentRow({
               className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               {showReplies
-                ? "Hide replies"
-                : `View ${comment.replyCount} ${comment.replyCount === 1 ? "reply" : "replies"}`}
+                ? t("hideReplies")
+                : t("viewReplies", { count: comment.replyCount })}
             </button>
           ) : null}
         </div>
@@ -358,7 +367,7 @@ function CommentRow({
           type="button"
           onClick={toggleLike}
           aria-pressed={liked}
-          aria-label={liked ? "Unlike comment" : "Like comment"}
+          aria-label={liked ? t("unlikeComment") : t("likeComment")}
           className="flex shrink-0 flex-col items-center text-xs text-muted-foreground"
         >
           {liked ? (
@@ -391,7 +400,7 @@ function CommentRow({
                 onClick={() => replies.fetchNextPage()}
                 className="text-xs font-medium text-primary hover:underline"
               >
-                More replies
+                {t("moreReplies")}
               </button>
             </li>
           ) : null}

@@ -3,6 +3,7 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "./eventDateValidation";
+import { t } from "./i18n/testTranslator";
 
 // A fixed "now" so the 5-hour notice rule is deterministic. Every date below
 // is far enough ahead of it that only the rule under test can fail.
@@ -13,6 +14,7 @@ describe("validateSingleDateRange", () => {
   it("accepts a start strictly before the end", () => {
     expect(
       validateSingleDateRange(
+        t,
         { from: day("2026-02-01T18:00:00Z"), to: day("2026-02-01T22:00:00Z") },
         NOW,
       ),
@@ -22,6 +24,7 @@ describe("validateSingleDateRange", () => {
   it("rejects an end earlier than the start", () => {
     expect(
       validateSingleDateRange(
+        t,
         { from: day("2026-02-01T18:00:00Z"), to: day("2026-02-01T17:00:00Z") },
         NOW,
       ),
@@ -33,7 +36,9 @@ describe("validateSingleDateRange", () => {
 
   it("rejects a zero-length range", () => {
     const at = day("2026-02-01T18:00:00Z");
-    expect(validateSingleDateRange({ from: at, to: at }, NOW).ok).toBe(false);
+    expect(validateSingleDateRange(t, { from: at, to: at }, NOW).ok).toBe(
+      false,
+    );
   });
 });
 
@@ -41,6 +46,7 @@ describe("validateSpecificDates", () => {
   it("accepts occurrences that each start before they end", () => {
     expect(
       validateSpecificDates(
+        t,
         [
           {
             start: day("2026-02-01T18:00:00Z"),
@@ -62,6 +68,7 @@ describe("validateSpecificDates", () => {
   it("rejects an occurrence whose end is before its start, naming it", () => {
     expect(
       validateSpecificDates(
+        t,
         [
           {
             start: day("2026-02-01T18:00:00Z"),
@@ -83,6 +90,7 @@ describe("validateSpecificDates", () => {
   it("uses the unnumbered message when there is only one date", () => {
     expect(
       validateSpecificDates(
+        t,
         [
           {
             start: day("2026-02-01T22:00:00Z"),
@@ -103,6 +111,7 @@ describe("validateSpecificDates", () => {
   it("reports the notice-period failure before the ordering one", () => {
     expect(
       validateSpecificDates(
+        t,
         [
           {
             start: day("2025-12-31T22:00:00Z"),

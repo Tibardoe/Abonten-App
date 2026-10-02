@@ -109,7 +109,7 @@ Services: `packages/services/src/admin/weekly/weeklyAdminCore.ts` (editions, sec
 | `weekly-publish-due` | */5 | `weekly_publish_due()` | Publishes scheduled editions whose time has come. One that fails its checks stays scheduled and opens an `incident` (component `weekly`, one per edition until resolved) |
 | `weekly-housekeeping` | 02:45 | `weekly_housekeeping()` | Deletes items whose listing no longer exists; archives editions older than `edition_retention_weeks` (104) |
 
-Health: `weekly_health()` feeds the `weekly` check in the observability health run (Admin › Monitoring, "Abonten Weekly schedule"). Healthy while the programme is off; when on, down if a scheduled edition is more than 15 minutes late or no Ghana-wide edition is published for the week by 09:00 Accra on Monday. Page errors report through the existing web error pipeline (`apps/web/src/app/(pages)/weekly/error.tsx`).
+Health: `weekly_health()` feeds the `weekly` check in the observability health run (Admin › Monitoring, "Abonten Weekly schedule"). Healthy while the programme is off; when on, down if a scheduled edition is more than 15 minutes late or no Ghana-wide edition is published for the week by 09:00 Accra on Monday. Page errors report through the existing web error pipeline (`apps/web/src/app/[locale]/(pages)/weekly/error.tsx`).
 
 ## 8. Web and mobile
 

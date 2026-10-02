@@ -3,6 +3,7 @@ import {
   routeParams,
 } from "@/app/api/mobile/field-ops/_lib/handler";
 import { removeEvidenceCore } from "@abonten/services/fieldOps/member/evidenceCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { fieldOpsEvidenceRemoveSchema } from "@abonten/validation/fieldOpsSchemas";
 
 // DELETE /api/mobile/field-ops/onboardings/:onboardingId/evidence/:evidenceId
@@ -11,6 +12,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ onboardingId: string; evidenceId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { onboardingId, evidenceId } = await routeParams(params);
   return fieldOpsRoute(
     req,

@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { getEventHasConfirmedParticipationCore } from "@abonten/services/events/getEventHasConfirmedParticipationCore";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 /**
  * Whether an event already has at least one confirmed ticket — paid or free
@@ -17,19 +19,22 @@ import { getEventHasConfirmedParticipationCore } from "@abonten/services/events/
  * can't be used to probe another organizer's event. Query body shared with
  * the mobile organizer routes via @/utils/getEventHasConfirmedParticipationCore.
  */
-export default async function getEventHasConfirmedParticipation(
-  eventId: string,
-) {
-  const supabase = await createClient();
+export default withActionLocale(
+  async function getEventHasConfirmedParticipation(eventId: string) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401 as const, message: "User not authenticated" };
-  }
+    if (userError || !user) {
+      return {
+        status: 401 as const,
+        message: tr("userNotAuthenticated"),
+      };
+    }
 
-  return getEventHasConfirmedParticipationCore(supabase, user.id, eventId);
-}
+    return getEventHasConfirmedParticipationCore(supabase, user.id, eventId);
+  },
+);

@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import type { LoyaltyProgress } from "@abonten/types/rewards";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { creditCurrencyFor } from "./creditCurrency";
 import { rewardsKillSwitchOn } from "./rewardsProgramQuery";
@@ -33,7 +34,7 @@ export async function getLoyaltyProgressCore(userId: string): Promise<{
   message?: string;
   data?: LoyaltyProgress | null;
 }> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   if (rewardsKillSwitchOn()) return { status: 200, data: null };
 
   const { data, error } = await getSupabaseServiceClient().rpc(
@@ -42,7 +43,10 @@ export async function getLoyaltyProgressCore(userId: string): Promise<{
   );
   if (error) {
     logger.error(`loyalty_progress failed for ${userId}: ${error.message}`);
-    return { status: 500, message: "Couldn't load your loyalty progress." };
+    return {
+      status: 500,
+      message: tr("couldnTLoadYourLoyaltyProgress"),
+    };
   }
   const p = data as ProgressJson | null;
   if (!p) return { status: 200, data: null };

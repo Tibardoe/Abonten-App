@@ -1,9 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
-export async function getTickets(eventId: string) {
+export const getTickets = withActionLocale(async function getTickets(
+  eventId: string,
+) {
   const supabase = await createClient();
 
   const { data: tickets, error: ticketsError } = await supabase
@@ -16,9 +20,9 @@ export async function getTickets(eventId: string) {
 
     return {
       status: 500,
-      message: "Failed to load tickets. Please try again.",
+      message: tr("failedToLoadTicketsPleaseTry"),
     };
   }
 
   return { status: 200, tickets };
-}
+});

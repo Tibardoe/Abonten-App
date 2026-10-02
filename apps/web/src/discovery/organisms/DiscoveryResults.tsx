@@ -9,6 +9,8 @@ import OrganizerCard from "@/discovery/molecules/OrganizerCard";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import PlaceCard from "@/places/molecules/PlaceCard";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type {
   SearchEntityType,
@@ -21,6 +23,7 @@ import type {
   SearchResults,
 } from "@abonten/types/searchType";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useCallback, useMemo, useRef } from "react";
 import { IoClose } from "react-icons/io5";
@@ -33,10 +36,10 @@ import { IoClose } from "react-icons/io5";
 // click-through panels in Admin › Discovery are built on.
 
 const TABS: { mode: SearchMode; label: string }[] = [
-  { mode: "all", label: "All" },
-  { mode: "events", label: "Events" },
-  { mode: "places", label: "Places" },
-  { mode: "organizers", label: "Organizers" },
+  { mode: "all", label: "tabs.all" },
+  { mode: "events", label: "tabs.events" },
+  { mode: "places", label: "tabs.places" },
+  { mode: "organizers", label: "tabs.organizers" },
 ];
 
 const GRID = "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5";
@@ -70,7 +73,9 @@ function useClickLogger(searchId: number | null) {
     (entityType: SearchEntityType, entityId: string, rank: number) => {
       if (!searchId || logged.current) return;
       logged.current = true;
-      void logSearchClick({ searchId, entityType, entityId, rank });
+      void logSearchClick({ searchId, entityType, entityId, rank }).catch(
+        actionUnreachable,
+      );
     },
     [searchId],
   );
@@ -128,6 +133,8 @@ function SingleGroup<T extends { id: string }>({
   className: string;
   onOpen: (type: SearchEntityType, id: string, rank: number) => void;
 }) {
+  const t = useTranslations("discovery");
+
   const query = useInfiniteQuery({
     queryKey: ["discovery-search", request],
     initialPageParam: null as string | null,
@@ -167,12 +174,12 @@ function SingleGroup<T extends { id: string }>({
           className="py-4 text-center text-sm text-muted-foreground"
           aria-live="polite"
         >
-          Loading more…
+          {t("loadingMore")}
         </p>
       ) : null}
       {query.isFetchNextPageError ? (
         <InlineErrorRetry
-          message="Couldn't load more results."
+          message={t("couldnTLoadMoreResults")}
           onRetry={() => query.fetchNextPage()}
         />
       ) : null}
@@ -182,6 +189,9 @@ function SingleGroup<T extends { id: string }>({
 }
 
 function NoResults({ request }: { request: SearchRequest }) {
+  const t = useTranslations("discovery");
+  const tc = useTranslations("core");
+
   const organizerMode = request.q.trim().startsWith("@");
   const categories = eventCategoriesAndTypes.slice(0, 6).map((c) => c.category);
   return (
@@ -189,15 +199,15 @@ function NoResults({ request }: { request: SearchRequest }) {
       <NoEventsFound
         heading={
           organizerMode
-            ? `No organizers match ${request.q.trim()}`
-            : `No results for "${request.q.trim()}"`
+            ? t("noOrganizersMatch", { trim: request.q.trim() })
+            : t("noResultsFor", { trim: request.q.trim() })
         }
         description={
           organizerMode
-            ? "Check the spelling of the handle, or search by name without the @."
-            : "Try a shorter or more general term, check the spelling, or browse what's on."
+            ? t("checkTheSpellingOfTheHandle")
+            : t("tryAShorterOrMoreGeneral")
         }
-        action={{ label: "Explore events near you", href: "/explore" }}
+        action={{ label: t("exploreEventsNearYou"), href: "/explore" }}
         compact
       />
       {!organizerMode ? (
@@ -208,7 +218,7 @@ function NoResults({ request }: { request: SearchRequest }) {
               href={`/search?category=${encodeURIComponent(category)}`}
               className="rounded-full bg-muted px-3 py-1.5 text-sm text-foreground hover:bg-accent"
             >
-              {category}
+              {eventCategoryLabel(tc, category)}
             </Link>
           ))}
         </div>
@@ -231,6 +241,8 @@ export default function DiscoveryResults({
   showPlaces: boolean;
   showOrganizers: boolean;
 }) {
+  const t = useTranslations("discovery");
+
   const onOpen = useClickLogger(initial.searchId);
   const organizerMode = initial.query.kind === "organizer";
   const tabs = TABS.filter(
@@ -255,21 +267,30 @@ export default function DiscoveryResults({
   const failureMessage =
     initial.status === 429 && initial.message
       ? initial.message
-      : "Search is unavailable right now.";
+      : t("searchIsUnavailableRightNow");
 
   const summary = failed
     ? failureMessage
     : total === 0
-      ? "No results."
+      ? t("noResults")
       : [
           counts.events
-            ? `${counts.events}${initial.events.hasNextPage ? "+" : ""} events`
+            ? t("eventsCount", {
+                count: counts.events,
+                plus: initial.events.hasNextPage ? "+" : "",
+              })
             : null,
           counts.places
-            ? `${counts.places}${initial.places.hasNextPage ? "+" : ""} places`
+            ? t("placesCount", {
+                count: counts.places,
+                plus: initial.places.hasNextPage ? "+" : "",
+              })
             : null,
           counts.organizers
-            ? `${counts.organizers}${initial.organizers.hasNextPage ? "+" : ""} organizers`
+            ? t("organizersCount", {
+                count: counts.organizers,
+                plus: initial.organizers.hasNextPage ? "+" : "",
+              })
             : null,
         ]
           .filter(Boolean)
@@ -280,10 +301,10 @@ export default function DiscoveryResults({
       {organizerLabel && request.organizerId ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm">
-            Events by {organizerLabel}
+            {t("eventsBy", { organizerLabel: organizerLabel })}
             <Link
               href={hrefFor(request, { organizerId: null, mode: "all" })}
-              aria-label="Show all results"
+              aria-label={t("showAllResults")}
               className="text-muted-foreground hover:text-foreground"
             >
               <IoClose aria-hidden />
@@ -294,7 +315,7 @@ export default function DiscoveryResults({
 
       {tabs.length > 1 ? (
         <nav
-          aria-label="Result type"
+          aria-label={t("resultType")}
           className="flex gap-2 overflow-x-auto pb-1"
         >
           {tabs.map((tab) => {
@@ -312,7 +333,7 @@ export default function DiscoveryResults({
                     : "bg-muted text-foreground hover:bg-accent",
                 )}
               >
-                {tab.label}
+                {t(tab.label)}
               </Link>
             );
           })}
@@ -335,7 +356,7 @@ export default function DiscoveryResults({
           {[
             {
               key: "events" as const,
-              title: "Events",
+              title: t("events"),
               group: initial.events,
               show: !organizerMode,
               body: (
@@ -350,7 +371,7 @@ export default function DiscoveryResults({
             },
             {
               key: "places" as const,
-              title: "Places",
+              title: t("places2"),
               group: initial.places,
               show: showPlaces && !organizerMode,
               body: (
@@ -365,7 +386,7 @@ export default function DiscoveryResults({
             },
             {
               key: "organizers" as const,
-              title: "Organizers",
+              title: t("organizers"),
               group: initial.organizers,
               show: showOrganizers,
               body: (
@@ -400,13 +421,13 @@ export default function DiscoveryResults({
                       href={hrefFor(request, { mode: section.key })}
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      See all {section.title.toLowerCase()}
+                      {t("seeAll", { section: section.key })}
                     </Link>
                   ) : null}
                 </div>
                 {section.group.error ? (
                   <InlineErrorRetry
-                    message={`Couldn't load ${section.title.toLowerCase()}.`}
+                    message={t("couldnTLoad", { section: section.key })}
                     onRetry={() => window.location.reload()}
                   />
                 ) : (

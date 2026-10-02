@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Native echo of the web submitPlaceClaimRequest action + getPlaceClaimRequests
@@ -55,10 +56,10 @@ export function validateClaimDoc(file: {
   sizeBytes: number | null;
 }): string | null {
   if (!CLAIM_DOC_ACCEPTED_MIME.includes(file.mimeType)) {
-    return "Only JPG, PNG, WebP or PDF files are accepted.";
+    return translatorFor("places")("onlyJpgPngWebpOrPdf");
   }
   if (file.sizeBytes != null && file.sizeBytes > CLAIM_DOC_MAX_BYTES) {
-    return "That file is over 10 MB. Please attach a smaller one.";
+    return translatorFor("places")("thatFileIsOver10Mb");
   }
   return null;
 }

@@ -5,9 +5,10 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import {
-  PROFILE_COMPLETION_GROUP_TITLES,
   type ProfileCompletionGroup,
   type ProfileCompletionItem,
+  profileCompletionGroupTitle,
+  profileCompletionItemCopy,
 } from "@abonten/core/profileCompletion";
 import {
   AtSign,
@@ -18,6 +19,7 @@ import {
   Phone,
   User,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 // Settings › Account setup: the five steps, what each is for, which are
@@ -37,6 +39,10 @@ const GROUPS: ProfileCompletionGroup[] = ["profile", "account"];
 const SKELETON_KEYS = ["a", "b", "c", "d", "e"];
 
 function Row({ item }: { item: ProfileCompletionItem }) {
+  const t = useTranslations("settings");
+  const tc = useTranslations("core");
+
+  const copy = profileCompletionItemCopy(tc, item);
   const Icon = item.complete ? Check : ICONS[item.key];
   return (
     <li>
@@ -55,16 +61,16 @@ function Row({ item }: { item: ProfileCompletionItem }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block font-medium text-card-foreground">
-            {item.complete ? item.doneLabel : item.label}
+            {item.complete ? copy.doneLabel : copy.label}
           </span>
           {!item.complete ? (
             <span className="block text-sm text-muted-foreground">
-              {item.description}
+              {copy.description}
             </span>
           ) : null}
           {item.state === "unverified" ? (
             <span className="block text-xs text-warning">
-              Waiting for a code
+              {t("waitingForACode")}
             </span>
           ) : null}
         </span>
@@ -75,6 +81,9 @@ function Row({ item }: { item: ProfileCompletionItem }) {
 }
 
 export default function AccountSetupPanel() {
+  const t = useTranslations("settings");
+  const tc = useTranslations("core");
+
   const {
     data: completion,
     isLoading,
@@ -95,7 +104,7 @@ export default function AccountSetupPanel() {
   if (isError || !completion) {
     return (
       <InlineErrorRetry
-        message="We couldn't load your account setup."
+        message={t("weCouldnTLoadYourAccount")}
         onRetry={() => refetch()}
       />
     );
@@ -108,28 +117,31 @@ export default function AccountSetupPanel() {
       <div className="space-y-3 rounded-xl border border-border bg-card p-4">
         {completion.isComplete ? (
           <div>
-            <p className="font-semibold">You&apos;re all set</p>
+            <p className="font-semibold">{t("youReAllSet")}</p>
             <p className="text-sm text-muted-foreground">
-              Your profile is complete and you have two ways to sign in.
+              {t("yourProfileIsCompleteAndYou")}
             </p>
           </div>
         ) : (
           <div>
-            <p className="font-semibold">
-              {left === 1 ? "One step left" : `${left} steps left`}
-            </p>
+            <p className="font-semibold">{t("stepsLeft", { left: left })}</p>
             <p className="text-sm text-muted-foreground">
-              None of these are required to use Abonten. Each one says what
-              it&apos;s for.
+              {t("noneOfTheseAreRequiredTo")}
             </p>
           </div>
         )}
         <Progress
           value={(completion.completedCount / completion.total) * 100}
-          aria-label={`${completion.completedCount} of ${completion.total} steps done`}
+          aria-label={t("ofStepsDone", {
+            completedCount: completion.completedCount,
+            total: completion.total,
+          })}
         />
         <p className="text-xs text-muted-foreground">
-          {completion.completedCount} of {completion.total} steps done
+          {t("ofStepsDone", {
+            completedCount: completion.completedCount,
+            total: completion.total,
+          })}
         </p>
       </div>
 
@@ -140,10 +152,10 @@ export default function AccountSetupPanel() {
           <section key={group} className="space-y-2">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                {PROFILE_COMPLETION_GROUP_TITLES[group]}
+                {profileCompletionGroupTitle(tc, group)}
               </h2>
               <span className="text-xs text-muted-foreground">
-                {done} of {items.length} done
+                {t("ofDone", { done: done, length: items.length })}
               </span>
             </div>
             <ul className="space-y-2">

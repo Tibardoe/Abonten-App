@@ -1,9 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
-export async function saveToSupabase(
+export const saveToSupabase = withActionLocale(async function saveToSupabase(
   publicId: string,
   version: number,
   transformation: string,
@@ -16,12 +18,12 @@ export async function saveToSupabase(
     logger.error("saveAvatarToSupabase: failed to fetch user", userError);
     return {
       status: 500,
-      message: "We couldn't load your account. Please try again.",
+      message: tr("weCouldnTLoadYourAccount"),
     };
   }
 
   if (!user) {
-    return { status: 401, message: "You need to be signed in to do that." };
+    return { status: 401, message: tr("youNeedToBeSignedIn") };
   }
 
   // The public_id's folder was bound to this user's id when the upload
@@ -30,7 +32,7 @@ export async function saveToSupabase(
   // tampered with — a real upload could never have landed elsewhere. Same
   // guard uploadHighlight.ts / addPlacePhotoCore / insertReviewPhotos apply.
   if (!publicId.startsWith(`user_profiles/${user.user.id}/`)) {
-    return { status: 403, message: "Not authorized for this image." };
+    return { status: 403, message: tr("notAuthorizedForThisImage") };
   }
 
   const { error: updateError } = await supabase
@@ -45,7 +47,7 @@ export async function saveToSupabase(
     );
     return {
       status: 500,
-      message: "We couldn't update your profile photo. Please try again.",
+      message: tr("weCouldnTUpdateYourProfile"),
     };
   }
 
@@ -72,5 +74,5 @@ export async function saveToSupabase(
     );
   }
 
-  return { status: 200, message: "Profile updated successfully." };
-}
+  return { status: 200, message: tr("profileUpdatedSuccessfully") };
+});

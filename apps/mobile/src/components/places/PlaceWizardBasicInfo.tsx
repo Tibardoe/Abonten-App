@@ -1,6 +1,8 @@
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import type { PlaceWizard } from "@/features/places/usePlaceWizard";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { AppText, Chip, Field, Icon, Input } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -9,24 +11,27 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 // "choose on map", or current location). Mirrors the web
 // PlaceCreateStepBasicInfo.
 export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+
   const [mapOpen, setMapOpen] = useState(false);
 
   return (
     <View className="gap-4">
-      <Field label="Name" error={w.textErrors.name}>
+      <Field label={t("name")} error={w.textErrors.name}>
         <Input
           value={w.name}
           onChangeText={w.setName}
-          placeholder="e.g. The Roastery Coffee Bar"
+          placeholder={t("eGTheRoasteryCoffeeBar")}
         />
       </Field>
 
-      <Field label="Category">
+      <Field label={t("category")}>
         <View className="flex-row flex-wrap gap-2">
           {w.categories.map((cat) => (
             <Chip
               key={cat.id}
-              label={cat.name}
+              label={placeCategoryLabel(tc, cat)}
               selected={cat.id === w.categoryId}
               onPress={() => w.setCategoryId(cat.id)}
             />
@@ -34,31 +39,28 @@ export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
         </View>
       </Field>
 
-      <Field label="Description" error={w.textErrors.description}>
+      <Field label={t("description")} error={w.textErrors.description}>
         <Input
           value={w.description}
           onChangeText={w.setDescription}
           multiline
           numberOfLines={4}
           style={{ minHeight: 96, textAlignVertical: "top" }}
-          placeholder="What should visitors know about this place?"
+          placeholder={t("whatShouldVisitorsKnowAboutThis")}
         />
       </Field>
 
-      <Field
-        label="Location"
-        hint="Search, choose on the map, or use your current location."
-      >
+      <Field label={t("location")} hint={t("searchChooseOnTheMapOr")}>
         <Input
           value={w.autocomplete.query}
           onChangeText={w.autocomplete.setQuery}
-          placeholder="Start typing an address…"
+          placeholder={t("startTypingAnAddress")}
           autoCorrect={false}
         />
         {w.resolvingLocation ? (
           <View className="flex-row items-center gap-2 py-1">
             <ActivityIndicator size="small" />
-            <AppText variant="meta">Resolving location…</AppText>
+            <AppText variant="meta">{t("resolvingLocation2")}</AppText>
           </View>
         ) : null}
         {w.autocomplete.predictions.length > 0 ? (
@@ -86,7 +88,7 @@ export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
           >
             <Icon name="map-outline" size={16} tone="primary" />
             <AppText variant="small" tone="brand">
-              Choose on map
+              {t("chooseOnMap")}
             </AppText>
           </Pressable>
           <Pressable
@@ -96,16 +98,22 @@ export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
           >
             <Icon name="locate-outline" size={16} tone="primary" />
             <AppText variant="small" tone="brand">
-              Current location
+              {t("currentLocation")}
             </AppText>
           </Pressable>
         </View>
         {w.address && w.coords ? (
-          <AppText variant="meta">Selected: {w.address}</AppText>
+          <AppText variant="meta">
+            {t("selected", { address: w.address })}
+          </AppText>
         ) : null}
       </Field>
 
-      <Field label="Website" error={w.textErrors.website_url} hint="Optional">
+      <Field
+        label={t("website2")}
+        error={w.textErrors.website_url}
+        hint={t("optional")}
+      >
         <Input
           value={w.website}
           onChangeText={w.setWebsite}
@@ -116,7 +124,11 @@ export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
         />
       </Field>
 
-      <Field label="Phone" error={w.textErrors.phone} hint="Optional">
+      <Field
+        label={t("phone2")}
+        error={w.textErrors.phone}
+        hint={t("optional")}
+      >
         <Input
           value={w.phone}
           onChangeText={w.setPhone}
@@ -125,7 +137,11 @@ export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
         />
       </Field>
 
-      <Field label="WhatsApp" error={w.textErrors.whatsapp} hint="Optional">
+      <Field
+        label="WhatsApp"
+        error={w.textErrors.whatsapp}
+        hint={t("optional")}
+      >
         <Input
           value={w.whatsapp}
           onChangeText={w.setWhatsapp}

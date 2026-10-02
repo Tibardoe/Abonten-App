@@ -4,6 +4,7 @@ import { cn } from "@/components/lib/utils";
 import usePrefersReducedMotion from "@/hooks/usePrefersReducedMotion";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { WeeklyBannerSlide } from "@abonten/types/weeklyType";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -67,6 +68,8 @@ export default function WeeklyBanner({
   children: ReactNode;
   priority?: boolean;
 }) {
+  const t = useTranslations("weekly");
+
   const count = slides.length;
   const rotating = count > 1;
   const reducedMotion = usePrefersReducedMotion();
@@ -292,7 +295,7 @@ export default function WeeklyBanner({
               type="button"
               onClick={() => setUserPaused((p) => !p)}
               aria-label={
-                userPaused ? "Resume the slideshow" : "Pause the slideshow"
+                userPaused ? t("resumeTheSlideshow") : t("pauseTheSlideshow")
               }
               className="pointer-events-auto grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/30 text-white ring-1 ring-white/20 backdrop-blur-md transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
@@ -344,8 +347,8 @@ export default function WeeklyBanner({
                     <span className="block truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">
                       {slide.headline ??
                         (slide.subjectType === "event"
-                          ? "Featured event"
-                          : "Featured place")}
+                          ? t("featuredEvent")
+                          : t("featuredPlace"))}
                     </span>
                     <span className="block truncate text-sm font-semibold">
                       {slide.title}
@@ -369,9 +372,9 @@ export default function WeeklyBanner({
                   className="m-0 flex min-w-0 items-center gap-2 border-0 p-0"
                   onKeyDown={onControlsKeyDown}
                 >
-                  <legend className="sr-only">Slideshow controls</legend>
+                  <legend className="sr-only">{t("slideshowControls")}</legend>
                   <ArrowButton
-                    label="Previous pick"
+                    label={t("previousPick")}
                     onClick={() => go(index - 1)}
                   >
                     <FiChevronLeft aria-hidden className="h-5 w-5" />
@@ -382,7 +385,11 @@ export default function WeeklyBanner({
                         key={s.key}
                         type="button"
                         onClick={() => go(i)}
-                        aria-label={`Show pick ${i + 1} of ${count}: ${s.title}`}
+                        aria-label={t("showPickOf", {
+                          value: i + 1,
+                          count: count,
+                          title: s.title,
+                        })}
                         aria-current={i === index ? "true" : undefined}
                         className="group/seg flex h-6 flex-1 items-center focus-visible:outline-none"
                       >
@@ -409,7 +416,10 @@ export default function WeeklyBanner({
                       </button>
                     ))}
                   </div>
-                  <ArrowButton label="Next pick" onClick={() => go(index + 1)}>
+                  <ArrowButton
+                    label={t("nextPick")}
+                    onClick={() => go(index + 1)}
+                  >
                     <FiChevronRight aria-hidden className="h-5 w-5" />
                   </ArrowButton>
                 </fieldset>

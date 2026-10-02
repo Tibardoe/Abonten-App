@@ -7,7 +7,9 @@ import {
 } from "@/features/organizer/useAttendees";
 import { useQueryView } from "@/lib/useQueryView";
 import type { AttendanceRow } from "@abonten/api-client";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Refresher, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
@@ -23,13 +25,18 @@ function AttendeeRow({
   attendee: AttendanceRow;
   eventId: string;
 }) {
+  const t = useTranslations("manage");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const checkIn = useCheckInTicket(eventId);
 
   const isCancelled = attendee.status === "cancelled";
   const isCheckedIn = attendee.ticket?.status === "used";
   const name =
-    attendee.user_info?.full_name ?? attendee.user_info?.username ?? "Attendee";
+    attendee.user_info?.full_name ??
+    attendee.user_info?.username ??
+    t("attendee");
 
   const toggle = (checkedIn: boolean) => {
     if (!attendee.ticket_id) return;
@@ -40,18 +47,20 @@ function AttendeeRow({
           if (res.status === 200) {
             toast.success(
               checkedIn
-                ? `${attendee.user_info?.full_name ?? "Attendee"} checked in`
-                : "Check-in undone",
+                ? t("checkedIn", {
+                    value: attendee.user_info?.full_name ?? t("attendee"),
+                  })
+                : t("checkInUndone"),
             );
             return;
           }
-          toast.error(res.message ?? "We couldn't check that ticket in.", {
-            description: "The attendee list is unchanged. Try again.",
+          toast.error(res.message ?? t("weCouldnTCheckThatTicket"), {
+            description: t("theAttendeeListIsUnchangedTry"),
           });
         },
         onError: () => {
-          toast.error("We couldn't reach the server.", {
-            description: "Check your connection and try again.",
+          toast.error(t("weCouldnTReachTheServer"), {
+            description: t("checkYourConnectionAndTryAgain"),
           });
         },
       },
@@ -67,7 +76,7 @@ function AttendeeRow({
         <View className="shrink-0 flex-row items-center gap-2">
           {attendee.ticket_type?.type ? (
             <AppText className="text-sm text-muted-foreground">
-              {attendee.ticket_type.type}
+              {ticketTypeLabel(tc, attendee.ticket_type.type)}
             </AppText>
           ) : null}
           <View
@@ -84,7 +93,7 @@ function AttendeeRow({
                   : "text-[13px] font-semibold text-primary"
               }
             >
-              {isCancelled ? "Cancelled" : "Active"}
+              {isCancelled ? t("cancelled") : t("active")}
             </AppText>
           </View>
         </View>
@@ -111,7 +120,7 @@ function AttendeeRow({
               className="self-start active:opacity-70 disabled:opacity-50"
             >
               <AppText variant="small" tone="brand" className="font-semibold">
-                ✓ Checked in — undo
+                {t("checkedInUndo")}
               </AppText>
             </Pressable>
           ) : (
@@ -122,7 +131,7 @@ function AttendeeRow({
               className="self-start rounded-md bg-primary px-3 py-1.5 active:opacity-90 disabled:opacity-60"
             >
               <AppText className="text-[13px] font-semibold text-primary-foreground">
-                {checkIn.isPending ? "Checking in…" : "Check in"}
+                {checkIn.isPending ? t("checkingIn") : t("checkIn")}
               </AppText>
             </Pressable>
           )}
@@ -133,6 +142,8 @@ function AttendeeRow({
 }
 
 export default function EventAttendeesScreen() {
+  const t = useTranslations("manage");
+
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const id = eventId ?? "";
   const q = useAttendees(id);
@@ -161,10 +172,10 @@ export default function EventAttendeesScreen() {
         contentContainerClassName="gap-2 p-4 pb-16"
         ListHeaderComponent={
           <View className="mb-2 flex-row items-center justify-between gap-3">
-            <AppText variant="screenTitle">Attendees</AppText>
+            <AppText variant="screenTitle">{t("attendees")}</AppText>
             {canScan ? (
               <Button
-                title="Scan tickets"
+                title={t("scanTickets")}
                 size="sm"
                 leftIcon="qr-code-outline"
                 onPress={() => setScanOpen(true)}
@@ -178,16 +189,16 @@ export default function EventAttendeesScreen() {
         ListEmptyComponent={
           forbidden ? (
             <AppText className="mt-10 text-center text-sm text-muted-foreground">
-              You're not authorized to view this event.
+              {t("youReNotAuthorizedToView")}
             </AppText>
           ) : view.kind === "empty" ? (
             <AppText className="mt-10 text-center text-sm text-muted-foreground">
-              No attendees yet.
+              {t("noAttendeesYet")}
             </AppText>
           ) : (
             <QueryUnavailable
               view={view}
-              subject="the attendee list"
+              subject={t("theAttendeeList")}
               onRetry={() => q.refetch()}
               loading={<ActivityIndicator className="mt-10" />}
             />

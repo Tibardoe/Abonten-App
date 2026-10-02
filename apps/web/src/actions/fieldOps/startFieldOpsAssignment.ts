@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsAssignmentStartSchema } from "@abonten/validation/fieldOpsSchem
  * Starts one of the member's assignments (offline members send their GPS
  * position). Same service as POST /api/mobile/field-ops/assignments/[id]/start.
  */
-export async function startFieldOpsAssignment(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsAssignment;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsAssignmentStartSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return startAssignmentCore(svc, userId, data);
-}
+export const startFieldOpsAssignment = withActionLocale(
+  async function startFieldOpsAssignment(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsAssignment;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsAssignmentStartSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return startAssignmentCore(svc, userId, data);
+  },
+);

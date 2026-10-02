@@ -9,12 +9,14 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { ReportDialog } from "@/components/organisms/ReportDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useHighlightViewer } from "@/hooks/useHighlightViewer";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   fallbackPlaybackSource,
   playbackSourceFor,
 } from "@abonten/core/highlightPlayback";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import {
   useCallback,
@@ -44,6 +46,8 @@ export default function HighlightViewer({
   isOwner,
   onClose,
 }: HighlightViewerProps) {
+  const t = useTranslations("common");
+
   const queryClient = useQueryClient();
   const { data: currentUser } = useCurrentUser();
 
@@ -194,11 +198,13 @@ export default function HighlightViewer({
   const handleDeleteSlide = async () => {
     setShowConfirmDelete(false);
     setIsDeleting(true);
-    const response = await deleteHighlightSlide(currentSlide.id);
+    const response = await deleteHighlightSlide(currentSlide.id).catch(
+      actionUnreachable,
+    );
     setIsDeleting(false);
 
     if (response.status !== 200) {
-      setDeleteError(response.message ?? "Failed to delete slide.");
+      setDeleteError(response.message ?? t("failedToDeleteSlide"));
       setTimeout(() => setDeleteError(null), 3000);
       return;
     }
@@ -236,7 +242,7 @@ export default function HighlightViewer({
   const menuActions: HighlightMenuAction[] = isOwner
     ? [
         {
-          label: `Delete this ${mediaNoun}`,
+          label: t("deleteThis", { mediaNoun: mediaNoun }),
           onSelect: () => setShowConfirmDelete(true),
           destructive: true,
         },
@@ -244,7 +250,7 @@ export default function HighlightViewer({
     : currentUser
       ? [
           {
-            label: `Report this ${mediaNoun}`,
+            label: t("reportThis3", { mediaNoun: mediaNoun }),
             onSelect: () => setShowReport(true),
             destructive: true,
           },
@@ -262,7 +268,7 @@ export default function HighlightViewer({
     <ModalShell
       open
       onClose={onClose}
-      title={`${username}'s highlight`}
+      title={t("sHighlight", { username: username })}
       className="bg-black overflow-hidden"
     >
       {/*
@@ -489,7 +495,7 @@ export default function HighlightViewer({
           {currentSlide.media_type === "image" ? (
             <Image
               src={currentSlide.media_url}
-              alt="Highlight"
+              alt={t("highlight")}
               width={700}
               height={700}
               draggable={false}
@@ -533,14 +539,14 @@ export default function HighlightViewer({
 
       {showConfirmDelete && (
         <ConfirmDeleteModal
-          title={`Delete this ${
-            currentSlide.media_type === "video" ? "video" : "photo"
-          }?`}
-          message={`Are you sure you want to delete this ${
-            currentSlide.media_type === "video" ? "video" : "photo"
-          }?`}
-          confirmLabel="Delete"
-          loadingLabel="Deleting…"
+          title={t("deleteThis2", {
+            value: currentSlide.media_type === "video" ? "video" : "photo",
+          })}
+          message={t("areYouSureYouWantTo5", {
+            value: currentSlide.media_type === "video" ? "video" : "photo",
+          })}
+          confirmLabel={t("deleteText")}
+          loadingLabel={t("deleting")}
           isLoading={isDeleting}
           onConfirm={handleDeleteSlide}
           onCancel={() => setShowConfirmDelete(false)}
@@ -558,7 +564,7 @@ export default function HighlightViewer({
         onOpenChange={setShowReport}
         targetType="highlight"
         targetId={currentSlide.id}
-        targetLabel={`highlight by ${username}`}
+        targetLabel={t("highlightBy", { username: username })}
       />
     </ModalShell>
   );

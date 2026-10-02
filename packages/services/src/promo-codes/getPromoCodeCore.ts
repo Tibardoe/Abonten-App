@@ -4,6 +4,7 @@ import { userFacingError } from "@abonten/core/userFacingError";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of getPromoCode — shared with validateCheckoutCore (and,
@@ -48,7 +49,7 @@ export async function getPromoCodeCore(
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many promo code attempts. Please try again shortly.",
+      message: tr("tooManyPromoCodeAttemptsPlease"),
     };
   }
 
@@ -71,12 +72,12 @@ export async function getPromoCodeCore(
     logger.error(`Error fetching promo code: ${promoCodeError.message}`);
     return {
       status: 500,
-      message: "Something went wrong. Please try again.",
+      message: tr("somethingWentWrongPleaseTryAgain"),
     };
   }
 
   if (!promoCode) {
-    return { status: 404, message: "Promo code is invalid!" };
+    return { status: 404, message: tr("promoCodeIsInvalid") };
   }
 
   // Both nullable in the DB (times_used has DEFAULT 0 but no NOT NULL;
@@ -87,11 +88,14 @@ export async function getPromoCodeCore(
     logger.error(
       `Promo code ${promoCode.id} has a null times_used/discount_percentage`,
     );
-    return { status: 500, message: "This promo code is misconfigured." };
+    return {
+      status: 500,
+      message: tr("thisPromoCodeIsMisconfigured"),
+    };
   }
 
   if (promoCode.is_active === false) {
-    return { status: 409, message: "Promo code is no longer active!" };
+    return { status: 409, message: tr("promoCodeIsNoLongerActive") };
   }
 
   if (
@@ -101,7 +105,7 @@ export async function getPromoCodeCore(
       (promoCode.event as { timezone?: string } | null)?.timezone ?? "UTC",
     ) <= new Date()
   ) {
-    return { status: 409, message: "Promo code has expired!" };
+    return { status: 409, message: tr("promoCodeHasExpired") };
   }
 
   const { data: promoCodeUsage, error: promoCodeUsageError } = await supabase
@@ -123,7 +127,10 @@ export async function getPromoCodeCore(
   }
 
   if (promoCodeUsage) {
-    return { status: 400, message: "You have already used this promo code" };
+    return {
+      status: 400,
+      message: tr("youHaveAlreadyUsedThisPromo"),
+    };
   }
 
   // max_uses is nullable and means "unlimited" — remainingUses stays null in
@@ -134,7 +141,10 @@ export async function getPromoCodeCore(
       : Math.max(0, promoCode.max_uses - promoCode.times_used);
 
   if (remainingUses !== null && remainingUses <= 0) {
-    return { status: 409, message: "Promo code has reached its usage limit!" };
+    return {
+      status: 409,
+      message: tr("promoCodeHasReachedItsUsage"),
+    };
   }
 
   return {

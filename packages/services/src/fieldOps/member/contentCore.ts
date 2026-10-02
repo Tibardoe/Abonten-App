@@ -4,6 +4,7 @@ import type {
   FieldOpsMyContent,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   BRIEF_COLUMNS,
   type BriefRow,
@@ -78,8 +79,8 @@ export async function getMyContentCore(
         .limit(200),
     ],
   );
-  if (error) return dbErr(error, "Could not load the content briefs");
-  if (!campaign) return { status: 404, message: "Campaign not found" };
+  if (error) return dbErr(error, tr("couldNotLoadTheContentBriefs"));
+  if (!campaign) return { status: 404, message: tr("campaignNotFound2") };
 
   const rule =
     membership.role === "content_creator"
@@ -131,7 +132,7 @@ export async function submitContentCore(
   if (!SUBMITTING.has(m.campaignStatus)) {
     return {
       status: 409,
-      message: "The campaign isn't taking content right now.",
+      message: tr("theCampaignIsnTTakingContent"),
     };
   }
 
@@ -143,9 +144,9 @@ export async function submitContentCore(
       .eq("id", input.briefId)
       .eq("campaign_id", input.campaignId)
       .maybeSingle();
-    if (!brief) return { status: 404, message: "Brief not found" };
+    if (!brief) return { status: 404, message: tr("briefNotFound") };
     if (brief.status === "closed") {
-      return { status: 409, message: "That brief is closed." };
+      return { status: 409, message: tr("thatBriefIsClosed") };
     }
   }
 
@@ -169,10 +170,10 @@ export async function submitContentCore(
     if (error.code === "23505") {
       return {
         status: 409,
-        message: "That post has already been sent in.",
+        message: tr("thatPostHasAlreadyBeenSent"),
       };
     }
-    return dbErr(error, "Could not send the deliverable");
+    return dbErr(error, tr("couldNotSendTheDeliverable"));
   }
 
   const { data: leads } = await supabase
@@ -188,15 +189,14 @@ export async function submitContentCore(
       .filter((id): id is string => Boolean(id)),
     {
       type: "fieldops_content_received",
-      title: "New content to review",
-      body: "The content creator sent in a deliverable.",
+      template: { id: "fieldops_content_received" },
       route: "/field/lead/content",
     },
   );
 
   return {
     status: 200,
-    message: "Sent for review.",
+    message: tr("sentForReview"),
     data: mapContentSubmission(data as unknown as ContentSubmissionRow),
   };
 }

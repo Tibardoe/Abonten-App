@@ -20,6 +20,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type CancelTicketProp = {
@@ -38,6 +39,8 @@ export default function CancelUserTicketBtn({
   transactionId,
   queryKey,
 }: CancelTicketProp) {
+  const t = useTranslations("common");
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
@@ -47,7 +50,7 @@ export default function CancelUserTicketBtn({
   // A ticket only has a transaction to refund if it was actually paid for
   // (free tickets never get a linked transaction — see generateTicket.ts) —
   // the menu label reflects that instead of always saying "refund".
-  const menuLabel = transactionId ? "Request Refund" : "Cancel Ticket";
+  const menuLabel = transactionId ? t("requestRefund") : t("cancelTicket");
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => cancelUserTicket(ticketId, transactionId),
@@ -88,9 +91,7 @@ export default function CancelUserTicketBtn({
         if (context?.previousData) {
           queryClient.setQueryData(queryKey, context.previousData);
         }
-        toast.error(
-          response.message ?? "Couldn't cancel this ticket. Please try again.",
-        );
+        toast.error(response.message ?? t("couldnTCancelThisTicketPlease"));
       }
     },
 
@@ -98,7 +99,7 @@ export default function CancelUserTicketBtn({
       if (context?.previousData) {
         queryClient.setQueryData(queryKey, context.previousData);
       }
-      toast.error("Couldn't cancel this ticket. Please try again.");
+      toast.error(t("couldnTCancelThisTicketPlease"));
     },
 
     onSettled: () => {
@@ -117,7 +118,7 @@ export default function CancelUserTicketBtn({
         <PopoverTrigger asChild>
           <button
             type="button"
-            aria-label="Ticket options"
+            aria-label={t("ticketOptions")}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <MoreVertical className="h-4 w-4" />
@@ -139,15 +140,13 @@ export default function CancelUserTicketBtn({
 
       {showCancelConfirm && (
         <ConfirmDeleteModal
-          title="Cancel this ticket?"
+          title={t("cancelThisTicket")}
           message={
-            transactionId
-              ? "Are you sure you want to cancel this ticket? A refund will be issued to your original payment method."
-              : "Are you sure you want to cancel this ticket?"
+            transactionId ? t("areYouSureYouWantTo") : t("areYouSureYouWantTo2")
           }
-          confirmLabel="Cancel Ticket"
-          cancelLabel="Keep Ticket"
-          loadingLabel="Cancelling…"
+          confirmLabel={t("cancelTicket")}
+          cancelLabel={t("keepTicket")}
+          loadingLabel={t("cancelling")}
           isLoading={isPending}
           onConfirm={() => mutate()}
           onCancel={() => setShowCancelConfirm(false)}

@@ -5,26 +5,33 @@ import ManagePromoCodesButton from "@/components/atoms/ManagePromoCodesButton";
 import EditEventFormFields from "@/components/molecules/EditEventFormFields";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
+import { TICKET_MODE, type TicketMode } from "@/events/ticketMode";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
 import { useToast } from "@/hooks/useToast";
 import {
   ticketCapacityHint,
   ticketCapacityProblem,
 } from "@abonten/core/ticketCapacity";
+import {
+  FREE_TICKET_TYPE,
+  SINGLE_TICKET_TYPE,
+} from "@abonten/core/ticketTiers";
 import type {
   ManagedEvent,
   ManagedEventTicketType,
 } from "@abonten/types/managedEventType";
 import type { Ticket } from "@abonten/types/ticketType";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
+
+// The name the create flow stores for an event with one paid ticket type
+// (a value in ticket_type.type, never shown as words).
 
 type ManageEventDetailsSectionProps = {
   event: ManagedEvent;
   hasConfirmedParticipation: boolean;
   onSaved: () => void;
 };
-
-type TicketMode = "Free" | "Single Ticket Type" | "Multiple Ticket Types";
 
 function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
   mode: TicketMode;
@@ -35,9 +42,9 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
 } {
   const currency = ticketTypes[0]?.currency ?? "";
 
-  if (ticketTypes.length === 1 && ticketTypes[0].type === "FREE") {
+  if (ticketTypes.length === 1 && ticketTypes[0].type === FREE_TICKET_TYPE) {
     return {
-      mode: "Free",
+      mode: TICKET_MODE.free,
       singleTicket: null,
       singleTicketQuantity: null,
       multipleTickets: [],
@@ -45,9 +52,9 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
     };
   }
 
-  if (ticketTypes.length === 1 && ticketTypes[0].type === "SINGLE TICKET") {
+  if (ticketTypes.length === 1 && ticketTypes[0].type === SINGLE_TICKET_TYPE) {
     return {
-      mode: "Single Ticket Type",
+      mode: TICKET_MODE.single,
       singleTicket: ticketTypes[0].price,
       singleTicketQuantity: ticketTypes[0].quantity,
       multipleTickets: [],
@@ -56,7 +63,7 @@ function inferInitialTicketState(ticketTypes: ManagedEventTicketType[]): {
   }
 
   return {
-    mode: "Multiple Ticket Types",
+    mode: TICKET_MODE.multiple,
     singleTicket: null,
     singleTicketQuantity: null,
     multipleTickets: ticketTypes.map((t) => ({
@@ -86,6 +93,9 @@ export default function ManageEventDetailsSection({
   hasConfirmedParticipation,
   onSaved,
 }: ManageEventDetailsSectionProps) {
+  const t = useTranslations("events");
+  const tc = useTranslations("core");
+
   const toast = useToast();
 
   const eventEditForm = useEventEditForm({
@@ -133,7 +143,7 @@ export default function ManageEventDetailsSection({
       });
 
       if (response.status === 200) {
-        toast.success("✅ Ticket types updated successfully!");
+        toast.success(t("ticketTypesUpdatedSuccessfully"));
         onSaved();
       } else {
         toast.error(`❌ ${response.message}`);
@@ -148,25 +158,25 @@ export default function ManageEventDetailsSection({
   // and the database apply (@abonten/core/ticketCapacity).
   const watchedCapacity = eventEditForm.form.watch("capacity");
   const tiersForCapacity =
-    ticketMode === "Single Ticket Type"
+    ticketMode === TICKET_MODE.single
       ? [{ quantity: singleTicketQuantity }]
-      : ticketMode === "Multiple Ticket Types"
+      : ticketMode === TICKET_MODE.multiple
         ? multipleTickets.map((t) => ({ quantity: t.quantity }))
         : [];
   const capacityProblem =
-    ticketMode && ticketMode !== "Free"
-      ? ticketCapacityProblem(watchedCapacity, tiersForCapacity)
+    ticketMode && ticketMode !== TICKET_MODE.free
+      ? ticketCapacityProblem(tc, watchedCapacity, tiersForCapacity)
       : null;
   const capacityHint =
-    ticketMode && ticketMode !== "Free"
-      ? ticketCapacityHint(watchedCapacity, tiersForCapacity)
+    ticketMode && ticketMode !== TICKET_MODE.free
+      ? ticketCapacityHint(tc, watchedCapacity, tiersForCapacity)
       : null;
 
   const saveButtonLabel = isResolvingLocation
-    ? "Resolving location..."
+    ? t("resolvingLocation")
     : isSubmitting
-      ? "Saving..."
-      : "Save changes";
+      ? t("saving")
+      : t("saveChanges2");
 
   // Wait for prefill to actually finish (isReady), not just for the raw
   // fetch to settle (isFetchingEvent) -- there's one render in between where
@@ -181,7 +191,7 @@ export default function ManageEventDetailsSection({
   if (isFetchingEvent || !isReady) {
     return (
       <div className="flex items-center justify-center py-10 text-muted-foreground text-sm">
-        Loading event...
+        {t("loadingEvent")}
       </div>
     );
   }
@@ -214,11 +224,11 @@ export default function ManageEventDetailsSection({
 
       <div className="space-y-4">
         <div>
-          <h2 className="font-semibold text-lg">Ticket Types</h2>
+          <h2 className="font-semibold text-lg">{t("ticketTypes")}</h2>
           <p className="text-sm text-muted-foreground">
             {hasConfirmedParticipation
-              ? "This event already has confirmed tickets, so ticket types can no longer be changed."
-              : "Free entry, a single paid ticket, or several ticket categories."}
+              ? t("thisEventAlreadyHasConfirmedTickets")
+              : t("freeEntryASinglePaidTicket")}
           </p>
         </div>
 
@@ -230,12 +240,12 @@ export default function ManageEventDetailsSection({
         >
           <TicketType
             ticket={ticketMode}
-            handleTicket={(value) => setTicketMode(value as TicketMode)}
+            handleTicket={setTicketMode}
             checked={ticketRegistrationChecked}
             handleChecked={setTicketRegistrationChecked}
           />
 
-          {ticketMode === "Single Ticket Type" && (
+          {ticketMode === TICKET_MODE.single && (
             <TicketInputs
               ticketType={ticketMode}
               singleTicketPrice={singleTicket}
@@ -245,7 +255,7 @@ export default function ManageEventDetailsSection({
             />
           )}
 
-          {ticketMode === "Multiple Ticket Types" && (
+          {ticketMode === TICKET_MODE.multiple && (
             <TicketInputs
               ticketType={ticketMode}
               multipleTickets={multipleTickets}
@@ -261,12 +271,12 @@ export default function ManageEventDetailsSection({
             <p className="text-xs text-muted-foreground">{capacityHint}</p>
           ) : null}
 
-          {ticketMode === "Free" && initialTicketState.mode !== "Free" && (
-            <p className="text-xs text-muted-foreground">
-              Making this event free removes its promo codes: unused ones are
-              deleted and used ones are deactivated.
-            </p>
-          )}
+          {ticketMode === TICKET_MODE.free &&
+            initialTicketState.mode !== TICKET_MODE.free && (
+              <p className="text-xs text-muted-foreground">
+                {t("makingThisEventFreeRemovesIts")}
+              </p>
+            )}
         </fieldset>
 
         {!hasConfirmedParticipation && (
@@ -276,7 +286,7 @@ export default function ManageEventDetailsSection({
             disabled={isSavingTickets || !ticketMode || !!capacityProblem}
             className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
-            {isSavingTickets ? "Saving..." : "Save ticket types"}
+            {isSavingTickets ? t("saving") : t("saveTicketTypes")}
           </button>
         )}
       </div>
@@ -284,11 +294,10 @@ export default function ManageEventDetailsSection({
       <hr className="border-border" />
 
       <div>
-        <h2 className="font-semibold text-lg mb-2">Promo Codes</h2>
-        {initialTicketState.mode === "Free" ? (
+        <h2 className="font-semibold text-lg mb-2">{t("promoCodes")}</h2>
+        {initialTicketState.mode === TICKET_MODE.free ? (
           <p className="text-sm text-muted-foreground">
-            Promo codes aren&apos;t available on a free event. Make the event
-            paid to offer discount codes.
+            {t("promoCodesArenTAvailableOn")}
           </p>
         ) : (
           <ManagePromoCodesButton eventId={event.id} />

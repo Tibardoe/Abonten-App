@@ -5,6 +5,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 /**
@@ -15,6 +16,9 @@ import Link from "next/link";
  * stays where money actually moves.
  */
 export default function OrganizerFinanceSummary() {
+  const locale = useLocale();
+  const t = useTranslations("common");
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["organizer-finance-overview"],
     queryFn: getOrganizerFinanceOverview,
@@ -28,7 +32,7 @@ export default function OrganizerFinanceSummary() {
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't load your finance summary."
+        message={t("weCouldnTLoadYourFinance")}
         onRetry={() => refetch()}
       />
     );
@@ -39,7 +43,7 @@ export default function OrganizerFinanceSummary() {
   if (!overview) {
     return (
       <p className="text-sm text-muted-foreground">
-        No finance data available yet.
+        {t("noFinanceDataAvailableYet")}
       </p>
     );
   }
@@ -51,21 +55,27 @@ export default function OrganizerFinanceSummary() {
     >
       <div className="flex gap-6">
         <div>
-          <p className="text-xs text-muted-foreground">Available to withdraw</p>
+          <p className="text-xs text-muted-foreground">
+            {t("availableToWithdraw")}
+          </p>
           <p className="font-bold">
-            {formatMoney(overview.currency, overview.available_balance)}
+            {formatMoney(overview.currency, overview.available_balance, {
+              locale,
+            })}
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Pending</p>
+          <p className="text-xs text-muted-foreground">{t("pending")}</p>
           <p className="font-bold">
-            {formatMoney(overview.currency, overview.pending_balance)}
+            {formatMoney(overview.currency, overview.pending_balance, {
+              locale,
+            })}
           </p>
         </div>
       </div>
 
       <span className="text-sm font-medium text-primary shrink-0">
-        View Finances
+        {t("viewFinances")}
       </span>
     </Link>
   );

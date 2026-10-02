@@ -1,7 +1,9 @@
 import { usePromptOffer, usePromptResponse } from "@/features/alerts/useAlerts";
 import { api } from "@/lib/api";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import type { PromptContext } from "@abonten/types/discoveryType";
 import { AppText, Button, Card, Icon, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Switch, View } from "react-native";
@@ -20,6 +22,9 @@ export function RecommendationPromptCard({
   context: PromptContext;
   onClose?: () => void;
 }) {
+  const t = useTranslations("notifications");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const router = useRouter();
   const { data: offer } = usePromptOffer(context);
@@ -53,8 +58,8 @@ export function RecommendationPromptCard({
       {
         onSuccess: (res) => {
           if (res.status !== 200) {
-            toast.error("Couldn't save that", {
-              description: res.message ?? "Please try again.",
+            toast.error(t("couldnTSaveThat"), {
+              description: res.message ?? t("pleaseTryAgain"),
             });
             return;
           }
@@ -62,8 +67,8 @@ export function RecommendationPromptCard({
           if (response === "dismissed") onClose?.();
         },
         onError: () =>
-          toast.error("Couldn't save that", {
-            description: "Please try again.",
+          toast.error(t("couldnTSaveThat"), {
+            description: t("pleaseTryAgain"),
           }),
       },
     );
@@ -71,16 +76,16 @@ export function RecommendationPromptCard({
   if (done === "accepted") {
     return (
       <Card className="gap-1" accessibilityLiveRegion="polite">
-        <AppText variant="bodyStrong">Notifications on</AppText>
+        <AppText variant="bodyStrong">{t("notificationsOn")}</AppText>
         <AppText variant="small" tone="muted">
-          We'll only send what you asked for, never more than one pick a day.
+          {t("weLlOnlySendWhatYou")}
         </AppText>
         <Pressable
           accessibilityRole="link"
           onPress={() => router.push("/(app)/settings/notifications")}
         >
           <AppText variant="small" tone="brand" className="font-medium">
-            Manage notifications
+            {t("manageNotifications")}
           </AppText>
         </Pressable>
       </Card>
@@ -90,12 +95,17 @@ export function RecommendationPromptCard({
   const place = offer?.place;
   const similar = offer?.similarEvents;
   const organizer = offer?.organizer;
-  const title = place ? "Like this place?" : "Enjoy events like this?";
+  const title = place ? t("likeThisPlace") : t("enjoyEventsLikeThis");
   const body = place
-    ? `Get updates from ${place.name} and discover similar places nearby.`
-    : `Get notified when similar ${similar?.category ?? ""} events are happening ${
-        similar?.locality ? `near ${similar.locality}` : "near you"
-      }.`;
+    ? t("getUpdatesFromAndDiscoverSimilar", { name: place.name })
+    : similar?.locality
+      ? t("getNotifiedWhenSimilarEventsAre", {
+          category: eventCategoryLabel(tc, similar.category ?? ""),
+          locality: similar.locality,
+        })
+      : t("getNotifiedWhenSimilarEventsAreNearYou", {
+          category: eventCategoryLabel(tc, similar?.category ?? ""),
+        });
 
   return (
     <Card className="gap-3">
@@ -111,7 +121,7 @@ export function RecommendationPromptCard({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Dismiss"
+          accessibilityLabel={t("dismiss")}
           hitSlop={10}
           disabled={respond.isPending}
           onPress={() => send("dismissed")}
@@ -122,10 +132,12 @@ export function RecommendationPromptCard({
       {organizer && !place ? (
         <View className="flex-row items-center justify-between gap-3">
           <AppText variant="small" className="flex-1">
-            Also tell me when @{organizer.username} posts a new event
+            {t("alsoTellMeWhenPostsA", { username: organizer.username })}
           </AppText>
           <Switch
-            accessibilityLabel={`Also alert me when @${organizer.username} posts`}
+            accessibilityLabel={t("alsoAlertMeWhenPosts", {
+              username: organizer.username,
+            })}
             value={alsoOrganizer}
             onValueChange={setAlsoOrganizer}
           />
@@ -133,7 +145,7 @@ export function RecommendationPromptCard({
       ) : null}
       <View className="flex-row gap-2">
         <Button
-          title="Turn on notifications"
+          title={t("turnOnNotifications")}
           className="flex-1"
           loading={
             respond.isPending && respond.variables?.response === "accepted"
@@ -142,7 +154,7 @@ export function RecommendationPromptCard({
           onPress={() => send("accepted")}
         />
         <Button
-          title="Not now"
+          title={t("notNow")}
           variant="outline"
           disabled={respond.isPending}
           onPress={() => send("dismissed")}

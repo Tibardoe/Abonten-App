@@ -1,11 +1,16 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { markNotificationReadFor } from "@abonten/services/notifications/notificationsQuery";
 
 // POST /api/mobile/notifications/read  { "notificationId": "<uuid>" }
 // Marks one of the caller's own notifications read.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -16,7 +21,10 @@ export async function POST(req: Request) {
     const notificationId = body?.notificationId;
 
     if (typeof notificationId !== "string" || notificationId.length === 0) {
-      return apiJson({ status: 400, message: "notificationId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("notificationidIsRequired"),
+      });
     }
 
     const result = await markNotificationReadFor(
@@ -28,6 +36,9 @@ export async function POST(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile POST /notifications/read failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

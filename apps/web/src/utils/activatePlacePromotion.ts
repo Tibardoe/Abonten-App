@@ -1,8 +1,9 @@
 import createNotification from "@/actions/createNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
-import { revalidatePath } from "next/cache";
 import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
 /**
@@ -39,11 +40,11 @@ export default async function activatePlacePromotion(
     logger.error(
       `Failed fetching place promotion checkout: ${existingCheckoutError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!existingCheckout) {
-    return { status: 404, message: "Checkout not found" };
+    return { status: 404, message: tr("checkoutNotFound") };
   }
 
   if (
@@ -56,7 +57,7 @@ export default async function activatePlacePromotion(
     logger.error(
       `activatePlacePromotion: no verified payment for checkout ${checkoutId}`,
     );
-    return { status: 402, message: "Payment not verified for this checkout" };
+    return { status: 402, message: tr("paymentNotVerifiedForThisCheckout") };
   }
 
   await supabase.rpc("expire_stale_place_promotion_checkouts");
@@ -73,20 +74,20 @@ export default async function activatePlacePromotion(
     logger.error(
       `Failed fetching place promotion checkout: ${checkoutError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!checkout) {
     return {
       status: 410,
-      message: "This checkout has expired. Please start again.",
+      message: tr("thisCheckoutHasExpiredPleaseStart"),
     };
   }
 
   const tier = checkout.place_promotion_tier;
 
   if (!tier) {
-    return { status: 404, message: "Promotion tier not found" };
+    return { status: 404, message: tr("promotionTierNotFound") };
   }
 
   const startsAt = new Date();
@@ -103,7 +104,7 @@ export default async function activatePlacePromotion(
     logger.error(
       `Failed computing promotion end date: ${endsAtError?.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const { error: insertError } = await supabase.from("place_promotion").insert({
@@ -120,7 +121,7 @@ export default async function activatePlacePromotion(
   // than a failure, so a retry can never create a second featured record.
   if (insertError && insertError.code !== "23505") {
     logger.error(`Failed activating place promotion: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   await supabase
@@ -138,10 +139,15 @@ export default async function activatePlacePromotion(
     {
       userId,
       type: "promotion_started",
-      title: "Your place is now featured",
-      body: place?.name
-        ? `${place.name} is now featured (${tier.duration_label}).`
-        : `Your promotion is now active (${tier.duration_label}).`,
+      notice: place?.name
+        ? {
+            id: "promotion_started_place",
+            params: { title: place.name, durationLabel: tier.duration_label },
+          }
+        : {
+            id: "promotion_started_generic",
+            params: { durationLabel: tier.duration_label },
+          },
       link: `/manage/places/${checkout.place_id}`,
       data: {
         kind: "place_featured",
@@ -158,14 +164,14 @@ export default async function activatePlacePromotion(
   // payment-completion step with no revalidatePath, leaving the
   // organizer's own /manage/places/[placeId] promotion tab able to show
   // stale "pick a tier" state after a Back-button navigation post-payment.
-  revalidatePath(`/manage/places/${checkout.place_id}`);
+  revalidateAppPath(`/manage/places/${checkout.place_id}`);
   if (place?.slug) {
-    revalidatePath(`/places/${place.slug}`);
+    revalidateAppPath(`/places/${place.slug}`);
   }
 
   return {
     status: 200,
-    message: "Place is now featured",
+    message: tr("placeIsNowFeatured"),
     data: { endsAt: computedEndsAt },
   };
 }

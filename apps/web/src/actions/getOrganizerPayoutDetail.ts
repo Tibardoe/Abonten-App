@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { OrganizerPayoutDetail } from "@abonten/types/organizerFinance";
 
 type GetOrganizerPayoutDetailResult =
@@ -13,7 +15,7 @@ type GetOrganizerPayoutDetailResult =
  * organizer_id server-side (never trusting the payoutId alone) — matches
  * getEventOverviewAnalytics.ts's ownership-check pattern.
  */
-export default async function getOrganizerPayoutDetail(
+export default withActionLocale(async function getOrganizerPayoutDetail(
   payoutId: string,
 ): Promise<GetOrganizerPayoutDetailResult> {
   const supabase = await createClient();
@@ -24,7 +26,7 @@ export default async function getOrganizerPayoutDetail(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const { data, error } = await supabase
@@ -38,15 +40,15 @@ export default async function getOrganizerPayoutDetail(
 
   if (error) {
     logger.error(`Failed fetching payout detail: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!data) {
-    return { status: 404, message: "Payout not found" };
+    return { status: 404, message: tr("payoutNotFound") };
   }
 
   return {
     status: 200,
     data: data as unknown as OrganizerPayoutDetail,
   };
-}
+});

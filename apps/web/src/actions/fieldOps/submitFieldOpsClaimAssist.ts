@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -13,16 +14,18 @@ import { fieldOpsClaimAssistSchema } from "@abonten/validation/fieldOpsSchemas";
  * phone. Same service as
  * POST /api/mobile/field-ops/onboardings/[id]/claim-assist.
  */
-export async function submitFieldOpsClaimAssist(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsOnboarding;
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsClaimAssistSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return submitClaimAssistCore(svc, userId, data);
-}
+export const submitFieldOpsClaimAssist = withActionLocale(
+  async function submitFieldOpsClaimAssist(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsOnboarding;
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsClaimAssistSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return submitClaimAssistCore(svc, userId, data);
+  },
+);

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type UpdatePromoCodeCoreResult,
   updatePromoCodeCore,
@@ -17,7 +19,7 @@ type UpdatePromoCodeInput = {
 // Thin wrapper: auth, then delegate to the shared body (also used by the
 // mobile POST /api/mobile/organizer/promo-codes/update route). Only the
 // terms of an existing code change here — never its text or event_id.
-export async function updatePromoCode(
+export const updatePromoCode = withActionLocale(async function updatePromoCode(
   input: UpdatePromoCodeInput,
 ): Promise<UpdatePromoCodeCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
@@ -28,8 +30,8 @@ export async function updatePromoCode(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return updatePromoCodeCore(supabase, user.id, input);
-}
+});

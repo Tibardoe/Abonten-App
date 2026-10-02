@@ -12,16 +12,17 @@ import type {
   OwnerPlaceBooking,
 } from "@abonten/types/placeBookingType";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 type StatusFilter = BookingStatus | "all";
 
 const FILTERS: { id: StatusFilter; label: string }[] = [
-  { id: "pending", label: "Pending" },
-  { id: "accepted", label: "Accepted" },
-  { id: "declined", label: "Declined" },
-  { id: "cancelled", label: "Cancelled" },
-  { id: "all", label: "All" },
+  { id: "pending", label: "bookingFilters.pending" },
+  { id: "accepted", label: "bookingFilters.accepted" },
+  { id: "declined", label: "bookingFilters.declined" },
+  { id: "cancelled", label: "bookingFilters.cancelled" },
+  { id: "all", label: "bookingFilters.all" },
 ];
 
 // "expired" is derived, not stored: a request nobody answered before its
@@ -69,6 +70,10 @@ export default function ManagePlaceBookingsSection({
   initialPage,
   fetchPage,
 }: ManagePlaceBookingsSectionProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("places");
+
   const queryClient = useQueryClient();
   const toast = useToast();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
@@ -82,12 +87,10 @@ export default function ManagePlaceBookingsSection({
     try {
       const result = await respondToPlaceBooking({ bookingId, decision });
       if (result.status === 200) {
-        toast.success(result.message ?? "Booking request updated.");
+        toast.success(result.message ?? t("bookingRequestUpdated"));
         queryClient.invalidateQueries({ queryKey });
       } else {
-        toast.error(
-          result.message ?? "We couldn't update that booking request.",
-        );
+        toast.error(result.message ?? t("weCouldnTUpdateThatBooking"));
       }
     } finally {
       setRespondingId(null);
@@ -109,7 +112,7 @@ export default function ManagePlaceBookingsSection({
                 : "border-border text-muted-foreground hover:text-foreground"
             }`}
           >
-            {filter.label}
+            {t(filter.label)}
           </button>
         ))}
       </div>
@@ -123,11 +126,16 @@ export default function ManagePlaceBookingsSection({
         listClassName="flex flex-col gap-4"
         emptyState={
           <p className="text-muted-foreground text-sm py-4">
-            No {statusFilter === "all" ? "" : `${statusFilter} `}bookings.
+            {t("no")} {statusFilter === "all" ? "" : `${statusFilter} `}
+            {t("bookings")}
           </p>
         }
         renderItem={(booking) => {
-          const { date, time } = formatSingleDateTime(booking.requested_time);
+          const { date, time } = formatSingleDateTime(
+            booking.requested_time,
+            undefined,
+            locale,
+          );
           const state = resolveBookingState(
             booking.status,
             booking.requested_time,
@@ -141,24 +149,24 @@ export default function ManagePlaceBookingsSection({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-medium text-card-foreground">
-                    {booking.user_info?.username ?? "A customer"}
+                    {booking.user_info?.username ?? t("aCustomer")}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {date} at {time}
+                    {t("at2", { date: date, time: time })}
                   </p>
                   {booking.place_service?.name && (
                     <p className="text-sm text-muted-foreground">
-                      Service: {booking.place_service.name}
+                      {t("service", { name: booking.place_service.name })}
                     </p>
                   )}
                   {booking.party_size != null && (
                     <p className="text-sm text-muted-foreground">
-                      Party size: {booking.party_size}
+                      {t("partySize", { party_size: booking.party_size })}
                     </p>
                   )}
                   {booking.note && (
                     <p className="text-sm text-foreground mt-1">
-                      &ldquo;{booking.note}&rdquo;
+                      {t("text", { note: booking.note })}
                     </p>
                   )}
                 </div>
@@ -178,7 +186,7 @@ export default function ManagePlaceBookingsSection({
                     onClick={() => respond(booking.id, "accept")}
                     className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
                   >
-                    {respondingId === booking.id ? "Accepting..." : "Accept"}
+                    {respondingId === booking.id ? t("accepting") : t("accept")}
                   </button>
                   <button
                     type="button"
@@ -186,19 +194,19 @@ export default function ManagePlaceBookingsSection({
                     onClick={() => setDecliningId(booking.id)}
                     className="border border-border px-3 py-1.5 rounded-md text-sm hover:bg-accent transition-colors disabled:opacity-60"
                   >
-                    Decline
+                    {t("decline")}
                   </button>
                 </div>
               )}
 
               {decliningId === booking.id && (
                 <ConfirmDeleteModal
-                  title="Decline this booking request?"
-                  message={`Decline this booking request from ${
-                    booking.user_info?.username ?? "this customer"
-                  }?`}
-                  confirmLabel="Decline Request"
-                  cancelLabel="Keep Request"
+                  title={t("declineThisBookingRequest")}
+                  message={t("declineThisBookingRequestFrom", {
+                    value: booking.user_info?.username ?? "this customer",
+                  })}
+                  confirmLabel={t("declineRequest")}
+                  cancelLabel={t("keepRequest")}
                   isLoading={respondingId === booking.id}
                   onConfirm={() => respond(booking.id, "decline")}
                   onCancel={() => setDecliningId(null)}

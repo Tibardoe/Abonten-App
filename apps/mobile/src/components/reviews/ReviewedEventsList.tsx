@@ -15,6 +15,7 @@ import {
   Spinner,
   Stars,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
@@ -27,6 +28,10 @@ import { ReviewPhotoStrip } from "./ReviewPhotoStrip";
 // event back in "To Review".
 
 export function ReviewedEventsList() {
+  const { locale } = useLocale();
+
+  const t = useTranslations("reviews");
+
   const q = useUserEventReviews();
   const del = useDeleteEventReview();
   const router = useRouter();
@@ -41,10 +46,10 @@ export function ReviewedEventsList() {
   }, [q]);
 
   const confirmDelete = (id: string) =>
-    Alert.alert("Delete review?", "This can't be undone.", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t("deleteReview"), t("thisCanTBeUndone"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Delete",
+        text: t("deleteText"),
         style: "destructive",
         onPress: () => del.mutate(id),
       },
@@ -54,8 +59,8 @@ export function ReviewedEventsList() {
     return (
       <EmptyState
         icon="chatbox-ellipses-outline"
-        title="No reviews yet"
-        description="Reviews you write appear here."
+        title={t("noReviewsYet")}
+        description={t("reviewsYouWriteAppearHere")}
       />
     );
   }
@@ -63,7 +68,7 @@ export function ReviewedEventsList() {
     return (
       <QueryUnavailable
         view={view}
-        subject="your reviews"
+        subject={t("yourReviews")}
         onRetry={() => q.refetch()}
         loading={<RowListSkeleton count={4} />}
       />
@@ -102,12 +107,12 @@ export function ReviewedEventsList() {
                   item.event && router.push(`/(app)/event/${item.event.id}`)
                 }
               >
-                {item.event?.title ?? "Event"}
+                {item.event?.title ?? t("event")}
               </AppText>
               <View className="flex-row items-center gap-2">
                 <Stars rating={item.rating} />
                 <AppText variant="caption">
-                  {getRelativeTime(item.created_at)}
+                  {getRelativeTime(item.created_at, undefined, locale)}
                 </AppText>
               </View>
             </View>
@@ -115,7 +120,7 @@ export function ReviewedEventsList() {
               onPress={() => confirmDelete(item.id)}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Delete review"
+              accessibilityLabel={t("deleteReview2")}
             >
               <Icon name="trash-outline" size={18} tone="destructive" />
             </Pressable>
@@ -130,7 +135,7 @@ export function ReviewedEventsList() {
           <ReviewPhotoStrip photos={item.event_review_photo} />
           {item.is_verified_attendee ? (
             <View className="self-start">
-              <Badge tone="success" label="Verified Attendee" />
+              <Badge tone="success" label={t("verifiedAttendee2")} />
             </View>
           ) : null}
         </View>

@@ -2,7 +2,11 @@
 
 import ensureProfileCompletionNotification from "@/actions/ensureProfileCompletionNotification";
 import { createClient } from "@/config/supabase/server";
+import { getUserLocale } from "@/i18n/locale";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
+import { saveUserLocale } from "@abonten/services/i18n/userLocale";
 import {
   issueOneTimePassword,
   verifyPhoneOtpAndResolveUser,
@@ -20,7 +24,7 @@ export type VerifyPhoneSignInResult =
 // one-time password through the SSR cookie-writing client so real auth
 // cookies get set on the response, exactly like exchangeCodeForSession does
 // for Google.
-export default async function verifyPhoneSignIn(
+export default withActionLocale(async function verifyPhoneSignIn(
   phoneE164: string,
   code: string,
 ): Promise<VerifyPhoneSignInResult> {
@@ -36,15 +40,23 @@ export default async function verifyPhoneSignIn(
     logger.error(
       `verifyPhoneSignIn: session mint failed: ${sessionResult.message}`,
     );
-    return { status: 500, message: "Something went wrong signing you in." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongSigningYouIn"),
+    };
   }
+
+  // The language they signed in with, before anything is written for them.
+  await saveUserLocale(resolved.userId, await getUserLocale(), {
+    onlyIfUnset: true,
+  });
 
   if (resolved.isNewUser) {
     await ensureProfileCompletionNotification(resolved.userId);
   }
 
   return { status: 200 };
-}
+});
 
 async function mintSessionForUser(
   phoneE164: string,

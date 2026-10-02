@@ -4,10 +4,12 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import DiscoveryCardCoverImage from "@/components/molecules/DiscoveryCardCoverImage";
 import DiscoveryCardTitleRow from "@/components/molecules/DiscoveryCardTitleRow";
 import { useMarketContext } from "@/hooks/useMarketContext";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { formatDistance } from "@abonten/core/units/distance";
 import type { PlaceType } from "@abonten/types/placeType";
+import { useLocale, useTranslations } from "next-intl";
 import { IoLocationOutline } from "react-icons/io5";
 import AddPlaceToFavoriteButton from "./AddPlaceToFavoriteButton";
 import PlaceOpenStatusBadge from "./PlaceOpenStatusBadge";
@@ -29,11 +31,16 @@ export default function PlaceCard({
   verified,
   priority,
 }: PlaceType & { priority?: boolean }) {
+  const locale = useLocale();
+
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+
   const { context } = useMarketContext();
-  const openStatus = derivePlaceCardOpenStatus(is_open, temporary_status);
+  const openStatus = derivePlaceCardOpenStatus(tc, is_open, temporary_status);
   const fullAddress =
     (address as { full_address?: string })?.full_address ??
-    "Location not specified";
+    t("locationNotSpecified");
   const placeHref = `/places/${slug}`;
 
   return (
@@ -46,7 +53,7 @@ export default function PlaceCard({
           width: 420,
           height: 256,
         })}
-        alt={`Cover photo for ${name}`}
+        alt={t("coverPhotoFor", { name: name })}
         priority={priority}
       />
 
@@ -61,7 +68,7 @@ export default function PlaceCard({
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs">
-              {category_name}
+              {placeCategoryLabel(tc, { name: category_name })}
             </span>
             {verified && <VerifiedBadge />}
             <PlaceOpenStatusBadge status={openStatus} />
@@ -82,11 +89,13 @@ export default function PlaceCard({
 
             {distance_km != null && (
               <span className="px-2 py-1 bg-muted rounded-full text-xs text-muted-foreground">
-                {formatDistance(
-                  distance_km * 1000,
-                  context?.distanceUnit ?? "km",
-                )}{" "}
-                away
+                {t("away", {
+                  formatDistance: formatDistance(
+                    distance_km * 1000,
+                    context?.distanceUnit ?? "km",
+                    locale,
+                  ),
+                })}
               </span>
             )}
           </div>

@@ -4,6 +4,10 @@ import { paymentChoiceFromBody } from "@/app/api/mobile/_lib/paymentChoiceBody";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { createMultiCheckoutPaymentAttemptCore } from "@abonten/services/payments/createMultiCheckoutPaymentAttemptCore";
 
 // POST /api/mobile/checkout/attempt
@@ -23,6 +27,7 @@ import { createMultiCheckoutPaymentAttemptCore } from "@abonten/services/payment
 // The Paystack callback is an `abonten://` deep link back to the checkout
 // screen.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -42,7 +47,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message: "checkoutSessionIds must be a non-empty array of strings",
+        message: tr("checkoutsessionidsMustBeANonEmpty"),
       });
     }
 
@@ -51,7 +56,7 @@ export async function POST(req: Request) {
     if (!choice.paymentMethodId && !choice.method && !useCredit) {
       return apiJson({
         status: 400,
-        message: "paymentMethodId or method is required",
+        message: tr("paymentmethodidOrMethodIsRequired"),
       });
     }
 
@@ -71,6 +76,9 @@ export async function POST(req: Request) {
     return fromActionResult(withLegacyPaystackField(result));
   } catch (error) {
     logger.error("mobile POST /checkout/attempt failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

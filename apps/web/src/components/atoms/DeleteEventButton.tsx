@@ -6,6 +6,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/useToast";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
 
@@ -23,6 +24,8 @@ export default function DeleteEventButton({
   asMenuItem,
   onRequestClose,
 }: EventProp) {
+  const t = useTranslations("common");
+
   const [showDeletePopup, setShowDeletePopup] = useState(false);
 
   const queryClient = useQueryClient();
@@ -51,14 +54,12 @@ export default function DeleteEventButton({
         invalidateEventListQueries(queryClient);
         toast.success(response.message);
       } else {
-        toast.error(
-          response.message ?? "Couldn't delete this event. Please try again.",
-        );
+        toast.error(response.message ?? t("couldnTDeleteThisEventPlease"));
       }
     },
 
     onError: () => {
-      toast.error("Couldn't delete this event. Please try again.");
+      toast.error(t("couldnTDeleteThisEventPlease"));
     },
   });
 
@@ -76,7 +77,7 @@ export default function DeleteEventButton({
           className="gap-2 text-destructive focus:text-destructive"
         >
           <MdDeleteOutline className="text-xl" />
-          Delete Event
+          {t("deleteEvent")}
         </DropdownMenuItem>
       ) : (
         <button
@@ -85,16 +86,16 @@ export default function DeleteEventButton({
           onClick={() => setShowDeletePopup(true)}
         >
           <MdDeleteOutline className="text-xl" />
-          Delete Event
+          {t("deleteEvent")}
         </button>
       )}
 
       {showDeletePopup && (
         <ConfirmDeleteModal
-          title="Delete this event?"
-          message="This will permanently remove the event and its listing. This cannot be undone."
-          confirmLabel="Delete Event"
-          loadingLabel="Deleting…"
+          title={t("deleteThisEvent")}
+          message={t("thisWillPermanentlyRemoveTheEvent")}
+          confirmLabel={t("deleteEvent")}
+          loadingLabel={t("deleting")}
           isLoading={false}
           onConfirm={() => mutate()}
           onCancel={closePopup}

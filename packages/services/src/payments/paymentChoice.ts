@@ -26,6 +26,7 @@ import { isMarketTransacting } from "@abonten/core/market/types";
 import { phoneCountry } from "@abonten/core/phone/phone";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getDefaultMarket, getMarketOrDefault } from "../markets/marketConfig";
 import type { SelectedPaymentMethod } from "./chargeInit";
 import {
@@ -124,7 +125,9 @@ export async function judgeSavedInstrument(
   if (!offer) {
     return {
       ok: false,
-      message: `That payment method isn't available in ${offers.marketName}. Choose another way to pay.`,
+      message: tr("thatPaymentMethodIsnTAvailable", {
+        marketName: offers.marketName,
+      }),
     };
   }
   const details = saved.details ?? {};
@@ -134,7 +137,9 @@ export async function judgeSavedInstrument(
     if (phoneCountry(phone) !== offers.countryCode) {
       return {
         ok: false,
-        message: `This mobile money wallet is registered outside ${offers.marketName}. Choose another way to pay.`,
+        message: tr("thisMobileMoneyWalletIsRegistered", {
+          marketName: offers.marketName,
+        }),
       };
     }
     return {
@@ -212,7 +217,9 @@ export async function marketClosedForSales(
     ? null
     : {
         status: 409,
-        message: `Sales are paused in ${market.name} right now. Please try again later.`,
+        message: tr("salesArePausedInRightNow", {
+          name: market.name,
+        }),
       };
 }
 
@@ -235,14 +242,20 @@ export async function resolvePaymentChoice(
     logger.error(
       `paymentChoice: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return { ok: false, status: 500, message: "Something went wrong!" };
+    return {
+      ok: false,
+      status: 500,
+      message: tr("somethingWentWrong"),
+    };
   }
 
   if (!offers.transacting) {
     return {
       ok: false,
       status: 409,
-      message: `Sales are paused in ${offers.marketName} right now. Please try again later.`,
+      message: tr("salesArePausedInRightNow2", {
+        marketName: offers.marketName,
+      }),
     };
   }
 
@@ -252,10 +265,18 @@ export async function resolvePaymentChoice(
   if (input.paymentMethodId) {
     const saved = await loadSaved(supabase, userId, input.paymentMethodId);
     if (saved === "error") {
-      return { ok: false, status: 500, message: "Something went wrong!" };
+      return {
+        ok: false,
+        status: 500,
+        message: tr("somethingWentWrong"),
+      };
     }
     if (!saved) {
-      return { ok: false, status: 404, message: "Payment method not found" };
+      return {
+        ok: false,
+        status: 404,
+        message: tr("paymentMethodNotFound"),
+      };
     }
     const judged = await judgeSavedInstrument(saved, offers);
     return judged.ok
@@ -269,7 +290,9 @@ export async function resolvePaymentChoice(
       return {
         ok: false,
         status: 400,
-        message: `That way to pay isn't available in ${offers.marketName}. Choose another.`,
+        message: tr("thatWayToPayIsnT", {
+          marketName: offers.marketName,
+        }),
       };
     }
     return {
@@ -284,5 +307,9 @@ export async function resolvePaymentChoice(
     };
   }
 
-  return { ok: false, status: 400, message: "Choose a payment method" };
+  return {
+    ok: false,
+    status: 400,
+    message: tr("chooseAPaymentMethod"),
+  };
 }

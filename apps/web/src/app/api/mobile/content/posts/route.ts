@@ -1,9 +1,11 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { createContentPostCore } from "@abonten/services/content/contentPostCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { createContentPostSchema } from "@abonten/validation/contentSchemas";
 
 // POST /api/mobile/content/posts — create a Spotlight or Story
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     { schema: createContentPostSchema, label: "POST /content/posts" },

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   addWeeklySection,
   reorderWeeklySections,
@@ -29,7 +30,7 @@ export function SectionList({ sections }: { sections: WeeklyAdminSection[] }) {
           editionId,
           expectedVersion: version,
           sectionIds: ids,
-        }),
+        }).catch(actionUnreachable),
       { success: "Section moved." },
     );
   };
@@ -82,7 +83,7 @@ export function SectionList({ sections }: { sections: WeeklyAdminSection[] }) {
                       kind,
                       title: weeklySectionKind(kind)?.defaultTitle,
                     },
-                  }),
+                  }).catch(actionUnreachable),
                 { success: "Section added." },
               )
             }

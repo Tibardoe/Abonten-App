@@ -25,11 +25,14 @@ import {
   useExplorePlaceSliders,
 } from "@/features/discovery/useExplorePlaceSliders";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
+import { useCoreI18n } from "@/features/i18n/useCoreI18n";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useQueryView } from "@/lib/useQueryView";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { EmptyState, Refresher } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { FlatList, View } from "react-native";
@@ -44,6 +47,9 @@ type EventKey = keyof EventSliders;
 type PlaceKey = keyof PlaceSliders;
 
 export default function ExploreSectionScreen() {
+  const t = useTranslations("explore");
+  const i18n = useCoreI18n();
+
   // `type` is the dynamic route segment and doubles as the slider key
   // (e.g. "happeningToday"); `kind` + `title` ride along as query params.
   const {
@@ -100,24 +106,27 @@ export default function ExploreSectionScreen() {
   const filterCount = isEvent
     ? countActiveEventFilters(eventFilters)
     : countActivePlaceFilters(placeFilters);
-  const selectedPlaceCategoryName =
+  const selectedPlaceCategory =
     placeFilters.categoryId != null
-      ? (placeCategories.find((c) => c.id === placeFilters.categoryId)?.name ??
-        null)
-      : null;
+      ? placeCategories.find((c) => c.id === placeFilters.categoryId)
+      : undefined;
+  const selectedPlaceCategoryName = selectedPlaceCategory
+    ? placeCategoryLabel(i18n.t, selectedPlaceCategory)
+    : null;
   const activeChips = isEvent
     ? describeEventFilters(
+        i18n,
         eventFilters,
         market?.defaultCurrency ?? "",
         market?.priceScale ?? 1,
       )
-    : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
+    : describePlaceFilters(i18n, placeFilters, selectedPlaceCategoryName);
 
   const header = (
     <View>
       <AppHeader
         variant="title"
-        title={title ?? "All"}
+        title={title ?? t("all")}
         backFallback="/(app)/(tabs)"
       />
       {filterCount > 0 ? (
@@ -159,15 +168,15 @@ export default function ExploreSectionScreen() {
                 icon="calendar-outline"
                 title={
                   filterCount > 0
-                    ? "No events match your filters"
-                    : "Nothing here right now"
+                    ? t("noEventsMatchYourFilters")
+                    : t("nothingHereRightNow")
                 }
                 description={
                   filterCount > 0
-                    ? "Try widening or clearing your filters."
-                    : "Check back soon, or change your location."
+                    ? t("tryWideningOrClearingYourFilters")
+                    : t("checkBackSoonOrChangeYour")
                 }
-                actionLabel={filterCount > 0 ? "Clear filters" : undefined}
+                actionLabel={filterCount > 0 ? t("clearFilters") : undefined}
                 onAction={filterCount > 0 ? clearEventFilters : undefined}
               />
             ) : (
@@ -192,15 +201,15 @@ export default function ExploreSectionScreen() {
                 icon="location-outline"
                 title={
                   filterCount > 0
-                    ? "No places match your filters"
-                    : "Nothing here right now"
+                    ? t("noPlacesMatchYourFilters")
+                    : t("nothingHereRightNow")
                 }
                 description={
                   filterCount > 0
-                    ? "Try widening or clearing your filters."
-                    : "Check back soon, or change your location."
+                    ? t("tryWideningOrClearingYourFilters")
+                    : t("checkBackSoonOrChangeYour")
                 }
-                actionLabel={filterCount > 0 ? "Clear filters" : undefined}
+                actionLabel={filterCount > 0 ? t("clearFilters") : undefined}
                 onAction={filterCount > 0 ? clearPlaceFilters : undefined}
               />
             ) : (

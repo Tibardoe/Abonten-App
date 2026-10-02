@@ -3,8 +3,10 @@ import { useRequireSignIn } from "@/features/content/contentLinks";
 import { useFollow } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { hapticSelection } from "@/lib/haptics";
+import { formatCount } from "@abonten/core/i18n/format";
 import type { FollowTargetKind } from "@abonten/types/contentType";
 import { AppText } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable } from "react-native";
 
 // Public Follow for an organizer or place: fills the Following feed and the
@@ -38,6 +40,9 @@ export function FollowButton({
   /** The viewer's follow state when a post document already carries it. */
   known?: boolean;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("spotlight");
+
   const { session } = useSession();
   const { program } = useContentProgram();
   const requireSignIn = useRequireSignIn();
@@ -62,7 +67,11 @@ export function FollowButton({
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: following, busy: toggle.isPending }}
-      accessibilityLabel={following ? `Unfollow ${label}` : `Follow ${label}`}
+      accessibilityLabel={
+        following
+          ? t("unfollow", { label: label })
+          : t("follow2", { label: label })
+      }
       hitSlop={inline ? 10 : 6}
       onPress={() => {
         if (toggle.isPending) return;
@@ -95,8 +104,8 @@ export function FollowButton({
               : "text-primary-foreground",
         ].join(" ")}
       >
-        {following ? "Following" : "Follow"}
-        {showCount && count > 0 ? ` · ${count.toLocaleString()}` : ""}
+        {following ? t("following") : t("follow")}
+        {showCount && count > 0 ? ` · ${formatCount(count, locale)}` : ""}
       </AppText>
     </Pressable>
   );

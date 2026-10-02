@@ -1,9 +1,11 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
+import { tc } from "@/lib/coreT";
 import { addWeeklyItem, searchWeeklySubjects } from "@/server/actions/weekly";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { WEEKLY_VALIDITY_LABEL } from "@abonten/core/weekly/copy";
+import { weeklyValidityLabel } from "@abonten/core/weekly/copy";
 import type {
   WeeklyAdminSection,
   WeeklySubjectOption,
@@ -35,7 +37,9 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
   const search = () =>
     startSearch(async () => {
       setError(null);
-      const res = await searchWeeklySubjects({ q, subjectType });
+      const res = await searchWeeklySubjects({ q, subjectType }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200 && "data" in res) {
         setResults((res.data as WeeklySubjectOption[]) ?? []);
       } else {
@@ -129,7 +133,8 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
                     </p>
                     {r.validity ? (
                       <p className="text-destructive">
-                        Cannot be featured: {WEEKLY_VALIDITY_LABEL[r.validity]}
+                        Cannot be featured:{" "}
+                        {weeklyValidityLabel(tc, r.validity)}
                       </p>
                     ) : null}
                   </div>
@@ -145,7 +150,7 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
                             sectionId: section.id,
                             subjectType: r.subjectType,
                             subjectId: r.subjectId,
-                          }),
+                          }).catch(actionUnreachable),
                         { success: `Added ${r.label}.` },
                       )
                     }

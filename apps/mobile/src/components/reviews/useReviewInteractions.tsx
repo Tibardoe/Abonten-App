@@ -17,6 +17,7 @@ import {
   reviewerDisplayName,
 } from "@abonten/core/reviews/reviewList";
 import { useModalHandoff, useToast } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { usePathname, useRouter } from "expo-router";
 import { type ReactNode, useCallback, useState } from "react";
 import { Alert } from "react-native";
@@ -47,6 +48,9 @@ export type ReviewInteractions = {
 export function useReviewInteractions(
   subject: ReviewSubject | undefined,
 ): ReviewInteractions {
+  const t = useTranslations("reviews");
+  const tc = useTranslations("core");
+
   const { session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
@@ -77,72 +81,64 @@ export function useReviewInteractions(
     (reviewId: string, rating: number) => {
       if (!subject) return;
       void share(
-        `${rating}-star review of ${subject.title}`,
+        t("starReviewOf", { rating, title: subject.title }),
         reviewShareUrl(subject.kind, subject.slug, reviewId),
       );
     },
-    [share, subject],
+    [share, subject, t],
   );
 
   const confirmDelete = useCallback(
     (review: OwnReview) => {
-      Alert.alert(
-        "Delete your review?",
-        "It will be removed from this page and its rating no longer counts. This can't be undone.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: () =>
-              deleteOwn.mutate(review.id, {
-                onSuccess: () => toast.success("Review deleted"),
-                onError: (e) =>
-                  toast.error("Couldn't delete your review", {
-                    description:
-                      e instanceof Error && e.message
-                        ? e.message
-                        : "Check your connection and try again.",
-                  }),
-              }),
-          },
-        ],
-      );
+      Alert.alert(t("deleteYourReview"), t("itWillBeRemovedFromThis"), [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("deleteText"),
+          style: "destructive",
+          onPress: () =>
+            deleteOwn.mutate(review.id, {
+              onSuccess: () => toast.success(t("reviewDeleted")),
+              onError: (e) =>
+                toast.error(t("couldnTDeleteYourReview"), {
+                  description:
+                    e instanceof Error && e.message
+                      ? e.message
+                      : t("checkYourConnectionAndTryAgain"),
+                }),
+            }),
+        },
+      ]);
     },
-    [deleteOwn, toast],
+    [deleteOwn, toast, t],
   );
 
   const confirmBlock = useCallback(
     (review: ReviewListRow) => {
       if (!subject) return;
-      const name = reviewerDisplayName(review.reviewer, subject.kind);
-      Alert.alert(
-        `Block ${name}?`,
-        "You won't see their reviews, and neither of you can message the other. You can unblock them any time in Settings › Blocked accounts.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Block",
-            style: "destructive",
-            onPress: () =>
-              block.mutate(
-                { userId: review.reviewerId, block: true },
-                {
-                  onSuccess: () => toast.success(`${name} is blocked`),
-                  onError: (e) =>
-                    toast.error("Couldn't block", {
-                      description:
-                        e instanceof Error && e.message
-                          ? e.message
-                          : "Check your connection and try again.",
-                    }),
-                },
-              ),
-          },
-        ],
-      );
+      const name = reviewerDisplayName(tc, review.reviewer, subject.kind);
+      Alert.alert(t("block2", { name: name }), t("youWonTSeeTheirReviews"), [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("block3"),
+          style: "destructive",
+          onPress: () =>
+            block.mutate(
+              { userId: review.reviewerId, block: true },
+              {
+                onSuccess: () => toast.success(t("isBlocked", { name: name })),
+                onError: (e) =>
+                  toast.error(t("couldnTBlock2"), {
+                    description:
+                      e instanceof Error && e.message
+                        ? e.message
+                        : t("checkYourConnectionAndTryAgain"),
+                  }),
+              },
+            ),
+        },
+      ]);
     },
-    [block, subject, toast],
+    [block, subject, toast, t, tc],
   );
 
   const onAction = (action: ReviewAction) => {
@@ -162,7 +158,11 @@ export function useReviewInteractions(
       else if (action === "report")
         setReport({
           id: r.id,
-          label: `Review by ${subject ? reviewerDisplayName(r.reviewer, subject.kind) : "a reviewer"}`,
+          label: t("reviewBy", {
+            value: subject
+              ? reviewerDisplayName(tc, r.reviewer, subject.kind)
+              : t("aReviewer"),
+          }),
         });
       else if (action === "block") confirmBlock(r);
     });
@@ -206,7 +206,7 @@ export function useReviewInteractions(
 
   const blockName =
     menu?.type === "other" && subject
-      ? reviewerDisplayName(menu.review.reviewer, subject.kind)
+      ? reviewerDisplayName(tc, menu.review.reviewer, subject.kind)
       : undefined;
 
   const sheets = subject ? (
@@ -219,7 +219,9 @@ export function useReviewInteractions(
         }}
         onDismiss={handoff.onDismiss}
         actions={actions}
-        blockLabel={blockName ? `Block ${blockName}` : undefined}
+        blockLabel={
+          blockName ? t("block4", { blockName: blockName }) : undefined
+        }
         onAction={onAction}
       />
       <ReviewComposerSheet

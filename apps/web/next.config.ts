@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
 
   experimental: {
     serverActions: { bodySizeLimit: "5mb" }, // ✅ Enable Server Actions
+    // The root layout lives under app/[locale]; an address that matches no
+    // route at all is rendered by app/global-not-found.tsx, which brings
+    // its own document (the only way to get the site's 404 under a
+    // dynamic root segment -- see the not-found file convention).
+    globalNotFound: true,
   },
 
   images: {

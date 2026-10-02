@@ -2,6 +2,7 @@ import "server-only";
 
 import { logger } from "@abonten/core/logger";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   sniffImageMime,
   uploadImageBuffer,
@@ -12,10 +13,10 @@ import {
 // other actions after they have authenticated the caller, so it must not be
 // an endpoint of its own.
 export async function savePlacePhotoToCloudinary(selectedFile: File) {
-  if (!selectedFile) return { error: "No file selected" };
+  if (!selectedFile) return { error: tr("noFileSelected") };
 
   if (selectedFile.size > MAX_EVENT_FLYER_SIZE_BYTES) {
-    return { error: "Image is too large. Maximum size is 5MB." };
+    return { error: tr("imageIsTooLargeMaximumSize") };
   }
 
   try {
@@ -23,7 +24,7 @@ export async function savePlacePhotoToCloudinary(selectedFile: File) {
     // The bytes decide, not the browser-supplied type.
     const mime = sniffImageMime(buffer);
     if (!mime) {
-      return { error: "Only image files are allowed for place photos" };
+      return { error: tr("onlyImageFilesAreAllowedFor2") };
     }
     const uploaded = await uploadImageBuffer(buffer, {
       folder: "place_photos",
@@ -36,6 +37,6 @@ export async function savePlacePhotoToCloudinary(selectedFile: File) {
     };
   } catch (error) {
     logger.error(`Cloudinary upload error: ${error}`);
-    return { error: "Upload failed" };
+    return { error: tr("uploadFailed") };
   }
 }

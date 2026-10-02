@@ -21,13 +21,12 @@ import { isNotFoundError } from "@/lib/queryErrors";
 import { useQueryView } from "@/lib/useQueryView";
 import type { QueryView } from "@abonten/core/query/queryView";
 import {
-  REVIEW_SORTS,
   type ReviewListRow,
   type ReviewRatingFilter,
   type ReviewSort,
   type ReviewSubjectKind,
-  emptyReviewsMessage,
   parseSharedReviewId,
+  reviewSortOptions,
 } from "@abonten/core/reviews/reviewList";
 import {
   AppText,
@@ -40,6 +39,7 @@ import {
   ScreenError,
   SegmentedTabs,
 } from "@abonten/ui-native";
+import { useFormatter, useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   type ReactElement,
@@ -57,8 +57,9 @@ import { FlatList, Pressable, ScrollView, View } from "react-native";
 // Opened from a details screen's "See all", or from a shared review link
 // (?review=<id>), in which case that review is pinned at the top.
 
-const RATING_FILTERS: { value: ReviewRatingFilter; label: string }[] = [
-  { value: null, label: "All" },
+// `label: null` is the "All" filter, named from the catalog at render.
+const RATING_FILTERS: { value: ReviewRatingFilter; label: string | null }[] = [
+  { value: null, label: null },
   { value: 5, label: "5 ★" },
   { value: 4, label: "4 ★" },
   { value: 3, label: "3 ★" },
@@ -117,6 +118,10 @@ function useSubject(
 }
 
 export default function ReviewsScreen() {
+  const t = useTranslations("reviews");
+  const tc = useTranslations("core");
+  const format = useFormatter();
+
   const params = useLocalSearchParams<{
     kind: string;
     id: string;
@@ -165,7 +170,7 @@ export default function ReviewsScreen() {
   const header = (
     <AppHeader
       variant="detail"
-      title="Reviews"
+      title={t("reviews")}
       backFallback={params.id ? `/(app)/${kind}/${params.id}` : "/(app)/(tabs)"}
     />
   );
@@ -174,7 +179,7 @@ export default function ReviewsScreen() {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError message="These reviews couldn't be found." />
+        <ScreenError message={t("theseReviewsCouldnTBeFound")} />
       </View>
     );
   }
@@ -182,9 +187,7 @@ export default function ReviewsScreen() {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenError
-          message={`This ${kind} is no longer available, so its reviews aren't either.`}
-        />
+        <ScreenError message={t("thisIsNoLongerAvailableSo", { kind: kind })} />
       </View>
     );
   }
@@ -208,13 +211,24 @@ export default function ReviewsScreen() {
   }
 
   const total = summary.data?.total ?? 0;
-  const empty = emptyReviewsMessage(rating, kind);
+  const empty = rating
+    ? {
+        title: t("noStarReviewsYet", { rating }),
+        description: t("tryAnotherRatingOrShowAll"),
+      }
+    : {
+        title: t("noReviewsYet"),
+        description:
+          kind === "event"
+            ? t("peopleWhoAttendedCanReview")
+            : t("beTheFirstToShare"),
+      };
 
   const listHeader = (
     <View className="gap-4 pb-3">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Open ${subject.title}`}
+        accessibilityLabel={t("open", { title: subject.title })}
         onPress={() => router.push(`/(app)/${kind}/${subject.id}`)}
         className="flex-row items-center gap-1 active:opacity-60"
       >
@@ -235,7 +249,7 @@ export default function ReviewsScreen() {
       {own.state === "can_review" ||
       (own.state === "signed_out" && kind === "place") ? (
         <Button
-          title="Write a review"
+          title={t("writeAReview")}
           variant="outline"
           leftIcon="create-outline"
           onPress={() => interactions.openComposer()}
@@ -259,7 +273,7 @@ export default function ReviewsScreen() {
         <View className="flex-row items-center gap-2 rounded-xl bg-muted p-3">
           <Icon name="information-circle-outline" size={16} tone="muted" />
           <AppText variant="small" tone="muted" className="flex-1">
-            The review you opened is no longer available.
+            {t("theReviewYouOpenedIsNo")}
           </AppText>
         </View>
       ) : null}
@@ -274,11 +288,11 @@ export default function ReviewsScreen() {
           >
             {RATING_FILTERS.map((f) => (
               <Chip
-                key={f.label}
+                key={f.label ?? "all"}
                 label={
                   f.value && summary.data
-                    ? `${f.label} · ${summary.data.counts[f.value].toLocaleString("en-US")}`
-                    : f.label
+                    ? `${f.label} · ${format.number(summary.data.counts[f.value])}`
+                    : (f.label ?? t("all"))
                 }
                 selected={rating === f.value}
                 showCheck
@@ -287,7 +301,7 @@ export default function ReviewsScreen() {
             ))}
           </ScrollView>
           <SegmentedTabs
-            options={REVIEW_SORTS.map((s) => ({
+            options={reviewSortOptions(tc).map((s) => ({
               key: s.value,
               label: s.label,
             }))}
@@ -318,7 +332,7 @@ export default function ReviewsScreen() {
     emptyComponent =
       own.state === "has_review" && !rating ? (
         <AppText variant="muted" className="py-6 text-center">
-          Yours is the only review so far.
+          {t("yoursIsTheOnlyReviewSo")}
         </AppText>
       ) : (
         <EmptyState
@@ -329,7 +343,7 @@ export default function ReviewsScreen() {
               ? own.message
               : empty.description
           }
-          actionLabel={rating ? "Show all reviews" : undefined}
+          actionLabel={rating ? t("showAllReviews") : undefined}
           onAction={rating ? () => changeFilter(null) : undefined}
           className="py-10"
         />

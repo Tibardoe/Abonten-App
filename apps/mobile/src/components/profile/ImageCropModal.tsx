@@ -1,5 +1,6 @@
 import { hapticLight } from "@/lib/haptics";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { FlipType, ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useEffect, useMemo, useState } from "react";
@@ -33,9 +34,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // the event-flyer (4:5) and place-cover (16:9) wizards, which must produce a
 // fixed shape.
 
-type AspectOption = { label: string; value: number | null };
+// `label: null` is the free crop, named from the catalog at render.
+type AspectOption = { label: string | null; value: number | null };
 const ASPECTS: AspectOption[] = [
-  { label: "Free", value: null },
+  { label: null, value: null },
   { label: "1:1", value: 1 },
   { label: "4:5", value: 4 / 5 },
   { label: "9:16", value: 9 / 16 },
@@ -64,6 +66,8 @@ export function ImageCropModal({
   onDone,
   lockedAspect,
 }: Props) {
+  const t = useTranslations("profile");
+
   const { width: screenW, height: screenH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -354,7 +358,7 @@ export function ImageCropModal({
               disabled={busy}
             >
               <AppText className="text-[15px] font-semibold text-white">
-                Cancel
+                {t("cancel")}
               </AppText>
             </Pressable>
             <View className="flex-row items-center gap-5">
@@ -363,7 +367,7 @@ export function ImageCropModal({
                 onPress={rotate}
                 hitSlop={10}
                 disabled={busy}
-                accessibilityLabel="Rotate"
+                accessibilityLabel={t("rotate")}
               >
                 <Icon name="refresh-outline" size={22} color="#fff" />
               </Pressable>
@@ -372,7 +376,7 @@ export function ImageCropModal({
                 onPress={() => flip(FlipType.Horizontal)}
                 hitSlop={10}
                 disabled={busy}
-                accessibilityLabel="Flip horizontally"
+                accessibilityLabel={t("flipHorizontally")}
               >
                 <Icon name="swap-horizontal-outline" size={22} color="#fff" />
               </Pressable>
@@ -381,7 +385,7 @@ export function ImageCropModal({
                 onPress={() => flip(FlipType.Vertical)}
                 hitSlop={10}
                 disabled={busy}
-                accessibilityLabel="Flip vertically"
+                accessibilityLabel={t("flipVertically")}
               >
                 <Icon name="swap-vertical-outline" size={22} color="#fff" />
               </Pressable>
@@ -393,7 +397,7 @@ export function ImageCropModal({
               disabled={busy}
             >
               <AppText className="text-[15px] font-bold text-mint">
-                Done
+                {t("done")}
               </AppText>
             </Pressable>
           </View>
@@ -406,7 +410,7 @@ export function ImageCropModal({
             {(lockedAspect ? [] : ASPECTS).map((opt, i) => (
               <Pressable
                 accessibilityRole="button"
-                key={opt.label}
+                key={opt.label ?? "free"}
                 onPress={() => setAspectIdx(i)}
                 disabled={busy}
                 className={[
@@ -422,7 +426,7 @@ export function ImageCropModal({
                     i === aspectIdx ? "text-mint" : "text-white/80",
                   ].join(" ")}
                 >
-                  {opt.label}
+                  {opt.label ?? t("free")}
                 </AppText>
               </Pressable>
             ))}

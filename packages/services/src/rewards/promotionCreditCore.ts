@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { PromotionCredit, RebateKind } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { creditCurrencyFor } from "./creditCurrency";
 import { getRewardsProgramCore } from "./rewardsProgramQuery";
@@ -47,7 +48,7 @@ export async function getPromotionCreditCore(
   message?: string;
   data?: PromotionCredit;
 }> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
 
   const service = getSupabaseServiceClient();
   const [program, stats, spendable, currency] = await Promise.all([
@@ -66,7 +67,10 @@ export async function getPromotionCreditCore(
         stats.error?.message ?? spendable.error?.message ?? program.message
       }`,
     );
-    return { status: 500, message: "Couldn't load your promotion credit." };
+    return {
+      status: 500,
+      message: tr("couldnTLoadYourPromotionCredit"),
+    };
   }
 
   const p = program.data;

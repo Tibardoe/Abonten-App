@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@abonten/core": "*",
+    "@abonten/i18n": "*",
     "@abonten/types": "*",
     "@abonten/validation": "*",
     "@photostructure/tz-lookup": "^11.7.0",

@@ -6,6 +6,7 @@ import {
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Platform, Pressable, View } from "react-native";
 
 // The small, non-interactive location map on the event and place detail
@@ -43,13 +44,15 @@ export function StaticMapPreview({
   onPress: () => void;
   height?: number;
 }) {
+  const t = useTranslations("explore");
+
   if (!MapConfigured || !MapView) return null;
 
   return (
     <MapErrorBoundary fallback={null}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Open directions to ${label}`}
+        accessibilityLabel={t("openDirectionsTo", { label: label })}
         onPress={onPress}
         className="overflow-hidden rounded-xl border border-border active:opacity-90"
         style={{ height }}
@@ -86,7 +89,7 @@ export function StaticMapPreview({
         >
           <Icon name="expand-outline" size={13} tone="foreground" />
           <AppText variant="caption" className="font-semibold">
-            Open in Maps
+            {t("openInMaps")}
           </AppText>
         </View>
       </Pressable>

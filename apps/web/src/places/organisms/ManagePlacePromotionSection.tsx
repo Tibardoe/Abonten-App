@@ -4,7 +4,9 @@ import insertPlacePromotionCheckout from "@/actions/insertPlacePromotionCheckout
 import { useToast } from "@/hooks/useToast";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { promotionDurationLabel } from "@abonten/core/promotionSummary";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoMegaphoneOutline } from "react-icons/io5";
@@ -31,6 +33,11 @@ export default function ManagePlacePromotionSection({
   tiers,
   currentPromotion,
 }: ManagePlacePromotionSectionProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const [selectedTierId, setSelectedTierId] = useState<number | null>(
     tiers[0]?.id ?? null,
@@ -49,7 +56,7 @@ export default function ManagePlacePromotionSection({
       );
 
       if (response.status !== 200 || !response.data) {
-        toast.error(response.message ?? "Something went wrong!");
+        toast.error(response.message ?? t("somethingWentWrong"));
         return;
       }
 
@@ -64,15 +71,15 @@ export default function ManagePlacePromotionSection({
       <div className="rounded-2xl border border-primary/40 bg-primary/10 p-6 space-y-2">
         <div className="flex items-center gap-2 text-primary font-semibold">
           <IoMegaphoneOutline className="text-lg" />
-          <p>This place is currently featured</p>
+          <p>{t("thisPlaceIsCurrentlyFeatured")}</p>
         </div>
         <p className="text-sm text-muted-foreground">
           {currentPromotion.tier_label
-            ? `${currentPromotion.tier_label} placement, active`
-            : "Active"}{" "}
-          until{" "}
+            ? t("placementActive", { tier_label: currentPromotion.tier_label })
+            : t("active")}
+          {t("until")}
           <span className="font-medium text-foreground">
-            {formatDateWithSuffix(currentPromotion.ends_at)}
+            {formatDateWithSuffix(currentPromotion.ends_at, undefined, locale)}
           </span>
           .
         </p>
@@ -83,16 +90,15 @@ export default function ManagePlacePromotionSection({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-semibold text-lg">Feature this Place</h2>
+        <h2 className="font-semibold text-lg">{t("featureThisPlace")}</h2>
         <p className="text-sm text-muted-foreground">
-          Get a paid, randomly-rotated slot in the Featured Places section on
-          the Explore page, clearly labeled "Sponsored".
+          {t("getAPaidRandomlyRotatedSlot")}
         </p>
       </div>
 
       {tiers.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No promotion tiers are available right now.
+          {t("noPromotionTiersAreAvailableRight")}
         </p>
       ) : (
         <div className="space-y-2">
@@ -107,9 +113,11 @@ export default function ManagePlacePromotionSection({
                   : "border-border hover:border-primary/40"
               }`}
             >
-              <span className="font-medium">{tier.duration_label}</span>
+              <span className="font-medium">
+                {promotionDurationLabel(tc, tier.duration_label)}
+              </span>
               <span className="text-sm text-muted-foreground">
-                {formatMoney(tier.currency, tier.price)}
+                {formatMoney(tier.currency, tier.price, { locale })}
               </span>
             </button>
           ))}
@@ -122,7 +130,7 @@ export default function ManagePlacePromotionSection({
         onClick={handlePromote}
         className="w-full rounded-md p-4 font-bold text-primary-foreground bg-primary text-center disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isSubmitting ? "Starting…" : "Feature this place"}
+        {isSubmitting ? t("starting") : t("featureThisPlace2")}
       </button>
     </div>
   );

@@ -4,6 +4,7 @@ import type {
   FieldOpsEvidenceUploadTicket,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../../i18n/requestLocale";
 import {
   fieldOpsError,
   requireMembership,
@@ -57,11 +58,11 @@ export async function requestEvidenceUploadCore(
     .eq("campaign_id", input.campaignId)
     .eq("member_user_id", userId)
     .maybeSingle();
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "draft" && row.status !== "needs_changes") {
     return {
       status: 409,
-      message: "This onboarding has already been submitted.",
+      message: tr("thisOnboardingHasAlreadyBeenSubmitted"),
     };
   }
   const { count } = await supabase
@@ -69,11 +70,15 @@ export async function requestEvidenceUploadCore(
     .select("id", { count: "exact", head: true })
     .eq("onboarding_id", row.id);
   if ((count ?? 0) >= MAX_EVIDENCE) {
-    return { status: 409, message: `At most ${MAX_EVIDENCE} evidence photos.` };
+    return {
+      status: 409,
+      message: tr("atMostEvidencePhotos", {
+        MAX_EVIDENCE: MAX_EVIDENCE,
+      }),
+    };
   }
   const ext = EXT[input.mimeType];
-  if (!ext)
-    return { status: 400, message: "Use a JPEG, PNG, WebP or HEIC photo." };
+  if (!ext) return { status: 400, message: tr("useAJpegPngWebpOr") };
   const path = `${row.campaign_id}/${row.id}/${randomUUID()}.${ext}`;
 
   const { data: inserted, error } = await supabase
@@ -96,8 +101,8 @@ export async function requestEvidenceUploadCore(
     .single();
   if (error || !inserted) {
     return dbErr(
-      error ?? { message: "insert failed" },
-      "Could not prepare the upload",
+      error ?? { message: tr("insertFailed") },
+      tr("couldNotPrepareTheUpload"),
     );
   }
   const { data: signed, error: signErr } = await supabase.storage
@@ -108,7 +113,10 @@ export async function requestEvidenceUploadCore(
       .from("fieldops_onboarding_evidence")
       .delete()
       .eq("id", inserted.id);
-    return { status: 500, message: "Could not prepare the upload. Try again." };
+    return {
+      status: 500,
+      message: tr("couldNotPrepareTheUploadTry"),
+    };
   }
   return {
     status: 200,
@@ -139,11 +147,11 @@ export async function removeEvidenceCore(
     .eq("campaign_id", input.campaignId)
     .eq("member_user_id", userId)
     .maybeSingle();
-  if (!row) return { status: 404, message: "Onboarding not found" };
+  if (!row) return { status: 404, message: tr("onboardingNotFound") };
   if (row.status !== "draft" && row.status !== "needs_changes") {
     return {
       status: 409,
-      message: "Evidence can't be changed after submission.",
+      message: tr("evidenceCanTBeChangedAfter"),
     };
   }
   const { data: ev } = await supabase
@@ -152,12 +160,16 @@ export async function removeEvidenceCore(
     .eq("id", input.evidenceId)
     .eq("onboarding_id", row.id)
     .maybeSingle();
-  if (!ev) return { status: 404, message: "Photo not found" };
+  if (!ev) return { status: 404, message: tr("photoNotFound") };
   await supabase.storage.from(EVIDENCE_BUCKET).remove([ev.storage_path]);
   const { error } = await supabase
     .from("fieldops_onboarding_evidence")
     .delete()
     .eq("id", ev.id);
-  if (error) return dbErr(error, "Could not remove the photo");
-  return { status: 200, message: "Photo removed.", data: { removed: true } };
+  if (error) return dbErr(error, tr("couldNotRemoveThePhoto"));
+  return {
+    status: 200,
+    message: tr("photoRemoved"),
+    data: { removed: true },
+  };
 }

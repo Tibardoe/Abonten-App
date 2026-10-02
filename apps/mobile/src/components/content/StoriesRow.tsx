@@ -7,12 +7,13 @@ import {
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { hapticSelection } from "@/lib/haptics";
 import { useIsOnline } from "@/lib/network";
-import { YOUR_STORY_LABEL } from "@abonten/core/content/copy";
+import { YOUR_STORY_LABEL_KEY } from "@abonten/core/content/copy";
 import type {
   ContentPublisherKind,
   StoryTrayEntry,
 } from "@abonten/types/contentType";
 import { AppText, Avatar, Icon, Skeleton } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { memo, useEffect } from "react";
@@ -33,6 +34,9 @@ const ITEM_WIDTH = 76;
 // bubble pushes the Stories player (story/play) with the whole row queued,
 // so the viewer moves on to the next publisher by itself.
 export function StoriesRow() {
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const { session } = useSession();
   const { program } = useContentProgram();
@@ -67,7 +71,7 @@ export function StoriesRow() {
     return (
       <View
         className="flex-row gap-2 border-b border-border px-3 pb-3 pt-2"
-        accessibilityLabel="Loading Stories"
+        accessibilityLabel={t("loadingStories")}
       >
         {Array.from({ length: 5 }, (_, i) => (
           <View
@@ -101,12 +105,12 @@ export function StoriesRow() {
       showsHorizontalScrollIndicator={false}
       className="grow-0 border-b border-border"
       contentContainerClassName="gap-2 px-3 pb-3 pt-2"
-      accessibilityLabel="Stories"
+      accessibilityLabel={t("stories")}
     >
       {self ? (
         <Bubble
           entry={self}
-          label={YOUR_STORY_LABEL}
+          label={tc(YOUR_STORY_LABEL_KEY)}
           onPress={() => openQueue([self], 0)}
           onAdd={canPublish ? compose : undefined}
         />
@@ -114,7 +118,7 @@ export function StoriesRow() {
         <Pressable
           onPress={compose}
           accessibilityRole="button"
-          accessibilityLabel="Add to your Story"
+          accessibilityLabel={t("addToYourStory")}
           className="items-center gap-1.5 active:opacity-70"
           style={{ width: ITEM_WIDTH }}
         >
@@ -125,7 +129,7 @@ export function StoriesRow() {
             <Icon name="add" size={28} tone="muted" />
           </View>
           <AppText variant="caption" numberOfLines={1}>
-            {YOUR_STORY_LABEL}
+            {tc(YOUR_STORY_LABEL_KEY)}
           </AppText>
         </Pressable>
       ) : null}
@@ -152,12 +156,17 @@ const Bubble = memo(function Bubble({
   onPress: () => void;
   onAdd?: () => void;
 }) {
+  const t = useTranslations("spotlight");
+
   return (
     <View className="items-center gap-1.5" style={{ width: ITEM_WIDTH }}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${label} Stories${entry.hasUnseen ? ", new" : ", seen"}`}
+        accessibilityLabel={t("stories2", {
+          label: label,
+          state: entry.hasUnseen ? "new" : "seen",
+        })}
         className={[
           "items-center justify-center rounded-full active:opacity-80",
           entry.hasUnseen ? "bg-primary" : "bg-border",
@@ -185,7 +194,7 @@ const Bubble = memo(function Bubble({
           onPress={onAdd}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Add to your Story"
+          accessibilityLabel={t("addToYourStory")}
           style={{ position: "absolute", right: 4, top: BUBBLE - 22 }}
           className="h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary"
         >

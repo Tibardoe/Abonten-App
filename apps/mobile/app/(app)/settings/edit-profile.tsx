@@ -20,6 +20,7 @@ import {
   ScreenError,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -38,6 +39,8 @@ type FormState = {
 };
 
 export default function EditProfile() {
+  const t = useTranslations("settings");
+
   const profileQuery = useProfile();
   const { data: profile, refetch: refetchProfile } = profileQuery;
   // Loading, offline and failed are told apart: the form never opens on a
@@ -70,7 +73,7 @@ export default function EditProfile() {
       });
       // `null` means the picker was dismissed — not a failure, and not
       // something to congratulate the user about either.
-      if (res) toast.success("Profile photo updated");
+      if (res) toast.success(t("profilePhotoUpdated"));
     } catch {
       // The inline error under the button already explains it; the mutation
       // holds the message.
@@ -142,7 +145,7 @@ export default function EditProfile() {
       // The server's own answer: no profile row yet.
       return (
         <ScreenError
-          message="Couldn't load your profile."
+          message={t("couldnTLoadYourProfile")}
           onRetry={() => refetchProfile()}
         />
       );
@@ -151,7 +154,7 @@ export default function EditProfile() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={profileView}
-          subject="your profile"
+          subject={t("yourProfile")}
           onRetry={() => refetchProfile()}
           loading={<FormSkeleton fields={5} />}
         />
@@ -163,7 +166,7 @@ export default function EditProfile() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Edit Profile"
+        title={t("editProfile2")}
         backFallback="/(app)/settings"
       />
       <KeyboardAwareScrollView
@@ -177,7 +180,7 @@ export default function EditProfile() {
             onPress={() => setPhotoViewerOpen(true)}
             disabled={!profile.avatar_public_id}
             accessibilityRole="button"
-            accessibilityLabel="View profile photo"
+            accessibilityLabel={t("viewProfilePhoto")}
           >
             <Avatar
               publicId={profile.avatar_public_id ?? undefined}
@@ -188,8 +191,8 @@ export default function EditProfile() {
           <View className="flex-1 gap-1">
             <AppText variant="bodyStrong">{profile.username}</AppText>
             <Button
-              title="Change photo"
-              loadingTitle="Uploading…"
+              title={t("changePhoto")}
+              loadingTitle={t("uploading")}
               variant="outline"
               size="sm"
               onPress={onChangePhoto}
@@ -200,13 +203,13 @@ export default function EditProfile() {
               <AppText variant="small" tone="error">
                 {avatar.error instanceof Error
                   ? avatar.error.message
-                  : "That photo didn't upload. Check your connection and try again."}
+                  : t("thatPhotoDidnTUploadCheck")}
               </AppText>
             ) : null}
           </View>
         </View>
 
-        <Field label="Username" error={errors.username}>
+        <Field label={t("username")} error={errors.username}>
           <Input
             value={form.username}
             onChangeText={(v) => set("username", v)}
@@ -215,14 +218,14 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Full name" error={errors.full_name}>
+        <Field label={t("fullName")} error={errors.full_name}>
           <Input
             value={form.full_name}
             onChangeText={(v) => set("full_name", v)}
           />
         </Field>
 
-        <Field label="Website" error={errors.website} hint="Optional">
+        <Field label={t("website")} error={errors.website} hint={t("optional")}>
           <Input
             value={form.website}
             onChangeText={(v) => set("website", v)}
@@ -233,7 +236,11 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field label="Bio" error={errors.bio} hint="Up to 160 characters">
+        <Field
+          label={t("bio")}
+          error={errors.bio}
+          hint={t("upTo160Characters")}
+        >
           <Input
             value={form.bio}
             onChangeText={(v) => set("bio", v)}
@@ -245,17 +252,17 @@ export default function EditProfile() {
 
         {update.isError ? (
           <AppText variant="small" tone="error">
-            We couldn't update your profile. Please try again.
+            {t("weCouldnTUpdateYourProfile")}
           </AppText>
         ) : null}
         {saved ? (
           <AppText variant="small" tone="brand">
-            Profile updated.
+            {t("profileUpdated")}
           </AppText>
         ) : null}
 
         <Button
-          title="Save changes"
+          title={t("saveChanges")}
           onPress={onSave}
           loading={update.isPending}
           disabled={!dirty}

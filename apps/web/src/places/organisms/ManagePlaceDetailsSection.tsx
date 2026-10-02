@@ -12,6 +12,7 @@ import {
 import { useManagePlaceDetailsForm } from "@/hooks/useManagePlaceDetailsForm";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { TbWorld } from "react-icons/tb";
@@ -43,6 +44,8 @@ export default function ManagePlaceDetailsSection({
   place,
   onSaved,
 }: ManagePlaceDetailsSectionProps) {
+  const t = useTranslations("places");
+
   const detailsForm = useManagePlaceDetailsForm({
     place,
     onSuccess: onSaved,
@@ -96,7 +99,7 @@ export default function ManagePlaceDetailsSection({
           <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
             <Image
               src={coverPreview}
-              alt="Cover photo"
+              alt={t("coverPhoto")}
               fill
               className="object-cover"
             />
@@ -104,7 +107,7 @@ export default function ManagePlaceDetailsSection({
 
           <div className="space-y-1">
             <label htmlFor="place-cover" className="text-sm font-medium">
-              Replace cover photo (optional)
+              {t("replaceCoverPhotoOptional")}
             </label>
             <input
               id="place-cover"
@@ -123,7 +126,11 @@ export default function ManagePlaceDetailsSection({
             render={({ field }) => (
               <FormItem className="space-y-0">
                 <FormControl>
-                  <PostInput type="text" inputPlaceholder="Name" {...field} />
+                  <PostInput
+                    type="text"
+                    inputPlaceholder={t("name")}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage className="text-sm" />
               </FormItem>
@@ -143,7 +150,7 @@ export default function ManagePlaceDetailsSection({
                 <FormControl>
                   <PostInput
                     type="text"
-                    inputPlaceholder="Description"
+                    inputPlaceholder={t("description")}
                     {...field}
                   />
                 </FormControl>
@@ -158,12 +165,12 @@ export default function ManagePlaceDetailsSection({
             onSelectCoordinates={handleSelectCoordinates}
             value={selectedAddress}
             placeholderText={{
-              text: "Address",
+              text: t("address"),
               svgUrl: "/assets/images/location.svg",
             }}
           />
           {selectedAddress === "" && (
-            <p className="text-destructive text-sm">Address is required</p>
+            <p className="text-destructive text-sm">{t("addressIsRequired")}</p>
           )}
 
           <FormField
@@ -174,7 +181,7 @@ export default function ManagePlaceDetailsSection({
                 <FormControl>
                   <PostInput
                     type="text"
-                    inputPlaceholder="Website (optional)"
+                    inputPlaceholder={t("websiteOptional")}
                     {...field}
                   />
                 </FormControl>
@@ -193,7 +200,7 @@ export default function ManagePlaceDetailsSection({
                     <FormControl>
                       <input
                         type="text"
-                        placeholder="Phone (optional)"
+                        placeholder={t("phoneOptional")}
                         className="rounded-md p-2 bg-transparent w-full"
                         {...field}
                       />
@@ -214,7 +221,7 @@ export default function ManagePlaceDetailsSection({
                 <FormControl>
                   <PostInput
                     type="text"
-                    inputPlaceholder="WhatsApp (optional)"
+                    inputPlaceholder={t("whatsappOptional")}
                     {...field}
                   />
                 </FormControl>
@@ -229,10 +236,10 @@ export default function ManagePlaceDetailsSection({
             className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
             {isResolvingLocation
-              ? "Resolving location..."
+              ? t("resolvingLocation")
               : isSaving
-                ? "Saving..."
-                : "Save changes"}
+                ? t("saving")
+                : t("saveChanges")}
           </button>
         </form>
       </Form>

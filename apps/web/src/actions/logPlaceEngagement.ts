@@ -1,7 +1,9 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 
 // Mirrors place_analytics_event_type_check in the migration exactly --
 // "promotion_impression" added by 20260826090000_add_place_promotions.sql's
@@ -28,22 +30,27 @@ function isAllowedEventType(value: string): value is PlaceEngagementEventType {
 // is typed as a plain string (not the narrower union) precisely so this
 // runtime check is real defense-in-depth against a caller that bypasses
 // TypeScript, not just a compile-time-only guard.
-export async function logPlaceEngagement(placeId: string, eventType: string) {
-  if (!isAllowedEventType(eventType)) {
-    return { status: 400, message: "Invalid engagement event type" };
-  }
+export const logPlaceEngagement = withActionLocale(
+  async function logPlaceEngagement(placeId: string, eventType: string) {
+    if (!isAllowedEventType(eventType)) {
+      return {
+        status: 400,
+        message: tr("invalidEngagementEventType"),
+      };
+    }
 
-  const supabase = publicSupabase;
+    const supabase = publicSupabase;
 
-  const { error } = await supabase.from("place_analytics_event").insert({
-    place_id: placeId,
-    event_type: eventType,
-  });
+    const { error } = await supabase.from("place_analytics_event").insert({
+      place_id: placeId,
+      event_type: eventType,
+    });
 
-  if (error) {
-    logger.error(`Error logging place engagement: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
+    if (error) {
+      logger.error(`Error logging place engagement: ${error.message}`);
+      return { status: 500, message: tr("somethingWentWrong") };
+    }
 
-  return { status: 200 };
-}
+    return { status: 200 };
+  },
+);

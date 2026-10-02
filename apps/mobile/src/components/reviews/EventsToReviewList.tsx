@@ -4,6 +4,7 @@ import { useEventsAwaitingReview } from "@/features/reviews/useEventReviews";
 import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Button, Card, EmptyState } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -15,6 +16,8 @@ import { ReviewComposerSheet } from "./ReviewComposerSheet";
 // the review sheet. An event drops out the moment its review is submitted
 // (usePostEventReview invalidates ["reviews","awaiting"]).
 export function EventsToReviewList() {
+  const t = useTranslations("reviews");
+
   const query = useEventsAwaitingReview();
   const { data } = query;
   const events = data ?? [];
@@ -31,8 +34,8 @@ export function EventsToReviewList() {
     return (
       <EmptyState
         icon="star-outline"
-        title="Nothing to review yet"
-        description="Events you've attended show up here once they end."
+        title={t("nothingToReviewYet")}
+        description={t("eventsYouVeAttendedShowUp")}
       />
     );
   }
@@ -40,7 +43,7 @@ export function EventsToReviewList() {
     return (
       <QueryUnavailable
         view={view}
-        subject="events to review"
+        subject={t("eventsToReview")}
         onRetry={() => query.refetch()}
         loading={<RowListSkeleton count={4} />}
       />
@@ -75,11 +78,11 @@ export function EventsToReviewList() {
                 >
                   {item.title}
                 </AppText>
-                <AppText variant="caption">How was this event?</AppText>
+                <AppText variant="caption">{t("howWasThisEvent")}</AppText>
               </View>
             </View>
             <Button
-              title="Write a review"
+              title={t("writeAReview")}
               onPress={() => setReviewing({ id: item.id, title: item.title })}
             />
           </Card>

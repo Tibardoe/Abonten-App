@@ -26,6 +26,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslations } from "../i18n";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { shadow } from "../theme/tokens";
 import { Icon } from "./Icon";
@@ -124,6 +125,8 @@ export function Sheet({
   maxHeightRatio = 0.85,
   minHeightRatio,
 }: SheetProps) {
+  const t = useTranslations("common");
+
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
@@ -331,7 +334,7 @@ export function Sheet({
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t("close")}
             onPress={onClose}
             style={{ flex: 1 }}
           />
@@ -360,7 +363,7 @@ export function Sheet({
             <View>
               <View
                 accessible
-                accessibilityLabel="Drag down to close"
+                accessibilityLabel={t("dragDownToClose")}
                 className="items-center pb-1 pt-3"
               >
                 <View className="h-1 w-10 rounded-full bg-border" />
@@ -371,7 +374,7 @@ export function Sheet({
                   {onBack ? (
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Back"
+                      accessibilityLabel={t("back")}
                       onPress={onBack}
                       hitSlop={8}
                     >
@@ -381,7 +384,7 @@ export function Sheet({
                   <SectionTitle className="flex-1">{title}</SectionTitle>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Close"
+                    accessibilityLabel={t("close")}
                     onPress={onClose}
                     hitSlop={8}
                   >

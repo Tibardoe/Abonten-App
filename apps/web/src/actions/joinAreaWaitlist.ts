@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { joinAreaWaitlistCore } from "@abonten/services/markets/areaWaitlistCore";
 import type { AreaWaitlistJoinBody } from "@abonten/types/marketType";
 
@@ -10,11 +12,13 @@ import type { AreaWaitlistJoinBody } from "@abonten/types/marketType";
  * launched there and records the city (or a ~1 km cell), never the exact
  * point.
  */
-export default async function joinAreaWaitlist(input: AreaWaitlistJoinBody) {
+export default withActionLocale(async function joinAreaWaitlist(
+  input: AreaWaitlistJoinBody,
+) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { status: 401, message: "User not logged in" };
+  if (!user) return { status: 401, message: tr("userNotLoggedIn") };
   return joinAreaWaitlistCore(user.id, { ...input, source: "web" });
-}
+});

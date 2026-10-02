@@ -2,6 +2,7 @@
 
 import { rememberInviteCode } from "@/actions/rememberInviteCode";
 import { normalizeReferralCode } from "@abonten/core/rewards/referralCode";
+import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 
 // "Have an invite code?" on the sign-in screen. The code is kept in the
@@ -12,6 +13,8 @@ export default function InviteCodeField({
 }: {
   initialCode: string | null;
 }) {
+  const t = useTranslations("rewards");
+
   const inputId = useId();
   const [open, setOpen] = useState(!!initialCode);
   const [code, setCode] = useState(initialCode ?? "");
@@ -26,7 +29,7 @@ export default function InviteCodeField({
         onClick={() => setOpen(true)}
         className="mx-auto block text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
       >
-        Have an invite code?
+        {t("haveAnInviteCode")}
       </button>
     );
   }
@@ -34,7 +37,7 @@ export default function InviteCodeField({
   const save = async () => {
     const normalized = normalizeReferralCode(code);
     if (!normalized) {
-      setError("Enter the 7-character invite code.");
+      setError(t("enterThe7CharacterInviteCode"));
       return;
     }
     setPending(true);
@@ -45,10 +48,10 @@ export default function InviteCodeField({
         setSaved(normalized);
         setCode(normalized);
       } else {
-        setError(res.message ?? "Enter the 7-character invite code.");
+        setError(res.message ?? t("enterThe7CharacterInviteCode"));
       }
     } catch {
-      setError("Couldn't save the code. Please try again.");
+      setError(t("couldnTSaveTheCodePlease"));
     } finally {
       setPending(false);
     }
@@ -57,7 +60,7 @@ export default function InviteCodeField({
   return (
     <div className="rounded-md border border-border p-3 text-left">
       <label htmlFor={inputId} className="text-sm font-medium">
-        Invite code
+        {t("inviteCode")}
       </label>
       <div className="mt-2 flex gap-2">
         <input
@@ -82,7 +85,11 @@ export default function InviteCodeField({
           disabled={pending || code.trim().length === 0 || saved === code}
           className="rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {saved === code && saved ? "Saved" : pending ? "Saving…" : "Save"}
+          {saved === code && saved
+            ? t("saved")
+            : pending
+              ? t("saving")
+              : t("save")}
         </button>
       </div>
       {error ? (
@@ -91,8 +98,7 @@ export default function InviteCodeField({
         </p>
       ) : saved ? (
         <p className="mt-2 text-xs text-muted-foreground">
-          We&apos;ll apply it when you sign in. Invite codes work for new
-          accounts, in their first week.
+          {t("weLlApplyItWhenYou")}
         </p>
       ) : null}
     </div>

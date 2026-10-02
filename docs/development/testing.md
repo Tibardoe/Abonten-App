@@ -4,8 +4,8 @@ purpose: What automated tests exist, how to run them, what they cover, and what 
 audience: Engineers
 scope: Vitest unit tests, the Supabase integration suite, parity and documentation checks
 status: Approved
-version: 1.3
-lastReviewed: 2026-09-29
+version: 1.4
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -56,7 +56,7 @@ wallet in live mode is still the launch check.
 
 ## Browser suite (Playwright, web)
 
-`apps/web/e2e/` runs against a production server (`next start`), so what is tested is what is deployed: the CSP and security headers, `/robots.txt` and `/sitemap.xml`, the sign-in redirect for private sections, the 404 page for unknown URLs and missing listings, the mobile API's 401 without a bearer token, the webhook's 401 without a signature, canonical URLs and titles, Open Graph and JSON-LD on a live event and place page (taken from the sitemap), and an axe-core accessibility scan of the public surface that fails on serious or critical violations. It also asserts route protection directly (`route-protection.spec.ts`: every private prefix redirects to sign-in, public paths do not, and `/api/geocode` answers 401 JSON) and that the Content-Security-Policy actually reports (`csp-reporting.spec.ts`: the configured `report-uri` is intercepted, a script from a disallowed origin is injected, and the browser's real `csp-report` is inspected; it skips where no Sentry DSN is configured, and also asserts the policy refuses nothing of the app's own).
+`apps/web/e2e/` runs against a production server (`next start`), so what is tested is what is deployed: the CSP and security headers, `/robots.txt` and `/sitemap.xml`, the sign-in redirect for private sections, the 404 page for unknown URLs and missing listings, the mobile API's 401 without a bearer token, the webhook's 401 without a signature, canonical URLs and titles, Open Graph and JSON-LD on a live event and place page (taken from the sitemap), and an axe-core accessibility scan of the public surface that fails on serious or critical violations. It checks the language a visitor gets (browser language, the preference cookie, no language in the address), that a page carries only the words it uses, the offline notice, and the navigation progress bar on a slow page. It also asserts route protection directly (`route-protection.spec.ts`: every private prefix redirects to sign-in, public paths do not, and `/api/geocode` answers 401 JSON) and that the Content-Security-Policy actually reports (`csp-reporting.spec.ts`: the configured `report-uri` is intercepted, a script from a disallowed origin is injected, and the browser's real `csp-report` is inspected; it skips where no Sentry DSN is configured, and also asserts the policy refuses nothing of the app's own).
 
 Locally: `npm run build -w @abonten/web`, then `npx playwright test` in `apps/web` (first time: `npx playwright install chromium`; the app's `.env.local` must be present). The event and place checks skip when the database has no public listing; set `E2E_REQUIRE_CATALOGUE=1` to make that a failure. In CI it is the `build-and-e2e-web` job, which does what the integration suite does first — `npm run test:db:up` — then seeds one organizer, a published upcoming event and a published place (`scripts/test-db/seed-e2e.mjs`, refuses any non-local database), builds the web app against that stack and runs the suite with the catalogue required. To reproduce CI locally: `npm run test:db:up`, `node scripts/test-db/seed-e2e.mjs`, export `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` from the `SUPABASE_TEST_*` values in `.env.test.local`, build, and run with `E2E_REQUIRE_CATALOGUE=1`. The first such run (2026-09-27) found white text on the mint fill ("FEATURED" badge, 1.74:1) that the empty-catalogue runs had never rendered.
 
@@ -70,9 +70,24 @@ Locally: `npm run build -w @abonten/web`, then `npx playwright test` in `apps/we
 
 `npm run check:mobile-a11y` fails if any `<Pressable>` with an `onPress` carries no `accessibilityRole`, so a pressable view always announces itself as a control to TalkBack and VoiceOver. It runs in CI. It is a static guard only: how a screen actually reads on a device is not covered (see below).
 
+## Walking the app on a device
+
+Some defects only exist on a phone: a screen that renders before its providers are mounted, a message the app's JavaScript engine cannot format, a translated word used as a lookup key. On 2026-10-02 the first run on a device after the strings moved into the catalogs found a crash on every cold start and every plural printing its key, with every check on a computer green.
+
+`scripts/qa/mobile-walk.sh` opens about sixty screens by deep link on a connected Android device or emulator, saves what each one says, and fails when a screen shows a catalog key path or the developer error screen:
+
+1. Open the app on the device (a development build on Metro, or a release build), sign in, and choose the language to check in Settings › Language.
+2. Run `EVENT_ID=<uuid> PLACE_ID=<uuid> USERNAME=<handle> bash scripts/qa/mobile-walk.sh out/french`, naming an event, a place and a profile the signed-in account can open.
+3. Read the saved `.txt` files for anything in the wrong language, for example `grep -nE "\b(the|and|your|with|not)\b" out/french/*.txt`.
+
+Do this in at least one language other than English before a release that touches wording, the language provider or the app's start-up. It needs adb and python; it is not run in CI (there is no device there).
+
 ## Other checks
 
 - `npm run check:api-parity` — every `/api/mobile/**` route has a typed client method.
+- `npm run check:i18n` — the translation chain ([architecture/internationalisation.md](../architecture/internationalisation.md) §7).
+- `npm run check:action-calls` — every Server Action called from browser code (website and admin console) has something to catch a dropped connection ([architecture/web-resilience.md](../architecture/web-resilience.md) §1).
+- `npm run check:mobile-boot` — the app's splash and root error screen, which render without providers, use no provider hook.
 - `npm run check:docs` — documentation validation (`documentation-validation.md`).
 - `npm run typecheck`, Biome (`npx biome check <paths>`), `next build` for web and admin.
 
@@ -81,7 +96,8 @@ Locally: `npm run build -w @abonten/web`, then `npx playwright test` in `apps/we
 - No signed-in web journeys in the browser suite yet (checkout, organizer management): the suite covers the public surface and the boundaries; signed-in flows are covered by the integration suite at the service layer.
 - No admin UI tests.
 - No device screen-reader testing. Roles and labels are enforced statically and by axe on web, but whether a screen *reads* sensibly through VoiceOver or TalkBack — focus order, grouping, gesture navigation — has not been checked on hardware.
-- No mobile UI tests; device QA is manual on an Android emulator/device (the owner's checklist lives in memory notes and PROJECT.md).
+- No mobile UI tests; device QA is manual on an Android emulator/device, helped by `scripts/qa/mobile-walk.sh` (above). Nothing in CI runs the app.
+- The translations into French, Spanish, German and Portuguese are checked for completeness and form, not for quality: no native speaker has read them.
 - No live Paystack tests in CI; the live money path was exercised manually (2026-09 audit).
 - Regression tests for the self-authorizing SECURITY DEFINER functions are partial (SEC-001).
 - Load testing: only the field-ops sweep (7,000 rows) was measured.

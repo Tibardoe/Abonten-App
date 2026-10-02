@@ -1,13 +1,18 @@
 import type { MessageRow } from "@abonten/api-client";
 import { AppText } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { View } from "react-native";
 
-function systemText(message: MessageRow, isMineInitiator: boolean): string {
+function systemText(
+  message: MessageRow,
+  isMineInitiator: boolean,
+  t: (key: string) => string,
+): string {
   switch (message.system_event) {
     case "conversation_started":
       return isMineInitiator
-        ? "You started this conversation"
-        : "Conversation started";
+        ? t("youStartedThisConversation")
+        : t("conversationStarted");
     default:
       // Unknown / future system events (member added, closed, reopened…) —
       // show the raw content if the server provided any, else nothing.
@@ -22,11 +27,13 @@ export function SystemMessage({
   message: MessageRow;
   currentUserId: string | undefined;
 }) {
+  const t = useTranslations("messaging");
   const initiatorId =
     (message.system_data?.initiator_id as string | undefined) ?? null;
   const text = systemText(
     message,
     !!currentUserId && initiatorId === currentUserId,
+    t,
   );
   if (!text) return null;
 

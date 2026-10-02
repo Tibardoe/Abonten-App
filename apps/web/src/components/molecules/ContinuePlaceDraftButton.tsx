@@ -1,8 +1,10 @@
 "use client";
 
 import { type PlaceDraftDetail, getPlaceDraft } from "@/actions/getPlaceDraft";
-import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
+import { PlaceUploadModal } from "@/components/organisms/LazyUploadModals";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -26,6 +28,8 @@ export default function ContinuePlaceDraftButton({
   children,
   onDraftListChanged,
 }: ContinuePlaceDraftButtonProps) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const [draft, setDraft] = useState<PlaceDraftDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -36,7 +40,7 @@ export default function ContinuePlaceDraftButton({
     setLoading(true);
     setError(null);
 
-    const response = await getPlaceDraft(draftId);
+    const response = await getPlaceDraft(draftId).catch(actionUnreachable);
     setLoading(false);
 
     if (response.status !== 200 || !response.data) {
@@ -62,7 +66,7 @@ export default function ContinuePlaceDraftButton({
         onClick={handleContinue}
         disabled={loading}
       >
-        {loading ? "Loading..." : children}
+        {loading ? t("loading") : children}
       </button>
 
       {error && <p className="text-destructive text-sm mt-1">{error}</p>}

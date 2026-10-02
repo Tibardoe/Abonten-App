@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import type { UserTicketType } from "@abonten/types/ticketType";
 
@@ -18,12 +20,16 @@ import type { UserTicketType } from "@abonten/types/ticketType";
  * Every existing call site omits it and keeps today's cookie-based behavior
  * exactly as-is.
  */
-export default async function getTicketsByIds(
+export default withActionLocale(async function getTicketsByIds(
   ticketIds: string[],
   authOverride?: AuthOverride,
 ): Promise<{ status: number; data: UserTicketType[]; message?: string }> {
   if (ticketIds.length === 0) {
-    return { status: 400, data: [], message: "No ticket ids provided" };
+    return {
+      status: 400,
+      data: [],
+      message: tr("noTicketIdsProvided"),
+    };
   }
 
   const supabase = authOverride?.supabase ?? (await createClient());
@@ -40,7 +46,11 @@ export default async function getTicketsByIds(
 
     if (userError || !user) {
       logger.error(`Failed fetching user: ${userError?.message}`);
-      return { status: 401, data: [], message: "User not logged in" };
+      return {
+        status: 401,
+        data: [],
+        message: tr("userNotLoggedIn"),
+      };
     }
 
     userId = user.id;
@@ -54,7 +64,11 @@ export default async function getTicketsByIds(
 
   if (ticketsError) {
     logger.error(`Failed fetching tickets: ${ticketsError.message}`);
-    return { status: 500, data: [], message: "Something went wrong" };
+    return {
+      status: 500,
+      data: [],
+      message: tr("somethingWentWrong2"),
+    };
   }
 
   const ticketsWithEvents = (
@@ -67,4 +81,4 @@ export default async function getTicketsByIds(
   }));
 
   return { status: 200, data: ticketsWithEvents };
-}
+});

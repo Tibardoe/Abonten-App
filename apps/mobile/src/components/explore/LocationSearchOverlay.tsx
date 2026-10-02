@@ -8,6 +8,7 @@ import {
   Skeleton,
   useKeyboardHeight,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Portal } from "@gorhom/portal";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -83,6 +84,8 @@ export function LocationSearchOverlay({
   onUseCurrent: () => void;
   onChooseOnMap: () => void;
 }) {
+  const t = useTranslations("explore");
+
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
@@ -161,7 +164,7 @@ export function LocationSearchOverlay({
           <View className="flex-row items-center gap-2">
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Back"
+              accessibilityLabel={t("back")}
               hitSlop={8}
               onPress={onClose}
               className="-ml-2 h-11 w-10 items-center justify-center active:opacity-60"
@@ -173,7 +176,7 @@ export function LocationSearchOverlay({
               <TextInput
                 ref={inputRef}
                 autoFocus
-                placeholder="Search a city, town or address"
+                placeholder={t("searchACityTownOrAddress")}
                 placeholderTextColor={c["muted-foreground"]}
                 autoCapitalize="words"
                 autoCorrect={false}
@@ -181,14 +184,14 @@ export function LocationSearchOverlay({
                 value={query}
                 onChangeText={onQueryChange}
                 onSubmitEditing={onSubmitTyped}
-                accessibilityLabel="Search a city, town or address"
+                accessibilityLabel={t("searchACityTownOrAddress")}
                 className="flex-1 text-[15px] text-foreground"
                 style={family.body ? { fontFamily: family.body } : undefined}
               />
               {query.length > 0 ? (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Clear"
+                  accessibilityLabel={t("clear")}
                   hitSlop={10}
                   onPress={() => {
                     onQueryChange("");
@@ -221,7 +224,7 @@ export function LocationSearchOverlay({
                 {error.settings ? (
                   <View className="flex-row pl-6">
                     <Button
-                      title="Open settings"
+                      title={t("openSettings")}
                       variant="outline"
                       size="sm"
                       onPress={() => Linking.openSettings()}
@@ -247,14 +250,14 @@ export function LocationSearchOverlay({
                 {waitingForSuggestions ? <SuggestionSkeletons /> : null}
                 {trimmed.length < 3 ? (
                   <AppText variant="meta" className="px-1 pb-1 pt-3">
-                    Keep typing to see places.
+                    {t("keepTypingToSeePlaces")}
                   </AppText>
                 ) : null}
                 <View className="mt-1 border-t border-border pt-1">
                   <ResultRow
                     icon="search-outline"
-                    title={`Search for “${trimmed}”`}
-                    subtitle="Use the address as you typed it"
+                    title={t("searchFor", { trimmed: trimmed })}
+                    subtitle={t("useTheAddressAsYouTyped")}
                     busy={busy === "typed"}
                     disabled={busy !== null}
                     onPress={onSubmitTyped}
@@ -268,13 +271,13 @@ export function LocationSearchOverlay({
                   accent
                   title={
                     busy === "current"
-                      ? "Finding you…"
-                      : "Use my current location"
+                      ? t("findingYou")
+                      : t("useMyCurrentLocation")
                   }
                   subtitle={
                     followingNow
-                      ? "Already following you as you move"
-                      : "Follows you as you move"
+                      ? t("alreadyFollowingYouAsYouMove")
+                      : t("followsYouAsYouMove")
                   }
                   busy={busy === "current"}
                   disabled={busy !== null}
@@ -283,8 +286,8 @@ export function LocationSearchOverlay({
                 <ResultRow
                   icon="map-outline"
                   accent
-                  title="Choose on map"
-                  subtitle="Move the map under the pin"
+                  title={t("chooseOnMap")}
+                  subtitle={t("moveTheMapUnderThePin")}
                   disabled={busy !== null}
                   onPress={onChooseOnMap}
                 />

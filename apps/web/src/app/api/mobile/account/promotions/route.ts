@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { listActivePromotionsCore } from "@abonten/services/promotions/activePromotionsCore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
@@ -9,6 +13,7 @@ import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClie
 // promoted Spotlights) for Settings › Overview. Same service as the web
 // getUserActivePromotions action.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -20,6 +25,9 @@ export async function GET(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /account/promotions failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

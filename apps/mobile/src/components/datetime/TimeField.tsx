@@ -1,4 +1,5 @@
 import { AppText, Icon, Sheet } from "@abonten/ui-native";
+import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -42,7 +43,7 @@ function toHHMM(h12: number, m: number, pm: boolean): string {
 
 /** "6:05 PM" — the human label shown on the trigger and review screens. */
 export function prettyTime(value: string | null): string {
-  if (!value) return "Set time";
+  if (!value) return translatorFor("common")("setTime");
   const { h12, m, pm } = parse(value);
   return `${h12}:${String(m).padStart(2, "0")} ${pm ? "PM" : "AM"}`;
 }
@@ -160,6 +161,8 @@ export function TimeField({
   label?: string;
   invalid?: boolean;
 }) {
+  const t = useTranslations("common");
+
   const c = useThemeColors();
   const [open, setOpen] = useState(false);
   const initial = useMemo(() => parse(value), [value]);
@@ -208,7 +211,7 @@ export function TimeField({
       <Sheet
         open={open}
         onClose={() => setOpen(false)}
-        title={label ?? "Pick a time"}
+        title={label ?? t("pickATime")}
         footer={
           <Pressable
             accessibilityRole="button"
@@ -216,7 +219,7 @@ export function TimeField({
             className="min-h-[48px] items-center justify-center rounded-xl bg-primary active:opacity-90"
           >
             <AppText className="text-[15px] font-semibold text-primary-foreground">
-              Done
+              {t("done")}
             </AppText>
           </Pressable>
         }

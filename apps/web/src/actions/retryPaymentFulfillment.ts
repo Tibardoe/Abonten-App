@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type RetryPaymentFulfillmentCoreResult,
   retryPaymentFulfillmentCore,
@@ -17,7 +19,7 @@ type RetryPaymentFulfillmentResult =
  * status). Never re-charges the user. Post-auth logic lives in
  * retryPaymentFulfillmentCore so the mobile API route shares it.
  */
-export default async function retryPaymentFulfillment(
+export default withActionLocale(async function retryPaymentFulfillment(
   paymentAttemptId: string,
 ): Promise<RetryPaymentFulfillmentResult> {
   const supabase = await createClient();
@@ -28,7 +30,7 @@ export default async function retryPaymentFulfillment(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   return retryPaymentFulfillmentCore(
@@ -37,4 +39,4 @@ export default async function retryPaymentFulfillment(
     paymentAttemptId,
     paymentFulfillmentDeps,
   );
-}
+});

@@ -2,8 +2,10 @@
 
 import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
 import NewPlaceOrDraftChooser from "@/components/molecules/NewPlaceOrDraftChooser";
+import { PlaceUploadModal } from "@/components/organisms/LazyUploadModals";
 import { Button } from "@/components/ui/button";
-import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 // "Add Place" trigger for the Places-tab empty state, analogous to
@@ -11,12 +13,14 @@ import { useState } from "react";
 // before opening a fresh modal, same as PostButton.tsx does for events —
 // starting a new place must not silently abandon an in-progress draft.
 export default function CreatePlaceButton() {
+  const t = useTranslations("places");
+
   const [showPlaceModal, setShowPlaceModal] = useState(false);
   const [showChooser, setShowChooser] = useState(false);
 
   const handleClick = async () => {
-    const { data } = await getActiveDraftCounts();
-    if (data.place > 0) {
+    const { data } = await getActiveDraftCounts().catch(actionUnreachable);
+    if ((data?.place ?? 0) > 0) {
       setShowChooser(true);
     } else {
       setShowPlaceModal(true);
@@ -26,7 +30,7 @@ export default function CreatePlaceButton() {
   return (
     <>
       <Button className="px-10 font-medium text-sm mt-5" onClick={handleClick}>
-        Add Place
+        {t("addPlace")}
       </Button>
 
       {showChooser && (

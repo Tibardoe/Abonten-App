@@ -1,5 +1,7 @@
 import { logger } from "@abonten/core/logger";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
+import { tr } from "../../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../../supabase/serviceClient";
 import { notifyCampaign } from "../contentNotifyCore";
 
@@ -29,7 +31,7 @@ export default async function activateContentCampaign(
     logger.error(
       `activateContentCampaign: attempt read failed: ${attemptsError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   const verified = (attempts ?? []).find(
     (a) =>
@@ -40,7 +42,10 @@ export default async function activateContentCampaign(
     logger.error(
       `activateContentCampaign: no verified payment for checkout ${checkoutId}`,
     );
-    return { status: 402, message: "Payment not verified for this checkout" };
+    return {
+      status: 402,
+      message: tr("paymentNotVerifiedForThisCheckout"),
+    };
   }
 
   await supabase.rpc("expire_stale_content_campaign_checkouts");
@@ -57,10 +62,13 @@ export default async function activateContentCampaign(
     // A checkout that already went 'paid' on an earlier run answers as a
     // replay inside the function; anything else is a real failure.
     if (error.code === "22023" && /Checkout is paid/.test(error.message)) {
-      return { status: 200, message: "Campaign already activated" };
+      return { status: 200, message: tr("campaignAlreadyActivated") };
     }
     logger.error(`activateContentCampaign: ${error.message}`);
-    return { status: 500, message: error.message };
+    return {
+      status: 500,
+      message: userFacingError("Activate campaign", error),
+    };
   }
   const result = (data ?? {}) as { campaign_id?: string; replayed?: boolean };
   if (result.campaign_id && !result.replayed) {
@@ -68,9 +76,8 @@ export default async function activateContentCampaign(
       id: result.campaign_id,
       advertiserId: userId,
       status: "pending_review",
-      reason:
-        "We check every promotion before it runs. You'll hear from us when it's approved.",
+      reason: tr("weCheckEveryPromotionBeforeIt"),
     });
   }
-  return { status: 200, message: "Campaign submitted for review" };
+  return { status: 200, message: tr("campaignSubmittedForReview") };
 }

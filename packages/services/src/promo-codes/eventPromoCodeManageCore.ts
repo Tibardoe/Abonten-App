@@ -1,11 +1,12 @@
 import { promoExpiryForStorage } from "@abonten/core/promoExpiry";
 import {
-  FREE_EVENT_PROMO_CODES_MESSAGE,
   FREE_TICKET_TYPE,
+  freeEventPromoCodesMessage,
 } from "@abonten/core/ticketTiers";
 import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT, tr } from "../i18n/requestLocale";
 
 // Post-auth bodies of getEventPromoCodes / updatePromoCode / deletePromoCode,
 // lifted so the mobile organizer promo-code routes run the exact same logic
@@ -41,13 +42,17 @@ export async function fetchEventPromoCodes(
     .maybeSingle();
 
   if (eventError) {
-    return { status: 500, message: eventError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Promo code", eventError),
+      data: [],
+    };
   }
 
   if (!event) {
     return {
       status: 403,
-      message: "Not authorized to view this event's promo codes",
+      message: tr("notAuthorizedToViewThisEvent2"),
       data: [],
     };
   }
@@ -61,7 +66,11 @@ export async function fetchEventPromoCodes(
     .order("created_at", { ascending: false });
 
   if (promoCodesError) {
-    return { status: 500, message: promoCodesError.message, data: [] };
+    return {
+      status: 500,
+      message: userFacingError("Promo code", promoCodesError),
+      data: [],
+    };
   }
 
   const data: EventPromoCode[] = (promoCodes ?? []).map((p) => ({
@@ -108,11 +117,11 @@ export async function updatePromoCodeCore(
     .maybeSingle();
 
   if (fetchError) {
-    return { status: 500, message: fetchError.message };
+    return { status: 500, message: userFacingError("Promo code", fetchError) };
   }
 
   if (!promoCode || promoCode.event_id === null) {
-    return { status: 404, message: "Promo code not found" };
+    return { status: 404, message: tr("promoCodeNotFound") };
   }
 
   const { data: event, error: eventError } = await supabase
@@ -123,11 +132,14 @@ export async function updatePromoCodeCore(
     .maybeSingle();
 
   if (eventError) {
-    return { status: 500, message: eventError.message };
+    return { status: 500, message: userFacingError("Promo code", eventError) };
   }
 
   if (!event) {
-    return { status: 403, message: "Not authorized to edit this promo code" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToEditThisPromo"),
+    };
   }
 
   // A code retired when the event went free can be edited but not switched
@@ -136,7 +148,7 @@ export async function updatePromoCodeCore(
     (t) => t.type === FREE_TICKET_TYPE,
   );
   if (input.isActive && isFree) {
-    return { status: 400, message: FREE_EVENT_PROMO_CODES_MESSAGE };
+    return { status: 400, message: freeEventPromoCodesMessage(coreT()) };
   }
 
   const { error: updateError } = await supabase
@@ -155,7 +167,10 @@ export async function updatePromoCodeCore(
 
   if (updateError) {
     if (updateError.code === CHECK_VIOLATION) {
-      return { status: 400, message: updateError.message };
+      return {
+        status: 400,
+        message: userFacingError("Promo code", updateError),
+      };
     }
     return {
       status: 500,
@@ -163,7 +178,7 @@ export async function updatePromoCodeCore(
     };
   }
 
-  return { status: 200, message: "Promo code updated successfully" };
+  return { status: 200, message: tr("promoCodeUpdatedSuccessfully") };
 }
 
 export type DeletePromoCodeCoreResult = {
@@ -184,11 +199,11 @@ export async function deletePromoCodeCore(
     .maybeSingle();
 
   if (fetchError) {
-    return { status: 500, message: fetchError.message };
+    return { status: 500, message: userFacingError("Promo code", fetchError) };
   }
 
   if (!promoCode || promoCode.event_id === null) {
-    return { status: 404, message: "Promo code not found" };
+    return { status: 404, message: tr("promoCodeNotFound") };
   }
 
   const { data: event, error: eventError } = await supabase
@@ -199,11 +214,14 @@ export async function deletePromoCodeCore(
     .maybeSingle();
 
   if (eventError) {
-    return { status: 500, message: eventError.message };
+    return { status: 500, message: userFacingError("Promo code", eventError) };
   }
 
   if (!event) {
-    return { status: 403, message: "Not authorized to delete this promo code" };
+    return {
+      status: 403,
+      message: tr("notAuthorizedToDeleteThisPromo"),
+    };
   }
 
   // promo_code_usage rows reference this code with ON DELETE CASCADE, so a
@@ -230,8 +248,7 @@ export async function deletePromoCodeCore(
 
     return {
       status: 200,
-      message:
-        "This promo code has already been used, so it was deactivated instead of deleted.",
+      message: tr("thisPromoCodeHasAlreadyBeen"),
       deactivatedOnly: true,
     };
   }
@@ -250,7 +267,7 @@ export async function deletePromoCodeCore(
 
   return {
     status: 200,
-    message: "Promo code deleted successfully",
+    message: tr("promoCodeDeletedSuccessfully"),
     deactivatedOnly: false,
   };
 }

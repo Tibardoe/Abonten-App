@@ -19,12 +19,15 @@ import {
   SegmentedTabs,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Switch, View } from "react-native";
 
 export default function EditEventScreen() {
+  const t = useTranslations("manage");
+
   const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const w = useEventEdit(eventId ?? "");
@@ -42,7 +45,7 @@ export default function EditEventScreen() {
         <View className="flex-1 bg-background">
           <QueryUnavailable
             view={w.loadView}
-            subject="this event"
+            subject={t("thisEvent")}
             onRetry={() => w.reload()}
           />
         </View>
@@ -64,11 +67,11 @@ export default function EditEventScreen() {
     const res = await w.save();
     if (!res) return;
     if (res.status === 200) {
-      toast.success("Saved", { description: "Your event has been updated." });
+      toast.success(t("saved"), { description: t("yourEventHasBeenUpdated") });
       router.back();
     } else {
-      toast.error("Couldn't save", {
-        description: res.message ?? "Please try again.",
+      toast.error(t("couldnTSave"), {
+        description: res.message ?? t("pleaseTryAgain"),
       });
     }
   }
@@ -77,11 +80,11 @@ export default function EditEventScreen() {
     const res = await w.saveTicketTypes();
     if (!res) return;
     if (res.status === 200) {
-      toast.success("Ticket types updated");
+      toast.success(t("ticketTypesUpdated"));
     } else {
-      toast.error(res.message ?? "We couldn't save your ticket types.", {
-        description: "Your changes are still on screen — try again.",
-        action: { label: "Retry", onPress: onSaveTicketTypes },
+      toast.error(res.message ?? t("weCouldnTSaveYourTicket"), {
+        description: t("yourChangesAreStillOnScreen"),
+        action: { label: t("retry"), onPress: onSaveTicketTypes },
       });
     }
   }
@@ -95,19 +98,17 @@ export default function EditEventScreen() {
       {w.locked ? (
         <View className="rounded-xl border border-border bg-muted p-3">
           <AppText variant="meta">
-            This event already has confirmed tickets, so its dates, location and
-            capacity are locked. You can still edit the title, description,
-            category, website, flyer and registration setting.
+            {t("thisEventAlreadyHasConfirmedTickets")}
           </AppText>
         </View>
       ) : null}
 
       {/* Basics */}
-      <Field label="Title" error={w.textErrors.title}>
+      <Field label={t("title")} error={w.textErrors.title}>
         <Input value={w.title} onChangeText={w.setTitle} />
       </Field>
 
-      <Field label="Description" error={w.textErrors.description}>
+      <Field label={t("description")} error={w.textErrors.description}>
         <Input
           value={w.description}
           onChangeText={w.setDescription}
@@ -117,7 +118,7 @@ export default function EditEventScreen() {
         />
       </Field>
 
-      <Field label="Category">
+      <Field label={t("category")}>
         <View className="flex-row flex-wrap gap-2">
           {w.categories.map((c) => (
             <Chip
@@ -131,14 +132,14 @@ export default function EditEventScreen() {
       </Field>
 
       {w.category ? (
-        <Field label="Types" hint="Pick one or more">
+        <Field label={t("types")} hint={t("pickOneOrMore")}>
           <View className="flex-row flex-wrap gap-2">
-            {w.categoryTypes.map((t) => (
+            {w.categoryTypes.map((item) => (
               <Chip
-                key={t}
-                label={t}
-                selected={w.types.includes(t)}
-                onPress={() => w.toggleType(t)}
+                key={item}
+                label={item}
+                selected={w.types.includes(item)}
+                onPress={() => w.toggleType(item)}
               />
             ))}
           </View>
@@ -146,12 +147,12 @@ export default function EditEventScreen() {
       ) : null}
 
       <Field
-        label="Capacity"
+        label={t("capacity2")}
         error={w.textErrors.capacity}
         hint={
           w.locked
-            ? "Locked — this event has confirmed tickets."
-            : "Optional — total attendees allowed"
+            ? t("lockedThisEventHasConfirmedTickets")
+            : t("optionalTotalAttendeesAllowed")
         }
       >
         <Input
@@ -162,7 +163,11 @@ export default function EditEventScreen() {
         />
       </Field>
 
-      <Field label="Website" error={w.textErrors.website_url} hint="Optional">
+      <Field
+        label={t("website")}
+        error={w.textErrors.website_url}
+        hint={t("optional")}
+      >
         <Input
           value={w.website}
           onChangeText={w.setWebsite}
@@ -175,10 +180,8 @@ export default function EditEventScreen() {
 
       <View className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3">
         <View className="flex-1 pr-3">
-          <AppText variant="bodyStrong">Require registration</AppText>
-          <AppText variant="meta">
-            Attendees must register even for a free event.
-          </AppText>
+          <AppText variant="bodyStrong">{t("requireRegistration")}</AppText>
+          <AppText variant="meta">{t("attendeesMustRegisterEvenForA")}</AppText>
         </View>
         <Switch
           value={w.requireRegistration}
@@ -187,7 +190,7 @@ export default function EditEventScreen() {
       </View>
 
       {/* Flyer */}
-      <Field label="Flyer">
+      <Field label={t("flyer")}>
         <View className="gap-2">
           {flyerPreview ? (
             <Image
@@ -198,7 +201,9 @@ export default function EditEventScreen() {
             />
           ) : null}
           <Button
-            title={w.newFlyerUri ? "Choose a different flyer" : "Change flyer"}
+            title={
+              w.newFlyerUri ? t("chooseADifferentFlyer") : t("changeFlyer")
+            }
             variant="outline"
             size="sm"
             onPress={w.pickFlyer}
@@ -208,20 +213,20 @@ export default function EditEventScreen() {
 
       {/* Schedule */}
       <View className="gap-3">
-        <AppText variant="label">Schedule</AppText>
+        <AppText variant="label">{t("schedule")}</AppText>
         {w.locked ? (
           <AppText variant="meta">
-            Locked — this event has confirmed tickets.
+            {t("lockedThisEventHasConfirmedTickets")}
           </AppText>
         ) : (
           <View className="flex-row gap-2">
             <Chip
-              label="Single event"
+              label={t("singleEvent")}
               selected={w.scheduleMode === "single"}
               onPress={() => w.setScheduleMode("single")}
             />
             <Chip
-              label="Multiple dates"
+              label={t("multipleDates")}
               selected={w.scheduleMode === "specific"}
               onPress={() => w.setScheduleMode("specific")}
             />
@@ -234,16 +239,16 @@ export default function EditEventScreen() {
               <View className="gap-3">
                 <SegmentedTabs
                   options={[
-                    { key: "single", label: "Single date" },
-                    { key: "range", label: "Date range" },
+                    { key: "single", label: t("singleDate") },
+                    { key: "range", label: t("dateRange") },
                   ]}
                   value={w.dateMode}
                   onChange={w.setDateMode}
                 />
                 {w.dateMode === "single" ? (
                   <Field
-                    label="Event date"
-                    hint="Tap the day your event happens"
+                    label={t("eventDate")}
+                    hint={t("tapTheDayYourEventHappens")}
                   >
                     <DateRangeField
                       mode="single"
@@ -256,8 +261,8 @@ export default function EditEventScreen() {
                   </Field>
                 ) : (
                   <Field
-                    label="Start & end date"
-                    hint="Tap the first day, then the last day"
+                    label={t("startEndDate")}
+                    hint={t("tapTheFirstDayThenThe")}
                   >
                     <DateRangeField
                       start={w.rangeStart}
@@ -277,14 +282,14 @@ export default function EditEventScreen() {
             ) : null}
             <View className="flex-row gap-3">
               <View className="flex-1">
-                <Field label="Start time">
+                <Field label={t("startTime")}>
                   {w.locked ? (
                     <AppText variant="small">
                       {prettyTime(w.rangeStartTime)}
                     </AppText>
                   ) : (
                     <TimeField
-                      label="Start time"
+                      label={t("startTime")}
                       value={w.rangeStartTime}
                       onChange={w.setRangeStartTime}
                       invalid={!TIME_RE.test(w.rangeStartTime)}
@@ -293,14 +298,14 @@ export default function EditEventScreen() {
                 </Field>
               </View>
               <View className="flex-1">
-                <Field label="End time">
+                <Field label={t("endTime")}>
                   {w.locked ? (
                     <AppText variant="small">
                       {prettyTime(w.rangeEndTime)}
                     </AppText>
                   ) : (
                     <TimeField
-                      label="End time"
+                      label={t("endTime")}
                       value={w.rangeEndTime}
                       onChange={w.setRangeEndTime}
                       invalid={!TIME_RE.test(w.rangeEndTime)}
@@ -314,8 +319,7 @@ export default function EditEventScreen() {
           <View className="gap-2">
             {w.occurrences.length > 0 ? (
               <AppText variant="overline">
-                {w.occurrences.length} date
-                {w.occurrences.length === 1 ? "" : "s"}
+                {t("date", { length: w.occurrences.length })}
               </AppText>
             ) : null}
             {[...w.occurrences]
@@ -338,7 +342,7 @@ export default function EditEventScreen() {
                       }
                     >
                       <AppText variant="small" tone="error">
-                        Remove
+                        {t("remove")}
                       </AppText>
                     </Pressable>
                   ) : null}
@@ -350,11 +354,11 @@ export default function EditEventScreen() {
 
       {/* Location */}
       <Field
-        label="Location"
+        label={t("location")}
         hint={
           w.locked
-            ? "Locked — this event has confirmed tickets."
-            : "Search, choose on the map, or use your current location."
+            ? t("lockedThisEventHasConfirmedTickets")
+            : t("searchChooseOnTheMapOr")
         }
       >
         {w.locked ? (
@@ -364,13 +368,13 @@ export default function EditEventScreen() {
             <Input
               value={w.autocomplete.query}
               onChangeText={w.autocomplete.setQuery}
-              placeholder="Start typing an address…"
+              placeholder={t("startTypingAnAddress")}
               autoCorrect={false}
             />
             {w.resolvingLocation ? (
               <View className="flex-row items-center gap-2 py-1">
                 <ActivityIndicator size="small" />
-                <AppText variant="meta">Resolving location…</AppText>
+                <AppText variant="meta">{t("resolvingLocation")}</AppText>
               </View>
             ) : null}
             {w.autocomplete.predictions.length > 0 ? (
@@ -398,7 +402,7 @@ export default function EditEventScreen() {
               >
                 <Icon name="map-outline" size={16} tone="primary" />
                 <AppText variant="small" tone="brand">
-                  Choose on map
+                  {t("chooseOnMap")}
                 </AppText>
               </Pressable>
               <Pressable
@@ -408,19 +412,21 @@ export default function EditEventScreen() {
               >
                 <Icon name="locate-outline" size={16} tone="primary" />
                 <AppText variant="small" tone="brand">
-                  Current location
+                  {t("currentLocation")}
                 </AppText>
               </Pressable>
             </View>
             {w.address && w.coords ? (
-              <AppText variant="meta">Selected: {w.address}</AppText>
+              <AppText variant="meta">
+                {t("selected", { address: w.address })}
+              </AppText>
             ) : null}
           </View>
         )}
       </Field>
 
       <Button
-        title={w.isSaving ? "Saving…" : "Save changes"}
+        title={w.isSaving ? t("saving") : t("saveChanges")}
         loading={w.isSaving}
         disabled={w.isSaving}
         onPress={onSave}
@@ -430,11 +436,10 @@ export default function EditEventScreen() {
 
       {/* Ticket types — a separate save, like the web Details tab */}
       <View className="gap-3">
-        <AppText variant="label">Ticket types</AppText>
+        <AppText variant="label">{t("ticketTypes")}</AppText>
         {w.locked ? (
           <AppText variant="meta">
-            This event already has confirmed tickets, so ticket types can no
-            longer be changed.
+            {t("thisEventAlreadyHasConfirmedTickets2")}
           </AppText>
         ) : (
           <>
@@ -444,10 +449,10 @@ export default function EditEventScreen() {
                   key={m}
                   label={
                     m === "free"
-                      ? "Free"
+                      ? t("free")
                       : m === "single"
-                        ? "One price"
-                        : "Multiple types"
+                        ? t("onePrice")
+                        : t("multipleTypes")
                   }
                   selected={w.ticketMode === m}
                   onPress={() => w.setTicketMode(m)}
@@ -457,14 +462,16 @@ export default function EditEventScreen() {
 
             {w.ticketMode === "free" ? (
               <AppText variant="muted">
-                Attendees reserve a free ticket. Capacity caps the total.
+                {t("attendeesReserveAFreeTicketCapacity")}
               </AppText>
             ) : null}
 
             {w.ticketMode === "single" ? (
               <View className="flex-row gap-3">
                 <View className="flex-1">
-                  <Field label={`Price (${w.ticketCurrency})`}>
+                  <Field
+                    label={t("price", { ticketCurrency: w.ticketCurrency })}
+                  >
                     <Input
                       value={w.ticketPrice}
                       onChangeText={w.setTicketPrice}
@@ -474,12 +481,12 @@ export default function EditEventScreen() {
                   </Field>
                 </View>
                 <View className="flex-1">
-                  <Field label="Quantity" hint="Optional">
+                  <Field label={t("quantity")} hint={t("optional")}>
                     <Input
                       value={w.ticketQuantity}
                       onChangeText={w.setTicketQuantity}
                       keyboardType="number-pad"
-                      placeholder="Unlimited"
+                      placeholder={t("unlimited")}
                     />
                   </Field>
                 </View>
@@ -488,14 +495,14 @@ export default function EditEventScreen() {
 
             {w.ticketMode === "multiple" ? (
               <View className="gap-3">
-                {w.tiers.map((t, i) => (
+                {w.tiers.map((tier, i) => (
                   <View
-                    key={t.id}
+                    key={tier.id}
                     className="gap-2 rounded-xl border border-border bg-card p-3"
                   >
                     <View className="flex-row items-center justify-between">
                       <AppText variant="small" className="font-semibold">
-                        Ticket type {i + 1}
+                        {t("ticketTypeNumber", { number: i + 1 })}
                       </AppText>
                       <Pressable
                         accessibilityRole="button"
@@ -506,12 +513,12 @@ export default function EditEventScreen() {
                         }
                       >
                         <AppText variant="small" tone="error">
-                          Remove
+                          {t("remove")}
                         </AppText>
                       </Pressable>
                     </View>
                     <Input
-                      value={t.name}
+                      value={tier.name}
                       onChangeText={(v) =>
                         w.setTiers((prev) =>
                           prev.map((x, idx) =>
@@ -519,12 +526,12 @@ export default function EditEventScreen() {
                           ),
                         )
                       }
-                      placeholder="e.g. VIP"
+                      placeholder={t("eGVip")}
                     />
                     <View className="flex-row gap-3">
                       <View className="flex-1">
                         <Input
-                          value={t.price}
+                          value={tier.price}
                           onChangeText={(v) =>
                             w.setTiers((prev) =>
                               prev.map((x, idx) =>
@@ -533,12 +540,14 @@ export default function EditEventScreen() {
                             )
                           }
                           keyboardType="decimal-pad"
-                          placeholder={`Price (${w.ticketCurrency})`}
+                          placeholder={t("price", {
+                            ticketCurrency: w.ticketCurrency,
+                          })}
                         />
                       </View>
                       <View className="flex-1">
                         <Input
-                          value={t.quantity}
+                          value={tier.quantity}
                           onChangeText={(v) =>
                             w.setTiers((prev) =>
                               prev.map((x, idx) =>
@@ -547,14 +556,14 @@ export default function EditEventScreen() {
                             )
                           }
                           keyboardType="number-pad"
-                          placeholder="Qty (optional)"
+                          placeholder={t("qtyOptional")}
                         />
                       </View>
                     </View>
                   </View>
                 ))}
                 <Button
-                  title="Add ticket type"
+                  title={t("addTicketType")}
                   variant="outline"
                   size="sm"
                   onPress={() =>
@@ -583,13 +592,12 @@ export default function EditEventScreen() {
 
             {w.ticketMode === "free" && !w.savedFree ? (
               <AppText variant="meta">
-                Making this event free removes its promo codes: unused ones are
-                deleted and used ones are deactivated.
+                {t("makingThisEventFreeRemovesIts")}
               </AppText>
             ) : null}
 
             <Button
-              title={w.isSavingTicketTypes ? "Saving…" : "Save ticket types"}
+              title={w.isSavingTicketTypes ? t("saving") : t("saveTicketTypes")}
               variant="secondary"
               loading={w.isSavingTicketTypes}
               disabled={w.isSavingTicketTypes || !!w.capacityProblem}

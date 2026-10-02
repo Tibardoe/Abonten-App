@@ -1,4 +1,6 @@
+import { useToast } from "@/hooks/useToast";
 import { canvasPreview, downscaleCanvas } from "@/utils/canvasPreview";
+import { formatDecimal } from "@abonten/core/i18n/format";
 import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import ReactCrop, {
@@ -9,6 +11,7 @@ import ReactCrop, {
   convertToPixelCrop,
 } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "../ui/button";
 import { Slider } from "../ui/slider";
 
@@ -54,6 +57,10 @@ export default function ImageCropper({
   outputQuality,
   maxOutputDimension,
 }: ImageCropType) {
+  const t = useTranslations("common");
+  const locale = useLocale();
+  const toast = useToast();
+
   const imgRef = useRef<HTMLImageElement>(null);
   const cropAreaRef = useRef<HTMLDivElement>(null);
   const [crop, setCrop] = useState<Crop>();
@@ -127,7 +134,7 @@ export default function ImageCropper({
   }
 
   const aspectOptions = [
-    { label: "Free", value: undefined },
+    { label: t("free"), value: undefined },
     { label: "16:9", value: 16 / 9 },
     { label: "4:3", value: 4 / 3 },
     { label: "1:1", value: 1 },
@@ -145,9 +152,9 @@ export default function ImageCropper({
       {!!imagePreview && (
         <>
           <div className="flex justify-between items-center px-5 pb-3 text-foreground shrink-0">
-            <Button onClick={handleCancel}>Cancel</Button>
+            <Button onClick={handleCancel}>{t("cancel")}</Button>
 
-            <Button onClick={handleCropSave}>Done</Button>
+            <Button onClick={handleCropSave}>{t("done")}</Button>
 
             {/* <div className="flex justify-between items-center mb-2 ml-7">
               <button
@@ -189,14 +196,12 @@ export default function ImageCropper({
             >
               <img
                 ref={imgRef}
-                alt="Crop me"
+                alt={t("cropMe")}
                 src={imagePreview}
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
                 onLoad={onImageLoad}
                 onError={() => {
-                  alert(
-                    "This image couldn't be loaded. Please try a different photo.",
-                  );
+                  toast.error(t("thisImageCouldnTBeLoaded"));
                   handleCancel();
                 }}
               />
@@ -208,7 +213,7 @@ export default function ImageCropper({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="block text-sm font-medium text-muted-foreground mb-1">
-                    Zoom: {scale.toFixed(1)}x
+                    {t("zoomX", { toFixed: formatDecimal(scale, locale, 1) })}
                   </span>
                   <Slider
                     min={0.1}
@@ -221,7 +226,7 @@ export default function ImageCropper({
                 </div>
                 <div>
                   <span className="block text-sm font-medium text-muted-foreground mb-1">
-                    Rotation: {rotate}°
+                    {t("rotation", { rotate: rotate })}
                   </span>
                   <Slider
                     min={-180}
@@ -236,7 +241,7 @@ export default function ImageCropper({
 
               <div className="space-y-2">
                 <span className="block text-sm font-medium text-muted-foreground">
-                  Aspect Ratio
+                  {t("aspectRatio")}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {aspectOptions.map((option) => (

@@ -1,12 +1,17 @@
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import type { WeeklyItem } from "@abonten/types/weeklyType";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 
 // A compact row for "list" sections: thumbnail, headline, title and one line
 // of detail. Good for longer runs of picks where full cards would be heavy.
 export default function WeeklyListItem({ item }: { item: WeeklyItem }) {
+  const locale = useLocale();
+  const tc = useTranslations("core");
+
   const event = item.event;
   const place = item.place;
   if (!event && !place) return null;
@@ -24,11 +29,15 @@ export default function WeeklyListItem({ item }: { item: WeeklyItem }) {
           event.ends_at,
           event.occurrences,
           event.timezone,
+          locale,
         ).date,
         event.address?.full_address,
       ]
     : [
-        place?.category_name,
+        placeCategoryLabel(tc, {
+          slug: place?.category_slug,
+          name: place?.category_name,
+        }),
         (place?.address as { full_address?: string } | undefined)?.full_address,
       ];
 

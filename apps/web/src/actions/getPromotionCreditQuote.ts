@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type PromotionCreditQuoteResult,
   getPromotionCreditQuoteCore,
@@ -11,20 +13,22 @@ import {
  * promotion checkout, and what would be left to pay. Same service as
  * GET /api/mobile/checkout/promotion-credit-quote.
  */
-export async function getPromotionCreditQuote(input: {
-  kind: "event" | "place" | "spotlight";
-  checkoutId: string;
-}): Promise<PromotionCreditQuoteResult | { status: 401; message: string }> {
-  const supabase = await createClient();
+export const getPromotionCreditQuote = withActionLocale(
+  async function getPromotionCreditQuote(input: {
+    kind: "event" | "place" | "spotlight";
+    checkoutId: string;
+  }): Promise<PromotionCreditQuoteResult | { status: 401; message: string }> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (userError || !user) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return getPromotionCreditQuoteCore(supabase, user.id, input);
-}
+    return getPromotionCreditQuoteCore(supabase, user.id, input);
+  },
+);

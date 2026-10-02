@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // The messaging RPCs (open_conversation / send_message / ...) do all their
 // authorization + business validation in-database and RAISE with a specific
@@ -18,24 +19,24 @@ export function mapMessagingRpcError(
 ): MessagingErrorEnvelope {
   switch (error.code) {
     case "42501": // insufficient_privilege — our "Not authorized" raises
-      return { status: 403, message: "You can't do that here." };
+      return { status: 403, message: tr("youCanTDoThatHere") };
     case "P0002": // no_data_found — "That event no longer exists" etc.
       return {
         status: 404,
-        message: error.message || "That no longer exists.",
+        message: error.message || tr("thatNoLongerExists"),
       };
     case "23514": // check_violation — every business-rule raise
     case "23505": // unique_violation
     case "P0001": // bare raise_exception
       return {
         status: 409,
-        message: error.message || "That action isn't allowed right now.",
+        message: error.message || tr("thatActionIsnTAllowedRight"),
       };
     default:
       logger.error(`${context}: unexpected messaging RPC error`, error);
       return {
         status: 500,
-        message: "Something went wrong. Please try again.",
+        message: tr("somethingWentWrongPleaseTryAgain"),
       };
   }
 }

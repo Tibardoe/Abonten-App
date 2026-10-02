@@ -1,10 +1,12 @@
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import {
   generateQRCodeDataURL,
@@ -13,7 +15,6 @@ import {
 import { saveEventQrCodeToCloudinary } from "@abonten/services/tickets/saveEventQrCodeToCloudinary";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import type { Database } from "@abonten/types/database.types";
-import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 type CheckoutRow = {
@@ -82,7 +83,7 @@ export default async function generateTicket(
 
       return {
         status: 401,
-        message: "User not logged in",
+        message: tr("userNotLoggedIn"),
       };
     }
 
@@ -107,17 +108,17 @@ export default async function generateTicket(
   if (allRowsError) {
     logger.error(`Failed fetching checkout: ${allRowsError.message}`);
 
-    return { status: 500, message: "Something went wrong" };
+    return { status: 500, message: tr("somethingWentWrong2") };
   }
 
   const allRows = (allRowsRaw ?? []) as CheckoutRow[];
 
   if (allRows.length === 0) {
-    return { status: 404, message: "Checkout not found" };
+    return { status: 404, message: tr("checkoutNotFound") };
   }
 
   if (allRows.every((row) => row.status === "paid")) {
-    return { status: 200, message: "Tickets already issued" };
+    return { status: 200, message: tr("ticketsAlreadyIssued") };
   }
 
   // Give the atomic sweep a chance to reclaim this checkout if its
@@ -139,7 +140,7 @@ export default async function generateTicket(
   if (checkoutError) {
     logger.error(`Failed fetching checkout: ${checkoutError.message}`);
 
-    return { status: 500, message: "Something went wrong" };
+    return { status: 500, message: tr("somethingWentWrong2") };
   }
 
   const rows = (checkoutData ?? []) as CheckoutRow[];
@@ -147,7 +148,7 @@ export default async function generateTicket(
   if (rows.length === 0) {
     return {
       status: 410,
-      message: "This checkout has expired. Please start again.",
+      message: tr("thisCheckoutHasExpiredPleaseStart"),
     };
   }
 
@@ -163,7 +164,7 @@ export default async function generateTicket(
 
   if (eventFetchError || !event) {
     logger.error(`Failed fetching event: ${eventFetchError?.message}`);
-    return { status: 500, message: "Something went wrong" };
+    return { status: 500, message: tr("somethingWentWrong2") };
   }
 
   const eventEndDate = resolveEventEndDate(
@@ -174,7 +175,7 @@ export default async function generateTicket(
 
   if (!eventEndDate) {
     logger.error(`Event ${eventId} has no resolvable start/end date`);
-    return { status: 500, message: "This event has no scheduled date" };
+    return { status: 500, message: tr("thisEventHasNoScheduledDate") };
   }
 
   // Generate a QR image per reserved unit and upload them all concurrently.
@@ -234,7 +235,7 @@ export default async function generateTicket(
     // Nothing was written to the DB yet — give the reserved units back so
     // the checkout's expiry sweep isn't the only thing that reclaims them.
     await releaseAllReservations();
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   let parsedMetadata: unknown = null;
@@ -294,7 +295,7 @@ export default async function generateTicket(
     await releaseAllReservations();
     return {
       status: 500,
-      message: issueError?.message || "Something went wrong!",
+      message: issueError?.message || tr("somethingWentWrong"),
     };
   }
 
@@ -306,19 +307,19 @@ export default async function generateTicket(
   // Establish the successful-purchase state before the caller redirects
   // anywhere: without this, browser Back to the wallet pages could keep
   // showing the pre-payment "pending" render until a manual refresh.
-  revalidatePath("/checkout");
-  revalidatePath(`/checkout/${checkoutSessionId}`);
-  revalidatePath("/manage/my-events");
-  revalidatePath(`/manage/events/${eventId}`);
-  revalidatePath("/manage/dashboard");
-  revalidatePath("/transactions");
-  revalidatePath(`/events/${event.event_code.toLowerCase()}`);
+  revalidateAppPath("/checkout");
+  revalidateAppPath(`/checkout/${checkoutSessionId}`);
+  revalidateAppPath("/manage/my-events");
+  revalidateAppPath(`/manage/events/${eventId}`);
+  revalidateAppPath("/manage/dashboard");
+  revalidateAppPath("/transactions");
+  revalidateAppPath(`/events/${event.event_code.toLowerCase()}`);
 
   // A pure idempotent replay (webhook redelivery after the first run already
   // issued + notified) — don't re-send the receipt email or a duplicate
   // in-app notification.
   if (wasAlreadyIssued) {
-    return { status: 200, message: "Tickets already issued" };
+    return { status: 200, message: tr("ticketsAlreadyIssued") };
   }
 
   // Runs after this response is sent, so PDF generation + email delivery
@@ -358,10 +359,7 @@ export default async function generateTicket(
   await createNotificationCore(supabase, {
     userId,
     type: "ticket_confirmed",
-    title: "Ticket confirmed",
-    body: event.title
-      ? `Your ticket for ${event.title} is confirmed.`
-      : "Your ticket is confirmed.",
+    notice: { id: "ticket_confirmed", params: { title: event.title ?? null } },
     link: "/manage/my-events",
     data: {
       kind: "ticket",
@@ -374,5 +372,5 @@ export default async function generateTicket(
     logger.error(`Failed creating ticket notification: ${error}`),
   );
 
-  return { status: 200, message: "Tickets generated successfully" };
+  return { status: 200, message: tr("ticketsGeneratedSuccessfully") };
 }

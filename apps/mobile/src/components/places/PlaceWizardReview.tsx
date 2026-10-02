@@ -1,5 +1,8 @@
-import { DAY_LABELS, type PlaceWizard } from "@/features/places/usePlaceWizard";
+import type { PlaceWizard } from "@/features/places/usePlaceWizard";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
+import { dayName } from "@abonten/core/dateFormatter";
 import { AppText } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
@@ -7,11 +10,15 @@ import { View } from "react-native";
 // web PlaceCreateStepReview. Publish is the header's "Publish" button
 // (app/(app)/place/new.tsx).
 export function PlaceWizardReview({ w }: { w: PlaceWizard }) {
-  const categoryName =
-    w.categories.find((c) => c.id === w.categoryId)?.name ?? "—";
+  const t = useTranslations("places");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
+
+  const category = w.categories.find((c) => c.id === w.categoryId);
+  const categoryName = category ? placeCategoryLabel(tc, category) : "—";
   const openDays = w.openingHours
     .filter((h) => !h.isClosed)
-    .map((h) => DAY_LABELS[h.dayOfWeek].slice(0, 3))
+    .map((h) => dayName(h.dayOfWeek, "short", locale))
     .join(", ");
 
   return (
@@ -24,19 +31,21 @@ export function PlaceWizardReview({ w }: { w: PlaceWizard }) {
         />
       ) : null}
       <View className="gap-2 rounded-xl border border-border bg-card p-4">
-        <ReviewRow label="Name" value={w.name} />
-        <ReviewRow label="Category" value={categoryName} />
-        <ReviewRow label="Location" value={w.address} />
-        {w.website ? <ReviewRow label="Website" value={w.website} /> : null}
-        {w.phone ? <ReviewRow label="Phone" value={w.phone} /> : null}
+        <ReviewRow label={t("name")} value={w.name} />
+        <ReviewRow label={t("category")} value={categoryName} />
+        <ReviewRow label={t("location")} value={w.address} />
+        {w.website ? (
+          <ReviewRow label={t("website2")} value={w.website} />
+        ) : null}
+        {w.phone ? <ReviewRow label={t("phone2")} value={w.phone} /> : null}
         {w.whatsapp ? <ReviewRow label="WhatsApp" value={w.whatsapp} /> : null}
-        <ReviewRow label="Open days" value={openDays} />
+        <ReviewRow label={t("openDays")} value={openDays} />
       </View>
       <AppText variant="muted">{w.description}</AppText>
 
       {w.isSubmitError ? (
         <AppText variant="small" tone="error">
-          We couldn't publish your place. Please try again.
+          {t("weCouldnTPublishYourPlace2")}
         </AppText>
       ) : null}
     </View>

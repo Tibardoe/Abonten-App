@@ -1,6 +1,6 @@
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { logger } from "@abonten/core/logger";
-import { WEEKLY_VALIDITY_LABEL } from "@abonten/core/weekly/copy";
+import { weeklyValidityLabel } from "@abonten/core/weekly/copy";
 import {
   sanitizeWeeklyLine,
   sanitizeWeeklyOptional,
@@ -30,6 +30,7 @@ import type {
   UpdateWeeklySectionInput,
   WeeklyTransitionInput,
 } from "@abonten/validation/weeklySchemas";
+import { coreTFor } from "../../i18n/requestLocale";
 import {
   mapWeeklyAdminDocument,
   mapWeeklyValidation,
@@ -788,7 +789,7 @@ export async function addWeeklyItemCore(
   if (validity) {
     return {
       status: 400,
-      message: `This listing cannot be featured: ${WEEKLY_VALIDITY_LABEL[validity as WeeklyValidityReason] ?? validity}.`,
+      message: `This listing cannot be featured: ${weeklyValidityLabel(coreTFor("en"), validity as WeeklyValidityReason)}.`,
     };
   }
   const rows = existing.data ?? [];

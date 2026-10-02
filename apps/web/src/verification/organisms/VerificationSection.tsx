@@ -5,13 +5,15 @@ import { startVerificationCase } from "@/actions/verification/startVerificationC
 import { submitVerificationCase } from "@/actions/verification/submitVerificationCase";
 import { updateVerificationCase } from "@/actions/verification/updateVerificationCase";
 import { withdrawVerificationCase } from "@/actions/verification/withdrawVerificationCase";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import VerificationExplainer from "@/verification/molecules/VerificationExplainer";
 import VerificationStatusCard from "@/verification/molecules/VerificationStatusCard";
 import VerificationEvidenceUploader from "@/verification/organisms/VerificationEvidenceUploader";
 import {
-  ORGANIZER_TYPE_DESCRIPTION,
-  ORGANIZER_TYPE_LABEL,
+  organizerTypeDescription,
+  organizerTypeLabel,
 } from "@abonten/core/verification/copy";
 import { isEditable } from "@abonten/core/verification/stateMachine";
 import type {
@@ -19,6 +21,7 @@ import type {
   SubjectVerificationView,
   VerificationSubjectType,
 } from "@abonten/types/verificationType";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 // The whole owner-facing verification experience for one subject, used by
@@ -41,7 +44,10 @@ export default function VerificationSection({
   subjectId,
   initial = null,
 }: Props) {
+  const t = useTranslations("verification");
+
   const toast = useToast();
+  const confirm = useConfirm();
   const [view, setView] = useState<SubjectVerificationView | null>(initial);
   const [loading, setLoading] = useState(!initial);
   const [busy, setBusy] = useState(false);
@@ -50,7 +56,9 @@ export default function VerificationSection({
   const [note, setNote] = useState("");
 
   const refresh = useCallback(async () => {
-    const res = await getSubjectVerification({ subjectType, subjectId });
+    const res = await getSubjectVerification({ subjectType, subjectId }).catch(
+      actionUnreachable,
+    );
     if (res.status === 200 && res.data) {
       setView(res.data);
       const c = res.data.openCase;
@@ -80,14 +88,14 @@ export default function VerificationSection({
     return (
       <div className="space-y-3 text-center">
         <p className="text-sm text-muted-foreground">
-          Couldn&apos;t load verification.
+          {t("couldnTLoadVerification")}
         </p>
         <button
           type="button"
           onClick={() => void refresh()}
           className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
         >
-          Try again
+          {t("tryAgain")}
         </button>
       </div>
     );
@@ -110,19 +118,16 @@ export default function VerificationSection({
           verifiedAt={approved.reviewedAt}
         />
         <div className="rounded-xl border border-border p-4">
-          <h3 className="font-semibold">What your badge says</h3>
+          <h3 className="font-semibold">{t("whatYourBadgeSays")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Abonten reviewed documents supporting your business and your link to
-            this account. It is not a statement about your service, prices or
-            quality.
+            {t("abontenReviewedDocumentsSupportingYourBusiness")}
           </p>
         </div>
         {approved.evidence.length > 0 ? (
           <p className="text-xs text-muted-foreground">
-            {approved.evidence.length} document
-            {approved.evidence.length === 1 ? "" : "s"} are held for this
-            verification. They stay private and are deleted once they are no
-            longer needed.
+            {t("documentsHeldForVerification", {
+              count: approved.evidence.length,
+            })}
           </p>
         ) : null}
       </div>
@@ -131,7 +136,7 @@ export default function VerificationSection({
 
   async function start() {
     if (subjectType === "organizer" && !organizerType) {
-      toast.error("Choose the kind of organizer you are first.");
+      toast.error(t("chooseTheKindOfOrganizerYou"));
       return;
     }
     setBusy(true);
@@ -141,12 +146,12 @@ export default function VerificationSection({
       organizerType: organizerType || null,
       legalName: legalName.trim() || null,
       applicantNote: note.trim() || null,
-    });
+    }).catch(actionUnreachable);
     setBusy(false);
     if (res.status === 200) {
       await refresh();
     } else {
-      toast.error(res.message ?? "Could not start verification.");
+      toast.error(res.message ?? t("couldNotStartVerification"));
     }
   }
 
@@ -157,10 +162,10 @@ export default function VerificationSection({
       organizerType: subjectType === "organizer" ? organizerType || null : null,
       legalName: legalName.trim() || null,
       applicantNote: note.trim() || null,
-    });
+    }).catch(actionUnreachable);
     setBusy(false);
-    if (res.status === 200) toast.success("Saved.");
-    else toast.error(res.message ?? "Could not save.");
+    if (res.status === 200) toast.success(t("saved"));
+    else toast.error(res.message ?? t("couldNotSave"));
   }
 
   async function submit(caseId: string) {
@@ -171,27 +176,36 @@ export default function VerificationSection({
       organizerType: subjectType === "organizer" ? organizerType || null : null,
       legalName: legalName.trim() || null,
       applicantNote: note.trim() || null,
-    });
-    const res = await submitVerificationCase({ caseId });
+    }).catch(actionUnreachable);
+    const res = await submitVerificationCase({ caseId }).catch(
+      actionUnreachable,
+    );
     setBusy(false);
     if (res.status === 200) {
-      toast.success(res.message ?? "Sent for review.");
+      toast.success(res.message ?? t("sentForReview"));
       await refresh();
     } else {
-      toast.error(res.message ?? "Could not send your request.");
+      toast.error(res.message ?? t("couldNotSendYourRequest"));
     }
   }
 
   async function withdraw(caseId: string) {
-    if (!confirm("Cancel this verification request?")) return;
+    const confirmed = await confirm({
+      title: t("cancelThisVerificationRequest"),
+      confirmLabel: t("cancelRequest"),
+      cancelLabel: t("keepIt"),
+    });
+    if (!confirmed) return;
     setBusy(true);
-    const res = await withdrawVerificationCase({ caseId });
+    const res = await withdrawVerificationCase({ caseId }).catch(
+      actionUnreachable,
+    );
     setBusy(false);
     if (res.status === 200) {
-      toast.success("Request withdrawn.");
+      toast.success(t("requestWithdrawn"));
       await refresh();
     } else {
-      toast.error(res.message ?? "Could not withdraw the request.");
+      toast.error(res.message ?? t("couldNotWithdrawTheRequest"));
     }
   }
 
@@ -225,26 +239,26 @@ export default function VerificationSection({
             <div className="space-y-3 rounded-xl border border-border p-4">
               <div className="space-y-1">
                 <label htmlFor="legal-name" className="text-sm font-medium">
-                  Registered name (optional)
+                  {t("registeredNameOptional")}
                 </label>
                 <input
                   id="legal-name"
                   value={legalName}
                   onChange={(e) => setLegalName(e.target.value)}
-                  placeholder="The name exactly as it appears on your documents"
+                  placeholder={t("theNameExactlyAsItAppears")}
                   className="w-full rounded-lg border border-border bg-background p-2 text-sm"
                 />
               </div>
               <div className="space-y-1">
                 <label htmlFor="applicant-note" className="text-sm font-medium">
-                  Anything the reviewer should know (optional)
+                  {t("anythingTheReviewerShouldKnowOptional")}
                 </label>
                 <textarea
                   id="applicant-note"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   rows={3}
-                  placeholder="For example: the permit is in my father's name, he is the registered owner."
+                  placeholder={t("forExampleThePermitIsIn")}
                   className="w-full rounded-lg border border-border bg-background p-2 text-sm"
                 />
               </div>
@@ -254,7 +268,7 @@ export default function VerificationSection({
                 disabled={busy}
                 className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
               >
-                Save details
+                {t("saveDetails")}
               </button>
             </div>
 
@@ -275,8 +289,8 @@ export default function VerificationSection({
                 className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
               >
                 {openCase.status === "needs_info"
-                  ? "Send again for review"
-                  : "Send for review"}
+                  ? t("sendAgainForReview")
+                  : t("sendForReview")}
               </button>
               <button
                 type="button"
@@ -284,12 +298,12 @@ export default function VerificationSection({
                 disabled={busy}
                 className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50"
               >
-                Cancel request
+                {t("cancelRequest")}
               </button>
             </div>
             {uploadedCount === 0 ? (
               <p className="text-xs text-muted-foreground">
-                Add at least one document before sending.
+                {t("addAtLeastOneDocumentBefore")}
               </p>
             ) : null}
           </>
@@ -297,7 +311,7 @@ export default function VerificationSection({
           <>
             {openCase.evidence.length > 0 ? (
               <div className="rounded-xl border border-border p-4">
-                <h3 className="text-sm font-semibold">What you sent</h3>
+                <h3 className="text-sm font-semibold">{t("whatYouSent")}</h3>
                 <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
                   {openCase.evidence.map((e) => (
                     <li key={e.id}>
@@ -314,7 +328,7 @@ export default function VerificationSection({
               disabled={busy}
               className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted disabled:opacity-50"
             >
-              Cancel request
+              {t("cancelRequest")}
             </button>
           </>
         )}
@@ -336,12 +350,11 @@ export default function VerificationSection({
 
       {!programOpen ? (
         <p className="text-sm text-muted-foreground">
-          Verification isn&apos;t open yet. We&apos;ll let you know when you can
-          apply.
+          {t("verificationIsnTOpenYetWe")}
         </p>
       ) : !view.canStart ? (
         <p className="text-sm text-muted-foreground">
-          {view.blockedReason ?? "Verification isn't available right now."}
+          {view.blockedReason ?? t("verificationIsnTAvailableRightNow")}
         </p>
       ) : (
         <>
@@ -362,7 +375,7 @@ export default function VerificationSection({
             disabled={busy}
             className="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
-            {lastClosedCase ? "Start a new request" : "Start verification"}
+            {lastClosedCase ? t("startANewRequest") : t("startVerification")}
           </button>
         </>
       )}
@@ -379,11 +392,14 @@ function OrganizerTypePicker({
   onChange: (v: OrganizerType) => void;
   allowed: OrganizerType[];
 }) {
+  const t = useTranslations("verification");
+  const tc = useTranslations("core");
+
   if (allowed.length === 0) return null;
   return (
     <fieldset className="space-y-2 rounded-xl border border-border p-4">
       <legend className="px-1 text-sm font-medium">
-        What kind of organizer are you?
+        {t("whatKindOfOrganizerAreYou")}
       </legend>
       {allowed.map((t) => (
         <label
@@ -402,10 +418,10 @@ function OrganizerTypePicker({
           />
           <span>
             <span className="block text-sm font-medium">
-              {ORGANIZER_TYPE_LABEL[t]}
+              {organizerTypeLabel(tc, t)}
             </span>
             <span className="block text-sm text-muted-foreground">
-              {ORGANIZER_TYPE_DESCRIPTION[t]}
+              {organizerTypeDescription(tc, t)}
             </span>
           </span>
         </label>

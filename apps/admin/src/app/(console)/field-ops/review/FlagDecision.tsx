@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { decideFieldOpsFlag } from "@/server/actions/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -24,7 +25,7 @@ export function FlagDecision({ onboardingId }: { onboardingId: string }) {
         onboardingId,
         decision,
         note: note.trim() || null,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) router.refresh();
     });

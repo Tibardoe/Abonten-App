@@ -5,6 +5,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 
 type EventProp = {
@@ -17,6 +18,8 @@ export default function AddToFavoriteButton({
   eventId,
   asMenuItem,
 }: EventProp) {
+  const t = useTranslations("common");
+
   const toast = useToast();
 
   const requireAuth = useRequireAuth();
@@ -72,7 +75,7 @@ export default function AddToFavoriteButton({
         ["user-favorited", eventId],
         context?.previousState,
       );
-      toast.error("Something went wrong. Please try again later.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
     },
 
     onSettled: () => {
@@ -85,7 +88,7 @@ export default function AddToFavoriteButton({
     },
   });
 
-  const buttonText = isFavorite ? "Saved" : "Save";
+  const buttonText = isFavorite ? t("saved") : t("save");
 
   const handleClick = async () => {
     if (await requireAuth()) mutate();

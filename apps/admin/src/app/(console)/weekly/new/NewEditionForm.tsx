@@ -1,8 +1,10 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
+import { tc } from "@/lib/coreT";
 import { createWeeklyEdition } from "@/server/actions/weekly";
-import { WEEKLY_DEFAULT_TITLE } from "@abonten/core/weekly/copy";
+import { WEEKLY_DEFAULT_TITLE_KEY } from "@abonten/core/weekly/copy";
 import { formatWeekRange, weekStartFor } from "@abonten/core/weekly/week";
 import type {
   WeeklyEditionListRow,
@@ -28,7 +30,7 @@ export function NewEditionForm({
   const [error, setError] = useState<string | null>(null);
   const [scopeId, setScopeId] = useState(scopes[0]?.id ?? "");
   const [week, setWeek] = useState(defaultWeek);
-  const [title, setTitle] = useState(WEEKLY_DEFAULT_TITLE);
+  const [title, setTitle] = useState(tc(WEEKLY_DEFAULT_TITLE_KEY));
   const [subtitle, setSubtitle] = useState("");
   const [intro, setIntro] = useState("");
   const [duplicateFrom, setDuplicateFrom] = useState("");
@@ -50,7 +52,7 @@ export function NewEditionForm({
         intro: intro || null,
         duplicateFrom: duplicateFrom || null,
         useTemplate,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res && res.data) {
         router.push(`/weekly/${res.data.id}`);
         return;

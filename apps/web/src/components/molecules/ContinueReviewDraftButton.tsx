@@ -2,6 +2,8 @@
 
 import { getReviewDraft } from "@/actions/getReviewDraft";
 import ReviewModal from "@/components/organisms/ReviewModal";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -22,6 +24,8 @@ export default function ContinueReviewDraftButton({
   children,
   onDraftListChanged,
 }: ContinueReviewDraftButtonProps) {
+  const t = useTranslations("common");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalData, setModalData] = useState<{
@@ -38,7 +42,7 @@ export default function ContinueReviewDraftButton({
     setLoading(true);
     setError(null);
 
-    const response = await getReviewDraft(draftId);
+    const response = await getReviewDraft(draftId).catch(actionUnreachable);
     setLoading(false);
 
     if (response.status !== 200 || !response.data) {
@@ -52,7 +56,7 @@ export default function ContinueReviewDraftButton({
     }
 
     if (!response.data.reviewedUsername) {
-      setError("This draft's target user no longer exists.");
+      setError(t("thisDraftSTargetUserNo"));
       return;
     }
 
@@ -75,7 +79,7 @@ export default function ContinueReviewDraftButton({
         onClick={handleContinue}
         disabled={loading}
       >
-        {loading ? "Loading..." : children}
+        {loading ? t("loading") : children}
       </button>
 
       {error && <p className="text-destructive text-xs mt-1">{error}</p>}

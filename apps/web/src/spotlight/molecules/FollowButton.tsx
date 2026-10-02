@@ -3,7 +3,9 @@
 import { cn } from "@/components/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { formatCount } from "@abonten/core/i18n/format";
 import type { FollowTargetKind } from "@abonten/types/contentType";
+import { useLocale, useTranslations } from "next-intl";
 import { useContentProgram } from "../hooks/useContentProgram";
 import { useFollow } from "../hooks/useFollow";
 
@@ -32,6 +34,9 @@ export default function FollowButton({
   /** The viewer's follow state when a post document already carries it. */
   known?: boolean;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("spotlight");
+
   const { program } = useContentProgram();
   const { data: user } = useCurrentUser();
   const requireAuth = useRequireAuth();
@@ -55,7 +60,11 @@ export default function FollowButton({
     <button
       type="button"
       aria-pressed={following}
-      aria-label={following ? `Unfollow ${label}` : `Follow ${label}`}
+      aria-label={
+        following
+          ? t("unfollow", { label: label })
+          : t("follow2", { label: label })
+      }
       disabled={toggle.isPending}
       onClick={async (e) => {
         e.preventDefault();
@@ -75,10 +84,10 @@ export default function FollowButton({
         className,
       )}
     >
-      {following ? "Following" : "Follow"}
+      {following ? t("following") : t("follow")}
       {showCount && count > 0 ? (
         <span className="font-normal opacity-80">
-          · {count.toLocaleString()}
+          · {formatCount(count, locale)}
         </span>
       ) : null}
     </button>

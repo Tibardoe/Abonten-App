@@ -6,6 +6,7 @@ import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSe
 import ManageEventPromotionSection from "@/events/organisms/ManageEventPromotionSection";
 import type { EventStatus } from "@abonten/core/eventStatus";
 import type { ManagedEvent } from "@abonten/types/managedEventType";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -28,9 +29,9 @@ type ManageEventViewProps = {
 type Tab = "details" | "promotion" | "insights";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "details", label: "Details" },
-  { id: "promotion", label: "Promotion" },
-  { id: "insights", label: "Insights" },
+  { id: "details", label: "tabs.details" },
+  { id: "promotion", label: "tabs.promotion" },
+  { id: "insights", label: "tabs.insights" },
 ];
 
 // Top-level management view for a single event, tabbed across Details,
@@ -46,6 +47,7 @@ export default function ManageEventView({
   derivedStatus,
   soldOut,
 }: ManageEventViewProps) {
+  const t = useTranslations("events");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -81,7 +83,7 @@ export default function ManageEventView({
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
       </div>

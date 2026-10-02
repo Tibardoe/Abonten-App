@@ -1,9 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchEventOverviewAnalytics } from "@abonten/services/organizer/eventInsightsQuery";
 
-export default async function getEventOverviewAnalytics(
+export default withActionLocale(async function getEventOverviewAnalytics(
   eventId: string,
   startDate?: string | null,
   endDate?: string | null,
@@ -16,7 +18,7 @@ export default async function getEventOverviewAnalytics(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401 as const, message: "User not logged in" };
+    return { status: 401 as const, message: tr("userNotLoggedIn") };
   }
 
   return fetchEventOverviewAnalytics(
@@ -26,4 +28,4 @@ export default async function getEventOverviewAnalytics(
     startDate,
     endDate,
   );
-}
+});

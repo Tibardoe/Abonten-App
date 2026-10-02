@@ -9,6 +9,7 @@ import {
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of the user-facing "Report this content" action. Shared
 // verbatim by the web submitReport Server Action and the mobile
@@ -103,7 +104,7 @@ export async function submitReportCore(
   if (!allowed || !allowed.includes(category)) {
     return {
       status: 400,
-      message: "That reason doesn't apply to this content.",
+      message: tr("thatReasonDoesnTApplyTo"),
     };
   }
 
@@ -112,7 +113,7 @@ export async function submitReportCore(
     (targetType === "user" || targetType === "organizer") &&
     targetId === userId
   ) {
-    return { status: 400, message: "You can't report your own account." };
+    return { status: 400, message: tr("youCanTReportYourOwn") };
   }
 
   // 3. target must exist
@@ -127,10 +128,13 @@ export async function submitReportCore(
     logger.error(
       `submitReportCore: target lookup failed: ${targetErr.message}`,
     );
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
   if (!targetRow) {
-    return { status: 404, message: "That content no longer exists." };
+    return { status: 404, message: tr("thatContentNoLongerExists") };
   }
 
   // 4. soft rate cap
@@ -146,8 +150,7 @@ export async function submitReportCore(
   } else if ((recentCount ?? 0) >= MAX_REPORTS_PER_HOUR) {
     return {
       status: 429,
-      message:
-        "You've submitted a lot of reports recently. Please try again later.",
+      message: tr("youVeSubmittedALotOf"),
     };
   }
 
@@ -164,7 +167,7 @@ export async function submitReportCore(
   if (existingOpen) {
     return {
       status: 409,
-      message: "You've already reported this. Our team is reviewing it.",
+      message: tr("youVeAlreadyReportedThisOur"),
     };
   }
 
@@ -195,13 +198,13 @@ export async function submitReportCore(
     if (insertErr.code === "23505") {
       return {
         status: 409,
-        message: "You've already reported this. Our team is reviewing it.",
+        message: tr("youVeAlreadyReportedThisOur"),
       };
     }
     logger.error(`submitReportCore: insert failed: ${insertErr.message}`);
     return {
       status: 500,
-      message: "Couldn't submit your report. Please try again.",
+      message: tr("couldnTSubmitYourReportPlease"),
     };
   }
 
@@ -232,7 +235,7 @@ export async function submitReportCore(
 
   return {
     status: 200,
-    message: "Report submitted. Thank you — our team will take a look.",
+    message: tr("reportSubmittedThankYouOurTeam"),
     data: { reportId: inserted.id },
   };
 }

@@ -4,6 +4,10 @@ import { paymentChoiceFromBody } from "@/app/api/mobile/_lib/paymentChoiceBody";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/createPromotionPaymentAttemptCore";
 
 // POST /api/mobile/checkout/spotlight-promotion-attempt
@@ -16,6 +20,7 @@ import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/cr
 // finalizePayment → activateContentCampaign path, which leaves the
 // campaign in review.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -36,7 +41,7 @@ export async function POST(req: Request) {
     if (!checkoutId || (!choice.paymentMethodId && !choice.method)) {
       return apiJson({
         status: 400,
-        message: "contentCampaignCheckoutId and paymentMethodId are required",
+        message: tr("contentcampaigncheckoutidAndPaymentmethodidAreRe"),
       });
     }
 
@@ -55,6 +60,9 @@ export async function POST(req: Request) {
       "mobile POST /checkout/spotlight-promotion-attempt failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

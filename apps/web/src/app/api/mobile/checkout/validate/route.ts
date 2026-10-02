@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { validateCheckoutCore } from "@abonten/services/checkout/validateCheckoutCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import type { ReferralHint } from "@abonten/types/rewards";
 
 // POST /api/mobile/checkout/validate
@@ -16,6 +20,7 @@ import type { ReferralHint } from "@abonten/types/rewards";
 // re-verifies + claims the promo code and reserves inventory atomically as
 // this route's own `authenticated` role + `auth.uid()`.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -29,7 +34,10 @@ export async function POST(req: Request) {
     } | null;
 
     if (typeof body?.eventId !== "string" || body.eventId.length === 0) {
-      return apiJson({ status: 400, message: "eventId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("eventidIsRequired"),
+      });
     }
 
     const promoCode =
@@ -43,7 +51,10 @@ export async function POST(req: Request) {
       typeof rawQuantities !== "object" ||
       Array.isArray(rawQuantities)
     ) {
-      return apiJson({ status: 400, message: "quantities is required" });
+      return apiJson({
+        status: 400,
+        message: tr("quantitiesIsRequired"),
+      });
     }
 
     const quantities: Record<string, number> = {};
@@ -53,7 +64,7 @@ export async function POST(req: Request) {
       if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
         return apiJson({
           status: 400,
-          message: "quantities values must be non-negative integers",
+          message: tr("quantitiesValuesMustBeNonNegative"),
         });
       }
       quantities[ticketTypeId] = value;
@@ -98,6 +109,9 @@ export async function POST(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile POST /checkout/validate failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

@@ -4,11 +4,14 @@ import { removeVerificationEvidence } from "@/actions/verification/removeVerific
 import { requestVerificationEvidenceUpload } from "@/actions/verification/requestVerificationEvidenceUpload";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import {
   VERIFICATION_EVIDENCE_MIME_TYPES,
   type VerificationEvidenceSummary,
   type VerificationEvidenceType,
 } from "@abonten/types/verificationType";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import {
   IoCheckmarkCircle,
@@ -36,12 +39,6 @@ type Staged = {
 
 const ACCEPT = VERIFICATION_EVIDENCE_MIME_TYPES.join(",");
 
-function readableSize(bytes: number): string {
-  return bytes >= 1024 * 1024
-    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-
 export default function VerificationEvidenceUploader({
   caseId,
   evidenceTypes,
@@ -59,6 +56,9 @@ export default function VerificationEvidenceUploader({
   disabled?: boolean;
   onChanged: () => void;
 }) {
+  const t = useTranslations("verification");
+  const locale = useLocale();
+
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [staged, setStaged] = useState<Staged[]>([]);
@@ -75,21 +75,22 @@ export default function VerificationEvidenceUploader({
     if (!files || files.length === 0) return;
     const room = maxFiles - total;
     if (room <= 0) {
-      toast.error(`You can attach at most ${maxFiles} documents.`);
+      toast.error(t("youCanAttachAtMostDocuments", { maxFiles: maxFiles }));
       return;
     }
     const next: Staged[] = [];
     for (const file of Array.from(files).slice(0, room)) {
       if (file.size > maxFileBytes) {
         toast.error(
-          `${file.name} is larger than ${Math.round(
-            maxFileBytes / (1024 * 1024),
-          )} MB. Try a smaller photo or scan.`,
+          t("isLargerThanMbTryA", {
+            name: file.name,
+            round: Math.round(maxFileBytes / (1024 * 1024)),
+          }),
         );
         continue;
       }
       if (!VERIFICATION_EVIDENCE_MIME_TYPES.includes(file.type as never)) {
-        toast.error(`${file.name} must be a photo or a PDF.`);
+        toast.error(t("mustBeAPhotoOrA", { name: file.name }));
         continue;
       }
       next.push({
@@ -118,7 +119,7 @@ export default function VerificationEvidenceUploader({
       mimeType: item.file.type,
       sizeBytes: item.file.size,
       fileName: item.file.name,
-    });
+    }).catch(actionUnreachable);
 
     if (ticket.status !== 200 || !ticket.data) {
       setStaged((prev) =>
@@ -127,7 +128,7 @@ export default function VerificationEvidenceUploader({
             ? {
                 ...s,
                 status: "error",
-                error: ticket.message ?? "Could not start the upload.",
+                error: ticket.message ?? t("couldNotStartTheUpload"),
               }
             : s,
         ),
@@ -145,7 +146,7 @@ export default function VerificationEvidenceUploader({
       setStaged((prev) =>
         prev.map((s) =>
           s.key === item.key
-            ? { ...s, status: "error", error: "Upload failed. Try again." }
+            ? { ...s, status: "error", error: t("uploadFailedTryAgain") }
             : s,
         ),
       );
@@ -170,19 +171,21 @@ export default function VerificationEvidenceUploader({
     if (anyOk) {
       setStaged((prev) => prev.filter((s) => s.status !== "done"));
       onChanged();
-      toast.success("Document added.");
+      toast.success(t("documentAdded"));
     }
   }
 
   async function remove(evidenceId: string) {
     setBusy(true);
-    const res = await removeVerificationEvidence({ caseId, evidenceId });
+    const res = await removeVerificationEvidence({ caseId, evidenceId }).catch(
+      actionUnreachable,
+    );
     setBusy(false);
     if (res.status === 200) {
       onChanged();
-      toast.success("Document removed.");
+      toast.success(t("documentRemoved"));
     } else {
-      toast.error(res.message ?? "Could not remove the document.");
+      toast.error(res.message ?? t("couldNotRemoveTheDocument"));
     }
   }
 
@@ -205,7 +208,8 @@ export default function VerificationEvidenceUploader({
                     {d.evidenceTypeLabel ?? d.evidenceType}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {d.fileName ?? "Document"} · {readableSize(d.sizeBytes)}
+                    {d.fileName ?? t("document")} ·{" "}
+                    {formatFileSize(d.sizeBytes, locale)}
                   </p>
                 </div>
               </div>
@@ -214,7 +218,9 @@ export default function VerificationEvidenceUploader({
                   type="button"
                   onClick={() => remove(d.id)}
                   disabled={busy}
-                  aria-label={`Remove ${d.fileName ?? "document"}`}
+                  aria-label={t("removeFile", {
+                    name: d.fileName ?? t("document"),
+                  })}
                   className="shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:opacity-50"
                 >
                   <IoTrashOutline className="text-lg" />
@@ -235,14 +241,14 @@ export default function VerificationEvidenceUploader({
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{s.file.name}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {readableSize(s.file.size)} ·{" "}
+                  {formatFileSize(s.file.size, locale)} ·{" "}
                   {s.status === "queued"
-                    ? "Ready to send"
+                    ? t("readyToSend")
                     : s.status === "uploading"
-                      ? "Sending…"
+                      ? t("sending")
                       : s.status === "done"
-                        ? "Sent"
-                        : (s.error ?? "Failed")}
+                        ? t("sent")
+                        : (s.error ?? t("failed"))}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -262,7 +268,7 @@ export default function VerificationEvidenceUploader({
                       type="button"
                       onClick={() => uploadOne(s)}
                       disabled={busy}
-                      aria-label={`Retry ${s.file.name}`}
+                      aria-label={t("retry", { name: s.file.name })}
                       className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
                       <IoRefreshOutline className="text-lg" />
@@ -275,7 +281,7 @@ export default function VerificationEvidenceUploader({
                     setStaged((prev) => prev.filter((x) => x.key !== s.key))
                   }
                   disabled={busy || s.status === "uploading"}
-                  aria-label={`Remove ${s.file.name}`}
+                  aria-label={t("remove2", { name: s.file.name })}
                   className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-50"
                 >
                   <IoTrashOutline className="text-lg" />
@@ -290,7 +296,7 @@ export default function VerificationEvidenceUploader({
         <div className="space-y-3 rounded-xl border border-border p-4">
           <div className="space-y-1">
             <label htmlFor="evidence-type" className="text-sm font-medium">
-              What are you sending?
+              {t("whatAreYouSending")}
             </label>
             <select
               id="evidence-type"
@@ -327,7 +333,7 @@ export default function VerificationEvidenceUploader({
               className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
             >
               <IoCloudUploadOutline className="text-lg" />
-              Choose file
+              {t("chooseFile")}
             </button>
 
             {staged.some((s) => s.status !== "done") ? (
@@ -337,15 +343,17 @@ export default function VerificationEvidenceUploader({
                 disabled={busy}
                 className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
               >
-                {busy ? "Sending…" : "Add to request"}
+                {busy ? t("sending") : t("addToRequest")}
               </button>
             ) : null}
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Photos or PDF, up to {Math.round(maxFileBytes / (1024 * 1024))} MB
-            each, {maxFiles} documents in total.
-            {full ? " You have reached the limit." : ""}
+            {t("photosOrPdfUpToMb", {
+              round: Math.round(maxFileBytes / (1024 * 1024)),
+              maxFiles: maxFiles,
+            })}
+            {full ? ` ${t("youHaveReachedTheLimit")}` : ""}
           </p>
         </div>
       ) : null}

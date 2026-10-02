@@ -1,4 +1,5 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import {
   getNotificationPreferencesCore,
   updateNotificationPreferencesCore,
@@ -12,6 +13,7 @@ import { z } from "zod";
 //   pause?: "two_weeks" | "resume" }
 // Same services as the web getNotificationPreferences / updateNotificationPreferences actions.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {
@@ -23,6 +25,7 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
+  bindLocaleFromRequest(req);
   return discoveryRoute(
     req,
     {

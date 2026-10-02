@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { finalizePayment } from "./finalizePayment";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 
@@ -42,15 +43,15 @@ export async function retryPaymentFulfillmentCore(
 
   if (attemptError) {
     logger.error(`Failed fetching payment attempt: ${attemptError.message}`);
-    return { status: 404, message: "Payment attempt not found" };
+    return { status: 404, message: tr("paymentAttemptNotFound") };
   }
 
   if (!attempt) {
-    return { status: 404, message: "Payment attempt not found" };
+    return { status: 404, message: tr("paymentAttemptNotFound") };
   }
 
   if (attempt.user_id !== userId) {
-    return { status: 403, message: "Not authorized" };
+    return { status: 403, message: tr("notAuthorized") };
   }
 
   const result = await finalizePayment(paymentAttemptId, deps);
@@ -68,7 +69,7 @@ export async function retryPaymentFulfillmentCore(
   }
 
   if (result.status === "not_found") {
-    return { status: 404, message: "Payment attempt not found" };
+    return { status: 404, message: tr("paymentAttemptNotFound") };
   }
 
   if (result.status === "fulfillment_failed") {

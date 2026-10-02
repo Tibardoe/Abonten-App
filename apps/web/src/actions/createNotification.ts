@@ -1,7 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { createNotificationCore } from "@abonten/services/notifications/createNotification";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import {
+  type LocalizedNotificationInput,
+  type NoticeNotificationInput,
+  createNotificationCore,
+} from "@abonten/services/notifications/createNotification";
 import type { Database } from "@abonten/types/database.types";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -19,10 +24,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * that already holds a Supabase client should import `createNotificationCore`
  * directly instead of going through this wrapper.
  */
-export default async function createNotification(
-  input: CreateNotificationInput,
+export default withActionLocale(async function createNotification(
+  input:
+    | CreateNotificationInput
+    | LocalizedNotificationInput
+    | NoticeNotificationInput,
   supabaseOverride?: SupabaseClient<Database>,
 ) {
   const supabase = supabaseOverride ?? (await createClient());
   return createNotificationCore(supabase, input);
-}
+});

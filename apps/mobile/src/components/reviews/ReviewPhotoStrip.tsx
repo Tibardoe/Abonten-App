@@ -1,5 +1,6 @@
 import { MediaViewer, type MediaViewerItem } from "@/components/MediaViewer";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
@@ -21,6 +22,8 @@ export function ReviewPhotoStrip({
 }: {
   photos: ReviewPhoto[] | null | undefined;
 }) {
+  const t = useTranslations("reviews");
+
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const sorted = useMemo(
@@ -55,7 +58,7 @@ export function ReviewPhotoStrip({
             key={photo.id}
             onPress={() => setOpenIndex(index)}
             accessibilityRole="button"
-            accessibilityLabel="View photo larger"
+            accessibilityLabel={t("viewPhotoLarger")}
           >
             <Image
               source={{

@@ -1,17 +1,9 @@
-import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import ImagePreviewPane from "@/components/molecules/ImagePreviewPane";
+import { usePlaceCategories } from "@/hooks/usePlaceCategories";
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
-import { useQuery } from "@tanstack/react-query";
-
-const DAY_LABELS: Record<number, string> = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-};
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
+import { dayName } from "@abonten/core/dateFormatter";
+import { useLocale, useTranslations } from "next-intl";
 
 // Monday-first display order, same convention as PlaceOpeningHoursEditor.
 const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -32,20 +24,18 @@ export default function PlaceCreateStepReview({
   coverPreview,
   className,
 }: PlaceCreateStepReviewProps) {
+  const t = useTranslations("places");
+  const locale = useLocale();
+  const tc = useTranslations("core");
+
   const values = getValues();
 
   // Same query key as PlaceCategoryPicker — this reads from that cache
   // (staleTime: Infinity) rather than fetching the lookup table again.
-  const { data: categories } = useQuery({
-    queryKey: ["place-categories"],
-    queryFn: async () => {
-      const response = await getPlaceCategories();
-      return response.status === 200 ? (response.data ?? []) : [];
-    },
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const { data: categories } = usePlaceCategories();
 
-  const categoryName = categories?.find((cat) => cat.id === categoryId)?.name;
+  const category = categories?.find((cat) => cat.id === categoryId);
+  const categoryName = category ? placeCategoryLabel(tc, category) : undefined;
 
   return (
     <div className={className}>
@@ -53,7 +43,7 @@ export default function PlaceCreateStepReview({
         <div className="relative w-full aspect-video rounded-lg overflow-hidden">
           <ImagePreviewPane
             src={coverPreview}
-            alt="Place cover photo"
+            alt={t("placeCoverPhoto")}
             className="w-full h-full"
           />
         </div>
@@ -61,13 +51,13 @@ export default function PlaceCreateStepReview({
 
       <div className="space-y-1">
         <h2 className="text-lg font-bold text-foreground">
-          {values.name || "Untitled place"}
+          {values.name || t("untitledPlace")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {categoryName ?? "No category selected"}
+          {categoryName ?? t("noCategorySelected")}
         </p>
         <p className="text-sm text-foreground">
-          {selectedAddress || "No address selected"}
+          {selectedAddress || t("noAddressSelected")}
         </p>
       </div>
 
@@ -77,14 +67,18 @@ export default function PlaceCreateStepReview({
 
       {(values.website_url || values.phone || values.whatsapp) && (
         <div className="text-sm text-foreground space-y-1">
-          {values.website_url && <p>Website: {values.website_url}</p>}
-          {values.phone && <p>Phone: {values.phone}</p>}
-          {values.whatsapp && <p>WhatsApp: {values.whatsapp}</p>}
+          {values.website_url && (
+            <p>{t("website", { website_url: values.website_url })}</p>
+          )}
+          {values.phone && <p>{t("phone", { phone: values.phone })}</p>}
+          {values.whatsapp && (
+            <p>{t("whatsapp", { whatsapp: values.whatsapp })}</p>
+          )}
         </div>
       )}
 
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold text-foreground">Hours</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t("hours")}</h3>
         <ul className="text-sm text-foreground space-y-0.5">
           {DISPLAY_ORDER.map((dayOfWeek) => {
             const hour = openingHours.find((h) => h.dayOfWeek === dayOfWeek);
@@ -92,10 +86,10 @@ export default function PlaceCreateStepReview({
 
             return (
               <li key={dayOfWeek} className="flex justify-between">
-                <span>{DAY_LABELS[dayOfWeek]}</span>
+                <span>{dayName(dayOfWeek, "long", locale)}</span>
                 <span className="text-muted-foreground">
                   {hour.isClosed
-                    ? "Closed"
+                    ? t("closed")
                     : `${hour.openTime} - ${hour.closeTime}`}
                 </span>
               </li>

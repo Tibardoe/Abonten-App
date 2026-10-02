@@ -5,8 +5,8 @@ import { listOwnContent } from "@/actions/content/listOwnContent";
 import { publishContentPost } from "@/actions/content/publishContentPost";
 import { cn } from "@/components/lib/utils";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { countLabel } from "@abonten/core/content/copy";
 import { spotlightPath } from "@abonten/core/content/links";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type { ContentKind, ContentOwnPost } from "@abonten/types/contentType";
@@ -16,6 +16,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -33,6 +34,8 @@ import ContentComposer from "./ContentComposer";
 type Tab = "spotlight" | "story" | "campaigns";
 
 export default function CreatorHub() {
+  const t = useTranslations("spotlight");
+
   const { program, ready } = useContentProgram();
   const router = useRouter();
   const pathname = usePathname();
@@ -72,21 +75,24 @@ export default function CreatorHub() {
   if (!canPost) {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
-        <h1 className="text-xl font-bold">Spotlight & Stories</h1>
+        <h1 className="text-xl font-bold">{t("spotlightStories")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Posting is open to organizers and place owners as we roll it out.
-          Create an event or list a place to get started.
+          {t("postingIsOpenToOrganizersAnd")}
         </p>
       </div>
     );
   }
 
   const tabs: { key: Tab; label: string; show: boolean }[] = [
-    { key: "spotlight", label: "Spotlights", show: program.spotlightPosting },
-    { key: "story", label: "Stories", show: program.storiesPosting },
+    {
+      key: "spotlight",
+      label: t("spotlights"),
+      show: program.spotlightPosting,
+    },
+    { key: "story", label: t("stories"), show: program.storiesPosting },
     {
       key: "campaigns",
-      label: "Promotions",
+      label: t("promotions"),
       show: program.spotlightPromotions,
     },
   ];
@@ -95,9 +101,9 @@ export default function CreatorHub() {
     <div className="mx-auto w-full max-w-4xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Spotlight & Stories</h1>
+          <h1 className="text-2xl font-bold">{t("spotlightStories")}</h1>
           <p className="text-sm text-muted-foreground">
-            Share short videos and Stories about your events and places.
+            {t("shareShortVideosAndStoriesAbout")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -107,7 +113,7 @@ export default function CreatorHub() {
               onClick={() => setParams({ new: "story" })}
               className="inline-flex items-center gap-1 rounded-md border px-3 py-2 text-sm font-semibold hover:bg-accent"
             >
-              <IoAdd /> New Story
+              <IoAdd /> {t("newStory")}
             </button>
           ) : null}
           {program.spotlightPosting ? (
@@ -116,7 +122,7 @@ export default function CreatorHub() {
               onClick={() => setParams({ new: "spotlight" })}
               className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
             >
-              <IoAdd /> New Spotlight
+              <IoAdd /> {t("newSpotlight")}
             </button>
           ) : null}
         </div>
@@ -159,6 +165,8 @@ export default function CreatorHub() {
 }
 
 function OwnPosts({ kind }: { kind: ContentKind }) {
+  const t = useTranslations("spotlight");
+
   const query = useInfiniteQuery({
     queryKey: ["content", "own", kind],
     initialPageParam: null as string | null,
@@ -186,13 +194,13 @@ function OwnPosts({ kind }: { kind: ContentKind }) {
   if (query.isError) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
-        Couldn't load your posts.{" "}
+        {t("couldnTLoadYourPosts")}
         <button
           type="button"
           onClick={() => query.refetch()}
           className="font-semibold text-primary hover:underline"
         >
-          Retry
+          {t("retry")}
         </button>
       </p>
     );
@@ -201,8 +209,8 @@ function OwnPosts({ kind }: { kind: ContentKind }) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
         {kind === "story"
-          ? "You haven't posted a Story yet."
-          : "You haven't posted a Spotlight yet."}
+          ? t("youHavenTPostedAStory")
+          : t("youHavenTPostedASpotlight")}
       </p>
     );
   }
@@ -221,7 +229,7 @@ function OwnPosts({ kind }: { kind: ContentKind }) {
           disabled={query.isFetchingNextPage}
           className="w-full py-2 text-sm font-semibold text-primary hover:underline disabled:opacity-60"
         >
-          {query.isFetchingNextPage ? "Loading…" : "Show more"}
+          {query.isFetchingNextPage ? t("loading") : t("showMore")}
         </button>
       ) : null}
     </div>
@@ -229,6 +237,8 @@ function OwnPosts({ kind }: { kind: ContentKind }) {
 }
 
 function OwnPostRow({ post }: { post: ContentOwnPost }) {
+  const t = useTranslations("spotlight");
+
   const toast = useToast();
   const qc = useQueryClient();
   const [publishing, setPublishing] = useState(false);
@@ -241,13 +251,15 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
 
   const publish = async () => {
     setPublishing(true);
-    const res = await publishContentPost({ postId: post.id });
+    const res = await publishContentPost({ postId: post.id }).catch(
+      actionUnreachable,
+    );
     setPublishing(false);
     if (res.status !== 200) {
-      toast.error(messageOf(res, "Couldn't publish this post."));
+      toast.error(messageOf(res, t("couldnTPublishThisPost")));
       return;
     }
-    toast.success("Published.");
+    toast.success(t("published"));
     qc.invalidateQueries({ queryKey: ["content", "own"] });
   };
 
@@ -263,7 +275,7 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <StatusPill label={status.label} tone={status.tone} />
+          <StatusPill label={t(status.label)} tone={status.tone} />
           {post.campaign ? (
             <CampaignStatusPill status={post.campaign.status} />
           ) : null}
@@ -273,13 +285,13 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
         </div>
         <p className="line-clamp-1 text-sm">
           {post.caption?.trim() || (
-            <span className="text-muted-foreground">No caption</span>
+            <span className="text-muted-foreground">{t("noCaption")}</span>
           )}
         </p>
         <p className="text-xs text-muted-foreground">
-          {countLabel(post.counts.views, "view")} ·{" "}
-          {countLabel(post.counts.likes, "like")} ·{" "}
-          {countLabel(post.counts.comments, "comment")}
+          {t("viewsCount", { count: post.counts.views })} ·{" "}
+          {t("likesCount", { count: post.counts.likes })} ·{" "}
+          {t("commentsCount", { count: post.counts.comments })}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
@@ -290,21 +302,21 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
             disabled={publishing}
             className="font-semibold text-primary hover:underline disabled:opacity-60"
           >
-            {publishing ? "Publishing…" : "Publish"}
+            {publishing ? t("publishing") : t("publish")}
           </button>
         ) : null}
         <Link
           href={`/manage/spotlight/posts/${post.id}`}
           className="font-semibold text-primary hover:underline"
         >
-          Manage
+          {t("manage")}
         </Link>
-        {post.kind === "spotlight" && status.label === "Live" ? (
+        {post.kind === "spotlight" && status.label === "postStatus.live" ? (
           <Link
             href={spotlightPath(post.id)}
             className="text-muted-foreground hover:text-foreground"
           >
-            View
+            {t("view")}
           </Link>
         ) : null}
       </div>
@@ -313,6 +325,9 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
 }
 
 function OwnCampaigns() {
+  const locale = useLocale();
+  const t = useTranslations("spotlight");
+
   const query = useQuery({
     queryKey: ["content", "campaigns"],
     queryFn: async () => {
@@ -333,14 +348,14 @@ function OwnCampaigns() {
   if (query.isError || !query.data) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
-        Couldn't load your promotions.
+        {t("couldnTLoadYourPromotions")}
       </p>
     );
   }
   if (query.data.length === 0) {
     return (
       <p className="py-10 text-center text-sm text-muted-foreground">
-        No promotions yet. Open a live Spotlight and choose Promote.
+        {t("noPromotionsYetOpenALive")}
       </p>
     );
   }
@@ -368,20 +383,22 @@ function OwnCampaigns() {
               <div className="flex items-center gap-2">
                 <CampaignStatusPill status={c.status} />
                 <span className="text-xs text-muted-foreground">
-                  {c.durationDays} days
+                  {t("days2", { durationDays: c.durationDays })}
                 </span>
               </div>
               <p className="line-clamp-1 text-sm">
-                {c.post?.caption?.trim() || "Spotlight"}
+                {c.post?.caption?.trim() || t("spotlight")}
               </p>
               <p className="text-xs text-muted-foreground">
-                {countLabel(c.reach, "person", "people")} reached ·{" "}
-                {countLabel(c.impressions, "impression")} ·{" "}
-                {countLabel(c.clicks, "click")}
+                {t("reached", {
+                  people: t("peopleCount", { count: c.reach }),
+                  impressions: t("impressionsCount", { count: c.impressions }),
+                  clicks: t("clicksCount", { count: c.clicks }),
+                })}
               </p>
             </div>
             <span className="shrink-0 text-sm font-semibold">
-              {formatMinor(c.budgetMinor, c.currency)}
+              {formatMinor(c.budgetMinor, c.currency, locale)}
             </span>
           </Link>
         </li>

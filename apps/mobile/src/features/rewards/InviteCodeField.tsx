@@ -1,5 +1,6 @@
 import { normalizeReferralCode } from "@abonten/core/rewards/referralCode";
 import { AppText, Button } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect, useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
@@ -11,6 +12,8 @@ import { useInvitesLive } from "./useRewards";
 // the person signs in. Filled in already when they came from an invite link
 // or the Play Store install referrer.
 export function InviteCodeField() {
+  const t = useTranslations("rewards");
+
   const c = useThemeColors();
   const live = useInvitesLive();
   const [open, setOpen] = useState(false);
@@ -38,7 +41,7 @@ export function InviteCodeField() {
         className="self-center active:opacity-60"
       >
         <AppText variant="small" tone="muted" className="font-semibold">
-          Have an invite code?
+          {t("haveAnInviteCode")}
         </AppText>
       </Pressable>
     );
@@ -47,7 +50,7 @@ export function InviteCodeField() {
   async function save() {
     const normalized = normalizeReferralCode(code);
     if (!normalized) {
-      setError("Enter the 7-character invite code.");
+      setError(t("enterThe7CharacterInviteCode"));
       return;
     }
     await captureInvite(normalized, "typed");
@@ -58,7 +61,7 @@ export function InviteCodeField() {
 
   return (
     <View className="gap-2 rounded-2xl border border-border bg-card p-4">
-      <AppText variant="label">Invite code</AppText>
+      <AppText variant="label">{t("inviteCode")}</AppText>
       <View className="flex-row gap-2">
         <TextInput
           className={[
@@ -76,12 +79,12 @@ export function InviteCodeField() {
           autoCapitalize="characters"
           autoCorrect={false}
           maxLength={9}
-          accessibilityLabel="Invite code"
+          accessibilityLabel={t("inviteCode")}
           onSubmitEditing={save}
           returnKeyType="done"
         />
         <Button
-          title={saved && saved === code ? "Saved" : "Save"}
+          title={saved && saved === code ? t("saved") : t("save")}
           variant="outline"
           disabled={code.trim().length === 0 || saved === code}
           onPress={save}
@@ -92,10 +95,7 @@ export function InviteCodeField() {
           {error}
         </AppText>
       ) : saved ? (
-        <AppText variant="caption">
-          We&apos;ll apply it when you sign in. Invite codes work for new
-          accounts, in their first week.
-        </AppText>
+        <AppText variant="caption">{t("weLlApplyItWhenYou")}</AppText>
       ) : null}
     </View>
   );

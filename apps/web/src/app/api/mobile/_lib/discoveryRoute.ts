@@ -1,6 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { ZodType, ZodTypeDef } from "zod";
@@ -58,7 +59,7 @@ export async function discoveryRoute<T>(
     if (!parsed.success) {
       return apiJson({
         status: 400,
-        message: parsed.error.issues[0]?.message ?? "Invalid input",
+        message: parsed.error.issues[0]?.message ?? tr("invalidInput"),
       });
     }
     const platformHeader = req.headers.get("x-abonten-platform");
@@ -75,7 +76,10 @@ export async function discoveryRoute<T>(
     );
   } catch (error) {
     logger.error(`mobile ${opts.label} failed`, error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }
 

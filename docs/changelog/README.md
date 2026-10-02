@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-26
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,18 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-10-02 — Languages, failures said as failures, and the app on a device
+
+- New `architecture/internationalisation.md` 1.0 and `architecture/web-resilience.md` 1.0; `development/ci.md`, `development/testing.md` (new "Walking the app on a device"), `security/application-security.md`, `architecture/README.md`, `INDEX.md`, `OPERATIONAL_DECISIONS_REQUIRED.md` 1.2 (D3 rewritten, new D7), `PROJECT.md` §57–§58, `CLAUDE.md`.
+- **Languages.** The website, the app, emails, pushes and in-app notices are in French, Spanish, German and Portuguese as well as English; Twi is partly translated and marked so. One message per sentence, plurals inside the message, numbers, dates, ratings and amounts in the reader's way ("4,5", "GH₵1 500,00"). The website sends each page only the words it uses (home page 374 KB → 49 KB). Not reviewed by native speakers (decision D3). Legal pages and the help centre stay English (D5).
+- **Failures.** A dropped connection, a tab older than the deployment or a refused request now gives the person a sentence in their language instead of a stuck button or an error page; a read that failed shows "couldn't load, try again" instead of an empty list (wallet, checkout, finances, payout accounts, payouts); an event or place page is a 500, not a 404, while the database is unreachable; the sitemap and Weekly pages keep their last good copy when a rebuild cannot read. With the database unreachable a page says so in about ten seconds instead of minutes. A progress bar shows while a page is on its way; "You're offline" shows when it is. The browser's own confirm and alert boxes are gone from the website and the admin console.
+- **Admin console.** A staff action that did not come back says whether it can have been applied; the typed reason is kept. Confirmations name the action ("Refund GH₵ 50.00").
+- **App.** The app crashed on every cold start on this branch (the splash and the root error screen had been given a provider hook), every plural printed its key (the app's engine has no plural rules; FormatJS polyfills added), the notifications screen crashed outside English, and four menu rows and one status printed their keys. All fixed, each with a check. New dependencies of `@abonten/ui-native`: `@formatjs/intl-locale`, `@formatjs/intl-pluralrules`, `@formatjs/intl-relativetimeformat` (plain JavaScript; an over-the-air update carries them).
+- **Speed.** A signed-in page opens with one request for the site chrome instead of a dozen (Explore: 15 Server Actions → 4); the proxy confirms the session only where it decides something by it; category chips and footer links are not prefetched.
+- **Checks added to CI:** the translation chain in `npm run check:i18n` (now also: keys that arrive through a variable, decimals written by hand, labels listed and used as keys), `npm run check:action-calls`, `npm run check:mobile-boot`; browser tests for languages, the offline notice and the progress bar. New tool, not in CI: `scripts/qa/mobile-walk.sh`.
+- Migration `20261001200000_organizer_needs_attention_facts` (applied to production and preview 2026-10-02): `get_organizer_needs_attention` also returns the facts its English sentence was made from (start, time zone, sold, remaining, tier), so each app words the dashboard note in the reader's language; execute revoked from `anon` and `public`. Env vars, permissions, jobs: none.
+- Decisions for the owner: D3 (native review of the translations, Twi), D7 (whether to cache the public event page; it is not cached today although the code said so).
 
 ## 2026-09-30 — Event codes no longer collide
 

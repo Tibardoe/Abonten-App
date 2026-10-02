@@ -27,6 +27,7 @@ import {
   toMajor,
 } from "@abonten/core/money/money";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import {
   type CreditReservationRow,
   captureReservation,
@@ -69,7 +70,7 @@ async function reconcileClosedAttempt(
     );
     return {
       status: "pending",
-      message: "Could not verify payment right now. Please try again.",
+      message: tr("couldNotVerifyPaymentRightNow"),
     };
   }
 
@@ -81,8 +82,8 @@ async function reconcileClosedAttempt(
       status: "failed",
       message:
         primary.status === "cancelled"
-          ? "This payment was replaced by a newer one."
-          : "This payment didn't go through.",
+          ? tr("thisPaymentWasReplacedByA")
+          : tr("thisPaymentDidnTGoThrough"),
     };
   }
 
@@ -97,12 +98,11 @@ async function reconcileClosedAttempt(
   return refunded.status === "refund_requested"
     ? {
         status: "failed",
-        message:
-          "This payment arrived after the order had closed, so it is being refunded in full.",
+        message: tr("thisPaymentArrivedAfterTheOrder"),
       }
     : {
         status: "pending",
-        message: "We're sorting out this payment. Please check back shortly.",
+        message: tr("weReSortingOutThisPayment"),
       };
 }
 
@@ -315,7 +315,10 @@ export async function finalizePayment(
 
   // Marked when the order's refund completed: nothing to verify or issue.
   if (primary.status === "refunded") {
-    return { status: "failed", message: "This payment was refunded." };
+    return {
+      status: "failed",
+      message: tr("thisPaymentWasRefunded"),
+    };
   }
 
   if (
@@ -335,7 +338,10 @@ export async function finalizePayment(
   }
 
   if (!primary.provider_reference) {
-    return { status: "failed", message: "Payment was never started" };
+    return {
+      status: "failed",
+      message: tr("paymentWasNeverStarted"),
+    };
   }
 
   // A closed attempt (declined, expired, replaced by another method) can
@@ -368,7 +374,7 @@ export async function finalizePayment(
       logger.error(
         `finalizePayment: failed fetching group members (${siblingsError.message})`,
       );
-      return { status: "failed", message: "Something went wrong" };
+      return { status: "failed", message: tr("somethingWentWrong2") };
     }
 
     if (siblings && siblings.length > 0) {
@@ -393,7 +399,7 @@ export async function finalizePayment(
 
   if (lockError) {
     logger.error(`finalizePayment: lock failed (${lockError.message})`);
-    return { status: "failed", message: "Something went wrong" };
+    return { status: "failed", message: tr("somethingWentWrong2") };
   }
 
   if (!locked) {
@@ -436,7 +442,7 @@ export async function finalizePayment(
     await revertToPending();
     return {
       status: "pending",
-      message: "Could not verify payment right now. Please try again.",
+      message: tr("couldNotVerifyPaymentRightNow"),
     };
   }
 
@@ -494,7 +500,7 @@ export async function finalizePayment(
     await revertToPending();
     return {
       status: "pending",
-      message: "Could not verify payment right now. Please try again.",
+      message: tr("couldNotVerifyPaymentRightNow"),
     };
   }
 
@@ -510,7 +516,10 @@ export async function finalizePayment(
       paymentLogData(primary, "reference_mismatch"),
     );
     await markGroup("failed", { failure_reason: "Reference mismatch" });
-    return { status: "failed", message: "Payment could not be verified" };
+    return {
+      status: "failed",
+      message: tr("paymentCouldNotBeVerified"),
+    };
   }
 
   if (verification.status === "pending") {
@@ -520,7 +529,7 @@ export async function finalizePayment(
     await revertToPending();
     return {
       status: "pending",
-      message: "Your payment is still awaiting authorization.",
+      message: tr("yourPaymentIsStillAwaitingAuthorization"),
     };
   }
 
@@ -560,21 +569,19 @@ export async function finalizePayment(
       return refunded.status === "refund_requested"
         ? {
             status: "failed",
-            message:
-              "The amount charged didn't match your order, so it is being refunded in full.",
+            message: tr("theAmountChargedDidnTMatch"),
           }
         : {
             status: "pending",
-            message:
-              "We're sorting out this payment. Please check back shortly.",
+            message: tr("weReSortingOutThisPayment"),
           };
     }
     return {
       status: "failed",
       message:
         verification.status === "abandoned"
-          ? "This payment was cancelled."
-          : "Your payment was declined. Please try another payment method.",
+          ? tr("thisPaymentWasCancelled")
+          : tr("yourPaymentWasDeclinedPleaseTry"),
     };
   }
 
@@ -624,7 +631,10 @@ async function finalizeCreditOnly(
     await markGroup("failed", {
       failure_reason: "Credit payment could not be verified",
     });
-    return { status: "failed", message: "Payment could not be verified" };
+    return {
+      status: "failed",
+      message: tr("paymentCouldNotBeVerified"),
+    };
   }
 
   const { data: authUser } = await supabase.auth.admin.getUserById(
@@ -704,7 +714,7 @@ async function completeVerifiedPayment({
         });
         return {
           status: "failed",
-          message: "This checkout expired. Please start again.",
+          message: tr("thisCheckoutExpiredPleaseStartAgain"),
         };
       }
     } else {
@@ -799,8 +809,7 @@ async function completeVerifiedPayment({
       }
       return {
         status: "failed",
-        message:
-          "Payment succeeded but we couldn't record it. Please contact support.",
+        message: tr("paymentSucceededButWeCouldnT"),
       };
     }
 
@@ -837,8 +846,8 @@ async function completeVerifiedPayment({
       return {
         status: "fulfillment_failed",
         message: creditOnly
-          ? "We couldn't apply your credit to this order. Tap Retry, or contact support if it keeps failing."
-          : "Your payment was successful, but we couldn't apply your credit yet. Tap Retry to finish — you won't be charged again.",
+          ? tr("weCouldnTApplyYourCredit")
+          : tr("yourPaymentWasSuccessfulButWe"),
         paymentAttemptId: primary.id,
       };
     }
@@ -908,7 +917,10 @@ async function completeVerifiedPayment({
             member.content_campaign_checkout_id,
             authOverride,
           )
-        : { status: 500, message: "Campaign activation is not wired" };
+        : {
+            status: 500,
+            message: tr("campaignActivationIsNotWired"),
+          };
     }
 
     if (!result) continue;
@@ -926,8 +938,7 @@ async function completeVerifiedPayment({
   if (anyFailed) {
     return {
       status: "fulfillment_failed",
-      message:
-        "Your payment was successful, but we couldn't finish issuing everything yet. Tap Retry to finish — you won't be charged again.",
+      message: tr("yourPaymentWasSuccessfulButWe2"),
       paymentAttemptId: primary.id,
     };
   }

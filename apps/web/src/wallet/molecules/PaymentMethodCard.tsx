@@ -8,12 +8,13 @@ import type {
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { cn } from "@/components/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 // Shared with WalletManager.tsx (the /wallet management list) and
 // PaymentMethodSelector.tsx (checkout) so this copy can't drift between the
-// two contexts a user might see it in.
-export const NO_PAYMENT_METHODS_MESSAGE =
-  "You haven't added a payment method yet.";
+// two contexts a user might see it in: the same catalog key exists in the
+// wallet and common namespaces.
+export const NO_PAYMENT_METHODS_KEY = "noPaymentMethodsYet";
 
 type PaymentMethodCardProps = {
   method: PaymentMethodRow;
@@ -25,7 +26,12 @@ type PaymentMethodCardProps = {
   settingDefault?: boolean;
 };
 
-export function getPaymentMethodDisplay(method: PaymentMethodRow) {
+export type PaymentMethodTexts = { mobileMoney: string; exp: string };
+
+export function getPaymentMethodDisplay(
+  method: PaymentMethodRow,
+  texts: PaymentMethodTexts,
+) {
   if (method.method_type === "momo") {
     const details = method.details as MomoPaymentMethodDetails &
       // Wallets saved before real phone numbers/network codes were
@@ -34,7 +40,7 @@ export function getPaymentMethodDisplay(method: PaymentMethodRow) {
       // number from a last-4-digits-only record.
       Partial<{ network: string; last4: string }>;
     const networkName =
-      details.networkName ?? details.network ?? "Mobile Money";
+      details.networkName ?? details.network ?? texts.mobileMoney;
     const maskedNumber = details.phone
       ? `•••• ${details.phone.slice(-4)}`
       : details.last4
@@ -53,7 +59,7 @@ export function getPaymentMethodDisplay(method: PaymentMethodRow) {
 
   return {
     title: details.label?.trim() || details.brand,
-    subtitle: `${details.brand} •••• ${details.last4} · exp ${expiry}`,
+    subtitle: `${details.brand} •••• ${details.last4} · ${texts.exp} ${expiry}`,
   };
 }
 
@@ -66,7 +72,12 @@ export default function PaymentMethodCard({
   removing,
   settingDefault,
 }: PaymentMethodCardProps) {
-  const { title, subtitle } = getPaymentMethodDisplay(method);
+  const t = useTranslations("wallet");
+
+  const { title, subtitle } = getPaymentMethodDisplay(method, {
+    mobileMoney: t("mobileMoney"),
+    exp: t("exp"),
+  });
   const isSelectable = Boolean(onSelect);
 
   return (
@@ -120,7 +131,7 @@ export default function PaymentMethodCard({
 
         {method.is_default && (
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-            Default
+            {t("defaultText")}
           </span>
         )}
       </div>
@@ -138,7 +149,7 @@ export default function PaymentMethodCard({
                 onSetDefault();
               }}
             >
-              {settingDefault ? "Setting..." : "Set as default"}
+              {settingDefault ? t("setting") : t("setAsDefault")}
             </Button>
           )}
           {onRemove && (
@@ -153,7 +164,7 @@ export default function PaymentMethodCard({
               }}
               className="text-destructive hover:text-destructive"
             >
-              {removing ? "Removing..." : "Remove"}
+              {removing ? t("removing") : t("remove")}
             </Button>
           )}
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   approveFieldOpsPayoutBatch,
   cancelFieldOpsPayoutBatch,
@@ -41,7 +42,7 @@ export function BatchActions({
       const res = await approveFieldOpsPayoutBatch({
         batchId,
         reason: reason.trim() || "Approved for this week's payout run",
-      });
+      }).catch(actionUnreachable);
       say(res.message ?? null);
       if (res.status === 200) router.refresh();
     });
@@ -52,7 +53,7 @@ export function BatchActions({
       const res = await cancelFieldOpsPayoutBatch({
         batchId,
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       say(res.message ?? null);
       if (res.status === 200) router.refresh();
     });
@@ -62,7 +63,8 @@ export function BatchActions({
   const exportCsv = () =>
     start(async () => {
       say(null);
-      const res = await exportFieldOpsPayoutBatch(batchId);
+      const res =
+        await exportFieldOpsPayoutBatch(batchId).catch(actionUnreachable);
       if (res.status !== 200 || !res.data) {
         say(res.message ?? "Could not export.");
         return;
@@ -138,7 +140,7 @@ export function ItemActions({ itemId }: { itemId: string }) {
         status: mode,
         reference: mode === "paid" ? value.trim() : null,
         failureReason: mode === "failed" ? value.trim() : null,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setValue("");

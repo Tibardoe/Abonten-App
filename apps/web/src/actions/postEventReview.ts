@@ -1,10 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import { formatTitle } from "@abonten/core/titleCase";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -47,7 +49,9 @@ type TicketRow = { ticket_type: { event_id: string } | null };
  * mirrors getEventReviewEligibility.ts's rules exactly so a direct call to
  * this action can't bypass what the UI already enforces.
  */
-export async function postEventReview(formData: PostEventReviewInput) {
+export const postEventReview = withActionLocale(async function postEventReview(
+  formData: PostEventReviewInput,
+) {
   const supabase = await createClient();
 
   const {
@@ -63,7 +67,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
   }
 
   if (!user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   const allowed = await checkRateLimit(
@@ -75,7 +79,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many reviews posted recently. Please try again later.",
+      message: tr("tooManyReviewsPostedRecentlyPlease"),
     };
   }
 
@@ -97,15 +101,18 @@ export async function postEventReview(formData: PostEventReviewInput) {
   }
 
   if (!event) {
-    return { status: 404, message: "Event not found" };
+    return { status: 404, message: tr("eventNotFound") };
   }
 
   if (event.organizer_id === user.id) {
-    return { status: 400, message: "You cannot review your own event" };
+    return {
+      status: 400,
+      message: tr("youCannotReviewYourOwnEvent"),
+    };
   }
 
   if (event.status === "canceled") {
-    return { status: 400, message: "This event was cancelled." };
+    return { status: 400, message: tr("thisEventWasCancelled") };
   }
 
   const endDate = resolveEventEndDate(
@@ -117,7 +124,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
   if (!endDate || new Date() < endDate) {
     return {
       status: 403,
-      message: "You can only review this event after it has ended.",
+      message: tr("youCanOnlyReviewThisEvent"),
     };
   }
 
@@ -141,7 +148,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
   if (!hasVerifiedTicket) {
     return {
       status: 403,
-      message: "You can only review events you've attended",
+      message: tr("youCanOnlyReviewEventsYou"),
     };
   }
 
@@ -163,11 +170,14 @@ export async function postEventReview(formData: PostEventReviewInput) {
 
   if (insertError) {
     if (insertError.code === UNIQUE_VIOLATION) {
-      return { status: 409, message: "You've already reviewed this event." };
+      return {
+        status: 409,
+        message: tr("youVeAlreadyReviewedThisEvent"),
+      };
     }
 
     logger.error(`Error inserting event review: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   await insertReviewPhotos(
@@ -179,5 +189,5 @@ export async function postEventReview(formData: PostEventReviewInput) {
     photos,
   );
 
-  return { status: 200, message: "Review posted successfully!" };
-}
+  return { status: 200, message: tr("reviewPostedSuccessfully") };
+});

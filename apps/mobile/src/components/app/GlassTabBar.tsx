@@ -1,4 +1,5 @@
 import { useReducedMotion } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { brandColors, family, useTheme } from "@abonten/ui-native/theme";
 import { requireOptionalNativeModule } from "expo";
 import {
@@ -131,6 +132,8 @@ export function GlassTabBar({
   darkRoutes?: string[];
   blurTargets?: TabBlurTargets;
 }) {
+  const t = useTranslations("common");
+
   const { colors: c, scheme } = useTheme();
   const reduceMotion = useReducedMotion();
   const [width, setWidth] = useState(0);
@@ -306,7 +309,9 @@ export function GlassTabBar({
               accessibilityState={{ selected: focused }}
               accessibilityLabel={
                 options.tabBarAccessibilityLabel ??
-                (badge > 0 ? `${label}, ${badge} unread` : label)
+                (badge > 0
+                  ? t("unread", { label: label, badge: badge })
+                  : label)
               }
               testID={options.tabBarButtonTestID}
               onPress={onPress}

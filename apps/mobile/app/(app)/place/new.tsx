@@ -17,6 +17,7 @@ import {
   Overline,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -31,26 +32,32 @@ import { Pressable, View } from "react-native";
 // Next / Publish advances; per-step gates come from `w.canAdvance`, except
 // Basic info which validates on Next-press.
 
+// Catalog keys in the places namespace.
 const STEPS: { title: string; subtitle: string }[] = [
   {
-    title: "Cover photo",
-    subtitle: "The image people recognise the place by — add it first.",
+    title: "wizardSteps.cover.title",
+    subtitle: "wizardSteps.cover.subtitle",
   },
   {
-    title: "Gallery photos",
-    subtitle: "Optional — a few shots of the space. Add more later any time.",
+    title: "wizardSteps.gallery.title",
+    subtitle: "wizardSteps.gallery.subtitle",
   },
   {
-    title: "Basic info",
-    subtitle: "Name, category, description and address.",
+    title: "wizardSteps.basics.title",
+    subtitle: "wizardSteps.basics.subtitle",
   },
-  { title: "Opening hours", subtitle: "When the place is open." },
-  { title: "Review & publish", subtitle: "Check everything, then go live." },
+  { title: "wizardSteps.hours.title", subtitle: "wizardSteps.hours.subtitle" },
+  {
+    title: "wizardSteps.review.title",
+    subtitle: "wizardSteps.review.subtitle",
+  },
 ];
 const LAST_STEP = STEPS.length - 1;
 const BASICS_STEP = 2;
 
 export default function CreatePlaceScreen() {
+  const t = useTranslations("places");
+
   const router = useRouter();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const toast = useToast();
@@ -70,15 +77,15 @@ export default function CreatePlaceScreen() {
       // Straight to the published place; the confirmation rides along as a
       // toast rather than an alert to dismiss first.
       router.replace(`/(app)/place/${res.placeId}`);
-      toast.success("Place published", {
-        description: "It is live and discoverable now.",
+      toast.success(t("placePublished"), {
+        description: t("itIsLiveAndDiscoverableNow"),
       });
       return;
     }
 
-    toast.error(res.message ?? "We couldn't publish your place.", {
-      description: "Everything you entered is still here. Try again.",
-      action: { label: "Retry", onPress: onPublish },
+    toast.error(res.message ?? t("weCouldnTPublishYourPlace"), {
+      description: t("everythingYouEnteredIsStillHere"),
+      action: { label: t("retry"), onPress: onPublish },
     });
   }
 
@@ -103,13 +110,13 @@ export default function CreatePlaceScreen() {
   async function onSaveDraft() {
     const res = await w.saveDraft();
     if (res.status === 200) {
-      toast.success("Draft saved", {
-        description: "Pick it back up any time from Place drafts.",
+      toast.success(t("draftSaved"), {
+        description: t("pickItBackUpAnyTime"),
       });
     } else {
-      toast.error(res.message ?? "We couldn't save your draft.", {
-        description: "Nothing was lost — try again.",
-        action: { label: "Retry", onPress: onSaveDraft },
+      toast.error(res.message ?? t("weCouldnTSaveYourDraft"), {
+        description: t("nothingWasLostTryAgain"),
+        action: { label: t("retry"), onPress: onSaveDraft },
       });
     }
   }
@@ -117,17 +124,17 @@ export default function CreatePlaceScreen() {
   const header = (
     <AppHeader
       variant="form"
-      title="Create Place"
+      title={t("createPlace")}
       onBack={goBack}
       onNext={goNext}
       nextLabel={
         w.step !== LAST_STEP
-          ? "Next"
+          ? t("next")
           : w.uploadingPhotos
-            ? "Adding photos…"
+            ? t("addingPhotos")
             : w.isSubmitting
-              ? "Publishing…"
-              : "Publish"
+              ? t("publishing2")
+              : t("publish")
       }
       nextLoading={w.isSubmitting || w.uploadingPhotos}
       nextDisabled={w.step !== BASICS_STEP && !w.canAdvance}
@@ -163,17 +170,17 @@ export default function CreatePlaceScreen() {
               className="active:opacity-60 disabled:opacity-50"
             >
               <AppText variant="small" tone="brand" className="font-semibold">
-                {w.isSavingDraft ? "Saving…" : "Save as draft"}
+                {w.isSavingDraft ? t("saving2") : t("saveAsDraft")}
               </AppText>
             </Pressable>
           </View>
 
           <View className="gap-1">
             <Overline>
-              Step {w.step + 1} of {STEPS.length}
+              {t("stepOf", { step: w.step + 1, total: STEPS.length })}
             </Overline>
-            <Hero>{stepInfo.title}</Hero>
-            <AppText variant="muted">{stepInfo.subtitle}</AppText>
+            <Hero>{t(stepInfo.title)}</Hero>
+            <AppText variant="muted">{t(stepInfo.subtitle)}</AppText>
           </View>
         </View>
 
@@ -195,10 +202,10 @@ export default function CreatePlaceScreen() {
           <Link href="/(app)/organizer/place-drafts" asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <AppText variant="body">
-                You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
+                {t("youHaveSavedDraft", { draftCount })}
               </AppText>
               <AppText variant="small" tone="brand" className="font-semibold">
-                Resume ›
+                {t("resume")}
               </AppText>
             </Pressable>
           </Link>

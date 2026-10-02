@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { openConversationCore } from "@abonten/services/messaging/openConversationCore";
 import { openConversationSchema } from "@abonten/validation/messageSchema";
 
@@ -10,6 +14,7 @@ import { openConversationSchema } from "@abonten/validation/messageSchema";
 // same body always returns the same conversationId. Mirrors the
 // openConversation Server Action.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -18,13 +23,17 @@ export async function POST(req: Request) {
       string,
       unknown
     > | null;
-    if (!body) return apiJson({ status: 400, message: "Invalid request body" });
+    if (!body)
+      return apiJson({
+        status: 400,
+        message: tr("invalidRequestBody"),
+      });
 
     const parsed = openConversationSchema.safeParse(body);
     if (!parsed.success) {
       return apiJson({
         status: 400,
-        message: parsed.error.issues[0]?.message ?? "Invalid request.",
+        message: parsed.error.issues[0]?.message ?? tr("invalidRequest"),
       });
     }
 
@@ -36,6 +45,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /messages/open failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

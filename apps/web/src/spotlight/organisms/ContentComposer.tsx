@@ -12,7 +12,7 @@ import {
 import { Select } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/useToast";
-import { CONTENT_RIGHTS_ACKNOWLEDGEMENT } from "@abonten/core/content/copy";
+import { CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY } from "@abonten/core/content/copy";
 import {
   MAX_CAPTION_LENGTH,
   MAX_CONTENT_IMAGE_BYTES,
@@ -22,6 +22,7 @@ import {
 import type { ContentKind } from "@abonten/types/contentType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { IoAdd, IoClose } from "react-icons/io5";
@@ -48,6 +49,9 @@ export default function ContentComposer({
   initialKind: ContentKind;
   onClose: () => void;
 }) {
+  const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
+
   const { program } = useContentProgram();
   const toast = useToast();
   const qc = useQueryClient();
@@ -92,22 +96,22 @@ export default function ContentComposer({
     if (list.length > room) {
       toast.error(
         kind === "story"
-          ? `A Story holds at most ${maxItems} items.`
-          : "A Spotlight holds one photo or video.",
+          ? t("aStoryHoldsAtMostItems", { maxItems: maxItems })
+          : t("aSpotlightHoldsOnePhotoOr"),
       );
     }
     const accepted = chosen.filter((file) => {
       const isVideo = file.type.startsWith("video/");
       const isImage = file.type.startsWith("image/");
       if (!isVideo && !isImage) {
-        toast.error(`${file.name} isn't a photo or video.`);
+        toast.error(t("isnTAPhotoOrVideo", { name: file.name }));
         return false;
       }
       if (
         file.size >
         (isVideo ? MAX_CONTENT_VIDEO_BYTES : MAX_CONTENT_IMAGE_BYTES)
       ) {
-        toast.error(`${file.name} is too large.`);
+        toast.error(t("isTooLarge", { name: file.name }));
         return false;
       }
       return true;
@@ -116,7 +120,7 @@ export default function ContentComposer({
     for (const f of added) {
       if (f.type !== "video" || f.durationSeconds === null) continue;
       if (f.durationSeconds < MIN_VIDEO_SECONDS) {
-        toast.error("That video is too short.");
+        toast.error(t("thatVideoIsTooShort"));
         upload.remove(f.id);
       } else if (f.durationSeconds > maxSeconds) {
         // Start with the first allowed stretch selected; the creator can move it.
@@ -141,7 +145,7 @@ export default function ContentComposer({
     try {
       const media = await upload.uploadAll(upload.files);
       if (!media) {
-        toast.error("Some files didn't upload. Fix them and try again.");
+        toast.error(t("someFilesDidnTUploadFix"));
         return;
       }
       const place = program.publisherPlaces.find((p) => p.id === publisher);
@@ -162,15 +166,15 @@ export default function ContentComposer({
         clientRequestId,
       });
       if (res.status !== 200) {
-        toast.error(messageOf(res, "Couldn't create your post."));
+        toast.error(messageOf(res, t("couldnTCreateYourPost")));
         return;
       }
       toast.success(
         publish
           ? kind === "story"
-            ? "Your Story is live."
-            : "Your Spotlight is live."
-          : "Saved as a draft.",
+            ? t("yourStoryIsLive")
+            : t("yourSpotlightIsLive")
+          : t("savedAsADraft"),
       );
       qc.invalidateQueries({ queryKey: ["content"] });
       upload.reset();
@@ -192,12 +196,14 @@ export default function ContentComposer({
     >
       <DialogContent className="max-h-[92dvh] max-w-lg overflow-y-auto">
         <DialogTitle>
-          {kind === "story" ? "New Story" : "New Spotlight"}
+          {kind === "story" ? t("newStory") : t("newSpotlight")}
         </DialogTitle>
         <DialogDescription>
           {kind === "story"
-            ? `Stories disappear after ${program.storyTtlHours} hours.`
-            : "A short video or photo about your event or place."}
+            ? t("storiesDisappearAfterHours", {
+                storyTtlHours: program.storyTtlHours,
+              })
+            : t("aShortVideoOrPhotoAbout")}
         </DialogDescription>
 
         <div className="space-y-4">
@@ -217,7 +223,7 @@ export default function ContentComposer({
                       : "border-border hover:bg-accent",
                   )}
                 >
-                  {k === "story" ? "Story" : "Spotlight"}
+                  {k === "story" ? t("story") : t("spotlight")}
                 </button>
               ))}
             </div>
@@ -225,14 +231,14 @@ export default function ContentComposer({
 
           {program.publisherPlaces.length > 0 ? (
             <div className="block space-y-1 text-sm font-medium">
-              <label htmlFor="composer-field-1">Post as</label>
+              <label htmlFor="composer-field-1">{t("postAs")}</label>
               <Select
                 id="composer-field-1"
                 value={publisher}
                 disabled={busy}
                 onChange={(e) => setPublisher(e.target.value)}
               >
-                <option value="me">Me (organizer profile)</option>
+                <option value="me">{t("meOrganizerProfile")}</option>
                 {program.publisherPlaces.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -262,8 +268,8 @@ export default function ContentComposer({
                 >
                   <IoAdd className="text-2xl" />
                   {upload.files.length === 0
-                    ? "Add photo or video"
-                    : "Add more"}
+                    ? t("addPhotoOrVideo")
+                    : t("addMore")}
                 </button>
               ) : null}
             </div>
@@ -276,8 +282,8 @@ export default function ContentComposer({
               onChange={(e) => pick(e.target.files)}
             />
             <p className="text-xs text-muted-foreground">
-              Videos up to {maxSeconds} seconds.
-              {kind === "story" ? ` Up to ${maxItems} items.` : ""}
+              {t("videosUpToSeconds", { maxSeconds: maxSeconds })}
+              {kind === "story" ? ` ${t("upToItems", { maxItems })}` : ""}
             </p>
             {upload.files
               .filter(
@@ -300,28 +306,30 @@ export default function ContentComposer({
           </div>
 
           <label className="block space-y-1 text-sm font-medium">
-            <span>Caption</span>
+            <span>{t("caption")}</span>
             <textarea
               value={caption}
               maxLength={MAX_CAPTION_LENGTH}
               disabled={busy}
               onChange={(e) => setCaption(e.target.value)}
               rows={3}
-              placeholder="Say something. #hashtags help people find it."
+              placeholder={t("saySomethingHashtagsHelpPeopleFind")}
               className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </label>
 
           {(events.data?.length ?? 0) > 0 ? (
             <div className="block space-y-1 text-sm font-medium">
-              <label htmlFor="composer-field-2">Link an event (optional)</label>
+              <label htmlFor="composer-field-2">
+                {t("linkAnEventOptional")}
+              </label>
               <Select
                 id="composer-field-2"
                 value={eventId}
                 disabled={busy}
                 onChange={(e) => setEventId(e.target.value)}
               >
-                <option value="">No event</option>
+                <option value="">{t("noEvent")}</option>
                 {events.data?.map((ev) => (
                   <option key={ev.id} value={ev.id}>
                     {ev.title}
@@ -333,14 +341,16 @@ export default function ContentComposer({
 
           {program.publisherPlaces.length > 0 ? (
             <div className="block space-y-1 text-sm font-medium">
-              <label htmlFor="composer-field-3">Link a place (optional)</label>
+              <label htmlFor="composer-field-3">
+                {t("linkAPlaceOptional")}
+              </label>
               <Select
                 id="composer-field-3"
                 value={placeId}
                 disabled={busy}
                 onChange={(e) => setPlaceId(e.target.value)}
               >
-                <option value="">No place</option>
+                <option value="">{t("noPlace")}</option>
                 {program.publisherPlaces.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -358,7 +368,7 @@ export default function ContentComposer({
                 disabled={busy}
                 onChange={(e) => setAllowComments(e.target.checked)}
               />
-              Allow comments
+              {t("allowComments")}
             </label>
             {kind === "spotlight" && program.spotlightDownloads ? (
               <label className="flex items-center gap-2">
@@ -368,7 +378,7 @@ export default function ContentComposer({
                   disabled={busy}
                   onChange={(e) => setAllowDownload(e.target.checked)}
                 />
-                Let people download this video
+                {t("letPeopleDownloadThisVideo")}
               </label>
             ) : null}
             <label className="flex items-start gap-2 rounded-md bg-muted p-2">
@@ -379,13 +389,13 @@ export default function ContentComposer({
                 disabled={busy}
                 onChange={(e) => setRights(e.target.checked)}
               />
-              <span>{CONTENT_RIGHTS_ACKNOWLEDGEMENT}</span>
+              <span>{tc(CONTENT_RIGHTS_ACKNOWLEDGEMENT_KEY)}</span>
             </label>
           </div>
 
           {tooLong ? (
             <p className="text-sm text-destructive">
-              Trim your video to {maxSeconds} seconds or less.
+              {t("trimYourVideoToSecondsOr", { maxSeconds: maxSeconds })}
             </p>
           ) : null}
 
@@ -396,7 +406,7 @@ export default function ContentComposer({
               onClick={() => submit(false)}
               className="rounded-md border px-4 py-2 text-sm font-semibold hover:bg-accent disabled:opacity-50"
             >
-              {submitting === "draft" ? "Saving…" : "Save draft"}
+              {submitting === "draft" ? t("saving") : t("saveDraft")}
             </button>
             <button
               type="button"
@@ -407,7 +417,7 @@ export default function ContentComposer({
               {submitting === "publish" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : null}
-              {submitting === "publish" ? "Publishing…" : "Publish"}
+              {submitting === "publish" ? t("publishing") : t("publish")}
             </button>
           </div>
         </div>
@@ -425,6 +435,8 @@ function MediaTile({
   disabled: boolean;
   onRemove: () => void;
 }) {
+  const t = useTranslations("spotlight");
+
   return (
     <div className="relative aspect-[9/16] overflow-hidden rounded-lg bg-muted">
       {item.type === "video" ? (
@@ -448,7 +460,7 @@ function MediaTile({
         <button
           type="button"
           onClick={onRemove}
-          aria-label="Remove"
+          aria-label={t("remove")}
           className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white"
         >
           <IoClose />
@@ -487,14 +499,19 @@ function TrimControl({
   disabled: boolean;
   onChange: (start: number, end: number) => void;
 }) {
+  const t = useTranslations("spotlight");
+
   const duration = item.durationSeconds ?? 0;
   const start = item.trimStart;
   const end = item.trimEnd ?? duration;
   return (
     <div className="space-y-1 rounded-md border p-2 text-sm">
       <p className="font-medium">
-        Choose up to {maxSeconds} seconds: {formatSeconds(start)} –{" "}
-        {formatSeconds(end)}
+        {t("chooseUpToSeconds", {
+          maxSeconds: maxSeconds,
+          formatSeconds: formatSeconds(start),
+          formatSeconds2: formatSeconds(end),
+        })}
       </p>
       <Slider
         min={0}
@@ -511,7 +528,7 @@ function TrimControl({
           }
           onChange(Math.max(0, nextStart), Math.min(duration, nextEnd));
         }}
-        aria-label="Trim video"
+        aria-label={t("trimVideo")}
       />
     </div>
   );

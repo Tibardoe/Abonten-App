@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsAssignment } from "@abonten/types/fieldOps";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -59,6 +61,8 @@ export default function AssignmentCard({
   canAct: boolean;
   today: string;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -84,12 +88,12 @@ export default function AssignmentCard({
         assignmentId: a.id,
         location,
         accuracyM,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
-        toast.success(res.message ?? "Started.");
+        toast.success(res.message ?? t("started"));
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't start that.");
+        toast.error(res.message ?? t("couldnTStartThat"));
       }
     });
 
@@ -98,12 +102,12 @@ export default function AssignmentCard({
       const res = await completeFieldOpsAssignment({
         campaignId: a.campaignId,
         assignmentId: a.id,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
-        toast.success(res.message ?? "Completed.");
+        toast.success(res.message ?? t("completed2"));
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't complete that.");
+        toast.error(res.message ?? t("couldnTCompleteThat"));
       }
     });
 
@@ -118,7 +122,8 @@ export default function AssignmentCard({
             {a.territoryName}
           </Link>
           <p className="text-sm text-muted-foreground">
-            {dateRange(a)} · {a.mode === "offline" ? "In person" : "Online"}
+            {dateRange(a)} ·{" "}
+            {a.mode === "offline" ? t("inPerson2") : t("online2")}
           </p>
         </div>
         <StatusChip status={a.status} />
@@ -126,12 +131,14 @@ export default function AssignmentCard({
       {a.notes ? <p className="mt-2 text-sm">{a.notes}</p> : null}
       {a.status === "started" && a.startDistanceM !== null ? (
         <p className="mt-2 text-xs text-muted-foreground">
-          Checked in {formatDistance(a.startDistanceM)} from the town centre.
+          {t("checkedInFromTheTownCentre", {
+            formatDistance: formatDistance(a.startDistanceM),
+          })}
         </p>
       ) : null}
       {a.status === "cancelled" && a.cancelReason ? (
         <p className="mt-2 text-xs text-muted-foreground">
-          Cancelled: {a.cancelReason}
+          {t("cancelled", { cancelReason: a.cancelReason })}
         </p>
       ) : null}
       {canAct && (a.status === "assigned" || a.status === "started") ? (
@@ -141,9 +148,9 @@ export default function AssignmentCard({
               size="sm"
               onClick={onStart}
               disabled={pending || !isToday}
-              title={isToday ? undefined : "Not until the start date"}
+              title={isToday ? undefined : t("notUntilTheStartDate")}
             >
-              {a.mode === "offline" ? "Start (check in)" : "Start"}
+              {a.mode === "offline" ? t("startCheckIn") : t("start")}
             </Button>
           ) : (
             <Button
@@ -152,12 +159,12 @@ export default function AssignmentCard({
               onClick={onComplete}
               disabled={pending}
             >
-              Mark completed
+              {t("markCompleted")}
             </Button>
           )}
           <Button asChild size="sm" variant="ghost">
             <Link href={`/field/territory/${a.territoryId}`}>
-              Open territory
+              {t("openTerritory")}
             </Link>
           </Button>
         </div>

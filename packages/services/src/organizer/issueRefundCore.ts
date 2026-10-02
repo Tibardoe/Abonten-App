@@ -13,12 +13,12 @@ import type { Database } from "@abonten/types/database.types";
 // Not a "use server" file — it takes an already-constructed Supabase client.
 
 import { logger } from "@abonten/core/logger";
-import { formatMoney } from "@abonten/core/money/formatMoney";
 import { fromMajor, money } from "@abonten/core/money/money";
 import { splitRefundTender } from "@abonten/core/rewards/refundTenderSplit";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import { resolveProviderAccount } from "@abonten/services/payments/providers/registry";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 export type IssueRefundResult = {
@@ -122,7 +122,7 @@ export async function issueRefundCore(
     logger.error(
       `Failed fetching transaction for refund: ${transactionError?.message}`,
     );
-    return { status: 404, message: "Transaction not found" };
+    return { status: 404, message: tr("transactionNotFound") };
   }
 
   const hasCredit = Number(transaction.credit_amount ?? 0) > 0;
@@ -145,26 +145,30 @@ export async function issueRefundCore(
       if (!(await returnCreditShare(transaction, again.creditBackMinor)).ok) {
         return {
           status: 500,
-          message:
-            "Your refund is in progress, but we couldn't return your credit yet. Please try again or contact support.",
+          message: tr("yourRefundIsInProgressBut"),
         };
       }
     }
     return transaction.status === "refunded"
-      ? { status: 200, message: "This payment was already refunded" }
+      ? { status: 200, message: tr("thisPaymentWasAlreadyRefunded") }
       : {
           status: 200,
-          message:
-            "Your refund is already being processed by the payment provider",
+          message: tr("yourRefundIsAlreadyBeingProcessed"),
         };
   }
 
   if (transaction.status !== "successful") {
-    return { status: 400, message: "Only successful payments can be refunded" };
+    return {
+      status: 400,
+      message: tr("onlySuccessfulPaymentsCanBeRefunded"),
+    };
   }
 
   if (!transaction.provider_reference) {
-    return { status: 400, message: "No payment reference on this transaction" };
+    return {
+      status: 400,
+      message: tr("noPaymentReferenceOnThisTransaction"),
+    };
   }
 
   // One request at a time. Paystack is asked for the refund BEFORE
@@ -185,13 +189,12 @@ export async function issueRefundCore(
     logger.error(
       `Failed claiming refund for transaction ${transaction.id}: ${claimError.message}`,
     );
-    return { status: 500, message: "Something went wrong! Try again" };
+    return { status: 500, message: tr("somethingWentWrongTryAgain") };
   }
   if (!claimed) {
     return {
       status: 409,
-      message:
-        "A refund for this payment was requested moments ago. Please wait a couple of minutes before trying again.",
+      message: tr("aRefundForThisPaymentWas"),
     };
   }
 
@@ -232,7 +235,7 @@ export async function issueRefundCore(
       );
       return {
         status: 400,
-        message: "No tickets are linked to this payment",
+        message: tr("noTicketsAreLinkedToThis"),
       };
     }
 
@@ -283,7 +286,7 @@ export async function issueRefundCore(
 
       return {
         status: 500,
-        message: "Refund could not be processed. Please contact support.",
+        message: tr("refundCouldNotBeProcessedPlease"),
       };
     }
   }
@@ -314,8 +317,7 @@ export async function issueRefundCore(
     );
     return {
       status: 500,
-      message:
-        "Refund was requested but couldn't be recorded. Please contact support.",
+      message: tr("refundWasRequestedButCouldnT"),
     };
   }
 
@@ -358,19 +360,22 @@ export async function issueRefundCore(
   // Best-effort — the hold above is already the source of truth; a failed
   // notification never undoes a real refund request. Completion/failure is
   // notified separately by the webhook once Paystack actually confirms it.
-  const creditText = credit.returnedNow
-    ? `${formatMoney(money(split.creditBackMinor, transaction.currency))} is back in your Abonten Credit`
+  // The amount as minor units: the notice says it the way the reader's
+  // language writes money.
+  const creditBack = credit.returnedNow
+    ? { creditMinor: split.creditBackMinor, currency: transaction.currency }
     : null;
   const completed = split.cashBackMinor === 0;
   await createNotificationCore(privileged, {
     userId: transaction.user_id,
     type: completed ? "refund_completed" : "refund_requested",
-    title: completed ? "Refund completed" : "Refund requested",
-    body: completed
-      ? `${creditText ?? "Your refund is complete"}.`
-      : creditText
-        ? `${creditText}. We've requested the rest back to your payment method — you'll be notified once it's completed.`
-        : "We've requested a refund for your cancelled ticket. You'll be notified once it's completed.",
+    notice: completed
+      ? creditBack
+        ? { id: "refund_completed_credit", params: creditBack }
+        : { id: "refund_completed_plain" }
+      : creditBack
+        ? { id: "refund_requested_credit", params: creditBack }
+        : { id: "refund_requested" },
     link: "/transactions",
     data: { kind: "ticket" },
   }).catch((error) => {
@@ -382,15 +387,14 @@ export async function issueRefundCore(
   if (!creditReturned) {
     return {
       status: 500,
-      message:
-        "Your refund was started, but we couldn't return your credit yet. Please try again or contact support.",
+      message: tr("yourRefundWasStartedButWe"),
     };
   }
 
   return {
     status: 200,
     message: completed
-      ? "Refunded to your Abonten Credit"
-      : "Refund requested — you'll be notified once the payment provider confirms it",
+      ? tr("refundedToYourAbontenCredit")
+      : tr("refundRequestedYouLlBeNotified"),
   };
 }

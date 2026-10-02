@@ -1,3 +1,4 @@
+import { useTranslations } from "../i18n";
 import { StatusPill } from "./StatusPill";
 import type { StatusKind } from "./status";
 
@@ -21,6 +22,7 @@ export type TicketStatusBadgeProps = {
   className?: string;
 };
 
+// `label` is a catalog key in the common namespace.
 function resolve(props: TicketStatusBadgeProps): {
   kind: StatusKind;
   label?: string;
@@ -30,27 +32,28 @@ function resolve(props: TicketStatusBadgeProps): {
       return {
         kind: "cancelled",
         label: props.cancelledByOrganizer
-          ? "Cancelled by organizer"
-          : "Cancelled",
+          ? "ticketStatus.cancelledByOrganizer"
+          : "ticketStatus.cancelled",
       };
     case "used":
-      return { kind: "used", label: "Checked in" };
+      return { kind: "used", label: "ticketStatus.checkedIn" };
     case "expired":
       return { kind: "expired" };
     default:
       if (props.eventCancelled)
-        return { kind: "cancelled", label: "Event cancelled" };
+        return { kind: "cancelled", label: "ticketStatus.eventCancelled" };
       if (props.eventEnded) return { kind: "ended" };
       return { kind: "active" };
   }
 }
 
 export function TicketStatusBadge(props: TicketStatusBadgeProps) {
+  const t = useTranslations("common");
   const { kind, label } = resolve(props);
   return (
     <StatusPill
       status={kind}
-      options={{ fallback: kind, label }}
+      options={{ fallback: kind, label: label ? t(label) : undefined }}
       className={props.className}
     />
   );

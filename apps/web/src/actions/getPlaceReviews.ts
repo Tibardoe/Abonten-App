@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -9,10 +10,11 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { PlaceReviewListItem } from "@abonten/types/reviewType";
 
-export async function getPlaceReviews(
+export const getPlaceReviews = withActionLocale(async function getPlaceReviews(
   placeId: string,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<PlaceReviewListItem>> {
@@ -45,7 +47,7 @@ export async function getPlaceReviews(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -64,4 +66,4 @@ export async function getPlaceReviews(
       : null;
 
   return { status: 200, data: page, nextCursor, hasNextPage };
-}
+});

@@ -1,13 +1,17 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import type {
   HighlightGroup,
   HighlightRow,
 } from "@abonten/types/highlightType";
 
-export default async function getUserHighlight(username: string) {
+export default withActionLocale(async function getUserHighlight(
+  username: string,
+) {
   const supabase = await createClient();
 
   const { data: userId, error: userIdError } = await supabase
@@ -19,7 +23,7 @@ export default async function getUserHighlight(username: string) {
   if (!userId || userIdError) {
     logger.error(`Error fetching user id: ${userIdError?.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const { data: highlights, error: highlightsError } = await supabase
@@ -31,7 +35,10 @@ export default async function getUserHighlight(username: string) {
 
   if (highlightsError) {
     logger.error(`Error fetching highlights: ${highlightsError.message}`);
-    return { status: 500, message: "Something went wrong! Try again later" };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongTryAgainLater"),
+    };
   }
 
   // Group by group_id
@@ -52,4 +59,4 @@ export default async function getUserHighlight(username: string) {
     status: 200,
     data: groupedHighlights,
   };
-}
+});

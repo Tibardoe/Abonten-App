@@ -3,6 +3,7 @@
 import { cn } from "@/components/lib/utils";
 import { contentCtaLabel } from "@abonten/core/content/copy";
 import type { ContentPostDocument } from "@abonten/types/contentType";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { IoChevronForward } from "react-icons/io5";
 import { trackContentClick } from "../hooks/useContentTelemetry";
@@ -20,7 +21,8 @@ export default function ContentCtaButton({
   campaignId?: string | null;
   className?: string;
 }) {
-  const cta = contentCtaLabel(post);
+  const tc = useTranslations("core");
+  const cta = contentCtaLabel(tc, post);
   if (!cta.label) return null;
 
   let href: string | null = null;

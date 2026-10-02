@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Stack } from "expo-router";
 
@@ -7,6 +8,8 @@ import { Stack } from "expo-router";
 // /transactions and /transactions/[kind]/[id] routes. Shares the standard
 // secondary-screen <AppHeader> via the layout so neither screen wires one.
 export default function TransactionsLayout() {
+  const t = useTranslations("transactions");
+
   const c = useThemeColors();
   return (
     <Stack
@@ -22,8 +25,8 @@ export default function TransactionsLayout() {
         ),
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Transactions" }} />
-      <Stack.Screen name="[kind]/[id]" options={{ title: "Transaction" }} />
+      <Stack.Screen name="index" options={{ title: t("transactions") }} />
+      <Stack.Screen name="[kind]/[id]" options={{ title: t("transaction") }} />
     </Stack>
   );
 }

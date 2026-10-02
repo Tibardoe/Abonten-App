@@ -1,4 +1,5 @@
 import type { ConversationListItem } from "@abonten/types/messagingType";
+import type { CoreTranslator } from "./i18n/translator";
 
 // Pure transforms over a cached, keyset-paginated inbox (the shape React
 // Query's useInfiniteQuery holds). Framework-free on purpose: web and mobile
@@ -253,4 +254,27 @@ export function conversationPreviewFor(message: {
         ? "[Voice message]"
         : "[Attachment]";
   return (message.content ?? fallback).slice(0, 140);
+}
+
+// What `send_message` stores when a message has no words of its own. They
+// are stored in English (the row is shared by both people in the chat) and
+// worded for whoever is reading the inbox.
+const PREVIEW_SENTINELS: Record<string, string> = {
+  "[Photo]": "messagePreview.photo",
+  "[Voice message]": "messagePreview.voice",
+  "[Attachment]": "messagePreview.attachment",
+};
+
+/**
+ * The inbox line for a conversation: the stored preview with its stand-ins
+ * worded ("Photo"), and "You: …" in front when the reader sent it.
+ */
+export function conversationPreviewText(
+  t: CoreTranslator,
+  preview: string,
+  fromMe = false,
+): string {
+  const key = PREVIEW_SENTINELS[preview];
+  const text = key ? t(key) : preview;
+  return fromMe ? t("messagePreview.you", { preview: text }) : text;
 }

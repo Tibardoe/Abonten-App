@@ -1,19 +1,16 @@
 import { useSession } from "@/auth/SessionProvider";
-import {
-  QUEUED_WRITE_LABEL,
-  QueuedWriteNotice,
-} from "@/components/QueuedWriteNotice";
+import { QueuedWriteNotice } from "@/components/QueuedWriteNotice";
 import { useSubmitReport } from "@/features/reports/useSubmitReport";
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
 import type { SubmitReportBody } from "@abonten/api-client";
+import { reportCategoryLabel, reportTitle } from "@abonten/core/reportCopy";
 import {
   REPORTABLE_CATEGORIES,
-  REPORT_CATEGORY_LABEL,
-  REPORT_TARGET_LABEL,
   type ReportTargetType,
 } from "@abonten/types/adminTypes";
 import { AppText, Button, Field, Icon, Input, Sheet } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import {
   REPORT_ATTACHMENT_MAX_BYTES,
   REPORT_ATTACHMENT_MIME_TYPES,
@@ -63,6 +60,9 @@ export function ReportSheet({
   /** short human description of what's being reported, e.g. the event title */
   label: string;
 }) {
+  const t = useTranslations("common");
+  const tc = useTranslations("core");
+
   const { session } = useSession();
   const categories = REPORTABLE_CATEGORIES[targetType];
   const [category, setCategory] = useState<SubmitReportBody["category"] | null>(
@@ -108,11 +108,11 @@ export function ReportSheet({
     if (
       !(REPORT_ATTACHMENT_MIME_TYPES as readonly string[]).includes(mimeType)
     ) {
-      setError("Attach a JPG, PNG, WebP or PDF file.");
+      setError(t("attachAJpgPngWebpOr"));
       return;
     }
     if (typeof a.size === "number" && a.size > REPORT_ATTACHMENT_MAX_BYTES) {
-      setError("That file is over 10 MB. Attach a smaller one.");
+      setError(t("thatFileIsOver10Mb"));
       return;
     }
     setAttachment({
@@ -151,7 +151,7 @@ export function ReportSheet({
   async function submit() {
     setError(null);
     if (!category) {
-      setError("Pick a reason.");
+      setError(t("pickAReason"));
       return;
     }
 
@@ -159,7 +159,7 @@ export function ReportSheet({
     if (attachment) {
       const userId = session?.user.id;
       if (!userId) {
-        setError("Sign in to attach a file.");
+        setError(t("signInToAttachAFile"));
         return;
       }
       setUploading(true);
@@ -167,7 +167,7 @@ export function ReportSheet({
         uploaded = await uploadAttachment(userId, attachment);
       } catch {
         setUploading(false);
-        setError("Couldn't upload that file. Try submitting without it.");
+        setError(t("couldnTUploadThatFileTry"));
         return;
       }
       setUploading(false);
@@ -184,7 +184,7 @@ export function ReportSheet({
       {
         onSuccess: () => setSubmitted(true),
         onError: (e) =>
-          setError(e instanceof Error ? e.message : "Something went wrong."),
+          setError(e instanceof Error ? e.message : t("somethingWentWrong2")),
       },
     );
   }
@@ -195,10 +195,10 @@ export function ReportSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={`Report this ${REPORT_TARGET_LABEL[targetType]}`}
+      title={reportTitle(tc, targetType)}
       footer={
         submitted ? (
-          <Button title="Done" onPress={onClose} />
+          <Button title={t("done")} onPress={onClose} />
         ) : (
           // The error belongs beside the button that triggers it. It used to
           // render at the end of the scrolling content, below the attachment
@@ -217,12 +217,12 @@ export function ReportSheet({
             <Button
               title={
                 uploading
-                  ? "Uploading…"
+                  ? t("uploading3")
                   : report.isPaused
-                    ? QUEUED_WRITE_LABEL
+                    ? t("waitingForConnection")
                     : report.isPending
-                      ? "Submitting…"
-                      : "Submit report"
+                      ? t("submitting2")
+                      : t("submitReport")
               }
               onPress={submit}
               disabled={busy}
@@ -235,10 +235,10 @@ export function ReportSheet({
         <View className="items-center gap-3 py-4">
           <Icon name="checkmark-circle" size={44} tone="success" />
           <AppText variant="bodyStrong" className="text-center">
-            Report submitted
+            {t("reportSubmitted")}
           </AppText>
           <AppText variant="muted" className="text-center">
-            Thanks — our team will take a look.
+            {t("thanksOurTeamWillTakeA")}
           </AppText>
         </View>
       ) : (
@@ -252,9 +252,9 @@ export function ReportSheet({
           </View>
 
           <View className="gap-2">
-            <AppText variant="label">Why are you reporting this?</AppText>
+            <AppText variant="label">{t("whyAreYouReportingThis")}</AppText>
             <AppText variant="caption" className="-mt-1">
-              Pick the one that fits best.
+              {t("pickTheOneThatFitsBest")}
             </AppText>
             <View className="overflow-hidden rounded-xl border border-border">
               {categories.map((c, i) => {
@@ -285,7 +285,7 @@ export function ReportSheet({
                       variant="body"
                       className={on ? "font-semibold" : undefined}
                     >
-                      {REPORT_CATEGORY_LABEL[c]}
+                      {reportCategoryLabel(tc, c)}
                     </AppText>
                   </Pressable>
                 );
@@ -293,11 +293,11 @@ export function ReportSheet({
             </View>
           </View>
 
-          <Field label="Anything else? (optional)">
+          <Field label={t("anythingElseOptional")}>
             <Input
               value={detail}
               onChangeText={setDetail}
-              placeholder="Add any detail that helps our team"
+              placeholder={t("addAnyDetailThatHelpsOur")}
               multiline
               numberOfLines={3}
               maxLength={2000}
@@ -306,7 +306,7 @@ export function ReportSheet({
           </Field>
 
           <View className="gap-2">
-            <AppText variant="label">Evidence (optional)</AppText>
+            <AppText variant="label">{t("evidenceOptional")}</AppText>
             {attachment ? (
               <View className="flex-row items-center gap-2 rounded-xl border border-border p-3">
                 <Icon
@@ -331,7 +331,7 @@ export function ReportSheet({
               </View>
             ) : (
               <Button
-                title="Attach a screenshot or PDF"
+                title={t("attachAScreenshotOrPdf")}
                 variant="outline"
                 size="sm"
                 leftIcon="attach"

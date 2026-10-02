@@ -4,6 +4,10 @@ import { paymentChoiceFromBody } from "@/app/api/mobile/_lib/paymentChoiceBody";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/createPromotionPaymentAttemptCore";
 
 // POST /api/mobile/checkout/promotion-attempt
@@ -18,6 +22,7 @@ import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/cr
 // it covers everything `data.paystack` is null (no paymentMethodId needed)
 // and `data.verification` already holds the outcome.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -43,7 +48,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message: "eventPromotionCheckoutId and paymentMethodId are required",
+        message: tr("eventpromotioncheckoutidAndPaymentmethodidAreReq"),
       });
     }
 
@@ -59,6 +64,9 @@ export async function POST(req: Request) {
     return fromActionResult(withLegacyPaystackField(result));
   } catch (error) {
     logger.error("mobile POST /checkout/promotion-attempt failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

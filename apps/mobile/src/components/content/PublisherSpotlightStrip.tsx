@@ -1,6 +1,8 @@
 import { usePublisherSpotlights } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
+import { formatCount } from "@abonten/core/i18n/format";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
@@ -16,6 +18,9 @@ export function PublisherSpotlightStrip({
   publisherId: string | undefined;
   className?: string;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("spotlight");
+
   const router = useRouter();
   const { program } = useContentProgram();
   const q = usePublisherSpotlights(
@@ -30,7 +35,7 @@ export function PublisherSpotlightStrip({
   return (
     <View className={["gap-2", className ?? ""].join(" ")}>
       <AppText variant="sectionHeading" className="px-4">
-        Spotlight
+        {t("spotlight")}
       </AppText>
       <ScrollView
         horizontal
@@ -48,7 +53,7 @@ export function PublisherSpotlightStrip({
               key={post.id}
               onPress={() => router.push(`/(app)/spotlight/${post.id}`)}
               accessibilityRole="button"
-              accessibilityLabel={post.caption?.slice(0, 80) || "Spotlight"}
+              accessibilityLabel={post.caption?.slice(0, 80) || t("spotlight")}
               className="h-44 w-28 overflow-hidden rounded-xl bg-muted"
             >
               {thumb ? (
@@ -64,7 +69,7 @@ export function PublisherSpotlightStrip({
               >
                 <Icon name="play" size={12} color="#fff" />
                 <AppText className="text-[11px] font-semibold text-white">
-                  {post.counts.views.toLocaleString()}
+                  {formatCount(post.counts.views, locale)}
                 </AppText>
               </View>
             </Pressable>

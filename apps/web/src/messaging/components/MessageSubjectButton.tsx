@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/useToast";
 import { useOpenConversation } from "@/messaging/hooks/useOpenConversation";
 import type { OpenConversationInput } from "@abonten/types/messagingType";
 import { MessageSquare } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // "Message organizer" / "Message this place" on a public detail page. Hidden
 // for signed-out visitors and for the owner (openConversation would reject
@@ -22,6 +23,8 @@ export function MessageSubjectButton({
   label: string;
   className?: string;
 }) {
+  const t = useTranslations("messaging");
+
   const { data: user } = useCurrentUser();
   const toast = useToast();
   const open = useOpenConversation();
@@ -38,10 +41,10 @@ export function MessageSubjectButton({
         open.mutate(input, {
           onSuccess: (res) => {
             if (res.status !== 200) {
-              toast.error(res.message ?? "Couldn't start a conversation.");
+              toast.error(res.message ?? t("couldnTStartAConversation"));
             }
           },
-          onError: () => toast.error("Couldn't start a conversation."),
+          onError: () => toast.error(t("couldnTStartAConversation")),
         })
       }
     >

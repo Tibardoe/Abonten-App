@@ -1,6 +1,8 @@
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
+import { type Notice, renderNotice } from "@abonten/core/notifications/notices";
 import { isSystemDbMessage } from "@abonten/core/userFacingError";
+import { translateServerText } from "@abonten/i18n/server";
 import type {
   FieldOpsAssignment,
   FieldOpsAssignmentMode,
@@ -15,7 +17,11 @@ import type {
   GeoJsonPolygon,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import { createNotificationCore } from "../../notifications/createNotification";
+import { requestLocale, tr } from "../../i18n/requestLocale";
+import {
+  createNotificationCore,
+  notificationWordsFor,
+} from "../../notifications/createNotification";
 
 // Row shapes, mappers and small helpers shared by the member, lead and admin
 // Field Ops services. Nothing here checks authorization: every core resolves
@@ -45,12 +51,16 @@ export function dbErr(
         : error.code === "P0002"
           ? 404
           : 400;
-  // Postgres's own wording (constraint names, SQL) stays in the log.
+  // Postgres's own wording (constraint names, SQL) stays in the log; a
+  // reason the database raised for a person is worded in their language.
   return {
     status,
     message: isSystemDbMessage(error.message)
       ? friendly
-      : `${friendly}: ${error.message}`,
+      : tr("failedWithDetail", {
+          what: friendly,
+          detail: translateServerText(requestLocale(), error.message),
+        }),
   };
 }
 
@@ -328,11 +338,20 @@ export async function notifyFieldOps(
   userIds: string[],
   notice: {
     type: string;
-    title: string;
-    body?: string | null;
     /** /field route the notice opens. */
     route: string;
-  },
+  } & (
+    | {
+        // Words a person typed (a lead's announcement): sent as written.
+        title: string;
+        body?: string | null;
+      }
+    | {
+        // A registry notice (@abonten/core/notifications/notices): worded
+        // for each recipient in their own language.
+        template: Notice;
+      }
+  ),
 ): Promise<void> {
   const recipients = [...new Set(userIds.filter(Boolean))];
   if (recipients.length === 0) return;
@@ -345,25 +364,57 @@ export async function notifyFieldOps(
   await Promise.all(
     recipients.map(async (userId) => {
       try {
+        const data = {
+          kind: "fieldops",
+          fieldOpsRoute: notice.route,
+        } as const;
         if (push) {
-          await createNotificationCore(supabase, {
-            userId,
-            type: notice.type,
-            title: notice.title,
-            body: notice.body ?? null,
-            link: notice.route,
-            data: { kind: "fieldops", fieldOpsRoute: notice.route },
-          });
-        } else {
-          await supabase.from("notification").insert({
-            user_id: userId,
-            type: notice.type,
-            title: notice.title,
-            body: notice.body ?? null,
-            link: notice.route,
-            data: { kind: "fieldops", fieldOpsRoute: notice.route },
-          });
+          await createNotificationCore(
+            supabase,
+            "template" in notice
+              ? {
+                  userId,
+                  type: notice.type,
+                  notice: notice.template,
+                  link: notice.route,
+                  data,
+                }
+              : {
+                  userId,
+                  type: notice.type,
+                  title: notice.title,
+                  body: notice.body ?? null,
+                  link: notice.route,
+                  data,
+                },
+          );
+          return;
         }
+        // In-app only: the same words, without the push.
+        let title: string;
+        let body: string | null;
+        let rowData: Record<string, unknown> = data;
+        if ("template" in notice) {
+          const words = await notificationWordsFor(userId);
+          const rendered = renderNotice(
+            { t: words.core, locale: words.locale },
+            notice.template,
+          );
+          title = rendered?.title ?? "";
+          body = rendered?.body ?? null;
+          rowData = { ...data, notice: notice.template };
+        } else {
+          title = notice.title;
+          body = notice.body ?? null;
+        }
+        await supabase.from("notification").insert({
+          user_id: userId,
+          type: notice.type,
+          title,
+          body,
+          link: notice.route,
+          data: rowData as never,
+        });
       } catch (err) {
         logger.error(`fieldOps notify ${notice.type} failed: ${err}`);
       }

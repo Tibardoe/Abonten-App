@@ -2,6 +2,7 @@ import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of getUserPendingTicketCheckouts, lifted verbatim so the
 // mobile API route (`/api/mobile/checkout/pending`) and the "use server"
@@ -91,7 +92,7 @@ export async function getUserPendingTicketCheckoutsCore(
 
   if (error) {
     logger.error(`Failed fetching pending checkouts: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const rows = (data ?? []) as unknown as PendingCheckoutRow[];

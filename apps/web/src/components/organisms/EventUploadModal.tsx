@@ -9,6 +9,7 @@ import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -69,6 +70,8 @@ export default function EventUploadModal({
   preselectedPlaceAddress,
   preselectedPlaceName,
 }: EventUploadModalProps) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -107,7 +110,7 @@ export default function EventUploadModal({
     openFilePicker: openReplaceFilePicker,
     handleFileChange: handleReplaceFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your event flyer.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
     onInvalidFile: (message) => toast.error(message),
     onSelect: () => {
@@ -158,10 +161,10 @@ export default function EventUploadModal({
   } = eventUploadForm;
 
   const uploadButtonLabel = isResolvingLocation
-    ? "Resolving location..."
+    ? t("resolvingLocation")
     : isUploading
-      ? "Uploading..."
-      : "Upload";
+      ? t("uploading2")
+      : t("upload");
 
   const requestClose = () => {
     if (hasMeaningfulContent) {
@@ -195,7 +198,7 @@ export default function EventUploadModal({
       <ModalShell
         open
         onClose={requestClose}
-        title="Create Event"
+        title={t("createEvent")}
         className="bg-background md:bg-transparent"
       >
         {/* px-4 on mobile keeps form content, cards, and controls off the
@@ -217,7 +220,7 @@ export default function EventUploadModal({
                   <UploadStepHeader
                     onBack={requestClose}
                     primaryAction={{
-                      label: "Next",
+                      label: t("next"),
                       onClick: () => setStep(2),
                       disabled: isUploading,
                     }}
@@ -226,7 +229,7 @@ export default function EventUploadModal({
                   <div className="relative flex-1 min-h-0 w-full md:w-[40%] mx-auto">
                     <ImagePreviewPane
                       src={effectivePreview}
-                      alt="Selected flyer"
+                      alt={t("selectedFlyer")}
                       className="w-full h-full"
                       onCropToggle={() => setShowCrop(true)}
                     />
@@ -235,7 +238,7 @@ export default function EventUploadModal({
                       onClick={openReplaceFilePicker}
                       className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full"
                     >
-                      Change Flyer
+                      {t("changeFlyer")}
                     </button>
                   </div>
                 </>
@@ -247,7 +250,7 @@ export default function EventUploadModal({
             <>
               <UploadStepHeader
                 onBack={goBackToPreview}
-                title="Create Event"
+                title={t("createEvent")}
                 primaryAction={{
                   label: uploadButtonLabel,
                   onClick: handleSubmit(onSubmit),
@@ -259,7 +262,7 @@ export default function EventUploadModal({
                 <div className="relative w-full md:w-1/2 aspect-square md:aspect-auto md:h-full mx-auto md:mx-0 md:rounded-bl-2xl overflow-hidden shrink-0">
                   <ImagePreviewPane
                     src={effectivePreview}
-                    alt="Selected flyer"
+                    alt={t("selectedFlyer")}
                     className="w-full h-full"
                   />
                   <button
@@ -267,7 +270,7 @@ export default function EventUploadModal({
                     onClick={openReplaceFilePicker}
                     className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full"
                   >
-                    Change Flyer
+                    {t("changeFlyer")}
                   </button>
                 </div>
 
@@ -291,7 +294,7 @@ export default function EventUploadModal({
 
       {showCancelConfirm && (
         <SaveDraftConfirmDialog
-          message="You have unsaved changes to this event."
+          message={t("youHaveUnsavedChangesToThis")}
           isSaving={isSavingDraft}
           onSaveDraft={handleSaveDraftAndClose}
           onDiscard={() => {

@@ -6,6 +6,7 @@ import {
 import { useQueryView } from "@/lib/useQueryView";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon, Spinner } from "@abonten/ui-native";
+import { translatorFor, useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo } from "react";
 import { View } from "react-native";
@@ -28,15 +29,15 @@ import { View } from "react-native";
 const TAIL = 6;
 
 function previewLine(m: MessageRow): string | null {
-  if (m.deleted_at) return "This message was deleted";
+  if (m.deleted_at) return translatorFor("messaging")("thisMessageWasDeleted");
   if (m.content) return m.content;
   switch (m.message_type) {
     case "image":
-      return "Photo";
+      return translatorFor("messaging")("photo");
     case "audio":
-      return "Voice message";
+      return translatorFor("messaging")("voiceMessage2");
     case "file":
-      return "Attachment";
+      return translatorFor("messaging")("attachment");
     default:
       return null;
   }
@@ -57,6 +58,8 @@ export function PeekThread({
   conversationId: string;
   currentUserId: string | undefined;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const q = useConversationMessages(conversationId);
   const rows = flattenMessages(q.data?.pages);
@@ -83,10 +86,10 @@ export function PeekThread({
         ) : (
           <AppText variant="meta" tone="muted">
             {view.kind === "offline"
-              ? "You're offline — not saved on this phone yet"
+              ? t("youReOfflineNotSavedOn")
               : view.kind === "error"
-                ? "Couldn't load this conversation"
-                : "No messages yet"}
+                ? t("couldnTLoadThisConversation")
+                : t("noMessagesYet")}
           </AppText>
         )}
       </View>

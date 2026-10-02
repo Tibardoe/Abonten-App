@@ -2,9 +2,11 @@
 
 import checkInTicket from "@/actions/checkInTicket";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { AttendanceRow as Attendee } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { FiCheck } from "react-icons/fi";
 
 export default function AttendanceListView({
@@ -43,6 +45,9 @@ function AttendanceRow({
   attendee: Attendee;
   queryKey: unknown[];
 }) {
+  const t = useTranslations("events");
+  const tc = useTranslations("core");
+
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -51,7 +56,7 @@ function AttendanceRow({
       if (!attendee.ticket_id) {
         return Promise.resolve({
           status: 400,
-          message: "No ticket to check in",
+          message: t("noTicketToCheckIn"),
         });
       }
       return checkInTicket(attendee.ticket_id, checkedIn);
@@ -71,16 +76,16 @@ function AttendanceRow({
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm text-muted-foreground">
-            {attendee.ticket_type?.type}
+            {ticketTypeLabel(tc, attendee.ticket_type?.type)}
           </span>
 
           {isCancelled ? (
             <span className="px-2 py-1 rounded-full text-xs font-semibold bg-destructive/10 text-destructive">
-              Cancelled
+              {t("cancelled")}
             </span>
           ) : (
             <span className="px-2 py-1 rounded-full text-xs font-semibold bg-success/10 text-success">
-              Active
+              {t("active")}
             </span>
           )}
         </div>
@@ -101,7 +106,7 @@ function AttendanceRow({
               onClick={() => mutate(false)}
               className="flex items-center gap-1.5 text-xs font-semibold text-success hover:underline disabled:opacity-50"
             >
-              <FiCheck /> Checked in — undo
+              <FiCheck /> {t("checkedInUndo")}
             </button>
           ) : (
             <button
@@ -110,7 +115,7 @@ function AttendanceRow({
               onClick={() => mutate(true)}
               className="px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-60"
             >
-              {isPending ? "Checking in..." : "Check in"}
+              {isPending ? t("checkingIn") : t("checkIn")}
             </button>
           )}
         </div>

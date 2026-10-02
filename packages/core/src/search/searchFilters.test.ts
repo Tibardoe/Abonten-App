@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { i18nEn } from "../i18n/testTranslator";
 import {
   EMPTY_SEARCH_FILTERS,
   type SearchFilters,
@@ -175,12 +176,14 @@ describe("clearing", () => {
 
 describe("chips", () => {
   it("labels active filters, with the location for distance", () => {
-    expect(describeSearchFilters(full, "places", "Osu", "GHS")).toEqual([
-      { key: "radiusKm", label: "Within 10 km of Osu" },
-      { key: "placeCategoryId", label: "Restaurants" },
-      { key: "openNow", label: "Open now" },
-      { key: "minRating", label: "4+ stars" },
-    ]);
+    expect(describeSearchFilters(i18nEn, full, "places", "Osu", "GHS")).toEqual(
+      [
+        { key: "radiusKm", label: "Within 10 km of Osu" },
+        { key: "placeCategoryId", label: "Restaurants" },
+        { key: "openNow", label: "Open now" },
+        { key: "minRating", label: "4+ stars" },
+      ],
+    );
   });
 });
 

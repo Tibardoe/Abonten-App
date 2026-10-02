@@ -1,3 +1,6 @@
+import { useTranslations } from "next-intl";
 export default function Security() {
-  return <div>Security</div>;
+  const t = useTranslations("settings");
+
+  return <div>{t("securityTitle")}</div>;
 }

@@ -9,6 +9,7 @@ import type {
   FollowTargetKind,
 } from "@abonten/types/contentType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { dataOf, messageOf } from "../lib/result";
 
 export function useFollow(
@@ -18,6 +19,8 @@ export function useFollow(
   /** Already known from a post document: skip the status request. */
   known?: boolean,
 ) {
+  const t = useTranslations("spotlight");
+
   const { data: user } = useCurrentUser();
   const qc = useQueryClient();
   const toast = useToast();
@@ -56,7 +59,7 @@ export function useFollow(
       const data = dataOf(res);
       if (!data) {
         qc.setQueryData(key, context?.previous);
-        toast.error(messageOf(res, "Couldn't update this follow."));
+        toast.error(messageOf(res, t("couldnTUpdateThisFollow")));
         return;
       }
       qc.setQueryData<FollowStatus>(key, data);
@@ -65,7 +68,7 @@ export function useFollow(
     },
     onError: (_e, _following, context) => {
       qc.setQueryData(key, context?.previous);
-      toast.error("Couldn't update this follow. Please try again.");
+      toast.error(t("couldnTUpdateThisFollowPlease"));
     },
   });
 

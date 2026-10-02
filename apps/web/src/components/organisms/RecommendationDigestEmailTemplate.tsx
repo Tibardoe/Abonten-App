@@ -1,3 +1,5 @@
+import type { EmailWords } from "@/lib/email/emailWords";
+import { richEmailText } from "@/lib/email/emailWords";
 import { Column, Img, Link, Row, Section, Text } from "@react-email/components";
 import {
   EmailButton,
@@ -22,7 +24,7 @@ export type RecommendationDigestEmailItem = {
 };
 
 interface RecommendationDigestEmailProps {
-  name: string | null;
+  words: EmailWords;
   headline: string;
   items: RecommendationDigestEmailItem[];
   forYouUrl: string;
@@ -32,28 +34,28 @@ interface RecommendationDigestEmailProps {
 
 /**
  * The recommendation digest by email: the same picks as the push, for people
- * who switched these emails on themselves (legal item G1 gates the switch).
- * Every pick says why it is there, and the footer says why the email came
- * and how to stop it (plus List-Unsubscribe headers from the sender). Built
- * from EmailParts like the other Abonten emails.
+ * who switched these emails on themselves (legal item G1 gates the switch),
+ * in their language. Every pick says why it is there, and the footer says
+ * why the email came and how to stop it (plus List-Unsubscribe headers from
+ * the sender). Built from EmailParts like the other Abonten emails.
  */
 export default function RecommendationDigestEmailTemplate({
-  name,
+  words,
   headline,
   items,
   forYouUrl,
   settingsUrl,
   unsubscribeUrl,
 }: RecommendationDigestEmailProps) {
+  const { t, locale, greeting } = words;
   return (
     <EmailShell
+      locale={locale}
       preview={items.map((i) => i.title).join(" · ")}
       heading={headline}
       intro={
         <EmailIntro>
-          Hi {name ?? "there"}, here {items.length === 1 ? "is" : "are"}{" "}
-          {items.length === 1 ? "a pick" : `${items.length} picks`} based on
-          what you asked to hear about.
+          {t("digest.intro", { greeting, count: items.length })}
         </EmailIntro>
       }
     >
@@ -112,23 +114,23 @@ export default function RecommendationDigestEmailTemplate({
         ))}
       </EmailSection>
 
-      <EmailButton href={forYouUrl}>See all your picks</EmailButton>
+      <EmailButton href={forYouUrl}>{t("digest.seeAll")}</EmailButton>
 
-      <EmailFooter>
+      <EmailFooter words={words}>
+        <EmailFinePrint>{t("digest.why")}</EmailFinePrint>
         <EmailFinePrint>
-          You&apos;re getting this because you turned on emails about picks and
-          alerts in your Abonten Hub notification settings. At most one a day.
-        </EmailFinePrint>
-        <EmailFinePrint>
-          Don&apos;t want these emails?{" "}
-          <Link href={unsubscribeUrl} style={emailFinePrintLink}>
-            Unsubscribe
-          </Link>{" "}
-          or{" "}
-          <Link href={settingsUrl} style={emailFinePrintLink}>
-            change your settings
-          </Link>
-          . Tickets, payments and account emails aren&apos;t affected.
+          {richEmailText(t("digest.unsubscribe"), {
+            unsubscribe: (chunk) => (
+              <Link href={unsubscribeUrl} style={emailFinePrintLink}>
+                {chunk}
+              </Link>
+            ),
+            settings: (chunk) => (
+              <Link href={settingsUrl} style={emailFinePrintLink}>
+                {chunk}
+              </Link>
+            ),
+          })}
         </EmailFinePrint>
       </EmailFooter>
     </EmailShell>

@@ -2,6 +2,7 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   grantGoodwillCredit,
   requestCreditAdjustment,
@@ -71,7 +72,7 @@ export function FreezePanel({
               userId,
               status: next,
               reason: reason.trim(),
-            });
+            }).catch(actionUnreachable);
             setMsg(res.message ?? null);
             if (res.status === 200) {
               setReason("");
@@ -145,7 +146,7 @@ export function GoodwillPanel({
               amount: Number(amount),
               reason: reason.trim(),
               requestId,
-            });
+            }).catch(actionUnreachable);
             setMsg(res.message ?? null);
             if (res.status === 200) {
               setAmount("");
@@ -276,7 +277,7 @@ export function AdjustmentPanel({
                   reason: reason.trim(),
                   userLabel: label.trim() || undefined,
                   allowNegative: direction === "debit" && allowNegative,
-                });
+                }).catch(actionUnreachable);
                 setMsg(res.message ?? null);
                 setConfirm(false);
                 if (res.status === 200 || res.status === 202) {
@@ -343,7 +344,7 @@ export function ReferralCodePanel({
               userId,
               disabled: !disabled,
               reason: reason.trim(),
-            });
+            }).catch(actionUnreachable);
             setMsg(res.message ?? null);
             if (res.status === 200) {
               setReason("");

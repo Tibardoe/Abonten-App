@@ -8,7 +8,6 @@ import { useRequireSignIn } from "@/features/content/contentLinks";
 import { hapticLight } from "@/lib/haptics";
 import { useIsOnline } from "@/lib/network";
 import type { CachedComment } from "@abonten/core/content/commentCache";
-import { countLabel } from "@abonten/core/content/copy";
 import { MAX_COMMENT_LENGTH } from "@abonten/core/content/limits";
 import {
   AppText,
@@ -17,6 +16,7 @@ import {
   useKeyboardLift,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -78,6 +78,8 @@ export function SpotlightCommentsPanel({
   commentCount: number;
   onClose: () => void;
 }) {
+  const t = useTranslations("spotlight");
+
   const toast = useToast();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -121,7 +123,7 @@ export function SpotlightCommentsPanel({
     if (!text) return;
     if (!requireSignIn()) return;
     if (!online) {
-      toast.info("You're offline. Your comment is still here to send later.");
+      toast.info(t("youReOfflineYourCommentIs"));
       return;
     }
     hapticLight();
@@ -204,14 +206,14 @@ export function SpotlightCommentsPanel({
                 className="flex-1 text-center"
               >
                 {commentCount > 0
-                  ? countLabel(commentCount, "comment")
-                  : "Comments"}
+                  ? t("commentsCount", { count: commentCount })
+                  : t("comments")}
               </AppText>
               <Pressable
                 onPress={close}
                 hitSlop={10}
                 accessibilityRole="button"
-                accessibilityLabel="Close comments"
+                accessibilityLabel={t("closeComments")}
                 className="h-9 w-9 items-center justify-center rounded-full active:bg-muted"
               >
                 <Icon name="close" size={22} tone="muted" />
@@ -261,19 +263,19 @@ export function SpotlightCommentsPanel({
               <View className="items-center gap-2 py-10">
                 <Icon name="cloud-offline-outline" size={28} tone="muted" />
                 <AppText variant="muted" className="text-center">
-                  You're offline. Comments will load when you're back online.
+                  {t("youReOfflineCommentsWillLoad")}
                 </AppText>
               </View>
             ) : top.isError ? (
               <View className="items-center gap-2 py-10">
-                <AppText variant="muted">Couldn't load comments.</AppText>
+                <AppText variant="muted">{t("couldnTLoadComments")}</AppText>
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => top.refetch()}
                   hitSlop={8}
                 >
                   <AppText tone="brand" className="font-semibold">
-                    Retry
+                    {t("retry")}
                   </AppText>
                 </Pressable>
               </View>
@@ -286,8 +288,8 @@ export function SpotlightCommentsPanel({
                 />
                 <AppText variant="muted" className="text-center">
                   {commentsAllowed
-                    ? "No comments yet. Start the conversation."
-                    : "Comments are turned off."}
+                    ? t("noCommentsYetStartTheConversation")
+                    : t("commentsAreTurnedOff")}
                 </AppText>
               </View>
             )
@@ -307,16 +309,18 @@ export function SpotlightCommentsPanel({
             {replyTo ? (
               <View className="flex-row items-center justify-between px-1">
                 <AppText variant="meta" numberOfLines={1} className="flex-1">
-                  Replying to {replyTo.author.username ?? "a comment"}
+                  {replyTo.author.username
+                    ? t("replyingToUser", { name: replyTo.author.username })
+                    : t("replyingToComment")}
                 </AppText>
                 <Pressable
                   onPress={() => setReplyTo(null)}
                   hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel="Cancel reply"
+                  accessibilityLabel={t("cancelReply")}
                 >
                   <AppText variant="meta" tone="brand">
-                    Cancel
+                    {t("cancel")}
                   </AppText>
                 </Pressable>
               </View>
@@ -328,8 +332,8 @@ export function SpotlightCommentsPanel({
                 onChangeText={setBody}
                 maxLength={MAX_COMMENT_LENGTH}
                 multiline
-                placeholder="Add a comment…"
-                accessibilityLabel="Write a comment"
+                placeholder={t("addAComment")}
+                accessibilityLabel={t("writeAComment")}
                 placeholderTextColor={c["muted-foreground"]}
                 className="max-h-28 min-h-[44px] flex-1 rounded-3xl bg-muted px-4 py-2.5 text-[15px] text-foreground"
               />
@@ -337,7 +341,7 @@ export function SpotlightCommentsPanel({
                 onPress={send}
                 disabled={!body.trim()}
                 accessibilityRole="button"
-                accessibilityLabel="Post comment"
+                accessibilityLabel={t("postComment")}
                 accessibilityState={{ disabled: !body.trim() }}
                 className={[
                   "h-11 w-11 items-center justify-center rounded-full",

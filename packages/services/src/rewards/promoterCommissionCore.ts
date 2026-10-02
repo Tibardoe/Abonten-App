@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { EventPromoterCommission } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { checkRateLimit } from "../security/rateLimit";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getRewardsProgramCore } from "./rewardsProgramQuery";
@@ -46,14 +47,18 @@ async function ownedEvent(
     .maybeSingle();
   if (error) {
     logger.error(`promoter commission: event read failed: ${error.message}`);
-    return { ok: false, status: 500, message: "Something went wrong!" };
+    return {
+      ok: false,
+      status: 500,
+      message: tr("somethingWentWrong"),
+    };
   }
-  if (!data) return { ok: false, status: 404, message: "Event not found." };
+  if (!data) return { ok: false, status: 404, message: tr("eventNotFound2") };
   if (data.organizer_id !== userId) {
     return {
       ok: false,
       status: 403,
-      message: "Only the event's organizer can change this.",
+      message: tr("onlyTheEventSOrganizerCan"),
     };
   }
   return { ok: true, status: String(data.status), currency: data.currency };
@@ -65,8 +70,8 @@ export async function getEventPromoterCommissionCore(
   userId: string,
   eventId: string,
 ): Promise<Envelope<EventPromoterCommission>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
-  if (!eventId) return { status: 400, message: "Event is required." };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
+  if (!eventId) return { status: 400, message: tr("eventIsRequired") };
 
   const owned = await ownedEvent(userId, eventId);
   if (!owned.ok) return { status: owned.status, message: owned.message };
@@ -87,7 +92,10 @@ export async function getEventPromoterCommissionCore(
         offer.error?.message ?? stats.error?.message ?? program.message
       }`,
     );
-    return { status: 500, message: "Couldn't load the promoter commission." };
+    return {
+      status: 500,
+      message: tr("couldnTLoadThePromoterCommission"),
+    };
   }
 
   const terms = program.data.enabled ? program.data.promoterCommission : null;
@@ -121,8 +129,8 @@ export async function setEventPromoterCommissionCore(
   userId: string,
   input: { eventId: string; rateBps: number | null },
 ): Promise<Envelope<EventPromoterCommission>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
-  if (!input?.eventId) return { status: 400, message: "Event is required." };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
+  if (!input?.eventId) return { status: 400, message: tr("eventIsRequired") };
 
   const allowed = await checkRateLimit(
     `promoter-commission:${userId}`,
@@ -132,7 +140,7 @@ export async function setEventPromoterCommissionCore(
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many changes. Try again in a little while.",
+      message: tr("tooManyChangesTryAgainIn"),
     };
   }
 
@@ -152,7 +160,7 @@ export async function setEventPromoterCommissionCore(
       .eq("event_id", input.eventId);
     if (error) {
       logger.error(`Stopping promoter commission failed: ${error.message}`);
-      return { status: 500, message: "Couldn't stop the commission." };
+      return { status: 500, message: tr("couldnTStopTheCommission") };
     }
     return getEventPromoterCommissionCore(supabase, userId, input.eventId);
   }
@@ -160,7 +168,7 @@ export async function setEventPromoterCommissionCore(
   if (owned.status === "canceled" || owned.status === "completed") {
     return {
       status: 409,
-      message: "This event isn't selling tickets any more.",
+      message: tr("thisEventIsnTSellingTickets"),
     };
   }
 
@@ -169,7 +177,7 @@ export async function setEventPromoterCommissionCore(
   if (!terms) {
     return {
       status: 409,
-      message: "Promoter commissions aren't available yet.",
+      message: tr("promoterCommissionsArenTAvailableYet"),
     };
   }
 
@@ -181,7 +189,10 @@ export async function setEventPromoterCommissionCore(
   ) {
     return {
       status: 400,
-      message: `Choose a commission between ${terms.minRateBps / 100}% and ${terms.maxRateBps / 100}%.`,
+      message: tr("chooseACommissionBetweenAnd", {
+        min: terms.minRateBps / 100,
+        max: terms.maxRateBps / 100,
+      }),
     };
   }
 
@@ -197,7 +208,7 @@ export async function setEventPromoterCommissionCore(
   );
   if (error) {
     logger.error(`Saving promoter commission failed: ${error.message}`);
-    return { status: 500, message: "Couldn't save the commission." };
+    return { status: 500, message: tr("couldnTSaveTheCommission") };
   }
   return getEventPromoterCommissionCore(supabase, userId, input.eventId);
 }

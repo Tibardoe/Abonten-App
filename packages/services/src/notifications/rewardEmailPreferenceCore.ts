@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import type { RewardEmailPreference } from "@abonten/types/rewards";
+import { tr } from "../i18n/requestLocale";
 import {
   deriveSigningKey,
   hmacBase64Url,
@@ -59,7 +60,10 @@ async function readPreference(
   ]);
   if (pref.error) {
     logger.error(`notification_preference read failed: ${pref.error.message}`);
-    return { status: 500, message: "Couldn't load your email settings." };
+    return {
+      status: 500,
+      message: tr("couldnTLoadYourEmailSettings"),
+    };
   }
   return {
     status: 200,
@@ -86,21 +90,24 @@ async function writePreference(
     );
   if (error) {
     logger.error(`notification_preference write failed: ${error.message}`);
-    return { status: 500, message: "Couldn't save your email settings." };
+    return {
+      status: 500,
+      message: tr("couldnTSaveYourEmailSettings"),
+    };
   }
   const res = await readPreference(userId);
   return {
     ...res,
     message: enabled
-      ? "You'll get emails about your credit."
-      : "You won't get emails about your credit.",
+      ? tr("youLlGetEmailsAboutYour")
+      : tr("youWonTGetEmailsAbout2"),
   };
 }
 
 export async function getRewardEmailPreferenceCore(
   userId: string,
 ): Promise<Envelope<RewardEmailPreference>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   return readPreference(userId);
 }
 
@@ -108,9 +115,9 @@ export async function setRewardEmailPreferenceCore(
   userId: string,
   input: { enabled: unknown },
 ): Promise<Envelope<RewardEmailPreference>> {
-  if (!userId) return { status: 401, message: "User not logged in" };
+  if (!userId) return { status: 401, message: tr("userNotLoggedIn") };
   if (typeof input.enabled !== "boolean") {
-    return { status: 400, message: "Choose on or off." };
+    return { status: 400, message: tr("chooseOnOrOff") };
   }
   return writePreference(userId, input.enabled);
 }
@@ -126,8 +133,7 @@ export async function setRewardEmailsByTokenCore(input: {
   if (!tokenValid(userId, token)) {
     return {
       status: 400,
-      message:
-        "This link isn't valid. Open the link from your latest email, or change it on your Rewards page.",
+      message: tr("thisLinkIsnTValidOpen2"),
     };
   }
   const res = await writePreference(userId, input.enabled);

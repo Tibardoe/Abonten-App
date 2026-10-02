@@ -3,6 +3,7 @@
 import ModalShell from "@/components/atoms/ModalShell";
 import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import ImagePreviewPane from "../molecules/ImagePreviewPane";
@@ -28,6 +29,8 @@ export default function AvatarUploadModal({
   handleClosePopup,
   imgUrl,
 }: AvatarUploadModalProps) {
+  const t = useTranslations("common");
+
   const [step, setStep] = useState<1 | 2>(1);
 
   const { cropped, croppedPreview, handleCropped } = useCroppedImage({
@@ -44,7 +47,7 @@ export default function AvatarUploadModal({
     <ModalShell
       open
       onClose={() => handleClosePopup(false)}
-      title="Upload Avatar"
+      title={t("uploadAvatar")}
       className="bg-background md:bg-transparent"
     >
       <div className="flex flex-col h-full w-full md:h-[85%] md:w-[45%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground py-3 overflow-y-auto">
@@ -67,9 +70,11 @@ export default function AvatarUploadModal({
           <>
             <UploadStepHeader
               onBack={isUploading ? undefined : () => setStep(1)}
-              title="Upload Avatar"
+              title={t("uploadAvatar")}
               primaryAction={{
-                label: isUploading ? `Uploading... ${progress}%` : "Upload",
+                label: isUploading
+                  ? t("uploading", { progress: progress })
+                  : t("upload"),
                 onClick: () => uploadAvatar(cropped),
                 disabled: isUploading,
               }}
@@ -79,7 +84,7 @@ export default function AvatarUploadModal({
               <div className="relative w-full max-w-sm aspect-square">
                 <ImagePreviewPane
                   src={croppedPreview}
-                  alt="Selected Avatar"
+                  alt={t("selectedAvatar")}
                   className="w-full h-full"
                 />
               </div>
@@ -92,7 +97,7 @@ export default function AvatarUploadModal({
                     onClick={cancelUpload}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto block"
                   >
-                    Cancel upload
+                    {t("cancelUpload")}
                   </button>
                 </div>
               )}

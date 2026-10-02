@@ -1,6 +1,7 @@
 "use client";
 
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoMdAddCircle } from "react-icons/io";
 import AddPaymentMethodPopup from "./AddPaymentMethodPopup";
@@ -10,6 +11,8 @@ type AddWalletButtonProps = {
 };
 
 export default function AddWalletButton({ onAdded }: AddWalletButtonProps) {
+  const t = useTranslations("wallet");
+
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePopupClick = () => {
@@ -33,9 +36,7 @@ export default function AddWalletButton({ onAdded }: AddWalletButtonProps) {
         className="text-[0.8rem] md:text-[1rem] flex flex-col gap-2 items-center justify-center w-44 h-44 md:w-52 md:h-52 rounded-2xl border border-border bg-muted"
       >
         <IoMdAddCircle className="text-primary text-3xl md:text-4xl" />
-        <p className="text-muted-foreground">
-          Add a new mobile money wallet or a bank card
-        </p>
+        <p className="text-muted-foreground">{t("addANewMobileMoneyWallet")}</p>
       </button>
 
       {isOpen && (

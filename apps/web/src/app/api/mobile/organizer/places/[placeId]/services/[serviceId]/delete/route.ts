@@ -1,6 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { removePlaceServiceCore } from "@abonten/services/places/placeServiceCore";
 
 // POST /api/mobile/organizer/places/:placeId/services/:serviceId/delete
@@ -11,6 +15,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ placeId: string; serviceId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -27,6 +32,9 @@ export async function POST(
       "mobile POST /organizer/places/:id/services/:serviceId/delete failed",
       error,
     );
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

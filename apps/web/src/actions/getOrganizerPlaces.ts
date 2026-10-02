@@ -1,10 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerPlacesPage } from "@abonten/services/organizer/organizerReadQuery";
 
-export default async function getOrganizerPlaces(options?: {
+export default withActionLocale(async function getOrganizerPlaces(options?: {
   // Public profile lookup (e.g. /user/[username]/places): when set, returns
   // that user's places without requiring the viewer to be signed in, same
   // as getUserPosts(username, ...). When omitted, falls back to the
@@ -33,7 +35,7 @@ export default async function getOrganizerPlaces(options?: {
         data: [],
         nextCursor: null,
         hasNextPage: false,
-        message: "User not found",
+        message: tr("userNotFound"),
       };
     }
 
@@ -51,7 +53,7 @@ export default async function getOrganizerPlaces(options?: {
         data: [],
         nextCursor: null,
         hasNextPage: false,
-        message: "User not logged in",
+        message: tr("userNotLoggedIn"),
       };
     }
 
@@ -62,4 +64,4 @@ export default async function getOrganizerPlaces(options?: {
     cursor: options?.cursor,
     pageSize: options?.pageSize,
   });
-}
+});

@@ -9,6 +9,7 @@ import { hapticLight } from "@/lib/haptics";
 import type { CachedComment } from "@abonten/core/content/commentCache";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { memo, useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -36,6 +37,8 @@ export const CommentRow = memo(function CommentRow({
   onReport: (c: CachedComment) => void;
   isReply?: boolean;
 }) {
+  const t = useTranslations("spotlight");
+
   const requireSignIn = useRequireSignIn();
   const toggleLike = useToggleCommentLike(requireSignIn);
   const deleteComment = useDeleteComment(postId);
@@ -47,7 +50,8 @@ export const CommentRow = memo(function CommentRow({
 
   const sending = comment.localState === "sending";
   const failed = comment.localState === "failed";
-  const name = comment.author.username ?? comment.author.fullName ?? "Someone";
+  const name =
+    comment.author.username ?? comment.author.fullName ?? t("someone");
 
   return (
     <View className={isReply ? "ml-11" : undefined}>
@@ -67,7 +71,7 @@ export const CommentRow = memo(function CommentRow({
               {name}
             </AppText>
             <AppText variant="caption" tone="muted">
-              {sending ? "Posting…" : formatStoryAge(comment.createdAt)}
+              {sending ? t("posting") : formatStoryAge(comment.createdAt)}
             </AppText>
           </View>
           <AppText variant="small">{comment.body}</AppText>
@@ -75,15 +79,15 @@ export const CommentRow = memo(function CommentRow({
           {failed ? (
             <View className="min-h-[32px] flex-row items-center gap-4">
               <AppText variant="caption" tone="error">
-                Couldn't post
+                {t("couldnTPost")}
               </AppText>
               <TextAction
-                label="Retry"
+                label={t("retry")}
                 tone="brand"
                 onPress={() => void retry(comment)}
               />
               <TextAction
-                label="Remove"
+                label={t("remove")}
                 tone="muted"
                 onPress={() => discard(comment)}
               />
@@ -92,20 +96,20 @@ export const CommentRow = memo(function CommentRow({
             <View className="min-h-[32px] flex-row items-center gap-5">
               {onReply ? (
                 <TextAction
-                  label="Reply"
+                  label={t("reply")}
                   tone="foreground"
                   onPress={() => onReply(comment)}
                 />
               ) : null}
               {comment.isMine || comment.canModerate ? (
                 <TextAction
-                  label="Delete"
+                  label={t("deleteText2")}
                   tone="error"
                   onPress={() => void deleteComment(comment)}
                 />
               ) : (
                 <TextAction
-                  label="Report"
+                  label={t("report2")}
                   tone="muted"
                   onPress={() => onReport(comment)}
                 />
@@ -123,8 +127,8 @@ export const CommentRow = memo(function CommentRow({
               <View className="h-px w-6 bg-border" />
               <AppText variant="caption" tone="muted" className="font-semibold">
                 {showReplies
-                  ? "Hide replies"
-                  : `View ${comment.replyCount} ${comment.replyCount === 1 ? "reply" : "replies"}`}
+                  ? t("hideReplies")
+                  : t("view2", { replyCount: comment.replyCount })}
               </AppText>
             </Pressable>
           ) : null}
@@ -141,8 +145,8 @@ export const CommentRow = memo(function CommentRow({
             accessibilityRole="button"
             accessibilityLabel={
               comment.likedByMe
-                ? `Unlike comment, ${comment.likeCount} likes`
-                : `Like comment, ${comment.likeCount} likes`
+                ? t("unlikeCommentLikes", { likeCount: comment.likeCount })
+                : t("likeCommentLikes", { likeCount: comment.likeCount })
             }
             accessibilityState={{ selected: comment.likedByMe }}
             className="min-h-[44px] w-11 items-center pt-0.5 active:opacity-60"
@@ -179,7 +183,9 @@ export const CommentRow = memo(function CommentRow({
           {replies.isLoading ? <ActivityIndicator /> : null}
           {replies.hasNextPage ? (
             <TextAction
-              label={replies.isFetchingNextPage ? "Loading…" : "More replies"}
+              label={
+                replies.isFetchingNextPage ? t("loading") : t("moreReplies")
+              }
               tone="muted"
               onPress={() => {
                 if (!replies.isFetchingNextPage) replies.fetchNextPage();

@@ -1,3 +1,4 @@
+import { translatorFor } from "@/i18n/clientTranslator";
 import { logger } from "@abonten/core/logger";
 type ShareData = {
   title: string;
@@ -7,37 +8,47 @@ type ShareData = {
 };
 
 /**
- * Opens the native share sheet, or copies the link where there isn't one.
- * Returns how the link left the page, or null when nothing was shared
- * (dismissed / failed).
+ * How the link left the page: through the share sheet, or copied; or that
+ * it did not: the person closed the sheet, or neither way worked.
+ */
+export type ShareOutcome = "native" | "copy" | "dismissed" | "failed";
+
+/**
+ * Opens the native share sheet, or copies the link where there isn't one
+ * (or where the sheet would not open). Says what happened and shows
+ * nothing itself: the caller tells the person (hooks/useEventShare.ts).
  */
 export async function handleShare({
   title,
   url,
   text,
-}: ShareData): Promise<"native" | "copy" | null> {
+}: ShareData): Promise<ShareOutcome> {
   const shareData = {
     title,
-    text: text ?? `Check out this event: ${title}`,
+    text:
+      text ?? translatorFor("common")("checkOutThisEvent", { title: title }),
     url,
   };
 
-  if (navigator.share) {
+  if (typeof navigator.share === "function") {
     try {
       await navigator.share(shareData);
       return "native";
     } catch (err) {
+      // Closing the share sheet rejects with AbortError: a choice, not a
+      // failure, and not something to copy a link behind their back for.
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return "dismissed";
+      }
       logger.error("Error sharing:", err);
-      return null;
     }
   }
 
   try {
     await navigator.clipboard.writeText(url);
-    alert("Link copied to clipboard!");
     return "copy";
   } catch (err) {
     logger.error("Clipboard copy failed:", err);
-    return null;
+    return "failed";
   }
 }

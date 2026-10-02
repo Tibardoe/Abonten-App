@@ -1,6 +1,7 @@
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
+  ticketPdfLabels,
 } from "@abonten/core/ticketPdfData";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { File, Paths } from "expo-file-system";
@@ -9,6 +10,7 @@ import * as Sharing from "expo-sharing";
 import { useState } from "react";
 
 import { useToast } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { buildTicketReceiptHtml } from "./ticketReceiptHtml";
 
 /**
@@ -19,6 +21,10 @@ import { buildTicketReceiptHtml } from "./ticketReceiptHtml";
  * (Save to Files, WhatsApp, …).
  */
 export function useTicketReceipt() {
+  const t = useTranslations("tickets");
+  const tc = useTranslations("core");
+  const { locale } = useLocale();
+
   const toast = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -27,9 +33,9 @@ export function useTicketReceipt() {
     setIsGenerating(true);
 
     try {
-      const data = buildTicketPdfData(ticket);
+      const data = buildTicketPdfData(ticket, undefined, locale);
       const { uri } = await Print.printToFileAsync({
-        html: buildTicketReceiptHtml(data),
+        html: buildTicketReceiptHtml(data, ticketPdfLabels(tc, data)),
       });
 
       // `printToFileAsync` writes to a random cache path; copy it to the same
@@ -52,18 +58,16 @@ export function useTicketReceipt() {
         await Sharing.shareAsync(shareUri, {
           mimeType: "application/pdf",
           UTI: "com.adobe.pdf",
-          dialogTitle: "Abonten ticket receipt",
+          dialogTitle: t("shareReceiptTitle"),
         });
       } else {
-        toast.success("Receipt ready", {
-          description:
-            "Sharing isn't available on this device, but the receipt PDF was generated.",
+        toast.success(t("receiptReady"), {
+          description: t("sharingIsnTAvailableOnThis"),
         });
       }
     } catch {
-      toast.error("Couldn't create the receipt", {
-        description:
-          "Something went wrong generating the PDF. Please try again.",
+      toast.error(t("couldnTCreateTheReceipt"), {
+        description: t("somethingWentWrongGeneratingThePdf"),
       });
     } finally {
       setIsGenerating(false);

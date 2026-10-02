@@ -3,6 +3,7 @@ import {
   deleteContentMediaCore,
   retryContentMediaProcessingCore,
 } from "@abonten/services/content/contentMediaCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { z } from "zod";
 
 // DELETE /api/mobile/content/media/[mediaId] — remove an unattached upload
@@ -10,6 +11,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ mediaId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { mediaId } = await params;
   return discoveryRoute(
     req,
@@ -28,6 +30,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ mediaId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { mediaId } = await params;
   return discoveryRoute(
     req,

@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { setRecommendationEmailsByTokenCore } from "@abonten/services/notifications/recommendationEmailPreferenceCore";
 
 /**
@@ -8,17 +9,19 @@ import { setRecommendationEmailsByTokenCore } from "@abonten/services/notificati
  * emails off: opting back in is a consent decision made in Settings while
  * signed in. Web-only: the link only exists in emails, so there's no app twin.
  */
-export async function setRecommendationEmailsByLink(input: {
-  userId: string;
-  token: string;
-}): Promise<{
-  status: number;
-  message?: string;
-  data?: { recommendationEmails: boolean };
-}> {
-  return setRecommendationEmailsByTokenCore({
-    userId: input?.userId,
-    token: input?.token,
-    source: "email_link",
-  });
-}
+export const setRecommendationEmailsByLink = withActionLocale(
+  async function setRecommendationEmailsByLink(input: {
+    userId: string;
+    token: string;
+  }): Promise<{
+    status: number;
+    message?: string;
+    data?: { recommendationEmails: boolean };
+  }> {
+    return setRecommendationEmailsByTokenCore({
+      userId: input?.userId,
+      token: input?.token,
+      source: "email_link",
+    });
+  },
+);

@@ -12,6 +12,7 @@ import {
   SheetOption,
   useModalHandoff,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCallback, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import {
@@ -47,16 +48,14 @@ import { describeArea } from "./areaCopy";
 // own open state so it can be up while the parent's `open` is false.
 
 const FOLLOW_MESSAGES: Record<Exclude<FollowOutcome, "ok">, string> = {
-  denied: "Allow location for Abonten to follow where you are.",
-  blocked:
-    "Location is turned off for Abonten. Turn it on in Settings to follow where you are.",
-  unavailable:
-    "We couldn't get your location. Check that location is on and try again.",
+  denied: "allowLocationForAbontenToFollow",
+  blocked: "locationIsTurnedOffForAbonten",
+  unavailable: "weCouldnTGetYourLocation",
 };
 
 const CHOOSE_MESSAGES: Record<Exclude<ChooseOutcome, "ok">, string> = {
-  not_found: "We couldn't find that address. Try another.",
-  offline: "You're offline. Try again when you're back online.",
+  not_found: "weCouldnTFindThatAddress",
+  offline: "youReOfflineTryAgainWhen",
 };
 
 export function ChangeLocationSheet({
@@ -66,6 +65,8 @@ export function ChangeLocationSheet({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("explore");
+
   const { area, devicePermission, chooseTypedArea, followDevice, chooseArea } =
     useExploreLocation();
   const auto = usePlacesAutocomplete(
@@ -104,7 +105,7 @@ export function ChangeLocationSheet({
       await chooseArea(resolved.lat, resolved.lng, resolved.address);
       finish();
     } else {
-      setError({ message: CHOOSE_MESSAGES.not_found });
+      setError({ message: t(CHOOSE_MESSAGES.not_found) });
     }
   }
 
@@ -115,7 +116,7 @@ export function ChangeLocationSheet({
     const outcome = await chooseTypedArea(auto.query);
     setBusy(null);
     if (outcome === "ok") finish();
-    else setError({ message: CHOOSE_MESSAGES[outcome] });
+    else setError({ message: t(CHOOSE_MESSAGES[outcome]) });
   }
 
   async function submitCurrent() {
@@ -127,7 +128,7 @@ export function ChangeLocationSheet({
     if (outcome === "ok") finish();
     else
       setError({
-        message: FOLLOW_MESSAGES[outcome],
+        message: t(FOLLOW_MESSAGES[outcome]),
         settings: outcome === "blocked",
       });
   }
@@ -148,7 +149,7 @@ export function ChangeLocationSheet({
           onClose();
         }}
         onDismiss={handoff.onDismiss}
-        title="Set your location"
+        title={t("setYourLocation")}
         minHeightRatio={0.45}
       >
         <View className="gap-4">
@@ -166,7 +167,7 @@ export function ChangeLocationSheet({
           {/* Opens the full-screen search; shaped like the field it opens. */}
           <Pressable
             accessibilityRole="search"
-            accessibilityLabel="Search a city, town or address"
+            accessibilityLabel={t("searchACityTownOrAddress")}
             onPress={() => {
               setError(null);
               setSearchOpen(true);
@@ -180,19 +181,19 @@ export function ChangeLocationSheet({
               numberOfLines={1}
               className="flex-1"
             >
-              {auto.query || "Search a city, town or address"}
+              {auto.query || t("searchACityTownOrAddress")}
             </AppText>
           </Pressable>
 
           <SheetOption
             icon="navigate"
             title={
-              busy === "current" ? "Finding you…" : "Use my current location"
+              busy === "current" ? t("findingYou") : t("useMyCurrentLocation")
             }
             subtitle={
               shown.status === "near_you"
-                ? "Already following you as you move"
-                : "Follows you as you move"
+                ? t("alreadyFollowingYouAsYouMove")
+                : t("followsYouAsYouMove")
             }
             onPress={submitCurrent}
             disabled={busy !== null && busy !== "current"}
@@ -200,8 +201,8 @@ export function ChangeLocationSheet({
 
           <SheetOption
             icon="map-outline"
-            title="Choose on map"
-            subtitle="Move the map under the pin"
+            title={t("chooseOnMap")}
+            subtitle={t("moveTheMapUnderThePin")}
             onPress={chooseOnMap}
             disabled={busy !== null}
           />
@@ -214,7 +215,7 @@ export function ChangeLocationSheet({
               {error.settings ? (
                 <View className="flex-row">
                   <Button
-                    title="Open settings"
+                    title={t("openSettings")}
                     variant="outline"
                     size="sm"
                     onPress={() => Linking.openSettings()}

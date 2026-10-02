@@ -2,6 +2,7 @@
 
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -18,6 +19,8 @@ export default function SettingsNavLinks({
   imgUrl,
   arrowUrl,
 }: SettingsNavLinkProps) {
+  const t = useTranslations("settings");
+
   const pathname = usePathname();
 
   const isActive = pathname === href || pathname.startsWith(href);
@@ -35,7 +38,7 @@ export default function SettingsNavLinks({
       <Link type="button" className="gap-3 items-center flex" href={href}>
         <MaskIcon
           src={imgUrl}
-          alt={`${text} icon`}
+          alt={t("icon", { text: text })}
           className="w-8 h-8 md:w-10 md:h-10"
         />
         <p className="text-lg">{text}</p>
@@ -44,7 +47,7 @@ export default function SettingsNavLinks({
       <Link href={href} className="flex lg:hidden">
         <MaskIcon
           src={arrowUrl}
-          alt={`${text} icon`}
+          alt={t("icon", { text: text })}
           className="w-[30px] h-[30px]"
         />
       </Link>

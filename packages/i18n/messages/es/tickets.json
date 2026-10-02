@@ -1,0 +1,48 @@
+{
+  "aRefundOfTheTicketPrice": "Se reembolsará el precio de la entrada a tu método de pago original. La tarifa de servicio de Abonten no se reembolsa.",
+  "areYouSureYouWantTo": "¿Seguro que quieres cancelar esta entrada?",
+  "cancelThisTicket": "¿Cancelar esta entrada?",
+  "cancelTicket": "Cancelar entrada",
+  "cancelTicketRequestRefund": "Cancelar entrada y solicitar reembolso",
+  "cancelling": "Cancelando…",
+  "checkedIn": "Registrado en la entrada",
+  "couldnTCancel": "No se pudo cancelar",
+  "couldnTCreateTheReceipt": "No se pudo crear el recibo",
+  "downloadReceiptPdf": "Descargar recibo (PDF)",
+  "empty": {
+    "active": {
+      "description": "Las entradas que compres aparecerán aquí.",
+      "title": "No hay entradas activas"
+    },
+    "cancelled": {
+      "description": "Las entradas canceladas aparecen aquí.",
+      "title": "No hay entradas canceladas"
+    },
+    "past": {
+      "description": "Entradas de eventos que han terminado o se cancelaron.",
+      "title": "No hay entradas pasadas"
+    },
+    "refunds": {
+      "description": "Los reembolsos de entradas de pago canceladas aparecerán aquí cuando corresponda.",
+      "title": "Aún no hay reembolsos"
+    }
+  },
+  "keepTicket": "Mantener entrada",
+  "locationUnavailable": "Ubicación no disponible",
+  "noQrCode": "Sin código QR",
+  "pleaseTryAgainInAMoment": "Inténtalo de nuevo en un momento.",
+  "preparingReceipt": "Preparando el recibo…",
+  "receiptReady": "Recibo listo",
+  "seat": "Asiento {seat_number}",
+  "shareReceiptTitle": "Recibo de entrada de Abonten",
+  "sharingIsnTAvailableOnThis": "Compartir no está disponible en este dispositivo, pero el recibo en PDF se ha generado.",
+  "showThisAtEntry": "Muestra esto en la entrada",
+  "somethingWentWrongGeneratingThePdf": "Algo salió mal al generar el PDF. Inténtalo de nuevo.",
+  "thisTicket": "esta entrada",
+  "thisTicketCouldNotBeFound": "No se encontró esta entrada.",
+  "ticket": "Entrada",
+  "ticketCancelled": "Entrada cancelada",
+  "ticketReference": "Referencia de la entrada",
+  "viewEvent": "Ver evento",
+  "yourTickets": "tus entradas"
+}

@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { AppText, Button, Field, Input, OtpInput } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { View } from "react-native";
 
@@ -19,6 +20,8 @@ export function PhoneVerificationForm({
   onDone: (message: string) => void;
   onCancel?: () => void;
 }) {
+  const t = useTranslations("account");
+
   // Starts on the person's own market (their dial code), editable for a
   // number from anywhere else.
   const { markets, context } = useMarket();
@@ -38,7 +41,7 @@ export function PhoneVerificationForm({
   async function sendCode() {
     setError(null);
     if (rawPhone.trim().length < 6) {
-      setError("Enter your phone number.");
+      setError(t("enterYourPhoneNumber"));
       return;
     }
     setBusy(true);
@@ -48,14 +51,15 @@ export function PhoneVerificationForm({
         rawPhone: rawPhone.trim(),
       });
       if (res.status !== 200 || !res.data) {
-        setError(res.message ?? "Couldn't send a code. Try again.");
+        setError(res.message ?? t("couldnTSendACodeTry"));
         return;
       }
-      if (phoneE164) setSentNote(`A new code is on its way to ${phoneE164}.`);
+      if (phoneE164)
+        setSentNote(t("aNewCodeIsOnIts2", { phoneE164: phoneE164 }));
       setPhoneE164(res.data.phoneE164);
       setCodeLength(res.data.codeLength);
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("networkErrorPleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -75,14 +79,14 @@ export function PhoneVerificationForm({
         code: value,
       });
       if (res.status !== 200) {
-        setError(res.message ?? "That code didn't work. Try again.");
+        setError(res.message ?? t("thatCodeDidnTWorkTry"));
         return;
       }
       // Pull the new phone claim into the local session.
       await supabase.auth.refreshSession();
-      onDone("Phone number verified.");
+      onDone(t("phoneNumberVerified"));
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("networkErrorPleaseTryAgain"));
     } finally {
       setBusy(false);
     }
@@ -91,7 +95,7 @@ export function PhoneVerificationForm({
   if (phoneE164) {
     return (
       <View className="gap-3">
-        <Field label={`Enter the code sent to ${phoneE164}`}>
+        <Field label={t("enterTheCodeSentTo2", { phoneE164: phoneE164 })}>
           <OtpInput
             value={otp}
             onChange={setOtp}
@@ -109,18 +113,18 @@ export function PhoneVerificationForm({
         ) : null}
         <View className="flex-row flex-wrap gap-2">
           <Button
-            title={busy ? "Verifying…" : "Verify"}
+            title={busy ? t("verifying") : t("verify")}
             onPress={() => verify()}
             disabled={busy || otp.trim().length < codeLength}
           />
           <Button
-            title="Resend code"
+            title={t("resendCode")}
             variant="outline"
             onPress={sendCode}
             disabled={busy}
           />
           <Button
-            title="Change number"
+            title={t("changeNumber")}
             variant="ghost"
             onPress={() => {
               setPhoneE164(null);
@@ -139,17 +143,17 @@ export function PhoneVerificationForm({
     <View className="gap-3">
       <View className="flex-row gap-2">
         <View className="w-20">
-          <Field label="Code">
+          <Field label={t("code")}>
             <Input
               value={dialCode}
               onChangeText={setDialCode}
               keyboardType="phone-pad"
-              accessibilityLabel="Country code"
+              accessibilityLabel={t("countryCode")}
             />
           </Field>
         </View>
         <View className="flex-1">
-          <Field label="Phone number">
+          <Field label={t("phoneNumber")}>
             <Input
               value={rawPhone}
               onChangeText={setRawPhone}
@@ -168,13 +172,13 @@ export function PhoneVerificationForm({
       ) : null}
       <View className="flex-row gap-2">
         <Button
-          title={busy ? "Sending…" : "Send code"}
+          title={busy ? t("sending") : t("sendCode")}
           onPress={sendCode}
           disabled={busy}
         />
         {onCancel ? (
           <Button
-            title="Cancel"
+            title={t("cancel")}
             variant="outline"
             onPress={onCancel}
             disabled={busy}

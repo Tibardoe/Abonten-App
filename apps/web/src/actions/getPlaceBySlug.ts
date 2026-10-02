@@ -1,7 +1,9 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   fetchPlaceRating,
   roundRating,
@@ -14,7 +16,9 @@ import {
  * Fetches opening hours/services/photos/rating alongside the place row
  * itself so the detail page has everything it needs in one round trip.
  */
-export async function getPlaceBySlug(slug: string) {
+export const getPlaceBySlug = withActionLocale(async function getPlaceBySlug(
+  slug: string,
+) {
   const supabase = publicSupabase;
 
   const { data: place, error: placeError } = await supabase
@@ -26,11 +30,11 @@ export async function getPlaceBySlug(slug: string) {
 
   if (placeError) {
     logger.error(`Error fetching place: ${placeError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!place) {
-    return { status: 404, message: "Place not found" };
+    return { status: 404, message: tr("placeNotFound") };
   }
 
   const [
@@ -63,7 +67,7 @@ export async function getPlaceBySlug(slug: string) {
 
   if (firstError) {
     logger.error(`Error fetching place details: ${firstError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const reviewCount = rating.count;
@@ -80,4 +84,4 @@ export async function getPlaceBySlug(slug: string) {
       reviewCount,
     },
   };
-}
+});

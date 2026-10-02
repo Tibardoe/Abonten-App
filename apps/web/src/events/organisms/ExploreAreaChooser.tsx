@@ -1,6 +1,7 @@
 import getMarketContext from "@/actions/getMarketContext";
 import LandingLocationSearch from "@/landingPage/organisms/LandingLocationSearch";
 import { regionLaunchStatus } from "@abonten/core/market/coverage";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 // /explore (and /events) with no area yet: instead of an empty page saying
@@ -10,6 +11,8 @@ import Link from "next/link";
 // a city that's coming soon says so (its page explains and offers the
 // waiting list).
 export default async function ExploreAreaChooser() {
+  const t = await getTranslations("events");
+
   const { markets, context } = await getMarketContext();
   const market =
     markets.find((m) => m.countryCode === context.marketCountry) ??
@@ -29,10 +32,10 @@ export default async function ExploreAreaChooser() {
     <section className="mx-auto flex max-w-2xl flex-col items-center gap-8 px-2 py-10 text-center md:py-16">
       <div className="space-y-2">
         <h1 className="text-2xl font-bold text-balance md:text-4xl">
-          Where do you want to go out?
+          {t("whereDoYouWantToGo")}
         </h1>
         <p className="text-muted-foreground text-pretty">
-          Pick a city, search for an area, or use where you are now.
+          {t("pickACitySearchForAn")}
         </p>
       </div>
 
@@ -41,7 +44,7 @@ export default async function ExploreAreaChooser() {
       {market && cities.length > 0 ? (
         <div className="w-full">
           <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-            Cities in {market.name}
+            {t("citiesIn", { name: market.name })}
           </h2>
           <ul className="flex flex-wrap justify-center gap-2">
             {cities.map((city) => (
@@ -53,7 +56,7 @@ export default async function ExploreAreaChooser() {
                   {city.name}
                   {regionLaunchStatus(city) === "coming_soon" ? (
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
-                      Coming soon
+                      {t("comingSoon")}
                     </span>
                   ) : null}
                 </Link>

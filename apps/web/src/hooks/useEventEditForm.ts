@@ -42,6 +42,7 @@ export function useEventEditForm({
   onSuccess,
 }: UseEventEditFormOptions) {
   const t = useTranslations("events");
+  const tc = useTranslations("core");
   const eventSchema = useMemo(
     () =>
       getEventSchema({
@@ -190,13 +191,13 @@ export function useEventEditForm({
     }
 
     if (!isImageFile(file)) {
-      toast.error("Please select an image file for your event flyer.");
+      toast.error(t("pleaseSelectAnImageFileFor"));
       return;
     }
 
     if (file.size > MAX_EVENT_FLYER_SIZE_BYTES) {
       const maxMb = Math.round(MAX_EVENT_FLYER_SIZE_BYTES / (1024 * 1024));
-      toast.error(`Image is too large. Maximum size is ${maxMb}MB.`);
+      toast.error(t("imageIsTooLargeMaximumSize", { maxMb: maxMb }));
       return;
     }
 
@@ -212,25 +213,21 @@ export function useEventEditForm({
       setIsResolvingLocation(false);
 
       if (!resolution || resolution.status === "empty") {
-        toast.error("Please enter a location");
+        toast.error(t("pleaseEnterALocation"));
         return;
       }
       if (resolution.status === "unresolved") {
-        toast.error(
-          "Could not find that location — please check the spelling or pick a suggestion.",
-        );
+        toast.error(t("couldNotFindThatLocationPlease"));
         return;
       }
       if (resolution.status === "error") {
-        toast.error(
-          "We couldn't verify this location right now. Please try again.",
-        );
+        toast.error(t("weCouldnTVerifyThisLocation"));
         return;
       }
 
       const coords = coordsRef.current;
       if (!coords) {
-        toast.error("Could not fetch coordinates");
+        toast.error(t("couldNotFetchCoordinates"));
         return;
       }
 
@@ -242,7 +239,11 @@ export function useEventEditForm({
       const bufferedNow = getBufferedNow();
 
       if (dateType === "single") {
-        const result = validateSingleDateRange(singleDateRange, bufferedNow);
+        const result = validateSingleDateRange(
+          tc,
+          singleDateRange,
+          bufferedNow,
+        );
         if (!result.ok) {
           toast.error(result.message);
           return;
@@ -253,7 +254,7 @@ export function useEventEditForm({
           ends_at: toWallClockString(singleDateRange.to as Date),
         };
       } else if (dateType === "specific") {
-        const result = validateSpecificDates(multipleDates, bufferedNow);
+        const result = validateSpecificDates(tc, multipleDates, bufferedNow);
         if (!result.ok) {
           toast.error(result.message);
           return;
@@ -266,12 +267,12 @@ export function useEventEditForm({
           })),
         };
       } else {
-        toast.error("Invalid date selection");
+        toast.error(t("invalidDateSelection"));
         return;
       }
 
       if (!category || types.length === 0) {
-        toast.error("Category and types must be set");
+        toast.error(t("categoryAndTypesMustBeSet"));
         return;
       }
 
@@ -292,13 +293,13 @@ export function useEventEditForm({
       });
 
       if (response.status === 200) {
-        toast.success("✅ Event updated successfully!");
+        toast.success(t("eventUpdatedSuccessfully"));
         onSuccess();
       } else {
         toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("somethingWentWrongPleaseTryAgain"));
     } finally {
       setIsSubmitting(false);
       setIsResolvingLocation(false);

@@ -4,16 +4,16 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewListItem from "@/components/molecules/ReviewListItem";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { formatRating } from "@abonten/core/i18n/format";
 import { roundRating } from "@abonten/core/ratings";
 import {
   type ReviewListRow,
   type ReviewSubjectKind,
   type ReviewSummary,
-  emptyReviewsMessage,
-  formatReviewCount,
   reviewsPath,
 } from "@abonten/core/reviews/reviewList";
 import { ChevronRight } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import OrganizerReplyControls from "../molecules/OrganizerReplyControls";
@@ -49,6 +49,9 @@ export default function ReviewsPreview({
   /** "Write a review" / "Your review" (AddEventReviewButton / AddPlaceReviewButton). */
   addReviewButton: ReactNode;
 }) {
+  const t = useTranslations("reviews");
+  const locale = useLocale();
+
   const { data: user } = useCurrentUser();
   const viewerId = user?.id ?? null;
   const summary = useReviewSummary(subject.kind, subject.id, initialSummary);
@@ -58,7 +61,13 @@ export default function ReviewsPreview({
   const average = roundRating(summary.data?.average ?? 0);
   const reviews = preview.data ?? [];
   const allHref = reviewsPath(subject.kind, subject.slug);
-  const empty = emptyReviewsMessage(null, subject.kind);
+  const empty = {
+    title: t("noReviewsYet"),
+    description:
+      subject.kind === "event"
+        ? t("peopleWhoAttendedCanReview")
+        : t("beTheFirstToShare"),
+  };
   const isOrganizer =
     subject.kind === "event" && !!viewerId && viewerId === subject.ownerId;
 
@@ -74,7 +83,7 @@ export default function ReviewsPreview({
             id="reviews-heading"
             className="text-xl md:text-2xl font-medium text-card-foreground"
           >
-            Reviews
+            {t("reviews")}
           </h2>
           {total > 0 ? (
             <Link
@@ -82,11 +91,11 @@ export default function ReviewsPreview({
               className="mt-1 flex items-center gap-2 hover:underline"
             >
               <span className="text-lg font-semibold">
-                {average.toFixed(1)}
+                {formatRating(average, locale)}
               </span>
               <StarRatingDisplay rating={summary.data?.average ?? 0} />
               <span className="text-sm text-muted-foreground">
-                ({formatReviewCount(total)})
+                ({t("reviewsCount", { count: total })})
               </span>
             </Link>
           ) : null}
@@ -127,13 +136,13 @@ export default function ReviewsPreview({
         </ul>
       ) : preview.isError ? (
         <p className="text-sm text-muted-foreground">
-          Couldn&apos;t load reviews.{" "}
+          {t("couldnTLoadReviews")}
           <button
             type="button"
             onClick={() => preview.refetch()}
             className="font-medium text-primary hover:underline"
           >
-            Try again
+            {t("tryAgain")}
           </button>
         </p>
       ) : (
@@ -148,7 +157,7 @@ export default function ReviewsPreview({
           href={allHref}
           className="flex items-center justify-center gap-1 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:bg-accent"
         >
-          See all {formatReviewCount(total)}
+          {t("seeAll", { reviews: t("reviewsCount", { count: total }) })}
           <ChevronRight className="h-4 w-4" aria-hidden />
         </Link>
       ) : null}

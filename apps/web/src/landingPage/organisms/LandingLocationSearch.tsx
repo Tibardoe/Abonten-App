@@ -7,6 +7,7 @@ import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { FiArrowRight } from "react-icons/fi";
@@ -22,6 +23,8 @@ export default function LandingLocationSearch({
   /** Drawn over the dark landing photo (true) or on a plain page. */
   onDark?: boolean;
 }) {
+  const t = useTranslations("landing");
+
   const router = useRouter();
   const autoCompleteRef = useRef<AutoCompleteHandle>(null);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
@@ -109,7 +112,7 @@ export default function LandingLocationSearch({
         <AutoComplete
           ref={autoCompleteRef}
           placeholderText={{
-            text: "Enter a city or address",
+            text: t("enterACityOrAddress"),
             svgUrl: "assets/images/location.svg",
           }}
           address={{ address: () => {} }}
@@ -119,7 +122,7 @@ export default function LandingLocationSearch({
         <button
           type="submit"
           disabled={isResolvingLocation}
-          aria-label="Explore events and places here"
+          aria-label={t("exploreEventsAndPlacesHere")}
           className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 md:px-5"
         >
           {isResolvingLocation ? (
@@ -127,7 +130,7 @@ export default function LandingLocationSearch({
           ) : (
             <FiArrowRight aria-hidden className="h-5 w-5" />
           )}
-          <span className="hidden sm:inline">Explore</span>
+          <span className="hidden sm:inline">{t("explore")}</span>
         </button>
       </form>
 
@@ -146,7 +149,7 @@ export default function LandingLocationSearch({
         ) : (
           <IoNavigateOutline aria-hidden className="h-4 w-4" />
         )}
-        Use my current location
+        {t("useMyCurrentLocation")}
       </button>
     </div>
   );

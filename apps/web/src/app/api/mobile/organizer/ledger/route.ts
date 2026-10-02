@@ -1,12 +1,17 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { fetchOrganizerLedgerPage } from "@abonten/services/organizer/organizerReadQuery";
 
 // GET /api/mobile/organizer/ledger?cursor=<opaque>&pageSize=<n>
 // Cursor-paginated organizer transactions feed (ticket sales, platform
 // fees, refunds, payouts). Same body as getOrganizerLedgerTransactions.
 export async function GET(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -27,6 +32,9 @@ export async function GET(req: Request) {
     return apiJson(result);
   } catch (error) {
     logger.error("mobile GET /organizer/ledger failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

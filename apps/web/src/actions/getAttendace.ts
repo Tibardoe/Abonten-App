@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 
 /**
@@ -11,18 +12,20 @@ import { logger } from "@abonten/core/logger";
  * narrow SECURITY DEFINER function that returns only the aggregate count,
  * never raw rows — see 20260902120000_add_public_attendance_count_rpcs.sql.
  */
-export async function getEventAttendanceCount(eventId: string) {
-  const supabase = publicSupabase;
-  const { data, error } = await supabase.rpc("get_event_attendance_count", {
-    p_event_id: eventId,
-  });
+export const getEventAttendanceCount = withActionLocale(
+  async function getEventAttendanceCount(eventId: string) {
+    const supabase = publicSupabase;
+    const { data, error } = await supabase.rpc("get_event_attendance_count", {
+      p_event_id: eventId,
+    });
 
-  if (error) {
-    return { status: 500, message: error.message };
-  }
+    if (error) {
+      return { status: 500, message: error.message };
+    }
 
-  return { status: 200, count: Number(data ?? 0) };
-}
+    return { status: 200, count: Number(data ?? 0) };
+  },
+);
 
 /**
  * Attendance counts for many events in a single round trip, instead of one
@@ -34,25 +37,30 @@ export async function getEventAttendanceCount(eventId: string) {
  * See getEventAttendanceCount above for why this goes through an RPC
  * instead of a direct `attendance` read.
  */
-export async function getEventAttendanceCounts(
-  eventIds: string[],
-): Promise<Record<string, number>> {
-  if (eventIds.length === 0) return {};
+export const getEventAttendanceCounts = withActionLocale(
+  async function getEventAttendanceCounts(
+    eventIds: string[],
+  ): Promise<Record<string, number>> {
+    if (eventIds.length === 0) return {};
 
-  const supabase = publicSupabase;
-  const { data, error } = await supabase.rpc("get_event_attendance_counts", {
-    p_event_ids: eventIds,
-  });
+    const supabase = publicSupabase;
+    const { data, error } = await supabase.rpc("get_event_attendance_counts", {
+      p_event_ids: eventIds,
+    });
 
-  if (error || !data) {
-    logger.error(`Error fetching attendance counts: ${error?.message}`);
-    return {};
-  }
+    if (error || !data) {
+      logger.error(`Error fetching attendance counts: ${error?.message}`);
+      return {};
+    }
 
-  const counts: Record<string, number> = {};
-  for (const row of data as { event_id: string; attendance_count: number }[]) {
-    counts[row.event_id] = Number(row.attendance_count ?? 0);
-  }
+    const counts: Record<string, number> = {};
+    for (const row of data as {
+      event_id: string;
+      attendance_count: number;
+    }[]) {
+      counts[row.event_id] = Number(row.attendance_count ?? 0);
+    }
 
-  return counts;
-}
+    return counts;
+  },
+);

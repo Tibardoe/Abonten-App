@@ -4,6 +4,10 @@ import { paymentChoiceFromBody } from "@/app/api/mobile/_lib/paymentChoiceBody";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/createPromotionPaymentAttemptCore";
 
 // POST /api/mobile/checkout/place-promotion-attempt
@@ -16,6 +20,7 @@ import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/cr
 // dispatches on the place_promotion_checkout_id column, no place-specific
 // verify needed). `useCredit` behaves as on the event route.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -41,7 +46,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message: "placePromotionCheckoutId and paymentMethodId are required",
+        message: tr("placepromotioncheckoutidAndPaymentmethodidAreReq"),
       });
     }
 
@@ -57,6 +62,9 @@ export async function POST(req: Request) {
     return fromActionResult(withLegacyPaystackField(result));
   } catch (error) {
     logger.error("mobile POST /checkout/place-promotion-attempt failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

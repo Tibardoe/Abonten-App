@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { majorToMinor, minorToInput } from "@/lib/moneyUnits";
 import {
   publishFieldOpsRuleVersion,
@@ -64,7 +65,7 @@ export function ActivateRuleButton({
                 activityKey,
                 ruleId,
                 reason: reason.trim(),
-              });
+              }).catch(actionUnreachable);
               setMsg(res.message ?? null);
               if (res.status === 200) {
                 setOpen(false);
@@ -134,7 +135,7 @@ export function NewRuleVersionForm({
         eligibility: parsed,
         note: note.trim(),
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setOpen(false);

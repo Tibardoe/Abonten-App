@@ -14,6 +14,7 @@ import type { Database } from "@abonten/types/database.types";
 
 import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 export type PaymentAttemptRow = {
@@ -80,7 +81,7 @@ export async function upsertPaymentAttemptForSession(
 
   if (existingError) {
     logger.error(`Failed checking existing attempt: ${existingError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (existingAttempt) {
@@ -125,7 +126,7 @@ export async function upsertPaymentAttemptForSession(
         logger.error(
           `Failed grouping existing attempt: ${updateError.message}`,
         );
-        return { status: 500, message: "Something went wrong!" };
+        return { status: 500, message: tr("somethingWentWrong") };
       }
 
       return { status: 200, data: updated as PaymentAttemptRow };
@@ -136,8 +137,7 @@ export async function upsertPaymentAttemptForSession(
     if (existingAttempt.status === "processing") {
       return {
         status: 409,
-        message:
-          "A payment for this order is being confirmed. Wait a moment, then check its status.",
+        message: tr("aPaymentForThisOrderIs"),
       };
     }
     await supabase
@@ -181,12 +181,12 @@ export async function upsertPaymentAttemptForSession(
     // charge.
     return {
       status: 409,
-      message: "This payment is already being started. Please wait a moment.",
+      message: tr("thisPaymentIsAlreadyBeingStarted"),
     };
   }
   if (insertError) {
     logger.error(`Failed creating payment attempt: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: attempt as PaymentAttemptRow };

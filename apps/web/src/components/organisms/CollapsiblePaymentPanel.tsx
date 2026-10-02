@@ -3,6 +3,7 @@
 import { cn } from "@/components/lib/utils";
 import usePrefersReducedMotion from "@/hooks/usePrefersReducedMotion";
 import { ChevronUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type CollapsiblePaymentPanelProps = {
   isExpanded: boolean;
@@ -51,6 +52,8 @@ export default function CollapsiblePaymentPanel({
   statusText,
   children,
 }: CollapsiblePaymentPanelProps) {
+  const t = useTranslations("common");
+
   const prefersReducedMotion = usePrefersReducedMotion();
   const duration = prefersReducedMotion ? "duration-0" : "duration-300";
 
@@ -67,7 +70,7 @@ export default function CollapsiblePaymentPanel({
         >
           <span>
             <span className="block text-xs font-medium text-muted-foreground">
-              Payment
+              {t("payment")}
             </span>
             <span className="block text-sm font-semibold">{statusText}</span>
           </span>
@@ -84,8 +87,8 @@ export default function CollapsiblePaymentPanel({
             />
             <span className="sr-only">
               {isExpanded
-                ? "Collapse payment section"
-                : "Expand payment section"}
+                ? t("collapsePaymentSection")
+                : t("expandPaymentSection")}
             </span>
           </span>
         </button>

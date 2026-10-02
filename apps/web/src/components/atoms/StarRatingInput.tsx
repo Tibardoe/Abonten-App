@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import type React from "react";
 import { useState } from "react";
 import { IoIosStar } from "react-icons/io";
@@ -14,6 +15,8 @@ const StarRatingInput: React.FC<Props> = ({
   totalStars = 5,
   initialRating = 0,
 }) => {
+  const t = useTranslations("common");
+
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
   const [selectedRating, setSelectedRating] = useState<number>(initialRating);
 
@@ -33,7 +36,10 @@ const StarRatingInput: React.FC<Props> = ({
             onClick={() => handleClick(starIndex)}
             onMouseEnter={() => setHoveredStar(starIndex)}
             onMouseLeave={() => setHoveredStar(null)}
-            aria-label={`Rate ${starIndex} out of ${totalStars} star${starIndex === 1 ? "" : "s"}`}
+            aria-label={t("rateOutOfStar", {
+              starIndex: starIndex,
+              totalStars: totalStars,
+            })}
             aria-pressed={selectedRating >= starIndex}
             className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
           >

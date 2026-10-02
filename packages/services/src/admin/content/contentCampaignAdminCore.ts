@@ -393,7 +393,7 @@ async function executeCampaignRefund(
     id: input.campaignId,
     advertiserId: campaign.advertiser_id,
     status: "refunded",
-    reason: `${formatMoney(money(amount, tx.currency))} is being returned to your payment method.`,
+    refund: { amountMinor: amount, currency: tx.currency },
   });
   return {
     status: 200,

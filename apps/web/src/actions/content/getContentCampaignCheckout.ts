@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   contentRequestIp,
   parseContentInput,
@@ -9,14 +10,16 @@ import { getContentCampaignCheckoutCore } from "@abonten/services/content/campai
 import { checkoutIdSchema } from "@abonten/validation/contentSchemas";
 
 /** A campaign checkout for the web checkout page. */
-export async function getContentCampaignCheckout(input: unknown) {
-  const caller = await requireContentUser();
-  if (caller.error) return caller.error;
-  const parsed = parseContentInput(checkoutIdSchema, input);
-  if (parsed.error) return parsed.error;
-  return getContentCampaignCheckoutCore(
-    caller.svc,
-    caller.userId,
-    parsed.data.checkoutId,
-  );
-}
+export const getContentCampaignCheckout = withActionLocale(
+  async function getContentCampaignCheckout(input: unknown) {
+    const caller = await requireContentUser();
+    if (caller.error) return caller.error;
+    const parsed = parseContentInput(checkoutIdSchema, input);
+    if (parsed.error) return parsed.error;
+    return getContentCampaignCheckoutCore(
+      caller.svc,
+      caller.userId,
+      parsed.data.checkoutId,
+    );
+  },
+);

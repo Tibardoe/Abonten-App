@@ -3,6 +3,7 @@
 import getUserHighlight from "@/actions/getUserHighlights";
 import UserHighlights from "@/components/molecules/UserHighlights";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Higlight from "./Highlight";
 
 // The profile's Highlights row. The owner always sees it (it holds the "add
@@ -18,6 +19,8 @@ export default function ProfileHighlightsSection({
   avatarUrl: string;
   isOwner: boolean;
 }) {
+  const t = useTranslations("account");
+
   const { data, isLoading } = useQuery({
     queryKey: ["highlights", username],
     queryFn: async () => (await getUserHighlight(username)).data,
@@ -28,7 +31,7 @@ export default function ProfileHighlightsSection({
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="font-semibold">Highlights</h2>
+      <h2 className="font-semibold">{t("highlights")}</h2>
 
       <div className="flex items-center gap-2 overflow-hidden">
         {isOwner && <Higlight username={username} />}

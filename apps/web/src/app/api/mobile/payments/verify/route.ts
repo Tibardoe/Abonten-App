@@ -2,6 +2,10 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 import { verifyPaymentCore } from "@abonten/services/payments/verifyPaymentCore";
 
 // POST /api/mobile/payments/verify  { paymentAttemptId: string }
@@ -11,6 +15,7 @@ import { verifyPaymentCore } from "@abonten/services/payments/verifyPaymentCore"
 // pending (poll again); 400 = payment failed; 207 = paid but ticket
 // issuance failed.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -23,7 +28,10 @@ export async function POST(req: Request) {
       typeof body?.paymentAttemptId !== "string" ||
       body.paymentAttemptId.length === 0
     ) {
-      return apiJson({ status: 400, message: "paymentAttemptId is required" });
+      return apiJson({
+        status: 400,
+        message: tr("paymentattemptidIsRequired"),
+      });
     }
 
     const result = await verifyPaymentCore(
@@ -36,6 +44,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /payments/verify failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

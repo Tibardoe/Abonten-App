@@ -2,7 +2,9 @@
 
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { SearchOrganizerHit } from "@abonten/types/searchType";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,6 +24,9 @@ export default function OrganizerCard({
 }: {
   organizer: SearchOrganizerHit;
 }) {
+  const t = useTranslations("discovery");
+  const locale = useLocale();
+
   const href = `/user/${organizer.username}/posts`;
   const avatar = buildCloudinaryUrl(
     organizer.avatarPublicId ?? DEFAULT_AVATAR.id,
@@ -64,25 +69,25 @@ export default function OrganizerCard({
             {organizer.upcomingCount > 0 ? (
               <span className="inline-flex items-center gap-1">
                 <IoCalendarOutline aria-hidden />
-                {organizer.upcomingCount} upcoming
+                {t("upcoming", { upcomingCount: organizer.upcomingCount })}
               </span>
             ) : null}
             {organizer.placeCount > 0 ? (
               <span className="inline-flex items-center gap-1">
                 <IoStorefrontOutline aria-hidden />
-                {organizer.placeCount}{" "}
-                {organizer.placeCount === 1 ? "place" : "places"}
+                {t("placesCount", { count: organizer.placeCount, plus: "" })}
               </span>
             ) : null}
             {organizer.ratingCount > 0 && organizer.avgRating != null ? (
               <span className="inline-flex items-center gap-1">
                 <IoStar aria-hidden className="text-primary" />
-                {organizer.avgRating.toFixed(1)} ({organizer.ratingCount})
+                {formatRating(organizer.avgRating, locale)} (
+                {organizer.ratingCount})
               </span>
             ) : null}
             {organizer.isNew ? (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
-                New
+                {t("newText")}
               </span>
             ) : null}
           </div>
@@ -99,7 +104,7 @@ export default function OrganizerCard({
             href={eventsHref}
             className="inline-flex items-center rounded-full bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
           >
-            See their events
+            {t("seeTheirEvents")}
           </Link>
         ) : null}
         <SubscribeBell

@@ -1,11 +1,14 @@
 "use client";
 
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ReviewModal from "../organisms/ReviewModal";
 import { Button } from "../ui/button";
 
 export default function AddReviewButton({ username }: { username: string }) {
+  const t = useTranslations("common");
+
   const [showReviewModal, setShowReviewModal] = useState(false);
 
   const handleShowReviewModal = (state: boolean) => {
@@ -32,7 +35,7 @@ export default function AddReviewButton({ username }: { username: string }) {
         className="h-9 rounded-full px-4 font-semibold"
         onClick={() => handleShowReviewModal(true)}
       >
-        Write a review
+        {t("writeAReview")}
       </Button>
 
       {/* <button

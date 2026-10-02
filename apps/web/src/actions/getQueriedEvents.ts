@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { normalizeEventRow } from "@abonten/core/eventAddress";
 import { logger } from "@abonten/core/logger";
 import {
@@ -32,90 +33,92 @@ interface FilterParams {
   pageSize?: number;
 }
 
-export async function getQueriedEvents(
-  queryParams: FilterParams,
-): Promise<PaginatedResult<UserPostType>> {
-  const supabase = publicSupabase;
+export const getQueriedEvents = withActionLocale(
+  async function getQueriedEvents(
+    queryParams: FilterParams,
+  ): Promise<PaginatedResult<UserPostType>> {
+    const supabase = publicSupabase;
 
-  const {
-    minPrice = null,
-    maxPrice = null,
-    minRating = null,
-    lat = null,
-    lng = null,
-    maxDistanceKm = null,
-    startDate = null,
-    endDate = null,
-    searchText = null,
-    category = null,
-    type = null,
-    cursor: rawCursor = null,
-    pageSize = DEFAULT_EVENTS_PAGE_SIZE,
-  } = queryParams;
+    const {
+      minPrice = null,
+      maxPrice = null,
+      minRating = null,
+      lat = null,
+      lng = null,
+      maxDistanceKm = null,
+      startDate = null,
+      endDate = null,
+      searchText = null,
+      category = null,
+      type = null,
+      cursor: rawCursor = null,
+      pageSize = DEFAULT_EVENTS_PAGE_SIZE,
+    } = queryParams;
 
-  const cursor = decodeCursor<FilteredEventsCursor>(rawCursor);
+    const cursor = decodeCursor<FilteredEventsCursor>(rawCursor);
 
-  // get_filtered_events' p_event_type is text[] -- an event matches if ANY
-  // selected type ILIKE-matches (see 20260902130000_multi_type_event_filter.sql).
-  // Pass null rather than [] for "no filter" so the RPC's `p_event_type IS
-  // NULL` short-circuit applies instead of its separate empty-array check.
-  const normalizedType = type && type.length > 0 ? type : null;
+    // get_filtered_events' p_event_type is text[] -- an event matches if ANY
+    // selected type ILIKE-matches (see 20260902130000_multi_type_event_filter.sql).
+    // Pass null rather than [] for "no filter" so the RPC's `p_event_type IS
+    // NULL` short-circuit applies instead of its separate empty-array check.
+    const normalizedType = type && type.length > 0 ? type : null;
 
-  // get_filtered_events declares its filter parameters without defaults
-  // and treats NULL as "no filter" (see 20260902130000_multi_type_event_filter.sql).
-  // The generated types cannot express a nullable argument, so the nulls
-  // are sent through one typed boundary here; the cursor parameters are
-  // DEFAULT NULL and may simply be omitted.
-  type FilteredEventsArgs =
-    Database["public"]["Functions"]["get_filtered_events"]["Args"];
-  const filters = {
-    p_min_price: minPrice,
-    p_max_price: maxPrice,
-    p_min_rating: minRating,
-    p_user_lat: lat,
-    p_user_lng: lng,
-    p_max_distance_km: maxDistanceKm,
-    p_start_date: startDate,
-    p_end_date: endDate,
-    p_event_type: normalizedType,
-  } satisfies Partial<Record<keyof FilteredEventsArgs, unknown>>;
-  const { data, error } = await supabase.rpc("get_filtered_events", {
-    ...(filters as unknown as Pick<FilteredEventsArgs, keyof typeof filters>),
-    p_search_text: searchText ?? "",
-    // ?category may repeat in the URL; the RPC filters on one category.
-    p_event_category: Array.isArray(category)
-      ? (category[0] ?? "")
-      : (category ?? ""),
-    p_cursor_starts_at: cursor?.startsAt ?? undefined,
-    p_cursor_distance_km: cursor?.distanceKm ?? undefined,
-    p_cursor_id: cursor?.id ?? undefined,
-    p_page_size: pageSize,
-  });
+    // get_filtered_events declares its filter parameters without defaults
+    // and treats NULL as "no filter" (see 20260902130000_multi_type_event_filter.sql).
+    // The generated types cannot express a nullable argument, so the nulls
+    // are sent through one typed boundary here; the cursor parameters are
+    // DEFAULT NULL and may simply be omitted.
+    type FilteredEventsArgs =
+      Database["public"]["Functions"]["get_filtered_events"]["Args"];
+    const filters = {
+      p_min_price: minPrice,
+      p_max_price: maxPrice,
+      p_min_rating: minRating,
+      p_user_lat: lat,
+      p_user_lng: lng,
+      p_max_distance_km: maxDistanceKm,
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_event_type: normalizedType,
+    } satisfies Partial<Record<keyof FilteredEventsArgs, unknown>>;
+    const { data, error } = await supabase.rpc("get_filtered_events", {
+      ...(filters as unknown as Pick<FilteredEventsArgs, keyof typeof filters>),
+      p_search_text: searchText ?? "",
+      // ?category may repeat in the URL; the RPC filters on one category.
+      p_event_category: Array.isArray(category)
+        ? (category[0] ?? "")
+        : (category ?? ""),
+      p_cursor_starts_at: cursor?.startsAt ?? undefined,
+      p_cursor_distance_km: cursor?.distanceKm ?? undefined,
+      p_cursor_id: cursor?.id ?? undefined,
+      p_page_size: pageSize,
+    });
 
-  if (error) {
-    logger.error("Error fetching filtered events:", error);
-    return { status: 500, data: [], nextCursor: null, hasNextPage: false };
-  }
+    if (error) {
+      logger.error("Error fetching filtered events:", error);
+      return { status: 500, data: [], nextCursor: null, hasNextPage: false };
+    }
 
-  const { page, hasNextPage } = splitPage<UserPostType>(
-    (data ?? []).map(normalizeEventRow),
-    pageSize,
-  );
-  const last = page[page.length - 1] as UserPostType | undefined;
+    const { page, hasNextPage } = splitPage<UserPostType>(
+      (data ?? []).map(normalizeEventRow),
+      pageSize,
+    );
+    const last = page[page.length - 1] as UserPostType | undefined;
 
-  // Matches the SQL-side sentinel for "no distance" (no lat/lng given) —
-  // JSON.stringify(Infinity) serializes to `null`, which would corrupt the
-  // cursor, so a plain large number is used instead.
-  const NO_DISTANCE_SENTINEL = 1e18;
+    // Matches the SQL-side sentinel for "no distance" (no lat/lng given) —
+    // JSON.stringify(Infinity) serializes to `null`, which would corrupt the
+    // cursor, so a plain large number is used instead.
+    const NO_DISTANCE_SENTINEL = 1e18;
 
-  const nextCursor =
-    hasNextPage && last
-      ? encodeCursor<FilteredEventsCursor>({
-          startsAt: String(last.starts_at),
-          distanceKm: last.distance_km ?? NO_DISTANCE_SENTINEL,
-          id: last.id,
-        })
-      : null;
+    const nextCursor =
+      hasNextPage && last
+        ? encodeCursor<FilteredEventsCursor>({
+            startsAt: String(last.starts_at),
+            distanceKm: last.distance_km ?? NO_DISTANCE_SENTINEL,
+            id: last.id,
+          })
+        : null;
 
-  return { status: 200, data: page, nextCursor, hasNextPage };
-}
+    return { status: 200, data: page, nextCursor, hasNextPage };
+  },
+);

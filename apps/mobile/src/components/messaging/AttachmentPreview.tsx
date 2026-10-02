@@ -1,5 +1,7 @@
 import type { StagedAttachment } from "@/features/messaging/attachments";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import { AppText, Icon, Sheet } from "@abonten/ui-native";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
@@ -11,11 +13,8 @@ import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 // field with an inline circular send button. A multi-photo gallery pick
 // skips this and stages in the composer strip instead.
 
-function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-}
+const formatBytes = (n: number): string =>
+  formatFileSize(n, getCurrentLocale());
 
 export function AttachmentPreview({
   attachment,
@@ -28,6 +27,8 @@ export function AttachmentPreview({
   onCancel: () => void;
   onConfirm: (caption: string) => void;
 }) {
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const [caption, setCaption] = useState("");
 
@@ -39,14 +40,14 @@ export function AttachmentPreview({
     <Sheet
       open={!!attachment}
       onClose={sending ? () => {} : onCancel}
-      title="Send attachment"
+      title={t("sendAttachment")}
       maxHeightRatio={0.82}
       footer={
         <View className="flex-row items-end gap-2">
           <TextInput
             value={caption}
             onChangeText={setCaption}
-            placeholder="Add a caption…"
+            placeholder={t("addACaption")}
             placeholderTextColor={c["muted-foreground"]}
             multiline
             editable={!sending}
@@ -58,7 +59,7 @@ export function AttachmentPreview({
             onPress={() => onConfirm(caption.trim())}
             disabled={sending}
             accessibilityRole="button"
-            accessibilityLabel="Send attachment"
+            accessibilityLabel={t("sendAttachment")}
             className="h-11 w-11 items-center justify-center rounded-full bg-primary active:opacity-80"
             style={{ opacity: sending ? 0.6 : 1 }}
           >
@@ -99,14 +100,14 @@ export function AttachmentPreview({
               </View>
               <View className="flex-1">
                 <AppText variant="bodyStrong" numberOfLines={1}>
-                  {attachment.fileName ?? "Attachment"}
+                  {attachment.fileName ?? t("attachment")}
                 </AppText>
                 <AppText variant="caption" tone="muted">
                   {attachment.kind === "video"
-                    ? "Video"
+                    ? t("video2")
                     : attachment.kind === "audio"
-                      ? "Audio"
-                      : "File"}
+                      ? t("audio")
+                      : t("file")}
                   {attachment.fileSize
                     ? ` · ${formatBytes(attachment.fileSize)}`
                     : ""}

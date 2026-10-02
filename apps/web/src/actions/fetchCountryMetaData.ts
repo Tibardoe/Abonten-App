@@ -1,5 +1,6 @@
 "use server";
 import { countryDetails } from "@/data/countryDetails";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { getDefaultMarket } from "@abonten/services/markets/marketConfig";
 import { cookies } from "next/headers";
 
@@ -8,14 +9,16 @@ import { cookies } from "next/headers";
  * the proxy keeps from the request's IP country, else the default market
  * (never a fixed country), so the dial code is always pre-selected.
  */
-export async function fetchCountryMetadata() {
-  const fetchedCountry = (await cookies()).get("country")?.value ?? "unknown";
+export const fetchCountryMetadata = withActionLocale(
+  async function fetchCountryMetadata() {
+    const fetchedCountry = (await cookies()).get("country")?.value ?? "unknown";
 
-  const details = countryDetails.find(
-    (item) => item.countryCode === fetchedCountry.toUpperCase(),
-  );
-  if (details) return details;
+    const details = countryDetails.find(
+      (item) => item.countryCode === fetchedCountry.toUpperCase(),
+    );
+    if (details) return details;
 
-  const fallback = (await getDefaultMarket()).countryCode;
-  return countryDetails.find((item) => item.countryCode === fallback);
-}
+    const fallback = (await getDefaultMarket()).countryCode;
+    return countryDetails.find((item) => item.countryCode === fallback);
+  },
+);

@@ -8,6 +8,7 @@ import { formatMoney } from "@abonten/core/formatMoney";
 import type { TransactionPeriod } from "@abonten/core/transactionsDateRange";
 import type { UserTransactionSummaryRow } from "@abonten/types/transactions";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 
 type SummaryResult =
   | { status: 200; data: UserTransactionSummaryRow[] }
@@ -24,6 +25,9 @@ export default function TransactionsSummaryCards({
   initialSummary: SummaryResult;
   fetchSummary: (period: TransactionPeriod) => Promise<SummaryResult>;
 }) {
+  const locale = useLocale();
+  const t = useTranslations("common");
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["user-transactions-summary", period],
     queryFn: () => fetchSummary(period),
@@ -38,7 +42,7 @@ export default function TransactionsSummaryCards({
   if (isError || !data || !("data" in data)) {
     return (
       <InlineErrorRetry
-        message="We couldn't load your transaction summary."
+        message={t("weCouldnTLoadYourTransaction")}
         onRetry={() => refetch()}
       />
     );
@@ -61,17 +65,17 @@ export default function TransactionsSummaryCards({
   const otherCurrencyRows = data.data.slice(1);
 
   const money = (amount: number, currency: string) =>
-    formatMoney(currency, Number(amount));
+    formatMoney(currency, Number(amount), { locale });
 
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatTile
-          label="Total Transactions"
+          label={t("totalTransactions")}
           value={String(row.total_transactions)}
         />
         <StatTile
-          label="Successful"
+          label={t("successful")}
           value={String(row.successful_count)}
           sublabel={
             row.amount_spent > 0
@@ -81,36 +85,36 @@ export default function TransactionsSummaryCards({
           icon={<TransactionStatusIcon status="paid" className="text-base" />}
         />
         <StatTile
-          label="Pending"
+          label={t("pending")}
           value={String(row.pending_count)}
           icon={
             <TransactionStatusIcon status="pending" className="text-base" />
           }
         />
         <StatTile
-          label="Failed"
+          label={t("failed")}
           value={String(row.failed_count)}
           icon={<TransactionStatusIcon status="failed" className="text-base" />}
         />
         <StatTile
-          label="Tickets Purchased"
+          label={t("ticketsPurchased")}
           value={String(row.tickets_purchased)}
         />
         <StatTile
-          label="Subscriptions"
+          label={t("subscriptions")}
           value={String(row.subscriptions_count)}
         />
       </div>
 
       {otherCurrencyRows.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Also spent{" "}
-          {otherCurrencyRows
-            .map((r: UserTransactionSummaryRow) =>
-              money(r.amount_spent, r.currency),
-            )
-            .join(", ")}
-          .
+          {t("alsoSpent", {
+            join: otherCurrencyRows
+              .map((r: UserTransactionSummaryRow) =>
+                money(r.amount_spent, r.currency),
+              )
+              .join(", "),
+          })}
         </p>
       )}
     </div>

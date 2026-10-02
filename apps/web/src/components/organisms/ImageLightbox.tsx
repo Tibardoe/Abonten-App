@@ -2,6 +2,7 @@
 
 import ModalShell from "@/components/atoms/ModalShell";
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { IoClose } from "react-icons/io5";
@@ -27,6 +28,8 @@ export default function ImageLightbox({
   open,
   onClose,
 }: ImageLightboxProps) {
+  const t = useTranslations("common");
+
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -57,7 +60,7 @@ export default function ImageLightbox({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close image viewer"
+        aria-label={t("closeImageViewer")}
         className="absolute top-4 right-4 md:top-6 md:right-6 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
       >
         <IoClose className="text-2xl" />
@@ -94,7 +97,7 @@ export default function ImageLightbox({
 
         {hasError && (
           <div className="absolute inset-0 flex items-center justify-center text-center text-sm text-white px-6">
-            Couldn't load this image.
+            {t("couldnTLoadThisImage")}
           </div>
         )}
       </div>

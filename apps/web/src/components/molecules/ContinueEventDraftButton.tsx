@@ -1,9 +1,11 @@
 "use client";
 
 import { type EventDraftDetail, getEventDraft } from "@/actions/getEventDraft";
-import EventUploadModal from "@/components/organisms/EventUploadModal";
+import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -25,6 +27,8 @@ export default function ContinueEventDraftButton({
   children,
   onDraftListChanged,
 }: ContinueEventDraftButtonProps) {
+  const t = useTranslations("common");
+
   const router = useRouter();
   const [draft, setDraft] = useState<EventDraftDetail | null>(null);
   const [loading, setLoading] = useState(false);
@@ -38,7 +42,7 @@ export default function ContinueEventDraftButton({
     openFilePicker,
     handleFileChange,
   } = useImageSelection({
-    invalidFileMessage: "Please select an image file for your event flyer.",
+    invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
     onInvalidFile: (message) => setError(message),
     onSelect: () => setShowModal(true),
   });
@@ -47,7 +51,7 @@ export default function ContinueEventDraftButton({
     setLoading(true);
     setError(null);
 
-    const response = await getEventDraft(draftId);
+    const response = await getEventDraft(draftId).catch(actionUnreachable);
     setLoading(false);
 
     if (response.status !== 200 || !response.data) {
@@ -79,7 +83,7 @@ export default function ContinueEventDraftButton({
         onClick={handleContinue}
         disabled={loading}
       >
-        {loading ? "Loading..." : children}
+        {loading ? t("loading") : children}
       </button>
 
       <input

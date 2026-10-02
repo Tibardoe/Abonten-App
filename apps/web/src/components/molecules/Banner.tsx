@@ -4,8 +4,8 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { generateSlug } from "@abonten/core/geerateSlug";
-// import { allEvents } from "@/data/allEvents";
 import type { UserPostType } from "@abonten/types/postsType";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 // import { useEffect, useState } from "react";
@@ -19,6 +19,10 @@ interface BannerProps {
 }
 
 export default function Banner({ event }: BannerProps) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   if (!event || !event.flyer_public_id) return null;
 
   const dateTime = getFormattedEventDate(
@@ -26,6 +30,7 @@ export default function Banner({ event }: BannerProps) {
     event.ends_at,
     event.occurrences,
     event.timezone,
+    locale,
   );
 
   return (
@@ -37,7 +42,7 @@ export default function Banner({ event }: BannerProps) {
             width: 900,
             height: 350,
           })}
-          alt={`${event.title} event flyer`}
+          alt={t("eventFlyer", { title: event.title })}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           priority
@@ -60,7 +65,7 @@ export default function Banner({ event }: BannerProps) {
           {/* Most Anticipated Tag */}
           <div className="mb-1 xs:mb-1.5 sm:mb-2">
             <span className="inline-block px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs xs:text-sm font-medium">
-              Most Anticipated
+              {t("mostAnticipated")}
             </span>
           </div>
 
@@ -82,18 +87,18 @@ export default function Banner({ event }: BannerProps) {
             <div className="flex items-center gap-1 xs:gap-2">
               <FiMapPin className="flex-shrink-0 text-xs xs:text-sm" />
               <span className="truncate">
-                {event.address.full_address || "Venue TBA"}
+                {event.address.full_address || t("venueTba")}
               </span>
             </div>
 
             <div className="flex items-center gap-1 xs:gap-2">
               <FiCalendar className="flex-shrink-0 text-xs xs:text-sm" />
-              <span>{dateTime ? dateTime.date : "Date TBA"}</span>
+              <span>{dateTime ? dateTime.date : t("dateTba")}</span>
             </div>
 
             <div className="flex items-center gap-1 xs:gap-2">
               <FiClock className="flex-shrink-0 text-xs xs:text-sm" />
-              <span>{dateTime.time || "Time TBA"}</span>
+              <span>{dateTime.time || t("timeTba")}</span>
             </div>
           </div>
 
@@ -101,15 +106,20 @@ export default function Banner({ event }: BannerProps) {
           <div className="mt-3 flex md:flex-col md:items-start items-center justify-between gap-2">
             <div className="px-2 py-1 xs:px-3 xs:py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full font-medium text-xs xs:text-sm">
               {event.min_price === 0 || event.min_price === null
-                ? "FREE ENTRY"
-                : `FROM ${formatMoney(event.currency, event.min_price, { trimZeroFraction: true })}`}
+                ? t("freeEntry")
+                : t("from", {
+                    formatMoney: formatMoney(event.currency, event.min_price, {
+                      trimZeroFraction: true,
+                      locale,
+                    }),
+                  })}
             </div>
 
             <Link
               href={`/events/${event.event_code.toLowerCase()}`}
               className="px-3 py-1.5 md:px-4 md:py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
             >
-              View Details
+              {t("viewDetails")}
               <FaArrowRightLong />
             </Link>
           </div>

@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { listMobileMoneyNetworksCore } from "@abonten/services/payments/mobileMoneyNetworksCore";
 
 export type MobileMoneyNetworkOption = {
@@ -23,7 +24,7 @@ type GetMobileMoneyNetworksResult =
  * by default); the server refuses markets without mobile money. Safe to
  * call unauthenticated (no user-specific data).
  */
-export default async function getPaystackMobileMoneyNetworks(
+export default withActionLocale(async function getPaystackMobileMoneyNetworks(
   countryCode?: string | null,
 ): Promise<GetMobileMoneyNetworksResult> {
   const result = await listMobileMoneyNetworksCore(countryCode ?? null);
@@ -34,4 +35,4 @@ export default async function getPaystackMobileMoneyNetworks(
     countryCode: result.data.countryCode,
     currency: result.data.currency,
   };
-}
+});

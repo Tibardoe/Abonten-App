@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
@@ -31,6 +32,8 @@ export default function ReviewPhotoLightbox({
   startIndex,
   onClose,
 }: ReviewPhotoLightboxProps) {
+  const t = useTranslations("common");
+
   useBodyScrollLock(true);
   const [api, setApi] = useState<CarouselApi>();
 
@@ -52,14 +55,14 @@ export default function ReviewPhotoLightbox({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close photo viewer"
+        aria-label={t("closePhotoViewer")}
         className="absolute inset-0 cursor-default"
       />
 
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close"
+        aria-label={t("close")}
         className="absolute top-4 right-4 z-10 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors"
       >
         <FiX className="text-xl" />
@@ -81,7 +84,7 @@ export default function ReviewPhotoLightbox({
                     src={buildCloudinaryUrl(photo.public_id, photo.version, {
                       width: 1000,
                     })}
-                    alt="Review photo"
+                    alt={t("reviewPhoto")}
                     fill
                     sizes="100vw"
                     className="object-contain"

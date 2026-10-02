@@ -9,6 +9,7 @@
 // things that are genuinely optional is honest and actionable.
 
 import type { VerificationStatus } from "@abonten/types/verificationType";
+import type { CoreTranslator } from "./i18n/translator";
 
 export type PlaceSetupItemKey =
   | "photos"
@@ -19,7 +20,12 @@ export type PlaceSetupItemKey =
 
 export type PlaceSetupItem = {
   key: PlaceSetupItemKey;
-  label: string;
+  /**
+   * Key under the core namespace; render with placeSetupItemLabel. Typed
+   * as the checklist's own group, so the web app knows which messages a
+   * screen showing it needs (scripts/i18n/gen-route-messages.mjs).
+   */
+  labelKey: `placeSetup.${string}`;
   complete: boolean;
   /** Which tab of the manage screen this item lives on. */
   tab: "photos" | "hours" | "details" | "services" | "verification";
@@ -49,29 +55,37 @@ export type PlaceSetupInput = {
 /** Three photos is the point where a listing stops looking empty. */
 export const PLACE_SETUP_MIN_PHOTOS = 3;
 
+/** "Add at least 3 photos" — the item's words in the reader's language. */
+export function placeSetupItemLabel(
+  t: CoreTranslator,
+  item: Pick<PlaceSetupItem, "labelKey">,
+): string {
+  return t(item.labelKey, { count: PLACE_SETUP_MIN_PHOTOS });
+}
+
 export function computePlaceSetup(input: PlaceSetupInput): PlaceSetup {
   const items: PlaceSetupItem[] = [
     {
       key: "photos",
-      label: `Add at least ${PLACE_SETUP_MIN_PHOTOS} photos`,
+      labelKey: "placeSetup.photos",
       complete: input.photoCount >= PLACE_SETUP_MIN_PHOTOS,
       tab: "photos",
     },
     {
       key: "hours",
-      label: "Set your opening hours",
+      labelKey: "placeSetup.hours",
       complete: input.hasOpeningHours,
       tab: "hours",
     },
     {
       key: "contact",
-      label: "Add a phone number or website",
+      labelKey: "placeSetup.contact",
       complete: input.hasContact,
       tab: "details",
     },
     {
       key: "services",
-      label: "List what you offer",
+      labelKey: "placeSetup.services",
       complete: input.serviceCount > 0,
       tab: "services",
     },
@@ -82,7 +96,7 @@ export function computePlaceSetup(input: PlaceSetupInput): PlaceSetup {
   if (input.verificationAvailable || input.verificationStatus) {
     items.push({
       key: "verification",
-      label: "Verify your place",
+      labelKey: "placeSetup.verification",
       complete: input.verificationStatus === "approved",
       tab: "verification",
       statusLabel: input.verificationStatus ?? null,

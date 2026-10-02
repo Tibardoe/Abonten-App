@@ -13,6 +13,7 @@ import type {
   MarketContextResult,
   PublicMarket,
 } from "@abonten/types/marketType";
+import { useLocale } from "@abonten/ui-native/i18n";
 import { useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { createContext, useContext, useMemo } from "react";
@@ -74,6 +75,7 @@ const viewerLocale = (() => {
 })();
 
 export function MarketProvider({ children }: { children: React.ReactNode }) {
+  const { locale } = useLocale();
   const { session } = useSession();
   const { area } = useExploreLocation();
   // A kilometre of precision is plenty to name the country and keeps the
@@ -134,13 +136,15 @@ export function MarketProvider({ children }: { children: React.ReactNode }) {
         );
         if (!converted || converted.stale) return null;
         return `≈ ${formatMoney(converted.approx, {
-          locale: context.locale,
+          // The app's language, not the device's: the estimate reads like
+          // every other amount on the screen.
+          locale,
           trimZeroFraction: true,
           viewerCurrency: context.displayCurrency,
         })}`;
       },
     };
-  }, [query.data]);
+  }, [query.data, locale]);
 
   return (
     <MarketContext.Provider value={value}>{children}</MarketContext.Provider>

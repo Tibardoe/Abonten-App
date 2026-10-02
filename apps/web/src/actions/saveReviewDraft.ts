@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type ReviewDraftPayload,
   reviewDraftPayloadSchema,
@@ -13,7 +15,7 @@ type SaveReviewDraftInput = {
   expectedUpdatedAt?: string;
 };
 
-export async function saveReviewDraft({
+export const saveReviewDraft = withActionLocale(async function saveReviewDraft({
   draftId,
   payload,
   expectedUpdatedAt,
@@ -32,16 +34,16 @@ export async function saveReviewDraft({
     };
   }
   if (!user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   const parsed = reviewDraftPayloadSchema.safeParse(payload);
   if (!parsed.success) {
-    return { status: 400, message: "Invalid draft data." };
+    return { status: 400, message: tr("invalidDraftData") };
   }
 
   if (parsed.data.reviewedId === user.id) {
-    return { status: 400, message: "You cannot review yourself" };
+    return { status: 400, message: tr("youCannotReviewYourself") };
   }
 
   if (draftId) {
@@ -59,13 +61,12 @@ export async function saveReviewDraft({
       };
     }
     if (!existingDraft || existingDraft.user_id !== user.id) {
-      return { status: 404, message: "Draft not found." };
+      return { status: 404, message: tr("draftNotFound") };
     }
     if (expectedUpdatedAt && existingDraft.updated_at !== expectedUpdatedAt) {
       return {
         status: 409,
-        message:
-          "This draft was updated elsewhere — reload to see the latest version.",
+        message: tr("thisDraftWasUpdatedElsewhereReload"),
       };
     }
   }
@@ -80,7 +81,7 @@ export async function saveReviewDraft({
       .eq("id", parsed.data.reviewedId)
       .maybeSingle();
     title = reviewedUser?.username
-      ? `Review of ${reviewedUser.username}`
+      ? tr("reviewOf", { username: reviewedUser.username })
       : null;
   }
 
@@ -126,7 +127,7 @@ export async function saveReviewDraft({
 
     return {
       status: 200,
-      message: "Draft saved.",
+      message: tr("draftSaved"),
       data: { draftId, updatedAt: refreshedDraft?.updated_at },
     };
   }
@@ -140,7 +141,9 @@ export async function saveReviewDraft({
   if (insertDraftError || !newDraft) {
     return {
       status: 500,
-      message: `Failed to save draft: ${insertDraftError?.message ?? "unknown error"}`,
+      message: tr("failedToSaveDraft", {
+        reason: insertDraftError?.message ?? tr("unknownError"),
+      }),
     };
   }
 
@@ -164,7 +167,7 @@ export async function saveReviewDraft({
 
   return {
     status: 200,
-    message: "Draft saved.",
+    message: tr("draftSaved"),
     data: { draftId: newDraft.id, updatedAt: newDraft.updated_at },
   };
-}
+});

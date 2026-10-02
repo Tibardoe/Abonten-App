@@ -2,6 +2,7 @@
 
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import RequestBookingModal from "@/places/organisms/RequestBookingModal";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type BookingService = {
@@ -29,6 +30,8 @@ export default function RequestBookingButton({
   ownerId,
   services,
 }: RequestBookingButtonProps) {
+  const t = useTranslations("places");
+
   const { data: user } = useCurrentUser();
   const [showModal, setShowModal] = useState(false);
 
@@ -41,7 +44,7 @@ export default function RequestBookingButton({
         onClick={() => setShowModal(true)}
         className="flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
       >
-        Book
+        {t("book")}
       </button>
 
       {showModal && (

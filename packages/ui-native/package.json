@@ -15,7 +15,10 @@
   "dependencies": {
     "@abonten/core": "*",
     "@abonten/i18n": "*",
-    "@abonten/ui-tokens": "*"
+    "@abonten/ui-tokens": "*",
+    "@formatjs/intl-locale": "^5.3.12",
+    "@formatjs/intl-pluralrules": "^6.3.15",
+    "@formatjs/intl-relativetimeformat": "^12.3.15"
   },
   "peerDependencies": {
     "@expo/vector-icons": "*",
@@ -29,7 +32,8 @@
     "react-native-gesture-handler": "*",
     "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
-    "react-native-svg": "*"
+    "react-native-svg": "*",
+    "use-intl": ">=4"
   },
   "devDependencies": {
     "@abonten/config": "*",

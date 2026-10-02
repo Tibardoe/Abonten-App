@@ -1,5 +1,6 @@
 import { discoveryRoute, signedIn } from "@/app/api/mobile/_lib/discoveryRoute";
 import { getContentCampaignCheckoutCore } from "@abonten/services/content/campaigns/contentCampaignCore";
+import { bindLocaleFromRequest } from "@abonten/services/i18n/requestLocale";
 import { checkoutIdSchema } from "@abonten/validation/contentSchemas";
 
 // GET /api/mobile/content/campaigns/checkout/[checkoutId] — a campaign checkout for the payment screen
@@ -7,6 +8,7 @@ export async function GET(
   req: Request,
   { params }: { params: Promise<{ checkoutId: string }> },
 ) {
+  bindLocaleFromRequest(req);
   const { checkoutId } = await params;
   return discoveryRoute(
     req,

@@ -84,6 +84,18 @@ export const PAYMENT_METHOD_LABEL: Record<PaymentMethodCode, string> = {
   wallet: "Wallet",
 };
 
+/**
+ * The method's name in the reader's language (`paymentMethods.*` of the
+ * core namespace). PAYMENT_METHOD_LABEL above is the English name the admin
+ * console and the logs use.
+ */
+export function paymentMethodLabel(
+  t: (key: string) => string,
+  code: PaymentMethodCode,
+): string {
+  return t(`paymentMethods.${code}`);
+}
+
 /** How an organizer receives a payout. */
 export type PayoutMethodCode = "mobile_money" | "bank";
 

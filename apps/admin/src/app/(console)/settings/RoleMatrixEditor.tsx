@@ -1,5 +1,6 @@
 "use client";
 
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { setRolePermission } from "@/server/actions/adminSettings";
 import type { RoleMatrix } from "@abonten/types/adminTypes";
 import { useRouter } from "next/navigation";
@@ -35,7 +36,7 @@ export function RoleMatrixEditor({
         roleKey,
         permissionKey: permKey,
         enabled: next,
-      });
+      }).catch(actionUnreachable);
       setBusyCell(null);
       if (res.status === 200 && res.data) {
         const next = res.data.grants;

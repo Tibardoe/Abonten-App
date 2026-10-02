@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import {
   type UpdateEventCoreResult,
   updateEventCore,
 } from "@abonten/services/events/updateEventCore";
-import { revalidatePath } from "next/cache";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
 export type UpdateEventInput = {
@@ -37,7 +39,7 @@ export type UpdateEventInput = {
  * this wrapper only adds auth, server-side flyer-File upload, and the
  * Next cache revalidation the app router needs.
  */
-export async function updateEvent(
+export const updateEvent = withActionLocale(async function updateEvent(
   formData: UpdateEventInput,
 ): Promise<UpdateEventCoreResult | { status: 401 | 500; message: string }> {
   const supabase = await createClient();
@@ -48,7 +50,7 @@ export async function updateEvent(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: tr("userNotAuthenticated") };
   }
 
   let flyerPublicId: string | undefined;
@@ -62,7 +64,7 @@ export async function updateEvent(
         status: 500,
         message:
           (flyerUpload as { error?: string })?.error ??
-          "Flyer upload to Cloudinary failed.",
+          tr("flyerUploadToCloudinaryFailed"),
       };
     }
 
@@ -90,13 +92,13 @@ export async function updateEvent(
   });
 
   if (result.status === 200) {
-    revalidatePath("/manage/my-events");
-    revalidatePath(`/manage/events/${formData.eventId}`);
-    revalidatePath("/manage/dashboard");
+    revalidateAppPath("/manage/my-events");
+    revalidateAppPath(`/manage/events/${formData.eventId}`);
+    revalidateAppPath("/manage/dashboard");
     // The public event page is ISR-cached and shows the title/description/
     // capacity/schedule/flyer this action just changed.
-    revalidatePath(`/events/${result.eventCode.toLowerCase()}`);
+    revalidateAppPath(`/events/${result.eventCode.toLowerCase()}`);
   }
 
   return result;
-}
+});

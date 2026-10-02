@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type MutatePayoutAccountResult,
   removePayoutAccountCore,
 } from "@abonten/services/organizer/payoutAccountCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Soft-removes a payout account (status -> 'removed'), matching
@@ -17,7 +19,7 @@ import { revalidatePath } from "next/cache";
  * or it's the destination of a payout still 'processing' (removing it mid-
  * flight would orphan the in-progress request's destination).
  */
-export default async function removePayoutAccount(
+export default withActionLocale(async function removePayoutAccount(
   payoutAccountId: string,
 ): Promise<MutatePayoutAccountResult> {
   const supabase = await createClient();
@@ -28,7 +30,7 @@ export default async function removePayoutAccount(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await removePayoutAccountCore(
@@ -38,8 +40,8 @@ export default async function removePayoutAccount(
   );
 
   if (result.status === 200) {
-    revalidatePath("/finances/payout-accounts");
+    revalidateAppPath("/finances/payout-accounts");
   }
 
   return result;
-}
+});

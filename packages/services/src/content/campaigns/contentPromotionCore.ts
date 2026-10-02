@@ -17,6 +17,7 @@ import {
   type EstimateContentPromotionInput,
   RADIUS_OPTIONS_KM,
 } from "@abonten/validation/contentSchemas";
+import { coreT, tr } from "../../i18n/requestLocale";
 import { resolveContentAccess } from "../contentProgram";
 import { type Envelope, FAIL, accountIsRestricted } from "../contentShared";
 
@@ -112,7 +113,10 @@ export async function getPromotionOptionsCore(
 ): Promise<Envelope<ContentPromotionOptions>> {
   const { program } = await resolveContentAccess(supabase, userId);
   if (!program.spotlightPromotions) {
-    return { status: 403, message: "Promotions aren't available yet." };
+    return {
+      status: 403,
+      message: tr("promotionsArenTAvailableYet"),
+    };
   }
   const pricing = await readPromotionPricing(supabase);
   if (!pricing) return FAIL;
@@ -141,10 +145,16 @@ export async function quotePromotion(
 ): Promise<Envelope<PromotionQuote>> {
   const { program, settings } = await resolveContentAccess(supabase, userId);
   if (!program.spotlightPromotions || !settings) {
-    return { status: 403, message: "Promotions aren't available yet." };
+    return {
+      status: 403,
+      message: tr("promotionsArenTAvailableYet"),
+    };
   }
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   const { data: post } = await supabase
     .from("content_post")
@@ -152,23 +162,26 @@ export async function quotePromotion(
     .eq("id", input.postId)
     .maybeSingle();
   if (!post || post.author_id !== userId) {
-    return { status: 404, message: "Spotlight not found." };
+    return { status: 404, message: tr("spotlightNotFound") };
   }
   if (post.kind !== "spotlight") {
-    return { status: 400, message: "Only a Spotlight can be promoted." };
+    return {
+      status: 400,
+      message: tr("onlyASpotlightCanBePromoted"),
+    };
   }
   if (post.status !== "published" || post.moderation_state !== "visible") {
     return {
       status: 400,
-      message: "Only a live Spotlight can be promoted.",
+      message: tr("onlyALiveSpotlightCanBe"),
     };
   }
   const pricing = await readPromotionPricing(supabase);
   if (!pricing) return FAIL;
 
-  const budgetError = budgetProblem(pricing, input.budgetMinor);
+  const budgetError = budgetProblem(coreT(), pricing, input.budgetMinor);
   if (budgetError) return { status: 400, message: budgetError };
-  const durationError = durationProblem(pricing, input.durationDays);
+  const durationError = durationProblem(coreT(), pricing, input.durationDays);
   if (durationError) return { status: 400, message: durationError };
 
   let targetingLocation: string | null = null;
@@ -178,8 +191,7 @@ export async function quotePromotion(
     if (!point) {
       return {
         status: 400,
-        message:
-          "This Spotlight has no location. Link an event or place, or show it everywhere.",
+        message: tr("thisSpotlightHasNoLocationLink"),
       };
     }
     targetingLocation = `SRID=4326;POINT(${point.lng} ${point.lat})`;
@@ -229,9 +241,9 @@ export function undeliverableMessage(
   estimate: ContentPromotionEstimate,
 ): string {
   if (estimate.basis === "no_data") {
-    return "We can't estimate reach for promotions yet. Please try again later.";
+    return tr("weCanTEstimateReachFor");
   }
-  return "The audience for this promotion is too small for this budget right now. Lower the budget, let it run longer or show it to a wider area.";
+  return tr("theAudienceForThisPromotionIs");
 }
 
 function shareByRadius(raw: unknown): Record<string, number> {

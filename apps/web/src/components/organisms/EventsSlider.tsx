@@ -2,6 +2,7 @@
 
 import { generateSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -31,6 +32,8 @@ export default function EventsSlider({
   urlPath,
   hideWhenEmpty = false,
 }: EventsSliderProp) {
+  const t = useTranslations("common");
+
   const [showLeftArrow, setShowLeftArrow] = useState(false);
 
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -107,7 +110,7 @@ export default function EventsSlider({
             href={viewAllLink}
             className="flex items-center gap-0.5 text-sm font-medium text-primary group transition-all"
           >
-            <span className="hover:underline">View all</span>
+            <span className="hover:underline">{t("viewAll")}</span>
             <MdKeyboardArrowRight className="text-lg transition-transform group-hover:translate-x-1" />
           </Link>
         )}
@@ -123,7 +126,7 @@ export default function EventsSlider({
         {events.length === 0 && (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-3">
             <p className="text-sm text-muted-foreground">
-              No events in this category yet.
+              {t("noEventsInThisCategoryYet")}
             </p>
             <Link
               href={
@@ -131,7 +134,7 @@ export default function EventsSlider({
               }
               className="text-sm font-medium text-primary hover:underline whitespace-nowrap"
             >
-              Browse all events
+              {t("browseAllEvents")}
             </Link>
           </div>
         )}
@@ -142,7 +145,7 @@ export default function EventsSlider({
             type="button"
             onClick={() => scroll("left")}
             className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-popover transition-all hover:scale-110"
-            aria-label="Scroll left"
+            aria-label={t("scrollLeft")}
           >
             <FaArrowLeftLong className="text-xl text-popover-foreground" />
           </button>
@@ -184,7 +187,7 @@ export default function EventsSlider({
             type="button"
             onClick={() => scroll("right")}
             className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-popover transition-all hover:scale-110"
-            aria-label="Scroll right"
+            aria-label={t("scrollRight")}
           >
             <FaArrowRightLong className="text-xl text-popover-foreground" />
           </button>

@@ -4,7 +4,10 @@ import { reviewFieldOpsOnboarding } from "@/actions/fieldOps/reviewFieldOpsOnboa
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -16,44 +19,52 @@ export default function ReviewDecisionForm({
   campaignId: string;
   onboardingId: string;
 }) {
+  const t = useTranslations("fieldOps");
+
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");
 
-  const decide = (decision: "verified" | "needs_changes" | "rejected") =>
+  const decide = async (
+    decision: "verified" | "needs_changes" | "rejected",
+  ) => {
+    if (decision !== "verified" && note.trim().length < 3) {
+      toast.error(t("tellTheMemberWhatToChange"));
+      return;
+    }
+    if (decision === "rejected") {
+      const confirmed = await confirm({
+        title: t("rejectOnboardingTitle"),
+        message: t("rejectOnboardingBody"),
+        confirmLabel: t("reject"),
+      });
+      if (!confirmed) return;
+    }
     start(async () => {
-      if (decision !== "verified" && note.trim().length < 3) {
-        toast.error("Tell the member what to change, or why it was rejected.");
-        return;
-      }
-      if (
-        decision === "rejected" &&
-        !confirm("Reject this onboarding? The member is told why.")
-      ) {
-        return;
-      }
       const res = await reviewFieldOpsOnboarding({
         campaignId,
         onboardingId,
         decision,
         note: note.trim() || null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
-        toast.success(res.message ?? "Saved.");
+        toast.success(res.message ?? t("saved"));
         router.push("/field/lead/review");
         router.refresh();
       } else {
-        toast.error(res.message ?? "Couldn't save the decision.");
+        toast.error(res.message ?? t("couldnTSaveTheDecision"));
       }
     });
+  };
 
   return (
     <section className="flex flex-col gap-3 rounded-xl border p-4">
-      <h2 className="font-semibold">Your decision</h2>
+      <h2 className="font-semibold">{t("yourDecision")}</h2>
       <div className="flex flex-col gap-1">
         <Label htmlFor="review-note">
-          Note to the member (required unless verifying)
+          {t("noteToTheMemberRequiredUnless")}
         </Label>
         <Textarea
           id="review-note"
@@ -61,26 +72,26 @@ export default function ReviewDecisionForm({
           maxLength={2000}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="e.g. The interior photo is blurry; retake it."
+          placeholder={t("eGTheInteriorPhotoIs")}
         />
       </div>
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => decide("verified")} disabled={pending}>
-          Verify
+          {t("verify")}
         </Button>
         <Button
           variant="outline"
           onClick={() => decide("needs_changes")}
           disabled={pending}
         >
-          Ask for changes
+          {t("askForChanges")}
         </Button>
         <Button
           variant="destructive"
           onClick={() => decide("rejected")}
           disabled={pending}
         >
-          Reject
+          {t("reject")}
         </Button>
       </div>
     </section>

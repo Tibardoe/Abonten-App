@@ -16,6 +16,7 @@ import {
 } from "@abonten/core/organizerDashboardDateRange";
 import { viewerTimeZone } from "@abonten/core/time";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 export default function EventAnalyticsDashboard({
@@ -23,6 +24,10 @@ export default function EventAnalyticsDashboard({
 }: {
   eventId: string;
 }) {
+  const locale = useLocale();
+
+  const t = useTranslations("common");
+
   const [period, setPeriod] = useState<DashboardPeriod>("all");
   // "Today" is the organizer's own day, in the browser's zone.
   const { start, end } = getDashboardPeriodRange(
@@ -51,7 +56,12 @@ export default function EventAnalyticsDashboard({
   // event_occurrence instead — see EventDateBreakdown below), so this
   // single-range header line only renders when there's a single date to show.
   const dateRange = overview?.starts_at
-    ? formatFullDateTimeRange(overview.starts_at, overview.ends_at)
+    ? formatFullDateTimeRange(
+        overview.starts_at,
+        overview.ends_at,
+        undefined,
+        locale,
+      )
     : null;
 
   return (
@@ -61,12 +71,12 @@ export default function EventAnalyticsDashboard({
           <Skeleton className="h-7 w-64" />
         ) : (
           <h1 className="font-bold text-xl md:text-2xl">
-            {overview?.event_title ?? "Event"}
+            {overview?.event_title ?? t("event2")}
           </h1>
         )}
         {dateRange && (
           <p className="text-sm text-muted-foreground mt-1">
-            {dateRange.date} &middot; {dateRange.time}
+            {t("text2", { date: dateRange.date, time: dateRange.time })}
           </p>
         )}
       </div>
@@ -74,11 +84,11 @@ export default function EventAnalyticsDashboard({
       <DashboardPeriodFilter
         value={period}
         onChange={setPeriod}
-        ariaLabel="Event insights time period"
+        ariaLabel={t("eventInsightsTimePeriod")}
       />
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Overview</h2>
+        <h2 className="font-bold md:text-lg">{t("overview")}</h2>
         <EventOverviewCards
           overview={overview}
           isLoading={isLoading}
@@ -100,6 +110,7 @@ export default function EventAnalyticsDashboard({
         endDate={endDate}
       />
       <EventPromoBreakdown
+        currency={overview?.currency ?? null}
         eventId={eventId}
         period={period}
         startDate={startDate}

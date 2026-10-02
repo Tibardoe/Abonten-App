@@ -1,6 +1,7 @@
 "use client";
 
 import { isImageFile } from "@abonten/core/isImageFile";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 type UseImageSelectionOptions = {
@@ -20,10 +21,12 @@ type UseImageSelectionOptions = {
 // lifecycle so callers don't each have to remember to revoke it.
 export function useImageSelection({
   onInvalidFile,
-  invalidFileMessage = "Please select an image file.",
+  invalidFileMessage,
   maxSizeBytes,
   onSelect,
 }: UseImageSelectionOptions = {}) {
+  const t = useTranslations("common");
+
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,13 +46,13 @@ export function useImageSelection({
     if (!file) return;
 
     if (!isImageFile(file)) {
-      onInvalidFile?.(invalidFileMessage);
+      onInvalidFile?.(invalidFileMessage ?? t("pleaseSelectAnImageFile"));
       return;
     }
 
     if (maxSizeBytes && file.size > maxSizeBytes) {
       const maxMb = Math.round(maxSizeBytes / (1024 * 1024));
-      onInvalidFile?.(`Image is too large. Maximum size is ${maxMb}MB.`);
+      onInvalidFile?.(t("imageIsTooLargeMaximumSize", { maxMb: maxMb }));
       return;
     }
 

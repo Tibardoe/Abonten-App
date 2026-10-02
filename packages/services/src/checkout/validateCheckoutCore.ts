@@ -15,6 +15,7 @@ import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { ReferralHint } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT, tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // A checkout retried right as its reservation expires re-runs this whole
@@ -84,7 +85,7 @@ export async function validateCheckoutCore(
   // transports (web action + /api/mobile/checkout/validate) reach this
   // shared core, so this one guard covers them both — see
   // @abonten/core/checkoutLimits (limitation DOS-001).
-  const quantityCheck = validateCheckoutQuantities(quantities);
+  const quantityCheck = validateCheckoutQuantities(coreT(), quantities);
 
   if (!quantityCheck.ok) {
     return { status: 400, message: quantityCheck.message };
@@ -99,7 +100,7 @@ export async function validateCheckoutCore(
   if (!allowed) {
     return {
       status: 429,
-      message: "Too many checkout attempts. Please try again shortly.",
+      message: tr("tooManyCheckoutAttemptsPleaseTry"),
     };
   }
 
@@ -128,7 +129,7 @@ export async function validateCheckoutCore(
       `Error fetching ticket checkout data: ${ticketCheckoutDataError.message}`,
     );
 
-    return { status: 500, message: "Something went wrong" };
+    return { status: 500, message: tr("somethingWentWrong2") };
   }
 
   const pendingRows = (ticketCheckoutData ?? []) as PendingCheckoutRow[];
@@ -140,7 +141,7 @@ export async function validateCheckoutCore(
       status: 300,
       reason: "pending_checkout" as const,
       checkoutId: pendingRows[0].checkout_session_id,
-      message: "You already have a pending ticket checkout for this event",
+      message: tr("youAlreadyHaveAPendingTicket"),
     };
   }
 
@@ -163,11 +164,11 @@ export async function validateCheckoutCore(
   if (eventError) {
     logger.error(`Failed to fetch event:${eventError.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!event) {
-    return { status: 404, message: "No event found!" };
+    return { status: 404, message: tr("noEventFound") };
   }
 
   // The caller's copy of the event can be stale (a cached detail page held
@@ -181,8 +182,8 @@ export async function validateCheckoutCore(
       status: 409,
       message:
         event.status === "canceled"
-          ? "This event has been canceled."
-          : "This event is not currently on sale.",
+          ? tr("thisEventHasBeenCanceled")
+          : tr("thisEventIsNotCurrentlyOn"),
     };
   }
 
@@ -202,20 +203,23 @@ export async function validateCheckoutCore(
 
   if (occurrenceState.blockReason === "no_dates") {
     logger.error(`Event ${eventId} has no resolvable start/end date`);
-    return { status: 500, message: "This event has no scheduled date" };
+    return {
+      status: 500,
+      message: tr("thisEventHasNoScheduledDate"),
+    };
   }
 
   if (occurrenceState.blockReason === "ended") {
     return {
       status: 409,
-      message: "Ticket sales for this event have closed — it has ended.",
+      message: tr("ticketSalesForThisEventHave"),
     };
   }
 
   if (occurrenceState.blockReason === "ongoing_no_future") {
     return {
       status: 409,
-      message: "This event is currently in progress and has no upcoming dates.",
+      message: tr("thisEventIsCurrentlyInProgress"),
     };
   }
 
@@ -231,10 +235,10 @@ export async function validateCheckoutCore(
 
     if (!occurrenceCheck.ok) {
       return occurrenceCheck.reason === "unknown"
-        ? { status: 400, message: "Invalid event date" }
+        ? { status: 400, message: tr("invalidEventDate") }
         : {
             status: 409,
-            message: "That date has already started — pick an upcoming date.",
+            message: tr("thatDateHasAlreadyStartedPick"),
           };
     }
   }
@@ -267,8 +271,7 @@ export async function validateCheckoutCore(
     if (promoCodeResponse.status !== 200) {
       return {
         status: promoCodeResponse.status,
-        message:
-          promoCodeResponse.message ?? "That promo code couldn't be applied.",
+        message: promoCodeResponse.message ?? tr("thatPromoCodeCouldnTBe"),
       };
     }
 
@@ -294,7 +297,7 @@ export async function validateCheckoutCore(
 
   if (ticketTypeError) {
     logger.error(`Failed to fetch ticket types: ${ticketTypeError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const priceById = new Map(
@@ -325,7 +328,9 @@ export async function validateCheckoutCore(
     if (unitPrice === undefined) {
       return {
         status: 404,
-        message: `Ticket of type ${ticketTypeId} not found`,
+        message: tr("ticketOfTypeNotFound", {
+          ticketTypeId: ticketTypeId,
+        }),
       };
     }
 
@@ -394,7 +399,7 @@ export async function validateCheckoutCore(
     // internal detail) — surface them instead of a generic message.
     return {
       status: 409,
-      message: createError?.message || "Something went wrong!",
+      message: createError?.message || tr("somethingWentWrong"),
     };
   }
 

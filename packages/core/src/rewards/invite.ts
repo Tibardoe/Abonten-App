@@ -2,6 +2,7 @@ import type {
   ReferralBindOutcome,
   ReferralBindResult,
 } from "@abonten/types/rewards";
+import type { CoreTranslator } from "../i18n/translator";
 import { formatCredit } from "./creditAmount";
 import type { StoredTouch, StoredTouchMap } from "./referralAttribution";
 import { normalizeReferralCode } from "./referralCode";
@@ -126,26 +127,37 @@ export function isFinalBindResult(result: ReferralBindResult): boolean {
   );
 }
 
-/** The share text for an invite (WhatsApp first in Ghana). */
-export function inviteShareMessage(input: {
-  url: string;
-  refereeMinor: number | null;
-  minOrderMinor: number | null;
-  currency: string;
-}): string {
-  const offer =
-    input.refereeMinor && input.refereeMinor > 0
-      ? ` and get ${formatCredit(input.refereeMinor, input.currency)} off your first ticket${
-          input.minOrderMinor
-            ? ` of ${formatCredit(input.minOrderMinor, input.currency)} or more`
-            : ""
-        }`
-      : "";
-  return `Join me on Abonten to find events and places near you${offer}: ${input.url}`;
+/**
+ * The share text for an invite (WhatsApp first in Ghana), in the sharer's
+ * language. Words live under `invite.*` of the core namespace.
+ */
+export function inviteShareMessage(
+  t: CoreTranslator,
+  input: {
+    url: string;
+    refereeMinor: number | null;
+    minOrderMinor: number | null;
+    currency: string;
+  },
+): string {
+  if (!input.refereeMinor || input.refereeMinor <= 0) {
+    return t("invite.share", { url: input.url });
+  }
+  const amount = formatCredit(input.refereeMinor, input.currency);
+  return input.minOrderMinor
+    ? t("invite.shareWithOfferMin", {
+        url: input.url,
+        amount,
+        min: formatCredit(input.minOrderMinor, input.currency),
+      })
+    : t("invite.shareWithOffer", { url: input.url, amount });
 }
 
 /** What to tell the person after a bind attempt. */
-export function bindResultMessage(outcome: ReferralBindOutcome): {
+export function bindResultMessage(
+  t: CoreTranslator,
+  outcome: ReferralBindOutcome,
+): {
   tone: "success" | "info" | "error";
   text: string;
 } {
@@ -153,18 +165,24 @@ export function bindResultMessage(outcome: ReferralBindOutcome): {
   switch (outcome.result) {
     case "bound": {
       const joined = name
-        ? `You joined with ${name}'s invite.`
-        : "You joined with a friend's invite.";
+        ? t("invite.joinedWith", { name })
+        : t("invite.joinedWithFriend");
       if (outcome.welcome === "granted" && outcome.welcomeMinor) {
         return {
           tone: "success",
-          text: `${joined} ${formatCredit(outcome.welcomeMinor, outcome.currency)} welcome credit is ready for your first ticket.`,
+          text: t("invite.welcomeReady", {
+            joined,
+            amount: formatCredit(outcome.welcomeMinor, outcome.currency),
+          }),
         };
       }
       if (outcome.welcome === "needs_phone" && outcome.welcomeMinor) {
         return {
           tone: "success",
-          text: `${joined} Verify your phone number to get ${formatCredit(outcome.welcomeMinor, outcome.currency)} off your first ticket.`,
+          text: t("invite.welcomeNeedsPhone", {
+            joined,
+            amount: formatCredit(outcome.welcomeMinor, outcome.currency),
+          }),
         };
       }
       return { tone: "success", text: joined };
@@ -173,50 +191,29 @@ export function bindResultMessage(outcome: ReferralBindOutcome): {
       return {
         tone: "info",
         text: name
-          ? `You already joined with ${name}'s invite.`
-          : "You already joined with an invite.",
+          ? t("invite.alreadyBoundWith", { name })
+          : t("invite.alreadyBound"),
       };
     case "own_code":
-      return { tone: "error", text: "That's your own invite code." };
+      return { tone: "error", text: t("invite.ownCode") };
     case "unknown_code":
-      return {
-        tone: "error",
-        text: "We couldn't find that invite code. Check it and try again.",
-      };
+      return { tone: "error", text: t("invite.unknownCode") };
     case "invalid":
-      return { tone: "error", text: "Enter the 7-character invite code." };
+      return { tone: "error", text: t("invite.invalid") };
     case "too_late":
-      return {
-        tone: "error",
-        text: "Invite codes can only be used in your first week on Abonten.",
-      };
+      return { tone: "error", text: t("invite.tooLate") };
     case "not_new":
-      return {
-        tone: "error",
-        text: "Invite codes are only for new accounts.",
-      };
+      return { tone: "error", text: t("invite.notNew") };
     case "circular":
-      return {
-        tone: "error",
-        text: "You can't join with the invite of someone you invited.",
-      };
+      return { tone: "error", text: t("invite.circular") };
     case "referrer_restricted":
-      return {
-        tone: "error",
-        text: "This invite code can't be used right now.",
-      };
+      return { tone: "error", text: t("invite.referrerRestricted") };
     case "rate_limited":
-      return {
-        tone: "error",
-        text: "Too many tries. Wait a few minutes and try again.",
-      };
+      return { tone: "error", text: t("invite.rateLimited") };
     case "capture_off":
     case "program_off":
-      return { tone: "info", text: "Invites aren't available right now." };
+      return { tone: "info", text: t("invite.unavailable") };
     default:
-      return {
-        tone: "error",
-        text: "We couldn't apply the invite. Please try again.",
-      };
+      return { tone: "error", text: t("invite.failed") };
   }
 }

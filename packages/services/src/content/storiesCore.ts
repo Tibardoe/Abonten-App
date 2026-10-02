@@ -7,6 +7,7 @@ import type {
   StoryTrayEntry,
 } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { tr } from "../i18n/requestLocale";
 import { resolveContentAccess } from "./contentProgram";
 import {
   type Envelope,
@@ -108,7 +109,9 @@ export async function getStoryTrayCore(
                 kind: "organizer",
                 id: u.id,
                 name:
-                  u.full_name ?? (u.username as string | null) ?? "Organizer",
+                  u.full_name ??
+                  (u.username as string | null) ??
+                  tr("organizerFallbackName"),
                 username: u.username as string | null,
                 avatarPublicId: u.avatar_public_id,
                 avatarVersion: u.avatar_version,
@@ -145,14 +148,14 @@ export async function getStorySequenceCore(
     input.publisherKind,
     input.publisherId,
   );
-  if (!publisher) return { status: 404, message: "Publisher not found." };
+  if (!publisher) return { status: 404, message: tr("publisherNotFound") };
   const isSelf =
     !!userId &&
     (input.publisherKind === "place"
       ? publisher.ownerId === userId
       : publisher.id === userId);
   if (!program.stories && !isSelf) {
-    return { status: 403, message: "Stories aren't available yet." };
+    return { status: 403, message: tr("storiesArenTAvailableYet") };
   }
   let query = supabase
     .from("content_post")
@@ -192,7 +195,10 @@ export async function setStoryMuteCore(
   },
 ): Promise<Envelope<{ muted: boolean }>> {
   if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
+    return {
+      status: 403,
+      message: tr("yourAccountHasBeenRestricted"),
+    };
   }
   if (input.muted) {
     const { error } = await supabase.from("content_mute").upsert(

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import EventCardMenuModal from "../molecules/EventCardMenuModal";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
@@ -30,6 +31,8 @@ export default function EventCardMenuBtn({
   organizerId,
   eventStatus,
 }: EventProp) {
+  const t = useTranslations("common");
+
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,7 +40,7 @@ export default function EventCardMenuBtn({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Event options"
+          aria-label={t("eventOptions")}
           className="flex-shrink-0 rounded-full p-1 transition-colors hover:bg-accent"
         >
           <MaskIcon

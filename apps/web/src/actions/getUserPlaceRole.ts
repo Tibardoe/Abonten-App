@@ -1,40 +1,28 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
+import { userPlaceRoleQuery } from "@abonten/services/profile/userRolesQuery";
 
-export async function getUserPlaceRole(userId: string) {
-  const supabase = await createClient();
+export const getUserPlaceRole = withActionLocale(
+  async function getUserPlaceRole(userId: string) {
+    const supabase = await createClient();
 
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (!user || userError || user.id !== userId) {
-      return { status: 401, role: "none" };
+      if (!user || userError || user.id !== userId) {
+        return { status: 401, role: "none" };
+      }
+
+      return await userPlaceRoleQuery(supabase, userId);
+    } catch (error) {
+      logger.error("Error checking user place role:", error);
+      return { role: "none" };
     }
-
-    const { data: ownedPlace, error: ownedPlaceError } = await supabase
-      .from("place")
-      .select("owner_id")
-      .eq("owner_id", userId)
-      .limit(1);
-
-    if (ownedPlaceError) {
-      logger.error(`Error fetching owned places: ${ownedPlaceError.message}`);
-
-      return { status: 500, message: "Something went wrong!" };
-    }
-
-    if (ownedPlace && ownedPlace.length > 0) {
-      return { role: "owner" };
-    }
-
-    return { role: "none" };
-  } catch (error) {
-    logger.error("Error checking user place role:", error);
-    return { role: "none" };
-  }
-}
+  },
+);

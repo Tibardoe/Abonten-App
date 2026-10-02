@@ -17,6 +17,7 @@ import {
   Refresher,
   useToast,
 } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useState } from "react";
 import { FlatList, View } from "react-native";
 
@@ -27,10 +28,15 @@ import { FlatList, View } from "react-native";
 // follow.
 
 function BlockedRow({ account }: { account: BlockedAccount }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("settings");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const unblock = useSetUserBlock();
   const [done, setDone] = useState(false);
-  const name = blockedAccountName(account);
+  const name = blockedAccountName(tc, account);
 
   return (
     <View className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3">
@@ -47,27 +53,33 @@ function BlockedRow({ account }: { account: BlockedAccount }) {
           {account.fullName && account.username
             ? `@${account.username} · `
             : ""}
-          Blocked {getRelativeTime(account.blockedAt)}
+          {t("blocked", {
+            getRelativeTime: getRelativeTime(
+              account.blockedAt,
+              undefined,
+              locale,
+            ),
+          })}
         </AppText>
       </View>
       <Button
-        title={done ? "Unblocked" : "Unblock"}
+        title={done ? t("unblocked") : t("unblock")}
         variant="outline"
         size="sm"
         disabled={done}
         loading={unblock.isPending}
-        accessibilityLabel={`Unblock ${name}`}
+        accessibilityLabel={t("unblock2", { name: name })}
         onPress={() =>
           unblock.mutate(
             { userId: account.userId, block: false },
             {
               onSuccess: () => {
                 setDone(true);
-                toast.success(`${name} is unblocked`);
+                toast.success(t("isUnblocked", { name: name }));
               },
               onError: () =>
-                toast.error("Couldn't unblock", {
-                  description: "Check your connection and try again.",
+                toast.error(t("couldnTUnblock"), {
+                  description: t("checkYourConnectionAndTryAgain"),
                 }),
             },
           )
@@ -78,6 +90,8 @@ function BlockedRow({ account }: { account: BlockedAccount }) {
 }
 
 export default function BlockedAccountsScreen() {
+  const t = useTranslations("settings");
+
   const query = useBlockedAccounts();
   const view = useQueryView(query, (d) => d.length === 0);
 
@@ -85,7 +99,7 @@ export default function BlockedAccountsScreen() {
     <View className="flex-1 bg-background">
       <AppHeader
         variant="title"
-        title="Blocked accounts"
+        title={t("blockedAccounts")}
         backFallback="/(app)/settings"
       />
       {view.kind === "content" || view.kind === "empty" ? (
@@ -96,15 +110,14 @@ export default function BlockedAccountsScreen() {
           refreshControl={<Refresher onRefresh={() => query.refetch()} />}
           ListHeaderComponent={
             <AppText variant="muted" className="pb-2">
-              People you block can't message you, and you won't see their
-              reviews, Spotlights or comments. They aren't told.
+              {t("peopleYouBlockCanTMessage")}
             </AppText>
           }
           ListEmptyComponent={
             <EmptyState
               icon="shield-checkmark-outline"
-              title="You haven't blocked anyone"
-              description="You can block someone from their review, message or Spotlight."
+              title={t("youHavenTBlockedAnyone")}
+              description={t("youCanBlockSomeoneFromTheir")}
             />
           }
           renderItem={({ item }) => <BlockedRow account={item} />}
@@ -112,7 +125,7 @@ export default function BlockedAccountsScreen() {
       ) : (
         <QueryUnavailable
           view={view}
-          subject="your blocked accounts"
+          subject={t("yourBlockedAccounts")}
           onRetry={() => query.refetch()}
           loading={<RowListSkeleton />}
           className="flex-1 justify-center"

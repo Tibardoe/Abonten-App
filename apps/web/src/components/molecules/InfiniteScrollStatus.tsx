@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 
 type InfiniteScrollStatusProps = {
   isFetchingNextPage: boolean;
@@ -15,18 +16,20 @@ export default function InfiniteScrollStatus({
   onRetry,
   itemCount,
 }: InfiniteScrollStatusProps) {
+  const t = useTranslations("common");
+
   if (isError) {
     return (
       <div className="flex flex-col items-center gap-2 py-6 text-center">
         <p className="text-sm text-muted-foreground">
-          Couldn’t load more events.
+          {t("couldnTLoadMoreEvents")}
         </p>
         <button
           type="button"
           onClick={onRetry}
           className="text-sm font-medium text-primary hover:underline"
         >
-          Try again
+          {t("tryAgain")}
         </button>
       </div>
     );
@@ -36,7 +39,9 @@ export default function InfiniteScrollStatus({
     return (
       <div className="flex items-center justify-center gap-2 py-6">
         <div className="border-2 border-primary border-t-transparent animate-spin rounded-full w-5 h-5 shrink-0" />
-        <span className="text-sm text-muted-foreground">Loading more…</span>
+        <span className="text-sm text-muted-foreground">
+          {t("loadingMore")}
+        </span>
       </div>
     );
   }
@@ -44,7 +49,7 @@ export default function InfiniteScrollStatus({
   if (!hasNextPage && itemCount > 0) {
     return (
       <p className="py-6 text-center text-sm text-muted-foreground">
-        You’ve reached the end
+        {t("youVeReachedTheEnd")}
       </p>
     );
   }

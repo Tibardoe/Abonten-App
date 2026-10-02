@@ -1,6 +1,7 @@
-import { EMAIL_OTP_MESSAGES } from "@abonten/core/emailOtp";
+import { emailOtpMessage } from "@abonten/core/emailOtp";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { coreT } from "../i18n/requestLocale";
 import { requestEmailOtpCore, verifyEmailOtpCore } from "./emailAuthCore";
 
 // Unit-level: no DB. The rate-limit primitive and the Supabase Auth calls
@@ -45,7 +46,7 @@ describe("requestEmailOtpCore", () => {
 
     expect(result).toEqual({
       status: 400,
-      message: EMAIL_OTP_MESSAGES.invalidEmail,
+      message: emailOtpMessage(coreT(), "invalidEmail"),
     });
     expect(mockedCheckRateLimit).not.toHaveBeenCalled();
     expect(signInWithOtp).not.toHaveBeenCalled();
@@ -106,7 +107,7 @@ describe("requestEmailOtpCore", () => {
 
     expect(result).toEqual({
       status: 500,
-      message: EMAIL_OTP_MESSAGES.generic,
+      message: emailOtpMessage(coreT(), "generic"),
     });
   });
 });
@@ -122,7 +123,7 @@ describe("verifyEmailOtpCore", () => {
     expect(result).toEqual({
       ok: false,
       status: 400,
-      message: EMAIL_OTP_MESSAGES.invalidFormat,
+      message: emailOtpMessage(coreT(), "invalidFormat"),
     });
     expect(verifyOtp).not.toHaveBeenCalled();
   });
@@ -174,7 +175,7 @@ describe("verifyEmailOtpCore", () => {
     expect(result).toEqual({
       ok: false,
       status: 401,
-      message: EMAIL_OTP_MESSAGES.invalidOrExpired,
+      message: emailOtpMessage(coreT(), "invalidOrExpired"),
     });
   });
 
@@ -193,7 +194,7 @@ describe("verifyEmailOtpCore", () => {
     expect(result).toEqual({
       ok: false,
       status: 401,
-      message: EMAIL_OTP_MESSAGES.invalidOrExpired,
+      message: emailOtpMessage(coreT(), "invalidOrExpired"),
     });
     // The old copy blamed expiry outright and told the user to request a new
     // code, which burns one of their three sends per 15 minutes for a typo.
@@ -201,6 +202,6 @@ describe("verifyEmailOtpCore", () => {
     expect(result).not.toMatchObject({
       message: "That code has expired. Request a new one.",
     });
-    expect(EMAIL_OTP_MESSAGES.invalidOrExpired).toMatch(/incorrect/i);
+    expect(emailOtpMessage(coreT(), "invalidOrExpired")).toMatch(/incorrect/i);
   });
 });

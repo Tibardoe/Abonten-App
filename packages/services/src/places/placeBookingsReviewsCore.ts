@@ -16,6 +16,7 @@ import type {
 } from "@abonten/types/placeBookingType";
 import type { PlaceReviewListItem } from "@abonten/types/reviewType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { createNotificationCore } from "../notifications/createNotification";
 
 // Post-auth bodies of getPlaceBookings / respondToPlaceBooking /
@@ -65,7 +66,7 @@ export async function fetchPlaceBookingsPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Place not found",
+      message: tr("placeNotFound"),
     };
   }
 
@@ -75,7 +76,7 @@ export async function fetchPlaceBookingsPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Not authorized to view this place's bookings",
+      message: tr("notAuthorizedToViewThisPlace"),
     };
   }
 
@@ -108,7 +109,7 @@ export async function fetchPlaceBookingsPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -162,7 +163,7 @@ export async function respondToPlaceBookingCore(
   }
 
   if (!booking) {
-    return { status: 404, message: "Booking not found" };
+    return { status: 404, message: tr("bookingNotFound") };
   }
 
   const place = booking.place;
@@ -170,14 +171,14 @@ export async function respondToPlaceBookingCore(
   if (place?.owner_id !== userId) {
     return {
       status: 403,
-      message: "Not authorized to respond to this booking",
+      message: tr("notAuthorizedToRespondToThis"),
     };
   }
 
   if (booking.status !== "pending") {
     return {
       status: 409,
-      message: "This booking has already been responded to.",
+      message: tr("thisBookingHasAlreadyBeenResponded"),
     };
   }
 
@@ -188,7 +189,7 @@ export async function respondToPlaceBookingCore(
   if (isBookingLapsed(booking.status, booking.requested_time)) {
     return {
       status: 409,
-      message: "This booking request expired — its date has already passed.",
+      message: tr("thisBookingRequestExpiredItsDate"),
     };
   }
 
@@ -203,29 +204,26 @@ export async function respondToPlaceBookingCore(
 
   if (updateError) {
     logger.error(`Error responding to booking: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!updatedRows || updatedRows.length === 0) {
     return {
       status: 409,
-      message: "This booking has already been responded to.",
+      message: tr("thisBookingHasAlreadyBeenResponded"),
     };
   }
-
-  const placeName = place?.name ?? "the place";
 
   const notifyResult = await createNotificationCore(supabase, {
     userId: booking.customer_id,
     type: `place_booking_${newStatus}`,
-    title:
-      newStatus === "accepted"
-        ? "Your booking was accepted"
-        : "Your booking was declined",
-    body:
-      newStatus === "accepted"
-        ? `Your booking request for ${placeName} was accepted.`
-        : `Your booking request for ${placeName} was declined.`,
+    notice: {
+      id:
+        newStatus === "accepted"
+          ? "place_booking_accepted"
+          : "place_booking_declined",
+      params: { place: place?.name ?? null },
+    },
     link: place?.slug ? `/places/${place.slug}` : null,
   });
 
@@ -238,7 +236,7 @@ export async function respondToPlaceBookingCore(
   return {
     status: 200,
     message:
-      newStatus === "accepted" ? "Booking accepted." : "Booking declined.",
+      newStatus === "accepted" ? tr("bookingAccepted") : tr("bookingDeclined"),
   };
 }
 
@@ -281,7 +279,7 @@ export async function fetchPlaceReviewsForOwner(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Place not found",
+      message: tr("placeNotFound"),
     };
   }
 
@@ -291,7 +289,7 @@ export async function fetchPlaceReviewsForOwner(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Not authorized to view this place's reviews",
+      message: tr("notAuthorizedToViewThisPlace2"),
     };
   }
 
@@ -323,7 +321,7 @@ export async function fetchPlaceReviewsForOwner(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 

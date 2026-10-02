@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type EventFinanceSummary,
   fetchEventFinanceSummary,
@@ -16,7 +18,7 @@ export type { EventFinanceSummary };
  * distinct case from a 403 (not this organizer's event). Query body shared
  * with the mobile route via @/utils/eventInsightsQuery.
  */
-export default async function getEventFinanceSummary(
+export default withActionLocale(async function getEventFinanceSummary(
   eventId: string,
   startDate?: string | null,
   endDate?: string | null,
@@ -29,7 +31,7 @@ export default async function getEventFinanceSummary(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401 as const, message: "User not logged in" };
+    return { status: 401 as const, message: tr("userNotLoggedIn") };
   }
 
   return fetchEventFinanceSummary(
@@ -39,4 +41,4 @@ export default async function getEventFinanceSummary(
     startDate,
     endDate,
   );
-}
+});

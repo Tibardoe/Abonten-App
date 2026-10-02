@@ -4,6 +4,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslations } from "next-intl";
 
 type SaveDraftConfirmDialogProps = {
   message: string;
@@ -25,6 +26,8 @@ export default function SaveDraftConfirmDialog({
   onDiscard,
   onContinueEditing,
 }: SaveDraftConfirmDialogProps) {
+  const t = useTranslations("common");
+
   return (
     <AlertDialog
       open
@@ -34,7 +37,7 @@ export default function SaveDraftConfirmDialog({
     >
       <AlertDialogContent preventCloseWhileBusy={isSaving}>
         <AlertDialogTitle className="text-center">
-          Save your progress?
+          {t("saveYourProgress")}
         </AlertDialogTitle>
         <AlertDialogDescription className="text-center">
           {message}
@@ -47,7 +50,7 @@ export default function SaveDraftConfirmDialog({
             onClick={onSaveDraft}
             disabled={isSaving}
           >
-            {isSaving ? "Saving..." : "Save as Draft"}
+            {isSaving ? t("saving") : t("saveAsDraft")}
           </button>
           <button
             type="button"
@@ -55,7 +58,7 @@ export default function SaveDraftConfirmDialog({
             onClick={onDiscard}
             disabled={isSaving}
           >
-            Discard
+            {t("discard")}
           </button>
           <button
             type="button"
@@ -63,7 +66,7 @@ export default function SaveDraftConfirmDialog({
             onClick={onContinueEditing}
             disabled={isSaving}
           >
-            Continue Editing
+            {t("continueEditing")}
           </button>
         </div>
       </AlertDialogContent>

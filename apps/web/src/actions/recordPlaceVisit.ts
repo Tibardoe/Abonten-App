@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type RecordPlaceVisitInput,
   recordPlaceVisitCore,
@@ -15,29 +17,31 @@ import { cookies } from "next/headers";
  * location is only a claim; the server checks it against the place. Same
  * service as POST /api/mobile/places/visits.
  */
-export async function recordPlaceVisit(
-  input: Pick<
-    RecordPlaceVisitInput,
-    "placeId" | "code" | "lat" | "lng" | "accuracyM"
-  >,
-): Promise<{ status: number; message?: string; data?: PlaceVisitResult }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { status: 401, message: "Sign in to check in." };
-  if (typeof input?.placeId !== "string" || typeof input.code !== "string") {
-    return { status: 400, message: "Invalid request" };
-  }
+export const recordPlaceVisit = withActionLocale(
+  async function recordPlaceVisit(
+    input: Pick<
+      RecordPlaceVisitInput,
+      "placeId" | "code" | "lat" | "lng" | "accuracyM"
+    >,
+  ): Promise<{ status: number; message?: string; data?: PlaceVisitResult }> {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { status: 401, message: tr("signInToCheckIn") };
+    if (typeof input?.placeId !== "string" || typeof input.code !== "string") {
+      return { status: 400, message: tr("invalidRequest2") };
+    }
 
-  const cookieStore = await cookies();
-  return recordPlaceVisitCore(user.id, {
-    placeId: input.placeId,
-    code: input.code,
-    lat: typeof input.lat === "number" ? input.lat : null,
-    lng: typeof input.lng === "number" ? input.lng : null,
-    accuracyM: typeof input.accuracyM === "number" ? input.accuracyM : null,
-    platform: "web",
-    installId: cookieStore.get(DEVICE_COOKIE_NAME)?.value ?? null,
-  });
-}
+    const cookieStore = await cookies();
+    return recordPlaceVisitCore(user.id, {
+      placeId: input.placeId,
+      code: input.code,
+      lat: typeof input.lat === "number" ? input.lat : null,
+      lng: typeof input.lng === "number" ? input.lng : null,
+      accuracyM: typeof input.accuracyM === "number" ? input.accuracyM : null,
+      platform: "web",
+      installId: cookieStore.get(DEVICE_COOKIE_NAME)?.value ?? null,
+    });
+  },
+);

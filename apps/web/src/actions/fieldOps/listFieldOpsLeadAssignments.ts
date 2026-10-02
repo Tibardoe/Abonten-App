@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -12,16 +13,18 @@ import { fieldOpsAssignmentListSchema } from "@abonten/validation/fieldOpsSchema
  * The team's assignments (optionally for one day). Same service as
  * GET /api/mobile/field-ops/lead/assignments.
  */
-export async function listFieldOpsLeadAssignments(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: FieldOpsAssignment[];
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsAssignmentListSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return listLeadAssignmentsCore(svc, userId, data);
-}
+export const listFieldOpsLeadAssignments = withActionLocale(
+  async function listFieldOpsLeadAssignments(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: FieldOpsAssignment[];
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsAssignmentListSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return listLeadAssignmentsCore(svc, userId, data);
+  },
+);

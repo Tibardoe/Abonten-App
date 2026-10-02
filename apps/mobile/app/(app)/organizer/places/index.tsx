@@ -5,19 +5,24 @@ import {
 } from "@/features/organizer/useOrganizerPlaces";
 import { useQueryView } from "@/lib/useQueryView";
 import type { OrganizerPlaceRow } from "@abonten/api-client";
+import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Refresher } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { useCallback } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 
 const CLOSED_LABEL: Record<string, string> = {
-  permanently_closed: "Permanently closed",
-  temporarily_closed: "Temporarily closed",
+  permanently_closed: "permanentlyClosed",
+  temporarily_closed: "temporarilyClosed",
 };
 
 function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
+  const t = useTranslations("manage");
+  const tc = useTranslations("core");
+
   const router = useRouter();
   const cover =
     place.cover_public_id && place.cover_version
@@ -27,7 +32,9 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
         })
       : null;
   const closed = place.temporary_status
-    ? (CLOSED_LABEL[place.temporary_status] ?? null)
+    ? CLOSED_LABEL[place.temporary_status]
+      ? t(CLOSED_LABEL[place.temporary_status])
+      : null
     : null;
 
   return (
@@ -45,7 +52,7 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
         />
       ) : (
         <View className="h-16 w-16 items-center justify-center rounded-lg bg-muted">
-          <AppText variant="caption">No image</AppText>
+          <AppText variant="caption">{t("noImage")}</AppText>
         </View>
       )}
       <View className="flex-1 justify-center gap-1">
@@ -59,7 +66,8 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
           className="text-[13px] text-muted-foreground"
           numberOfLines={1}
         >
-          {place.place_category?.name ?? "Uncategorized"}
+          {placeCategoryLabel(tc, place.place_category ?? {}) ||
+            t("uncategorized")}
           {closed ? ` · ${closed}` : ""}
         </AppText>
       </View>
@@ -69,6 +77,8 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
 }
 
 export default function OrganizerPlacesScreen() {
+  const t = useTranslations("manage");
+
   const q = useOrganizerPlaces();
   const places = flattenOrganizerPlaces(q.data?.pages);
   // "No places yet" is only ever said for an answer the server gave;
@@ -88,11 +98,11 @@ export default function OrganizerPlacesScreen() {
       contentContainerClassName="gap-3 p-4 pb-16"
       ListHeaderComponent={
         <View className="mb-1 flex-row items-center justify-between">
-          <AppText variant="screenTitle">My places</AppText>
+          <AppText variant="screenTitle">{t("myPlaces2")}</AppText>
           <Link href="/(app)/place/new" asChild>
             <Pressable className="rounded-lg bg-primary px-3 py-1.5 active:opacity-90">
               <AppText className="text-sm font-semibold text-primary-foreground">
-                Add place
+                {t("addPlace")}
               </AppText>
             </Pressable>
           </Link>
@@ -104,12 +114,12 @@ export default function OrganizerPlacesScreen() {
       ListEmptyComponent={
         view.kind === "empty" ? (
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
-            You haven't added any places yet.
+            {t("youHavenTAddedAnyPlaces")}
           </AppText>
         ) : (
           <QueryUnavailable
             view={view}
-            subject="your places"
+            subject={t("yourPlaces3")}
             onRetry={() => q.refetch()}
             loading={<ActivityIndicator className="mt-10" />}
           />

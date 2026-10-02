@@ -18,6 +18,7 @@ import {
   KeyboardRevealGroup,
   useToast,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useTheme, useThemeColors } from "@abonten/ui-native/theme";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -66,6 +67,8 @@ function useSignInCountry(): { country: Country; priority: string[] } {
 }
 
 export default function SignIn() {
+  const t = useTranslations("auth");
+
   const router = useRouter();
   const toast = useToast();
   const c = useThemeColors();
@@ -97,7 +100,7 @@ export default function SignIn() {
   async function sendCode() {
     if (!phoneValid) {
       hapticError();
-      setError("Enter your phone number.");
+      setError(t("enterYourPhoneNumber"));
       return;
     }
     setError(null);
@@ -110,7 +113,7 @@ export default function SignIn() {
 
       if (res.status !== 200 || !res.data) {
         hapticError();
-        setError(res.message ?? "Couldn't send the code. Try again.");
+        setError(res.message ?? t("couldnTSendTheCodeTry"));
         return;
       }
 
@@ -127,7 +130,7 @@ export default function SignIn() {
       });
     } catch {
       hapticError();
-      setError("Network error. Check your connection and try again.");
+      setError(t("networkErrorCheckYourConnectionAnd"));
     } finally {
       setBusy(null);
     }
@@ -140,7 +143,7 @@ export default function SignIn() {
       const res = await signInWithApple();
       if (!res.ok && !res.cancelled) {
         hapticError();
-        toast.error("Couldn't sign in with Apple", {
+        toast.error(t("couldnTSignInWithApple"), {
           description: res.message,
         });
       }
@@ -159,7 +162,7 @@ export default function SignIn() {
       // phone field and would outline it red for a problem it didn't have.
       if (!res.ok && !res.cancelled) {
         hapticError();
-        toast.error("Couldn't sign in with Google", {
+        toast.error(t("couldnTSignInWithGoogle"), {
           description: res.message,
         });
       }
@@ -174,7 +177,7 @@ export default function SignIn() {
       <View className="flex-1">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={router.canGoBack() ? "Back" : "Close"}
+          accessibilityLabel={router.canGoBack() ? t("back") : t("close")}
           onPress={() =>
             router.canGoBack() ? router.back() : router.replace("/(app)/(tabs)")
           }
@@ -210,12 +213,12 @@ export default function SignIn() {
 
             <View className="gap-2">
               <AppText variant="pageTitle" className="text-center">
-                Log in or sign up
+                {t("logInOrSignUp")}
               </AppText>
               <AppText variant="muted" className="text-center">
                 {appleAvailable
-                  ? "Continue with Apple, Google, your email address, or your phone number."
-                  : "Continue with Google, your email address, or your phone number."}
+                  ? t("continueWithAppleGoogleYourEmail")
+                  : t("continueWithGoogleYourEmailAddress")}
               </AppText>
             </View>
 
@@ -230,7 +233,7 @@ export default function SignIn() {
               // white fill whose logo and title share one colour.
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Continue with Apple"
+                accessibilityLabel={t("continueWithApple")}
                 disabled={busy !== null}
                 onPress={apple}
                 style={{
@@ -254,7 +257,7 @@ export default function SignIn() {
                         scheme === "dark" ? "text-black" : "text-white"
                       }
                     >
-                      Continue with Apple
+                      {t("continueWithApple")}
                     </AppText>
                   </>
                 )}
@@ -263,7 +266,7 @@ export default function SignIn() {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Continue with Google"
+              accessibilityLabel={t("continueWithGoogle")}
               disabled={busy !== null}
               onPress={google}
               className="h-14 flex-row items-center justify-center gap-3 rounded-xl border border-border bg-card active:opacity-80 disabled:opacity-50"
@@ -273,30 +276,32 @@ export default function SignIn() {
               ) : (
                 <>
                   <GoogleIcon size={20} />
-                  <AppText variant="bodyStrong">Continue with Google</AppText>
+                  <AppText variant="bodyStrong">
+                    {t("continueWithGoogle")}
+                  </AppText>
                 </>
               )}
             </Pressable>
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Continue with email"
+              accessibilityLabel={t("continueWithEmail")}
               disabled={busy !== null}
               onPress={() => router.push("/(auth)/email")}
               className="h-14 flex-row items-center justify-center gap-3 rounded-xl border border-border bg-card active:opacity-80 disabled:opacity-50"
             >
               <Icon name="mail-outline" size={20} tone="foreground" />
-              <AppText variant="bodyStrong">Continue with email</AppText>
+              <AppText variant="bodyStrong">{t("continueWithEmail")}</AppText>
             </Pressable>
 
             <View className="flex-row items-center gap-3">
               <View className="h-px flex-1 bg-border" />
-              <AppText variant="overline">or</AppText>
+              <AppText variant="overline">{t("or2")}</AppText>
               <View className="h-px flex-1 bg-border" />
             </View>
 
             <KeyboardRevealGroup className="gap-3 rounded-2xl border border-border bg-card p-4">
-              <AppText variant="label">Phone number</AppText>
+              <AppText variant="label">{t("phoneNumber")}</AppText>
               <View className="flex-row gap-2">
                 <CountryCodeField
                   value={country}
@@ -339,7 +344,7 @@ export default function SignIn() {
               ) : null}
 
               <Button
-                title={busy === "phone" ? "Sending code…" : "Send code"}
+                title={busy === "phone" ? t("sendingCode2") : t("sendCode")}
                 size="lg"
                 fullWidth
                 loading={busy === "phone"}
@@ -352,23 +357,23 @@ export default function SignIn() {
             <InviteCodeField />
 
             <AppText variant="caption" className="text-center">
-              By continuing you agree to Abonten's{" "}
+              {t("byContinuingYouAgreeToAbonten2")}
               <AppText
                 variant="caption"
                 tone="brand"
                 className="font-semibold"
                 onPress={() => void openExternalLink(LEGAL_URLS.terms)}
               >
-                Terms
-              </AppText>{" "}
-              and{" "}
+                {t("terms")}
+              </AppText>
+              {t("and")}
               <AppText
                 variant="caption"
                 tone="brand"
                 className="font-semibold"
                 onPress={() => void openExternalLink(LEGAL_URLS.privacy)}
               >
-                Privacy Policy
+                {t("privacyPolicy")}
               </AppText>
               .
             </AppText>

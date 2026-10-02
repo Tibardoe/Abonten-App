@@ -20,6 +20,7 @@ import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { OrganizerPlaceRow } from "@abonten/types/placeRows";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth query bodies for an organizer's own read-only surfaces
 // (dashboard overview, events list, finances). Shared by the Server Actions
@@ -67,7 +68,7 @@ export async function fetchOrganizerDashboardOverview(
 
   if (currentResult.error) {
     logger.error("Supabase error:", currentResult.error.message);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return {
@@ -96,7 +97,7 @@ export async function fetchOrganizerFinanceOverview(
     logger.error(
       `Failed fetching organizer finance overview: ${error.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: (data ?? []) as OrganizerFinanceOverviewRow[] };
@@ -131,7 +132,7 @@ export async function fetchOrganizerEventsPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -198,7 +199,7 @@ export async function fetchEventAttendanceListPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Not authorized to view this event",
+      message: tr("notAuthorizedToViewThisEvent"),
     };
   }
 
@@ -225,7 +226,7 @@ export async function fetchEventAttendanceListPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -295,7 +296,7 @@ export async function fetchOrganizerLedgerPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -349,7 +350,7 @@ export async function fetchOrganizerPlacesPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -391,7 +392,10 @@ export async function fetchPlaceInsights(
     .maybeSingle();
 
   if (fetchError || !place) {
-    return { status: 404, message: "Place not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("placeNotFoundOrUnauthorized"),
+    };
   }
 
   const [eventsResult, favoritesResult, reviewsResult] = await Promise.all([
@@ -416,7 +420,7 @@ export async function fetchPlaceInsights(
       favoritesResult.error?.message ??
       reviewsResult.error?.message;
     logger.error(`Error fetching place insights: ${message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const counts = (eventsResult.data ?? []).reduce<Record<string, number>>(

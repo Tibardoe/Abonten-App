@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type OrganizerFinanceOverviewResult,
   fetchOrganizerFinanceOverview,
@@ -12,17 +14,19 @@ import {
  * exact action/RPC (get_organizer_finance_overview), so the numbers shown
  * on each can never drift apart.
  */
-export default async function getOrganizerFinanceOverview(): Promise<OrganizerFinanceOverviewResult> {
-  const supabase = await createClient();
+export default withActionLocale(
+  async function getOrganizerFinanceOverview(): Promise<OrganizerFinanceOverviewResult> {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
-  }
+    if (!user || userError) {
+      return { status: 401, message: tr("userNotLoggedIn") };
+    }
 
-  return fetchOrganizerFinanceOverview(supabase);
-}
+    return fetchOrganizerFinanceOverview(supabase);
+  },
+);

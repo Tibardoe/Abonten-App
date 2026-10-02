@@ -2,6 +2,7 @@ import { AppDrawer } from "@/components/app/AppDrawer";
 import { MenuSheetProvider } from "@/components/app/menuSheet";
 import { ExploreFiltersProvider } from "@/features/discovery/ExploreFiltersProvider";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
+import { useLocaleSync } from "@/features/i18n/useLocaleSync";
 import { MarketProvider } from "@/features/markets/MarketProvider";
 import { useInboxRealtime } from "@/features/messaging/useInboxRealtime";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
@@ -27,6 +28,8 @@ function StackHost() {
   useRemindersSync();
   // Apply a friend's invite held on this device once someone is signed in.
   useInviteBinding();
+  // Mirror the app language onto the account (notifications, emails).
+  useLocaleSync();
   // The one owner of the signed-in user's `inbox:<id>` channel. Mounted here,
   // not in the tabs layout, so it is live on every screen -- including a
   // thread opened straight from a notification, where the tabs may never

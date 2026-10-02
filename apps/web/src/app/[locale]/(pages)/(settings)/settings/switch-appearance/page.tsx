@@ -1,0 +1,24 @@
+import PageHeader from "@/components/molecules/PageHeader";
+import SwitchAppearance from "@/settings/organisms/SwitchAppearance";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("settings");
+  return { title: t("appearanceTitle") };
+}
+
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// export const instant = false;
+
+export default async function page() {
+  const t = await getTranslations("settings");
+
+  return (
+    <div className="w-full flex flex-col gap-14">
+      <PageHeader title={t("nav.switchAppearance")} showBackButton />
+      <SwitchAppearance />
+    </div>
+  );
+}

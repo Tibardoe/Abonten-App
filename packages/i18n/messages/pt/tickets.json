@@ -1,0 +1,48 @@
+{
+  "aRefundOfTheTicketPrice": "O preço do bilhete será reembolsado no seu método de pagamento original. A taxa de serviço do Abonten não é reembolsada.",
+  "areYouSureYouWantTo": "Tem a certeza de que quer cancelar este bilhete?",
+  "cancelThisTicket": "Cancelar este bilhete?",
+  "cancelTicket": "Cancelar bilhete",
+  "cancelTicketRequestRefund": "Cancelar bilhete e pedir reembolso",
+  "cancelling": "A cancelar…",
+  "checkedIn": "Entrada registada",
+  "couldnTCancel": "Não foi possível cancelar",
+  "couldnTCreateTheReceipt": "Não foi possível criar o recibo",
+  "downloadReceiptPdf": "Transferir recibo (PDF)",
+  "empty": {
+    "active": {
+      "description": "Os bilhetes que comprar aparecerão aqui.",
+      "title": "Sem bilhetes ativos"
+    },
+    "cancelled": {
+      "description": "Os bilhetes cancelados aparecem aqui.",
+      "title": "Sem bilhetes cancelados"
+    },
+    "past": {
+      "description": "Bilhetes de eventos que terminaram ou foram cancelados.",
+      "title": "Sem bilhetes anteriores"
+    },
+    "refunds": {
+      "description": "Os reembolsos de bilhetes pagos cancelados aparecerão aqui quando aplicável.",
+      "title": "Ainda não há reembolsos"
+    }
+  },
+  "keepTicket": "Manter bilhete",
+  "locationUnavailable": "Localização indisponível",
+  "noQrCode": "Sem código QR",
+  "pleaseTryAgainInAMoment": "Tente novamente dentro de momentos.",
+  "preparingReceipt": "A preparar o recibo…",
+  "receiptReady": "Recibo pronto",
+  "seat": "Lugar {seat_number}",
+  "shareReceiptTitle": "Recibo de bilhete Abonten",
+  "sharingIsnTAvailableOnThis": "A partilha não está disponível neste dispositivo, mas o recibo em PDF foi gerado.",
+  "showThisAtEntry": "Mostre isto à entrada",
+  "somethingWentWrongGeneratingThePdf": "Algo correu mal ao gerar o PDF. Tente novamente.",
+  "thisTicket": "este bilhete",
+  "thisTicketCouldNotBeFound": "Não foi possível encontrar este bilhete.",
+  "ticket": "Bilhete",
+  "ticketCancelled": "Bilhete cancelado",
+  "ticketReference": "Referência do bilhete",
+  "viewEvent": "Ver evento",
+  "yourTickets": "os seus bilhetes"
+}

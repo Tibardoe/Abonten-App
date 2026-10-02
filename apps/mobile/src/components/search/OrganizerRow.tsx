@@ -1,7 +1,9 @@
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
+import { formatRating } from "@abonten/core/i18n/format";
 import type { SearchOrganizerHit } from "@abonten/types/searchType";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
@@ -16,18 +18,22 @@ export function OrganizerRow({
   onOpen?: () => void;
   onSeeEvents?: () => void;
 }) {
+  const t = useTranslations("search");
+
   const router = useRouter();
   const open = () => {
     onOpen?.();
     router.push(`/(app)/user/${organizer.username}`);
   };
   const facts = [
-    organizer.upcomingCount > 0 ? `${organizer.upcomingCount} upcoming` : null,
+    organizer.upcomingCount > 0
+      ? t("upcomingCount", { count: organizer.upcomingCount })
+      : null,
     organizer.placeCount > 0
-      ? `${organizer.placeCount} ${organizer.placeCount === 1 ? "place" : "places"}`
+      ? t("placesCount", { count: organizer.placeCount })
       : null,
     organizer.ratingCount > 0 && organizer.avgRating != null
-      ? `★ ${organizer.avgRating.toFixed(1)} (${organizer.ratingCount})`
+      ? `★ ${formatRating(organizer.avgRating, getCurrentLocale())} (${organizer.ratingCount})`
       : null,
   ].filter(Boolean);
 
@@ -35,7 +41,7 @@ export function OrganizerRow({
     <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Open @${organizer.username}`}
+        accessibilityLabel={t("open", { username: organizer.username })}
         onPress={open}
         className="flex-row items-center gap-3 active:opacity-80"
       >
@@ -55,7 +61,7 @@ export function OrganizerRow({
           </View>
           <AppText variant="meta" tone="muted" numberOfLines={1}>
             @{organizer.username}
-            {organizer.isNew ? " · New" : ""}
+            {organizer.isNew ? t("newText") : ""}
           </AppText>
           {facts.length ? (
             <AppText variant="caption" tone="muted" numberOfLines={1}>
@@ -73,7 +79,7 @@ export function OrganizerRow({
             className="h-10 justify-center rounded-full bg-primary px-4 active:opacity-80"
           >
             <AppText variant="label" className="text-primary-foreground">
-              See their events
+              {t("seeTheirEvents")}
             </AppText>
           </Pressable>
         ) : null}

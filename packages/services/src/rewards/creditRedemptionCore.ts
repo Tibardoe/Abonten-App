@@ -5,6 +5,7 @@ import { allocateCredit } from "@abonten/core/rewards/creditAllocation";
 import type { Database } from "@abonten/types/database.types";
 import type { CreditBlockedReason, CreditQuote } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { rewardsKillSwitchOn } from "./rewardsProgramQuery";
 
@@ -317,11 +318,11 @@ export async function getPromotionCreditQuoteCore(
       input.kind,
       input.checkoutId,
     );
-    if (!order) return { status: 404, message: "Checkout not found" };
+    if (!order) return { status: 404, message: tr("checkoutNotFound") };
     if (order.status !== "pending") {
       return {
         status: 410,
-        message: "This checkout has expired. Please start again.",
+        message: tr("thisCheckoutHasExpiredPleaseStart"),
       };
     }
     if (!PROMOTION_TARGETS[input.kind].creditAllowed) {
@@ -344,7 +345,7 @@ export async function getPromotionCreditQuoteCore(
     );
     return { status: 200, data: quoteCredit(order, spendable) };
   } catch {
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 }
 
@@ -424,10 +425,10 @@ export async function reserveCredit(input: {
       ok: false,
       message:
         error?.code === "23514"
-          ? "Your credit balance changed. Check the amount and try again."
+          ? tr("yourCreditBalanceChangedCheckThe")
           : error?.code === "55000"
             ? error.message
-            : "We couldn't apply your credit. Please try again.",
+            : tr("weCouldnTApplyYourCredit2"),
     };
   }
   return { ok: true, reservationId: data as string };
@@ -515,8 +516,8 @@ export async function captureReservation(
       ok: false,
       message:
         error.code === "23514"
-          ? "The credit for this order is no longer available."
-          : "We couldn't apply your credit.",
+          ? tr("theCreditForThisOrderIs")
+          : tr("weCouldnTApplyYourCredit3"),
     };
   }
   return { ok: true };

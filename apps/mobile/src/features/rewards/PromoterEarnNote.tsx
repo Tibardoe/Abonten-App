@@ -1,6 +1,8 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
+import { formatPercent } from "@abonten/core/i18n/format";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { View } from "react-native";
 import { useReferralCode } from "./useReferralCode";
@@ -17,6 +19,9 @@ export function PromoterEarnNote({
   eventId: string;
   organizerId: string | null;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("rewards");
+
   const { session } = useSession();
   const code = useReferralCode();
   const program = useRewardsProgram({ enabled: !!code });
@@ -44,12 +49,16 @@ export function PromoterEarnNote({
     <View className="flex-row items-start gap-3 rounded-xl border border-border bg-card p-3">
       <Icon name="megaphone-outline" size={20} tone="primary" />
       <AppText variant="small" className="flex-1">
-        Share this event and earn{" "}
-        <AppText variant="small" className="font-semibold">
-          {Number((rate / 100).toFixed(2))}%
-        </AppText>{" "}
-        of every ticket sold through your link. The organizer pays it as credit
-        after the event. Tap share at the top.
+        {/* One sentence, with the rate set in bold inside it: glued from
+            three pieces it read "earn7%of every ticket". */}
+        {t.rich("promoterEarnNote", {
+          rate: formatPercent(rate / 100, locale, { maximumFractionDigits: 2 }),
+          b: (chunks) => (
+            <AppText variant="small" className="font-semibold">
+              {chunks}
+            </AppText>
+          ),
+        })}
       </AppText>
     </View>
   );

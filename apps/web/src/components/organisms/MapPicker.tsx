@@ -1,13 +1,14 @@
 "use client";
 
+import { useGoogleMaps } from "@/hooks/useGoogleMaps";
+import { useToast } from "@/hooks/useToast";
 import { animateMarkerTo } from "@/utils/animateMarker";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import { useTranslations } from "next-intl";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { TbLocation } from "react-icons/tb";
-
-const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
 
 const containerClass =
   "w-full h-[500px] md:h-[300px] rounded-lg overflow-hidden";
@@ -23,21 +24,16 @@ const MapPicker: React.FC<MapPickerProps> = ({
   defaultCenter,
   center,
 }) => {
+  const t = useTranslations("common");
+  const toast = useToast();
+
   const [markerPosition, setMarkerPosition] = useState(center || defaultCenter);
 
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
 
   const mapRef = useRef<google.maps.Map | null>(null); // for centering map programmatically
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    throw new Error("Google Maps API key is missing.");
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    libraries: GOOGLE_MAPS_LIBRARIES,
-  });
+  const { isLoaded } = useGoogleMaps();
 
   useEffect(() => {
     if (isLoaded && !geocoder) {
@@ -53,7 +49,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
         const address = results[0].formatted_address;
         onLocationSelect({ lat, lng, address });
       } else {
-        onLocationSelect({ lat, lng, address: "Unknown location" });
+        onLocationSelect({ lat, lng, address: t("unknownLocation") });
       }
     });
   };
@@ -78,7 +74,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const locateUser = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
+      toast.error(t("geolocationIsNotSupportedByYour"));
       return;
     }
 
@@ -88,7 +84,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
         handleMapInteraction(latitude, longitude);
       },
       () => {
-        alert("Unable to retrieve your location.");
+        toast.error(t("unableToRetrieveYourLocation"));
       },
     );
   };
@@ -99,7 +95,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     }
   }, [center]);
 
-  if (!isLoaded) return <p>Loading map...</p>;
+  if (!isLoaded) return <p>{t("loadingMap")}</p>;
 
   return (
     <div className="relative">
@@ -124,6 +120,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       >
         <Marker
           position={markerPosition}
+          title={t("moveThePinToYourPreferred")}
           draggable
           onDragEnd={(e) => {
             if (e.latLng) {

@@ -1,0 +1,61 @@
+{
+  "common": {
+    "hi": "Hi {name},",
+    "there": "there",
+    "contactUsThroughTheApp": "If you have any questions, contact us through the Abonten app.",
+    "copyright": "© {year} {entity}"
+  },
+  "ticket": {
+    "subject": "Your Abonten Ticket Is Ready 🎟️ — {eventTitle}",
+    "preview": "Your Abonten ticket for {eventTitle} is ready — see details inside",
+    "heading": "Congratulations! 🎟️",
+    "intro": "{greeting} your ticket for <strong>{eventTitle}</strong> has been successfully purchased.",
+    "attached": "Your ticket is attached to this email as a PDF. You can also open it anytime from My Tickets in Abonten.",
+    "detailsLabel": "Ticket details",
+    "event": "Event",
+    "date": "Date",
+    "time": "Time",
+    "venue": "Venue",
+    "quantity": "Quantity",
+    "quantityValue": "{count, plural, one {# ticket} other {# tickets}}",
+    "purchaseDate": "Purchase date",
+    "amountPaid": "Amount paid",
+    "free": "Free",
+    "viewMyTickets": "View My Tickets",
+    "keepSafe": "Please keep your ticket safe — you'll need it (or the attached PDF) for entry at the venue. If you have any questions, contact us through the Abonten app."
+  },
+  "cancellation": {
+    "subject": "Event cancelled — {eventTitle}",
+    "preview": "{eventTitle} has been cancelled — here's what happens to your ticket",
+    "heading": "Event cancelled",
+    "intro": "{greeting} the organizer has cancelled <strong>{eventTitle}</strong>. Your ticket is no longer valid.",
+    "refund": "A refund will be issued to the payment method used for your ticket. This can take a few days to complete — you can check its status anytime from My Tickets.",
+    "event": "Event",
+    "refundAmount": "Refund amount",
+    "refundStatus": "Refund status",
+    "processing": "Processing",
+    "viewRefundStatus": "View Refund Status",
+    "questions": "If you have any questions about this cancellation or your refund, contact us through the Abonten app."
+  },
+  "rewards": {
+    "subjectMany": "Abonten Rewards: {count} updates",
+    "headingMany": "Your rewards update",
+    "intro": "{greeting} here's what's new with your Abonten Credit.",
+    "open": "Open Abonten Rewards",
+    "why": "You're getting this because you earned Abonten Credit on your Abonten Hub account. Credit can be spent on Abonten and can't be exchanged for cash.",
+    "unsubscribe": "Don't want these emails? <link>Unsubscribe</link>. You'll still see your credit in the app."
+  },
+  "digest": {
+    "intro": "{greeting} here {count, plural, one {is a pick} other {are # picks}} based on what you asked to hear about.",
+    "seeAll": "See all your picks",
+    "why": "You're getting this because you turned on emails about picks and alerts in your Abonten Hub notification settings. At most one a day.",
+    "unsubscribe": "Don't want these emails? <unsubscribe>Unsubscribe</unsubscribe> or <settings>change your settings</settings>. Tickets, payments and account emails aren't affected.",
+    "reason": {
+      "organizerNamed": "New from @{username}",
+      "organizer": "From an organizer you follow",
+      "place": "At a place you follow",
+      "similarPlaces": "Similar to places you liked",
+      "similarEvents": "Similar to events you liked"
+    }
+  }
+}

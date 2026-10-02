@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import {
   bindResultMessage,
   codeFromInstallReferrer,
@@ -75,7 +76,7 @@ describe("the invite a browser holds", () => {
 describe("invite copy", () => {
   it("words the share message with the friend's offer", () => {
     expect(
-      inviteShareMessage({
+      inviteShareMessage(t, {
         url: "https://abontenhub.com/invite/K7QX2MA",
         currency: "GHS",
         refereeMinor: 200,
@@ -85,7 +86,7 @@ describe("invite copy", () => {
       "Join me on Abonten to find events and places near you and get GH₵2.00 off your first ticket of GH₵30.00 or more: https://abontenhub.com/invite/K7QX2MA",
     );
     expect(
-      inviteShareMessage({
+      inviteShareMessage(t, {
         url: "u",
         refereeMinor: null,
         minOrderMinor: null,
@@ -102,19 +103,19 @@ describe("invite copy", () => {
       welcomeMinor: 200,
     };
     expect(
-      bindResultMessage({ ...base, result: "bound", welcome: "granted" }),
+      bindResultMessage(t, { ...base, result: "bound", welcome: "granted" }),
     ).toEqual({
       tone: "success",
       text: "You joined with Ama K.'s invite. GH₵2.00 welcome credit is ready for your first ticket.",
     });
     expect(
-      bindResultMessage({ ...base, result: "bound", welcome: "needs_phone" })
+      bindResultMessage(t, { ...base, result: "bound", welcome: "needs_phone" })
         .text,
     ).toContain("Verify your phone number");
-    expect(bindResultMessage({ ...base, result: "not_new" }).tone).toBe(
+    expect(bindResultMessage(t, { ...base, result: "not_new" }).tone).toBe(
       "error",
     );
-    expect(bindResultMessage({ ...base, result: "program_off" }).tone).toBe(
+    expect(bindResultMessage(t, { ...base, result: "program_off" }).tone).toBe(
       "info",
     );
   });

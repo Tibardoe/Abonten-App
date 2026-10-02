@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import { fetchPlaceDraftsList } from "@abonten/services/places/placeDraftCore";
 
 export type { PlaceDraftListItem } from "@abonten/services/places/placeDraftCore";
@@ -8,7 +10,7 @@ export type { PlaceDraftListItem } from "@abonten/services/places/placeDraftCore
 // List-page query: only list-display columns, never the full jsonb payload,
 // bounded to this user's own non-expired place drafts. Body shared with the
 // mobile GET /api/mobile/organizer/place-drafts route. Mirrors getEventDrafts.ts.
-export async function getPlaceDrafts() {
+export const getPlaceDrafts = withActionLocale(async function getPlaceDrafts() {
   const supabase = await createClient();
 
   const {
@@ -22,7 +24,7 @@ export async function getPlaceDrafts() {
   if (!user) {
     return {
       status: 401 as const,
-      message: "User not authenticated",
+      message: tr("userNotAuthenticated"),
       data: [],
     };
   }
@@ -34,4 +36,4 @@ export async function getPlaceDrafts() {
   }
 
   return { status: 200 as const, message: "OK", data: result.data };
-}
+});

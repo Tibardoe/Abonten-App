@@ -1,5 +1,7 @@
 import StatTile from "@/components/atoms/StatTile";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import { formatCount } from "@abonten/core/i18n/format";
+import { useLocale, useTranslations } from "next-intl";
 
 type ManagePlaceInsightsSectionProps = {
   insights: Record<string, number>;
@@ -18,22 +20,25 @@ export default function ManagePlaceInsightsSection({
   isError,
   onRetry,
 }: ManagePlaceInsightsSectionProps) {
+  const locale = useLocale();
+  const t = useTranslations("places");
+
   if (isError) {
     return (
       <InlineErrorRetry
-        message="We couldn't load this place's insights."
+        message={t("weCouldnTLoadThisPlace")}
         onRetry={onRetry}
       />
     );
   }
 
   const tiles = [
-    { label: "Place Views", value: insights.view ?? 0 },
-    { label: "Directions", value: insights.direction_click ?? 0 },
-    { label: "Phone Calls", value: insights.phone_click ?? 0 },
+    { label: t("placeViews"), value: insights.view ?? 0 },
+    { label: t("directions"), value: insights.direction_click ?? 0 },
+    { label: t("phoneCalls"), value: insights.phone_click ?? 0 },
     { label: "WhatsApp", value: insights.whatsapp_click ?? 0 },
-    { label: "Favorites", value: insights.favorites ?? 0 },
-    { label: "Reviews", value: insights.reviews ?? 0 },
+    { label: t("favorites"), value: insights.favorites ?? 0 },
+    { label: t("reviews"), value: insights.reviews ?? 0 },
   ];
 
   return (
@@ -42,7 +47,7 @@ export default function ManagePlaceInsightsSection({
         <StatTile
           key={tile.label}
           label={tile.label}
-          value={tile.value.toLocaleString()}
+          value={formatCount(tile.value, locale)}
         />
       ))}
     </div>

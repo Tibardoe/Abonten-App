@@ -1,8 +1,14 @@
 import { logger } from "@abonten/core/logger";
 import { ticketCapacityProblem } from "@abonten/core/ticketCapacity";
-import { paidTierProblem } from "@abonten/core/ticketTiers";
+import {
+  SINGLE_TICKET_TYPE,
+  paidTierProblem,
+  ticketTierProblemMessage,
+} from "@abonten/core/ticketTiers";
+import { userFacingError } from "@abonten/core/userFacingError";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT, tr } from "../i18n/requestLocale";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
 // Post-auth body of updateEventTicketTypes, lifted so the
@@ -37,7 +43,7 @@ async function retireEventPromoCodes(
     .eq("times_used", 0);
   if (deleteError) {
     logger.error(`Failed removing promo codes: ${deleteError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   const { error: deactivateError } = await supabase
     .from("promo_code")
@@ -46,7 +52,7 @@ async function retireEventPromoCodes(
     .eq("is_active", true);
   if (deactivateError) {
     logger.error(`Failed deactivating promo codes: ${deactivateError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
   return null;
 }
@@ -84,7 +90,12 @@ export async function updateEventTicketTypesCore(
       ...multipleTickets,
     ]) {
       const problem = paidTierProblem(tier);
-      if (problem) return { status: 400, message: problem };
+      if (problem) {
+        return {
+          status: 400,
+          message: ticketTierProblemMessage(coreT(), problem),
+        };
+      }
     }
   }
 
@@ -96,7 +107,10 @@ export async function updateEventTicketTypesCore(
     .maybeSingle();
 
   if (eventError || !event) {
-    return { status: 404, message: "Event not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("eventNotFoundOrUnauthorized"),
+    };
   }
 
   // Every ticket type carries the event's canonical currency; a client that
@@ -105,7 +119,9 @@ export async function updateEventTicketTypesCore(
   if (input.currency && input.currency.toUpperCase() !== currency) {
     return {
       status: 400,
-      message: `Tickets for this event are priced in ${currency}.`,
+      message: tr("ticketsForThisEventArePriced", {
+        currency: currency,
+      }),
     };
   }
 
@@ -120,8 +136,7 @@ export async function updateEventTicketTypesCore(
   if (participation.data) {
     return {
       status: 409,
-      message:
-        "Ticket types can't be changed anymore — this event already has confirmed tickets.",
+      message: tr("ticketTypesCanTBeChanged"),
     };
   }
 
@@ -129,7 +144,7 @@ export async function updateEventTicketTypesCore(
   // types without one share what is left (@abonten/core/ticketCapacity).
   // The database re-checks this on insert, this is the friendly copy.
   if (!freeEvent) {
-    const capacityProblem = ticketCapacityProblem(event.capacity, [
+    const capacityProblem = ticketCapacityProblem(coreT(), event.capacity, [
       ...(singleTicket ? [singleTicket] : []),
       ...multipleTickets,
     ]);
@@ -151,7 +166,7 @@ export async function updateEventTicketTypesCore(
         ...(singleTicket
           ? [
               {
-                type: "SINGLE TICKET",
+                type: SINGLE_TICKET_TYPE,
                 price: singleTicket.price,
                 currency,
                 quantity: singleTicket.quantity,
@@ -171,7 +186,7 @@ export async function updateEventTicketTypesCore(
       ];
 
   if (ticketTypesPayload.length === 0) {
-    return { status: 400, message: "At least one ticket type is required." };
+    return { status: 400, message: tr("atLeastOneTicketTypeIs") };
   }
 
   const { data: existingTicketTypes, error: existingTicketTypesError } =
@@ -181,7 +196,7 @@ export async function updateEventTicketTypesCore(
     logger.error(
       `Failed fetching existing ticket types: ${existingTicketTypesError.message}`,
     );
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   const existingIds = (existingTicketTypes ?? []).map((t) => t.id);
@@ -202,14 +217,13 @@ export async function updateEventTicketTypesCore(
       logger.error(
         `Failed checking pending checkouts: ${pendingError.message}`,
       );
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
 
     if ((pendingCount ?? 0) > 0) {
       return {
         status: 409,
-        message:
-          "Someone is currently checking out for this event. Please try again in a few minutes.",
+        message: tr("someoneIsCurrentlyCheckingOutFor"),
       };
     }
 
@@ -220,7 +234,7 @@ export async function updateEventTicketTypesCore(
 
     if (deleteError) {
       logger.error(`Failed deleting old ticket types: ${deleteError.message}`);
-      return { status: 500, message: "Something went wrong!" };
+      return { status: 500, message: tr("somethingWentWrong") };
     }
   }
 
@@ -242,11 +256,17 @@ export async function updateEventTicketTypesCore(
   if (insertError) {
     if (insertError.code === CHECK_VIOLATION) {
       // The capacity / free-event guards raise with an organizer-facing message.
-      return { status: 400, message: insertError.message };
+      return {
+        status: 400,
+        message: userFacingError("Update ticket types", insertError),
+      };
     }
     logger.error(`Failed inserting new ticket types: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  return { status: 200, message: "Ticket types updated successfully!" };
+  return {
+    status: 200,
+    message: tr("ticketTypesUpdatedSuccessfully"),
+  };
 }

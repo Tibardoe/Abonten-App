@@ -2,6 +2,7 @@ import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { DashboardWidgets } from "@/components/organizer/DashboardWidgets";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
+import { useMarket } from "@/features/markets/MarketProvider";
 import {
   useOrganizerDashboardWidgets,
   useOrganizerOverview,
@@ -14,6 +15,7 @@ import type {
   OrganizerOverviewRow,
 } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { formatCount, formatPercent } from "@abonten/core/i18n/format";
 import {
   AppText,
   Chip,
@@ -22,21 +24,26 @@ import {
   Overline,
   Refresher,
 } from "@abonten/ui-native";
+import {
+  getCurrentLocale,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "7d", label: "7 days" },
-  { key: "30d", label: "30 days" },
-  { key: "all", label: "All time" },
+  { key: "today", label: "periods.today" },
+  { key: "7d", label: "periods.7d" },
+  { key: "30d", label: "periods.30d" },
+  { key: "all", label: "periods.all" },
 ];
 
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
 
 function money(currency: string | null, amount: number | string): string {
-  return formatMoney(currency, n(amount));
+  return formatMoney(currency, n(amount), { locale: getCurrentLocale() });
 }
 
 // Percent change vs. the previous period. null when there's no comparable
@@ -54,9 +61,12 @@ function Delta({
   pct: number | null;
   compact?: boolean;
 }) {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+
   if (pct == null) {
     return (
-      <AppText variant="caption">{compact ? "—" : "— vs last period"}</AppText>
+      <AppText variant="caption">{compact ? "—" : t("vsLastPeriod")}</AppText>
     );
   }
   const up = pct >= 0;
@@ -72,10 +82,11 @@ function Delta({
         tone={up ? "success" : "error"}
         className="font-medium"
       >
-        {up ? "+" : "−"}
-        {Math.abs(Math.round(pct))}%
+        {formatPercent(Math.round(pct), locale, { signDisplay: "always" })}
       </AppText>
-      {compact ? null : <AppText variant="caption">vs last period</AppText>}
+      {compact ? null : (
+        <AppText variant="caption">{t("vsLastPeriod2")}</AppText>
+      )}
     </View>
   );
 }
@@ -153,6 +164,9 @@ function NavRow({ href, label }: { href: string; label: string }) {
 }
 
 export default function OrganizerDashboard() {
+  const { locale } = useLocale();
+  const t = useTranslations("manage");
+
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("30d");
   const widgetsQuery = useOrganizerDashboardWidgets(period);
   // The KPI rows arrive in the same payload as the widgets (one API call,
@@ -214,7 +228,11 @@ export default function OrganizerDashboard() {
   // and identical on every row.
   const moneyRows = rows.filter((r) => r.currency != null);
   const prevMoney = prevRows?.filter((r) => r.currency != null) ?? null;
-  const primaryCurrency = moneyRows[0]?.currency ?? "";
+  // Before the first sale no row names a currency: zero is shown in the
+  // market's own ("GH₵0.00"), not as a bare "0.00".
+  const { market } = useMarket();
+  const primaryCurrency =
+    moneyRows[0]?.currency ?? market?.defaultCurrency ?? "";
   // Match the primary currency row across periods so the delta compares
   // like with like rather than "row 0" against "row 0".
   const prevPrimaryMoney =
@@ -245,7 +263,7 @@ export default function OrganizerDashboard() {
         {PERIODS.map((p) => (
           <Chip
             key={p.key}
-            label={p.label}
+            label={t(p.label)}
             selected={p.key === period}
             onPress={() => setPeriod(p.key)}
           />
@@ -255,20 +273,20 @@ export default function OrganizerDashboard() {
       {kpiView.kind !== "content" && kpiView.kind !== "empty" ? (
         <QueryUnavailable
           view={kpiView}
-          subject="your dashboard"
+          subject={t("yourDashboard")}
           onRetry={() => q.refetch()}
           loading={<DashboardSkeleton />}
         />
       ) : !hasEvents ? (
         <View className="items-center gap-3 py-12">
-          <AppText variant="sectionHeading">No events yet</AppText>
+          <AppText variant="sectionHeading">{t("noEventsYet")}</AppText>
           <AppText className="text-center text-sm text-muted-foreground">
-            Publish your first event to start seeing sales here.
+            {t("publishYourFirstEventToStart")}
           </AppText>
           <Link href="/(app)/event/new" asChild>
             <Pressable className="rounded-lg bg-primary px-4 py-2 active:opacity-90">
               <AppText className="font-semibold text-primary-foreground">
-                + Create event
+                {t("createEvent")}
               </AppText>
             </Pressable>
           </Link>
@@ -278,7 +296,7 @@ export default function OrganizerDashboard() {
           {/* Headline KPIs — gross sales leads, the two counts sit under it */}
           <View className="gap-2">
             <KpiHero
-              label="Gross sales"
+              label={t("grossSales2")}
               icon="cash-outline"
               value={
                 moneyRows[0]
@@ -289,22 +307,22 @@ export default function OrganizerDashboard() {
             />
             <View className="flex-row gap-2">
               <KpiMini
-                label="Tickets sold"
+                label={t("ticketsSold2")}
                 icon="ticket-outline"
-                value={n(head?.tickets_sold).toLocaleString()}
+                value={formatCount(n(head?.tickets_sold), locale)}
                 delta={period === "all" ? undefined : ticketsDelta}
               />
               <KpiMini
-                label="Active events"
+                label={t("activeEvents")}
                 icon="calendar-outline"
-                value={n(head?.active_events_count).toLocaleString()}
+                value={formatCount(n(head?.active_events_count), locale)}
               />
             </View>
           </View>
 
           {moneyRows.length > 1 ? (
             <View className="rounded-xl border border-border bg-card p-3">
-              <AppText variant="caption">Other currencies</AppText>
+              <AppText variant="caption">{t("otherCurrencies")}</AppText>
               {moneyRows.slice(1).map((r) => (
                 <AppText key={r.currency} variant="metaStrong">
                   {money(r.currency, r.gross_sales)}
@@ -315,38 +333,41 @@ export default function OrganizerDashboard() {
 
           {/* Secondary metrics */}
           <View className="gap-3 rounded-2xl border border-border bg-card p-4">
-            <Overline>This period</Overline>
+            <Overline>{t("thisPeriod")}</Overline>
             <View className="flex-row flex-wrap gap-y-3">
               <MetricRow
-                label="Paid orders"
-                value={n(moneyRows[0]?.paid_orders).toLocaleString()}
+                label={t("paidOrders")}
+                value={formatCount(n(moneyRows[0]?.paid_orders), locale)}
               />
               <MetricRow
-                label="Buyers"
-                value={n(moneyRows[0]?.distinct_purchasers).toLocaleString()}
+                label={t("buyers")}
+                value={formatCount(
+                  n(moneyRows[0]?.distinct_purchasers),
+                  locale,
+                )}
               />
               <MetricRow
-                label="Discounts"
+                label={t("discounts")}
                 value={money(
                   moneyRows[0]?.currency ?? primaryCurrency,
                   moneyRows[0]?.total_discount ?? 0,
                 )}
               />
               <MetricRow
-                label="Registrations"
-                value={n(head?.registrations).toLocaleString()}
+                label={t("registrations")}
+                value={formatCount(n(head?.registrations), locale)}
               />
               <MetricRow
-                label="Cancelled"
-                value={n(head?.tickets_cancelled).toLocaleString()}
+                label={t("cancelled")}
+                value={formatCount(n(head?.tickets_cancelled), locale)}
               />
               <MetricRow
-                label="Upcoming events"
-                value={n(head?.upcoming_events_count).toLocaleString()}
+                label={t("upcomingEvents")}
+                value={formatCount(n(head?.upcoming_events_count), locale)}
               />
               <MetricRow
-                label="Total events"
-                value={n(head?.total_events_count).toLocaleString()}
+                label={t("totalEvents")}
+                value={formatCount(n(head?.total_events_count), locale)}
               />
             </View>
           </View>
@@ -361,29 +382,29 @@ export default function OrganizerDashboard() {
         <Link href="/(app)/event/new" asChild>
           <Pressable className="items-center rounded-xl bg-primary px-4 py-3 active:opacity-90">
             <AppText className="text-base font-semibold text-primary-foreground">
-              + Create event
+              {t("createEvent")}
             </AppText>
           </Pressable>
         </Link>
-        <NavRow href="/(app)/organizer/events" label="My events" />
+        <NavRow href="/(app)/organizer/events" label={t("myEvents2")} />
         {draftCount > 0 ? (
           <NavRow
             href="/(app)/organizer/event-drafts"
-            label={`Event drafts (${draftCount})`}
+            label={t("eventDrafts2", { draftCount: draftCount })}
           />
         ) : null}
-        <NavRow href="/(app)/organizer/places" label="My places" />
+        <NavRow href="/(app)/organizer/places" label={t("myPlaces2")} />
         {placeDraftCount > 0 ? (
           <NavRow
             href="/(app)/organizer/place-drafts"
-            label={`Place drafts (${placeDraftCount})`}
+            label={t("placeDrafts2", { placeDraftCount: placeDraftCount })}
           />
         ) : null}
         <NavRow
           href="/(app)/organizer/verification"
-          label="Organizer verification"
+          label={t("organizerVerification")}
         />
-        <NavRow href="/(app)/organizer/finance" label="Finances" />
+        <NavRow href="/(app)/organizer/finance" label={t("finances")} />
       </View>
     </ScrollView>
   );

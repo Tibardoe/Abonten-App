@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t } from "../i18n/testTranslator";
 import { contentDestinationCta } from "./copy";
 import {
   readStoryReplyContext,
@@ -57,19 +58,19 @@ describe("story reply context", () => {
   });
 
   it("words the reply from each side of the conversation", () => {
-    expect(storyReplyLabel({ kind: "text" }, false, "Ama")).toBe(
+    expect(storyReplyLabel(t, { kind: "text" }, false, "Ama")).toBe(
       "Ama replied to your story",
     );
-    expect(storyReplyLabel({ kind: "text" }, true, "Ama")).toBe(
+    expect(storyReplyLabel(t, { kind: "text" }, true, "Ama")).toBe(
       "You replied to their story",
     );
-    expect(storyReplyLabel({ kind: "reaction" }, false, "")).toBe(
+    expect(storyReplyLabel(t, { kind: "reaction" }, false, "")).toBe(
       "Reacted to your story",
     );
-    expect(storyReplyNotificationBody("reaction", " 🔥 ")).toBe(
+    expect(storyReplyNotificationBody(t, "reaction", " 🔥 ")).toBe(
       "Reacted 🔥 to your story",
     );
-    expect(storyReplyNotificationBody("text", "x".repeat(300))).toHaveLength(
+    expect(storyReplyNotificationBody(t, "text", "x".repeat(300))).toHaveLength(
       140,
     );
   });
@@ -80,18 +81,18 @@ describe("overlay destination CTA", () => {
     event: null,
     place: null,
     publisher: { kind: "organizer" as const },
-  } satisfies Parameters<typeof contentDestinationCta>[0];
+  } satisfies Parameters<typeof contentDestinationCta>[1];
 
   it("drops the publisher fallbacks the tappable identity already covers", () => {
-    expect(contentDestinationCta(base)).toEqual({ label: "", target: null });
+    expect(contentDestinationCta(t, base)).toEqual({ label: "", target: null });
     expect(
-      contentDestinationCta({ ...base, publisher: { kind: "place" } }),
+      contentDestinationCta(t, { ...base, publisher: { kind: "place" } }),
     ).toEqual({ label: "", target: null });
   });
 
   it("keeps attached events and places, including their live state", () => {
     expect(
-      contentDestinationCta({
+      contentDestinationCta(t, {
         ...base,
         event: {
           available: true,
@@ -103,7 +104,7 @@ describe("overlay destination CTA", () => {
       }),
     ).toEqual({ label: "View event", target: "event" });
     expect(
-      contentDestinationCta({
+      contentDestinationCta(t, {
         ...base,
         place: { available: false, temporaryStatus: "permanently_closed" },
       }),

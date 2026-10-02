@@ -1,10 +1,13 @@
+import { TICKET_MODE, type TicketMode } from "@/events/ticketMode";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { cn } from "../lib/utils";
 
 type TicketProp = {
+  /** A TICKET_MODE code, never a label. */
   ticket: string | null;
-  handleTicket: (categoryName: string) => void;
+  handleTicket: (mode: TicketMode) => void;
   checked: boolean;
   handleChecked: (state: boolean) => void;
 };
@@ -15,6 +18,8 @@ export default function TicketType({
   checked,
   handleChecked,
 }: TicketProp) {
+  const t = useTranslations("common");
+
   const [showTicketDropdown, setShowTicketDropdown] = useState(false);
 
   return (
@@ -24,7 +29,7 @@ export default function TicketType({
         onClick={() => setShowTicketDropdown((prevState) => !prevState)}
         className="flex gap-2 justify-between w-full items-center"
       >
-        <h2>Ticketing</h2>
+        <h2>{t("ticketing")}</h2>
 
         {showTicketDropdown ? (
           <IoIosArrowUp className="text-2xl" />
@@ -38,21 +43,21 @@ export default function TicketType({
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => handleTicket("Free")}
+              onClick={() => handleTicket(TICKET_MODE.free)}
               className="flex justify-between items-center w-full text-sm"
             >
-              Free
+              {t("free")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== "Free",
-                    flex: ticket === "Free",
+                    hidden: ticket !== TICKET_MODE.free,
+                    flex: ticket === TICKET_MODE.free,
                   })}
                 />
               </span>
             </button>
 
-            {ticket === "Free" && (
+            {ticket === TICKET_MODE.free && (
               <div className="flex items-center gap-2 text-foreground">
                 <button
                   type="button"
@@ -68,7 +73,7 @@ export default function TicketType({
                   </span>
                 </button>
                 <p className="text-xs">
-                  Require interested users to register for this event
+                  {t("requireInterestedUsersToRegisterFor")}
                 </p>
               </div>
             )}
@@ -77,15 +82,15 @@ export default function TicketType({
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => handleTicket("Single Ticket Type")}
+              onClick={() => handleTicket(TICKET_MODE.single)}
               className="flex justify-between items-center w-full text-sm"
             >
-              Single Ticket Type
+              {t("singleTicketType")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== "Single Ticket Type",
-                    flex: ticket === "Single Ticket Type",
+                    hidden: ticket !== TICKET_MODE.single,
+                    flex: ticket === TICKET_MODE.single,
                   })}
                 />
               </span>
@@ -95,15 +100,15 @@ export default function TicketType({
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => handleTicket("Multiple Ticket Types")}
+              onClick={() => handleTicket(TICKET_MODE.multiple)}
               className="flex justify-between items-center w-full text-sm"
             >
-              Multiple Ticket Types
+              {t("multipleTicketTypes")}
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
-                    hidden: ticket !== "Multiple Ticket Types",
-                    flex: ticket === "Multiple Ticket Types",
+                    hidden: ticket !== TICKET_MODE.multiple,
+                    flex: ticket === TICKET_MODE.multiple,
                   })}
                 />
               </span>

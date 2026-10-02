@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { roundRating } from "@abonten/core/ratings";
+import { translatorFor } from "@abonten/ui-native/i18n";
 import { type QueryClient, useQuery } from "@tanstack/react-query";
 
 // A public user profile, keyed by username, in ONE request:
@@ -50,7 +51,7 @@ async function fetchProfile(username: string): Promise<PublicProfile> {
   if (error) throw error;
   const row = data as Record<string, unknown> | null;
   if (!row || typeof row.user_id !== "string") {
-    throw new NotFoundError("Profile");
+    throw new NotFoundError(translatorFor("profile")("profile"));
   }
 
   return {

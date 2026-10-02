@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import {
   parseFieldOpsInput,
   resolveFieldOpsCaller,
@@ -11,16 +12,18 @@ import { fieldOpsEvidenceRemoveSchema } from "@abonten/validation/fieldOpsSchema
  * Removes an evidence photo from a draft. Same service as
  * DELETE /api/mobile/field-ops/onboardings/[id]/evidence/[evidenceId].
  */
-export async function removeFieldOpsEvidence(input: unknown): Promise<{
-  status: number;
-  message?: string;
-  data?: { removed: boolean };
-}> {
-  const caller = await resolveFieldOpsCaller();
-  if (caller.error) return caller.error;
-  const { userId, svc } = caller;
-  const parsed = parseFieldOpsInput(fieldOpsEvidenceRemoveSchema, input);
-  if (parsed.error) return parsed.error;
-  const { data } = parsed;
-  return removeEvidenceCore(svc, userId, data);
-}
+export const removeFieldOpsEvidence = withActionLocale(
+  async function removeFieldOpsEvidence(input: unknown): Promise<{
+    status: number;
+    message?: string;
+    data?: { removed: boolean };
+  }> {
+    const caller = await resolveFieldOpsCaller();
+    if (caller.error) return caller.error;
+    const { userId, svc } = caller;
+    const parsed = parseFieldOpsInput(fieldOpsEvidenceRemoveSchema, input);
+    if (parsed.error) return parsed.error;
+    const { data } = parsed;
+    return removeEvidenceCore(svc, userId, data);
+  },
+);

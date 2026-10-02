@@ -5,6 +5,10 @@ import {
   type PostEventCoreInput,
   postEventCore,
 } from "@abonten/services/events/postEventCore";
+import {
+  bindLocaleFromRequest,
+  tr,
+} from "@abonten/services/i18n/requestLocale";
 
 // POST /api/mobile/events
 //   { title, description, category, types[], address, latitude, longitude,
@@ -17,6 +21,7 @@ import {
 // direct upload, kind "event_photo"); its public_id/version come in here.
 // Runs the same postEventCore the web postEvent action runs.
 export async function POST(req: Request) {
+  bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
 
@@ -27,7 +32,10 @@ export async function POST(req: Request) {
     > | null;
 
     if (!body) {
-      return apiJson({ status: 400, message: "Invalid request body" });
+      return apiJson({
+        status: 400,
+        message: tr("invalidRequestBody"),
+      });
     }
 
     const str = (v: unknown): string | null =>
@@ -61,8 +69,7 @@ export async function POST(req: Request) {
     ) {
       return apiJson({
         status: 400,
-        message:
-          "title, description, category, types, address, latitude, longitude, flyerPublicId, flyerVersion and clientRequestId are required",
+        message: tr("titleDescriptionCategoryTypesAddressLatitude"),
       });
     }
 
@@ -72,7 +79,7 @@ export async function POST(req: Request) {
     if (!hasSingleRange && !hasSpecific) {
       return apiJson({
         status: 400,
-        message: "Provide either startsAt + endsAt, or specificDates",
+        message: tr("provideEitherStartsatEndsatOrSpecificdates"),
       });
     }
 
@@ -119,6 +126,9 @@ export async function POST(req: Request) {
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /events failed", error);
-    return apiJson({ status: 500, message: "Something went wrong!" });
+    return apiJson({
+      status: 500,
+      message: tr("somethingWentWrong"),
+    });
   }
 }

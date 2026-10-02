@@ -1,4 +1,5 @@
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
+import { useTranslations } from "next-intl";
 import PlaceOpeningHoursEditor from "../molecules/PlaceOpeningHoursEditor";
 
 type PlaceCreateStepHoursProps = Pick<
@@ -12,9 +13,13 @@ export default function PlaceCreateStepHours({
   setOpeningHours,
   className,
 }: PlaceCreateStepHoursProps) {
+  const t = useTranslations("places");
+
   return (
     <div className={className}>
-      <h2 className="text-sm font-semibold text-foreground">Opening Hours</h2>
+      <h2 className="text-sm font-semibold text-foreground">
+        {t("openingHours2")}
+      </h2>
       <PlaceOpeningHoursEditor
         openingHours={openingHours}
         onChange={setOpeningHours}

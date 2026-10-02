@@ -11,10 +11,11 @@ import {
   money,
   timeAgo,
 } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import { loadFieldOpsOverview } from "@/lib/data";
 import { minorToMajor } from "@/lib/moneyUnits";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/fieldOps/campaignLifecycle";
+import { fieldOpsCampaignStatusLabel } from "@abonten/core/fieldOps/campaignLifecycle";
 import type { FieldOpsCampaignStatus } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "./FieldOpsTabs";
@@ -237,7 +238,7 @@ export default async function FieldOpsOverviewPage() {
                           <Td>{c.regionName}</Td>
                           <Td>
                             <Badge tone={campaignStatusTone(c.status)}>
-                              {CAMPAIGN_STATUS_LABEL[c.status]}
+                              {fieldOpsCampaignStatusLabel(tc, c.status)}
                             </Badge>
                           </Td>
                           <Td className="text-muted-foreground">

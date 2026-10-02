@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   EMAIL_OTP_CODE_LENGTH,
-  EMAIL_OTP_MESSAGES,
+  emailOtpMessage,
   isLikelyEmail,
   normalizeEmail,
 } from "@abonten/core/emailOtp";
@@ -9,6 +9,7 @@ import { logger } from "@abonten/core/logger";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { coreT } from "../i18n/requestLocale";
 
 // Transport-neutral core of email one-time-code sign-in, shared by the web
 // Server Actions (src/actions/requestEmailOtp.ts + verifyEmailSignIn.ts,
@@ -56,7 +57,7 @@ export async function requestEmailOtpCore(
   const email = normalizeEmail(input.email);
 
   if (!isLikelyEmail(email)) {
-    return { status: 400, message: EMAIL_OTP_MESSAGES.invalidEmail };
+    return { status: 400, message: emailOtpMessage(coreT(), "invalidEmail") };
   }
 
   const withinEmailCap = await checkRateLimit(
@@ -66,7 +67,7 @@ export async function requestEmailOtpCore(
   );
 
   if (!withinEmailCap) {
-    return { status: 429, message: EMAIL_OTP_MESSAGES.rateLimited };
+    return { status: 429, message: emailOtpMessage(coreT(), "rateLimited") };
   }
 
   if (input.ip) {
@@ -77,7 +78,7 @@ export async function requestEmailOtpCore(
     );
 
     if (!withinIpCap) {
-      return { status: 429, message: EMAIL_OTP_MESSAGES.rateLimited };
+      return { status: 429, message: emailOtpMessage(coreT(), "rateLimited") };
     }
   }
 
@@ -95,14 +96,14 @@ export async function requestEmailOtpCore(
     // A 429 from Supabase's own rate limiter (built-in SMTP is ~2-4/hour;
     // custom SMTP much higher) — surface as a slow-down, not a failure.
     if (error.status === 429) {
-      return { status: 429, message: EMAIL_OTP_MESSAGES.rateLimited };
+      return { status: 429, message: emailOtpMessage(coreT(), "rateLimited") };
     }
 
     // Anything else: log the real reason server-side, tell the user
     // nothing specific (could be "signups disabled", a provider outage,
     // etc. — none of which should hint at account state).
     logger.error(`requestEmailOtpCore: signInWithOtp failed: ${error.message}`);
-    return { status: 500, message: EMAIL_OTP_MESSAGES.generic };
+    return { status: 500, message: emailOtpMessage(coreT(), "generic") };
   }
 
   return { status: 200 };
@@ -123,7 +124,7 @@ export async function verifyEmailOtpCore(
     return {
       ok: false,
       status: 400,
-      message: EMAIL_OTP_MESSAGES.invalidFormat,
+      message: emailOtpMessage(coreT(), "invalidFormat"),
     };
   }
 
@@ -138,7 +139,7 @@ export async function verifyEmailOtpCore(
       return {
         ok: false,
         status: 429,
-        message: EMAIL_OTP_MESSAGES.rateLimited,
+        message: emailOtpMessage(coreT(), "rateLimited"),
       };
     }
 
@@ -149,7 +150,7 @@ export async function verifyEmailOtpCore(
     return {
       ok: false,
       status: 401,
-      message: EMAIL_OTP_MESSAGES.invalidOrExpired,
+      message: emailOtpMessage(coreT(), "invalidOrExpired"),
     };
   }
 

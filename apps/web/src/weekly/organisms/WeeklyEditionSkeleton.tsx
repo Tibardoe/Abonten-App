@@ -1,14 +1,17 @@
 import EventsSliderSkeleton from "@/components/organisms/EventsSliderSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslations } from "next-intl";
 
 export default function WeeklyEditionSkeleton() {
+  const t = useTranslations("weekly");
+
   return (
     // A labelled <section> is a region: a label on a bare <div> is ignored
     // by assistive tech (axe aria-prohibited-attr).
     <section
       className="mx-auto flex w-full max-w-7xl flex-col gap-8"
       aria-busy="true"
-      aria-label="Loading Abonten Weekly"
+      aria-label={t("loadingAbontenWeekly")}
     >
       <div className="space-y-3 rounded-2xl border border-border p-5 md:p-8">
         <Skeleton className="h-3 w-40" />

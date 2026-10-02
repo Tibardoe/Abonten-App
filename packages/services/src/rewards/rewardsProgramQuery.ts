@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { RewardsProgram } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { rewardRulesCurrency } from "./creditCurrency";
 
 // The public, sanitized view of the Rewards program (get_rewards_program_
@@ -187,7 +188,7 @@ export async function getRewardsProgramCore(
     logger.error(`getRewardsProgramCore failed: ${error.message}`);
     return {
       status: 500,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
       data: { ...DISABLED_REWARDS_PROGRAM, currency },
     };
   }

@@ -1,4 +1,5 @@
 import { cn } from "@/components/lib/utils";
+import { useTranslations } from "next-intl";
 
 const TONES: Record<string, string> = {
   // assignment
@@ -26,7 +27,11 @@ const TONES: Record<string, string> = {
   left: "bg-muted text-muted-foreground",
 };
 
-/** A small status pill; the label is the status with underscores spaced. */
+/**
+ * A small status pill. The status is a code ("winding_down"); its words
+ * come from `fieldOps.statusChip.*`. A code with no words yet is shown
+ * with its underscores spaced rather than not at all.
+ */
 export default function StatusChip({
   status,
   label,
@@ -36,15 +41,19 @@ export default function StatusChip({
   label?: string;
   className?: string;
 }) {
+  const t = useTranslations("fieldOps");
+  const worded = t.has(`statusChip.${status}`)
+    ? t(`statusChip.${status}`)
+    : status.replace(/_/g, " ");
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize",
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
         TONES[status] ?? "bg-secondary text-secondary-foreground",
         className,
       )}
     >
-      {label ?? status.replace(/_/g, " ")}
+      {label ?? worded}
     </span>
   );
 }

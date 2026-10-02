@@ -2,11 +2,12 @@ import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider
 import { useMarket } from "@/features/markets/MarketProvider";
 import type { BrowseSuggestions } from "@abonten/core/market/coverage";
 import {
-  BROWSE_ELSEWHERE_TITLE,
+  BROWSE_ELSEWHERE_TITLE_KEY,
   browseReasonLabel,
   cityDistanceText,
 } from "@abonten/core/market/coverageCopy";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // "Explore what's happening elsewhere": the launched cities offered from an
@@ -24,22 +25,29 @@ export function BrowseElsewhereList({
   browse: BrowseSuggestions;
   className?: string;
 }) {
+  const t = useTranslations("explore");
+  const tc = useTranslations("core");
+
   const { chooseArea } = useExploreLocation();
   const { context } = useMarket();
   const unit = context?.distanceUnit ?? "km";
   if (browse.cities.length === 0) return null;
-  const reason = browseReasonLabel(browse.reason);
+  const reason = browseReasonLabel(tc, browse.reason);
 
   return (
     <View className={`gap-1 ${className ?? ""}`}>
-      <AppText variant="label">{BROWSE_ELSEWHERE_TITLE}</AppText>
+      <AppText variant="label">{tc(BROWSE_ELSEWHERE_TITLE_KEY)}</AppText>
       {browse.cities.map((city) => {
-        const distance = cityDistanceText(city, unit);
+        const distance = cityDistanceText(tc, city, unit);
         return (
           <Pressable
             key={city.region.id}
             accessibilityRole="button"
-            accessibilityLabel={`Explore ${city.region.name}, ${distance}${reason ? `, ${reason}` : ""}`}
+            accessibilityLabel={t("explore2", {
+              name: city.region.name,
+              distance: distance,
+              value: reason ? `, ${reason}` : "",
+            })}
             onPress={() =>
               void chooseArea(
                 city.region.lat,

@@ -3,6 +3,11 @@ import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
+import {
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -67,7 +72,7 @@ function identityFor(item: ConversationListItem): string {
     item.other_display_name ||
     item.subject_title ||
     item.title ||
-    "Conversation"
+    translatorFor("messaging")("conversation")
   );
 }
 
@@ -98,6 +103,10 @@ export function ConversationPeekOverlay({
   onToggleMute: (item: ConversationListItem) => void;
   onToggleArchive: (item: ConversationListItem) => void;
 }) {
+  const { locale } = useLocale();
+
+  const t = useTranslations("messaging");
+
   const c = useThemeColors();
   const screen = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -118,13 +127,13 @@ export function ConversationPeekOverlay({
     return [
       {
         key: "read",
-        label: unread ? "Mark as read" : "Mark as unread",
+        label: unread ? t("markAsRead") : t("markAsUnread"),
         icon: unread ? "checkmark-done-outline" : "ellipse-outline",
         onPress: () => onToggleRead(item),
       },
       {
         key: "mute",
-        label: item.muted ? "Unmute" : "Mute",
+        label: item.muted ? t("unmute") : t("mute"),
         icon: item.muted
           ? "notifications-outline"
           : "notifications-off-outline",
@@ -132,12 +141,12 @@ export function ConversationPeekOverlay({
       },
       {
         key: "archive",
-        label: archived ? "Unarchive" : "Archive",
+        label: archived ? t("unarchive") : t("archive"),
         icon: archived ? "arrow-undo-outline" : "archive-outline",
         onPress: () => onToggleArchive(item),
       },
     ];
-  }, [item, archivedView, onToggleRead, onToggleMute, onToggleArchive]);
+  }, [item, archivedView, onToggleRead, onToggleMute, onToggleArchive, t]);
 
   const PEEK_W = screen.width - 32;
   const PEEK_LEFT = 16;
@@ -314,7 +323,7 @@ export function ConversationPeekOverlay({
           />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Dismiss"
+            accessibilityLabel={t("dismiss")}
             onPress={() => close()}
             style={StyleSheet.absoluteFill}
           />
@@ -323,8 +332,10 @@ export function ConversationPeekOverlay({
           <GestureDetector gesture={gesture}>
             <Animated.View
               accessibilityRole="button"
-              accessibilityLabel={`Open conversation with ${identityFor(item)}`}
-              accessibilityHint="Swipe up to open, swipe down to dismiss"
+              accessibilityLabel={t("openConversationWith", {
+                identityFor: identityFor(item),
+              })}
+              accessibilityHint={t("swipeUpToOpenSwipeDown")}
               onLayout={(e) => setPeekH(e.nativeEvent.layout.height)}
               style={[
                 {
@@ -372,7 +383,11 @@ export function ConversationPeekOverlay({
                     </AppText>
                     {item.last_message_at ? (
                       <AppText variant="caption" tone="muted">
-                        {getRelativeTime(item.last_message_at)}
+                        {getRelativeTime(
+                          item.last_message_at,
+                          undefined,
+                          locale,
+                        )}
                       </AppText>
                     ) : null}
                   </View>
@@ -416,7 +431,7 @@ export function ConversationPeekOverlay({
                         tone="muted"
                       />
                       <AppText variant="caption" tone="muted">
-                        Muted
+                        {t("muted")}
                       </AppText>
                     </View>
                   ) : null}
@@ -429,7 +444,8 @@ export function ConversationPeekOverlay({
                         allowFontScaling={false}
                         className="text-[11px] font-bold text-primary-foreground"
                       >
-                        {item.unread_count > 99 ? "99+" : item.unread_count} new
+                        {item.unread_count > 99 ? "99+" : item.unread_count}{" "}
+                        {t("newText")}
                       </AppText>
                     </View>
                   ) : null}

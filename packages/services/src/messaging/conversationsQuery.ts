@@ -10,6 +10,7 @@ import type {
   MessagingEnvelope,
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Read side of the inbox, shared by the web actions and the
 // /api/mobile/messages routes. All three functions run on the caller's own
@@ -84,7 +85,7 @@ export async function fetchConversationsPage(
       data: [],
       nextCursor: null,
       hasNextPage: false,
-      message: "Something went wrong!",
+      message: tr("somethingWentWrong"),
     };
   }
 
@@ -115,7 +116,11 @@ export async function getUnreadMessageCount(
 
   if (error) {
     logger.error(`getUnreadMessageCount failed: ${error.message}`);
-    return { status: 500, count: 0, message: "Something went wrong!" };
+    return {
+      status: 500,
+      count: 0,
+      message: tr("somethingWentWrong"),
+    };
   }
 
   return { status: 200, count: (data as number | null) ?? 0 };
@@ -136,17 +141,20 @@ export async function getConversationContext(
     logger.error(
       `getConversationContext: conversation read failed: ${convErr.message}`,
     );
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
   if (!conv) {
     // RLS hides conversations the caller isn't in — treat as not found.
-    return { status: 404, message: "Conversation not found." };
+    return { status: 404, message: tr("conversationNotFound") };
   }
   if (conv.moderation_state !== "visible") {
     // Hidden / removed / restricted by a moderator (Phase 8) — the thread is
     // no longer reachable from the chat UI. Staff act on it from the admin
     // report workspace, not here.
-    return { status: 404, message: "Conversation not found." };
+    return { status: 404, message: tr("conversationNotFound") };
   }
 
   const { data: participantRows, error: partErr } = await supabase
@@ -158,13 +166,16 @@ export async function getConversationContext(
     logger.error(
       `getConversationContext: participants read failed: ${partErr.message}`,
     );
-    return { status: 500, message: "Something went wrong. Please try again." };
+    return {
+      status: 500,
+      message: tr("somethingWentWrongPleaseTryAgain"),
+    };
   }
 
   const participants = (participantRows ?? []) as ConversationParticipantRow[];
   const mine = participants.find((p) => p.user_id === userId);
   if (!mine) {
-    return { status: 404, message: "Conversation not found." };
+    return { status: 404, message: tr("conversationNotFound") };
   }
 
   const profileIds = participants.map((p) => p.user_id);

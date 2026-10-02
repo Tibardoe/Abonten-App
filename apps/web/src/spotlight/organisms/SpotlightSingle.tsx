@@ -4,6 +4,7 @@ import { getContentPost } from "@/actions/content/getContentPost";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContentProgram } from "../hooks/useContentProgram";
@@ -11,6 +12,8 @@ import SpotlightCard from "./SpotlightCard";
 
 // A single Spotlight opened from a shared link or a notification.
 export default function SpotlightSingle({ postId }: { postId: string }) {
+  const t = useTranslations("spotlight");
+
   const { isLoading: userLoading, data: user } = useCurrentUser();
   const { ready } = useContentProgram();
   const router = useRouter();
@@ -38,16 +41,16 @@ export default function SpotlightSingle({ postId }: { postId: string }) {
   if (!post || post.kind !== "spotlight") {
     return (
       <div className="mx-auto max-w-md py-20 text-center">
-        <h1 className="text-xl font-bold">This Spotlight isn't available</h1>
+        <h1 className="text-xl font-bold">{t("thisSpotlightIsnTAvailable")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {(res && "message" in res ? res.message : null) ??
-            "It may have been removed."}
+            t("itMayHaveBeenRemoved")}
         </p>
         <Link
           href="/spotlight"
           className="mt-4 inline-block text-sm font-semibold text-primary hover:underline"
         >
-          Go to Spotlight
+          {t("goToSpotlight")}
         </Link>
       </div>
     );
@@ -65,13 +68,13 @@ export default function SpotlightSingle({ postId }: { postId: string }) {
           }
           className="text-sm font-medium text-muted-foreground hover:text-foreground"
         >
-          ← Back
+          {t("back")}
         </button>
         <Link
           href="/spotlight"
           className="text-sm font-semibold text-primary hover:underline"
         >
-          More Spotlights
+          {t("moreSpotlights")}
         </Link>
       </div>
       <div className="h-[calc(100dvh-13rem)] overflow-hidden rounded-2xl">

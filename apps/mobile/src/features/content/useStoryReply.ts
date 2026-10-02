@@ -2,6 +2,7 @@ import { messagingKeys } from "@/features/messaging/keys";
 import { api } from "@/lib/api";
 import { uuidv4 } from "@/lib/uuid";
 import type { ContentReactionEmoji } from "@abonten/types/contentType";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 
@@ -18,6 +19,8 @@ export type StoryReplyOutcome =
  * response lands on the same message instead of sending it twice.
  */
 export function useStoryReply(postId: string) {
+  const t = useTranslations("spotlight");
+
   const qc = useQueryClient();
   const [sending, setSending] = useState(false);
   const attempt = useRef<{ text: string; id: string } | null>(null);
@@ -28,7 +31,7 @@ export function useStoryReply(postId: string) {
       content: string,
     ): Promise<StoryReplyOutcome> => {
       const text = content.trim();
-      if (!text) return { ok: false, message: "Write a reply first." };
+      if (!text) return { ok: false, message: t("writeAReplyFirst") };
       if (kind === "text" && attempt.current?.text !== text) {
         attempt.current = { text, id: uuidv4() };
       }
@@ -48,8 +51,8 @@ export function useStoryReply(postId: string) {
             message:
               res.message ??
               (kind === "reaction"
-                ? "Couldn't send your reaction."
-                : "Couldn't send your reply."),
+                ? t("couldnTSendYourReaction")
+                : t("couldnTSendYourReply")),
           };
         }
         if (kind === "text") attempt.current = null;
@@ -61,13 +64,13 @@ export function useStoryReply(postId: string) {
       } catch {
         return {
           ok: false,
-          message: "No connection. Your reply wasn't sent.",
+          message: t("noConnectionYourReplyWasnT"),
         };
       } finally {
         setSending(false);
       }
     },
-    [postId, qc],
+    [postId, qc, t],
   );
 
   return {

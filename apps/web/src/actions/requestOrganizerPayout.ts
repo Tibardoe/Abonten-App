@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type RequestOrganizerPayoutResult,
   requestOrganizerPayoutCore,
 } from "@abonten/services/organizer/requestOrganizerPayoutCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Requests a withdrawal. All authorization/validation is server-side inside
@@ -17,7 +19,7 @@ import { revalidatePath } from "next/cache";
  * (see the migration's header comment on payout fulfillment scope) — that
  * connection is intentionally left for a later task.
  */
-export default async function requestOrganizerPayout(
+export default withActionLocale(async function requestOrganizerPayout(
   payoutAccountId: string,
   amount: number,
   currency: string,
@@ -30,7 +32,7 @@ export default async function requestOrganizerPayout(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: tr("userNotLoggedIn") };
   }
 
   const result = await requestOrganizerPayoutCore(supabase, {
@@ -40,11 +42,11 @@ export default async function requestOrganizerPayout(
   });
 
   if (result.status === 200) {
-    revalidatePath("/finances");
-    revalidatePath("/finances/payouts");
-    revalidatePath("/finances/transactions");
-    revalidatePath("/manage/dashboard");
+    revalidateAppPath("/finances");
+    revalidateAppPath("/finances/payouts");
+    revalidateAppPath("/finances/transactions");
+    revalidateAppPath("/manage/dashboard");
   }
 
   return result;
-}
+});

@@ -3,6 +3,8 @@
 import { setRewardEmailsByLink } from "@/actions/setRewardEmailsByLink";
 import { Button } from "@/components/ui/button";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
+import { actionUnreachable } from "@/utils/actionUnreachable";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
 /**
@@ -16,6 +18,8 @@ export default function RewardEmailUnsubscribe({
   userId: string;
   token: string;
 }) {
+  const t = useTranslations("rewards");
+
   const [state, setState] = useState<"ask" | "off" | "on">("ask");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -23,11 +27,13 @@ export default function RewardEmailUnsubscribe({
   const change = (enabled: boolean) =>
     start(async () => {
       setError(null);
-      const res = await setRewardEmailsByLink({ userId, token, enabled });
+      const res = await setRewardEmailsByLink({ userId, token, enabled }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200) {
         setState(enabled ? "on" : "off");
       } else {
-        setError(res.message ?? "Couldn't save that. Please try again.");
+        setError(res.message ?? t("couldnTSaveThatPleaseTry"));
       }
     });
 
@@ -35,17 +41,17 @@ export default function RewardEmailUnsubscribe({
     <>
       <PageTitle>
         {state === "off"
-          ? "You're unsubscribed"
+          ? t("youReUnsubscribed")
           : state === "on"
-            ? "Reward emails are back on"
-            : "Stop Abonten Rewards emails?"}
+            ? t("rewardEmailsAreBackOn")
+            : t("stopAbontenRewardsEmails")}
       </PageTitle>
       <SupportingText>
         {state === "off"
-          ? "We won't email you about your Abonten Credit any more. You'll still see it in the app and on your Rewards page, where you can turn these emails back on."
+          ? t("weWonTEmailYouAbout")
           : state === "on"
-            ? "We'll email you when credit is ready to use."
-            : "These are the emails we send when credit is ready for you to use. Your credit and the app's notifications aren't affected."}
+            ? t("weLlEmailYouWhenCredit")
+            : t("theseAreTheEmailsWeSend")}
       </SupportingText>
       {error ? (
         <p role="alert" className="text-sm text-destructive">
@@ -59,11 +65,11 @@ export default function RewardEmailUnsubscribe({
             disabled={pending}
             onClick={() => change(true)}
           >
-            {pending ? "Saving…" : "Turn them back on"}
+            {pending ? t("saving") : t("turnThemBackOn")}
           </Button>
         ) : state === "ask" ? (
           <Button disabled={pending} onClick={() => change(false)}>
-            {pending ? "Saving…" : "Unsubscribe"}
+            {pending ? t("saving") : t("unsubscribe")}
           </Button>
         ) : null}
       </div>

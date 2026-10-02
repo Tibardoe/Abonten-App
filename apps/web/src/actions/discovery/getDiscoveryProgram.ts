@@ -1,5 +1,6 @@
 "use server";
 
+import { withActionLocale } from "@/i18n/withActionLocale";
 import { resolveDiscoveryCaller } from "@/utils/discoveryAction";
 import { getDiscoveryProgramCore } from "@abonten/services/search/discoveryProgram";
 import {
@@ -8,14 +9,16 @@ import {
 } from "@abonten/types/discoveryType";
 
 /** What the current visitor may use. Signed-out visitors get search only when it is open to everyone. */
-export async function getDiscoveryProgram(): Promise<{
-  status: number;
-  data: DiscoveryProgram;
-}> {
-  try {
-    const caller = await resolveDiscoveryCaller();
-    return await getDiscoveryProgramCore(caller.svc, caller.userId);
-  } catch {
-    return { status: 200, data: DISABLED_DISCOVERY_PROGRAM };
-  }
-}
+export const getDiscoveryProgram = withActionLocale(
+  async function getDiscoveryProgram(): Promise<{
+    status: number;
+    data: DiscoveryProgram;
+  }> {
+    try {
+      const caller = await resolveDiscoveryCaller();
+      return await getDiscoveryProgramCore(caller.svc, caller.userId);
+    } catch {
+      return { status: 200, data: DISABLED_DISCOVERY_PROGRAM };
+    }
+  },
+);

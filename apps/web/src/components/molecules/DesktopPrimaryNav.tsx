@@ -51,7 +51,7 @@ export default function DesktopPrimaryNav({
   ];
 
   return (
-    <nav aria-label="Primary" className="flex items-center gap-1">
+    <nav aria-label={t("primary")} className="flex items-center gap-1">
       {links
         .filter((link) => link.show)
         .map((link) => (

@@ -8,14 +8,15 @@ import {
   Th,
 } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
+import { tc } from "@/lib/coreT";
 import { loadContentCampaign } from "@/lib/data";
 import { formatOpsDateTime } from "@/lib/format";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
-  CAMPAIGN_OBJECTIVE_LABEL,
-  CAMPAIGN_STATUS_LABEL,
-  PROMOTION_END_REASON_LABEL,
+  campaignObjectiveLabel,
+  campaignStatusLabel,
+  promotionEndReasonLabel,
 } from "@abonten/core/content/copy";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import { formatMoney } from "@abonten/core/formatMoney";
@@ -52,10 +53,10 @@ export default async function SpotlightCampaignDetailPage({
     [
       "Status",
       <Badge key="s" tone={campaignTone(c.status)}>
-        {CAMPAIGN_STATUS_LABEL[c.status]}
+        {campaignStatusLabel(tc, c.status)}
       </Badge>,
     ],
-    ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
+    ["Goal", campaignObjectiveLabel(tc, c.objective)],
     [
       "Budget",
       `${formatMinor(c.budgetMinor, c.currency)} · up to ${c.durationDays} days`,
@@ -72,7 +73,7 @@ export default async function SpotlightCampaignDetailPage({
     ["Delivered (spent)", formatMinor(c.spentMinor, c.currency)],
     ["Refunded", formatMinor(c.refundedMinor, c.currency)],
     ["Refundable now", formatMinor(c.refundableMinor, c.currency)],
-    ["Ended", c.endReason ? PROMOTION_END_REASON_LABEL[c.endReason] : "—"],
+    ["Ended", c.endReason ? promotionEndReasonLabel(tc, c.endReason) : "—"],
   ];
   const m = c.metrics;
   const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GB");
@@ -80,7 +81,7 @@ export default async function SpotlightCampaignDetailPage({
   const delivery: [string, string][] = [
     [
       "Estimated reach (sold)",
-      `${formatReachRange({ reachLow: c.estimatedReachLow, reachHigh: c.estimatedReachHigh })} · ${c.estimateBasis}`,
+      `${formatReachRange(tc, { reachLow: c.estimatedReachLow, reachHigh: c.estimatedReachHigh })} · ${c.estimateBasis}`,
     ],
     ["Reach", n(m?.reach ?? c.reach)],
     [

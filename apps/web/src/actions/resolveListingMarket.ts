@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   LISTING_MARKET_LOOKUPS_PER_MINUTE,
   type ListingMarketResult,
@@ -15,7 +17,7 @@ import { checkRateLimit } from "@abonten/services/security/rateLimit";
  * will be stored. Signed-in and rate limited: a new point can cost a billed
  * Google reverse-geocode call (the forms that use it are signed-in only).
  */
-export default async function resolveListingMarket(input: {
+export default withActionLocale(async function resolveListingMarket(input: {
   lat: number;
   lng: number;
   countryHint?: string | null;
@@ -24,7 +26,7 @@ export default async function resolveListingMarket(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false, message: "Sign in to continue." };
+  if (!user) return { ok: false, message: tr("signInToContinue") };
 
   const allowed = await checkRateLimit(
     `listing-market:${user.id}`,
@@ -34,8 +36,8 @@ export default async function resolveListingMarket(input: {
   if (!allowed) {
     return {
       ok: false,
-      message: "Too many location checks. Please wait a moment.",
+      message: tr("tooManyLocationChecksPleaseWait"),
     };
   }
   return getListingMarketCore(input);
-}
+});

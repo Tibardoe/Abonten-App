@@ -13,9 +13,10 @@ import { destroyAssetIfUnused } from "@abonten/services/media/assetReferences";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveListingLocation } from "../geo/locationResolution";
+import { coreT, tr } from "../i18n/requestLocale";
 import {
-  RESTRICTED_ACCOUNT_MESSAGE,
   isAccountRestricted,
+  restrictedAccountMessage,
 } from "../security/accountStatus";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
@@ -96,12 +97,19 @@ export async function updateEventCore(
   // but the zone update below runs as the service — check first, and answer
   // with the reason instead of a generic failure.
   if (await isAccountRestricted(userId)) {
-    return { status: 403, message: RESTRICTED_ACCOUNT_MESSAGE };
+    return { status: 403, message: restrictedAccountMessage() };
   }
 
-  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  const locationCheck = validateLocationInput(coreT(), {
+    address,
+    latitude,
+    longitude,
+  });
   if (!locationCheck.valid) {
-    return { status: 400, message: locationCheck.message };
+    return {
+      status: 400,
+      message: userFacingError("Update event", locationCheck),
+    };
   }
 
   // A moved event stays in its market: the currency its tickets were sold
@@ -111,7 +119,8 @@ export async function updateEventCore(
     lng: longitude,
     countryHint: input.addressDetails?.country_code ?? null,
   });
-  if (!resolved.ok) return { status: 400, message: resolved.message };
+  if (!resolved.ok)
+    return { status: 400, message: userFacingError("Update event", resolved) };
   const { location } = resolved;
   const toInstant = (value: DateInput | null | undefined): Date | null =>
     value == null
@@ -136,7 +145,10 @@ export async function updateEventCore(
     .single();
 
   if (fetchError || !existingEvent) {
-    return { status: 404, message: "Event not found or unauthorized" };
+    return {
+      status: 404,
+      message: tr("eventNotFoundOrUnauthorized"),
+    };
   }
 
   // Dates, location and capacity could affect people who already hold a
@@ -171,8 +183,7 @@ export async function updateEventCore(
     if (lockedCapacityChanged || addressChanged || datesChanged) {
       return {
         status: 409,
-        message:
-          "This event already has confirmed tickets — dates, location and capacity can't be changed.",
+        message: tr("thisEventAlreadyHasConfirmedTickets"),
       };
     }
   }
@@ -187,7 +198,11 @@ export async function updateEventCore(
   const capacityChanged = nextCapacity !== (existingEvent.capacity ?? null);
   const freeTier = ticketTypes.find((t) => t.type === FREE_TICKET_TYPE);
   if (capacityChanged && !freeTier) {
-    const capacityProblem = ticketCapacityProblem(nextCapacity, ticketTypes);
+    const capacityProblem = ticketCapacityProblem(
+      coreT(),
+      nextCapacity,
+      ticketTypes,
+    );
     if (capacityProblem) return { status: 400, message: capacityProblem };
   }
 
@@ -224,15 +239,14 @@ export async function updateEventCore(
   if (existingEvent.country_code !== location.countryCode) {
     return {
       status: 400,
-      message:
-        "An event can't move to another country. Create a new event there instead.",
+      message: tr("anEventCanTMoveTo"),
     };
   }
 
   const eventStartDate = isSpecificEvent ? null : toInstant(starts_at);
   const eventEndDate = isSpecificEvent ? null : toInstant(ends_at);
   if (!isSpecificEvent && (!eventStartDate || !eventEndDate)) {
-    return { status: 400, message: "Enter a valid start and end time." };
+    return { status: 400, message: tr("enterAValidStartAndEnd") };
   }
   const addressPayload: StructuredAddress = {
     ...readStructuredAddress(input.addressDetails ?? null),
@@ -269,12 +283,15 @@ export async function updateEventCore(
   if (updateError) {
     if (updateError.code === CHECK_VIOLATION) {
       // The capacity guard raises with an organizer-facing message.
-      return { status: 400, message: updateError.message };
+      return {
+        status: 400,
+        message: userFacingError("Update event", updateError),
+      };
     }
     logger.error(`updateEventCore: update failed (${updateError.message})`);
     return {
       status: 500,
-      message: "We couldn't save your event. Please try again.",
+      message: tr("weCouldnTSaveYourEvent"),
     };
   }
 
@@ -292,7 +309,7 @@ export async function updateEventCore(
     );
     return {
       status: 500,
-      message: "We couldn't save your event. Please try again.",
+      message: tr("weCouldnTSaveYourEvent"),
     };
   }
 
@@ -348,7 +365,7 @@ export async function updateEventCore(
 
   return {
     status: 200,
-    message: "Event updated successfully!",
+    message: tr("eventUpdatedSuccessfully"),
     eventCode: existingEvent.event_code as string,
   };
 }

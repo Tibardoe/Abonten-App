@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { t } from "./i18n/testTranslator";
 import {
   planTicketCapacity,
   ticketCapacityHint,
@@ -24,24 +25,24 @@ describe("ticketCapacityProblem — the capacity / quantity matrix", () => {
     [100, [50, 40, 20], false],
     [100, [], true],
   ])("capacity %s with quantities %j → valid: %s", (capacity, qs, valid) => {
-    const problem = ticketCapacityProblem(capacity, tiers(...qs));
+    const problem = ticketCapacityProblem(t, capacity, tiers(...qs));
     expect(problem === null).toBe(valid);
   });
 
   it("names both numbers so the organizer knows what to change", () => {
-    expect(ticketCapacityProblem(100, tiers(80, 30))).toBe(
+    expect(ticketCapacityProblem(t, 100, tiers(80, 30))).toBe(
       "Ticket quantities total 110, which exceeds the event capacity of 100.",
     );
   });
 
   it("treats undefined, null and a non-finite capacity as no limit", () => {
-    expect(ticketCapacityProblem(undefined, tiers(500))).toBeNull();
-    expect(ticketCapacityProblem(Number.NaN, tiers(500))).toBeNull();
-    expect(ticketCapacityProblem(0, tiers(500))).toBeNull();
+    expect(ticketCapacityProblem(t, undefined, tiers(500))).toBeNull();
+    expect(ticketCapacityProblem(t, Number.NaN, tiers(500))).toBeNull();
+    expect(ticketCapacityProblem(t, 0, tiers(500))).toBeNull();
   });
 
   it("ignores undefined quantities the same way as null ones", () => {
-    expect(ticketCapacityProblem(100, [{}, { quantity: 100 }])).toBeNull();
+    expect(ticketCapacityProblem(t, 100, [{}, { quantity: 100 }])).toBeNull();
   });
 });
 
@@ -75,32 +76,32 @@ describe("planTicketCapacity — the shared pool", () => {
 
 describe("ticketCapacityHint", () => {
   it("says nothing without a capacity or without ticket types", () => {
-    expect(ticketCapacityHint(null, tiers(10))).toBeNull();
-    expect(ticketCapacityHint(100, [])).toBeNull();
+    expect(ticketCapacityHint(t, null, tiers(10))).toBeNull();
+    expect(ticketCapacityHint(t, 100, [])).toBeNull();
   });
 
   it("explains a fully shared capacity", () => {
-    expect(ticketCapacityHint(100, tiers(null, null))).toBe(
+    expect(ticketCapacityHint(t, 100, tiers(null, null))).toBe(
       "All 100 seats are shared across your ticket types.",
     );
   });
 
   it("explains the split between reserved and shared seats", () => {
-    expect(ticketCapacityHint(100, tiers(60, null))).toBe(
+    expect(ticketCapacityHint(t, 100, tiers(60, null))).toBe(
       "60 seats reserved by the quantities you set; the remaining 40 seats are shared by the type without a quantity.",
     );
   });
 
   it("points out seats no ticket type can sell", () => {
-    expect(ticketCapacityHint(100, tiers(60, 30))).toBe(
+    expect(ticketCapacityHint(t, 100, tiers(60, 30))).toBe(
       "Ticket quantities use 90 of 100 seats; 10 will stay unsold unless you raise a quantity.",
     );
-    expect(ticketCapacityHint(100, tiers(60, 40))).toBe(
+    expect(ticketCapacityHint(t, 100, tiers(60, 40))).toBe(
       "Ticket quantities use all 100 seats.",
     );
   });
 
   it("leaves an over-allocation to the problem message", () => {
-    expect(ticketCapacityHint(100, tiers(60, 50))).toBeNull();
+    expect(ticketCapacityHint(t, 100, tiers(60, 50))).toBeNull();
   });
 });

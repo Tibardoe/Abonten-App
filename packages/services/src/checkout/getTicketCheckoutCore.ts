@@ -1,6 +1,7 @@
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 
 // Post-auth body of getTicketCheckout — shared with
 // `/api/mobile/checkout/session/[sessionId]`. See getTicketCheckout.ts.
@@ -42,7 +43,7 @@ export async function getTicketCheckoutCore(
   if (checkoutDataError) {
     logger.error(`Failed fetching checout data: ${checkoutDataError.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   return { status: 200, data: checkoutData };

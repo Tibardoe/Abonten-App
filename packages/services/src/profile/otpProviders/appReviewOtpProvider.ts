@@ -11,6 +11,7 @@
 
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { logger } from "@abonten/core/logger";
+import { tr } from "../../i18n/requestLocale";
 import type { OtpProvider, OtpSendResult, OtpVerifyResult } from "./types";
 
 // The app's code boxes are sized for at most six digits on a phone.
@@ -56,7 +57,7 @@ export const appReviewOtpProvider: OtpProvider = {
       return {
         ok: false,
         reason: "not_configured",
-        message: "Something went wrong. Please try again.",
+        message: tr("somethingWentWrongPleaseTryAgain"),
       };
     }
     // Nothing is texted. The handle only ties the pending row to this send.
@@ -82,6 +83,6 @@ export const appReviewOtpProvider: OtpProvider = {
     });
     return matches
       ? { ok: true }
-      : { ok: false, message: "That code is incorrect." };
+      : { ok: false, message: tr("thatCodeIsIncorrect") };
   },
 };

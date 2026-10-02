@@ -30,9 +30,10 @@ export default async function AreaCoverageNotice({
   });
   if (coverage.kind !== "not_launched") return null;
 
-  const label = locationLabelFromSlug(location);
+  // An empty fallback says "this address names no place" without asking
+  // whether two translated strings happen to be equal.
   const areaName =
-    coverage.region?.name ?? (label === "your area" ? null : label);
+    coverage.region?.name ?? (locationLabelFromSlug(location, "") || null);
   const status = await getAreaWaitlistStatus({ lat, lng });
 
   return (

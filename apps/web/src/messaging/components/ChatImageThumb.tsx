@@ -2,6 +2,7 @@
 
 import { useAttachmentUrl } from "@/messaging/hooks/useAttachmentUrl";
 import { ImageIcon, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const MAX_W = 260;
 const MAX_H = 340;
@@ -26,6 +27,8 @@ export function ChatImageThumb({
   width?: number | null;
   height?: number | null;
 }) {
+  const t = useTranslations("messaging");
+
   const signed = useAttachmentUrl(localUrl ? null : storagePath);
   const url = localUrl ?? signed.data ?? null;
   const size = fitted(width ?? null, height ?? null);
@@ -57,7 +60,7 @@ export function ChatImageThumb({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
-        alt="Shared attachment"
+        alt={t("sharedAttachment")}
         width={size.width}
         height={size.height}
         className="h-auto max-w-full object-cover"

@@ -10,9 +10,10 @@ import {
   cn,
   timeAgo,
 } from "@/components/ui";
+import { tc } from "@/lib/coreT";
 import { loadFieldOpsCampaigns } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/fieldOps/campaignLifecycle";
+import { fieldOpsCampaignStatusLabel } from "@abonten/core/fieldOps/campaignLifecycle";
 import { getDefaultMarket } from "@abonten/services/markets/marketConfig";
 import Link from "next/link";
 import { FieldOpsTabs } from "../FieldOpsTabs";
@@ -112,7 +113,7 @@ export default async function FieldOpsCampaignsPage({
                 <Td>{c.regionName}</Td>
                 <Td>
                   <Badge tone={campaignStatusTone(c.status)}>
-                    {CAMPAIGN_STATUS_LABEL[c.status]}
+                    {fieldOpsCampaignStatusLabel(tc, c.status)}
                   </Badge>
                 </Td>
                 <Td className="text-muted-foreground">

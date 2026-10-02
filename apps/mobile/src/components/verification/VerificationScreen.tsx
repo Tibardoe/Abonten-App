@@ -11,13 +11,14 @@ import {
 } from "@/features/verification/useVerification";
 import { useQueryView } from "@/lib/useQueryView";
 import { uuidv4 } from "@/lib/uuid";
+import { formatFileSize } from "@abonten/core/i18n/format";
 import {
-  HOW_REVIEW_WORKS,
-  ORGANIZER_TYPE_DESCRIPTION,
-  ORGANIZER_TYPE_LABEL,
-  VERIFICATION_CHIP_LABEL,
-  WHY_VERIFY,
+  howReviewWorks,
+  organizerTypeDescription,
+  organizerTypeLabel,
   ownerStatusCopy,
+  verificationChipLabel,
+  whyVerify,
 } from "@abonten/core/verification/copy";
 import { isEditable } from "@abonten/core/verification/stateMachine";
 import type {
@@ -36,6 +37,7 @@ import {
   Spinner,
   useToast,
 } from "@abonten/ui-native";
+import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import * as DocumentPicker from "expo-document-picker";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
@@ -61,11 +63,8 @@ const STATUS_TONE: Record<
   revoked: "warning",
 };
 
-function humanSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+const humanSize = (bytes: number): string =>
+  formatFileSize(bytes, getCurrentLocale());
 
 function DocRow({
   doc,
@@ -76,6 +75,8 @@ function DocRow({
   onRemove: () => void;
   onRetry: () => void;
 }) {
+  const t = useTranslations("verification");
+
   return (
     <View className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-2.5">
       {doc.isImage ? (
@@ -95,11 +96,11 @@ function DocRow({
         </AppText>
         <AppText variant="caption">
           {doc.status === "uploading"
-            ? "Sending…"
+            ? t("sending")
             : doc.status === "done"
-              ? "Sent"
+              ? t("sent")
               : doc.status === "error"
-                ? (doc.error ?? "Failed")
+                ? (doc.error ?? t("failed"))
                 : humanSize(doc.sizeBytes)}
         </AppText>
       </View>
@@ -110,7 +111,7 @@ function DocRow({
       ) : doc.status === "error" ? (
         <Pressable onPress={onRetry} hitSlop={8} accessibilityRole="button">
           <AppText variant="small" tone="brand" className="font-semibold">
-            Retry
+            {t("retry2")}
           </AppText>
         </Pressable>
       ) : (
@@ -133,7 +134,11 @@ function StatusCard({
   subjectName: string | null;
   reason: string | null;
 }) {
-  const copy = ownerStatusCopy(status, subjectType, { subjectName, reason });
+  const tc = useTranslations("core");
+  const copy = ownerStatusCopy(tc, status, subjectType, {
+    subjectName,
+    reason,
+  });
   const tone = STATUS_TONE[status];
   return (
     <View
@@ -175,6 +180,9 @@ export default function VerificationScreen({
   subjectType: VerificationSubjectType;
   subjectId: string;
 }) {
+  const t = useTranslations("verification");
+  const tc = useTranslations("core");
+
   const toast = useToast();
   const q = useSubjectVerification(subjectType, subjectId);
   const view = verificationView(q.data);
@@ -211,10 +219,10 @@ export default function VerificationScreen({
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background p-6">
         <AppText tone="muted" className="text-center">
-          Couldn&apos;t load verification.
+          {t("couldnTLoadVerification")}
         </AppText>
         <Button
-          title="Try again"
+          title={t("tryAgain")}
           variant="outline"
           onPress={() => q.refetch()}
         />
@@ -263,7 +271,7 @@ export default function VerificationScreen({
   async function takePhoto() {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
-      toast.error("Camera permission is needed to photograph a document.");
+      toast.error(t("cameraPermissionIsNeededToPhotograph"));
       return;
     }
     const res = await ImagePicker.launchCameraAsync({ quality: 0.8 });
@@ -288,7 +296,9 @@ export default function VerificationScreen({
       staged.docs.filter((d) => d.status !== "error").length;
     if (attached >= program.maxEvidenceFiles) {
       toast.error(
-        `You can attach at most ${program.maxEvidenceFiles} documents.`,
+        t("youCanAttachAtMostDocuments2", {
+          maxEvidenceFiles: program.maxEvidenceFiles,
+        }),
       );
       return;
     }
@@ -332,13 +342,13 @@ export default function VerificationScreen({
     if (any) {
       staged.clearDone();
       await actions.invalidate();
-      toast.success("Document added.");
+      toast.success(t("documentAdded"));
     }
   }
 
   async function start() {
     if (subjectType === "organizer" && !organizerType) {
-      toast.error("Choose the kind of organizer you are first.");
+      toast.error(t("chooseTheKindOfOrganizerYou"));
       return;
     }
     setBusy(true);
@@ -349,7 +359,7 @@ export default function VerificationScreen({
     });
     setBusy(false);
     if (res.status !== 200) {
-      toast.error(res.message ?? "Could not start verification.");
+      toast.error(res.message ?? t("couldNotStartVerification"));
     }
   }
 
@@ -366,25 +376,25 @@ export default function VerificationScreen({
     setBusy(false);
     if (res.status === 200) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      toast.success(res.message ?? "Sent for review.");
+      toast.success(res.message ?? t("sentForReview"));
     } else {
-      toast.error(res.message ?? "Could not send your request.");
+      toast.error(res.message ?? t("couldNotSendYourRequest"));
     }
   }
 
   function confirmWithdraw(caseId: string) {
     Alert.alert(
-      "Cancel this request?",
-      "Your documents are removed and nothing is reviewed.",
+      t("cancelThisRequest"),
+      t("yourDocumentsAreRemovedAndNothing"),
       [
-        { text: "Keep it", style: "cancel" },
+        { text: t("keepIt"), style: "cancel" },
         {
-          text: "Cancel request",
+          text: t("cancelRequest"),
           style: "destructive",
           onPress: async () => {
             const res = await actions.withdraw.mutateAsync(caseId);
-            if (res.status === 200) toast.success("Request withdrawn.");
-            else toast.error(res.message ?? "Could not withdraw.");
+            if (res.status === 200) toast.success(t("requestWithdrawn"));
+            else toast.error(res.message ?? t("couldNotWithdraw"));
           },
         },
       ],
@@ -403,11 +413,9 @@ export default function VerificationScreen({
             reason={null}
           />
           <View className="gap-1 rounded-xl border border-border bg-card p-4">
-            <AppText variant="sectionHeading">What your badge says</AppText>
+            <AppText variant="sectionHeading">{t("whatYourBadgeSays")}</AppText>
             <AppText variant="small" tone="muted">
-              Abonten reviewed documents supporting your business and your link
-              to this account. It is not a statement about your service, prices
-              or quality.
+              {t("abontenReviewedDocumentsSupportingYourBusiness")}
             </AppText>
           </View>
         </>
@@ -437,20 +445,20 @@ export default function VerificationScreen({
               ) : null}
 
               <View className="gap-3 rounded-xl border border-border bg-card p-4">
-                <Field label="Registered name (optional)">
+                <Field label={t("registeredNameOptional")}>
                   <Input
                     value={legalName}
                     onChangeText={setLegalName}
-                    placeholder="As it appears on your documents"
+                    placeholder={t("asItAppearsOnYourDocuments")}
                   />
                 </Field>
-                <Field label="Anything the reviewer should know (optional)">
+                <Field label={t("anythingTheReviewerShouldKnowOptional")}>
                   <Input
                     value={note}
                     onChangeText={setNote}
                     multiline
                     numberOfLines={3}
-                    placeholder="For example: the permit is in my father's name."
+                    placeholder={t("forExampleThePermitIsIn2")}
                   />
                 </Field>
               </View>
@@ -480,20 +488,21 @@ export default function VerificationScreen({
                           {e.evidenceTypeLabel ?? e.evidenceType}
                         </AppText>
                         <AppText variant="caption" numberOfLines={1}>
-                          {e.fileName ?? "Document"} · {humanSize(e.sizeBytes)}
+                          {e.fileName ?? t("document2")} ·{" "}
+                          {humanSize(e.sizeBytes)}
                         </AppText>
                       </View>
                       <Pressable
                         hitSlop={8}
                         accessibilityRole="button"
-                        accessibilityLabel="Remove document"
+                        accessibilityLabel={t("removeDocument")}
                         onPress={async () => {
                           const res = await actions.removeEvidence.mutateAsync({
                             caseId: openCase.id,
                             evidenceId: e.id,
                           });
-                          if (res.status === 200) toast.success("Removed.");
-                          else toast.error(res.message ?? "Could not remove.");
+                          if (res.status === 200) toast.success(t("removed"));
+                          else toast.error(res.message ?? t("couldNotRemove"));
                         }}
                       >
                         <Icon name="trash-outline" size={18} tone="muted" />
@@ -518,14 +527,14 @@ export default function VerificationScreen({
 
               <View className="flex-row flex-wrap gap-2">
                 <Button
-                  title="Photograph"
+                  title={t("photograph")}
                   variant="outline"
                   leftIcon="camera-outline"
                   onPress={takePhoto}
                   disabled={busy}
                 />
                 <Button
-                  title="From gallery"
+                  title={t("fromGallery")}
                   variant="outline"
                   leftIcon="image-outline"
                   onPress={pickPhoto}
@@ -542,34 +551,35 @@ export default function VerificationScreen({
 
               {staged.docs.some((d) => d.status !== "done") ? (
                 <Button
-                  title={busy ? "Sending…" : "Add to request"}
+                  title={busy ? t("sending") : t("addToRequest")}
                   onPress={() => sendAll(openCase.id)}
                   disabled={busy}
                 />
               ) : null}
 
               <AppText variant="caption" tone="muted">
-                Photos or PDF, up to{" "}
-                {Math.round(program.maxFileBytes / (1024 * 1024))} MB each,{" "}
-                {program.maxEvidenceFiles} in total.
+                {t("photosOrPdfUpToMb2", {
+                  round: Math.round(program.maxFileBytes / (1024 * 1024)),
+                  maxEvidenceFiles: program.maxEvidenceFiles,
+                })}
               </AppText>
 
               <Button
                 title={
                   openCase.status === "needs_info"
-                    ? "Send again for review"
-                    : "Send for review"
+                    ? t("sendAgainForReview")
+                    : t("sendForReview")
                 }
                 onPress={() => submit(openCase.id)}
                 disabled={busy || attached === 0}
               />
               {attached === 0 ? (
                 <AppText variant="caption" tone="muted">
-                  Add at least one document before sending.
+                  {t("addAtLeastOneDocumentBefore")}
                 </AppText>
               ) : null}
               <Button
-                title="Cancel request"
+                title={t("cancelRequest")}
                 variant="outline"
                 onPress={() => confirmWithdraw(openCase.id)}
                 disabled={busy}
@@ -579,7 +589,7 @@ export default function VerificationScreen({
             <>
               {openCase.evidence.length > 0 ? (
                 <View className="gap-1 rounded-xl border border-border bg-card p-4">
-                  <AppText variant="sectionHeading">What you sent</AppText>
+                  <AppText variant="sectionHeading">{t("whatYouSent")}</AppText>
                   {openCase.evidence.map((e) => (
                     <AppText key={e.id} variant="small" tone="muted">
                       {e.evidenceTypeLabel ?? e.evidenceType}
@@ -589,7 +599,7 @@ export default function VerificationScreen({
                 </View>
               ) : null}
               <Button
-                title="Cancel request"
+                title={t("cancelRequest")}
                 variant="outline"
                 onPress={() => confirmWithdraw(openCase.id)}
                 disabled={busy}
@@ -614,18 +624,17 @@ export default function VerificationScreen({
 
         {!programOpen ? (
           <AppText variant="small" tone="muted">
-            Verification isn&apos;t open yet. We&apos;ll let you know when you
-            can apply.
+            {t("verificationIsnTOpenYetWe")}
           </AppText>
         ) : !view.canStart ? (
           <AppText variant="small" tone="muted">
-            {view.blockedReason ?? "Verification isn't available right now."}
+            {view.blockedReason ?? t("verificationIsnTAvailableRightNow")}
           </AppText>
         ) : (
           <>
             <View className="gap-2 rounded-xl border border-border bg-card p-4">
-              <AppText variant="sectionHeading">Why verify</AppText>
-              {WHY_VERIFY[subjectType].map((line) => (
+              <AppText variant="sectionHeading">{t("whyVerify")}</AppText>
+              {whyVerify(tc, subjectType).map((line) => (
                 <View key={line} className="flex-row gap-2">
                   <Icon name="checkmark-circle" size={16} tone="primary" />
                   <AppText variant="small" tone="muted" className="flex-1">
@@ -636,10 +645,9 @@ export default function VerificationScreen({
             </View>
 
             <View className="gap-2 rounded-xl border border-border bg-card p-4">
-              <AppText variant="sectionHeading">What you can send</AppText>
+              <AppText variant="sectionHeading">{t("whatYouCanSend")}</AppText>
               <AppText variant="small" tone="muted">
-                Send whatever you have. There is no single document Abonten
-                insists on.
+                {t("sendWhateverYouHaveThereIs")}
               </AppText>
               {evidenceTypes.map((t) => (
                 <View key={t.key} className="gap-0.5">
@@ -656,8 +664,8 @@ export default function VerificationScreen({
             </View>
 
             <View className="gap-2 rounded-xl border border-border bg-muted p-4">
-              <AppText variant="sectionHeading">How review works</AppText>
-              {HOW_REVIEW_WORKS.map((line) => (
+              <AppText variant="sectionHeading">{t("howReviewWorks")}</AppText>
+              {howReviewWorks(tc).map((line) => (
                 <AppText key={line} variant="small" tone="muted">
                   {line}
                 </AppText>
@@ -674,7 +682,7 @@ export default function VerificationScreen({
 
             <Button
               title={
-                lastClosedCase ? "Start a new request" : "Start verification"
+                lastClosedCase ? t("startANewRequest") : t("startVerification")
               }
               onPress={start}
               disabled={busy}
@@ -705,11 +713,13 @@ function EvidenceTypePicker({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const t = useTranslations("verification");
+
   if (types.length === 0) return null;
   const selected = types.find((t) => t.key === value);
   return (
     <View className="gap-2">
-      <AppText variant="sectionHeading">What are you sending?</AppText>
+      <AppText variant="sectionHeading">{t("whatAreYouSending")}</AppText>
       <View className="flex-row flex-wrap gap-2">
         {types.map((t) => (
           <Pressable
@@ -747,11 +757,14 @@ function OrganizerTypePicker({
   onChange: (v: OrganizerType) => void;
   allowed: OrganizerType[];
 }) {
+  const t = useTranslations("verification");
+  const tc = useTranslations("core");
+
   if (allowed.length === 0) return null;
   return (
     <View className="gap-2">
       <AppText variant="sectionHeading">
-        What kind of organizer are you?
+        {t("whatKindOfOrganizerAreYou")}
       </AppText>
       {allowed.map((t) => (
         <Pressable
@@ -766,10 +779,10 @@ function OrganizerTypePicker({
           }`}
         >
           <AppText variant="small" className="font-medium">
-            {ORGANIZER_TYPE_LABEL[t]}
+            {organizerTypeLabel(tc, t)}
           </AppText>
           <AppText variant="caption" tone="muted">
-            {ORGANIZER_TYPE_DESCRIPTION[t]}
+            {organizerTypeDescription(tc, t)}
           </AppText>
         </Pressable>
       ))}
@@ -779,6 +792,7 @@ function OrganizerTypePicker({
 
 /** Status pill reused by the places list and the organizer nav row. */
 export function VerificationChip({ status }: { status: VerificationStatus }) {
+  const tc = useTranslations("core");
   return (
     <View
       className={`rounded-full px-2 py-0.5 ${
@@ -789,7 +803,7 @@ export function VerificationChip({ status }: { status: VerificationStatus }) {
         variant="caption"
         tone={status === "approved" ? "brand" : "muted"}
       >
-        {VERIFICATION_CHIP_LABEL[status]}
+        {verificationChipLabel(tc, status)}
       </AppText>
     </View>
   );

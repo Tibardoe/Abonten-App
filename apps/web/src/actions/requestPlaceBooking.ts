@@ -1,12 +1,14 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { withActionLocale } from "@/i18n/withActionLocale";
+import { revalidateAppPath } from "@/lib/revalidateAppPath";
 import { userFacingError } from "@abonten/core/userFacingError";
+import { tr } from "@abonten/services/i18n/requestLocale";
 import {
   type RequestPlaceBookingInput,
   requestPlaceBookingCore,
 } from "@abonten/services/places/requestPlaceBookingCore";
-import { revalidatePath } from "next/cache";
 
 /**
  * Thin web transport over `requestPlaceBookingCore` — resolves the cookie
@@ -14,33 +16,35 @@ import { revalidatePath } from "next/cache";
  * pending insert, owner notification) to the shared service so the mobile
  * `POST /api/mobile/places/[placeId]/bookings` route runs it verbatim.
  */
-export async function requestPlaceBooking(formData: RequestPlaceBookingInput) {
-  const supabase = await createClient();
+export const requestPlaceBooking = withActionLocale(
+  async function requestPlaceBooking(formData: RequestPlaceBookingInput) {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError) {
-    return {
-      status: 500,
-      message: userFacingError("Error fetching user", userError),
-    };
-  }
+    if (userError) {
+      return {
+        status: 500,
+        message: userFacingError("Error fetching user", userError),
+      };
+    }
 
-  if (!user) {
-    return { status: 401, message: "User not authenticated" };
-  }
+    if (!user) {
+      return { status: 401, message: tr("userNotAuthenticated") };
+    }
 
-  const result = await requestPlaceBookingCore(supabase, user.id, formData);
+    const result = await requestPlaceBookingCore(supabase, user.id, formData);
 
-  if (result.status === 200) {
-    // Surface the new pending request on the owner's manage dashboard
-    // without a manual refresh (the requester's own list is React-Query
-    // driven and refetches on its own).
-    revalidatePath(`/manage/places/${formData.placeId}`);
-  }
+    if (result.status === 200) {
+      // Surface the new pending request on the owner's manage dashboard
+      // without a manual refresh (the requester's own list is React-Query
+      // driven and refetches on its own).
+      revalidateAppPath(`/manage/places/${formData.placeId}`);
+    }
 
-  return result;
-}
+    return result;
+  },
+);

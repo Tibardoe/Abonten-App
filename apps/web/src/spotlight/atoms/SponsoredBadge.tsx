@@ -1,9 +1,11 @@
 import { cn } from "@/components/lib/utils";
-import { SPONSORED_LABEL } from "@abonten/core/content/copy";
+import { SPONSORED_LABEL_KEY } from "@abonten/core/content/copy";
+import { useTranslations } from "next-intl";
 
 // The paid-placement disclosure. Every promoted slot shows it, in the same
 // place, and it can never be hidden by the publisher.
 export default function SponsoredBadge({ className }: { className?: string }) {
+  const tc = useTranslations("core");
   return (
     <span
       className={cn(
@@ -11,7 +13,7 @@ export default function SponsoredBadge({ className }: { className?: string }) {
         className,
       )}
     >
-      {SPONSORED_LABEL}
+      {tc(SPONSORED_LABEL_KEY)}
     </span>
   );
 }

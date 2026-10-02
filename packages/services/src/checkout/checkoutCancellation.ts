@@ -14,6 +14,7 @@ import type { Database } from "@abonten/types/database.types";
 import { logger } from "@abonten/core/logger";
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { tr } from "../i18n/requestLocale";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 type PromotionCheckoutTable =
@@ -52,17 +53,20 @@ export async function cancelPromotionCheckout(
 
   if (checkoutError) {
     logger.error(`Failed fetching ${table}: ${checkoutError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   if (!checkout) {
-    return { status: 404, message: "Checkout not found" };
+    return { status: 404, message: tr("checkoutNotFound") };
   }
 
   if (checkout.status !== "pending") {
     // Already paid/expired/cancelled — nothing to do, and flipping a paid
     // row's status here would corrupt a real purchase.
-    return { status: 200, message: "Checkout cancelled successfully!" };
+    return {
+      status: 200,
+      message: tr("checkoutCancelledSuccessfully"),
+    };
   }
 
   // Phase 12 race guard: never cancel out from under an in-flight payment —
@@ -71,8 +75,7 @@ export async function cancelPromotionCheckout(
   if (await hasOpenPaymentAttempt(svc, paymentAttemptColumn, checkoutId)) {
     return {
       status: 409,
-      message:
-        "Payment is currently being processed for this order. Please wait a moment and try again.",
+      message: tr("paymentIsCurrentlyBeingProcessedFor"),
     };
   }
 
@@ -85,7 +88,7 @@ export async function cancelPromotionCheckout(
 
   if (updateError) {
     logger.error(`Failed cancelling ${table}: ${updateError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 500, message: tr("somethingWentWrong") };
   }
 
   // A Spotlight campaign waiting on this checkout goes back to draft, the
@@ -107,5 +110,8 @@ export async function cancelPromotionCheckout(
     }
   }
 
-  return { status: 200, message: "Checkout cancelled successfully!" };
+  return {
+    status: 200,
+    message: tr("checkoutCancelledSuccessfully"),
+  };
 }
