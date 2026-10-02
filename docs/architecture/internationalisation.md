@@ -4,7 +4,7 @@ purpose: Explain how every word, number, date and amount reaches a person in the
 audience: Engineering, anyone adding a screen, a message or a language
 scope: The shared catalogs (packages/i18n), how the web app, the native app and the server pick a language and word their text, number and date formatting, the checks in `npm run check:i18n`, and the known limits. Not covered - the content of the legal pages and the help centre (English Markdown, see §9), and the admin console (English only).
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -98,6 +98,8 @@ The app uses `use-intl` over the same catalogs (`@abonten/ui-native/i18n`): `use
 - **Two screens render without any provider**: the splash (before the providers mount) and the root error screen (after they are gone). They word themselves with `translatorFor(namespace)`, which reads the catalogs directly. `scripts/check-mobile-boot.mjs` keeps provider hooks out of both files.
 - **A message that is missing or cannot be formatted** shows its key path and keeps rendering. It is reported once per message: a warning in the developer console, and an event in both error pipelines (`setIntlErrorReporter` in `apps/mobile/app/_layout.tsx`).
 
+- **A tab label is never cut.** `SegmentedTabs` (`packages/ui-native/src/primitives/SegmentedTabs.tsx`) keeps equal columns while every label fits one. When a label does not ("Organisateurs", "Remboursements", "Veranstaltungen"), each tab takes the width of its own label, and the row scrolls sideways if the labels together are wider than the screen. English fits four equal columns; French and German do not.
+
 Code outside React (a helper that words a toast) uses `translatorFor` on both platforms.
 
 ## 7. The checks
@@ -133,5 +135,6 @@ When the English of a message changes on purpose, re-check its translations and 
 - **No native speaker has read the French, Spanish, German and Portuguese.** They were written during engineering work and are complete and consistent, but they have not been reviewed (`OPERATIONAL_DECISIONS_REQUIRED.md`, D3).
 - **The legal pages and the help centre are English** (`apps/web/src/content`). The legal documents are drafts awaiting counsel; translating them is a decision for the owner (`OPERATIONAL_DECISIONS_REQUIRED.md`, D5).
 - **The admin console is English only**, by design.
+- **Search** reads accents, date words and everyday words in the five complete languages; that is its own document, [search-languages.md](search-languages.md). Its other-language words were not read by a native speaker either (D3), and Twi has none.
 - **Content people write** (an event's description, a review) is shown as written.
 - **Words checked only on a device.** A translated word used as a lookup key in a way the static check does not model, or a message that fails only in the app's engine, shows up on a phone and nowhere else. Before a release that touches wording, walk the app in a second language (`docs/development/testing.md`, "Walking the app on a device").

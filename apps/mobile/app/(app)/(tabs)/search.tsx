@@ -23,6 +23,7 @@ import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
+import { foldedIncludes } from "@abonten/core/search/foldSearchText";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { EventSuggestion } from "@abonten/types/searchSuggestionType";
 import {
@@ -194,13 +195,11 @@ function LegacySearch() {
   const categoryMatches = useMemo(
     () =>
       typing
-        ? ALL_CATEGORY_NAMES.filter((n) => {
-            const needle = trimmed.toLowerCase();
-            return (
-              n.toLowerCase().includes(needle) ||
-              eventCategoryLabel(i18n.t, n).toLowerCase().includes(needle)
-            );
-          }).slice(0, 4)
+        ? ALL_CATEGORY_NAMES.filter(
+            (n) =>
+              foldedIncludes(n, trimmed) ||
+              foldedIncludes(eventCategoryLabel(i18n.t, n), trimmed),
+          ).slice(0, 4)
         : [],
     [typing, trimmed, i18n],
   );

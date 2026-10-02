@@ -4,8 +4,8 @@ purpose: Record what the search and recommendation functions cost on a large syn
 audience: Engineering
 scope: search_suggest, search_events, search_places (including place services), search_organizers, get_events_in_window, recommendations_generate, recommendations_build_digest, admin_recommendation_metrics. Local Docker Postgres only; not production latency.
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-26
+version: 1.3
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -101,6 +101,91 @@ Checks in the same run: every person got exactly one digest, at most five picks,
 3. **A starvation bug found on the way.** The digest job ran hourly with a 5,000-person limit and acted only in the digest hour, so anyone after the first 5,000 people (ordered by id) would never have received a digest. The loop now skips people already handled today and the job runs every 10 minutes during that hour. An integration test builds a day's digests one person per run.
 
 Remaining cost in the digest is mostly foreign-key checks and inserts, about 1.1 ms per person. At that rate the 20,000-person batch the job requests takes about 22 seconds, and six runs in the digest hour cover about 120,000 people.
+
+## Search in the reader's language (2026-10-02)
+
+Migration `20261002140000_search_reads_every_language.sql` folds the search
+documents and the query, reads date words from a table, widens the
+vocabulary to four more languages and keeps the dates in the typo fallback
+([../search-languages.md](../search-languages.md)). Same harness, same
+laptop, three runs on the same afternoon. The laptop was also running an
+Android emulator and two local servers, so the absolute numbers are higher
+than the September tables above; compare the columns with each other.
+
+| Case | Before p50 | Before p95 | After p50 | After p95 |
+|---|---|---|---|---|
+| suggest · common word | 107.7 | 139.1 | 82.4 | 115.3 |
+| suggest · typo of a common word | 91.2 | 107.7 | 72.2 | 83.5 |
+| suggest · `@handle` prefix | 17.5 | 20.9 | 13.2 | 16.9 |
+| events · common word, with location | 32.2 | 37.4 | 23.5 | 30.9 |
+| events · rare word | 5.4 | 7.2 | 5.2 | 6.2 |
+| events · common word + price + date filters | 56.0 | 63.4 | 47.8 | 51.8 |
+| places · common word, with location | 44.1 | 51.3 | 31.0 | 37.8 |
+| places · category name ("restaurant") | 57.0 | 63.5 | 45.9 | 51.8 |
+| organizers · mid-frequency word | 17.5 | 20.4 | 14.2 | 18.7 |
+| broad · events, city + common word, with location | 108.5 | 133.4 | 84.9 | 94.0 |
+
+Nothing got slower. Folding costs nothing at search time because the folded
+title and name are stored columns; the date words are one small indexed
+lookup per search. Plans confirmed in the same run: candidates use
+`idx_event_search_tsv`, `idx_place_search_tsv` and
+`idx_place_service_search_tsv`, the event trigram fallback uses
+`idx_event_search_title_trgm` (the folded title), and `@handle` uses
+`idx_user_info_username_prefix`.
+
+New cases, after only:
+
+| Case | Rows | p50 | p95 | max |
+|---|---|---|---|---|
+| events · dated, French ("jazz ce week-end") | 21 | 31.8 | 34.6 | 39.1 |
+| events · French word through the vocabulary ("soirée jazz") | 21 | 27.9 | 30.9 | 34.4 |
+| events · typo in a dated search (trigram inside the dates) | 1 | 11.9 | 13.7 | 15.5 |
+| places · French word through the vocabulary ("plage") | 21 | 42.2 | 56.9 | 64.2 |
+
+### What the measurements changed
+
+The first version of the migration let the new words work both ways, like
+every vocabulary term before them: "plage" found a beach, and "beach" also
+looked for "plage". On this catalogue no listing contains a French, Spanish,
+German or Portuguese word, so those lookups found nothing, and they were not
+free. A common English word gained up to seventeen alternatives, each a
+term in the ranking of every candidate row. Measured in one session, with
+the other-language rows switched on and off:
+
+| Case | Rows on p50 | Rows on p95 | Rows off p50 | Rows off p95 |
+|---|---|---|---|---|
+| places · category name ("restaurant", 17 extra words) | 70.7 | 93.6 | 47.6 | 55.6 |
+| events · common word + filters ("night", 6 extra words) | 61.1 | 70.9 | 46.6 | 50.1 |
+| suggest · common word ("party") | 132.5 | 143.3 | 98.7 | 114.0 |
+| events · common word with no extra words ("jazz") | 24.7 | 31.2 | 23.8 | 26.4 |
+
+So a vocabulary term now has a direction (`search_concept.two_way`). The
+other-language words are one-way: the term finds its words and nothing
+finds the term. Staff switch a language's terms to two-way when a market's
+listings are written in it. The "After" columns above are with one-way rows.
+
+The older search (`get_filtered_events` / `get_filtered_places` with a
+search text, the fallback when unified search is off) was first changed to
+fold the description, category and type of every row. Old body against new
+body, same session, 50 km around the seeded city:
+
+| Case | Old p50 | Folding every row p50 | Final p50 | Final p95 |
+|---|---|---|---|---|
+| events · common word | 330.7 | 3045.4 | 139.9 | 149.9 |
+| events · rare word | 301.1 | 3091.8 | 80.4 | 90.9 |
+| places · common word | 26.4 | 174.8 | 5.4 | 6.2 |
+
+One fold is a few microseconds, and a scan makes a hundred thousand of
+them. The final body compares the title, name and slug through the stored
+folded columns and reads the description, category and type from the
+search document, which is indexed. It is faster than the body it
+replaced. The rule since: never fold a column for every row of a scan.
+
+Noticed and not changed here: `get_filtered_events` with no search text,
+the Explore list, takes about 1.2 s for the whole seeded city (100,000
+upcoming events inside 50 km), the same before and after this work. It
+builds prices, ratings and attendance for every event in the radius before
+it takes a page.
 
 ## Repeating
 

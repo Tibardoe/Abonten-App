@@ -4,8 +4,8 @@ purpose: How Abonten searches events, places and organizers, how results are ran
 audience: Engineering, operations, security and privacy reviewers
 scope: The search_* and recommendation* database functions and tables, notification_subscription, notification_prompt_state and notification_consent_event, push delivery (Expo receipts, web push), @abonten/services search and notifications modules, web and mobile surfaces, admin module and scheduled jobs. Not covered - the older filter-only browsing RPCs (get_filtered_events and siblings), which are unchanged.
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-25
+version: 1.3
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -35,7 +35,7 @@ Everything runs on the existing stack: Postgres full-text and trigram search, pg
 
 ### 2.1 Indexing
 
-Stored generated `tsvector` columns, `simple` configuration (no stemming, so Ghanaian names are never mangled):
+Stored generated `tsvector` columns, `simple` configuration (no stemming, so Ghanaian names are never mangled). Since 2026-10-02 every column below is built from **folded** text (`_search_fold`: lower case, no accents, Twi and Ewe letters as typed on a plain keyboard), and the query is folded the same way, so "cafe" finds "Café" and "odehyee" finds "Ɔdehyeɛ". Letters, dates and words in French, Spanish, German and Portuguese: [search-languages.md](search-languages.md).
 
 | Table | Column | Weight A | Weight B | Weight C |
 |---|---|---|---|---|
@@ -45,13 +45,13 @@ Stored generated `tsvector` columns, `simple` configuration (no stemming, so Gha
 
 `place_service` also has a generated `search_tsv` (service name A; description C, first 500 characters) with a GIN index, so a place is found by what it offers: "sauna", "braids", "parking" (`20260915100000_place_service_search.sql`). A generated column cannot read another table, which is why services are not folded into `place.search_tsv`.
 
-The event, place and account columns each have a partial GIN index whose predicate is the visibility rule (published, not archived, moderation state not hidden or removed; `status_id = 1` for accounts), so drafts and hidden rows are never candidates. Trigram GIN indexes cover `event.title`, `place.name`, `user_info.username` and `user_info.full_name`, and a `text_pattern_ops` btree on `lower(username)` serves `@prefix` lookups. Migration: `supabase/migrations/20260913090000_search_v2_foundation.sql`.
+The event, place and account columns each have a partial GIN index whose predicate is the visibility rule (published, not archived, moderation state not hidden or removed; `status_id = 1` for accounts), so drafts and hidden rows are never candidates. Trigram GIN indexes cover the folded title and names (`event.search_title`, `place.search_name`, `user_info.search_name`, stored generated columns) and `user_info.username`, and a `text_pattern_ops` btree on `lower(username)` serves `@prefix` lookups. Migration: `supabase/migrations/20260913090000_search_v2_foundation.sql`.
 
 ### 2.2 Query handling
 
 The same rules run in SQL and in `packages/core/src/search/parseSearchQuery.ts` (the TypeScript copy only drives the UI; it never builds SQL):
 
-- Text is lower-cased, control characters removed, whitespace collapsed, capped at 120 characters.
+- Text is folded (lower case, accents removed; `_search_fold`, mirrored by `packages/core/src/search/foldSearchText.ts`), control characters removed, whitespace collapsed, capped at 120 characters.
 - `@name` at the start switches to organizer mode. Anything else is text mode and needs at least two characters.
 - Two tsqueries are built: every word required with a prefix match on the last word (typing as you go), and `websearch_to_tsquery` (quotes and `-word` work). LIKE patterns are escaped.
 
@@ -59,7 +59,7 @@ The same rules run in SQL and in `packages/core/src/search/parseSearchQuery.ts` 
 
 Each group is found in two stages.
 
-**Stage 1 — candidates** (`_search_event_pool`, `_search_place_pool`, `_search_organizer_pool`). The precise match runs first: full text, last-word prefix, place category names, place services, handle prefix and display-name word starts. Only when that finds fewer than five candidates are trigram matches added, so a typo ("afrobeets") still finds "Afrobeats" while a well-spelled query stays exact (`20260913090500_search_trigram_fallback.sql`). Each OR of different indexes is written as a UNION so every branch uses its own index (`20260913090600_search_pool_index_paths.sql`). Pools are capped at 400 rows per group, and since 2026-09-25 (`20260925111700`) every ranking branch — precise, dated, related, relaxed, trigram, place services — scores at most `greatest(p_limit, 1500)` matching rows, the limit placed after every filter (market, moderation, radius, date window, category, organizer). Below the cap results are unchanged; above it the best of the first 1,500 matches are returned, so a word found in every listing costs about the same as a rare one.
+**Stage 1 — candidates** (`_search_event_pool`, `_search_place_pool`, `_search_organizer_pool`). The precise match runs first: full text, last-word prefix, place category names, place services, handle prefix and display-name word starts. Only when that finds fewer than five candidates are trigram matches added, so a typo ("afrobeets") still finds "Afrobeats" while a well-spelled query stays exact (`20260913090500_search_trigram_fallback.sql`). A search that names a date ("jazz december", "jazz ce week-end") keeps its dates in that fallback too (`20261002140000_search_reads_every_language.sql`). Each OR of different indexes is written as a UNION so every branch uses its own index (`20260913090600_search_pool_index_paths.sql`). Pools are capped at 400 rows per group, and since 2026-09-25 (`20260925111700`) every ranking branch — precise, dated, related, relaxed, trigram, place services — scores at most `greatest(p_limit, 1500)` matching rows, the limit placed after every filter (market, moderation, radius, date window, category, organizer). Below the cap results are unchanged; above it the best of the first 1,500 matches are returned, so a word found in every listing costs about the same as a rare one.
 
 **Stage 2 — score.** Weights live in the function bodies; changing one is a migration.
 
@@ -206,4 +206,5 @@ Turning `recommendations_enabled` off, or setting `RECOMMENDATIONS_KILL_SWITCH`,
 - Web push needs the three `WEB_PUSH_*` environment variables on the web deployment before anyone can turn it on. It has not been checked against real browser push services (the integration suite mocks the sender), and Safari on iPhone and iPad supports it only from a Home Screen web app.
 - A browser subscription the push service rotates is replaced the next time the person opens Settings › Notifications; until then pushes to the old endpoint fail and it is deleted on the push service's 410.
 - A place found through a service does not say which service matched.
+- Portuguese "março" is not read as a month, and weekday names are not read as dates in any language ([search-languages.md](search-languages.md) §8).
 - iOS has not been tested; Android was tested on the emulator against a local stack.

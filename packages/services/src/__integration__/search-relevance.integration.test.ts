@@ -5,6 +5,13 @@ import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { searchCore } from "../search/searchCore";
 import {
+  type SearchFixtures,
+  createSearchFixtures,
+  eventIdsFor as eventIdsWith,
+  nextInMonth,
+  placeIdsFor as placeIdsWith,
+} from "./searchFixtures";
+import {
   type TestUser,
   createTestUser,
   deleteTestUser,
@@ -27,16 +34,12 @@ const anon = createClient<Database>(
   { auth: { persistSession: false } },
 );
 
-// Short on purpose. The typo fallback of the search compares the whole
-// query with a title by trigram similarity (threshold 0.45), and a long
-// shared token is most of both: with ten characters, "<token> jazz
-// december" and "<token> Rainy Season Jazz" scored 0.44 or 0.46 depending
-// on the letters the clock happened to give, so the June fixture slipped
-// into a December search on some runs and not on others (red twice on
-// 2026-10-01). Six characters keep the token under a third of the query.
+// Short on purpose: a long shared token is most of a query and of a title,
+// and the typo fallback compares the two whole (threshold 0.45). Since
+// migration 20261002140000 that fallback keeps the dates of a dated search,
+// so the token's length no longer decides whether a June event slips into
+// a December search (it did, on some runs, on 2026-10-01).
 const TOKEN = `zr${Date.now().toString(36).slice(-4)}`;
-const LAT = 5.6037;
-const LNG = -0.187;
 
 const ON: DiscoveryProgram = {
   searchV2: true,
@@ -48,113 +51,15 @@ const ON: DiscoveryProgram = {
 };
 
 let organizer: TestUser;
-const eventIds: string[] = [];
-const placeIds: string[] = [];
+let fixtures: SearchFixtures;
 const conceptTerms: string[] = [];
 
-async function makeEvent(opts: {
-  title: string;
-  description?: string;
-  category?: string;
-  startsAt: Date;
-}): Promise<string> {
-  const { data, error } = await svc.rpc("create_event", {
-    p_client_request_id: crypto.randomUUID(),
-    p_organizer_id: organizer.id,
-    p_title: opts.title,
-    p_slug: `${opts.title.toLowerCase().replace(/\W+/g, "-")}-${crypto.randomUUID()}`,
-    p_description:
-      opts.description ??
-      "An integration test event with a long enough description to count as complete.",
-    p_event_code: crypto.randomUUID().slice(0, 8).toUpperCase(),
-    p_event_category: opts.category ?? "Music & Concerts",
-    p_event_type: ["Live Concerts"],
-    p_latitude: LAT,
-    p_longitude: LNG,
-    p_address: { full_address: "Osu, Accra, Ghana" },
-    p_capacity: 100,
-    p_website_url: null,
-    p_flyer_public_id: "test/flyer",
-    p_flyer_version: "1",
-    p_starts_at: opts.startsAt.toISOString(),
-    p_ends_at: new Date(opts.startsAt.getTime() + 4 * 3_600_000).toISOString(),
-    p_require_registration: false,
-    p_featured: false,
-    p_specific_dates: null,
-    p_ticket_types: [
-      {
-        type: "General",
-        price: 50,
-        currency: "GHS",
-        quantity: 50,
-        available_from: null,
-        available_until: null,
-      },
-    ],
-    p_promo_codes: null,
-    p_receiving_account: null,
-    p_place_id: null,
-  } as unknown as Database["public"]["Functions"]["create_event"]["Args"]);
-  if (error || !data) throw new Error(`create_event failed: ${error?.message}`);
-  const id = data as unknown as string;
-  eventIds.push(id);
-  await svc.from("event").update({ status: "published" }).eq("id", id);
-  return id;
-}
-
-async function makePlace(name: string, description: string): Promise<string> {
-  const { data, error } = await svc
-    .from("place")
-    .insert({
-      country_code: "GH",
-      timezone: "Africa/Accra",
-      owner_id: organizer.id,
-      name,
-      slug: `${name.toLowerCase().replace(/\W+/g, "-")}-${crypto.randomUUID()}`,
-      description,
-      category_id: 1,
-      location: `SRID=4326;POINT(${LNG} ${LAT})`,
-      address: { full_address: "Oxford Street, Osu, Accra" },
-      cover_public_id: "test/cover",
-      cover_version: "1",
-      status: "published",
-    } as never)
-    .select("id")
-    .single();
-  if (error) throw new Error(`place insert failed: ${error.message}`);
-  placeIds.push(data.id);
-  return data.id;
-}
-
-async function eventIdsFor(query: string): Promise<string[]> {
-  const { data, error } = await anon.rpc("search_events", {
-    p_query: query,
-    p_page_size: 50,
-  });
-  expect(error).toBeNull();
-  return (data ?? []).map((r) => r.id);
-}
-
-async function placeIdsFor(query: string): Promise<string[]> {
-  const { data, error } = await anon.rpc("search_places", {
-    p_query: query,
-    p_page_size: 50,
-  });
-  expect(error).toBeNull();
-  return (data ?? []).map((r) => r.id);
-}
-
-/** Next occurrence of `month` (1-12), day 12 at 18:00 Accra, at least a day ahead. */
-function nextInMonth(month: number): Date {
-  const now = new Date();
-  let year = now.getUTCFullYear();
-  let candidate = new Date(Date.UTC(year, month - 1, 12, 18));
-  if (candidate.getTime() < now.getTime() + 86_400_000) {
-    year += 1;
-    candidate = new Date(Date.UTC(year, month - 1, 12, 18));
-  }
-  return candidate;
-}
+const makeEvent: SearchFixtures["makeEvent"] = (opts) =>
+  fixtures.makeEvent(opts);
+const makePlace: SearchFixtures["makePlace"] = (name, description) =>
+  fixtures.makePlace(name, description);
+const eventIdsFor = (query: string) => eventIdsWith(anon, query);
+const placeIdsFor = (query: string) => placeIdsWith(anon, query);
 
 beforeAll(async () => {
   organizer = await createTestUser(getServiceClient());
@@ -162,11 +67,11 @@ beforeAll(async () => {
     .from("user_info")
     .update({ username: `${TOKEN}_org`, full_name: "Relevance Org" })
     .eq("id", organizer.id);
+  fixtures = createSearchFixtures(svc, () => organizer.id);
 });
 
 afterAll(async () => {
-  if (eventIds.length) await svc.from("event").delete().in("id", eventIds);
-  if (placeIds.length) await svc.from("place").delete().in("id", placeIds);
+  await fixtures.cleanup();
   if (conceptTerms.length) {
     await svc
       .from("search_concept" as never)
@@ -226,7 +131,7 @@ describe("vocabulary (search_concept)", () => {
     // Every word must still match (itself or an alternative): the token
     // keeps other people's food listings out.
     const places = await placeIdsFor(`${TOKEN} gob3`);
-    for (const id of places) expect(placeIds).toContain(id);
+    for (const id of places) expect(fixtures.placeIds).toContain(id);
   });
 
   it("is data: a new row takes effect without a deploy, and can be switched off", async () => {

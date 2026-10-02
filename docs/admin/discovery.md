@@ -4,8 +4,8 @@ purpose: How to read the Discovery overview, tune the search vocabulary from rea
 audience: Operations, analysts
 scope: Admin › Discovery (Overview, Search vocabulary and Programme settings), the discovery.view and discovery.configure permissions, the SEARCH_V2_KILL_SWITCH, RECOMMENDATIONS_KILL_SWITCH and RECOMMENDATION_EMAIL_KILL_SWITCH deploy flags
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-19
+version: 1.3
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -70,6 +70,13 @@ Admin › Discovery › Search vocabulary. Search widens each word of a query wi
 4. Write a reason and save. Adding, editing and removing need `discovery.configure` and a fresh identity check, and are audited (`discovery.vocabulary.create` / `.update` / `.delete`, with the row before and after). If someone else saved the same term in the meantime, the save is refused; reload.
 
 Prefer switching a term off ("In use" unticked) over removing it: an off term is kept for later and changes nothing. Keep words specific: every word added to a term makes that term's searches broader. Never add a term to make one listing rank higher.
+
+**Letters and languages** (since 2026-10-02, [architecture/search-languages.md](../architecture/search-languages.md)):
+
+- A term and its words are saved the way a search arrives: lower case and without accents ("Crêpe" is saved as "crepe", "Kɔkɔɔ" as "kokoo"). Type them however is easiest. The list of unanswered searches is folded the same way, so "café" and "cafe" are one line.
+- The vocabulary holds everyday French, Spanish, German and Portuguese words with the words listings use for them ("plage", "iglesia", "Konzert", "festa"). No native speaker has read these words (decision D3). If one is wrong, edit it like any other term.
+- **Listings use this term too.** Ticked (the default for a term you add), the term works both ways: it finds its words, and each of its words finds it ("beans" finds "gob3"). Unticked, it works one way only. The other-language words are unticked: "plage" finds a beach, but "beach" does not look for "plage", because no listing is written in French yet and the lookup slows every search for "beach". When a market's listings are written in a language, tick its terms.
+- Date words ("demain", "ce week-end", "im Dezember") are not vocabulary terms. They live in the `search_date_term` table and are changed with SQL by engineering.
 
 ## Changing settings
 

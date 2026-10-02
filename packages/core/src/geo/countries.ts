@@ -5,6 +5,7 @@
 // market starts from, and the `market` table for what is live.
 
 import { coreLocale, intlLocale } from "../i18n/coreStrings";
+import { foldSearchText } from "../search/foldSearchText";
 import { COUNTRY_DATA, type CountryDatum } from "./countryData";
 import { COUNTRY_NAMES } from "./countryNames.generated";
 
@@ -50,12 +51,6 @@ export function countryFlag(code: CountryCode): string {
   return findCountry(code)?.flag ?? "";
 }
 
-/** Lower case without accents: "etats" finds "États-Unis". */
-export function foldForSearch(text: string): string {
-  // \p{M}: the accents NFD splits off their letters.
-  return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-}
-
 /**
  * Case- and accent-insensitive match on the name (in the reader's language
  * and in English), dial code (with or without "+") or ISO code, for a
@@ -66,12 +61,12 @@ export function matchCountries(
   pool: readonly Country[] = COUNTRIES,
   locale?: string | null,
 ): Country[] {
-  const q = foldForSearch(query.trim()).replace(/^\+/, "");
+  const q = foldSearchText(query.trim()).replace(/^\+/, "");
   if (!q) return [...pool];
   return pool.filter(
     (c) =>
-      foldForSearch(c.name).includes(q) ||
-      foldForSearch(countryName(c.code, locale)).includes(q) ||
+      foldSearchText(c.name).includes(q) ||
+      foldSearchText(countryName(c.code, locale)).includes(q) ||
       c.dialCode.replace("+", "").startsWith(q) ||
       c.code.toLowerCase() === q,
   );

@@ -3,6 +3,8 @@
 // constraints, so the admin form can explain a problem before the database
 // refuses it, and the service normalises input the same way every time.
 
+import { foldSearchText } from "./foldSearchText";
+
 export const SEARCH_CONCEPT_SCOPES = ["event", "place", "spotlight"] as const;
 export type SearchConceptScope = (typeof SEARCH_CONCEPT_SCOPES)[number];
 
@@ -15,6 +17,11 @@ export type SearchConcept = {
   expandsTo: string[];
   appliesTo: SearchConceptScope[];
   enabled: boolean;
+  /**
+   * Listings use the term too, so one of its words also finds the term.
+   * False for a word of a language no listing is written in yet.
+   */
+  twoWay: boolean;
   note: string | null;
   updatedAt: string;
 };
@@ -42,9 +49,13 @@ export type SearchConceptPreview = {
   spotlights?: { count: number; samples: string[] };
 };
 
-/** Lower case, single spaces, trimmed — the form search queries are stored in. */
+/**
+ * Folded (lower case, no accents), single spaces, trimmed: the form a
+ * search query arrives in, and the form the database stores a term in
+ * (the search_concept_fold trigger does the same on write).
+ */
 export function normalizeConceptWord(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, " ").trim();
+  return foldSearchText(value).replace(/\s+/g, " ").trim();
 }
 
 /**

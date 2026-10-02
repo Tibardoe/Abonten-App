@@ -4,8 +4,8 @@ purpose: Orientation to the ~175 tables — grouped by domain with the key relat
 audience: Engineering
 scope: supabase/migrations (source of truth: the baseline 20260810084821_remote_schema.sql plus dated migrations)
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -49,7 +49,7 @@ The schema is defined only by `supabase/migrations/`. There are **no Postgres en
 
 ## Discovery
 
-Search reads generated `search_tsv` columns on `event`, `place` and `user_info`. Opt-ins and notices: `notification_subscription`, `notification_prompt_state`, `recommendation`, `recommendation_digest`, `recommendation_digest_skip`; settings in `discovery_program_setting`; anonymous analytics in `search_query_log`. See [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md).
+Search reads generated `search_tsv` columns on `event`, `place`, `user_info`, `place_service` and `content_post`, built from folded text (lower case, no accents; `_search_fold`), and the folded `search_title` / `search_name` columns. Words that widen a search are rows in `search_concept`; date words ("tomorrow", "ce week-end") are rows in `search_date_term`. See [search-languages.md](search-languages.md). Opt-ins and notices: `notification_subscription`, `notification_prompt_state`, `recommendation`, `recommendation_digest`, `recommendation_digest_skip`; settings in `discovery_program_setting`; anonymous analytics in `search_query_log`. See [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md).
 
 ## Abonten Weekly
 

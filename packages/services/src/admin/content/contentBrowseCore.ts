@@ -5,6 +5,7 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import { foldSearchText } from "@abonten/core/search/foldSearchText";
 import type {
   AdminContext,
   AdminPermissionKey,
@@ -26,6 +27,8 @@ import { type AdminEnvelope, assertPermission } from "../adminContext";
 type Cfg = {
   table: string;
   labelCol: string;
+  /** The label as search compares it (folded), when the table has one. */
+  foldedLabelCol?: string;
   ownerCol: string;
   statusCol: string | null;
   /** how a report row references this entity */
@@ -39,6 +42,7 @@ const CFG: Record<ModeratableTargetType, Cfg> = {
   event: {
     table: "event",
     labelCol: "title",
+    foldedLabelCol: "search_title",
     ownerCol: "organizer_id",
     statusCol: "status",
     reportTargetType: "event",
@@ -47,6 +51,7 @@ const CFG: Record<ModeratableTargetType, Cfg> = {
   place: {
     table: "place",
     labelCol: "name",
+    foldedLabelCol: "search_name",
     ownerCol: "owner_id",
     statusCol: "status",
     reportTargetType: "place",
@@ -176,7 +181,9 @@ export async function listModeratableContentCore(
 
   if (filters.search?.trim()) {
     const s = filters.search.trim().replace(/[%,()]/g, "");
-    query = query.ilike(cfg.labelCol, `%${s}%`);
+    query = cfg.foldedLabelCol
+      ? query.like(cfg.foldedLabelCol, `%${foldSearchText(s)}%`)
+      : query.ilike(cfg.labelCol, `%${s}%`);
   }
   if (cursor) {
     query = query.or(

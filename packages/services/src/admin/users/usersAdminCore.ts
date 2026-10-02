@@ -5,6 +5,7 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import { foldSearchText } from "@abonten/core/search/foldSearchText";
 import type {
   AdminContext,
   AdminUserDetail,
@@ -77,7 +78,10 @@ export async function listUsersCore(
 
   if (filters.search?.trim()) {
     const s = filters.search.trim().replace(/[%,()]/g, "");
-    query = query.or(`username.ilike.%${s}%,full_name.ilike.%${s}%`);
+    // The folded name: "desire" finds "Désiré".
+    query = query.or(
+      `username.ilike.%${s}%,search_name.like.%${foldSearchText(s)}%`,
+    );
   }
   if (filters.status) query = query.eq("status_id", STATUS_ID[filters.status]);
   if (typeof filters.isAdmin === "boolean")

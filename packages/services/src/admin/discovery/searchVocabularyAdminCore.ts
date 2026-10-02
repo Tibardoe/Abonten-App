@@ -38,6 +38,7 @@ type ConceptRow = {
   expands_to: string[];
   applies_to: string[];
   enabled: boolean;
+  two_way: boolean;
   note: string | null;
   updated_at: string;
 };
@@ -51,13 +52,14 @@ function mapConcept(row: ConceptRow): SearchConcept {
       (SEARCH_CONCEPT_SCOPES as readonly string[]).includes(s),
     ),
     enabled: row.enabled,
+    twoWay: row.two_way,
     note: row.note,
     updatedAt: row.updated_at,
   };
 }
 
 const CONCEPT_COLUMNS =
-  "id, term, expands_to, applies_to, enabled, note, updated_at";
+  "id, term, expands_to, applies_to, enabled, two_way, note, updated_at";
 
 export async function getSearchVocabularyCore(
   supabase: ServiceRoleClient,
@@ -136,6 +138,8 @@ export async function saveSearchConceptCore(
     expandsTo: string[];
     appliesTo: string[];
     enabled: boolean;
+    /** One of its words also finds the term. Two-way when absent. */
+    twoWay?: boolean;
     note?: string | null;
     reason: string;
   },
@@ -186,6 +190,7 @@ export async function saveSearchConceptCore(
         expands_to: expandsTo,
         applies_to: appliesTo,
         enabled: input.enabled,
+        ...(input.twoWay === undefined ? {} : { two_way: input.twoWay }),
         note,
         updated_at: new Date().toISOString(),
       })
@@ -209,6 +214,7 @@ export async function saveSearchConceptCore(
         expands_to: expandsTo,
         applies_to: appliesTo,
         enabled: input.enabled,
+        two_way: input.twoWay ?? true,
         note,
       })
       .select(CONCEPT_COLUMNS)

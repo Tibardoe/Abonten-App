@@ -4,8 +4,8 @@ purpose: How to prepare, check, open, pause and maintain a country (market), tar
 audience: Operations, finance, engineering
 scope: Admin › Markets (Countries, market editor, Feature flags, Exchange rates), the markets.view / markets.manage / markets.activate permissions
 status: Approved
-version: 1.4
-lastReviewed: 2026-09-30
+version: 1.5
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -97,6 +97,13 @@ when a critical one now fails.
 8. **Watch.** Admin › Monitoring shows the Paystack probe per market; a
    test purchase in NGN, a refund, and a phone sign-in with a +234 number
    close the launch.
+9. **Search words, when listings will be written in another language.**
+   For a market whose organizers write in French, Spanish, German or
+   Portuguese, open Admin › Discovery › Search vocabulary and tick
+   "Listings use this term too" on that language's terms, so an English
+   word also finds a listing written in it
+   ([discovery.md](discovery.md), "Letters and languages"). Nigeria
+   needs nothing here.
 
 To take it back down: **Pause** (invisible, no payments) or **Enter
 maintenance** (browsable, no payments). Existing tickets stay valid.

@@ -345,6 +345,25 @@ describe("publishing and the feed", () => {
     expect(item?.post.event?.available).toBe(true);
   });
 
+  it("finds a Spotlight by its caption or hashtag, with or without accents", async () => {
+    const mark = crypto.randomUUID().slice(0, 6);
+    const id = await publishPost("spotlight", {
+      caption: `Soirée à la plage ${mark} #Fête${mark}`,
+    });
+    const find = async (query: string) => {
+      const { data, error } = await svc.rpc("search_spotlight", {
+        p_query: query,
+        p_viewer: viewer.id,
+      } as never);
+      expect(error).toBeNull();
+      return ((data ?? []) as { post_id: string }[]).map((r) => r.post_id);
+    };
+    expect(await find(`soiree plage ${mark}`)).toContain(id);
+    expect(await find(`SOIRÉE ${mark}`)).toContain(id);
+    expect(await find(`#fete${mark}`)).toContain(id);
+    expect(await find(`#FÊTE${mark}`)).toContain(id);
+  });
+
   it("drops a post from the feed after Not interested, a block or moderation", async () => {
     const id = await publishPost("spotlight");
     const inFeed = async (userId: string) => {

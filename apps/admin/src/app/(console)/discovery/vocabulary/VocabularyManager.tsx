@@ -48,6 +48,7 @@ type Draft = {
   words: string;
   appliesTo: SearchConceptScope[];
   enabled: boolean;
+  twoWay: boolean;
   note: string;
 };
 
@@ -56,6 +57,7 @@ const EMPTY: Draft = {
   words: "",
   appliesTo: [...SEARCH_CONCEPT_SCOPES],
   enabled: true,
+  twoWay: true,
   note: "",
 };
 
@@ -67,6 +69,7 @@ function draftFrom(c: SearchConcept): Draft {
     words: c.expandsTo.join(", "),
     appliesTo: c.appliesTo,
     enabled: c.enabled,
+    twoWay: c.twoWay,
     note: c.note ?? "",
   };
 }
@@ -135,6 +138,7 @@ export function VocabularyManager({
         expandsTo: words,
         appliesTo: draft.appliesTo,
         enabled: draft.enabled,
+        twoWay: draft.twoWay,
         note: draft.note.trim() || null,
         reason: reason.trim(),
       }).catch(actionUnreachable);
@@ -286,8 +290,8 @@ export function VocabularyManager({
             <span className="font-medium">Words listings use for it</span>
             <span className="block text-xs text-muted-foreground">
               Separate with commas or new lines. Up to 30. A listing with any of
-              them matches this word of the search. The relationship works both
-              ways: searching one of these words also finds the term.
+              them matches this word of the search. Accents do not matter: the
+              term and its words are saved without them.
             </span>
             <textarea
               value={draft.words}
@@ -328,6 +332,15 @@ export function VocabularyManager({
               }
             />
             In use (switch off to keep the term without it affecting search)
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={draft.twoWay}
+              onChange={(e) => setDraft({ ...draft, twoWay: e.target.checked })}
+            />
+            Listings use this term too (its words also find it; leave off for a
+            word of a language no listing is written in yet)
           </label>
           <label className="block text-sm">
             <span className="font-medium">Note</span>
@@ -431,6 +444,7 @@ export function VocabularyManager({
                   <Td className="font-medium">
                     {c.term}
                     {!c.enabled ? <Badge className="ml-2">Off</Badge> : null}
+                    {!c.twoWay ? <Badge className="ml-2">One way</Badge> : null}
                     {c.note ? (
                       <span className="block text-xs font-normal text-muted-foreground">
                         {c.note}

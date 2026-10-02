@@ -14,7 +14,7 @@ Results and their interpretation live in
 Start the local stack first (`npm run test:db:up`), then from the repo root:
 
 ```sh
-# Search: 19 query shapes x 40 runs, p50/p95/max, plus index plans (~1 min)
+# Search: 30 query shapes x 40 runs, p50/p95/max, plus index plans (a few minutes)
 cat scripts/perf/discovery-perf-seed.sql scripts/perf/discovery-search-perf.sql \
   | docker exec -i supabase_db_Abonten-App psql -U postgres -v ON_ERROR_STOP=1
 

@@ -25,6 +25,14 @@ describe("normalizeSearchQuery", () => {
     expect(normalizeSearchQuery(null)).toBe("");
     expect(normalizeSearchQuery(undefined)).toBe("");
   });
+
+  it("folds letters the way the database does", () => {
+    expect(normalizeSearchQuery("  Soirée  à la PLAGE ")).toBe(
+      "soiree a la plage",
+    );
+    expect(normalizeSearchQuery("Ɔdehyeɛ Café")).toBe("odehyee cafe");
+    expect(normalizeSearchQuery("Esi’s")).toBe("esi's");
+  });
 });
 
 describe("parseSearchQuery", () => {
@@ -62,7 +70,11 @@ describe("parseSearchQuery", () => {
     expect(isSearchableQuery(parseSearchQuery("@k"))).toBe(true);
   });
 
-  it("accepts non-Latin letters in handles", () => {
-    expect(parseSearchQuery("@ɔdɔ").handle).toBe("ɔdɔ");
+  it("folds a handle typed with Twi letters or accents, and keeps other scripts", () => {
+    // Usernames are plain letters, so "@Ɔdɔ" can only mean "odo" (or a
+    // display name, which is compared folded too).
+    expect(parseSearchQuery("@Ɔdɔ").handle).toBe("odo");
+    expect(parseSearchQuery("@José").handle).toBe("jose");
+    expect(parseSearchQuery("@Привет").handle).toBe("привет");
   });
 });
