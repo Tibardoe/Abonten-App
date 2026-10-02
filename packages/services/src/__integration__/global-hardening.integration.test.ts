@@ -28,6 +28,7 @@ import {
   vi,
 } from "vitest";
 import { validateCheckoutCore } from "../checkout/validateCheckoutCore";
+import { runWithLocale } from "../i18n/requestLocale";
 import { invalidateMarketCache } from "../markets/marketConfig";
 import { getCheckoutPaymentOptionsCore } from "../payments/checkoutPaymentOptionsCore";
 import { createMultiCheckoutPaymentAttemptCore } from "../payments/createMultiCheckoutPaymentAttemptCore";
@@ -340,6 +341,25 @@ describe("paying with a market method, no saved card", () => {
     if (options.status !== 200) return;
     expect(options.data.countryCode).toBe("GH");
     expect(options.data.methods.map((m) => m.method)).toContain("card");
+
+    // Ghana sets no name of its own for a method, so each one is named in
+    // the language of the request (the checkout said "Card" to everyone).
+    expect(options.data.methods.find((m) => m.method === "card")?.label).toBe(
+      "Card",
+    );
+    const inFrench = await runWithLocale("fr", () =>
+      getCheckoutPaymentOptionsCore(
+        buyer.client,
+        buyer.id,
+        { kind: "ticket", checkoutSessionIds: [sessionId] },
+        "web",
+      ),
+    );
+    expect(inFrench.status).toBe(200);
+    if (inFrench.status !== 200) return;
+    expect(inFrench.data.methods.find((m) => m.method === "card")?.label).toBe(
+      "Carte",
+    );
 
     const card = await createMultiCheckoutPaymentAttemptCore(
       buyer.client,
