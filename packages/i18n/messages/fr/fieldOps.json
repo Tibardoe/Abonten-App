@@ -315,7 +315,6 @@
   "reason": "Motif : {rejectionReason}",
   "reasonKeptOnRecord": "Motif (conservé dans le dossier)",
   "reject": "Refuser",
-  "rejectThisOnboardingTheMemberIs": "Refuser cette intégration ? Le membre est informé du motif.",
   "rejected": "refusé",
   "remove": "Retirer",
   "remove2": "retirer",
@@ -470,7 +469,6 @@
   "whyTheMemberSeesThis": "Pourquoi ? Le membre verra ce message.",
   "withdraw": "Retirer",
   "withdrawThisOnboarding": "Retirer cette intégration",
-  "withdrawThisOnboardingYouCanStart": "Retirer cette intégration ? Vous pourrez en commencer une nouvelle plus tard.",
   "withdrawn": "Retiré.",
   "workingOverThePhoneSendThem": "Vous travaillez par téléphone ? Envoyez-lui ce lien pour qu'il saisisse lui-même le code :",
   "workingToday": "Au travail aujourd'hui",
@@ -541,5 +539,9 @@
     "content_deliverable": "Contenu livré",
     "content_monthly_stipend": "Indemnité mensuelle (contenu)",
     "team_lead_monthly_stipend": "Indemnité mensuelle (chef d'équipe)"
-  }
+  },
+  "withdrawOnboardingTitle": "Retirer cette intégration ?",
+  "withdrawOnboardingBody": "Vous pourrez en commencer une nouvelle plus tard.",
+  "rejectOnboardingTitle": "Refuser cette intégration ?",
+  "rejectOnboardingBody": "Le membre est informé du motif."
 }

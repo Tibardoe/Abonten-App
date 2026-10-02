@@ -3,6 +3,7 @@
 import { setRecommendationEmailsByLink } from "@/actions/discovery/setRecommendationEmailsByLink";
 import { Button } from "@/components/ui/button";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState, useTransition } from "react";
@@ -27,7 +28,9 @@ export default function RecommendationEmailUnsubscribe({
   const unsubscribe = () =>
     start(async () => {
       setError(null);
-      const res = await setRecommendationEmailsByLink({ userId, token });
+      const res = await setRecommendationEmailsByLink({ userId, token }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200) setDone(true);
       else setError(res.message ?? t("couldnTSaveThatPleaseTry"));
     });

@@ -3,6 +3,7 @@ import {
   type GetProfileCompletionResult,
   getProfileCompletion,
 } from "@/actions/getProfileCompletion";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "./useCurrentUser";
 
@@ -20,6 +21,7 @@ function useAccountSetupState() {
     enabled: !!user?.id,
     queryFn: async (): Promise<SetupState | null> => {
       const result = await getProfileCompletion();
+      answerOrThrow(result);
       return result.status === 200 ? result : null;
     },
     staleTime: 60 * 1000,

@@ -63,7 +63,6 @@
   "couldnTStartAConversation": "Não foi possível iniciar uma conversa.",
   "deleteText": "Eliminar",
   "deleteThisMessage": "Eliminar esta mensagem?",
-  "deleteThisMessageThisCanT": "Eliminar esta mensagem? Esta ação não pode ser anulada.",
   "deletedAMessage": "{value} eliminou uma mensagem, {clockTime}",
   "deletedMessage": "Mensagem eliminada",
   "dismiss": "Dispensar",
@@ -235,5 +234,7 @@
   "yourArchivedChats": "as suas conversas arquivadas",
   "yourAttachmentCouldnTBeSent": "Não foi possível enviar o seu anexo.",
   "yourImageCouldnTBeUploaded": "Não foi possível carregar a sua imagem.",
-  "yourMessages": "as suas mensagens"
+  "yourMessages": "as suas mensagens",
+  "deleteMessageTitle": "Eliminar esta mensagem?",
+  "deleteMessageBody": "Esta ação não pode ser anulada."
 }

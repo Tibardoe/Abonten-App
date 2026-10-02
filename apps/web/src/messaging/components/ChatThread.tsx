@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import { useToast } from "@/hooks/useToast";
@@ -70,6 +71,7 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   const { data: user } = useCurrentUser();
   const myId = user?.id;
   const toast = useToast();
+  const confirm = useConfirm();
 
   const detailQ = useConversationDetail(conversationId);
   const messagesQ = useConversationMessages(conversationId);
@@ -187,8 +189,13 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
     );
   }
 
-  function onDelete(m: MessageRow) {
-    if (!window.confirm(t("deleteThisMessageThisCanT"))) return;
+  async function onDelete(m: MessageRow) {
+    const confirmed = await confirm({
+      title: t("deleteMessageTitle"),
+      message: t("deleteMessageBody"),
+      confirmLabel: t("deleteText"),
+    });
+    if (!confirmed) return;
     deleteMsg.mutate(m.id, {
       onSettled: (res) => {
         if (res && res.status !== 200) {

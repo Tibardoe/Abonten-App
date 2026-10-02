@@ -9,6 +9,7 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { ReportDialog } from "@/components/organisms/ReportDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useHighlightViewer } from "@/hooks/useHighlightViewer";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   fallbackPlaybackSource,
   playbackSourceFor,
@@ -197,7 +198,9 @@ export default function HighlightViewer({
   const handleDeleteSlide = async () => {
     setShowConfirmDelete(false);
     setIsDeleting(true);
-    const response = await deleteHighlightSlide(currentSlide.id);
+    const response = await deleteHighlightSlide(currentSlide.id).catch(
+      actionUnreachable,
+    );
     setIsDeleting(false);
 
     if (response.status !== 200) {

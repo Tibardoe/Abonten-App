@@ -8,19 +8,23 @@ import getUserPendingTicketCheckouts, {
 import issueFreeCheckoutTickets from "@/actions/issueFreeCheckoutTickets";
 import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
 import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPanel";
 import PaymentMethodSelector, {
   type PaymentSelectorStatus,
 } from "@/components/organisms/PaymentMethodSelector";
+import { Skeleton } from "@/components/ui/skeleton";
 import RecommendationPromptCard from "@/discovery/organisms/RecommendationPromptCard";
 import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   invalidateEventListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
 import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,7 +34,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type PendingCheckoutsBasketProps = {
-  initialSessions: PendingCheckoutSession[];
+  /** Left out when the server could not read them: the list loads here. */
+  initialSessions?: PendingCheckoutSession[];
 };
 
 // Shared with PaymentMethodSelector.tsx via utils/queryKeys.ts so a
@@ -49,10 +54,10 @@ export default function PendingCheckoutsBasket({
   const router = useRouter();
   const toast = useToast();
 
-  const { data } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const response = await getUserPendingTicketCheckouts();
+      const response = answerOrThrow(await getUserPendingTicketCheckouts());
       return response.status === 200 ? response.sessions : [];
     },
     initialData: initialSessions,
@@ -61,7 +66,7 @@ export default function PendingCheckoutsBasket({
   const sessions = data ?? [];
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(initialSessions.map((s) => s.checkoutSessionId)),
+    () => new Set((initialSessions ?? []).map((s) => s.checkoutSessionId)),
   );
   const [pendingLineIds, setPendingLineIds] = useState<Set<string>>(new Set());
   const [removingSessionIds, setRemovingSessionIds] = useState<Set<string>>(
@@ -463,7 +468,7 @@ export default function PendingCheckoutsBasket({
     for (const session of selectedSessions) {
       const response = await issueFreeCheckoutTickets(
         session.checkoutSessionId,
-      );
+      ).catch(actionUnreachable);
       results.push({
         eventTitle: session.eventTitle,
         ok: response.status === 200,
@@ -514,6 +519,26 @@ export default function PendingCheckoutsBasket({
     );
     router.refresh();
   };
+
+  // "Couldn't load" and "there is nothing" are different answers.
+  if (sessions.length === 0 && !completedCheckout) {
+    if (isPending) {
+      return (
+        <div className="space-y-3">
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl" />
+        </div>
+      );
+    }
+    if (isError) {
+      return (
+        <InlineErrorRetry
+          message={t("couldnTLoadYourPendingCheckouts")}
+          onRetry={() => refetch()}
+        />
+      );
+    }
+  }
 
   if (sessions.length === 0) {
     if (completedCheckout) {

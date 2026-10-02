@@ -156,7 +156,6 @@
       "couldnTSendACodePlease": "Impossible d'envoyer un code. Veuillez réessayer.",
       "deleteAccount": "Supprimer le compte",
       "deleteIcon": "Icône de suppression",
-      "deleteYourAccountThisCannotBe": "Supprimer votre compte ? Cette action est irréversible. Les billets que vous avez achetés et les justificatifs de paiement sont conservés pour la comptabilité ; votre profil est supprimé.",
       "editNumber": "Modifier le numéro",
       "email": "E-mail",
       "emailUpdated": "Adresse e-mail mise à jour.",
@@ -177,7 +176,9 @@
       "updateDescription": "Nous vous enverrons un code par SMS pour le vérifier",
       "updateTitle": "Modifier le numéro de téléphone",
       "usedToSignInAndVerify": "Sert à vous connecter et à vérifier qu'il s'agit bien de vous — n'apparaît pas sur votre profil public.",
-      "verificationFailedPleaseTryAgain": "Échec de la vérification. Veuillez réessayer."
+      "verificationFailedPleaseTryAgain": "Échec de la vérification. Veuillez réessayer.",
+      "deleteAccountTitle": "Supprimer votre compte ?",
+      "deleteAccountBody": "Cette action est irréversible. Les billets que vous avez achetés et les justificatifs de paiement sont conservés pour la comptabilité ; votre profil est supprimé."
     }
   },
   "securityTitle": "Sécurité",

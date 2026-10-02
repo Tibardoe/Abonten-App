@@ -1,4 +1,5 @@
 import getOrganizerPayouts from "@/actions/getOrganizerPayouts";
+import RefreshErrorRetry from "@/components/molecules/RefreshErrorRetry";
 import { SectionTitle, SupportingText } from "@/components/ui/typography";
 import FinancesPayoutsList from "@/finances/organisms/FinancesPayoutsList";
 import type { Metadata } from "next";
@@ -17,7 +18,6 @@ export default async function FinancesPayoutsPage() {
   const t = await getTranslations("finances");
 
   const response = await getOrganizerPayouts();
-  const payouts = response.status === 200 ? response.data : [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -26,7 +26,11 @@ export default async function FinancesPayoutsPage() {
         <SupportingText>{t("yourWithdrawalHistoryAndStatus")}</SupportingText>
       </div>
 
-      <FinancesPayoutsList initialPayouts={payouts} />
+      {response.status === 200 ? (
+        <FinancesPayoutsList initialPayouts={response.data} />
+      ) : (
+        <RefreshErrorRetry message={t("couldnTLoadYourPayouts")} />
+      )}
     </div>
   );
 }

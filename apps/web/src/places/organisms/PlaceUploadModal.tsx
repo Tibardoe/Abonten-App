@@ -6,6 +6,7 @@ import SaveDraftConfirmDialog from "@/components/organisms/SaveDraftConfirmDialo
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
+import { useToast } from "@/hooks/useToast";
 import { invalidatePlaceListQueries } from "@/utils/mutationQueryInvalidation";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { PlaceDraftPayload } from "@abonten/validation/placeDraftSchema";
@@ -62,6 +63,7 @@ export default function PlaceUploadModal({
   onDraftSaved,
 }: PlaceUploadModalProps) {
   const t = useTranslations("places");
+  const toast = useToast();
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -79,7 +81,7 @@ export default function PlaceUploadModal({
   } = useImageSelection({
     invalidFileMessage: t("pleaseSelectAnImageFileFor"),
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
-    onInvalidFile: (message) => alert(message),
+    onInvalidFile: (message) => toast.error(message),
   });
 
   const { cropped, croppedPreview, handleCropped } = useCroppedImage({

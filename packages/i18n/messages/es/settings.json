@@ -156,7 +156,6 @@
       "couldnTSendACodePlease": "No se pudo enviar el código. Inténtalo de nuevo.",
       "deleteAccount": "Eliminar cuenta",
       "deleteIcon": "Icono de eliminar",
-      "deleteYourAccountThisCannotBe": "¿Eliminar tu cuenta? Esta acción no se puede deshacer. Las entradas que compraste y los registros de pago se conservan por contabilidad; tu perfil se elimina.",
       "editNumber": "Editar número",
       "email": "Correo electrónico",
       "emailUpdated": "Correo electrónico actualizado.",
@@ -177,7 +176,9 @@
       "updateDescription": "Te enviaremos un código por SMS para verificarlo",
       "updateTitle": "Actualizar número de teléfono",
       "usedToSignInAndVerify": "Se usa para iniciar sesión y comprobar que eres tú — no se muestra en tu perfil público.",
-      "verificationFailedPleaseTryAgain": "La verificación falló. Inténtalo de nuevo."
+      "verificationFailedPleaseTryAgain": "La verificación falló. Inténtalo de nuevo.",
+      "deleteAccountTitle": "¿Eliminar tu cuenta?",
+      "deleteAccountBody": "Esta acción no se puede deshacer. Las entradas que compraste y los registros de pago se conservan por contabilidad; tu perfil se elimina."
     }
   },
   "securityTitle": "Seguridad",

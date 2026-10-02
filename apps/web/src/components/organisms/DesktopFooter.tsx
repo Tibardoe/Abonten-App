@@ -86,8 +86,12 @@ export default function DesktopFooter() {
             <ul className="flex flex-col gap-2.5 text-sm text-muted-foreground">
               {column.links.map((link) => (
                 <li key={link.href}>
+                  {/* Not prefetched: the footer is on every page, and its
+                      links (help, legal) were eighteen requests per page
+                      view for pages few people open from here. */}
                   <Link
                     href={link.href}
+                    prefetch={false}
                     className="transition-colors hover:text-foreground"
                   >
                     {t(link.label)}

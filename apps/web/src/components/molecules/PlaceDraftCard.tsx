@@ -4,6 +4,7 @@ import { deletePlaceDraft } from "@/actions/deletePlaceDraft";
 import type { PlaceDraftListItem } from "@/actions/getPlaceDrafts";
 import ContinuePlaceDraftButton from "@/components/molecules/ContinuePlaceDraftButton";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatExpiresIn } from "@abonten/core/formatExpiresIn";
@@ -52,12 +53,14 @@ export default function PlaceDraftCard({
     setShowDeleteConfirm(false);
     onDeleted(draft.id);
 
-    deletePlaceDraft(draft.id).then((response) => {
-      if (response.status !== 200) {
-        onRestoreDraft(draft);
-        onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
-      }
-    });
+    deletePlaceDraft(draft.id)
+      .catch(actionUnreachable)
+      .then((response) => {
+        if (response.status !== 200) {
+          onRestoreDraft(draft);
+          onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
+        }
+      });
   };
 
   return (

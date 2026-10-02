@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
@@ -23,7 +24,11 @@ export default function AnnouncementForm({
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     start(async () => {
-      const res = await sendFieldOpsAnnouncement({ campaignId, title, body });
+      const res = await sendFieldOpsAnnouncement({
+        campaignId,
+        title,
+        body,
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("sent"));
         setTitle("");

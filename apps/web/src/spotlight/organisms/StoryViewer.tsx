@@ -7,6 +7,7 @@ import ModalShell from "@/components/atoms/ModalShell";
 import { cn } from "@/components/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { CONTENT_REACTIONS } from "@abonten/core/content/reactions";
 import {
   formatStoryAge,
@@ -368,7 +369,11 @@ function StorySlide({
   };
 
   const muteStories = async () => {
-    const res = await setStoryMute({ publisherKind, publisherId, muted: true });
+    const res = await setStoryMute({
+      publisherKind,
+      publisherId,
+      muted: true,
+    }).catch(actionUnreachable);
     if (res.status !== 200) {
       toast.error(messageOf(res, t("couldnTMuteTheseStories")));
       return;
@@ -438,7 +443,7 @@ function StorySlide({
       kind: "reaction",
       content: emoji,
       clientGeneratedId: crypto.randomUUID(),
-    });
+    }).catch(actionUnreachable);
     const data = dataOf(res);
     if (!data) {
       toast.error(messageOf(res, t("couldnTSendYourReaction")));

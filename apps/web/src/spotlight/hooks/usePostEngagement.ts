@@ -7,6 +7,7 @@ import { setContentReaction } from "@/actions/content/setContentReaction";
 import { setContentSave } from "@/actions/content/setContentSave";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type {
   ContentCounts,
   ContentPostDocument,
@@ -88,7 +89,10 @@ export function usePostEngagement(post: ContentPostDocument) {
           }));
         };
       },
-      () => setContentLike({ postId: post.id, liked: next }),
+      () =>
+        setContentLike({ postId: post.id, liked: next }).catch(
+          actionUnreachable,
+        ),
       (res) => {
         const data = dataOf(res as Awaited<ReturnType<typeof setContentLike>>);
         if (data) setCounts(data.counts);
@@ -103,7 +107,10 @@ export function usePostEngagement(post: ContentPostDocument) {
         setSaved(next);
         return () => setSaved(!next);
       },
-      () => setContentSave({ postId: post.id, saved: next }),
+      () =>
+        setContentSave({ postId: post.id, saved: next }).catch(
+          actionUnreachable,
+        ),
       (res) => {
         const data = dataOf(res as Awaited<ReturnType<typeof setContentSave>>);
         if (data) setCounts(data.counts);
@@ -121,7 +128,10 @@ export function usePostEngagement(post: ContentPostDocument) {
         setReaction(next);
         return () => setReaction(previous);
       },
-      () => setContentReaction({ postId: post.id, emoji: next }),
+      () =>
+        setContentReaction({ postId: post.id, emoji: next }).catch(
+          actionUnreachable,
+        ),
     );
   };
 
@@ -131,7 +141,11 @@ export function usePostEngagement(post: ContentPostDocument) {
         setNotInterested(value);
         return () => setNotInterested(!value);
       },
-      () => setContentNotInterested({ postId: post.id, notInterested: value }),
+      () =>
+        setContentNotInterested({
+          postId: post.id,
+          notInterested: value,
+        }).catch(actionUnreachable),
       () => {
         if (value) {
           toast.success(t("gotItYouLlSeeFewer"));

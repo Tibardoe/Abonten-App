@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/select";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { FIELD_OPS_ROLE_LABEL } from "@/fieldOps/lib/roleLabel";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsTeamMember } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -48,7 +49,7 @@ export default function LeadTeamPanel({
         role,
         invitedPhoneE164: `+${phone.replace(/\D/g, "")}`,
         fullName,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("invited"));
         setPhone("");
@@ -69,7 +70,7 @@ export default function LeadTeamPanel({
         memberId: acting.id,
         status: acting.status,
         reason,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("updated"));
         setActing(null);

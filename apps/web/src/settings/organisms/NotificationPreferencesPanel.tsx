@@ -10,6 +10,7 @@ import { useDiscoveryProgram } from "@/hooks/useDiscoveryProgram";
 import { useToast } from "@/hooks/useToast";
 import { needsHomeScreenInstall, useWebPush } from "@/hooks/useWebPush";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import type {
   NotificationPreferences,
   NotificationPreferencesPatch,
@@ -256,6 +257,7 @@ export default function NotificationPreferencesPanel() {
     queryKey: SUBS_KEY,
     queryFn: async () => {
       const res = await listNotificationSubscriptions();
+      answerOrThrow(res);
       return res.status === 200 && "data" in res && res.data ? res.data : [];
     },
     staleTime: 30_000,

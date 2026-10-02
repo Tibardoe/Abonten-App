@@ -156,7 +156,6 @@
       "couldnTSendACodePlease": "Der Code konnte nicht gesendet werden. Bitte versuche es erneut.",
       "deleteAccount": "Konto löschen",
       "deleteIcon": "Löschen-Symbol",
-      "deleteYourAccountThisCannotBe": "Dein Konto löschen? Das lässt sich nicht rückgängig machen. Gekaufte Tickets und Zahlungsbelege werden für die Buchhaltung aufbewahrt; dein Profil wird entfernt.",
       "editNumber": "Nummer bearbeiten",
       "email": "E-Mail",
       "emailUpdated": "E-Mail-Adresse aktualisiert.",
@@ -177,7 +176,9 @@
       "updateDescription": "Wir senden dir zur Bestätigung einen Code per SMS",
       "updateTitle": "Telefonnummer ändern",
       "usedToSignInAndVerify": "Wird für die Anmeldung und zur Bestätigung verwendet, dass wirklich du es bist — erscheint nicht in deinem öffentlichen Profil.",
-      "verificationFailedPleaseTryAgain": "Bestätigung fehlgeschlagen. Bitte versuche es erneut."
+      "verificationFailedPleaseTryAgain": "Bestätigung fehlgeschlagen. Bitte versuche es erneut.",
+      "deleteAccountTitle": "Dein Konto löschen?",
+      "deleteAccountBody": "Das lässt sich nicht rückgängig machen. Gekaufte Tickets und Zahlungsbelege werden für die Buchhaltung aufbewahrt; dein Profil wird entfernt."
     }
   },
   "securityTitle": "Sicherheit",

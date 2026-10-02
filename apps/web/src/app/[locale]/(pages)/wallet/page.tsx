@@ -19,7 +19,8 @@ export default async function page() {
   const t = await getTranslations("wallet");
 
   const response = await getUserPaymentMethods();
-  const paymentMethods = response.status === 200 ? response.data : [];
+  // Not read: the component loads them itself and says so if it cannot.
+  const paymentMethods = response.status === 200 ? response.data : undefined;
 
   return (
     <div className="flex flex-col justify-center gap-5">

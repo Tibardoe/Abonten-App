@@ -6,6 +6,7 @@
 // build with a DSN, so `next dev` sessions never reach the production
 // project.
 
+import { announceNavigationStart } from "@/lib/navigationSignal";
 import * as Sentry from "@sentry/nextjs";
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
@@ -21,5 +22,13 @@ Sentry.init({
   sendDefaultPii: false,
 });
 
-// Instruments client-side App Router navigations for tracing.
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+// Next.js calls this when a navigation starts, whatever started it (a link,
+// router.push, the Back button). Sentry traces it; the progress bar at the
+// top of the window is told too (lib/navigationSignal.ts).
+export function onRouterTransitionStart(
+  url: string,
+  navigationType: "push" | "replace" | "traverse",
+) {
+  Sentry.captureRouterTransitionStart(url, navigationType);
+  announceNavigationStart(url);
+}

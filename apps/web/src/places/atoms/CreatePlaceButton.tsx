@@ -4,6 +4,7 @@ import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
 import NewPlaceOrDraftChooser from "@/components/molecules/NewPlaceOrDraftChooser";
 import { PlaceUploadModal } from "@/components/organisms/LazyUploadModals";
 import { Button } from "@/components/ui/button";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -18,8 +19,8 @@ export default function CreatePlaceButton() {
   const [showChooser, setShowChooser] = useState(false);
 
   const handleClick = async () => {
-    const { data } = await getActiveDraftCounts();
-    if (data.place > 0) {
+    const { data } = await getActiveDraftCounts().catch(actionUnreachable);
+    if ((data?.place ?? 0) > 0) {
       setShowChooser(true);
     } else {
       setShowPlaceModal(true);

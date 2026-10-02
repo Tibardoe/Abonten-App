@@ -3,6 +3,7 @@
 import { startFieldOpsOnboarding } from "@/actions/fieldOps/startFieldOpsOnboarding";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useTransition } from "react";
@@ -45,7 +46,7 @@ export default function StartOnboardingButton({
         prospectId: prospectId ?? null,
         kind,
         clientRequestId: requestId.current,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && res.data) {
         router.push(`/field/onboard/${res.data.id}`);
       } else {

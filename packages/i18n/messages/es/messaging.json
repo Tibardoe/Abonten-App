@@ -63,7 +63,6 @@
   "couldnTStartAConversation": "No se pudo iniciar una conversación.",
   "deleteText": "Eliminar",
   "deleteThisMessage": "¿Eliminar este mensaje?",
-  "deleteThisMessageThisCanT": "¿Eliminar este mensaje? Esta acción no se puede deshacer.",
   "deletedAMessage": "{value} eliminó un mensaje, {clockTime}",
   "deletedMessage": "Mensaje eliminado",
   "dismiss": "Descartar",
@@ -235,5 +234,7 @@
   "yourArchivedChats": "tus chats archivados",
   "yourAttachmentCouldnTBeSent": "No se pudo enviar tu adjunto.",
   "yourImageCouldnTBeUploaded": "No se pudo subir tu imagen.",
-  "yourMessages": "tus mensajes"
+  "yourMessages": "tus mensajes",
+  "deleteMessageTitle": "¿Eliminar este mensaje?",
+  "deleteMessageBody": "Esta acción no se puede deshacer."
 }

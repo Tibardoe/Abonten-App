@@ -2,6 +2,7 @@
 
 import { type PlaceDraftDetail, getPlaceDraft } from "@/actions/getPlaceDraft";
 import { PlaceUploadModal } from "@/components/organisms/LazyUploadModals";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -39,7 +40,7 @@ export default function ContinuePlaceDraftButton({
     setLoading(true);
     setError(null);
 
-    const response = await getPlaceDraft(draftId);
+    const response = await getPlaceDraft(draftId).catch(actionUnreachable);
     setLoading(false);
 
     if (response.status !== 200 || !response.data) {

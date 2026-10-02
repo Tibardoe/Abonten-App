@@ -892,5 +892,13 @@
   "zoomX": "Zoom: {toFixed}x",
   "refundRequestsSummary": "{count, plural, one {# pedido} other {# pedidos}} · {pending} pendentes · {completed} concluídos",
   "dateHeading": "{count, plural, =1 {Data} other {Escolha uma data}}",
-  "activityFor": "{type, select, ticket_sold {Bilhete vendido para {event}} ticket_cancelled {Bilhete cancelado para {event}} other {Nova inscrição para {event}}}"
+  "activityFor": "{type, select, ticket_sold {Bilhete vendido para {event}} ticket_cancelled {Bilhete cancelado para {event}} other {Nova inscrição para {event}}}",
+  "actionFailed": {
+    "offline": "Está offline. Verifique a sua ligação e tente novamente.",
+    "unreachable": "Não foi possível contactar o Abonten. Verifique a sua ligação e tente novamente.",
+    "updated": "O Abonten foi atualizado desde que abriu esta página. Recarregue a página e tente novamente.",
+    "restricted": "A sua conta foi restringida. Contacte o apoio se achar que se trata de um erro.",
+    "unexpected": "Não foi possível concluir. Tente novamente dentro de momentos."
+  },
+  "couldnTLoadYourPendingCheckouts": "Não foi possível carregar as suas compras pendentes."
 }

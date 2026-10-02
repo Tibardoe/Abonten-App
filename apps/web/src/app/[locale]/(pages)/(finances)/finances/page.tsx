@@ -7,7 +7,8 @@ import FinancesOverview from "@/finances/organisms/FinancesOverview";
 
 export default async function FinancesOverviewPage() {
   const response = await getOrganizerFinanceOverview();
-  const overview = response.status === 200 ? response.data : [];
+  // Not read: the component loads it itself and says so if it cannot.
+  const overview = response.status === 200 ? response.data : undefined;
 
   return <FinancesOverview initialOverview={overview} />;
 }

@@ -156,7 +156,6 @@
       "couldnTSendACodePlease": "Não foi possível enviar o código. Tente novamente.",
       "deleteAccount": "Eliminar conta",
       "deleteIcon": "Ícone de eliminar",
-      "deleteYourAccountThisCannotBe": "Eliminar a sua conta? Esta ação não pode ser anulada. Os bilhetes que comprou e os registos de pagamento são mantidos para efeitos de contabilidade; o seu perfil é removido.",
       "editNumber": "Editar número",
       "email": "E-mail",
       "emailUpdated": "E-mail atualizado.",
@@ -177,7 +176,9 @@
       "updateDescription": "Enviaremos um código por SMS para verificação",
       "updateTitle": "Atualizar número de telefone",
       "usedToSignInAndVerify": "Serve para iniciar sessão e confirmar que é mesmo você — não aparece no seu perfil público.",
-      "verificationFailedPleaseTryAgain": "A verificação falhou. Tente novamente."
+      "verificationFailedPleaseTryAgain": "A verificação falhou. Tente novamente.",
+      "deleteAccountTitle": "Eliminar a sua conta?",
+      "deleteAccountBody": "Esta ação não pode ser anulada. Os bilhetes que comprou e os registos de pagamento são mantidos para efeitos de contabilidade; o seu perfil é removido."
     }
   },
   "securityTitle": "Segurança",

@@ -2,6 +2,7 @@ import { publicSupabase } from "@/config/supabase/publicClient";
 import AddPlaceReviewButton from "@/places/molecules/AddPlaceReviewButton";
 import { loadReviewsPage, reviewsPageDescription } from "@/reviews/loadReviews";
 import ReviewsBrowser from "@/reviews/organisms/ReviewsBrowser";
+import { rowOrFailure } from "@/utils/rowOrFailure";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { reviewsPath } from "@abonten/core/reviews/reviewList";
 import { ChevronLeft } from "lucide-react";
@@ -21,13 +22,15 @@ import { notFound } from "next/navigation";
 // export const instant = false;
 
 async function loadPlace(slug: string) {
-  const { data } = await publicSupabase
-    .from("place")
-    .select("id, name, slug, owner_id, cover_public_id, cover_version")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
-  return data;
+  return rowOrFailure(
+    await publicSupabase
+      .from("place")
+      .select("id, name, slug, owner_id, cover_public_id, cover_version")
+      .eq("slug", slug)
+      .eq("status", "published")
+      .maybeSingle(),
+    "place",
+  );
 }
 
 export async function generateMetadata({

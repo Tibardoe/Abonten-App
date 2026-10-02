@@ -7,6 +7,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { RecommendationItem } from "@abonten/types/discoveryType";
@@ -63,7 +64,7 @@ function PickCard({
           void markRecommendationOpened({
             subjectType: item.subjectType,
             subjectId: item.subjectId,
-          })
+          }).catch(actionUnreachable)
         }
         className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-muted md:h-28 md:w-28"
       >
@@ -88,7 +89,7 @@ function PickCard({
             void markRecommendationOpened({
               subjectType: item.subjectType,
               subjectId: item.subjectId,
-            })
+            }).catch(actionUnreachable)
           }
           className="mt-0.5 line-clamp-2 font-medium hover:text-primary"
         >

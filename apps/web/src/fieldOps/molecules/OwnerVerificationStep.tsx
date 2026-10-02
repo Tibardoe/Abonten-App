@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toE164 } from "@/fieldOps/lib/wizardStorage";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -65,7 +66,7 @@ export default function OwnerVerificationStep({
         onboardingId,
         ownerFullName: fullName.trim(),
         ownerPhoneE164: e164,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         setSent(true);
         setConsentPath(res.data?.consentPath ?? null);
@@ -81,7 +82,7 @@ export default function OwnerVerificationStep({
         campaignId,
         onboardingId,
         code: value,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(t("verified2", { party }));
         onVerified();

@@ -2,6 +2,7 @@
 
 import getAttendanceList from "@/actions/getAttendanceList";
 import EventAnalyticsDashboard from "@/components/organisms/EventAnalyticsDashboard";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import AttendanceListView from "./AttendanceListView";
 

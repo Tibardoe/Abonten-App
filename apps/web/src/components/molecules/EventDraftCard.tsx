@@ -4,6 +4,7 @@ import { deleteEventDraft } from "@/actions/deleteEventDraft";
 import type { EventDraftListItem } from "@/actions/getEventDrafts";
 import ContinueEventDraftButton from "@/components/molecules/ContinueEventDraftButton";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatExpiresIn } from "@abonten/core/formatExpiresIn";
@@ -50,12 +51,14 @@ export default function EventDraftCard({
     setShowDeleteConfirm(false);
     onDeleted(draft.id);
 
-    deleteEventDraft(draft.id).then((response) => {
-      if (response.status !== 200) {
-        onRestoreDraft(draft);
-        onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
-      }
-    });
+    deleteEventDraft(draft.id)
+      .catch(actionUnreachable)
+      .then((response) => {
+        if (response.status !== 200) {
+          onRestoreDraft(draft);
+          onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
+        }
+      });
   };
 
   return (

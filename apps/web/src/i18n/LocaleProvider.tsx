@@ -1,6 +1,7 @@
 "use client";
 
 import { setUserLocale } from "@/actions/setUserLocale";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import {
@@ -60,7 +61,7 @@ export default function LocaleProvider({
   const setLocale = useCallback(
     async (next: Locale) => {
       if (next === locale) return;
-      const response = await setUserLocale(next);
+      const response = await setUserLocale(next).catch(actionUnreachable);
       if (response.status !== 200) {
         throw new Error(response.message);
       }

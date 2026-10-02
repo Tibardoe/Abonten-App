@@ -162,6 +162,7 @@ export default function EventsMapView({
           <Marker
             key={event.id}
             position={{ lat, lng }}
+            title={event.title}
             onClick={() => setSelectedEvent(event)}
           />
         ))}

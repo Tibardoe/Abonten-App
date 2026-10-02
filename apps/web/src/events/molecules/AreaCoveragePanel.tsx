@@ -5,6 +5,7 @@ import leaveAreaWaitlist from "@/actions/leaveAreaWaitlist";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import type { BrowseSuggestions } from "@abonten/core/market/coverage";
 import {
@@ -75,7 +76,9 @@ export default function AreaCoveragePanel({
         router.push(getSignInUrl(currentQuery({ [JOIN_PARAM]: "1" })));
         return;
       }
-      const res = await joinAreaWaitlist({ ...point, label: areaName });
+      const res = await joinAreaWaitlist({ ...point, label: areaName }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200) {
         setWaiting(true);
         toast.success(waitingText(tc, res.data?.areaName ?? areaName));
@@ -90,7 +93,7 @@ export default function AreaCoveragePanel({
 
   function leave() {
     startTransition(async () => {
-      const res = await leaveAreaWaitlist(point);
+      const res = await leaveAreaWaitlist(point).catch(actionUnreachable);
       if (res.status === 200) setWaiting(false);
       else toast.error(res.message ?? t("couldnTTakeYouOffThe"));
     });

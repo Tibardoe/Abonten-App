@@ -4,8 +4,10 @@ import deleteUser from "@/actions/deleteUser";
 import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import updateVerifiedPhone from "@/actions/updateVerifiedPhone";
 import { supabase } from "@/config/supabase/client";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
 import { linkGoogleIdentity } from "@/services/authService";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   EMAIL_OTP_CODE_LENGTH,
   emailOtpMessage,
@@ -48,6 +50,7 @@ export default function SecurityInputFields({
   const tAuth = useTranslations("auth");
   const searchParams = useSearchParams();
   const toast = useToast();
+  const confirm = useConfirm();
   const [isLinkingGoogle, setIsLinkingGoogle] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: only meant to run once on mount, to surface a one-time OAuth redirect error carried in the URL.
@@ -127,10 +130,13 @@ export default function SecurityInputFields({
   }, [initialCallingCode]);
 
   const handleDeleteUser = async () => {
-    if (!window.confirm(t("deleteYourAccountThisCannotBe"))) {
-      return;
-    }
-    const response = await deleteUser();
+    const confirmed = await confirm({
+      title: t("deleteAccountTitle"),
+      message: t("deleteAccountBody"),
+      confirmLabel: t("deleteAccount"),
+    });
+    if (!confirmed) return;
+    const response = await deleteUser().catch(actionUnreachable);
     if (response.status === 200) {
       toast.success(response.message);
       // The account is gone server-side (sessions revoked); drop the local

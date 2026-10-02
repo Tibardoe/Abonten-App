@@ -10,6 +10,7 @@ import {
   useSearchSuggestions,
 } from "@/hooks/useSearchSuggestions";
 import { isExploreTab } from "@/places/exploreTab";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   addRecentSearch,
   clearRecentSearches,
@@ -511,7 +512,7 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
               0,
               group.findIndex((g) => g.id === hit.id),
             ),
-          });
+          }).catch(actionUnreachable);
         }
         if (hit.entityType === "organizer") {
           recordRecentSearch(`@${hit.label}`);

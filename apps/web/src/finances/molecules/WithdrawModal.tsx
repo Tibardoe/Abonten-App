@@ -11,6 +11,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { buildWithdrawAmountSchema } from "@abonten/validation/payoutSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -101,13 +102,13 @@ export default function WithdrawModal({
       payoutAccountId,
       Number(amount),
       currency,
-    );
+    ).catch(actionUnreachable);
 
     setIsSubmitting(false);
 
     if (response.status !== 200) {
       setServerError(response.message);
-      if (response.balanceStale) {
+      if ("balanceStale" in response && response.balanceStale) {
         onBalanceStale();
       }
       return;

@@ -315,7 +315,6 @@
   "reason": "Motivo: {rejectionReason}",
   "reasonKeptOnRecord": "Motivo (queda registrado)",
   "reject": "Rechazar",
-  "rejectThisOnboardingTheMemberIs": "¿Rechazar esta incorporación? Al miembro se le dice el motivo.",
   "rejected": "rechazado",
   "remove": "Quitar",
   "remove2": "quitar",
@@ -470,7 +469,6 @@
   "whyTheMemberSeesThis": "¿Por qué? El miembro verá esto.",
   "withdraw": "Retirar",
   "withdrawThisOnboarding": "Retirar esta incorporación",
-  "withdrawThisOnboardingYouCanStart": "¿Retirar esta incorporación? Puedes iniciar una nueva más adelante.",
   "withdrawn": "Retirado.",
   "workingOverThePhoneSendThem": "¿Trabajas por teléfono? Envíale este enlace para que introduzca el código por su cuenta:",
   "workingToday": "Trabajando hoy",
@@ -541,5 +539,9 @@
     "content_deliverable": "Contenido entregado",
     "content_monthly_stipend": "Estipendio mensual (contenido)",
     "team_lead_monthly_stipend": "Estipendio mensual (jefe de equipo)"
-  }
+  },
+  "withdrawOnboardingTitle": "¿Retirar esta incorporación?",
+  "withdrawOnboardingBody": "Puedes iniciar una nueva más adelante.",
+  "rejectOnboardingTitle": "¿Rechazar esta incorporación?",
+  "rejectOnboardingBody": "Al miembro se le dice el motivo."
 }

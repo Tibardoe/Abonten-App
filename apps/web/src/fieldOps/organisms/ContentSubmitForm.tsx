@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsContentBrief } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -63,7 +64,7 @@ export default function ContentSubmitForm({
           likes: num(likes),
           shares: num(shares),
         },
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("sentForReview"));
         setOpen(false);

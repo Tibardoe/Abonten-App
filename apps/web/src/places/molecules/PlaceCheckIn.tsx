@@ -4,6 +4,7 @@ import { recordPlaceVisit } from "@/actions/recordPlaceVisit";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { announcePlaceInteraction } from "@/discovery/placeInteraction";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -54,7 +55,7 @@ export default function PlaceCheckIn({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracyM: pos.coords.accuracy,
-        });
+        }).catch(actionUnreachable);
         if (res.status === 200) {
           announcePlaceInteraction({ placeId, trigger: "visit" });
         }

@@ -2,6 +2,7 @@
 
 import getHighlightUploadSignature from "@/actions/getHighlightUploadSignature";
 import uploadHighlight from "@/actions/uploadHighlight";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   isUploadCancelled,
   uploadToCloudinary,
@@ -49,7 +50,8 @@ export function useHighlightUpload(username: string) {
         errorMessage: null,
       });
 
-      const signatureResponse = await getHighlightUploadSignature();
+      const signatureResponse =
+        await getHighlightUploadSignature().catch(actionUnreachable);
 
       if (signatureResponse.status !== 200 || !signatureResponse.data) {
         patch(setItems, id, {

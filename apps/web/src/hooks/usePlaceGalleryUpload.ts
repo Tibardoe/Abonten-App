@@ -2,6 +2,7 @@
 
 import { addPlacePhoto } from "@/actions/addPlacePhoto";
 import getPlacePhotoUploadSignature from "@/actions/getPlacePhotoUploadSignature";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { isImageFile } from "@abonten/core/isImageFile";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
@@ -47,7 +48,8 @@ export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
         errorMessage: null,
       });
 
-      const signatureResponse = await getPlacePhotoUploadSignature();
+      const signatureResponse =
+        await getPlacePhotoUploadSignature().catch(actionUnreachable);
 
       if (signatureResponse.status !== 200 || !signatureResponse.data) {
         patch(setItems, id, {

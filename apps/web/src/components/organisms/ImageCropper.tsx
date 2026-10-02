@@ -1,3 +1,4 @@
+import { useToast } from "@/hooks/useToast";
 import { canvasPreview, downscaleCanvas } from "@/utils/canvasPreview";
 import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -56,6 +57,7 @@ export default function ImageCropper({
   maxOutputDimension,
 }: ImageCropType) {
   const t = useTranslations("common");
+  const toast = useToast();
 
   const imgRef = useRef<HTMLImageElement>(null);
   const cropAreaRef = useRef<HTMLDivElement>(null);
@@ -197,7 +199,7 @@ export default function ImageCropper({
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
                 onLoad={onImageLoad}
                 onError={() => {
-                  alert(t("thisImageCouldnTBeLoaded"));
+                  toast.error(t("thisImageCouldnTBeLoaded"));
                   handleCancel();
                 }}
               />

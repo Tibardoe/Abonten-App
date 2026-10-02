@@ -315,7 +315,6 @@
   "reason": "Grund: {rejectionReason}",
   "reasonKeptOnRecord": "Grund (wird dokumentiert)",
   "reject": "Ablehnen",
-  "rejectThisOnboardingTheMemberIs": "Diese Aufnahme ablehnen? Das Mitglied erfährt den Grund.",
   "rejected": "abgelehnt",
   "remove": "Entfernen",
   "remove2": "entfernen",
@@ -470,7 +469,6 @@
   "whyTheMemberSeesThis": "Warum? Das Mitglied sieht diesen Text.",
   "withdraw": "Zurückziehen",
   "withdrawThisOnboarding": "Diese Aufnahme zurückziehen",
-  "withdrawThisOnboardingYouCanStart": "Diese Aufnahme zurückziehen? Du kannst später eine neue starten.",
   "withdrawn": "Zurückgezogen.",
   "workingOverThePhoneSendThem": "Du arbeitest am Telefon? Sende diesen Link, damit die Person den Code selbst eingibt:",
   "workingToday": "Heute im Einsatz",
@@ -541,5 +539,9 @@
     "content_deliverable": "Gelieferter Content",
     "content_monthly_stipend": "Monatspauschale (Content)",
     "team_lead_monthly_stipend": "Monatspauschale (Teamleitung)"
-  }
+  },
+  "withdrawOnboardingTitle": "Diese Aufnahme zurückziehen?",
+  "withdrawOnboardingBody": "Du kannst später eine neue starten.",
+  "rejectOnboardingTitle": "Diese Aufnahme ablehnen?",
+  "rejectOnboardingBody": "Das Mitglied erfährt den Grund."
 }

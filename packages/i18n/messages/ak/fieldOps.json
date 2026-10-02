@@ -315,7 +315,6 @@
   "reason": "Reason: {rejectionReason}",
   "reasonKeptOnRecord": "Reason (kept on record)",
   "reject": "Reject",
-  "rejectThisOnboardingTheMemberIs": "Reject this onboarding? The member is told why.",
   "rejected": "rejected",
   "remove": "Remove",
   "remove2": "remove",
@@ -470,7 +469,6 @@
   "whyTheMemberSeesThis": "Why? The member sees this.",
   "withdraw": "Withdraw",
   "withdrawThisOnboarding": "Withdraw this onboarding",
-  "withdrawThisOnboardingYouCanStart": "Withdraw this onboarding? You can start a new one later.",
   "withdrawn": "Withdrawn.",
   "workingOverThePhoneSendThem": "Working over the phone? Send them this link so they enter the code themselves:",
   "workingToday": "Working today",
@@ -541,5 +539,9 @@
     "content_deliverable": "Content deliverable",
     "content_monthly_stipend": "Content monthly stipend",
     "team_lead_monthly_stipend": "Team lead monthly stipend"
-  }
+  },
+  "withdrawOnboardingTitle": "Withdraw this onboarding?",
+  "withdrawOnboardingBody": "You can start a new one later.",
+  "rejectOnboardingTitle": "Reject this onboarding?",
+  "rejectOnboardingBody": "The member is told why."
 }

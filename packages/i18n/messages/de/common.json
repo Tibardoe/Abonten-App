@@ -892,5 +892,13 @@
   "zoomX": "Zoom: {toFixed}x",
   "refundRequestsSummary": "{count, plural, one {# Anfrage} other {# Anfragen}} · {pending} ausstehend · {completed} abgeschlossen",
   "dateHeading": "{count, plural, =1 {Datum} other {Datum wählen}}",
-  "activityFor": "{type, select, ticket_sold {Ticket verkauft für {event}} ticket_cancelled {Ticket storniert für {event}} other {Neue Anmeldung für {event}}}"
+  "activityFor": "{type, select, ticket_sold {Ticket verkauft für {event}} ticket_cancelled {Ticket storniert für {event}} other {Neue Anmeldung für {event}}}",
+  "actionFailed": {
+    "offline": "Du bist offline. Prüfe deine Verbindung und versuche es erneut.",
+    "unreachable": "Abonten ist nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.",
+    "updated": "Abonten wurde aktualisiert, seit du diese Seite geöffnet hast. Lade die Seite neu und versuche es dann erneut.",
+    "restricted": "Dein Konto wurde eingeschränkt. Wende dich an den Support, wenn du das für einen Fehler hältst.",
+    "unexpected": "Das hat nicht geklappt. Versuche es gleich noch einmal."
+  },
+  "couldnTLoadYourPendingCheckouts": "Deine offenen Bestellungen konnten nicht geladen werden."
 }

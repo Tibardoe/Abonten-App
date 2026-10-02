@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import StartOnboardingButton from "@/fieldOps/molecules/StartOnboardingButton";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsProspect } from "@abonten/types/fieldOps";
 import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -48,7 +49,7 @@ export default function ProspectRow({
         campaignId: p.campaignId,
         prospectId: p.id,
         contactAttempt: { channel, outcome, note: note || null },
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(t("logged"));
         setLogging(false);

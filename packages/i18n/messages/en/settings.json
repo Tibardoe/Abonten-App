@@ -156,7 +156,6 @@
       "couldnTSendACodePlease": "Couldn't send a code. Please try again.",
       "deleteAccount": "Delete account",
       "deleteIcon": "Delete icon",
-      "deleteYourAccountThisCannotBe": "Delete your account? This cannot be undone. Tickets you bought and payment records are kept for accounting; your profile is removed.",
       "editNumber": "Edit number",
       "email": "Email",
       "emailUpdated": "Email updated.",
@@ -177,7 +176,9 @@
       "updateDescription": "We'll send an SMS code for verification",
       "updateTitle": "Update phone number",
       "usedToSignInAndVerify": "Used to sign in and verify it's really you — not shown on your public profile.",
-      "verificationFailedPleaseTryAgain": "Verification failed. Please try again."
+      "verificationFailedPleaseTryAgain": "Verification failed. Please try again.",
+      "deleteAccountTitle": "Delete your account?",
+      "deleteAccountBody": "This cannot be undone. Tickets you bought and payment records are kept for accounting; your profile is removed."
     }
   },
   "securityTitle": "Security",

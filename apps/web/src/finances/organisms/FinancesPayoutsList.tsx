@@ -2,6 +2,7 @@
 
 import getOrganizerPayouts from "@/actions/getOrganizerPayouts";
 import { Button } from "@/components/ui/button";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerPayoutRow } from "@abonten/types/organizerFinance";
@@ -37,7 +38,9 @@ export default function FinancesPayoutsList({
 
   const loadMore = async () => {
     setIsLoadingMore(true);
-    const response = await getOrganizerPayouts(payouts.length, PAGE_SIZE);
+    const response = await getOrganizerPayouts(payouts.length, PAGE_SIZE).catch(
+      actionUnreachable,
+    );
     setIsLoadingMore(false);
 
     if (response.status !== 200) return;

@@ -5,6 +5,7 @@ import { setEventPromoterCommission } from "@/actions/setEventPromoterCommission
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -42,7 +43,9 @@ export default function PromoterCommissionCard({
 
   const save = (rateBps: number | null) =>
     start(async () => {
-      const res = await setEventPromoterCommission({ eventId, rateBps });
+      const res = await setEventPromoterCommission({ eventId, rateBps }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200 && res.data) {
         qc.setQueryData(key, res);
         setRate("");

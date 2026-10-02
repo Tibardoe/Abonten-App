@@ -3,6 +3,7 @@
 import { setRewardEmailsByLink } from "@/actions/setRewardEmailsByLink";
 import { Button } from "@/components/ui/button";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 
@@ -26,7 +27,9 @@ export default function RewardEmailUnsubscribe({
   const change = (enabled: boolean) =>
     start(async () => {
       setError(null);
-      const res = await setRewardEmailsByLink({ userId, token, enabled });
+      const res = await setRewardEmailsByLink({ userId, token, enabled }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200) {
         setState(enabled ? "on" : "off");
       } else {

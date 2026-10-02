@@ -13,11 +13,24 @@ import { cache } from "react";
 // per request.
 
 export const getPublicWeeklyEdition = cache(
-  async (scope: string | null, week: string | null) =>
-    getWeeklyEditionCore(getSupabaseServiceClient(), null, {
-      scope: scope ?? undefined,
-      week: week ?? undefined,
-    }),
+  async (scope: string | null, week: string | null) => {
+    const result = await getWeeklyEditionCore(
+      getSupabaseServiceClient(),
+      null,
+      {
+        scope: scope ?? undefined,
+        week: week ?? undefined,
+      },
+    );
+    // These pages are rebuilt every minute. An edition that could not be
+    // read must not be rendered as "nothing published" (and marked noindex)
+    // for the next minute: thrown, the rebuild fails and the copy people
+    // are being served stays up.
+    if (result.status >= 500) {
+      throw new Error(`weekly edition read failed (${result.status})`);
+    }
+    return result;
+  },
 );
 
 export const getWeeklyPreview = cache(async (token: string) =>

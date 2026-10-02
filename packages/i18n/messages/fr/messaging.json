@@ -63,7 +63,6 @@
   "couldnTStartAConversation": "Impossible de démarrer une conversation.",
   "deleteText": "Supprimer",
   "deleteThisMessage": "Supprimer ce message ?",
-  "deleteThisMessageThisCanT": "Supprimer ce message ? Cette action est irréversible.",
   "deletedAMessage": "{value} a supprimé un message, {clockTime}",
   "deletedMessage": "Message supprimé",
   "dismiss": "Ignorer",
@@ -235,5 +234,7 @@
   "yourArchivedChats": "vos discussions archivées",
   "yourAttachmentCouldnTBeSent": "Votre pièce jointe n'a pas pu être envoyée.",
   "yourImageCouldnTBeUploaded": "Votre image n'a pas pu être mise en ligne.",
-  "yourMessages": "vos messages"
+  "yourMessages": "vos messages",
+  "deleteMessageTitle": "Supprimer ce message ?",
+  "deleteMessageBody": "Cette action est irréversible."
 }

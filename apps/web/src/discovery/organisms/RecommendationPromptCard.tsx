@@ -5,6 +5,7 @@ import { markRecommendationPromptShown } from "@/actions/discovery/markRecommend
 import { respondToRecommendationPrompt } from "@/actions/discovery/respondToRecommendationPrompt";
 import { cn } from "@/components/lib/utils";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { PromptContext, PromptOffer } from "@abonten/types/discoveryType";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -53,7 +54,7 @@ export default function RecommendationPromptCard({
   useEffect(() => {
     if (!isEmpty(offer) && !recorded.current) {
       recorded.current = true;
-      void markRecommendationPromptShown(context);
+      void markRecommendationPromptShown(context).catch(actionUnreachable);
     }
   }, [offer, context]);
 

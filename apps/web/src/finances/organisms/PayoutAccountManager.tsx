@@ -6,6 +6,7 @@ import setDefaultPayoutAccount from "@/actions/setDefaultPayoutAccount";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -15,7 +16,8 @@ import PayoutAccountCard from "../molecules/PayoutAccountCard";
 import AddPayoutAccountPopup from "./AddPayoutAccountPopup";
 
 type PayoutAccountManagerProps = {
-  initialAccounts: PayoutAccountRow[];
+  /** Left out when the server could not read them: the list loads here. */
+  initialAccounts?: PayoutAccountRow[];
 };
 
 export const PAYOUT_ACCOUNTS_QUERY_KEY = ["payout-accounts"];
@@ -39,7 +41,7 @@ export default function PayoutAccountManager({
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: PAYOUT_ACCOUNTS_QUERY_KEY,
     queryFn: async () => {
-      const response = await getOrganizerPayoutAccounts();
+      const response = answerOrThrow(await getOrganizerPayoutAccounts());
       return response.status === 200 ? response.data : [];
     },
     initialData: initialAccounts,

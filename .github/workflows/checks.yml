@@ -80,6 +80,8 @@ jobs:
 
       - run: npm run check:locale-routing
 
+      - run: npm run check:action-calls
+
   # Documentation validation (docs/** and the public legal/help content):
   # required files, metadata, internal links, code references, placeholder
   # and social links, secret patterns, public/internal separation. No

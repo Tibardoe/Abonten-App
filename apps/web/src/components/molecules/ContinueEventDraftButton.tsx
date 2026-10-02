@@ -3,6 +3,7 @@
 import { type EventDraftDetail, getEventDraft } from "@/actions/getEventDraft";
 import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -50,7 +51,7 @@ export default function ContinueEventDraftButton({
     setLoading(true);
     setError(null);
 
-    const response = await getEventDraft(draftId);
+    const response = await getEventDraft(draftId).catch(actionUnreachable);
     setLoading(false);
 
     if (response.status !== 200 || !response.data) {

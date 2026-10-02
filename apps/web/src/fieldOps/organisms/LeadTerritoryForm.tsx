@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsTerritory } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -87,7 +88,7 @@ export default function LeadTerritoryForm({
         radiusM: Number(radius),
         boundary: initial?.boundary ?? null,
         notes: notes || null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("saved"));
         onDone?.();

@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 export default async function page() {
   const response = await getUserPendingTicketCheckouts();
-  const sessions = response.status === 200 ? response.sessions : [];
+  // Not read: the component loads them itself and says so if it cannot.
+  const sessions = response.status === 200 ? response.sessions : undefined;
 
   return (
     <div className="flex flex-col justify-center gap-5">

@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import OwnerVerificationStep from "@/fieldOps/molecules/OwnerVerificationStep";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import {
   eventCategoryLabel,
@@ -69,6 +71,7 @@ export default function EventOnboardingWizard({
 
   const o = draft.onboarding;
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [step, setStep] = useState(1);
@@ -113,7 +116,7 @@ export default function EventOnboardingWizard({
         toast.error(t("thatFlyerIsTooLarge"));
         return;
       }
-      const sig = await getEventFlyerUploadSignature();
+      const sig = await getEventFlyerUploadSignature().catch(actionUnreachable);
       if (sig.status !== 200 || !sig.data) {
         toast.error(sig.message ?? t("couldnTStartTheUpload"));
         return;
@@ -137,18 +140,28 @@ export default function EventOnboardingWizard({
       }
     });
 
-  const withdraw = () =>
+  // The place wizard asked before withdrawing; this one withdrew on the
+  // first click of a button that sits beside "Next".
+  const withdraw = async () => {
+    const confirmed = await confirm({
+      title: t("withdrawOnboardingTitle"),
+      message: t("withdrawOnboardingBody"),
+      confirmLabel: t("withdraw"),
+      cancelLabel: t("keepIt"),
+    });
+    if (!confirmed) return;
     start(async () => {
       const res = await withdrawFieldOpsOnboarding({
         campaignId,
         onboardingId: o.id,
         reason: t("notGoingAhead"),
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(t("withdrawn"));
         router.push("/field/submissions");
       } else toast.error(res.message ?? t("couldnTWithdraw"));
     });
+  };
 
   const submit = () =>
     start(async () => {
@@ -188,7 +201,7 @@ export default function EventOnboardingWizard({
         },
         submissionLocation: here ? { lat: here.lat, lng: here.lng } : null,
         submissionAccuracyM: here?.accuracyM ?? null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("submitted2"));
         router.push(`/field/submissions/${o.id}`);

@@ -12,12 +12,14 @@ import PaymentMethodCard, {
   NO_PAYMENT_METHODS_KEY,
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 type WalletManagerProps = {
-  initialPaymentMethods: PaymentMethodRow[];
+  /** Left out when the server could not read them: the list loads here. */
+  initialPaymentMethods?: PaymentMethodRow[];
 };
 
 export const PAYMENT_METHODS_QUERY_KEY = ["payment-methods"];
@@ -44,7 +46,7 @@ export default function WalletManager({
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: PAYMENT_METHODS_QUERY_KEY,
     queryFn: async () => {
-      const response = await getUserPaymentMethods();
+      const response = answerOrThrow(await getUserPaymentMethods());
       return response.status === 200 ? response.data : [];
     },
     initialData: initialPaymentMethods,

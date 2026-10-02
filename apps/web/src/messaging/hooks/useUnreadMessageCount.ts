@@ -15,8 +15,13 @@ export function useUnreadMessageCount() {
   return useQuery({
     queryKey: [...messagingKeys.unreadCount(), user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
-      const shared = await takeShellSlice(client, "unreadMessages", user?.id);
+    queryFn: async ({ queryKey }) => {
+      const shared = await takeShellSlice(
+        client,
+        "unreadMessages",
+        user?.id,
+        queryKey,
+      );
       if (shared !== undefined) return shared;
       const res = await getUnreadMessageCount();
       return res.status === 200 ? res.count : 0;

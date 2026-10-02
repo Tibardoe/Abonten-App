@@ -99,6 +99,42 @@ describe("createSharedFirstAnswer", () => {
     expect(await empty.shared.take("program")).toBeUndefined();
   });
 
+  it("fails every asker at once when the failure is everyone's", async () => {
+    const refused = new Error("refused");
+    let t = 0;
+    const ask = vi.fn(async (): Promise<Answer | null> => {
+      throw refused;
+    });
+    const shared = createSharedFirstAnswer<Answer>({
+      ask,
+      ownerOf: (a) => a.userId,
+      freshForMs: 15_000,
+      failsTogether: (error) => error === refused,
+      now: () => t,
+    });
+    shared.prime();
+    await expect(shared.take("unread", "u1")).rejects.toBe(refused);
+    await expect(shared.take("program")).rejects.toBe(refused);
+    // Once per part, and only while it is the page-load answer.
+    expect(await shared.take("unread", "u1")).toBeUndefined();
+    t = 20_000;
+    expect(await shared.take("userId")).toBeUndefined();
+    expect(ask).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps other failures to itself: each asker asks for itself", async () => {
+    const shared = createSharedFirstAnswer<Answer>({
+      ask: async () => {
+        throw new Error("offline");
+      },
+      ownerOf: (a) => a.userId,
+      freshForMs: 15_000,
+      failsTogether: () => false,
+    });
+    shared.prime();
+    expect(await shared.take("unread", "u1")).toBeUndefined();
+  });
+
   it("hands over a part whose value is null or zero", async () => {
     const { shared } = setup({ userId: "u1", unread: 0, program: "" });
     shared.prime();

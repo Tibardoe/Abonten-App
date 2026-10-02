@@ -148,6 +148,7 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
           <Marker
             key={place.id}
             position={{ lat, lng }}
+            title={place.name}
             onClick={() => setSelectedPlace(place)}
           />
         ))}

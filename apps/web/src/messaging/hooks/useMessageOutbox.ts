@@ -1,6 +1,7 @@
 "use client";
 
 import { sendMessage } from "@/actions/sendMessage";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
 import type {
   MessageRow,
@@ -66,7 +67,7 @@ export function useMessageOutbox(conversationId: string) {
         content: draft.content ?? null,
         replyToMessageId: draft.replyToMessageId ?? null,
         attachments: draft.attachments ?? [],
-      });
+      }).catch(actionUnreachable);
 
       if (res.status === 200 && "data" in res && res.data?.message) {
         const canonical: MessageRow = res.data.message;

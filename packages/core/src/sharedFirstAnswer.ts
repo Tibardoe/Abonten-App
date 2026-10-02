@@ -12,6 +12,12 @@
 //     long after the page opened);
 //   - the shared request failed;
 //   - the answer was made for someone else (`owner` differs).
+//
+// One kind of failure is not worth asking about again: the one every asker
+// would get too (the account is restricted, the page is older than the
+// deployment). `failsTogether` names those, and `take` then rejects with
+// the failure instead, so a dozen askers do not each repeat a request that
+// has just been refused.
 
 export type SharedFirstAnswer<T extends object> = {
   /** Sends the one request, if it has not been sent. */
@@ -34,11 +40,14 @@ export function createSharedFirstAnswer<T extends object>(options: {
   ownerOf: (answer: T) => string | null;
   /** How long after the request an asker may still take its part. */
   freshForMs: number;
+  /** Whether a failure of the request is every asker's failure. */
+  failsTogether?: (error: unknown) => boolean;
   /** The clock, for tests. */
   now?: () => number;
 }): SharedFirstAnswer<T> {
   const now = options.now ?? Date.now;
-  let answer: Promise<T | null> | null = null;
+  type Settled = { value: T | null } | { error: unknown };
+  let answer: Promise<Settled> | null = null;
   let askedAt = 0;
   const taken = new Set<keyof T>();
 
@@ -46,8 +55,8 @@ export function createSharedFirstAnswer<T extends object>(options: {
     if (answer) return;
     askedAt = now();
     answer = options.ask().then(
-      (value) => value,
-      () => null,
+      (value): Settled => ({ value }),
+      (error): Settled => ({ error }),
     );
   };
 
@@ -59,7 +68,12 @@ export function createSharedFirstAnswer<T extends object>(options: {
       if (taken.has(part)) return undefined;
       if (now() - askedAt > options.freshForMs) return undefined;
       taken.add(part);
-      const value = await answer;
+      const settled = await answer;
+      if ("error" in settled) {
+        if (options.failsTogether?.(settled.error)) throw settled.error;
+        return undefined;
+      }
+      const { value } = settled;
       if (!value) return undefined;
       if (owner !== undefined && options.ownerOf(value) !== owner) {
         return undefined;

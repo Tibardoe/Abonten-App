@@ -10,6 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useCarouselAutoplay } from "@/hooks/useCarouselAutoplay";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { PlaceType } from "@abonten/types/placeType";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
@@ -46,7 +47,9 @@ export default function FeaturedPlacesSlider({
     for (const place of places) {
       if (loggedImpressions.current.has(place.id)) continue;
       loggedImpressions.current.add(place.id);
-      logPlaceEngagement(place.id, "promotion_impression");
+      logPlaceEngagement(place.id, "promotion_impression").catch(
+        actionUnreachable,
+      );
     }
   }, [places]);
 

@@ -4,6 +4,7 @@ import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import RequestBookingButton from "@/places/molecules/RequestBookingButton";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { FiPhone } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io5";
@@ -52,7 +53,13 @@ export default function PlaceActionButtons({
         to piggyback an analytics click via bubbling, without modifying
         GetDirectionBtn.tsx itself (reused as-is, per the Places spec).
       */}
-      <div onClick={() => logPlaceEngagement(placeId, "direction_click")}>
+      <div
+        onClick={() =>
+          logPlaceEngagement(placeId, "direction_click").catch(
+            actionUnreachable,
+          )
+        }
+      >
         <GetDirectionBtn location={location} />
       </div>
 
@@ -73,7 +80,9 @@ export default function PlaceActionButtons({
       {phone && (
         <a
           href={`tel:${phone}`}
-          onClick={() => logPlaceEngagement(placeId, "phone_click")}
+          onClick={() =>
+            logPlaceEngagement(placeId, "phone_click").catch(actionUnreachable)
+          }
           className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
         >
           <FiPhone /> {t("call")}
@@ -85,7 +94,11 @@ export default function PlaceActionButtons({
           href={`https://wa.me/${whatsappDigits}`}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => logPlaceEngagement(placeId, "whatsapp_click")}
+          onClick={() =>
+            logPlaceEngagement(placeId, "whatsapp_click").catch(
+              actionUnreachable,
+            )
+          }
           className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
         >
           <IoLogoWhatsapp /> WhatsApp

@@ -5,7 +5,9 @@ import { startVerificationCase } from "@/actions/verification/startVerificationC
 import { submitVerificationCase } from "@/actions/verification/submitVerificationCase";
 import { updateVerificationCase } from "@/actions/verification/updateVerificationCase";
 import { withdrawVerificationCase } from "@/actions/verification/withdrawVerificationCase";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import VerificationExplainer from "@/verification/molecules/VerificationExplainer";
 import VerificationStatusCard from "@/verification/molecules/VerificationStatusCard";
 import VerificationEvidenceUploader from "@/verification/organisms/VerificationEvidenceUploader";
@@ -45,6 +47,7 @@ export default function VerificationSection({
   const t = useTranslations("verification");
 
   const toast = useToast();
+  const confirm = useConfirm();
   const [view, setView] = useState<SubjectVerificationView | null>(initial);
   const [loading, setLoading] = useState(!initial);
   const [busy, setBusy] = useState(false);
@@ -53,7 +56,9 @@ export default function VerificationSection({
   const [note, setNote] = useState("");
 
   const refresh = useCallback(async () => {
-    const res = await getSubjectVerification({ subjectType, subjectId });
+    const res = await getSubjectVerification({ subjectType, subjectId }).catch(
+      actionUnreachable,
+    );
     if (res.status === 200 && res.data) {
       setView(res.data);
       const c = res.data.openCase;
@@ -141,7 +146,7 @@ export default function VerificationSection({
       organizerType: organizerType || null,
       legalName: legalName.trim() || null,
       applicantNote: note.trim() || null,
-    });
+    }).catch(actionUnreachable);
     setBusy(false);
     if (res.status === 200) {
       await refresh();
@@ -157,7 +162,7 @@ export default function VerificationSection({
       organizerType: subjectType === "organizer" ? organizerType || null : null,
       legalName: legalName.trim() || null,
       applicantNote: note.trim() || null,
-    });
+    }).catch(actionUnreachable);
     setBusy(false);
     if (res.status === 200) toast.success(t("saved"));
     else toast.error(res.message ?? t("couldNotSave"));
@@ -171,8 +176,10 @@ export default function VerificationSection({
       organizerType: subjectType === "organizer" ? organizerType || null : null,
       legalName: legalName.trim() || null,
       applicantNote: note.trim() || null,
-    });
-    const res = await submitVerificationCase({ caseId });
+    }).catch(actionUnreachable);
+    const res = await submitVerificationCase({ caseId }).catch(
+      actionUnreachable,
+    );
     setBusy(false);
     if (res.status === 200) {
       toast.success(res.message ?? t("sentForReview"));
@@ -183,9 +190,16 @@ export default function VerificationSection({
   }
 
   async function withdraw(caseId: string) {
-    if (!confirm(t("cancelThisVerificationRequest"))) return;
+    const confirmed = await confirm({
+      title: t("cancelThisVerificationRequest"),
+      confirmLabel: t("cancelRequest"),
+      cancelLabel: t("keepIt"),
+    });
+    if (!confirmed) return;
     setBusy(true);
-    const res = await withdrawVerificationCase({ caseId });
+    const res = await withdrawVerificationCase({ caseId }).catch(
+      actionUnreachable,
+    );
     setBusy(false);
     if (res.status === 200) {
       toast.success(t("requestWithdrawn"));

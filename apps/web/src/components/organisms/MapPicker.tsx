@@ -1,6 +1,7 @@
 "use client";
 
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
+import { useToast } from "@/hooks/useToast";
 import { animateMarkerTo } from "@/utils/animateMarker";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { GoogleMap, Marker } from "@react-google-maps/api";
@@ -24,6 +25,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   center,
 }) => {
   const t = useTranslations("common");
+  const toast = useToast();
 
   const [markerPosition, setMarkerPosition] = useState(center || defaultCenter);
 
@@ -72,7 +74,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const locateUser = () => {
     if (!navigator.geolocation) {
-      alert(t("geolocationIsNotSupportedByYour"));
+      toast.error(t("geolocationIsNotSupportedByYour"));
       return;
     }
 
@@ -82,7 +84,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
         handleMapInteraction(latitude, longitude);
       },
       () => {
-        alert(t("unableToRetrieveYourLocation"));
+        toast.error(t("unableToRetrieveYourLocation"));
       },
     );
   };
@@ -118,6 +120,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       >
         <Marker
           position={markerPosition}
+          title={t("moveThePinToYourPreferred")}
           draggable
           onDragEnd={(e) => {
             if (e.latLng) {

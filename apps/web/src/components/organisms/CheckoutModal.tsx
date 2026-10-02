@@ -7,6 +7,7 @@ import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
 import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
 import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   allocatePromoEligibility,
   computeCheckoutFee,
@@ -219,9 +220,13 @@ export default function CheckoutModal({
       quantities,
       promoCode: appliedPromo?.code ?? null,
       occurrenceId,
-    });
+    }).catch(actionUnreachable);
 
-    if (response.status !== 200 && response.reason === "pending_checkout") {
+    if (
+      response.status !== 200 &&
+      "reason" in response &&
+      response.reason === "pending_checkout"
+    ) {
       toast.info(response.message ?? t("youAlreadyHaveAPendingCheckout"));
       router.push(`/checkout/${response.checkoutId}?type=ticket`);
 

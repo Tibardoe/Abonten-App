@@ -892,5 +892,13 @@
   "zoomX": "Zoom: {toFixed}x",
   "refundRequestsSummary": "{count, plural, one {# request} other {# requests}} · {pending} pending · {completed} completed",
   "dateHeading": "{count, plural, =1 {Date} other {Choose a date}}",
-  "activityFor": "{type, select, ticket_sold {Ticket sold for {event}} ticket_cancelled {Ticket cancelled for {event}} other {New registration for {event}}}"
+  "activityFor": "{type, select, ticket_sold {Ticket sold for {event}} ticket_cancelled {Ticket cancelled for {event}} other {New registration for {event}}}",
+  "actionFailed": {
+    "offline": "You're offline. Check your connection and try again.",
+    "unreachable": "We couldn't reach Abonten. Check your connection and try again.",
+    "updated": "Abonten has been updated since you opened this page. Reload the page, then try again.",
+    "restricted": "Your account has been restricted. Contact support if you think this is a mistake.",
+    "unexpected": "That didn't go through. Try again in a moment."
+  },
+  "couldnTLoadYourPendingCheckouts": "Couldn't load your pending checkouts."
 }

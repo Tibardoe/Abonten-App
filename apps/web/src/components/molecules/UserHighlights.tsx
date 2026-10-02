@@ -7,6 +7,7 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import HighlightViewer from "@/components/organisms/HighlightViewer";
 import { useLongPress } from "@/hooks/useLongPress";
 import HighlightsRowSkeleton from "@/userAccount/molecules/HighlightsRowSkeleton";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -332,7 +333,7 @@ export default function UserHighlights({
     );
 
     setIsDeleting(true);
-    const response = await deleteHighlight(groupId);
+    const response = await deleteHighlight(groupId).catch(actionUnreachable);
     setIsDeleting(false);
 
     if (response.status !== 200) {

@@ -16,11 +16,12 @@ export function useUnreadNotificationCount() {
   return useQuery({
     queryKey: ["unread-notification-count", user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
       const shared = await takeShellSlice(
         client,
         "unreadNotifications",
         user?.id,
+        queryKey,
       );
       if (shared !== undefined) return shared;
       const result = await getUnreadNotificationCount();

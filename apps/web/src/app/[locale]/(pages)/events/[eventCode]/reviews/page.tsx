@@ -2,6 +2,7 @@ import { publicSupabase } from "@/config/supabase/publicClient";
 import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
 import { loadReviewsPage, reviewsPageDescription } from "@/reviews/loadReviews";
 import ReviewsBrowser from "@/reviews/organisms/ReviewsBrowser";
+import { rowOrFailure } from "@/utils/rowOrFailure";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { reviewsPath } from "@abonten/core/reviews/reviewList";
 import { ChevronLeft } from "lucide-react";
@@ -20,14 +21,16 @@ import { notFound } from "next/navigation";
 // export const instant = false;
 
 async function loadEvent(eventCode: string) {
-  const { data } = await publicSupabase
-    .from("event")
-    .select(
-      "id, title, event_code, organizer_id, status, starts_at, ends_at, flyer_public_id, flyer_version, event_occurrence(id, starts_at, ends_at)",
-    )
-    .eq("event_code", eventCode.toUpperCase())
-    .maybeSingle();
-  return data;
+  return rowOrFailure(
+    await publicSupabase
+      .from("event")
+      .select(
+        "id, title, event_code, organizer_id, status, starts_at, ends_at, flyer_public_id, flyer_version, event_occurrence(id, starts_at, ends_at)",
+      )
+      .eq("event_code", eventCode.toUpperCase())
+      .maybeSingle(),
+    "event",
+  );
 }
 
 export async function generateMetadata({

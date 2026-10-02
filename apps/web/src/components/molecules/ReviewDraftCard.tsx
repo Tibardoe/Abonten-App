@@ -5,6 +5,7 @@ import type { ReviewDraftListItem } from "@/actions/getReviewDrafts";
 import Rating from "@/components/atoms/Rating";
 import ContinueReviewDraftButton from "@/components/molecules/ContinueReviewDraftButton";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatExpiresIn } from "@abonten/core/formatExpiresIn";
 import { useLocale, useTranslations } from "next-intl";
@@ -42,12 +43,14 @@ export default function ReviewDraftCard({
     setShowDeleteConfirm(false);
     onDeleted(draft.id);
 
-    deleteReviewDraft(draft.id).then((response) => {
-      if (response.status !== 200) {
-        onRestoreDraft(draft);
-        onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
-      }
-    });
+    deleteReviewDraft(draft.id)
+      .catch(actionUnreachable)
+      .then((response) => {
+        if (response.status !== 200) {
+          onRestoreDraft(draft);
+          onDeleteError(response.message ?? t("couldnTDeleteThisDraft"));
+        }
+      });
   };
 
   return (

@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import {
   type AddBankPayoutAccountInput,
@@ -46,7 +47,7 @@ export default function AddBankPayoutForm({ onSaved }: PopupCloseProp) {
 
   const onSubmit = async (values: AddBankPayoutAccountInput) => {
     setServerError(null);
-    const response = await addPayoutAccount(values);
+    const response = await addPayoutAccount(values).catch(actionUnreachable);
 
     if (response.status !== 200) {
       setServerError(response.message);

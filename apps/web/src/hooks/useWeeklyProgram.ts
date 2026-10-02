@@ -16,11 +16,12 @@ export function useWeeklyProgram() {
   const query = useQuery({
     queryKey: ["weekly-program", user?.id ?? null],
     enabled: !userLoading,
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
       const shared = await takeShellSlice(
         client,
         "weeklyProgram",
         user?.id ?? null,
+        queryKey,
       );
       if (shared !== undefined) return shared;
       return (await getWeeklyProgram()).data;

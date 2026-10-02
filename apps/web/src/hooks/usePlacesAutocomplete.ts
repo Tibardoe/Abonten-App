@@ -3,6 +3,7 @@
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { useMarketContext } from "@/hooks/useMarketContext";
+import { useToast } from "@/hooks/useToast";
 import { logger } from "@abonten/core/logger";
 import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddressType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
@@ -31,6 +32,7 @@ export function usePlacesAutocomplete({
   onSelectCoordinates,
 }: UsePlacesAutocompleteOptions = {}) {
   const t = useTranslations("common");
+  const { error: showError } = useToast();
 
   const [inputValue, setInputValue] = useState("");
   const [searchResults, setSearchResults] = useState<
@@ -185,11 +187,11 @@ export function usePlacesAutocomplete({
         return true;
       } catch (error) {
         logger.error(error);
-        alert(t("failedToFetchPlaceDetails"));
+        showError(t("failedToFetchPlaceDetails"));
         return false;
       }
     },
-    [address, onSelectCoordinates, getFormattedPlaceDetails, t],
+    [address, onSelectCoordinates, getFormattedPlaceDetails, t, showError],
   );
 
   // Reverse-geocodes a lat/lng pair into a formatted address and commits it
@@ -251,7 +253,7 @@ export function usePlacesAutocomplete({
 
   const handleSelectCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      alert(t("geolocationIsNotSupported"));
+      showError(t("geolocationIsNotSupported"));
       return;
     }
 
@@ -262,14 +264,14 @@ export function usePlacesAutocomplete({
           lat: latitude,
           lng: longitude,
         });
-        if (!resolvedAddress) alert(t("noAddressFound"));
+        if (!resolvedAddress) showError(t("noAddressFound"));
       },
       (error) => {
         logger.error("Error getting location:", error);
-        alert(t("unableToRetrieveLocation"));
+        showError(t("unableToRetrieveLocation"));
       },
     );
-  }, [resolveCoordinates, t]);
+  }, [resolveCoordinates, t, showError]);
 
   useEffect(() => {
     if (value) setInputValue(value);

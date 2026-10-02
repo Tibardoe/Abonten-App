@@ -122,5 +122,7 @@
   "youCanPutTowardsFeaturingAn": "Puedes destinar {formatCredit} a destacar un evento o un lugar, incluido tu otro Crédito Abonten.",
   "youHavenTAddedAPayout": "Aún no has añadido una cuenta de cobro.",
   "yourWithdrawalHistoryAndStatus": "Tu historial de retiros y su estado.",
-  "yourWithdrawalWillMoveToProcessing": "Tu retiro pasará a «Procesando» mientras se revisa — no se marcará como completado hasta que se pague realmente."
+  "yourWithdrawalWillMoveToProcessing": "Tu retiro pasará a «Procesando» mientras se revisa — no se marcará como completado hasta que se pague realmente.",
+  "couldnTLoadYourBalance": "No se pudo cargar tu saldo.",
+  "couldnTLoadYourPayouts": "No se pudieron cargar tus retiros."
 }

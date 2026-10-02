@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import { createRecentCache } from "@abonten/core/recentCache";
+import {
+  ACCOUNT_RESTRICTED_ACTION_CODE,
+  ACTION_REFUSAL_CONTENT_TYPE,
+} from "@abonten/core/security/actionRefusal";
 import type { Database } from "@abonten/types/database.types";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
@@ -166,13 +170,20 @@ export async function updateSession(request: NextRequest) {
     const key = tokenKey(session?.access_token ?? "");
     let statusId = isServerAction ? undefined : accountStatuses.get(key);
     if (statusId === undefined) {
-      const { data: statusRow } = await supabase
+      // One attempt. The data client repeats a failed read by itself (three
+      // more times over seven seconds), which is right for a page's data and
+      // wrong here: this check fails open, and while the database was
+      // unreachable it added seven seconds to every Server Action.
+      const { data: statusRow, error: statusError } = await supabase
         .from("user_info")
         .select("status_id")
         .eq("id", user.id)
+        .retry(false)
         .maybeSingle();
       statusId = statusRow?.status_id ?? null;
-      accountStatuses.set(key, statusId);
+      // Only an answer is remembered: a read that failed is asked again by
+      // the next request, not trusted for half a minute.
+      if (!statusError) accountStatuses.set(key, statusId);
     }
 
     // status_id 4 is a deleted (anonymised) account -- its sessions are
@@ -180,14 +191,13 @@ export async function updateSession(request: NextRequest) {
     // expires.
     if (statusId === 2 || statusId === 3 || statusId === 4) {
       if (isServerAction) {
-        return NextResponse.json(
-          {
-            status: 403,
-            message:
-              "Your account has been restricted. Contact support if you think this is a mistake.",
-          },
-          { status: 403 },
-        );
+        // A code, as plain text: the only refusal the framework's browser
+        // code hands on to the caller, which words it in the reader's
+        // language (@abonten/core/security/actionRefusal).
+        return new NextResponse(ACCOUNT_RESTRICTED_ACTION_CODE, {
+          status: 403,
+          headers: { "content-type": ACTION_REFUSAL_CONTENT_TYPE },
+        });
       }
       const url = request.nextUrl.clone();
       url.pathname = "/account-restricted";

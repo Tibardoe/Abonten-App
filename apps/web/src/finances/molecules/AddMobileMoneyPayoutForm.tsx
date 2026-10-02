@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import {
   type AddMobileMoneyPayoutAccountInput,
@@ -72,7 +73,7 @@ export default function AddMobileMoneyPayoutForm({ onSaved }: PopupCloseProp) {
       ...values,
       // Sent as typed: the service parses it for the account's market.
       phone: values.phone.trim(),
-    });
+    }).catch(actionUnreachable);
 
     if (response.status !== 200) {
       setServerError(response.message);

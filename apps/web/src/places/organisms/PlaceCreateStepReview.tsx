@@ -1,9 +1,8 @@
-import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import ImagePreviewPane from "@/components/molecules/ImagePreviewPane";
+import { usePlaceCategories } from "@/hooks/usePlaceCategories";
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
 import { dayName } from "@abonten/core/dateFormatter";
-import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 
 // Monday-first display order, same convention as PlaceOpeningHoursEditor.
@@ -33,14 +32,7 @@ export default function PlaceCreateStepReview({
 
   // Same query key as PlaceCategoryPicker — this reads from that cache
   // (staleTime: Infinity) rather than fetching the lookup table again.
-  const { data: categories } = useQuery({
-    queryKey: ["place-categories"],
-    queryFn: async () => {
-      const response = await getPlaceCategories();
-      return response.status === 200 ? (response.data ?? []) : [];
-    },
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const { data: categories } = usePlaceCategories();
 
   const category = categories?.find((cat) => cat.id === categoryId);
   const categoryName = category ? placeCategoryLabel(tc, category) : undefined;

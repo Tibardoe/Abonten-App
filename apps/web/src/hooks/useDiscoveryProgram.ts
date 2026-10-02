@@ -17,11 +17,12 @@ export function useDiscoveryProgram() {
   const query = useQuery({
     queryKey: ["discovery-program", user?.id ?? null],
     enabled: !userLoading,
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
       const shared = await takeShellSlice(
         client,
         "discoveryProgram",
         user?.id ?? null,
+        queryKey,
       );
       if (shared !== undefined) return shared;
       return (await getDiscoveryProgram()).data;

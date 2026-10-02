@@ -122,5 +122,7 @@
   "youCanPutTowardsFeaturingAn": "You can put {formatCredit} towards featuring an event or place, including your other Abonten Credit.",
   "youHavenTAddedAPayout": "You haven't added a payout account yet.",
   "yourWithdrawalHistoryAndStatus": "Your withdrawal history and status.",
-  "yourWithdrawalWillMoveToProcessing": "Your withdrawal will move to \"Processing\" while it's reviewed — it won't be marked complete until it's actually paid out."
+  "yourWithdrawalWillMoveToProcessing": "Your withdrawal will move to \"Processing\" while it's reviewed — it won't be marked complete until it's actually paid out.",
+  "couldnTLoadYourBalance": "Couldn't load your balance.",
+  "couldnTLoadYourPayouts": "Couldn't load your payouts."
 }

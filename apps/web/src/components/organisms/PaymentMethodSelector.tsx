@@ -31,6 +31,7 @@ import PaymentMethodCard, {
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { getFulfillmentMessage } from "@abonten/core/paymentStatusCopy";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
@@ -250,6 +251,7 @@ export default function PaymentMethodSelector(
     queryKey: PAYMENT_METHODS_QUERY_KEY,
     queryFn: async () => {
       const response = await getUserPaymentMethods();
+      answerOrThrow(response);
       return response.status === 200 ? response.data : [];
     },
   });

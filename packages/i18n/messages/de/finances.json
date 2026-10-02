@@ -122,5 +122,7 @@
   "youCanPutTowardsFeaturingAn": "Du kannst {formatCredit} einsetzen, um ein Event oder einen Ort hervorzuheben — einschließlich deines übrigen Abonten-Guthabens.",
   "youHavenTAddedAPayout": "Du hast noch kein Auszahlungskonto hinzugefügt.",
   "yourWithdrawalHistoryAndStatus": "Dein Auszahlungsverlauf und der Status.",
-  "yourWithdrawalWillMoveToProcessing": "Deine Auszahlung wechselt während der Prüfung zu „In Bearbeitung“ — sie gilt erst als abgeschlossen, wenn sie tatsächlich ausgezahlt wurde."
+  "yourWithdrawalWillMoveToProcessing": "Deine Auszahlung wechselt während der Prüfung zu „In Bearbeitung“ — sie gilt erst als abgeschlossen, wenn sie tatsächlich ausgezahlt wurde.",
+  "couldnTLoadYourBalance": "Dein Guthaben konnte nicht geladen werden.",
+  "couldnTLoadYourPayouts": "Deine Auszahlungen konnten nicht geladen werden."
 }

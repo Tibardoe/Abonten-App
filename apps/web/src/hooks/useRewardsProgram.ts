@@ -11,8 +11,13 @@ export function useRewardsProgram() {
   const client = useQueryClient();
   return useQuery({
     queryKey: ["rewards-program"],
-    queryFn: async () => {
-      const shared = await takeShellSlice(client, "rewardsProgram");
+    queryFn: async ({ queryKey }) => {
+      const shared = await takeShellSlice(
+        client,
+        "rewardsProgram",
+        undefined,
+        queryKey,
+      );
       if (shared !== undefined) return shared;
       return (await getRewardsProgram()).data;
     },

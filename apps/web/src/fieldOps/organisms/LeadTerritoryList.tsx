@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import LeadTerritoryForm from "@/fieldOps/organisms/LeadTerritoryForm";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsTerritory } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -38,7 +39,7 @@ export default function LeadTerritoryList({
         campaignId,
         territoryId: id,
         status,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("saved"));
         router.refresh();

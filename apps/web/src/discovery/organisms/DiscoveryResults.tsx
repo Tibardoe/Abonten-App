@@ -9,6 +9,7 @@ import OrganizerCard from "@/discovery/molecules/OrganizerCard";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import PlaceCard from "@/places/molecules/PlaceCard";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type {
@@ -72,7 +73,9 @@ function useClickLogger(searchId: number | null) {
     (entityType: SearchEntityType, entityId: string, rank: number) => {
       if (!searchId || logged.current) return;
       logged.current = true;
-      void logSearchClick({ searchId, entityType, entityId, rank });
+      void logSearchClick({ searchId, entityType, entityId, rank }).catch(
+        actionUnreachable,
+      );
     },
     [searchId],
   );

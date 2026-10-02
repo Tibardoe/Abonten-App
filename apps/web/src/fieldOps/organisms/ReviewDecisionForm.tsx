@@ -4,7 +4,9 @@ import { reviewFieldOpsOnboarding } from "@/actions/fieldOps/reviewFieldOpsOnboa
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -20,28 +22,33 @@ export default function ReviewDecisionForm({
   const t = useTranslations("fieldOps");
 
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const [pending, start] = useTransition();
   const [note, setNote] = useState("");
 
-  const decide = (decision: "verified" | "needs_changes" | "rejected") =>
+  const decide = async (
+    decision: "verified" | "needs_changes" | "rejected",
+  ) => {
+    if (decision !== "verified" && note.trim().length < 3) {
+      toast.error(t("tellTheMemberWhatToChange"));
+      return;
+    }
+    if (decision === "rejected") {
+      const confirmed = await confirm({
+        title: t("rejectOnboardingTitle"),
+        message: t("rejectOnboardingBody"),
+        confirmLabel: t("reject"),
+      });
+      if (!confirmed) return;
+    }
     start(async () => {
-      if (decision !== "verified" && note.trim().length < 3) {
-        toast.error(t("tellTheMemberWhatToChange"));
-        return;
-      }
-      if (
-        decision === "rejected" &&
-        !confirm(t("rejectThisOnboardingTheMemberIs"))
-      ) {
-        return;
-      }
       const res = await reviewFieldOpsOnboarding({
         campaignId,
         onboardingId,
         decision,
         note: note.trim() || null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("saved"));
         router.push("/field/lead/review");
@@ -50,6 +57,7 @@ export default function ReviewDecisionForm({
         toast.error(res.message ?? t("couldnTSaveTheDecision"));
       }
     });
+  };
 
   return (
     <section className="flex flex-col gap-3 rounded-xl border p-4">

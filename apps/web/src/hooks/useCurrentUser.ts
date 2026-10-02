@@ -4,6 +4,7 @@ import { getUserDetails } from "@/actions/getUserDetails";
 import { getUserEventRole } from "@/actions/getUserEventRole";
 import { getUserPlaceRole } from "@/actions/getUserPlaceRole";
 import { supabase } from "@/config/supabase/client";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { takeShellSlice } from "./shellBootstrap";
 import { useHydrated } from "./useHydrated";
@@ -53,10 +54,16 @@ export function useCurrentUserDetails() {
   const detailsQuery = useQuery({
     queryKey: ["user-details", user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
-      const shared = await takeShellSlice(client, "userDetails", user?.id);
+    queryFn: async ({ queryKey }) => {
+      const shared = await takeShellSlice(
+        client,
+        "userDetails",
+        user?.id,
+        queryKey,
+      );
       if (shared !== undefined) return shared;
       const details = await getUserDetails();
+      answerOrThrow(details);
       return details?.status === 200 ? details.userDetails : null;
     },
     staleTime: 60 * 1000,
@@ -76,8 +83,13 @@ export function useIsOrganizer() {
   const { data } = useQuery({
     queryKey: ["user-event-role", user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
-      const shared = await takeShellSlice(client, "eventRole", user?.id);
+    queryFn: async ({ queryKey }) => {
+      const shared = await takeShellSlice(
+        client,
+        "eventRole",
+        user?.id,
+        queryKey,
+      );
       if (shared !== undefined) return shared;
       return getUserEventRole(user?.id as string);
     },
@@ -98,8 +110,13 @@ export function useIsPlaceOwner() {
   const { data } = useQuery({
     queryKey: ["user-place-role", user?.id],
     enabled: !!user?.id,
-    queryFn: async () => {
-      const shared = await takeShellSlice(client, "placeRole", user?.id);
+    queryFn: async ({ queryKey }) => {
+      const shared = await takeShellSlice(
+        client,
+        "placeRole",
+        user?.id,
+        queryKey,
+      );
       if (shared !== undefined) return shared;
       return getUserPlaceRole(user?.id as string);
     },

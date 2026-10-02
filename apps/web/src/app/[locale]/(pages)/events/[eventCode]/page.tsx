@@ -17,6 +17,7 @@ import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import { loadReviewPreview } from "@/reviews/loadReviews";
 import ReviewsPreview from "@/reviews/organisms/ReviewsPreview";
+import { rowOrFailure } from "@/utils/rowOrFailure";
 import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import {
   buildAvatarUrl,
@@ -50,11 +51,18 @@ import { getLocale, getTranslations } from "next-intl/server";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-// Event details are public and don't depend on the viewer, so this page can
-// be statically rendered and revalidated periodically (ISR) instead of
-// re-querying Supabase on every request. 60s balances freshness (ticket
-// price/attendance/sold-out status shown here are display-only — checkout
-// re-validates stock live) against not hitting the DB on every hit.
+// Event details are public and don't depend on the viewer. This setting was
+// meant to cache the page for a minute and does NOT: a route with a dynamic
+// segment is only cached when it also exports generateStaticParams (the
+// Weekly pages do), and getSimilarEvents below reads the session cookie. The
+// build lists this page as dynamic: it is rendered for every request.
+//
+// Turning the cache on is a product decision, not a one-line fix. A cached
+// page keeps showing a cancelled, edited or hidden event until it is
+// rebuilt, and the first visitor after a quiet spell is served the old copy
+// however old it is, so every write that changes the page (edit, cancel,
+// sell-out, review, moderation from the admin app) would have to revalidate
+// it. See docs/architecture/web-resilience.md, "Event page caching".
 export const revalidate = 60;
 
 // Rich link previews when an event is shared (from web or the mobile share
@@ -68,11 +76,14 @@ export async function generateMetadata({
   const t = await getTranslations("events");
 
   const { eventCode } = await params;
-  const { data: event } = await publicSupabase
-    .from("event")
-    .select("title, description, flyer_public_id, flyer_version")
-    .eq("event_code", eventCode.toUpperCase())
-    .single();
+  const event = rowOrFailure(
+    await publicSupabase
+      .from("event")
+      .select("title, description, flyer_public_id, flyer_version")
+      .eq("event_code", eventCode.toUpperCase())
+      .single(),
+    "event",
+  );
 
   // The segment layout has already answered with a 404 for a missing code.
   if (!event) return { title: t("eventNotFound") };
@@ -121,40 +132,44 @@ export default async function page({
 
   const { eventCode } = await params;
 
-  const { data: event } = await supabase
-    .from("event")
-    .select(
-      `
-      *,
-  user_info!organizer_id(
-    avatar_public_id,
-    avatar_version,
-    username,
-    organizer_verified,
-    status_id
-  ),
-  ticket_type(
-    id,
-    type,
-    price,
-    currency,
-    quantity,
-    available_from,
-    available_until
-  ),
-  event_occurrence(
-    id,
-    starts_at,
-    ends_at
-  ),
-  place:place_id(
-    name,
-    slug
-  )
-    `,
+  // A lookup that failed is a 500, never a 404 (utils/rowOrFailure.ts).
+  const event = rowOrFailure(
+    await supabase
+      .from("event")
+      .select(
+        `
+        *,
+    user_info!organizer_id(
+      avatar_public_id,
+      avatar_version,
+      username,
+      organizer_verified,
+      status_id
+    ),
+    ticket_type(
+      id,
+      type,
+      price,
+      currency,
+      quantity,
+      available_from,
+      available_until
+    ),
+    event_occurrence(
+      id,
+      starts_at,
+      ends_at
+    ),
+    place:place_id(
+      name,
+      slug
     )
-    .eq("event_code", eventCode.toUpperCase())
-    .single();
+      `,
+      )
+      .eq("event_code", eventCode.toUpperCase())
+      .single(),
+    "event",
+  );
 
   if (!event) notFound();
 
@@ -522,7 +537,10 @@ export default async function page({
               </div>
             </div>
 
-            <LocationMapPreview location={locationWkb} />
+            <LocationMapPreview
+              location={locationWkb}
+              label={address.full_address}
+            />
             <GetDirectionBtn location={locationWkb} />
           </section>
 

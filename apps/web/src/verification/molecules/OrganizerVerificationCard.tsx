@@ -2,6 +2,7 @@
 
 import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { supabase } from "@/config/supabase/client";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   ownerStatusCopy,
   verificationChipLabel,
@@ -40,7 +41,7 @@ export default function OrganizerVerificationCard() {
       const res = await getSubjectVerification({
         subjectType: "organizer",
         subjectId: user.id,
-      });
+      }).catch(actionUnreachable);
       if (!cancelled) {
         if (res.status === 200 && res.data) setView(res.data);
         setLoaded(true);

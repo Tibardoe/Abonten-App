@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   type AddMomoWalletInput,
   addMomoWalletSchema,
@@ -71,7 +72,7 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
       // Sent as typed: the service parses it for the person's market
       // (a Ghanaian 024…, a Kenyan 0712…) and stores E.164.
       phone: values.phone.trim(),
-    });
+    }).catch(actionUnreachable);
 
     if (response.status !== 200) {
       setServerError(response.message);

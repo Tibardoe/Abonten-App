@@ -2,6 +2,7 @@
 
 import { getReviewDraft } from "@/actions/getReviewDraft";
 import ReviewModal from "@/components/organisms/ReviewModal";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -41,7 +42,7 @@ export default function ContinueReviewDraftButton({
     setLoading(true);
     setError(null);
 
-    const response = await getReviewDraft(draftId);
+    const response = await getReviewDraft(draftId).catch(actionUnreachable);
     setLoading(false);
 
     if (response.status !== 200 || !response.data) {

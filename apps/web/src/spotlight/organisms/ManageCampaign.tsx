@@ -4,6 +4,7 @@ import { advertiserCampaignAction } from "@/actions/content/advertiserCampaignAc
 import { getOwnCampaign } from "@/actions/content/getOwnCampaign";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachine";
 import {
@@ -67,7 +68,10 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
 
   const act = async (action: "pause" | "resume" | "cancel") => {
     setBusy(action);
-    const res = await advertiserCampaignAction({ campaignId: c.id, action });
+    const res = await advertiserCampaignAction({
+      campaignId: c.id,
+      action,
+    }).catch(actionUnreachable);
     setBusy(null);
     setConfirmCancel(false);
     if (res.status !== 200) {

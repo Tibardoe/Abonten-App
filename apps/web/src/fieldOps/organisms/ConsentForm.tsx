@@ -3,6 +3,7 @@
 import { verifyFieldOpsConsent } from "@/actions/fieldOps/verifyFieldOpsConsent";
 import OtpInput from "@/components/molecules/OtpInput";
 import { Button } from "@/components/ui/button";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -19,7 +20,9 @@ export default function ConsentForm({ token }: { token: string }) {
   const submit = () =>
     start(async () => {
       setError(null);
-      const res = await verifyFieldOpsConsent({ token, code });
+      const res = await verifyFieldOpsConsent({ token, code }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200) setDone(true);
       else setError(res.message ?? t("thatCodeDidnTWork"));
     });

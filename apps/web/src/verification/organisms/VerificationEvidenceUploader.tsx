@@ -4,6 +4,7 @@ import { removeVerificationEvidence } from "@/actions/verification/removeVerific
 import { requestVerificationEvidenceUpload } from "@/actions/verification/requestVerificationEvidenceUpload";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   VERIFICATION_EVIDENCE_MIME_TYPES,
   type VerificationEvidenceSummary,
@@ -122,7 +123,7 @@ export default function VerificationEvidenceUploader({
       mimeType: item.file.type,
       sizeBytes: item.file.size,
       fileName: item.file.name,
-    });
+    }).catch(actionUnreachable);
 
     if (ticket.status !== 200 || !ticket.data) {
       setStaged((prev) =>
@@ -180,7 +181,9 @@ export default function VerificationEvidenceUploader({
 
   async function remove(evidenceId: string) {
     setBusy(true);
-    const res = await removeVerificationEvidence({ caseId, evidenceId });
+    const res = await removeVerificationEvidence({ caseId, evidenceId }).catch(
+      actionUnreachable,
+    );
     setBusy(false);
     if (res.status === 200) {
       onChanged();

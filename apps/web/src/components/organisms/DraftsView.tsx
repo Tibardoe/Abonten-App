@@ -12,6 +12,7 @@ import PlaceDraftCard from "@/components/molecules/PlaceDraftCard";
 import ReviewDraftCard from "@/components/molecules/ReviewDraftCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -47,17 +48,17 @@ export default function DraftsView({
   // above only reads its initial value once, so those new props are
   // silently dropped and the list stays stale.
   const refreshEventDrafts = async () => {
-    const response = await getEventDrafts();
+    const response = await getEventDrafts().catch(actionUnreachable);
     if (response.status === 200) setEventDrafts(response.data);
   };
 
   const refreshReviewDrafts = async () => {
-    const response = await getReviewDrafts();
+    const response = await getReviewDrafts().catch(actionUnreachable);
     if (response.status === 200) setReviewDrafts(response.data);
   };
 
   const refreshPlaceDrafts = async () => {
-    const response = await getPlaceDrafts();
+    const response = await getPlaceDrafts().catch(actionUnreachable);
     if (response.status === 200) setPlaceDrafts(response.data);
   };
 

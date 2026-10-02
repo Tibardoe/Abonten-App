@@ -63,7 +63,6 @@
   "couldnTStartAConversation": "Couldn't start a conversation.",
   "deleteText": "Delete",
   "deleteThisMessage": "Delete this message?",
-  "deleteThisMessageThisCanT": "Delete this message? This can't be undone.",
   "deletedAMessage": "{value} deleted a message, {clockTime}",
   "deletedMessage": "Deleted message",
   "dismiss": "Dismiss",
@@ -235,5 +234,7 @@
   "yourArchivedChats": "your archived chats",
   "yourAttachmentCouldnTBeSent": "Your attachment couldn't be sent.",
   "yourImageCouldnTBeUploaded": "Your image couldn't be uploaded.",
-  "yourMessages": "your messages"
+  "yourMessages": "your messages",
+  "deleteMessageTitle": "Delete this message?",
+  "deleteMessageBody": "This can't be undone."
 }

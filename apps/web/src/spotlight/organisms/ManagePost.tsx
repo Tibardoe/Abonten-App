@@ -6,6 +6,7 @@ import { getContentPost } from "@/actions/content/getContentPost";
 import { updateContentPost } from "@/actions/content/updateContentPost";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
 import { spotlightPath, storyPath } from "@abonten/core/content/links";
 import { formatCount } from "@abonten/core/i18n/format";
@@ -227,7 +228,7 @@ function EditPost({
         allowComments,
         ...(post.kind === "spotlight" ? { allowDownload } : {}),
       },
-    });
+    }).catch(actionUnreachable);
     setSaving(false);
     if (res.status !== 200) {
       toast.error(messageOf(res, t("couldnTSaveYourChanges")));
@@ -239,7 +240,9 @@ function EditPost({
 
   const remove = async () => {
     setDeleting(true);
-    const res = await deleteContentPost({ postId: post.id });
+    const res = await deleteContentPost({ postId: post.id }).catch(
+      actionUnreachable,
+    );
     setDeleting(false);
     if (res.status !== 200) {
       toast.error(messageOf(res, t("couldnTDeleteThisPost")));

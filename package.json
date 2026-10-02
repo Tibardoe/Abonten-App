@@ -14,6 +14,7 @@
     "typecheck": "turbo run typecheck",
     "lint:ci": "biome check apps/web/src apps/admin/src apps/mobile/app apps/mobile/src packages",
     "check:api-parity": "node scripts/check-mobile-api-parity.mjs",
+    "check:action-calls": "node scripts/check-action-calls.mjs --check",
     "check:docs": "node scripts/check-docs.mjs",
     "check:mobile-a11y": "node scripts/check-mobile-a11y.mjs",
     "check:deep-link-decoder": "node scripts/check-deep-link-decoder.mjs",

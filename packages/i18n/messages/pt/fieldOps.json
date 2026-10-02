@@ -315,7 +315,6 @@
   "reason": "Motivo: {rejectionReason}",
   "reasonKeptOnRecord": "Motivo (fica registado)",
   "reject": "Rejeitar",
-  "rejectThisOnboardingTheMemberIs": "Rejeitar esta integração? O membro é informado do motivo.",
   "rejected": "rejeitado",
   "remove": "Remover",
   "remove2": "remover",
@@ -470,7 +469,6 @@
   "whyTheMemberSeesThis": "Porquê? O membro vê isto.",
   "withdraw": "Retirar",
   "withdrawThisOnboarding": "Retirar esta integração",
-  "withdrawThisOnboardingYouCanStart": "Retirar esta integração? Pode iniciar uma nova mais tarde.",
   "withdrawn": "Retirado.",
   "workingOverThePhoneSendThem": "Está a trabalhar por telefone? Envie esta ligação para que a pessoa introduza o código:",
   "workingToday": "A trabalhar hoje",
@@ -541,5 +539,9 @@
     "content_deliverable": "Conteúdo entregue",
     "content_monthly_stipend": "Subsídio mensal (conteúdo)",
     "team_lead_monthly_stipend": "Subsídio mensal (líder de equipa)"
-  }
+  },
+  "withdrawOnboardingTitle": "Retirar esta integração?",
+  "withdrawOnboardingBody": "Pode iniciar uma nova mais tarde.",
+  "rejectOnboardingTitle": "Rejeitar esta integração?",
+  "rejectOnboardingBody": "O membro é informado do motivo."
 }

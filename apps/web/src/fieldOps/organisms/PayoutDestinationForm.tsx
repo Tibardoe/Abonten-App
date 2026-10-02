@@ -2,6 +2,7 @@
 
 import { setFieldOpsPayoutDestination } from "@/actions/fieldOps/setFieldOpsPayoutDestination";
 import { Button } from "@/components/ui/button";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -42,7 +43,7 @@ export default function PayoutDestinationForm({
         momoNumber: number.trim(),
         momoNetwork: network,
         holderName: holder.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200 && res.data) {
         setSaved(res.data);

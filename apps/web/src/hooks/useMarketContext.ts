@@ -31,11 +31,16 @@ export function useMarketContext(browsingCountry?: string | null) {
   const client = useQueryClient();
   const query = useQuery({
     queryKey: ["market-context", browsingCountry ?? null],
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
       // The shared answer is for the visitor's own market; a page about
       // another country's area asks for that country.
       if (!browsingCountry) {
-        const shared = await takeShellSlice(client, "marketContext");
+        const shared = await takeShellSlice(
+          client,
+          "marketContext",
+          undefined,
+          queryKey,
+        );
         if (shared !== undefined) return shared;
       }
       return getMarketContext({

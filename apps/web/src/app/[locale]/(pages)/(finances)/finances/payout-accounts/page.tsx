@@ -16,7 +16,8 @@ export default async function PayoutAccountsPage() {
   const t = await getTranslations("finances");
 
   const response = await getOrganizerPayoutAccounts();
-  const accounts = response.status === 200 ? response.data : [];
+  // Not read: the component loads them itself and says so if it cannot.
+  const accounts = response.status === 200 ? response.data : undefined;
 
   return (
     <div className="flex flex-col gap-4">

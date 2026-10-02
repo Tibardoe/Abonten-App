@@ -25,9 +25,11 @@ import {
   saveWizardState,
   toE164,
 } from "@/fieldOps/lib/wizardStorage";
+import { useConfirm } from "@/hooks/useConfirm";
 import { useToast } from "@/hooks/useToast";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import PlaceOpeningHoursEditor from "@/places/molecules/PlaceOpeningHoursEditor";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
@@ -80,6 +82,7 @@ export default function OnboardingWizard({
   const t = useTranslations("fieldOps");
 
   const toast = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
   const o = draft.onboarding;
   const dial = draft.dialCode;
@@ -154,7 +157,7 @@ export default function OnboardingWizard({
         location: state.location,
         phoneE164: toE164(state.phone, dial),
         whatsappE164: toE164(state.whatsapp, dial),
-      });
+      }).catch(actionUnreachable);
       if (res.status !== 200 || !res.data) {
         toast.error(res.message ?? t("couldnTCheckForDuplicates"));
         return;
@@ -176,7 +179,7 @@ export default function OnboardingWizard({
         onboardingId: o.id,
         ownerFullName: state.ownerFullName,
         ownerPhoneE164: phone,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && res.data) {
         setOtpSent(true);
         setOwnerMasked(res.data.ownerPhoneMasked);
@@ -193,7 +196,7 @@ export default function OnboardingWizard({
         campaignId,
         onboardingId: o.id,
         code,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         setOwnerVerified(true);
         toast.success(t("ownerVerified"));
@@ -216,7 +219,7 @@ export default function OnboardingWizard({
       toast.error(t("thatPhotoIsOver5Mb"));
       return null;
     }
-    const sig = await getPlacePhotoUploadSignature();
+    const sig = await getPlacePhotoUploadSignature().catch(actionUnreachable);
     if (sig.status !== 200 || !sig.data) {
       toast.error(sig.message ?? t("couldnTStartTheUpload"));
       return null;
@@ -325,7 +328,7 @@ export default function OnboardingWizard({
         campaignId,
         onboardingId: o.id,
         evidenceId: id,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) setEvidence((l) => l.filter((e) => e.id !== id));
       else toast.error(res.message ?? t("couldnTRemoveIt"));
     });
@@ -350,7 +353,7 @@ export default function OnboardingWizard({
         placeId: state.claimPlaceId,
         submissionLocation: here ? { lat: here.lat, lng: here.lng } : null,
         submissionAccuracyM: here?.accuracyM ?? null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         clearWizardState(o.id);
         toast.success(res.message ?? t("claimFiled"));
@@ -400,7 +403,7 @@ export default function OnboardingWizard({
         submissionLocation: here ? { lat: here.lat, lng: here.lng } : null,
         submissionAccuracyM: here?.accuracyM ?? null,
         duplicateAcknowledged: state.duplicateAcknowledged,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         clearWizardState(o.id);
         toast.success(res.message ?? t("submitted2"));
@@ -409,18 +412,25 @@ export default function OnboardingWizard({
         toast.error(res.message ?? t("couldnTSubmit"));
       }
     });
-  const withdraw = () =>
+  const withdraw = async () => {
+    const confirmed = await confirm({
+      title: t("withdrawOnboardingTitle"),
+      message: t("withdrawOnboardingBody"),
+      confirmLabel: t("withdraw"),
+      cancelLabel: t("keepIt"),
+    });
+    if (!confirmed) return;
     start(async () => {
-      if (!confirm(t("withdrawThisOnboardingYouCanStart"))) return;
       const res = await withdrawFieldOpsOnboarding({
         campaignId,
         onboardingId: o.id,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         clearWizardState(o.id);
         router.push("/field/submissions");
       } else toast.error(res.message ?? t("couldnTWithdraw"));
     });
+  };
 
   const evidenceReady =
     !isOffline ||

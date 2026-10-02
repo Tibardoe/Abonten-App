@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -76,7 +77,9 @@ export default function ContentMoreMenu({
   };
 
   const download = async () => {
-    const res = await getContentDownloadUrl({ postId: post.id });
+    const res = await getContentDownloadUrl({ postId: post.id }).catch(
+      actionUnreachable,
+    );
     const data = dataOf(res);
     if (!data) {
       toast.error(messageOf(res, t("thisCanTBeDownloaded")));
@@ -87,7 +90,9 @@ export default function ContentMoreMenu({
 
   const remove = async () => {
     setDeleting(true);
-    const res = await deleteContentPost({ postId: post.id });
+    const res = await deleteContentPost({ postId: post.id }).catch(
+      actionUnreachable,
+    );
     setDeleting(false);
     setConfirmDelete(false);
     if (res.status !== 200) {

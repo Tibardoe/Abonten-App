@@ -63,7 +63,6 @@
   "couldnTStartAConversation": "Unterhaltung konnte nicht gestartet werden.",
   "deleteText": "Löschen",
   "deleteThisMessage": "Diese Nachricht löschen?",
-  "deleteThisMessageThisCanT": "Diese Nachricht löschen? Das kann nicht rückgängig gemacht werden.",
   "deletedAMessage": "{value} hat eine Nachricht gelöscht, {clockTime}",
   "deletedMessage": "Gelöschte Nachricht",
   "dismiss": "Ausblenden",
@@ -235,5 +234,7 @@
   "yourArchivedChats": "deine archivierten Chats",
   "yourAttachmentCouldnTBeSent": "Dein Anhang konnte nicht gesendet werden.",
   "yourImageCouldnTBeUploaded": "Dein Bild konnte nicht hochgeladen werden.",
-  "yourMessages": "deine Nachrichten"
+  "yourMessages": "deine Nachrichten",
+  "deleteMessageTitle": "Diese Nachricht löschen?",
+  "deleteMessageBody": "Das kann nicht rückgängig gemacht werden."
 }

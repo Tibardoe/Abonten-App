@@ -4,6 +4,7 @@ import getLocalePreferences from "@/actions/getLocalePreferences";
 import updateLocalePreferences from "@/actions/updateLocalePreferences";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { countryFlag } from "@abonten/core/geo/countries";
 import { getCurrency } from "@abonten/core/money/currencies";
 import type { LocalePreferencesPatch } from "@abonten/types/marketType";
@@ -39,7 +40,7 @@ export default function RegionAndCurrency() {
 
   const save = (patch: LocalePreferencesPatch) =>
     start(async () => {
-      const res = await updateLocalePreferences(patch);
+      const res = await updateLocalePreferences(patch).catch(actionUnreachable);
       if (res.status !== 200) {
         toast.error(res.message ?? t("couldnTSaveYourPreferences"));
         return;

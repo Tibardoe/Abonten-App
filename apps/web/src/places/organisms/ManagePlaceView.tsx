@@ -2,6 +2,7 @@
 
 import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { useToast } from "@/hooks/useToast";
 import ManagePlaceBookingsSection from "@/places/organisms/ManagePlaceBookingsSection";
 import ManagePlaceDetailsSection from "@/places/organisms/ManagePlaceDetailsSection";
 import ManagePlaceHoursSection from "@/places/organisms/ManagePlaceHoursSection";
@@ -127,6 +128,7 @@ export default function ManagePlaceView({
   setup,
 }: ManagePlaceViewProps) {
   const t = useTranslations("places");
+  const toast = useToast();
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -149,7 +151,7 @@ export default function ManagePlaceView({
   const { imagePreview, selectedFile, fileInputRef, handleFileChange } =
     useImageSelection({
       invalidFileMessage: t("pleaseSelectAnImageFileFor2"),
-      onInvalidFile: (message) => alert(message),
+      onInvalidFile: (message) => toast.error(message),
       onSelect: () => setShowEventModal(true),
     });
 

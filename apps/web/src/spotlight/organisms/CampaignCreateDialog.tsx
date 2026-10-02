@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   CAMPAIGN_OBJECTIVES,
@@ -183,7 +184,7 @@ export default function CampaignCreateDialog({
       objective,
       startsAt: start.toISOString(),
       targeting,
-    });
+    }).catch(actionUnreachable);
     const data = dataOf(res);
     if (!data) {
       setSubmitting(false);

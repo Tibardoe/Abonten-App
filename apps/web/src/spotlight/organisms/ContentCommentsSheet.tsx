@@ -14,6 +14,7 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { MAX_COMMENT_LENGTH } from "@abonten/core/content/limits";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type {
@@ -264,7 +265,7 @@ function CommentRow({
     const res = await setContentCommentLike({
       commentId: comment.id,
       liked: next,
-    });
+    }).catch(actionUnreachable);
     const data = dataOf(res);
     if (!data) {
       setLiked(!next);
@@ -276,7 +277,9 @@ function CommentRow({
   };
 
   const remove = async () => {
-    const res = await deleteContentComment({ commentId: comment.id });
+    const res = await deleteContentComment({ commentId: comment.id }).catch(
+      actionUnreachable,
+    );
     if (res.status !== 200) {
       toast.error(messageOf(res, t("couldnTDeleteThisComment")));
       return;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useToast } from "@/hooks/useToast";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { logger } from "@abonten/core/logger";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
@@ -12,6 +13,7 @@ type EventDetailsType = {
 
 export default function GetDirectionBtn({ location }: EventDetailsType) {
   const t = useTranslations("common");
+  const toast = useToast();
 
   const handleGetDirection = async () => {
     try {
@@ -27,7 +29,7 @@ export default function GetDirectionBtn({ location }: EventDetailsType) {
     } catch (error) {
       logger.error("Failed to get directions:", error);
 
-      alert(t("couldNotGetDirectionsPleaseEnable"));
+      toast.error(t("couldNotGetDirectionsPleaseEnable"));
     }
   };
 

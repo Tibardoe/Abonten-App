@@ -11,6 +11,8 @@ type LocationMapPreviewProps = {
   // Raw PostGIS WKB hex string -- same format event.location/place.location
   // already carry, parsed the same way GetDirectionBtn.tsx does.
   location: string;
+  /** What the pin marks (the address): its name for a screen reader. */
+  label?: string;
   className?: string;
 };
 
@@ -21,6 +23,7 @@ type LocationMapPreviewProps = {
 // interaction beyond the map's own default pan/zoom.
 export default function LocationMapPreview({
   location,
+  label,
   className,
 }: LocationMapPreviewProps) {
   const { isLoaded } = useGoogleMaps();
@@ -53,7 +56,7 @@ export default function LocationMapPreview({
         gestureHandling: "cooperative",
       }}
     >
-      <Marker position={center} />
+      <Marker position={center} title={label} />
     </GoogleMap>
   );
 }

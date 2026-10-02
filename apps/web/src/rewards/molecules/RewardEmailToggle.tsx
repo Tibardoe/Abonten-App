@@ -2,6 +2,7 @@
 
 import { setRewardEmailPreference } from "@/actions/setRewardEmailPreference";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { RewardEmailPreference } from "@abonten/types/rewards";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -24,7 +25,9 @@ export default function RewardEmailToggle({
   const toggle = () =>
     start(async () => {
       const next = !on;
-      const res = await setRewardEmailPreference({ enabled: next });
+      const res = await setRewardEmailPreference({ enabled: next }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200 && res.data) {
         setOn(res.data.rewardEmails);
         toast.success(res.message ?? t("saved2"));

@@ -2,6 +2,7 @@
 
 import getContentUploadSignature from "@/actions/content/getContentUploadSignature";
 import { registerContentMedia } from "@/actions/content/registerContentMedia";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import {
   isUploadCancelled,
   uploadToCloudinary,
@@ -102,7 +103,8 @@ export function useContentUpload(kind: ContentKind) {
       if (item.media) return item.media;
       patch(item.id, { status: "uploading", progress: 0, error: null });
 
-      const signature = await getContentUploadSignature();
+      const signature =
+        await getContentUploadSignature().catch(actionUnreachable);
       if (signature.status !== 200 || !signature.data) {
         patch(item.id, {
           status: "error",
@@ -153,7 +155,7 @@ export function useContentUpload(kind: ContentKind) {
         trimEndSeconds: trimmed
           ? (item.trimEnd ?? item.durationSeconds ?? undefined)
           : undefined,
-      });
+      }).catch(actionUnreachable);
       const media = dataOf(res);
       if (!media) {
         patch(item.id, {

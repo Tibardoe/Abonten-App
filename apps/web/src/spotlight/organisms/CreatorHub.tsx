@@ -5,6 +5,7 @@ import { listOwnContent } from "@/actions/content/listOwnContent";
 import { publishContentPost } from "@/actions/content/publishContentPost";
 import { cn } from "@/components/lib/utils";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { spotlightPath } from "@abonten/core/content/links";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
@@ -250,7 +251,9 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
 
   const publish = async () => {
     setPublishing(true);
-    const res = await publishContentPost({ postId: post.id });
+    const res = await publishContentPost({ postId: post.id }).catch(
+      actionUnreachable,
+    );
     setPublishing(false);
     if (res.status !== 200) {
       toast.error(messageOf(res, t("couldnTPublishThisPost")));

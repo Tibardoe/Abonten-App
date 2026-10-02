@@ -32,8 +32,12 @@ type UpdateToastOptions = {
   durationMs?: number;
 };
 
+// What useToast() hands out: the actions only, and the same object for the
+// life of the page. The list of toasts on screen is this provider's own
+// state. It used to be part of this value, which re-rendered every
+// component that can show a toast (about a hundred) each time one appeared
+// or went away, and made the object useless in a dependency list.
 type ToastContextValue = {
-  toasts: ToastEntry[];
   success: (message: string, options?: ShowToastOptions) => string;
   error: (message: string, options?: ShowToastOptions) => string;
   warning: (message: string, options?: ShowToastOptions) => string;
@@ -131,7 +135,6 @@ export default function ToastProvider({
 
   const value = useMemo<ToastContextValue>(
     () => ({
-      toasts,
       success: (message, options) => show("success", message, options),
       error: (message, options) => show("error", message, options),
       warning: (message, options) => show("warning", message, options),
@@ -140,7 +143,7 @@ export default function ToastProvider({
       update,
       dismiss,
     }),
-    [toasts, show, update, dismiss],
+    [show, update, dismiss],
   );
 
   return (

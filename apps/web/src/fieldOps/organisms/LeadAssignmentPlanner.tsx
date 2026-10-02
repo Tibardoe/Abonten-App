@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/select";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type {
   FieldOpsAssignment,
   FieldOpsLeadDashboard,
@@ -65,7 +66,7 @@ export default function LeadAssignmentPlanner({
         startsOn,
         endsOn,
         notes: notes || null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("assigned"));
         setNotes("");
@@ -84,7 +85,7 @@ export default function LeadAssignmentPlanner({
         campaignId,
         assignmentId: cancelId,
         reason,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("cancelled2"));
         setCancelId(null);

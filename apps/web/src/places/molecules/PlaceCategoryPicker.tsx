@@ -1,9 +1,8 @@
 "use client";
 
-import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import TileSelector from "@/components/molecules/TileSelector";
+import { usePlaceCategories } from "@/hooks/usePlaceCategories";
 import { placeCategoryLabel } from "@abonten/core/categoryLabels";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 type PlaceCategoryPickerProps = {
@@ -22,14 +21,7 @@ export default function PlaceCategoryPicker({
   const t = useTranslations("places");
   const tc = useTranslations("core");
 
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ["place-categories"],
-    queryFn: async () => {
-      const response = await getPlaceCategories();
-      return response.status === 200 ? (response.data ?? []) : [];
-    },
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const { data: categories, isLoading } = usePlaceCategories();
 
   return (
     <TileSelector

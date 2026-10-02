@@ -71,6 +71,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const response = await getPlaceBySlug(slug);
 
+  if (response.status >= 500) {
+    throw new Error(`place lookup failed (${response.status})`);
+  }
   // The segment layout has already answered with a 404 for a missing slug.
   if (response.status !== 200 || !response.data) {
     return { title: t("placeNotFound") };
@@ -124,6 +127,11 @@ export default async function page({
 
   const placeResponse = await getPlaceBySlug(slug);
 
+  // Could not be read is not "does not exist": a 404 here would tell a
+  // visitor, and a search engine, that the place is gone.
+  if (placeResponse.status >= 500) {
+    throw new Error(`place lookup failed (${placeResponse.status})`);
+  }
   if (placeResponse.status !== 200 || !placeResponse.data) notFound();
 
   const place = placeResponse.data;
@@ -458,7 +466,7 @@ export default async function page({
               <p className="text-muted-foreground mb-4 text-sm md:text-base">
                 {fullAddress}
               </p>
-              <LocationMapPreview location={locationWkb} />
+              <LocationMapPreview location={locationWkb} label={fullAddress} />
             </div>
 
             {/* Contact */}

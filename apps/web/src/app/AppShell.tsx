@@ -1,7 +1,10 @@
 import "./globals.css";
 import { euclidCircular } from "@/app/fonts";
+import NavigationProgress from "@/components/atoms/NavigationProgress";
+import OfflineNotice from "@/components/atoms/OfflineNotice";
 import LocaleProvider from "@/i18n/LocaleProvider";
 import RootMessages from "@/i18n/RootMessages";
+import ConfirmProvider from "@/providers/ConfirmProvider";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
 import ToastProvider from "@/providers/ToastProvider";
@@ -9,7 +12,8 @@ import InviteBinder from "@/rewards/atoms/InviteBinder";
 import ReferralTouchLogger from "@/rewards/atoms/ReferralTouchLogger";
 
 // The document every page is rendered in: <html lang>, the brand font, and
-// the provider stack (theme, language, data cache, toasts). The root layout
+// the provider stack (theme, language, data cache, toasts,
+// confirmations). The root layout
 // under app/[locale] uses it for every page; app/global-not-found.tsx uses
 // it too, because an address that matches no route at all is rendered
 // outside the [locale] layout and would otherwise get a bare document.
@@ -39,13 +43,19 @@ export default function AppShell({
               (i18n/SegmentMessages.tsx). */}
           <RootMessages>
             <LocaleProvider>
-              <ReactQueryProvider>
-                <ToastProvider>
-                  {children}
-                  <ReferralTouchLogger />
-                  <InviteBinder />
-                </ToastProvider>
-              </ReactQueryProvider>
+              {/* Toasts sit outside the data cache: a write that fails
+                  without saying so itself is reported through one. */}
+              <ToastProvider>
+                <ReactQueryProvider>
+                  <ConfirmProvider>
+                    <NavigationProgress />
+                    {children}
+                    <OfflineNotice />
+                    <ReferralTouchLogger />
+                    <InviteBinder />
+                  </ConfirmProvider>
+                </ReactQueryProvider>
+              </ToastProvider>
             </LocaleProvider>
           </RootMessages>
         </ThemeProvider>

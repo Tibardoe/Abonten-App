@@ -1,4 +1,5 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { rowOrFailure } from "@/utils/rowOrFailure";
 import { notFound } from "next/navigation";
 
 // "Does this event exist" is decided here, in the segment layout, because
@@ -15,11 +16,15 @@ export default async function EventLayout({
   params: Promise<{ eventCode: string }>;
 }) {
   const { eventCode } = await params;
-  const { data } = await publicSupabase
-    .from("event")
-    .select("id")
-    .eq("event_code", eventCode.toUpperCase())
-    .maybeSingle();
+  // A lookup that failed is a 500, never a 404 (utils/rowOrFailure.ts).
+  const data = rowOrFailure(
+    await publicSupabase
+      .from("event")
+      .select("id")
+      .eq("event_code", eventCode.toUpperCase())
+      .maybeSingle(),
+    "event",
+  );
   if (!data) notFound();
   return children;
 }

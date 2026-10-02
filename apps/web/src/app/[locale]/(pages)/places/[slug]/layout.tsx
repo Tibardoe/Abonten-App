@@ -1,4 +1,5 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { rowOrFailure } from "@/utils/rowOrFailure";
 import { notFound } from "next/navigation";
 
 // See events/[eventCode]/layout.tsx: the existence check lives in the
@@ -12,12 +13,16 @@ export default async function PlaceLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { data } = await publicSupabase
-    .from("place")
-    .select("id")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+  // A lookup that failed is a 500, never a 404 (utils/rowOrFailure.ts).
+  const data = rowOrFailure(
+    await publicSupabase
+      .from("place")
+      .select("id")
+      .eq("slug", slug)
+      .eq("status", "published")
+      .maybeSingle(),
+    "place",
+  );
   if (!data) notFound();
   return children;
 }

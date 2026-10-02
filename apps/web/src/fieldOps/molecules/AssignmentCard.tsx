@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { useToast } from "@/hooks/useToast";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import type { FieldOpsAssignment } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -87,7 +88,7 @@ export default function AssignmentCard({
         assignmentId: a.id,
         location,
         accuracyM,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("started"));
         router.refresh();
@@ -101,7 +102,7 @@ export default function AssignmentCard({
       const res = await completeFieldOpsAssignment({
         campaignId: a.campaignId,
         assignmentId: a.id,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         toast.success(res.message ?? t("completed2"));
         router.refresh();

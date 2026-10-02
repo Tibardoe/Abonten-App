@@ -1,10 +1,12 @@
 "use client";
 
 import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMarketContext } from "@/hooks/useMarketContext";
 import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
+import { answerOrThrow } from "@abonten/core/envelopeFailure";
 import { formatMoney } from "@abonten/core/formatMoney";
 import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +22,8 @@ export const ORGANIZER_FINANCE_OVERVIEW_QUERY_KEY = [
 ];
 
 type FinancesOverviewProps = {
-  initialOverview: OrganizerFinanceOverviewRow[];
+  /** Left out when the server could not read it: the balance loads here. */
+  initialOverview?: OrganizerFinanceOverviewRow[];
 };
 
 /**
@@ -43,10 +46,10 @@ export default function FinancesOverview({
   const queryClient = useQueryClient();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ORGANIZER_FINANCE_OVERVIEW_QUERY_KEY,
     queryFn: async () => {
-      const response = await getOrganizerFinanceOverview();
+      const response = answerOrThrow(await getOrganizerFinanceOverview());
       return response.status === 200 ? response.data : [];
     },
     initialData: initialOverview,
@@ -73,6 +76,16 @@ export default function FinancesOverview({
         <Skeleton className="h-32 w-full rounded-xl" />
         <Skeleton className="h-40 w-full rounded-xl" />
       </div>
+    );
+  }
+
+  // A balance that could not be read is not a balance of zero.
+  if (isError && !data) {
+    return (
+      <InlineErrorRetry
+        message={t("couldnTLoadYourBalance")}
+        onRetry={() => refetch()}
+      />
     );
   }
 

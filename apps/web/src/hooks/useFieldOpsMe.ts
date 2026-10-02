@@ -11,8 +11,13 @@ export function useFieldOpsMe() {
   const client = useQueryClient();
   return useQuery({
     queryKey: ["fieldops-me"],
-    queryFn: async () => {
-      const shared = await takeShellSlice(client, "fieldOps");
+    queryFn: async ({ queryKey }) => {
+      const shared = await takeShellSlice(
+        client,
+        "fieldOps",
+        undefined,
+        queryKey,
+      );
       if (shared !== undefined) return shared;
       return (await getMyFieldOps()).data ?? null;
     },

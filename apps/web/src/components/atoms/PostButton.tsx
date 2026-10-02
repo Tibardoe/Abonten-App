@@ -3,6 +3,7 @@
 import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
 import { EventUploadModal } from "@/components/organisms/LazyUploadModals";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { actionUnreachable } from "@/utils/actionUnreachable";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -42,8 +43,8 @@ export default function PostButton() {
   const closePopup = (state: boolean) => setShowPostModal(state);
 
   const handleClick = async () => {
-    const { data } = await getActiveDraftCounts();
-    if (data.event > 0) {
+    const { data } = await getActiveDraftCounts().catch(actionUnreachable);
+    if ((data?.event ?? 0) > 0) {
       setShowChooser(true);
     } else {
       openFilePicker();

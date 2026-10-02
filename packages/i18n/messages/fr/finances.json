@@ -122,5 +122,7 @@
   "youCanPutTowardsFeaturingAn": "Vous pouvez consacrer {formatCredit} à la mise en avant d'un événement ou d'un lieu, votre autre Crédit Abonten compris.",
   "youHavenTAddedAPayout": "Vous n'avez pas encore ajouté de compte de versement.",
   "yourWithdrawalHistoryAndStatus": "L'historique et le statut de vos retraits.",
-  "yourWithdrawalWillMoveToProcessing": "Votre retrait passera à « En cours de traitement » pendant son examen — il ne sera marqué comme terminé qu'une fois réellement versé."
+  "yourWithdrawalWillMoveToProcessing": "Votre retrait passera à « En cours de traitement » pendant son examen — il ne sera marqué comme terminé qu'une fois réellement versé.",
+  "couldnTLoadYourBalance": "Impossible de charger votre solde.",
+  "couldnTLoadYourPayouts": "Impossible de charger vos versements."
 }
