@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { foldSearchText } from "@abonten/core/search/foldSearchText";
 import type {
   AdminContext,
   GlobalSearchHit,
@@ -47,6 +48,9 @@ export async function globalSearchCore(
 
   const isId = UUID_RE.test(q);
   const like = `%${q}%`;
+  // Titles and names are matched on their folded columns: "cafe" finds
+  // "Café".
+  const folded = `%${foldSearchText(q)}%`;
   const can = (p: Parameters<typeof assertPermission>[1]) =>
     ctx.permissions.includes(p);
 
@@ -61,7 +65,7 @@ export async function globalSearchCore(
         .limit(PER_GROUP);
       query = isId
         ? query.eq("id", q)
-        : query.or(`username.ilike.${like},full_name.ilike.${like}`);
+        : query.or(`username.ilike.${like},search_name.like.${folded}`);
       const { data, error } = await query;
       if (error) {
         logger.error(`globalSearch users failed: ${error.message}`);
@@ -85,7 +89,7 @@ export async function globalSearchCore(
         .limit(PER_GROUP);
       query = isId
         ? query.eq("id", q)
-        : query.or(`title.ilike.${like},event_code.ilike.${like}`);
+        : query.or(`search_title.like.${folded},event_code.ilike.${like}`);
       const { data, error } = await query;
       if (error) {
         logger.error(`globalSearch events failed: ${error.message}`);
@@ -109,7 +113,7 @@ export async function globalSearchCore(
         .limit(PER_GROUP);
       query = isId
         ? query.eq("id", q)
-        : query.or(`name.ilike.${like},slug.ilike.${like}`);
+        : query.or(`search_name.like.${folded},slug.ilike.${like}`);
       const { data, error } = await query;
       if (error) {
         logger.error(`globalSearch places failed: ${error.message}`);

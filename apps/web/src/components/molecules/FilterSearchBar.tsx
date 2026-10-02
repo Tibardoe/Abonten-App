@@ -23,6 +23,7 @@ import {
 } from "@abonten/core/categoryLabels";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { isAnyPriceParam } from "@abonten/core/parseFilterModalQueries";
+import { foldedIncludes } from "@abonten/core/search/foldSearchText";
 import { parseSearchQuery } from "@abonten/core/search/parseSearchQuery";
 import type {
   SuggestionItem,
@@ -59,12 +60,10 @@ function matchCategoryNames(
   limit: number,
   label: (name: string) => string,
 ): string[] {
-  const lower = query.toLowerCase();
   return names
     .filter(
       (name) =>
-        name.toLowerCase().includes(lower) ||
-        label(name).toLowerCase().includes(lower),
+        foldedIncludes(name, query) || foldedIncludes(label(name), query),
     )
     .slice(0, limit);
 }
@@ -429,13 +428,11 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
     );
     const matchedPlaceCategories = includePlaces
       ? placeCategories
-          .filter((category) => {
-            const needle = rawTrimmedQuery.toLowerCase();
-            return (
-              category.name.toLowerCase().includes(needle) ||
-              placeCategoryLabel(tc, category).toLowerCase().includes(needle)
-            );
-          })
+          .filter(
+            (category) =>
+              foldedIncludes(category.name, rawTrimmedQuery) ||
+              foldedIncludes(placeCategoryLabel(tc, category), rawTrimmedQuery),
+          )
           .slice(0, PLACE_CATEGORY_SUGGESTION_LIMIT)
       : [];
     const categoryItems: SuggestionItem[] = [

@@ -182,7 +182,12 @@ describe("admin search vocabulary", () => {
       reason: "Two searches found nothing",
     });
     expect(added.status).toBe(200);
-    expect(added.data).toMatchObject({ term: TERM, expandsTo: [WORD] });
+    // A term staff add is two-way unless they say otherwise.
+    expect(added.data).toMatchObject({
+      term: TERM,
+      expandsTo: [WORD],
+      twoWay: true,
+    });
     expect(await placeIdsFor(TERM)).toContain(placeId);
 
     const duplicate = await saveSearchConceptCore(svc, can, {
@@ -202,9 +207,11 @@ describe("admin search vocabulary", () => {
       expandsTo: [WORD],
       appliesTo: ["place"],
       enabled: false,
+      twoWay: false,
       reason: "switching it off for now",
     });
     expect(switchedOff.status).toBe(200);
+    expect(switchedOff.data?.twoWay).toBe(false);
     expect(await placeIdsFor(TERM)).not.toContain(placeId);
 
     const stale = await saveSearchConceptCore(svc, can, {

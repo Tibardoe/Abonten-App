@@ -39,7 +39,7 @@ export default function SocialLinks({
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={t("abontenOn", { label: link.label })}
+                aria-label={t(`abontenOnNetwork.${link.key}`)}
                 className="inline-flex hover:opacity-80"
               >
                 <MaskIcon

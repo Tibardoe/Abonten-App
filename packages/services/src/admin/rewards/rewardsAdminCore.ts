@@ -6,6 +6,7 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
+import { foldSearchText } from "@abonten/core/search/foldSearchText";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type {
@@ -307,7 +308,7 @@ export async function listCreditAccountsCore(
     const { data: users } = await supabase
       .from("user_info")
       .select("id")
-      .or(`username.ilike.%${s}%,full_name.ilike.%${s}%`)
+      .or(`username.ilike.%${s}%,search_name.like.%${foldSearchText(s)}%`)
       .limit(100);
     userIds = (users ?? []).map((u) => u.id);
     if (userIds.length === 0) {

@@ -9,6 +9,11 @@ describe("normalizeConceptWord", () => {
   it("lower-cases, trims and collapses spaces", () => {
     expect(normalizeConceptWord("  Chop   Bar ")).toBe("chop bar");
   });
+
+  it("folds accents and Twi letters, the way a query arrives", () => {
+    expect(normalizeConceptWord("Pâtisserie")).toBe("patisserie");
+    expect(normalizeConceptWord(" Kɔkɔɔ  Kɛse ")).toBe("kokoo kese");
+  });
 });
 
 describe("parseConceptWords", () => {
@@ -16,6 +21,10 @@ describe("parseConceptWords", () => {
     expect(
       parseConceptWords("Beans, plantain\n\nbeans ,Gob3, red  red", "gob3"),
     ).toEqual(["beans", "plantain", "red red"]);
+  });
+
+  it("treats a word and its accented spelling as one", () => {
+    expect(parseConceptWords("Café, cafe, crème", "CRÈME")).toEqual(["cafe"]);
   });
 
   it("returns nothing for empty text", () => {

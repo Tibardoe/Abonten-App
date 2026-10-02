@@ -572,7 +572,7 @@ export function AppDrawer() {
                   <Pressable
                     key={link.key}
                     accessibilityRole="link"
-                    accessibilityLabel={t("abontenOn", { label: link.label })}
+                    accessibilityLabel={tCommon(`abontenOnNetwork.${link.key}`)}
                     onPress={() => Linking.openURL(link.href).catch(() => {})}
                     className="active:opacity-60"
                   >

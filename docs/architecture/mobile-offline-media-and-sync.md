@@ -4,8 +4,8 @@ purpose: How the mobile app keeps previously loaded data across restarts and off
 audience: Engineering, QA, security reviewers
 scope: apps/mobile query persistence (queryPersistence.tsx, queryPersistPolicy.ts, queryCacheFiles.ts, SessionProvider offline session, storedSession.ts and the api.ts token fallback), the screen-state contract (useQueryView, QueryUnavailable, @abonten/core/query/queryView, settleEnvelope in every /api/mobile query hook), the browsing area (ExploreLocationProvider, AreaSwitcher, AreaSuggestionCard, ChangeLocationSheet, useCoarseLocation, @abonten/core/location/browsingArea), the side menu lifecycle (AppDrawer), detail prefetching (useWarmDetails, prefetchEventDetail / prefetchPlaceDetail, prefetchStorySequence), the navigation theme (navigationTheme.ts), the Spotlight feed and SpotlightVideo with its timeline, scrubbing and speed controls (SpotlightTimeline, spotlightSpeed.ts, @abonten/core/content/playbackControls) and publish-to-feed (publishedSpotlight.ts, @abonten/core/content/feedMerge prependOwnPost), the sticky detail and checkout CTAs and the in-checkout wallet add (@abonten/core/eventCta, BottomBar, useFreeRsvpFlow, PayBar, PaymentChoiceList, AddWalletSheet), commentThread / usePostEngagement / postCacheSync, the unified search screen and its filters, the profile header; migrations 20260919090000, 20260919091000, 20260919092000, 20260919093000 and 20260919100000; Admin › Discovery › Search vocabulary; @abonten/core query/persistPolicy, content/feedPlayback, content/commentCache, content/latestIntentToggle, content/postCache, search/searchFilters, promotionSummary; @abonten/services promotions/activePromotionsCore and GET /api/mobile/account/promotions. Not covered - web equivalents beyond the shared services and the Settings promotion card.
 status: Approved
-version: 1.5
-lastReviewed: 2026-09-30
+version: 1.6
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -228,8 +228,12 @@ switched off without a deploy (service role only; no client access).
 precise full text → related terms (×0.6) → any-word / run-together
 ("afro wave" → "afrowave", ×0.35, only when fewer than five results) → typo
 trigram fallback. **Dates:** month names and today / tonight / tomorrow /
-weekend become an Africa/Accra date window with the other words kept ("jazz
-december"); a title that literally contains the month still matches.
+weekend become a date window in the zone of the place searched, with the
+other words kept ("jazz december"); a title that literally contains the
+month still matches. Since 2026-10-02 the date words are data, in five
+languages, letters are folded (no accents), and the vocabulary holds
+French, Spanish, German and Portuguese words:
+[search-languages.md](search-languages.md).
 Spotlight search uses the same vocabulary for captions and hashtags.
 
 **Tuning from real searches** (migration `20260919100000`, Admin ›

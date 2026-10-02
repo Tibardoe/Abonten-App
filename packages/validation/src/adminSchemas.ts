@@ -442,6 +442,8 @@ export const searchConceptSaveSchema = z.object({
   id: z.number().int().positive().optional(),
   expectedUpdatedAt: z.string().min(1).optional(),
   enabled: z.boolean(),
+  // Absent means two-way: what every term was before terms had a direction.
+  twoWay: z.boolean().optional(),
   note: z.string().trim().max(200).nullable().optional(),
   reason: z
     .string()

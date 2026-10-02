@@ -2,7 +2,9 @@
   "root": {
     "common": [
       "abontenHub",
-      "abontenOn",
+      "abontenOnNetwork.instagram",
+      "abontenOnNetwork.tiktok",
+      "abontenOnNetwork.x",
       "abontenOnSocialMedia",
       "actionFailed.offline",
       "actionFailed.restricted",

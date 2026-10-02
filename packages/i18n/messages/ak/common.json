@@ -4,7 +4,6 @@
   "abonten": "Abonten",
   "abontenFees": "Abonten fees",
   "abontenHub": "{getFullYear} Abonten Hub",
-  "abontenOn": "Abonten on {label}",
   "abontenOnSocialMedia": "Abonten on social media",
   "accountNumber": "Account Number",
   "accountSetupOfStepsDone": "Account setup: {completedCount} of {total} steps done",
@@ -900,5 +899,10 @@
     "restricted": "Your account has been restricted. Contact support if you think this is a mistake.",
     "unexpected": "That didn't go through. Try again in a moment."
   },
-  "couldnTLoadYourPendingCheckouts": "Couldn't load your pending checkouts."
+  "couldnTLoadYourPendingCheckouts": "Couldn't load your pending checkouts.",
+  "abontenOnNetwork": {
+    "x": "Abonten on X (formerly Twitter)",
+    "instagram": "Abonten on Instagram",
+    "tiktok": "Abonten on TikTok"
+  }
 }

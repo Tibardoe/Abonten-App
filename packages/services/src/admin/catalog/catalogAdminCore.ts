@@ -5,6 +5,7 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import { foldSearchText } from "@abonten/core/search/foldSearchText";
 import type {
   AdminContext,
   AdminNoteEntry,
@@ -231,7 +232,8 @@ export async function listEventsCore(
     query = query.eq("moderation_state", filters.moderationState);
   if (filters.search?.trim()) {
     const s = filters.search.trim().replace(/[%,()]/g, "");
-    query = query.ilike("title", `%${s}%`);
+    // The folded title: "soiree" finds "Soirée".
+    query = query.like("search_title", `%${foldSearchText(s)}%`);
   }
   if (cursor) {
     query = query.or(
@@ -409,7 +411,7 @@ export async function listPlacesCore(
     query = query.eq("moderation_state", filters.moderationState);
   if (filters.search?.trim()) {
     const s = filters.search.trim().replace(/[%,()]/g, "");
-    query = query.ilike("name", `%${s}%`);
+    query = query.like("search_name", `%${foldSearchText(s)}%`);
   }
   if (cursor) {
     query = query.or(
@@ -598,7 +600,9 @@ export async function listOrganizersCore(
 
   if (filters.search?.trim()) {
     const s = filters.search.trim().replace(/[%,()]/g, "");
-    query = query.or(`username.ilike.%${s}%,full_name.ilike.%${s}%`);
+    query = query.or(
+      `username.ilike.%${s}%,search_name.like.%${foldSearchText(s)}%`,
+    );
   }
   if (cursor) {
     query = query.or(

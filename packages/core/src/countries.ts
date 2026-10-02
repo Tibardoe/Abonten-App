@@ -11,10 +11,10 @@ import {
   COUNTRIES,
   countryName,
   findCountry,
-  foldForSearch,
   prioritiseCountries,
 } from "./geo/countries";
 import { COUNTRY_DEFAULTS } from "./geo/countryDefaults";
+import { foldSearchText } from "./search/foldSearchText";
 
 export type Country = {
   /** In the reader's language when the list was built with one. */
@@ -76,12 +76,12 @@ export function matchCountry(
   query: string,
   pool: readonly Country[] = countries,
 ): Country[] {
-  const q = foldForSearch(query.trim()).replace(/^\+/, "");
+  const q = foldSearchText(query.trim()).replace(/^\+/, "");
   if (!q) return [...pool];
   return pool.filter(
     (c) =>
-      foldForSearch(c.name).includes(q) ||
-      foldForSearch(countryName(c.countryCode)).includes(q) ||
+      foldSearchText(c.name).includes(q) ||
+      foldSearchText(countryName(c.countryCode)).includes(q) ||
       c.callingCode.replace("+", "").startsWith(q) ||
       c.countryCode.toLowerCase() === q,
   );

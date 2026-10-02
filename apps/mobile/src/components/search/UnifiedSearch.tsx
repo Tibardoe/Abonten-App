@@ -15,7 +15,10 @@ import {
   useUnifiedSuggestions,
 } from "@/features/search/useUnifiedSearch";
 import { useQueryView } from "@/lib/useQueryView";
-import { eventCategoryLabel } from "@abonten/core/categoryLabels";
+import {
+  eventCategoryLabel,
+  placeCategoryLabel,
+} from "@abonten/core/categoryLabels";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   chunkRows,
@@ -23,6 +26,7 @@ import {
 } from "@abonten/core/content/profileContent";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
+import { foldedIncludes } from "@abonten/core/search/foldSearchText";
 import {
   isSearchableQuery,
   parseSearchQuery,
@@ -552,10 +556,8 @@ export function UnifiedSearch() {
       typing && !organizerQuery
         ? ALL_CATEGORY_NAMES.filter(
             (n) =>
-              n.toLowerCase().includes(parsed.normalized) ||
-              eventCategoryLabel(tc, n)
-                .toLowerCase()
-                .includes(parsed.normalized),
+              foldedIncludes(n, parsed.normalized) ||
+              foldedIncludes(eventCategoryLabel(tc, n), parsed.normalized),
           ).slice(0, 4)
         : [],
     [typing, organizerQuery, parsed.normalized, tc],
@@ -912,6 +914,8 @@ export function UnifiedSearch() {
                     s.startsAt
                       ? formatDateWithSuffix(s.startsAt, undefined, locale)
                       : s.sublabel
+                        ? eventCategoryLabel(tc, s.sublabel)
+                        : undefined
                   }
                   imageUri={thumb(s)}
                   onPress={() => openSuggestion(s)}
@@ -927,7 +931,12 @@ export function UnifiedSearch() {
                   key={s.id}
                   icon="storefront-outline"
                   title={s.label}
-                  subtitle={s.sublabel}
+                  // The category arrives by its stored English name.
+                  subtitle={
+                    s.sublabel
+                      ? placeCategoryLabel(tc, { name: s.sublabel })
+                      : undefined
+                  }
                   imageUri={thumb(s)}
                   verified={s.verified}
                   onPress={() => openSuggestion(s)}

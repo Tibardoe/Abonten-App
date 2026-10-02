@@ -3145,6 +3145,7 @@ export type Database = {
           place_id: string | null
           published_at: string | null
           require_registration: boolean
+          search_title: string | null
           search_tsv: unknown
           slug: string
           starts_at: string | null
@@ -3179,6 +3180,7 @@ export type Database = {
           place_id?: string | null
           published_at?: string | null
           require_registration?: boolean
+          search_title?: string | null
           search_tsv?: unknown
           slug: string
           starts_at?: string | null
@@ -3213,6 +3215,7 @@ export type Database = {
           place_id?: string | null
           published_at?: string | null
           require_registration?: boolean
+          search_title?: string | null
           search_tsv?: unknown
           slug?: string
           starts_at?: string | null
@@ -8072,6 +8075,7 @@ export type Database = {
           owner_id: string
           phone: string | null
           published_at: string | null
+          search_name: string | null
           search_tsv: unknown
           slug: string
           social_links: Json | null
@@ -8106,6 +8110,7 @@ export type Database = {
           owner_id: string
           phone?: string | null
           published_at?: string | null
+          search_name?: string | null
           search_tsv?: unknown
           slug: string
           social_links?: Json | null
@@ -8140,6 +8145,7 @@ export type Database = {
           owner_id?: string
           phone?: string | null
           published_at?: string | null
+          search_name?: string | null
           search_tsv?: unknown
           slug?: string
           social_links?: Json | null
@@ -11322,6 +11328,7 @@ export type Database = {
           id: number
           note: string | null
           term: string
+          two_way: boolean
           updated_at: string
         }
         Insert: {
@@ -11332,6 +11339,7 @@ export type Database = {
           id?: never
           note?: string | null
           term: string
+          two_way?: boolean
           updated_at?: string
         }
         Update: {
@@ -11342,7 +11350,41 @@ export type Database = {
           id?: never
           note?: string | null
           term?: string
+          two_way?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      search_date_term: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          kind: string
+          locale: string
+          month: number | null
+          note: string | null
+          placement: string | null
+          term: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          kind: string
+          locale: string
+          month?: number | null
+          note?: string | null
+          placement?: string | null
+          term: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          kind?: string
+          locale?: string
+          month?: number | null
+          note?: string | null
+          placement?: string | null
+          term?: string
         }
         Relationships: []
       }
@@ -12268,6 +12310,7 @@ export type Database = {
           organizer_verification_case_id: string | null
           organizer_verified: boolean
           organizer_verified_at: string | null
+          search_name: string | null
           search_tsv: unknown
           status_id: number
           updated_at: string
@@ -12290,6 +12333,7 @@ export type Database = {
           organizer_verification_case_id?: string | null
           organizer_verified?: boolean
           organizer_verified_at?: string | null
+          search_name?: string | null
           search_tsv?: unknown
           status_id?: number
           updated_at?: string
@@ -12312,6 +12356,7 @@ export type Database = {
           organizer_verification_case_id?: string | null
           organizer_verified?: boolean
           organizer_verified_at?: string | null
+          search_name?: string | null
           search_tsv?: unknown
           status_id?: number
           updated_at?: string
@@ -13576,6 +13621,7 @@ export type Database = {
           text_score: number
         }[]
       }
+      _search_fold: { Args: { p_text: string }; Returns: string }
       _search_is_stopword: { Args: { p_word: string }; Returns: boolean }
       _search_like_escape: { Args: { p_text: string }; Returns: string }
       _search_normalize: { Args: { p_query: string }; Returns: string }
@@ -13610,6 +13656,7 @@ export type Database = {
         Returns: {
           date_from: string
           date_to: string
+          date_words: string
           rest: string
         }[]
       }

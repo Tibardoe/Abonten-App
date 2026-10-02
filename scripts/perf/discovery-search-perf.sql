@@ -41,6 +41,16 @@ select * from (
          format('select count(*) from public.search_events(%L, p_min_price => 10, p_max_price => 100, p_start_date => now(), p_end_date => now() + interval %L)', 'night', '30 days')
   union all select 24, 'events     · one organizer''s events (browse)',
          format('select count(*) from public.search_events(%L, p_organizer_id => %L)', '', (select id from perf_orgs where n = 7))
+  -- Search in the reader's language (migration 20261002140000): the date
+  -- words are a table lookup, a French word goes through the vocabulary,
+  -- and a dated typo runs the in-window trigram arm.
+  union all select 25, 'events     · dated, French ("jazz ce week-end")',
+         format('select count(*) from public.search_events(%L, 5.6, -0.19)', 'jazz ce week-end')
+  union all select 26, 'events     · French word through the vocabulary ("soirée jazz")',
+         format('select count(*) from public.search_events(%L, 5.6, -0.19)', 'soirée jazz')
+  union all select 27, 'events     · dated typo (in-window trigram)',
+         format('select count(*) from public.search_events(%L)',
+                left((select w from perf_rare where n = 4242), 8) || 'x december')
   union all select 30, 'places     · common word, with location',
          format('select count(*) from public.search_places(%L, 5.6, -0.19)', 'rooftop')
   union all select 31, 'places     · mid word',
@@ -51,6 +61,8 @@ select * from (
          format('select count(*) from public.search_places(%L, 5.6, -0.19)', 'sauna')
   union all select 34, 'places     · amenity + mid word',
          format('select count(*) from public.search_places(%L)', 'pool ' || (select w from perf_mid where n = 42))
+  union all select 35, 'places     · French word through the vocabulary ("plage")',
+         format('select count(*) from public.search_places(%L, 5.6, -0.19)', 'plage')
   union all select 10, 'suggest    · common amenity',
          format('select count(*) from public.search_suggest(%L)', 'massage')
   union all select 40, 'organizers · mid word',
@@ -143,7 +155,7 @@ where e.status = 'published'
   and e.archived_at is null
   and e.moderation_state is distinct from 'hidden'
   and e.moderation_state is distinct from 'removed'
-  and (left((select w from perf_rare where n = 4242), 8) || 'x') operator(extensions.<%) e.title;
+  and (left((select w from perf_rare where n = 4242), 8) || 'x') operator(extensions.<%) e.search_title;
 
 explain (analyze, costs off, timing off, summary on)
 select p.id

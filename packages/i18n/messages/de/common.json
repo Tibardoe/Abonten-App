@@ -4,7 +4,6 @@
   "abonten": "Abonten",
   "abontenFees": "Abonten-Gebühren",
   "abontenHub": "{getFullYear} Abonten Hub",
-  "abontenOn": "Abonten auf {label}",
   "abontenOnSocialMedia": "Abonten in sozialen Medien",
   "accountNumber": "Kontonummer",
   "accountSetupOfStepsDone": "Kontoeinrichtung: {completedCount} von {total} Schritten erledigt",
@@ -900,5 +899,10 @@
     "restricted": "Dein Konto wurde eingeschränkt. Wende dich an den Support, wenn du das für einen Fehler hältst.",
     "unexpected": "Das hat nicht geklappt. Versuche es gleich noch einmal."
   },
-  "couldnTLoadYourPendingCheckouts": "Deine offenen Bestellungen konnten nicht geladen werden."
+  "couldnTLoadYourPendingCheckouts": "Deine offenen Bestellungen konnten nicht geladen werden.",
+  "abontenOnNetwork": {
+    "x": "Abonten auf X (ehemals Twitter)",
+    "instagram": "Abonten auf Instagram",
+    "tiktok": "Abonten auf TikTok"
+  }
 }

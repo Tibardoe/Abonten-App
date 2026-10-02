@@ -4,7 +4,6 @@
   "abonten": "Abonten",
   "abontenFees": "Tarifas de Abonten",
   "abontenHub": "{getFullYear} Abonten Hub",
-  "abontenOn": "Abonten en {label}",
   "abontenOnSocialMedia": "Abonten en redes sociales",
   "accountNumber": "Número de cuenta",
   "accountSetupOfStepsDone": "Configuración de la cuenta: {completedCount} de {total} pasos completados",
@@ -900,5 +899,10 @@
     "restricted": "Tu cuenta ha sido restringida. Contacta con soporte si crees que es un error.",
     "unexpected": "No se pudo completar. Inténtalo de nuevo en un momento."
   },
-  "couldnTLoadYourPendingCheckouts": "No se pudieron cargar tus compras pendientes."
+  "couldnTLoadYourPendingCheckouts": "No se pudieron cargar tus compras pendientes.",
+  "abontenOnNetwork": {
+    "x": "Abonten en X (antes Twitter)",
+    "instagram": "Abonten en Instagram",
+    "tiktok": "Abonten en TikTok"
+  }
 }
