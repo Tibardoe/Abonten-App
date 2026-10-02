@@ -27,6 +27,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - **Measured.** No search got slower on the 100,000-event catalogue, and the older search is two to four times faster (it reads the indexed search document for descriptions instead of scanning them). Two first attempts were dropped because of what the timings showed: letting the new words work both ways cost a third more on common words (so they are one-way), and folding every row's description made the older search ten times slower (so nothing folds a column per row).
 - **Checked on Postgres 15.8** (the production version) in a stand-in container, because the local stack and the preview project run 17.6: the migration, its built-in checks and ten behaviour checks pass.
 - Migration `20261002140000_search_reads_every_language`, applied to the preview and the production database on 2026-10-02 before the code was merged (the new functions keep the old signatures, so the code already running kept working). Each database fetched the committed file itself and ran it only after its SHA-256 matched the commit; afterwards every function, generated column, index, grant and seed row compared equal to a fresh replay of the repository. Env vars, permissions, jobs: none.
+- `security/secrets-and-environment.md` 1.9: the `node-forge` alert raised today (no fixed release; used only by Expo's build tools, never by anything shipped) is dismissed with its reason, and what to do when a fix is released.
 
 ## 2026-10-02 — Languages, failures said as failures, and the app on a device
 

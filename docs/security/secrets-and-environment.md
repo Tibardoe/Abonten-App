@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.8
-lastReviewed: 2026-09-29
+version: 1.9
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -81,6 +81,8 @@ complianceReviewRequired: no
 ## Dependency alerts
 
 GitHub Dependabot alerts are on for the repository (2026-09-27). The two alerts raised at switch-on were dismissed as tolerable risk with the reason recorded on each: `uuid` < 11.1.1 (only `xcode`, used when generating the iOS project, depends on it and calls `v4()` without a buffer; the flaw is in v3/v5/v6 with one) and `decode-uri-component` ≤ 0.4.2 (replaced in the app bundle by `apps/mobile/vendor/decode-uri-component.js`, checked in CI by `npm run check:deep-link-decoder`). Both leave with Expo's own dependency updates. A new alert is triaged the same way: is the vulnerable code reachable in something we ship; fix it if so, otherwise dismiss with the reason.
+
+`node-forge` ≤ 1.4.0 (raised 2026-10-02, high: a forged RSA PKCS#1 v1.5 signature can pass verification with a low-exponent key) was dismissed the same way. It has no fixed release yet. Only Expo's build tools depend on it (`@expo/cli` for the development server and iOS signing identities, and `@expo/code-signing-certificates`, which makes and checks certificates for signed app updates, a feature this app does not use). Nothing in the website, the admin console or the app bundle imports it. The tools check only signatures made on the developer's machine and, during `expo start`, a development certificate fetched from Expo over HTTPS; the attack needs a key with a very small public exponent (such as 3), and both use 65537. When a fixed release appears, add it to `overrides` in the root `package.json` unless Expo's own update has already brought it in. If signed app updates are ever switched on, look at this again first.
 
 ## Rotation procedure
 
