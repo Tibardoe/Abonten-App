@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   geocodeFieldOpsQuery,
   upsertFieldOpsRegion,
@@ -43,7 +44,7 @@ export function RegionForm({
     start(async () => {
       const res = await geocodeFieldOpsQuery({
         query: `${name}, ${countryCode}`,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res && res.data) {
         setLat(String(res.data.lat));
         setLng(String(res.data.lng));
@@ -65,7 +66,7 @@ export function RegionForm({
         centre: hasCentre ? { lat: Number(lat), lng: Number(lng) } : null,
         status,
         notes: notes.trim() || null,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         if (!region) {

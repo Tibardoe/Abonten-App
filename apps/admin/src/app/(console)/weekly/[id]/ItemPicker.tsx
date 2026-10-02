@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { tc } from "@/lib/coreT";
 import { addWeeklyItem, searchWeeklySubjects } from "@/server/actions/weekly";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -36,7 +37,9 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
   const search = () =>
     startSearch(async () => {
       setError(null);
-      const res = await searchWeeklySubjects({ q, subjectType });
+      const res = await searchWeeklySubjects({ q, subjectType }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200 && "data" in res) {
         setResults((res.data as WeeklySubjectOption[]) ?? []);
       } else {
@@ -147,7 +150,7 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
                             sectionId: section.id,
                             subjectType: r.subjectType,
                             subjectId: r.subjectId,
-                          }),
+                          }).catch(actionUnreachable),
                         { success: `Added ${r.label}.` },
                       )
                     }

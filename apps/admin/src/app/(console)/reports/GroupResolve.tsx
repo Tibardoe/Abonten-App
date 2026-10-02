@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { resolveReportGroup } from "@/server/actions/reports";
 import type {
   AdminPermissionKey,
@@ -57,7 +58,7 @@ export function GroupResolve({
           mod && MODERATABLE.includes(targetType)
             ? { action: mod, reason: resolution.trim() }
             : undefined,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setOpen(false);

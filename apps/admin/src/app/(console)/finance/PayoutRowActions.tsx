@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { settlePayout } from "@/server/actions/finance";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -34,7 +35,7 @@ export function PayoutRowActions({
         status,
         failureReason: status === "failed" ? failureReason.trim() : undefined,
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setOpen(false);

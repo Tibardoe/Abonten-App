@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { refundTransaction } from "@/server/actions/finance";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -88,7 +89,7 @@ export function RefundPanel({
                 const res = await refundTransaction({
                   transactionId,
                   reason: reason.trim(),
-                });
+                }).catch(actionUnreachable);
                 setMsg(res.message ?? null);
                 setConfirm(false);
                 if (res.status === 200) router.refresh();

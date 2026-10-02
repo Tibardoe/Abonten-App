@@ -1,6 +1,8 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Badge, Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { tc } from "@/lib/coreT";
 import {
   notifyRegionWaitlist,
@@ -192,7 +194,7 @@ function OverviewForm({
                   ? { lat: Number(centreLat), lng: Number(centreLng) }
                   : null,
               priceScale: priceScale.trim() ? Number(priceScale) : null,
-            });
+            }).catch(actionUnreachable);
             setMsg({
               ok: res.status === 200,
               text: res.status === 200 ? "Saved." : (res.message ?? "Failed"),
@@ -396,7 +398,7 @@ function TaxFeesLegalForm({
                 supportEmail: supportEmail || null,
                 acknowledge: ackLegal,
               },
-            });
+            }).catch(actionUnreachable);
             setMsg({
               ok: res.status === 200,
               text: res.status === 200 ? "Saved." : (res.message ?? "Failed"),
@@ -637,7 +639,7 @@ function ProvidersSection({
                 payoutsEnabled: payouts,
                 providerAccountRef: ref.trim() || null,
                 options: parsedOptions,
-              });
+              }).catch(actionUnreachable);
               setMsg({
                 ok: res.status === 200,
                 text: res.message ?? (res.status === 200 ? "Saved." : "Failed"),
@@ -818,7 +820,7 @@ function PaymentMethodsSection({
                       s === "web" || s === "ios" || s === "android",
                   ),
                 recommended,
-              });
+              }).catch(actionUnreachable);
               setMsg({
                 ok: res.status === 200,
                 text: res.message ?? (res.status === 200 ? "Saved." : "Failed"),
@@ -982,7 +984,7 @@ function PayoutMethodsSection({
                 currency,
                 automated,
                 fields,
-              });
+              }).catch(actionUnreachable);
               setMsg({
                 ok: res.status === 200,
                 text: res.message ?? (res.status === 200 ? "Saved." : "Failed"),
@@ -1090,14 +1092,16 @@ function RegionsSection({
   const [tz, setTz] = useState("");
   const [launchStatus, setLaunchStatus] = useState<LaunchStatus>("launched");
   const [launchMsg, setLaunchMsg] = useState<Msg>(null);
+  const confirm = useConfirm();
   const stats = new Map(overview?.regions.map((r) => [r.regionId, r]) ?? []);
   const outsideOpen = market.coverageMode !== "launched_areas";
 
-  function run(
+  async function run(
     work: () => Promise<{ status: number; message?: string }>,
     confirmText: string,
+    confirmLabel: string,
   ) {
-    if (!window.confirm(confirmText)) return;
+    if (!(await confirm(confirmText, { confirmLabel }))) return;
     setLaunchMsg(null);
     start(async () => {
       const res = await work();
@@ -1132,10 +1136,13 @@ function RegionsSection({
                   setMarketCoverageMode({
                     countryCode: market.countryCode,
                     mode: outsideOpen ? "launched_areas" : "everywhere",
-                  }),
+                  }).catch(actionUnreachable),
                 outsideOpen
                   ? `Show everywhere outside the launched cities in ${market.name} as not launched yet? Nothing is hidden or blocked; Explore says so and offers the waiting list.`
                   : `Show everywhere outside the listed cities in ${market.name} as open?`,
+                outsideOpen
+                  ? "Treat outside as not launched"
+                  : "Treat outside as open",
               )
             }
           >
@@ -1190,8 +1197,9 @@ function RegionsSection({
                               countryCode: market.countryCode,
                               regionId: r.id,
                               launchStatus: "coming_soon",
-                            }),
+                            }).catch(actionUnreachable),
                           `Mark ${r.name} coming soon? Explore there will say Abonten isn't launched yet. Nothing is hidden or blocked.`,
+                          "Mark coming soon",
                         )
                       }
                     >
@@ -1209,10 +1217,13 @@ function RegionsSection({
                               regionId: r.id,
                               launchStatus: "launched",
                               notifyWaiting: true,
-                            }),
+                            }).catch(actionUnreachable),
                           waiting > 0
                             ? `Launch ${r.name} and send "Abonten is now in ${r.name}" to the ${waiting} ${people} waiting?`
                             : `Launch ${r.name}?`,
+                          waiting > 0
+                            ? `Launch and notify ${waiting}`
+                            : "Launch",
                         )
                       }
                     >
@@ -1230,8 +1241,9 @@ function RegionsSection({
                             notifyRegionWaitlist({
                               countryCode: market.countryCode,
                               regionId: r.id,
-                            }),
+                            }).catch(actionUnreachable),
                           `Send "Abonten is now in ${r.name}" to the ${waiting} ${people} waiting?`,
+                          `Notify ${waiting} waiting`,
                         )
                       }
                     >
@@ -1291,7 +1303,7 @@ function RegionsSection({
                 timezone: tz.trim() || null,
                 status: "active",
                 launchStatus,
-              });
+              }).catch(actionUnreachable);
               setMsg({
                 ok: res.status === 200,
                 text: res.message ?? (res.status === 200 ? "Saved." : "Failed"),
@@ -1496,7 +1508,7 @@ function BrowseFallbackForm({
                     strategy,
                     regionId: strategy === "fixed" ? regionId : null,
                     limit,
-                  });
+                  }).catch(actionUnreachable);
                   setMsg({
                     ok: res.status === 200,
                     text:
@@ -1555,7 +1567,9 @@ function ReadinessSection({
           onClick={() => {
             setMsg(null);
             start(async () => {
-              const res = await runMarketReadiness(market.countryCode);
+              const res = await runMarketReadiness(market.countryCode).catch(
+                actionUnreachable,
+              );
               if (res.status === 200 && "data" in res && res.data) {
                 setReport(res.data);
                 setMsg({
@@ -1654,7 +1668,7 @@ function ReadinessSection({
                       countryCode: market.countryCode,
                       transition: t as MarketTransition,
                       reason: reason || null,
-                    });
+                    }).catch(actionUnreachable);
                     setMsg({
                       ok: res.status === 200,
                       text:

@@ -1,7 +1,9 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { updateContentSettings } from "@/server/actions/content";
 import type {
   ContentAudience,
@@ -280,6 +282,7 @@ export function ContentSettingsForm({
     ) as Record<NumKey, string>,
   );
   const [reason, setReason] = useState("");
+  const confirm = useConfirm();
   const editable = canConfigure && stepUpFresh;
   const set = <K extends keyof ContentSettings>(
     key: K,
@@ -301,17 +304,19 @@ export function ContentSettingsForm({
       setMsg(null);
       if (
         widening &&
-        !window.confirm(
-          "This opens Spotlight or Stories to everyone, including signed-out visitors. Continue?",
-        )
+        !(await confirm(
+          "Open Spotlight or Stories to everyone? That includes signed-out visitors.",
+          { confirmLabel: "Open to everyone" },
+        ))
       ) {
         return;
       }
       if (
         promotionsOn &&
-        !window.confirm(
-          "This lets people pay for promotions. Make sure someone is reviewing the promotion queue. Continue?",
-        )
+        !(await confirm(
+          "Let people pay for promotions? Make sure someone is reviewing the promotion queue.",
+          { confirmLabel: "Turn promotions on" },
+        ))
       ) {
         return;
       }
@@ -342,7 +347,7 @@ export function ContentSettingsForm({
             .filter(Boolean),
           ...numericPatch,
         },
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text: res.message ?? (res.status === 200 ? "Saved." : "Couldn't save."),

@@ -1,6 +1,8 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { tc } from "@/lib/coreT";
 import { formatOpsDateTime } from "@/lib/format";
 import { updatePromotionPricing } from "@/server/actions/content";
@@ -149,6 +151,7 @@ export function PromotionPricingForm({
     ),
   );
   const [reason, setReason] = useState("");
+  const confirm = useConfirm();
 
   const save = () =>
     start(async () => {
@@ -184,9 +187,10 @@ export function PromotionPricingForm({
       }
       patch.locationAudienceShareByRadiusBps = shares;
       if (
-        !window.confirm(
-          "New prices and estimates apply to promotions created from now on. Running promotions keep the price they were sold at. Continue?",
-        )
+        !(await confirm(
+          "Save the new prices? They and the new estimates apply to promotions created from now on. Running promotions keep the price they were sold at.",
+          { confirmLabel: "Save prices" },
+        ))
       ) {
         return;
       }
@@ -194,7 +198,7 @@ export function PromotionPricingForm({
         expectedVersion: pricing.version,
         reason: reason.trim(),
         patch,
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text: res.message ?? (res.status === 200 ? "Saved." : "Couldn't save."),

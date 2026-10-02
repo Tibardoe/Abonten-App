@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { updateWeeklyEdition } from "@/server/actions/weekly";
 import { useEffect, useState } from "react";
 import { fieldClass, useEditor } from "./EditorContext";
@@ -74,7 +75,7 @@ export function EditionCopyForm({
                 editionId,
                 expectedVersion: version,
                 patch: { title: t, subtitle: s || null, intro: i || null },
-              }),
+              }).catch(actionUnreachable),
             )
           }
         >

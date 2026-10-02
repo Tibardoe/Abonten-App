@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { upsertFeatureFlag } from "@/server/actions/markets";
 import type { FlagRules } from "@abonten/core/flags/evaluateFlag";
 import type { FeatureFlagRow } from "@abonten/services/admin/markets/marketsAdminCore";
@@ -108,7 +109,7 @@ export function FlagsEditor({
                   description,
                   enabled,
                   rules: Object.keys(rules).length ? rules : null,
-                });
+                }).catch(actionUnreachable);
                 setMsg(
                   res.message ?? (res.status === 200 ? "Saved." : "Failed"),
                 );

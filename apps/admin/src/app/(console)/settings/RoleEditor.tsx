@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   grantAdminRole,
   revokeAdminRole,
@@ -58,7 +59,11 @@ export function RoleEditor({
           variant="ghost"
           disabled={pending || disabled}
           onClick={() =>
-            run(() => grantAdminRole({ targetUserId: userId, roleKey: role }))
+            run(() =>
+              grantAdminRole({ targetUserId: userId, roleKey: role }).catch(
+                actionUnreachable,
+              ),
+            )
           }
         >
           Grant
@@ -71,7 +76,11 @@ export function RoleEditor({
             type="button"
             disabled={pending || disabled}
             onClick={() =>
-              run(() => revokeAdminRole({ targetUserId: userId, roleKey: r }))
+              run(() =>
+                revokeAdminRole({ targetUserId: userId, roleKey: r }).catch(
+                  actionUnreachable,
+                ),
+              )
             }
             className="rounded bg-muted px-1.5 py-0.5 hover:bg-destructive/15 hover:text-destructive"
           >
@@ -89,7 +98,7 @@ export function RoleEditor({
               setAdminUserStatus({
                 targetUserId: userId,
                 status: status === "active" ? "disabled" : "active",
-              }),
+              }).catch(actionUnreachable),
             )
           }
         >

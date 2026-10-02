@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { addVerificationNote } from "@/server/actions/verification";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -45,7 +46,7 @@ export function NoteForm({ caseId }: { caseId: string }) {
             const res = await addVerificationNote({
               caseId,
               body: body.trim(),
-            });
+            }).catch(actionUnreachable);
             if (res.status === 200) {
               setBody("");
               setMsg({ tone: "ok", text: "Note added." });

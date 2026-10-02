@@ -1,7 +1,9 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   createWeeklyEdition,
   getWeeklyPreviewLink,
@@ -63,16 +65,30 @@ export function PublishPanel({
     expiresAt: string;
   } | null>(null);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const confirm = useConfirm();
 
   const status = edition.status;
   const needsStepUp = canPublish && !stepUpFresh;
   const publishable = canPublish && stepUpFresh;
 
-  const transition = (
+  const transition = async (
     action: WeeklyTransitionAction,
-    extra: { scheduledFor?: string; confirm?: string } = {},
+    extra: {
+      scheduledFor?: string;
+      confirm?: string;
+      confirmLabel?: string;
+      danger?: boolean;
+    } = {},
   ) => {
-    if (extra.confirm && !window.confirm(extra.confirm)) return;
+    if (
+      extra.confirm &&
+      !(await confirm(extra.confirm, {
+        confirmLabel: extra.confirmLabel,
+        danger: extra.danger,
+      }))
+    ) {
+      return;
+    }
     run(
       (version) =>
         transitionWeeklyEdition({
@@ -81,7 +97,7 @@ export function PublishPanel({
           action,
           scheduledFor: extra.scheduledFor ?? null,
           reason: reason || null,
-        }),
+        }).catch(actionUnreachable),
       { onSuccess: () => setReason("") },
     );
   };
@@ -89,7 +105,9 @@ export function PublishPanel({
   const openPreview = () =>
     startLink(async () => {
       setLinkError(null);
-      const res = await getWeeklyPreviewLink({ editionId });
+      const res = await getWeeklyPreviewLink({ editionId }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200 && "data" in res && res.data) {
         setPreview(res.data);
         window.open(res.data.url, "_blank", "noopener,noreferrer");
@@ -109,7 +127,7 @@ export function PublishPanel({
         intro: edition.intro,
         duplicateFrom: edition.id,
         useTemplate: false,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res && res.data) {
         router.push(`/weekly/${res.data.id}`);
       } else {
@@ -212,6 +230,7 @@ export function PublishPanel({
               transition("publish", {
                 confirm:
                   "Publish now? The edition becomes visible to the Abonten Weekly audience straight away.",
+                confirmLabel: "Publish now",
               })
             }
           >
@@ -274,6 +293,8 @@ export function PublishPanel({
             transition("unpublish", {
               confirm:
                 "Unpublish? The edition disappears for everyone and becomes a draft again.",
+              confirmLabel: "Unpublish",
+              danger: true,
             })
           }
         >
@@ -293,6 +314,8 @@ export function PublishPanel({
                 status === "published"
                   ? "Archive this published edition? It stops being visible."
                   : "Archive this edition?",
+              confirmLabel: "Archive",
+              danger: status === "published",
             })
           }
         >

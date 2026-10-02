@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { tc } from "@/lib/coreT";
 import { removeWeeklyItem, updateWeeklyItem } from "@/server/actions/weekly";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -110,7 +111,7 @@ export function ItemRow({
           itemId: item.id,
           patch,
           ...extra,
-        }),
+        }).catch(actionUnreachable),
       { success },
     );
 
@@ -272,7 +273,7 @@ export function ItemRow({
                     editionId,
                     expectedVersion: version,
                     itemId: item.id,
-                  }),
+                  }).catch(actionUnreachable),
                 { success: "Listing removed." },
               )
             }

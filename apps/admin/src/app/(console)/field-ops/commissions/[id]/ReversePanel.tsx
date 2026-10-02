@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { reverseFieldOpsCommission } from "@/server/actions/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -27,7 +28,7 @@ export function ReversePanel({ commissionId }: { commissionId: string }) {
       const res = await reverseFieldOpsCommission({
         commissionId,
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setConfirming(false);

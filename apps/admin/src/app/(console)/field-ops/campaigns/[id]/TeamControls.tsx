@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   addFieldOpsTeamMember,
   setFieldOpsTeamMemberRole,
@@ -43,7 +44,7 @@ export function AddMemberForm({ campaignId }: { campaignId: string }) {
         userId: mode === "user" ? userId.trim() : null,
         invitedPhoneE164: mode === "phone" ? phone.trim() : null,
         fullName: fullName.trim() || null,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setUserId("");
@@ -221,12 +222,12 @@ export function MemberRowActions({
               memberId,
               status: target as "active" | "suspended" | "left",
               reason: reason.trim(),
-            })
+            }).catch(actionUnreachable)
           : await setFieldOpsTeamMemberRole({
               memberId,
               role: target as FieldOpsMemberRole,
               reason: reason.trim(),
-            });
+            }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setOpen(null);

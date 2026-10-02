@@ -1,6 +1,8 @@
 "use client";
 
+import { useConfirm } from "@/components/ConfirmProvider";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { geocodeWeeklyArea, upsertWeeklyScope } from "@/server/actions/weekly";
 import type { WeeklyScope } from "@abonten/types/weeklyType";
 import { useRouter } from "next/navigation";
@@ -32,13 +34,16 @@ export function AreaForm({ scope }: { scope?: WeeklyScope }) {
     scope?.status ?? "active",
   );
   const [reason, setReason] = useState("");
+  const confirm = useConfirm();
 
   const lookup = () =>
     start(async () => {
       setMsg(null);
       // A bare place name: the result's label says which country it is
       // in, and the server files the area under the market at its centre.
-      const res = await geocodeWeeklyArea({ query: name });
+      const res = await geocodeWeeklyArea({ query: name }).catch(
+        actionUnreachable,
+      );
       if (res.status === 200 && "data" in res && res.data) {
         setLat(res.data.lat.toFixed(6));
         setLng(res.data.lng.toFixed(6));
@@ -55,9 +60,10 @@ export function AreaForm({ scope }: { scope?: WeeklyScope }) {
         scope &&
         status === "retired" &&
         scope.status === "active" &&
-        !window.confirm(
+        !(await confirm(
           `Retire ${scope.name}? Its editions stop being shown and visitors there see the country-wide picks.`,
-        )
+          { confirmLabel: "Retire", danger: true },
+        ))
       ) {
         return;
       }
@@ -74,7 +80,7 @@ export function AreaForm({ scope }: { scope?: WeeklyScope }) {
           position: Number(position),
           status,
         },
-      });
+      }).catch(actionUnreachable);
       setMsg({
         ok: res.status === 200,
         text: res.message ?? (res.status === 200 ? "Saved." : "Couldn't save."),

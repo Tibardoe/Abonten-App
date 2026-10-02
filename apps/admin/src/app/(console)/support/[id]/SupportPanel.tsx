@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   addSupportNote,
   assignSupportConversation,
@@ -98,7 +99,7 @@ export function SupportPanel({
                   assignSupportConversation({
                     conversationId,
                     assigneeId: myUserId,
-                  }),
+                  }).catch(actionUnreachable),
                 )
               }
             >
@@ -115,7 +116,7 @@ export function SupportPanel({
                   assignSupportConversation({
                     conversationId,
                     assigneeId: null,
-                  }),
+                  }).catch(actionUnreachable),
                 )
               }
             >
@@ -144,7 +145,7 @@ export function SupportPanel({
               const res = await replySupportConversation({
                 conversationId,
                 body: reply.trim(),
-              });
+              }).catch(actionUnreachable);
               if (res.status === 200) setReply("");
               return res;
             })
@@ -171,7 +172,7 @@ export function SupportPanel({
                 setSupportConversationStatus({
                   conversationId,
                   status: "open",
-                }),
+                }).catch(actionUnreachable),
               )
             }
           >
@@ -187,7 +188,7 @@ export function SupportPanel({
                 setSupportConversationStatus({
                   conversationId,
                   status: "closed",
-                }),
+                }).catch(actionUnreachable),
               )
             }
           >
@@ -217,7 +218,7 @@ export function SupportPanel({
                 targetType: "support_conversation",
                 targetId: conversationId,
                 body: note.trim(),
-              });
+              }).catch(actionUnreachable);
               if (res.status === 200) setNote("");
               return res;
             })

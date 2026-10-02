@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   refreshExchangeRates,
   setExchangeRateConfig,
@@ -93,7 +94,8 @@ export function RatesPanel({
               onClick={() => {
                 setMsg(null);
                 start(async () => {
-                  const res = await refreshExchangeRates();
+                  const res =
+                    await refreshExchangeRates().catch(actionUnreachable);
                   setMsg(
                     res.status === 200
                       ? `Refreshed ${"data" in res && res.data ? res.data.count : ""} rates.`
@@ -127,7 +129,7 @@ export function RatesPanel({
                     base,
                     appIdEnv,
                     refreshUrl: refreshUrl.trim() || null,
-                  });
+                  }).catch(actionUnreachable);
                   setMsg(
                     res.message ?? (res.status === 200 ? "Saved." : "Failed"),
                   );
@@ -195,7 +197,7 @@ export function RatesPanel({
                     base,
                     quote: quote.toUpperCase(),
                     rate: Number(rate),
-                  });
+                  }).catch(actionUnreachable);
                   setMsg(
                     res.message ?? (res.status === 200 ? "Saved." : "Failed"),
                   );

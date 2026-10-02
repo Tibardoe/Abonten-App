@@ -2,6 +2,7 @@
 
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { updateFieldOpsSettings } from "@/server/actions/fieldOps";
 import type { FieldOpsProgramSettings } from "@abonten/types/fieldOps";
 import { useRouter } from "next/navigation";
@@ -70,7 +71,7 @@ export function SettingsForm({
           payoutsEnabled: payouts,
           notifyPushEnabled: push,
         },
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setReason("");

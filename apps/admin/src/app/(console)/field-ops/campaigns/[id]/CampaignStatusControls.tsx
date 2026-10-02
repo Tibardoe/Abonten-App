@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { tc } from "@/lib/coreT";
 import { setFieldOpsCampaignStatus } from "@/server/actions/fieldOps";
 import {
@@ -106,7 +107,7 @@ export function CampaignStatusControls({
                     campaignId,
                     action,
                     reason: reason.trim(),
-                  });
+                  }).catch(actionUnreachable);
                   setMsg(res.message ?? null);
                   if (res.status === 200) {
                     setAction(null);

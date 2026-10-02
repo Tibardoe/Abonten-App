@@ -16,12 +16,17 @@
 // This check finds every call to a Server Action from browser code that has
 // nothing to catch that rejection. A call is safe when it is
 //   - guarded: `await saveThing(input).catch(actionUnreachable)`
-//     (apps/web/src/utils/actionUnreachable.ts turns the rejection into the
+//     (apps/web/src/utils/actionUnreachable.ts and, for the console,
+//     apps/admin/src/lib/actionUnreachable.ts turn the rejection into the
 //     envelope the caller already handles);
 //   - inside a `try` block, or followed by its own `.catch(...)`;
 //   - made by React Query (inside a queryFn / mutationFn, or the page
 //     fetcher of a paginated list), which catches it and reports it through
 //     the query's or the mutation's error state.
+//
+// The web app and the admin console are both checked; each has its own
+// guard (the console is English only, and words the unknown outcome of a
+// staff action differently).
 //
 //   node scripts/check-action-calls.mjs            report
 //   node scripts/check-action-calls.mjs --check    fail when one is unguarded
@@ -33,12 +38,29 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SRC = join(ROOT, "apps", "web", "src");
 const CHECK = process.argv.includes("--check");
 const FIX = process.argv.includes("--fix");
 
 const GUARD = "actionUnreachable";
-const GUARD_MODULE = "@/utils/actionUnreachable";
+
+const APPS = [
+  {
+    name: "web",
+    src: join(ROOT, "apps", "web", "src"),
+    // Where the Server Actions live, as the app imports them.
+    actionImport: "@/actions/",
+    // Files that are the server side themselves.
+    serverSide: ["actions/", "app/api/"],
+    guardModule: "@/utils/actionUnreachable",
+  },
+  {
+    name: "admin",
+    src: join(ROOT, "apps", "admin", "src"),
+    actionImport: "@/server/actions/",
+    serverSide: ["server/", "app/api/"],
+    guardModule: "@/lib/actionUnreachable",
+  },
+];
 
 // React Query runs these and catches what they throw.
 const MANAGED_PROPERTIES = new Set(["queryFn", "mutationFn"]);
@@ -73,12 +95,12 @@ function directives(source) {
 }
 
 /** Names this file imports from the Server Actions folder. */
-function actionImports(source) {
+function actionImports(source, actionImport) {
   const names = new Set();
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
     const from = statement.moduleSpecifier.text;
-    if (!from.startsWith("@/actions/")) continue;
+    if (!from.startsWith(actionImport)) continue;
     const clause = statement.importClause;
     if (!clause || clause.isTypeOnly) continue;
     if (clause.name) names.add(clause.name.text);
@@ -173,11 +195,15 @@ let filesFixed = 0;
 let callsFixed = 0;
 let safeCalls = 0;
 
-for (const file of walk(SRC)) {
-  const rel = relative(SRC, file).split(sep).join("/");
-  if (rel.startsWith("actions/") || rel.startsWith("app/api/")) continue;
+const files = APPS.flatMap((app) =>
+  walk(app.src).map((file) => ({ app, file })),
+);
+
+for (const { app, file } of files) {
+  const rel = relative(app.src, file).split(sep).join("/");
+  if (app.serverSide.some((prefix) => rel.startsWith(prefix))) continue;
   const text = readFileSync(file, "utf8");
-  if (!text.includes("@/actions/")) continue;
+  if (!text.includes(app.actionImport)) continue;
   const source = ts.createSourceFile(
     file,
     text,
@@ -186,7 +212,7 @@ for (const file of walk(SRC)) {
     file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
   if (!isBrowserCode(source, text)) continue;
-  const actions = actionImports(source);
+  const actions = actionImports(source, app.actionImport);
   if (actions.size === 0) continue;
 
   const unguarded = [];
@@ -208,7 +234,7 @@ for (const file of walk(SRC)) {
     for (const node of unguarded) {
       const { line } = source.getLineAndCharacterOfPosition(node.getStart());
       findings.push(
-        `apps/web/src/${rel}:${line + 1}  ${node.expression.text}(…)`,
+        `apps/${app.name}/src/${rel}:${line + 1}  ${node.expression.text}(…)`,
       );
     }
     continue;
@@ -220,12 +246,12 @@ for (const file of walk(SRC)) {
   for (const node of [...unguarded].sort((a, b) => b.end - a.end)) {
     next = `${next.slice(0, node.end)}.catch(${GUARD})${next.slice(node.end)}`;
   }
-  if (!new RegExp(`from "${GUARD_MODULE}"`).test(next)) {
+  if (!next.includes(`from "${app.guardModule}"`)) {
     const lastImport = [...source.statements]
       .filter(ts.isImportDeclaration)
       .pop();
     const at = lastImport ? lastImport.end : 0;
-    next = `${next.slice(0, at)}\nimport { ${GUARD} } from "${GUARD_MODULE}";${next.slice(at)}`;
+    next = `${next.slice(0, at)}\nimport { ${GUARD} } from "${app.guardModule}";${next.slice(at)}`;
   }
   writeFileSync(file, next);
   filesFixed += 1;
@@ -251,6 +277,6 @@ console.log(
 );
 for (const finding of findings) console.log(`  ${finding}`);
 console.log(
-  `\nAdd .catch(${GUARD}) (from ${GUARD_MODULE}), or run: node scripts/check-action-calls.mjs --fix`,
+  `\nAdd .catch(${GUARD}) (from ${APPS.map((app) => app.guardModule).join(" / ")}), or run: node scripts/check-action-calls.mjs --fix`,
 );
 process.exit(CHECK ? 1 : 0);

@@ -2,6 +2,7 @@
 
 import { StatusBadge } from "@/components/metrics/StatusBadge";
 import { Button, Td, timeAgo } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { setErrorGroupStatus } from "@/server/actions/observability";
 import type { ErrorGroup } from "@abonten/types/adminTypes";
 import Link from "next/link";
@@ -23,7 +24,7 @@ export function ErrorGroupRow({
       const res = await setErrorGroupStatus({
         fingerprint: group.fingerprint,
         status,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) router.refresh();
     });
   }

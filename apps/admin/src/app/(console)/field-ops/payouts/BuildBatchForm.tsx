@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { buildFieldOpsPayoutBatch } from "@/server/actions/fieldOps";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -30,7 +31,7 @@ export function BuildBatchForm({ campaignId }: { campaignId: string }) {
         campaignId,
         label: label.trim(),
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) router.refresh();
     });

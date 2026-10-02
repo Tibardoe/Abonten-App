@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { decideCreditAdjustment } from "@/server/actions/rewards";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -33,7 +34,7 @@ export function AdjustmentDecision({
         requestId,
         decision,
         note: note.trim() || undefined,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) router.refresh();
     });

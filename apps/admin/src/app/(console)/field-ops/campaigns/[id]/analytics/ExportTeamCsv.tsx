@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { exportFieldOpsCampaignStats } from "@/server/actions/fieldOps";
 import { useState, useTransition } from "react";
 
@@ -16,7 +17,8 @@ export function ExportTeamCsv({ campaignId }: { campaignId: string }) {
   const run = () =>
     start(async () => {
       setMsg(null);
-      const res = await exportFieldOpsCampaignStats(campaignId);
+      const res =
+        await exportFieldOpsCampaignStats(campaignId).catch(actionUnreachable);
       if (res.status !== 200 || !res.data) {
         setMsg(res.message ?? "Could not export.");
         return;

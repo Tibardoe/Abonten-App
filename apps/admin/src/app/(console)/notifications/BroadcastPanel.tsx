@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { broadcastNotification } from "@/server/actions/notifications";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -35,7 +36,7 @@ export function BroadcastPanel() {
         title: title.trim(),
         body: body.trim() || undefined,
         link: link.trim() || undefined,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? (res.status === 200 ? "Sent." : "Failed."));
       if (res.status === 200) {
         setTitle("");

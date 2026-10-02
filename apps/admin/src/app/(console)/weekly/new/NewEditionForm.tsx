@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { tc } from "@/lib/coreT";
 import { createWeeklyEdition } from "@/server/actions/weekly";
 import { WEEKLY_DEFAULT_TITLE_KEY } from "@abonten/core/weekly/copy";
@@ -51,7 +52,7 @@ export function NewEditionForm({
         intro: intro || null,
         duplicateFrom: duplicateFrom || null,
         useTemplate,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res && res.data) {
         router.push(`/weekly/${res.data.id}`);
         return;

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   decideFieldOpsContent,
   runFieldOpsStipends,
@@ -31,7 +32,7 @@ export function ContentDecision({
         submissionId,
         decision,
         note: note.trim() || null,
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) router.refresh();
     });
@@ -82,7 +83,7 @@ export function StipendRun({ campaignId }: { campaignId: string }) {
         campaignId,
         periodStart: `${month}-01`,
         reason: reason.trim(),
-      });
+      }).catch(actionUnreachable);
       setMsg(res.message ?? null);
       if (res.status === 200) router.refresh();
     });

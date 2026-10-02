@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge, Button, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import { upsertIncident } from "@/server/actions/observability";
 import type { Incident } from "@abonten/types/adminTypes";
 import { useRouter } from "next/navigation";
@@ -52,7 +53,7 @@ function IncidentForm({
         severity: f.severity,
         component: f.component.trim() || null,
         summary: f.summary.trim() || null,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200) {
         onDone();
         router.refresh();

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { actionUnreachable } from "@/lib/actionUnreachable";
 import {
   geocodeFieldOpsQuery,
   upsertFieldOpsTerritory,
@@ -262,7 +263,7 @@ export function TerritoryForm({
     start(async () => {
       const res = await geocodeFieldOpsQuery({
         query: `${s.name}, ${regionName}, ${countryCode}`,
-      });
+      }).catch(actionUnreachable);
       if (res.status === 200 && "data" in res && res.data) {
         s.setLat(String(res.data.lat));
         s.setLng(String(res.data.lng));
@@ -278,7 +279,9 @@ export function TerritoryForm({
         setMsg(built.error);
         return;
       }
-      const res = await upsertFieldOpsTerritory(built.value);
+      const res = await upsertFieldOpsTerritory(built.value).catch(
+        actionUnreachable,
+      );
       setMsg(res.message ?? null);
       if (res.status === 200) {
         s.setName("");
@@ -343,7 +346,9 @@ export function TerritoryRowEdit({
         setMsg(built.error);
         return;
       }
-      const res = await upsertFieldOpsTerritory(built.value);
+      const res = await upsertFieldOpsTerritory(built.value).catch(
+        actionUnreachable,
+      );
       setMsg(res.message ?? null);
       if (res.status === 200) {
         setOpen(false);
