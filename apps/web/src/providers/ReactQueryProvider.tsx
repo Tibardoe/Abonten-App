@@ -1,5 +1,9 @@
 "use client";
 import { supabase } from "@/config/supabase/client";
+import {
+  primeShellBootstrap,
+  resetShellBootstrap,
+} from "@/hooks/shellBootstrap";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
@@ -25,41 +29,46 @@ export default function ReactQueryProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            // This client previously ran on library defaults, which meant
-            // staleTime 0 + refetchOnWindowFocus — every query refetched on
-            // every remount and every time the tab regained focus, so simply
-            // alt-tabbing back re-ran every mounted query on the page. 30s
-            // matches the native client so both platforms behave the same.
-            //
-            // Data that genuinely needs to be fresher sets its own value:
-            // ticket availability polls every 20s inside the checkout modal,
-            // and the unread badges poll on their own interval. Nothing on
-            // the money path depends on a refetch-on-mount — checkout and
-            // payment state are re-validated server-side at the point of the
-            // write, never trusted from a cached read.
-            staleTime: 30_000,
-            // Keep a screen's data around long enough that going back to it
-            // renders from cache instead of showing a spinner again.
-            gcTime: 10 * 60_000,
-            refetchOnWindowFocus: false,
-            refetchOnReconnect: true,
-            retry: (failureCount, error) =>
-              isTerminalError(error) ? false : failureCount < 2,
-            retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
-          },
-          mutations: {
-            // Never silently auto-retry a write (a payment, a cancel, a
-            // claim) — the caller decides.
-            retry: 0,
-          },
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          // This client previously ran on library defaults, which meant
+          // staleTime 0 + refetchOnWindowFocus — every query refetched on
+          // every remount and every time the tab regained focus, so simply
+          // alt-tabbing back re-ran every mounted query on the page. 30s
+          // matches the native client so both platforms behave the same.
+          //
+          // Data that genuinely needs to be fresher sets its own value:
+          // ticket availability polls every 20s inside the checkout modal,
+          // and the unread badges poll on their own interval. Nothing on
+          // the money path depends on a refetch-on-mount — checkout and
+          // payment state are re-validated server-side at the point of the
+          // write, never trusted from a cached read.
+          staleTime: 30_000,
+          // Keep a screen's data around long enough that going back to it
+          // renders from cache instead of showing a spinner again.
+          gcTime: 10 * 60_000,
+          refetchOnWindowFocus: false,
+          refetchOnReconnect: true,
+          retry: (failureCount, error) =>
+            isTerminalError(error) ? false : failureCount < 2,
+          retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
         },
-      }),
-  );
+        mutations: {
+          // Never silently auto-retry a write (a payment, a cancel, a
+          // claim) — the caller decides.
+          retry: 0,
+        },
+      },
+    });
+    // The header's questions about the visitor go out as one request, and
+    // first: asked here, while rendering, it is ahead of every action a
+    // page's own queries send from their effects (a browser runs Server
+    // Actions in the order they were sent). See hooks/shellBootstrap.ts.
+    primeShellBootstrap(client);
+    return client;
+  });
 
   // Keeps every "who's signed in"-derived query (useCurrentUser and
   // everything layered on top of it) reactive instead of relying purely on
@@ -75,6 +84,8 @@ export default function ReactQueryProvider({
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
+        // The shared answer was the previous person's.
+        resetShellBootstrap(queryClient);
         queryClient.removeQueries();
         return;
       }

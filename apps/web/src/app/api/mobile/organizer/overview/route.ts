@@ -13,7 +13,7 @@ const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];
 
 // GET /api/mobile/organizer/overview?period=today|7d|30d|all&tz=<IANA zone>
 // The signed-in organizer's dashboard KPIs for the period (and the
-// comparison window). Same body as the getOrganizerDashboardOverview action.
+// comparison window). The web page reads the same numbers through getOrganizerDashboard.
 export async function GET(req: Request) {
   bindLocaleFromRequest(req);
   const auth = await getMobileAuth(req);

@@ -1,9 +1,10 @@
 "use client";
 
 import { getDiscoveryProgram } from "@/actions/discovery/getDiscoveryProgram";
+import { takeShellSlice } from "@/hooks/shellBootstrap";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DISABLED_DISCOVERY_PROGRAM } from "@abonten/types/discoveryType";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Which Discovery features the current visitor may use (new search,
 // organizer and place search, alerts and opt-in prompts). Rolls out by
@@ -12,10 +13,19 @@ import { useQuery } from "@tanstack/react-query";
 // Cached per person, because the answer depends on who is asking.
 export function useDiscoveryProgram() {
   const { data: user, isLoading: userLoading } = useCurrentUser();
+  const client = useQueryClient();
   const query = useQuery({
     queryKey: ["discovery-program", user?.id ?? null],
     enabled: !userLoading,
-    queryFn: async () => (await getDiscoveryProgram()).data,
+    queryFn: async () => {
+      const shared = await takeShellSlice(
+        client,
+        "discoveryProgram",
+        user?.id ?? null,
+      );
+      if (shared !== undefined) return shared;
+      return (await getDiscoveryProgram()).data;
+    },
     staleTime: 5 * 60 * 1000,
   });
   return {

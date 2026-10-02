@@ -1,11 +1,7 @@
 "use client";
 
-import getOrganizerDashboardOverview from "@/actions/getOrganizerDashboardOverview";
+import getOrganizerDashboard from "@/actions/getOrganizerDashboard";
 import getOrganizerEventPerformance from "@/actions/getOrganizerEventPerformance";
-import getOrganizerNeedsAttention from "@/actions/getOrganizerNeedsAttention";
-import getOrganizerRecentActivity from "@/actions/getOrganizerRecentActivity";
-import getOrganizerSalesTimeline from "@/actions/getOrganizerSalesTimeline";
-import getOrganizerUpcomingEvents from "@/actions/getOrganizerUpcomingEvents";
 import EventUploadButton from "@/components/atoms/EventUploadButton";
 import DashboardPeriodFilter from "@/components/molecules/DashboardPeriodFilter";
 import OrganizerEventPerformanceList from "@/components/molecules/OrganizerEventPerformanceList";
@@ -36,10 +32,16 @@ import OrganizerVerificationCard from "@/verification/molecules/OrganizerVerific
 import { useTranslations } from "next-intl";
 type Row = OrganizerOverviewRow;
 
-// Every section below is its own useQuery — independent loading states, and
-// a stale mutation (purchase/cancel/registration) only needs to invalidate
-// this page's TanStack Query cache or wait out the shared staleTime, same
-// as EventAnalyticsDashboard's precedent.
+// The whole page is one question (getOrganizerDashboard): the KPIs, the
+// timeline and every list arrive together, in one round trip. Each section
+// used to be its own Server Action, and a browser runs those one at a
+// time, so the last list appeared six round trips after the first card.
+// The one thing asked separately is the events list sorted by tickets,
+// and only when someone chooses that sort.
+//
+// A purchase, a cancellation or a registration invalidates this page's
+// queries by their "organizer-dashboard" key prefix
+// (utils/mutationQueryInvalidation.ts), or the shared staleTime runs out.
 const STALE_TIME = 20_000;
 
 export default function OrganizerDashboard() {
@@ -52,85 +54,53 @@ export default function OrganizerDashboard() {
 
   const { data: userDetails } = useCurrentUserDetails();
 
-  const overviewQuery = useQuery({
-    queryKey: ["organizer-dashboard-overview", period],
-    queryFn: () => getOrganizerDashboardOverview(period),
+  const dashboardQuery = useQuery({
+    queryKey: ["organizer-dashboard", period],
+    queryFn: () => getOrganizerDashboard(period),
     staleTime: STALE_TIME,
   });
 
-  const timelineQuery = useQuery({
-    queryKey: ["organizer-dashboard-timeline", period],
-    queryFn: () => getOrganizerSalesTimeline(period),
+  const byTicketsQuery = useQuery({
+    queryKey: ["organizer-dashboard-performance", period, "tickets"],
+    queryFn: () => getOrganizerEventPerformance(period, "tickets", 10),
+    enabled: performanceSort === "tickets",
     staleTime: STALE_TIME,
   });
 
-  const performanceQuery = useQuery({
-    queryKey: ["organizer-dashboard-performance", period, performanceSort],
-    queryFn: () => getOrganizerEventPerformance(period, performanceSort, 10),
-    staleTime: STALE_TIME,
-  });
+  const dashboard =
+    dashboardQuery.data?.status === 200 ? dashboardQuery.data.data : null;
+  const isLoading = dashboardQuery.isLoading;
+  // An answer that says it failed is a failure too: it used to render as
+  // an empty dashboard, as if nothing had been sold.
+  const isError =
+    dashboardQuery.isError ||
+    (dashboardQuery.data !== undefined && dashboardQuery.data.status !== 200);
+  const retry = () => dashboardQuery.refetch();
 
-  const upcomingQuery = useQuery({
-    queryKey: ["organizer-dashboard-upcoming"],
-    queryFn: () => getOrganizerUpcomingEvents(5),
-    staleTime: STALE_TIME,
-  });
-
-  const attentionQuery = useQuery({
-    queryKey: ["organizer-dashboard-attention"],
-    queryFn: () => getOrganizerNeedsAttention(7),
-    staleTime: STALE_TIME,
-  });
-
-  const activityQuery = useQuery({
-    queryKey: ["organizer-dashboard-activity"],
-    queryFn: () => getOrganizerRecentActivity(8),
-    staleTime: STALE_TIME,
-  });
-
-  const overviewData = overviewQuery.data;
   const overview: { current: Row[]; previous: Row[] | null } | null =
-    overviewData && overviewData.status === 200
-      ? {
-          current: overviewData.data.current,
-          previous: overviewData.data.previous,
-        }
-      : null;
+    dashboard?.overview ?? null;
   const hasNoEvents =
-    !overviewQuery.isLoading &&
+    !isLoading &&
     overview !== null &&
     Number(overview.current[0]?.total_events_count ?? 0) === 0;
 
   const primaryCurrency = overview?.current?.[0]?.currency ?? "";
 
-  const timelineResult = timelineQuery.data;
   const timelineData: OrganizerSalesTimelinePoint[] =
-    timelineResult && timelineResult.status === 200 ? timelineResult.data : [];
-  const timelineBucket: DashboardBucket =
-    (timelineResult &&
-      timelineResult.status === 200 &&
-      timelineResult.bucket) ||
-    "day";
+    dashboard?.timeline.rows ?? [];
+  const timelineBucket: DashboardBucket = dashboard?.timeline.bucket ?? "day";
 
-  const performanceResult = performanceQuery.data;
-  const performanceEvents: OrganizerEventPerformanceRow[] =
-    performanceResult && performanceResult.status === 200
-      ? performanceResult.data
-      : [];
+  const byTickets = byTicketsQuery.data;
+  const sortedByTickets = performanceSort === "tickets";
+  const performanceEvents: OrganizerEventPerformanceRow[] = sortedByTickets
+    ? byTickets && byTickets.status === 200
+      ? byTickets.data
+      : []
+    : (dashboard?.performance ?? []);
 
-  const upcomingResult = upcomingQuery.data;
-  const upcomingEvents: OrganizerUpcomingEventRow[] =
-    upcomingResult && upcomingResult.status === 200 ? upcomingResult.data : [];
-
-  const attentionResult = attentionQuery.data;
-  const attentionItems: OrganizerAttentionRow[] =
-    attentionResult && attentionResult.status === 200
-      ? attentionResult.data
-      : [];
-
-  const activityResult = activityQuery.data;
-  const activityItems: OrganizerActivityRow[] =
-    activityResult && activityResult.status === 200 ? activityResult.data : [];
+  const upcomingEvents: OrganizerUpcomingEventRow[] = dashboard?.upcoming ?? [];
+  const attentionItems: OrganizerAttentionRow[] = dashboard?.attention ?? [];
+  const activityItems: OrganizerActivityRow[] = dashboard?.activity ?? [];
 
   const greeting = (() => {
     const hour = new Date().getHours();
@@ -141,7 +111,7 @@ export default function OrganizerDashboard() {
 
   // First name when the person has given one, else their handle.
   const greetingName =
-    userDetails?.full_name?.trim().split(/s+/)[0] || userDetails?.username;
+    userDetails?.full_name?.trim().split(/\s+/)[0] || userDetails?.username;
 
   if (hasNoEvents) {
     return (
@@ -171,9 +141,9 @@ export default function OrganizerDashboard() {
       <OrganizerOverviewCards
         overview={overview}
         period={period}
-        isLoading={overviewQuery.isLoading}
-        isError={overviewQuery.isError}
-        onRetry={() => overviewQuery.refetch()}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={retry}
       />
 
       <OrganizerFinanceSummary />
@@ -186,9 +156,9 @@ export default function OrganizerDashboard() {
           data={timelineData}
           bucket={timelineBucket}
           currency={primaryCurrency}
-          isLoading={timelineQuery.isLoading}
-          isError={timelineQuery.isError}
-          onRetry={() => timelineQuery.refetch()}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={retry}
         />
       </section>
 
@@ -196,30 +166,35 @@ export default function OrganizerDashboard() {
         events={performanceEvents}
         sort={performanceSort}
         onSortChange={setPerformanceSort}
-        isLoading={performanceQuery.isLoading}
-        isError={performanceQuery.isError}
-        onRetry={() => performanceQuery.refetch()}
+        isLoading={sortedByTickets ? byTicketsQuery.isLoading : isLoading}
+        isError={
+          sortedByTickets
+            ? byTicketsQuery.isError ||
+              (byTickets !== undefined && byTickets.status !== 200)
+            : isError
+        }
+        onRetry={sortedByTickets ? () => byTicketsQuery.refetch() : retry}
       />
 
       <OrganizerUpcomingEvents
         events={upcomingEvents}
-        isLoading={upcomingQuery.isLoading}
-        isError={upcomingQuery.isError}
-        onRetry={() => upcomingQuery.refetch()}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={retry}
       />
 
       <OrganizerNeedsAttention
         items={attentionItems}
-        isLoading={attentionQuery.isLoading}
-        isError={attentionQuery.isError}
-        onRetry={() => attentionQuery.refetch()}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={retry}
       />
 
       <OrganizerRecentActivity
         items={activityItems}
-        isLoading={activityQuery.isLoading}
-        isError={activityQuery.isError}
-        onRetry={() => activityQuery.refetch()}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={retry}
       />
     </div>
   );

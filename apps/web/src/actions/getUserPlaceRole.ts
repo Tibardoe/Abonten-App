@@ -3,7 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
-import { tr } from "@abonten/services/i18n/requestLocale";
+import { userPlaceRoleQuery } from "@abonten/services/profile/userRolesQuery";
 
 export const getUserPlaceRole = withActionLocale(
   async function getUserPlaceRole(userId: string) {
@@ -19,23 +19,7 @@ export const getUserPlaceRole = withActionLocale(
         return { status: 401, role: "none" };
       }
 
-      const { data: ownedPlace, error: ownedPlaceError } = await supabase
-        .from("place")
-        .select("owner_id")
-        .eq("owner_id", userId)
-        .limit(1);
-
-      if (ownedPlaceError) {
-        logger.error(`Error fetching owned places: ${ownedPlaceError.message}`);
-
-        return { status: 500, message: tr("somethingWentWrong") };
-      }
-
-      if (ownedPlace && ownedPlace.length > 0) {
-        return { role: "owner" };
-      }
-
-      return { role: "none" };
+      return await userPlaceRoleQuery(supabase, userId);
     } catch (error) {
       logger.error("Error checking user place role:", error);
       return { role: "none" };

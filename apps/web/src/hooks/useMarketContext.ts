@@ -1,11 +1,12 @@
 "use client";
 
 import getMarketContext from "@/actions/getMarketContext";
+import { takeShellSlice } from "@/hooks/shellBootstrap";
 import type { PublicMarket } from "@abonten/core/market/types";
 import { convertForDisplay } from "@abonten/core/money/conversion";
 import { formatMoney } from "@abonten/core/money/formatMoney";
 import { fromMajor } from "@abonten/core/money/money";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "next-intl";
 import { useMemo } from "react";
 
@@ -27,15 +28,23 @@ const viewerTimeZone = () => {
  */
 export function useMarketContext(browsingCountry?: string | null) {
   const locale = useLocale();
+  const client = useQueryClient();
   const query = useQuery({
     queryKey: ["market-context", browsingCountry ?? null],
-    queryFn: () =>
-      getMarketContext({
+    queryFn: async () => {
+      // The shared answer is for the visitor's own market; a page about
+      // another country's area asks for that country.
+      if (!browsingCountry) {
+        const shared = await takeShellSlice(client, "marketContext");
+        if (shared !== undefined) return shared;
+      }
+      return getMarketContext({
         browsingCountry: browsingCountry ?? null,
         viewerTimeZone: viewerTimeZone(),
         viewerLocale:
           typeof navigator !== "undefined" ? navigator.language : null,
-      }),
+      });
+    },
     staleTime: 10 * 60 * 1000,
   });
 

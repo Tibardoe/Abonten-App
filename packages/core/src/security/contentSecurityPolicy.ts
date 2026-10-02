@@ -77,7 +77,9 @@ function serialize(directives: Record<string, string[]>): string {
 /** The consumer web app (abontenhub.com). */
 export function buildWebCsp(options: CspOptions = {}): string {
   const supabase = origin(options.supabaseUrl);
-  const supabaseWs = supabase ? supabase.replace(/^https:/, "wss:") : null;
+  // https → wss, and http → ws for a local stack (a production build run
+  // against one had its realtime socket refused by this very policy).
+  const supabaseWs = supabase ? supabase.replace(/^http/, "ws") : null;
   const sentry = sentryCspEndpoints(options.sentryDsn);
   const dev = options.development === true;
   const preview = options.vercelPreview === true;
@@ -155,7 +157,9 @@ export function buildWebCsp(options: CspOptions = {}): string {
 /** The operations console (admin.abontenhub.com): no third-party scripts. */
 export function buildAdminCsp(options: CspOptions = {}): string {
   const supabase = origin(options.supabaseUrl);
-  const supabaseWs = supabase ? supabase.replace(/^https:/, "wss:") : null;
+  // https → wss, and http → ws for a local stack (a production build run
+  // against one had its realtime socket refused by this very policy).
+  const supabaseWs = supabase ? supabase.replace(/^http/, "ws") : null;
   const sentry = sentryCspEndpoints(options.sentryDsn);
   const dev = options.development === true;
   const preview = options.vercelPreview === true;

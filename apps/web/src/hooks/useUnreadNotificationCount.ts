@@ -1,8 +1,9 @@
 "use client";
 
 import { getUnreadNotificationCount } from "@/actions/getUnreadNotificationCount";
+import { takeShellSlice } from "@/hooks/shellBootstrap";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Powers the NotificationBell badge. Short staleTime (unlike
 // useCurrentUser's 60s) since an unread count needs to feel reasonably
@@ -11,11 +12,17 @@ import { useQuery } from "@tanstack/react-query";
 // after a full remount.
 export function useUnreadNotificationCount() {
   const { data: user } = useCurrentUser();
-
+  const client = useQueryClient();
   return useQuery({
     queryKey: ["unread-notification-count", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
+      const shared = await takeShellSlice(
+        client,
+        "unreadNotifications",
+        user?.id,
+      );
+      if (shared !== undefined) return shared;
       const result = await getUnreadNotificationCount();
       return result.status === 200 ? result.count : 0;
     },

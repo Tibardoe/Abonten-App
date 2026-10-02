@@ -64,6 +64,21 @@ describe("buildWebCsp", () => {
     expect(connect).toContain("https://api.cloudinary.com");
   });
 
+  it("reaches a local stack's realtime socket over ws", () => {
+    const local = buildWebCsp({
+      supabaseUrl: "http://127.0.0.1:54321",
+      sentryDsn: DSN,
+    });
+    const connect = directive(local, "connect-src");
+    expect(connect).toContain("http://127.0.0.1:54321");
+    expect(connect).toContain("ws://127.0.0.1:54321");
+  });
+
+  it("names no third party that learns the visitor's address for nothing", () => {
+    // The address field used to ask ipapi.co for the visitor's country.
+    expect(policy).not.toContain("ipapi");
+  });
+
   it("frames only Paystack", () => {
     expect(directive(policy, "frame-src")).toEqual([
       "'self'",

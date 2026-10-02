@@ -1,9 +1,10 @@
 "use client";
 
 import { getContentProgram } from "@/actions/content/getContentProgram";
+import { takeShellSlice } from "@/hooks/shellBootstrap";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DISABLED_CONTENT_PROGRAM } from "@abonten/types/contentType";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Which Spotlight + Stories features the current visitor may use. Rolls out
 // by audience (staff -> beta -> everyone) and fails closed, so every entry
@@ -11,10 +12,17 @@ import { useQuery } from "@tanstack/react-query";
 // Cached per person, because the answer depends on who is asking.
 export function useContentProgram() {
   const { data: user, isLoading: userLoading } = useCurrentUser();
+  const client = useQueryClient();
   const query = useQuery({
     queryKey: ["content", "program", user?.id ?? null],
     enabled: !userLoading,
     queryFn: async () => {
+      const shared = await takeShellSlice(
+        client,
+        "contentProgram",
+        user?.id ?? null,
+      );
+      if (shared !== undefined) return shared;
       const res = await getContentProgram();
       return res.status === 200 && res.data ? res.data : null;
     },
