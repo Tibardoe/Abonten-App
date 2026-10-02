@@ -8,7 +8,7 @@ import ModalShell from "@/components/atoms/ModalShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
-import { formatDateTime } from "@abonten/core/i18n/format";
+import { formatDateTime, formatPercent } from "@abonten/core/i18n/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
@@ -259,7 +259,11 @@ export default function ManagePromoCodesModal({
                       <div className="space-y-1 text-sm text-muted-foreground">
                         <div className="flex justify-between">
                           <p>{t("discount2")}</p>
-                          <p>{code.discountPercentage}%</p>
+                          <p>
+                            {formatPercent(code.discountPercentage, locale, {
+                              maximumFractionDigits: 2,
+                            })}
+                          </p>
                         </div>
                         <div className="flex justify-between">
                           <p>{t("expires")}</p>

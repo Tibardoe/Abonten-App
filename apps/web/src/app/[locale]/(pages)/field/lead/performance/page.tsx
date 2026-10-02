@@ -3,19 +3,20 @@ import { PageTitle, SupportingText } from "@/components/ui/typography";
 import StatTile from "@/fieldOps/atoms/StatTile";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
+import { FIELD_OPS_ROLE_LABEL } from "@/fieldOps/lib/roleLabel";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
+import { formatPercent } from "@abonten/core/i18n/format";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-/** "3 of 4" reads better than "75%" at these volumes. */
-const outOf = (part: number, whole: number) =>
-  whole === 0 ? "—" : `${part} of ${whole}`;
-
 export default async function FieldLeadPerformancePage() {
   const t = await getTranslations("fieldOps");
   const locale = await getLocale();
+  /** "3 of 4" reads better than "75%" at these volumes. */
+  const outOf = (part: number, whole: number) =>
+    whole === 0 ? "—" : t("outOf", { part, whole });
   const money = (minor: number, currency: string) =>
     formatMinor(minor, currency, locale);
 
@@ -43,7 +44,7 @@ export default async function FieldLeadPerformancePage() {
         <StatTile
           label={t("townsCovered")}
           value={`${stats.territories.covered + stats.territories.completed}/${stats.territories.total}`}
-          hint={`${stats.territories.coveragePct}%`}
+          hint={formatPercent(stats.territories.coveragePct, locale)}
         />
         <StatTile
           label={t("businessesListed")}
@@ -97,8 +98,10 @@ export default async function FieldLeadPerformancePage() {
                       {m.fullName ?? t("aMember")}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {m.role.replace(/_/g, " ")}
-                      {m.status !== "active" ? ` · ${m.status}` : ""}
+                      {t(FIELD_OPS_ROLE_LABEL[m.role])}
+                      {m.status !== "active"
+                        ? ` · ${t(`statusChip.${m.status}`)}`
+                        : ""}
                     </div>
                   </td>
                   <td className="p-3 tabular-nums">{m.assignedDays}</td>

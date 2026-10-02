@@ -143,7 +143,6 @@ export function FeaturedBanner({
         accessibilityLabel={t("opensTheOneOnShow", {
           label: label,
           count: count,
-          value: count === 1 ? t("listing") : t("listings"),
         })}
         eyebrow={
           <WeeklyChip strong>
@@ -155,7 +154,7 @@ export function FeaturedBanner({
           className="text-[12px] font-medium"
           style={{ color: "rgba(255,255,255,0.82)" }}
         >
-          {count} {count === 1 ? t("pick") : t("picks")} {t("paidPlacement")}
+          {t("picksPaidPlacement", { count: count })}
         </AppText>
         <AppText
           className="mt-1.5 text-[30px] font-extrabold leading-[33px] text-white"

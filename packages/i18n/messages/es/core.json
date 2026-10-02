@@ -1170,5 +1170,10 @@
       "restricted": "Restringido por moderación",
       "unsupported": "Aún no es compatible"
     }
+  },
+  "needsAttention": {
+    "noSalesYet": "Empieza el {date} y aún no hay ventas.",
+    "lowSales": "Empieza el {date} y solo {sold, plural, one {se ha vendido # entrada} other {se han vendido # entradas}} hasta ahora.",
+    "nearlySoldOut": "{type}: casi agotado ({remaining, plural, one {queda # entrada} other {quedan # entradas}})."
   }
 }

@@ -47,9 +47,7 @@
   "favorites": "Favorites",
   "finishSettingUpYourAccount": "Finish setting up your account",
   "finishSettingUpYourAccountOf": "Finish setting up your account. {completedCount} of {total} steps done.",
-  "follower": "follower",
   "followers": "Followers",
-  "followers2": "followers",
   "highlightButton": "Highlight button",
   "highlights": "Highlights",
   "isnTConfirmedYetWeLl": "{currentEmail} isn't confirmed yet. We'll send a code to it.",
@@ -119,5 +117,6 @@
   "weCouldnTCancelThatBooking": "We couldn't cancel that booking request.",
   "youCanPayNow": "You can pay now.",
   "youHavenTPostedASpotlight": "You haven't posted a Spotlight yet.",
-  "yourBookingRequestsToPlacesWill": "Your booking requests to places will show up here."
+  "yourBookingRequestsToPlacesWill": "Your booking requests to places will show up here.",
+  "followersCount": "{count, plural, one {<b>#</b> follower} other {<b>#</b> followers}}"
 }

@@ -309,7 +309,9 @@ export function SpotlightCommentsPanel({
             {replyTo ? (
               <View className="flex-row items-center justify-between px-1">
                 <AppText variant="meta" numberOfLines={1} className="flex-1">
-                  {t("replyingTo")} {replyTo.author.username ?? t("aComment")}
+                  {replyTo.author.username
+                    ? t("replyingToUser", { name: replyTo.author.username })
+                    : t("replyingToComment")}
                 </AppText>
                 <Pressable
                   onPress={() => setReplyTo(null)}

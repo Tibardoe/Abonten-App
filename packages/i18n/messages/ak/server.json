@@ -51,7 +51,7 @@
   "atMostEvidencePhotos": "At most {MAX_EVIDENCE} evidence photos.",
   "atPlace": "At {place}",
   "attachmentsCanTChangeOnceA": "Attachments can't change once a post is published.",
-  "automaticRefreshIsOffProvider": "Automatic refresh is off (provider: {provider}).",
+  "automaticRefreshIsOffProvider": "Automatic refresh is off (provider: {provider, select, manual {manual} other {off}}).",
   "bankPayoutsArenTAvailableIn": "Bank payouts aren't available in {name} yet.",
   "becauseYouLike": "Because you like {category}",
   "bookingAccepted": "Booking accepted.",

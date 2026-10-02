@@ -1,7 +1,7 @@
 {
   "aPastEditionSomeEventsHave": "Eine frühere Ausgabe. Einige Events haben bereits stattgefunden.",
   "abontenWeeklyCouldnTBeLoaded": "Abonten Weekly konnte gerade nicht geladen werden.",
-  "browse": "{pickCount} durchstöbern",
+  "browse": "{pickCount, plural, one {# Tipp ansehen} other {# Tipps durchstöbern}}",
   "checkOutThisWeekSAbonten": "Sieh dir das Abonten Weekly dieser Woche an.",
   "couldnTLoadAbontenWeekly": "Abonten Weekly konnte nicht geladen werden.",
   "event": "Event",
@@ -19,7 +19,7 @@
   "itMayHaveBeenTakenDown": "Möglicherweise wurde sie entfernt oder ist noch nicht erschienen.",
   "linkWorksUntilUtc": "Der Link funktioniert bis {formatUtc} UTC",
   "loadingAbontenWeekly": "Abonten Weekly wird geladen",
-  "more": " +{extraDates} weitere",
+  "more": "+{extraDates} weitere",
   "moreDates": "+{count, plural, one {# weiterer Termin} other {# weitere Termine}}",
   "nextPick": "Nächster Tipp",
   "notVisibleToThePublicUnless": "— {item}. Für die Öffentlichkeit erst nach der Veröffentlichung sichtbar. Einträge, die nicht angezeigt werden können, sind bereits ausgelassen.",
@@ -32,7 +32,6 @@
   "openTheEditionInTheAdmin": "Öffne die Ausgabe in der Admin-Konsole und wähle erneut „Vorschau“.",
   "pauseTheSlideshow": "Diashow pausieren",
   "pick": "Tipp",
-  "picks": "Tipps",
   "picksCount": "{count, plural, one {# Tipp} other {# Tipps}}",
   "place": "Ort",
   "preview": "Vorschau",
@@ -55,10 +54,10 @@
   "thereIsNoEditionForYour": "Für deine Gegend gibt es diese Woche keine Ausgabe, daher sind das Tipps für ganz {scopeName}.",
   "thisEditionIsnTAvailable": "Diese Ausgabe ist nicht verfügbar",
   "thisPreviewLinkHasExpired": "Dieser Vorschau-Link ist abgelaufen.",
-  "thisWeek": "diese Woche",
   "thisWeekSEditionIsOn": "Die Ausgabe dieser Woche ist unterwegs",
   "thisWeekSEditionIsOn2": "Die Ausgabe dieser Woche ist unterwegs. Hier ist die der letzten Woche.",
   "viewEvent": "Event ansehen",
   "viewPlace": "Ort ansehen",
-  "widePicks": "Tipps für ganz {scopeName}"
+  "widePicks": "Tipps für ganz {scopeName}",
+  "picksThisWeek": "{count, plural, one {# Tipp diese Woche} other {# Tipps diese Woche}}"
 }

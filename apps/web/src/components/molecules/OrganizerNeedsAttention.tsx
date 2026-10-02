@@ -1,5 +1,6 @@
+import { organizerNeedsAttentionText } from "@abonten/core/organizerNeedsAttention";
 import type { OrganizerAttentionRow } from "@abonten/types/eventAnalytics";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { TbAlertTriangle, TbCircleCheck } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
@@ -20,7 +21,9 @@ export default function OrganizerNeedsAttention({
   isError?: boolean;
   onRetry?: () => void;
 }) {
+  const locale = useLocale();
   const t = useTranslations("common");
+  const tc = useTranslations("core");
 
   if (isLoading) {
     return (
@@ -71,7 +74,9 @@ export default function OrganizerNeedsAttention({
             />
             <div className="min-w-0">
               <p className="font-medium truncate">{item.event_title}</p>
-              <p className="text-sm text-muted-foreground">{item.message}</p>
+              <p className="text-sm text-muted-foreground">
+                {organizerNeedsAttentionText(tc, item, locale)}
+              </p>
             </div>
           </Link>
         ))}

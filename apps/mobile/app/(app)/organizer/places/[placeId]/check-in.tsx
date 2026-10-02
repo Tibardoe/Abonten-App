@@ -93,7 +93,7 @@ export default function PlaceCheckInScreen() {
           </View>
 
           <AppText variant="small" className="text-center">
-            {t("showThisAtYourCounterOr")}
+            {t("showThisAtYourCounterOr")}{" "}
             {panel.verified
               ? t("everyDifferentPersonWhoChecksIn", {
                   formatCredit: formatCredit(

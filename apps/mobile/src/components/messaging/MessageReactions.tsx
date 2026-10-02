@@ -40,8 +40,7 @@ export const MessageReactions = memo(function MessageReactions({
             accessibilityLabel={t("tapTo", {
               emoji: r.emoji,
               count: r.count,
-              value: r.reacted_by_me ? t("includingYou") : "",
-              value2: r.reacted_by_me ? t("remove") : t("add"),
+              mine: r.reacted_by_me ? "yes" : "no",
             })}
             hitSlop={6}
             onPress={() => onToggle(r.emoji)}

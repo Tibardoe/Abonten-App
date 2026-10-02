@@ -122,7 +122,6 @@
   "ofDone": "{done} sur {length} terminés",
   "ofStepsDone": "{completedCount, plural, one {# étape terminée} other {# étapes terminées}} sur {total}",
   "onIphoneAndIpadAddAbonten": "Sur iPhone et iPad, ajoutez Abonten Hub à votre écran d'accueil depuis le menu Partager de Safari, puis ouvrez-le depuis cet écran pour activer cette option.",
-  "oneStepLeft": "Plus qu'une étape",
   "openSettings": "Ouvrir les réglages",
   "optional": "Facultatif",
   "overview": "Vue d'ensemble",
@@ -190,8 +189,7 @@
   "similarEventsAndPlaces": "Événements et lieux similaires",
   "similarPlaces": "Lieux similaires",
   "starts": "Début",
-  "stepsLeft": "{left} étapes restantes",
-  "stepsLeft2": "{value} étapes restantes",
+  "stepsLeft": "{left, plural, =1 {Plus qu'une étape} other {# étapes restantes}}",
   "stop": "Arrêter",
   "stopAlerts": "Arrêter les alertes",
   "takeABreak": "Faire une pause",
@@ -246,5 +244,6 @@
   "yourProfile": "votre profil",
   "yourProfileFavouritesAndSavedPayment": "Votre profil, vos favoris et vos informations de paiement enregistrées sont supprimés et vous êtes déconnecté partout. Les billets que vous avez achetés et les justificatifs de paiement sont conservés pour la comptabilité. Les lieux qui vous appartiennent restent référencés, sans propriétaire.",
   "yourProfileIsCompleteAndYou": "Votre profil est complet et vous avez deux moyens de vous connecter.",
-  "yourSettings": "vos paramètres"
+  "yourSettings": "vos paramètres",
+  "promotionWhen": "{state, select, scheduled {Commence le {date}} other {Se termine le {date}}}"
 }

@@ -1,7 +1,7 @@
 {
   "aPastEditionSomeEventsHave": "Una edición pasada. Algunos eventos ya se han celebrado.",
   "abontenWeeklyCouldnTBeLoaded": "No se pudo cargar Abonten Weekly en este momento.",
-  "browse": "Explorar {pickCount}",
+  "browse": "{pickCount, plural, one {Explorar # sugerencia} other {Explorar las # sugerencias}}",
   "checkOutThisWeekSAbonten": "Echa un vistazo al Abonten Weekly de esta semana.",
   "couldnTLoadAbontenWeekly": "No se pudo cargar Abonten Weekly.",
   "event": "Evento",
@@ -19,7 +19,7 @@
   "itMayHaveBeenTakenDown": "Puede que se haya retirado o que aún no haya salido.",
   "linkWorksUntilUtc": "El enlace funciona hasta las {formatUtc} UTC",
   "loadingAbontenWeekly": "Cargando Abonten Weekly",
-  "more": " +{extraDates} más",
+  "more": "+{extraDates} más",
   "moreDates": "+{count, plural, one {# fecha más} other {# fechas más}}",
   "nextPick": "Sugerencia siguiente",
   "notVisibleToThePublicUnless": "— {item}. No es visible para el público hasta que se publique. Las fichas que no se pueden mostrar ya se han dejado fuera.",
@@ -32,7 +32,6 @@
   "openTheEditionInTheAdmin": "Abre la edición en la consola de administración y vuelve a elegir Vista previa.",
   "pauseTheSlideshow": "Pausar el pase de diapositivas",
   "pick": "sugerencia",
-  "picks": "sugerencias",
   "picksCount": "{count, plural, one {# sugerencia} other {# sugerencias}}",
   "place": "lugar",
   "preview": "Vista previa",
@@ -55,10 +54,10 @@
   "thereIsNoEditionForYour": "Esta semana no hay edición para tu zona, así que estas son sugerencias de toda la zona de {scopeName}.",
   "thisEditionIsnTAvailable": "Esta edición no está disponible",
   "thisPreviewLinkHasExpired": "Este enlace de vista previa ha caducado.",
-  "thisWeek": "esta semana",
   "thisWeekSEditionIsOn": "La edición de esta semana está en camino",
   "thisWeekSEditionIsOn2": "La edición de esta semana está en camino. Aquí tienes la de la semana pasada.",
   "viewEvent": "Ver evento",
   "viewPlace": "Ver lugar",
-  "widePicks": "Sugerencias de toda la zona de {scopeName}"
+  "widePicks": "Sugerencias de toda la zona de {scopeName}",
+  "picksThisWeek": "{count, plural, one {# sugerencia esta semana} other {# sugerencias esta semana}}"
 }

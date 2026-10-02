@@ -1,7 +1,7 @@
 {
   "aPastEditionSomeEventsHave": "Une édition passée. Certains événements ont déjà eu lieu.",
   "abontenWeeklyCouldnTBeLoaded": "Abonten Weekly n'a pas pu être chargé pour l'instant.",
-  "browse": "Parcourir {pickCount}",
+  "browse": "{pickCount, plural, one {Parcourir # suggestion} other {Parcourir les # suggestions}}",
   "checkOutThisWeekSAbonten": "Découvrez l'Abonten Weekly de cette semaine.",
   "couldnTLoadAbontenWeekly": "Impossible de charger Abonten Weekly.",
   "event": "Événement",
@@ -19,7 +19,7 @@
   "itMayHaveBeenTakenDown": "Elle a peut-être été retirée, ou elle n'est pas encore parue.",
   "linkWorksUntilUtc": "Le lien fonctionne jusqu'à {formatUtc} UTC",
   "loadingAbontenWeekly": "Chargement d'Abonten Weekly",
-  "more": " +{extraDates} autres",
+  "more": "+{extraDates} autres",
   "moreDates": "+{count, plural, one {# autre date} other {# autres dates}}",
   "nextPick": "Suggestion suivante",
   "notVisibleToThePublicUnless": "— {item}. Non visible du public tant que l'édition n'est pas publiée. Les fiches qui ne peuvent pas être affichées sont déjà exclues.",
@@ -32,7 +32,6 @@
   "openTheEditionInTheAdmin": "Ouvrez l'édition dans la console d'administration et choisissez de nouveau Aperçu.",
   "pauseTheSlideshow": "Mettre le diaporama en pause",
   "pick": "suggestion",
-  "picks": "suggestions",
   "picksCount": "{count, plural, one {# suggestion} other {# suggestions}}",
   "place": "lieu",
   "preview": "Aperçu",
@@ -55,10 +54,10 @@
   "thereIsNoEditionForYour": "Il n'y a pas d'édition pour votre zone cette semaine ; voici donc des suggestions à l'échelle de la zone {scopeName}.",
   "thisEditionIsnTAvailable": "Cette édition n'est pas disponible",
   "thisPreviewLinkHasExpired": "Ce lien d'aperçu a expiré.",
-  "thisWeek": "cette semaine",
   "thisWeekSEditionIsOn": "L'édition de cette semaine arrive",
   "thisWeekSEditionIsOn2": "L'édition de cette semaine arrive. Voici celle de la semaine dernière.",
   "viewEvent": "Voir l'événement",
   "viewPlace": "Voir le lieu",
-  "widePicks": "Suggestions à l'échelle de la zone {scopeName}"
+  "widePicks": "Suggestions à l'échelle de la zone {scopeName}",
+  "picksThisWeek": "{count, plural, one {# suggestion cette semaine} other {# suggestions cette semaine}}"
 }

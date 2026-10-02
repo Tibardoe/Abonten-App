@@ -83,8 +83,7 @@ export default function WeeklyEditionView({
             href="#weekly-picks"
             className="inline-flex h-11 items-center gap-3 rounded-full bg-white pl-5 pr-1.5 text-sm font-semibold text-slate-950 shadow-lg shadow-black/20 transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
-            {t("browse", { pickCount: pickCount })}{" "}
-            {pickCount === 1 ? t("pick") : t("picks")}
+            {t("browse", { pickCount: pickCount })}
             <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-950 text-white">
               <FiArrowDown aria-hidden className="h-4 w-4" />
             </span>

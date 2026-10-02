@@ -104,9 +104,7 @@ export function ProfileHeader({
             />
             <Stat
               value={compactCount(profile.follower_count)}
-              label={
-                profile.follower_count === 1 ? t("follower") : t("followers")
-              }
+              label={t("followersLabel", { count: profile.follower_count })}
               accessibilityLabel={t("followersCount", {
                 count: profile.follower_count,
               })}

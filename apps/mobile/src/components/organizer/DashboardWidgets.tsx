@@ -10,10 +10,10 @@ import type {
 } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
+import { organizerNeedsAttentionText } from "@abonten/core/organizerNeedsAttention";
 import { AppText, Icon, type IoniconName, Overline } from "@abonten/ui-native";
 import {
   getCurrentLocale,
-  translatorFor,
   useLocale,
   useTranslations,
 } from "@abonten/ui-native/i18n";
@@ -142,7 +142,9 @@ function UpcomingEvents({ events }: { events: OrganizerUpcomingRow[] }) {
 }
 
 function NeedsAttention({ items }: { items: OrganizerAttentionRow[] }) {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
+  const tc = useTranslations("core");
 
   return (
     <View className="gap-2">
@@ -174,7 +176,9 @@ function NeedsAttention({ items }: { items: OrganizerAttentionRow[] }) {
                 >
                   {item.event_title ?? t("event")}
                 </AppText>
-                <AppText variant="muted">{item.message}</AppText>
+                <AppText variant="muted">
+                  {organizerNeedsAttentionText(tc, item, locale)}
+                </AppText>
               </View>
             </Pressable>
           </Link>
@@ -189,13 +193,6 @@ const ACTIVITY_ICON: Record<string, IoniconName> = {
   ticket_cancelled: "close-circle-outline",
   registration: "person-add-outline",
 };
-
-function activityVerb(type: string): string {
-  if (type === "ticket_sold") return translatorFor("manage")("ticketSoldFor");
-  if (type === "ticket_cancelled")
-    return translatorFor("manage")("ticketCancelledFor");
-  return translatorFor("manage")("newRegistrationFor");
-}
 
 function RecentActivity({ items }: { items: OrganizerActivityRow[] }) {
   const { locale } = useLocale();
@@ -222,8 +219,10 @@ function RecentActivity({ items }: { items: OrganizerActivityRow[] }) {
                 size={18}
               />
               <AppText variant="small" className="flex-1" numberOfLines={1}>
-                {activityVerb(item.activity_type)}{" "}
-                {item.event_title ?? t("anEvent")}
+                {t("activityFor", {
+                  type: item.activity_type,
+                  event: item.event_title ?? t("anEvent"),
+                })}
               </AppText>
               <AppText variant="caption" className="shrink-0">
                 {getRelativeTime(item.occurred_at, undefined, locale)}

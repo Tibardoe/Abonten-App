@@ -99,7 +99,7 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
           className="mt-3 text-[12px] font-semibold uppercase tracking-widest"
           style={{ color: "rgba(255,255,255,0.7)" }}
         >
-          {pickCount} {pickCount === 1 ? t("pick") : t("picks")} {t("thisWeek")}
+          {t("picksThisWeek", { count: pickCount })}
         </AppText>
       </WeeklyBanner>
 

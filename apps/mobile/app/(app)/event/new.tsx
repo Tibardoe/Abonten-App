@@ -211,8 +211,10 @@ export default function CreateEventScreen() {
 
           <View className="gap-1">
             <Overline>
-              {t("step")} {visibleSteps.indexOf(w.step) + 1}{" "}
-              {t("ofText", { length: visibleSteps.length })}
+              {t("stepOf", {
+                step: visibleSteps.indexOf(w.step) + 1,
+                total: visibleSteps.length,
+              })}
             </Overline>
             <Hero>{t(stepInfo.title)}</Hero>
             <AppText variant="muted">{t(stepInfo.subtitle)}</AppText>

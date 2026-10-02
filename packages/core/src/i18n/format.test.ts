@@ -1,9 +1,57 @@
 import { describe, expect, it } from "vitest";
-import { formatCount, formatDate, formatDateTime } from "./format";
+import {
+  formatCount,
+  formatDate,
+  formatDateTime,
+  formatPercent,
+} from "./format";
 
 // The separators differ by language and some are non-breaking spaces:
 // compare after folding every kind of space to a plain one.
 const plain = (text: string) => text.replace(/[  ]/g, " ");
+
+describe("formatPercent", () => {
+  it("writes the sign where the reader's language puts it", () => {
+    expect(formatPercent(7, "en")).toBe("7%");
+    expect(plain(formatPercent(7, "fr"))).toBe("7 %");
+    expect(plain(formatPercent(7, "de"))).toBe("7 %");
+    expect(plain(formatPercent(7, "es"))).toBe("7 %");
+    expect(formatPercent(7, "pt")).toBe("7%");
+  });
+
+  it("takes the percentage itself, not a ratio", () => {
+    expect(formatPercent(100, "en")).toBe("100%");
+    expect(formatPercent(0.5, "en", { maximumFractionDigits: 1 })).toBe("0.5%");
+  });
+
+  it("shows decimals only as far as it is asked to", () => {
+    expect(formatPercent(7.25, "en")).toBe("7%");
+    expect(formatPercent(7.25, "en", { maximumFractionDigits: 2 })).toBe(
+      "7.25%",
+    );
+    expect(formatPercent(7.5, "en", { maximumFractionDigits: 2 })).toBe("7.5%");
+    expect(plain(formatPercent(12.5, "fr", { minimumFractionDigits: 1 }))).toBe(
+      "12,5 %",
+    );
+    expect(formatPercent(12, "en", { minimumFractionDigits: 1 })).toBe("12.0%");
+  });
+
+  it("marks a rise and a fall when asked to", () => {
+    const options = {
+      minimumFractionDigits: 1,
+      signDisplay: "exceptZero",
+    } as const;
+    expect(formatPercent(12.5, "en", options)).toBe("+12.5%");
+    expect(formatPercent(-5, "en", options)).toBe("-5.0%");
+    expect(formatPercent(0, "en", options)).toBe("0.0%");
+  });
+
+  it("never prints NaN", () => {
+    expect(formatPercent(null, "en")).toBe("0%");
+    expect(formatPercent("not a number", "en")).toBe("0%");
+    expect(formatPercent("40", "en")).toBe("40%");
+  });
+});
 
 describe("formatCount", () => {
   it("groups the way the reader's language does", () => {

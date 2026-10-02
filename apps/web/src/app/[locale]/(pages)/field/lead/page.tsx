@@ -5,13 +5,15 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import CampaignBanner from "@/fieldOps/molecules/CampaignBanner";
-import { getTranslations } from "next-intl/server";
+import { formatPercent } from "@abonten/core/i18n/format";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function FieldLeadDashboardPage() {
+  const locale = await getLocale();
   const t = await getTranslations("fieldOps");
 
   const me = await loadFieldOpsMe();
@@ -34,7 +36,10 @@ export default async function FieldLeadDashboardPage() {
       <CampaignBanner campaign={d.campaign} membership={current.membership} />
 
       <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile label={t("coverage")} value={`${d.coveragePct}%`} />
+        <StatTile
+          label={t("coverage")}
+          value={formatPercent(d.coveragePct, locale)}
+        />
         <StatTile label={t("territories")} value={d.territories.length} />
         <StatTile label={t("workingToday")} value={d.todayAssignments.length} />
         <StatTile

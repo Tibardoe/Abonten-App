@@ -57,7 +57,6 @@
   "finishYourProfile": "Complétez votre profil",
   "flipHorizontally": "Retourner horizontalement",
   "flipVertically": "Retourner verticalement",
-  "follower": "Abonné",
   "follower2": "abonné",
   "followers": "Abonnés",
   "followers2": "abonnés",
@@ -68,9 +67,8 @@
   "highlightIsFull": "Le temps fort est plein",
   "highlightPosted": "Temps fort publié",
   "image": "image",
-  "items": "{count} éléments",
+  "items": "{count, plural, one {# élément} other {# éléments}}",
   "listAVenueRestaurantOrSpot": "Référencez une salle, un restaurant ou un lieu",
-  "n1Item": "1 élément",
   "newHighlight": "Nouveau temps fort",
   "on": "sur {name}",
   "oneIsOverMb": "Un élément ({value}) dépasse {round} Mo.",
@@ -114,5 +112,8 @@
   "toSwitchBetweenEventsAndPlaces": "pour basculer entre Événements et Lieux",
   "uploadFailedPleaseTryAgain": "Échec de l'envoi. Veuillez réessayer.",
   "video": "vidéo",
-  "viewProfilePhoto": "Voir la photo de profil"
+  "viewProfilePhoto": "Voir la photo de profil",
+  "followersLabel": "{count, plural, one {Abonné} other {Abonnés}}",
+  "deleteMedia": "{kind, select, video {Supprimer la vidéo} other {Supprimer la photo}}",
+  "reportMedia": "{kind, select, video {Signaler la vidéo} other {Signaler la photo}}"
 }

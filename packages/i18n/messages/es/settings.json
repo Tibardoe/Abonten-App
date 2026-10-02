@@ -122,7 +122,6 @@
   "ofDone": "{done} de {length} completados",
   "ofStepsDone": "{completedCount} de {total} pasos completados",
   "onIphoneAndIpadAddAbonten": "En iPhone y iPad, añade Abonten Hub a tu pantalla de inicio desde el menú Compartir de Safari y ábrelo desde allí para activar esto.",
-  "oneStepLeft": "Queda un paso",
   "openSettings": "Abrir ajustes",
   "optional": "Opcional",
   "overview": "Resumen",
@@ -190,8 +189,7 @@
   "similarEventsAndPlaces": "Eventos y lugares similares",
   "similarPlaces": "Lugares similares",
   "starts": "Empieza",
-  "stepsLeft": "Quedan {left} pasos",
-  "stepsLeft2": "Quedan {value} pasos",
+  "stepsLeft": "{left, plural, =1 {Queda un paso} other {Quedan # pasos}}",
   "stop": "Detener",
   "stopAlerts": "Detener alertas",
   "takeABreak": "Tómate un descanso",
@@ -246,5 +244,6 @@
   "yourProfile": "tu perfil",
   "yourProfileFavouritesAndSavedPayment": "Tu perfil, tus favoritos y tus datos de pago guardados se eliminan y se cierra tu sesión en todas partes. Las entradas que compraste y los registros de pago se conservan por contabilidad. Los lugares que son tuyos siguen publicados, sin propietario.",
   "yourProfileIsCompleteAndYou": "Tu perfil está completo y tienes dos formas de iniciar sesión.",
-  "yourSettings": "tus ajustes"
+  "yourSettings": "tus ajustes",
+  "promotionWhen": "{state, select, scheduled {Empieza el {date}} other {Termina el {date}}}"
 }

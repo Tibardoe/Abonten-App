@@ -90,10 +90,8 @@
   "openInMaps": "Open in Maps",
   "openNow": "Open now",
   "openSettings": "Open settings",
-  "opensTheOneOnShow": "{label}, {count} {value}. Opens the one on show.",
-  "paidPlacement": "· Paid placement",
+  "opensTheOneOnShow": "{label}, {count, plural, one {# listing} other {# listings}}. Opens the one on show.",
   "pick": "pick",
-  "picks": "picks",
   "places": "Places",
   "placesHere": "places here",
   "pleaseTryAgain": "Please try again.",
@@ -154,5 +152,6 @@
   "youReOnTheList": "You're on the list",
   "youReSomewhereNew": "You're somewhere new",
   "yourArea": "your area",
-  "yourLocation": "Your location"
+  "yourLocation": "Your location",
+  "picksPaidPlacement": "{count, plural, one {# pick} other {# picks}} · Paid placement"
 }

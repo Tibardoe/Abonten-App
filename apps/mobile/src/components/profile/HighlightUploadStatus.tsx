@@ -1,6 +1,7 @@
 import { useHighlightUpload } from "@/features/profile/HighlightUploadProvider";
+import { formatPercent } from "@abonten/core/i18n/format";
 import { AppText, Icon } from "@abonten/ui-native";
-import { useTranslations } from "@abonten/ui-native/i18n";
+import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
 
 // Compact banner for an in-flight / failed highlight upload, shown on the
@@ -8,6 +9,7 @@ import { Pressable, View } from "react-native";
 // of the web `HighlightUploadStatus`.
 
 export function HighlightUploadStatus() {
+  const { locale } = useLocale();
   const t = useTranslations("profile");
 
   const { status, progress, count, error, retry, dismiss } =
@@ -16,7 +18,7 @@ export function HighlightUploadStatus() {
   if (status === "idle") return null;
 
   const pct = Math.round(progress * 100);
-  const label = count === 1 ? t("n1Item") : t("items", { count: count });
+  const label = t("items", { count: count });
 
   if (status === "success") {
     return (
@@ -59,7 +61,7 @@ export function HighlightUploadStatus() {
         <AppText variant="small">
           {t("postingHighlight", { label: label })}
         </AppText>
-        <AppText variant="meta">{pct}%</AppText>
+        <AppText variant="meta">{formatPercent(pct, locale)}</AppText>
       </View>
       <View className="h-1.5 overflow-hidden rounded-full bg-muted">
         <View

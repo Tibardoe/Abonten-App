@@ -177,7 +177,7 @@ export default function CreatePlaceScreen() {
 
           <View className="gap-1">
             <Overline>
-              {t("step")} {w.step + 1} {t("ofText", { length: STEPS.length })}
+              {t("stepOf", { step: w.step + 1, total: STEPS.length })}
             </Overline>
             <Hero>{t(stepInfo.title)}</Hero>
             <AppText variant="muted">{t(stepInfo.subtitle)}</AppText>

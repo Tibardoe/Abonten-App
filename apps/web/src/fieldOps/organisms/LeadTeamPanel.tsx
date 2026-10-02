@@ -7,18 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { FIELD_OPS_ROLE_LABEL } from "@/fieldOps/lib/roleLabel";
 import { useToast } from "@/hooks/useToast";
 import type { FieldOpsTeamMember } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-
-const ROLE_LABEL: Record<FieldOpsTeamMember["role"], string> = {
-  team_lead: "teamLead",
-  content_creator: "contentCreator",
-  offline_member: "fieldMember",
-  online_member: "onlineMember",
-};
 
 /** The lead's team: invite by phone; suspend / reactivate / remove. */
 export default function LeadTeamPanel({
@@ -100,7 +94,7 @@ export default function LeadTeamPanel({
                     m.invitedPhoneMasked ??
                     t("member")}
                 </span>{" "}
-                · {t(ROLE_LABEL[m.role])}
+                · {t(FIELD_OPS_ROLE_LABEL[m.role])}
                 {m.status === "invited" && m.invitedPhoneMasked
                   ? ` · ${m.invitedPhoneMasked}`
                   : ""}

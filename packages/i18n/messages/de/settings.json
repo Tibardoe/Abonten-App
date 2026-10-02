@@ -122,7 +122,6 @@
   "ofDone": "{done} von {length} erledigt",
   "ofStepsDone": "{completedCount} von {total} Schritten erledigt",
   "onIphoneAndIpadAddAbonten": "Füge Abonten Hub auf iPhone und iPad über das Teilen-Menü von Safari zum Home-Bildschirm hinzu und öffne es dann von dort, um das zu aktivieren.",
-  "oneStepLeft": "Noch ein Schritt",
   "openSettings": "Einstellungen öffnen",
   "optional": "Optional",
   "overview": "Übersicht",
@@ -190,8 +189,7 @@
   "similarEventsAndPlaces": "Ähnliche Events und Orte",
   "similarPlaces": "Ähnliche Orte",
   "starts": "Beginnt",
-  "stepsLeft": "Noch {left} Schritte",
-  "stepsLeft2": "Noch {value} Schritte",
+  "stepsLeft": "{left, plural, =1 {Noch ein Schritt} other {Noch # Schritte}}",
   "stop": "Stoppen",
   "stopAlerts": "Benachrichtigungen beenden",
   "takeABreak": "Mach eine Pause",
@@ -246,5 +244,6 @@
   "yourProfile": "dein Profil",
   "yourProfileFavouritesAndSavedPayment": "Dein Profil, deine Favoriten und deine gespeicherten Zahlungsdaten werden entfernt und du wirst überall abgemeldet. Gekaufte Tickets und Zahlungsbelege werden für die Buchhaltung aufbewahrt. Orte, die dir gehören, bleiben eingetragen, ohne Inhaber.",
   "yourProfileIsCompleteAndYou": "Dein Profil ist vollständig und du hast zwei Möglichkeiten, dich anzumelden.",
-  "yourSettings": "deine Einstellungen"
+  "yourSettings": "deine Einstellungen",
+  "promotionWhen": "{state, select, scheduled {Beginnt am {date}} other {Endet am {date}}}"
 }

@@ -12,7 +12,7 @@ import { IN_APP_PROMOTION_PURCHASES } from "@/lib/storePolicy";
 import { useQueryView } from "@/lib/useQueryView";
 import { campaignStatusLabel } from "@abonten/core/content/copy";
 import { MAX_CAPTION_LENGTH } from "@abonten/core/content/limits";
-import { formatCount } from "@abonten/core/i18n/format";
+import { formatCount, formatPercent } from "@abonten/core/i18n/format";
 import {
   AppText,
   Button,
@@ -201,7 +201,10 @@ export default function ManagePostScreen() {
     [
       t("completionRate"),
       totals
-        ? `${views > 0 ? Math.round((totals.completions / views) * 100) : 0}%`
+        ? formatPercent(
+            views > 0 ? Math.round((totals.completions / views) * 100) : 0,
+            locale,
+          )
         : undefined,
     ],
     [t("likes"), totals?.likes],

@@ -456,7 +456,9 @@ export default function SecurityInputFields({
             ) : emailStep === "code" ? (
               <form onSubmit={handleEmailOtpSubmit} className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  {tAuth("codeSentTo")} {maskEmail(pendingEmail)}
+                  {tAuth("codeSentToAddress", {
+                    address: maskEmail(pendingEmail),
+                  })}
                 </p>
 
                 <OtpInput

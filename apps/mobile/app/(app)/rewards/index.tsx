@@ -119,19 +119,12 @@ function BalanceCard({
       ) : null}
       {welcomeMinor > 0 ? (
         <AppText variant="meta">
-          {t("isWelcomeCreditForYourFirst", {
-            formatCredit: formatCredit(welcomeMinor, summary.currency, locale),
+          {t("welcomeCredit", {
+            amount: formatCredit(welcomeMinor, summary.currency, locale),
+            minimum: welcomeMinOrderMinor
+              ? formatCredit(welcomeMinOrderMinor, summary.currency, locale)
+              : "none",
           })}
-          {welcomeMinOrderMinor
-            ? t("ofOrMore", {
-                formatCredit: formatCredit(
-                  welcomeMinOrderMinor,
-                  summary.currency,
-                  locale,
-                ),
-              })
-            : ""}
-          .
         </AppText>
       ) : null}
       {summary.expiringSoon ? (
@@ -218,7 +211,7 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
               })
           : t("inviteFriendsToAbonten")}
         {invite.stats.joined > 0
-          ? t("joinedSoFar", { joined: invite.stats.joined })
+          ? ` ${t("joinedSoFar", { joined: invite.stats.joined })}`
           : ""}
       </AppText>
       <Button

@@ -203,9 +203,9 @@ export default function CampaignScreen() {
           <AppText variant="muted">
             {promotionEndReasonLabel(tc, c.endReason)}.
             {unused > 0
-              ? t("ofTheBudgetWasnTUsed2", {
-                  formatMinor: formatMinor(unused, c.currency, locale),
-                })
+              ? ` ${t("budgetUnused", {
+                  amount: formatMinor(unused, c.currency, locale),
+                })}`
               : ""}
           </AppText>
         ) : null}

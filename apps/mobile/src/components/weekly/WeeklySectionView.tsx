@@ -222,7 +222,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
               <MetaLine icon="calendar-outline">
                 {[when.date, when.time].filter(Boolean).join(" · ")}
                 {when.extraDates > 0
-                  ? t("more", { extraDates: when.extraDates })
+                  ? ` ${t("more", { extraDates: when.extraDates })}`
                   : ""}
               </MetaLine>
             ) : null}

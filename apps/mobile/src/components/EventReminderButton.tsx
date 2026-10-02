@@ -56,9 +56,7 @@ export function EventReminderButton({
 
   const active = offsets.length > 0;
   const summary = active
-    ? offsets.length === 1
-      ? t("n1ReminderSet")
-      : t("remindersSet", { length: offsets.length })
+    ? t("remindersSet", { length: offsets.length })
     : t("getAReminderBeforeItStarts");
 
   return (

@@ -312,9 +312,9 @@ export function ClaimPlaceSheet({
             {t("claimRequestSubmitted")}
           </AppText>
           <AppText variant="muted" className="text-center">
-            {t("anAdminWillReviewYourRequest")}
-            {docs.length > 0 ? t("andYourDocuments") : ""}
-            {t("youLlBeNotifiedOnceIt")}
+            {t("claimReviewNote", {
+              documents: docs.length > 0 ? "yes" : "no",
+            })}
           </AppText>
           {failedCount > 0 ? (
             <View className="w-full gap-2 pt-2">

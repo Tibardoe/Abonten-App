@@ -6,7 +6,8 @@ import { setPlaceCoverFromPhoto } from "@/actions/setPlaceCoverFromPhoto";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { usePlaceGalleryUpload } from "@/hooks/usePlaceGalleryUpload";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { useTranslations } from "next-intl";
+import { formatPercent } from "@abonten/core/i18n/format";
+import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
@@ -35,6 +36,7 @@ export default function ManagePlacePhotosSection({
   photos,
   onChanged,
 }: ManagePlacePhotosSectionProps) {
+  const locale = useLocale();
   const t = useTranslations("places");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,7 +134,7 @@ export default function ManagePlacePhotosSection({
                   ? (item.errorMessage ?? t("failed"))
                   : item.status === "success"
                     ? t("done")
-                    : `${item.progress}%`}
+                    : formatPercent(item.progress, locale)}
               </span>
               {item.status === "error" && (
                 <button

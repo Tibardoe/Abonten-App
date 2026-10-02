@@ -100,16 +100,14 @@ export default function EventFinanceSummary({
             />
             {(summary.pendingRefunds > 0 || summary.completedRefunds > 0) && (
               <p className="text-xs text-muted-foreground">
-                {t("request", {
-                  refundRequestCount: summary.refundRequestCount,
-                })}{" "}
-                {t("pendingCompleted", {
-                  formatMoney: formatMoney(
+                {t("refundRequestsSummary", {
+                  count: summary.refundRequestCount,
+                  pending: formatMoney(
                     summary.currency,
                     summary.pendingRefunds,
                     { locale },
                   ),
-                  formatMoney2: formatMoney(
+                  completed: formatMoney(
                     summary.currency,
                     summary.completedRefunds,
                     { locale },

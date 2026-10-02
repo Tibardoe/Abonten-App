@@ -544,7 +544,7 @@ export default function PendingCheckoutsBasket({
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold text-lg md:text-xl">
-          {sessions.length > 1 ? t("yourCheckouts") : t("yourCheckout")}
+          {t("yourCheckouts", { count: sessions.length })}
         </h2>
         {sessions.length > 1 && (
           <button

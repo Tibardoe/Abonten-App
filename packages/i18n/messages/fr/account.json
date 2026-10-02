@@ -47,9 +47,7 @@
   "favorites": "Favoris",
   "finishSettingUpYourAccount": "Terminez la configuration de votre compte",
   "finishSettingUpYourAccountOf": "Terminez la configuration de votre compte. {completedCount, plural, one {# étape terminée} other {# étapes terminées}} sur {total}.",
-  "follower": "abonné",
   "followers": "Abonnés",
-  "followers2": "abonnés",
   "highlightButton": "Bouton de temps fort",
   "highlights": "Temps forts",
   "isnTConfirmedYetWeLl": "{currentEmail} n'est pas encore confirmée. Nous allons y envoyer un code.",
@@ -119,5 +117,6 @@
   "weCouldnTCancelThatBooking": "Nous n'avons pas pu annuler cette demande de réservation.",
   "youCanPayNow": "Vous pouvez payer maintenant.",
   "youHavenTPostedASpotlight": "Vous n'avez pas encore publié de Spotlight.",
-  "yourBookingRequestsToPlacesWill": "Vos demandes de réservation auprès des lieux apparaîtront ici."
+  "yourBookingRequestsToPlacesWill": "Vos demandes de réservation auprès des lieux apparaîtront ici.",
+  "followersCount": "{count, plural, one {<b>#</b> abonné} other {<b>#</b> abonnés}}"
 }

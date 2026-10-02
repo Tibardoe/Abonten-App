@@ -51,7 +51,7 @@
   "atMostEvidencePhotos": "Höchstens {MAX_EVIDENCE} Nachweisfotos.",
   "atPlace": "Ort: {place}",
   "attachmentsCanTChangeOnceA": "Anhänge können nicht mehr geändert werden, sobald ein Beitrag veröffentlicht ist.",
-  "automaticRefreshIsOffProvider": "Automatic refresh is off (provider: {provider}).",
+  "automaticRefreshIsOffProvider": "Die automatische Aktualisierung ist aus (Anbieter: {provider, select, manual {manuell} other {aus}}).",
   "bankPayoutsArenTAvailableIn": "Banküberweisungen sind hier noch nicht verfügbar: {name}.",
   "becauseYouLike": "Weil dir {category} gefällt",
   "bookingAccepted": "Buchung angenommen.",

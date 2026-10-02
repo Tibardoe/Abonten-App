@@ -64,13 +64,6 @@ export default function OrganizerRecentActivity({
       <div className="flex flex-col divide-y divide-border border border-border bg-card rounded-md shadow-md">
         {items.map((item, i) => {
           const Icon = ACTIVITY_ICON[item.activity_type] ?? TbTicket;
-          const verb =
-            item.activity_type === "ticket_sold"
-              ? t("ticketSoldFor")
-              : item.activity_type === "ticket_cancelled"
-                ? t("ticketCancelledFor")
-                : t("newRegistrationFor");
-
           return (
             <div
               key={`${item.event_id}-${item.occurred_at}-${i.toLocaleString()}`}
@@ -82,7 +75,10 @@ export default function OrganizerRecentActivity({
               />
               <div className="min-w-0 flex-1">
                 <p className="text-sm truncate">
-                  {verb} {item.event_title}
+                  {t("activityFor", {
+                    type: item.activity_type,
+                    event: item.event_title,
+                  })}
                 </p>
               </div>
               <p className="text-xs text-muted-foreground shrink-0">

@@ -688,11 +688,9 @@ export default function EventDetailScreen() {
                 </View>
                 {/* The Buy button is the sticky bar at the foot of the page. */}
                 <AppText variant="meta">
-                  {event.ticket_type.length > 1
-                    ? t("ticketTypesChooseYoursAtCheckout", {
-                        length: event.ticket_type.length,
-                      })
-                    : t("chooseHowManyAtCheckout")}
+                  {t("ticketTypesChooseYoursAtCheckout", {
+                    length: event.ticket_type.length,
+                  })}
                 </AppText>
               </View>
             )}

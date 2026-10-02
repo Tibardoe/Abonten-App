@@ -12,8 +12,12 @@
 //   - calls toLocaleString / toLocaleDateString / toLocaleTimeString with
 //     no language (or `undefined`, or a hard-coded "en…");
 //   - calls formatMoney / formatMajor / formatCredit / formatCreditDelta /
-//     formatMinor / formatCount / formatDate / formatDateTime from
-//     @abonten/core without handing over the app's language.
+//     formatMinor / formatCount / formatPercent / formatDate /
+//     formatDateTime from @abonten/core without handing over the app's
+//     language;
+//   - writes a percentage by hand ({rate}% or `${rate}%`): French and
+//     German put a space before the sign and use a decimal comma. Use
+//     formatPercent.
 //
 // Use @abonten/core/i18n/format (formatCount, formatDate, formatDateTime)
 // and pass `locale` (web `useLocale()` / `await getLocale()`, native
@@ -59,6 +63,7 @@ const FORMATTERS = {
   formatCreditDelta: { at: 2 },
   formatMinor: { at: 2 },
   formatCount: { at: 1 },
+  formatPercent: { at: 1 },
   formatDate: { at: 1 },
   formatDateTime: { at: 1 },
 };
@@ -85,7 +90,8 @@ const findings = [];
 for (const file of files) {
   const abs = join(ROOT, file);
   const source = readFileSync(abs, "utf8");
-  if (!/toLocale(Date|Time)?String\(|\bformat[A-Z]\w*\(/.test(source)) continue;
+  if (!/toLocale(Date|Time)?String\(|\bformat[A-Z]\w*\(|\}%/.test(source))
+    continue;
   const sf = ts.createSourceFile(
     abs,
     source,
@@ -168,8 +174,52 @@ for (const file of files) {
         if (!given) report(node, "is not given the app's language");
       }
     }
+    // {rate}% in text on screen
+    if (ts.isJsxText(node) && node.text.startsWith("%")) {
+      const siblings = node.parent.children;
+      const before = siblings[siblings.indexOf(node) - 1];
+      if (before && ts.isJsxExpression(before)) {
+        report(node.parent, "writes a percentage by hand");
+      }
+    }
+    // `${rate}%` — unless it is a size or a position for the layout
+    if (
+      ts.isTemplateExpression(node) &&
+      node.templateSpans.some((span) => span.literal.text.startsWith("%")) &&
+      !isLayoutValue(node)
+    ) {
+      report(node, "writes a percentage by hand");
+    }
     ts.forEachChild(node, visit);
   };
+
+  // width: `${n}%`, style={{ left: `${n}%` }}, className, an SVG attribute.
+  const LAYOUT =
+    /^(width|height|left|right|top|bottom|inset|flex|flexBasis|maxWidth|minWidth|maxHeight|minHeight|transform|translateX|translateY|margin\w*|padding\w*|strokeDasharray|strokeDashoffset|background\w*|objectPosition|clipPath|style|className|class|sizes|d|x|y|cx|cy|r|offset|stopOpacity)$/;
+  function isLayoutValue(node) {
+    // hsla(…%, …%), calc(100% - …): a colour or a length, not a number read
+    if (/^(hsla?|rgba?|calc|translate\w*|scale\w*)\(/.test(node.head.text))
+      return true;
+    for (let cur = node.parent; cur; cur = cur.parent) {
+      if (ts.isPropertyAssignment(cur) && LAYOUT.test(cur.name.getText(sf)))
+        return true;
+      if (ts.isJsxAttribute(cur)) return LAYOUT.test(cur.name.getText(sf));
+      if (
+        ts.isVariableDeclaration(cur) &&
+        /(width|height|style|offset|position)$/i.test(cur.name.getText(sf))
+      ) {
+        return true;
+      }
+      if (
+        ts.isCallExpression(cur) &&
+        /^(cn|clsx|twMerge)$|\.setProperty$/.test(cur.expression.getText(sf))
+      ) {
+        return true;
+      }
+      if (ts.isBlock(cur) || ts.isSourceFile(cur)) return false;
+    }
+    return false;
+  }
   visit(sf);
 }
 

@@ -102,12 +102,9 @@ export default function ReviewItemActions({
     }
   };
 
-  const helpfulLabel =
-    review.helpfulCount === 1
-      ? t("n1PersonFoundThisHelpful")
-      : t("peopleFoundThisHelpful", {
-          count: format.number(review.helpfulCount),
-        });
+  const helpfulLabel = t("peopleFoundThisHelpful", {
+    count: review.helpfulCount,
+  });
 
   return (
     <div className="flex items-center gap-3">

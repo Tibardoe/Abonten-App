@@ -106,7 +106,7 @@ export default function EventDateSelector({
       {sortedEventDates.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            {sortedEventDates.length > 1 ? t("chooseADate") : t("date")}
+            {t("dateHeading", { count: sortedEventDates.length })}
           </h3>
           <div className="flex overflow-x-auto gap-3 pb-1">
             {sortedEventDates.map((occurrence, index) => {

@@ -165,7 +165,7 @@ const Bubble = memo(function Bubble({
         accessibilityRole="button"
         accessibilityLabel={t("stories2", {
           label: label,
-          value: entry.hasUnseen ? t("newText") : t("seen"),
+          state: entry.hasUnseen ? "new" : "seen",
         })}
         className={[
           "items-center justify-center rounded-full active:opacity-80",

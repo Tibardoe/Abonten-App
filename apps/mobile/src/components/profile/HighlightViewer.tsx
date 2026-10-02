@@ -634,7 +634,7 @@ export function HighlightViewer({
                       tone="error"
                       className="font-medium"
                     >
-                      {t("deleteText")} {isVideo ? t("video") : t("photo")}
+                      {t("deleteMedia", { kind: isVideo ? "video" : "photo" })}
                     </AppText>
                   </Pressable>
                 ) : onReport && slide ? (
@@ -648,7 +648,7 @@ export function HighlightViewer({
                   >
                     <Icon name="flag-outline" size={18} tone="foreground" />
                     <AppText variant="small" className="font-medium">
-                      {t("report")} {isVideo ? t("video") : t("photo")}
+                      {t("reportMedia", { kind: isVideo ? "video" : "photo" })}
                     </AppText>
                   </Pressable>
                 ) : null}

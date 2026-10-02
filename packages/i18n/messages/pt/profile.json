@@ -57,7 +57,6 @@
   "finishYourProfile": "Conclua o seu perfil",
   "flipHorizontally": "Inverter na horizontal",
   "flipVertically": "Inverter na vertical",
-  "follower": "Seguidor",
   "follower2": "seguidor",
   "followers": "Seguidores",
   "followers2": "seguidores",
@@ -68,9 +67,8 @@
   "highlightIsFull": "O destaque está cheio",
   "highlightPosted": "Destaque publicado",
   "image": "imagem",
-  "items": "{count} itens",
+  "items": "{count, plural, one {# item} other {# itens}}",
   "listAVenueRestaurantOrSpot": "Liste uma sala, um restaurante ou um espaço",
-  "n1Item": "1 item",
   "newHighlight": "Novo destaque",
   "on": "em {name}",
   "oneIsOverMb": "Um item ({value}) tem mais de {round} MB.",
@@ -114,5 +112,8 @@
   "toSwitchBetweenEventsAndPlaces": "para alternar entre Eventos e Locais",
   "uploadFailedPleaseTryAgain": "Falha no carregamento. Tente novamente.",
   "video": "vídeo",
-  "viewProfilePhoto": "Ver a foto de perfil"
+  "viewProfilePhoto": "Ver a foto de perfil",
+  "followersLabel": "{count, plural, one {Seguidor} other {Seguidores}}",
+  "deleteMedia": "{kind, select, video {Eliminar o vídeo} other {Eliminar a foto}}",
+  "reportMedia": "{kind, select, video {Denunciar o vídeo} other {Denunciar a foto}}"
 }

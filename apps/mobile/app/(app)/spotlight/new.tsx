@@ -780,10 +780,10 @@ function PublishPreview({
   let value = 0;
   let indeterminate = false;
   if (state.phase === "uploading") {
-    label =
-      state.total > 1
-        ? t("uploadingOf", { value: state.index + 1, total: state.total })
-        : t("uploading");
+    label = t("uploadingOf", {
+      value: state.index + 1,
+      total: state.total,
+    });
     value = (state.index + state.fraction) / state.total;
     // Bytes are all sent; the server is checking the file.
     if (state.fraction >= 1) {
@@ -840,11 +840,10 @@ function PublishPreview({
         ) : (
           <>
             <AppText variant="bodyStrong">
-              {items.length > 1
-                ? t("itemsReady", { length: items.length })
-                : first.type === "video"
-                  ? t("videoReadyToPost")
-                  : t("photoReadyToPost")}
+              {t("readyToPost", {
+                kind: items.length > 1 ? "several" : first.type,
+                count: items.length,
+              })}
             </AppText>
             <AppText variant="caption" tone="muted">
               {t("itUploadsWhenYouPublishKeep")}

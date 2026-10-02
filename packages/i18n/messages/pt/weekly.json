@@ -1,7 +1,7 @@
 {
   "aPastEditionSomeEventsHave": "Uma edição anterior. Alguns eventos já aconteceram.",
   "abontenWeeklyCouldnTBeLoaded": "Não foi possível carregar o Abonten Weekly neste momento.",
-  "browse": "Explorar {pickCount}",
+  "browse": "{pickCount, plural, one {Explorar # sugestão} other {Explorar as # sugestões}}",
   "checkOutThisWeekSAbonten": "Veja o Abonten Weekly desta semana.",
   "couldnTLoadAbontenWeekly": "Não foi possível carregar o Abonten Weekly.",
   "event": "Evento",
@@ -19,7 +19,7 @@
   "itMayHaveBeenTakenDown": "Pode ter sido retirada ou ainda não ter saído.",
   "linkWorksUntilUtc": "A ligação funciona até às {formatUtc} UTC",
   "loadingAbontenWeekly": "A carregar o Abonten Weekly",
-  "more": " +{extraDates} mais",
+  "more": "+{extraDates} mais",
   "moreDates": "+{count, plural, one {# data adicional} other {# datas adicionais}}",
   "nextPick": "Sugestão seguinte",
   "notVisibleToThePublicUnless": "— {item}. Não é visível para o público até ser publicada. As páginas que não podem ser mostradas já foram excluídas.",
@@ -32,7 +32,6 @@
   "openTheEditionInTheAdmin": "Abra a edição na consola de administração e escolha novamente Pré-visualizar.",
   "pauseTheSlideshow": "Pausar a apresentação",
   "pick": "sugestão",
-  "picks": "sugestões",
   "picksCount": "{count, plural, one {# sugestão} other {# sugestões}}",
   "place": "local",
   "preview": "Pré-visualização",
@@ -55,10 +54,10 @@
   "thereIsNoEditionForYour": "Não há edição para a sua zona esta semana, por isso estas são sugestões de toda a zona de {scopeName}.",
   "thisEditionIsnTAvailable": "Esta edição não está disponível",
   "thisPreviewLinkHasExpired": "Esta ligação de pré-visualização expirou.",
-  "thisWeek": "esta semana",
   "thisWeekSEditionIsOn": "A edição desta semana está a caminho",
   "thisWeekSEditionIsOn2": "A edição desta semana está a caminho. Aqui está a da semana passada.",
   "viewEvent": "Ver evento",
   "viewPlace": "Ver local",
-  "widePicks": "Sugestões de toda a zona de {scopeName}"
+  "widePicks": "Sugestões de toda a zona de {scopeName}",
+  "picksThisWeek": "{count, plural, one {# sugestão esta semana} other {# sugestões esta semana}}"
 }

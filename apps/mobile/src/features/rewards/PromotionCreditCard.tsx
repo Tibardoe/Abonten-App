@@ -127,11 +127,7 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
       ) : null}
 
       <AppText variant="caption">
-        {t("promotionCreditOnlyPaysForFeaturing")}
-        {expiryDays
-          ? t("andLastsDaysFromWhenYou", { expiryDays: expiryDays })
-          : ""}
-        {t("itCanTBeWithdrawn")}
+        {t("promotionCreditRules", { days: expiryDays ?? 0 })}
       </AppText>
     </View>
   );

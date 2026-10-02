@@ -14,7 +14,7 @@ import type {
   OrganizerOverviewRow,
 } from "@abonten/api-client";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { formatCount } from "@abonten/core/i18n/format";
+import { formatCount, formatPercent } from "@abonten/core/i18n/format";
 import {
   AppText,
   Chip,
@@ -60,6 +60,7 @@ function Delta({
   pct: number | null;
   compact?: boolean;
 }) {
+  const { locale } = useLocale();
   const t = useTranslations("manage");
 
   if (pct == null) {
@@ -80,8 +81,7 @@ function Delta({
         tone={up ? "success" : "error"}
         className="font-medium"
       >
-        {up ? "+" : "−"}
-        {Math.abs(Math.round(pct))}%
+        {formatPercent(Math.round(pct), locale, { signDisplay: "always" })}
       </AppText>
       {compact ? null : (
         <AppText variant="caption">{t("vsLastPeriod2")}</AppText>

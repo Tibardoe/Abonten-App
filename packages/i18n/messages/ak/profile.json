@@ -57,7 +57,6 @@
   "finishYourProfile": "Finish your profile",
   "flipHorizontally": "Flip horizontally",
   "flipVertically": "Flip vertically",
-  "follower": "Follower",
   "follower2": "follower",
   "followers": "Followers",
   "followers2": "followers",
@@ -68,9 +67,8 @@
   "highlightIsFull": "Highlight is full",
   "highlightPosted": "Highlight posted",
   "image": "image",
-  "items": "{count} items",
+  "items": "{count, plural, one {# item} other {# items}}",
   "listAVenueRestaurantOrSpot": "List a venue, restaurant or spot",
-  "n1Item": "1 item",
   "newHighlight": "New highlight",
   "on": "on {name}",
   "oneIsOverMb": "One {value} is over {round}MB.",
@@ -114,5 +112,8 @@
   "toSwitchBetweenEventsAndPlaces": "to switch between Events and Places",
   "uploadFailedPleaseTryAgain": "Upload failed. Please try again.",
   "video": "video",
-  "viewProfilePhoto": "View profile photo"
+  "viewProfilePhoto": "View profile photo",
+  "followersLabel": "{count, plural, one {Follower} other {Followers}}",
+  "deleteMedia": "{kind, select, video {Delete video} other {Delete photo}}",
+  "reportMedia": "{kind, select, video {Report video} other {Report photo}}"
 }

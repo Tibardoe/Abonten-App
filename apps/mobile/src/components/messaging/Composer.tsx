@@ -479,7 +479,9 @@ export function Composer({
               className="mt-1 text-right"
               accessibilityLiveRegion="polite"
             >
-              {MESSAGE_MAX_LENGTH - text.length} {t("charactersLeft")}
+              {t("charactersLeft", {
+                count: MESSAGE_MAX_LENGTH - text.length,
+              })}
             </AppText>
           ) : null}
         </View>

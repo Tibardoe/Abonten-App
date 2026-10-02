@@ -29,6 +29,36 @@ export function formatCount(
   return format.format(Number.isFinite(number) ? number : 0);
 }
 
+/**
+ * A percentage the way the reader's language writes one: "7.5%" in
+ * English, "7,5 %" in French and German. `value` is the percentage itself
+ * (7.5), not a ratio.
+ */
+export function formatPercent(
+  value: number | string | null | undefined,
+  locale?: string | null,
+  options: {
+    /** Decimal places shown at most (default 0). */
+    maximumFractionDigits?: number;
+    /** Decimal places always shown (default 0). */
+    minimumFractionDigits?: number;
+    /** "exceptZero" writes +12% for a rise. */
+    signDisplay?: "auto" | "exceptZero" | "always" | "never";
+  } = {},
+): string {
+  const number = typeof value === "string" ? Number(value) : (value ?? 0);
+  const minimum = options.minimumFractionDigits ?? 0;
+  return new Intl.NumberFormat(intlLocale(locale), {
+    style: "percent",
+    minimumFractionDigits: minimum,
+    maximumFractionDigits: Math.max(
+      options.maximumFractionDigits ?? 0,
+      minimum,
+    ),
+    signDisplay: options.signDisplay ?? "auto",
+  }).format((Number.isFinite(number) ? number : 0) / 100);
+}
+
 const DATE_TIME: Intl.DateTimeFormatOptions = {
   year: "numeric",
   month: "short",

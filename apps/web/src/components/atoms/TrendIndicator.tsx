@@ -1,3 +1,5 @@
+import { formatPercent } from "@abonten/core/i18n/format";
+import { useLocale } from "next-intl";
 import { TbMinus, TbTrendingDown, TbTrendingUp } from "react-icons/tb";
 import { cn } from "../lib/utils";
 
@@ -14,6 +16,7 @@ export default function TrendIndicator({
   percentChange: number;
   label: string;
 }) {
+  const locale = useLocale();
   const isFlat = Math.abs(percentChange) < 0.05;
   const isUp = !isFlat && percentChange > 0;
   const isDown = !isFlat && percentChange < 0;
@@ -30,8 +33,11 @@ export default function TrendIndicator({
     >
       <Icon className="text-sm" aria-hidden="true" />
       <span>
-        {isUp ? "+" : ""}
-        {percentChange.toFixed(1)}% {label}
+        {formatPercent(percentChange, locale, {
+          minimumFractionDigits: 1,
+          signDisplay: "exceptZero",
+        })}{" "}
+        {label}
       </span>
     </p>
   );

@@ -9,7 +9,7 @@ import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { settleEnvelope } from "@/lib/envelope";
 import { useQueryView } from "@/lib/useQueryView";
 import type { EventPromoCode } from "@abonten/api-client";
-import { formatDateTime } from "@abonten/core/i18n/format";
+import { formatDateTime, formatPercent } from "@abonten/core/i18n/format";
 import { FREE_TICKET_TYPE } from "@abonten/core/ticketTiers";
 import {
   AppText,
@@ -155,10 +155,9 @@ function PromoCodeCard({
             {code.promoCode}
           </AppText>
           <AppText className="text-xs text-muted-foreground">
-            {t("use", { timesUsed: code.timesUsed })}
             {code.maxUses != null
-              ? t("ofMax", { maxUses: code.maxUses })
-              : t("unlimited2")}
+              ? t("usesOfMax", { used: code.timesUsed, max: code.maxUses })
+              : t("usesUnlimited", { used: code.timesUsed })}
           </AppText>
         </View>
         <AppText
@@ -256,7 +255,9 @@ function PromoCodeCard({
                 {t("discount3")}
               </AppText>
               <AppText className="text-sm text-foreground">
-                {code.discountPercentage ?? 0}%
+                {formatPercent(code.discountPercentage ?? 0, locale, {
+                  maximumFractionDigits: 2,
+                })}
               </AppText>
             </View>
             <View className="flex-row justify-between">

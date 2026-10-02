@@ -81,9 +81,7 @@ export default function AccountSetupScreen() {
             ) : (
               <>
                 <AppText variant="bodyStrong">
-                  {c.total - c.completedCount === 1
-                    ? t("oneStepLeft")
-                    : t("stepsLeft2", { value: c.total - c.completedCount })}
+                  {t("stepsLeft", { left: c.total - c.completedCount })}
                 </AppText>
                 <AppText variant="meta">
                   {t("noneOfTheseAreRequiredTo")}

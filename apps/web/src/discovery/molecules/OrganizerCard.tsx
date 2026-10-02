@@ -73,8 +73,7 @@ export default function OrganizerCard({
             {organizer.placeCount > 0 ? (
               <span className="inline-flex items-center gap-1">
                 <IoStorefrontOutline aria-hidden />
-                {organizer.placeCount}{" "}
-                {organizer.placeCount === 1 ? t("place") : t("places")}
+                {t("placesCount", { count: organizer.placeCount, plus: "" })}
               </span>
             ) : null}
             {organizer.ratingCount > 0 && organizer.avgRating != null ? (

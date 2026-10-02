@@ -17,8 +17,13 @@
 // before 2026-10-01 a person who chose French read most of the app in
 // English, because new sentences reached the catalogs untranslated.
 //
+// And a translation is of the English it was made from (the section after
+// that): when an English message is reworded, its translations are looked
+// at again before the change ships.
+//
 // Run: node scripts/check-i18n.mjs
 
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
@@ -187,12 +192,17 @@ function valuesOf(message, label) {
     return null;
   }
   const names = new Set();
+  // The values the message words differently by: "count (plural)",
+  // "kind (select)".
+  names.branches = new Set();
   const walk = (nodes) => {
     for (const node of nodes) {
       // 0 literal, 1 argument, 2 number, 3 date, 4 time, 5 select,
       // 6 plural, 7 pound, 8 tag
       if (node.type === 0 || node.type === 7) continue;
       names.add(node.type === 8 ? `<${node.value}>` : node.value);
+      if (node.type === 6) names.branches.add(`${node.value} (plural)`);
+      if (node.type === 5) names.branches.add(`${node.value} (select)`);
       if (node.options) {
         for (const option of Object.values(node.options)) walk(option.value);
       }
@@ -248,6 +258,19 @@ for (const file of files) {
       if (dropped.length) {
         problems.push(
           `${locale}/${file}: "${key}" drops the tag ${dropped.join(", ")}`,
+        );
+      }
+      // Where English says it one way for one and another way for many
+      // ("# request" / "# requests"), or names the thing by a code
+      // ({kind, select, place {…} other {…}}), the translation must do the
+      // same: printing the bare value gave "3 demande" and "Supprimer
+      // cette video" on 2026-10-01, after English had moved to these forms.
+      const flattened = [...wanted.branches].filter(
+        (branch) => !given.branches.has(branch),
+      );
+      if (flattened.length) {
+        problems.push(
+          `${locale}/${file}: "${key}" prints ${flattened.join(", ")} as it comes; English words it by that value, so must the translation`,
         );
       }
     }
@@ -336,6 +359,98 @@ for (const locale of finished) {
   same[locale].sort();
 }
 
+// ── a translation is of the English it was made from ──
+//
+// On 2026-10-01 twenty-nine English messages had been reworded ("{n}
+// request" became a plural, "Delete this {kind}" a select) and their
+// translations had not: French read "3 demande" and "Supprimer cette
+// video", and four sentences were English again. Nothing noticed, because
+// each translation still differed from the new English.
+//
+// source-english.json records, for every message, a fingerprint of the
+// English its translations were written from. Change the English, and the
+// check fails until the translations have been looked at again:
+//
+//   node scripts/check-i18n.mjs --accept-source    after updating them
+
+const SOURCE_FILE = fileURLToPath(
+  new URL("../packages/i18n/source-english.json", import.meta.url),
+);
+const ACCEPT_SOURCE = process.argv.includes("--accept-source");
+const fingerprint = (text) =>
+  createHash("sha1").update(text).digest("hex").slice(0, 8);
+
+const sourceNow = {};
+for (const file of files) {
+  const ns = file.replace(/\.json$/, "");
+  sourceNow[ns] = {};
+  for (const [key, message] of Object.entries(messagesOf(BASE, file))) {
+    sourceNow[ns][key] = fingerprint(message);
+  }
+}
+let sourceThen = {};
+try {
+  sourceThen = JSON.parse(readFileSync(SOURCE_FILE, "utf8"));
+} catch {
+  sourceThen = {};
+}
+const reworded = [];
+const unrecorded = [];
+let forgotten = 0;
+for (const [ns, keys] of Object.entries(sourceNow)) {
+  for (const [key, hash] of Object.entries(keys)) {
+    const before = sourceThen[ns]?.[key];
+    if (before === undefined) unrecorded.push(`${ns}:${key}`);
+    else if (before !== hash) reworded.push(`${ns}:${key}`);
+  }
+}
+for (const [ns, keys] of Object.entries(sourceThen)) {
+  for (const key of Object.keys(keys)) {
+    if (sourceNow[ns]?.[key] === undefined) forgotten++;
+  }
+}
+
+function finishSource() {
+  if (ACCEPT_SOURCE) {
+    writeFileSync(SOURCE_FILE, `${JSON.stringify(sourceNow, null, 2)}\n`);
+    console.log(
+      `i18n: recorded the English of ${Object.values(sourceNow).reduce((n, keys) => n + Object.keys(keys).length, 0)} messages as what their translations were made from.`,
+    );
+    return;
+  }
+  if (reworded.length || unrecorded.length || forgotten) {
+    if (reworded.length) {
+      console.error(
+        `${reworded.length} English messages were reworded after they were translated:`,
+      );
+      for (const ref of reworded.slice(0, 60)) console.error(`  ${ref}`);
+      if (reworded.length > 60)
+        console.error(`  … and ${reworded.length - 60} more`);
+    }
+    if (unrecorded.length) {
+      console.error(
+        `${unrecorded.length} messages are new since the translations were last confirmed${unrecorded.length <= 20 ? `: ${unrecorded.join(", ")}` : ""}.`,
+      );
+    }
+    if (forgotten) {
+      console.error(
+        `${forgotten} recorded messages no longer exist in the catalogs.`,
+      );
+    }
+    console.error(
+      [
+        "",
+        `Check each one in ${finished.join(", ")} (does the translation still say what the English now says?), then:`,
+        "  node scripts/check-i18n.mjs --accept-source",
+      ].join("\n"),
+    );
+    process.exit(1);
+  }
+  console.log(
+    "i18n: every translation is of the English it was made from.",
+  );
+}
+
 if (ACCEPT) {
   writeFileSync(SAME_FILE, `${JSON.stringify(same, null, 2)}\n`);
   const total = Object.values(same).reduce((n, refs) => n + refs.length, 0);
@@ -366,3 +481,5 @@ if (ACCEPT) {
     `i18n: nothing is left in English in ${finished.join(", ")} (${total} values recorded as the same word); partly translated: ${registry.partial.join(", ") || "none"}.`,
   );
 }
+
+finishSource();

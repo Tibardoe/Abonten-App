@@ -18,10 +18,7 @@ export function NewMessagesPill({
   const t = useTranslations("messaging");
 
   if (count <= 0) return null;
-  const label = t("newText2", {
-    count: count,
-    value: count === 1 ? t("message2") : t("messages2"),
-  });
+  const label = t("newText2", { count: count });
   return (
     <View
       pointerEvents="box-none"

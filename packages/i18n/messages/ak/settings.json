@@ -122,7 +122,6 @@
   "ofDone": "{done} of {length} done",
   "ofStepsDone": "{completedCount} of {total} steps done",
   "onIphoneAndIpadAddAbonten": "On iPhone and iPad, add Abonten Hub to your Home Screen from Safari's Share menu, then open it from there to turn this on.",
-  "oneStepLeft": "One step left",
   "openSettings": "Open settings",
   "optional": "Optional",
   "overview": "Overview",
@@ -190,8 +189,7 @@
   "similarEventsAndPlaces": "Similar events and places",
   "similarPlaces": "Similar places",
   "starts": "Starts",
-  "stepsLeft": "{left} steps left",
-  "stepsLeft2": "{value} steps left",
+  "stepsLeft": "{left, plural, =1 {One step left} other {# steps left}}",
   "stop": "Stop",
   "stopAlerts": "Stop alerts",
   "takeABreak": "Take a break",
@@ -246,5 +244,6 @@
   "yourProfile": "your profile",
   "yourProfileFavouritesAndSavedPayment": "Your profile, favourites and saved payment details are removed and you are signed out everywhere. Tickets you bought and payment records are kept for accounting. Places you own stay listed, unclaimed.",
   "yourProfileIsCompleteAndYou": "Your profile is complete and you have two ways to sign in.",
-  "yourSettings": "your settings"
+  "yourSettings": "your settings",
+  "promotionWhen": "{state, select, scheduled {Starts {date}} other {Ends {date}}}"
 }

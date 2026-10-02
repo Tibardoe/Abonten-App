@@ -44,17 +44,17 @@ export default async function PromotionDetails() {
                   {promotion.resourceName}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {t("text", {
-                    promotionStatusLine: promotionStatusLine(tc, promotion),
+                  {promotionStatusLine(tc, promotion)} ·{" "}
+                  {t("promotionWhen", {
+                    state: promotion.state,
+                    date: formatDateWithSuffix(
+                      promotion.state === "scheduled"
+                        ? promotion.startsAt
+                        : promotion.endsAt,
+                      undefined,
+                      locale,
+                    ),
                   })}
-                  {promotion.state === "scheduled" ? t("starts") : t("ends")}{" "}
-                  {formatDateWithSuffix(
-                    promotion.state === "scheduled"
-                      ? promotion.startsAt
-                      : promotion.endsAt,
-                    undefined,
-                    locale,
-                  )}
                 </p>
               </div>
             ))}

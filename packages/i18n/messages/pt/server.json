@@ -51,7 +51,7 @@
   "atMostEvidencePhotos": "No máximo {MAX_EVIDENCE} fotos de comprovação.",
   "atPlace": "Em {place}",
   "attachmentsCanTChangeOnceA": "Os anexos não podem ser alterados depois de a publicação estar publicada.",
-  "automaticRefreshIsOffProvider": "Automatic refresh is off (provider: {provider}).",
+  "automaticRefreshIsOffProvider": "A atualização automática está desligada (fornecedor: {provider, select, manual {manual} other {desligado}}).",
   "bankPayoutsArenTAvailableIn": "Os pagamentos bancários ainda não estão disponíveis aqui: {name}.",
   "becauseYouLike": "Porque gosta de {category}",
   "bookingAccepted": "Reserva aceite.",

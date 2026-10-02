@@ -1,16 +1,10 @@
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { FIELD_OPS_ROLE_LABEL } from "@/fieldOps/lib/roleLabel";
 import type {
   FieldOpsCampaignSummary,
   FieldOpsMembership,
 } from "@abonten/types/fieldOps";
 import { useTranslations } from "next-intl";
-
-const ROLE_LABEL: Record<FieldOpsMembership["role"], string> = {
-  team_lead: "teamLead",
-  content_creator: "contentCreator",
-  offline_member: "fieldMember",
-  online_member: "onlineMember",
-};
 
 const STATUS_NOTE: Partial<Record<FieldOpsCampaignSummary["status"], string>> =
   {
@@ -42,7 +36,7 @@ export default function CampaignBanner({
         <div>
           <p className="font-medium">{campaign.name}</p>
           <p className="text-sm text-muted-foreground">
-            {campaign.regionName} · {t(ROLE_LABEL[membership.role])}
+            {campaign.regionName} · {t(FIELD_OPS_ROLE_LABEL[membership.role])}
           </p>
         </div>
         <StatusChip status={campaign.status} />

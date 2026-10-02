@@ -128,11 +128,7 @@ export const CommentRow = memo(function CommentRow({
               <AppText variant="caption" tone="muted" className="font-semibold">
                 {showReplies
                   ? t("hideReplies")
-                  : t("view2", {
-                      replyCount: comment.replyCount,
-                      value:
-                        comment.replyCount === 1 ? t("reply2") : t("replies"),
-                    })}
+                  : t("view2", { replyCount: comment.replyCount })}
               </AppText>
             </Pressable>
           ) : null}

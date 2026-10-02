@@ -100,8 +100,9 @@ function BookingRow({
         ) : null}
         {state === "lapsed" ? (
           <AppText variant="caption" tone="muted">
-            {booking.place?.name ?? t("theOwner")}{" "}
-            {t("didnTRespondBeforeThisDate")}
+            {booking.place?.name
+              ? t("placeDidntRespond", { name: booking.place.name })
+              : t("ownerDidntRespond")}
           </AppText>
         ) : null}
       </View>

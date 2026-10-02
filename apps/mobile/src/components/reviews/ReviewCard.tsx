@@ -61,12 +61,9 @@ function ReviewCardImpl({
       : null;
   const long = (review.comment?.length ?? 0) > FOLD_AT;
   const when = getRelativeTime(review.createdAt, undefined, locale);
-  const helpfulLabel =
-    review.helpfulCount === 1
-      ? t("n1PersonFoundThisHelpful")
-      : t("peopleFoundThisHelpful2", {
-          toLocaleString: formatCount(review.helpfulCount, locale),
-        });
+  const helpfulLabel = t("peopleFoundThisHelpful", {
+    count: review.helpfulCount,
+  });
 
   return (
     <View

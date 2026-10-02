@@ -1170,5 +1170,10 @@
       "restricted": "Von der Moderation eingeschränkt",
       "unsupported": "Noch nicht unterstützt"
     }
+  },
+  "needsAttention": {
+    "noSalesYet": "Beginnt am {date}, bisher ohne Verkäufe.",
+    "lowSales": "Beginnt am {date}, bisher {sold, plural, one {nur # Ticket} other {nur # Tickets}} verkauft.",
+    "nearlySoldOut": "{type}: fast ausverkauft ({remaining, plural, one {noch # Ticket} other {noch # Tickets}})."
   }
 }

@@ -97,11 +97,6 @@ export default async function page({
     );
   }
 
-  const urlPath = type
-    .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-
   let firstPage: PaginatedResult<UserPostType>;
   let fetchPage: (
     cursor: string | null,
@@ -162,7 +157,9 @@ export default async function page({
 
   return (
     <div className="space-y-3">
-      <h1 className="font-bold text-xl">{urlPath}</h1>
+      <h1 className="font-bold text-xl">
+        {t("exploreHeading", { filter: filter.replaceAll("-", "_") })}
+      </h1>
 
       <ExploreEventsList
         key={`${filter}-${lat}-${lng}`}

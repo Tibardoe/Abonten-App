@@ -88,7 +88,7 @@ function PromotionRow({ promotion }: { promotion: ActivePromotionSummary }) {
             {promotion.tierLabel
               ? `${promotionDurationLabel(tc, promotion.tierLabel)} · `
               : ""}
-            {upcoming ? t("starts") : t("ends")} {when}
+            {t("promotionWhen", { state: promotion.state, date: when })}
           </AppText>
         </View>
       </View>

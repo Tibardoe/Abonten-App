@@ -1170,5 +1170,10 @@
       "restricted": "Restricted by moderation",
       "unsupported": "Not supported yet"
     }
+  },
+  "needsAttention": {
+    "noSalesYet": "Starts {date} with no sales yet.",
+    "lowSales": "Starts {date} with only {sold, plural, one {# ticket} other {# tickets}} sold so far.",
+    "nearlySoldOut": "{type}: almost sold out ({remaining, plural, one {# ticket left} other {# tickets left}})."
   }
 }

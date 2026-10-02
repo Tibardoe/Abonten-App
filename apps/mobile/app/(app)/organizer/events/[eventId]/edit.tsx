@@ -502,7 +502,7 @@ export default function EditEventScreen() {
                   >
                     <View className="flex-row items-center justify-between">
                       <AppText variant="small" className="font-semibold">
-                        {t("ticketType")} {i + 1}
+                        {t("ticketTypeNumber", { number: i + 1 })}
                       </AppText>
                       <Pressable
                         accessibilityRole="button"

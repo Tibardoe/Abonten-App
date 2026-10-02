@@ -209,31 +209,24 @@ export default function InviteFriends() {
             <Card elevated className="items-center gap-3">
               {data.referrerMinor ? (
                 <AppText variant="body" className="text-center">
-                  {t("youGetWhenAFriendYou", {
-                    formatCredit: formatCredit(
+                  {t("inviteTerms", {
+                    amount: formatCredit(
                       data.referrerMinor,
                       data.currency,
                       locale,
                     ),
+                    minimum: data.minOrderMinor
+                      ? formatCredit(data.minOrderMinor, data.currency, locale)
+                      : "none",
                   })}
-                  {data.minOrderMinor
-                    ? t("ofOrMore", {
-                        formatCredit: formatCredit(
-                          data.minOrderMinor,
-                          data.currency,
-                          locale,
-                        ),
-                      })
-                    : ""}
-                  {t("andTheirEventHasTakenPlace")}
                   {data.refereeMinor
-                    ? t("theyGetOffThatTicket2", {
-                        formatCredit: formatCredit(
+                    ? ` ${t("friendGetsOff", {
+                        amount: formatCredit(
                           data.refereeMinor,
                           data.currency,
                           locale,
                         ),
-                      })
+                      })}`
                     : ""}
                 </AppText>
               ) : null}

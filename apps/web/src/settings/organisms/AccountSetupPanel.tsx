@@ -124,9 +124,7 @@ export default function AccountSetupPanel() {
           </div>
         ) : (
           <div>
-            <p className="font-semibold">
-              {left === 1 ? t("oneStepLeft") : t("stepsLeft", { left: left })}
-            </p>
+            <p className="font-semibold">{t("stepsLeft", { left: left })}</p>
             <p className="text-sm text-muted-foreground">
               {t("noneOfTheseAreRequiredTo")}
             </p>

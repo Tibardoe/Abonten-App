@@ -51,7 +51,7 @@
   "atMostEvidencePhotos": "{MAX_EVIDENCE} photos justificatives au maximum.",
   "atPlace": "Lieu : {place}",
   "attachmentsCanTChangeOnceA": "Les pièces jointes ne peuvent plus changer une fois la publication en ligne.",
-  "automaticRefreshIsOffProvider": "Automatic refresh is off (provider: {provider}).",
+  "automaticRefreshIsOffProvider": "L'actualisation automatique est désactivée (fournisseur : {provider, select, manual {manuel} other {désactivé}}).",
   "bankPayoutsArenTAvailableIn": "Les versements bancaires ne sont pas encore disponibles ici : {name}.",
   "becauseYouLike": "Parce que vous aimez : {category}",
   "bookingAccepted": "Réservation acceptée.",

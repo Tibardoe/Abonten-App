@@ -101,9 +101,7 @@ export function PlacePhotoManager({
           return;
         }
       }
-      toast.success(
-        added === 1 ? t("photoAdded") : t("photosAdded", { added: added }),
-      );
+      toast.success(t("photosAdded", { added: added }));
     } finally {
       progress.reset();
     }

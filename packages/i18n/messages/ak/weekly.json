@@ -1,7 +1,7 @@
 {
   "aPastEditionSomeEventsHave": "A past edition. Some events have already happened.",
   "abontenWeeklyCouldnTBeLoaded": "Abonten Weekly couldn't be loaded right now.",
-  "browse": "Browse {pickCount}",
+  "browse": "{pickCount, plural, one {Browse # pick} other {Browse # picks}}",
   "checkOutThisWeekSAbonten": "Check out this week's Abonten Weekly.",
   "couldnTLoadAbontenWeekly": "Couldn't load Abonten Weekly.",
   "event": "Event",
@@ -19,7 +19,7 @@
   "itMayHaveBeenTakenDown": "It may have been taken down, or it isn't out yet.",
   "linkWorksUntilUtc": "Link works until {formatUtc} UTC",
   "loadingAbontenWeekly": "Loading Abonten Weekly",
-  "more": " +{extraDates} more",
+  "more": "+{extraDates} more",
   "moreDates": "+{count, plural, one {# more date} other {# more dates}}",
   "nextPick": "Next pick",
   "notVisibleToThePublicUnless": "— {item}. Not visible to the public unless published. Listings that cannot be shown are already left out.",
@@ -32,7 +32,6 @@
   "openTheEditionInTheAdmin": "Open the edition in the admin console and choose Preview again.",
   "pauseTheSlideshow": "Pause the slideshow",
   "pick": "pick",
-  "picks": "picks",
   "picksCount": "{count, plural, one {# pick} other {# picks}}",
   "place": "place",
   "preview": "Preview",
@@ -55,10 +54,10 @@
   "thereIsNoEditionForYour": "There is no edition for your area this week, so these are {scopeName}-wide picks.",
   "thisEditionIsnTAvailable": "This edition isn't available",
   "thisPreviewLinkHasExpired": "This preview link has expired.",
-  "thisWeek": "this week",
   "thisWeekSEditionIsOn": "This week's edition is on its way",
   "thisWeekSEditionIsOn2": "This week's edition is on its way. Here is last week's.",
   "viewEvent": "View event",
   "viewPlace": "View place",
-  "widePicks": "{scopeName}-wide picks"
+  "widePicks": "{scopeName}-wide picks",
+  "picksThisWeek": "{count, plural, one {# pick this week} other {# picks this week}}"
 }

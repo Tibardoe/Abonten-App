@@ -1170,5 +1170,10 @@
       "restricted": "Restreint par la modération",
       "unsupported": "Pas encore pris en charge"
     }
+  },
+  "needsAttention": {
+    "noSalesYet": "Commence le {date}, sans aucune vente pour l'instant.",
+    "lowSales": "Commence le {date} avec seulement {sold, plural, one {# billet vendu} other {# billets vendus}} pour l'instant.",
+    "nearlySoldOut": "{type} : presque complet ({remaining, plural, one {# billet restant} other {# billets restants}})."
   }
 }

@@ -1,4 +1,5 @@
-import { useFormatter, useTranslations } from "next-intl";
+import { formatPercent } from "@abonten/core/i18n/format";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import React from "react";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -47,6 +48,7 @@ export default function PromoCodeInputs({
   onPromoCodesChange,
   initialPromoCodes,
 }: PromoCodeInputProps) {
+  const locale = useLocale();
   const t = useTranslations("common");
   const format = useFormatter();
 
@@ -233,7 +235,11 @@ export default function PromoCodeInputs({
                 <div className="flex justify-between items-center text-sm text-muted-foreground">
                   <p>{t("discount2")}</p>
 
-                  <p>{promoCodes.discount}%</p>
+                  <p>
+                    {formatPercent(promoCodes.discount, locale, {
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">

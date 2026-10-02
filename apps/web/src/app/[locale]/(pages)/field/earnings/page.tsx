@@ -63,7 +63,7 @@ export default async function FieldEarningsPage() {
               </Link>
             ) : (
               <span className="font-medium">
-                {c.activityKey.replace(/_/g, " ")}
+                {t(`activityName.${c.activityKey}`)}
               </span>
             )}
             <p className="text-sm text-muted-foreground">

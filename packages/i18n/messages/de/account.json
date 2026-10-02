@@ -47,9 +47,7 @@
   "favorites": "Favoriten",
   "finishSettingUpYourAccount": "Schließe die Einrichtung deines Kontos ab",
   "finishSettingUpYourAccountOf": "Schließe die Einrichtung deines Kontos ab. {completedCount} von {total} Schritten erledigt.",
-  "follower": "Follower",
   "followers": "Follower",
-  "followers2": "Follower",
   "highlightButton": "Highlight-Schaltfläche",
   "highlights": "Highlights",
   "isnTConfirmedYetWeLl": "{currentEmail} ist noch nicht bestätigt. Wir senden einen Code dorthin.",
@@ -119,5 +117,6 @@
   "weCouldnTCancelThatBooking": "Wir konnten diese Buchungsanfrage nicht stornieren.",
   "youCanPayNow": "Du kannst jetzt bezahlen.",
   "youHavenTPostedASpotlight": "Du hast noch kein Spotlight gepostet.",
-  "yourBookingRequestsToPlacesWill": "Deine Buchungsanfragen an Orte erscheinen hier."
+  "yourBookingRequestsToPlacesWill": "Deine Buchungsanfragen an Orte erscheinen hier.",
+  "followersCount": "{count, plural, one {<b>#</b> Follower} other {<b>#</b> Follower}}"
 }
