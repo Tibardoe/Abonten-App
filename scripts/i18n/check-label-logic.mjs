@@ -19,7 +19,11 @@
 //     (setTicket(t(…)) — but setError(t(…)) is fine);
 //   - the `value`, `defaultValue`, `id`, `name` or `key` of an element, or
 //     a `value` / `id` / `key` / `type` / `kind` / `code` property;
-//   - an index (`MAP[t(…)]`) or the first state of a non-display useState.
+//   - an index (`MAP[t(…)]`) or the first state of a non-display useState;
+//   - listed, and then used as a key by whatever walks the list:
+//     `[t("today"), t("yesterday")].filter((k) => buckets[k].length)`. The
+//     buckets were filled under English names, so the notifications screen
+//     crashed in every other language.
 //
 //   node scripts/i18n/check-label-logic.mjs            # report
 //   node scripts/i18n/check-label-logic.mjs --check    # CI
@@ -133,6 +137,13 @@ for (const file of files) {
     if (ts.isIdentifier(callee)) {
       return translators.has(callee.text) || TRANSLATOR_CALLS.test(callee.text);
     }
+    // translatorFor("ns")("key"): a translator made and called in one go
+    if (
+      ts.isCallExpression(callee) &&
+      TRANSLATOR_SOURCES.test(callee.expression.getText(sf))
+    ) {
+      return true;
+    }
     // words.t("…"), i18n.t("…")
     return (
       ts.isPropertyAccessExpression(callee) &&
@@ -148,7 +159,109 @@ for (const file of files) {
     findings.push({ file, line, text, why });
   };
 
+  // A list of translated labels, walked by a callback that uses each one
+  // as a key: [t("a"), t("b")].filter((k) => MAP[k]).
+  const WALKS =
+    /^(filter|map|forEach|find|findIndex|some|every|flatMap|reduce)$/;
+  const walkedLists = new Set();
+  const keyUseIn = (callback) => {
+    if (!ts.isArrowFunction(callback) && !ts.isFunctionExpression(callback)) {
+      return null;
+    }
+    const first = callback.parameters[0];
+    if (!first || !ts.isIdentifier(first.name)) return null;
+    const name = first.name.text;
+    let found = null;
+    const look = (n) => {
+      if (found) return;
+      if (
+        ts.isElementAccessExpression(n) &&
+        ts.isIdentifier(n.argumentExpression) &&
+        n.argumentExpression.text === name
+      ) {
+        found = n;
+        return;
+      }
+      if (
+        ts.isBinaryExpression(n) &&
+        COMPARISONS.has(n.operatorToken.kind) &&
+        [n.left, n.right].some(
+          (side) => ts.isIdentifier(side) && side.text === name,
+        )
+      ) {
+        found = n;
+        return;
+      }
+      if (
+        ts.isCallExpression(n) &&
+        ts.isPropertyAccessExpression(n.expression) &&
+        /^(has|get|includes|indexOf)$/.test(n.expression.name.text) &&
+        n.arguments.some((arg) => ts.isIdentifier(arg) && arg.text === name)
+      ) {
+        found = n;
+        return;
+      }
+      ts.forEachChild(n, look);
+    };
+    look(callback.body);
+    return found;
+  };
+  const checkWalk = (list, receiver) => {
+    // receiver.method(callback)
+    const access = receiver.parent;
+    if (
+      !access ||
+      !ts.isPropertyAccessExpression(access) ||
+      access.expression !== receiver ||
+      !WALKS.test(access.name.text)
+    ) {
+      return;
+    }
+    const call = access.parent;
+    if (!call || !ts.isCallExpression(call) || call.expression !== access)
+      return;
+    const use = call.arguments[0] ? keyUseIn(call.arguments[0]) : null;
+    if (use && !walkedLists.has(list.pos)) {
+      walkedLists.add(list.pos);
+      report(use, "a list of translated labels used as keys");
+    }
+  };
+  const checkList = (list) => {
+    let value = list;
+    while (
+      value.parent &&
+      (ts.isParenthesizedExpression(value.parent) ||
+        ts.isAsExpression(value.parent) ||
+        ts.isSatisfiesExpression(value.parent))
+    ) {
+      value = value.parent;
+    }
+    checkWalk(list, value);
+    // const labels = [t(…), …]; labels.filter((k) => MAP[k])
+    const declaration = value.parent;
+    if (
+      declaration &&
+      ts.isVariableDeclaration(declaration) &&
+      ts.isIdentifier(declaration.name)
+    ) {
+      const name = declaration.name.text;
+      const find = (n) => {
+        if (ts.isIdentifier(n) && n.text === name && n !== declaration.name) {
+          checkWalk(list, n);
+        }
+        ts.forEachChild(n, find);
+      };
+      find(sf);
+    }
+  };
+
   const visit = (node) => {
+    if (
+      ts.isArrayLiteralExpression(node) &&
+      node.elements.some((element) => isTranslation(element))
+    ) {
+      checkList(node);
+    }
     if (isTranslation(node)) {
       // climb through wrappers that keep it the same value
       let cur = node;
@@ -169,7 +282,11 @@ for (const file of files) {
         p = cur.parent;
       }
 
-      if (p && ts.isBinaryExpression(p) && COMPARISONS.has(p.operatorToken.kind)) {
+      if (
+        p &&
+        ts.isBinaryExpression(p) &&
+        COMPARISONS.has(p.operatorToken.kind)
+      ) {
         report(p, "compared with a translated label");
       } else if (p && ts.isCaseClause(p)) {
         report(p.expression, "a switch case on a translated label");
@@ -251,7 +368,8 @@ for (const f of findings) {
 }
 for (const [file, list] of byFile) {
   console.log(file);
-  for (const f of list) console.log(`  ${f.line}: ${f.why}: ${f.text.slice(0, 140)}`);
+  for (const f of list)
+    console.log(`  ${f.line}: ${f.why}: ${f.text.slice(0, 140)}`);
 }
 console.log(
   `\n${findings.length} place${findings.length === 1 ? "" : "s"} in ${byFile.size} file${byFile.size === 1 ? "" : "s"} use a translated label as a value.`,

@@ -11,9 +11,10 @@ import type {
   ClientPlatform,
   PaymentMethodCode,
 } from "@abonten/core/market/types";
-import { PAYMENT_METHOD_LABEL } from "@abonten/core/market/types";
+import { paymentMethodLabel } from "@abonten/core/market/types";
 import type { AvailablePaymentMethod } from "@abonten/types/paymentOptionsType";
 import { listFeatureFlags } from "../flags/featureFlagCore";
+import { coreT } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
 import { accountFromConfig, getPaymentProvider } from "./providers/registry";
 
@@ -62,7 +63,9 @@ export async function listAvailablePaymentMethods(input: {
     out.push({
       method: pm.method,
       provider: pm.provider,
-      label: pm.label ?? PAYMENT_METHOD_LABEL[pm.method],
+      // The market's own name for it when it set one; else the method's
+      // name in the language of the request ("Carte", not "Card").
+      label: pm.label ?? paymentMethodLabel(coreT(), pm.method),
       recommended: pm.recommended,
       savable:
         (pm.method === "card" && caps.savedCards) ||

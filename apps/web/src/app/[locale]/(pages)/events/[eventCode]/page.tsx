@@ -63,7 +63,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 // rebuilt, and the first visitor after a quiet spell is served the old copy
 // however old it is, so every write that changes the page (edit, cancel,
 // sell-out, review, moderation from the admin app) would have to revalidate
-// it. See docs/architecture/web-resilience.md, "Event page caching".
+// it. See docs/architecture/web-resilience.md, "Event page caching"
+// (decision D7).
 export const revalidate = 60;
 
 // Rich link previews when an event is shared (from web or the mobile share
