@@ -388,7 +388,6 @@
   "mobileMoney": "Dinero móvil",
   "more": "  ·  +{extraDates} más",
   "moreOptions": "Más opciones",
-  "mostAnticipated": "Los más esperados",
   "moveThePinToYourPreferred": "Mueve el marcador a tu ubicación preferida",
   "multipleDates": "Varias fechas",
   "multipleTicketTypes": "Varios tipos de entrada",
@@ -904,5 +903,7 @@
     "x": "Abonten en X (antes Twitter)",
     "instagram": "Abonten en Instagram",
     "tiktok": "Abonten en TikTok"
-  }
+  },
+  "featured": "Destacado",
+  "paidPlacement": "Espacio de pago"
 }

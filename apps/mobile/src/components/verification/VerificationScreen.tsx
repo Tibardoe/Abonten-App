@@ -203,7 +203,7 @@ export default function VerificationScreen({
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={loadView}
-          subject="verification"
+          subject={t("yourVerification")}
           onRetry={() => q.refetch()}
           loading={
             <View className="flex-1 items-center justify-center">

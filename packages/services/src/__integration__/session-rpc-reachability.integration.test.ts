@@ -117,6 +117,87 @@ describe("reads the apps make with a person's own session", () => {
     }
   });
 
+  // 2026-10-02: every event and place list is built from service-only
+  // helpers (_explore_event_candidates, _event_cards, _place_cards) and
+  // reads the hidden markets. Each must run for a visitor and for a
+  // signed-in person, with the place alone (every other argument has a
+  // default).
+  it("the Explore lists answer a signed-in person and a visitor", async () => {
+    const here = { lat: 5.6037, lng: -0.187 };
+    for (const client of [organizer.client, anon]) {
+      const calls: Record<string, PromiseLike<{ error: unknown }>> = {
+        get_nearby_events: client.rpc("get_nearby_events", {
+          user_lat: here.lat,
+          user_lng: here.lng,
+          search_radius: 5000,
+        }),
+        get_filtered_events: client.rpc("get_filtered_events", {
+          p_user_lat: here.lat,
+          p_user_lng: here.lng,
+          p_max_distance_km: 5,
+          p_max_price: 0,
+          p_min_rating: 1,
+          p_event_type: ["Live Concerts"],
+        }),
+        get_explore_event_sections: client.rpc("get_explore_event_sections", {
+          p_user_lat: here.lat,
+          p_user_lng: here.lng,
+          p_today_end: new Date(Date.now() + 86_400_000).toISOString(),
+          p_month_end: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+        }),
+        get_events_in_window: client.rpc("get_events_in_window", {
+          p_user_lat: here.lat,
+          p_user_lng: here.lng,
+          p_radius_km: 5,
+          p_window_start: new Date().toISOString(),
+          p_window_end: new Date(Date.now() + 7 * 86_400_000).toISOString(),
+        }),
+        get_similar_events: client.rpc("get_similar_events", {
+          input_category: "conference",
+          input_location: `SRID=4326;POINT(${here.lng} ${here.lat})`,
+          input_radius_km: 5,
+        }),
+        get_place_events: client.rpc("get_place_events", {
+          p_place_id: crypto.randomUUID(),
+        }),
+        get_nearby_places: client.rpc("get_nearby_places", {
+          user_lat: here.lat,
+          user_lng: here.lng,
+          search_radius: 5000,
+        }),
+        get_filtered_places: client.rpc("get_filtered_places", {
+          p_user_lat: here.lat,
+          p_user_lng: here.lng,
+          p_max_distance_km: 5,
+          p_open_now: true,
+          p_min_rating: 1,
+        }),
+      };
+      for (const [name, call] of Object.entries(calls)) {
+        const { error } = await call;
+        expect(error, name).toBeNull();
+      }
+      // What the lists are built from is not theirs to call.
+      for (const helper of [
+        "_explore_event_candidates",
+        "_event_cards",
+        "_place_cards",
+      ]) {
+        const { error } = await client.rpc(
+          helper as never,
+          {
+            p_user_lat: here.lat,
+            p_user_lng: here.lng,
+            p_max_distance_km: 5,
+            p_ids: [],
+            p_km: [],
+          } as never,
+        );
+        expect(error, helper).not.toBeNull();
+      }
+    }
+  });
+
   it("a place's open-now check works for a visitor", async () => {
     // Its own place: with none in the database the call never reached the
     // zone lookup, and this passed while visitors got "permission denied

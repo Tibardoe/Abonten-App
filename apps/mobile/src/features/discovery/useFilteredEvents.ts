@@ -1,74 +1,80 @@
 import { supabase } from "@/lib/supabase";
-import type { Database } from "@abonten/types/database.types";
+import { withInlineEventAvailability } from "@abonten/core/eventAvailability";
+import {
+  EXPLORE_EVENTS_RADIUS_KM,
+  eventFilterArgs,
+} from "@abonten/core/exploreSections";
+import { viewerTimeZone } from "@abonten/core/time/timeZone";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { EventFilters } from "./exploreFilters";
-
-// get_filtered_events' generated Args type marks most filter params as
-// required (non-null) -- its live SQL signature genuinely lacks
-// `DEFAULT NULL` on them, unlike its sibling get_filtered_places (which has
-// defaults on the equivalent params). Postgres already accepts an explicit
-// null for any parameter regardless of whether it has a default (defaults
-// only matter for OMITTED args), and this app has always called it that way
-// for "no filter" -- so this is a generated-type gap, not a real runtime
-// constraint. Fixing get_filtered_events' SQL signature to match
-// get_filtered_places' would remove the need for this cast, but that's a
-// database change, flagged separately (docs/audit) rather than made here.
-type GetFilteredEventsArgs =
-  Database["public"]["Functions"]["get_filtered_events"]["Args"];
 
 const PAGE_SIZE = 20;
 // JSON-safe stand-in for "no distance" — matches getQueriedEvents /
 // useEventSearch.
 const NO_DISTANCE = 1e18;
 
-// get_filtered_events' distance clause is
-// `ST_DWithin(location, point, p_max_distance_km * 1000)` — when coords are
-// given but p_max_distance_km is null, `null * 1000` is null and ST_DWithin
-// returns null, so the whole row is filtered out and "All events" comes back
-// empty even though the curated sliders (a separate 10km get_nearby_events
-// call) are full. Web never hits this because EventsTabContent always passes
-// `maxDistanceKm ?? EXPLORE_EVENTS_RADIUS_KM` (10). Match that here: the
-// Filter sheet's Distance field overrides it when set.
-const DEFAULT_RADIUS_KM = 10;
-
 type Cursor = { startsAt: string; distanceKm: number; id: string };
 
-async function fetchPage(
+/**
+ * A stretch of time laid over the filters: the "See all" of a time row
+ * ("Happening today") is this list inside that row's window. With a date
+ * filter also set, the list is what falls inside both. Pass the same
+ * object while the screen is open (it is part of the query's key).
+ */
+export type EventListWindow = { from: string; to: string };
+
+function later(a: string | undefined, b: string): string {
+  return a && a > b ? a : b;
+}
+
+function earlier(a: string | undefined, b: string): string {
+  return a && a < b ? a : b;
+}
+
+export async function fetchFilteredEventsPage(
   coords: { lat: number; lng: number } | null,
   f: EventFilters,
   cursor: Cursor | null,
+  options: { searchText?: string; window?: EventListWindow } = {},
 ): Promise<{ rows: UserPostType[]; nextCursor: Cursor | null }> {
-  // get_filtered_events' p_event_type is text[] and matches on ANY selected
-  // type; pass null (not []) for "no filter" so the RPC's null short-circuit
-  // applies — same as getQueriedEvents.
-  const normalizedType = f.types.length > 0 ? f.types : null;
-  const maxPrice = f.maxPrice != null ? f.maxPrice : null;
+  // Days are the phone's calendar: from the first moment of the first day
+  // to the last moment of the last. Every filter is optional in SQL, and
+  // each end of a price or date range stands on its own ("Free" is "up to
+  // 0", "Today" is one whole day).
+  const args = eventFilterArgs(f, viewerTimeZone());
+  const window = options.window;
 
   const { data, error } = await supabase.rpc("get_filtered_events", {
-    p_min_price: f.minPrice,
-    p_max_price: maxPrice,
-    p_min_rating: f.minRating,
-    p_user_lat: coords?.lat ?? null,
-    p_user_lng: coords?.lng ?? null,
-    p_max_distance_km: f.maxDistanceKm ?? DEFAULT_RADIUS_KM,
-    p_start_date: f.startDate,
-    p_end_date: f.endDate,
-    p_search_text: "",
-    p_event_category: f.category ?? "",
-    p_event_type: normalizedType,
-    p_cursor_starts_at: cursor?.startsAt ?? null,
-    p_cursor_distance_km: cursor?.distanceKm ?? null,
-    p_cursor_id: cursor?.id ?? null,
-    p_page_size: PAGE_SIZE + 1,
-  } as GetFilteredEventsArgs);
+    ...args,
+    // ISO instants in UTC compare as text.
+    p_start_date: window
+      ? later(args.p_start_date, window.from)
+      : args.p_start_date,
+    p_end_date: window ? earlier(args.p_end_date, window.to) : args.p_end_date,
+    p_user_lat: coords?.lat,
+    p_user_lng: coords?.lng,
+    // Explore browses one area (10 km) unless a distance is chosen; a
+    // search with no area has no limit.
+    p_max_distance_km:
+      f.maxDistanceKm ?? (coords ? EXPLORE_EVENTS_RADIUS_KM : undefined),
+    p_search_text: options.searchText ?? "",
+    p_cursor_starts_at: cursor?.startsAt,
+    p_cursor_distance_km: cursor?.distanceKm,
+    p_cursor_id: cursor?.id,
+    p_page_size: PAGE_SIZE,
+  });
 
   if (error) throw error;
 
-  // Same RPC-to-app-model translation boundary as the other discovery
-  // hooks -- get_filtered_events' real return columns don't exactly match
-  // UserPostType's shape.
-  const all = (data ?? []) as unknown as UserPostType[];
+  // The function returns one row more than asked when there is a next
+  // page. The row is the whole card (attendance, per-tier stock); its
+  // columns don't exactly match UserPostType's app-level shape (address:
+  // Json, location: unknown) -- the same RPC-to-app-model boundary as the
+  // other discovery hooks.
+  const all = (data ?? []).map((row) =>
+    withInlineEventAvailability(row),
+  ) as unknown as UserPostType[];
   const hasNext = all.length > PAGE_SIZE;
   const rows = hasNext ? all.slice(0, PAGE_SIZE) : all;
   const last = rows[rows.length - 1];
@@ -92,6 +98,7 @@ async function fetchPage(
 export function useFilteredEvents(
   coords: { lat: number; lng: number } | null,
   filters: EventFilters,
+  window?: EventListWindow,
 ) {
   return useInfiniteQuery({
     queryKey: [
@@ -100,10 +107,12 @@ export function useFilteredEvents(
       coords?.lat ?? 0,
       coords?.lng ?? 0,
       filters,
+      window ?? null,
     ],
     enabled: coords != null,
     initialPageParam: null as Cursor | null,
-    queryFn: ({ pageParam }) => fetchPage(coords, filters, pageParam),
+    queryFn: ({ pageParam }) =>
+      fetchFilteredEventsPage(coords, filters, pageParam, { window }),
     getNextPageParam: (last) => last.nextCursor,
   });
 }

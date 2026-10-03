@@ -303,7 +303,7 @@ export default function PlaceReviewsScreen() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="reviews"
+            subject={t("theReviews")}
             onRetry={() => q.refetch()}
             loading={<ActivityIndicator className="mt-10" />}
           />

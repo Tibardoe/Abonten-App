@@ -355,7 +355,7 @@
   "viewVenue": "Voir le lieu",
   "visitWebsite": "Visiter le site web",
   "weCouldnTFindAnyEvents": "Nous n'avons trouvé aucun événement à cet endroit. Essayez de changer de lieu ou soyez le premier à en publier un.",
-  "weCouldnTFindAnyEvents2": "Nous n'avons trouvé aucun événement {eventCategory} à {location}{value}. Essayez une autre catégorie ou revenez bientôt.",
+  "weCouldnTFindAnyEvents2": "Nous n'avons trouvé aucun événement {eventCategory} à {location}. Essayez une autre catégorie ou revenez bientôt.",
   "weCouldnTFindAnyEvents3": "Nous n'avons trouvé aucun événement à {location} correspondant à vos filtres. Essayez de les ajuster ou de les effacer.",
   "weCouldnTPostYourEvent": "Nous n'avons pas pu publier votre événement. Veuillez réessayer.",
   "weCouldnTPublishYourEvent": "Nous n'avons pas pu publier votre événement.",
@@ -404,5 +404,6 @@
   "yourReview": "Votre avis",
   "stepOf": "Étape {step} sur {total}",
   "ticketTypeNumber": "Type de billet {number}",
-  "exploreHeading": "{filter, select, happening_today {Aujourd'hui} happening_this_week {Cette semaine} happening_this_month {Ce mois-ci} top_rated_organizers {Organisateurs les mieux notés} around_you {Près de chez vous} other {Par catégorie}}"
+  "exploreHeading": "{filter, select, happening_today {Aujourd'hui} happening_this_week {Cette semaine} happening_this_month {Ce mois-ci} top_rated_organizers {Organisateurs les mieux notés} around_you {Près de chez vous} other {Par catégorie}}",
+  "weCouldnTFindAnyEventsFiltered": "Nous n'avons trouvé aucun événement {eventCategory} à {location} correspondant à vos filtres. Essayez de les ajuster ou de les effacer."
 }

@@ -4,8 +4,8 @@ purpose: Record every category of personal data Abonten processes, where it is s
 audience: Privacy reviewer, engineering, support leads
 scope: All production data stores (Supabase Postgres, Supabase Storage, Cloudinary, device storage, provider systems)
 status: Review required
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -35,7 +35,7 @@ Format: **Data → Owner (controller) → Purpose → Storage → Access → Ret
 | Data | Tables / stores | Purpose | Access | Notes |
 |---|---|---|---|---|
 | Explore location (town chosen) | App SecureStore `abonten.explore-location`; URL/state on web | Discovery | Device only | |
-| Device coordinates for "near you" | Passed to discovery RPCs (`get_nearby_events`, `get_nearby_places`) at query time | Distance sorting | Not stored | Only the query uses them |
+| Device coordinates for "near you" | Passed to discovery RPCs (`get_explore_event_sections`, `get_filtered_events`, `get_nearby_events`, `get_filtered_places`, `get_nearby_places`) at query time | Distance sorting | Not stored | Only the query uses them |
 | Place-visit check-in position | `place_visit_record` (rewards, ~150 m rule) | Verify a visit | Owner sees own visits; place owner sees counts | Shadow mode today |
 | Field team GPS: assignment start position, submission position, distance to pin | `fieldops_assignment.start_location`, `fieldops_onboarding.submission_location` | Verify field work | Member (own), team lead, admin `fieldops.view` | Informational for leads; never refused on |
 | Approximate country from network | `x-vercel-ip-country` → `country` cookie | Defaults | Device | |

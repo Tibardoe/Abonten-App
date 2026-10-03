@@ -2,7 +2,10 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
+import { requestTimeZone } from "@/utils/requestTimeZone";
 import { normalizeEventRow } from "@abonten/core/eventAddress";
+import { withInlineEventAvailability } from "@abonten/core/eventAvailability";
+import { eventFilterDateBounds } from "@abonten/core/exploreSections";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,7 +13,6 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
-import type { Database } from "@abonten/types/database.types";
 import type {
   FilteredEventsCursor,
   PaginatedResult,
@@ -24,6 +26,10 @@ interface FilterParams {
   lat?: number | null;
   lng?: number | null;
   maxDistanceKm?: number | null;
+  /**
+   * The first and last day asked for: a day ("2026-10-12") or a date
+   * picker's instant. Either end may be missing; one day alone is that day.
+   */
   startDate?: string | null;
   endDate?: string | null;
   searchText?: string | null;
@@ -57,32 +63,26 @@ export const getQueriedEvents = withActionLocale(
 
     const cursor = decodeCursor<FilteredEventsCursor>(rawCursor);
 
-    // get_filtered_events' p_event_type is text[] -- an event matches if ANY
-    // selected type ILIKE-matches (see 20260902130000_multi_type_event_filter.sql).
-    // Pass null rather than [] for "no filter" so the RPC's `p_event_type IS
-    // NULL` short-circuit applies instead of its separate empty-array check.
-    const normalizedType = type && type.length > 0 ? type : null;
+    // Days are the visitor's: from the first moment of the first day to the
+    // last moment of the last, in their browser's zone.
+    const { from, to } = eventFilterDateBounds(
+      startDate,
+      endDate,
+      await requestTimeZone(),
+    );
 
-    // get_filtered_events declares its filter parameters without defaults
-    // and treats NULL as "no filter" (see 20260902130000_multi_type_event_filter.sql).
-    // The generated types cannot express a nullable argument, so the nulls
-    // are sent through one typed boundary here; the cursor parameters are
-    // DEFAULT NULL and may simply be omitted.
-    type FilteredEventsArgs =
-      Database["public"]["Functions"]["get_filtered_events"]["Args"];
-    const filters = {
-      p_min_price: minPrice,
-      p_max_price: maxPrice,
-      p_min_rating: minRating,
-      p_user_lat: lat,
-      p_user_lng: lng,
-      p_max_distance_km: maxDistanceKm,
-      p_start_date: startDate,
-      p_end_date: endDate,
-      p_event_type: normalizedType,
-    } satisfies Partial<Record<keyof FilteredEventsArgs, unknown>>;
+    // Every filter of get_filtered_events is optional (DEFAULT NULL): one
+    // that is not set is left out, and each bound of a range stands alone.
     const { data, error } = await supabase.rpc("get_filtered_events", {
-      ...(filters as unknown as Pick<FilteredEventsArgs, keyof typeof filters>),
+      p_min_price: minPrice ?? undefined,
+      p_max_price: maxPrice ?? undefined,
+      p_min_rating: minRating ?? undefined,
+      p_user_lat: lat ?? undefined,
+      p_user_lng: lng ?? undefined,
+      p_max_distance_km: maxDistanceKm ?? undefined,
+      p_start_date: from ?? undefined,
+      p_end_date: to ?? undefined,
+      p_event_type: type && type.length > 0 ? type : undefined,
       p_search_text: searchText ?? "",
       // ?category may repeat in the URL; the RPC filters on one category.
       p_event_category: Array.isArray(category)
@@ -100,7 +100,11 @@ export const getQueriedEvents = withActionLocale(
     }
 
     const { page, hasNextPage } = splitPage<UserPostType>(
-      (data ?? []).map(normalizeEventRow),
+      // The row carries attendance and per-tier stock, so a card says
+      // "Sold out" here the same way it does in the rows above the list.
+      (data ?? []).map((row) =>
+        withInlineEventAvailability(normalizeEventRow(row)),
+      ),
       pageSize,
     );
     const last = page[page.length - 1] as UserPostType | undefined;

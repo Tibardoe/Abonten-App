@@ -146,7 +146,7 @@ export default function PlaceManageScreen() {
             upcomingView.kind === "error" ? (
             <QueryUnavailable
               view={upcomingView}
-              subject="upcoming events"
+              subject={t("theUpcomingEvents")}
               onRetry={() => upcoming.refetch()}
               className="py-4"
             />

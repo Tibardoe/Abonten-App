@@ -2,6 +2,7 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import { normalizeEventRow } from "@abonten/core/eventAddress";
+import { withInlineEventAvailability } from "@abonten/core/eventAvailability";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -29,8 +30,8 @@ export async function getNearByEvents(
     user_lat: lat,
     user_lng: lng,
     search_radius: radius,
-    p_cursor_sort_key: cursor?.sortKey ?? null,
-    p_cursor_id: cursor?.id ?? null,
+    p_cursor_sort_key: cursor?.sortKey ?? undefined,
+    p_cursor_id: cursor?.id ?? undefined,
     p_page_size: pageSize,
   });
 
@@ -40,17 +41,14 @@ export async function getNearByEvents(
     return { status: 500, data: [], nextCursor: null, hasNextPage: false };
   }
 
+  // The row carries attendance and per-tier stock inline, so the cards
+  // need no second request.
   const { page, hasNextPage } = splitPage<UserPostType>(
-    (data ?? []).map(normalizeEventRow),
+    (data ?? []).map((row) =>
+      withInlineEventAvailability(normalizeEventRow(row)),
+    ),
     pageSize,
   );
-
-  // get_nearby_events returns attendance_count inline (migration
-  // 20260910163552) — this used to be a second round trip per page.
-  const eventsWithAttendance = page.map((event: UserPostType) => ({
-    ...event,
-    attendanceCount: Number(event.attendance_count ?? 0) || 0,
-  }));
 
   const last = page[page.length - 1] as
     | (UserPostType & { cursor_sort_key: string })
@@ -64,10 +62,5 @@ export async function getNearByEvents(
         })
       : null;
 
-  return {
-    status: 200,
-    data: eventsWithAttendance,
-    nextCursor,
-    hasNextPage,
-  };
+  return { status: 200, data: page, nextCursor, hasNextPage };
 }

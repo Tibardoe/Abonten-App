@@ -587,5 +587,10 @@
   "ticketTypeNumber": "Ticket type {number}",
   "usesOfMax": "{used, plural, one {# use} other {# uses}} of {max} max",
   "usesUnlimited": "{used, plural, one {# use} other {# uses}} (unlimited)",
-  "activityFor": "{type, select, ticket_sold {Ticket sold for {event}} ticket_cancelled {Ticket cancelled for {event}} other {New registration for {event}}}"
+  "activityFor": "{type, select, ticket_sold {Ticket sold for {event}} ticket_cancelled {Ticket cancelled for {event}} other {New registration for {event}}}",
+  "thePromotionOptions": "the promotion options",
+  "theReviews": "the reviews",
+  "theBookings": "the bookings",
+  "theCheckInCode": "the check-in code",
+  "theUpcomingEvents": "the upcoming events"
 }

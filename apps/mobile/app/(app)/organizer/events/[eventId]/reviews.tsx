@@ -256,7 +256,7 @@ export default function ManageEventReviewsScreen() {
           ) : (
             <QueryUnavailable
               view={view}
-              subject="reviews"
+              subject={t("theReviews")}
               onRetry={() => q.refetch()}
               loading={<Spinner className="mt-10" />}
             />

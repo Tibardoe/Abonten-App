@@ -74,5 +74,6 @@
   "weCouldnTFindAnyEvents": "Nous n'avons trouvé aucun événement correspondant à cette recherche. Essayez un terme différent ou plus général.",
   "when": "Quand",
   "youReOffline": "Vous êtes hors ligne",
-  "yourLocation": "votre position"
+  "yourLocation": "votre position",
+  "theseResults": "ces résultats"
 }

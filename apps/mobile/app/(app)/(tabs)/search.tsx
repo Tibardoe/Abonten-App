@@ -341,7 +341,7 @@ function LegacySearch() {
             ) : (
               <QueryUnavailable
                 view={resultsView}
-                subject="these results"
+                subject={t("theseResults")}
                 onRetry={() => results.refetch()}
                 loading={
                   <View className="gap-4 px-1 pt-2">

@@ -587,5 +587,10 @@
   "ticketTypeNumber": "Tickettyp {number}",
   "usesOfMax": "{used, plural, one {# Nutzung} other {# Nutzungen}} von max. {max}",
   "usesUnlimited": "{used, plural, one {# Nutzung} other {# Nutzungen}} (unbegrenzt)",
-  "activityFor": "{type, select, ticket_sold {Ticket verkauft für {event}} ticket_cancelled {Ticket storniert für {event}} other {Neue Anmeldung für {event}}}"
+  "activityFor": "{type, select, ticket_sold {Ticket verkauft für {event}} ticket_cancelled {Ticket storniert für {event}} other {Neue Anmeldung für {event}}}",
+  "thePromotionOptions": "die Werbeoptionen",
+  "theReviews": "die Bewertungen",
+  "theBookings": "die Buchungen",
+  "theCheckInCode": "der Check-in-Code",
+  "theUpcomingEvents": "die anstehenden Events"
 }

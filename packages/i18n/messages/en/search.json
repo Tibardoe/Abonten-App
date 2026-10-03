@@ -74,5 +74,6 @@
   "youReOffline": "You're offline",
   "yourLocation": "your location",
   "upcomingCount": "{count} upcoming",
-  "placesCount": "{count, plural, one {# place} other {# places}}"
+  "placesCount": "{count, plural, one {# place} other {# places}}",
+  "theseResults": "these results"
 }

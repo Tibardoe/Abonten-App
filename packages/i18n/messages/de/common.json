@@ -388,7 +388,6 @@
   "mobileMoney": "Mobile Money",
   "more": "  ·  +{extraDates} weitere",
   "moreOptions": "Weitere Optionen",
-  "mostAnticipated": "Am meisten erwartet",
   "moveThePinToYourPreferred": "Verschiebe die Markierung an deinen gewünschten Ort",
   "multipleDates": "Mehrere Termine",
   "multipleTicketTypes": "Mehrere Tickettypen",
@@ -904,5 +903,7 @@
     "x": "Abonten auf X (ehemals Twitter)",
     "instagram": "Abonten auf Instagram",
     "tiktok": "Abonten auf TikTok"
-  }
+  },
+  "featured": "Hervorgehoben",
+  "paidPlacement": "Bezahlte Platzierung"
 }

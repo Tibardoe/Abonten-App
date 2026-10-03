@@ -17,13 +17,13 @@ import {
 } from "@abonten/core/search/searchFilters";
 import { formatDistance } from "@abonten/core/units";
 
-// The Explore Filter modal's field set + predicates now live in
-// @abonten/core/exploreFilters (shared verbatim with the web Explore page).
-// This module re-exports them and adds the React-Native-only presentation
-// helpers: the choices the FilterSheet offers (the same When / Price /
-// Rating choices as the Search sheet, turned into Explore's dates and
-// amounts), the removable-chip descriptors and the per-key clear helpers
-// the FilterSheet / ActiveFilterChips use.
+// The Explore Filter modal's field set lives in @abonten/core/exploreFilters
+// (shared verbatim with the web Explore page); what a filter means is
+// decided in the database. This module re-exports the field set and adds
+// the React-Native-only presentation helpers: the choices the FilterSheet
+// offers (the same When / Price / Rating choices as the Search sheet,
+// turned into Explore's dates and amounts), the removable-chip descriptors
+// and the per-key clear helpers the FilterSheet / ActiveFilterChips use.
 //
 // Everything that produces words takes the reader's translator (the `core`
 // namespace) and language: `useCoreI18n()` hands both to a component.
@@ -37,12 +37,6 @@ export {
   priceSliderMax,
   countActiveEventFilters,
   countActivePlaceFilters,
-  eventFiltersNeedServerData,
-  eventMatchesFilters,
-  placeMatchesFilters,
-  filterEventList,
-  filterPlaceList,
-  haversineKm,
 } from "@abonten/core/exploreFilters";
 
 export type ExploreTab = "events" | "places";

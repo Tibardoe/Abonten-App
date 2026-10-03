@@ -83,5 +83,6 @@
   "youCanAttachAtMostDocuments2": "You can attach at most {maxEvidenceFiles} documents.",
   "youHaveReachedTheLimit": "You have reached the limit.",
   "yourBadgeShowsOnYourEvents": "Your badge shows on your events and your profile.",
-  "yourDocumentsAreRemovedAndNothing": "Your documents are removed and nothing is reviewed."
+  "yourDocumentsAreRemovedAndNothing": "Your documents are removed and nothing is reviewed.",
+  "yourVerification": "your verification"
 }

@@ -1,15 +1,16 @@
 import { supabase } from "@/lib/supabase";
+import { readTicketTiers } from "@abonten/core/eventAvailability";
 
 // Native mirror of the web `getEventAttendanceCounts` action
 // (apps/web/src/actions/getAttendace.ts).
 //
-// `get_nearby_events`, `get_similar_events` and raw `event` table reads do
-// NOT carry an attendance figure (only `get_filtered_events` does), so every
-// EventCard fed from those sources rendered "0 going" and full spots-left —
-// it could never show "few left" or "Sold out". The web Server Actions
-// backfill it with one batched RPC call per page; the mobile discovery hooks
-// were missing that step. `get_event_attendance_counts` is an anon-safe
-// SECURITY DEFINER RPC that returns only the aggregate (summing
+// Every event list function returns attendance and per-tier stock inline
+// (migration 20261002180000), and the discovery hooks read them with
+// `withInlineEventAvailability` from @abonten/core. What is left for this
+// file is rows read straight from the `event` table (a profile's events):
+// those carry no attendance figure, so a card fed from them would say "0
+// going" and never "Sold out". `get_event_attendance_counts` is an
+// anon-safe SECURITY DEFINER RPC that returns only the aggregate (summing
 // `number_of_tickets`, `status = 'attending'` only), never raw rows.
 
 /**
@@ -46,12 +47,12 @@ type TicketTypeRow = {
 /**
  * event_id -> its ticket tiers' remaining stock.
  *
- * The discovery RPCs aggregate ticket types down to min_price/currency, so a
- * card fed from them had no idea how many tickets actually remained and fell
- * back to `capacity - attending`. An event with capacity 100 and 3 tickets
- * therefore advertised "100 spots left" — and never "Sold out" — even with
- * every ticket gone. `ticket_type_select` RLS exposes the tiers of any
- * published or canceled event, so this is the same data the buy screen reads.
+ * A card that knows only min_price/currency has no idea how many tickets
+ * remain and falls back to `capacity - attending`: an event with capacity
+ * 100 and 3 tickets would advertise "100 spots left" — and never "Sold
+ * out" — even with every ticket gone. `ticket_type_select` RLS exposes the
+ * tiers of any published or canceled event, so this is the same data the
+ * buy screen reads.
  *
  * Never throws: a failed lookup degrades to "no ticket data", which puts the
  * cards back on the capacity-only figure rather than breaking the list.
@@ -104,33 +105,21 @@ export async function withEventAttendanceCounts<T extends { id: string }>(
 type AvailabilityRow = {
   id: string;
   ticket_type?: unknown;
-  // get_nearby_events returns both of these inline (migration
-  // 20260910163552) so the Explore screen no longer needs a second trip.
+  // The event list functions return both of these inline.
   attendance_count?: number | string | null;
   ticket_types?: unknown;
 };
 
-function inlineTicketTypes(value: unknown): TicketTypeRow[] | null {
-  if (!Array.isArray(value)) return null;
-  return value.map((t) => {
-    const row = (t ?? {}) as Record<string, unknown>;
-    return {
-      price: Number(row.price ?? 0),
-      currency: typeof row.currency === "string" ? row.currency : "",
-      quantity: row.quantity == null ? null : Number(row.quantity),
-    };
-  });
-}
-
 /**
- * Attendance + remaining ticket stock merged onto `rows`. Use this wherever
- * EventCards are rendered from a discovery RPC — both numbers are needed
- * before "spots left" and "Sold out" can be honest.
+ * Attendance + remaining ticket stock merged onto `rows`. Use this where
+ * EventCards are rendered from rows that may not carry them (a read of the
+ * `event` table) — both numbers are needed before "spots left" and "Sold
+ * out" can be honest.
  *
- * Rows that already carry the figures (get_nearby_events returns
- * `attendance_count` and `ticket_types` inline; a detail read carries
- * `ticket_type`) are used as-is. Only rows missing one of them cost a
- * round trip, and those go out in parallel.
+ * Rows that already carry the figures (an event list function's
+ * `attendance_count` and `ticket_types`; a detail read's `ticket_type`) are
+ * used as-is. Only rows missing one of them cost a round trip, and those go
+ * out in parallel.
  */
 export async function withEventAvailability<T extends AvailabilityRow>(
   rows: T[],
@@ -164,6 +153,6 @@ export async function withEventAvailability<T extends AvailabilityRow>(
         : (counts[r.id] ?? 0),
     ticket_type: Array.isArray(r.ticket_type)
       ? r.ticket_type
-      : (inlineTicketTypes(r.ticket_types) ?? ticketTypes[r.id] ?? undefined),
+      : (readTicketTiers(r.ticket_types) ?? ticketTypes[r.id] ?? undefined),
   }));
 }

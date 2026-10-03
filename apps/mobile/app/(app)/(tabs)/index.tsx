@@ -32,9 +32,6 @@ import {
   countActivePlaceFilters,
   describeEventFilters,
   describePlaceFilters,
-  eventFiltersNeedServerData,
-  filterEventList,
-  filterPlaceList,
 } from "@/features/discovery/exploreFilters";
 import { useExploreEventSliders } from "@/features/discovery/useExploreEventSliders";
 import { useExplorePlaceSliders } from "@/features/discovery/useExplorePlaceSliders";
@@ -60,7 +57,6 @@ import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import {
   AppText,
-  Caption,
   EmptyState,
   Icon,
   ListFooter,
@@ -175,8 +171,12 @@ export default function Explore() {
   const eventsQuery = useFilteredEvents(coords, eventFilters);
   const placesQuery = useFilteredPlaces(coords, placeFilters);
 
-  const eventSliders = useExploreEventSliders(coords, area?.label ?? "");
-  const placeSliders = useExplorePlaceSliders(coords);
+  const eventSliders = useExploreEventSliders(
+    coords,
+    area?.label ?? "",
+    eventFilters,
+  );
+  const placeSliders = useExplorePlaceSliders(coords, placeFilters);
 
   const events: UserPostType[] =
     eventsQuery.data?.pages.flatMap((p) => p.rows) ?? [];
@@ -197,47 +197,21 @@ export default function Explore() {
         ],
   );
 
-  // The filter sheet feeds every relevant section, not just the "All" list:
-  // each curated slider is client-filtered against the same nearby fetch it
-  // was already derived from (no extra network). A slider that ends up empty
-  // is hidden further down; when a rating filter is set — a dimension the
-  // events payload can't express — the whole curated block collapses and the
-  // rating-aware "All" list carries the screen.
+  // The filter sheet feeds every section, not just the "All" list. The
+  // rows are filtered in the database, by the same rule as the list below
+  // them (the event rows by get_explore_event_sections, each place row by
+  // get_filtered_places with the filters added to its own question), so a
+  // row is what the whole area has to offer for the filters, not what was
+  // left of a first page. A row that ends up empty is hidden further down.
   //
   // Featured (paid placement) is the one exception: it is not a search
-  // result, so it is never filtered and is rendered by <DiscoveryHero> from
-  // the unfiltered slider data — a filter that matches nothing used to take
-  // the Featured banner down with it.
+  // result, so it is never filtered, and <DiscoveryHero> renders it. A
+  // filter that matches nothing used to take the Featured banner down with
+  // it.
   const eventFilterCount = countActiveEventFilters(eventFilters);
   const placeFilterCount = countActivePlaceFilters(placeFilters);
-  const curatedEventsSuppressed = eventFiltersNeedServerData(eventFilters);
-
-  const eventSlidersFiltered = useMemo(() => {
-    const d = eventSliders.data;
-    if (eventFilterCount === 0) return d;
-    const f = (list: UserPostType[]) =>
-      filterEventList(list, eventFilters, coords);
-    return {
-      featured: d.featured,
-      aroundYou: f(d.aroundYou),
-      topRatedOrganizers: f(d.topRatedOrganizers),
-      happeningToday: f(d.happeningToday),
-      happeningThisWeek: f(d.happeningThisWeek),
-      happeningThisMonth: f(d.happeningThisMonth),
-    };
-  }, [eventSliders.data, eventFilters, eventFilterCount, coords]);
-
-  const placeSlidersFiltered = useMemo(() => {
-    const d = placeSliders.data;
-    if (placeFilterCount === 0) return d;
-    const f = (list: PlaceType[]) => filterPlaceList(list, placeFilters);
-    return {
-      featured: d.featured,
-      aroundYou: f(d.aroundYou),
-      openNow: f(d.openNow),
-      topRated: f(d.topRated),
-    };
-  }, [placeSliders.data, placeFilters, placeFilterCount]);
+  const eventRows = eventSliders.data;
+  const placeRows = placeSliders.data;
 
   const eventCategoryChips = useMemo(
     () =>
@@ -302,35 +276,30 @@ export default function Explore() {
 
   const eventCuratedEmpty =
     eventFilterCount > 0 &&
-    !curatedEventsSuppressed &&
-    eventSlidersFiltered.aroundYou.length === 0 &&
-    eventSlidersFiltered.topRatedOrganizers.length === 0 &&
-    eventSlidersFiltered.happeningToday.length === 0 &&
-    eventSlidersFiltered.happeningThisWeek.length === 0 &&
-    eventSlidersFiltered.happeningThisMonth.length === 0;
+    eventRows.aroundYou.length === 0 &&
+    eventRows.topRatedOrganizers.length === 0 &&
+    eventRows.happeningToday.length === 0 &&
+    eventRows.happeningThisWeek.length === 0 &&
+    eventRows.happeningThisMonth.length === 0;
 
   const placeCuratedEmpty =
     placeFilterCount > 0 &&
-    placeSlidersFiltered.aroundYou.length === 0 &&
-    placeSlidersFiltered.openNow.length === 0 &&
-    placeSlidersFiltered.topRated.length === 0;
+    placeRows.aroundYou.length === 0 &&
+    placeRows.openNow.length === 0 &&
+    placeRows.topRated.length === 0;
 
   const sliders =
     tab === "events" ? (
-      curatedEventsSuppressed ? (
-        <Caption className="px-4 pt-4">
-          {t("ratingFilterAppliedShowingTheFull")}
-        </Caption>
-      ) : eventCuratedEmpty ? null : (
+      eventCuratedEmpty ? null : (
         <View>
           <EventSliderRow
             title={t("aroundYou")}
-            events={eventSlidersFiltered.aroundYou}
+            events={eventRows.aroundYou}
             onViewAll={() => openSection("event", "aroundYou", t("aroundYou"))}
           />
           <EventSliderRow
             title={t("topRatedOrganizers")}
-            events={eventSlidersFiltered.topRatedOrganizers}
+            events={eventRows.topRatedOrganizers}
             onViewAll={() =>
               openSection(
                 "event",
@@ -341,21 +310,21 @@ export default function Explore() {
           />
           <EventSliderRow
             title={t("happeningToday")}
-            events={eventSlidersFiltered.happeningToday}
+            events={eventRows.happeningToday}
             onViewAll={() =>
               openSection("event", "happeningToday", t("happeningToday"))
             }
           />
           <EventSliderRow
             title={t("happeningThisWeek")}
-            events={eventSlidersFiltered.happeningThisWeek}
+            events={eventRows.happeningThisWeek}
             onViewAll={() =>
               openSection("event", "happeningThisWeek", t("happeningThisWeek"))
             }
           />
           <EventSliderRow
             title={t("happeningThisMonth")}
-            events={eventSlidersFiltered.happeningThisMonth}
+            events={eventRows.happeningThisMonth}
             onViewAll={() =>
               openSection(
                 "event",
@@ -370,17 +339,17 @@ export default function Explore() {
       <View>
         <PlaceSliderRow
           title={t("aroundYou")}
-          places={placeSlidersFiltered.aroundYou}
+          places={placeRows.aroundYou}
           onViewAll={() => openSection("place", "aroundYou", t("aroundYou"))}
         />
         <PlaceSliderRow
           title={t("openNow")}
-          places={placeSlidersFiltered.openNow}
+          places={placeRows.openNow}
           onViewAll={() => openSection("place", "openNow", t("openNow"))}
         />
         <PlaceSliderRow
           title={t("topRated")}
-          places={placeSlidersFiltered.topRated}
+          places={placeRows.topRated}
           onViewAll={() => openSection("place", "topRated", t("topRated"))}
         />
       </View>
@@ -388,9 +357,8 @@ export default function Explore() {
 
   // The category chip row + active-filter summary sit directly below the
   // Events/Places tabs, above every curated section — one filter surface
-  // that drives Featured, Around You, Happening This…, Top Rated AND the
-  // "All" list below (each curated slider is client-filtered against the
-  // same nearby fetch via eventSlidersFiltered / placeSlidersFiltered).
+  // that drives Around You, Happening This…, Top Rated AND the "All" list
+  // below.
   // The category chip row sits directly under the Events/Places tabs and
   // above the Map toggle — rendered outside the list so it stays put when
   // the map view is showing.

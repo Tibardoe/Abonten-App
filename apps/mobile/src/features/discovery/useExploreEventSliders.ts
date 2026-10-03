@@ -1,108 +1,89 @@
-import { withEventAvailability } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
-import { filterEventsByWindow } from "@abonten/core/eventDateWindow";
+import { withInlineEventAvailability } from "@abonten/core/eventAvailability";
+import {
+  EMPTY_EVENT_FILTERS,
+  type EventFilters,
+} from "@abonten/core/exploreFilters";
+import {
+  type ExploreEventSection,
+  type ExploreEventSections,
+  emptyExploreEventSections,
+  exploreEventSectionArgs,
+  splitExploreEventSections,
+} from "@abonten/core/exploreSections";
+import { viewerTimeZone } from "@abonten/core/time/timeZone";
 import type { UserPostType } from "@abonten/types/postsType";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-// The Explore Events tab's curated sliders — the native echo of the web
-// EventsTabContent. Every slider is derived from ONE bounded
-// `get_nearby_events` fetch (10km, matching the web
-// getNearByEvents(lat,lng,10000) call) plus the active-promotion id set,
-// exactly like the web page's Promise.all. Only the "All events" list (a
-// separate infinite query) honours the filter sheet — these keep their
-// fixed curated semantics, same split as web.
+// The Explore Events tab's rows — the native echo of the web
+// EventsTabContent. One call (get_explore_event_sections) returns every
+// row, each taken from all the events in the area, with the person's
+// filters applied in the database by the same rule as the "All events" list
+// below them. Featured is paid placement, not a search result: the filters
+// do not touch it. "Today" and "this month" are the phone's calendar.
+//
+// The rows used to be cut on the phone from one list of the first 60
+// nearby events, which came in no particular order: in a busy area
+// "Happening today" could be empty on a day with events, and a promotion
+// only reached Featured when its event happened to be among the 60.
 
-// `get_nearby_events.search_radius` is a PostGIS `geography` distance, i.e.
-// METRES (ST_DWithin, no *1000 in the RPC body). Web passes 10000 here;
-// this used to pass 10, which is a 10-metre radius that returns almost
-// nothing — the cause of web-created events never showing on mobile.
-const NEARBY_RADIUS_METERS = 10_000;
-const NEARBY_LIMIT = 60;
+export type EventSliders = ExploreEventSections<UserPostType>;
 
-async function fetchNearby(lat: number, lng: number): Promise<UserPostType[]> {
-  const { data, error } = await supabase.rpc("get_nearby_events", {
-    user_lat: lat,
-    user_lng: lng,
-    search_radius: NEARBY_RADIUS_METERS,
-    p_cursor_sort_key: null,
-    p_cursor_id: null,
-    p_page_size: NEARBY_LIMIT,
-  });
+// A card row, plus the rows it belongs to and its place in each.
+type SectionRow = UserPostType & { sections?: unknown };
+
+const EMPTY: EventSliders = emptyExploreEventSections<UserPostType>();
+
+export async function fetchExploreEventSections(input: {
+  lat: number;
+  lng: number;
+  filters: EventFilters;
+  sections?: readonly ExploreEventSection[];
+  sectionSize?: number;
+}): Promise<EventSliders> {
+  const { data, error } = await supabase.rpc(
+    "get_explore_event_sections",
+    exploreEventSectionArgs({ ...input, zone: viewerTimeZone() }),
+  );
   if (error) throw error;
-  // get_nearby_events' real return columns (address: Json, etc.) don't
-  // exactly match UserPostType's app-level shape (address: { full_address })
-  // -- same intentional RPC-to-app-model translation boundary as the other
-  // discovery hooks, not a compiler oversight.
-  return (data ?? []) as unknown as UserPostType[];
+  // The row is the whole card (price, attendance, per-tier stock), so the
+  // cards need no second request. Its columns don't exactly match
+  // UserPostType's app-level shape (address: Json, location: unknown) --
+  // the same RPC-to-app-model boundary as the other discovery hooks.
+  const rows = (data ?? []).map((row) =>
+    withInlineEventAvailability(row),
+  ) as unknown as SectionRow[];
+  return splitExploreEventSections(rows);
 }
-
-async function fetchPromotedIds(): Promise<Set<string>> {
-  const { data, error } = await supabase
-    .from("event_promotion")
-    .select("event_id")
-    .gt("ends_at", new Date().toISOString());
-  if (error) throw error;
-  return new Set((data ?? []).map((r) => (r as { event_id: string }).event_id));
-}
-
-export type EventSliders = {
-  featured: UserPostType[];
-  aroundYou: UserPostType[];
-  topRatedOrganizers: UserPostType[];
-  happeningToday: UserPostType[];
-  happeningThisWeek: UserPostType[];
-  happeningThisMonth: UserPostType[];
-};
-
-const EMPTY: EventSliders = {
-  featured: [],
-  aroundYou: [],
-  topRatedOrganizers: [],
-  happeningToday: [],
-  happeningThisWeek: [],
-  happeningThisMonth: [],
-};
 
 export function useExploreEventSliders(
   coords: { lat: number; lng: number } | null,
   locationLabel: string,
+  filters: EventFilters = EMPTY_EVENT_FILTERS,
 ) {
   const query = useQuery({
-    queryKey: ["explore", "event-sliders", coords?.lat ?? 0, coords?.lng ?? 0],
+    queryKey: [
+      "explore",
+      "event-sliders",
+      coords?.lat ?? 0,
+      coords?.lng ?? 0,
+      filters,
+    ],
     enabled: coords != null,
+    // A filter change asks again; the rows already on screen stay until
+    // the answer is in, instead of blinking out.
+    placeholderData: keepPreviousData,
     queryFn: async (): Promise<EventSliders> => {
-      const [nearby, promotedIds] = await Promise.all([
-        fetchNearby(coords?.lat ?? 0, coords?.lng ?? 0),
-        fetchPromotedIds().catch(() => new Set<string>()),
-      ]);
-
-      // get_nearby_events carries no attendance figure — backfill it once
-      // for the whole set so every derived slider's cards show real
-      // "going" / spots-left / Sold-out (matches the web EventsTabContent).
-      const events = await withEventAvailability(nearby);
-
-      // A paid promotion makes an event featured-eligible, same fold-in as
-      // the web page (before getFeaturedEvents runs).
-      const withPromotion = promotedIds.size
-        ? events.map((e) =>
-            promotedIds.has(e.id) ? { ...e, featured: true } : e,
-          )
-        : events;
-
+      const sections = await fetchExploreEventSections({
+        lat: coords?.lat ?? 0,
+        lng: coords?.lng ?? 0,
+        filters,
+      });
       return {
-        featured: getFeaturedEvents(withPromotion, locationLabel),
-        aroundYou: events,
-        topRatedOrganizers: filterEventsByWindow(
-          events,
-          "top-rated-organizers",
-        ),
-        happeningToday: filterEventsByWindow(events, "happening-today"),
-        happeningThisWeek: filterEventsByWindow(events, "happening-this-week"),
-        happeningThisMonth: filterEventsByWindow(
-          events,
-          "happening-this-month",
-        ),
+        ...sections,
+        // Which paid placements show, and which leads, rotates daily.
+        featured: getFeaturedEvents(sections.featured, locationLabel),
       };
     },
   });

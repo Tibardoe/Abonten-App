@@ -26,7 +26,7 @@ function isAllowedEventType(value: string): value is PlaceEngagementEventType {
 
 // No auth required -- anonymous visitors browsing a place's page still
 // generate view/click analytics, same reasoning as the public,
-// no-auth-check RPCs in getNearByPlaces.ts/getQueriedPlaces.ts. `eventType`
+// no-auth-check RPCs in getQueriedPlaces.ts. `eventType`
 // is typed as a plain string (not the narrower union) precisely so this
 // runtime check is real defense-in-depth against a caller that bypasses
 // TypeScript, not just a compile-time-only guard.

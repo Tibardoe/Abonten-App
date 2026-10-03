@@ -1,5 +1,5 @@
-import { withEventAvailability } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
+import { withInlineEventAvailability } from "@abonten/core/eventAvailability";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
@@ -21,23 +21,24 @@ async function fetchPage(
     user_lat: lat,
     user_lng: lng,
     search_radius: radiusMeters,
-    p_cursor_sort_key: cursor?.sortKey ?? null,
-    p_cursor_id: cursor?.id ?? null,
-    p_page_size: PAGE_SIZE + 1,
+    p_cursor_sort_key: cursor?.sortKey,
+    p_cursor_id: cursor?.id,
+    p_page_size: PAGE_SIZE,
   });
 
   if (error) throw error;
 
-  // Same RPC-to-app-model translation boundary as the other discovery
-  // hooks -- get_nearby_events' real return columns don't exactly match
-  // UserPostType's shape.
-  const all = (data ?? []) as unknown as Row[];
+  // Soonest first, and one row more than asked when there is a next page.
+  // The row is the whole card (attendance, per-tier stock); its columns
+  // don't exactly match UserPostType's app-level shape (address: Json,
+  // location: unknown) -- the same RPC-to-app-model boundary as the other
+  // discovery hooks.
+  const all = (data ?? []).map((row) =>
+    withInlineEventAvailability(row),
+  ) as unknown as Row[];
   const hasNext = all.length > PAGE_SIZE;
-  const page = hasNext ? all.slice(0, PAGE_SIZE) : all;
-  const last = page[page.length - 1];
-  // get_nearby_events omits attendance — backfill it so the cards can show
-  // real "going" / spots-left / Sold-out (same as the web getNearByEvents).
-  const rows = (await withEventAvailability(page)) as Row[];
+  const rows = hasNext ? all.slice(0, PAGE_SIZE) : all;
+  const last = rows[rows.length - 1];
 
   return {
     rows,

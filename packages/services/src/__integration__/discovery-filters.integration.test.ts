@@ -297,14 +297,9 @@ describe("discovery RPCs: archived events and event ratings", () => {
     );
   });
 
-  async function similarIds(): Promise<string[]> {
-    const { data: ev } = await service
-      .from("event")
-      .select("event_category")
-      .eq("id", eventId)
-      .single();
+  async function similarIds(category: string): Promise<string[]> {
     const { data, error } = await service.rpc("get_similar_events", {
-      input_category: ev?.event_category ?? "",
+      input_category: category,
       input_location: `SRID=4326;POINT(${LNG} ${LAT})`,
       input_radius_km: 50,
     } as never);
@@ -315,8 +310,20 @@ describe("discovery RPCs: archived events and event ratings", () => {
   it("get_similar_events lists a live event and drops it once archived", async () => {
     // 20260909130000 fixed the other three RPCs; get_similar_events was the
     // one left still returning archived events.
-    expect(await similarIds()).toContain(eventId);
+    //
+    // The list is the soonest few of a category, and every fixture event of
+    // every suite sits at this spot in one category with the same start. A
+    // category of its own keeps this about archiving and not about how
+    // many other events are around.
+    const category = `similar-${crypto.randomUUID()}`;
+    const moved = await service
+      .from("event")
+      .update({ event_category: category })
+      .eq("id", eventId);
+    expect(moved.error).toBeNull();
+
+    expect(await similarIds(category)).toEqual([eventId]);
     await archive();
-    expect(await similarIds()).not.toContain(eventId);
+    expect(await similarIds(category)).toEqual([]);
   });
 });

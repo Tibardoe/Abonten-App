@@ -83,5 +83,6 @@
   "youCanAttachAtMostDocuments2": "Du kannst höchstens {maxEvidenceFiles} Dokumente anhängen.",
   "youHaveReachedTheLimit": "Du hast das Limit erreicht.",
   "yourBadgeShowsOnYourEvents": "Dein Abzeichen erscheint bei deinen Events und in deinem Profil.",
-  "yourDocumentsAreRemovedAndNothing": "Deine Dokumente werden entfernt und nichts wird geprüft."
+  "yourDocumentsAreRemovedAndNothing": "Deine Dokumente werden entfernt und nichts wird geprüft.",
+  "yourVerification": "deine Verifizierung"
 }

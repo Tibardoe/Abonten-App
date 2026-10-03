@@ -62,7 +62,8 @@ describe("parseFilters", () => {
       minRating: 4.5,
       lat: 5.6,
       lng: -0.18,
-      maxDistanceKm: 20_000,
+      // No distance chosen: no limit (the function takes a point alone).
+      maxDistanceKm: null,
     });
   });
 });

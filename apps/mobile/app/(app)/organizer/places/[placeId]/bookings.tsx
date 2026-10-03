@@ -245,7 +245,7 @@ export default function PlaceBookingsScreen() {
         ) : (
           <QueryUnavailable
             view={view}
-            subject="bookings"
+            subject={t("theBookings")}
             onRetry={() => q.refetch()}
             loading={<ActivityIndicator className="mt-10" />}
           />

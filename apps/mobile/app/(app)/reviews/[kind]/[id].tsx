@@ -197,7 +197,7 @@ export default function ReviewsScreen() {
         {header}
         <QueryUnavailable
           view={subjectView}
-          subject="these reviews"
+          subject={t("theseReviews")}
           onRetry={() => subjectQuery.refetch()}
           loading={
             <View className="p-4">
@@ -323,7 +323,7 @@ export default function ReviewsScreen() {
     emptyComponent = (
       <QueryUnavailable
         view={listView}
-        subject="these reviews"
+        subject={t("theseReviews")}
         onRetry={() => list.refetch()}
         className="py-10"
       />

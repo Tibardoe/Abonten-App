@@ -2,10 +2,10 @@
 title: Discovery performance measurements (September 2026)
 purpose: Record what the search and recommendation functions cost on a large synthetic catalogue, what the measurements changed, and how to repeat them.
 audience: Engineering
-scope: search_suggest, search_events, search_places (including place services), search_organizers, get_events_in_window, recommendations_generate, recommendations_build_digest, admin_recommendation_metrics. Local Docker Postgres only; not production latency.
+scope: search_suggest, search_events, search_places (including place services), search_organizers, get_events_in_window, the Explore lists (get_filtered_events, get_nearby_events, get_explore_event_sections, get_similar_events, get_filtered_places, get_nearby_places), recommendations_generate, recommendations_build_digest, admin_recommendation_metrics. Local Docker Postgres only; not production latency.
 status: Approved
-version: 1.3
-lastReviewed: 2026-10-02
+version: 1.4
+lastReviewed: 2026-10-03
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -181,11 +181,9 @@ folded columns and reads the description, category and type from the
 search document, which is indexed. It is faster than the body it
 replaced. The rule since: never fold a column for every row of a scan.
 
-Noticed and not changed here: `get_filtered_events` with no search text,
-the Explore list, takes about 1.2 s for the whole seeded city (100,000
-upcoming events inside 50 km), the same before and after this work. It
-builds prices, ratings and attendance for every event in the radius before
-it takes a page.
+Noticed then and changed since: `get_filtered_events` with no search text,
+the Explore list, built prices, ratings and attendance for every event in
+the radius before it took a page. See "Explore lists" below.
 
 ## Repeating
 
@@ -225,3 +223,134 @@ found no difference in rows, values or order. The remaining cost grows with
 the number of events that start inside the window across the market, not
 with the radius.
 
+## Explore lists (2026-10-02)
+
+Migration `20261002180000_explore_lists_one_rule.sql`
+([../explore-lists.md](../explore-lists.md)). Script:
+`scripts/perf/discovery-explore-perf.sql`, same seed plus what the lists
+read and the seed lacks: ticket tiers, 2,000 events with three dates,
+event, place and organizer reviews, opening hours for four places in five
+(none for any place of kind 14, so "open now" for that kind finds nothing at
+any hour), and a second, small city (300 events and 100 places around Kumasi).
+12 runs per case after two warm-ups, as the `anon` role, first page of 20
+(plus the has-more row) unless noted. Before: the production bodies.
+
+"Accra 10 km" has 21,000 events in range, "Accra 50 km" 92,000 and
+"Accra 20 km" 20,000 places: far more than any one city has on at once.
+Kumasi is the size of a city today.
+
+| Case | Rows | Before p50 | Before p95 | After p50 | After p95 |
+|---|---|---|---|---|---|
+| events list · Accra 10 km | 21 | 212.8 | 234.2 | 74.5 | 82.1 |
+| events list · Accra 50 km (the whole city) | 21 | 894.4 | 929.7 | 263.3 | 284.8 |
+| events list · 50 km, one category | 21 | 258.2 | 280.6 | 107.7 | 119.2 |
+| events list · 50 km, price 10 to 60 | 21 | 625.9 | 660.3 | 248.7 | 284.3 |
+| events list · 50 km, next 7 days | 21 | 407.7 | 416.2 | 166.0 | 168.6 |
+| events list · 50 km, rated 4 and up | 21 | 664.1 | 694.6 | 165.4 | 176.2 |
+| events list · Kumasi 10 km | 21 | 3.0 | 3.2 | 1.9 | 2.0 |
+| events list · no area (the whole catalogue) | 21 | 777.5 | 809.1 | 147.8 | 157.8 |
+| events list · 10 km, a later page | 21 | 210.0 | 218.9 | 71.8 | 73.5 |
+| events nearby · Accra 10 km | 21 | 56.9 | 62.2 | 56.0 | 61.2 |
+| events nearby · Accra 50 km | 21 | 210.6 | 226.7 | 178.9 | 180.7 |
+| events nearby · Accra 10 km, 60 rows | 61 | 66.7 | 72.5 | 55.1 | 59.6 |
+| events nearby · Kumasi 10 km | 21 | 1.9 | 2.0 | 1.5 | 1.5 |
+| similar events · one category, 10 km | 20 | 64.0 | 72.2 | 31.6 | 32.7 |
+| events in window · today, Accra 10 km | 21 | 2.8 | 3.5 | 3.3 | 3.7 |
+| events in window · next 30 days, Accra 10 km | 21 | 86.5 | 90.7 | 88.9 | 97.9 |
+| places list · Accra 20 km | 21 | 78.2 | 84.9 | 34.1 | 35.5 |
+| places list · 20 km, open now | 11 | 295.2 | 331.1 | 35.6 | 36.9 |
+| places list · 20 km, rated 4 and up | 21 | 64.4 | 69.7 | 36.2 | 45.8 |
+| places list · 20 km, one category | 21 | 6.8 | 7.2 | 5.8 | 7.2 |
+| places nearby · Accra 5 km | 21 | 5.5 | 5.8 | 4.6 | 5.2 |
+| places nearby · Accra 50 km | 21 | 86.4 | 102.2 | 33.9 | 38.1 |
+| places list · Kumasi 20 km | 21 | 1.1 | 1.2 | 2.5 | 2.8 |
+
+New, after only:
+
+| Case | Events returned | p50 | p95 |
+|---|---|---|---|
+| Explore rows · Accra 10 km, all six | 70 | 92.6 | 98.5 |
+| Explore rows · Accra 10 km, one category | 52 | 41.3 | 42.6 |
+| Explore rows · Kumasi 10 km, all six | 35 | 3.2 | 3.4 |
+| Explore rows · Accra 10 km, top rated only, 60 | 60 | 77.9 | 83.0 |
+
+The Explore rows used to be two `get_nearby_events` calls and a read of
+the active promotions (about 85 ms together on "Accra 10 km"), cut into
+rows on the client from the first 20 or 60 events. They are now one call
+that takes each row from every event in range.
+
+### What changed, and what the measurements changed
+
+Every list built the whole card (lowest price, ratings, attendance, the
+dates as JSON, open now) for every listing in range and then kept 20. Now a
+list reads only what decides the order and the asked filters for the
+listings in range, picks its page, and builds the cards for that page.
+
+What is left is one visit per event in range to learn its next date, about
+3 microseconds each. `get_nearby_events` already worked that way, which is
+why it barely moved; its change is the order (soonest first, section 1 of
+the linked page).
+
+Three things came out of measuring:
+
+- **The first attempt at finding events with one date was an anti-join
+  against `event_occurrence`.** The planner's estimate of how many events
+  lie in an area is far too low, and it chose a nested loop over a
+  materialised copy of the occurrence table: 3.5 s for 10 km and 16.5 s for
+  the whole city. Asking each event for its dates through the index is the
+  same speed whatever the planner estimates, and is what shipped.
+- **"Open now" was a third of a second** because `place_is_open_now` ran
+  for every place in range. The list now sorts the places by distance and
+  asks the nearest first until the page is full. With every place closed it
+  still asks them all; since 2026-10-03 each ask is an index lookup instead
+  of a call (below).
+- **A small list got a millisecond slower** ("places list · Kumasi", 1.1 to
+  2.5 ms). The lists plan each call with the values given
+  (`plan_cache_mode = force_custom_plan`), because a plan made for a city
+  and reused for a village, or the other way round, reads the whole table.
+
+Every list was compared with the function it replaces on this catalogue:
+27 cases, each row's values and the order, and five pages by cursor for
+the events list and for the open-now list. No difference where the meaning
+did not change. Where it changed (dates and prices with one end, whole
+days, several dates, the order of nearby events) the integration suite
+says what the answer must be
+(`packages/services/src/__integration__/explore-lists.integration.test.ts`).
+
+### 2026-10-03: dates read first, "open now" without a call
+
+Two changes to the same migration, measured in one run (before: the
+migration as above; after: the migration as shipped). The run was late in
+the evening, Accra time, when only late bars are open.
+
+| Case | Rows | Before p50 | Before p95 | After p50 | After p95 |
+|---|---|---|---|---|---|
+| events list · Accra 10 km, today | 21 | 63.4 | 64.9 | 18.2 | 25.4 |
+| events list · 50 km, next 7 days | 21 | 222.4 | 241.9 | 65.5 | 68.0 |
+| events in window · today, Accra 10 km | 21 | 63.0 | 64.7 | 18.2 | 23.1 |
+| events in window · this week, Accra 10 km | 21 | 62.6 | 63.3 | 22.3 | 23.4 |
+| events in window · next 30 days, Accra 10 km | 21 | 63.8 | 64.9 | 43.8 | 45.9 |
+| events in window · a week, the whole country (Abonten Weekly's fallback) | 13 | 213.3 | 227.3 | 56.2 | 61.8 |
+| places list · 20 km, open now (late evening) | 11 | 46.9 | 57.3 | 34.3 | 37.5 |
+| places list · 20 km, open now, none open (1,400 places asked) | 0 | 79.1 | 80.7 | 7.8 | 8.4 |
+
+Every other case of the script was within a few per cent of the table
+above.
+
+- **Dates read first.** `get_events_in_window` now uses the shared rule, so
+  an event that began before the window and is still running is in it (a
+  festival on its second day is "happening today"). Alone, that made every
+  window cost a visit to every event in range (about 63 ms in Accra). The
+  rule now reads the two start-time indexes whenever a list has an end
+  date, and the planner starts from the dates or from the area, whichever
+  is smaller. "Today" is 18 ms rather than the 3 ms of the window list
+  before, because "still running" has no lower bound in time: every event
+  that started before tonight and is not archived is read. The test
+  catalogue never archives anything; in production the nightly job
+  archives or deletes ended events, so that set is what is on now.
+- **"Open now" without a call.** `place_is_open_now` costs about 60
+  microseconds a place, almost all of it the call. The list checks the
+  opening hours itself in one index lookup a place, about 5 microseconds:
+  the 20,000 places of "Accra 20 km", all closed, took 1.2 s before. The
+  integration suite checks the list and the function agree for every kind
+  of opening hours.

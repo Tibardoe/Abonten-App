@@ -3,7 +3,6 @@
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { generateSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
@@ -57,24 +56,23 @@ export default function Banner({ event }: BannerProps) {
         {/* Badge - Responsive positioning and size */}
         <div className="absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4 md:top-5 md:right-5 lg:top-6 lg:right-6 bg-primary text-primary-foreground px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 rounded-full text-xs xs:text-sm font-medium flex items-center gap-1">
           <PiTicketBold className="text-xs xs:text-sm" />
-          <span className="xs:inline">FEATURED</span>
+          <span className="xs:inline uppercase">{t("featured")}</span>
         </div>
 
         {/* Event Info */}
         <div className="w-fit space-y-1 xs:space-y-1.5 sm:space-y-2 md:space-y-3 lg:space-y-4">
-          {/* Most Anticipated Tag */}
+          {/* The banner is bought (a promotion), and says so, as the app's
+              banner does. */}
           <div className="mb-1 xs:mb-1.5 sm:mb-2">
             <span className="inline-block px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs xs:text-sm font-medium">
-              {t("mostAnticipated")}
+              {t("paidPlacement")}
             </span>
           </div>
 
           {/* Event Title - Responsive font sizes */}
 
           <Link
-            href={`/events/${generateSlug(event.address.full_address)}/${
-              event.event_code
-            }`}
+            href={`/events/${event.event_code.toLowerCase()}`}
             className="block mb-2 xs:mb-3 sm:mb-4"
           >
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight">

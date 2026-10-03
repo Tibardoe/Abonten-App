@@ -2,10 +2,11 @@ import {
   type EventWindow,
   getEventsInWindow,
 } from "@/actions/getEventsInWindow";
+import { getExploreEventSections } from "@/actions/getExploreEventSections";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import LocationUnavailable from "@/components/molecules/LocationUnavailable";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
-import { filterEventsByWindow } from "@abonten/core/eventDateWindow";
+import { EMPTY_EVENT_FILTERS } from "@abonten/core/exploreFilters";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -65,6 +66,9 @@ export async function generateMetadata({
   };
 }
 
+// How many events the top-rated list carries (the most the function gives).
+const TOP_RATED_PAGE_SIZE = 60;
+
 const windowFilters: readonly FilterType[] = [
   "happening-today",
   "happening-this-week",
@@ -103,10 +107,9 @@ export default async function page({
   ) => Promise<PaginatedResult<UserPostType>>;
 
   if (windowFilters.includes(filter)) {
-    // "Happening today/this week/this month": a real server-side date-range
-    // query (get_events_in_window), not the old fetch-200-then-filter-in-JS
-    // approach — see getFilteredEvents.ts's filterEventsByWindow, which is
-    // still used for the bounded preview sliders but not here.
+    // "Happening today/this week/this month": a server-side date-range
+    // query (get_events_in_window), paged; the Explore row it came from is
+    // the start of this same list.
     firstPage = await getEventsInWindow({
       lat,
       lng,
@@ -124,27 +127,40 @@ export default async function page({
         cursor,
       });
     };
-  } else {
-    // "around-you" / "top-rated-organizers" / "category": radius-only
-    // fetches. "top-rated-organizers" additionally ranks each page by the
-    // organizer rating get_nearby_events now returns — the same
-    // filterEventsByWindow rule the preview slider uses — so this "see all"
-    // page agrees with the slider it came from. "category" has no named
-    // filter of its own (pre-existing gap, unrelated to pagination).
-    const radius = filter === "around-you" ? 5000 : 10000;
-    const shape = (page: PaginatedResult<UserPostType>) =>
-      filter === "top-rated-organizers"
-        ? {
-            ...page,
-            data: filterEventsByWindow(page.data, "top-rated-organizers"),
-          }
-        : page;
+  } else if (filter === "top-rated-organizers") {
+    // A ranking, not a feed: the best-rated organizers' events from the
+    // whole area, in one page. It is the same list the Explore row shows,
+    // carried on (get_explore_event_sections), instead of each page of a
+    // nearby list re-sorted on its own.
+    const top = await getExploreEventSections({
+      lat,
+      lng,
+      filters: EMPTY_EVENT_FILTERS,
+      sections: ["topRatedOrganizers"],
+      sectionSize: TOP_RATED_PAGE_SIZE,
+    });
+    firstPage = {
+      status: top.status,
+      data: top.data.topRatedOrganizers,
+      nextCursor: null,
+      hasNextPage: false,
+    };
 
-    firstPage = shape(await getNearByEvents(lat, lng, radius));
+    fetchPage = async () => {
+      "use server";
+      return { status: 200, data: [], nextCursor: null, hasNextPage: false };
+    };
+  } else {
+    // "around-you" / "category": events near here, soonest first.
+    // "category" has no named filter of its own (pre-existing gap,
+    // unrelated to pagination).
+    const radius = filter === "around-you" ? 5000 : 10000;
+
+    firstPage = await getNearByEvents(lat, lng, radius);
 
     fetchPage = async (cursor: string | null) => {
       "use server";
-      return shape(await getNearByEvents(lat, lng, radius, { cursor }));
+      return getNearByEvents(lat, lng, radius, { cursor });
     };
   }
 

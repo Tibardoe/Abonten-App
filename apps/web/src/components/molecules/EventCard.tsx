@@ -6,7 +6,10 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { formatMoney } from "@abonten/core/formatMoney";
-import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import {
+  getEventSoldOutStatus,
+  getEventSpotsLeft,
+} from "@abonten/core/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useLocale, useTranslations } from "next-intl";
@@ -34,6 +37,7 @@ export default function EventCard({
   status,
   organizer_id,
   timezone,
+  ticket_type,
   priority,
 }: UserPostType & { priority?: boolean }) {
   const locale = useLocale();
@@ -58,17 +62,24 @@ export default function EventCard({
     occurrences,
   );
   const attendees = attendanceCount ?? attendance_count ?? 0;
+  // Room under the headcount cap and stock left in the ticket tiers are two
+  // separate limits; the list rows carry both (`ticket_type` holds each
+  // tier's remaining stock), so the card counts the smaller.
   const soldOut = getEventSoldOutStatus({
     capacity,
     attendeeCount: attendees,
+    ticketTypes: ticket_type,
   });
   const eventHref = `/events/${event_code.toLowerCase()}`;
   // Scarcity and turnout are shown only when they say something: "300 spots
   // left" on a new event and "0 attending" read as noise (or as a warning
   // sign), so the chips appear once places are running low or people are
   // actually going.
-  const spotsLeft =
-    capacity && capacity > 0 ? Math.max(capacity - attendees, 0) : null;
+  const spotsLeft = getEventSpotsLeft({
+    capacity,
+    attendeeCount: attendees,
+    ticketTypes: ticket_type,
+  });
   const fewSpotsLeft =
     spotsLeft !== null &&
     spotsLeft > 0 &&
