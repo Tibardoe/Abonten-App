@@ -13,13 +13,11 @@ type FilterParams = {
 
 // Parses the /search filter modal's query string into get_filtered_events
 // parameters. A missing filter is null, never a "match everything" number:
-// get_filtered_events skips a null clause, whereas the old defaults (price
-// 0-999999 always on) silently dropped any event without a ticket type.
+// get_filtered_events skips a null clause, and each end of a range stands
+// on its own ("20-any" is "from 20").
 //
-// Distance is kilometres. It used to be multiplied by 1000 here and then
-// multiplied by 1000 again inside the RPC (p_max_distance_km * 1000), so
-// "Up to 3km" searched a 3,000 km radius and the filter did nothing.
-export const ANY_DISTANCE_KM = 20_000;
+// Distance is kilometres. A point with no chosen distance is "anywhere,
+// with the distance shown": the function takes that as no limit.
 
 export function parseFilters(params: FilterParams) {
   let minPrice: number | null = null;
@@ -66,11 +64,7 @@ export function parseFilters(params: FilterParams) {
     minPrice,
     maxPrice,
     minRating,
-    // With coordinates but no chosen radius, get_filtered_events would
-    // compare against a NULL radius and drop every event; half the Earth's
-    // circumference keeps the distance column without filtering anything.
-    maxDistanceKm:
-      maxDistanceKm ?? (lat !== null && lng !== null ? ANY_DISTANCE_KM : null),
+    maxDistanceKm,
     startDate,
     endDate,
     lat,

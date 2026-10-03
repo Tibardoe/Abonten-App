@@ -1,12 +1,7 @@
 import { getActivePlacePromotions } from "@/actions/getActivePlacePromotions";
-import { getNearByPlaces } from "@/actions/getNearByPlaces";
 import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
 import ViewToggle from "@/components/molecules/ViewToggle";
-import {
-  type PlaceFilters,
-  filterPlaceList,
-} from "@abonten/core/exploreFilters";
 import { getTranslations } from "next-intl/server";
 import NoPlacesEmptyState from "../molecules/NoPlacesEmptyState";
 import PlaceCategoryChips from "../molecules/PlaceCategoryChips";
@@ -20,6 +15,12 @@ import PlacesSlider from "./PlacesSlider";
 // cover a whole location without the naive "no radius filter at all" the
 // spec warns against.
 const EXPLORE_PLACES_RADIUS_KM = 20;
+const AROUND_YOU_RADIUS_KM = 5;
+const AROUND_YOU_SIZE = 20;
+const OPEN_NOW_SIZE = 10;
+
+// "Top Rated" means rated 4 or better, unless the visitor asked for more.
+const TOP_RATED_MIN_RATING = 4;
 
 // Phase 1's get_filtered_places RPC orders strictly by (distance_km, id) —
 // there's no rating-sort option (confirmed against
@@ -79,12 +80,23 @@ export default async function PlacesTabContent({
       ? (categories.find((category) => category.id === categoryIdParam) ?? null)
       : null;
 
-  // Only "All Places" (the primary, filterable listing) honors the filter
-  // modal's Open now/Rating/Distance/search choices -- the three bounded
-  // sliders above it (Around You/Open Now/Top Rated) keep their own fixed,
-  // curated semantics regardless of what the owner filtered by, same as the
-  // Events tab's sliders don't change shape when a search is active.
+  // The category chip row and the Filter modal drive every section on this
+  // tab. Each row is its own question to the database (nearest, open now,
+  // best rated) with the visitor's filters added to it, so a row shows what
+  // the whole area has for those filters. The rows used to be fetched
+  // without the filters and narrowed afterwards, which left "Open now" with
+  // whatever restaurants happened to be among the ten nearest open places.
+  // Featured is paid placement, not a search result: the filters do not
+  // touch it. A search narrows "All Places" only.
   const effectiveMaxDistanceKm = maxDistanceKmParam ?? EXPLORE_PLACES_RADIUS_KM;
+  const rowFilters = {
+    lat,
+    lng,
+    categoryId: selectedCategory?.id ?? null,
+    openNow: openNow ? true : null,
+    minRating: minRatingParam ?? null,
+    maxDistanceKm: effectiveMaxDistanceKm,
+  };
 
   const [
     featuredResult,
@@ -99,72 +111,41 @@ export default async function PlacesTabContent({
     // get_active_place_promotions) is what stops one advertiser from
     // permanently holding the top slot, not a proximity cutoff.
     getActivePlacePromotions(),
-    getNearByPlaces(lat ?? 0, lng ?? 0, 5000),
     getQueriedPlaces({
-      lat,
-      lng,
-      openNow: true,
-      maxDistanceKm: EXPLORE_PLACES_RADIUS_KM,
-      pageSize: 10,
+      ...rowFilters,
+      maxDistanceKm: Math.min(AROUND_YOU_RADIUS_KM, effectiveMaxDistanceKm),
+      pageSize: AROUND_YOU_SIZE,
     }),
     getQueriedPlaces({
-      lat,
-      lng,
-      minRating: 4,
-      maxDistanceKm: EXPLORE_PLACES_RADIUS_KM,
+      ...rowFilters,
+      openNow: true,
+      pageSize: OPEN_NOW_SIZE,
+    }),
+    getQueriedPlaces({
+      ...rowFilters,
+      minRating: Math.max(TOP_RATED_MIN_RATING, minRatingParam ?? 0),
       pageSize: TOP_RATED_FETCH_SIZE,
     }),
     getQueriedPlaces({
-      lat,
-      lng,
-      maxDistanceKm: effectiveMaxDistanceKm,
-      categoryId: selectedCategory?.id ?? null,
-      openNow: openNow ?? null,
-      minRating: minRatingParam ?? null,
+      ...rowFilters,
       searchText: searchText ?? null,
       pageSize: view === "map" ? MAP_VIEW_PAGE_SIZE : undefined,
     }),
   ]);
 
-  // The category chip row + Filter modal now drive EVERY section on this
-  // tab, not just "All Places". The curated sliders are filtered
-  // client-side against the same bounded payloads they're already derived
-  // from — no extra query.
-  const curatedPlaceFilters: PlaceFilters = {
-    categoryId: selectedCategory?.id ?? null,
-    openNow: openNow ?? false,
-    minRating: minRatingParam ?? null,
-    maxDistanceKm: maxDistanceKmParam ?? null,
-  };
-
-  const featuredPlaces = filterPlaceList(
-    featuredResult.data ?? [],
-    curatedPlaceFilters,
-  );
-  const aroundYouPlaces = filterPlaceList(
-    aroundYouResult.data ?? [],
-    curatedPlaceFilters,
-  );
-  const openNowPlaces = filterPlaceList(
-    openNowResult.data ?? [],
-    curatedPlaceFilters,
-  );
-  const topRatedPlaces = filterPlaceList(
-    [...(topRatedResult.data ?? [])],
-    curatedPlaceFilters,
-  )
+  const featuredPlaces = featuredResult.data ?? [];
+  const aroundYouPlaces = aroundYouResult.data ?? [];
+  const openNowPlaces = openNowResult.data ?? [];
+  // get_filtered_places orders by distance: the well-rated places nearest
+  // to here, shown best first.
+  const topRatedPlaces = [...(topRatedResult.data ?? [])]
     .sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0))
     .slice(0, TOP_RATED_DISPLAY_SIZE);
 
   async function fetchAllPlacesPage(cursor: string | null) {
     "use server";
     return getQueriedPlaces({
-      lat,
-      lng,
-      maxDistanceKm: effectiveMaxDistanceKm,
-      categoryId: selectedCategory?.id ?? null,
-      openNow: openNow ?? null,
-      minRating: minRatingParam ?? null,
+      ...rowFilters,
       searchText: searchText ?? null,
       cursor,
     });

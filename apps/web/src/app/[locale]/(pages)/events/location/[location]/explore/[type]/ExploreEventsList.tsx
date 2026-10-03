@@ -24,24 +24,7 @@ export default function ExploreEventsList({
       emptyState={emptyState}
       listClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 overflow-x-scroll scrollbar-hide gap-2 pb-5"
       renderItem={(event, index) => (
-        <EventCard
-          key={event.id}
-          priority={index < 4}
-          title={event.title}
-          id={event.id}
-          flyer_public_id={event.flyer_public_id}
-          flyer_version={event.flyer_version}
-          event_code={event.event_code}
-          address={event.address}
-          starts_at={event.starts_at}
-          occurrences={event.occurrences}
-          ends_at={event.ends_at}
-          organizer_id={event.organizer_id}
-          min_price={event.min_price}
-          currency={event.currency ?? ""}
-          created_at={event.created_at}
-          attendanceCount={event.attendanceCount ?? 0}
-        />
+        <EventCard key={event.id} priority={index < 4} {...event} />
       )}
     />
   );

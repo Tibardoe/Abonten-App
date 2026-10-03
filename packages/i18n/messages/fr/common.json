@@ -386,9 +386,8 @@
   "messageAbontenSupportFromYourInbox": "Écrivez à l'assistance Abonten depuis votre boîte de réception. Les réponses arrivent sous forme de messages et de notifications.",
   "minimumPrice": "Prix minimum",
   "mobileMoney": "Mobile money",
-  "more": "  ·  +{extraDates} autres",
+  "more": "  ·  +{extraDates, plural, one {# autre} other {# autres}}",
   "moreOptions": "Plus d'options",
-  "mostAnticipated": "Les plus attendus",
   "moveThePinToYourPreferred": "Déplacez le repère vers l'emplacement souhaité",
   "multipleDates": "Plusieurs dates",
   "multipleTicketTypes": "Plusieurs types de billets",
@@ -904,5 +903,7 @@
     "x": "Abonten sur X (anciennement Twitter)",
     "instagram": "Abonten sur Instagram",
     "tiktok": "Abonten sur TikTok"
-  }
+  },
+  "featured": "À la une",
+  "paidPlacement": "Emplacement payant"
 }

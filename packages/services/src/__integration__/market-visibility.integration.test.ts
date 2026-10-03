@@ -80,6 +80,14 @@ describe("discovery hides listings in markets that are not live", () => {
       .single();
     if (error || !place) throw new Error(error?.message);
     placeId = (place as Row).id;
+
+    // The event happens at the place, so the place's own event list is
+    // checked too.
+    const { error: hostError } = await service
+      .from("event")
+      .update({ place_id: placeId })
+      .eq("id", eventId);
+    if (hostError) throw new Error(hostError.message);
   });
 
   afterAll(async () => {
@@ -110,8 +118,6 @@ describe("discovery hides listings in markets that are not live", () => {
     const rpc = (name: string, args: Record<string, unknown>) =>
       anon.rpc(name as never, args as never);
     const calls: Record<string, [ReturnType<typeof rpc>, string]> = {
-      // (The three-argument get_nearby_events overload cannot be reached
-      // through the Data API: PostgREST refuses the call as ambiguous.)
       get_nearby_events: [
         rpc("get_nearby_events", {
           user_lat: LAT,
@@ -154,6 +160,30 @@ describe("discovery hides listings in markets that are not live", () => {
           p_cursor_id: null,
           p_page_size: 50,
         }),
+        eventId,
+      ],
+      get_explore_event_sections: [
+        rpc("get_explore_event_sections", {
+          p_user_lat: LAT,
+          p_user_lng: LNG,
+          p_radius_km: 5,
+          p_around_km: 5,
+          p_today_end: week,
+          p_month_end: week,
+        }),
+        eventId,
+      ],
+      get_similar_events: [
+        rpc("get_similar_events", {
+          input_category: "Music & Concerts",
+          input_location: `SRID=4326;POINT(${LNG} ${LAT})`,
+          input_radius_km: 5,
+          p_limit: 100,
+        }),
+        eventId,
+      ],
+      get_place_events: [
+        rpc("get_place_events", { p_place_id: placeId, p_limit: 100 }),
         eventId,
       ],
       search_events: [

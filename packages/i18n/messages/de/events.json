@@ -355,7 +355,7 @@
   "viewVenue": "Location ansehen",
   "visitWebsite": "Website besuchen",
   "weCouldnTFindAnyEvents": "Wir konnten an diesem Ort keine Events finden. Ändere deinen Ort oder poste als Erster eins.",
-  "weCouldnTFindAnyEvents2": "Wir konnten keine Events aus „{eventCategory}“ in {location}{value} finden. Probiere eine andere Kategorie oder schau bald wieder vorbei.",
+  "weCouldnTFindAnyEvents2": "Wir konnten keine Events aus „{eventCategory}“ in {location} finden. Probiere eine andere Kategorie oder schau bald wieder vorbei.",
   "weCouldnTFindAnyEvents3": "Wir konnten in {location} keine Events finden, die zu deinen Filtern passen. Passe sie an oder lösche sie.",
   "weCouldnTPostYourEvent": "Wir konnten dein Event nicht veröffentlichen. Bitte versuche es erneut.",
   "weCouldnTPublishYourEvent": "Wir konnten dein Event nicht veröffentlichen.",
@@ -404,5 +404,6 @@
   "yourReview": "Deine Bewertung",
   "stepOf": "Schritt {step} von {total}",
   "ticketTypeNumber": "Tickettyp {number}",
-  "exploreHeading": "{filter, select, happening_today {Heute} happening_this_week {Diese Woche} happening_this_month {Diesen Monat} top_rated_organizers {Bestbewertete Veranstalter} around_you {In deiner Nähe} other {Nach Kategorie}}"
+  "exploreHeading": "{filter, select, happening_today {Heute} happening_this_week {Diese Woche} happening_this_month {Diesen Monat} top_rated_organizers {Bestbewertete Veranstalter} around_you {In deiner Nähe} other {Nach Kategorie}}",
+  "weCouldnTFindAnyEventsFiltered": "Wir konnten in {location} keine Events aus „{eventCategory}“ finden, die zu deinen Filtern passen. Passe sie an oder lösche sie."
 }

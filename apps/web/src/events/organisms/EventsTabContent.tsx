@@ -1,5 +1,4 @@
-import getActivePromotedEventIds from "@/actions/getActivePromotedEventIds";
-import { filterEventsByWindow } from "@/actions/getFilteredEvents";
+import { getExploreEventSections } from "@/actions/getExploreEventSections";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import AllEventsList from "@/app/[locale]/(pages)/events/location/[location]/AllEventsList";
@@ -10,23 +9,22 @@ import EventCategoryChips from "@/events/molecules/EventCategoryChips";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import NoEventsInLocation from "@/events/molecules/NoEventsInLocation";
 import EventsMapView from "@/events/organisms/EventsMapView";
+import { locationLabelFromSlug } from "@/utils/locationLabel";
 import { requestTimeZone } from "@/utils/requestTimeZone";
+import { eventCategoryLabel } from "@abonten/core/categoryLabels";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import {
   type EventFilters,
-  filterEventList,
+  countActiveEventFilters,
 } from "@abonten/core/exploreFilters";
-import type { UserPostType } from "@abonten/types/postsType";
+import { EXPLORE_EVENTS_RADIUS_KM } from "@abonten/core/exploreSections";
+import { calendarDayOf } from "@abonten/core/time/timeZone";
 import { getTranslations } from "next-intl/server";
 
-// Radius (km) used for the "All Events" section — matches the previous
-// getNearByEvents(lat, lng, 10000) call's 10km/10000m radius exactly
-// (getQueriedEvents/get_filtered_events take maxDistanceKm in km, not
-// meters). "Around You" below keeps its own separate 5km getNearByEvents
-// call, untouched. Overridden when the Filter modal's Distance field is set
-// (maxDistanceKm prop), same as PlacesTabContent's
-// `maxDistanceKmParam ?? EXPLORE_PLACES_RADIUS_KM` pattern.
-const EXPLORE_EVENTS_RADIUS_KM = 10;
+// The area the Events tab browses is EXPLORE_EVENTS_RADIUS_KM (10 km),
+// "Around You" 5 km inside it; the Filter modal's Distance field narrows
+// both (same as PlacesTabContent's `maxDistanceKmParam ??
+// EXPLORE_PLACES_RADIUS_KM`).
 
 // The Events tab's "All Events" isn't infinite-scrolled in map view --
 // fetches one bounded page instead of AllEventsList's cursor-paginated
@@ -62,6 +60,7 @@ export default async function EventsTabContent({
   view?: "list" | "map";
 }) {
   const t = await getTranslations("events");
+  const tc = await getTranslations("core");
 
   // Same nullable-coordinate handling as PlacesTabContent.tsx -- geocoding
   // can fail (geocodeAddress returns { lat: null, lng: null, error }), and
@@ -69,94 +68,27 @@ export default async function EventsTabContent({
   const safeLat = lat ?? 0;
   const safeLng = lng ?? 0;
 
-  // Unchanged from the previous inline explore/[location]/page.tsx
-  // implementation -- these sliders keep their own fixed, curated semantics
-  // regardless of the category/filter modal, same as Places' Around
-  // You/Open Now/Top Rated sliders don't honor the filter modal either.
-  const [eventsWithinLocation, eventsAroundYou, promotedEventIds] =
-    await Promise.all([
-      getNearByEvents(safeLat, safeLng, 10000),
-      getNearByEvents(safeLat, safeLng, 5000),
-      getActivePromotedEventIds(),
-    ]);
-
-  const aroundYouEvents: UserPostType[] = eventsAroundYou.data || [];
-  const events: UserPostType[] = eventsWithinLocation.data || [];
-
-  if (!events.length) {
-    return <NoEventsInLocation location={location} />;
-  }
-
-  // The category chip row + Filter modal now drive EVERY section on this
-  // tab, not just "All Events". The curated sliders below are filtered
-  // client-side against the same bounded nearby payload they're already
-  // derived from — no extra query. `minRating` is the one dimension that
-  // payload can't express: it still narrows "All Events" through the DB and
-  // is a no-op on the curated sliders (the native Explore screen documents
-  // the same limitation).
-  const curatedCoords = lat != null && lng != null ? { lat, lng } : null;
-  const curatedFilters: EventFilters = {
+  // The category chip row and the Filter modal drive every section on this
+  // tab. The filters are applied in the database, by the same rule for the
+  // rows and for "All Events", and each row is taken from every event in
+  // the area (not from the first page of a nearby list, which is what they
+  // used to be cut from). Featured is paid placement, not a search result:
+  // the filters do not touch it.
+  //
+  // Dates in the URL are the browser's local midnights; they are read as
+  // the days they name on the visitor's calendar.
+  const zone = await requestTimeZone();
+  const filters: EventFilters = {
     category: eventCategory ?? null,
     types: eventTypes ?? [],
     minPrice: minPrice ?? null,
     maxPrice: maxPrice ?? null,
-    startDate: startDate ? startDate.slice(0, 10) : null,
-    endDate: endDate ? endDate.slice(0, 10) : null,
+    startDate: calendarDayOf(startDate, zone),
+    endDate: calendarDayOf(endDate, zone),
     minRating: minRating ?? null,
     maxDistanceKm: maxDistanceKm ?? null,
   };
-
-  // A paid Event Promotion makes an event featured-eligible for its
-  // purchased period, exactly like the free, self-toggled `featured`
-  // checkbox already does — same fold-in previously only wired into the
-  // now-unlinked /events/location/[location] route; ported here since
-  // /explore/[location]'s Events tab (this component) is the page users
-  // actually land on today (see LocationAndFilterSection.tsx/MobileNavBar.tsx).
-  const eventsWithPromotion = promotedEventIds.size
-    ? events.map((event) =>
-        promotedEventIds.has(event.id) ? { ...event, featured: true } : event,
-      )
-    : events;
-
-  const curatedEvents = filterEventList(
-    eventsWithPromotion,
-    curatedFilters,
-    curatedCoords,
-  );
-  const curatedAroundYou = filterEventList(
-    aroundYouEvents,
-    curatedFilters,
-    curatedCoords,
-  );
-
-  const featuredEvents = getFeaturedEvents(curatedEvents, location);
-
-  const topRatedOrganizers = filterEventsByWindow(
-    curatedEvents,
-    "top-rated-organizers",
-  );
-  // "Today" and "this month" on the visitor's calendar, not the server's.
-  const zone = await requestTimeZone();
-  const happeningToday = filterEventsByWindow(
-    curatedEvents,
-    "happening-today",
-    zone,
-  );
-  const happeningThisWeek = filterEventsByWindow(
-    curatedEvents,
-    "happening-this-week",
-    zone,
-  );
-  const happeningThisMonth = filterEventsByWindow(
-    curatedEvents,
-    "happening-this-month",
-    zone,
-  );
-
-  // Only "All Events" (the primary, filterable listing) honors the category
-  // chip row + Filter modal's price/date/rating/distance fields -- the
-  // curated sliders above it keep their own fixed semantics, same split
-  // Places uses for "All Places" vs. its sliders.
+  const hasActiveFilters = countActiveEventFilters(filters) > 0;
   const effectiveMaxDistanceKm = maxDistanceKm ?? EXPLORE_EVENTS_RADIUS_KM;
 
   const allEventsFilters = {
@@ -167,29 +99,41 @@ export default async function EventsTabContent({
     type: eventTypes ?? undefined,
     minPrice: minPrice ?? undefined,
     maxPrice: maxPrice ?? undefined,
-    startDate: startDate ?? undefined,
-    endDate: endDate ?? undefined,
+    startDate: filters.startDate ?? undefined,
+    endDate: filters.endDate ?? undefined,
     minRating: minRating ?? undefined,
   };
 
-  const hasActiveFilters =
-    !!eventCategory ||
-    !!eventTypes?.length ||
-    minPrice != null ||
-    maxPrice != null ||
-    !!startDate ||
-    !!endDate ||
-    minRating != null ||
-    maxDistanceKm != null;
+  const [sectionsResult, allEventsInitialPage, anyEventHere] =
+    await Promise.all([
+      getExploreEventSections({ lat: safeLat, lng: safeLng, filters }),
+      // The Events tab's "All Events" isn't infinite-scrolled in map view.
+      getQueriedEvents({
+        ...allEventsFilters,
+        pageSize: view === "map" ? MAP_VIEW_PAGE_SIZE : undefined,
+      }),
+      // "Nothing here at all" and "nothing matches your filters" are
+      // different answers; with filters on, one row tells them apart.
+      hasActiveFilters
+        ? getNearByEvents(safeLat, safeLng, EXPLORE_EVENTS_RADIUS_KM * 1000, {
+            pageSize: 1,
+          })
+        : null,
+    ]);
 
-  // Curated windows that come back empty are hidden rather than shown as a
-  // "nothing here" row: several are often empty at once (a quiet area, or a
-  // category filter), the stacked placeholder rows read as noise, and the
-  // "All Events" list below always answers what is on.
-  const allEventsInitialPage = await getQueriedEvents({
-    ...allEventsFilters,
-    pageSize: view === "map" ? MAP_VIEW_PAGE_SIZE : undefined,
-  });
+  const sections = sectionsResult.data;
+  const areaHasEvents = anyEventHere
+    ? anyEventHere.data.length > 0
+    : allEventsInitialPage.data.length > 0 ||
+      sections.aroundYou.length > 0 ||
+      sections.featured.length > 0;
+
+  if (!areaHasEvents) {
+    return <NoEventsInLocation location={location} />;
+  }
+
+  // Which paid placements show, and which leads, rotates daily.
+  const featuredEvents = getFeaturedEvents(sections.featured, location);
 
   async function fetchAllEventsPage(cursor: string | null) {
     "use server";
@@ -200,21 +144,32 @@ export default async function EventsTabContent({
   // current category/filters -- a distinct, more specific message than "no
   // events in this location at all", with a one-click way back to the
   // unfiltered list rather than making the user hunt for what to change.
+  // The category and the place as the visitor reads them, not as they are
+  // stored ("Music & Concerts") or written in the address ("east-legon").
+  const categoryName = eventCategory
+    ? eventCategoryLabel(tc, eventCategory)
+    : null;
+  const placeName = locationLabelFromSlug(location, t("yourArea"));
+  const onlyCategoryChosen = countActiveEventFilters(filters) === 1;
   const noMatchingEventsState = (
     <NoEventsFound
       heading={
-        eventCategory
-          ? t("noEventsFound3", { eventCategory: eventCategory })
+        categoryName
+          ? t("noEventsFound3", { eventCategory: categoryName })
           : t("noEventsMatchYourFilters")
       }
       description={
-        eventCategory
-          ? t("weCouldnTFindAnyEvents2", {
-              eventCategory: eventCategory,
-              location: location,
-              value: hasActiveFilters ? " matching your filters" : "",
-            })
-          : t("weCouldnTFindAnyEvents3", { location: location })
+        categoryName
+          ? onlyCategoryChosen
+            ? t("weCouldnTFindAnyEvents2", {
+                eventCategory: categoryName,
+                location: placeName,
+              })
+            : t("weCouldnTFindAnyEventsFiltered", {
+                eventCategory: categoryName,
+                location: placeName,
+              })
+          : t("weCouldnTFindAnyEvents3", { location: placeName })
       }
       action={{
         label: t("viewAllEvents"),
@@ -237,35 +192,35 @@ export default async function EventsTabContent({
 
       <EventsSlider
         heading={t("aroundYou2")}
-        events={curatedAroundYou}
+        events={sections.aroundYou}
         urlPath={`location/${location}/explore/around-you`}
         hideWhenEmpty
       />
 
       <EventsSlider
         heading={t("fromTopRatedOrganizers")}
-        events={topRatedOrganizers}
+        events={sections.topRatedOrganizers}
         urlPath={`location/${location}/explore/top-rated-organizers`}
         hideWhenEmpty
       />
 
       <EventsSlider
         heading={t("happeningToday2")}
-        events={happeningToday}
+        events={sections.happeningToday}
         urlPath={`location/${location}/explore/happening-today`}
         hideWhenEmpty
       />
 
       <EventsSlider
         heading={t("happeningThisWeek2")}
-        events={happeningThisWeek}
+        events={sections.happeningThisWeek}
         urlPath={`location/${location}/explore/happening-this-week`}
         hideWhenEmpty
       />
 
       <EventsSlider
         heading={t("happeningThisMonth2")}
-        events={happeningThisMonth}
+        events={sections.happeningThisMonth}
         urlPath={`location/${location}/explore/happening-this-month`}
         hideWhenEmpty
       />

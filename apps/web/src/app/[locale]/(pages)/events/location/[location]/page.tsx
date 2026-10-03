@@ -1,5 +1,4 @@
-import getActivePromotedEventIds from "@/actions/getActivePromotedEventIds";
-import { filterEventsByWindow } from "@/actions/getFilteredEvents";
+import { getExploreEventSections } from "@/actions/getExploreEventSections";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import LocationUnavailable from "@/components/molecules/LocationUnavailable";
 import EventsSlider from "@/components/organisms/EventsSlider";
@@ -7,10 +6,9 @@ import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarouse
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import AreaCoverageNotice from "@/events/organisms/AreaCoverageNotice";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
-import { requestTimeZone } from "@/utils/requestTimeZone";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
+import { EMPTY_EVENT_FILTERS } from "@abonten/core/exploreFilters";
 import { undoSlug } from "@abonten/core/geerateSlug";
-import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -71,52 +69,18 @@ export default async function page({
     );
   }
 
-  // "Around You" (5km) is a genuinely different dataset from the 10km
-  // location-wide set, so both are fetched — but only once each. Every
-  // other slider below (top-rated, today/week/month) previously re-fetched
-  // "all events within 10km" from scratch per slider; they now filter the
-  // one `eventsWithinLocation` fetch in memory instead.
-  const [eventsWithinLocation, eventsAroundYou] = await Promise.all([
+  // The rows (Featured, Around You, top-rated organizers, today / this week
+  // / this month) come from one call that takes each from every event in
+  // the area; "All Events" below pages through the same area, soonest
+  // first.
+  const [eventsWithinLocation, sectionsResult] = await Promise.all([
     getNearByEvents(lat, lng, 10000),
-    getNearByEvents(lat, lng, 5000),
+    getExploreEventSections({ lat, lng, filters: EMPTY_EVENT_FILTERS }),
   ]);
+  const sections = sectionsResult.data;
 
-  const aroundYou: UserPostType[] = eventsAroundYou.data || [];
-
-  const events: UserPostType[] = eventsWithinLocation.data || [];
-
-  const topRatedOrganizers = filterEventsByWindow(
-    events,
-    "top-rated-organizers",
-  );
-  // "Today" and "this month" on the visitor's calendar, not the server's.
-  const zone = await requestTimeZone();
-  const happeningToday = filterEventsByWindow(events, "happening-today", zone);
-  const happeningThisWeek = filterEventsByWindow(
-    events,
-    "happening-this-week",
-    zone,
-  );
-  const happeningThisMonth = filterEventsByWindow(
-    events,
-    "happening-this-month",
-    zone,
-  );
-
-  // A paid Event Promotion (see the Promotion tab in Unified Event
-  // Management) makes an event featured-eligible for its purchased period,
-  // exactly like the free, self-toggled `featured` checkbox already does —
-  // folded in here rather than inside getFeaturedEvents/meetsBaseEligibility
-  // themselves, so every existing eligibility rule there (upcoming, not
-  // sold out) keeps applying unchanged to promoted events too.
-  const promotedEventIds = await getActivePromotedEventIds();
-  const eventsWithPromotion = promotedEventIds.size
-    ? events.map((event) =>
-        promotedEventIds.has(event.id) ? { ...event, featured: true } : event,
-      )
-    : events;
-
-  const featuredEvents = getFeaturedEvents(eventsWithPromotion, safeLocation);
+  // Which paid placements show, and which leads, rotates daily.
+  const featuredEvents = getFeaturedEvents(sections.featured, safeLocation);
 
   // Bound before the closure: a hoisted function declaration is analysed
   // without the null guard above, so the narrowed values are captured here.
@@ -169,31 +133,31 @@ export default async function page({
 
           <EventsSlider
             heading={t("aroundYou")}
-            events={aroundYou || []}
+            events={sections.aroundYou}
             urlPath={`location/${safeLocation}/explore/around-you`}
           />
 
           <EventsSlider
             heading={t("topRatedOrganizers")}
-            events={topRatedOrganizers}
+            events={sections.topRatedOrganizers}
             urlPath={`location/${safeLocation}/explore/top-rated-organizers`}
           />
 
           <EventsSlider
             heading={t("happeningToday")}
-            events={happeningToday}
+            events={sections.happeningToday}
             urlPath={`location/${safeLocation}/explore/happening-today`}
           />
 
           <EventsSlider
             heading={t("happeningThisWeek")}
-            events={happeningThisWeek}
+            events={sections.happeningThisWeek}
             urlPath={`location/${safeLocation}/explore/happening-this-week`}
           />
 
           <EventsSlider
             heading={t("happeningThisMonth")}
-            events={happeningThisMonth}
+            events={sections.happeningThisMonth}
             urlPath={`location/${safeLocation}/explore/happening-this-month`}
           />
 

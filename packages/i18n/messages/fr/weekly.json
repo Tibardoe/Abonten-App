@@ -19,7 +19,7 @@
   "itMayHaveBeenTakenDown": "Elle a peut-être été retirée, ou elle n'est pas encore parue.",
   "linkWorksUntilUtc": "Le lien fonctionne jusqu'à {formatUtc} UTC",
   "loadingAbontenWeekly": "Chargement d'Abonten Weekly",
-  "more": "+{extraDates} autres",
+  "more": "+{extraDates, plural, one {# autre} other {# autres}}",
   "moreDates": "+{count, plural, one {# autre date} other {# autres dates}}",
   "nextPick": "Suggestion suivante",
   "notVisibleToThePublicUnless": "— {item}. Non visible du public tant que l'édition n'est pas publiée. Les fiches qui ne peuvent pas être affichées sont déjà exclues.",

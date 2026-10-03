@@ -4,8 +4,8 @@ purpose: The customer's path from first visit to rewards, step by step, with the
 audience: Product, support, engineering
 scope: Web and Android app
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -23,7 +23,7 @@ flowchart LR
 
 | Stage | User does (W/A) | System | Failure points | Docs |
 |---|---|---|---|---|
-| **Discover** | Chooses a location, browses Home/Explore/Events/Places, searches, uses the map, filters, reads Abonten Weekly when it is on for them (W, A) | Discovery RPCs (`get_filtered_events`, `get_nearby_*`, `get_filtered_places`, `get_similar_events`), unified search (`search_suggest`, `search_events`, `search_places`, `search_organizers`) when the Discovery programme is on for them, Abonten Weekly (`weekly_edition_view` through `@abonten/services/weekly`, listings re-checked on every read), moderation filter; `country`/`NEXT_LOCALE` cookies; `abn_ref` if arriving from a share/invite link | Not appearing (unpublished/hidden/stale matview); map key | Help: finding-events-and-places; troubleshooting |
+| **Discover** | Chooses a location, browses Home/Explore/Events/Places, searches, uses the map, filters, reads Abonten Weekly when it is on for them (W, A) | Discovery RPCs (`get_explore_event_sections`, `get_filtered_events`, `get_nearby_*`, `get_filtered_places`, `get_similar_events`, `get_place_events`), unified search (`search_suggest`, `search_events`, `search_places`, `search_organizers`) when the Discovery programme is on for them, Abonten Weekly (`weekly_edition_view` through `@abonten/services/weekly`, listings re-checked on every read), moderation filter; `country`/`NEXT_LOCALE` cookies; `abn_ref` if arriving from a share/invite link | Not appearing (unpublished/hidden/stale matview); map key | Help: finding-events-and-places; troubleshooting |
 | **Sign in** | Google / phone OTP / email OTP; consent line shown (W, A); invite code applied | Supabase Auth; Hubtel; `phone_otp_state`; `user_info` created by trigger; referral bind (`referral_bind`) | No code, rate limits, Google redirect | Help: getting-started; security/application-security |
 | **Event or place page** | Reads details, saves, shares, sets a reminder (A), messages | `favorite*`, `event_share` + referral touch, local reminders, `open_conversation` | — | Help pages |
 | **Booking request** (place) | Sends request; tracks under Bookings | `place_booking` pending → owner accepts/declines; notifications | Owner unresponsive | Help: bookings |

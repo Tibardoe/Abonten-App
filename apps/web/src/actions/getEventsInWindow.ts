@@ -4,6 +4,7 @@ import { publicSupabase } from "@/config/supabase/publicClient";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { requestTimeZone } from "@/utils/requestTimeZone";
 import { normalizeEventRow } from "@abonten/core/eventAddress";
+import { withInlineEventAvailability } from "@abonten/core/eventAvailability";
 import { windowBoundsInZone } from "@abonten/core/eventDateWindow";
 import { logger } from "@abonten/core/logger";
 import {
@@ -18,19 +19,17 @@ import type {
 } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import { addDays } from "date-fns";
-import { getEventAttendanceCounts } from "./getAttendace";
 
 export type EventWindow =
   | "happening-today"
   | "happening-this-week"
   | "happening-this-month";
 
-// Same boundary rules as the JS filter this replaces
-// (getFilteredEvents.ts's filterEventsByWindow) — "this week" is a literal
-// rolling 7 days from now, not the calendar week; "this month" runs to the
-// end of the current calendar month, not a rolling 30 days. "Today" and
-// "this month" are the visitor's (their browser's zone), not the server's
-// UTC clock.
+// The same windows as the Explore rows (get_explore_event_sections): "this
+// week" is a literal rolling 7 days from now, not the calendar week; "this
+// month" runs to the end of the current calendar month, not a rolling 30
+// days. "Today" and "this month" are the visitor's (their browser's zone),
+// not the server's UTC clock.
 function getWindowBounds(
   window: EventWindow,
   timeZone: string,
@@ -84,19 +83,14 @@ export const getEventsInWindow = withActionLocale(
       return { status: 500, data: [], nextCursor: null, hasNextPage: false };
     }
 
+    // The row carries attendance and per-tier stock inline (this used to
+    // be a second request per page).
     const { page, hasNextPage } = splitPage<UserPostType>(
-      (data ?? []).map(normalizeEventRow),
+      (data ?? []).map((row) =>
+        withInlineEventAvailability(normalizeEventRow(row)),
+      ),
       pageSize,
     );
-
-    const attendanceCounts = await getEventAttendanceCounts(
-      page.map((event: UserPostType) => event.id),
-    );
-
-    const eventsWithAttendance = page.map((event: UserPostType) => ({
-      ...event,
-      attendanceCount: attendanceCounts[event.id] ?? 0,
-    }));
 
     const last = page[page.length - 1] as UserPostType | undefined;
 
@@ -108,11 +102,6 @@ export const getEventsInWindow = withActionLocale(
           })
         : null;
 
-    return {
-      status: 200,
-      data: eventsWithAttendance,
-      nextCursor,
-      hasNextPage,
-    };
+    return { status: 200, data: page, nextCursor, hasNextPage };
   },
 );

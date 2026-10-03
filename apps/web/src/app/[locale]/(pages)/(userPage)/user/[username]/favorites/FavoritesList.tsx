@@ -45,6 +45,9 @@ export default function FavoritesList({
             currency={event.currency ?? ""}
             created_at={event.created_at}
             attendanceCount={event.attendanceCount ?? 0}
+            capacity={event.capacity}
+            status={event.status}
+            timezone={event.timezone}
           />
         );
       }}

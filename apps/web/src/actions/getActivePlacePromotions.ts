@@ -8,7 +8,7 @@ import type { PlaceType } from "@abonten/types/placeType";
 const FEATURED_PLACES_LIMIT = 10;
 
 // Featured Places (Milestone 5, paid promotion) -- public read, no auth
-// needed, same reasoning as getNearByPlaces.ts/getQueriedPlaces.ts. Backed
+// needed, same reasoning as getQueriedPlaces.ts. Backed
 // by the get_active_place_promotions RPC (see the migration) because
 // PostgREST's query builder can't express `ORDER BY random()` -- ordering is
 // randomized fresh on every request in the database itself, so no single

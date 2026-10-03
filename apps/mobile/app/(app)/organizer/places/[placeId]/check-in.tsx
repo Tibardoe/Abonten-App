@@ -58,7 +58,7 @@ export default function PlaceCheckInScreen() {
       {view.kind !== "content" && view.kind !== "empty" ? (
         <QueryUnavailable
           view={view}
-          subject="the check-in code"
+          subject={t("theCheckInCode")}
           onRetry={() => q.refetch()}
           loading={
             <View className="items-center py-12">

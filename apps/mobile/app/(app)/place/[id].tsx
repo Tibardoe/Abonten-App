@@ -19,10 +19,12 @@ import { VerifiedPill } from "@/components/verification/VerifiedPill";
 import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
-import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
-import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
+import {
+  usePlaceUpcomingEvents,
+  useSimilarPlaces,
+} from "@/features/places/usePlaceExtras";
 import type { ReviewSubject } from "@/features/reviews/useReviewSubject";
 import { PlaceCheckInSheet } from "@/features/rewards/PlaceCheckInSheet";
 import { useCheckIn } from "@/features/rewards/usePlaceVisits";
@@ -222,15 +224,8 @@ export default function PlaceDetailScreen() {
 
   const { data: claim } = usePlaceClaimState(place?.id, place?.owner_id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
-  // 10 km in metres — matches web's SIMILAR_PLACES_RADIUS_METERS.
-  const nearby = useNearbyPlaces(coords, 10_000);
-
-  const similarPlaces = useMemo<PlaceType[]>(() => {
-    const rows = nearby.data?.pages.flatMap((p) => p.rows) ?? [];
-    return rows
-      .filter((p) => p.id !== place?.id && p.category_id === place?.category_id)
-      .slice(0, 6);
-  }, [nearby.data, place?.id, place?.category_id]);
+  const similarPlaces: PlaceType[] =
+    useSimilarPlaces(place?.id, place?.category_id, coords).data ?? [];
 
   // Cached data (restored from the last session too) keeps rendering when a
   // refresh fails or the device is offline; only "no longer exists" or

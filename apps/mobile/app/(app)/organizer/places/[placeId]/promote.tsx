@@ -54,7 +54,7 @@ export default function PromotePlaceScreen() {
       <View className="flex-1 bg-background">
         <QueryUnavailable
           view={view}
-          subject="promotion options"
+          subject={t("thePromotionOptions")}
           onRetry={() => q.refetch()}
           loading={
             <View className="flex-1 items-center justify-center">

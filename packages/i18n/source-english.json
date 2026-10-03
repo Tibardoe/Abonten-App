@@ -719,7 +719,6 @@
     "mobileMoney": "6a38d1e4",
     "more": "4e793733",
     "moreOptions": "86c0a35e",
-    "mostAnticipated": "e6ddc77e",
     "moveThePinToYourPreferred": "8395178a",
     "multipleDates": "34ea1961",
     "multipleTicketTypes": "93a45321",
@@ -1224,7 +1223,9 @@
     "couldnTLoadYourPendingCheckouts": "83022787",
     "abontenOnNetwork.x": "31e167a9",
     "abontenOnNetwork.instagram": "35cf3471",
-    "abontenOnNetwork.tiktok": "e7f0a610"
+    "abontenOnNetwork.tiktok": "e7f0a610",
+    "featured": "ae31ad5d",
+    "paidPlacement": "b0b68f68"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -2537,7 +2538,7 @@
     "viewVenue": "c53b2e75",
     "visitWebsite": "2e1f56f5",
     "weCouldnTFindAnyEvents": "968ed965",
-    "weCouldnTFindAnyEvents2": "9e794a1a",
+    "weCouldnTFindAnyEvents2": "b022563d",
     "weCouldnTFindAnyEvents3": "bf7ae828",
     "weCouldnTPostYourEvent": "1bfe4a25",
     "weCouldnTPublishYourEvent": "60276d1b",
@@ -2573,7 +2574,8 @@
     "quantityAvailable": "b626e09c",
     "stepOf": "b0d2ef96",
     "ticketTypeNumber": "d7659d8a",
-    "exploreHeading": "9a038346"
+    "exploreHeading": "9a038346",
+    "weCouldnTFindAnyEventsFiltered": "ad193e36"
   },
   "explore": {
     "abontenHasnTLaunchedHereYet": "b1e552b7",
@@ -2678,7 +2680,6 @@
     "promotedByOrganizersNearYou": "3f0d0385",
     "promotedByPlacesNearYou": "e4977698",
     "rating": "6437b7bf",
-    "ratingFilterAppliedShowingTheFull": "aea59aff",
     "removeFilter": "7a739abe",
     "removingYou": "b6c32a18",
     "resetFilters": "56553100",
@@ -4011,7 +4012,12 @@
     "ticketTypeNumber": "d7659d8a",
     "usesOfMax": "43b01840",
     "usesUnlimited": "ef5c3d4b",
-    "activityFor": "dc545f25"
+    "activityFor": "dc545f25",
+    "thePromotionOptions": "d6af9274",
+    "theReviews": "80206269",
+    "theBookings": "4d63b828",
+    "theCheckInCode": "8bcc7758",
+    "theUpcomingEvents": "2724d9f2"
   },
   "messaging": {
     "a11y.messageActions": "949184b0",
@@ -5081,7 +5087,8 @@
     "yourReview": "501c1728",
     "yourReviewOptions": "fd87f08a",
     "yourReviews": "ef821b15",
-    "yoursIsTheOnlyReviewSo": "f22fc46f"
+    "yoursIsTheOnlyReviewSo": "f22fc46f",
+    "theseReviews": "49ac7c06"
   },
   "rewards": {
     "aRewardWasReversedAfterYou": "becd633a",
@@ -5353,7 +5360,8 @@
     "youReOffline": "f4d9cea9",
     "yourLocation": "f9a03722",
     "upcomingCount": "daedb93a",
-    "placesCount": "05ef548d"
+    "placesCount": "05ef548d",
+    "theseResults": "e68b84ed"
   },
   "server": {
     "aCoverPhotoIsRequired": "0a88c1d2",
@@ -7534,7 +7542,8 @@
     "youCanAttachAtMostDocuments2": "d56cf4cc",
     "youHaveReachedTheLimit": "e2649680",
     "yourBadgeShowsOnYourEvents": "52eedec1",
-    "yourDocumentsAreRemovedAndNothing": "e6a7c259"
+    "yourDocumentsAreRemovedAndNothing": "e6a7c259",
+    "yourVerification": "756309a5"
   },
   "wallet": {
     "addANewMobileMoneyWallet": "30058626",

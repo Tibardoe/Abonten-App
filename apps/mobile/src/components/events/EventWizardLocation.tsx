@@ -29,8 +29,9 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
                 <Pressable
                   key={v.id}
                   accessibilityRole="button"
+                  // The state says "selected" in the phone's own language.
                   accessibilityState={{ selected }}
-                  accessibilityLabel={`${v.name}${selected ? ", selected" : ""}`}
+                  accessibilityLabel={v.name}
                   onPress={() => w.setVenuePlace(selected ? null : v)}
                   className={`min-h-[40px] flex-row items-center gap-1.5 rounded-full border px-3 py-2 active:opacity-70 ${
                     selected

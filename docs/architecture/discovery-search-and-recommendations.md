@@ -2,9 +2,9 @@
 title: Discovery — unified search and opt-in recommendations
 purpose: How Abonten searches events, places and organizers, how results are ranked, and how people opt in to alerts and recommendation notices that stay capped and controllable.
 audience: Engineering, operations, security and privacy reviewers
-scope: The search_* and recommendation* database functions and tables, notification_subscription, notification_prompt_state and notification_consent_event, push delivery (Expo receipts, web push), @abonten/services search and notifications modules, web and mobile surfaces, admin module and scheduled jobs. Not covered - the older filter-only browsing RPCs (get_filtered_events and siblings), which are unchanged.
+scope: The search_* and recommendation* database functions and tables, notification_subscription, notification_prompt_state and notification_consent_event, push delivery (Expo receipts, web push), @abonten/services search and notifications modules, web and mobile surfaces, admin module and scheduled jobs. Not covered - the Explore lists (get_filtered_events and siblings), which have their own page, explore-lists.md.
 status: Approved
-version: 1.3
+version: 1.4
 lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder

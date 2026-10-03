@@ -24,26 +24,7 @@ export default function SearchTitleResultsList({
       emptyState={emptyState}
       listClassName="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5"
       renderItem={(event, index) => (
-        <EventCard
-          key={event.id}
-          priority={index < 4}
-          id={event.id}
-          title={event.title}
-          flyer_public_id={event.flyer_public_id}
-          flyer_version={event.flyer_version}
-          address={event.address}
-          event_code={event.event_code}
-          starts_at={event.starts_at}
-          ends_at={event.ends_at}
-          organizer_id={event.organizer_id}
-          occurrences={event.occurrences}
-          minTicket={event.minTicket}
-          created_at={event.created_at}
-          capacity={event.capacity}
-          min_price={event.min_price}
-          currency={event.currency}
-          attendance_count={event.attendance_count}
-        />
+        <EventCard key={event.id} priority={index < 4} {...event} />
       )}
     />
   );

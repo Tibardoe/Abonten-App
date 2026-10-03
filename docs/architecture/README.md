@@ -4,7 +4,7 @@ purpose: Index of the technical architecture documents for developers and techni
 audience: Engineering
 scope: Monorepo, database, APIs, jobs, integrations
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -25,8 +25,9 @@ complianceReviewRequired: no
 | [mobile-offline-media-and-sync.md](mobile-offline-media-and-sync.md) | Mobile offline query cache, Spotlight player lifecycle, live comments and likes, search vocabulary and date parsing, search filters, follower counts |
 | [internationalisation.md](internationalisation.md) | The six languages: shared catalogs, how each surface picks a language, server and database text, number and date formatting, per-page messages on the website, the native app's Intl polyfills, the checks |
 | [search-languages.md](search-languages.md) | Search in the reader's language: one folding rule for letters (accents, Twi and Ewe letters), date words in five languages as data, everyday words of four more languages in the vocabulary and their direction, the typo fallback of a dated search, and every other place typed text is compared |
+| [explore-lists.md](explore-lists.md) | The lists of events and places on Explore: the one rule for which events are on and what each filter means, how a page and the Explore rows are chosen, the card every list returns, cursors, and what the apps send |
 | [web-resilience.md](web-resilience.md) | What people see when a request fails or the database is unreachable (website, admin console, app start-up), 404 against 500, timed rebuilds, confirmations, and how few requests a page opens with |
-| [perf/discovery-2026-09.md](perf/discovery-2026-09.md) | Measured search and recommendation cost on a 100,000-event synthetic catalogue |
+| [perf/discovery-2026-09.md](perf/discovery-2026-09.md) | Measured search, Explore list and recommendation cost on a 100,000-event synthetic catalogue |
 | [data-model-overview.md](data-model-overview.md) | Table groups, key relationships, status columns, partitions, unused tables |
 | [integrations.md](integrations.md) | Each external service: what, where in code, config, failure behaviour |
 | [observability.md](observability.md) | Self-hosted error/health/metric pipeline, Sentry projects, where to look, gaps |

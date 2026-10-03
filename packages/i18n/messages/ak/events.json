@@ -355,7 +355,7 @@
   "viewVenue": "View venue",
   "visitWebsite": "Visit website",
   "weCouldnTFindAnyEvents": "We couldn’t find any events in this location. Try changing your location or be the first to post one.",
-  "weCouldnTFindAnyEvents2": "We couldn't find any {eventCategory} events in {location}{value}. Try a different category or check back soon.",
+  "weCouldnTFindAnyEvents2": "We couldn't find any {eventCategory} events in {location}. Try a different category or check back soon.",
   "weCouldnTFindAnyEvents3": "We couldn't find any events in {location} matching your filters. Try adjusting or clearing them.",
   "weCouldnTPostYourEvent": "We couldn't post your event. Please try again.",
   "weCouldnTPublishYourEvent": "We couldn't publish your event.",
@@ -404,5 +404,6 @@
   "yourReview": "Your Review",
   "stepOf": "Step {step} of {total}",
   "ticketTypeNumber": "Ticket type {number}",
-  "exploreHeading": "{filter, select, happening_today {Happening today} happening_this_week {Happening this week} happening_this_month {Happening this month} top_rated_organizers {Top-rated organizers} around_you {Around you} other {By category}}"
+  "exploreHeading": "{filter, select, happening_today {Happening today} happening_this_week {Happening this week} happening_this_month {Happening this month} top_rated_organizers {Top-rated organizers} around_you {Around you} other {By category}}",
+  "weCouldnTFindAnyEventsFiltered": "We couldn't find any {eventCategory} events in {location} matching your filters. Try adjusting or clearing them."
 }

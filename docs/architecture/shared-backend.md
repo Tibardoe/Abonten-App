@@ -63,7 +63,7 @@ Governed entirely by RLS; identical rows whichever client asks.
 
 | Operation | Why safe |
 |---|---|
-| `get_filtered_events` / `get_nearby_events` / `get_similar_events` / `get_events_in_window` / `get_event_suggestions` / `get_place_suggestions` / `get_nearby_places` / `get_filtered_places` | anon-`GRANT`ed, no `auth.uid()`, read-only PostGIS |
+| `get_filtered_events` / `get_nearby_events` / `get_explore_event_sections` / `get_similar_events` / `get_place_events` / `get_events_in_window` / `get_event_suggestions` / `get_place_suggestions` / `get_nearby_places` / `get_filtered_places` | anon-`GRANT`ed, no `auth.uid()`, read-only PostGIS ([explore-lists.md](explore-lists.md)) |
 | `get_event_attendance_count(s)` | public counts, no PII |
 | `get_user_transaction_summary` / `get_user_transaction_history` | `SECURITY DEFINER`, scope to `auth.uid()` internally |
 | `event` / `event_occurrence` / `ticket_type` / `place` / `event_review` / `place_review` reads | RLS `*_public_select` (published) |

@@ -1,63 +1,46 @@
-import { createClient } from "@/config/supabase/server";
+import { publicSupabase } from "@/config/supabase/publicClient";
+import { normalizeEventRow } from "@abonten/core/eventAddress";
+import { withInlineEventAvailability } from "@abonten/core/eventAvailability";
 import { logger } from "@abonten/core/logger";
 import { userFacingError } from "@abonten/core/userFacingError";
-import { getEventAttendanceCounts } from "./getAttendace";
+import type { UserPostType } from "@abonten/types/postsType";
 
+/**
+ * Events of the same category near a point, soonest first, without the
+ * event being looked at. get_similar_events orders and limits the list
+ * itself and returns the whole card (price, attendance, per-tier stock), so
+ * this is one request. Public read: the cookie-free client.
+ */
 export async function getSimilarEvents(
   category: string,
   lng: number,
   lat: number,
-) {
-  const supabase = await createClient();
+  options: { excludeEventId?: string; limit?: number } = {},
+): Promise<
+  | { status: 200; similarEvents: UserPostType[] }
+  | { status: 500; message: string; similarEvents?: undefined }
+> {
+  const { data, error } = await publicSupabase.rpc("get_similar_events", {
+    input_category: category,
+    input_location: `SRID=4326;POINT(${lng} ${lat})`,
+    input_radius_km: 10,
+    p_exclude_event_id: options.excludeEventId,
+    // A small "similar events" row, not a full list page.
+    p_limit: options.limit ?? 20,
+  });
 
-  const { data: similarEvents, error: similarEventsError } = await supabase
-    .rpc("get_similar_events", {
-      input_category: category,
-      input_location: `SRID=4326;POINT(${lng} ${lat})`,
-      input_radius_km: 10,
-    })
-    .order("starts_at", { ascending: true })
-    // Safety cap: this feeds a small "similar events" widget, not a full
-    // list page, so a tight cap is intentional here rather than a fallback.
-    .limit(20);
-
-  if (similarEventsError) {
-    logger.error(similarEventsError.message);
+  if (error) {
+    logger.error(error.message);
 
     return {
       status: 500,
-      message: userFacingError(
-        "Error fetching similar events",
-        similarEventsError,
-      ),
+      message: userFacingError("Error fetching similar events", error),
     };
   }
 
-  // get_similar_events, unlike get_filtered_events/get_nearby_events, has no
-  // attendance_count column at all — every similar-event card always showed
-  // 0 attending regardless of real ticket sales. Merged in the same way
-  // getUserPosts.ts/getEventsInWindow.ts already do for their own listings.
-  const attendanceCounts = await getEventAttendanceCounts(
-    (similarEvents ?? []).map((event: { id: string }) => event.id),
+  const similarEvents: UserPostType[] = (data ?? []).map((row) =>
+    withInlineEventAvailability(normalizeEventRow(row)),
   );
 
-  // get_similar_events returns ticket_price/ticket_currency, unlike
-  // get_filtered_events/get_nearby_events which return min_price/currency —
-  // EventCard (via EventsSlider) only reads the latter names, so without
-  // this mapping every similar-event card's price badge renders
-  // "undefined undefined" instead of "Free Entry" / the actual price.
-  const mappedSimilarEvents = (similarEvents ?? []).map(
-    (event: {
-      id: string;
-      ticket_price: number | null;
-      ticket_currency: string | null;
-    }) => ({
-      ...event,
-      min_price: event.ticket_price,
-      currency: event.ticket_currency,
-      attendanceCount: attendanceCounts[event.id] ?? 0,
-    }),
-  );
-
-  return { status: 200, similarEvents: mappedSimilarEvents };
+  return { status: 200, similarEvents };
 }

@@ -60,8 +60,7 @@ export default async function page({
     logger.error(response.message);
   }
 
-  const events: UserPostType[] =
-    (response?.similarEvents as unknown as UserPostType[] | undefined) ?? [];
+  const events: UserPostType[] = response?.similarEvents ?? [];
 
   return (
     <div className="space-y-3">
@@ -70,24 +69,7 @@ export default async function page({
       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 overflow-x-scroll scrollbar-hide gap-2 pb-5">
         {events?.length
           ? events.map((event, index) => (
-              <EventCard
-                key={event.id}
-                priority={index < 4}
-                title={event.title}
-                id={event.id}
-                event_code={event.event_code}
-                flyer_public_id={event.flyer_public_id}
-                flyer_version={event.flyer_version}
-                address={event.address}
-                starts_at={event.starts_at}
-                occurrences={event.occurrences}
-                ends_at={event.ends_at}
-                organizer_id={event.organizer_id}
-                min_price={event.ticket_price}
-                currency={event.ticket_currency ?? ""}
-                created_at={event.created_at}
-                attendanceCount={event.attendanceCount ?? 0}
-              />
+              <EventCard key={event.id} priority={index < 4} {...event} />
             ))
           : t("noEvents")}
       </ul>

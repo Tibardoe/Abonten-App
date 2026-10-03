@@ -1,6 +1,6 @@
-import { getNearByPlaces } from "@/actions/getNearByPlaces";
 import { getPlaceBySlug } from "@/actions/getPlaceBySlug";
 import { getPlaceUpcomingEvents } from "@/actions/getPlaceUpcomingEvents";
+import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
 import JsonLd from "@/components/atoms/JsonLd";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReportButton from "@/components/atoms/ReportButton";
@@ -56,7 +56,7 @@ export const revalidate = 60;
 // How far around a place to look for "Similar Places" -- matches
 // getSimilarEvents.ts's 10km radius convention for the analogous "similar
 // events" widget.
-const SIMILAR_PLACES_RADIUS_METERS = 10000;
+const SIMILAR_PLACES_RADIUS_KM = 10;
 const SIMILAR_PLACES_LIMIT = 6;
 
 type PlaceAddress = { full_address?: string };
@@ -156,16 +156,21 @@ export default async function page({
   // fetch gets on the event details page.
   const locationWkb = asWkbHex(place.location);
   const { eventLat: placeLat, eventLng: placeLng } = parseWKBHex(locationWkb);
-  const nearbyPlacesResponse = await getNearByPlaces(
-    placeLat,
-    placeLng,
-    SIMILAR_PLACES_RADIUS_METERS,
-    { pageSize: 20 },
-  );
+  // The nearest places of the same category, asked for as that. (It used to
+  // be "the 20 nearest places of any kind, then keep this category", which
+  // in a busy street found none.) One more than shown: this place is its
+  // own nearest.
+  const similarPlacesResponse = await getQueriedPlaces({
+    categoryId: place.category_id,
+    lat: placeLat,
+    lng: placeLng,
+    maxDistanceKm: SIMILAR_PLACES_RADIUS_KM,
+    pageSize: SIMILAR_PLACES_LIMIT + 1,
+  });
   const similarPlaces = (
-    nearbyPlacesResponse.status === 200 ? nearbyPlacesResponse.data : []
+    similarPlacesResponse.status === 200 ? similarPlacesResponse.data : []
   )
-    .filter((p) => p.id !== place.id && p.category_id === place.category_id)
+    .filter((p) => p.id !== place.id)
     .slice(0, SIMILAR_PLACES_LIMIT);
 
   const categoryName =

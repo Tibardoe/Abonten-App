@@ -4,8 +4,8 @@ purpose: Index of Abonten's security documentation and a one-page summary of the
 audience: Engineering, founder, security reviewers
 scope: Application, database, payments, infrastructure, access control, secrets
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-02
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -38,7 +38,7 @@ Public summary: `apps/web/src/content/legal/security.md` (served at `/legal/secu
 
 ## Known weaknesses and open items (do not publish)
 
-- `SEC-004`: service-role JWT inline in the `cleanupExpiredEvents` cron command — move to Vault (roadmap).
+- `SEC-004` (fixed 2026-09-04): the `cleanupExpiredEvents` cron command no longer carries a service-role JWT; it reads the public anon key from Vault. Retiring that job's edge function and the unused Vault secret is decision S8.
 - `SEC-003`: Supabase Auth leaked-password protection / hardening toggles off; Postgres minor patch pending (owner's call).
 - `get_event_attendee_contacts` exposes attendee emails/phones to organizers (decision M4).
 - Rate limiter fails **open** on infrastructure error (deliberate: availability over strictness).

@@ -15205,6 +15205,7 @@ export type Database = {
         }
         Returns: {
           address: Json
+          attendance_count: number
           capacity: number
           country_code: string
           created_at: string
@@ -15225,6 +15226,57 @@ export type Database = {
           slug: string
           starts_at: string
           status: string
+          ticket_types: Json
+          timezone: string
+          title: string
+          website_url: string
+        }[]
+      }
+      get_explore_event_sections: {
+        Args: {
+          p_around_km?: number
+          p_end_date?: string
+          p_event_category?: string
+          p_event_type?: string[]
+          p_max_price?: number
+          p_min_price?: number
+          p_min_rating?: number
+          p_month_end?: string
+          p_radius_km?: number
+          p_section_size?: number
+          p_sections?: string[]
+          p_start_date?: string
+          p_today_end?: string
+          p_user_lat: number
+          p_user_lng: number
+        }
+        Returns: {
+          address: Json
+          attendance_count: number
+          avg_rating: number
+          capacity: number
+          country_code: string
+          created_at: string
+          currency: string
+          ends_at: string
+          event_category: string
+          event_code: string
+          event_type: string
+          featured: boolean
+          flyer_public_id: string
+          flyer_version: string
+          id: string
+          location: unknown
+          min_price: number
+          occurrences: Json
+          organizer_avg_rating: number
+          organizer_id: string
+          organizer_rating_count: number
+          sections: Json
+          slug: string
+          starts_at: string
+          status: string
+          ticket_types: Json
           timezone: string
           title: string
           website_url: string
@@ -15235,18 +15287,18 @@ export type Database = {
           p_cursor_distance_km?: number
           p_cursor_id?: string
           p_cursor_starts_at?: string
-          p_end_date: string
-          p_event_category: string
-          p_event_type: string[]
-          p_max_distance_km: number
-          p_max_price: number
-          p_min_price: number
-          p_min_rating: number
+          p_end_date?: string
+          p_event_category?: string
+          p_event_type?: string[]
+          p_max_distance_km?: number
+          p_max_price?: number
+          p_min_price?: number
+          p_min_rating?: number
           p_page_size?: number
-          p_search_text: string
-          p_start_date: string
-          p_user_lat: number
-          p_user_lng: number
+          p_search_text?: string
+          p_start_date?: string
+          p_user_lat?: number
+          p_user_lng?: number
         }
         Returns: {
           address: Json
@@ -15260,15 +15312,21 @@ export type Database = {
           ends_at: string
           event_category: string
           event_code: string
+          event_type: string
+          featured: boolean
           flyer_public_id: string
           flyer_version: string
           id: string
           location: unknown
           min_price: number
           occurrences: Json
+          organizer_avg_rating: number
           organizer_id: string
+          organizer_rating_count: number
+          slug: string
           starts_at: string
           status: string
+          ticket_types: Json
           timezone: string
           title: string
         }[]
@@ -15335,72 +15393,46 @@ export type Database = {
         }[]
       }
       get_my_credit_summary: { Args: never; Returns: Json }
-      get_nearby_events:
-        | {
-            Args: { search_radius: number; user_lat: number; user_lng: number }
-            Returns: {
-              address: Json
-              capacity: number
-              created_at: string
-              currency: string
-              description: string
-              ends_at: string
-              event_category: string
-              event_code: string
-              event_type: string
-              featured: boolean
-              flyer_public_id: string
-              flyer_version: string
-              id: string
-              location: unknown
-              min_price: number
-              occurrences: Json
-              organizer_id: string
-              slug: string
-              starts_at: string
-              status: string
-              title: string
-              website_url: string
-            }[]
-          }
-        | {
-            Args: {
-              p_cursor_id?: string
-              p_cursor_sort_key?: string
-              p_page_size?: number
-              search_radius: number
-              user_lat: number
-              user_lng: number
-            }
-            Returns: {
-              address: Json
-              attendance_count: number
-              capacity: number
-              created_at: string
-              currency: string
-              cursor_sort_key: string
-              ends_at: string
-              event_category: string
-              event_code: string
-              event_type: string
-              featured: boolean
-              flyer_public_id: string
-              flyer_version: string
-              id: string
-              location: unknown
-              min_price: number
-              occurrences: Json
-              organizer_avg_rating: number
-              organizer_id: string
-              organizer_rating_count: number
-              slug: string
-              starts_at: string
-              status: string
-              ticket_types: Json
-              title: string
-              website_url: string
-            }[]
-          }
+      get_nearby_events: {
+        Args: {
+          p_cursor_id?: string
+          p_cursor_sort_key?: string
+          p_page_size?: number
+          search_radius: number
+          user_lat: number
+          user_lng: number
+        }
+        Returns: {
+          address: Json
+          attendance_count: number
+          capacity: number
+          country_code: string
+          created_at: string
+          currency: string
+          cursor_sort_key: string
+          ends_at: string
+          event_category: string
+          event_code: string
+          event_type: string
+          featured: boolean
+          flyer_public_id: string
+          flyer_version: string
+          id: string
+          location: unknown
+          min_price: number
+          occurrences: Json
+          organizer_avg_rating: number
+          organizer_id: string
+          organizer_rating_count: number
+          slug: string
+          starts_at: string
+          status: string
+          ticket_types: Json
+          timezone: string
+          title: string
+          website_url: string
+        }[]
+      }
       get_nearby_places: {
         Args: {
           p_cursor_distance?: number
@@ -15583,6 +15615,39 @@ export type Database = {
           title: string
         }[]
       }
+      get_place_events: {
+        Args: { p_limit?: number; p_place_id: string }
+        Returns: {
+          address: Json
+          attendance_count: number
+          avg_rating: number
+          capacity: number
+          country_code: string
+          created_at: string
+          currency: string
+          ends_at: string
+          event_category: string
+          event_code: string
+          event_type: string
+          featured: boolean
+          flyer_public_id: string
+          flyer_version: string
+          id: string
+          location: unknown
+          min_price: number
+          occurrences: Json
+          organizer_avg_rating: number
+          organizer_id: string
+          organizer_rating_count: number
+          slug: string
+          starts_at: string
+          status: string
+          ticket_types: Json
+          timezone: string
+          title: string
+          website_url: string
+        }[]
+      }
       get_place_rating: {
         Args: { p_place_id: string }
         Returns: {
@@ -15616,21 +15681,27 @@ export type Database = {
           input_category: string
           input_location: unknown
           input_radius_km: number
+          p_exclude_event_id?: string
+          p_limit?: number
         }
         Returns: {
           address: Json
+          attendance_count: number
           capacity: number
           country_code: string
           created_at: string
+          currency: string
           description: string
           ends_at: string
           event_category: string
           event_code: string
           event_type: string
+          featured: boolean
           flyer_public_id: string
           flyer_version: string
           id: string
           location: unknown
+          min_price: number
           occurrences: Json
           organizer_id: string
           require_registration: boolean
@@ -15639,6 +15710,7 @@ export type Database = {
           status: string
           ticket_currency: string
           ticket_price: number
+          ticket_types: Json
           timezone: string
           title: string
           website_url: string

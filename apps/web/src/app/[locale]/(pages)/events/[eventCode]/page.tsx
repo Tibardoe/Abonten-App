@@ -55,8 +55,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 // Event details are public and don't depend on the viewer. This setting was
 // meant to cache the page for a minute and does NOT: a route with a dynamic
 // segment is only cached when it also exports generateStaticParams (the
-// Weekly pages do), and getSimilarEvents below reads the session cookie. The
-// build lists this page as dynamic: it is rendered for every request.
+// Weekly pages do), and the page reads the visitor's cookies (language,
+// session). The build lists this page as dynamic: it is rendered for every
+// request.
 //
 // Turning the cache on is a product decision, not a one-line fix. A cached
 // page keeps showing a cancelled, edited or hidden event until it is
@@ -248,10 +249,11 @@ export default async function page({
   const similarEventsResponse =
     lat === null || lng === null
       ? null
-      : await getSimilarEvents(event.event_category, lng, lat);
-  const similarEvents: UserPostType[] = (
-    (similarEventsResponse?.similarEvents ?? []) as unknown as UserPostType[]
-  ).filter((evt) => evt.id !== event.id);
+      : await getSimilarEvents(event.event_category, lng, lat, {
+          excludeEventId: event.id,
+        });
+  const similarEvents: UserPostType[] =
+    similarEventsResponse?.similarEvents ?? [];
 
   const postedAt = getRelativeTime(event.created_at, undefined, locale);
   const eventDateAndTime = getFormattedEventDate(

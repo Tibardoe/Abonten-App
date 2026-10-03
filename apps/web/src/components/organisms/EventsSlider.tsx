@@ -158,26 +158,7 @@ export default function EventsSlider({
           // className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 pb-4 relative"
         >
           {events.map((event, index) => (
-            <EventCard
-              key={event.id}
-              priority={index < 4}
-              title={event.title}
-              id={event.id}
-              flyer_public_id={event.flyer_public_id}
-              flyer_version={event.flyer_version}
-              address={event.address}
-              event_code={event.event_code}
-              starts_at={event.starts_at}
-              ends_at={event.ends_at}
-              occurrences={event.occurrences}
-              min_price={event.min_price}
-              organizer_id={event.organizer_id}
-              currency={event.currency}
-              created_at={event.created_at}
-              capacity={event.capacity}
-              attendanceCount={event.attendanceCount}
-              status={event.status}
-            />
+            <EventCard key={event.id} priority={index < 4} {...event} />
           ))}
         </ul>
 
