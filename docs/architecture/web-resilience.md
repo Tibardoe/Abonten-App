@@ -4,7 +4,7 @@ purpose: Describe what the website, the admin console and the app do when a requ
 audience: Engineering, operations, anyone reading an incident where "the site showed nothing"
 scope: Server Action calls from the browser (web and admin), cached reads (React Query on the web), page lookups (404 against 500), timed rebuilds (sitemap, Weekly), the proxy's session and account checks, the shell bootstrap request, navigation feedback, the offline notice, confirmation dialogs, and the native app's two provider-less screens. Not covered - payments (PROJECT.md §46.3), the native app's offline cache (mobile-offline-media-and-sync.md).
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -75,17 +75,14 @@ What makes the difference:
 
 **Timed rebuilds.** The sitemap (hourly) and the Weekly pages (every minute) are rebuilt on a timer. A read that failed during a rebuild used to be cached as "no events" or "nothing published". They now throw, the rebuild fails, and the last good copy stays up. During the build itself, where there is no earlier copy, the sitemap goes out with the static pages only.
 
-### Event page caching
+### Event and place pages are not cached
 
-`apps/web/src/app/[locale]/(pages)/events/[eventCode]/page.tsx` declares `revalidate = 60`, and its comments say the page is cached for a minute. **It is not.** A route with a dynamic segment is only cached when it also exports `generateStaticParams` (the Weekly pages do), and one of the page's reads (`getSimilarEvents`) uses the session cookie. The build lists the page as dynamic: it is rendered for every request.
+The event page (`events/[eventCode]/page.tsx`) and the place page (`places/[slug]/page.tsx`) are rendered for every request, on purpose: both export `dynamic = "force-dynamic"` (decision D7, 2026-10-04).
 
-Turning the cache on is a product decision, not a one-line fix (`OPERATIONAL_DECISIONS_REQUIRED.md`, D7):
-
-- A cached page keeps showing a cancelled, edited, sold-out or hidden event until it is rebuilt.
-- With a timed rebuild, the first visitor after a quiet spell is served the old copy, however old it is.
-- So every write that changes the page would have to revalidate it: edits, cancellation, ticket sales that change "sold out", reviews, and moderation done from the admin console, which is a separate app and cannot revalidate the website's cache today.
-
-The benefit would be a page served from the edge for the links people share most.
+- A cancellation, a moderation decision, an edit or a sell-out has to show on the next request. Those writes come from the website, the app's API, the admin console (a separate app) and database jobs, so a cached page would need every one of them to revalidate it.
+- Until 2026-10-04 both pages declared `revalidate = 60` and were dynamic all the same (a dynamic segment without `generateStaticParams`, and reads that use the session cookie). That setting would have become a one-minute cache, with nothing revalidating it, the day the page stopped reading cookies. The explicit setting closes that trap.
+- Checked on a production build on 2026-10-04: an edited title and a hidden event both showed on the very next request.
+- A request costs a few database rounds in the same region (section 7); most of a visitor's wait is the distance to the server. If these pages ever become slow or expensive, cache them together with revalidation from every write, not instead of it.
 
 ## 5. What the visitor sees while waiting
 

@@ -52,21 +52,17 @@ import { getLocale, getTranslations } from "next-intl/server";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-// Event details are public and don't depend on the viewer. This setting was
-// meant to cache the page for a minute and does NOT: a route with a dynamic
-// segment is only cached when it also exports generateStaticParams (the
-// Weekly pages do), and the page reads the visitor's cookies (language,
-// session). The build lists this page as dynamic: it is rendered for every
-// request.
-//
-// Turning the cache on is a product decision, not a one-line fix. A cached
-// page keeps showing a cancelled, edited or hidden event until it is
-// rebuilt, and the first visitor after a quiet spell is served the old copy
-// however old it is, so every write that changes the page (edit, cancel,
-// sell-out, review, moderation from the admin app) would have to revalidate
-// it. See docs/architecture/web-resilience.md, "Event page caching"
-// (decision D7).
-export const revalidate = 60;
+// Rendered for every visit, on purpose (decision D7, 2026-10-04). The page
+// must show a cancellation, a moderation decision, an edit or a sell-out the
+// moment it happens; a cached copy would keep showing the old state until
+// something revalidated it, and those writes come from several places (the
+// website, the app's API, the admin console, database jobs). It was
+// rendered per request before too, while declaring `revalidate = 60`: that
+// setting would have turned into a one-minute cache, with nothing
+// revalidating it, the day the page stopped reading cookies. Measured on a
+// production build on 2026-10-04: an edit and a hide both showed on the very
+// next request. Revisit only together with revalidation on every write.
+export const dynamic = "force-dynamic";
 
 // Rich link previews when an event is shared (from web or the mobile share
 // sheet). The flyer is served straight from Cloudinary at OG dimensions —
