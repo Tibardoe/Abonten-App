@@ -51,9 +51,24 @@ export default async function page({
   const { eventId } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Who is asking and the event are read together: the read is limited
+  // by the visitor's own session, and nothing is shown until both checks
+  // below pass.
+  const [
+    {
+      data: { user },
+    },
+    { data: event, error: eventError },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("event")
+      .select(
+        "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, currency)",
+      )
+      .eq("id", eventId)
+      .maybeSingle(),
+  ]);
 
   if (!user) {
     return (
@@ -62,14 +77,6 @@ export default async function page({
       </p>
     );
   }
-
-  const { data: event, error: eventError } = await supabase
-    .from("event")
-    .select(
-      "*, event_occurrence(id, starts_at, ends_at), ticket_type(id, type, price, quantity, currency)",
-    )
-    .eq("id", eventId)
-    .maybeSingle();
 
   if (eventError || !event) {
     return (

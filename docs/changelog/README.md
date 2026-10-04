@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Fewer database rounds on the event, place and manage pages
+
+- Updated `architecture/web-resilience.md` 1.1 (§7: independent reads start together; one read per row per request). The event page asks for similar events with its other reads and takes its cheapest tier from the tiers it already has (one query fewer); the place page reads the place once for its metadata and its page and then everything else at once (three rounds after the place became one); both reviews pages read their event or place once; the two manage pages check the visitor and read the listing together. No behaviour change.
+
 ## 2026-10-02 — Explore lists, and what an ended event keeps
 
 - New `architecture/explore-lists.md` 1.0. Updated: `architecture/perf/discovery-2026-09.md` 1.4 (the Explore lists measured), `architecture/README.md` 1.3, `INDEX.md` 1.4, `architecture/feature-inventory.md` 1.4, `architecture/discovery-search-and-recommendations.md` 1.4, `architecture/shared-backend.md`, `journeys/customer.md` 1.1, `privacy/data-inventory.md` 1.1, `privacy/data-retention-and-deletion.md` 1.2, `operations/scheduled-jobs.md` 1.2, `security/database-security.md` 1.1, `security/README.md` 1.1, `security/secrets-and-environment.md` 1.10, `OPERATIONAL_DECISIONS_REQUIRED.md` 1.4 (new D8 and S8); `PROJECT.md` §60 and §61; `CLAUDE.md` (two rules).

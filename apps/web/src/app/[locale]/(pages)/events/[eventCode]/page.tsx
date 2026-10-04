@@ -196,18 +196,15 @@ export default async function page({
   // geocoded the address text instead: a billed Google call per page, a
   // guess where the venue pin is exact, and an event with no address line
   // (structured address only) threw and took the whole page down.
-  const { eventLat, eventLng } = parseWKBHex(locationWkb);
-  const eventCoordinates = { lat: eventLat, lng: eventLng };
+  const { eventLat: lat, eventLng: lng } = parseWKBHex(locationWkb);
 
-  // attendanceCount, minTicket, averageRating, and the geocode lookup only
-  // depend on `event` (not on each other), so run them concurrently instead
-  // of as four sequential round trips.
+  // Everything below depends on `event` only, not on each other, so it is
+  // asked for at once: one round trip after the event instead of two.
   const [
     { data: attendanceCountResult },
-    { data: minTicket },
     averageRating,
-    { lat, lng },
     reviewPreview,
+    similarEventsResponse,
   ] = await Promise.all([
     // `attendance` has RLS restricting SELECT to the row's owner or the
     // event's organizer — this cookie-free publicSupabase client always has
@@ -216,20 +213,19 @@ export default async function page({
     // that returns only the aggregate (sums number_of_tickets, only rows
     // still 'attending' — see 20260902120000_add_public_attendance_count_rpcs.sql).
     supabase.rpc("get_event_attendance_count", { p_event_id: event.id }),
-    supabase
-      .from("ticket_type")
-      .select("id, type, price, currency")
-      .eq("event_id", event.id)
-      .order("price", { ascending: true })
-      .limit(1)
-      .single(),
     // Rates the organizer as a person (generic `review` table) — distinct
     // from eventRating below, which rates this specific event.
     getUserRating(event.organizer_id),
-    eventCoordinates,
     // The reviews block: summary + the three most helpful (never the
     // whole history — "See all" opens /events/<code>/reviews).
     loadReviewPreview("event", event.id),
+    // The same category near the event's own pin. An event with no
+    // coordinates simply has no "similar events" section.
+    lat === null || lng === null
+      ? null
+      : getSimilarEvents(event.event_category, lng, lat, {
+          excludeEventId: event.id,
+        }),
   ]);
 
   const attendanceCount = Number(attendanceCountResult ?? 0);
@@ -240,20 +236,16 @@ export default async function page({
     ticketTypes: event.ticket_type,
   });
 
-  // Similar events genuinely depend on the geocode result above, so this
-  // stays sequential. Uses the same category-matching RPC as the dedicated
-  // similar-events page instead of a separate nearby-events fetch + JS filter.
-  // No coordinates (an address Google does not know, or a lookup that timed
-  // out) simply means no "similar events near here" section — never a
-  // failed event page.
-  const similarEventsResponse =
-    lat === null || lng === null
-      ? null
-      : await getSimilarEvents(event.event_category, lng, lat, {
-          excludeEventId: event.id,
-        });
   const similarEvents: UserPostType[] =
     similarEventsResponse?.similarEvents ?? [];
+
+  // The cheapest tier, from the tiers the event was read with (this was a
+  // second query for the same rows).
+  const minTicket: { price: number | null; currency: string | null } | null =
+    [...(event.ticket_type ?? [])].sort(
+      (a: { price: number | null }, b: { price: number | null }) =>
+        Number(a.price ?? 0) - Number(b.price ?? 0),
+    )[0] ?? null;
 
   const postedAt = getRelativeTime(event.created_at, undefined, locale);
   const eventDateAndTime = getFormattedEventDate(

@@ -54,9 +54,22 @@ export default async function page({
   const { placeId } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Who is asking and the place are read together: the read is limited
+  // by the visitor's own session, and nothing is shown until both checks
+  // below pass.
+  const [
+    {
+      data: { user },
+    },
+    { data: place, error: placeError },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("place")
+      .select("*, place_category(id, name, slug)")
+      .eq("id", placeId)
+      .maybeSingle(),
+  ]);
 
   if (!user) {
     return (
@@ -65,12 +78,6 @@ export default async function page({
       </p>
     );
   }
-
-  const { data: place, error: placeError } = await supabase
-    .from("place")
-    .select("*, place_category(id, name, slug)")
-    .eq("id", placeId)
-    .maybeSingle();
 
   if (placeError || !place) {
     return (

@@ -4,8 +4,8 @@ purpose: Describe what the website, the admin console and the app do when a requ
 audience: Engineering, operations, anyone reading an incident where "the site showed nothing"
 scope: Server Action calls from the browser (web and admin), cached reads (React Query on the web), page lookups (404 against 500), timed rebuilds (sitemap, Weekly), the proxy's session and account checks, the shell bootstrap request, navigation feedback, the offline notice, confirmation dialogs, and the native app's two provider-less screens. Not covered - payments (PROJECT.md §46.3), the native app's offline cache (mobile-offline-media-and-sync.md).
 status: Approved
-version: 1.0
-lastReviewed: 2026-10-02
+version: 1.1
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -110,6 +110,7 @@ A browser runs Server Actions one at a time, so each one a page sends at load de
 - **The proxy confirms the session only where it decides something by it** (a private section, a Server Action). Elsewhere it reads the cookie and refreshes an expired token. A confirmed session and the account status are remembered for 30 seconds per server instance.
 - **Prefetching.** The category chips and the footer's links are not prefetched: they were twenty and eighteen requests per page view.
 - **Messages.** A page sends only the words it uses (`internationalisation.md` §5).
+- **Server-rendered pages read in as few rounds as they can.** A read that does not need another's answer starts with it (`Promise.all`): after the event, its attendance, organizer rating, reviews and similar events are asked at once; after the place, its market, events, reviews and similar places; on a manage page, who is asking and the listing. A row that both `generateMetadata` and the page read is read once per request through React `cache()` (place page, both reviews pages, Weekly). Leave two reads in sequence when both write first: the checkout page's two reads each expire stale checkouts.
 
 ## 8. The native app's two provider-less screens
 
