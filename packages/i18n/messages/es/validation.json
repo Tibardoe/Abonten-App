@@ -42,6 +42,8 @@
   "invalidId": "Identificador no válido",
   "invalidMediaReference": "Referencia de archivo multimedia no válida",
   "invalidPhotoReference": "Referencia de foto no válida",
+  "invalidPlace": "Lugar no válido",
+  "invalidSession": "Sesión no válida",
   "keepItUnderCharacters": "No superes los {0} caracteres",
   "keepTheCaptionUnderCharacters": "El texto no debe superar los {0} caracteres",
   "keepTheDescriptionUnder2000Characters": "La descripción no debe superar los 2000 caracteres",

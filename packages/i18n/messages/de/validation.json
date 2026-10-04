@@ -42,6 +42,8 @@
   "invalidId": "Ungültige ID",
   "invalidMediaReference": "Ungültige Medienreferenz",
   "invalidPhotoReference": "Ungültige Fotoreferenz",
+  "invalidPlace": "Ungültiger Ort",
+  "invalidSession": "Ungültige Sitzung",
   "keepItUnderCharacters": "Bleib unter {0} Zeichen",
   "keepTheCaptionUnderCharacters": "Halte die Bildunterschrift unter {0} Zeichen",
   "keepTheDescriptionUnder2000Characters": "Halte die Beschreibung unter 2000 Zeichen",
