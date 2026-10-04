@@ -24,7 +24,7 @@ Detailed history and one-off setup: `../mobile/08-phase-6-release-prep.md`.
 | `preview` | internal | preview | Android **APK**; iOS simulator build (never produced) |
 | `production` | store | production | `autoIncrement` version |
 
-`appVersionSource: remote`; runtime version policy `appVersion` (`app.json` `version` 0.3.0 since 2026-10-04) — a native change requires bumping the app version so updates target the right runtime. 0.3.0 was cut because installed 0.2.0 binaries lack native modules today's JavaScript uses (iOS build 17 of 2026-09-27 has no `expo-blur` for the glass tab bar; the Android preview APKs of 2026-09-15 also lack the volume and gesture-exclusion modules and `expo-system-ui`): an update published on 0.2.0 would have reached them.
+`appVersionSource: remote`; runtime version policy `appVersion` (`app.json` `version` 0.3.0 since 2026-10-04) — a native change requires bumping the app version so updates target the right runtime. **An update may only load native modules every binary of its runtime has**: guard an optional one with `requireOptionalNativeModule("Name")` before requiring its package — a try/catch around `require` does not help, because Metro reports a failed module initialisation as fatal first (update `f4d1a5bc` crashed 0.3.0 installs for ten minutes on 2026-10-04 and was rolled back with `eas update:roll-back-to-embedded`). 0.3.0 was cut because installed 0.2.0 binaries lack native modules today's JavaScript uses (iOS build 17 of 2026-09-27 has no `expo-blur` for the glass tab bar; the Android preview APKs of 2026-09-15 also lack the volume and gesture-exclusion modules and `expo-system-ui`): an update published on 0.2.0 would have reached them.
 
 ## Environment
 
