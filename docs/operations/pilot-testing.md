@@ -4,7 +4,7 @@ purpose: Where the pilot's working documents are, how the pilot is structured, w
 audience: Founder, engineering, support
 scope: The closed pilot of app 1.0.0 before public launch; TestFlight group "Pilot testers"; Google Play internal testing; the pilot's WhatsApp community, forms and tracker
 status: Draft
-version: 1.0
+version: 1.1
 lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -42,7 +42,7 @@ The links open only for the founder's account.
 |---|---|
 | TestFlight group "Pilot testers" (outside testers, feedback on, no public link) | Created. Build 1.0.0 (20) added and submitted to Apple's beta review |
 | Google Play internal testing | Not set up. Do it after Google's production review ends, with the testers' Gmail addresses |
-| The three Google Forms and the tracker sheet | Not built. Every question is listed in the run-book |
+| The three Google Forms (sign-up with the agreement, bug report, Friday check-in) and the "Abonten Pilot tracker" sheet they feed | Built in the founder's Google Workspace account by an Apps Script project there ("Untitled project", allowed to manage Forms and Sheets). The links are in the run-book, section "The three forms". The forms answer without a Google sign-in. Not yet shared with anyone |
 | WhatsApp community | Not created |
 
 ## Rules that follow from how the product works
@@ -58,4 +58,4 @@ The links open only for the founder's account.
 |---|---|
 | The confidentiality agreement has not been read by a lawyer; neither has electronic acceptance on a form as the way of signing | `../LEGAL_REVIEW_REQUIRED.md` F6 |
 | What testers are given, how long the tester list is kept, and the start date | `../OPERATIONAL_DECISIONS_REQUIRED.md` D10 |
-| The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace | Add it to `../privacy/data-inventory.md` when the forms are built |
+| The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace. The forms exist but hold no answers yet | Add it to `../privacy/data-inventory.md` before the sign-up link is shared |
