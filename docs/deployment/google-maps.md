@@ -49,7 +49,7 @@ The browser key was checked the same day by drawing a map with it on each addres
 
 Left, in this order (each needs the founder's Google Cloud, Vercel or GitHub access):
 
-1. Create **Abonten Server (geocoding + places)**: Google Cloud › APIs & Services › Credentials › Create credentials › API key; Application restrictions: none; API restrictions: Geocoding API and Places API (New). Put its value in `GOOGLE_MAPS_API_KEY` on the Vercel projects `abonten` and `abonten-app-admin` (Production, Preview, Development; Sensitive).
+1. Create **Abonten Server (geocoding + places)**: Google Cloud › APIs & Services › Credentials › Create credentials › API key; Application restrictions: none; API restrictions: Geocoding API and Places API (New). Put its value in `GOOGLE_MAPS_API_KEY` on the Vercel project `abonten` (new; Production, Preview, Development; Sensitive) and replace the value of `GOOGLE_MAPS_API_KEY` on `abonten-app-admin` (it exists, Production, and probably holds the original key). Delete `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` from `abonten-app-admin`: no admin page draws a map, so it only ships a key to admins' browsers for nothing.
 2. The Map ID: done on 2026-10-04 (above).
 3. Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` on `abonten` (all three environments) and the GitHub Actions secret of the same name to the **Abonten Web (browser)** key, then redeploy production.
 4. Check production: a map with pins on an event page, address suggestions on the home page, "Find on the map" in Admin, a public location page (`/explore/<town>`).
