@@ -163,7 +163,9 @@ export function usePlacesAutocomplete({
 
     if (!nextValue.trim()) {
       // Clearing the field should clear any previously selected location,
-      // not leave a stale selection lingering behind an empty input.
+      // not leave a stale selection lingering behind an empty input. An
+      // answer still on its way for the old text is dropped as stale.
+      latestRequestIdRef.current++;
       setSearchResults([]);
       address?.address("");
     }

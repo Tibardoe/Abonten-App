@@ -55,19 +55,24 @@ const MapPicker: React.FC<MapPickerProps> = ({
     });
   };
 
-  const handleMapInteraction = (lat: number, lng: number) => {
+  // The pin slides to a tapped point or the visitor's position. A dragged
+  // pin is already where it was dropped: sliding it again from where the
+  // drag started made it jump back first.
+  const handleMapInteraction = (lat: number, lng: number, slide = true) => {
     const newCoords = { lat, lng };
 
     if (mapRef.current) {
       mapRef.current.panTo(newCoords); // Smoothly pan the map to new location
     }
 
-    animateMarkerTo(
-      markerPosition,
-      newCoords,
-      500, // duration in ms
-      setMarkerPosition,
-    );
+    if (slide) {
+      animateMarkerTo(
+        markerPosition,
+        newCoords,
+        500, // duration in ms
+        setMarkerPosition,
+      );
+    }
 
     setMarkerPosition(newCoords);
     reverseGeocode(lat, lng);
@@ -126,7 +131,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
           position={markerPosition}
           title={t("moveThePinToYourPreferred")}
           draggable
-          onDragEnd={({ lat, lng }) => handleMapInteraction(lat, lng)}
+          onDragEnd={({ lat, lng }) => handleMapInteraction(lat, lng, false)}
         />
       </GoogleMap>
 
