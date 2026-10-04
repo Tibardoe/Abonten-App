@@ -22,6 +22,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - **What happened.** Update `f4d1a5bc` (production channel, 06:28:55 UTC) and `b347874b` (preview, 06:30:51) required `expo-localization`, whose native side is not in the 0.3.0 binaries built earlier that day (iOS 18 on TestFlight, Android preview `75046e9a`). The require sat in a try/catch, but Metro reports a module that fails to initialise as a fatal error before the catch runs, so the app closed on start. Found on the emulator; both channels were rolled back to the embedded app (`cf36c0aa` at 06:33:21, `c855d955` at 06:33:37). expo-updates' own error recovery returned a crashed install to its embedded app on the next launch (seen on the emulator: one more crash, then normal). Nobody outside the team has the app.
 - **Fix.** `deviceLocale()` asks `requireOptionalNativeModule("ExpoLocalization")` first, the pattern the app already used for optional modules. Checked in the old dev client (no module: no error, app starts) before republishing.
 - **Rule.** An update may only reach binaries that have every native module its JavaScript loads: check with `requireOptionalNativeModule`, never with try/catch around `require`, or bump the app version.
+- **Republished** after the fix as preview `f4064ca4` and production `70cccec8` (main `e4eae453`), first tested on the 0.3.0 Android release build without the module: it downloaded the update, ran it on the next two launches, no crash.
 
 ## 2026-10-04 — The app speaks the system's language choice; iOS permission prompts translated
 
