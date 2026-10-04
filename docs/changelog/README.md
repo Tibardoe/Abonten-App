@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — App version 0.3.0
+
+- Updated `deployment/mobile-eas.md`, `mobile/release-verification.md`.
+- `app.json` `version` 0.2.0 → 0.3.0. The runtime version follows it (policy `appVersion`), and installed 0.2.0 binaries lack native modules today's JavaScript uses (iOS build 17 has no `expo-blur` for the glass tab bar; the Android preview APKs of 2026-09-15 also lack the volume and gesture-exclusion modules and `expo-system-ui`), so an update published on 0.2.0 could have reached them. New production builds carry 0.3.0; updates go to them only.
+
 ## 2026-10-04 — The help centre in five languages (D5); links that freeze no more
 
 - Updated `architecture/internationalisation.md` (§9), `architecture/web-resilience.md` (§5, §7), `OPERATIONAL_DECISIONS_REQUIRED.md` (D5 decided), `development/documentation-validation.md` (help-translations rule), `documentation-coverage-matrix.md` (Spotlight, Weekly, Discovery rows).

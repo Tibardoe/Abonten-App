@@ -4,8 +4,8 @@ purpose: State exactly how far each mobile change on the documentation branch ha
 audience: Engineering, QA, founder
 scope: apps/mobile (Android; iOS has never been built) and the shared packages it bundles (@abonten/core brand constants, @abonten/i18n messages)
 status: Draft
-version: 1.1
-lastReviewed: 2026-09-15
+version: 1.2
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -31,8 +31,8 @@ complianceReviewRequired: no
 | Fact | Value |
 |---|---|
 | App | Abonten — Android package `com.abonten.app`; iOS bundle id declared but **iOS has never been built** |
-| App version | `0.2.0` (`expo.version`); EAS `appVersionSource: remote`, production builds `autoIncrement` |
-| Runtime version policy | `appVersion` → runtime version `0.2.0`; an EAS Update only reaches installs whose native build has runtime version `0.2.0` |
+| App version | `0.3.0` since 2026-10-04 (`expo.version`; `0.2.0` before); EAS `appVersionSource: remote`, production builds `autoIncrement` |
+| Runtime version policy | `appVersion` → runtime version `0.3.0`; an EAS Update only reaches installs whose native build has that runtime version. No update was ever published to the `production` channel on `0.2.0`, and none should be: later JavaScript needs native modules those builds lack |
 | Update channels | `development`, `preview`, `production` (one per EAS build profile) |
 | Updates library | `expo-updates` ~57.0.21 (Expo SDK 57) |
 | Current production build / update group | **None.** `eas build:list` (2026-09-12) shows only `preview` and `development` builds; **no production build has ever been made**, no EAS Update had ever been published on any channel before 2026-09-12, and the app is not in Google Play. An update on the `production` channel would therefore reach no install. |

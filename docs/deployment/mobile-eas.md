@@ -4,8 +4,8 @@ purpose: How the Android app is built, updated over the air and (eventually) sub
 audience: Engineers
 scope: apps/mobile, eas.json, EAS project @abonten-hub/abonten
 status: Approved
-version: 1.4
-lastReviewed: 2026-09-29
+version: 1.5
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -24,7 +24,7 @@ Detailed history and one-off setup: `../mobile/08-phase-6-release-prep.md`.
 | `preview` | internal | preview | Android **APK**; iOS simulator build (never produced) |
 | `production` | store | production | `autoIncrement` version |
 
-`appVersionSource: remote`; runtime version policy `appVersion` (`app.json` `version` 0.2.0) — a native change requires bumping the app version so updates target the right runtime.
+`appVersionSource: remote`; runtime version policy `appVersion` (`app.json` `version` 0.3.0 since 2026-10-04) — a native change requires bumping the app version so updates target the right runtime. 0.3.0 was cut because installed 0.2.0 binaries lack native modules today's JavaScript uses (iOS build 17 of 2026-09-27 has no `expo-blur` for the glass tab bar; the Android preview APKs of 2026-09-15 also lack the volume and gesture-exclusion modules and `expo-system-ui`): an update published on 0.2.0 would have reached them.
 
 ## Environment
 
