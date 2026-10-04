@@ -87,13 +87,16 @@ function reportAttachmentError(
   });
 }
 
+/** Who a reply answers: yourself, or someone (named when we know the name). */
+export type ReplySender = { self: boolean; name: string | null };
+
 function ReplyPreview({
   message,
-  senderName,
+  sender,
   onCancel,
 }: {
   message: MessageRow;
-  senderName: string;
+  sender: ReplySender | undefined;
   onCancel: () => void;
 }) {
   const t = useTranslations("messaging");
@@ -138,7 +141,11 @@ function ReplyPreview({
             numberOfLines={1}
             className="text-[13px] font-semibold leading-[16px] text-primary"
           >
-            {t("replyingTo2", { senderName: senderName })}
+            {sender?.self
+              ? t("replyingToYourself")
+              : sender?.name
+                ? t("replyingTo2", { senderName: sender.name })
+                : t("replyingToAMessage")}
           </AppText>
           <AppText
             variant="meta"
@@ -176,7 +183,7 @@ function ReplyPreview({
 export function Composer({
   conversationId,
   replyingTo,
-  replyingToName,
+  replyingToSender,
   onCancelReply,
   onSend,
   onTyping,
@@ -185,7 +192,7 @@ export function Composer({
 }: {
   conversationId: string;
   replyingTo: MessageRow | null;
-  replyingToName?: string;
+  replyingToSender?: ReplySender;
   onCancelReply: () => void;
   onSend: (draft: OutboxDraft) => void;
   onTyping: (isTyping: boolean) => void;
@@ -390,7 +397,7 @@ export function Composer({
       {replyingTo ? (
         <ReplyPreview
           message={replyingTo}
-          senderName={replyingToName ?? "message"}
+          sender={replyingToSender}
           onCancel={onCancelReply}
         />
       ) : null}

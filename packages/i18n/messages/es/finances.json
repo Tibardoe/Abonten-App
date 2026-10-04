@@ -101,7 +101,7 @@
     "pendingUntilTheEventSettles": "Pendiente hasta que se liquide el evento",
     "processed": "Procesado",
     "processing": "Procesando",
-    "successful": "Correcto"
+    "successful": "Completado"
   },
   "submitting": "Enviando…",
   "theFirstTimeOneOfYour": "La primera vez que uno de tus eventos vende a {uniqueBuyers} personas distintas, recibes {formatCredit}.",

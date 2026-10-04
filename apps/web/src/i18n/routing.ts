@@ -6,8 +6,9 @@ import { getPreferredLocale } from "./negotiateLocale";
 // Public URLs never carry a language ("/events/abc", not "/fr/events/abc"):
 // one address per page for sharing and search engines. Internally every
 // page is under app/[locale], so the proxy rewrites each page request to
-// "/<locale>/<path>". The locale comes from the preference cookie, else
-// from the browser's Accept-Language, else English.
+// "/<locale>/<path>". The locale comes from a link that names one
+// ("?hl=fr"), else the preference cookie, else the browser's
+// Accept-Language, else English.
 
 // Requests that are not pages and must reach their own route untouched.
 const PASSTHROUGH_PREFIXES = [
@@ -32,10 +33,21 @@ export function isLocalizedPath(pathname: string): boolean {
   return !STATIC_FILE.test(pathname);
 }
 
+/**
+ * The query parameter a link uses to name its language. The app opens help
+ * and the policies with it, so they match the app's language rather than
+ * the phone's (the in-app browser sends the phone's Accept-Language and
+ * keeps its own cookies).
+ */
+export const LOCALE_QUERY_PARAM = "hl";
+
 export function resolveRequestLocale(request: {
   cookies: { get(name: string): { value: string } | undefined };
   headers: { get(name: string): string | null };
+  nextUrl?: { searchParams: URLSearchParams };
 }): Locale {
+  const fromLink = request.nextUrl?.searchParams.get(LOCALE_QUERY_PARAM);
+  if (isLocale(fromLink)) return fromLink;
   const fromCookie = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
   if (isLocale(fromCookie)) return fromCookie;
   return getPreferredLocale(request.headers.get("accept-language"));

@@ -2,9 +2,9 @@
 title: Languages - how Abonten is translated
 purpose: Explain how every word, number, date and amount reaches a person in the language they chose, on the website, in the app, in emails and in notifications, and which checks keep it that way.
 audience: Engineering, anyone adding a screen, a message or a language
-scope: The shared catalogs (packages/i18n), how the web app, the native app and the server pick a language and word their text, number and date formatting, the checks in `npm run check:i18n`, and the known limits. Not covered - the content of the legal pages and the help centre (English Markdown, see §9), and the admin console (English only).
+scope: The shared catalogs (packages/i18n), how the web app, the native app and the server pick a language and word their text, number and date formatting, the checks in `npm run check:i18n`, and the known limits. Also the help centre's translated pages and the English-only legal pages (§9). Not covered - the admin console (English only).
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -140,7 +140,9 @@ When the English of a message changes on purpose, re-check its translations and 
   - **Shape**: every message has the sentences, questions and length its English has, except where the language is naturally shorter.
   - **Fixed then**: three account error messages that still translated an older, technical English in all four languages; Brazilian forms in the European Portuguese ("Salvar", "Cadastrar-se", "Meus ingressos", "usuário", direct "você"); and 59 API messages that were developer text in every language, English included, now plain sentences that keep the field name.
   - A native reader is still the step that catches wrong tone and unidiomatic phrasing; the review hand-off in §8 is how to commission one.
-- **The legal pages and the help centre are English** (`apps/web/src/content`). The legal documents are drafts awaiting counsel; translating them is a decision for the owner (`OPERATIONAL_DECISIONS_REQUIRED.md`, D5).
+- **The help centre is in English, French, Spanish, German and Portuguese; the legal pages are English** (`OPERATIONAL_DECISIONS_REQUIRED.md`, D5). A help page's translation sits beside it as `<slug>.<locale>.md` and is served at the English page's address in that language (`apps/web/src/utils/publicContent.ts`); a page with no translation, and every page in Twi, is the English page under a notice, inside an element marked `lang="en"` for screen readers. The legal pages stay English until counsel approves a text and its translation; in another language they say so, and their status and dates are worded and formatted in the reader's language. `npm run check:docs` refuses a translation with no English page, a different `order` or different site links, and warns when the English page changed after it (`help-translations`); it also refuses a translated legal file. When an English help page changes, change its four translations in the same commit.
+- **A deleted account is named, not quoted.** The database scrubs a deleted profile to the English data "Deleted user" and the username `deleted_` + 12 hex digits; screens recognise the username (`isDeletedAccount` / `personName` in `@abonten/core/personName`) and say `core:member.former`. Use `personName` wherever another person's name is shown.
+- **A link can name its language.** `?hl=fr` on any page address wins over the cookie and the browser and is remembered as the visitor's choice (`apps/web/src/i18n/routing.ts`, the proxy). The app opens our own pages this way (`inAppLanguage` in `apps/mobile/src/lib/legalLinks.ts`), because the in-app browser sends the phone's language and keeps its own cookies.
 - **The admin console is English only**, by design.
 - **Search** reads accents, date words and everyday words in the five complete languages; that is its own document, [search-languages.md](search-languages.md). Its other-language words were not read by a native speaker either (D3), and Twi has none.
 - **Content people write** (an event's description, a review) is shown as written.

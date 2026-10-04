@@ -2,7 +2,7 @@
 title: Getting started and signing in
 summary: Create your account with Google, your phone number or your email, and find your way around the website and the app.
 order: 1
-lastUpdated: 2026-09-23
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -45,13 +45,13 @@ If a friend gave you an invite link or code, open the link before you sign up (o
 
 **App**
 
-- Five tabs: **Home** (what's on near you), **Search**, **Tickets**, **Messages**, **Account**.
+- Tabs: **Home** (what's on near you), **Search**, **Spotlight** (short videos), **Messages** and **Account**. Your tickets are under **Account › My Tickets**.
 - The **drawer** (swipe from the left edge or tap the menu button) repeats the main destinations and has the legal links.
-- **Account** holds Settings, Notifications, Transactions, Wallet, Places, Rewards (when available), Organizer tools (once you have created something), and *Help & support*.
+- **Account** holds My Tickets, Settings, Notifications, Transactions, Wallet, Places, Rewards (when available), Organizer tools (once you have created something), and *Help & support*.
 
 ## Language and appearance
 
-Settings › Language offers English, French, Spanish, German, Portuguese and Akan. Settings › Switch appearance chooses light, dark or system. Both are remembered on the device you set them on.
+Settings › Language offers English, French, Spanish, German, Portuguese and Twi (Twi is partly translated; what is not translated yet shows in English). The help centre is available in the same languages except Twi. Settings › Switch appearance chooses light, dark or system. Both are remembered on the device you set them on, and your language is also used for the emails and notifications we send you.
 
 ## Signing out
 

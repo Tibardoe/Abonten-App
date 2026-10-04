@@ -114,7 +114,7 @@
   "weCouldnTRemoveThatPayout": "Wir konnten dieses Auszahlungskonto nicht entfernen. Bitte versuche es erneut.",
   "weCouldnTUpdateYourDefault": "Wir konnten dein Standard-Auszahlungskonto nicht aktualisieren.",
   "weVeReceivedYourWithdrawalRequest": "Wir haben deine Auszahlungsanfrage erhalten. Referenz:",
-  "withdraw": "Zurückziehen",
+  "withdraw": "Auszahlen",
   "withdraw2": "{formatMoney} auszahlen",
   "withdrawFunds": "Geld auszahlen",
   "withdrawalRequested": "Auszahlung angefordert",

@@ -236,5 +236,7 @@
   "yourImageCouldnTBeUploaded": "Dein Bild konnte nicht hochgeladen werden.",
   "yourMessages": "deine Nachrichten",
   "deleteMessageTitle": "Diese Nachricht löschen?",
-  "deleteMessageBody": "Das kann nicht rückgängig gemacht werden."
+  "deleteMessageBody": "Das kann nicht rückgängig gemacht werden.",
+  "replyingToYourself": "Antwort an dich selbst",
+  "replyingToAMessage": "Antwort auf eine Nachricht"
 }

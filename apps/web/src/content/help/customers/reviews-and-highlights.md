@@ -2,7 +2,7 @@
 title: Reviews and highlights
 summary: Who can review an event or place, reading and filtering reviews, Helpful votes, sharing, reporting and blocking, how organizers reply, and how highlights work.
 order: 8
-lastUpdated: 2026-09-23
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,7 +18,7 @@ You can review an event when **all** of these are true:
 - you hold a ticket that was **checked in** at the event;
 - you have not already reviewed it.
 
-Events waiting for your review appear under **My Tickets › To review** (web) or in the Tickets tab (app). A review has a star rating, an optional title (up to 150 characters), a comment (up to 500 characters) and optional photos. You can edit or delete your own review later.
+Events waiting for your review appear under **My Tickets › To review** (Manage › My Tickets on the web, Account › My Tickets in the app). A review has a star rating, an optional title (up to 150 characters), a comment (up to 500 characters) and optional photos. You can edit or delete your own review later.
 
 ## Reviewing a place
 

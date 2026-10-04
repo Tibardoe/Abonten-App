@@ -8,6 +8,7 @@ import { useRequireSignIn } from "@/features/content/contentLinks";
 import { hapticLight } from "@/lib/haptics";
 import type { CachedComment } from "@abonten/core/content/commentCache";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
+import { isDeletedAccount } from "@abonten/core/personName";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { memo, useState } from "react";
@@ -38,6 +39,7 @@ export const CommentRow = memo(function CommentRow({
   isReply?: boolean;
 }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const requireSignIn = useRequireSignIn();
   const toggleLike = useToggleCommentLike(requireSignIn);
@@ -50,8 +52,9 @@ export const CommentRow = memo(function CommentRow({
 
   const sending = comment.localState === "sending";
   const failed = comment.localState === "failed";
-  const name =
-    comment.author.username ?? comment.author.fullName ?? t("someone");
+  const name = isDeletedAccount(comment.author.username)
+    ? tc("member.former")
+    : (comment.author.username ?? comment.author.fullName ?? t("someone"));
 
   return (
     <View className={isReply ? "ml-11" : undefined}>

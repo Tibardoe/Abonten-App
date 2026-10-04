@@ -45,6 +45,7 @@ import { hapticSelection } from "@/lib/haptics";
 import { useQueryView } from "@/lib/useQueryView";
 import { isUuid } from "@/lib/uuid";
 import type { MessageRow } from "@abonten/api-client";
+import { personName } from "@abonten/core/personName";
 import {
   MESSAGE_EDIT_WINDOW_MINUTES,
   MESSAGE_MAX_LENGTH,
@@ -77,6 +78,7 @@ function canEdit(m: MessageRow, myId: string | undefined): boolean {
 
 export default function ConversationScreen() {
   const t = useTranslations("messaging");
+  const tc = useTranslations("core");
 
   const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
   const valid = isUuid(conversationId);
@@ -162,15 +164,16 @@ export default function ConversationScreen() {
     (p) => p.user_id !== myId,
   )?.user_id;
 
-  // "Replying to X" label for the composer preview (spec §10–11).
-  const replyingToName = useMemo(() => {
+  // Who the composer preview says is being replied to (spec §10–11). The
+  // words are the preview's own messages: this is who, not how it reads.
+  const replyingToSender = useMemo(() => {
     if (!replyingTo) return undefined;
-    if (replyingTo.sender_id === myId) return "yourself";
+    if (replyingTo.sender_id === myId) return { self: true, name: null };
     const p = context?.participants.find(
       (x) => x.user_id === replyingTo.sender_id,
     );
-    return p?.profile?.full_name || p?.profile?.username || "them";
-  }, [replyingTo, myId, context]);
+    return { self: false, name: personName(tc, p?.profile) };
+  }, [replyingTo, myId, context, tc]);
   const iBlockedThem =
     !!otherUserId && (context?.blocked_user_ids ?? []).includes(otherUserId);
   const closed = context?.status === "closed";
@@ -557,7 +560,7 @@ export default function ConversationScreen() {
         <Composer
           conversationId={conversationId}
           replyingTo={replyingTo}
-          replyingToName={replyingToName}
+          replyingToSender={replyingToSender}
           onCancelReply={() => setReplyingTo(null)}
           onSend={handleSend}
           onTyping={sendTyping}

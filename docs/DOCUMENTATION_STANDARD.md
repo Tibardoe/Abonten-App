@@ -4,8 +4,8 @@ purpose: Define the metadata, structure, language and review rules every Abonten
 audience: Anyone writing or reviewing documentation
 scope: All files under docs/ and apps/web/src/content
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -34,7 +34,7 @@ complianceReviewRequired: yes | no
 ---
 ```
 
-Legal documents add `effectiveDate` and `summary`. Help-centre pages use the shorter public block (`title`, `summary`, `order`, `lastUpdated`, `status`, `owner`) because their metadata is rendered on the site.
+Legal documents add `effectiveDate` and `summary`. Help-centre pages use the shorter public block (`title`, `summary`, `order`, `lastUpdated`, `status`, `owner`) because their metadata is rendered on the site. A help page's translation (`<slug>.fr.md`, `.es.md`, `.de.md`, `.pt.md`) carries the same block with the title and summary translated and the same `order`; it changes in the same commit as its English page. Legal documents are not translated until counsel approves them (`OPERATIONAL_DECISIONS_REQUIRED.md`, D5).
 
 ## 2. Required sections
 

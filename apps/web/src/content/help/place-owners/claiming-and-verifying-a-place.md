@@ -2,7 +2,7 @@
 title: Claiming and verifying a place
 summary: Take control of a listing for a business you own, then ask Abonten to verify it — what to send, how review works, and what "verified" means.
 order: 1
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -34,6 +34,8 @@ If the place is **not** on Abonten yet, do not claim. [Add it yourself](/help/pl
 ## Verifying your place
 
 Verification is optional and free. Your listing works either way.
+
+> **Availability.** Verification is being introduced in stages and is not open to every account yet. If you do not see the verification option described below, it is not available to you at the moment; your listings work exactly the same without it.
 
 1. Open **Manage › Places**, pick the place, and go to the **Verification** tab. In the app it is **Account › Places › your place › Verification**.
 2. Read what the badge means and what you can send.

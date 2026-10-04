@@ -4,8 +4,8 @@ purpose: What `npm run check:docs` verifies, how to run it, and how to fix each 
 audience: Engineers, documentation maintainers
 scope: scripts/check-docs.mjs; docs/**, apps/web/src/content/**, footers and mobile link constants
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-12
+version: 1.2
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -36,7 +36,8 @@ npm run check:docs -- --external  # also probe external links (network)
 | **Terminology** | `venue owner` (outside "venue rebate"), `wallet credit`, `Abonten Credits` (plural), `Twitter` used as the current brand in UI copy | Use the standard term |
 | **Contacts** | `packages/core/src/brand/contacts.ts` lacks one of the three official addresses (support@, privacy@, security@abontenhub.com); a legal page fails to quote the address it must carry (Terms: all three; Privacy: privacy and support; Security: security); any other `@abontenhub.com` address (except the outbound-only senders `tickets@`, `rewards@`, `no-reply@`), or a personal mailbox (gmail, yahoo, outlook…), appears in docs or public content | Use the constants; publish only the official channels |
 | **Security-txt** | `apps/web/public/.well-known/security.txt` is missing; its `Contact` is not `mailto:security@abontenhub.com`; `Expires` is not an ISO 8601 date-time or has passed (warning when within 30 days); `Policy` does not point at the public Security page, or its `#anchor` matches no heading there | Renew the date, fix the field, or restore the heading |
-| **Coverage** | An internal document (outside the historical exemptions) is linked from neither `docs/INDEX.md` nor its folder `README.md`; or a public legal or help page is not referenced from `docs/documentation-coverage-matrix.md` | Add the link — every document must be reachable from the hub, and every public page must have a row in the coverage matrix |
+| **Coverage** | An internal document (outside the historical exemptions) is linked from neither `docs/INDEX.md` nor its folder `README.md`; or a public legal or help page is not referenced from `docs/documentation-coverage-matrix.md` (a help translation is covered by its English page) | Add the link — every document must be reachable from the hub, and every public page must have a row in the coverage matrix |
+| **Help translations** | A help translation (`<slug>.<locale>.md`) is in a language the help centre does not have (fr, es, de, pt), has no English page beside it, has a different `order`, or links to a different set of `/help/…` and `/legal/…` pages than its English page; any translated legal file (warning: the English page was updated after the translation) | Translate the change, or add the missing page |
 | **Legal placeholders** | A public legal document whose `status` is Published or Approved still contains a `[… — TO BE CONFIRMED]` placeholder, or lacks a real `effectiveDate` (`YYYY-MM-DD`) | Fill the placeholder from the founder's confirmed details (register §H) or keep the document at Review required |
 
 Warnings (do not fail): documents still `Draft` or `Review required`, `POLICY DECISION REQUIRED` occurrences (counted so the registers can be reconciled), the number of `TO BE CONFIRMED` placeholders in the legal documents, external links skipped without `--external`.

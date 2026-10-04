@@ -19,7 +19,7 @@ Attendee names and contact details are shared with you **only to run this event*
 
 **From the list (web and app):** find the attendee and tap **Check in**. Their ticket becomes *used*. Tap again to undo if you made a mistake.
 
-**By scanning (app only):** on the attendee screen choose **Scan**. Allow camera access the first time. Point the camera at the attendee's QR code; the app reads the ticket code and checks them in, showing a clear success or error message. You can also type or paste a `TKT-` code.
+**By scanning (app only):** on the attendee screen choose **Scan tickets**. Allow camera access the first time. Point the camera at the attendee's QR code; the app reads the ticket code and checks them in, showing a clear success or error message. You can also type or paste a `TKT-` code.
 
 ## What the scanner tells you
 

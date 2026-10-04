@@ -9,6 +9,7 @@ import {
 import type { PublicProfile } from "@/features/profile/usePublicProfile";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatCompactCount } from "@abonten/core/i18n/format";
+import { isDeletedAccount } from "@abonten/core/personName";
 import { AppText, Avatar, Button } from "@abonten/ui-native";
 import { getCurrentLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
@@ -57,6 +58,7 @@ export function ProfileHeader({
   isOwn: boolean;
 }) {
   const t = useTranslations("profile");
+  const tc = useTranslations("core");
 
   const router = useRouter();
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -87,7 +89,9 @@ export function ProfileHeader({
         <View className="flex-1 gap-2">
           <View className="flex-row items-center gap-1.5">
             <AppText variant="bodyStrong" numberOfLines={1} className="shrink">
-              {profile.full_name ?? `@${profile.username}`}
+              {isDeletedAccount(profile.username)
+                ? tc("member.former")
+                : (profile.full_name ?? `@${profile.username}`)}
             </AppText>
             {showsOrganizerBadge(profile) ? (
               <VerifiedPill subjectType="organizer" />

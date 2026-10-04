@@ -236,5 +236,7 @@
   "yourImageCouldnTBeUploaded": "Não foi possível carregar a sua imagem.",
   "yourMessages": "as suas mensagens",
   "deleteMessageTitle": "Eliminar esta mensagem?",
-  "deleteMessageBody": "Esta ação não pode ser anulada."
+  "deleteMessageBody": "Esta ação não pode ser anulada.",
+  "replyingToYourself": "A responder a si próprio",
+  "replyingToAMessage": "A responder a uma mensagem"
 }

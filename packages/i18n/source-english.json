@@ -3410,7 +3410,12 @@
     "helpCentre3": "68fb4ae1",
     "howToFindEventsAndPlaces": "66fe2609",
     "lastUpdated": "89e4f82e",
-    "stepByStepGuidesForCustomers": "148b00cd"
+    "stepByStepGuidesForCustomers": "148b00cd",
+    "sectionCustomers": "e1b131d4",
+    "sectionOrganizers": "805c7ecc",
+    "sectionPlaceOwners": "672ae87e",
+    "sectionAccount": "354f9be6",
+    "notTranslatedYet": "29bb232a"
   },
   "landing": {
     "abonten": "acfdb324",
@@ -3433,7 +3438,15 @@
     "sections": "7ff5a6da",
     "status": "fa6cc0be",
     "theDocumentsThatGovernYourUse": "afb4ce40",
-    "version": "7a4a5b08"
+    "version": "7a4a5b08",
+    "englishOnly": "07c350f4",
+    "statusDraft": "23d33e22",
+    "statusReviewRequired": "c77ff1ad",
+    "statusApproved": "41b81eb8",
+    "statusPublished": "483bf207",
+    "statusDeprecated": "ab014c32",
+    "notInForce": "78665af3",
+    "notInForce2": "8c108b1b"
   },
   "manage": {
     "abontenFees": "3f2b4f0d",
@@ -4251,7 +4264,9 @@
     "yourImageCouldnTBeUploaded": "77239766",
     "yourMessages": "73e211b7",
     "deleteMessageTitle": "e0a26141",
-    "deleteMessageBody": "fe63a123"
+    "deleteMessageBody": "fe63a123",
+    "replyingToYourself": "c1c1b09d",
+    "replyingToAMessage": "e5101da5"
   },
   "metadata": {
     "siteTitle": "95ad407c",
@@ -7444,6 +7459,7 @@
     "thatReasonDoesnTApplyTo": "0670796e",
     "theEndDateCanTBe": "8457065b",
     "theEventHasToEndAfter": "885556a4",
+    "thisUsernameIsnTAvailable": "2f1dea92",
     "uploadAPhotoJpegPngWebp": "e32224ce",
     "useA2LetterCountryCode": "2ff79032",
     "useA3LetterCurrencyCode": "0c4298bd",
@@ -7451,7 +7467,7 @@
     "useHhMm": "aff71a71",
     "useTheInternationalFormatEG": "4dbe3690",
     "useYyyyMmDd": "8a01ad6d",
-    "usernameCanOnlyContainLettersNumbers": "b8c5ace4",
+    "usernameCanOnlyContainLettersNumbers": "41457ae6",
     "usernameMustBe30CharactersOr": "bf25eb47",
     "usernameMustBeAtLeast3": "eb79f6d3",
     "writeAReplyFirst": "2fe86de8",

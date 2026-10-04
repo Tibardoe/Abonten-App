@@ -2,6 +2,7 @@ import { hapticMedium } from "@/lib/haptics";
 import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { conversationPreviewText } from "@abonten/core/messagingInboxCache";
+import { isDeletedAccount } from "@abonten/core/personName";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
 import {
@@ -65,7 +66,9 @@ const CONTEXT_ICON: Record<ConversationType, IoniconName> = {
 
 function identityFor(item: ConversationListItem): string {
   return (
-    item.other_display_name ||
+    (isDeletedAccount(item.other_username)
+      ? translatorFor("core")("member.former")
+      : item.other_display_name) ||
     item.subject_title ||
     item.title ||
     translatorFor("messaging")("conversation")

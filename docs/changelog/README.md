@@ -16,6 +16,18 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — The help centre in five languages (D5); links that freeze no more
+
+- Updated `architecture/internationalisation.md` (§9), `architecture/web-resilience.md` (§5, §7), `OPERATIONAL_DECISIONS_REQUIRED.md` (D5 decided), `development/documentation-validation.md` (help-translations rule), `documentation-coverage-matrix.md` (Spotlight, Weekly, Discovery rows).
+- **Help centre.** All 29 pages in French, Spanish, German and Portuguese, a new page on Spotlight, Stories and following, and eleven English pages brought up to date (tabs, search, reminders, alerts and picks, web push, blocking, account setup, Weekly, archived events). Corrected: once a ticket is confirmed an event's dates, venue, capacity and ticket types are locked, so moving it means cancelling and creating a new one (the pages said dates could be edited); the app's tickets are under Account › My Tickets.
+- **Legal pages** say in other languages that they are English until approved, with the status and dates in the reader's language ("Not in force yet" instead of the raw front matter).
+- **`?hl=`** names a page's language in a link; the app opens help and the policies in its own language.
+- **Fixed: a link clicked while the page was loading did nothing, and the header's request repeated every half second.** The shell bootstrap Server Action was sent during render; it is sent from a layout effect now. Verified on production before the fix (17–19 requests in 9 s on Explore in two loads of three; a footer link clicked after load never opened) and locally after it (one request; the click navigates even with the request held 6 s). The progress bar's listener no longer waits for a Suspense boundary.
+- Catalog fixes: Spanish "Completado" for a successful payment (was "Correcto"); German "Auszahlen" and Portuguese "Levantar" for withdrawing earnings (were "Zurückziehen" and "Retirar").
+- **A deleted account** shows as "Former Abonten member" in the reader's language in the inbox, the chat header, Spotlight comments, attendee lists and its profile (`@abonten/core/personName`); before, the stored English "Deleted user" and the scrubbed username showed. Nobody may choose a `deleted_…` username now.
+- **Usernames** are checked against what the database accepts (letters, numbers, underscores): "john.doe" passed the form and was then refused by the database.
+- **The app's reply preview** said "Replying to yourself" / "them" in English in every language; it is worded by messages now.
+
 ## 2026-10-04 — Translations reviewed by machine (D3)
 
 - Updated `architecture/internationalisation.md` (§8 the review hand-off, §9 what was checked), `OPERATIONAL_DECISIONS_REQUIRED.md` (D3 decided; S7 decided: the repository stays public until Actions billing exists, after a clean full-history secret scan).

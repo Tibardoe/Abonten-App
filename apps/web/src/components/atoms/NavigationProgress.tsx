@@ -6,7 +6,7 @@ import {
   leavesCurrentPage,
 } from "@/lib/navigationSignal";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 // The thin bar at the top of the window while a page is on its way.
 //
@@ -26,20 +26,35 @@ const FADE_MS = 300;
 
 type Phase = "idle" | "running" | "done";
 
-function Bar() {
-  const pathname = usePathname();
-  const search = useSearchParams().toString();
+// The address the page is showing. Reading the query string needs a
+// Suspense boundary on a prerendered page, and what is inside one starts
+// after the rest of the page: so only this watcher is inside it, and the
+// bar's listener is ready as soon as the shell is (a link clicked right
+// after the page loaded used to get no bar).
+function AddressWatcher({ onChange }: { onChange: () => void }) {
+  const address = `${usePathname()}?${useSearchParams().toString()}`;
+  const shown = useRef(address);
+  useEffect(() => {
+    if (shown.current === address) return;
+    shown.current = address;
+    onChange();
+  }, [address, onChange]);
+  return null;
+}
+
+export default function NavigationProgress() {
   const [phase, setPhase] = useState<Phase>("idle");
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const giveUpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const clearTimers = useCallback(() => {
+    if (showTimer.current) clearTimeout(showTimer.current);
+    if (giveUpTimer.current) clearTimeout(giveUpTimer.current);
+    showTimer.current = null;
+    giveUpTimer.current = null;
+  }, []);
+
   useEffect(() => {
-    const clearTimers = () => {
-      if (showTimer.current) clearTimeout(showTimer.current);
-      if (giveUpTimer.current) clearTimeout(giveUpTimer.current);
-      showTimer.current = null;
-      giveUpTimer.current = null;
-    };
     const onStart = (event: Event) => {
       const { url } = (event as CustomEvent<NavigationStartDetail>).detail;
       if (!leavesCurrentPage(url, window.location.href)) return;
@@ -55,17 +70,13 @@ function Bar() {
       window.removeEventListener(NAVIGATION_START_EVENT, onStart);
       clearTimers();
     };
-  }, []);
+  }, [clearTimers]);
 
   // The address changed: the new page is on screen.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the address is the signal, not an input
-  useEffect(() => {
-    if (showTimer.current) clearTimeout(showTimer.current);
-    if (giveUpTimer.current) clearTimeout(giveUpTimer.current);
-    showTimer.current = null;
-    giveUpTimer.current = null;
+  const arrived = useCallback(() => {
+    clearTimers();
     setPhase((current) => (current === "running" ? "done" : "idle"));
-  }, [pathname, search]);
+  }, [clearTimers]);
 
   useEffect(() => {
     if (phase !== "done") return;
@@ -73,30 +84,25 @@ function Bar() {
     return () => clearTimeout(timer);
   }, [phase]);
 
-  if (phase === "idle") return null;
-
   return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-0.5"
-    >
-      <div
-        className={
-          phase === "running"
-            ? "navigation-progress-running h-full origin-left bg-primary"
-            : "navigation-progress-done h-full origin-left bg-primary"
-        }
-      />
-    </div>
-  );
-}
-
-export default function NavigationProgress() {
-  // useSearchParams() needs a boundary on a prerendered page; the bar has
-  // nothing to show before the browser takes over anyway.
-  return (
-    <Suspense fallback={null}>
-      <Bar />
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <AddressWatcher onChange={arrived} />
+      </Suspense>
+      {phase === "idle" ? null : (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-0.5"
+        >
+          <div
+            className={
+              phase === "running"
+                ? "navigation-progress-running h-full origin-left bg-primary"
+                : "navigation-progress-done h-full origin-left bg-primary"
+            }
+          />
+        </div>
+      )}
+    </>
   );
 }

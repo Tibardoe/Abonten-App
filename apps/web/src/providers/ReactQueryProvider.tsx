@@ -12,7 +12,7 @@ import {
 } from "@/utils/actionUnreachable";
 import { FailedReadError } from "@abonten/core/envelopeFailure";
 import { MutationCache, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 // A JWT that expired or was revoked elsewhere, and a missing resource, will
 // never succeed on a retry — retrying them only makes the user wait through
@@ -97,13 +97,24 @@ export default function ReactQueryProvider({
         },
       },
     });
-    // The header's questions about the visitor go out as one request, and
-    // first: asked here, while rendering, it is ahead of every action a
-    // page's own queries send from their effects (a browser runs Server
-    // Actions in the order they were sent). See hooks/shellBootstrap.ts.
-    primeShellBootstrap(client);
     return client;
   });
+
+  // The header's questions about the visitor go out as one request, and
+  // first: a layout effect runs before every passive effect of the commit,
+  // so this is ahead of every action a page's own queries send from theirs
+  // (a browser runs Server Actions in the order they were sent). See
+  // hooks/shellBootstrap.ts.
+  //
+  // Never while rendering: a Server Action updates the router's state, and
+  // one sent from a render that React then threw away and retried (a
+  // hydration that suspended) was sent again on every retry — production
+  // sent it every half second, for as long as the page was open — and left
+  // the router waiting on an answer it never applied, so a link clicked
+  // meanwhile did nothing, then or later (2026-10-04).
+  useLayoutEffect(() => {
+    primeShellBootstrap(queryClient);
+  }, [queryClient]);
 
   // Keeps every "who's signed in"-derived query (useCurrentUser and
   // everything layered on top of it) reactive instead of relying purely on

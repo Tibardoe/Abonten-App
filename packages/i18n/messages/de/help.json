@@ -5,5 +5,10 @@
   "helpCentre3": "{title} — Hilfe-Center",
   "howToFindEventsAndPlaces": "So findest du Events und Orte, kaufst und nutzt Tickets, veranstaltest Events, verwaltest einen Ort und kümmerst dich um dein Abonten-Konto.",
   "lastUpdated": "Zuletzt aktualisiert: {lastUpdated}",
-  "stepByStepGuidesForCustomers": "Schritt-für-Schritt-Anleitungen für Kunden, Veranstalter und Ortsinhaber, im Web und in der Abonten-App."
+  "stepByStepGuidesForCustomers": "Schritt-für-Schritt-Anleitungen für Kunden, Veranstalter und Ortsinhaber, im Web und in der Abonten-App.",
+  "sectionCustomers": "Für Kunden",
+  "sectionOrganizers": "Für Veranstalter",
+  "sectionPlaceOwners": "Für Inhaber von Orten",
+  "sectionAccount": "Konto, Datenschutz und Sicherheit",
+  "notTranslatedYet": "Diese Seite gibt es noch nicht in deiner Sprache, daher wird sie auf Englisch angezeigt."
 }

@@ -236,5 +236,7 @@
   "yourImageCouldnTBeUploaded": "No se pudo subir tu imagen.",
   "yourMessages": "tus mensajes",
   "deleteMessageTitle": "¿Eliminar este mensaje?",
-  "deleteMessageBody": "Esta acción no se puede deshacer."
+  "deleteMessageBody": "Esta acción no se puede deshacer.",
+  "replyingToYourself": "Respondiéndote a ti mismo",
+  "replyingToAMessage": "Respondiendo a un mensaje"
 }

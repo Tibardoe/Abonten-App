@@ -2,7 +2,7 @@
 title: Your tickets — QR codes, check-in and receipts
 summary: Where to find your tickets, how the QR code is used at the door, and how to download or share a ticket.
 order: 5
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -12,7 +12,7 @@ owner: Abonten Hub
 ## Where they are
 
 - **Web:** Manage › **My Tickets**, with *Active*, *Past*, *Cancelled* and *Refunds* tabs and a *To review / Reviewed* view for events you attended.
-- **App:** the **Tickets** tab.
+- **App:** Account › **My Tickets**, with the same tabs.
 
 Each ticket shows the event, date, ticket type, a unique ticket code (starting `TKT-`) and a QR code.
 

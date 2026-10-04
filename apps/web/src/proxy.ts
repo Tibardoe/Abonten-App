@@ -11,8 +11,13 @@ import {
 } from "@abonten/services/rewards/referralCookie";
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "./config/supabase/middleware";
-import { LOCALE_COOKIE_MAX_AGE, LOCALE_COOKIE_NAME } from "./i18n/config";
 import {
+  LOCALE_COOKIE_MAX_AGE,
+  LOCALE_COOKIE_NAME,
+  isLocale,
+} from "./i18n/config";
+import {
+  LOCALE_QUERY_PARAM,
   isLocalizedPath,
   localizedPathname,
   resolveRequestLocale,
@@ -30,8 +35,9 @@ const CONTENT_SECURITY_POLICY = buildWebCsp({
 export async function proxy(request: NextRequest) {
   const session = await updateSession(request);
 
-  // The visitor's language, decided once per request: the preference
-  // cookie, else the browser's Accept-Language, else English. Every page
+  // The visitor's language, decided once per request: a link that names
+  // one (?hl=fr), else the preference cookie, else the browser's
+  // Accept-Language, else English. Every page
   // lives under app/[locale], so a page request is rewritten to its
   // language's route ("/plans" → "/fr/plans") while the address bar keeps
   // the public URL. Redirects (sign-in bounce, restricted account) and the
@@ -83,9 +89,14 @@ export async function proxy(request: NextRequest) {
   // explicit choice the user already made via Language Settings. The
   // value is the language this very response was rendered in, so the
   // next request (and every Server Action) agrees with it.
+  // A link that names a language is an explicit choice as well (the app
+  // opens help and the policies that way), so it replaces the stored one.
   const storedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
+  const linkNamedLocale = isLocale(
+    request.nextUrl.searchParams.get(LOCALE_QUERY_PARAM),
+  );
 
-  if (!storedLocale) {
+  if (!storedLocale || (linkNamedLocale && storedLocale !== locale)) {
     response.cookies.set(LOCALE_COOKIE_NAME, locale, {
       path: "/",
       httpOnly: false,
