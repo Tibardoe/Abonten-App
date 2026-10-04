@@ -272,8 +272,6 @@
   "failedToDeleteHighlight": "Impossible de supprimer le temps fort.",
   "failedToDeleteSlide": "Impossible de supprimer la diapositive.",
   "failedToFetchPlaceDetails": "Impossible de récupérer les détails du lieu.",
-  "failedToFetchPlaceDetails2": "Impossible de récupérer les détails du lieu",
-  "failedToGetPlaceDetails": "Impossible d'obtenir les détails du lieu.",
   "failedToLoadTicketsPleaseTry": "Impossible de charger les billets. Veuillez réessayer.",
   "failedToRemoveCheckout": "Impossible de retirer la commande.",
   "failedToRemoveCheckoutPleaseTry": "Impossible de retirer la commande. Veuillez réessayer.",
@@ -905,5 +903,6 @@
     "tiktok": "Abonten sur TikTok"
   },
   "featured": "À la une",
-  "paidPlacement": "Emplacement payant"
+  "paidPlacement": "Emplacement payant",
+  "changeLocationNow": "Changer de lieu (actuellement {location})"
 }

@@ -1,6 +1,9 @@
 "use client";
 
-import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
+import {
+  type PlaceSuggestion,
+  usePlacesAutocomplete,
+} from "@/hooks/usePlacesAutocomplete";
 import { logger } from "@abonten/core/logger";
 import { parseRawCoordinates } from "@abonten/core/parseRawCoordinates";
 import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddressType";
@@ -55,10 +58,9 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
       loadError,
       inputValue,
       searchResults,
-      countries,
       containerRef,
-      autocompleteServiceRef,
-      sessionTokenRef,
+      placesReady,
+      fetchSuggestions,
       handleInputChange,
       handleSelectPrediction,
       handleSelectCurrentLocation,
@@ -79,8 +81,8 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
           const text = inputValue.trim();
           if (!text) return { status: "empty" };
 
-          // Raw "lat,lng" coordinates aren't something the Autocomplete
-          // predictions API is built to handle -- resolve them directly via
+          // Raw "lat,lng" coordinates aren't something Autocomplete is
+          // built to handle -- resolve them directly via
           // reverse geocoding instead (same path "use my current location"
           // uses).
           const coords = parseRawCoordinates(text);
@@ -96,39 +98,15 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
             }
           }
 
-          if (!autocompleteServiceRef.current || !sessionTokenRef.current) {
+          if (!placesReady) {
             return { status: "error" };
           }
 
-          const request: google.maps.places.AutocompleteRequest = {
-            input: text,
-            sessionToken: sessionTokenRef.current,
-            ...(countries.length > 0 && {
-              componentRestrictions: { country: countries },
-            }),
-          };
-
-          let predictions: google.maps.places.AutocompletePrediction[];
+          let predictions: PlaceSuggestion[];
           try {
-            predictions = await new Promise<
-              google.maps.places.AutocompletePrediction[]
-            >((resolve, reject) => {
-              autocompleteServiceRef.current?.getPlacePredictions(
-                request,
-                (results, status) => {
-                  const { PlacesServiceStatus } = google.maps.places;
-                  if (status === PlacesServiceStatus.OK && results) {
-                    resolve(results);
-                  } else if (status === PlacesServiceStatus.ZERO_RESULTS) {
-                    resolve([]);
-                  } else {
-                    reject(new Error(status));
-                  }
-                },
-              );
-            });
+            predictions = await fetchSuggestions(text);
           } catch (error) {
-            logger.error("Places predictions request failed:", error);
+            logger.error("Places suggestions request failed:", error);
             return { status: "error" };
           }
 
@@ -150,11 +128,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
             }
           }
 
-          const resolved = await handleSelectPrediction(
-            topPrediction.description,
-            topPrediction.structured_formatting.main_text,
-            topPrediction.place_id,
-          );
+          const resolved = await handleSelectPrediction(topPrediction);
 
           return resolved
             ? { status: "resolved" }
@@ -163,9 +137,8 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
       }),
       [
         inputValue,
-        countries,
-        autocompleteServiceRef,
-        sessionTokenRef,
+        placesReady,
+        fetchSuggestions,
         handleSelectPrediction,
         resolveCoordinates,
         geocodeAddressText,
@@ -221,21 +194,15 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
             {searchResults.map((result) => (
               <button
                 type="button"
-                key={result.place_id}
-                onClick={() =>
-                  handleSelectPrediction(
-                    result.description,
-                    result.structured_formatting.main_text,
-                    result.place_id,
-                  )
-                }
+                key={result.placeId}
+                onClick={() => handleSelectPrediction(result)}
                 className="p-2 w-full text-start hover:bg-accent cursor-pointer border-b border-border"
               >
                 <div className="font-semibold text-sm text-popover-foreground">
-                  {result.structured_formatting.main_text}
+                  {result.mainText}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {result.structured_formatting.secondary_text}
+                  {result.secondaryText}
                 </div>
               </button>
             ))}

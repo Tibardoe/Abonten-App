@@ -2,7 +2,8 @@
 
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
+import MapMarker from "../atoms/MapMarker";
 
 const containerClass =
   "w-full h-[180px] md:h-[220px] rounded-lg overflow-hidden";
@@ -26,7 +27,7 @@ export default function LocationMapPreview({
   label,
   className,
 }: LocationMapPreviewProps) {
-  const { isLoaded } = useGoogleMaps();
+  const { isLoaded, mapId, colorScheme } = useGoogleMaps();
 
   let center: { lat: number; lng: number };
   try {
@@ -46,17 +47,20 @@ export default function LocationMapPreview({
 
   return (
     <GoogleMap
+      key={colorScheme}
       mapContainerClassName={`${containerClass} ${className ?? ""}`}
       center={center}
       zoom={15}
       options={{
+        mapId,
+        colorScheme,
         fullscreenControl: false,
         streetViewControl: false,
         mapTypeControl: false,
         gestureHandling: "cooperative",
       }}
     >
-      <Marker position={center} title={label} />
+      <MapMarker position={center} title={label} />
     </GoogleMap>
   );
 }

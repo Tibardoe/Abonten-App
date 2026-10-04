@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-10-02
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,12 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-10-04 — Google Maps: one key per job, the current Places and pins
+
+- Added `deployment/google-maps.md`. Updated `deployment/README.md`, `INDEX.md`, `security/secrets-and-environment.md`, `security/infrastructure-and-provider-responsibilities.md`, `architecture/integrations.md`, `architecture/field-ops.md`, `troubleshooting/README.md`; PROJECT.md §62.
+- One Google key was in every visitor's browser, inside the app and on the server, allowed 27 Google services and usable by anyone. Now a browser key limited to Abonten's websites, a secret server key (`GOOGLE_MAPS_API_KEY`, read through `googleMapsServerKey()`), and the original key for Android maps only. The app's address search moved to the server (`/api/mobile/addresses/*`). The website moved to Places API (New) (a fresh session token per pick, the place asked for its location only: two billing leaks closed) and to advanced-marker pins, which open by keyboard and follow dark mode.
+- The founder's remaining steps (server key, Map ID, switching the browser key, limiting the original key) are listed in order in `deployment/google-maps.md`.
 
 ## 2026-10-04 — Links to routes that do not exist
 

@@ -41,9 +41,10 @@ export default function LocationAndFilterSection() {
         <button
           type="button"
           className="flex gap-1 items-center text-lg md:text-xl"
+          aria-label={t("changeLocationNow", { location })}
           onClick={() => handleShowChangeLocationModal(true)}
         >
-          <IoLocationOutline className="text-2xl md:text-3xl" />
+          <IoLocationOutline aria-hidden className="text-2xl md:text-3xl" />
 
           <p>{location}</p>
         </button>

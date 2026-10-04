@@ -11,6 +11,7 @@ import type {
   GeoJsonPolygon,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { googleMapsServerKey } from "../../geo/googleMapsKey";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -342,9 +343,7 @@ export async function geocodeQueryCore(
   } catch (e) {
     return denied(e);
   }
-  const apiKey =
-    process.env.GOOGLE_MAPS_API_KEY ??
-    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = googleMapsServerKey();
   if (!apiKey) {
     return {
       status: 409,

@@ -5,6 +5,7 @@ import { useMarketContext } from "@/hooks/useMarketContext";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -37,36 +38,30 @@ export default function ChangeLocationModal({
   );
   const [isMapOpen, setIsMapOpen] = useState(false);
 
-  const [_selectedLocation, setSelectedLocation] = useState<{
-    lat: number;
-    lng: number;
-    address: string;
-  } | null>(null);
-
-  // The map starts on the visitor's position when they open it and allow
-  // it, else on the centre of the market they're browsing — it no longer
-  // asks for the position as soon as this modal opens, and no longer falls
-  // back to Nairobi.
+  // The map opens at once on the centre of the market being browsed and
+  // moves to the visitor's position if they share it. It used to wait for
+  // the browser's answer first, so for anyone who left the location prompt
+  // unanswered "Choose on map" did nothing at all.
   const { market } = useMarketContext();
   const handleOpenMap = () => {
-    const fallback = market?.centre ?? { lat: 5.6037, lng: -0.187 };
+    setCoords(market?.centre ?? { lat: 5.6037, lng: -0.187 });
+    setIsMapOpen(true);
     getCurrentPosition()
       .then((pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       })
-      .catch(() => {
-        setCoords(fallback);
-      })
-      .finally(() => setIsMapOpen(true));
+      .catch(() => {});
   };
 
-  const handleLocationSelect = (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => {
-    setSelectedLocation(location); // Save the result from modal
-    setIsMapOpen(false); // Close modal
+  // A point picked on the map: its address names the Explore page and its
+  // coordinates place it, so the page needs no second geocoding. (This
+  // used to link to /events/<address>, the address of one event: a 404.)
+  const handleLocationSelect = (location: ResolvedLocation) => {
+    setIsMapOpen(false);
+    handleShowChangeLocationModal(false);
+    router.push(
+      `/explore/${generateSlug(location.address)}?lat=${location.lat}&lng=${location.lng}`,
+    );
   };
 
   // Mirrors LandingLocationSearch.tsx's "Go" handler exactly: resolves
@@ -164,7 +159,7 @@ export default function ChangeLocationModal({
             >
               <MaskIcon
                 src="/assets/images/onMap.svg"
-                alt={t("chooseOnMap")}
+                alt=""
                 className="w-[30px] h-[30px]"
               />
               {t("chooseOnMap")}

@@ -87,6 +87,16 @@ export type ApiEnvelope<T> = {
   data?: T;
 };
 
+/** One address suggestion from /api/mobile/addresses/suggest. */
+export type AddressSuggestion = {
+  placeId: string;
+  primary: string;
+  secondary: string;
+};
+
+/** The picked suggestion's point and address (/addresses/resolve). */
+export type ResolvedAddress = { lat: number; lng: number; address: string };
+
 export type {
   ConversationContext,
   ConversationCustomFilter,

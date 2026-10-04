@@ -1,27 +1,16 @@
+import { api } from "@/lib/api";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Native echo of the web usePlacesAutocomplete hook. The web uses the
-// Google Maps JS SDK's AutocompleteService; on native there's no DOM, so
-// this hits the Places web service REST endpoints directly with
-// EXPO_PUBLIC_GOOGLE_MAPS_API_KEY. If the key is missing or referrer-locked
-// the requests fail quietly and the field degrades to plain manual entry
-// (same behaviour the web hook documents).
-//
-// Predictions are biased (not restricted) toward `near` — the area being
-// browsed — within BIAS_RADIUS_METRES, and Ghana is the request's region:
-// "Osu" then resolves to Osu, Accra before any other Osu in the world, and
-// a Ghanaian town name beats a same-named place elsewhere, while a far-off
-// place typed in full is still found. The web hook restricts to the
-// visitor's country instead (looked up by IP); the bias does the same job
-// without a lookup and without locking a traveller out.
+// Native echo of the web usePlacesAutocomplete hook. Suggestions come from
+// the server (/api/mobile/addresses/*, Google Places API (New)): the app
+// holds no paid Google key. The server limits suggestions to the countries
+// Abonten is open in, as the website does, and biases them toward `near`
+// (the area being browsed), so "Osu" is Osu, Accra first. If the server
+// cannot answer, the field degrades to plain manual entry.
 
-const KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
-const AUTOCOMPLETE_URL =
-  "https://maps.googleapis.com/maps/api/place/autocomplete/json";
-const DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json";
-const BIAS_RADIUS_METRES = 200_000;
-const REGION = "gh";
+const MIN_QUERY_LENGTH = 3;
+const MAX_SUGGESTIONS = 5;
 
 export type PlacePrediction = {
   placeId: string;
@@ -31,6 +20,8 @@ export type PlacePrediction = {
 
 export type ResolvedPlace = { lat: number; lng: number; address: string };
 
+// One token for the typing and the pick that ends it: Google bills that
+// session as one lookup. URL-safe, at most 36 characters.
 function newSessionToken(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
@@ -51,7 +42,7 @@ export function usePlacesAutocomplete(
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!KEY || query.trim().length < 3) {
+    if (query.trim().length < MIN_QUERY_LENGTH) {
       setPredictions([]);
       setLoading(false);
       return;
@@ -61,37 +52,18 @@ export function usePlacesAutocomplete(
     setLoading(true);
     debounceRef.current = setTimeout(async () => {
       try {
-        const bias =
-          nearLat != null && nearLng != null
-            ? `&location=${nearLat},${nearLng}&radius=${BIAS_RADIUS_METRES}`
-            : "";
-        const url = `${AUTOCOMPLETE_URL}?input=${encodeURIComponent(
-          query.trim(),
-        )}&region=${REGION}${bias}&sessiontoken=${sessionRef.current}&key=${KEY}`;
-        const res = await fetch(url);
-        const json = (await res.json()) as {
-          status: string;
-          predictions?: {
-            place_id: string;
-            structured_formatting?: {
-              main_text?: string;
-              secondary_text?: string;
-            };
-            description?: string;
-          }[];
-        };
+        const res = await api.addresses.suggest({
+          q: query.trim(),
+          session: sessionRef.current,
+          lat: nearLat,
+          lng: nearLng,
+        });
         if (id !== reqIdRef.current) return;
         setLoading(false);
-        if (json.status !== "OK" || !json.predictions) {
-          setPredictions([]);
-          return;
-        }
         setPredictions(
-          json.predictions.slice(0, 5).map((p) => ({
-            placeId: p.place_id,
-            primary: p.structured_formatting?.main_text ?? p.description ?? "",
-            secondary: p.structured_formatting?.secondary_text ?? "",
-          })),
+          res.status === 200 && res.data
+            ? res.data.slice(0, MAX_SUGGESTIONS)
+            : [],
         );
       } catch {
         if (id === reqIdRef.current) {
@@ -108,29 +80,17 @@ export function usePlacesAutocomplete(
 
   const resolvePlace = useCallback(
     async (placeId: string): Promise<ResolvedPlace | null> => {
-      if (!KEY) return null;
       try {
-        const url = `${DETAILS_URL}?place_id=${placeId}&fields=geometry,name,formatted_address&sessiontoken=${sessionRef.current}&key=${KEY}`;
-        const res = await fetch(url);
-        const json = (await res.json()) as {
-          status: string;
-          result?: {
-            formatted_address?: string;
-            name?: string;
-            geometry?: { location?: { lat: number; lng: number } };
-          };
-        };
+        const res = await api.addresses.resolve({
+          placeId,
+          session: sessionRef.current,
+        });
         // Start a fresh session after a resolution (Google billing model).
         sessionRef.current = newSessionToken();
-        const loc = json.result?.geometry?.location;
-        if (json.status !== "OK" || !loc) return null;
+        if (res.status !== 200 || !res.data) return null;
         return {
-          lat: loc.lat,
-          lng: loc.lng,
-          address:
-            json.result?.formatted_address ??
-            json.result?.name ??
-            t("selected"),
+          ...res.data,
+          address: res.data.address || t("selected"),
         };
       } catch {
         return null;
@@ -140,7 +100,7 @@ export function usePlacesAutocomplete(
   );
 
   return {
-    enabled: !!KEY,
+    enabled: true,
     query,
     setQuery,
     predictions,

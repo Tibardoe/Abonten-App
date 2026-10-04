@@ -1,6 +1,9 @@
 "use client";
 
-import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
+import {
+  type PlaceSuggestion,
+  usePlacesAutocomplete,
+} from "@/hooks/usePlacesAutocomplete";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { parseRawCoordinates } from "@abonten/core/parseRawCoordinates";
@@ -55,10 +58,9 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
       loadError,
       inputValue,
       searchResults,
-      countries,
       containerRef,
-      autocompleteServiceRef,
-      sessionTokenRef,
+      placesReady,
+      fetchSuggestions,
       handleInputChange,
       handleSelectPrediction: resolvePrediction,
       handleSelectCurrentLocation,
@@ -69,11 +71,11 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
     // Layers this component's navigation behavior on top of the shared
     // resolve-and-update-input logic from the hook.
     const handleSelectPrediction = useCallback(
-      async (description: string, mainText: string, placeId: string) => {
-        const success = await resolvePrediction(description, mainText, placeId);
+      async (suggestion: PlaceSuggestion) => {
+        const success = await resolvePrediction(suggestion);
 
         if (success) {
-          const pathSegment = mainText.trim().replace(/\s+/g, "-");
+          const pathSegment = suggestion.mainText.trim().replace(/\s+/g, "-");
           router.push(
             `/explore/${generateSlug(encodeURIComponent(pathSegment))}`,
           );
@@ -94,8 +96,8 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
           const text = inputValue.trim();
           if (!text) return { status: "empty" };
 
-          // Raw "lat,lng" coordinates aren't something the Autocomplete
-          // predictions API is built to handle -- resolve them directly via
+          // Raw "lat,lng" coordinates aren't something Autocomplete is
+          // built to handle -- resolve them directly via
           // reverse geocoding, then navigate the same way a resolved
           // prediction would.
           const coords = parseRawCoordinates(text);
@@ -116,42 +118,18 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
             }
           }
 
-          if (!autocompleteServiceRef.current || !sessionTokenRef.current) {
+          if (!placesReady) {
             // Places hasn't finished loading (or failed to). Rather than
             // discarding what the user typed, hand it back as unresolved so
             // the caller can still navigate using the raw text as a slug.
             return { status: "unresolved", rawText: text };
           }
 
-          const request: google.maps.places.AutocompleteRequest = {
-            input: text,
-            sessionToken: sessionTokenRef.current,
-            ...(countries.length > 0 && {
-              componentRestrictions: { country: countries },
-            }),
-          };
-
-          let predictions: google.maps.places.AutocompletePrediction[];
+          let predictions: PlaceSuggestion[];
           try {
-            predictions = await new Promise<
-              google.maps.places.AutocompletePrediction[]
-            >((resolve, reject) => {
-              autocompleteServiceRef.current?.getPlacePredictions(
-                request,
-                (results, status) => {
-                  const { PlacesServiceStatus } = google.maps.places;
-                  if (status === PlacesServiceStatus.OK && results) {
-                    resolve(results);
-                  } else if (status === PlacesServiceStatus.ZERO_RESULTS) {
-                    resolve([]);
-                  } else {
-                    reject(new Error(status));
-                  }
-                },
-              );
-            });
+            predictions = await fetchSuggestions(text);
           } catch (error) {
-            logger.error("Places predictions request failed:", error);
+            logger.error("Places suggestions request failed:", error);
             return { status: "error" };
           }
 
@@ -177,11 +155,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
             }
           }
 
-          const resolved = await handleSelectPrediction(
-            topPrediction.description,
-            topPrediction.structured_formatting.main_text,
-            topPrediction.place_id,
-          );
+          const resolved = await handleSelectPrediction(topPrediction);
 
           return resolved
             ? { status: "resolved" }
@@ -190,9 +164,8 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
       }),
       [
         inputValue,
-        countries,
-        autocompleteServiceRef,
-        sessionTokenRef,
+        placesReady,
+        fetchSuggestions,
         handleSelectPrediction,
         resolveCoordinates,
         geocodeAddressText,
@@ -254,21 +227,15 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
             {searchResults.map((result) => (
               <button
                 type="button"
-                key={result.place_id}
-                onClick={() =>
-                  handleSelectPrediction(
-                    result.description,
-                    result.structured_formatting.main_text,
-                    result.place_id,
-                  )
-                }
+                key={result.placeId}
+                onClick={() => handleSelectPrediction(result)}
                 className="p-3 w-full text-start hover:bg-accent cursor-pointer border-b border-border last:border-b-0"
               >
                 <div className="font-semibold text-popover-foreground">
-                  {result.structured_formatting.main_text}
+                  {result.mainText}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {result.structured_formatting.secondary_text}
+                  {result.secondaryText}
                 </div>
               </button>
             ))}

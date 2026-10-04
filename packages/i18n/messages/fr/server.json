@@ -1234,5 +1234,6 @@
   "yourRefundIsInProgressBut": "Votre remboursement est en cours, mais nous n'avons pas encore pu vous restituer votre crédit. Veuillez réessayer ou contacter l'assistance.",
   "yourRefundWasStartedButWe": "Votre remboursement a été lancé, mais nous n'avons pas encore pu vous restituer votre crédit. Veuillez réessayer ou contacter l'assistance.",
   "yourRoleCanTDoThis": "Votre rôle ne permet pas de faire cela",
-  "yourSpotlight": "Votre Spotlight"
+  "yourSpotlight": "Votre Spotlight",
+  "thatPlaceCouldNotBeFound": "Ce lieu est introuvable. Choisissez une autre suggestion."
 }

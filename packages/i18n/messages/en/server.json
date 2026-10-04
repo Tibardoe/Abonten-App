@@ -1234,5 +1234,6 @@
     "ownerVerified": "Owner verified their phone",
     "claimFiledFor": "Claim filed for {name}",
     "eventListedFor": "Event listed for {date}"
-  }
+  },
+  "thatPlaceCouldNotBeFound": "That place could not be found. Pick another suggestion."
 }

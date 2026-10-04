@@ -1234,5 +1234,6 @@
   "yourRefundIsInProgressBut": "O seu reembolso está em curso, mas ainda não conseguimos devolver o seu crédito. Tente novamente ou contacte o apoio.",
   "yourRefundWasStartedButWe": "O seu reembolso foi iniciado, mas ainda não conseguimos devolver o seu crédito. Tente novamente ou contacte o apoio.",
   "yourRoleCanTDoThis": "A sua função não pode fazer isto",
-  "yourSpotlight": "O seu Spotlight"
+  "yourSpotlight": "O seu Spotlight",
+  "thatPlaceCouldNotBeFound": "Não foi possível encontrar esse local. Escolha outra sugestão."
 }

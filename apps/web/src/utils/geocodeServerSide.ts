@@ -3,6 +3,7 @@ import {
   fetchWithTimeout,
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
+import { googleMapsServerKey } from "@abonten/services/geo/googleMapsKey";
 import {
   type GeocodeLookup,
   geocodePlaceName,
@@ -16,8 +17,8 @@ export type GeocodeResult = {
   error?: string;
 };
 
-// Server-side Google Geocoding for the public location pages. The key is the
-// public Maps key; this module itself has no browser use.
+// Server-side Google Geocoding for the public location pages, with the
+// server's own key (googleMapsServerKey); this module has no browser use.
 //
 // These pages take any text in the URL, so Google is the last resort:
 // @abonten/services/geo/placeNameGeocode answers market cities and cached
@@ -30,9 +31,9 @@ export type GeocodeResult = {
 // take the whole page down through the error boundary — which is what an
 // uncaught deadline from fetchWithTimeout would do.
 const googleLookup: GeocodeLookup = async (query) => {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = googleMapsServerKey();
   if (!apiKey) {
-    logger.error("geocodeAddress: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set");
+    logger.error("geocodeAddress: GOOGLE_MAPS_API_KEY is not set");
     return "unavailable";
   }
   try {

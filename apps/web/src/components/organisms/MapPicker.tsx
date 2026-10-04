@@ -4,11 +4,12 @@ import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { useToast } from "@/hooks/useToast";
 import { animateMarkerTo } from "@/utils/animateMarker";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { TbLocation } from "react-icons/tb";
+import MapMarker from "../atoms/MapMarker";
 
 const containerClass =
   "w-full h-[500px] md:h-[300px] rounded-lg overflow-hidden";
@@ -33,7 +34,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const mapRef = useRef<google.maps.Map | null>(null); // for centering map programmatically
 
-  const { isLoaded } = useGoogleMaps();
+  const { isLoaded, mapId, colorScheme } = useGoogleMaps();
 
   useEffect(() => {
     if (isLoaded && !geocoder) {
@@ -100,6 +101,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   return (
     <div className="relative">
       <GoogleMap
+        key={colorScheme}
         mapContainerClassName={containerClass}
         center={markerPosition}
         zoom={15}
@@ -112,21 +114,19 @@ const MapPicker: React.FC<MapPickerProps> = ({
           }
         }}
         options={{
+          mapId,
+          colorScheme,
           fullscreenControl: false,
           streetViewControl: false,
           mapTypeControl: false,
           gestureHandling: "greedy",
         }}
       >
-        <Marker
+        <MapMarker
           position={markerPosition}
           title={t("moveThePinToYourPreferred")}
           draggable
-          onDragEnd={(e) => {
-            if (e.latLng) {
-              handleMapInteraction(e.latLng.lat(), e.latLng.lng());
-            }
-          }}
+          onDragEnd={({ lat, lng }) => handleMapInteraction(lat, lng)}
         />
       </GoogleMap>
 

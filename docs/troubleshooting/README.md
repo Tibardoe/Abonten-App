@@ -86,7 +86,7 @@ Search tip: every entry heading is the phrase a user or colleague would say. Mon
 
 ### Map not loading
 - **Causes:** Google Maps key missing/restricted on the deployment (web) or in the EAS environment (mobile `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`); browser blocking Google scripts; no network.
-- **Checks:** browser console for Google Maps errors; env var present; key referrer restrictions include the domain.
+- **Checks:** browser console for Google Maps errors (`RefererNotAllowedMapError`: the browser key does not list this address); env var present; app address search: `/api/mobile/addresses/suggest` answers 503 without `GOOGLE_MAPS_API_KEY`. Keys and their limits: `../deployment/google-maps.md`.
 - **Escalation:** engineering.
 
 ### Image or video upload fails

@@ -1234,5 +1234,6 @@
   "yourRefundIsInProgressBut": "Deine Erstattung läuft, aber wir konnten dein Guthaben noch nicht zurückbuchen. Bitte versuche es erneut oder wende dich an den Support.",
   "yourRefundWasStartedButWe": "Deine Erstattung wurde gestartet, aber wir konnten dein Guthaben noch nicht zurückbuchen. Bitte versuche es erneut oder wende dich an den Support.",
   "yourRoleCanTDoThis": "Deine Rolle darf das nicht",
-  "yourSpotlight": "Dein Spotlight"
+  "yourSpotlight": "Dein Spotlight",
+  "thatPlaceCouldNotBeFound": "Dieser Ort wurde nicht gefunden. Wähle einen anderen Vorschlag."
 }

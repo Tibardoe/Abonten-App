@@ -1,5 +1,6 @@
 "use client";
 
+import MapMarker from "@/components/atoms/MapMarker";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -7,7 +8,7 @@ import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { formatMoney } from "@abonten/core/formatMoney";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { UserPostType } from "@abonten/types/postsType";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,7 +50,7 @@ export default function EventsMapView({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { isLoaded } = useGoogleMaps();
+  const { isLoaded, mapId, colorScheme } = useGoogleMaps();
 
   // Parsed once per `events` change — UserPostType.location is a raw
   // PostGIS WKB hex string (see parseWKBHex.ts). An event with a
@@ -147,11 +148,14 @@ export default function EventsMapView({
   return (
     <div className="relative">
       <GoogleMap
+        key={colorScheme}
         mapContainerClassName={containerClass}
         center={{ lat: initialCenter.lat, lng: initialCenter.lng }}
         zoom={13}
         onLoad={handleMapLoad}
         options={{
+          mapId,
+          colorScheme,
           fullscreenControl: false,
           streetViewControl: false,
           mapTypeControl: false,
@@ -159,7 +163,7 @@ export default function EventsMapView({
         }}
       >
         {markers.map(({ event, lat, lng }) => (
-          <Marker
+          <MapMarker
             key={event.id}
             position={{ lat, lng }}
             title={event.title}
