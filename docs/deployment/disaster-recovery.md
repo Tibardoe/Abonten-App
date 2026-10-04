@@ -4,8 +4,8 @@ purpose: State what would be lost and how it would be recovered in each disaster
 audience: Founder, engineering, on-call responder
 scope: Supabase (database, auth, storage), Vercel (web, admin), EAS (mobile), Cloudinary, third-party providers, secrets
 status: Review required
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -22,8 +22,8 @@ This page is deliberately honest about what has **not** been verified. Rollbacks
 |---|---|
 | Recovery time objective (how long the service may be down) | **NOT DETERMINED FROM CODE — POLICY/PRODUCT DECISION REQUIRED** (decision S6) |
 | Recovery point objective (how much data may be lost) | **NOT DETERMINED FROM CODE — POLICY/PRODUCT DECISION REQUIRED** (S6) |
-| Backup retention | Governed by the Supabase plan; **not recorded in the repository** — confirm in the dashboard and record here (S6) |
-| Point-in-time recovery | Depends on the Supabase plan; not confirmed |
+| Backup retention | **None.** The Supabase organization is on the free plan, which keeps no database backups (checked 2026-10-04 through the Management API: no backups listed, WAL-G off). A lost or corrupted production database cannot be restored from Supabase today. The Pro plan adds daily backups kept 7 days (S6). |
+| Point-in-time recovery | **None** (free plan; checked 2026-10-04). An add-on on paid plans (S6). |
 | Restore drill | **None recorded.** No restore into a scratch project has been performed and documented |
 
 ## What holds state, and where the copies are

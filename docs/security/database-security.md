@@ -4,7 +4,7 @@ purpose: Document the Postgres/Supabase security model — RLS coverage, service
 audience: Engineering, security reviewers
 scope: supabase/migrations, Supabase project configuration
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -64,7 +64,7 @@ A real privilege-escalation bug was fixed on 2026-09-11: `protect_user_info_priv
 
 ## Backups and recovery
 
-Supabase-managed backups per plan (retention: confirm in dashboard — decision in `../privacy/data-retention-and-deletion.md` §5). Point-in-time recovery availability depends on the plan. Recovery procedure: `../deployment/rollback-and-recovery.md`.
+**None today.** The Supabase organization is on the free plan, which keeps no database backups and has no point-in-time recovery (checked 2026-10-04). Moving to the Pro plan (daily backups, 7 days) is decision S6. Recovery procedure: `../deployment/rollback-and-recovery.md`.
 
 ## Postgres version
 

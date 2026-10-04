@@ -4,7 +4,7 @@ purpose: State, for every data category, how long it is kept, what deletes or ex
 audience: Privacy reviewer, engineering, operations
 scope: Production data in Supabase, Supabase Storage, Cloudinary and provider systems
 status: Review required
-version: 1.3
+version: 1.4
 lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -88,7 +88,7 @@ Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`)
 
 ## 5. Backups
 
-Supabase manages database backups for the project; the retention of those backups is governed by the Supabase plan and is outside the application's control. Deleted data may persist in backups until they rotate. **Backup retention period: NOT DETERMINED FROM CODE — confirm in the Supabase dashboard and record here.**
+The project keeps **no database backups** today: the Supabase organization is on the free plan, which has none (checked 2026-10-04). Deleted data is therefore gone once deleted. If the plan changes to one with backups (Pro keeps daily backups for 7 days, decision S6), deleted data persists in them until they rotate, and this section must say so.
 
 ## 6. Legal holds
 
