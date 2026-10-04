@@ -42,6 +42,8 @@
   "invalidId": "Identifiant non valide",
   "invalidMediaReference": "Référence de média non valide",
   "invalidPhotoReference": "Référence de photo non valide",
+  "invalidPlace": "Lieu non valide",
+  "invalidSession": "Session non valide",
   "keepItUnderCharacters": "Ne dépassez pas {0} caractères",
   "keepTheCaptionUnderCharacters": "La légende ne doit pas dépasser {0} caractères",
   "keepTheDescriptionUnder2000Characters": "La description ne doit pas dépasser 2000 caractères",

@@ -64,6 +64,12 @@ describe("buildWebCsp", () => {
     expect(connect).toContain("https://api.cloudinary.com");
   });
 
+  it("lets the address fields reach Google Places (New)", () => {
+    expect(directive(policy, "connect-src")).toContain(
+      "https://places.googleapis.com",
+    );
+  });
+
   it("reaches a local stack's realtime socket over ws", () => {
     const local = buildWebCsp({
       supabaseUrl: "http://127.0.0.1:54321",

@@ -1,10 +1,8 @@
 "use client";
 
 import ModalShell from "@/components/atoms/ModalShell";
-import { generateSlug } from "@abonten/core/geerateSlug";
 import { useTranslations } from "next-intl";
 // import Image from "next/image";
-import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import { MdCancel } from "react-icons/md";
@@ -91,25 +89,26 @@ const MapModal: React.FC<MapModalProps> = ({
           </div>
         </div>
 
-        {/* Set address button */}
+        {/* Set address button: the parent opens Explore for the point. */}
         <div className="flex mt-10 px-4">
-          <Link
-            href={`/events/${generateSlug(currentLocation?.address ?? "")}`}
+          <button
             type="button"
             onClick={handleConfirm}
-            className="bg-primary w-full rounded-full text-primary-foreground font-bold px-4 py-2 text-center"
+            disabled={!currentLocation}
+            className="bg-primary w-full rounded-full text-primary-foreground font-bold px-4 py-2 text-center disabled:opacity-60"
           >
             {t("setAddress")}
-          </Link>
+          </button>
         </div>
 
         {/* Cancel button */}
         <button
           type="button"
           onClick={onClose}
+          aria-label={t("cancel")}
           className="absolute top-1 right-3 text-3xl"
         >
-          <MdCancel />
+          <MdCancel aria-hidden />
         </button>
       </div>
     </ModalShell>

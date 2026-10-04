@@ -49,6 +49,8 @@ export const VALIDATION_SOURCE: Record<string, string> = {
   invalidId: "Invalid id",
   invalidMediaReference: "Invalid media reference",
   invalidPhotoReference: "Invalid photo reference",
+  invalidPlace: "Invalid place",
+  invalidSession: "Invalid session",
   keepItUnderCharacters: "Keep it under {0} characters",
   keepTheCaptionUnderCharacters: "Keep the caption under {0} characters",
   keepTheDescriptionUnder2000Characters:

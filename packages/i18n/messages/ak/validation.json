@@ -42,6 +42,8 @@
   "invalidId": "Invalid id",
   "invalidMediaReference": "Invalid media reference",
   "invalidPhotoReference": "Invalid photo reference",
+  "invalidPlace": "Invalid place",
+  "invalidSession": "Invalid session",
   "keepItUnderCharacters": "Keep it under {0} characters",
   "keepTheCaptionUnderCharacters": "Keep the caption under {0} characters",
   "keepTheDescriptionUnder2000Characters": "Keep the description under 2000 characters",

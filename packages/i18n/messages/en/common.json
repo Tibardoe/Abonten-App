@@ -272,8 +272,6 @@
   "failedToDeleteHighlight": "Failed to delete highlight.",
   "failedToDeleteSlide": "Failed to delete slide.",
   "failedToFetchPlaceDetails": "Failed to fetch place details.",
-  "failedToFetchPlaceDetails2": "Failed to fetch place details",
-  "failedToGetPlaceDetails": "Failed to get place details.",
   "failedToLoadTicketsPleaseTry": "Failed to load tickets. Please try again.",
   "failedToRemoveCheckout": "Failed to remove checkout.",
   "failedToRemoveCheckoutPleaseTry": "Failed to remove checkout. Please try again.",
@@ -905,5 +903,6 @@
     "tiktok": "Abonten on TikTok"
   },
   "featured": "Featured",
-  "paidPlacement": "Paid placement"
+  "paidPlacement": "Paid placement",
+  "changeLocationNow": "Change location (now {location})"
 }

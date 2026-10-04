@@ -42,6 +42,8 @@
   "invalidId": "Identificador inválido",
   "invalidMediaReference": "Referência de conteúdo multimédia inválida",
   "invalidPhotoReference": "Referência de foto inválida",
+  "invalidPlace": "Local inválido",
+  "invalidSession": "Sessão inválida",
   "keepItUnderCharacters": "Não ultrapasse {0} caracteres",
   "keepTheCaptionUnderCharacters": "A legenda não pode ultrapassar {0} caracteres",
   "keepTheDescriptionUnder2000Characters": "A descrição não pode ultrapassar 2000 caracteres",

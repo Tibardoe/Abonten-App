@@ -11,6 +11,14 @@ import debounce from "lodash.debounce";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+/** One address suggestion, as the fields show it and as Google resolves it. */
+export type PlaceSuggestion = {
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+  prediction: google.maps.places.PlacePrediction;
+};
+
 type UsePlacesAutocompleteOptions = {
   address?: AutoCompleteAddressType;
   value?: string;
@@ -20,8 +28,15 @@ type UsePlacesAutocompleteOptions = {
 /**
  * Shared Google Places Autocomplete logic behind AutoComplete.tsx and
  * PostAutoComplete.tsx — script loading, which countries to suggest places
- * in, debounced predictions, session token lifecycle, and
- * place/current-location resolution. Each component only differs in what
+ * in, debounced suggestions, session token lifecycle, and
+ * place/current-location resolution.
+ *
+ * Suggestions come from Places API (New) (AutocompleteSuggestion; the older
+ * AutocompleteService is closed to new Google customers). One session token
+ * covers the typing and the one place it ends on, and a fresh token starts
+ * after each pick: Google bills a session as one lookup, and a token used
+ * again is billed request by request. The chosen place is asked for its
+ * location only, so the lookup is billed at the cheapest rate. Each component only differs in what
  * happens *after* a place is resolved (AutoComplete additionally navigates;
  * PostAutoComplete doesn't), so that part stays in the components
  * themselves rather than in this hook.
@@ -35,25 +50,21 @@ export function usePlacesAutocomplete({
   const { error: showError } = useToast();
 
   const [inputValue, setInputValue] = useState("");
-  const [searchResults, setSearchResults] = useState<
-    google.maps.places.AutocompletePrediction[]
-  >([]);
+  const [searchResults, setSearchResults] = useState<PlaceSuggestion[]>([]);
   // Suggest places in the countries Abonten is open in, not in whichever
   // country the visitor's connection is in: someone in London planning a
   // night out in Accra must be able to find Accra. (This used to ask a
   // third-party IP lookup for the visitor's country on every page with an
-  // address field.) Google takes at most five countries; with more open
+  // address field.) Google takes at most fifteen countries; with more open
   // markets than that, the one being browsed.
   const { markets, context } = useMarketContext();
   const marketCountry = context?.marketCountry ?? null;
   const countries = useMemo(() => {
     const open = markets.map((m) => m.countryCode.toLowerCase());
-    if (open.length > 0 && open.length <= 5) return open;
+    if (open.length > 0 && open.length <= 15) return open;
     return marketCountry ? [marketCountry.toLowerCase()] : [];
   }, [markets, marketCountry]);
 
-  const autocompleteServiceRef =
-    useRef<google.maps.places.AutocompleteService | null>(null);
   const sessionTokenRef =
     useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -69,7 +80,7 @@ export function usePlacesAutocomplete({
   // something to surface to end users -- the location field degrades to
   // plain manual entry either way (useGoogleMaps logs a missing key once).
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-  const { isLoaded, loadError } = useGoogleMaps();
+  const { isLoaded, loadError, language } = useGoogleMaps();
 
   useEffect(() => {
     if (loadError) {
@@ -77,53 +88,68 @@ export function usePlacesAutocomplete({
     }
   }, [loadError]);
 
+  // Places is ready once the script has loaded; until then (or without a
+  // key) the field is a plain text field.
+  const placesReady =
+    isLoaded && typeof window !== "undefined" && !!window.google;
+
   useEffect(() => {
-    if (isLoaded && window.google) {
-      autocompleteServiceRef.current =
-        new window.google.maps.places.AutocompleteService();
+    if (placesReady) {
       sessionTokenRef.current =
         new window.google.maps.places.AutocompleteSessionToken();
     }
-  }, [isLoaded]);
+  }, [placesReady]);
+
+  // Suggestions for `input`, in the app's language, in the open markets.
+  // Throws when Google could not answer (a quota, key or network problem);
+  // an empty list means nothing matched.
+  const fetchSuggestions = useCallback(
+    async (input: string): Promise<PlaceSuggestion[]> => {
+      if (!placesReady || !sessionTokenRef.current) {
+        throw new Error("Places is not loaded");
+      }
+      const { suggestions } =
+        await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(
+          {
+            input,
+            sessionToken: sessionTokenRef.current,
+            language,
+            ...(countries.length > 0 && { includedRegionCodes: countries }),
+          },
+        );
+      return suggestions.flatMap(({ placePrediction: p }) =>
+        p
+          ? [
+              {
+                placeId: p.placeId,
+                mainText: p.mainText?.text ?? p.text.text,
+                secondaryText: p.secondaryText?.text ?? "",
+                prediction: p,
+              },
+            ]
+          : [],
+      );
+    },
+    [placesReady, language, countries],
+  );
 
   const fetchPlacePredictionsCallback = useCallback(
     async (input: string) => {
-      if (
-        !input.trim() ||
-        !autocompleteServiceRef.current ||
-        !sessionTokenRef.current
-      )
-        return;
+      if (!input.trim() || !placesReady) return;
 
       const requestId = ++latestRequestIdRef.current;
-
-      const request: google.maps.places.AutocompleteRequest = {
-        input,
-        sessionToken: sessionTokenRef.current,
-        ...(countries.length > 0 && {
-          componentRestrictions: { country: countries },
-        }),
-      };
-
-      autocompleteServiceRef.current.getPlacePredictions(
-        request,
-        (predictions, status) => {
-          // A newer request has since been fired -- this response is stale,
-          // ignore it so it can't overwrite fresher results.
-          if (requestId !== latestRequestIdRef.current) return;
-
-          if (
-            status === google.maps.places.PlacesServiceStatus.OK &&
-            predictions
-          ) {
-            setSearchResults(predictions);
-          } else {
-            setSearchResults([]);
-          }
-        },
-      );
+      let results: PlaceSuggestion[] = [];
+      try {
+        results = await fetchSuggestions(input);
+      } catch (error) {
+        logger.warn("Places suggestions request failed:", error);
+      }
+      // A newer request has since been fired -- this response is stale,
+      // ignore it so it can't overwrite fresher results.
+      if (requestId !== latestRequestIdRef.current) return;
+      setSearchResults(results);
     },
-    [countries],
+    [placesReady, fetchSuggestions],
   );
 
   const debouncedApiCall = useMemo(
@@ -137,7 +163,9 @@ export function usePlacesAutocomplete({
 
     if (!nextValue.trim()) {
       // Clearing the field should clear any previously selected location,
-      // not leave a stale selection lingering behind an empty input.
+      // not leave a stale selection lingering behind an empty input. An
+      // answer still on its way for the old text is dropped as stale.
+      latestRequestIdRef.current++;
       setSearchResults([]);
       address?.address("");
     }
@@ -145,38 +173,21 @@ export function usePlacesAutocomplete({
     debouncedApiCall(nextValue);
   };
 
-  const getFormattedPlaceDetails = useCallback(
-    (placeId: string): Promise<google.maps.places.PlaceResult> => {
-      return new Promise((resolve, reject) => {
-        const service = new google.maps.places.PlacesService(
-          document.createElement("div"),
-        );
-        service.getDetails({ placeId }, (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-            resolve(place);
-          } else {
-            reject(t("failedToGetPlaceDetails"));
-          }
-        });
-      });
-    },
-    [t],
-  );
-
-  // Resolves a chosen prediction and updates local input/result state.
+  // Resolves a chosen suggestion and updates local input/result state.
   // Returns whether it succeeded so callers can layer their own follow-up
-  // behavior (e.g. AutoComplete navigating) on top.
+  // behavior (e.g. AutoComplete navigating) on top. Asking the place for
+  // its location ends the session; the next keystroke starts a new one.
   const handleSelectPrediction = useCallback(
-    async (
-      _description: string,
-      mainText: string,
-      placeId: string,
-    ): Promise<boolean> => {
+    async ({ mainText, prediction }: PlaceSuggestion): Promise<boolean> => {
       try {
-        const place = await getFormattedPlaceDetails(placeId);
+        const place = prediction.toPlace();
+        await place.fetchFields({ fields: ["location"] });
+        sessionTokenRef.current =
+          new google.maps.places.AutocompleteSessionToken();
+        if (!place.location) throw new Error("The place has no location");
         const coords = {
-          lat: place.geometry?.location?.lat() ?? 0,
-          lng: place.geometry?.location?.lng() ?? 0,
+          lat: place.location.lat(),
+          lng: place.location.lng(),
         };
 
         address?.address(mainText);
@@ -191,14 +202,14 @@ export function usePlacesAutocomplete({
         return false;
       }
     },
-    [address, onSelectCoordinates, getFormattedPlaceDetails, t, showError],
+    [address, onSelectCoordinates, t, showError],
   );
 
   // Reverse-geocodes a lat/lng pair into a formatted address and commits it
   // through the same state-update path a predictions-based resolution
   // uses. Shared by "use my current location" and by resolving raw
   // "lat,lng" text typed directly into the input (Google's Autocomplete
-  // predictions API isn't built to handle bare coordinates).
+  // suggestions aren't built to handle bare coordinates).
   const resolveCoordinates = useCallback(
     (latlng: { lat: number; lng: number }): Promise<string | null> => {
       return new Promise((resolve) => {
@@ -283,10 +294,9 @@ export function usePlacesAutocomplete({
     loadError,
     inputValue,
     searchResults,
-    countries,
     containerRef,
-    autocompleteServiceRef,
-    sessionTokenRef,
+    placesReady,
+    fetchSuggestions,
     handleInputChange,
     handleSelectPrediction,
     handleSelectCurrentLocation,

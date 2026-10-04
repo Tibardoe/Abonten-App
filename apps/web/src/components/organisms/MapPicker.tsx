@@ -4,11 +4,12 @@ import { useGoogleMaps } from "@/hooks/useGoogleMaps";
 import { useToast } from "@/hooks/useToast";
 import { animateMarkerTo } from "@/utils/animateMarker";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { useTranslations } from "next-intl";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { TbLocation } from "react-icons/tb";
+import MapMarker from "../atoms/MapMarker";
 
 const containerClass =
   "w-full h-[500px] md:h-[300px] rounded-lg overflow-hidden";
@@ -32,8 +33,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
 
   const mapRef = useRef<google.maps.Map | null>(null); // for centering map programmatically
+  const dragRef = useRef({ active: false, endedAt: 0 });
 
-  const { isLoaded } = useGoogleMaps();
+  const { isLoaded, mapId, colorScheme } = useGoogleMaps();
 
   useEffect(() => {
     if (isLoaded && !geocoder) {
@@ -54,19 +56,24 @@ const MapPicker: React.FC<MapPickerProps> = ({
     });
   };
 
-  const handleMapInteraction = (lat: number, lng: number) => {
+  // The pin slides to a tapped point or the visitor's position. A dragged
+  // pin is already where it was dropped: sliding it again from where the
+  // drag started made it jump back first.
+  const handleMapInteraction = (lat: number, lng: number, slide = true) => {
     const newCoords = { lat, lng };
 
     if (mapRef.current) {
       mapRef.current.panTo(newCoords); // Smoothly pan the map to new location
     }
 
-    animateMarkerTo(
-      markerPosition,
-      newCoords,
-      500, // duration in ms
-      setMarkerPosition,
-    );
+    if (slide) {
+      animateMarkerTo(
+        markerPosition,
+        newCoords,
+        500, // duration in ms
+        setMarkerPosition,
+      );
+    }
 
     setMarkerPosition(newCoords);
     reverseGeocode(lat, lng);
@@ -100,6 +107,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   return (
     <div className="relative">
       <GoogleMap
+        key={colorScheme}
         mapContainerClassName={containerClass}
         center={markerPosition}
         zoom={15}
@@ -107,25 +115,38 @@ const MapPicker: React.FC<MapPickerProps> = ({
           mapRef.current = map;
         }}
         onClick={(e) => {
+          // Releasing a dragged pin also clicks the map under it (an
+          // advanced marker does not swallow that click): skip it, or the
+          // pin is placed twice and the address looked up twice.
+          if (
+            dragRef.current.active ||
+            Date.now() - dragRef.current.endedAt < 500
+          ) {
+            return;
+          }
           if (e.latLng) {
             handleMapInteraction(e.latLng.lat(), e.latLng.lng());
           }
         }}
         options={{
+          mapId,
+          colorScheme,
           fullscreenControl: false,
           streetViewControl: false,
           mapTypeControl: false,
           gestureHandling: "greedy",
         }}
       >
-        <Marker
+        <MapMarker
           position={markerPosition}
           title={t("moveThePinToYourPreferred")}
           draggable
-          onDragEnd={(e) => {
-            if (e.latLng) {
-              handleMapInteraction(e.latLng.lat(), e.latLng.lng());
-            }
+          onDragStart={() => {
+            dragRef.current.active = true;
+          }}
+          onDragEnd={({ lat, lng }) => {
+            dragRef.current = { active: false, endedAt: Date.now() };
+            handleMapInteraction(lat, lng, false);
           }}
         />
       </GoogleMap>

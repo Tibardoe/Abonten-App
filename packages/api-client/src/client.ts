@@ -37,6 +37,7 @@ import type {
   AddPayoutAccountResult,
   AddPlacePhotoBody,
   AddPlaceServiceBody,
+  AddressSuggestion,
   ApiEnvelope,
   AttendanceRow,
   BlockParticipantBody,
@@ -220,6 +221,7 @@ import type {
   RequestPhoneOtpData,
   RequestPlaceBookingBody,
   RequestPlaceBookingResult,
+  ResolvedAddress,
   RespondToPlaceBookingBody,
   RespondToPlaceReviewBody,
   RewardEmailPreferenceResult,
@@ -1056,6 +1058,38 @@ export function createApiClient(options: ApiClientOptions) {
 
     // Markets: what makes the app local (open markets, the viewer's locale
     // context, display rates, feature flags) and the market of a venue point.
+    /**
+     * Address search for location fields (PROJECT.md §45): Google Places
+     * suggestions asked by the server, so no paid Google key lives in the
+     * app. `session` is one token for the typing and the pick that ends it.
+     * Works signed out.
+     */
+    addresses: {
+      suggest(params: {
+        q: string;
+        session: string;
+        lat?: number | null;
+        lng?: number | null;
+      }) {
+        const q = new URLSearchParams({ q: params.q, session: params.session });
+        if (params.lat != null && params.lng != null) {
+          q.set("lat", params.lat.toFixed(3));
+          q.set("lng", params.lng.toFixed(3));
+        }
+        return request<ApiEnvelope<AddressSuggestion[]>>(
+          `/api/mobile/addresses/suggest?${q.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      resolve(params: { placeId: string; session: string }) {
+        const q = new URLSearchParams(params);
+        return request<ApiEnvelope<ResolvedAddress>>(
+          `/api/mobile/addresses/resolve?${q.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+    },
+
     markets: {
       context(params: {
         platform: "ios" | "android";

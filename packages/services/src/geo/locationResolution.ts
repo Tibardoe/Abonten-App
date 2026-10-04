@@ -30,6 +30,7 @@ import { isValidTimeZone } from "@abonten/core/time/timeZone";
 import tzlookup from "@photostructure/tz-lookup";
 import { tr } from "../i18n/requestLocale";
 import { listMarkets } from "../markets/marketConfig";
+import { googleMapsServerKey } from "./googleMapsKey";
 
 export type ResolvedLocation = {
   countryCode: string;
@@ -69,9 +70,7 @@ async function countryFromGoogle(
   lat: number,
   lng: number,
 ): Promise<string | null> {
-  const key =
-    process.env.GOOGLE_MAPS_API_KEY ??
-    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const key = googleMapsServerKey();
   if (!key) return null;
   const cache = cellKey(lat, lng);
   if (countryCache.has(cache)) return countryCache.get(cache) ?? null;

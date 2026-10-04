@@ -97,6 +97,8 @@ export const HTTP_TIMEOUTS = {
   expoPush: 10_000,
   webPush: 10_000,
   googleGeocode: 8_000,
+  /** Address suggestions are typed against: a slow answer is a stale one. */
+  googlePlaces: 5_000,
   cloudinary: 8_000,
   ipLookup: 3_000,
 } as const;

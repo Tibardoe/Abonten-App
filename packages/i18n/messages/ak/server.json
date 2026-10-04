@@ -1234,5 +1234,6 @@
   "yourRefundIsInProgressBut": "Your refund is in progress, but we couldn't return your credit yet. Please try again or contact support.",
   "yourRefundWasStartedButWe": "Your refund was started, but we couldn't return your credit yet. Please try again or contact support.",
   "yourRoleCanTDoThis": "Your role can't do this",
-  "yourSpotlight": "Your Spotlight"
+  "yourSpotlight": "Your Spotlight",
+  "thatPlaceCouldNotBeFound": "That place could not be found. Pick another suggestion."
 }

@@ -104,8 +104,10 @@ export function buildWebCsp(options: CspOptions = {}): string {
     "https://api.cloudinary.com",
     // Media probes / blob fetches for sharing
     "https://res.cloudinary.com",
-    // Client-side reverse geocoding + Places
+    // Client-side reverse geocoding, and Places API (New) for address
+    // suggestions and the chosen place's location
     "https://maps.googleapis.com",
+    "https://places.googleapis.com",
     // Paystack inline may call its own API from the host page
     "https://api.paystack.co",
     "https://checkout.paystack.com",

@@ -314,8 +314,8 @@ territory in the region and an active team lead); the same table lives in
 ## Runbook
 
 - **Set up a region:** Admin › Field Ops › Regions › New region (optionally
-  "Find on the map" — needs `GOOGLE_MAPS_API_KEY` or
-  `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` on the admin deployment; otherwise type
+  "Find on the map" — needs the server key `GOOGLE_MAPS_API_KEY` on the
+  admin deployment (`../deployment/google-maps.md`); otherwise type
   coordinates) → open it → add towns (centre + radius; paste a GeoJSON
   polygon to override the circle).
 - **Start a campaign:** Campaigns › New campaign (draft) → open it → add the

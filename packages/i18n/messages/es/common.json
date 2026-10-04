@@ -272,8 +272,6 @@
   "failedToDeleteHighlight": "No se pudo eliminar el destacado.",
   "failedToDeleteSlide": "No se pudo eliminar la diapositiva.",
   "failedToFetchPlaceDetails": "No se pudieron obtener los detalles del lugar.",
-  "failedToFetchPlaceDetails2": "No se pudieron obtener los detalles del lugar",
-  "failedToGetPlaceDetails": "No se pudieron obtener los detalles del lugar.",
   "failedToLoadTicketsPleaseTry": "No se pudieron cargar las entradas. Inténtalo de nuevo.",
   "failedToRemoveCheckout": "No se pudo quitar la compra.",
   "failedToRemoveCheckoutPleaseTry": "No se pudo quitar la compra. Inténtalo de nuevo.",
@@ -905,5 +903,6 @@
     "tiktok": "Abonten en TikTok"
   },
   "featured": "Destacado",
-  "paidPlacement": "Espacio de pago"
+  "paidPlacement": "Espacio de pago",
+  "changeLocationNow": "Cambiar ubicación (ahora {location})"
 }

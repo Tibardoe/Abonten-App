@@ -4,6 +4,7 @@ import {
   fetchWithTimeout,
 } from "@abonten/core/http/fetchWithTimeout";
 import { logger } from "@abonten/core/logger";
+import { googleMapsServerKey } from "@abonten/services/geo/googleMapsKey";
 import { tr } from "@abonten/services/i18n/requestLocale";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import { NextResponse } from "next/server";
@@ -58,10 +59,10 @@ export async function GET(req: Request) {
       );
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const apiKey = googleMapsServerKey();
 
     if (!apiKey) {
-      logger.error("Geocode: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set");
+      logger.error("Geocode: GOOGLE_MAPS_API_KEY is not set");
       return NextResponse.json(
         { error: tr("locationLookupUnavailable") },
         { status: 500 },

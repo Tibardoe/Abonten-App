@@ -18,6 +18,7 @@ complianceReviewRequired: no
 |---|---|
 | [web-and-admin-vercel.md](web-and-admin-vercel.md) | The two Vercel projects, env, domains, build, redirects |
 | [mobile-eas.md](mobile-eas.md) | EAS Build/Update, environments, channels, stores |
+| [google-maps.md](google-maps.md) | The three Google keys (browser, server, Android), what each may do, the Map ID, rotation |
 | [supabase-migrations.md](supabase-migrations.md) | Applying schema changes to production safely |
 | [release-checklist.md](release-checklist.md) | Before / during / after a release |
 | [rollback-and-recovery.md](rollback-and-recovery.md) | Rolling back each layer; database recovery; kill switches |

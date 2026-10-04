@@ -1,5 +1,6 @@
 "use client";
 
+import MapMarker from "@/components/atoms/MapMarker";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useGoogleMaps } from "@/hooks/useGoogleMaps";
@@ -8,7 +9,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { PlaceType } from "@abonten/types/placeType";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap } from "@react-google-maps/api";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,7 +43,7 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const { isLoaded } = useGoogleMaps();
+  const { isLoaded, mapId, colorScheme } = useGoogleMaps();
 
   // Parsed once per `places` change -- PlaceType.location is a raw PostGIS
   // WKB hex string (see parseWKBHex.ts, already used by GetDirectionBtn.tsx
@@ -133,11 +134,14 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
   return (
     <div className="relative">
       <GoogleMap
+        key={colorScheme}
         mapContainerClassName={containerClass}
         center={{ lat: initialCenter.lat, lng: initialCenter.lng }}
         zoom={13}
         onLoad={handleMapLoad}
         options={{
+          mapId,
+          colorScheme,
           fullscreenControl: false,
           streetViewControl: false,
           mapTypeControl: false,
@@ -145,7 +149,7 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
         }}
       >
         {markers.map(({ place, lat, lng }) => (
-          <Marker
+          <MapMarker
             key={place.id}
             position={{ lat, lng }}
             title={place.name}
