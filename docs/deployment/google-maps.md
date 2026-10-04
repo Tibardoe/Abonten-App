@@ -53,7 +53,7 @@ Left, in this order (each needs the founder's Google Cloud, Vercel or GitHub acc
 2. The Map ID: done on 2026-10-04 (above).
 3. Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` on `abonten` (all three environments) and the GitHub Actions secret of the same name to the **Abonten Web (browser)** key, then redeploy production.
 4. Check production: a map with pins on an event page, address suggestions on the home page, "Find on the map" in Admin, a public location page (`/explore/<town>`).
-5. Publish the app update that carries the new address search (preview first, then production, after launching an older binary of the same runtime; see `mobile-eas.md`).
+5. The app update carrying the new address search: done on 2026-10-04 (production `d390cd88`).
 6. Limit **Maps Platform API Key** to Maps SDK for Android only (Credentials › the key › API restrictions). From then on a copy of it can only draw maps in an Android app, which Google does not charge for.
 
 Each step can be undone on its own: a key's restrictions can be widened again in the console, and a Vercel variable can be pointed back at the old key.
