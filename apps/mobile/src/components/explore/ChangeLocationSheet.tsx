@@ -98,11 +98,19 @@ export function ChangeLocationSheet({
     setBusy("pick");
     setPickingId(placeId);
     setError(null);
+    // The area is named after the suggestion that was tapped ("Kejetia
+    // Market"), as on the website; Google's formatted address for the
+    // place can read differently ("Kumasi kejetis markets, Kejetia Road").
+    const picked = auto.predictions.find((p) => p.placeId === placeId);
     const resolved = await auto.resolvePlace(placeId);
     setBusy(null);
     setPickingId(null);
     if (resolved) {
-      await chooseArea(resolved.lat, resolved.lng, resolved.address);
+      await chooseArea(
+        resolved.lat,
+        resolved.lng,
+        picked?.primary || resolved.address,
+      );
       finish();
     } else {
       setError({ message: t(CHOOSE_MESSAGES.not_found) });
