@@ -2,6 +2,7 @@ import "server-only";
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
+import { formatDate } from "@abonten/core/i18n/format";
 import {
   type ParsedMarkdown,
   parseFrontMatter,
@@ -56,21 +57,45 @@ function toDocument(slug: string, source: string): PublicDocument {
   };
 }
 
+/**
+ * A front-matter calendar day ("2026-10-04") in the reader's language, or
+ * null when the value is not a day ("Not yet in force — set when approved").
+ */
+export function formatDocumentDay(
+  value: string | null,
+  locale: string,
+): string | null {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  return formatDate(value, locale, { dateStyle: "long", timeZone: "UTC" });
+}
+
+// Legal documents stay in English until counsel approves a text and its
+// translation (OPERATIONAL_DECISIONS_REQUIRED.md D5); the pages say so.
 export function loadLegalDocument(slug: LegalSlug): PublicDocument {
   const file = path.join(CONTENT_ROOT, "legal", LEGAL_DOCUMENTS[slug].file);
   return toDocument(slug, readFileSync(file, "utf8"));
 }
 
 // ---- help centre ------------------------------------------------------------
+//
+// English pages are <section>/<slug>.md. A translation sits beside its page
+// as <slug>.<locale>.md (French, Spanish, German, Portuguese); a page with no
+// translation is shown in English, marked so. Section names are messages
+// (`help.section*`), never words in this file.
 
 export const HELP_SECTIONS = [
-  { dir: "customers", label: "For customers" },
-  { dir: "organizers", label: "For organizers" },
-  { dir: "place-owners", label: "For place owners" },
-  { dir: "account", label: "Account, privacy and safety" },
+  { dir: "customers" },
+  { dir: "organizers" },
+  { dir: "place-owners" },
+  { dir: "account" },
 ] as const;
 
 export type HelpSectionDir = (typeof HELP_SECTIONS)[number]["dir"];
+
+/** The languages the help centre is written in besides English. */
+export const HELP_TRANSLATIONS = ["fr", "es", "de", "pt"] as const;
+
+const TRANSLATION_FILE = /\.([a-z]{2})\.md$/;
 
 export type HelpPageMeta = {
   section: HelpSectionDir;
@@ -81,12 +106,55 @@ export type HelpPageMeta = {
   href: string;
 };
 
-function isHelpSection(value: string): value is HelpSectionDir {
+export function isHelpSection(value: string): value is HelpSectionDir {
   return HELP_SECTIONS.some((s) => s.dir === value);
 }
 
-/** Every help page's front matter, grouped by section and sorted by `order` then title. */
-export function listHelpPages(): HelpPageMeta[] {
+function helpTranslationOf(locale: string | null | undefined): string | null {
+  return locale && (HELP_TRANSLATIONS as readonly string[]).includes(locale)
+    ? locale
+    : null;
+}
+
+/**
+ * A page's Markdown in `locale` (the English page where it is not
+ * translated), and whether it is translated; null when there is no page.
+ * Each read builds its path in place: the bundler traces these files from
+ * the expression, and a path handed over from another function would make
+ * it trace the whole project instead.
+ */
+function readHelpSource(
+  section: HelpSectionDir,
+  slug: string,
+  locale: string | null | undefined,
+): { source: string; translated: boolean } | null {
+  const lang = helpTranslationOf(locale);
+  if (lang) {
+    try {
+      const translation = path.join(
+        CONTENT_ROOT,
+        "help",
+        section,
+        `${slug}.${lang}.md`,
+      );
+      return { source: readFileSync(translation, "utf8"), translated: true };
+    } catch {
+      // No translation yet: the English page.
+    }
+  }
+  try {
+    const english = path.join(CONTENT_ROOT, "help", section, `${slug}.md`);
+    return { source: readFileSync(english, "utf8"), translated: false };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Every help page's front matter in `locale` (English where a page is not
+ * translated), grouped by section and sorted by `order` then title.
+ */
+export function listHelpPages(locale?: string | null): HelpPageMeta[] {
   const out: HelpPageMeta[] = [];
   for (const section of HELP_SECTIONS) {
     const dir = path.join(CONTENT_ROOT, "help", section.dir);
@@ -97,11 +165,12 @@ export function listHelpPages(): HelpPageMeta[] {
       continue;
     }
     for (const entry of entries) {
-      if (!entry.endsWith(".md")) continue;
-      const full = path.join(dir, entry);
-      if (!statSync(full).isFile()) continue;
-      const { frontMatter } = parseFrontMatter(readFileSync(full, "utf8"));
+      if (!entry.endsWith(".md") || TRANSLATION_FILE.test(entry)) continue;
+      if (!statSync(path.join(dir, entry)).isFile()) continue;
       const slug = entry.replace(/\.md$/, "");
+      const read = readHelpSource(section.dir, slug, locale);
+      if (!read) continue;
+      const { frontMatter } = parseFrontMatter(read.source);
       out.push({
         section: section.dir,
         slug,
@@ -117,20 +186,18 @@ export function listHelpPages(): HelpPageMeta[] {
       HELP_SECTIONS.findIndex((s) => s.dir === a.section) -
         HELP_SECTIONS.findIndex((s) => s.dir === b.section) ||
       a.order - b.order ||
-      a.title.localeCompare(b.title),
+      a.title.localeCompare(b.title, locale ?? undefined),
   );
 }
 
 export function loadHelpPage(
   section: string,
   slug: string,
-): PublicDocument | null {
+  locale?: string | null,
+): (PublicDocument & { translated: boolean }) | null {
   if (!isHelpSection(section)) return null;
   if (!/^[a-z0-9-]+$/.test(slug)) return null;
-  const file = path.join(CONTENT_ROOT, "help", section, `${slug}.md`);
-  try {
-    return toDocument(slug, readFileSync(file, "utf8"));
-  } catch {
-    return null;
-  }
+  const read = readHelpSource(section, slug, locale);
+  if (!read) return null;
+  return { ...toDocument(slug, read.source), translated: read.translated };
 }

@@ -2,7 +2,7 @@
 title: Refunds and cancellations
 summary: Cancelling a ticket, what is refunded (and what is not), how long refunds take, and what happens when an organizer cancels an event.
 order: 6
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -11,7 +11,7 @@ owner: Abonten Hub
 
 ## Cancelling a ticket you bought
 
-Open the ticket in My Tickets (web) or the Tickets tab (app) and choose **Cancel ticket** while it is still *Active*. Cancelling releases the ticket so someone else can buy it.
+Open the ticket in My Tickets (Manage › My Tickets on the web, Account › My Tickets in the app) and choose **Cancel ticket** while it is still *Active*. Cancelling releases the ticket so someone else can buy it.
 
 ## What you get back
 

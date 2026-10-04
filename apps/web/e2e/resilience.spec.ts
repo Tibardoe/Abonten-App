@@ -69,6 +69,31 @@ test("a slow navigation shows the progress bar until the page arrives", async ({
   await expect(page.locator(".navigation-progress-done")).toHaveCount(0);
 });
 
+test("a link clicked while the header's request is out still navigates", async ({
+  page,
+}) => {
+  // Until 2026-10-04 the header's one Server Action was sent while React
+  // was rendering. A render React retried sent it again (production sent
+  // it every half second for as long as the page was open), and a link
+  // clicked before its answer arrived did nothing — nor did any link after.
+  let actions = 0;
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    if (request.method() === "POST" && request.headers()["next-action"]) {
+      actions += 1;
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+    }
+    await route.continue();
+  });
+  await page.goto("/help");
+  await hydrated(page, 'footer a[href="/legal/terms"]');
+  await page.locator('footer a[href="/legal/terms"]').click();
+  await page.waitForURL("**/legal/terms", { timeout: 3000 });
+  await expect(page.locator("h1")).toBeVisible();
+  // Asked once for the page, not again and again.
+  expect(actions).toBe(1);
+});
+
 test("a navigation to the page already open starts no progress bar", async ({
   page,
 }) => {

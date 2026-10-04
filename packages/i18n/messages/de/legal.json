@@ -9,5 +9,13 @@
   "sections": "Abschnitte",
   "status": "· Status: {status}",
   "theDocumentsThatGovernYourUse": "Die Dokumente, die deine Nutzung von Abonten Hub im Web und in der mobilen App regeln.",
-  "version": "Version {version}"
+  "version": "Version {version}",
+  "englishOnly": "Dieses Dokument gibt es vorerst nur auf Englisch. Übersetzungen folgen, sobald der Text freigegeben ist.",
+  "statusDraft": "Entwurf",
+  "statusReviewRequired": "Prüfung ausstehend",
+  "statusApproved": "Freigegeben",
+  "statusPublished": "Veröffentlicht",
+  "statusDeprecated": "Zurückgezogen",
+  "notInForce": "· Noch nicht in Kraft",
+  "notInForce2": " · Noch nicht in Kraft"
 }

@@ -673,7 +673,7 @@
     "rejected": "Rechazado",
     "reversed": "Revertido",
     "soldOut": "Agotado",
-    "successful": "Correcto",
+    "successful": "Completado",
     "upcoming": "Próximo",
     "used": "Usado"
   },
@@ -690,7 +690,7 @@
   "subscriptions": "Suscripciones",
   "subtotal": "Subtotal",
   "subtotal2": "Subtotal:",
-  "successful": "Correcto",
+  "successful": "Completado",
   "tax": "Impuesto",
   "termsConditions": "Términos y condiciones",
   "text2": "{date} · {time}",

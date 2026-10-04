@@ -4,8 +4,8 @@ purpose: Show, for every major Abonten feature, exactly which public, internal a
 audience: Documentation maintainers, support, product, engineering
 scope: Every feature in the audit matrix, mapped to files; public pages are linked to their Markdown source in apps/web/src/content
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -16,7 +16,7 @@ complianceReviewRequired: no
 
 Companion to [documentation-audit-matrix.md](documentation-audit-matrix.md) (which records *whether* a feature is documented and accurate); this page records *where*. `scripts/check-docs.mjs` fails if any public page or internal document is not reachable from here or from `INDEX.md`.
 
-Public pages are served at `/legal/<slug>` and `/help/<section>/<slug>`; the links below open the Markdown source. "—" means no document of that type is needed for the feature; **gap** means one is missing and is tracked.
+Public pages are served at `/legal/<slug>` and `/help/<section>/<slug>`; the links below open the Markdown source. A help page's translations (`<slug>.fr.md`, `.es.md`, `.de.md`, `.pt.md`) sit beside it and are covered by its row. "—" means no document of that type is needed for the feature; **gap** means one is missing and is tracked.
 
 ## Identity and account
 
@@ -73,8 +73,8 @@ Public pages are served at `/legal/<slug>` and `/help/<section>/<slug>`; the lin
 | Add and manage a place (photos, hours, services, temporary status) | [Adding and managing your place](../apps/web/src/content/help/place-owners/managing-your-place.md) | [Admin › Catalog](admin/catalog.md) | [Feature inventory §Places](architecture/feature-inventory.md) |
 | Claims and place verification (evidence purged on a retention schedule) | [Claiming and verifying a place](../apps/web/src/content/help/place-owners/claiming-and-verifying-a-place.md) | [Admin › Claims](admin/claims.md) · [Admin › Verification](admin/verification.md) · [Trust & Verification architecture](architecture/trust-and-verification.md) · [Field ops — claim assistance](field-operations/claim-assistance.md) | [Data retention §1](privacy/data-retention-and-deletion.md) |
 | Organizer verification (optional; never required to publish an event) | [Getting verified as an organizer](../apps/web/src/content/help/organizers/getting-verified.md) | [Admin › Verification](admin/verification.md) · [Trust & Verification architecture](architecture/trust-and-verification.md) | [Data retention §1](privacy/data-retention-and-deletion.md) |
-| Search, alerts and recommendation notices (ships switched off) | — (no public help page until the programme is on for customers) | [Admin › Discovery](admin/discovery.md) | [Discovery architecture](architecture/discovery-search-and-recommendations.md) · [Performance](architecture/perf/discovery-2026-09.md) |
-| Abonten Weekly editions (ships switched off) | — (no public help page until the audience is Everyone) | [Admin › Abonten Weekly](admin/weekly.md) | [Abonten Weekly architecture](architecture/weekly-highlights.md) |
+| Search, alerts and recommendation notices (on for everyone in production) | [Finding events and places](../apps/web/src/content/help/customers/finding-events-and-places.md) · [Notifications](../apps/web/src/content/help/customers/notifications.md) | [Admin › Discovery](admin/discovery.md) | [Discovery architecture](architecture/discovery-search-and-recommendations.md) · [Performance](architecture/perf/discovery-2026-09.md) |
+| Abonten Weekly editions (on for everyone in production) | [Finding events and places](../apps/web/src/content/help/customers/finding-events-and-places.md) | [Admin › Abonten Weekly](admin/weekly.md) | [Abonten Weekly architecture](architecture/weekly-highlights.md) |
 | Bookings, reviews, replies, messaging | [Bookings, reviews and messaging](../apps/web/src/content/help/place-owners/bookings-reviews-and-messaging.md) | [Admin › Content](admin/content.md) | [Feature inventory](architecture/feature-inventory.md) |
 | Promoting a place; visit QR | [Promoting your place](../apps/web/src/content/help/place-owners/promoting-your-place.md) | [Rewards operations](operations/rewards-operations.md) | [Rewards ledger](architecture/rewards-ledger.md) |
 
@@ -86,6 +86,7 @@ Public pages are served at `/legal/<slug>` and `/help/<section>/<slug>`; the lin
 | Messaging (text, media, voice notes, blocking) and support conversation | [Messaging](../apps/web/src/content/help/customers/messaging.md) | [Admin › Support](admin/support.md) · [Account and support procedures](operations/account-and-support-procedures.md) | [Feature inventory](architecture/feature-inventory.md) · [Data retention R3](privacy/data-retention-and-deletion.md) |
 | Reporting and moderation | [Reporting a problem](../apps/web/src/content/help/customers/reporting-a-problem.md) · [Terms §14](../apps/web/src/content/legal/terms.md) | [Admin › Reports and moderation](admin/reports-and-moderation.md) · [Moderation policy](operations/content-moderation-policy.md) · [Abuse, spam, impersonation](incident-response/abuse-spam-impersonation.md) · [Malicious content and uploads](incident-response/malicious-content-and-uploads.md) | [Roles and permissions](architecture/roles-and-permissions.md) |
 | Notifications (in-app, push, email) | [Notifications](../apps/web/src/content/help/customers/notifications.md) | [Notifications and email operations](operations/notifications-and-email-operations.md) · [Admin › Notifications](admin/notifications.md) | [Scheduled jobs](operations/scheduled-jobs.md) · [Integrations — Expo, Resend](architecture/integrations.md) |
+| Spotlight, Stories, following, promoted Spotlights | [Spotlight, Stories and following](../apps/web/src/content/help/customers/spotlight-stories-and-following.md) | [Admin › Spotlight](admin/spotlight.md) · [Moderation policy](operations/content-moderation-policy.md) | [Spotlight and Stories architecture](architecture/spotlight-and-stories.md) |
 
 ## Rewards and referrals (shadow mode — not generally available)
 

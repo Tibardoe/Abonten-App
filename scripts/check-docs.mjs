@@ -9,6 +9,7 @@
 // Rules (see docs/development/documentation-validation.md):
 //   required-files · metadata · internal-links · code-references · placeholders
 //   social-links · secrets · public-internal-separation · terminology
+//   help-translations
 // Warnings never fail the run: draft/review status counts, POLICY DECISION
 // REQUIRED occurrences, skipped external links.
 
@@ -207,9 +208,14 @@ for (const file of allMarkdown) {
 // ---- rule: internal links ---------------------------------------------------
 
 const LEGAL_SLUGS = new Set(["terms", "privacy", "cookies", "security"]);
+// A help page's translation sits beside it as <slug>.<locale>.md and is
+// served at the English page's address.
+const TRANSLATION_FILE = /\.([a-z]{2})\.md$/;
+const englishOf = (f) => f.replace(TRANSLATION_FILE, ".md");
 const helpPages = new Set(
   contentFiles
     .filter((f) => rel(f).includes("/content/help/"))
+    .filter((f) => !TRANSLATION_FILE.test(f))
     .map((f) =>
       rel(f).replace("apps/web/src/content/help/", "").replace(/\.md$/, ""),
     ),
@@ -256,6 +262,64 @@ for (const file of allMarkdown) {
     if (!existsSync(resolved))
       fail("internal-links", r, line, `broken link ${target}`);
   });
+}
+
+// ---- rule: help translations ------------------------------------------------
+
+// A translation must belong to an English page, say the same thing in the
+// same place (same order, same links), and is flagged when the English page
+// changed after it. Legal documents are not translated until counsel approves
+// a text (OPERATIONAL_DECISIONS_REQUIRED.md D5).
+const HELP_LANGUAGES = new Set(["fr", "es", "de", "pt"]);
+const sitePaths = (src) => {
+  const out = [];
+  forEachLink(src, (target) => {
+    if (/^\/(help|legal)(\/|$)/.test(target)) out.push(target.split("#")[0]);
+  });
+  return [...new Set(out)].sort().join(" ");
+};
+for (const file of contentFiles) {
+  const r = rel(file);
+  const m = file.match(TRANSLATION_FILE);
+  if (!m) continue;
+  if (r.includes("/content/legal/")) {
+    fail("help-translations", r, 1, "legal documents stay in English (D5)");
+    continue;
+  }
+  if (!HELP_LANGUAGES.has(m[1])) {
+    fail("help-translations", r, 1, `"${m[1]}" is not a help-centre language`);
+    continue;
+  }
+  const english = englishOf(file);
+  if (!existsSync(english)) {
+    fail("help-translations", r, 1, "no English page beside this translation");
+    continue;
+  }
+  const src = read(file);
+  const en = read(english);
+  const fm = frontMatter(src) ?? {};
+  const enFm = frontMatter(en) ?? {};
+  if (fm.order !== enFm.order)
+    fail(
+      "help-translations",
+      r,
+      1,
+      `order ${fm.order} ≠ English ${enFm.order}`,
+    );
+  if (sitePaths(src) !== sitePaths(en))
+    fail(
+      "help-translations",
+      r,
+      1,
+      `links differ from the English page: ${sitePaths(src)} ≠ ${sitePaths(en)}`,
+    );
+  if ((fm.lastUpdated ?? "") < (enFm.lastUpdated ?? ""))
+    warn(
+      "help-translations",
+      r,
+      1,
+      `English page updated ${enFm.lastUpdated}, translation ${fm.lastUpdated}`,
+    );
 }
 
 // ---- rule: code references (backticked repo paths) --------------------------
@@ -676,7 +740,8 @@ for (const file of docFiles) {
     );
 }
 for (const file of contentFiles) {
-  if (!coverageLinks.has(resolve(file)))
+  // A translation is covered by its English page.
+  if (!coverageLinks.has(resolve(englishOf(file))))
     fail(
       "coverage",
       rel(file),

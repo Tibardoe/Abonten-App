@@ -5,5 +5,10 @@
   "helpCentre3": "{title} — Help centre",
   "howToFindEventsAndPlaces": "How to find events and places, buy and use tickets, run events, manage a place, and look after your Abonten account.",
   "lastUpdated": "Last updated {lastUpdated}",
-  "stepByStepGuidesForCustomers": "Step-by-step guides for customers, organizers and place owners, on the web and in the Abonten app."
+  "stepByStepGuidesForCustomers": "Step-by-step guides for customers, organizers and place owners, on the web and in the Abonten app.",
+  "sectionCustomers": "For customers",
+  "sectionOrganizers": "For organizers",
+  "sectionPlaceOwners": "For place owners",
+  "sectionAccount": "Account, privacy and safety",
+  "notTranslatedYet": "This page isn't available in your language yet, so it is shown in English."
 }

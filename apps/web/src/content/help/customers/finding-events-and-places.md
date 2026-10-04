@@ -2,7 +2,7 @@
 title: Finding events and places
 summary: Explore what's on near you, search, filter, use the map, and save the things you like.
 order: 2
-lastUpdated: 2026-09-30
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -37,7 +37,7 @@ Listings that Abonten has hidden or removed for breaking the rules never appear 
 
 ## Search
 
-Type in the search box to see suggestions as you go. Search results list matching events; place suggestions appear in the suggestion list. Your last eight searches are kept on your device for quick access.
+Type in the search box to see suggestions as you go. Results are grouped into **events**, **places** and **organizers**; type `@` and a name to look for an organizer by username. Search understands everyday words and dates in the language you use the app in ("tomorrow", "this weekend", "demain"), ignores accents, and suggests close spellings when nothing matches. Your last eight searches are kept on your device for quick access.
 
 ## The map
 
@@ -60,7 +60,12 @@ A place page shows photos, verified/claimed badges, opening hours, services, con
 
 ## Reminders (app only)
 
-In the app you can set a reminder for an event from its page. Reminders are stored on your phone and shown as local notifications; they are not synced to other devices.
+In the app you can set a reminder for an event from its page and choose how long before it starts. Abonten sends the reminder as a notification to every device you are signed in on, and the phone keeps a local alarm as a backup in case it is offline.
+
+## Abonten Weekly and picks for you
+
+- **Abonten Weekly** (abontenhub.com/weekly, and in the app) is a short, hand-picked guide to the week's events and places for your area. When no guide has been published for the current week, it shows what is on that week instead.
+- **For you** shows picks based on what you have bought, saved and followed. If you allow it, Abonten can also send you at most one suggestion a day and three a week — see [Notifications](/help/customers/notifications).
 
 ## Something wrong with a listing?
 

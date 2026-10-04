@@ -2,7 +2,7 @@
 title: Privacy and your data
 summary: What Abonten knows about you, who can see it, how to ask for a copy or a correction, and how to control notifications and location.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -13,7 +13,7 @@ The full picture is in our [Privacy Policy](/legal/privacy) and [Cookie Policy](
 
 ## What is public
 
-Your username, name, avatar, bio, website, published events and places, highlights and reviews are visible to anyone. Favourites and bookings are private. Your phone number and email are never shown publicly; organizers see the contact details of their ticket holders, and place owners see the details in booking requests.
+Your username, name, avatar, bio, website, published events and places, highlights, Spotlights, Stories (while they last) and reviews are visible to anyone, and so is following an organizer or place (they are told, and follower counts are shown). "Notify me" alerts are private. Favourites and bookings are private. Your phone number and email are never shown publicly; organizers see the contact details of their ticket holders, and place owners see the details in booking requests.
 
 ## Location
 
@@ -21,7 +21,7 @@ The app asks for location permission to show what's near you and to sort by dist
 
 ## Notifications and emails
 
-Push notifications can be turned off in your phone settings. Rewards emails have an on/off switch on the Rewards page and an unsubscribe link in every such email. Ticket, cancellation and sign-in emails are part of the service. See [Notifications](/help/customers/notifications).
+Push notifications can be turned off in your phone settings. Rewards emails have an on/off switch on the Rewards page, picks and alerts emails a switch in Settings › Alerts and picks, and every such email has an unsubscribe link. Ticket, cancellation and sign-in emails are part of the service. See [Notifications](/help/customers/notifications).
 
 ## Ask for a copy of your data or a correction
 

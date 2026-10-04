@@ -114,7 +114,7 @@
   "weCouldnTRemoveThatPayout": "Não foi possível remover essa conta de recebimento. Tente novamente.",
   "weCouldnTUpdateYourDefault": "Não foi possível atualizar a sua conta de recebimento predefinida.",
   "weVeReceivedYourWithdrawalRequest": "Recebemos o seu pedido de levantamento. Referência:",
-  "withdraw": "Retirar",
+  "withdraw": "Levantar",
   "withdraw2": "Levantar {formatMoney}",
   "withdrawFunds": "Levantar fundos",
   "withdrawalRequested": "Levantamento pedido",

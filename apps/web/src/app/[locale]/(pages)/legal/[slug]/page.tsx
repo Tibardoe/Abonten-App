@@ -2,6 +2,7 @@ import MarkdownDocument from "@/components/organisms/MarkdownDocument";
 import {
   LEGAL_DOCUMENTS,
   type LegalSlug,
+  formatDocumentDay,
   isLegalSlug,
   loadLegalDocument,
 } from "@/utils/publicContent";
@@ -49,13 +50,33 @@ export async function generateMetadata({
 export default async function LegalDocumentPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }) {
   const t = await getTranslations("legal");
 
-  const { slug } = await params;
+  const { locale, slug } = await params;
   if (!isLegalSlug(slug)) notFound();
   const doc = loadLegalDocument(slug);
+  const effectiveDate = formatDocumentDay(doc.effectiveDate, locale);
+  const lastUpdated = formatDocumentDay(doc.lastUpdated, locale);
+  // The front matter's status is a fixed English word; the reader sees it in
+  // their language.
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "Draft":
+        return t("statusDraft");
+      case "Review required":
+        return t("statusReviewRequired");
+      case "Approved":
+        return t("statusApproved");
+      case "Published":
+        return t("statusPublished");
+      case "Deprecated":
+        return t("statusDeprecated");
+      default:
+        return status;
+    }
+  };
   const others = (Object.keys(LEGAL_DOCUMENTS) as LegalSlug[]).filter(
     (s) => s !== slug,
   );
@@ -104,17 +125,26 @@ export default async function LegalDocumentPage({
           {doc.version ? (
             <span>{t("version", { version: doc.version })}</span>
           ) : null}
-          {doc.effectiveDate ? (
-            <span> {t("effective", { effectiveDate: doc.effectiveDate })}</span>
+          {effectiveDate ? (
+            <span> {t("effective", { effectiveDate })}</span>
+          ) : doc.effectiveDate ? (
+            <span> {t("notInForce")}</span>
           ) : null}
-          {doc.lastUpdated ? (
-            <span> {t("lastUpdated", { lastUpdated: doc.lastUpdated })}</span>
+          {lastUpdated ? (
+            <span> {t("lastUpdated", { lastUpdated })}</span>
           ) : null}
           {doc.status ? (
-            <span> {t("status", { status: doc.status })}</span>
+            <span> {t("status", { status: statusLabel(doc.status) })}</span>
           ) : null}
         </div>
-        <MarkdownDocument blocks={doc.blocks} />
+        {locale !== "en" ? (
+          <p className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+            {t("englishOnly")}
+          </p>
+        ) : null}
+        <div lang={locale === "en" ? undefined : "en"}>
+          <MarkdownDocument blocks={doc.blocks} />
+        </div>
       </article>
     </div>
   );

@@ -1,8 +1,12 @@
 import ContactSupportCard from "@/components/molecules/ContactSupportCard";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
-import { HELP_SECTIONS, listHelpPages } from "@/utils/publicContent";
+import {
+  HELP_SECTIONS,
+  type HelpSectionDir,
+  listHelpPages,
+} from "@/utils/publicContent";
 import type { Metadata } from "next";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -11,7 +15,8 @@ import Link from "next/link";
 // export const instant = false;
 
 // The public help centre hub. Pages are Markdown files under
-// apps/web/src/content/help/<section>/<slug>.md, rendered at build time.
+// apps/web/src/content/help/<section>/<slug>.md (and <slug>.<locale>.md for
+// their translations), rendered at build time once per language.
 // Public (allow-listed in config/supabase/middleware.ts).
 
 export const dynamic = "force-static";
@@ -26,8 +31,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function HelpIndexPage() {
   const t = useTranslations("help");
+  const locale = useLocale();
 
-  const pages = listHelpPages();
+  const pages = listHelpPages(locale);
+  const sectionLabel = (dir: HelpSectionDir) => {
+    switch (dir) {
+      case "customers":
+        return t("sectionCustomers");
+      case "organizers":
+        return t("sectionOrganizers");
+      case "place-owners":
+        return t("sectionPlaceOwners");
+      case "account":
+        return t("sectionAccount");
+    }
+  };
 
   return (
     <section className="mx-auto flex max-w-4xl flex-col gap-8 py-6">
@@ -41,7 +59,9 @@ export default function HelpIndexPage() {
         if (items.length === 0) return null;
         return (
           <div key={section.dir} className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{section.label}</h2>
+            <h2 className="text-lg font-semibold">
+              {sectionLabel(section.dir)}
+            </h2>
             <ul className="grid gap-3 sm:grid-cols-2">
               {items.map((page) => (
                 <li key={page.href}>

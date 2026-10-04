@@ -2,6 +2,9 @@ import ContactSupportCard from "@/components/molecules/ContactSupportCard";
 import MarkdownDocument from "@/components/organisms/MarkdownDocument";
 import {
   HELP_SECTIONS,
+  type HelpSectionDir,
+  formatDocumentDay,
+  isHelpSection,
   listHelpPages,
   loadHelpPage,
 } from "@/utils/publicContent";
@@ -24,12 +27,12 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ section: string; slug: string }>;
+  params: Promise<{ locale: string; section: string; slug: string }>;
 }): Promise<Metadata> {
   const t = await getTranslations("help");
 
-  const { section, slug } = await params;
-  const doc = loadHelpPage(section, slug);
+  const { locale, section, slug } = await params;
+  const doc = loadHelpPage(section, slug, locale);
   if (!doc) return { title: t("helpCentre") };
   return {
     title: t("helpCentre3", { title: doc.title }),
@@ -41,17 +44,29 @@ export async function generateMetadata({
 export default async function HelpArticlePage({
   params,
 }: {
-  params: Promise<{ section: string; slug: string }>;
+  params: Promise<{ locale: string; section: string; slug: string }>;
 }) {
   const t = await getTranslations("help");
 
-  const { section, slug } = await params;
-  const doc = loadHelpPage(section, slug);
+  const { locale, section, slug } = await params;
+  const doc = loadHelpPage(section, slug, locale);
   if (!doc) notFound();
 
-  const pages = listHelpPages();
-  const sectionLabel =
-    HELP_SECTIONS.find((s) => s.dir === section)?.label ?? t("help");
+  const pages = listHelpPages(locale);
+  const labelOf = (dir: HelpSectionDir) => {
+    switch (dir) {
+      case "customers":
+        return t("sectionCustomers");
+      case "organizers":
+        return t("sectionOrganizers");
+      case "place-owners":
+        return t("sectionPlaceOwners");
+      case "account":
+        return t("sectionAccount");
+    }
+  };
+  const sectionLabel = isHelpSection(section) ? labelOf(section) : t("help");
+  const lastUpdated = formatDocumentDay(doc.lastUpdated, locale);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 py-6 lg:flex-row lg:gap-12">
@@ -68,7 +83,7 @@ export default async function HelpArticlePage({
           return (
             <div key={s.dir} className="mt-5">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {s.label}
+                {labelOf(s.dir)}
               </p>
               <ul className="flex flex-col gap-1 text-sm">
                 {items.map((p) => {
@@ -99,10 +114,19 @@ export default async function HelpArticlePage({
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {sectionLabel}
         </p>
-        <MarkdownDocument blocks={doc.blocks} />
-        {doc.lastUpdated ? (
+        {!doc.translated && locale !== "en" ? (
+          <p className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+            {t("notTranslatedYet")}
+          </p>
+        ) : null}
+        {/* An untranslated page is English text inside a page in another
+            language; screen readers need to know to read it as English. */}
+        <div lang={doc.translated || locale === "en" ? undefined : "en"}>
+          <MarkdownDocument blocks={doc.blocks} />
+        </div>
+        {lastUpdated ? (
           <p className="mt-8 text-xs text-muted-foreground">
-            {t("lastUpdated", { lastUpdated: doc.lastUpdated })}
+            {t("lastUpdated", { lastUpdated })}
           </p>
         ) : null}
         <div className="mt-10">

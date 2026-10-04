@@ -2,14 +2,14 @@
 title: Cancelling an event
 summary: What happens to tickets, refunds, attendees and your earnings when you cancel, and alternatives to cancelling.
 order: 4
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
 
 # Cancelling an event
 
-Cancelling is **final and cannot be undone**. Consider editing the date or venue instead — buyers keep their tickets when you edit.
+Cancelling is **final and cannot be undone**. Before the first ticket is confirmed you can simply edit the date or venue instead; after that they are locked, to protect people who already hold a ticket.
 
 ## How to cancel
 
@@ -33,9 +33,9 @@ Earnings from a cancelled event are reversed. If part of an earlier payout alrea
 
 A paid promotion on a cancelled event is not refunded.
 
-## Postponing instead
+## Moving the event to a new date
 
-Abonten has no "postponed" state. Edit the event's dates and message attendees; they keep their tickets. If some attendees cannot make the new date, they can cancel their own ticket and receive the ticket price back.
+Abonten has no "postponed" state. Before any ticket is confirmed, edit the event's dates. Once tickets are confirmed, the dates and venue can't be changed: cancel the event (buyers get the ticket price back), create a new event for the new date, and say where to find it in the cancelled event's description.
 
 ## Communicating
 

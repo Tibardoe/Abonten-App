@@ -4,7 +4,7 @@ purpose: Describe what the website, the admin console and the app do when a requ
 audience: Engineering, operations, anyone reading an incident where "the site showed nothing"
 scope: Server Action calls from the browser (web and admin), cached reads (React Query on the web), page lookups (404 against 500), timed rebuilds (sitemap, Weekly), the proxy's session and account checks, the shell bootstrap request, navigation feedback, the offline notice, confirmation dialogs, and the native app's two provider-less screens. Not covered - payments (PROJECT.md §46.3), the native app's offline cache (mobile-offline-media-and-sync.md).
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -86,7 +86,7 @@ The event page (`events/[eventCode]/page.tsx`) and the place page (`places/[slug
 
 ## 5. What the visitor sees while waiting
 
-- **Navigation progress.** Sixty pages have no skeleton of their own (`loading.tsx`), and a click on a slow connection looked ignored. A thin bar at the top of the window (`NavigationProgress`) shows while a page is on its way. It is driven by the framework's own hook (`onRouterTransitionStart` in `apps/web/src/instrumentation-client.ts`), so links, `router.push` and the Back button all count; it stays hidden for navigations faster than 150 ms.
+- **Navigation progress.** Sixty pages have no skeleton of their own (`loading.tsx`), and a click on a slow connection looked ignored. A thin bar at the top of the window (`NavigationProgress`) shows while a page is on its way. It is driven by the framework's own hook (`onRouterTransitionStart` in `apps/web/src/instrumentation-client.ts`), so links, `router.push` and the Back button all count; it stays hidden for navigations faster than 150 ms. Its listener sits outside the Suspense boundary that reading the query string needs, so it is ready as soon as the shell is: inside it, it started after the rest of the page and missed a click made right after load.
 - **Offline.** "You're offline" shows while the browser has no connection (`OfflineNotice`).
 - **Errors outside the main layout.** The landing page and the restricted-account notice have an error screen of their own (`app/[locale]/error.tsx`); they used to fall to the bare last-resort one.
 
@@ -103,6 +103,7 @@ Both keep the open question in a store read with `useSyncExternalStore` (`@abont
 
 A browser runs Server Actions one at a time, so each one a page sends at load delays the next.
 
+- **Never a Server Action while rendering.** A Server Action updates the router's state. Until 2026-10-04 the shell bootstrap was sent from the render that built the query client: React retried that render while hydrating, so production sent the action every half second for as long as a page was open (Explore, about one load in two), and the router waited on an answer it never applied, so a link clicked meanwhile did nothing, then or later. It is sent from a layout effect now (`ReactQueryProvider`), which still runs before every query's own effect. Send actions from effects and handlers, never from a render, a `useState` initialiser or module code; `e2e/resilience.spec.ts` holds a click made while the request is out.
 - **One request for the site chrome.** `getShellBootstrap` answers what the header and navigation ask (which programmes are on, unread counts, profile, roles, market) with the session checked once. Each hook takes its part on first load and keeps its own action for later refetches (`@abonten/core/sharedFirstAnswer`). A signed-in Explore page went from 15 actions to 4.
 - **The proxy confirms the session only where it decides something by it** (a private section, a Server Action). Elsewhere it reads the cookie and refreshes an expired token. A confirmed session and the account status are remembered for 30 seconds per server instance.
 - **Prefetching.** The category chips and the footer's links are not prefetched: they were twenty and eighteen requests per page view.

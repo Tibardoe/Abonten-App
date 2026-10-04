@@ -2,7 +2,7 @@
 title: Selling tickets, promo codes and promoter commission
 summary: How sales and holds work, creating promo codes, offering a promoter commission, and reading your sales insights.
 order: 2
-lastUpdated: 2026-09-22
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -54,4 +54,4 @@ Use **Share** on the event page. When the Abonten Rewards programme is live, sha
 
 ## Sold out and waiting lists
 
-Sales stop automatically when a ticket type's quantity is reached, or when the event's capacity is. Abonten does not have a waiting list; increase the quantity or the capacity from **Edit** if you have more room (both are locked once the event has a confirmed ticket).
+Sales stop automatically when a ticket type's quantity is reached, or when the event's capacity is. Abonten does not have a waiting list. Quantities and capacity can be raised from **Edit** only until the first ticket is confirmed; after that they are locked, like the ticket types themselves.

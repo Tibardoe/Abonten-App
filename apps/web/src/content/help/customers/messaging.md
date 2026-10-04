@@ -2,7 +2,7 @@
 title: Messaging organizers, places and support
 summary: Start a conversation from an event or place, send text, photos, files and voice notes, react, edit, archive, block, and reach Abonten Support.
 order: 9
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -30,7 +30,7 @@ Opening a conversation twice always returns to the same thread.
 - **Filters** switch between all conversations, unread, and (for organizers and owners) business conversations.
 - **Archive** a conversation to move it out of the main list; find it under *Archived*.
 - **Mark as unread** to come back to something later.
-- **Block** a participant to stop receiving their messages. Blocking is per conversation participant.
+- **Block** someone from the conversation's menu (or from a review's ⋯ menu) to stop them messaging you; their Spotlights, Stories, comments and reviews are hidden from you too, and they are not told. Unblock them in **Settings › Blocked accounts**.
 
 ## Your privacy
 

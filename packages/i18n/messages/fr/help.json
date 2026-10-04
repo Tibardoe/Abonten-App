@@ -5,5 +5,10 @@
   "helpCentre3": "{title} — Centre d'aide",
   "howToFindEventsAndPlaces": "Comment trouver des événements et des lieux, acheter et utiliser des billets, organiser des événements, gérer un lieu et prendre soin de votre compte Abonten.",
   "lastUpdated": "Dernière mise à jour : {lastUpdated}",
-  "stepByStepGuidesForCustomers": "Guides pas à pas pour les clients, les organisateurs et les propriétaires de lieux, sur le web et dans l'application Abonten."
+  "stepByStepGuidesForCustomers": "Guides pas à pas pour les clients, les organisateurs et les propriétaires de lieux, sur le web et dans l'application Abonten.",
+  "sectionCustomers": "Pour les clients",
+  "sectionOrganizers": "Pour les organisateurs",
+  "sectionPlaceOwners": "Pour les propriétaires de lieux",
+  "sectionAccount": "Compte, confidentialité et sécurité",
+  "notTranslatedYet": "Cette page n'est pas encore disponible dans votre langue ; elle est affichée en anglais."
 }

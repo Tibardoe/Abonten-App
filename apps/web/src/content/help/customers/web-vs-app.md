@@ -2,7 +2,7 @@
 title: Website vs the app — what's different
 summary: Almost everything works in both; this is the short list of features that are only in one place.
 order: 13
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -17,8 +17,10 @@ owner: Abonten Hub
 | Bookings, reviews, highlights, favourites | ✓ | ✓ |
 | Messaging (text, photos, files) | ✓ | ✓ |
 | Voice notes in messages | — | ✓ |
-| Push notifications | — | ✓ |
-| Event reminders | — | ✓ (stored on the phone) |
+| Spotlight, Stories and following | ✓ | ✓ |
+| Abonten Weekly | ✓ | ✓ |
+| Push notifications | ✓ (where the browser supports it) | ✓ |
+| Event reminders | — | ✓ |
 | Organizer tools (create, edit, promo codes, finance, payouts) | ✓ | ✓ |
 | Check attendees in from the list | ✓ | ✓ |
 | Scan ticket QR codes with the camera | — | ✓ |

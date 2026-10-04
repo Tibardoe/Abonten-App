@@ -9,5 +9,13 @@
   "sections": "Sections",
   "status": "· Status: {status}",
   "theDocumentsThatGovernYourUse": "The documents that govern your use of Abonten Hub on the web and in the mobile app.",
-  "version": "Version {version}"
+  "version": "Version {version}",
+  "englishOnly": "This document is available in English only for now. Translations will follow once the text has been approved.",
+  "statusDraft": "Draft",
+  "statusReviewRequired": "Review required",
+  "statusApproved": "Approved",
+  "statusPublished": "Published",
+  "statusDeprecated": "Withdrawn",
+  "notInForce": "· Not in force yet",
+  "notInForce2": " · Not in force yet"
 }

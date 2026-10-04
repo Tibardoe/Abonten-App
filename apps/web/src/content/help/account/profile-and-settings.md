@@ -2,7 +2,7 @@
 title: Your profile and settings
 summary: Edit your profile and avatar, change your phone number or email, pick a language and appearance.
 order: 1
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -15,7 +15,7 @@ Your profile (web: `/user/<username>`; app: Account › your name) shows your av
 
 ## Edit your profile
 
-**Settings › Edit profile** (web and app): name, username, bio, website, and avatar. Avatars are cropped in the app or browser and uploaded straight to our image host; a progress bar shows the upload. Usernames must be unique. A "complete your profile" reminder appears until you have set a name and username.
+**Settings › Edit profile** (web and app): name, username, bio, website, and avatar. Avatars are cropped in the app or browser and uploaded straight to our image host; a progress bar shows the upload. Usernames must be unique. **Settings › Account setup** lists the five steps of a complete account (name, a username you choose, photo, verified email, verified phone); a small reminder card shows while steps are left, and *Not now* puts it away for a while.
 
 ## Phone number and email
 
@@ -28,11 +28,15 @@ Both flows work without signing you out.
 
 ## Language
 
-**Settings › Language**: English, French, Spanish, German, Portuguese, Akan. The choice is saved on this device (a cookie on the web).
+**Settings › Language**: English, French, Spanish, German, Portuguese, Twi (partly translated). The choice is saved on this device (a cookie on the web) and, when you are signed in, used for the emails and notifications we send you.
 
 ## Appearance
 
 **Settings › Switch appearance**: light, dark or follow the system.
+
+## Blocked accounts
+
+**Settings › Blocked accounts** lists the people you have blocked and lets you unblock them.
 
 ## Wallet and payout accounts
 

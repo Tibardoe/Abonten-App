@@ -52,6 +52,69 @@ test("the preference cookie wins over the browser language", async ({
   await context.close();
 });
 
+test("a link that names a language wins, and is remembered", async ({
+  browser,
+}) => {
+  // The app opens help and the policies as "/help?hl=fr" so they match the
+  // app's language even when the phone (and so the in-app browser) is set
+  // to another one, and even over a cookie the browser already holds.
+  const context = await browser.newContext({ locale: "en-GB" });
+  await context.addCookies([
+    {
+      name: "NEXT_LOCALE",
+      value: "es",
+      url: process.env.E2E_BASE_URL ?? "http://127.0.0.1:3010",
+    },
+  ]);
+  const page = await context.newPage();
+  await page.goto("/help?hl=fr");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  const cookies = await context.cookies();
+  expect(cookies.find((c) => c.name === "NEXT_LOCALE")?.value).toBe("fr");
+
+  // The next page, reached without the parameter, stays in French.
+  await page.goto("/legal");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+
+  // A language we don't have is ignored.
+  await page.goto("/help?hl=xx");
+  await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+  await context.close();
+});
+
+test("the help centre is translated, and says so when a page is not", async ({
+  browser,
+}) => {
+  const base = process.env.E2E_BASE_URL ?? "http://127.0.0.1:3010";
+  const french = await browser.newContext();
+  await french.addCookies([{ name: "NEXT_LOCALE", value: "fr", url: base }]);
+  const page = await french.newPage();
+  await page.goto("/help/customers/getting-started");
+  await expect(page.locator("h1")).toHaveText("Bien démarrer et se connecter");
+  await expect(page.getByText("Pour les clients").first()).toBeVisible();
+  await expect(page.locator("article [lang=en]")).toHaveCount(0);
+  // Legal texts stay in English until counsel approves a translation, and
+  // the page says so.
+  await page.goto("/legal/terms");
+  await expect(
+    page.getByText("Ce document n'est disponible qu'en anglais"),
+  ).toBeVisible();
+  await expect(page.locator("article [lang=en]")).toHaveCount(1);
+  await french.close();
+
+  // Twi has no help pages yet: the English page, announced and marked as
+  // English for screen readers.
+  const twi = await browser.newContext();
+  await twi.addCookies([{ name: "NEXT_LOCALE", value: "ak", url: base }]);
+  const twiPage = await twi.newPage();
+  await twiPage.goto("/help/customers/getting-started");
+  await expect(twiPage.locator("html")).toHaveAttribute("lang", "ak");
+  await expect(twiPage.locator("article [lang=en] h1")).toHaveText(
+    "Getting started and signing in",
+  );
+  await twi.close();
+});
+
 test("the internal locale route is not a public address", async ({
   request,
 }) => {

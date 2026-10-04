@@ -2,7 +2,7 @@
 title: Buying tickets and registering for free events
 summary: How checkout works, the 30-minute hold, promo codes, the service fee, and what happens when payment succeeds or fails.
 order: 3
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -18,15 +18,15 @@ Open the event and choose **Register** (RSVP). You get a ticket with a QR code s
 1. **Choose tickets.** Pick a date (for multi-date events), a ticket type and how many. You can buy up to 50 of one type and 100 in total per order.
 2. **Promo code.** If you have one, enter it before continuing. A valid code shows the discount immediately; an invalid, expired or fully used code is rejected with a reason.
 3. **Review the order.** You see the ticket price, Abonten's **service fee** (a percentage of the ticket price, shown as its own line) and the total.
-4. **Hold.** When you continue, your tickets are held for **30 minutes**. A countdown shows how long you have. If you leave, your pending checkout waits for you under the checkout basket (web) or the Tickets tab (app) until it expires.
+4. **Hold.** When you continue, your tickets are held for **30 minutes**. A countdown shows how long you have. If you leave, your pending checkout waits for you under the checkout basket (web) or at the top of Account › My Tickets (app) until it expires.
 5. **Pay.** Choose a saved payment method or pay with a new card or mobile-money wallet (see [Payments and payment methods](/help/customers/payments-and-payment-methods)). For mobile money you may be asked to confirm a prompt on your phone or enter a one-time code.
-6. **Done.** Your tickets appear in My Tickets (web) or the Tickets tab (app), and a confirmation email with your tickets is sent if your account has an email address.
+6. **Done.** Your tickets appear in My Tickets (Manage › My Tickets on the web, Account › My Tickets in the app), and a confirmation email with your tickets is sent if your account has an email address.
 
-You cannot start a second checkout for an event while you already have a pending checkout or a ticket for it. Cancel the pending checkout first if you want to change it.
+You can buy more tickets for an event you already have tickets for, but only one checkout per event can be open at a time: finish or cancel the pending one first if you want to change it.
 
 ## When the payment takes a moment
 
-After you pay, Abonten confirms the payment with Paystack before issuing tickets. This usually takes a second or two. If you see **"payment received, preparing your tickets"** for longer, use the **Retry** button or reopen the checkout — it re-checks the payment and issues the tickets. You are never charged twice for the same checkout.
+After you pay, Abonten confirms the payment with Paystack before issuing tickets. This usually takes a second or two. If **"Payment successful. Preparing your tickets…"** stays on screen for longer, use the **Retry** button or reopen the checkout — it re-checks the payment and issues the tickets. You are never charged twice for the same checkout.
 
 ## When a payment fails
 

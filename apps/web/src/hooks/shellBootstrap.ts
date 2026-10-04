@@ -50,7 +50,8 @@ function viewerTimeZone(): string | null {
 
 /**
  * Sends the one request, ahead of everything a page's own queries will
- * send. Called while the query client is being made (ReactQueryProvider).
+ * send. Called from ReactQueryProvider's layout effect, after the first
+ * commit and before any query's own effect.
  */
 export function primeShellBootstrap(client: QueryClient): void {
   if (typeof window === "undefined") return;

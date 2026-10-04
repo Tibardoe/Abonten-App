@@ -2,7 +2,7 @@
 title: Getting verified as an organizer
 summary: Ask Abonten to review who is behind your events, what to send depending on how you organise, and what the badge does and does not say.
 order: 7
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-04
 status: Draft
 owner: Abonten Hub
 ---
@@ -12,6 +12,8 @@ owner: Abonten Hub
 A Verified badge next to your name tells ticket buyers that Abonten has checked who is behind your events.
 
 It is **optional**. You can create, publish and sell tickets for events whether or not you are verified. Nothing about how your events work changes.
+
+> **Availability.** Verification is being introduced in stages and is not open to every account yet. If you do not see the verification option described below, it is not available to you at the moment; your listings work exactly the same without it.
 
 ## How to apply
 

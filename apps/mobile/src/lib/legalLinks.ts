@@ -4,6 +4,7 @@ import {
   LEGAL_PATHS,
   PUBLIC_SITE_ORIGIN,
 } from "@abonten/core/brand/socialLinks";
+import { getCurrentLocale } from "@abonten/ui-native/i18n";
 import * as WebBrowser from "expo-web-browser";
 import { Linking } from "react-native";
 
@@ -35,11 +36,26 @@ export const LEGAL_LINK_ROWS = [
   { label: "security", url: LEGAL_URLS.security },
 ] as const;
 
+/**
+ * Our own pages open in the app's language, not the phone's: the in-app
+ * browser sends the phone's language and keeps its own cookies, so the link
+ * names the language (`?hl=`, read by the website's proxy).
+ */
+export function inAppLanguage(url: string): string {
+  if (!url.startsWith(`${PUBLIC_SITE_ORIGIN}/`) && url !== PUBLIC_SITE_ORIGIN)
+    return url;
+  if (/[?&]hl=/.test(url)) return url;
+  const [base, hash] = url.split("#", 2);
+  const joined = `${base}${base.includes("?") ? "&" : "?"}hl=${encodeURIComponent(getCurrentLocale())}`;
+  return hash === undefined ? joined : `${joined}#${hash}`;
+}
+
 export async function openExternalLink(url: string): Promise<void> {
+  const target = inAppLanguage(url);
   try {
-    await WebBrowser.openBrowserAsync(url);
+    await WebBrowser.openBrowserAsync(target);
   } catch {
-    await Linking.openURL(url).catch(() => {});
+    await Linking.openURL(target).catch(() => {});
   }
 }
 
