@@ -26,6 +26,7 @@
     "expo-haptics": "*",
     "expo-image": "*",
     "expo-localization": "*",
+    "expo-modules-core": "*",
     "expo-secure-store": "*",
     "nativewind": ">=4",
     "react": "*",

@@ -1,6 +1,7 @@
 // First: what the engine lacks of Intl (see the file).
 import "./polyfills";
 import { translateValidation } from "@abonten/i18n/validation";
+import { requireOptionalNativeModule } from "expo-modules-core";
 import * as SecureStore from "expo-secure-store";
 import {
   type ReactNode,
@@ -37,10 +38,14 @@ export const DEFAULT_LOCALE: I18nLocale = "en";
 
 // expo-localization reads the language the system gives this app, which
 // on Android 13+ and iOS can be chosen per app in the system settings (the
-// app declares its languages through the plugin in app.json). Required
-// lazily: a binary built before the module was added has no native side,
-// and then the language comes from React Native's own constants as before.
+// app declares its languages through the plugin in app.json). A binary
+// built before the module was added has no native side: ask whether it is
+// there first and fall back to React Native's own constants. A try/catch
+// around the require is not enough — Metro reports a module that fails to
+// initialise as a fatal error before the catch sees it, and an update that
+// relied on that crashed 0.3.0 installs for five minutes (2026-10-04).
 function systemAppLanguage(): string | null {
+  if (!requireOptionalNativeModule("ExpoLocalization")) return null;
   try {
     const { getLocales } = require("expo-localization") as {
       getLocales: () => { languageCode: string | null }[];
