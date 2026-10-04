@@ -106,7 +106,7 @@ export function ConversationHeader({
           onPress={() =>
             router.canGoBack()
               ? router.back()
-              : router.replace("/(app)/messages")
+              : router.replace("/(app)/(tabs)/messages")
           }
           className="h-10 w-10 items-center justify-center rounded-full active:opacity-60"
         >

@@ -49,7 +49,7 @@ function PlacesEmptyState() {
       </p>
 
       <Link
-        href="/places"
+        href="/explore?tab=places"
         className="font-medium bg-primary text-primary-foreground py-1 px-5 rounded-md mt-5"
       >
         {t("explorePlaces")}
