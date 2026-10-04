@@ -37,9 +37,9 @@ The Firebase keys in the project ("Android key" and "Browser key", auto-created 
 
 ## Map ID
 
-Advanced markers need a Map ID: the map's settings kept in Google Cloud (Google Maps Platform › Map management). A Map ID is not a secret. The website reads `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`; without one it uses Google's `DEMO_MAP_ID`, which shows the pins but is meant for testing. Every map also gets the site's colour scheme (`colorScheme`, light or dark, chosen when the map is created), which only a map with a Map ID accepts.
+Advanced markers need a Map ID: the map's settings kept in Google Cloud (Google Maps Platform › Map management). The website's is **Abonten web**, `7ca0d719568c4064a177c611` (JavaScript, raster: the same tiles as before and no WebGL needed on low-end phones), created on 2026-10-04. A Map ID is not a secret — Google expects it in page code — so it is the default in `useGoogleMaps.ts`; `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` overrides it (a test map). Every map also gets the site's colour scheme (`colorScheme`, light or dark, chosen when the map is created), which only a map with a Map ID accepts.
 
-To create one: Google Cloud console › Google Maps Platform › Map management › Create Map ID, name "Abonten web", type **JavaScript**, **Vector**, then set `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` on the Vercel project `abonten` (Production, Preview, Development) and redeploy.
+A Map ID on the website does not change what Google bills: web map loads are Dynamic Maps either way. (On Maps SDK for Android or iOS a Map ID would make free map loads billable, which is one more reason the app uses none.)
 
 ## Cut-over of 2026-10-04 and what is left
 
@@ -50,7 +50,7 @@ The browser key was checked the same day by drawing a map with it on each addres
 Left, in this order (each needs the founder's Google Cloud, Vercel or GitHub access):
 
 1. Create **Abonten Server (geocoding + places)**: Google Cloud › APIs & Services › Credentials › Create credentials › API key; Application restrictions: none; API restrictions: Geocoding API and Places API (New). Put its value in `GOOGLE_MAPS_API_KEY` on the Vercel projects `abonten` and `abonten-app-admin` (Production, Preview, Development; Sensitive).
-2. Create the Map ID (above) and set `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`.
+2. The Map ID: done on 2026-10-04 (above).
 3. Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` on `abonten` (all three environments) and the GitHub Actions secret of the same name to the **Abonten Web (browser)** key, then redeploy production.
 4. Check production: a map with pins on an event page, address suggestions on the home page, "Find on the map" in Admin, a public location page (`/explore/<town>`).
 5. Publish the app update that carries the new address search (preview first, then production, after launching an older binary of the same runtime; see `mobile-eas.md`).

@@ -9,6 +9,7 @@ type MapMarkerProps = {
   title?: string;
   onClick?: () => void;
   draggable?: boolean;
+  onDragStart?: () => void;
   onDragEnd?: (position: google.maps.LatLngLiteral) => void;
 };
 
@@ -25,24 +26,28 @@ export default function MapMarker({
   title,
   onClick,
   draggable = false,
+  onDragStart,
   onDragEnd,
 }: MapMarkerProps) {
   const map = useGoogleMap();
   const [marker, setMarker] =
     useState<google.maps.marker.AdvancedMarkerElement | null>(null);
   const onClickRef = useRef(onClick);
+  const onDragStartRef = useRef(onDragStart);
   const onDragEndRef = useRef(onDragEnd);
 
   useEffect(() => {
     onClickRef.current = onClick;
+    onDragStartRef.current = onDragStart;
     onDragEndRef.current = onDragEnd;
-  }, [onClick, onDragEnd]);
+  }, [onClick, onDragStart, onDragEnd]);
 
   useEffect(() => {
     if (!map) return;
     const created = new google.maps.marker.AdvancedMarkerElement({ map });
     // Google's "gmp-" DOM events; the older addListener ones are deprecated.
     const handleClick = () => onClickRef.current?.();
+    const handleDragStart = () => onDragStartRef.current?.();
     const handleDragEnd = () => {
       const at = created.position;
       if (!at) return;
@@ -53,10 +58,12 @@ export default function MapMarker({
       );
     };
     created.addEventListener("gmp-click", handleClick);
+    created.addEventListener("gmp-dragstart", handleDragStart);
     created.addEventListener("gmp-dragend", handleDragEnd);
     setMarker(created);
     return () => {
       created.removeEventListener("gmp-click", handleClick);
+      created.removeEventListener("gmp-dragstart", handleDragStart);
       created.removeEventListener("gmp-dragend", handleDragEnd);
       created.map = null;
       setMarker(null);

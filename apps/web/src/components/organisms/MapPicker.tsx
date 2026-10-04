@@ -33,6 +33,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null);
 
   const mapRef = useRef<google.maps.Map | null>(null); // for centering map programmatically
+  const dragRef = useRef({ active: false, endedAt: 0 });
 
   const { isLoaded, mapId, colorScheme } = useGoogleMaps();
 
@@ -114,6 +115,15 @@ const MapPicker: React.FC<MapPickerProps> = ({
           mapRef.current = map;
         }}
         onClick={(e) => {
+          // Releasing a dragged pin also clicks the map under it (an
+          // advanced marker does not swallow that click): skip it, or the
+          // pin is placed twice and the address looked up twice.
+          if (
+            dragRef.current.active ||
+            Date.now() - dragRef.current.endedAt < 500
+          ) {
+            return;
+          }
           if (e.latLng) {
             handleMapInteraction(e.latLng.lat(), e.latLng.lng());
           }
@@ -131,7 +141,13 @@ const MapPicker: React.FC<MapPickerProps> = ({
           position={markerPosition}
           title={t("moveThePinToYourPreferred")}
           draggable
-          onDragEnd={({ lat, lng }) => handleMapInteraction(lat, lng, false)}
+          onDragStart={() => {
+            dragRef.current.active = true;
+          }}
+          onDragEnd={({ lat, lng }) => {
+            dragRef.current = { active: false, endedAt: Date.now() };
+            handleMapInteraction(lat, lng, false);
+          }}
         />
       </GoogleMap>
 

@@ -33,7 +33,7 @@ complianceReviewRequired: no
 | `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_SITE_URL` | yes | Absolute links (emails, share, invite) | wrong links |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | yes (the **Abonten Web (browser)** key: websites only; Maps JavaScript, Places (New), Geocoding) | Maps, address fields in the browser | maps and address suggestions off |
 | `GOOGLE_MAPS_API_KEY` | **secret** (the **Abonten Server** key: Geocoding, Places (New)) | Every server Google call through `googleMapsServerKey()`: `/api/geocode`, public location pages, country lookup, the app's address search (`/api/mobile/addresses/*`) | falls back to the browser key, which Google refuses for server calls once it is limited to websites |
-| `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` | yes (not a secret) | Map ID for advanced-marker pins and the dark map | Google's `DEMO_MAP_ID` (testing only) |
+| `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` | yes (not a secret; optional) | Overrides the website's Map ID (default "Abonten web" in `useGoogleMaps.ts`) | the default Map ID |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | yes | Cloudinary URLs | media fails |
 | `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | secret | Signed uploads, destroys, health probe | uploads fail |
 | `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET` | secret | Ghana's Paystack account: payments, refunds, webhook signature (the names Ghana's `market_payment_provider` row points at). **Both hold the same value** — Paystack signs webhooks with the secret key; a differing webhook value makes the registry refuse the account (2026-09-25) | Ghana payments fail / webhooks rejected |
