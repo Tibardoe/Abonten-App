@@ -4,8 +4,8 @@ purpose: State, for every data category, how long it is kept, what deletes or ex
 audience: Privacy reviewer, engineering, operations
 scope: Production data in Supabase, Supabase Storage, Cloudinary and provider systems
 status: Review required
-version: 1.2
-lastReviewed: 2026-10-02
+version: 1.3
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -29,7 +29,7 @@ complianceReviewRequired: yes
 | Rate-limit buckets | `cleanup_rate_limit_buckets()` cron 04:00 | 1 day | `20260904135447_rate_limit_primitive.sql` |
 | Referral click log (`referral_touch`) | `referral_purge_old_touches()` cron | 90 days | `20260911015208_referral_capture.sql` |
 | Credit lots | `credit_expire_due_lots(5000)` cron 02:00 — expires the lot; ledger rows are never deleted | per-lot expiry | `20260910193609_credits_ledger_core.sql` |
-| Ended events | Edge function `delete-expired-events` (daily) → `archive_or_delete_expired_event`. An event that anyone registered for, attended, reviewed or paid for is archived (`archived_at` set): it leaves discovery and everything is kept, including tickets, attendance and reviews. An event nobody touched is deleted and its flyer queued for clean-up. Until 2026-10-02 only ledger or promotion history kept an event, so a free event was deleted with its tickets and reviews the night it ended. | after the last date ends | migration `20261002170000`; `supabase/functions/delete-expired-events/index.ts` |
+| Ended events | Job `retire-ended-events` (daily, `retire_ended_events()`): every event whose last date is over is archived (`archived_at` set). It leaves discovery; its page, tickets, attendance, reviews and its place on the organizer's profile stay. Nothing is deleted (decision D8, 2026-10-04): an organizer can still delete their own event, and a deleted account follows its own rules. Until 2026-10-02 a free event was deleted with its tickets and reviews the night it ended; until 2026-10-04 an event nobody registered for was deleted. | after the last date ends | migrations `20261002170000`, `20261004100000` |
 | Replaced or removed media | Explicit Cloudinary `destroy` in the mutation cores (avatar, flyer, place photos, highlights, message attachments where deleted) | immediate | `eventDraftCore`, `updateEventCore`, `updatePlaceCore`, `placePhotoCore`, `highlightDeleteCore`, `uploadHighlight.ts` |
 | Dead push tokens | Pruned when Expo returns `DeviceNotRegistered` in the send ticket or the receipt; removed on sign-out via `/api/mobile/devices/unregister` | event-driven | `sendPushNotification.ts`, `pushReceiptsCore.ts`, `deviceTokenCore.ts` |
 | Push receipts waiting to be read | Deleted once read; unread rows dropped after one day | every minute | `run_notification_delivery()`, `pushReceiptsCore.ts` |

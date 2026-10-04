@@ -3,15 +3,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 //
 // What happens to an event once its last date is over
-// (archive_or_delete_expired_event, migration 20261002170000).
+// (retire_ended_events, migration 20261004100000; decisions S8 and D8).
 //
-// Before that migration the nightly job deleted every ended event the
-// ledger did not protect. A free ticket has no ledger row, so a free event
-// took its tickets, its attendance and its reviews with it the night it
-// ended. Now anything a person did with an event keeps it (archived, out of
-// discovery, still reachable by its link), and only an event nobody touched
-// is deleted, with its flyer queued for a clean-up that checks who else
-// uses the image.
+// Until 2026-10-02 the nightly job deleted every ended event the ledger did
+// not protect, so a free event took its tickets, attendance and reviews with
+// it the night it ended. From 2026-10-02 to 2026-10-04 an event nobody
+// touched was still deleted. Now every ended event is archived: out of
+// discovery, still on its page, its tickets, its reviews and the organizer's
+// profile. Nothing is deleted.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   type TestUser,
@@ -19,14 +18,6 @@ import {
   deleteTestUser,
   getServiceClient,
 } from "./setupClient";
-
-type Outcome = {
-  event_id: string;
-  hard_deleted: boolean;
-  archived: boolean;
-  skipped?: string;
-  reason?: string;
-};
 
 const HOUR = 3_600_000;
 const tag = `ended-${crypto.randomUUID().slice(0, 8)}`;
@@ -111,12 +102,11 @@ async function endIt(eventId: string) {
   if (error) throw new Error(error.message);
 }
 
-async function retire(eventId: string): Promise<Outcome> {
-  const { data, error } = await service.rpc("archive_or_delete_expired_event", {
-    p_event_id: eventId,
-  });
+/** The scheduled job, run now. */
+async function runJob(): Promise<{ archived: number }> {
+  const { data, error } = await service.rpc("retire_ended_events");
   if (error) throw new Error(error.message);
-  return data as unknown as Outcome;
+  return data as unknown as { archived: number };
 }
 
 async function eventRow(eventId: string) {
@@ -147,7 +137,7 @@ afterAll(async () => {
 });
 
 describe("an event whose last date is over", () => {
-  it("keeps a free event that someone registered for, with their ticket and review", async () => {
+  it("is archived with its tickets, attendance and reviews, and still opens by its link", async () => {
     const eventId = await createEvent({ free: true });
     const ticketId = await register(eventId, guest.id);
     await endIt(eventId);
@@ -164,12 +154,10 @@ describe("an event whose last date is over", () => {
     });
     expect(review.error).toBeNull();
 
-    const outcome = await retire(eventId);
+    const result = await runJob();
 
-    expect(outcome).toMatchObject({ hard_deleted: false, archived: true });
-    expect(outcome.reason).toBe("attendance");
+    expect(result.archived).toBeGreaterThanOrEqual(1);
     expect((await eventRow(eventId))?.archived_at).not.toBeNull();
-
     const ticket = await service
       .from("ticket")
       .select("id, status")
@@ -187,8 +175,7 @@ describe("an event whose last date is over", () => {
       .eq("event_id", eventId);
     expect(reviews.count).toBe(1);
 
-    // Archived takes it out of discovery, not out of reach: the person who
-    // went can still open it by its link.
+    // Archived takes it out of discovery, not out of reach.
     const seen = await guest.client
       .from("event")
       .select("id")
@@ -197,50 +184,33 @@ describe("an event whose last date is over", () => {
     expect(seen.data?.id).toBe(eventId);
   });
 
-  it("keeps an event that only has a review left", async () => {
-    const eventId = await createEvent({ free: true });
-    await endIt(eventId);
-    const review = await service.from("event_review").insert({
-      event_id: eventId,
-      reviewer_id: guest.id,
-      rating: 4,
-      status: "approved",
-    });
-    expect(review.error).toBeNull();
-
-    const outcome = await retire(eventId);
-
-    expect(outcome).toMatchObject({ archived: true, reason: "reviews" });
-    expect(await eventRow(eventId)).not.toBeNull();
-  });
-
-  it("deletes an event nobody ever registered for and queues its flyer for clean-up", async () => {
+  it("is archived, not deleted, when nobody registered for it, and stays on the organizer's profile", async () => {
     const eventId = await createEvent({});
     const flyer = (await eventRow(eventId))?.flyer_public_id as string;
     await endIt(eventId);
 
-    const outcome = await retire(eventId);
+    await runJob();
 
-    expect(outcome).toMatchObject({ hard_deleted: true, archived: false });
-    expect(await eventRow(eventId)).toBeNull();
-    // Queued, not destroyed on the spot: the drain checks who else uses it.
+    expect((await eventRow(eventId))?.archived_at).not.toBeNull();
+    // Its flyer is still the event's: nothing is queued for clean-up.
     const queued = await service
       .from("draft_asset_cleanup_queue")
-      .select("status, resource_type")
+      .select("id")
       .eq("public_id", flyer);
-    expect(queued.data).toEqual([{ status: "queued", resource_type: "image" }]);
+    expect(queued.data).toEqual([]);
+    // Anyone reading the organizer's events still finds it.
+    const profile = await guest.client
+      .from("event")
+      .select("id")
+      .eq("organizer_id", organizer.id);
+    expect((profile.data ?? []).map((e) => e.id)).toContain(eventId);
   });
 
-  it("does nothing to an event that has not ended, whoever asks", async () => {
+  it("leaves an event that has not ended", async () => {
     const eventId = await createEvent({});
 
-    const outcome = await retire(eventId);
+    await runJob();
 
-    expect(outcome).toMatchObject({
-      hard_deleted: false,
-      archived: false,
-      skipped: "not_ended",
-    });
     expect((await eventRow(eventId))?.archived_at).toBeNull();
   });
 
@@ -253,43 +223,39 @@ describe("an event whose last date is over", () => {
       start: new Date(Date.now() + 48 * HOUR).toISOString(),
       end: new Date(Date.now() + 50 * HOUR).toISOString(),
     };
-
     const running = await createEvent({ dates: [past(30), future] });
-    expect(await retire(running)).toMatchObject({ skipped: "not_ended" });
-    expect(await eventRow(running)).not.toBeNull();
-
     const over = await createEvent({ dates: [past(60), past(30)] });
-    expect(await retire(over)).toMatchObject({ hard_deleted: true });
-    expect(await eventRow(over)).toBeNull();
+
+    await runJob();
+
+    expect((await eventRow(running))?.archived_at).toBeNull();
+    expect((await eventRow(over))?.archived_at).not.toBeNull();
   });
 
-  it("answers for an event that is not there or already archived", async () => {
-    expect(await retire(crypto.randomUUID())).toMatchObject({
-      hard_deleted: false,
-      archived: false,
-      skipped: "missing",
-    });
-
-    const eventId = await createEvent({ free: true });
-    await register(eventId, guest.id);
+  it("does not archive twice: a second run leaves the first date alone", async () => {
+    const eventId = await createEvent({});
     await endIt(eventId);
-    await retire(eventId);
-    expect(await retire(eventId)).toMatchObject({
-      hard_deleted: false,
-      archived: true,
-      skipped: "already_archived",
-    });
+    await runJob();
+    const first = (await eventRow(eventId))?.archived_at;
+
+    await runJob();
+
+    expect((await eventRow(eventId))?.archived_at).toBe(first);
   });
 
-  it("cannot be called by a signed-in person", async () => {
+  it("cannot be run by a signed-in person or a visitor", async () => {
     const eventId = await createEvent({});
     await endIt(eventId);
 
-    const attempt = await guest.client.rpc("archive_or_delete_expired_event", {
-      p_event_id: eventId,
-    });
+    const signedIn = await guest.client.rpc("retire_ended_events");
+    expect(signedIn.error).not.toBeNull();
+    expect((await eventRow(eventId))?.archived_at).toBeNull();
 
-    expect(attempt.error).not.toBeNull();
-    expect(await eventRow(eventId)).not.toBeNull();
+    // The function the old edge function called is gone.
+    const old = await service.rpc(
+      "archive_or_delete_expired_event" as never,
+      { p_event_id: eventId } as never,
+    );
+    expect(old.error).not.toBeNull();
   });
 });

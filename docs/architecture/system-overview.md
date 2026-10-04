@@ -4,8 +4,8 @@ purpose: The technical shape of Abonten Hub — apps, packages, how requests flo
 audience: Engineering, technical administrators
 scope: The monorepo and its production topology as of 2026-09-12
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -62,7 +62,7 @@ packages/services  business logic by domain (admin, checkout, events, fieldOps, 
                    platform, profile, promo-codes, promotions, reports, reviews, rewards, security, supabase, tickets, uploads) + __integration__ tests
 packages/core      pure helpers (pricing, limits, eligibility, markdown, brand, rewards math, fieldOps logic, adminPermissions seed)
 packages/types, validation (zod), api-client (typed mobile client), i18n (6 locales), ui-native, ui-tokens, config
-supabase/migrations  204 SQL files (source of truth for schema); functions/delete-expired-events (edge fn); seed.sql
+supabase/migrations  204 SQL files (source of truth for schema); seed.sql
 scripts/           check-mobile-api-parity.mjs, check-docs.mjs, test-db/*
 docs/              internal documentation (this tree)
 ```

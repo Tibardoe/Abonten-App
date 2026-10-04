@@ -96,7 +96,10 @@ const IRREDUCIBLE_STATEMENTS = [
     // Irreducible regardless of position: dozens of FK constraints across
     // the schema (all predating this file) bind to user_info_id_key, so
     // DROP CONSTRAINT hits a hard dependency error on a from-scratch
-    // replay no matter where this file runs.
+    // replay no matter where this file runs. Since 2026-10-04,
+    // 20261004100100_match_production_user_info_and_place_drafts.sql moves
+    // those keys to user_info_pkey and drops the duplicate, so a replayed
+    // database ends up like production all the same.
     match:
       /^ALTER TABLE public\.user_info DROP CONSTRAINT IF EXISTS user_info_id_key;$/m,
   },
@@ -105,7 +108,7 @@ const IRREDUCIBLE_STATEMENTS = [
     // References public.place_drafts, not created until
     // 20260827090000_add_place_drafts.sql, two days later. That file has
     // no entry in production's migration history at all, unlike everything
-    // else this audit checked.
+    // else this audit checked. 20261004100100 applies the same rule later.
     match:
       /^ALTER POLICY place_drafts_owner_all ON public\.place_drafts\n[\s\S]*?WITH CHECK \(EXISTS \(SELECT 1 FROM public\.drafts d WHERE d\.id = place_drafts\.draft_id AND d\.user_id = \(select auth\.uid\(\)\)\)\);$/m,
   },
