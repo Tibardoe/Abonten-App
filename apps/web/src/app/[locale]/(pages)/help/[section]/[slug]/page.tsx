@@ -70,7 +70,9 @@ export default async function HelpArticlePage({
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 py-6 lg:flex-row lg:gap-12">
-      <aside className="lg:sticky lg:top-28 lg:w-64 lg:shrink-0 lg:self-start">
+      {/* On a phone the page comes first and the list of every help page
+          after it: before, a reader scrolled past thirty links to reach it. */}
+      <aside className="order-last lg:order-none lg:sticky lg:top-28 lg:w-64 lg:shrink-0 lg:self-start">
         <Link
           href="/help"
           className="text-sm text-muted-foreground hover:text-foreground"

@@ -82,70 +82,74 @@ export default async function LegalDocumentPage({
   );
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 py-6 lg:flex-row lg:gap-12">
-      <aside className="lg:sticky lg:top-28 lg:w-64 lg:shrink-0 lg:self-start">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {t("onThisPage")}
+    <div className="mx-auto max-w-5xl py-6">
+      {/* First on the page: on a phone the list of sections comes before
+          the text, and a reader should know why it is in English. */}
+      {locale !== "en" ? (
+        <p className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+          {t("englishOnly")}
         </p>
-        <nav aria-label={t("sections")}>
-          <ul className="flex flex-col gap-1 text-sm">
-            {doc.headings
-              .filter((h) => h.level === 2)
-              .map((h) => (
-                <li key={h.id}>
-                  <a
-                    href={`#${h.id}`}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    {h.text}
-                  </a>
-                </li>
-              ))}
-          </ul>
-        </nav>
-        <p className="mt-6 mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {t("otherDocuments")}
-        </p>
-        <ul className="flex flex-col gap-1 text-sm">
-          {others.map((s) => (
-            <li key={s}>
-              <Link
-                href={`/legal/${s}`}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {loadLegalDocument(s).title}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      <article className="min-w-0 flex-1">
-        <div className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
-          {doc.version ? (
-            <span>{t("version", { version: doc.version })}</span>
-          ) : null}
-          {effectiveDate ? (
-            <span> {t("effective", { effectiveDate })}</span>
-          ) : doc.effectiveDate ? (
-            <span> {t("notInForce")}</span>
-          ) : null}
-          {lastUpdated ? (
-            <span> {t("lastUpdated", { lastUpdated })}</span>
-          ) : null}
-          {doc.status ? (
-            <span> {t("status", { status: statusLabel(doc.status) })}</span>
-          ) : null}
-        </div>
-        {locale !== "en" ? (
-          <p className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-            {t("englishOnly")}
+      ) : null}
+      <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
+        <aside className="lg:sticky lg:top-28 lg:w-64 lg:shrink-0 lg:self-start">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("onThisPage")}
           </p>
-        ) : null}
-        <div lang={locale === "en" ? undefined : "en"}>
-          <MarkdownDocument blocks={doc.blocks} />
-        </div>
-      </article>
+          <nav aria-label={t("sections")}>
+            <ul className="flex flex-col gap-1 text-sm">
+              {doc.headings
+                .filter((h) => h.level === 2)
+                .map((h) => (
+                  <li key={h.id}>
+                    <a
+                      href={`#${h.id}`}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          </nav>
+          <p className="mt-6 mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t("otherDocuments")}
+          </p>
+          <ul className="flex flex-col gap-1 text-sm">
+            {others.map((s) => (
+              <li key={s}>
+                <Link
+                  href={`/legal/${s}`}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {loadLegalDocument(s).title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        <article className="min-w-0 flex-1">
+          <div className="mb-6 rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
+            {doc.version ? (
+              <span>{t("version", { version: doc.version })}</span>
+            ) : null}
+            {effectiveDate ? (
+              <span> {t("effective", { effectiveDate })}</span>
+            ) : doc.effectiveDate ? (
+              <span> {t("notInForce")}</span>
+            ) : null}
+            {lastUpdated ? (
+              <span> {t("lastUpdated", { lastUpdated })}</span>
+            ) : null}
+            {doc.status ? (
+              <span> {t("status", { status: statusLabel(doc.status) })}</span>
+            ) : null}
+          </div>
+          <div lang={locale === "en" ? undefined : "en"}>
+            <MarkdownDocument blocks={doc.blocks} />
+          </div>
+        </article>
+      </div>
     </div>
   );
 }
