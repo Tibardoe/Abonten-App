@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — App 1.0.0: the first store release, iPhone only
+
+- Updated `deployment/mobile-eas.md` (1.7).
+- `apps/mobile/app.json`: `version` 1.0.0 (the runtime version follows it, so updates for 1.0.0 are published separately from 0.3.0) and `ios.supportsTablet` false. The iPhone app was marked as an iPad app too, which makes iPad screenshots mandatory and has App Review test every screen at iPad sizes; none was ever laid out or tested there. On an iPad it now runs as the iPhone app.
+- Migrations, permissions, jobs, env vars: none.
+
 ## 2026-10-04 — Google Maps: one key per job, the current Places and pins
 
 - Added `deployment/google-maps.md`. Updated `deployment/README.md`, `INDEX.md`, `security/secrets-and-environment.md`, `security/infrastructure-and-provider-responsibilities.md`, `architecture/integrations.md`, `architecture/field-ops.md`, `troubleshooting/README.md`; PROJECT.md §62.
