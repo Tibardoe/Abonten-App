@@ -45,6 +45,8 @@ To create one: Google Cloud console › Google Maps Platform › Map management 
 
 Done on 2026-10-04: the browser key above was created; the code reads the server key through `googleMapsServerKey()`; the app's address search moved to the server; the website moved to Places API (New) and advanced markers.
 
+The browser key was checked the same day by drawing a map with it on each address: `abontenhub.com`, `abonten.vercel.app`, a preview deployment (so Google accepts the `*-benjamin-tibardoes-projects.vercel.app` pattern) and a local build on `127.0.0.1:3010` drew their maps; `example.com` was refused with `RefererNotAllowedMapError`. The local build also ran the address fields and the pins on it.
+
 Left, in this order (each needs the founder's Google Cloud, Vercel or GitHub access):
 
 1. Create **Abonten Server (geocoding + places)**: Google Cloud › APIs & Services › Credentials › Create credentials › API key; Application restrictions: none; API restrictions: Geocoding API and Places API (New). Put its value in `GOOGLE_MAPS_API_KEY` on the Vercel projects `abonten` and `abonten-app-admin` (Production, Preview, Development; Sensitive).
