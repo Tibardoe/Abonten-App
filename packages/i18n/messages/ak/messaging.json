@@ -236,5 +236,7 @@
   "yourImageCouldnTBeUploaded": "Your image couldn't be uploaded.",
   "yourMessages": "your messages",
   "deleteMessageTitle": "Delete this message?",
-  "deleteMessageBody": "This can't be undone."
+  "deleteMessageBody": "This can't be undone.",
+  "replyingToYourself": "Replying to yourself",
+  "replyingToAMessage": "Replying to a message"
 }

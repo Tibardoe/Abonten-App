@@ -95,6 +95,7 @@ export const VALIDATION_SOURCE: Record<string, string> = {
   thatReasonDoesnTApplyTo: "That reason doesn't apply to this kind of content",
   theEndDateCanTBe: "The end date can't be before the start date",
   theEventHasToEndAfter: "The event has to end after it starts",
+  thisUsernameIsnTAvailable: "This username isn't available.",
   uploadAPhotoJpegPngWebp: "Upload a photo (JPEG, PNG, WebP, HEIC) or a PDF",
   useA2LetterCountryCode: "Use a 2-letter country code, e.g. GH",
   useA3LetterCurrencyCode: "Use a 3-letter currency code, e.g. GHS",
@@ -104,7 +105,7 @@ export const VALIDATION_SOURCE: Record<string, string> = {
     "Use the international format, e.g. +233241234567",
   useYyyyMmDd: "Use YYYY-MM-DD",
   usernameCanOnlyContainLettersNumbers:
-    "Username can only contain letters, numbers, periods, underscores, and hyphens.",
+    "Username can only contain letters, numbers and underscores.",
   usernameMustBe30CharactersOr: "Username must be 30 characters or fewer.",
   usernameMustBeAtLeast3: "Username must be at least 3 characters.",
   writeAReplyFirst: "Write a reply first.",

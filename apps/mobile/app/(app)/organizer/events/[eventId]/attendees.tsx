@@ -7,6 +7,7 @@ import {
 } from "@/features/organizer/useAttendees";
 import { useQueryView } from "@/lib/useQueryView";
 import type { AttendanceRow } from "@abonten/api-client";
+import { personName } from "@abonten/core/personName";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import { AppText, Button, Refresher, useToast } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -33,10 +34,7 @@ function AttendeeRow({
 
   const isCancelled = attendee.status === "cancelled";
   const isCheckedIn = attendee.ticket?.status === "used";
-  const name =
-    attendee.user_info?.full_name ??
-    attendee.user_info?.username ??
-    t("attendee");
+  const name = personName(tc, attendee.user_info) ?? t("attendee");
 
   const toggle = (checkedIn: boolean) => {
     if (!attendee.ticket_id) return;
@@ -48,7 +46,7 @@ function AttendeeRow({
             toast.success(
               checkedIn
                 ? t("checkedIn", {
-                    value: attendee.user_info?.full_name ?? t("attendee"),
+                    value: name,
                   })
                 : t("checkInUndone"),
             );

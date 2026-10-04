@@ -15,6 +15,7 @@ import {
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { conversationPreviewText } from "@abonten/core/messagingInboxCache";
+import { isDeletedAccount } from "@abonten/core/personName";
 import type {
   ConversationListItem,
   ConversationType,
@@ -82,7 +83,9 @@ export function ConversationListRow({
   const lastFromMe =
     !!currentUserId && item.last_message_sender_id === currentUserId;
   const identity =
-    item.other_display_name ||
+    (isDeletedAccount(item.other_username)
+      ? tc("member.former")
+      : item.other_display_name) ||
     item.subject_title ||
     item.title ||
     t("conversation");

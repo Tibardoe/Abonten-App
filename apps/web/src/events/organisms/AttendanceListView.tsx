@@ -2,6 +2,7 @@
 
 import checkInTicket from "@/actions/checkInTicket";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { personName } from "@abonten/core/personName";
 import { ticketTypeLabel } from "@abonten/core/ticketTiers";
 import type { AttendanceRow as Attendee } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
@@ -70,9 +71,7 @@ function AttendanceRow({
   return (
     <li className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2">
       <div className="flex justify-between items-center gap-2">
-        <h2 className="font-bold">
-          {attendee.user_info?.full_name ?? attendee.user_info?.username}
-        </h2>
+        <h2 className="font-bold">{personName(tc, attendee.user_info)}</h2>
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-sm text-muted-foreground">

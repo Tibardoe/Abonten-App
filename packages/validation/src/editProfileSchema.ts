@@ -1,9 +1,14 @@
 import { WEBSITE_URL_REGEX } from "@abonten/core/urlValidation";
 import { z } from "zod";
 
-// Usernames are used in public URLs (/user/[username]/...), so the allowed
-// character set matches what's safe there: letters, numbers, underscore, period, hyphen.
-const USERNAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+// Usernames are used in public URLs (/user/[username]/...). The database
+// accepts letters, numbers and underscores only (user_info_username_check);
+// this used to allow periods and hyphens too, so "john.doe" passed here and
+// was then refused by the database with no useful message.
+const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
+// What a deleted account's username becomes (anonymize_deleted_account):
+// screens show such an account as a former member, so nobody may take one.
+const DELETED_ACCOUNT_USERNAME = /^deleted_/i;
 
 export const editProfileSchema = z.object({
   username: z
@@ -12,8 +17,10 @@ export const editProfileSchema = z.object({
     .min(3, { message: "Username must be at least 3 characters." })
     .max(30, { message: "Username must be 30 characters or fewer." })
     .regex(USERNAME_REGEX, {
-      message:
-        "Username can only contain letters, numbers, periods, underscores, and hyphens.",
+      message: "Username can only contain letters, numbers and underscores.",
+    })
+    .refine((value) => !DELETED_ACCOUNT_USERNAME.test(value), {
+      message: "This username isn't available.",
     }),
 
   full_name: z

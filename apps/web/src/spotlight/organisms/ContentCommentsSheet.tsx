@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/useToast";
 import { actionUnreachable } from "@/utils/actionUnreachable";
 import { MAX_COMMENT_LENGTH } from "@abonten/core/content/limits";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
+import { isDeletedAccount } from "@abonten/core/personName";
 import type {
   ContentComment,
   ContentCommentsPage,
@@ -246,6 +247,7 @@ function CommentRow({
   isReply?: boolean;
 }) {
   const t = useTranslations("spotlight");
+  const tc = useTranslations("core");
 
   const requireAuth = useRequireAuth();
   const toast = useToast();
@@ -300,8 +302,9 @@ function CommentRow({
     onDeleted();
   };
 
-  const name =
-    comment.author.username ?? comment.author.fullName ?? t("someone");
+  const name = isDeletedAccount(comment.author.username)
+    ? tc("member.former")
+    : (comment.author.username ?? comment.author.fullName ?? t("someone"));
 
   return (
     <li className={isReply ? "ml-10" : undefined}>

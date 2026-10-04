@@ -236,5 +236,7 @@
   "yourImageCouldnTBeUploaded": "Votre image n'a pas pu être mise en ligne.",
   "yourMessages": "vos messages",
   "deleteMessageTitle": "Supprimer ce message ?",
-  "deleteMessageBody": "Cette action est irréversible."
+  "deleteMessageBody": "Cette action est irréversible.",
+  "replyingToYourself": "Réponse à vous-même",
+  "replyingToAMessage": "Réponse à un message"
 }

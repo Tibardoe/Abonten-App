@@ -1,4 +1,5 @@
 import type { ConversationContext } from "@abonten/api-client";
+import { personName } from "@abonten/core/personName";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
@@ -35,6 +36,7 @@ export function ConversationHeader({
   present?: boolean;
 }) {
   const t = useTranslations("messaging");
+  const tc = useTranslations("core");
 
   const { ref: menuRef, measure: measureMenu } = useAnchorMeasure();
   const c = useThemeColors();
@@ -60,9 +62,7 @@ export function ConversationHeader({
     (p) => p.user_id !== currentUserId && p.profile,
   );
   const otherName =
-    context?.type !== "support"
-      ? other?.profile?.full_name || other?.profile?.username || null
-      : null;
+    context?.type !== "support" ? personName(tc, other?.profile) : null;
   const title = otherName ?? subjectName;
   // A direct conversation (opened by a Story reply) has no event or place;
   // its stored title is only the organizer's name, which would repeat the
