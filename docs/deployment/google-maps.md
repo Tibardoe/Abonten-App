@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Google Maps keys and Map ID
 
-Google bills Abonten for every address lookup, suggestion and place detail, so each key may do only its own job. Until 2026-10-04 one key, "Maps Platform API Key", did everything: it was sent to every website visitor, built into the app, and allowed 27 Google services, with no restriction on who could use it. Anyone who copied it from the website could have run up the bill on any of those services.
+Google bills Abonten for every address lookup, suggestion and place detail, so each key may do only its own job. Until 2026-10-04 one key, "Maps Platform API Key" (now **Abonten Android (Maps SDK only)**), did everything: it was sent to every website visitor, built into the app, and allowed 27 Google services, with no restriction on who could use it. Anyone who copied it from the website could have run up the bill on any of those services.
 
 ## The keys
 
@@ -23,8 +23,8 @@ Project `abonten-452216` (Google Cloud, signed in as the founder's abontenhub ac
 | Key (Google Cloud name) | Variable | Who may use it | Services | Why |
 |---|---|---|---|---|
 | **Abonten Web (browser)** | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (web, every environment; GitHub Actions secret of the same name) | Websites only: `abontenhub.com`, `*.abontenhub.com`, `abonten.vercel.app`, the project's preview addresses (`*-benjamin-tibardoes-projects.vercel.app`), `localhost` / `127.0.0.1` on ports 3000 and 3010 | Maps JavaScript API, Places API (New), Geocoding API | It is in every visitor's browser, so Google must refuse it anywhere else |
-| **Abonten Server (geocoding + places)** | `GOOGLE_MAPS_API_KEY` (web and admin, every environment; secret) | Any caller holding it; it never leaves the server | Geocoding API, Places API (New) | Server calls carry no website address, so a browser key cannot be used; the key is kept secret instead |
-| **Maps Platform API Key** (the original key) | `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` (EAS environments, `apps/mobile/.env`) | Any caller | Maps SDK for Android only (once the cut-over below is finished) | It is built into every Android app and cannot be hidden. Google charges nothing for Maps SDK map loads, so a copy of it costs nothing. It is not limited to the app's signing certificate on purpose: Play App Signing re-signs the app with Google's own certificate, and a forgotten fingerprint would blank every map on the day the app reaches Play |
+| **Abonten Server (geocoding + places)** | `GOOGLE_MAPS_API_KEY` (web and admin, Production and Preview; secret) | Any caller holding it; it never leaves the server | Geocoding API, Places API (New) | Server calls carry no website address, so a browser key cannot be used; the key is kept secret instead |
+| **Abonten Android (Maps SDK only)** (the original key, "Maps Platform API Key" until 2026-10-04) | `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` (EAS environments, `apps/mobile/.env`) | Any caller | Maps SDK for Android only | It is built into every Android app and cannot be hidden. Google charges nothing for Maps SDK map loads, so a copy of it costs nothing. It is not limited to the app's signing certificate on purpose: Play App Signing re-signs the app with Google's own certificate, and a forgotten fingerprint would blank every map on the day the app reaches Play |
 
 `googleMapsServerKey()` (`@abonten/services/geo/googleMapsKey`) is the only way server code reads a key: `GOOGLE_MAPS_API_KEY`, falling back to the browser key with a logged warning on a deployment that has no server key yet. Server callers: `/api/geocode`, the public location pages (`geocodeServerSide.ts` through `placeNameGeocode`), the country lookup in `locationResolution.ts`, Admin › Field Ops / Abonten Weekly "Find on the map" (`regionsAdminCore.ts`), and the app's address search (`placeSuggestions.ts`).
 
@@ -41,22 +41,20 @@ Advanced markers need a Map ID: the map's settings kept in Google Cloud (Google 
 
 A Map ID on the website does not change what Google bills: web map loads are Dynamic Maps either way. (On Maps SDK for Android or iOS a Map ID would make free map loads billable, which is one more reason the app uses none.)
 
-## Cut-over of 2026-10-04 and what is left
+## Cut-over of 2026-10-04 (done)
 
-Done on 2026-10-04: the browser key above was created; the code reads the server key through `googleMapsServerKey()`; the app's address search moved to the server; the website moved to Places API (New) and advanced markers.
+All on 2026-10-04, in this order:
 
-The browser key was checked the same day by drawing a map with it on each address: `abontenhub.com`, `abonten.vercel.app`, a preview deployment (so Google accepts the `*-benjamin-tibardoes-projects.vercel.app` pattern) and a local build on `127.0.0.1:3010` drew their maps; `example.com` was refused with `RefererNotAllowedMapError`. The local build also ran the address fields and the pins on it.
+1. The code: `googleMapsServerKey()`, the app's address search through the server, Places API (New) and advanced markers on the website (PR #24, main `abf5cda8`); app update `d390cd88` (production).
+2. Map ID "Abonten web" created and made the website's default.
+3. **Abonten Web (browser)** created. The browser key was checked the same day by drawing a map with it on each address: `abontenhub.com`, `abonten.vercel.app`, a preview deployment (so Google accepts the `*-benjamin-tibardoes-projects.vercel.app` pattern) and a local build on `127.0.0.1:3010` drew their maps; `example.com` was refused with `RefererNotAllowedMapError`. The local build also ran the address fields and the pins on it.
+4. **Abonten Server (geocoding + places)** created (`52297ca2…`) and checked: Geocoding and Places (New) answer, Static Maps is refused. `GOOGLE_MAPS_API_KEY` set on `abonten` (Production, Preview; Sensitive — Vercel does not offer a sensitive variable to Development, and local development reads `apps/web/.env.local`) and replaced on `abonten-app-admin` (Production, and added for Preview). `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` removed from `abonten-app-admin`.
+5. `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` on `abonten` (Production, Preview, Development) and the GitHub Actions secret switched to the browser key; web and admin redeployed. The live site's scripts carry the browser key only (checked by fingerprint). Checked live: pins on the Explore map and an event page, address suggestions and a pick on the home page, the app's address search, a location page that needs a fresh geocode.
+6. The original key renamed **Abonten Android (Maps SDK only)** and limited to Maps SDK for Android. Google refuses to remove a service a key used in the last 7 days unless the check is skipped (`gcloud services api-keys update … --no-check-existing-usage`); it was skipped after Cloud Monitoring's request counts (`serviceruntime.googleapis.com/api/request_count` by `credential_id`) showed no traffic on the key since the switch. Afterwards Google answered `REQUEST_DENIED` / `PERMISSION_DENIED` to it for Geocoding and Places, and the Android app still drew its maps with it.
 
-Left, in this order (each needs the founder's Google Cloud, Vercel or GitHub access):
+Installed app builds that have not fetched update `d390cd88` still call Google's Places web service with the original key; their address field now gets no suggestions and falls back to typed text until they update.
 
-1. Create **Abonten Server (geocoding + places)**: Google Cloud › APIs & Services › Credentials › Create credentials › API key; Application restrictions: none; API restrictions: Geocoding API and Places API (New). Put its value in `GOOGLE_MAPS_API_KEY` on the Vercel project `abonten` (new; Production, Preview, Development; Sensitive) and replace the value of `GOOGLE_MAPS_API_KEY` on `abonten-app-admin` (it exists, Production, and probably holds the original key). Delete `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` from `abonten-app-admin`: no admin page draws a map, so it only ships a key to admins' browsers for nothing.
-2. The Map ID: done on 2026-10-04 (above).
-3. Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` on `abonten` (all three environments) and the GitHub Actions secret of the same name to the **Abonten Web (browser)** key, then redeploy production.
-4. Check production: a map with pins on an event page, address suggestions on the home page, "Find on the map" in Admin, a public location page (`/explore/<town>`).
-5. The app update carrying the new address search: done on 2026-10-04 (production `d390cd88`).
-6. Limit **Maps Platform API Key** to Maps SDK for Android only (Credentials › the key › API restrictions). From then on a copy of it can only draw maps in an Android app, which Google does not charge for.
-
-Each step can be undone on its own: a key's restrictions can be widened again in the console, and a Vercel variable can be pointed back at the old key.
+Every step can be undone on its own: a key's restrictions can be widened again (Credentials › the key, or `gcloud services api-keys update … --api-target=…`), and a Vercel variable can be pointed back at another key.
 
 ## Rotating a key
 
