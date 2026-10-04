@@ -43,7 +43,7 @@ export const DEFAULT_LOCALE: I18nLocale = "en";
 // there first and fall back to React Native's own constants. A try/catch
 // around the require is not enough — Metro reports a module that fails to
 // initialise as a fatal error before the catch sees it, and an update that
-// relied on that crashed every 0.3.0 install for ten minutes (2026-10-04).
+// relied on that crashed 0.3.0 installs for five minutes (2026-10-04).
 function systemAppLanguage(): string | null {
   if (!requireOptionalNativeModule("ExpoLocalization")) return null;
   try {
