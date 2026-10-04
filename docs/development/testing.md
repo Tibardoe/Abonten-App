@@ -4,8 +4,8 @@ purpose: What automated tests exist, how to run them, what they cover, and what 
 audience: Engineers
 scope: Vitest unit tests, the Supabase integration suite, parity and documentation checks
 status: Approved
-version: 1.4
-lastReviewed: 2026-10-02
+version: 1.5
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -88,6 +88,7 @@ Do this in at least one language other than English before a release that touche
 - `npm run check:i18n` — the translation chain ([architecture/internationalisation.md](../architecture/internationalisation.md) §7).
 - `npm run check:action-calls` — every Server Action called from browser code (website and admin console) has something to catch a dropped connection ([architecture/web-resilience.md](../architecture/web-resilience.md) §1).
 - `npm run check:mobile-boot` — the app's splash and root error screen, which render without providers, use no provider hook.
+- `npm run check:route-links` — every literal `href` / `push` / `replace` / `redirect` / `navigate` target in the website and the app matches a route folder (`apps/web/src/app`, `apps/mobile/app`).
 - `npm run check:docs` — documentation validation (`documentation-validation.md`).
 - `npm run typecheck`, Biome (`npx biome check <paths>`), `next build` for web and admin.
 

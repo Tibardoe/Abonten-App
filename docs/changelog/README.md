@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Links to routes that do not exist
+
+- Updated `development/ci.md`, `development/testing.md`.
+- The favourites page sent people with no saved places to `/places`, which has no page (now `/explore?tab=places`); the app's chat header fell back to `/(app)/messages` while every other screen uses `/(app)/(tabs)/messages`. Found by crawling production (70 links on the public pages, all fine) and a static pass over every literal address; `scripts/check-route-links.mjs` (`npm run check:route-links`, in CI) keeps it so.
+
 ## 2026-10-04 — Incident: an app update crashed 0.3.0 installs for five minutes
 
 - Updated `architecture/internationalisation.md` (§9), `deployment/mobile-eas.md`.
