@@ -165,6 +165,6 @@ Two things decide the cost:
 - "From top-rated organizers" stops at 60 events.
 - An event with no start and no dates of its own, but an end in the future, sorts last and cannot be paged past. The apps cannot create one.
 - A city with tens of thousands of events on at once pays about 3 microseconds an event for every list without an end date: 75 ms for 21,000 events in range.
-- "Happening today" reads every event that started before the end of today and is not archived. That is what is on only while the nightly job archives ended events (decision S8 is about that job).
+- "Happening today" reads every event that started before the end of today and is not archived. The daily `retire-ended-events` job archives the ones that are over, in every environment.
 - "Open now" at night asks every place in range when few are open: about 5 microseconds a place.
 - A list with no point (the older search with filters and no text) reads every event that is on.

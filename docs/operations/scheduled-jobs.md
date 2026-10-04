@@ -1,11 +1,11 @@
 ---
-title: Scheduled jobs (pg_cron and edge functions)
+title: Scheduled jobs (pg_cron)
 purpose: Every scheduled job in production — what it does, when it runs, how to tell it is healthy, and what breaks if it stops.
 audience: Engineering, operations
-scope: pg_cron jobs in supabase/migrations, the delete-expired-events edge function
+scope: pg_cron jobs in supabase/migrations
 status: Approved
-version: 1.2
-lastReviewed: 2026-10-02
+version: 1.3
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -55,7 +55,7 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `expire-stale-content-campaign-checkouts` | */5 min | `expire_stale_content_campaign_checkouts()` | Expire unpaid promotion checkouts after 30 minutes (skips a live payment attempt) and return the campaign to draft | Stale checkouts block a new promotion on the same post |
 | `content-attribute-conversions` | :35 hourly | `content_attribute_conversions()` | Credit ticket purchases to a promoted post tapped within 7 days | Conversion counts stop |
 | `content-campaign-reconcile` | :10, :40 | `content_campaign_reconcile()` | Promotion ledger vs paid/delivered/refunded amounts, live-without-payment, missing transaction, spend beyond delivery → critical incidents; completed promotions with unused budget unrefunded after 7 days → medium incident | Money drift goes unnoticed |
-| `cleanupExpiredEvents` | 00:00 | `net.http_get` → edge function `delete-expired-events` → `archive_or_delete_expired_event` for each event whose last date is over | Archive an ended event that anyone registered for, attended, reviewed or paid for (kept, out of discovery, still reachable by its link); delete one nobody touched and queue its flyer for clean-up. The database function checks for itself that the event has ended. | Ended events stay unarchived (their dates already keep them out of every list). **This job exists on production only** (created by hand, never in a migration), and pg_cron records "succeeded" when the request is queued, not when the function finishes, so a failed run does not show in Admin › Monitoring. The request carries the public anon key, read from Vault (SEC-004, fixed 2026-09-04). Moving the job into the database is decision S8. |
+| `retire-ended-events` | 00:00 | `public.retire_ended_events()` (migration `20261004100000`) | Archive every event whose last date is over (its own dates if it has any, else its own end). Nothing is deleted: an archived event leaves discovery and keeps its page, tickets, attendance, reviews and its place on the organizer's profile (decision D8). | Ended events stay unarchived: their dates already keep them out of every list, the "Happening today" lists read a few more rows, and an organizer whose only event has ended keeps Spotlight eligibility longer. Runs in every environment; a failed run shows in Admin › Monitoring. Replaced, on 2026-10-04, the hand-made production job `cleanupExpiredEvents` and the `delete-expired-events` edge function it called (decision S8). |
 
 ## Operating notes
 

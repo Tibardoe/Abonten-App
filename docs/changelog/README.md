@@ -16,6 +16,21 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Event and place pages: rendered per request, on purpose (D7)
+
+- Updated `architecture/web-resilience.md` (§4 "Event and place pages are not cached"), `OPERATIONAL_DECISIONS_REQUIRED.md` (D7 decided), `PROJECT.md`, `CLAUDE.md`.
+- The event and place pages export `dynamic = "force-dynamic"` in place of a `revalidate = 60` that did nothing today and would have become an unrevalidated one-minute cache if the pages ever stopped reading cookies. No behaviour change: both were already rendered for every request.
+- The Featured banner no longer features an event whose ticket tiers are all sold out (it checked only the headcount cap).
+- Removed the website's leftover disk-cache folder: 15 JSON snapshots that nothing has read since the banner stopped storing its pick.
+
+## 2026-10-04 — Ended events: one job in the database, nothing deleted
+
+- Updated: `operations/scheduled-jobs.md` 1.3, `privacy/data-retention-and-deletion.md` 1.3, `security/database-security.md` 1.2, `security/README.md` 1.2, `security/secrets-and-environment.md` 1.11, `OPERATIONAL_DECISIONS_REQUIRED.md` 1.5 (D8 and S8 decided), `architecture/system-overview.md`, `architecture/explore-lists.md`, `audit/01-limitations-register.md` (DATA-006 superseded); `PROJECT.md` §61; `CLAUDE.md`.
+- **Behaviour.** An ended event is archived, never deleted: it leaves discovery and keeps its page, tickets, reviews and its place on the organizer's profile. Before, an ended event nobody registered for was deleted the night it ended.
+- **Job.** `retire-ended-events` (00:00 UTC, `retire_ended_events()`) in every environment replaces the hand-made production job `cleanupExpiredEvents` and the `delete-expired-events` edge function, which is deleted with its secrets. Vault secrets `cleanup_expired_events_anon_key` and `cleanup_expired_events_service_role_key` removed. `archive_or_delete_expired_event()` dropped.
+- **Replay drift.** A database built from the migrations now matches production: no `user_info_id_key`, and `place_drafts_owner_all` asks `auth.uid()` once per statement.
+- Migrations `20261004100000_ended_events_job_in_the_database`, `20261004100100_match_production_user_info_and_place_drafts`. Env vars: none. Edge function secrets removed: `URL`, `SERVICE_ROLE_KEY`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_CLOUD_NAME`.
+
 ## 2026-10-04 — Fewer database rounds on the event, place and manage pages
 
 - Updated `architecture/web-resilience.md` 1.1 (§7: independent reads start together; one read per row per request). The event page asks for similar events with its other reads and takes its cheapest tier from the tiers it already has (one query fewer); the place page reads the place once for its metadata and its page and then everything else at once (three rounds after the place became one); both reviews pages read their event or place once; the two manage pages check the visitor and read the listing together. No behaviour change.

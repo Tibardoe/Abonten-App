@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.10
-lastReviewed: 2026-10-02
+version: 1.11
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -72,7 +72,7 @@ complianceReviewRequired: no
 
 ## Database-side secrets
 
-`observability_config` (health URL + secret), `notification_delivery_config` (dispatch URL + token). The `cleanupExpiredEvents` cron reads the anon key for its request from Supabase Vault (`cleanup_expired_events_anon_key`; SEC-004, fixed 2026-09-04). A second Vault secret, `cleanup_expired_events_service_role_key`, holds the old service-role JWT that was deactivated in that rotation; nothing reads it (decision S8).
+`observability_config` (health URL + secret), `notification_delivery_config` (dispatch URL + token). No scheduled job holds a key: ended events are retired inside the database (`retire-ended-events`). The Vault secrets `cleanup_expired_events_anon_key` and `cleanup_expired_events_service_role_key`, and the `delete-expired-events` edge function with its own secrets (`URL`, `SERVICE_ROLE_KEY` and three Cloudinary keys), were removed on 2026-10-04 (decision S8); the project has no edge functions.
 
 ## Test-only
 
@@ -88,7 +88,7 @@ GitHub Dependabot alerts are on for the repository (2026-09-27). The two alerts 
 
 1. Generate the new secret at the provider (Supabase keys, Paystack, Cloudinary, Resend, Hubtel, Sentry token, Google).
 2. Update Vercel env (web **and** admin where shared) and, for `EXPO_PUBLIC_*`, EAS env; update GitHub Actions secrets (third-party keys only — CI holds no Supabase key).
-3. For `OBSERVABILITY_INGEST_SECRET`, also update the `observability_config` row; for the Supabase service-role key, also update the `delete-expired-events` edge function's own `SERVICE_ROLE_KEY` secret (Supabase Dashboard) and any EAS/CI usage.
+3. For `OBSERVABILITY_INGEST_SECRET`, also update the `observability_config` row; for the Supabase service-role key, also update any EAS/CI usage.
 4. Redeploy web and admin; `eas update` if a public value changed (rare).
 5. Revoke the old secret at the provider; confirm health probes green; check Sentry for auth errors.
 6. Record the rotation date here.

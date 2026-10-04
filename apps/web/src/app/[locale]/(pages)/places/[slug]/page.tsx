@@ -47,11 +47,10 @@ import { IoLocationOutline, IoLogoWhatsapp } from "react-icons/io5";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-// Place details are public and don't depend on the viewer, so this page can
-// be statically rendered and revalidated periodically (ISR) instead of
-// re-querying Supabase on every request -- same reasoning/window as the
-// event details page.
-export const revalidate = 60;
+// Rendered for every visit, on purpose, like the event page (decision D7):
+// a closure, a moderation decision or an edit shows on the next request.
+// (It declared `revalidate = 60` and was dynamic all the same.)
+export const dynamic = "force-dynamic";
 
 // How far around a place to look for "Similar Places" -- matches
 // getSimilarEvents.ts's 10km radius convention for the analogous "similar

@@ -4,8 +4,8 @@ purpose: Document the Postgres/Supabase security model — RLS coverage, service
 audience: Engineering, security reviewers
 scope: supabase/migrations, Supabase project configuration
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-02
+version: 1.2
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -54,7 +54,7 @@ A real privilege-escalation bug was fixed on 2026-09-11: `protect_user_info_priv
 
 ## Secrets in the database
 
-`observability_config` (health URL + secret) and `notification_delivery_config` (dispatch URL + token) are operator-filled rows readable only by service role. The `cleanupExpiredEvents` cron command reads its `Authorization` header (the public anon key) from Supabase Vault; the service-role JWT it once carried inline was removed and the key rotated (SEC-004, fixed 2026-09-04). The old, deactivated JWT is still stored in Vault as `cleanup_expired_events_service_role_key` and has no reader (decision S8).
+`observability_config` (health URL + secret) and `notification_delivery_config` (dispatch URL + token) are operator-filled rows readable only by service role. Ended events are retired by a job inside the database (`retire-ended-events`, since 2026-10-04): no request leaves the database and no key is stored for it. The hand-made cron job it replaced once carried a service-role JWT inline (SEC-004, fixed 2026-09-04 by moving it to Vault and rotating the key); that job, the `delete-expired-events` edge function it called, its two Vault secrets and the edge function's own secrets were removed on 2026-10-04 (decision S8).
 
 ## Migrations discipline
 

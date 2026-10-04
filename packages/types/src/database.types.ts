@@ -13790,10 +13790,6 @@ export type Database = {
         Args: { p_admin_id: string; p_request_id: string }
         Returns: string
       }
-      archive_or_delete_expired_event: {
-        Args: { p_event_id: string }
-        Returns: Json
-      }
       area_launch_overview: {
         Args: { p_country_code: string }
         Returns: {
@@ -16173,6 +16169,7 @@ export type Database = {
         }
         Returns: Json
       }
+      retire_ended_events: { Args: never; Returns: Json }
       review_list: {
         Args: {
           p_after_created?: string

@@ -18,13 +18,13 @@ function meetsBaseEligibility(event: UserPostType): boolean {
   );
   if (status !== "upcoming") return false;
 
-  // Matches EventCard's sold-out check: get_nearby_events (the source of
-  // the events passed in here) returns aggregated min_price/currency, not
-  // a per-ticket-type quantity list, so only the capacity-based branch of
-  // getEventSoldOutStatus is meaningful at this layer.
+  // The same test as EventCard: the headcount cap, and the stock of every
+  // ticket tier (the Explore rows carry both since 2026-10-02), so a banner
+  // never features an event whose tickets are gone.
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: event.attendanceCount ?? event.attendance_count ?? 0,
+    ticketTypes: event.ticket_type,
   });
 
   return !soldOut;
