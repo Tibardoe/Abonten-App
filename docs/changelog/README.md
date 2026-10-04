@@ -20,6 +20,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - Updated `deployment/mobile-eas.md` (1.7).
 - `apps/mobile/app.json`: `version` 1.0.0 (the runtime version follows it, so updates for 1.0.0 are published separately from 0.3.0) and `ios.supportsTablet` false. The iPhone app was marked as an iPad app too, which makes iPad screenshots mandatory and has App Review test every screen at iPad sizes; none was ever laid out or tested there. On an iPad it now runs as the iPhone app.
+- Found while preparing the store screenshots on a device: the app's Edit Profile never showed a saved website, because `GET /api/mobile/profile` returns the `user_profile_details` view and the view has no `website` column, so saving any other field wrote an empty website over it. The route now adds `user_info.website` (this also mends installed apps). Changing the photo re-filled the whole form and threw away a typed username: the form now follows the server only in fields the person has not touched. The sign-in screens kept the previous screen's status-bar style on Android (white clock and battery on the light page): the sign-in stack now sets it from the theme.
 - Migrations, permissions, jobs, env vars: none.
 
 ## 2026-10-04 — Google Maps: one key per job, the current Places and pins

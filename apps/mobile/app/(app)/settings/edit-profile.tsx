@@ -22,7 +22,7 @@ import {
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, View } from "react-native";
 
 // Native echo of the web EditProfileInputFields — the same
@@ -82,19 +82,33 @@ export default function EditProfile() {
     }
   }
 
-  // Seed the form once the profile loads. `website` is seeded too: it used
-  // to start empty regardless of what was saved, so the field never showed
-  // an existing website and every save from the app wrote "" over one that
-  // had been set on the web.
+  // Fill the form from the profile, and follow later answers (a new photo
+  // or a save refetches it) only in the fields the person has not touched:
+  // re-filling the whole form threw away a typed username when the photo
+  // changed. `website` comes from the profile route, which adds it to the
+  // view's row; without it every save wrote "" over the saved website.
+  const serverValues = useRef<FormState | null>(null);
   useEffect(() => {
-    if (profile) {
-      setForm({
-        username: profile.username ?? "",
-        full_name: profile.full_name ?? "",
-        website: profile.website ?? "",
-        bio: profile.bio ?? "",
-      });
-    }
+    if (!profile) return;
+    const next: FormState = {
+      username: profile.username ?? "",
+      full_name: profile.full_name ?? "",
+      website: profile.website ?? "",
+      bio: profile.bio ?? "",
+    };
+    const previous = serverValues.current;
+    serverValues.current = next;
+    setForm((current) => {
+      if (!previous) return next;
+      const keep = (key: keyof FormState) =>
+        current[key] === previous[key] ? next[key] : current[key];
+      return {
+        username: keep("username"),
+        full_name: keep("full_name"),
+        website: keep("website"),
+        bio: keep("bio"),
+      };
+    });
   }, [profile]);
 
   const dirty = useMemo(() => {
