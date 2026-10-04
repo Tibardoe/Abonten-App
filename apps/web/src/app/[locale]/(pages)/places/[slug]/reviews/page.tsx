@@ -1,4 +1,5 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { languageAlternates } from "@/i18n/alternates";
 import AddPlaceReviewButton from "@/places/molecules/AddPlaceReviewButton";
 import { loadReviewsPage, reviewsPageDescription } from "@/reviews/loadReviews";
 import ReviewsBrowser from "@/reviews/organisms/ReviewsBrowser";
@@ -67,7 +68,10 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: reviewsPath("place", place.slug) },
+    alternates: languageAlternates(
+      reviewsPath("place", place.slug),
+      await getLocale(),
+    ),
     openGraph: {
       title,
       description,

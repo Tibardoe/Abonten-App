@@ -1,4 +1,5 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { languageUrls } from "@/i18n/alternates";
 import { LEGAL_DOCUMENTS, listHelpPages } from "@/utils/publicContent";
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { logger } from "@abonten/core/logger";
@@ -8,6 +9,8 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants";
 // /sitemap.xml -- every public event and place page plus the static
 // public pages, so search engines find listings without crawling the
 // location-based explore pages (which need a geolocation to show anything).
+// Each translated page lists its other languages (hreflang, ?hl=<locale>,
+// i18n/alternates.ts); the legal pages are English only.
 // Rebuilt at most once an hour. Reads go through the cookie-free anon
 // client, so RLS keeps hidden / removed / draft listings out exactly as it
 // does for a signed-out visitor; archived and long-ended events are left
@@ -27,18 +30,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: `${base}/`,
+      alternates: { languages: languageUrls(`${base}/`) },
       lastModified: now,
       changeFrequency: "daily",
       priority: 1,
     },
     {
       url: `${base}/weekly`,
+      alternates: { languages: languageUrls(`${base}/weekly`) },
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${base}/help`,
+      alternates: { languages: languageUrls(`${base}/help`) },
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.4,
@@ -57,6 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     ...listHelpPages().map((p) => ({
       url: `${base}${p.href}`,
+      alternates: { languages: languageUrls(`${base}${p.href}`) },
       lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.3,
@@ -97,6 +104,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((e) => !!e.event_code)
     .map((e) => ({
       url: `${base}/events/${e.event_code}`,
+      alternates: { languages: languageUrls(`${base}/events/${e.event_code}`) },
       lastModified: e.created_at ? new Date(e.created_at) : now,
       changeFrequency: "daily" as const,
       priority: 0.7,
@@ -106,6 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((p) => !!p.slug)
     .map((p) => ({
       url: `${base}/places/${p.slug}`,
+      alternates: { languages: languageUrls(`${base}/places/${p.slug}`) },
       lastModified: p.updated_at ? new Date(p.updated_at) : now,
       changeFrequency: "weekly" as const,
       priority: 0.6,

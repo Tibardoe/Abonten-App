@@ -5,12 +5,13 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import AreaCoverageNotice from "@/events/organisms/AreaCoverageNotice";
+import { languageAlternates } from "@/i18n/alternates";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import { EMPTY_EVENT_FILTERS } from "@abonten/core/exploreFilters";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import AllEventsList from "./AllEventsList";
 
@@ -26,7 +27,10 @@ export async function generateMetadata({
   return {
     title: t("eventsIn", { label: label }),
     description: t("upcomingEventsInWhatIsHappening", { label: label }),
-    alternates: { canonical: `/events/location/${location}` },
+    alternates: languageAlternates(
+      `/events/location/${location}`,
+      await getLocale(),
+    ),
   };
 }
 

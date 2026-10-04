@@ -1,3 +1,4 @@
+import { languageAlternates } from "@/i18n/alternates";
 import { getPublicWeeklyEdition } from "@/utils/weeklyPublic";
 import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -7,7 +8,7 @@ import {
   weeklyEditionPath,
 } from "@abonten/core/weekly/copy";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import WeeklyEditionView from "./WeeklyEditionView";
 import WeeklyFallback from "./WeeklyFallback";
@@ -89,7 +90,10 @@ export async function weeklyMetadata(
   return {
     title,
     description,
-    alternates: { canonical: `${siteOrigin()}${canonicalPath}` },
+    alternates: languageAlternates(
+      `${siteOrigin()}${canonicalPath}`,
+      await getLocale(),
+    ),
     openGraph: {
       title: socialTitle,
       description,
