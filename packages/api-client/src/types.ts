@@ -266,9 +266,10 @@ export type CloudinarySignatureData = {
 
 // ---- profile ---------------------------------------------------------------
 
-// The `user_profile_details` view row, returned by the profile route as-is.
-// Verified column set (PostgREST serialises the bigint/numeric aggregates as
-// strings, hence `number | string`).
+// The `user_profile_details` view row plus `user_info.website`, which the
+// view does not carry and the profile route adds. Verified column set
+// (PostgREST serialises the bigint/numeric aggregates as strings, hence
+// `number | string`).
 export type ProfileData = {
   user_id: string;
   full_name: string | null;
@@ -276,7 +277,7 @@ export type ProfileData = {
   avatar_public_id: string | null;
   avatar_version: string | null;
   bio: string | null;
-  /** user_info.website — the route selects the whole row. */
+  /** user_info.website, added by the route (absent from older deployments). */
   website?: string | null;
   total_posts: number | string | null;
   total_favorites: number | string | null;

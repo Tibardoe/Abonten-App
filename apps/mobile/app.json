@@ -3,7 +3,7 @@
     "name": "Abonten",
     "slug": "abonten",
     "scheme": "abonten",
-    "version": "0.3.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -13,7 +13,7 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.abonten.app",
       "usesAppleSignIn": true,
       "appleTeamId": "KDDBR5P4D6",

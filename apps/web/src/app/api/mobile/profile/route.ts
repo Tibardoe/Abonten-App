@@ -29,7 +29,19 @@ export async function GET(req: Request) {
       });
     }
 
-    return apiJson({ status: 200, data });
+    // The view has no `website` column, and the app's Edit Profile fills its
+    // form from this answer: without it the field opened empty and the next
+    // save wrote "" over the saved website.
+    const { data: info } = await auth.supabase
+      .from("user_info")
+      .select("website")
+      .eq("id", auth.user.id)
+      .maybeSingle();
+
+    return apiJson({
+      status: 200,
+      data: { ...data, website: info?.website ?? null },
+    });
   } catch (error) {
     logger.error("mobile GET /profile failed", error);
     return apiJson({
