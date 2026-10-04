@@ -20,7 +20,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - Added `operations/pilot-testing.md`. Updated `INDEX.md`, `LEGAL_REVIEW_REQUIRED.md` (F6), `OPERATIONAL_DECISIONS_REQUIRED.md` (D10).
 - A four-week closed pilot of app 1.0.0 with about 40 invited testers in four groups was planned: weekly missions, a checkpoint each week, a bug form and a Friday check-in, a real meet-up in week 3. The run-book, the tester confidentiality agreement and the tester handbook are living documents in the founder's account, linked from `operations/pilot-testing.md`.
-- Set up: TestFlight group "Pilot testers" with build 1.0.0 (20), submitted to Apple's beta review. Not set up yet: Google Play internal testing, the three forms, the WhatsApp community.
+- Set up: TestFlight group "Pilot testers" with build 1.0.0 (20), submitted to Apple's beta review; the three Google Forms and the tracker sheet, in the founder's Google Workspace account (`operations/pilot-testing.md` 1.1). Not set up yet: Google Play internal testing, the WhatsApp community.
 - The agreement has not been read by counsel (F6). The reward, the retention of the tester list and the start date are the founder's (D10).
 - Migrations, permissions, jobs, env vars: none.
 
