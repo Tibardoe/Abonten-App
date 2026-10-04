@@ -16,6 +16,14 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Pilot testing programme planned
+
+- Added `operations/pilot-testing.md`. Updated `INDEX.md`, `LEGAL_REVIEW_REQUIRED.md` (F6), `OPERATIONAL_DECISIONS_REQUIRED.md` (D10).
+- A four-week closed pilot of app 1.0.0 with about 40 invited testers in four groups was planned: weekly missions, a checkpoint each week, a bug form and a Friday check-in, a real meet-up in week 3. The run-book, the tester confidentiality agreement and the tester handbook are living documents in the founder's account, linked from `operations/pilot-testing.md`.
+- Set up: TestFlight group "Pilot testers" with build 1.0.0 (20), submitted to Apple's beta review. Not set up yet: Google Play internal testing, the three forms, the WhatsApp community.
+- The agreement has not been read by counsel (F6). The reward, the retention of the tester list and the start date are the founder's (D10).
+- Migrations, permissions, jobs, env vars: none.
+
 ## 2026-10-04 — Store listings written and both apps sent for review
 
 - Added `deployment/store-listings.md`. Updated `deployment/mobile-eas.md` (1.8), `deployment/README.md`, `deployment/release-checklist.md`, `INDEX.md`, `OPERATIONAL_DECISIONS_REQUIRED.md` (D2 decided, D9 added), `LEGAL_REVIEW_REQUIRED.md` and `operations/open-items.md` (F2), `mobile/release-verification.md`; PROJECT.md §63. New folder `apps/mobile/store` (listing text and privacy answers for both stores).
