@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.abonten.app",
       "sha256_cert_fingerprints": [
-        "C3:8D:50:8C:BB:93:07:44:2B:09:2B:A0:88:6B:EE:48:76:11:92:8C:C4:36:EC:A7:A4:5D:A5:81:BD:68:99:61"
+        "C3:8D:50:8C:BB:93:07:44:2B:09:2B:A0:88:6B:EE:48:76:11:92:8C:C4:36:EC:A7:A4:5D:A5:81:BD:68:99:61",
+        "2E:41:10:E4:31:6B:10:33:2D:7D:B8:ED:E6:01:A6:5A:FA:1C:24:8F:98:91:34:A3:5F:47:7F:8F:76:5A:AE:0A"
       ]
     }
   }

@@ -28,6 +28,7 @@ complianceReviewRequired: no
 
 - [ ] Merge with `--no-ff`; watch the Vercel deployments for web and admin.
 - [ ] Mobile: `eas update --channel production` for JS changes; `eas build` + store steps for native changes.
+- [ ] Store listings ([store-listings.md](store-listings.md)): a claim in the description that stopped being true, a changed screen in a screenshot, or a change to what the app collects (Privacy Policy §2) is changed in both stores in the same release.
 - [ ] If a URL/domain changed: `observability_config`, `notification_delivery_config`, Supabase Auth redirects, Paystack webhook URL, `EXPO_PUBLIC_API_BASE_URL`.
 
 ## After (first 15 minutes)
