@@ -136,8 +136,11 @@ function TableBlock({
   prefix: string;
 }) {
   return (
+    // No minimum width: on a phone a fixed 480 px pushed the second column
+    // off screen behind a sideways scroll nobody noticed. The columns wrap
+    // instead; the scroll stays only for a table that cannot fit at all.
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[480px] border-collapse text-sm">
+      <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border text-left">
             {keyed(block.header, `${prefix}-h`).map(({ key, item }) => (
@@ -152,7 +155,7 @@ function TableBlock({
             ({ key: rowKey, item: row }) => (
               <tr key={rowKey} className="border-b border-border/60 align-top">
                 {keyed(row, rowKey).map(({ key, item }) => (
-                  <td key={key} className="py-2 pr-4">
+                  <td key={key} className="py-2 pr-4 [overflow-wrap:anywhere]">
                     {renderInline(item, key)}
                   </td>
                 ))}
