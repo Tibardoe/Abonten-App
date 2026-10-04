@@ -1,5 +1,6 @@
 import ContactSupportCard from "@/components/molecules/ContactSupportCard";
 import MarkdownDocument from "@/components/organisms/MarkdownDocument";
+import { languageAlternates } from "@/i18n/alternates";
 import {
   HELP_SECTIONS,
   type HelpSectionDir,
@@ -37,7 +38,7 @@ export async function generateMetadata({
   return {
     title: t("helpCentre3", { title: doc.title }),
     description: doc.summary ?? undefined,
-    alternates: { canonical: `/help/${section}/${slug}` },
+    alternates: languageAlternates(`/help/${section}/${slug}`, locale),
   };
 }
 

@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Search engines see every language
+
+- Updated `architecture/internationalisation.md` (§9).
+- Addresses carry no language, so search engines only ever saw English. Each translated public page now has its canonical in the language it was rendered in (`?hl=fr`, plain for English) and lists its language versions (hreflang en/fr/es/de/pt + x-default), in the page and in the sitemap (`apps/web/src/i18n/alternates.ts`); event and place pages had no canonical at all. Legal pages list none (English only). Browser test in `e2e/seo.spec.ts`.
+- `operations/open-items.md`: N1, K1 (open for everyone since 2026-09-18), SEC-004 (closed), D2 (TestFlight builds, App Store pending), D3/D5 (decided), M1 (device walks in French, release build 0.3.0) brought up to date.
+
 ## 2026-10-04 — Help and legal pages on a phone
 
 - On a phone, a help article now comes before the list of every help page (a reader scrolled past thirty links to reach it), and a legal page's "English only" notice comes before its list of sections. Tables in help and legal pages wrap on a phone instead of hiding their second column behind a sideways scroll (`MarkdownDocument`). Found on the Android emulator in French.

@@ -14,6 +14,7 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
 import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
+import { languageAlternates } from "@/i18n/alternates";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import { loadReviewPreview } from "@/reviews/loadReviews";
 import ReviewsPreview from "@/reviews/organisms/ReviewsPreview";
@@ -78,7 +79,7 @@ export async function generateMetadata({
   const event = rowOrFailure(
     await publicSupabase
       .from("event")
-      .select("title, description, flyer_public_id, flyer_version")
+      .select("title, description, flyer_public_id, flyer_version, event_code")
       .eq("event_code", eventCode.toUpperCase())
       .single(),
     "event",
@@ -99,7 +100,9 @@ export async function generateMetadata({
         })
       : undefined;
 
+  const locale = await getLocale();
   return {
+    alternates: languageAlternates(`/events/${event.event_code}`, locale),
     title,
     description,
     openGraph: {
