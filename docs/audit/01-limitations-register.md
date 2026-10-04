@@ -274,6 +274,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Recommended solution**: enable leaked-password protection in Auth settings; schedule the Postgres minor upgrade in a maintenance window.
 - **Status**: Deferred — flagged for owner (dashboard toggle + upgrade window).
 - **Update 2026-09-26 (report 11)**: still open, both dashboard-only. Postgres is still `15.8.1.044`; the upgrade to 17 is eligible since 2026-09-18 (about an hour of downtime, no downgrade). Leaked-password protection is a Pro-plan feature and end users have no passwords, so it is not applicable on the current plan.
+- **Update 2026-10-04**: the Management API's pre-check for production is clean (no unsupported extensions, nothing to drop, no warnings); targets offered: Postgres 17.11.0.002 (GA). Local, CI and the preview project already run 17. The upgrade is one action in the dashboard (Settings › Infrastructure, about an hour, no downgrade) and is left for the founder.
 
 ### DB-PERF-001 — Unindexed FKs and a large "unused index" set
 - **Area**: Database / Performance

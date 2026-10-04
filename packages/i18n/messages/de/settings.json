@@ -62,9 +62,9 @@
   "ends": "Endet",
   "enterTheCode": "Gib den Code ein",
   "errors": {
-    "fetchUserFailed": "Fehler beim Abrufen des Benutzers",
-    "notAuthenticated": "Benutzer nicht authentifiziert",
-    "updateFailed": "Aktualisierung der Benutzerdaten fehlgeschlagen"
+    "fetchUserFailed": "Dein Konto konnte nicht geladen werden. Bitte versuche es erneut.",
+    "notAuthenticated": "Dafür musst du angemeldet sein.",
+    "updateFailed": "Dein Profil konnte gerade nicht aktualisiert werden. Bitte versuche es erneut."
   },
   "featureAnEventAPlaceOr": "Hebe ein Event, einen Ort oder ein Spotlight hervor, um mehr Menschen zu erreichen.",
   "featureAnEventOrPlaceTo": "Hebe ein Event oder einen Ort hervor, um mehr Menschen zu erreichen.",

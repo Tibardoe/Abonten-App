@@ -9,6 +9,10 @@
 //       <dir>/units-NN.txt     one unit per line:  id|English text
 //       <dir>/units.json       id → { text, keys: ["ns:key.path", …] }
 //
+//       [--review fr]           also <dir>/fr-NN.txt pre-filled with the
+//                                current French, for a native speaker to
+//                                correct in place (the import applies it)
+//
 //   node scripts/i18n/translation-units.mjs import --locale fr --in <dir>
 //       reads <dir>/<locale>-NN.txt  (id|translation, same ids), writes
 //       packages/i18n/messages/<locale>/*.json, reports what it refused.
@@ -158,9 +162,36 @@ const tags = (message) =>
     .sort()
     .join(" ");
 
+// The same arguments, each used the same way, except that a language may
+// give plural forms to a number the English prints as it is, plainly or
+// with `{n, number}` ("+{n} more" is "+{n, plural, one {# autre} other
+// {# autres}}" in French).
+function sameShape(english, translated) {
+  const parts = (s) =>
+    new Map(
+      s
+        .split(" ")
+        .filter(Boolean)
+        .map((p) => [p.split(":")[0], p]),
+    );
+  const en = parts(shape(english));
+  const tr = parts(shape(translated));
+  if (en.size !== tr.size) return false;
+  for (const [name, use] of en) {
+    const other = tr.get(name);
+    if (other === undefined) return false;
+    if (other === use) continue;
+    const plainOrNumber = !use.includes(":") || /^[^:]+:number:/.test(use);
+    const pluralOfPlain =
+      plainOrNumber && /^[^:]+:(plural|selectordinal):/.test(other);
+    if (!pluralOfPlain) return false;
+  }
+  return true;
+}
+
 function problem(english, translated) {
   if (!translated.trim()) return "empty";
-  if (shape(english) !== shape(translated)) {
+  if (!sameShape(english, translated)) {
     return `placeholders differ: ${shape(english)} ≠ ${shape(translated)}`;
   }
   if (tags(english) !== tags(translated)) return "tags differ";
@@ -219,6 +250,35 @@ if (mode === "export") {
       join(out, `units-${String(n).padStart(2, "0")}.txt`),
       `${lines.join("\n")}\n`,
     );
+  }
+  // A review hand-off (--review fr): the locale's current translations are
+  // written beside the English, for a native speaker to correct in place.
+  // The import then applies their lines over what is there (same checks).
+  const review = option("review");
+  if (review) {
+    let m = 0;
+    for (let start = 0; start < units.length; start += size) {
+      m++;
+      const lines = [
+        "# Correct the text after | where it reads wrong. Keep {placeholders}, plural/select branches and <tags> as they are.",
+      ];
+      units.slice(start, start + size).forEach((unit, j) => {
+        const id = start + j + 1;
+        const said = unit.keys.map((ref) => [ref, valueIn(review, ref)]);
+        const distinct = new Set(said.map(([, t]) => t));
+        if (distinct.size === 1) {
+          lines.push(`${id}|${encode(String(said[0][1] ?? ""))}`);
+        } else {
+          for (const [ref, t] of said)
+            lines.push(`${id}@${ref}|${encode(String(t ?? ""))}`);
+        }
+      });
+      writeFileSync(
+        join(out, `${review}-${String(m).padStart(2, "0")}.txt`),
+        `${lines.join("\n")}\n`,
+      );
+    }
+    writeFileSync(join(out, `kept-${review}.json`), "[]\n");
   }
   // What each locale had already translated before this hand-off is kept
   // as it is: the import never writes over a reviewed translation.

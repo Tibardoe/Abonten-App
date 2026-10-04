@@ -62,9 +62,9 @@
   "ends": "Termina",
   "enterTheCode": "Introduza o código",
   "errors": {
-    "fetchUserFailed": "Erro ao buscar usuário",
-    "notAuthenticated": "Usuário não autenticado",
-    "updateFailed": "Falha ao atualizar os dados do usuário"
+    "fetchUserFailed": "Não foi possível carregar a sua conta. Tente novamente.",
+    "notAuthenticated": "Tem de iniciar sessão para fazer isso.",
+    "updateFailed": "Não foi possível atualizar o seu perfil agora. Tente novamente."
   },
   "featureAnEventAPlaceOr": "Destaque um evento, um local ou um Spotlight para chegar a mais pessoas.",
   "featureAnEventOrPlaceTo": "Destaque um evento ou local para chegar a mais pessoas.",
@@ -175,7 +175,7 @@
       "unverified": "(não verificado)",
       "updateDescription": "Enviaremos um código por SMS para verificação",
       "updateTitle": "Atualizar número de telefone",
-      "usedToSignInAndVerify": "Serve para iniciar sessão e confirmar que é mesmo você — não aparece no seu perfil público.",
+      "usedToSignInAndVerify": "Serve para iniciar sessão e confirmar a sua identidade — não aparece no seu perfil público.",
       "verificationFailedPleaseTryAgain": "A verificação falhou. Tente novamente.",
       "deleteAccountTitle": "Eliminar a sua conta?",
       "deleteAccountBody": "Esta ação não pode ser anulada. Os bilhetes que comprou e os registos de pagamento são mantidos para efeitos de contabilidade; o seu perfil é removido."

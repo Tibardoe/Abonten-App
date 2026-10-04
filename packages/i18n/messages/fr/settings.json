@@ -62,9 +62,9 @@
   "ends": "Fin",
   "enterTheCode": "Saisissez le code",
   "errors": {
-    "fetchUserFailed": "Erreur lors de la récupération de l'utilisateur",
-    "notAuthenticated": "Utilisateur non authentifié",
-    "updateFailed": "Échec de la mise à jour des informations utilisateur"
+    "fetchUserFailed": "Impossible de charger votre compte. Veuillez réessayer.",
+    "notAuthenticated": "Vous devez être connecté pour faire cela.",
+    "updateFailed": "Impossible de mettre à jour votre profil pour le moment. Veuillez réessayer."
   },
   "featureAnEventAPlaceOr": "Mettez en avant un événement, un lieu ou un Spotlight pour toucher plus de monde.",
   "featureAnEventOrPlaceTo": "Mettez en avant un événement ou un lieu pour toucher plus de monde.",

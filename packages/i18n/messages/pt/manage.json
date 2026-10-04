@@ -181,7 +181,7 @@
   "eventPerformance": "Desempenho do evento",
   "eventRevenue": "Receita do evento",
   "events": "Eventos",
-  "eventsYouOrOtherOrganizersPin": "Os eventos que você ou outros organizadores associam a este local aparecem na respetiva página pública. Toque em Adicionar evento para publicar um.",
+  "eventsYouOrOtherOrganizersPin": "Os eventos que associa a este local, ou que outros organizadores associam, aparecem na respetiva página pública. Toque em Adicionar evento para publicar um.",
   "everyDifferentPersonWhoChecksIn": "Cada pessoa diferente que fizer check-in durante um mês dá-lhe {formatCredit} de crédito de promoção (até {maxVisitors} por mês), adicionado no início do mês seguinte.",
   "everyOpenDayNeedsAnOpen": "Cada dia aberto precisa de uma hora de abertura e de fecho no formato HH:MM.",
   "everyTicketIsCancelledAllPaid": "Todos os bilhetes são cancelados, todos os compradores pagantes são reembolsados (a taxa de serviço não é devolvida) e todos os participantes recebem um e-mail. Crie um novo evento se precisar de reagendar.",

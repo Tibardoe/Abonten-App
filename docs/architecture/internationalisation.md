@@ -4,8 +4,8 @@ purpose: Explain how every word, number, date and amount reaches a person in the
 audience: Engineering, anyone adding a screen, a message or a language
 scope: The shared catalogs (packages/i18n), how the web app, the native app and the server pick a language and word their text, number and date formatting, the checks in `npm run check:i18n`, and the known limits. Not covered - the content of the legal pages and the help centre (English Markdown, see §9), and the admin console (English only).
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-02
+version: 1.2
+lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -129,10 +129,17 @@ When the English of a message changes on purpose, re-check its translations and 
 
 **A language.** Add the folder under `packages/i18n/messages`, add it to `locales.json` (in `partial` until it is complete), run `node scripts/i18n/gen-catalog-index.mjs`, and add the FormatJS locale data lines in `packages/ui-native/src/i18n/polyfills.ts`. `node scripts/i18n/translation-units.mjs` exports what is still English for a translator.
 
+**A translator or a reviewer.** `node scripts/i18n/translation-units.mjs export --out <dir> --untranslated ak` gives a translator every sentence a language still shows in English; `--review fr` instead writes the current French beside each English sentence (`<dir>/fr-NN.txt`) for a native speaker to correct in place. `import --locale fr --in <dir>` writes their lines back and refuses any line that loses a placeholder, a select branch or a tag (a language may add plural forms to a number the English prints plainly). Then run `npm run check:i18n`.
+
 ## 9. Known limits
 
 - **Twi (Akan) is partly translated.** It needs a native translator; nothing machine-made was added. It is marked in the pickers and exempt from the "nothing left in English" rule.
-- **No native speaker has read the French, Spanish, German and Portuguese.** They were written during engineering work and are complete and consistent, but they have not been reviewed (`OPERATIONAL_DECISIONS_REQUIRED.md`, D3).
+- **No native speaker has read the French, Spanish, German and Portuguese yet** (`OPERATIONAL_DECISIONS_REQUIRED.md`, D3). They were checked by machine on 2026-10-04 across all 7,640 messages:
+  - **Address**: French uses *vous*, Portuguese the European polite forms ("o seu", "para si"), Spanish *tú* and German *du*, each without a single exception.
+  - **Terms**: one word per idea ("événement", "billet", "lieu"; "entradas"; "bilhetes", "local"; German "Event", "Ort", and "Location" for a venue).
+  - **Shape**: every message has the sentences, questions and length its English has, except where the language is naturally shorter.
+  - **Fixed then**: three account error messages that still translated an older, technical English in all four languages; Brazilian forms in the European Portuguese ("Salvar", "Cadastrar-se", "Meus ingressos", "usuário", direct "você"); and 59 API messages that were developer text in every language, English included, now plain sentences that keep the field name.
+  - A native reader is still the step that catches wrong tone and unidiomatic phrasing; the review hand-off in §8 is how to commission one.
 - **The legal pages and the help centre are English** (`apps/web/src/content`). The legal documents are drafts awaiting counsel; translating them is a decision for the owner (`OPERATIONAL_DECISIONS_REQUIRED.md`, D5).
 - **The admin console is English only**, by design.
 - **Search** reads accents, date words and everyday words in the five complete languages; that is its own document, [search-languages.md](search-languages.md). Its other-language words were not read by a native speaker either (D3), and Twi has none.

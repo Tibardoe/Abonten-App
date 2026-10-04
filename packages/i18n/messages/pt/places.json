@@ -1,5 +1,5 @@
 {
-  "aBusinessRegistrationAUtilityBill": "Um registo comercial, uma fatura de serviços em nome da empresa ou uma carta de autorização assinada. JPG, PNG ou PDF, até 10 MB cada, no máximo {CLAIM_DOC_MAX_FILES}. Só você e o revisor os podem ver — são guardados de forma privada e removidos após a revisão.",
+  "aBusinessRegistrationAUtilityBill": "Um registo comercial, uma fatura de serviços em nome da empresa ou uma carta de autorização assinada. JPG, PNG ou PDF, até 10 MB cada, no máximo {CLAIM_DOC_MAX_FILES}. Só ficam visíveis para si e para o revisor — são guardados de forma privada e removidos após a revisão.",
   "aCustomer": "Um cliente",
   "about": "Sobre",
   "accept": "Aceitar",
