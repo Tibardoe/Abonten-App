@@ -78,7 +78,7 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 | # | Item | Affects | Decision needed | Status |
 |---|---|---|---|---|
 | F1 | User-content licence wording and the copyright takedown process | Terms §13, §17 | Confirm | Open |
-| F2 | Google Play Data safety form must match the Privacy Policy (data types, sharing, deletion) | Play listing | Compliance review at each release | Open |
+| F2 | Google Play Data safety form and Apple's App Privacy answers must match the Privacy Policy (data types, sharing, deletion). Both were first filed on 2026-10-04 from Privacy Policy 1.5-draft; the answers are kept in `apps/mobile/store` and tabled in `deployment/store-listings.md` | Play and App Store listings | Compliance review at each release, and whenever the Privacy Policy's table of collected data changes | Open |
 | F3 | Apple App Store privacy labels and account-deletion requirement (when iOS ships) | Future iOS listing | Prepare when applicable | Open |
 | F4 | Trademark status of the Abonten name and logo | Terms §17 | Confirm registration | Open |
 | F5 | Spotlight and Stories user content (built 2026-09-16, switched off): the licence publishers grant, the rights acknowledgement shown before posting (`CONTENT_RIGHTS_ACKNOWLEDGEMENT`), copyright and likeness takedowns through the report flow, whether music in uploaded videos is permitted, and the download option (off by default, author opt-in) | Terms §13, §17; `architecture/spotlight-and-stories.md` §3, §7 | Confirm before the Spotlight or Stories audience is Everyone | Open |

@@ -4,7 +4,7 @@ purpose: State exactly how far each mobile change on the documentation branch ha
 audience: Engineering, QA, founder
 scope: apps/mobile (Android; iOS has never been built) and the shared packages it bundles (@abonten/core brand constants, @abonten/i18n messages)
 status: Draft
-version: 1.3
+version: 1.4
 lastReviewed: 2026-10-04
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -30,13 +30,14 @@ complianceReviewRequired: no
 
 | Fact | Value |
 |---|---|
-| App | Abonten — Android package `com.abonten.app`; iOS bundle id declared but **iOS has never been built** |
-| App version | `0.3.0` since 2026-10-04 (`expo.version`; `0.2.0` before); EAS `appVersionSource: remote`, production builds `autoIncrement` |
+| App | Abonten — Android package `com.abonten.app`, iOS bundle id `com.abonten.app` (iPhone only since 1.0.0) |
+| App version | `1.0.0` since 2026-10-04, the first store release (`expo.version`; `0.3.0` earlier the same day, `0.2.0` before); EAS `appVersionSource: remote`, production builds `autoIncrement` |
 | Runtime version policy | `appVersion` → runtime version `0.3.0`; an EAS Update only reaches installs whose native build has that runtime version. No update was ever published to the `production` channel on `0.2.0`, and none should be: later JavaScript needs native modules those builds lack |
 | Builds and updates of 2026-10-04 | iOS 0.3.0 (18) from `7cd487d7` on TestFlight (App Store Connect processing VALID; EAS build `bb1b0420` stayed "in progress" after its archive uploaded, submitted with `eas submit --url`). Android preview 0.3.0 (5) `75046e9a` (`7cd487d7`) and `ec0e37a8` (with `expo-localization`). Production update `70cccec8` and preview `f4064ca4` from `e4eae453`, tested on `75046e9a` (no localization module): downloaded, ran, no crash. The app walked in French on the release build: 59 screens, no key path or crash. iOS 0.3.0 (19) `5bb3493f` from `e4eae453` adds `expo-localization` (per-app language) and the translated permission texts: the archive was checked for `fr/es/de/pt.lproj/InfoPlist.strings` and `CFBundleLocalizations` before submission to TestFlight |
+| Store builds of 2026-10-04 (1.0.0) | From main `0bc2b149`. **iOS 1.0.0 (20)**, EAS build `c0cf7ee0`: BUILD VERIFIED (App Store Connect processing VALID, attached to the App Store version and submitted to App Review); **DEVICE VERIFICATION PENDING** — no iPhone can be run from the development PC, and its JavaScript is the code already running on the 0.3.0 TestFlight builds. **Android 1.0.0 (6)**, EAS build `f3b985ae` (app bundle): DEVICE VERIFIED on AVD `abonten_a35` by turning the bundle into one universal file with bundletool 1.18.3 and a throwaway key — it starts, asks for location, Home loads the Accra events from production, the sign-in screen opens with dark status-bar icons; Google's own signature differs, so maps and app links under Google's key are checked only once Google's review build is installable. Details: `../deployment/store-listings.md` |
 | Update channels | `development`, `preview`, `production` (one per EAS build profile) |
 | Updates library | `expo-updates` ~57.0.21 (Expo SDK 57) |
-| Current production build / update group | **None.** `eas build:list` (2026-09-12) shows only `preview` and `development` builds; **no production build has ever been made**, no EAS Update had ever been published on any channel before 2026-09-12, and the app is not in Google Play. An update on the `production` channel would therefore reach no install. |
+| Current production build / update group | **Since 2026-10-04: the 1.0.0 store builds above** (in review, not yet public). Before that: none. `eas build:list` (2026-09-12) shows only `preview` and `development` builds; **no production build has ever been made**, no EAS Update had ever been published on any channel before 2026-09-12, and the app is not in Google Play. An update on the `production` channel would therefore reach no install. |
 | Preview build containing this programme | EAS build `598fdb7f-2f23-4073-a5bb-028834c4c1cc` — profile `preview`, channel `preview`, runtime `0.2.0`, version code 2, commit `9b6c8b23` (main after the merge), finished 2026-09-12 19:28 UTC, fingerprint `6f87b7f6…`. Built because native dependencies (`expo-audio`, `expo-application`, `expo-clipboard`, an `/invite` intent filter) had changed since the previous preview build of 2026-09-06, so an update alone could not have been loaded safely by that build. |
 | Preview update containing this programme | EAS Update group `d5102dde-714e-4b8a-82b3-1e07aab42cbf` (Android update `01a0971c-…`), branch/channel `preview`, runtime `0.2.0`, commit `9b6c8b23`, published 2026-09-12 |
 

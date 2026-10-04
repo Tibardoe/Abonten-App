@@ -357,25 +357,30 @@ export default function SignIn() {
             <InviteCodeField />
 
             <AppText variant="caption" className="text-center">
-              {t("byContinuingYouAgreeToAbonten2")}
-              <AppText
-                variant="caption"
-                tone="brand"
-                className="font-semibold"
-                onPress={() => void openExternalLink(LEGAL_URLS.terms)}
-              >
-                {t("terms")}
-              </AppText>
-              {t("and")}
-              <AppText
-                variant="caption"
-                tone="brand"
-                className="font-semibold"
-                onPress={() => void openExternalLink(LEGAL_URLS.privacy)}
-              >
-                {t("privacyPolicy")}
-              </AppText>
-              .
+              {/* One sentence with the two links inside it: glued from
+                  four pieces it read "Abonten'sTermsandPrivacy Policy". */}
+              {t.rich("consentNotice", {
+                terms: (chunks) => (
+                  <AppText
+                    variant="caption"
+                    tone="brand"
+                    className="font-semibold"
+                    onPress={() => void openExternalLink(LEGAL_URLS.terms)}
+                  >
+                    {chunks}
+                  </AppText>
+                ),
+                privacy: (chunks) => (
+                  <AppText
+                    variant="caption"
+                    tone="brand"
+                    className="font-semibold"
+                    onPress={() => void openExternalLink(LEGAL_URLS.privacy)}
+                  >
+                    {chunks}
+                  </AppText>
+                ),
+              })}
             </AppText>
           </View>
         </KeyboardAwareScrollView>
