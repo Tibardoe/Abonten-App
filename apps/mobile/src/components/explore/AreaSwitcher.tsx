@@ -1,4 +1,7 @@
-import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import {
+  displayAreaLabel,
+  useExploreLocation,
+} from "@/features/discovery/ExploreLocationProvider";
 import { AppText, Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { Pressable, View } from "react-native";
@@ -16,7 +19,7 @@ export function AreaSwitcher({ onPress }: { onPress: () => void }) {
 
   const { area, devicePermission } = useExploreLocation();
   const shown = describeArea(area, devicePermission);
-  const label = area?.label ?? t("setLocation");
+  const label = area ? displayAreaLabel(area.label, t) : t("setLocation");
 
   return (
     <Pressable

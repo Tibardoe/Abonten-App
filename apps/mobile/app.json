@@ -19,7 +19,8 @@
       "appleTeamId": "KDDBR5P4D6",
       "associatedDomains": ["applinks:abontenhub.com"],
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleAllowMixedLocalizations": true
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -181,7 +182,16 @@
         }
       ],
       "./plugins/withAndroidNativeBuildFix",
-      "./plugins/withAndroidMinification"
+      "./plugins/withAndroidMinification",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "fr", "es", "de", "pt"],
+            "android": ["en", "fr", "es", "de", "pt", "ak"]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false
@@ -192,6 +202,12 @@
         "projectId": "c0a45056-182f-47c5-b862-de14034a830a"
       }
     },
-    "owner": "abonten-hub"
+    "owner": "abonten-hub",
+    "locales": {
+      "fr": "./locales/fr.json",
+      "es": "./locales/es.json",
+      "de": "./locales/de.json",
+      "pt": "./locales/pt.json"
+    }
   }
 }

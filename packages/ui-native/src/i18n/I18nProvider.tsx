@@ -35,13 +35,30 @@ import { CATALOG, I18N_LOCALES, type I18nLocale } from "./catalog";
 const STORAGE_KEY = "abonten.locale";
 export const DEFAULT_LOCALE: I18nLocale = "en";
 
+// expo-localization reads the language the system gives this app, which
+// on Android 13+ and iOS can be chosen per app in the system settings (the
+// app declares its languages through the plugin in app.json). Required
+// lazily: a binary built before the module was added has no native side,
+// and then the language comes from React Native's own constants as before.
+function systemAppLanguage(): string | null {
+  try {
+    const { getLocales } = require("expo-localization") as {
+      getLocales: () => { languageCode: string | null }[];
+    };
+    return getLocales()[0]?.languageCode ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function deviceLocale(): I18nLocale {
   try {
     const tag =
-      Platform.OS === "ios"
+      systemAppLanguage() ??
+      (Platform.OS === "ios"
         ? (NativeModules.SettingsManager?.settings?.AppleLocale ??
           NativeModules.SettingsManager?.settings?.AppleLanguages?.[0])
-        : NativeModules.I18nManager?.localeIdentifier;
+        : NativeModules.I18nManager?.localeIdentifier);
     const lang = String(tag ?? "")
       .slice(0, 2)
       .toLowerCase();

@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — The app speaks the system's language choice; iOS permission prompts translated
+
+- Updated `architecture/internationalisation.md` (§9).
+- The app declares en/fr/es/de/pt (and Twi on Android) to the system, so Android 13+ and iOS offer a per-app language in the system settings, and the app now follows it (`expo-localization`, required lazily so older binaries keep working). The five iOS permission texts are translated (`apps/mobile/locales/`). Verified on an Android preview build (`ec0e37a8`): setting the app to French in the system showed the app in French.
+- Fixed: an area whose town could not be named showed the stored English "Your location" in the area chooser, Explore's sentences, the filter sheet and Search; found on that build in French, delivered to it as preview update `5994f40e` and seen fixed.
+
 ## 2026-10-04 — Search engines see every language
 
 - Updated `architecture/internationalisation.md` (§9).

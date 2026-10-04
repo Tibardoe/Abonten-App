@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "NSPhotoLibraryUsageDescription": "O Abonten usa as suas fotografias quando escolhe uma: uma fotografia de perfil, o cartaz de um evento, fotografias de um local, uma avaliação, uma Story ou um destaque, uma imagem numa mensagem ou um documento para uma verificação.",
+    "NSCameraUsageDescription": "O Abonten usa a câmara quando o decide: os organizadores leem os códigos QR dos bilhetes para registar entradas, o utilizador lê o código de um local na sua visita e pode tirar uma fotografia para enviar numa mensagem ou para um documento de verificação.",
+    "NSMicrophoneUsageDescription": "O Abonten usa o microfone para que possa gravar e enviar mensagens de voz.",
+    "NSLocationWhenInUseUsageDescription": "O Abonten usa a sua localização para lhe mostrar eventos e locais perto de si, ajudar a escolher um local no mapa e registar uma visita quando está num local.",
+    "NSMotionUsageDescription": "O Abonten não usa dados de movimento e de atividade física. Este texto é obrigatório porque o componente de localização da aplicação inclui uma função opcional de deteção de atividade, que o Abonten nunca ativa."
+  }
+}

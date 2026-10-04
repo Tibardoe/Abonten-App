@@ -24,7 +24,10 @@ import { FilterSheet } from "@/components/explore/FilterSheet";
 import { whereText } from "@/components/explore/areaCopy";
 import { ExploreSkeleton } from "@/components/skeletons";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
-import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import {
+  displayAreaLabel,
+  useExploreLocation,
+} from "@/features/discovery/ExploreLocationProvider";
 import {
   clearEventFilterKey,
   clearPlaceFilterKey,
@@ -171,9 +174,10 @@ export default function Explore() {
   const eventsQuery = useFilteredEvents(coords, eventFilters);
   const placesQuery = useFilteredPlaces(coords, placeFilters);
 
+  const shownAreaLabel = area ? displayAreaLabel(area.label, t) : "";
   const eventSliders = useExploreEventSliders(
     coords,
-    area?.label ?? "",
+    shownAreaLabel,
     eventFilters,
   );
   const placeSliders = useExplorePlaceSliders(coords, placeFilters);
@@ -667,7 +671,7 @@ export default function Explore() {
         placeCategories={placeCategories}
         onApplyEvents={setEventFilters}
         onApplyPlaces={setPlaceFilters}
-        areaLabel={area?.label ?? null}
+        areaLabel={shownAreaLabel || null}
       />
     </View>
   );
