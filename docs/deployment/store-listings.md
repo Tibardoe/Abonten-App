@@ -32,7 +32,7 @@ Neither store publishes the app by itself. That is deliberate: see "Before the a
 | Title, short and full description (Google) | `apps/mobile/store/google-play/listing.en-GB.json` | Play Console › Grow users › Store listings |
 | Data safety answers (Google) | `apps/mobile/store/google-play/data-safety.csv` | Play Console › App content › Data safety › Import from CSV |
 | Screenshots, Play banner and icon | `Desktop\Abonten-Brand\08-store-listing\` (not in the repository, like the print collateral) | `asc screenshots upload`; Play Console asset library |
-| The generator for those images | `Desktop\Abonten-Brand\src\store\` (`panels.cjs`, `render.cjs`, `demo-flyer.cjs`) | `node render.cjs` |
+| The generator for those images | `Desktop\Abonten-Brand\src\store\` (`panels.cjs`, `render.cjs`, `demo-flyer.cjs`, `video.cjs`) | `node render.cjs`; `node video.cjs` for the video (needs ffmpeg) |
 | App Review contact, demo account, notes | App Store Connect (version › App Review Information) and Play Console (App content › Sign in details) | Never in the repository: they contain the review sign-in code |
 
 `asc` is the App Store Connect command-line tool (see `mobile-eas.md`). The Play Console has no equivalent that this project may use: the only service account has read-only access, so Google Play is filled in through the website.
@@ -67,7 +67,7 @@ Rules that must hold when the pictures are redone:
 - The iPhone pictures are built from Android captures of the same screens, because no iPhone can be run from the development PC. If real iPhone screenshots are wanted, put them in `captures/` with the same file names and render again.
 - Google asks whether listing pictures were "created or edited using AI". The answer given is **no label**: Google's test is a new realistic picture made from a prompt, or a real one meaningfully changed. These are real screens laid out by a script with words and flat shapes around them.
 
-There is no video. Google takes only a YouTube link and Apple only footage recorded on an iPhone.
+**Video.** `08-store-listing/google-play/promo-video-1920x1080.mp4` (40 seconds, built by `video.cjs` from `captures/app-walk.mp4`, a screen recording of the app in use made with `adb shell screenrecord`) shows the app moving through Explore, an event, checkout, tickets and search, with the same headlines and the sonic logo at the end. Google Play takes a video only as a YouTube link (public or unlisted, advertising off, not age-restricted): upload the file to Abonten's YouTube channel and paste the link into Store listings › Video. It is not on the listing yet. The App Store takes only footage recorded on an iPhone, so there is no App Store video.
 
 ## Declarations
 
