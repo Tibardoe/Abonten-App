@@ -2,6 +2,7 @@ import {
   type BrowsingArea,
   type DevicePermission,
   UNNAMED_AREA_LABEL,
+  displayAreaLabel,
 } from "@/features/discovery/ExploreLocationProvider";
 import {
   type AreaStatus,
@@ -33,7 +34,9 @@ export function whereText(area: BrowsingArea | null): string {
   if (!area) return translatorFor("explore")("here");
   if (area.mode === "following" && area.label === UNNAMED_AREA_LABEL)
     return translatorFor("explore")("nearYou");
-  return translatorFor("explore")("inArea", { area: area.label });
+  return translatorFor("explore")("inArea", {
+    area: displayAreaLabel(area.label, translatorFor("explore")),
+  });
 }
 
 export function describeArea(
@@ -41,7 +44,11 @@ export function describeArea(
   permission: DevicePermission,
 ): AreaPresentation {
   const status = areaStatus(area, permission);
-  const label = area?.label ?? translatorFor("explore")("yourArea");
+  // The stored label of an unnamed area is an English sentinel; the
+  // sentences below show it in the reader's language.
+  const label = area
+    ? displayAreaLabel(area.label, translatorFor("explore"))
+    : translatorFor("explore")("yourArea");
   switch (status) {
     case "near_you":
       return {

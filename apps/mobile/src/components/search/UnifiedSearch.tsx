@@ -4,7 +4,10 @@ import { useTabBarListPadding } from "@/components/app/GlassTabBar";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { SpotlightTileRow } from "@/components/profile/SpotlightGrid";
 import { useContentProgram } from "@/features/content/useContentProgram";
-import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import {
+  displayAreaLabel,
+  useExploreLocation,
+} from "@/features/discovery/ExploreLocationProvider";
 import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useRecentSearches } from "@/features/search/recentSearches";
@@ -61,7 +64,11 @@ import {
   SegmentedTabs,
   Skeleton,
 } from "@abonten/ui-native";
-import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
+import {
+  translatorFor,
+  useLocale,
+  useTranslations,
+} from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -329,13 +336,18 @@ export function UnifiedSearch() {
       market?.priceScale,
     ],
   );
+  // The stored label of an unnamed area is an English sentinel.
+  const shownAreaLabel =
+    hasRealLocation && area
+      ? displayAreaLabel(area.label, translatorFor("explore"))
+      : null;
   const filterChips = useMemo(
     () =>
       describeSearchFilters(
         { t: tc, locale },
         filters,
         effectiveMode,
-        hasRealLocation ? area?.label : null,
+        shownAreaLabel,
         marketCurrency,
         market?.priceScale ?? 1,
       ).filter((c) => c.key !== "radiusKm" || hasRealLocation),
@@ -343,7 +355,7 @@ export function UnifiedSearch() {
       filters,
       effectiveMode,
       hasRealLocation,
-      area?.label,
+      shownAreaLabel,
       marketCurrency,
       market?.priceScale,
       locale,
@@ -1052,7 +1064,7 @@ export function UnifiedSearch() {
           // query itself is never changed by filtering.
           if (trimmed && submitted !== trimmed) runSearch(trimmed);
         }}
-        locationLabel={hasRealLocation ? (area?.label ?? null) : null}
+        locationLabel={shownAreaLabel}
         hasLocation={hasRealLocation}
       />
     </View>
