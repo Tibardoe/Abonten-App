@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "NSPhotoLibraryUsageDescription": "Abonten verwendet deine Fotos, wenn du eines auswählst: ein Profilbild, einen Event-Flyer, Fotos eines Orts, eine Bewertung, eine Story oder ein Highlight, ein Bild in einer Nachricht oder ein Dokument für eine Verifizierung.",
+    "NSCameraUsageDescription": "Abonten verwendet die Kamera, wenn du es möchtest: Veranstalter scannen die QR-Codes von Tickets beim Einlass, du scannst den Code eines Orts bei deinem Besuch, und du kannst ein Foto für eine Nachricht oder ein Verifizierungsdokument aufnehmen.",
+    "NSMicrophoneUsageDescription": "Abonten verwendet das Mikrofon, damit du Sprachnachrichten aufnehmen und senden kannst.",
+    "NSLocationWhenInUseUsageDescription": "Abonten verwendet deinen Standort, um dir Events und Orte in deiner Nähe zu zeigen, dir bei der Wahl eines Orts auf der Karte zu helfen und einen Besuch festzuhalten, wenn du an einem Ort eincheckst.",
+    "NSMotionUsageDescription": "Abonten verwendet keine Bewegungs- und Fitnessdaten. Dieser Text ist vorgeschrieben, weil die Standortkomponente der App eine optionale Aktivitätserkennung enthält, die Abonten nie einschaltet."
+  }
+}

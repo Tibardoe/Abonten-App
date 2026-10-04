@@ -1,0 +1,9 @@
+{
+  "ios": {
+    "NSPhotoLibraryUsageDescription": "Abonten utilise vos photos quand vous en choisissez une : une photo de profil, l'affiche d'un événement, les photos d'un lieu, un avis, une Story ou un temps fort, une image dans un message, ou un document pour une vérification.",
+    "NSCameraUsageDescription": "Abonten utilise l'appareil photo quand vous le choisissez : les organisateurs scannent les QR codes des billets pour enregistrer les entrées, vous scannez le code d'un lieu lors de votre visite, et vous pouvez prendre une photo à envoyer dans un message ou pour un document de vérification.",
+    "NSMicrophoneUsageDescription": "Abonten utilise le micro pour que vous puissiez enregistrer et envoyer des messages vocaux.",
+    "NSLocationWhenInUseUsageDescription": "Abonten utilise votre position pour vous montrer les événements et les lieux près de vous, vous aider à choisir un lieu sur la carte et enregistrer une visite quand vous êtes dans un lieu.",
+    "NSMotionUsageDescription": "Abonten n'utilise pas les données de mouvement et de forme. Ce texte est exigé parce que le composant de localisation de l'application contient une fonction facultative de détection d'activité, qu'Abonten n'active jamais."
+  }
+}
