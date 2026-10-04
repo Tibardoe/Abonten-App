@@ -8,6 +8,7 @@ import EventCard from "@/components/molecules/EventCard";
 import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import SubscribeBell from "@/discovery/molecules/SubscribeBell";
 import PlacePromptHost from "@/discovery/organisms/PlacePromptHost";
+import { languageAlternates } from "@/i18n/alternates";
 import PlaceViewLogger from "@/places/atoms/PlaceViewLogger";
 import AddPlaceReviewButton from "@/places/molecules/AddPlaceReviewButton";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
@@ -100,9 +101,11 @@ export async function generateMetadata({
         })
       : undefined;
 
+  const locale = await getLocale();
   return {
     title,
     description,
+    alternates: languageAlternates(`/places/${slug}`, locale),
     openGraph: {
       title,
       description,

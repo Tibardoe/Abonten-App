@@ -2,6 +2,7 @@ import RememberExploreArea from "@/components/atoms/RememberExploreArea";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import AreaCoverageNotice from "@/events/organisms/AreaCoverageNotice";
 import EventsTabContent from "@/events/organisms/EventsTabContent";
+import { languageAlternates } from "@/i18n/alternates";
 import { isExploreTab } from "@/places/exploreTab";
 import ExploreTabs from "@/places/organisms/ExploreTabs";
 import PlacesTabContent from "@/places/organisms/PlacesTabContent";
@@ -10,7 +11,7 @@ import { geocodeAddress } from "@/utils/geocodeServerSide";
 import WeeklyTeaser from "@/weekly/organisms/WeeklyTeaser";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 // One canonical URL per location: the filter, tab and coordinate query
@@ -29,7 +30,7 @@ export async function generateMetadata({
     description: t("discoverUpcomingEventsRestaurantsNightlifeAnd", {
       label: label,
     }),
-    alternates: { canonical: `/explore/${location}` },
+    alternates: languageAlternates(`/explore/${location}`, await getLocale()),
   };
 }
 

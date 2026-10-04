@@ -1,5 +1,6 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
+import { languageAlternates } from "@/i18n/alternates";
 import { loadReviewsPage, reviewsPageDescription } from "@/reviews/loadReviews";
 import ReviewsBrowser from "@/reviews/organisms/ReviewsBrowser";
 import { rowOrFailure } from "@/utils/rowOrFailure";
@@ -67,7 +68,10 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: reviewsPath("event", event.event_code) },
+    alternates: languageAlternates(
+      reviewsPath("event", event.event_code),
+      await getLocale(),
+    ),
     openGraph: {
       title,
       description,

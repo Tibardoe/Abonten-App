@@ -90,3 +90,43 @@ test("pages without their own preview image fall back to the brand card", async 
     );
   }
 });
+
+// Addresses carry no language, so each language's version of a translated
+// page is the address with ?hl=<locale>: its canonical in that language,
+// and every language listed as an alternate (hreflang), here and in the
+// sitemap. The legal pages are English only and list no alternates.
+test("translated pages name their language versions for search engines", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/help/customers/getting-started?hl=fr");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/help\/customers\/getting-started\?hl=fr$/,
+  );
+  for (const [lang, suffix] of [
+    ["en", "/help/customers/getting-started"],
+    ["fr", "?hl=fr"],
+    ["pt", "?hl=pt"],
+    ["x-default", "/help/customers/getting-started"],
+  ]) {
+    const href = await page
+      .locator(`link[rel="alternate"][hreflang="${lang}"]`)
+      .getAttribute("href");
+    expect(href?.endsWith(suffix), `${lang}: ${href}`).toBe(true);
+  }
+  await expect(page.locator('link[hreflang="ak"]')).toHaveCount(0);
+
+  await page.goto("/help/customers/getting-started?hl=en");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    /\/help\/customers\/getting-started$/,
+  );
+
+  await page.goto("/legal/terms");
+  await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0);
+
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  expect(sitemap).toContain('hreflang="fr"');
+  expect(sitemap).toMatch(/\/help\/customers\/getting-started\?hl=de/);
+});

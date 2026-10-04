@@ -5,13 +5,14 @@ import {
 import { getExploreEventSections } from "@/actions/getExploreEventSections";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import LocationUnavailable from "@/components/molecules/LocationUnavailable";
+import { languageAlternates } from "@/i18n/alternates";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { EMPTY_EVENT_FILTERS } from "@abonten/core/exploreFilters";
 import { undoSlug } from "@abonten/core/geerateSlug";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import ExploreEventsList from "./ExploreEventsList";
 
@@ -55,9 +56,10 @@ export async function generateMetadata({
   if (!filter) return { title: t("eventsIn", { label: label }) };
   return {
     title: t(FILTER_TITLE_KEYS[filter], { place: label }),
-    alternates: {
-      canonical: `/events/location/${location}/explore/${filter}`,
-    },
+    alternates: languageAlternates(
+      `/events/location/${location}/explore/${filter}`,
+      await getLocale(),
+    ),
     // "category" and "around-you" depend on query or device state.
     robots:
       filter === "category" || filter === "around-you"

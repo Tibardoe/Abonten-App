@@ -1,5 +1,6 @@
 import ContactSupportCard from "@/components/molecules/ContactSupportCard";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
+import { languageAlternates } from "@/i18n/alternates";
 import {
   HELP_SECTIONS,
   type HelpSectionDir,
@@ -7,7 +8,7 @@ import {
 } from "@/utils/publicContent";
 import type { Metadata } from "next";
 import { useLocale, useTranslations } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -26,6 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t("helpCentre"),
     description: t("howToFindEventsAndPlaces"),
+    alternates: languageAlternates("/help", await getLocale()),
   };
 }
 
