@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Translations reviewed by machine (D3)
+
+- Updated `architecture/internationalisation.md` (§8 the review hand-off, §9 what was checked), `OPERATIONAL_DECISIONS_REQUIRED.md` (D3 decided; S7 decided: the repository stays public until Actions billing exists, after a clean full-history secret scan).
+- **Words.** `settings:errors.*` re-translated in fr/es/de/pt (they translated an older English); European Portuguese without Brazilian forms ("Guardar", "Registar-se", "Os meus bilhetes", "utilizador", no direct "você"); "Para onde quer sair?"; 59 `server` messages for malformed API requests reworded for people in every language, keeping the field name; generic failures say "Something went wrong. Please try again." in each language.
+- **Tool.** `scripts/i18n/translation-units.mjs export --review <locale>` writes a language's current text beside the English for a native reviewer; the import applies their corrections and accepts plural forms of a number the English prints plainly.
+
 ## 2026-10-04 — Event and place pages: rendered per request, on purpose (D7)
 
 - Updated `architecture/web-resilience.md` (§4 "Event and place pages are not cached"), `OPERATIONAL_DECISIONS_REQUIRED.md` (D7 decided), `PROJECT.md`, `CLAUDE.md`.

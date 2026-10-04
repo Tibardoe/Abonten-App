@@ -62,9 +62,9 @@
   "ends": "Termina",
   "enterTheCode": "Introduce el código",
   "errors": {
-    "fetchUserFailed": "Error al obtener el usuario",
-    "notAuthenticated": "Usuario no autenticado",
-    "updateFailed": "Error al actualizar los datos del usuario"
+    "fetchUserFailed": "No pudimos cargar tu cuenta. Inténtalo de nuevo.",
+    "notAuthenticated": "Tienes que iniciar sesión para hacer eso.",
+    "updateFailed": "No pudimos actualizar tu perfil en este momento. Inténtalo de nuevo."
   },
   "featureAnEventAPlaceOr": "Destaca un evento, un lugar o un Spotlight para llegar a más gente.",
   "featureAnEventOrPlaceTo": "Destaca un evento o un lugar para llegar a más gente.",

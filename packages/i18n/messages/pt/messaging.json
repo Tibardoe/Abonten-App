@@ -190,7 +190,7 @@
   "support": "Apoio",
   "swipeUpToOpenSwipeDown": "Deslize para cima para abrir e para baixo para fechar",
   "switchYourKeyboardToEmojiAnd": "Mude o teclado para emojis e toque num.",
-  "tapTo": "{mine, select, yes {{emoji} {count}, incluindo você. Toque para remover.} other {{emoji} {count}. Toque para adicionar.}}",
+  "tapTo": "{mine, select, yes {{emoji} {count}, incluindo a sua. Toque para remover.} other {{emoji} {count}. Toque para adicionar.}}",
   "tapToOpen": "Toque para abrir",
   "tapToRetry": "Toque para tentar novamente",
   "thatImageIsOver10Mb": "Essa imagem tem mais de 10 MB. Escolha uma mais pequena.",

@@ -40,7 +40,7 @@
     "placesYouPublish": "Os locais que publicar serão listados aqui.",
     "reviewsYouLeave": "As avaliações que deixar serão listadas aqui.",
     "savedSpotlights": {
-      "description": "Toque em Guardar num Spotlight para o manter aqui. Só você vê isto.",
+      "description": "Toque em Guardar num Spotlight para o manter aqui. Só é visível para si.",
       "title": "Sem Spotlights guardados"
     },
     "tapTheHeartOnAnyEvent": "Toque no coração de qualquer evento para o guardar aqui.",
