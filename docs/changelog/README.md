@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Help and legal pages on a phone
+
+- On a phone, a help article now comes before the list of every help page (a reader scrolled past thirty links to reach it), and a legal page's "English only" notice comes before its list of sections. Tables in help and legal pages wrap on a phone instead of hiding their second column behind a sideways scroll (`MarkdownDocument`). Found on the Android emulator in French.
+
 ## 2026-10-04 — App version 0.3.0
 
 - Updated `deployment/mobile-eas.md`, `mobile/release-verification.md`.
