@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-04 — Help and legal pages on a phone
+
+- On a phone, a help article now comes before the list of every help page (a reader scrolled past thirty links to reach it), and a legal page's "English only" notice comes before its list of sections. Found on the Android emulator in French.
+
 ## 2026-10-04 — The help centre in five languages (D5); links that freeze no more
 
 - Updated `architecture/internationalisation.md` (§9), `architecture/web-resilience.md` (§5, §7), `OPERATIONAL_DECISIONS_REQUIRED.md` (D5 decided), `development/documentation-validation.md` (help-translations rule), `documentation-coverage-matrix.md` (Spotlight, Weekly, Discovery rows).
