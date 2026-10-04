@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 
 // /places/<slug>/reviews — every review of one place: breakdown, star
 // filters, sorting and infinite scroll (ReviewsBrowser). ?review=<id> is a
@@ -21,7 +22,9 @@ import { notFound } from "next/navigation";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-async function loadPlace(slug: string) {
+// The metadata and the page read the same row: one database read per
+// request (React cache), not two.
+const loadPlace = cache(async (slug: string) => {
   return rowOrFailure(
     await publicSupabase
       .from("place")
@@ -31,7 +34,7 @@ async function loadPlace(slug: string) {
       .maybeSingle(),
     "place",
   );
-}
+});
 
 export async function generateMetadata({
   params,

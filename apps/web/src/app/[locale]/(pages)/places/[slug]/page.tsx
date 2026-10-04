@@ -38,7 +38,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import { FiGlobe, FiMapPin, FiPhone } from "react-icons/fi";
 import { IoIosStar } from "react-icons/io";
 import { IoLocationOutline, IoLogoWhatsapp } from "react-icons/io5";
@@ -61,6 +61,10 @@ const SIMILAR_PLACES_LIMIT = 6;
 
 type PlaceAddress = { full_address?: string };
 
+// The metadata and the page read the same place: one database read per
+// request (React cache), not two.
+const loadPlace = cache((slug: string) => getPlaceBySlug(slug));
+
 export async function generateMetadata({
   params,
 }: {
@@ -70,7 +74,7 @@ export async function generateMetadata({
   const tc = await getTranslations("core");
 
   const { slug } = await params;
-  const response = await getPlaceBySlug(slug);
+  const response = await loadPlace(slug);
 
   if (response.status >= 500) {
     throw new Error(`place lookup failed (${response.status})`);
@@ -126,7 +130,7 @@ export default async function page({
 
   const { slug } = await params;
 
-  const placeResponse = await getPlaceBySlug(slug);
+  const placeResponse = await loadPlace(slug);
 
   // Could not be read is not "does not exist": a 404 here would tell a
   // visitor, and a search engine, that the place is gone.
@@ -136,37 +140,34 @@ export default async function page({
   if (placeResponse.status !== 200 || !placeResponse.data) notFound();
 
   const place = placeResponse.data;
-  // Service prices are in the place's market currency.
-  const placeCurrency = (
-    await getMarketOrDefault(
-      (place as { country_code?: string | null }).country_code ?? null,
-    )
-  ).defaultCurrency;
-
-  // Upcoming events and the reviews block (summary + the three most
-  // helpful — "See all" opens /places/<slug>/reviews) only depend on the
-  // place's id, so fetch them concurrently.
-  const [upcomingEventsResponse, reviewPreview] = await Promise.all([
-    getPlaceUpcomingEvents(place.id),
-    loadReviewPreview("place", place.id),
-  ]);
-
-  // Similar Places genuinely depends on this place's own category+location,
-  // so it stays sequential -- same reasoning getSimilarEvents' sequential
-  // fetch gets on the event details page.
   const locationWkb = asWkbHex(place.location);
   const { eventLat: placeLat, eventLng: placeLng } = parseWKBHex(locationWkb);
-  // The nearest places of the same category, asked for as that. (It used to
-  // be "the 20 nearest places of any kind, then keep this category", which
-  // in a busy street found none.) One more than shown: this place is its
-  // own nearest.
-  const similarPlacesResponse = await getQueriedPlaces({
-    categoryId: place.category_id,
-    lat: placeLat,
-    lng: placeLng,
-    maxDistanceKm: SIMILAR_PLACES_RADIUS_KM,
-    pageSize: SIMILAR_PLACES_LIMIT + 1,
-  });
+
+  // Everything below depends on the place only, not on each other, so it is
+  // asked for at once: one round trip after the place instead of three.
+  const [market, upcomingEventsResponse, reviewPreview, similarPlacesResponse] =
+    await Promise.all([
+      // Service prices are in the place's market currency.
+      getMarketOrDefault(
+        (place as { country_code?: string | null }).country_code ?? null,
+      ),
+      getPlaceUpcomingEvents(place.id),
+      // The reviews block: summary + the three most helpful ("See all"
+      // opens /places/<slug>/reviews).
+      loadReviewPreview("place", place.id),
+      // The nearest places of the same category, asked for as that. (It
+      // used to be "the 20 nearest places of any kind, then keep this
+      // category", which in a busy street found none.) One more than shown:
+      // this place is its own nearest.
+      getQueriedPlaces({
+        categoryId: place.category_id,
+        lat: placeLat,
+        lng: placeLng,
+        maxDistanceKm: SIMILAR_PLACES_RADIUS_KM,
+        pageSize: SIMILAR_PLACES_LIMIT + 1,
+      }),
+    ]);
+  const placeCurrency = market.defaultCurrency;
   const similarPlaces = (
     similarPlacesResponse.status === 200 ? similarPlacesResponse.data : []
   )
