@@ -22,6 +22,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - The founder set the dates: announce on Monday 12 October 2026, choose testers on Sunday 18 October, start on Monday 19 October, last checkpoint on Sunday 15 November.
 - The founder decided to use the tester confidentiality agreement as written, without counsel's review. F6 stays open for counsel and says so.
 - The run-book's messages now carry the dates, the short form links and the Google Play join link. Retention of the tester list is still open (D10).
+- The start does not wait for Apple's review (`operations/pilot-testing.md` 1.5): week 1 runs in full from 19 October, new listings are looked at every morning and junk is hidden.
 - Migrations, permissions, jobs, env vars: none.
 
 ## 2026-10-09 — Pilot: testers are not paid; the WhatsApp community exists
