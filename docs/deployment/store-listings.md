@@ -4,8 +4,8 @@ purpose: What Abonten's App Store and Google Play listings say, where each word,
 audience: Engineers, founder, compliance
 scope: App Store Connect app 6812440895 (com.abonten.app); Google Play app com.abonten.app (developer account "Abonten Hub"); apps/mobile/store; the store images outside the repository
 status: Approved
-version: 1.0
-lastReviewed: 2026-10-04
+version: 1.1
+lastReviewed: 2026-10-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -14,14 +14,16 @@ complianceReviewRequired: yes
 
 # Store listings and review submissions
 
-## State on 2026-10-04
+## State on 2026-10-09
 
 | Store | Version | State | When it goes public |
 |---|---|---|---|
-| App Store (iPhone) | 1.0.0 (build 20), main `0bc2b149` | Submitted to App Review 19:06 UTC, "Waiting for Review" | **Manual release**: after approval it waits in "Pending Developer Release" until someone presses Release |
-| Google Play (Android) | 1.0.0 (version code 6), same commit | Production release sent for review the same evening | **Managed publishing is on**: after approval it waits in Publishing overview until someone presses Publish |
+| App Store (iPhone) | 1.0.0 (build 20), main `0bc2b149` | Submitted to App Review on 2026-10-04 at 19:06 UTC. Still "Waiting for Review" five days later: no reviewer has picked it up, and it has not been rejected. A status question was sent to Apple on 2026-10-09 (see "If a store says no") | **Manual release**: after approval it waits in "Pending Developer Release" until someone presses Release |
+| Google Play (Android) | 1.0.0 (version code 6), same commit | Sent for review on 2026-10-04. **Approved**: on 2026-10-09 the submission shows "Ready to publish" and Publishing overview holds 11 changes behind the Publish button. The public Play page does not exist yet | **Managed publishing is on**: the app stays unpublished until someone presses Publish |
 
 Neither store publishes the app by itself. That is deliberate: see "Before the app is public" below.
+
+The test builds are a separate matter (`../operations/pilot-testing.md`): Apple approved build 20 for outside TestFlight testers, and the same Android bundle is on Google Play's internal testing track since 2026-10-09.
 
 ## Where everything is kept
 
@@ -136,6 +138,7 @@ Approval does not publish the app. Do these, in order, then release:
 
 - **Apple:** the reason arrives in App Store Connect › App Review and by email. `asc status --app 6812440895` shows the state; `asc web review threads --app 6812440895` lists the messages (needs `asc web auth login`). Fix, then `asc review submit --app 6812440895 --version-id <id> --build-id <id> --confirm`. A change to the notes or the listing needs no new build.
 - **Google:** the reason arrives by email and in Play Console › Policy status. Fix, then Publishing overview › Send for review.
+- **Apple has not started after several days:** ask about the status at `developer.apple.com/contact` › App Review › App Review Status (an email form: app name, the app's Apple ID 6812440895, platform, message). It needs the founder signed in to Apple in the browser; `asc` has no command for it. Apple replies by email to the address of the Apple account and gives a case number. The other page, "Contact the App Review Team", only offers an appeal or a request for a faster review, and Apple expects a reason for the second (an urgent fix or a dated event).
 
 Likely questions and where the answer is:
 
@@ -164,6 +167,8 @@ asc validate --app 6812440895 --version <version>
 ```
 
 Google Play is changed in the Play Console. Every change there waits in Publishing overview until it is sent for review.
+
+The internal testing track is the exception. A release there is published at once ("Changes made will be published to Google Play immediately"), is not reviewed, and does not touch the changes waiting in Publishing overview: on 2026-10-09 an internal testing release went live while the 11 approved production changes stayed unpublished. Choosing the track's tester list took effect at once too.
 
 ## Android signing
 

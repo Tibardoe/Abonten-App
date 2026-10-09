@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-10-04
+lastReviewed: 2026-10-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,15 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-10-09 — Google approved the app; both pilot install routes are ready
+
+- Updated `deployment/store-listings.md` (1.1) and `operations/pilot-testing.md` (1.2); the "Store listings" note in `CLAUDE.md`.
+- Google Play approved the production release sent on 2026-10-04: it is "Ready to publish" and stays unpublished behind the Publish button. The App Store version is still "Waiting for Review" after five days; a status question was sent to Apple, and how to ask is now written down.
+- Google Play internal testing was set up for the pilot (release "1.0.0 (6) pilot test", email list "Abonten pilot testers"). Recorded what was learned: an internal testing release is published at once and does not release the changes held by managed publishing, and testers see the name "com.abonten.app (unreviewed)" until the listing is published.
+- Apple approved TestFlight build 1.0.0 (20) for outside testers. No tester has been added on either platform: the sign-up form has no answers yet.
+- WhatsApp's limits were added to the pilot record (a pin is hidden from people who join later and lasts 30 days at most; the Business app cannot create a community).
+- Migrations, permissions, jobs, env vars: none.
 
 ## 2026-10-04 — Pilot testing programme planned
 
