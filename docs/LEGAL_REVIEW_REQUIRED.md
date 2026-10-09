@@ -4,8 +4,8 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-12
+version: 1.2
+lastReviewed: 2026-10-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -82,7 +82,7 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 | F3 | Apple App Store privacy labels and account-deletion requirement (when iOS ships) | Future iOS listing | Prepare when applicable | Open |
 | F4 | Trademark status of the Abonten name and logo | Terms §17 | Confirm registration | Open |
 | F5 | Spotlight and Stories user content (built 2026-09-16, switched off): the licence publishers grant, the rights acknowledgement shown before posting (`CONTENT_RIGHTS_ACKNOWLEDGEMENT`), copyright and likeness takedowns through the report flow, whether music in uploaded videos is permitted, and the download option (off by default, author opt-in) | Terms §13, §17; `architecture/spotlight-and-stories.md` §3, §7 | Confirm before the Spotlight or Stories audience is Everyone | Open |
-| F6 | Pilot tester confidentiality agreement (written by engineering on 2026-10-04, not read by counsel): its terms, the two-year period, the feedback licence, and whether ticking a box and typing a full name on the sign-up form is a sufficient signature under the Electronic Transactions Act, 2008 (Act 772). Also whether any reward for testers needs a permit if it is ever decided by chance | [operations/pilot-testing.md](operations/pilot-testing.md); the agreement linked from it | Review before the first tester accepts it | Open |
+| F6 | Pilot tester confidentiality agreement (written by engineering on 2026-10-04, not read by counsel): its terms, the two-year period, the feedback licence, and whether ticking a box and typing a full name on the sign-up form is a sufficient signature under the Electronic Transactions Act, 2008 (Act 772). Also whether any reward for testers needs a permit if it is ever decided by chance | [operations/pilot-testing.md](operations/pilot-testing.md); the agreement linked from it | Review before the first tester accepts it | **Open: not reviewed by counsel.** On 2026-10-09 the founder decided to use the agreement as written for the pilot, without waiting for a review; testers accept it from 2026-10-12. The questions in this row still stand for counsel. The reward question no longer arises: testers are given no money and nothing is decided by chance (`OPERATIONAL_DECISIONS_REQUIRED.md` D10) |
 
 ## G. Communications
 
