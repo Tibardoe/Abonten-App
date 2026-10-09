@@ -4,7 +4,7 @@ purpose: Where the pilot's working documents are, how the pilot is structured, w
 audience: Founder, engineering, support
 scope: The closed pilot of app 1.0.0 before public launch; TestFlight group "Pilot testers"; Google Play internal testing; the pilot's WhatsApp community, forms and tracker
 status: Draft
-version: 1.2
+version: 1.3
 lastReviewed: 2026-10-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -31,6 +31,7 @@ The links open only for the founder's account.
 ## Structure in brief
 
 - **Who:** 40 accepted testers and a waiting list of 10, in four groups: 20 explorers (A), 10 organizers (B), 5 place owners (C), 5 breakers (D). Each tester has a code (A01, B01 …) that goes on every report.
+- **What testers get:** no money (decided 2026-10-09). They are thanked by code in the community each week they finish, named as founding testers at launch if they agree, and given new versions first. The announcement says there is no payment and that testing uses their own data or Wi-Fi.
 - **How long:** one preparation week, then four weeks: first steps, money and events, event day (one real meet-up checked in by QR code), polish and wrap.
 - **Checkpoints:** one at the end of each week, passed or repeated. The last one is the launch decision.
 - **Reporting:** a bug form (never the chat), a Friday check-in form, TestFlight's screenshot feedback on iPhone, and the app's own support chat. Levels: blocker, major, minor, idea.
@@ -43,7 +44,7 @@ The links open only for the founder's account.
 | TestFlight group "Pilot testers" (outside testers, feedback on, no public link) | Created. Apple approved build 1.0.0 (20) for outside testers. No tester added yet: invite each accepted tester by email (`asc testflight groups add-testers`) |
 | Google Play internal testing | Set up on 2026-10-09, after Google approved the production release. Release "1.0.0 (6) pilot test" is the same bundle as production. The email list is "Abonten pilot testers"; it holds only the founder's Workspace account so far. The join link is on the track's Testers tab and in the run-book. Add each accepted tester's Gmail address to the list, then send the link |
 | The three Google Forms (sign-up with the agreement, bug report, Friday check-in) and the "Abonten Pilot tracker" sheet they feed | Built in the founder's Google Workspace account by an Apps Script project there ("Untitled project", allowed to manage Forms and Sheets). The links are in the run-book, section "The three forms". The forms answer without a Google sign-in. Not yet shared with anyone |
-| WhatsApp community | Not created. The run-book says how |
+| WhatsApp community "Abonten Pilot" | Created on 2026-10-09 on a company number kept for the pilot: Announcements (only admins post), General, Help Desk and groups A to D. The rules are in the description of Help Desk and of each lettered group. Members cannot add people or change group settings, joining a lettered group needs approval, and only admins can add groups. No member yet besides the founder. The founder linked that WhatsApp number to the browser Claude drives, so the groups can be checked from there; WhatsApp › Linked devices on the phone ends that access |
 
 ## Rules that follow from how the product works
 
@@ -59,5 +60,5 @@ The links open only for the founder's account.
 | Item | Register |
 |---|---|
 | The confidentiality agreement has not been read by a lawyer; neither has electronic acceptance on a form as the way of signing | `../LEGAL_REVIEW_REQUIRED.md` F6 |
-| What testers are given, how long the tester list is kept, and the start date | `../OPERATIONAL_DECISIONS_REQUIRED.md` D10 |
-| The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace. The forms exist but hold no answers yet | Add it to `../privacy/data-inventory.md` before the sign-up link is shared |
+| How long the tester list is kept, and the start date (what testers are given is decided: no money) | `../OPERATIONAL_DECISIONS_REQUIRED.md` D10 |
+| The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace. Recorded in `../privacy/data-inventory.md` §12 on 2026-10-09; the forms held no answers then | How long it is kept is still to decide (D10) |
