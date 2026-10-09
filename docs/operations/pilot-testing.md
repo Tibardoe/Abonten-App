@@ -4,7 +4,7 @@ purpose: Where the pilot's working documents are, how the pilot is structured, w
 audience: Founder, engineering, support
 scope: The closed pilot of app 1.0.0 before public launch; TestFlight group "Pilot testers"; Google Play internal testing; the pilot's WhatsApp community, forms and tracker
 status: Draft
-version: 1.3
+version: 1.4
 lastReviewed: 2026-10-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -33,6 +33,7 @@ The links open only for the founder's account.
 - **Who:** 40 accepted testers and a waiting list of 10, in four groups: 20 explorers (A), 10 organizers (B), 5 place owners (C), 5 breakers (D). Each tester has a code (A01, B01 …) that goes on every report.
 - **What testers get:** no money (decided 2026-10-09). They are thanked by code in the community each week they finish, named as founding testers at launch if they agree, and given new versions first. The announcement says there is no payment and that testing uses their own data or Wi-Fi.
 - **How long:** one preparation week, then four weeks: first steps, money and events, event day (one real meet-up checked in by QR code), polish and wrap.
+- **When (decided 2026-10-09):** announce on Monday 12 October 2026; choose testers on Sunday 18 October; week 1 from Monday 19 October; week 2 from 26 October; week 3 from 2 November; week 4 from 9 November; last checkpoint and the launch decision on Sunday 15 November.
 - **Checkpoints:** one at the end of each week, passed or repeated. The last one is the launch decision.
 - **Reporting:** a bug form (never the chat), a Friday check-in form, TestFlight's screenshot feedback on iPhone, and the app's own support chat. Levels: blocker, major, minor, idea.
 - **Where testers act:** the production app. Payments stay in Paystack test mode for weeks 1 to 3 (the public test card), with one real-money day in week 4 only if the live cut-over has happened (`../finance/paystack-live-cutover.md`).
@@ -59,6 +60,7 @@ The links open only for the founder's account.
 
 | Item | Register |
 |---|---|
-| The confidentiality agreement has not been read by a lawyer; neither has electronic acceptance on a form as the way of signing | `../LEGAL_REVIEW_REQUIRED.md` F6 |
-| How long the tester list is kept, and the start date (what testers are given is decided: no money) | `../OPERATIONAL_DECISIONS_REQUIRED.md` D10 |
+| The confidentiality agreement has not been read by a lawyer; neither has electronic acceptance on a form as the way of signing. The founder decided on 2026-10-09 to use it as written for the pilot | `../LEGAL_REVIEW_REQUIRED.md` F6 (still open for counsel) |
+| How long the tester list is kept (what testers are given and the dates are decided) | `../OPERATIONAL_DECISIONS_REQUIRED.md` D10 |
+| Apple's review of version 1.0.0 had not started on 2026-10-09. If it has not answered by 19 October, the week 1 missions that publish events and places wait | `../deployment/store-listings.md` |
 | The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace. Recorded in `../privacy/data-inventory.md` §12 on 2026-10-09; the forms held no answers then | How long it is kept is still to decide (D10) |
