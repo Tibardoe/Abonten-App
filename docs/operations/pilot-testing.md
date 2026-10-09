@@ -61,4 +61,4 @@ The links open only for the founder's account.
 |---|---|
 | The confidentiality agreement has not been read by a lawyer; neither has electronic acceptance on a form as the way of signing | `../LEGAL_REVIEW_REQUIRED.md` F6 |
 | How long the tester list is kept, and the start date (what testers are given is decided: no money) | `../OPERATIONAL_DECISIONS_REQUIRED.md` D10 |
-| The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace. The forms exist but hold no answers yet | Add it to `../privacy/data-inventory.md` before the sign-up link is shared |
+| The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace. Recorded in `../privacy/data-inventory.md` §12 on 2026-10-09; the forms held no answers then | How long it is kept is still to decide (D10) |

@@ -18,7 +18,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 ## 2026-10-09 — Pilot: testers are not paid; the WhatsApp community exists
 
-- Updated `OPERATIONAL_DECISIONS_REQUIRED.md` (1.9, D10 partly decided) and `operations/pilot-testing.md` (1.3).
+- Updated `OPERATIONAL_DECISIONS_REQUIRED.md` (1.9, D10 partly decided), `operations/pilot-testing.md` (1.3) and `privacy/data-inventory.md` (1.2, new §12: the pilot's tester list, held in Google Workspace, the two stores' tester lists and the WhatsApp community).
 - The founder decided that testers are given no money: they are thanked by code each week, named as founding testers at launch if they agree, and given new versions first. The run-book's announcements, weekly routine and closing message were changed to say so. The agreement needed no change: it already says testers are not paid except for a thank-you announced in writing.
 - The WhatsApp community "Abonten Pilot" was created on a company number, with the rules in each group's description and the permissions locked. Retention of the tester list and the start date are still open (D10).
 - Migrations, permissions, jobs, env vars: none.

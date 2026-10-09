@@ -2,10 +2,10 @@
 title: Personal data inventory
 purpose: Record every category of personal data Abonten processes, where it is stored, who can access it, why it exists and what happens to it — the factual basis for the Privacy Policy.
 audience: Privacy reviewer, engineering, support leads
-scope: All production data stores (Supabase Postgres, Supabase Storage, Cloudinary, device storage, provider systems)
+scope: All production data stores (Supabase Postgres, Supabase Storage, Cloudinary, device storage, provider systems), and the pilot's tester list kept in Google Workspace
 status: Review required
-version: 1.1
-lastReviewed: 2026-10-02
+version: 1.2
+lastReviewed: 2026-10-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -127,6 +127,17 @@ Format: **Data → Owner (controller) → Purpose → Storage → Access → Ret
 | Health-check results | `health_check_result` | No retention job |
 | Rate-limit buckets (keyed by user id or IP) | `rate_limit_bucket` | Purged daily (1-day window) |
 | Server logs (Vercel) | Vercel | Vercel's retention |
+
+## 12. Pilot testers (held outside the product)
+
+The closed pilot of app 1.0.0 (`../operations/pilot-testing.md`) keeps a small list of invited testers. None of it is in Supabase. The forms were built on 2026-10-04 and held no answers on 2026-10-09.
+
+| Data | Where it is kept | Purpose | Who can read it | Notes |
+|---|---|---|---|---|
+| Sign-up answers: email address, full legal name, WhatsApp number, city or area, a tick that the person is 18 or older, iPhone or Android, phone make and model, mobile network, what kind of user they are, languages, availability, the accepted confidentiality agreement with the typed name and date | Google Forms and the sheet "Abonten Pilot tracker" in the founder's Google Workspace account | Choosing testers, sending them the app, and the record that each accepted the agreement | The founder | **POLICY DECISION REQUIRED** (D10): how long the list is kept. Suggested: delete it six months after the pilot ends and keep the accepted agreements for as long as the secrecy lasts |
+| Bug reports and Friday check-ins: tester code, what happened, the tester's own words | The same sheet | Fixing the app | The founder; engineering | Carry a tester code, not a name. The code maps to a person only on the sheet's Testers tab |
+| Email addresses of testers | App Store Connect (TestFlight group "Pilot testers") and Play Console (email list "Abonten pilot testers") | Letting that person install the test build | The founder; Apple and Google as the stores | Remove each address when the pilot ends |
+| Phone numbers and messages of testers | The WhatsApp community "Abonten Pilot", on a company number | Running the pilot | The founder; other members of the same group see each other's numbers, as in any WhatsApp group | In the Announcements group only admins can see who the members are |
 
 ## Providers (processors)
 
