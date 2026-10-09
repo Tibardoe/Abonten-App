@@ -4,7 +4,7 @@ purpose: Where the pilot's working documents are, how the pilot is structured, w
 audience: Founder, engineering, support
 scope: The closed pilot of app 1.0.0 before public launch; TestFlight group "Pilot testers"; Google Play internal testing; the pilot's WhatsApp community, forms and tracker
 status: Draft
-version: 1.4
+version: 1.5
 lastReviewed: 2026-10-09
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -49,7 +49,7 @@ The links open only for the founder's account.
 
 ## Rules that follow from how the product works
 
-- **Testers post into production.** Until both store reviews have answered, obviously fake listings can get the app rejected. Missions start after the reviews; listings must be real-looking and use the tester's own pictures. Junk is hidden in Admin › Moderation.
+- **Testers post into production.** Until both store reviews have answered, obviously fake listings can get the app rejected. Listings must be real-looking and use the tester's own pictures; new ones are looked at every morning and junk is hidden in Admin › Moderation. The start does not wait for Apple's review (see "Waiting on").
 - **Every phone sign-in sends a paid text message** and each number is limited to five codes an hour and ten a day. Testers who meet the limit use Google or email sign-in.
 - **Fixes reach testers as over-the-air updates** on the `production` channel for runtime 1.0.0 (`../deployment/mobile-eas.md`). Try each update on one device before trusting it.
 - **The Play test does not publish the app.** An internal testing release goes live at once and leaves the approved production changes waiting in Publishing overview (`../deployment/store-listings.md`). Until those are published, Google shows testers the app under the name "com.abonten.app (unreviewed)"; the handbook tells them so.
@@ -62,5 +62,5 @@ The links open only for the founder's account.
 |---|---|
 | The confidentiality agreement has not been read by a lawyer; neither has electronic acceptance on a form as the way of signing. The founder decided on 2026-10-09 to use it as written for the pilot | `../LEGAL_REVIEW_REQUIRED.md` F6 (still open for counsel) |
 | How long the tester list is kept (what testers are given and the dates are decided) | `../OPERATIONAL_DECISIONS_REQUIRED.md` D10 |
-| Apple's review of version 1.0.0 had not started on 2026-10-09. If it has not answered by 19 October, the week 1 missions that publish events and places wait | `../deployment/store-listings.md` |
+| Apple's review of version 1.0.0 had not started on 2026-10-09. The pilot does not wait for it (founder, 2026-10-09): week 1 runs in full from 19 October, because real-looking listings are not a risk to the review. New events and places are looked at every morning and junk is hidden in Admin › Moderation | `../deployment/store-listings.md` |
 | The testers' sign-up details are a new set of personal data (name, phone, email, phone model, city) held in Google Workspace. Recorded in `../privacy/data-inventory.md` §12 on 2026-10-09; the forms held no answers then | How long it is kept is still to decide (D10) |
