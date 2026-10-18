@@ -100,6 +100,19 @@ describe("buildWebCsp", () => {
     ]);
   });
 
+  it("files the reports under the environment they came from", () => {
+    const ci = buildWebCsp({ sentryDsn: DSN, sentryEnvironment: "ci" });
+    expect(directive(ci, "report-uri")).toEqual([
+      "https://o4509.ingest.de.sentry.io/api/4509999/security/?sentry_key=abc123&sentry_environment=ci",
+    ]);
+  });
+
+  it("lets the Google Maps script fetch its font stylesheet", () => {
+    expect(directive(policy, "connect-src")).toContain(
+      "https://fonts.googleapis.com",
+    );
+  });
+
   it("adds eval and the HMR socket only in development", () => {
     const dev = buildWebCsp({ development: true });
     expect(directive(dev, "script-src")).toContain("'unsafe-eval'");

@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.11
-lastReviewed: 2026-10-04
+version: 1.12
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -49,7 +49,7 @@ complianceReviewRequired: no
 | `OPEN_EXCHANGE_RATES_APP_ID` (name configurable in Admin › Markets › Exchange rates) | secret | Hourly display rates for “≈” estimates | estimates hidden; prices and charges unaffected |
 | `RESEND_API_KEY` | secret | Transactional email | emails skipped (code is env-gated) |
 | `OBSERVABILITY_INGEST_SECRET` | secret | `/api/observability/*` auth; must equal `observability_config.secret` in the DB | health/error ingest 401 |
-| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_AUTH_TOKEN` | DSN public; token secret | Error monitoring; source-map upload (CI/Vercel only) | no Sentry events / no source maps |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_AUTH_TOKEN` | DSN public; token secret | Error monitoring; source-map upload (CI/Vercel only). `NEXT_PUBLIC_SENTRY_ENVIRONMENT=ci` (the web browser-suite job) switches sending off and tags violation reports `ci` | no Sentry events / no source maps |
 | `REWARDS_KILL_SWITCH`, `FIELD_OPS_KILL_SWITCH`, `VERIFICATION_KILL_SWITCH` | flag | Emergency off switches | programmes follow DB settings |
 | `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` | flag | Discovery emergency stops: old search everywhere; no prompts, alerts, For you or new subscriptions | Discovery follows `discovery_program_setting` |
 | `RECOMMENDATION_EMAIL_KILL_SWITCH` | flag | Stops recommendation email only: no opt-in, queued emails skipped | follows `discovery_program_setting.recommendations_email_enabled` (legal item G1) |

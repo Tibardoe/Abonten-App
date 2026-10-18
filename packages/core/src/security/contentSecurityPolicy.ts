@@ -18,6 +18,12 @@ export type CspOptions = {
   supabaseUrl?: string | null;
   /** NEXT_PUBLIC_SENTRY_DSN; used for connect-src and violation reports. */
   sentryDsn?: string | null;
+  /**
+   * The Sentry environment the reports belong to ("production", "preview",
+   * "ci"). Without it Sentry files every violation report under no
+   * environment, so CI's deliberate test violations looked like production.
+   */
+  sentryEnvironment?: string | null;
   /** `next dev` needs eval and its HMR websocket. */
   development?: boolean;
   /** Vercel preview deployments inject the vercel.live toolbar. */
@@ -38,6 +44,7 @@ export type SentryCspEndpoints = {
  */
 export function sentryCspEndpoints(
   dsn: string | null | undefined,
+  environment?: string | null,
 ): SentryCspEndpoints | null {
   if (!dsn) return null;
   let url: URL;
@@ -50,9 +57,12 @@ export function sentryCspEndpoints(
   const project = url.pathname.replace(/^\/+/, "").split("/")[0];
   if (!key || !project || !url.hostname) return null;
   const ingestOrigin = `${url.protocol}//${url.host}`;
+  const env = environment
+    ? `&sentry_environment=${encodeURIComponent(environment)}`
+    : "";
   return {
     ingestOrigin,
-    reportUri: `${ingestOrigin}/api/${project}/security/?sentry_key=${key}`,
+    reportUri: `${ingestOrigin}/api/${project}/security/?sentry_key=${key}${env}`,
   };
 }
 
@@ -80,7 +90,10 @@ export function buildWebCsp(options: CspOptions = {}): string {
   // https → wss, and http → ws for a local stack (a production build run
   // against one had its realtime socket refused by this very policy).
   const supabaseWs = supabase ? supabase.replace(/^http/, "ws") : null;
-  const sentry = sentryCspEndpoints(options.sentryDsn);
+  const sentry = sentryCspEndpoints(
+    options.sentryDsn,
+    options.sentryEnvironment,
+  );
   const dev = options.development === true;
   const preview = options.vercelPreview === true;
 
@@ -111,6 +124,9 @@ export function buildWebCsp(options: CspOptions = {}): string {
     // Paystack inline may call its own API from the host page
     "https://api.paystack.co",
     "https://checkout.paystack.com",
+    // The Google Maps script fetches the stylesheet for its keyboard
+    // shortcuts help (arrow glyphs) from here
+    "https://fonts.googleapis.com",
   );
   if (sentry) connectSrc.push(sentry.ingestOrigin);
   if (dev) connectSrc.push("ws://localhost:*", "http://localhost:*");
@@ -162,7 +178,10 @@ export function buildAdminCsp(options: CspOptions = {}): string {
   // https → wss, and http → ws for a local stack (a production build run
   // against one had its realtime socket refused by this very policy).
   const supabaseWs = supabase ? supabase.replace(/^http/, "ws") : null;
-  const sentry = sentryCspEndpoints(options.sentryDsn);
+  const sentry = sentryCspEndpoints(
+    options.sentryDsn,
+    options.sentryEnvironment,
+  );
   const dev = options.development === true;
   const preview = options.vercelPreview === true;
 
