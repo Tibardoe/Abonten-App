@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { EmailVerificationForm } from "@/components/account/EmailVerificationForm";
 import { PhoneVerificationForm } from "@/components/account/PhoneVerificationForm";
 import { AppHeader } from "@/components/app/AppHeader";
+import { useHomeDialCode } from "@/features/markets/MarketProvider";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { api } from "@/lib/api";
 import { maskEmail } from "@abonten/core/emailOtp";
@@ -45,6 +46,7 @@ export default function Security() {
   const { session, signOut } = useSession();
   const user = session?.user;
   const google = (user?.identities ?? []).some((i) => i.provider === "google");
+  const homeDialCode = useHomeDialCode();
 
   // ---- delete account ---------------------------------------------------
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -189,6 +191,7 @@ export default function Security() {
           {phoneOpen ? (
             <View className="pt-2">
               <PhoneVerificationForm
+                homeDialCode={homeDialCode}
                 onDone={(message) => {
                   setPhoneOpen(false);
                   setPhoneMsg(message);

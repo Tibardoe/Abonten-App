@@ -4,6 +4,7 @@ import { PhoneVerificationForm } from "@/components/account/PhoneVerificationFor
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { FormSkeleton } from "@/components/skeletons";
+import { useHomeDialCode } from "@/features/markets/MarketProvider";
 import { useProfileCompletion } from "@/features/profile/useProfileCompletion";
 import { useQueryView } from "@/lib/useQueryView";
 import type { ProfileCompletionItem } from "@abonten/core/profileCompletion";
@@ -38,6 +39,8 @@ export default function AccountSetupScreen() {
   const completion = useProfileCompletion();
   const view = useQueryView(completion);
   const [sheet, setSheet] = useState<"email" | "phone" | null>(null);
+  // Read here, not in the form: the sheet renders outside MarketProvider.
+  const homeDialCode = useHomeDialCode();
 
   const onItemPress = (item: ProfileCompletionItem) => {
     if (item.group === "profile") {
@@ -134,6 +137,7 @@ export default function AccountSetupScreen() {
           <AppText variant="meta">{t("letsYouSignInWithA")}</AppText>
           {sheet === "phone" ? (
             <PhoneVerificationForm
+              homeDialCode={homeDialCode}
               onDone={done}
               onCancel={() => setSheet(null)}
             />

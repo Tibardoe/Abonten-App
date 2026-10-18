@@ -88,6 +88,11 @@ import { KeyboardAwareContext, useKeyboardReveal } from "./useKeyboardReveal";
 // drag would fight the ScrollView and swallow taps on inputs.
 //
 // REQUIREMENT: <PortalProvider> must wrap the app — see app/_layout.tsx.
+//
+// CONTEXT. The content renders where the PortalHost is, not where the <Sheet>
+// is written, so it sees only the providers above <PortalProvider>. A hook for
+// a provider mounted lower down (the app's markets, explore location, …)
+// throws inside a sheet: read it in the screen and pass the value in.
 
 export type SheetProps = {
   open: boolean;

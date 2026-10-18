@@ -156,3 +156,12 @@ export function useMarket(): MarketValue {
   if (!value) throw new Error("useMarket must be used inside MarketProvider");
   return value;
 }
+
+/** The dial code of the person's own market ("" until markets load). */
+export function useHomeDialCode(): string {
+  const { markets, context } = useMarket();
+  return (
+    markets.find((m) => m.countryCode === context?.marketCountry)?.dialCode ??
+    ""
+  );
+}

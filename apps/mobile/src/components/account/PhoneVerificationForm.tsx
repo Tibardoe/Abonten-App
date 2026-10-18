@@ -1,4 +1,3 @@
-import { useMarket } from "@/features/markets/MarketProvider";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PHONE_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
@@ -12,22 +11,23 @@ import { View } from "react-native";
 // which attaches the number already verified). Used by Settings › Security
 // and Account setup. Once it's on the account, the number can be used to
 // sign in with a code.
+//
+// The screen passes the dial code in (`useHomeDialCode`): Account setup shows
+// this form in a Sheet, and a Sheet renders at the app root, outside the
+// (app) group's MarketProvider, so the form cannot read the market itself.
 
 export function PhoneVerificationForm({
+  homeDialCode,
   onDone,
   onCancel,
 }: {
+  /** The person's own market's dial code; editable for a number elsewhere. */
+  homeDialCode: string;
   onDone: (message: string) => void;
   onCancel?: () => void;
 }) {
   const t = useTranslations("account");
 
-  // Starts on the person's own market (their dial code), editable for a
-  // number from anywhere else.
-  const { markets, context } = useMarket();
-  const homeDialCode =
-    markets.find((m) => m.countryCode === context?.marketCountry)?.dialCode ??
-    "";
   const [typedDialCode, setDialCode] = useState<string | null>(null);
   const dialCode = typedDialCode ?? homeDialCode;
   const [rawPhone, setRawPhone] = useState("");
