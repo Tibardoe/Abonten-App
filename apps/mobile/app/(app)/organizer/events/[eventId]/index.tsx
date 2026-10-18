@@ -141,6 +141,17 @@ function OverviewCards({
     }
   }
 
+  // How many times the event's page was opened, on the website and in the app.
+  if (overview.page_views != null) {
+    const appViews = n(overview.app_page_views);
+    tiles.push({
+      label: t("pageViews"),
+      value: String(n(overview.page_views)),
+      sublabel:
+        appViews > 0 ? t("pageViewsInTheApp", { count: appViews }) : undefined,
+    });
+  }
+
   return (
     <View className="flex-row flex-wrap gap-2">
       {tiles.map((t) => (

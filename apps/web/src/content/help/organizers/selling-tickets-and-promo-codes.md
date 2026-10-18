@@ -2,7 +2,7 @@
 title: Selling tickets, promo codes and promoter commission
 summary: How sales and holds work, creating promo codes, offering a promoter commission, and reading your sales insights.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -46,7 +46,7 @@ Where the feature is available, you can offer people who bring buyers a **commis
 
 ## Insights
 
-Open your event › **Insights** (web: `?tab=insights`; app: the event's overview): sales over time, tickets sold by type, promo-code usage, returning attendees, revenue, and the attendee list. The **Dashboard** (web: Manage › Dashboard; app: Organizer home) aggregates all your published events: gross sales, tickets sold, active events, upcoming events, items needing attention and recent activity.
+Open your event › **Insights** (web: `?tab=insights`; app: the event's overview): sales over time, tickets sold by type, promo-code usage, returning attendees, revenue, and the attendee list. **Page views** count how many times your event's page was opened, on the website and in the app; your own visits are not counted. The **Dashboard** (web: Manage › Dashboard; app: Organizer home) aggregates all your published events: gross sales, tickets sold, active events, upcoming events, items needing attention and recent activity.
 
 ## Sharing your event
 

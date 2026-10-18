@@ -19,6 +19,7 @@ import { OPS_TIME_ZONE, formatOpsDate } from "@/lib/format";
 import { computeTrend } from "@abonten/core/admin/computeTrend";
 import { describeSeries } from "@abonten/core/admin/describeSeries";
 import { statusMeta } from "@abonten/core/admin/statusLabels";
+import type { AnalyticsViewedListingRow } from "@abonten/services/admin/analytics/analyticsAdminCore";
 import Link from "next/link";
 
 // Analytics answers "how is Abonten growing, and who is using it" — with
@@ -60,6 +61,53 @@ function bucketLabel(iso: string, bucket: "hour" | "day" | "week"): string {
     day: "numeric",
     month: "short",
   }).format(d);
+}
+
+function ViewedTable({
+  title,
+  rows,
+  hrefFor,
+  empty,
+}: {
+  title: string;
+  rows: AnalyticsViewedListingRow[];
+  hrefFor: (id: string) => string;
+  empty: string;
+}) {
+  return (
+    <div>
+      <h3 className="mb-2 text-sm font-semibold">{title}</h3>
+      {rows.length === 0 ? (
+        <EmptyState>{empty}</EmptyState>
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <Th>Listing</Th>
+              <Th>Views</Th>
+              <Th>In the app</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="hover:bg-muted/40">
+                <Td>
+                  <Link
+                    href={hrefFor(r.id)}
+                    className="text-primary hover:underline"
+                  >
+                    {r.name || "—"}
+                  </Link>
+                </Td>
+                <Td className="tabular-nums">{r.views}</Td>
+                <Td className="tabular-nums">{r.appViews}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+    </div>
+  );
 }
 
 export default async function AnalyticsPage({
@@ -637,6 +685,52 @@ export default async function AnalyticsPage({
           ) : null}
         </div>
       </div>
+
+      <section className="mt-6">
+        <SectionHeading
+          title={`Page views · ${range.label.toLowerCase()}`}
+          tip={{
+            label: "Page views",
+            text: "Each time an event's or a place's page was opened, on the website or in the app. A listing's own organizer or owner is not counted. One person opening a page twice counts twice.",
+          }}
+        />
+        <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <MetricCard
+            label="Event page views"
+            definition={{
+              text: "Times an event's page was opened in this period, on the website or in the app; the organizer's own views are left out.",
+              source: "event_analytics_event",
+            }}
+            value={a.listingViews.eventViews}
+            period={range.label}
+            secondary={`${a.listingViews.eventAppViews.toLocaleString("en-GB")} in the app`}
+          />
+          <MetricCard
+            label="Place page views"
+            definition={{
+              text: "Times a place's page was opened in this period, on the website or in the app; the owner's own views are left out. App views are counted from 18 October 2026.",
+              source: "place_analytics_event",
+            }}
+            value={a.listingViews.placeViews}
+            period={range.label}
+            secondary={`${a.listingViews.placeAppViews.toLocaleString("en-GB")} in the app`}
+          />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ViewedTable
+            title="Most viewed events"
+            rows={a.listingViews.topEvents}
+            hrefFor={(id) => `/events/${id}`}
+            empty="No event page was opened in this period."
+          />
+          <ViewedTable
+            title="Most viewed places"
+            rows={a.listingViews.topPlaces}
+            hrefFor={(id) => `/places/${id}`}
+            empty="No place page was opened in this period."
+          />
+        </div>
+      </section>
 
       <p className="mt-6 text-xs text-muted-foreground">
         Read from the database when this page loaded, for{" "}

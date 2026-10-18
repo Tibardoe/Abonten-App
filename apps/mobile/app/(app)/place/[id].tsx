@@ -19,6 +19,7 @@ import { VerifiedPill } from "@/components/verification/VerifiedPill";
 import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
+import { useLogPlaceView } from "@/features/places/placeEngagement";
 import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
 import {
@@ -124,6 +125,7 @@ export default function PlaceDetailScreen() {
   const carouselCardWidth = useCarouselCardWidth();
   const detail = usePlaceDetail(id);
   const { data: place, isError, error, isRefetching, refetch } = detail;
+  useLogPlaceView(place?.id);
   const { markets } = useMarket();
   // Service prices are in the place's market currency.
   const placeCurrency =

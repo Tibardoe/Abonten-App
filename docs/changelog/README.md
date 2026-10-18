@@ -16,6 +16,13 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-18 — Event and place page views, from the website and the app
+
+- Migration `20261018192426_listing_page_views` (live on preview and production). New `event_analytics_event` (one row per opening of an event's page: event, platform, server time; no account, device or address); `place_analytics_event` gains `platform`. Anyone may insert; only the organizer reads an event's rows. Both throttles now drop the listing owner's own rows and keep 60 per listing per type per minute. New service-role `admin_listing_views(p_from, p_to, p_limit)`.
+- Written by the website (`EventViewLogger` → `logEventView`; `logPlaceEngagement` now sends the cookie session and `platform: "web"`) and the app (`useLogEventView`, `useLogPlaceView`, impressions carry the platform). Shown in the event's Insights overview (web and app, "Page views" with the app's share), the place's Insights (now counting the app), Admin › Events / Places detail, and Admin › Analytics › Page views.
+- Updated `admin/analytics.md` (2.1), `admin/catalog.md` (1.1), `architecture/feature-inventory.md` (1.5), `architecture/data-model-overview.md` (1.2), `journeys/place-owner.md` (1.1), `privacy/data-inventory.md`, `privacy/cookies-and-storage-inventory.md` (1.2), `operations/marketing-collateral-and-qr-links.md` (1.3), `legal/README.md`, `legal/versioning-and-effective-dates.md`, `LEGAL_REVIEW_REQUIRED.md` (B3, F2), `PROJECT.md` §64; public draft `legal/privacy-policy.md` 1.7-draft (still "Review required"); help `organizers/selling-tickets-and-promo-codes` and `place-owners/managing-your-place` in all five languages.
+- Permissions, jobs, env vars: none. The app's store privacy answers already declare product interaction for analytics, so they did not change. The app part reaches phones with an over-the-air update.
+
 ## 2026-10-18 — The website counts its visits
 
 - Updated `architecture/integrations.md` (1.3), `operations/marketing-collateral-and-qr-links.md` (1.1, new "tag the links in a social post"), `privacy/cookies-and-storage-inventory.md` (1.1), `privacy/third-party-processors.md` (1.1), `privacy/data-inventory.md` (1.3), `legal/README.md` (1.1), `legal/versioning-and-effective-dates.md` (1.1), `LEGAL_REVIEW_REQUIRED.md` (1.3, B4 and F2), `PROJECT.md` §10; public drafts `legal/privacy-policy.md` 1.6-draft and `legal/cookie-policy.md` 1.1-draft (still "Review required").

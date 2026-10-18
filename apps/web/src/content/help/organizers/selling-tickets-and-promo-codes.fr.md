@@ -2,7 +2,7 @@
 title: Vendre des billets, codes promo et commission des promoteurs
 summary: Comment fonctionnent les ventes et les réservations, créer des codes promo, proposer une commission aux promoteurs et lire les statistiques de vos ventes.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -46,7 +46,7 @@ Là où la fonctionnalité est disponible, vous pouvez offrir aux personnes qui 
 
 ## Statistiques
 
-Ouvrez votre événement › **Statistiques** (site web : `?tab=insights` ; application : la vue d'ensemble de l'événement) : ventes dans le temps, billets vendus par type, utilisation des codes promo, participants fidèles, recettes et liste des participants. Le **Tableau de bord** (site web : Gérer › Tableau de bord ; application : accueil Organisateur) regroupe tous vos événements publiés : ventes brutes, billets vendus, événements actifs, événements à venir, points qui demandent votre attention et activité récente.
+Ouvrez votre événement › **Statistiques** (site web : `?tab=insights` ; application : la vue d'ensemble de l'événement) : ventes dans le temps, billets vendus par type, utilisation des codes promo, participants fidèles, recettes et liste des participants. Les **vues de la page** indiquent combien de fois la page de votre événement a été ouverte, sur le site web et dans l'application ; vos propres visites ne sont pas comptées. Le **Tableau de bord** (site web : Gérer › Tableau de bord ; application : accueil Organisateur) regroupe tous vos événements publiés : ventes brutes, billets vendus, événements actifs, événements à venir, points qui demandent votre attention et activité récente.
 
 ## Partager votre événement
 

@@ -2288,6 +2288,8 @@
         "ordersTicketsDiscounted",
         "organizerEarnings",
         "overview",
+        "pageViews",
+        "pageViewsInTheApp",
         "pending",
         "photosOptional",
         "placeDrafts",

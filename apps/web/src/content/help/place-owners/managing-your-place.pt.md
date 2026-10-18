@@ -2,7 +2,7 @@
 title: Adicionar e gerir o seu local
 summary: Criar a página de um local, manter atualizados os dados, o horário, os serviços e as fotografias, indicar um encerramento temporário e ler as suas estatísticas.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -44,7 +44,7 @@ Abra-a em Gerir › Locais (website) ou Organizador › Locais (aplicação):
 
 ## Estatísticas
 
-As **Estatísticas** do local mostram ao longo do tempo as visualizações da página e os toques nos seus botões de contacto (chamada, WhatsApp, website, direções).
+As **Estatísticas** do local mostram ao longo do tempo as visualizações da página e os toques nos seus botões de contacto (chamada, WhatsApp, website, direções). As visualizações são contadas no website e, desde 18 de outubro de 2026, na aplicação; as suas próprias visitas e toques não são contados.
 
 ## Eventos no seu local
 

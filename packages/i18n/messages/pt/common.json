@@ -458,6 +458,8 @@
   "ownerSReply": "Resposta do proprietário",
   "pageNotFound": "Página não encontrada",
   "pageTitleWithBrand": "{title} | Abonten Hub",
+  "pageViews": "Visualizações da página",
+  "pageViewsInTheApp": "{count, number} na aplicação",
   "pauseVideo": "Pausar vídeo",
   "pay": "Pagar {formatMoney}",
   "payTheRestWith": "Pagar o restante com",

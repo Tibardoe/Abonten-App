@@ -17,7 +17,8 @@ import { num, toRangeMetrics, toSnapshotMetrics } from "../shared/metricRows";
 // Platform Analytics: growth, sales and the only breakdowns of people the
 // data honestly supports.
 //
-// Three RPCs, aggregated in Postgres. The page used to pull up to 50,000 raw
+// Four RPCs, aggregated in Postgres (the fourth, admin_listing_views, counts
+// event and place page opens from the website and the app). The page used to pull up to 50,000 raw
 // rows per metric and bucket them in JavaScript, which silently dropped every
 // period that had no activity — a gap in a chart that read as "no data" when
 // it meant "zero".
@@ -52,6 +53,25 @@ export type AnalyticsTopEventRow = {
   organizerName: string | null;
   paidTickets: number;
   grossTicketSales: number;
+};
+
+export type AnalyticsViewedListingRow = {
+  id: string;
+  /** Event title or place name. */
+  name: string;
+  /** Event code or place slug, for the public link. */
+  publicKey: string | null;
+  views: number;
+  appViews: number;
+};
+
+export type AnalyticsListingViews = {
+  eventViews: number;
+  eventAppViews: number;
+  placeViews: number;
+  placeAppViews: number;
+  topEvents: AnalyticsViewedListingRow[];
+  topPlaces: AnalyticsViewedListingRow[];
 };
 
 export type AnalyticsTopOrganizerRow = {
@@ -99,6 +119,7 @@ export type PlatformAnalyticsV2 = {
   topOrganizers: AnalyticsTopOrganizerRow[];
   /** Sales that cover several events at once and cannot be attributed. */
   grossWithoutEvent: number;
+  listingViews: AnalyticsListingViews;
   demographics: AnalyticsDemographics;
 };
 
@@ -155,7 +176,7 @@ export async function getPlatformAnalyticsCore(
   const prevFrom = range.prevFrom ?? range.from;
   const prevTo = range.prevTo ?? range.from;
 
-  const [kpis, analytics, demographics] = await Promise.all([
+  const [kpis, analytics, demographics, views] = await Promise.all([
     supabase.rpc("admin_dashboard_kpis", {
       p_from: range.from,
       p_to: range.to,
@@ -177,9 +198,15 @@ export async function getPlatformAnalyticsCore(
       p_prev_from: prevFrom,
       p_prev_to: prevTo,
     }),
+    supabase.rpc("admin_listing_views", {
+      p_from: range.from,
+      p_to: range.to,
+      p_limit: 10,
+    }),
   ]);
 
-  const failure = kpis.error ?? analytics.error ?? demographics.error;
+  const failure =
+    kpis.error ?? analytics.error ?? demographics.error ?? views.error;
   if (failure) {
     logger.error(`getPlatformAnalyticsCore failed: ${failure.message}`);
     return { status: 500, message: "Couldn't load the analytics figures." };
@@ -188,6 +215,23 @@ export async function getPlatformAnalyticsCore(
   const k = (kpis.data ?? {}) as Row;
   const a = (analytics.data ?? {}) as Row;
   const d = (demographics.data ?? {}) as Row;
+  const v = (views.data ?? {}) as Row;
+
+  const viewedRows = (
+    raw: unknown,
+    nameKey: "title" | "name",
+    publicKey: "eventCode" | "slug",
+  ): AnalyticsViewedListingRow[] =>
+    (Array.isArray(raw) ? raw : []).map((row) => {
+      const r = (row ?? {}) as Row;
+      return {
+        id: String(r.id ?? ""),
+        name: String(r[nameKey] ?? ""),
+        publicKey: r[publicKey] ? String(r[publicKey]) : null,
+        views: num(r.views),
+        appViews: num(r.appViews),
+      };
+    });
 
   const series = (Array.isArray(a.series) ? a.series : []).map((row) => {
     const r = (row ?? {}) as Row;
@@ -259,6 +303,14 @@ export async function getPlatformAnalyticsCore(
       topEvents,
       topOrganizers,
       grossWithoutEvent: num(a.grossWithoutEvent),
+      listingViews: {
+        eventViews: num(v.eventViews),
+        eventAppViews: num(v.eventAppViews),
+        placeViews: num(v.placeViews),
+        placeAppViews: num(v.placeAppViews),
+        topEvents: viewedRows(v.topEvents, "title", "eventCode"),
+        topPlaces: viewedRows(v.topPlaces, "name", "slug"),
+      },
       demographics: {
         signInMethod: toBreakdown(d.signInMethod),
         platform: toBreakdown(d.platform),

@@ -312,6 +312,8 @@
   "organizerVerification": "Verificación del organizador",
   "otherCurrencies": "Otras monedas",
   "overview": "Resumen",
+  "pageViews": "Visitas a la ficha",
+  "pageViewsInTheApp": "{count, number} en la app",
   "paidOrders": "Pedidos pagados",
   "paidTickets": "Entradas de pago",
   "paidWithAmountCredit": "Pagado con {amount} de crédito",

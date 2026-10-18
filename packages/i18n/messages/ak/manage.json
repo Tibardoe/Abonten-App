@@ -312,6 +312,8 @@
   "organizerVerification": "Organizer verification",
   "otherCurrencies": "Other currencies",
   "overview": "Overview",
+  "pageViews": "Page views",
+  "pageViewsInTheApp": "{count, number} in the app",
   "paidOrders": "Paid orders",
   "paidTickets": "Paid tickets",
   "paidWithAmountCredit": "Paid with {amount} credit",

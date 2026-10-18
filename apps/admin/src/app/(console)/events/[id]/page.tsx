@@ -9,6 +9,7 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadEventDetail } from "@/lib/data";
+import { pageViewsHint } from "@/lib/format";
 import { findCountry } from "@abonten/core/geo/countries";
 import {
   formatInTimeZone,
@@ -59,7 +60,7 @@ export default async function EventDetailPage({
         }
       />
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-4">
+      <div className="mb-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label="Tickets issued" value={e.ticketsSold} />
         <Stat
           label="Gross (list price)"
@@ -69,6 +70,11 @@ export default async function EventDetailPage({
           label="Rating"
           value={e.reviewCount > 0 ? e.avgRating.toFixed(1) : "—"}
           hint={`${e.reviewCount} review(s)`}
+        />
+        <Stat
+          label="Page views"
+          value={e.pageViews ? e.pageViews.total : "—"}
+          hint={pageViewsHint(e.pageViews)}
         />
         <Stat
           label="Reports"

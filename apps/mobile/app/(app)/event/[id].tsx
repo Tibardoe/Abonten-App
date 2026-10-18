@@ -14,6 +14,7 @@ import {
   showsOrganizerBadge,
 } from "@/components/verification/VerifiedPill";
 import { useFreeRsvpFlow } from "@/features/checkout/useFreeRsvpFlow";
+import { useLogEventView } from "@/features/discovery/eventEngagement";
 import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
@@ -125,6 +126,7 @@ export default function EventDetailScreen() {
   const detail = useEventDetail(id);
   const { data, isError, error, isRefetching, refetch } = detail;
   const detailView = useQueryView(detail);
+  useLogEventView(data?.event.id);
   const { session } = useSession();
   const { estimate } = useMarket();
   const messageOrganizer = useOpenConversation();

@@ -13,6 +13,7 @@ import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
+import EventViewLogger from "@/events/atoms/EventViewLogger";
 import AddEventReviewButton from "@/events/molecules/AddEventReviewButton";
 import { languageAlternates } from "@/i18n/alternates";
 import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
@@ -292,6 +293,7 @@ export default async function page({
   return (
     <div className="bg-background">
       <JsonLd data={eventJsonLd(event)} />
+      <EventViewLogger eventId={event.id} />
       {/* Hero Section */}
       <div className="relative h-72 md:h-[500px] bg-muted overflow-hidden md:rounded-2xl">
         <Image

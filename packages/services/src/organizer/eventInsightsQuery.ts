@@ -117,23 +117,59 @@ async function ownsEvent(
 
 // --- internal RPC bodies (ownership already verified by the caller) ---
 
+// Page opens in the period, from event_analytics_event (the organizer reads
+// their own event's rows through RLS). Bounds are inclusive, as in the RPCs.
+async function countPageViews(
+  supabase: SupabaseClient<Database>,
+  eventId: string,
+  startDate: DateBound,
+  endDate: DateBound,
+  appOnly: boolean,
+): Promise<number | null> {
+  let query = supabase
+    .from("event_analytics_event")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId)
+    .eq("event_type", "view");
+  if (startDate) query = query.gte("created_at", startDate);
+  if (endDate) query = query.lte("created_at", endDate);
+  if (appOnly) query = query.in("platform", ["ios", "android"]);
+  const { count, error } = await query;
+  if (error) {
+    logger.error("Supabase error:", error.message);
+    return null;
+  }
+  return count ?? 0;
+}
+
 async function runOverview(
   supabase: SupabaseClient<Database>,
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
 ): Promise<EventOverviewAnalyticsResult> {
-  const { data, error } = await supabase.rpc("get_event_overview_analytics", {
-    p_event_id: eventId,
-    p_start_date: startDate ?? undefined,
-    p_end_date: endDate ?? undefined,
-  });
+  const [{ data, error }, pageViews, appPageViews] = await Promise.all([
+    supabase.rpc("get_event_overview_analytics", {
+      p_event_id: eventId,
+      p_start_date: startDate ?? undefined,
+      p_end_date: endDate ?? undefined,
+    }),
+    countPageViews(supabase, eventId, startDate, endDate, false),
+    countPageViews(supabase, eventId, startDate, endDate, true),
+  ]);
   if (error) {
     logger.error("Supabase error:", error.message);
     return FAILED;
   }
-  const rows = data ?? [];
-  return { status: 200, data: rows[0] ?? null };
+  // A count that failed is not zero views.
+  if (pageViews === null || appPageViews === null) return FAILED;
+  const row = (data ?? [])[0];
+  return {
+    status: 200,
+    data: row
+      ? { ...row, page_views: pageViews, app_page_views: appPageViews }
+      : null,
+  };
 }
 
 async function runTicketTypes(

@@ -2,7 +2,7 @@
 title: Adding and managing your place
 summary: Create a place listing, keep details, opening hours, services and photos current, set a temporary status, and read your insights.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -44,7 +44,7 @@ Open it under Manage › Places (web) or Organizer › Places (app):
 
 ## Insights
 
-The place's **Insights** show page views and clicks on your contact buttons (call, WhatsApp, website, directions) over time.
+The place's **Insights** show page views and clicks on your contact buttons (call, WhatsApp, website, directions) over time. Views are counted on the website and, since 18 October 2026, in the app; your own visits and clicks are not counted.
 
 ## Events at your place
 

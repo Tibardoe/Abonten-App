@@ -11,6 +11,7 @@ import type {
   AdminNoteEntry,
   EventAdminDetail,
   EventAdminListItem,
+  ListingPageViews,
   ModerationState,
   OrganizerDetail,
   OrganizerListItem,
@@ -181,6 +182,61 @@ async function eventSales(
   return { ticketsSold, grossSales, currency };
 }
 
+// Page opens (website and app) from event_analytics_event /
+// place_analytics_event: all time, the app's share, the last seven days.
+const APP_PLATFORMS = ["ios", "android"];
+const WEEK_MS = 7 * 86_400_000;
+
+type CountAnswer = { count: number | null; error: { message: string } | null };
+
+function pageViewsFrom(answers: CountAnswer[], what: string): ListingPageViews {
+  const failed = answers.find((a) => a.error);
+  if (failed) {
+    logger.error(`${what} page views failed: ${failed.error?.message}`);
+    return null;
+  }
+  const [total, app, last7Days] = answers.map((a) => a.count ?? 0);
+  return { total, app, last7Days };
+}
+
+async function eventPageViews(
+  supabase: ServiceRoleClient,
+  eventId: string,
+): Promise<ListingPageViews> {
+  const since = new Date(Date.now() - WEEK_MS).toISOString();
+  const views = () =>
+    supabase
+      .from("event_analytics_event")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", eventId)
+      .eq("event_type", "view");
+  const answers = await Promise.all([
+    views(),
+    views().in("platform", APP_PLATFORMS),
+    views().gte("created_at", since),
+  ]);
+  return pageViewsFrom(answers, "Event");
+}
+
+async function placePageViews(
+  supabase: ServiceRoleClient,
+  placeId: string,
+): Promise<ListingPageViews> {
+  const since = new Date(Date.now() - WEEK_MS).toISOString();
+  const views = () =>
+    supabase
+      .from("place_analytics_event")
+      .select("id", { count: "exact", head: true })
+      .eq("place_id", placeId)
+      .eq("event_type", "view");
+  const answers = await Promise.all([
+    views(),
+    views().in("platform", APP_PLATFORMS),
+    views().gte("created_at", since),
+  ]);
+  return pageViewsFrom(answers, "Place");
+}
+
 // ─────────────────────────────────────────────────────────────
 // Events
 // ─────────────────────────────────────────────────────────────
@@ -314,14 +370,16 @@ export async function getEventDetailCore(
   }
   if (!e) return { status: 404, message: "Event not found" };
 
-  const [nm, sales, rating, recentReports, notes, rc] = await Promise.all([
-    names(supabase, [e.organizer_id]),
-    eventSales(supabase, eventId),
-    ratingFor(supabase, "event_review", "event_id", eventId),
-    recentReportsFor(supabase, "event", eventId),
-    adminNotes(supabase, "event", eventId),
-    reportCounts(supabase, "event", [eventId]),
-  ]);
+  const [nm, sales, rating, recentReports, notes, rc, pageViews] =
+    await Promise.all([
+      names(supabase, [e.organizer_id]),
+      eventSales(supabase, eventId),
+      ratingFor(supabase, "event_review", "event_id", eventId),
+      recentReportsFor(supabase, "event", eventId),
+      adminNotes(supabase, "event", eventId),
+      reportCounts(supabase, "event", [eventId]),
+      eventPageViews(supabase, eventId),
+    ]);
 
   return {
     status: 200,
@@ -351,6 +409,7 @@ export async function getEventDetailCore(
       timezone: e.timezone ?? null,
       avgRating: rating.avg,
       reviewCount: rating.count,
+      pageViews,
       moderationReason: e.moderation_reason ?? null,
       recentReports,
       notes,
@@ -492,24 +551,33 @@ export async function getPlaceDetailCore(
   }
   if (!p) return { status: 404, message: "Place not found" };
 
-  const [nm, rating, recentReports, notes, rc, upcoming, pendingClaims] =
-    await Promise.all([
-      names(supabase, [p.owner_id]),
-      ratingFor(supabase, "place_review", "place_id", placeId),
-      recentReportsFor(supabase, "place", placeId),
-      adminNotes(supabase, "place", placeId),
-      reportCounts(supabase, "place", [placeId]),
-      supabase
-        .from("event")
-        .select("id", { count: "exact", head: true })
-        .eq("place_id", placeId)
-        .gte("starts_at", new Date().toISOString()),
-      supabase
-        .from("place_claim_request")
-        .select("id", { count: "exact", head: true })
-        .eq("place_id", placeId)
-        .eq("status", "pending"),
-    ]);
+  const [
+    nm,
+    rating,
+    recentReports,
+    notes,
+    rc,
+    upcoming,
+    pendingClaims,
+    pageViews,
+  ] = await Promise.all([
+    names(supabase, [p.owner_id]),
+    ratingFor(supabase, "place_review", "place_id", placeId),
+    recentReportsFor(supabase, "place", placeId),
+    adminNotes(supabase, "place", placeId),
+    reportCounts(supabase, "place", [placeId]),
+    supabase
+      .from("event")
+      .select("id", { count: "exact", head: true })
+      .eq("place_id", placeId)
+      .gte("starts_at", new Date().toISOString()),
+    supabase
+      .from("place_claim_request")
+      .select("id", { count: "exact", head: true })
+      .eq("place_id", placeId)
+      .eq("status", "pending"),
+    placePageViews(supabase, placeId),
+  ]);
 
   return {
     status: 200,
@@ -533,6 +601,7 @@ export async function getPlaceDetailCore(
       avgRating: rating.avg,
       reviewCount: rating.count,
       upcomingEventCount: upcoming.count ?? 0,
+      pageViews,
       moderationReason: p.moderation_reason ?? null,
       pendingClaimCount: pendingClaims.count ?? 0,
       recentReports,

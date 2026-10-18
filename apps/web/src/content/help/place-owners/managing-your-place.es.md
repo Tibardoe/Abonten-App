@@ -2,7 +2,7 @@
 title: Añadir y gestionar tu lugar
 summary: Crear la ficha de un lugar, mantener al día sus datos, horario, servicios y fotos, indicar un cierre temporal y leer tus estadísticas.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -44,7 +44,7 @@ Al publicar, el lugar aparece en Explorar, en la búsqueda y en el mapa, y en tu
 
 ## Estadísticas
 
-Las **Estadísticas** del lugar muestran a lo largo del tiempo las visitas a la página y los toques en tus botones de contacto (llamada, WhatsApp, sitio web, cómo llegar).
+Las **Estadísticas** del lugar muestran a lo largo del tiempo las visitas a la página y los toques en tus botones de contacto (llamada, WhatsApp, sitio web, cómo llegar). Las visitas se cuentan en la web y, desde el 18 de octubre de 2026, en la aplicación; tus propias visitas y toques no se cuentan.
 
 ## Eventos en tu lugar
 

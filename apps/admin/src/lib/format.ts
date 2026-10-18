@@ -43,3 +43,13 @@ export function formatOpsDateTime(iso: string | null | undefined): string {
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? "—" : DATE_TIME.format(d);
 }
+
+const COUNT = new Intl.NumberFormat("en-GB");
+
+/** A listing's page views under its total: "12 in the last 7 days · 4 in the app". */
+export function pageViewsHint(
+  views: { app: number; last7Days: number } | null,
+): string {
+  if (!views) return "Couldn't count them";
+  return `${COUNT.format(views.last7Days)} in the last 7 days · ${COUNT.format(views.app)} in the app`;
+}
