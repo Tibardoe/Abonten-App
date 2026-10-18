@@ -65,7 +65,18 @@ test("a blocked load produces a CSP violation report addressed to the configured
 
 test("the policy blocks a disallowed script but still runs the app's own", async ({
   page,
+  request,
 }) => {
+  // The violation below is deliberate: keep its report on the machine, or
+  // every CI run files it in Sentry.
+  const header = (await request.get("/")).headers()["content-security-policy"];
+  const reportUri = header ? directive(header, "report-uri")?.[0] : undefined;
+  if (reportUri) {
+    await page.route(`${reportUri.split("?")[0]}*`, (route) =>
+      route.fulfill({ status: 200, body: "" }),
+    );
+  }
+
   const blocked: string[] = [];
   page.on("console", (m) => {
     const t = m.text();
