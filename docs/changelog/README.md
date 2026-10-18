@@ -16,10 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
-## 2026-10-18 — Pilot: eleven testers, starting tomorrow
+## 2026-10-18 — Pilot: twelve testers, starting tomorrow
 
 - Updated `operations/pilot-testing.md` (1.6).
-- Eleven people signed up and accepted the agreement (A 4, B 1, C 1, D 5; 6 iPhone, 5 Android). The founder starts on 19 October with them. The six iPhone testers were invited to the TestFlight group "Pilot testers" and the five Android testers added to the Play list "Abonten pilot testers"; the welcome messages go out from the founder. One more person was asked to sign up before being added.
+- Eleven people signed up and accepted the agreement (A 4, B 1, C 1, D 5; 6 iPhone, 5 Android). The founder starts on 19 October with them. The six iPhone testers were invited to the TestFlight group "Pilot testers" and the five Android testers added to the Play list "Abonten pilot testers"; the welcome messages go out from the founder. A twelfth person, known to the founder, was added on iPhone as A05 before filling in the form; his welcome message asks him to accept the agreement on the form first.
 - Migrations, permissions, jobs, env vars: none.
 
 ## 2026-10-09 — Pilot: the dates are set and the agreement is used as written
