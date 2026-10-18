@@ -4,8 +4,8 @@ purpose: Describe how errors, health, request timing and incidents are captured 
 audience: Engineers, on-call responder, admins using Monitoring
 scope: apps/web observability routes, the observability tables and pg_cron health check, Sentry in web, admin and mobile
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -40,11 +40,11 @@ One organisation, three projects, three different DSNs, one org-level auth token
 
 | App | Project | Setup | Notes |
 |---|---|---|---|
-| Web | `abonten-web` | `apps/web/src/instrumentation.ts` and `apps/web/src/instrumentation-client.ts`; `withSentryConfig` in `apps/web/next.config.ts` | Enabled only in production builds; `tracesSampleRate: 0.1`; `sendDefaultPii: false`; **no Session Replay**. The self-hosted error route also forwards events tagged `web` / `api` |
+| Web | `abonten-web` | `apps/web/src/instrumentation.ts` and `apps/web/src/instrumentation-client.ts`; `withSentryConfig` in `apps/web/next.config.ts` | Enabled only in production builds, and never in CI (environment `ci`); `tracesSampleRate: 0.1`; `sendDefaultPii: false`; **no Session Replay**; ignores the "Refused to evaluate a string" error that browser extensions cause. The self-hosted error route also forwards events tagged `web` / `api` |
 | Admin | `abonten-admin` | `apps/admin/src/lib/sentry.ts` factory used by the three inits | Drops the expected `AdminUnauthenticated` / `AdminForbidden` throws; redacts cookies, headers, tokens and query strings in `beforeSend`; tags requests with the admin id and roles; a `captureAdminActionError()` bridge for swallowed Server Action failures; a controlled test route under `/monitoring/sentry-check` |
 | Mobile | `abonten-mobile` | `apps/mobile/src/lib/sentry.ts`, `Sentry.wrap` on the root layout, the Expo config plugin for source maps | `enabled: !__DEV__ && dsn`; runs alongside the self-hosted `reportClientError` pipeline |
 
-Preview and production are separated by the `environment` tag. Sentry's own data retention follows its plan; the privacy inventory records Sentry as a processor (`../privacy/third-party-processors.md`).
+Preview and production are separated by the `environment` tag. The Content-Security-Policy's `report-uri` carries the same environment (`sentry_environment=`), so violation reports are filed under production, preview or `ci` too. CI's browser suite builds the site with `NEXT_PUBLIC_SENTRY_ENVIRONMENT=ci`: until 2026-10-18 its runs sent errors and test violation reports into the production project tagged production. Sentry's own data retention follows its plan; the privacy inventory records Sentry as a processor (`../privacy/third-party-processors.md`).
 
 ## Where to look, by question
 

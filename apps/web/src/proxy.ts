@@ -28,6 +28,10 @@ import {
 const CONTENT_SECURITY_POLICY = buildWebCsp({
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
   sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  sentryEnvironment:
+    process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ||
+    process.env.NEXT_PUBLIC_VERCEL_ENV ||
+    process.env.NODE_ENV,
   development: process.env.NODE_ENV === "development",
   vercelPreview: process.env.NEXT_PUBLIC_VERCEL_ENV === "preview",
 });

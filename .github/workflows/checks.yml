@@ -122,6 +122,10 @@ jobs:
       OBSERVABILITY_INGEST_SECRET: ${{ secrets.OBSERVABILITY_INGEST_SECRET }}
       SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.WEB_SENTRY_DSN }}
+      # The DSN is here so the policy carries a report-uri for
+      # csp-reporting.spec.ts. "ci" keeps this run's errors out of Sentry and
+      # files its violation reports under "ci", not under production.
+      NEXT_PUBLIC_SENTRY_ENVIRONMENT: ci
       NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
       NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
       CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
