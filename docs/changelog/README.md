@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-10-09
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,12 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-10-18 — Pilot: eleven testers, starting tomorrow
+
+- Updated `operations/pilot-testing.md` (1.6).
+- Eleven people signed up and accepted the agreement (A 4, B 1, C 1, D 5; 6 iPhone, 5 Android). The founder starts on 19 October with them. The six iPhone testers were invited to the TestFlight group "Pilot testers" and the five Android testers added to the Play list "Abonten pilot testers"; the welcome messages go out from the founder. One more person was asked to sign up before being added.
+- Migrations, permissions, jobs, env vars: none.
 
 ## 2026-10-09 — Pilot: the dates are set and the agreement is used as written
 

@@ -4,8 +4,8 @@ purpose: Where the pilot's working documents are, how the pilot is structured, w
 audience: Founder, engineering, support
 scope: The closed pilot of app 1.0.0 before public launch; TestFlight group "Pilot testers"; Google Play internal testing; the pilot's WhatsApp community, forms and tracker
 status: Draft
-version: 1.5
-lastReviewed: 2026-10-09
+version: 1.6
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -14,7 +14,7 @@ complianceReviewRequired: yes
 
 # Pilot testing programme
 
-A four-week closed test of app 1.0.0 with about 40 invited people, run by the founder before public launch. It has not started: on 2026-10-04 it was planned and the documents were written, and on 2026-10-09 both install routes were ready. Nobody has signed up yet, because the announcement has not gone out.
+A four-week closed test of app 1.0.0 with about 40 invited people, run by the founder before public launch. On 2026-10-04 it was planned and the documents were written, and on 2026-10-09 both install routes were ready. The announcement went out from 12 October; by Sunday 18 October 11 people had signed up and accepted the agreement, and the founder decided to start on 19 October with them rather than wait for 40.
 
 ## The working documents
 
@@ -30,7 +30,7 @@ The links open only for the founder's account.
 
 ## Structure in brief
 
-- **Who:** 40 accepted testers and a waiting list of 10, in four groups: 20 explorers (A), 10 organizers (B), 5 place owners (C), 5 breakers (D). Each tester has a code (A01, B01 …) that goes on every report.
+- **Who:** planned as 40 testers and a waiting list of 10 in four groups: explorers (A), organizers (B), place owners (C), breakers (D). Started on 2026-10-19 with 11: A 4, B 1, C 1, D 5; 6 on iPhone and 5 on Android; 5 in Kumasi. No waiting list. One more person was asked to sign up first. Each tester has a code (A01, B01 …) that goes on every report; the Testers tab of the tracker holds the codes.
 - **What testers get:** no money (decided 2026-10-09). They are thanked by code in the community each week they finish, named as founding testers at launch if they agree, and given new versions first. The announcement says there is no payment and that testing uses their own data or Wi-Fi.
 - **How long:** one preparation week, then four weeks: first steps, money and events, event day (one real meet-up checked in by QR code), polish and wrap.
 - **When (decided 2026-10-09):** announce on Monday 12 October 2026; choose testers on Sunday 18 October; week 1 from Monday 19 October; week 2 from 26 October; week 3 from 2 November; week 4 from 9 November; last checkpoint and the launch decision on Sunday 15 November.
