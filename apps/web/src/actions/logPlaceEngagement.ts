@@ -1,6 +1,6 @@
 "use server";
 
-import { publicSupabase } from "@/config/supabase/publicClient";
+import { createClient } from "@/config/supabase/server";
 import { withActionLocale } from "@/i18n/withActionLocale";
 import { logger } from "@abonten/core/logger";
 import { tr } from "@abonten/services/i18n/requestLocale";
@@ -39,11 +39,15 @@ export const logPlaceEngagement = withActionLocale(
       };
     }
 
-    const supabase = publicSupabase;
+    // The cookie session goes with the insert when there is one, so the
+    // database can leave out the owner's own views and clicks; the row keeps
+    // no account id.
+    const supabase = await createClient();
 
     const { error } = await supabase.from("place_analytics_event").insert({
       place_id: placeId,
       event_type: eventType,
+      platform: "web",
     });
 
     if (error) {

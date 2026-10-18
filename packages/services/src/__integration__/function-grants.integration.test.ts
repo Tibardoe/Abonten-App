@@ -109,6 +109,14 @@ const SESSION_CALLABLE: Call[] = [
 // with real fixtures in money-path-lockdown, so they are not repeated here.)
 const SERVICE_ROLE_ONLY: Call[] = [
   {
+    name: "admin_listing_views",
+    args: {
+      p_from: "2026-01-01T00:00:00Z",
+      p_to: "2026-01-02T00:00:00Z",
+    },
+    why: "Admin › Analytics' most viewed listings (2026-10-18), read with the console's service role",
+  },
+  {
     name: "get_transaction_refundable_amount",
     args: { p_transaction_id: ABSENT_ID },
     why: "locked down 2026-09-18: it answered with an amount for any transaction id",

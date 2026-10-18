@@ -2,7 +2,7 @@
 title: Ajouter et gérer votre lieu
 summary: Créer la fiche d'un lieu, tenir à jour ses informations, ses horaires, ses services et ses photos, indiquer une fermeture temporaire et lire vos statistiques.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -44,7 +44,7 @@ Ouvrez-la dans Gérer › Lieux (site web) ou Organisateur › Lieux (applicatio
 
 ## Statistiques
 
-Les **Statistiques** du lieu montrent, dans le temps, les vues de la page et les clics sur vos boutons de contact (appel, WhatsApp, site web, itinéraire).
+Les **Statistiques** du lieu montrent, dans le temps, les vues de la page et les clics sur vos boutons de contact (appel, WhatsApp, site web, itinéraire). Les vues sont comptées sur le site web et, depuis le 18 octobre 2026, dans l'application ; vos propres visites et clics ne sont pas comptés.
 
 ## Les événements dans votre lieu
 

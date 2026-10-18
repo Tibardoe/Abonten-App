@@ -44,6 +44,19 @@ export default function EventOverviewCards({
   const money = (amount: number) =>
     formatMoney(currency, Number(amount), { locale });
 
+  // How many times the event's page was opened (website and app).
+  const pageViews = (
+    <StatTile
+      label={t("pageViews")}
+      value={String(overview.page_views)}
+      sublabel={
+        overview.app_page_views > 0
+          ? t("pageViewsInTheApp", { count: overview.app_page_views })
+          : undefined
+      }
+    />
+  );
+
   // Free/RSVP events lead with registrations, not a sales figure that would
   // otherwise misleadingly read as "GHS 0" — Gross Sales is only shown if
   // the event actually generated some (e.g. a paid add-on ticket type).
@@ -81,6 +94,7 @@ export default function EventOverviewCards({
             value={String(overview.promo_purchase_count)}
           />
         )}
+        {pageViews}
       </div>
     );
   }
@@ -111,6 +125,7 @@ export default function EventOverviewCards({
           sublabel={t("ofCapacity", { capacity: overview.capacity })}
         />
       )}
+      {pageViews}
     </div>
   );
 }

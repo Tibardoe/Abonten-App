@@ -899,6 +899,15 @@ export type EventAdminListItem = {
   createdAt: string;
 };
 
+/** Times a listing's page was opened (website and app); null when the
+ *  count could not be read. The listing owner's own views are not recorded. */
+export type ListingPageViews = {
+  total: number;
+  /** Of which in the app (iPhone or Android). */
+  app: number;
+  last7Days: number;
+} | null;
+
 export type EventAdminDetail = EventAdminListItem & {
   description: string | null;
   category: string | null;
@@ -914,6 +923,7 @@ export type EventAdminDetail = EventAdminListItem & {
   timezone: string | null;
   avgRating: number;
   reviewCount: number;
+  pageViews: ListingPageViews;
   moderationReason: string | null;
   recentReports: ReportListItem[];
   notes: AdminNoteEntry[];
@@ -940,6 +950,7 @@ export type PlaceAdminDetail = PlaceAdminListItem & {
   avgRating: number;
   reviewCount: number;
   upcomingEventCount: number;
+  pageViews: ListingPageViews;
   moderationReason: string | null;
   pendingClaimCount: number;
   recentReports: ReportListItem[];

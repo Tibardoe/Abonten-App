@@ -970,6 +970,11 @@ export type EventInsightsOverview = {
   promo_purchase_count: number;
   distinct_attendees: number;
   capacity_remaining: number | null;
+  /** Times the event's page was opened, website and app (since 2026-10-18;
+   *  absent from an older server). */
+  page_views?: number;
+  /** Of which in the app. */
+  app_page_views?: number;
 };
 
 export type EventInsightsFinance = {

@@ -312,6 +312,8 @@
   "organizerVerification": "Veranstalter-Verifizierung",
   "otherCurrencies": "Andere Währungen",
   "overview": "Übersicht",
+  "pageViews": "Seitenaufrufe",
+  "pageViewsInTheApp": "{count, number} in der App",
   "paidOrders": "Bezahlte Bestellungen",
   "paidTickets": "Bezahlte Tickets",
   "paidWithAmountCredit": "Mit {amount} Guthaben bezahlt",

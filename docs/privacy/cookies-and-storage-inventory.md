@@ -4,7 +4,7 @@ purpose: The exact, code-referenced inventory of cookies, browser storage, devic
 audience: Engineering, privacy reviewer
 scope: apps/web, apps/admin, apps/mobile
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -73,7 +73,7 @@ Public version: `apps/web/src/content/legal/cookie-policy.md`. **When anything b
 
 ## First-party product analytics (database, not cookies)
 
-`place_analytics_event` (`logPlaceEngagement`: page views, call/WhatsApp/website/directions clicks), `place_visit` (rewards), `referral_touch` (90-day purge), `event_share`.
+`place_analytics_event` (web `logPlaceEngagement`: page views, call/WhatsApp/website/directions clicks; app `placeEngagement.ts`: page views and Featured impressions), `event_analytics_event` (web `logEventView`, app `eventEngagement.ts`: event page views; since 2026-10-18), both with a `platform` and no account or device id, `place_visit` (rewards), `referral_touch` (90-day purge), `event_share`.
 
 ## Open questions
 

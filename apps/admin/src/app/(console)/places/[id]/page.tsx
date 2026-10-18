@@ -8,6 +8,7 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadPlaceDetail } from "@/lib/data";
+import { pageViewsHint } from "@/lib/format";
 import Link from "next/link";
 
 function modTone(s: string | null) {
@@ -54,7 +55,7 @@ export default async function PlaceDetailPage({
         }
       />
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-4">
+      <div className="mb-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Stat
           label="Rating"
           value={p.reviewCount > 0 ? p.avgRating.toFixed(1) : "—"}
@@ -66,6 +67,11 @@ export default async function PlaceDetailPage({
           value={p.pendingClaimCount}
           tone={p.pendingClaimCount > 0 ? "warning" : undefined}
           href="/claims"
+        />
+        <Stat
+          label="Page views"
+          value={p.pageViews ? p.pageViews.total : "—"}
+          hint={pageViewsHint(p.pageViews)}
         />
         <Stat
           label="Reports"

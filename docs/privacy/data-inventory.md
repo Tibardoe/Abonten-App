@@ -126,6 +126,7 @@ Format: **Data → Owner (controller) → Purpose → Storage → Access → Ret
 | Request-timing metrics (mobile) | `app_request_metric` | No retention job |
 | Health-check results | `health_check_result` | No retention job |
 | Rate-limit buckets (keyed by user id or IP) | `rate_limit_bucket` | Purged daily (1-day window) |
+| Listing page views and place clicks: listing id, type, platform (web / ios / android), server time. No account, device or address; the listing owner's own rows are dropped by trigger | `event_analytics_event` (since 2026-10-18), `place_analytics_event` (platform since 2026-10-18) | No retention job (legal B3). Organizer / owner read their own listing's rows; admin console through the service role |
 | Server logs (Vercel) | Vercel | Vercel's retention |
 | Website page views: page address (private pages cut to their first segment, only `utm_*` kept), route pattern, referrer, country, device, OS, browser | Vercel Web Analytics (production website only) | Vercel's plan retention; no cookies, no account id; read in the Vercel dashboard or its API |
 

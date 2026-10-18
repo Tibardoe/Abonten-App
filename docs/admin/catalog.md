@@ -4,8 +4,8 @@ purpose: Read-only catalogue views for investigation, and where the actions for 
 audience: All admin roles with the matching view permission
 scope: /events, /events/[id], /places, /places/[id], /organizers, /organizers/[id]
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -18,13 +18,13 @@ Source: `packages/services/src/admin/catalog/catalogAdminCore.ts`. **No mutation
 
 ## Events (`events.view`)
 
-List with status (draft / published / canceled / archived), moderation state, organizer, date, tickets issued; detail with approximate sales (issued tickets × list price — the Finance module is authoritative), rating, reports against, moderation state, internal notes. Actions: **Content** (hide/restrict/remove), **Reports**, **Users** (organizer), **Finance › Transactions** filtered to the event.
+List with status (draft / published / canceled / archived), moderation state, organizer, date, tickets issued; detail with approximate sales (issued tickets × list price — the Finance module is authoritative), page views (all time, last 7 days, in the app), rating, reports against, moderation state, internal notes. Actions: **Content** (hide/restrict/remove), **Reports**, **Users** (organizer), **Finance › Transactions** filtered to the event.
 
 Admins cannot edit, publish, unpublish or cancel an event from the console. Cancellation with refunds is the organizer's action in the web/app; if an organizer is unreachable or banned and the event must be cancelled, an engineer runs `cancelEventCore` on the service role with the founder's approval and records it.
 
 ## Places (`places.view`)
 
-List with status, claimed/verified badges, moderation state, owner; detail with photos, hours, reports, bookings count, reviews. Actions elsewhere: **Claims** (ownership), **Content** (moderation), **Users** (owner). Admins cannot edit a listing's details.
+List with status, claimed/verified badges, moderation state, owner; detail with photos, hours, reports, bookings count, reviews, page views (all time, last 7 days, in the app). Actions elsewhere: **Claims** (ownership), **Content** (moderation), **Users** (owner). Admins cannot edit a listing's details.
 
 ## Organizers (`organizers.view`)
 

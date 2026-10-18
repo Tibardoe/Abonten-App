@@ -25,7 +25,7 @@ Keeping the text in the web app (rather than in this folder) guarantees it is in
 | Document | File | Route | Version | Status | Effective | Blocking review items |
 |---|---|---|---|---|---|---|
 | Terms and Conditions | `apps/web/src/content/legal/terms.md` | `/legal/terms` | 1.3-draft | Review required | not yet | B7, C1, C3, E1–E9, F1, F4 (A1, A3, O1 decided 2026-09-12) |
-| Privacy Policy | `apps/web/src/content/legal/privacy-policy.md` | `/legal/privacy` | 1.6-draft | Review required | not yet | B1–B9, G2 (A1, A3, O1 decided 2026-09-12; A2 decided 2026-09-17) |
+| Privacy Policy | `apps/web/src/content/legal/privacy-policy.md` | `/legal/privacy` | 1.7-draft | Review required | not yet | B1–B9, G2 (A1, A3, O1 decided 2026-09-12; A2 decided 2026-09-17) |
 | Cookie Policy | `apps/web/src/content/legal/cookie-policy.md` | `/legal/cookies` | 1.1-draft | Review required | not yet | B4 |
 | Security overview | `apps/web/src/content/legal/security.md` | `/legal/security` | 1.3-draft | Review required | not yet | D3 (safe-harbour wording); O1 acknowledgement goal decided 2026-09-12 |
 

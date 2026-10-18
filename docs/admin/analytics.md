@@ -4,8 +4,8 @@ purpose: What the platform analytics page measures and how the figures are compu
 audience: analyst, founder, operations
 scope: /analytics
 status: Approved
-version: 2.0
-lastReviewed: 2026-09-13
+version: 2.1
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Admin › Analytics
 
-Source: `packages/services/src/admin/analytics/analyticsAdminCore.ts` (`analytics.view`), reading `admin_dashboard_kpis`, `admin_platform_analytics` and `admin_user_demographics`. Read-only.
+Source: `packages/services/src/admin/analytics/analyticsAdminCore.ts` (`analytics.view`), reading `admin_dashboard_kpis`, `admin_platform_analytics`, `admin_user_demographics` and `admin_listing_views`. Read-only.
 
 Every figure on the page carries its definition behind the ⓘ beside it; the same wording is in [metrics.md](metrics.md). The period control offers today, 7, 30 and 90 days, this year and a custom range; each figure states the window it covers and how it compares with the equivalent window before it.
 
@@ -29,6 +29,7 @@ Every figure on the page carries its definition behind the ⓘ beside it; the sa
 | In-range figures | The same tables filtered to the selected window (Africa/Accra): users, events and places by `created_at`, tickets by `issued_at`, money by the fee entry's `created_at` |
 | Organizers who added an event | Distinct organizers of events created in the range. It does not mean they sold anything |
 | Charts | One point per hour, day or week depending on the range, built with `generate_series` so a period with no activity is a real zero rather than a missing point. Each chart carries a one-sentence summary for screen readers and the same numbers as a hidden table, and draws the previous period as a dashed line |
+| Page views (event pages, place pages) and the 10 most viewed of each | `admin_listing_views`: rows of `event_analytics_event` / `place_analytics_event` of type `view` in the range, with the app's share (`platform` ios or android). Each opening of a page counts once, so one person opening it twice counts twice; the listing's own organizer or owner is not recorded. Place views from the app, and every event view, start on 2026-10-18 |
 | Top 10 events by tickets issued; top 10 organizers by gross ticket sales | `ticket` counts joined through `ticket_type`; `platform_fee_entry.event_id → event.organizer_id` |
 
 Caveats: these are operational figures, not audited accounts. Money covers **ticket sales only** — promotions and subscriptions have no fee entry, so Finance › Overview is the place for charged totals. A ticket order that covered several events has no `event_id` on its fee entry and is therefore absent from the per-event and per-organizer tables; the page says how much that is. Field Ops has its own figures under Field Ops › Campaigns › Figures.

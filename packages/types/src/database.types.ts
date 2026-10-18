@@ -3255,6 +3255,38 @@ export type Database = {
           },
         ]
       }
+      event_analytics_event: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_type: string
+          id: string
+          platform: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          event_type?: string
+          id?: string
+          platform?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_type?: string
+          id?: string
+          platform?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_analytics_event_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "event"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_drafts: {
         Row: {
           draft_id: string
@@ -8197,18 +8229,21 @@ export type Database = {
           event_type: string
           id: string
           place_id: string
+          platform: string | null
         }
         Insert: {
           created_at?: string
           event_type: string
           id?: string
           place_id: string
+          platform?: string | null
         }
         Update: {
           created_at?: string
           event_type?: string
           id?: string
           place_id?: string
+          platform?: string | null
         }
         Relationships: [
           {
@@ -13716,6 +13751,10 @@ export type Database = {
         Returns: Json
       }
       admin_has_permission: { Args: { p_permission: string }; Returns: boolean }
+      admin_listing_views: {
+        Args: { p_from: string; p_limit?: number; p_to: string }
+        Returns: Json
+      }
       admin_organizer_balance: {
         Args: { p_organizer_id?: string }
         Returns: Json

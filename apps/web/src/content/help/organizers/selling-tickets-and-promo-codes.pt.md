@@ -2,7 +2,7 @@
 title: Vender bilhetes, códigos promocionais e comissão de promotores
 summary: Como funcionam as vendas e as reservas, criar códigos promocionais, oferecer uma comissão a promotores e ler as estatísticas das suas vendas.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -46,7 +46,7 @@ Onde a funcionalidade estiver disponível, pode oferecer a quem lhe traz comprad
 
 ## Estatísticas
 
-Abra o seu evento › **Estatísticas** (website: `?tab=insights`; aplicação: a vista geral do evento): vendas ao longo do tempo, bilhetes vendidos por tipo, utilização de códigos promocionais, participantes que regressam, receitas e a lista de participantes. O **Painel** (website: Gerir › Painel; aplicação: início de Organizador) reúne todos os seus eventos publicados: vendas brutas, bilhetes vendidos, eventos ativos, próximos eventos, assuntos que precisam da sua atenção e atividade recente.
+Abra o seu evento › **Estatísticas** (website: `?tab=insights`; aplicação: a vista geral do evento): vendas ao longo do tempo, bilhetes vendidos por tipo, utilização de códigos promocionais, participantes que regressam, receitas e a lista de participantes. As **visualizações da página** contam quantas vezes a página do seu evento foi aberta, no website e na aplicação; as suas próprias visitas não são contadas. O **Painel** (website: Gerir › Painel; aplicação: início de Organizador) reúne todos os seus eventos publicados: vendas brutas, bilhetes vendidos, eventos ativos, próximos eventos, assuntos que precisam da sua atenção e atividade recente.
 
 ## Partilhar o seu evento
 

@@ -9,8 +9,16 @@ type Fn = Database["public"]["Functions"];
 export type EventSalesTimelinePoint =
   Fn["get_event_sales_timeline"]["Returns"][number];
 
+/**
+ * The overview RPC's row plus how many times the event's page was opened in
+ * the same period (event_analytics_event: website and app; the organizer's
+ * own views are not recorded).
+ */
 export type EventOverviewAnalytics =
-  Fn["get_event_overview_analytics"]["Returns"][number];
+  Fn["get_event_overview_analytics"]["Returns"][number] & {
+    page_views: number;
+    app_page_views: number;
+  };
 
 export type EventPromoAnalyticsRow =
   Fn["get_event_promo_analytics"]["Returns"][number];

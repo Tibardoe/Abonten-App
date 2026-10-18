@@ -2,7 +2,7 @@
 title: Vender entradas, códigos promocionales y comisión de promotores
 summary: Cómo funcionan las ventas y las reservas, crear códigos promocionales, ofrecer una comisión a promotores y leer las estadísticas de ventas.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -46,7 +46,7 @@ Donde la función esté disponible, puedes ofrecer a quienes te traen compradore
 
 ## Estadísticas
 
-Abre tu evento › **Estadísticas** (web: `?tab=insights`; aplicación: el resumen del evento): ventas a lo largo del tiempo, entradas vendidas por tipo, uso de códigos promocionales, asistentes que repiten, ingresos y la lista de asistentes. El **Panel** (web: Gestionar › Panel; aplicación: inicio de Organizador) reúne todos tus eventos publicados: ventas brutas, entradas vendidas, eventos activos, próximos eventos, asuntos que requieren atención y actividad reciente.
+Abre tu evento › **Estadísticas** (web: `?tab=insights`; aplicación: el resumen del evento): ventas a lo largo del tiempo, entradas vendidas por tipo, uso de códigos promocionales, asistentes que repiten, ingresos y la lista de asistentes. Las **visitas a la ficha** cuentan cuántas veces se abrió la página de tu evento, en la web y en la aplicación; tus propias visitas no se cuentan. El **Panel** (web: Gestionar › Panel; aplicación: inicio de Organizador) reúne todos tus eventos publicados: ventas brutas, entradas vendidas, eventos activos, próximos eventos, asuntos que requieren atención y actividad reciente.
 
 ## Compartir tu evento
 

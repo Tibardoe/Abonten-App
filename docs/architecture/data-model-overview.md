@@ -4,8 +4,8 @@ purpose: Orientation to the ~175 tables — grouped by domain with the key relat
 audience: Engineering
 scope: supabase/migrations (source of truth: the baseline 20260810084821_remote_schema.sql plus dated migrations)
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-02
+version: 1.2
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -21,7 +21,7 @@ The schema is defined only by `supabase/migrations/`. There are **no Postgres en
 | Domain | Core tables | Key relationships |
 |---|---|---|
 | Identity | `auth.users` (Supabase), `user_info`, `user_status`, `user_image_history`, `phone_otp_state`, `phone_otp_send_log`, `device_token`, `push_receipt`, `web_push_subscription`, `device_install` | `user_info.id = auth.users.id` (cascade) |
-| Events | `event`, `event_occurrence`, `ticket_type`, `event_drafts`, `drafts`, `draft_asset_cleanup_queue`, `event_reminder`, `event_share`, `event_media` (unused) | `ticket_type.event_id`; `event.organizer_id → user_info` |
+| Events | `event`, `event_occurrence`, `ticket_type`, `event_drafts`, `drafts`, `draft_asset_cleanup_queue`, `event_reminder`, `event_share`, `event_analytics_event` (page views, since 2026-10-18), `event_media` (unused) | `ticket_type.event_id`; `event.organizer_id → user_info` |
 | Ticketing & payments | `ticket_checkout`, `payment_attempt`, `transaction`, `transaction_status` (lookup), `ticket`, `attendance`, `promo_code`, `promo_code_usage`, `payment_method` (partitioned), `payment_dispute` | `ticket.transaction_id`, `ticket.ticket_checkout_id`; `transaction (provider, provider_reference)` UNIQUE |
 | Organizer finance | `organizer_ledger_entry`, `payout`, `payout_account`, `receiving_account` (legacy), `platform_fee_entry`, `platform_fee_config` | ledger entries reference checkouts/transactions/payouts |
 | Promotions | `event_promotion_tier`, `event_promotion_checkout`, `event_promotion`, `place_promotion_tier`, `place_promotion_checkout`, `place_promotion`, `event_promoter_commission` | activation writes `*_promotion` from a paid checkout |

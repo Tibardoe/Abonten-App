@@ -2,7 +2,7 @@
 title: Deinen Ort hinzufügen und verwalten
 summary: Einen Ort eintragen, Details, Öffnungszeiten, Leistungen und Fotos aktuell halten, einen vorübergehenden Status setzen und deine Statistiken lesen.
 order: 2
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -44,7 +44,7 @@ Mit der Veröffentlichung wird der Ort in Entdecken, in der Suche, auf der Karte
 
 ## Statistiken
 
-Die **Statistiken** des Orts zeigen im Zeitverlauf Seitenaufrufe und Klicks auf deine Kontakt-Schaltflächen (Anruf, WhatsApp, Website, Route).
+Die **Statistiken** des Orts zeigen im Zeitverlauf Seitenaufrufe und Klicks auf deine Kontakt-Schaltflächen (Anruf, WhatsApp, Website, Route). Aufrufe werden auf der Website und seit dem 18. Oktober 2026 in der App gezählt; deine eigenen Aufrufe und Klicks werden nicht mitgezählt.
 
 ## Events bei dir
 

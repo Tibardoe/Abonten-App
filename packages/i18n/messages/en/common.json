@@ -457,6 +457,8 @@
   "ownerSReply": "Owner's reply",
   "pageNotFound": "Page not found",
   "pageTitleWithBrand": "{title} | Abonten Hub",
+  "pageViews": "Page views",
+  "pageViewsInTheApp": "{count, number} in the app",
   "pauseVideo": "Pause video",
   "pay": "Pay {formatMoney}",
   "payTheRestWith": "Pay the rest with",

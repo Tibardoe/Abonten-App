@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.4
-lastReviewed: 2026-10-02
+version: 1.5
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -80,7 +80,8 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Claim place | W A | Cu→Ow | request + documents → staff review → `approve_place_claim` | `place_claim_request`, `place_claim_document` | action `submitPlaceClaimRequest`; `admin/claims/claimsAdminCore` | Claims (`claims.review`, audit `claim.*`) | help claiming; admin/claims |
 | Booking requests | W A | Cu / Ow | request → accept/decline/cancel | `place_booking` | `places/requestPlaceBookingCore`, `placeBookingsReviewsCore`; API `places/[id]/bookings*`, `organizer/places/[id]/bookings*` | — | help bookings |
 | Place reviews + replies | W A | Cu / Ow | one per person; owner response; preview + `/places/<slug>/reviews` (breakdown, star filter, sort, Helpful, share, report, block) | `place_review`, `place_review_photo`, `place_review_helpful`; `review_list`, `review_summary`, `review_set_helpful` | actions `postPlaceReview`…, `respondToPlaceReview`, `getReviewPage`, `setReviewHelpful`; `reviews/reviewListQuery` | Content | help; architecture/reviews-and-account-setup |
-| Place insights | W A | Ow | views/clicks | `place_analytics_event` | action `getPlaceInsights`, `logPlaceEngagement` | — | help |
+| Place insights | W A | Ow | views/clicks (web and app views since 2026-10-18; owner's own dropped) | `place_analytics_event` | action `getPlaceInsights`, `logPlaceEngagement`; app `useLogPlaceView` | — | help |
+| Event page views | W A | Org | views in the event's Insights overview (organizer's own dropped); Admin event detail and Analytics › Page views | `event_analytics_event` | action `logEventView` (`EventViewLogger`), app `useLogEventView`; `fetchEventOverviewAnalytics`; `admin_listing_views` | — | help |
 | Place promotion | W A | Ow | tier → checkout → activate | `place_promotion*` | `places/placePromotionCore`, `utils/activatePlacePromotion.ts` | Finance | help promoting |
 | Visit QR (rewards) | W A | Ow / Cu | rotating code; ~150 m; daily | `place_visit_key`, `place_visit`, `place_visit_record` | `places/placeVisitCore`; API `places/visits`, `organizer/places/[id]/visit-code` | Rewards | rewards ops |
 

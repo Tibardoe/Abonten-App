@@ -4,7 +4,7 @@ purpose: How printed and digital marketing pieces link into the product, how to 
 audience: Founder, marketing, field team leads, engineering
 scope: The /go/<code> short links (apps/web), the collateral set kept in the brand workspace (Desktop\Abonten-Brand\07-collateral), and the rules for printing it. Not the brand identity itself (PROJECT.md §48).
 status: Approved
-version: 1.2
+version: 1.3
 lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -74,7 +74,7 @@ Since 2026-10-18 the website counts page views with Vercel Web Analytics (`../ar
 
 `utm_*` tags may still be added (`?utm_source=instagram&utm_medium=social&utm_campaign=osu-2026-w43`, the campaign being the area and the ISO week of the weekend promoted); they survive in the reported address and become readable only if the add-on is bought. Every other parameter (`?ref=`, `?q=`) is dropped in the browser before the view is sent (`@abonten/core/analytics/pageViewUrl`).
 
-To read the results: Vercel › the `abonten` project › Analytics (Pages and Referrers); or ask engineering for the Monday figures (visits per page and referring site, next to Admin › Analytics' new users and new listings). Visits from the app are not counted there; place pages also record views and clicks in Abonten's own `place_analytics_event`, which owners see.
+To read the results: Vercel › the `abonten` project › Analytics (Pages and Referrers); or ask engineering for the Monday figures (visits per page and referring site, next to Admin › Analytics' new users and new listings). Visits from the app are not counted there. Abonten's own counts cover both: Admin › Analytics › Page views (events and places opened on the website or in the app, with the app's share and the ten most viewed of each), an event's Insights for its organizer, and a place's Insights for its owner (`event_analytics_event`, `place_analytics_event`, since 2026-10-18; the listing owner's own views are left out).
 
 ## Expected outcome
 

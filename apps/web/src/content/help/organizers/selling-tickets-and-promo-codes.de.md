@@ -2,7 +2,7 @@
 title: Tickets verkaufen, Promo-Codes und Promoter-Provision
 summary: Wie Verkäufe und Reservierungen ablaufen, Promo-Codes anlegen, eine Promoter-Provision anbieten und deine Verkaufsstatistiken lesen.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-18
 status: Draft
 owner: Abonten Hub
 ---
@@ -46,7 +46,7 @@ Wo die Funktion verfügbar ist, kannst du Personen, die dir Käufer bringen, ein
 
 ## Statistiken
 
-Öffne dein Event › **Statistiken** (Website: `?tab=insights`; App: die Übersicht des Events): Verkäufe im Zeitverlauf, verkaufte Tickets nach Art, Nutzung von Promo-Codes, wiederkehrende Teilnehmer, Einnahmen und die Teilnehmerliste. Das **Dashboard** (Website: Verwalten › Dashboard; App: Veranstalter-Startseite) fasst alle deine veröffentlichten Events zusammen: Bruttoumsatz, verkaufte Tickets, aktive Events, kommende Events, Dinge, die deine Aufmerksamkeit brauchen, und letzte Aktivitäten.
+Öffne dein Event › **Statistiken** (Website: `?tab=insights`; App: die Übersicht des Events): Verkäufe im Zeitverlauf, verkaufte Tickets nach Art, Nutzung von Promo-Codes, wiederkehrende Teilnehmer, Einnahmen und die Teilnehmerliste. Die **Seitenaufrufe** zählen, wie oft die Seite deines Events geöffnet wurde, auf der Website und in der App; deine eigenen Aufrufe werden nicht mitgezählt. Das **Dashboard** (Website: Verwalten › Dashboard; App: Veranstalter-Startseite) fasst alle deine veröffentlichten Events zusammen: Bruttoumsatz, verkaufte Tickets, aktive Events, kommende Events, Dinge, die deine Aufmerksamkeit brauchen, und letzte Aktivitäten.
 
 ## Dein Event teilen
 
