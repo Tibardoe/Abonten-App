@@ -4,8 +4,8 @@ purpose: The exact, code-referenced inventory of cookies, browser storage, devic
 audience: Engineering, privacy reviewer
 scope: apps/web, apps/admin, apps/mobile
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -68,7 +68,8 @@ Public version: `apps/web/src/content/legal/cookie-policy.md`. **When anything b
 | Paystack inline JS | `src/wallet/organisms/AddBankCard.tsx` (`<Script strategy="afterInteractive">`) and the payment pop-up (`usePaystackPopup.ts`) | Only on those screens |
 | Cloudinary | image/video delivery (`res.cloudinary.com`) | no cookies set by Abonten |
 | Sentry | `instrumentation-client.ts`, `sentry.*.config.ts` (web); `src/lib/sentry.ts` (admin, mobile) | `sendDefaultPii:false`, `tracesSampleRate 0.1`, prod only, **no Session Replay** |
-| Analytics products | **none** — no Vercel Analytics, GA, GTM, PostHog, Plausible, Mixpanel, Segment in any `package.json` | |
+| Vercel Web Analytics (`@vercel/analytics`) | `apps/web/src/components/atoms/WebAnalytics.tsx`, rendered by `AppShell.tsx` on the production deployment only | No cookies and no browser storage. Sends the page address after `@abonten/core/analytics/pageViewUrl` (public listings keep their path; every other page keeps only its first segment; only `utm_*` parameters survive), the route pattern, the referrer, country, device, OS, browser. Web only; not in the app or the admin console |
+| Other analytics products | **none** — no GA, GTM, PostHog, Plausible, Mixpanel, Segment in any `package.json` | |
 
 ## First-party product analytics (database, not cookies)
 

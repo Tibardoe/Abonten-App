@@ -1,9 +1,9 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.5-draft
+version: 1.6-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-09-30
+lastUpdated: 2026-10-18
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -37,12 +37,13 @@ We collect only what the service needs to work. The table below lists every cate
 | Messages | Conversations with organizers, places and Abonten Support: text, images, files, voice notes, reactions, read state | You | To deliver your messages |
 | Reports | Reports you make about content or users, the reason, details and attachments | You | To moderate the service |
 | Notifications | In-app notifications, whether you have read them, and the push token of each device you signed in on | Your devices | To notify you in the app and by push |
+| Website visits | Which pages of the website are opened; the site or link that led there, including the campaign tags in links Abonten posts; country, device type, operating system and browser. Counted by Vercel Web Analytics, which sets no cookies and stores nothing in your browser. Addresses of private pages (messages, checkout, settings, consent links) are cut to their first part before they leave your browser | Your browser | To count visits and see which pages and which of our posts bring people |
 | Device and technical | A random install id (app) or browser id (web) used to detect rewards abuse; device platform; app version; network address in server logs and rate-limit records; error reports with the screen or page and technical details | Your device / browser | Security, abuse prevention, reliability |
 | Rewards and referrals | Invite codes, which link you arrived from, who invited you, your Abonten Credit ledger, reward decisions and the risk signals behind them | You, your activity | To run the rewards programme fairly |
 | Field programme | For team members: role, assignments, GPS check-ins, work submitted, evidence photos, commission and payout records; for business owners: the phone number used to give consent | Team members, owners | To run and audit the field programme |
 | Support and moderation records | Support conversations, admin notes about your account, moderation actions, suspension or ban reasons | Abonten staff | To support you and enforce our terms |
 
-We do **not** collect your date of birth, government identity numbers, or full card numbers, and we do not use advertising or analytics trackers (see the [Cookie Policy](/legal/cookies)).
+We do **not** collect your date of birth, government identity numbers, or full card numbers, and we do not use advertising trackers or analytics cookies. Visits to the website are counted without cookies, as described above (see the [Cookie Policy](/legal/cookies)). The app does not use Vercel Web Analytics.
 
 ## 3. How we use it
 
@@ -53,7 +54,7 @@ We use personal information to:
 3. **Keep the service safe** — verify phone numbers, limit how often codes and requests can be sent, detect duplicate accounts and rewards abuse, investigate reports, and enforce our Terms.
 4. **Run the rewards programme** — attribute referrals, decide and pay rewards, and screen them for abuse.
 5. **Communicate with you** — ticket confirmations, event cancellation notices, rewards updates (which you can turn off), support replies, and important notices about your account or these policies.
-6. **Understand and improve the service** — aggregated statistics such as ticket sales per event for organizers, place-page views and clicks for owners, and error and performance monitoring for our engineers.
+6. **Understand and improve the service** — aggregated statistics such as ticket sales per event for organizers, place-page views and clicks for owners, visits to the website per page and per link, and error and performance monitoring for our engineers.
 7. **Meet legal obligations** — keep financial records, respond to lawful requests, and handle disputes.
 
 **Legal grounds.** Under the Data Protection Act, 2012, we rely on your consent (for example when you sign up, allow location or notifications, or give onboarding consent by code), the performance of our contract with you (providing the service you asked for), our legitimate interests in running a safe and reliable service, and compliance with law. Which ground applies to each purpose is subject to legal review.
@@ -68,6 +69,7 @@ Abonten runs on cloud services. The providers below process personal information
 |---|---|---|
 | Supabase | Database, authentication, file storage for claim documents and field evidence | European Union (Paris region) |
 | Vercel | Hosts the website and its server code | European Union (Paris region) |
+| Vercel Web Analytics | Counts visits to website pages (section 2); no cookies | To be confirmed |
 | Cloudinary | Stores and serves images and videos (avatars, flyers, place photos, highlights, message attachments, ticket QR codes) | Global content network |
 | Paystack | Payment processing, card tokenization, refunds and payouts | Nigeria / Ghana |
 | Hubtel | Sends SMS one-time codes | Ghana |
@@ -96,7 +98,7 @@ When an organizer or owner receives your information through Abonten, they may u
 
 ## 7. Cookies and device storage
 
-The website uses a small number of first-party cookies for signing in, remembering your language and country, attributing invites and referrals, and detecting rewards abuse. The app stores equivalent information securely on your device. We do not use analytics or advertising cookies. The [Cookie Policy](/legal/cookies) lists every cookie and storage key.
+The website uses a small number of first-party cookies for signing in, remembering your language and country, attributing invites and referrals, and detecting rewards abuse. The app stores equivalent information securely on your device. We do not use analytics or advertising cookies; website visits are counted without them (section 2). The [Cookie Policy](/legal/cookies) lists every cookie and storage key.
 
 ## 8. Notifications and marketing
 
@@ -120,6 +122,7 @@ The website uses a small number of first-party cookies for signing in, rememberi
 | Field-programme evidence photos | Intended retention 365 days; automatic deletion is not yet in place |
 | Rate-limit and one-time-code records | Rate-limit records 1 day; code request logs are retained (period to be confirmed) |
 | Push tokens | Removed when you sign out of a device or the device stops accepting notifications |
+| Website visit statistics | Kept by Vercel for the period its Web Analytics plan allows (to be confirmed) |
 | Error and performance monitoring | Sentry retains events per its plan; our own error records have no retention period yet (to be confirmed) |
 | Administrative audit log | Retained permanently; it cannot be edited or deleted |
 

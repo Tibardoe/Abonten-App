@@ -16,6 +16,14 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-18 — The website counts its visits
+
+- Updated `architecture/integrations.md` (1.3), `operations/marketing-collateral-and-qr-links.md` (1.1, new "tag the links in a social post"), `privacy/cookies-and-storage-inventory.md` (1.1), `privacy/third-party-processors.md` (1.1), `privacy/data-inventory.md` (1.3), `legal/README.md` (1.1), `legal/versioning-and-effective-dates.md` (1.1), `LEGAL_REVIEW_REQUIRED.md` (1.3, B4 and F2), `PROJECT.md` §10; public drafts `legal/privacy-policy.md` 1.6-draft and `legal/cookie-policy.md` 1.1-draft (still "Review required").
+- The founder switched Web Analytics on in the Vercel project; the website now loads it on the production deployment. It sets no cookies and stores nothing in the browser. Public listings (events, places, Explore, Weekly, Spotlight, public profiles, help, legal) are reported with their address; every other page with its first segment only, and every query parameter except `utm_*` is dropped before a view is sent. The app and the admin console send nothing.
+- Why: the weekly "This weekend in Osu" posts need to show which post and which page brought visitors; Admin › Analytics counts sign-ups and listings but nothing recorded visits (place pages excepted, `place_analytics_event`).
+- `_vercel` is outside the proxy's matcher; `VERCEL_ENV` is in the build's turbo cache key.
+- Migrations, permissions, jobs: none. Env vars: none. New dependency: `@vercel/analytics` 2.0.1 (web).
+
 ## 2026-10-18 — Pilot: twelve testers, starting tomorrow
 
 - Updated `operations/pilot-testing.md` (1.6).

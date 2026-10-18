@@ -2,10 +2,10 @@
 title: External integrations
 purpose: For each external service — what Abonten uses it for, the code that calls it, configuration, health monitoring, and behaviour when it fails.
 audience: Engineering, operations
-scope: Supabase, Vercel, Cloudinary, Paystack, Hubtel, Resend, Google, Expo/FCM, Sentry
+scope: Supabase, Vercel, Vercel Web Analytics, Cloudinary, Paystack, Hubtel, Resend, Google, Expo/FCM, Sentry
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-29
+version: 1.3
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -18,6 +18,7 @@ complianceReviewRequired: no
 |---|---|---|---|---|---|
 | **Supabase** | Postgres + RLS, Auth (Google, phone via custom flow, email OTP), Storage (4 private buckets), pg_cron, Realtime (messaging) | `apps/web/src/config/supabase/{client,server,middleware,publicClient}.ts`; `packages/services/src/supabase/{serviceClient,publicClient}.ts`; `apps/mobile/src/lib/supabase.ts`; `apps/admin/src/lib/supabaseServer.ts` | `NEXT_PUBLIC_SUPABASE_URL/ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `EXPO_PUBLIC_SUPABASE_*` | `db`, `auth`, `storage` | Everything degrades; see outages runbook |
 | **Vercel** | Hosting web + admin, serverless functions, edge middleware (`proxy.ts`), `x-vercel-ip-country` header | `vercel.json` (`cdg1`), `next.config.ts` | Vercel env | `self` (cron reaching the web app) | Site down |
+| **Vercel Web Analytics** | Page views on the website (production deployment only): page, route pattern, referring site, the link's `utm_*` tags, country, device, OS, browser. No cookies, nothing stored in the browser; the app does not use it | `apps/web/src/components/atoms/WebAnalytics.tsx` (rendered by `AppShell.tsx` when `VERCEL_ENV` is `production`), `@abonten/core/analytics/pageViewUrl` (cuts private addresses to their first segment and drops every parameter but `utm_*`); `_vercel` is outside the proxy matcher | Switched on in the Vercel project's Analytics tab; no env var | — | Visits are not counted; nothing else is affected |
 | **Cloudinary** | Media storage/CDN: avatars, flyers, place photos, highlights (image/video), message attachments, ticket QR images | `packages/services/src/uploads/cloudinaryUploadSignature.ts`, `apps/web/src/utils/uploadToCloudinary.ts`, `apps/mobile/src/lib/cloudinaryUpload.ts`, `@abonten/core/cloudinaryUrl.ts`, destroys in mutation cores | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY/SECRET`, `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME` | `cloudinary` (ping) | Uploads fail; images may be missing |
 | **Paystack** | Payments (popup, charge authorization, MoMo charge + OTP), verify, refunds (partial), disputes webhook, transfers (off per market) — one adapter for every Paystack business (GH, NG, KE, ZA, CI) | `packages/services/src/payments/providers/paystackProvider.ts` + `paystackApi.ts`, `payments/*`; `apps/web/src/app/api/payments/webhook/[provider]/[country]/route.ts` (and the legacy `api/paystack/webhook` for Ghana); `usePaystackPopup.ts` | Named per market in `market_payment_provider`: Ghana `PAYSTACK_SECRET_KEY`, `PAYSTACK_WEBHOOK_SECRET`, `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY`; others `PAYSTACK_<CC>_*` | `paystack` (`/bank`) | Payments fail at init/verify; attempts pending → reaper/retry |
 | **Stripe** | Hosted Checkout Sessions (card, Apple Pay, Google Pay, bank redirects), refunds, dispute + checkout webhooks. No saved cards, mobile money or payouts (reported as capabilities, never offered) | `packages/services/src/payments/providers/stripeProvider.ts`; `api/payments/webhook/stripe/[country]` | `STRIPE_SECRET_KEY_<GB|US|EU>`, `STRIPE_WEBHOOK_SECRET_<…>`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_<…>` (names set per market) | `stripe` | Market cannot activate (readiness) |
@@ -32,7 +33,7 @@ complianceReviewRequired: no
 
 ## Not integrated (despite traces)
 
-Twilio (removed), Flutterwave (never), NextAuth (env vars vestigial), analytics products (none), Firebase Admin SDK (none; only client config).
+Twilio (removed), Flutterwave (never), NextAuth (env vars vestigial), analytics products other than Vercel Web Analytics (none: no GA, GTM, PostHog, Plausible, Mixpanel, Segment), Firebase Admin SDK (none; only client config).
 
 ## Adding an integration
 

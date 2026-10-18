@@ -1,9 +1,9 @@
 ---
 title: Cookie Policy
 summary: Every cookie the Abonten website sets, what the mobile app stores on your device, which third parties load on our pages, and how to control them.
-version: 1.0-draft
+version: 1.1-draft
 effectiveDate: Not yet in force — set when approved
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-18
 status: Review required
 owner: Abonten Hub
 audience: Public
@@ -16,7 +16,7 @@ legalReviewRequired: yes
 
 ## 1. What cookies are
 
-Cookies are small text files a website stores in your browser. Abonten uses a small number of **first-party** cookies (set by abontenhub.com itself). We do not use analytics cookies, advertising cookies, or tracking pixels, and no third party sets cookies through our pages except where noted in section 4.
+Cookies are small text files a website stores in your browser. Abonten uses a small number of **first-party** cookies (set by abontenhub.com itself). We do not use analytics cookies, advertising cookies, or tracking pixels, and no third party sets cookies through our pages except where noted in section 4. Visits to our pages are counted with Vercel Web Analytics, which sets no cookies and stores nothing in your browser.
 
 ## 2. Cookies set by the Abonten website
 
@@ -52,6 +52,7 @@ The website also uses your browser's local storage for conveniences that never l
 | Google Maps | Pages with a map (explore, event and place pages, location pickers) | Google may set its own cookies when its map script loads; see Google's privacy policy |
 | Paystack | Only on the "add a bank card" screen in your wallet, and in the payment pop-up when you pay | Paystack's own cookies within its payment window |
 | Cloudinary | Images and videos across the site | Serves media; no tracking cookies |
+| Vercel Web Analytics | Every page of the website | Sets no cookies and stores nothing in your browser. Sends Vercel the page address (cut to its first part for private pages, with only the campaign tags of a link kept), the site that led there, and the country, device type, operating system and browser |
 
 We do not load Google Analytics, Facebook Pixel, or any advertising network.
 

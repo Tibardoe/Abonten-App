@@ -4,8 +4,8 @@ purpose: Record every category of personal data Abonten processes, where it is s
 audience: Privacy reviewer, engineering, support leads
 scope: All production data stores (Supabase Postgres, Supabase Storage, Cloudinary, device storage, provider systems), and the pilot's tester list kept in Google Workspace
 status: Review required
-version: 1.2
-lastReviewed: 2026-10-09
+version: 1.3
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -127,6 +127,7 @@ Format: **Data → Owner (controller) → Purpose → Storage → Access → Ret
 | Health-check results | `health_check_result` | No retention job |
 | Rate-limit buckets (keyed by user id or IP) | `rate_limit_bucket` | Purged daily (1-day window) |
 | Server logs (Vercel) | Vercel | Vercel's retention |
+| Website page views: page address (private pages cut to their first segment, only `utm_*` kept), route pattern, referrer, country, device, OS, browser | Vercel Web Analytics (production website only) | Vercel's plan retention; no cookies, no account id; read in the Vercel dashboard or its API |
 
 ## 12. Pilot testers (held outside the product)
 

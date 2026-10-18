@@ -16,7 +16,8 @@
         "RESEND_API_KEY",
         "SENTRY_AUTH_TOKEN",
         "SENTRY_DSN",
-        "SUPABASE_SERVICE_ROLE_KEY"
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "VERCEL_ENV"
       ]
     },
     "typecheck": {

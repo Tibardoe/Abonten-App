@@ -1,11 +1,11 @@
 ---
 title: Marketing collateral and QR short links
-purpose: How printed and digital marketing pieces link into the product, how to re-point a printed QR code, and how to produce the per-place and per-event pieces.
+purpose: How printed and digital marketing pieces link into the product, how to re-point a printed QR code, how to tag the links in social posts so their visits can be counted, and how to produce the per-place and per-event pieces.
 audience: Founder, marketing, field team leads, engineering
 scope: The /go/<code> short links (apps/web), the collateral set kept in the brand workspace (Desktop\Abonten-Brand\07-collateral), and the rules for printing it. Not the brand identity itself (PROJECT.md §48).
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-28
+version: 1.1
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -63,6 +63,23 @@ node kit.cjs event <code> "<Event name>"    # ticket-check sign, Tickets on Abon
 ```
 
 The kit refuses to render unless the page answers 200 on abontenhub.com, and decodes each rendered QR to check it opens that page.
+
+## Procedure — tag the links in a social post
+
+Since 2026-10-18 the website counts page views with Vercel Web Analytics (`../architecture/integrations.md`). A post's visits can be told apart only if its link carries tags. Add three to every link Abonten posts:
+
+```
+https://abontenhub.com/events/<code>?utm_source=instagram&utm_medium=social&utm_campaign=osu-2026-w43
+```
+
+- `utm_source`: where the link is posted, in lower case: `instagram`, `tiktok`, `facebook`, `whatsapp`, `x`.
+- `utm_medium`: `social` for a post or story, `dm` for a direct message, `bio` for a profile link.
+- `utm_campaign`: the area and the ISO week of the weekend it promotes, for example `osu-2026-w43` for "This weekend in Osu" on 24–25 October 2026. Use the same name on every platform that week.
+- Optional `utm_content`: which post, when one week has several (`weekend-carousel`, `recap-video`).
+
+Only these `utm_*` tags reach the analytics; every other parameter (`?ref=`, `?q=`) is dropped in the browser before the view is sent (`@abonten/core/analytics/pageViewUrl`). A `?ref=CODE` referral link can carry the tags too: `…?ref=K7QX2MA&utm_source=whatsapp&…`.
+
+To read the results: Vercel › the `abonten` project › Analytics, filtered by UTM campaign or source; or ask engineering for the Monday figures (visits per campaign and page, next to Admin › Analytics' new users and new listings). Visits from the app are not counted there.
 
 ## Expected outcome
 

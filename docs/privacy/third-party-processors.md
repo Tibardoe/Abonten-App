@@ -4,8 +4,8 @@ purpose: List every external provider that receives personal data from Abonten, 
 audience: Privacy reviewer, engineering, founder
 scope: Production integrations
 status: Review required
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -18,6 +18,7 @@ complianceReviewRequired: yes
 |---|---|---|---|---|---|
 | **Supabase** | Database, Auth, Storage, cron | Everything in the data inventory | EU — Paris (project region; Vercel pinned to `cdg1` to match) | Supabase Terms + DPA (confirm signed) | `src/config/supabase/*`, `packages/services/src/supabase/*` |
 | **Vercel** | Hosting for web and admin, server functions, edge middleware, request logs | Request metadata, IPs, everything passing through server actions | `cdg1` (Paris) per `vercel.json` | Vercel Terms + DPA (confirm) | `apps/web/vercel.json`, `apps/admin/vercel.json` |
+| **Vercel Web Analytics** | Counting website page views (since 2026-10-18) | Page address (private pages cut to their first segment, only `utm_*` parameters kept), route pattern, referrer, country, device type, OS, browser; no cookies, no browser storage, no account id | To be confirmed (Vercel's analytics storage, not the `cdg1` function region) | Vercel Terms + DPA (confirm it covers Web Analytics) | `apps/web/src/components/atoms/WebAnalytics.tsx`, `@abonten/core/analytics/pageViewUrl` |
 | **Cloudinary** | Media storage and delivery | Avatars, flyers, place photos, highlights, message attachments, ticket QR images (public ids in DB) | Global CDN; account region: confirm | Cloudinary Terms (confirm DPA) | `uploadToCloudinary.ts`, `cloudinaryUploadSignature.ts`, `sendPushNotification`-adjacent QR upload in `generateTicket.ts` |
 | **Paystack** | Payments, card tokenization, refunds, (transfers — flag off), disputes | Payer email, amount, currency, card/MoMo details entered in Paystack UI, authorization codes; payout account details if transfers are enabled | Nigeria/Ghana | Paystack merchant agreement | `packages/services/src/payments/providers/paystackApi.ts`, `paystackTransfer.ts`, `api/paystack/webhook/route.ts` |
 | **Hubtel** | SMS one-time codes | Phone numbers, the code | Ghana | Hubtel agreement | `packages/services/src/profile/otpProviders/hubtelOtpProvider.ts` |
