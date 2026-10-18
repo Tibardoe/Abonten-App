@@ -24,10 +24,11 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 ## 2026-10-18 — Sentry: CI no longer reports into production
 
-- Updated `architecture/observability.md` (1.1), `development/testing.md` (1.6), `security/secrets-and-environment.md` (1.12).
+- Updated `architecture/observability.md` (1.1), `development/testing.md` (1.6, then 1.7), `security/secrets-and-environment.md` (1.12).
 - The web browser-suite job built the site for production with the production DSN, so each CI run sent its errors and its deliberate CSP test violation into the `abonten-web` project, tagged production (Sentry issues WEB-1, WEB-6, WEB-7). The job now sets `NEXT_PUBLIC_SENTRY_ENVIRONMENT=ci`: the site's Sentry stays off there, and the policy's `report-uri` carries the environment, so reports land under `ci`. Production and preview reports now carry their environment too.
 - The website's Sentry ignores "Refused to evaluate a string as JavaScript because 'unsafe-eval'": Abonten's code never evaluates strings; the 16 October alert (WEB-8, WEB-9) came from a visitor's crypto-wallet browser extension on the sign-in page.
 - The web policy's `connect-src` allows `https://fonts.googleapis.com`, where the Google Maps script fetches the stylesheet for its keyboard-shortcuts help.
+- The second test in `apps/web/e2e/csp-reporting.spec.ts` now intercepts its deliberate violation's report like the first one does, so a CI run sends Sentry no report at all (after the first change they still arrived, tagged `ci`).
 - Migrations, permissions, jobs: none. Env var: `NEXT_PUBLIC_SENTRY_ENVIRONMENT=ci` in the CI job only.
 
 ## 2026-10-09 — Pilot: the dates are set and the agreement is used as written
