@@ -2,6 +2,7 @@ import "./globals.css";
 import { euclidCircular } from "@/app/fonts";
 import NavigationProgress from "@/components/atoms/NavigationProgress";
 import OfflineNotice from "@/components/atoms/OfflineNotice";
+import WebAnalytics from "@/components/atoms/WebAnalytics";
 import LocaleProvider from "@/i18n/LocaleProvider";
 import RootMessages from "@/i18n/RootMessages";
 import ConfirmProvider from "@/providers/ConfirmProvider";
@@ -53,6 +54,12 @@ export default function AppShell({
                     <OfflineNotice />
                     <ReferralTouchLogger />
                     <InviteBinder />
+                    {/* Only the production deployment counts visits: preview
+                        QA, CI and local runs would inflate the numbers, and
+                        the script exists only on Vercel. */}
+                    {process.env.VERCEL_ENV === "production" ? (
+                      <WebAnalytics />
+                    ) : null}
                   </ConfirmProvider>
                 </ReactQueryProvider>
               </ToastProvider>

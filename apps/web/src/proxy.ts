@@ -196,10 +196,12 @@ export const config = {
      * - push-sw.js (the web push service worker: browsers refuse a
      *   redirected worker script, and re-check it signed out too -- a
      *   redirect to /auth/signin broke registration and updates)
+     * - _vercel (Web Analytics' script and the page views it sends: every
+     *   page view would otherwise run this proxy a second time)
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|_vercel|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|api/payments/webhook|api/jobs|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
