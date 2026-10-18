@@ -23,6 +23,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - Why: the weekly "This weekend in Osu" posts need to show which post and which page brought visitors; Admin › Analytics counts sign-ups and listings but nothing recorded visits (place pages excepted, `place_analytics_event`).
 - `_vercel` is outside the proxy's matcher; `VERCEL_ENV` is in the build's turbo cache key.
 - Migrations, permissions, jobs: none. Env vars: none. New dependency: `@vercel/analytics` 2.0.1 (web).
+- Checked on production the same evening: an event page reported as `/events/CC9196` (its `?ref=` dropped, route `/events/[eventCode]`), a consent link as `/auth` after its sign-in redirect. The project's script answers at its own address (`/7b023d401e35c45f/…`), not `/_vercel/insights`, and Vercel serves it before the proxy. Vercel's UTM breakdown needs the paid Web Analytics Plus add-on (API answered 402), so `operations/marketing-collateral-and-qr-links.md` (1.2) now tells a post apart by the page it links to and the referring site.
 
 ## 2026-10-18 — Pilot: twelve testers, starting tomorrow
 

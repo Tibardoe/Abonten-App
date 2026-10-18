@@ -196,8 +196,9 @@ export const config = {
      * - push-sw.js (the web push service worker: browsers refuse a
      *   redirected worker script, and re-check it signed out too -- a
      *   redirect to /auth/signin broke registration and updates)
-     * - _vercel (Web Analytics' script and the page views it sends: every
-     *   page view would otherwise run this proxy a second time)
+     * - _vercel (the default address of Web Analytics' script and page
+     *   views; this project's analytics answers at its own address, which
+     *   Vercel serves before the proxy runs)
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",

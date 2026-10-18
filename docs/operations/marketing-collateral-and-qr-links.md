@@ -1,10 +1,10 @@
 ---
 title: Marketing collateral and QR short links
-purpose: How printed and digital marketing pieces link into the product, how to re-point a printed QR code, how to tag the links in social posts so their visits can be counted, and how to produce the per-place and per-event pieces.
+purpose: How printed and digital marketing pieces link into the product, how to re-point a printed QR code, how to make a social post's visits countable, and how to produce the per-place and per-event pieces.
 audience: Founder, marketing, field team leads, engineering
 scope: The /go/<code> short links (apps/web), the collateral set kept in the brand workspace (Desktop\Abonten-Brand\07-collateral), and the rules for printing it. Not the brand identity itself (PROJECT.md §48).
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-10-18
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -64,22 +64,17 @@ node kit.cjs event <code> "<Event name>"    # ticket-check sign, Tickets on Abon
 
 The kit refuses to render unless the page answers 200 on abontenhub.com, and decodes each rendered QR to check it opens that page.
 
-## Procedure — tag the links in a social post
+## Procedure — make each post's visits countable
 
-Since 2026-10-18 the website counts page views with Vercel Web Analytics (`../architecture/integrations.md`). A post's visits can be told apart only if its link carries tags. Add three to every link Abonten posts:
+Since 2026-10-18 the website counts page views with Vercel Web Analytics (`../architecture/integrations.md`). On the current plan Vercel breaks visits down by **page** and by **referring site** (instagram.com, tiktok.com, facebook.com …), not by `utm_*` tags: those need the paid Web Analytics Plus add-on or Enterprise (Vercel's API answered 402 on 2026-10-18). So a post is told apart by the page it links to:
 
-```
-https://abontenhub.com/events/<code>?utm_source=instagram&utm_medium=social&utm_campaign=osu-2026-w43
-```
+- "This weekend in Osu": link to that week's Abonten Weekly edition (`/weekly/<scope>/<week>`), whose address is new every week.
+- A post about one event or place: link to that event's or place's page.
+- The platform is the referring site. WhatsApp and some in-app browsers send no referrer, so their visits show under no referring site.
 
-- `utm_source`: where the link is posted, in lower case: `instagram`, `tiktok`, `facebook`, `whatsapp`, `x`.
-- `utm_medium`: `social` for a post or story, `dm` for a direct message, `bio` for a profile link.
-- `utm_campaign`: the area and the ISO week of the weekend it promotes, for example `osu-2026-w43` for "This weekend in Osu" on 24–25 October 2026. Use the same name on every platform that week.
-- Optional `utm_content`: which post, when one week has several (`weekend-carousel`, `recap-video`).
+`utm_*` tags may still be added (`?utm_source=instagram&utm_medium=social&utm_campaign=osu-2026-w43`, the campaign being the area and the ISO week of the weekend promoted); they survive in the reported address and become readable only if the add-on is bought. Every other parameter (`?ref=`, `?q=`) is dropped in the browser before the view is sent (`@abonten/core/analytics/pageViewUrl`).
 
-Only these `utm_*` tags reach the analytics; every other parameter (`?ref=`, `?q=`) is dropped in the browser before the view is sent (`@abonten/core/analytics/pageViewUrl`). A `?ref=CODE` referral link can carry the tags too: `…?ref=K7QX2MA&utm_source=whatsapp&…`.
-
-To read the results: Vercel › the `abonten` project › Analytics, filtered by UTM campaign or source; or ask engineering for the Monday figures (visits per campaign and page, next to Admin › Analytics' new users and new listings). Visits from the app are not counted there.
+To read the results: Vercel › the `abonten` project › Analytics (Pages and Referrers); or ask engineering for the Monday figures (visits per page and referring site, next to Admin › Analytics' new users and new listings). Visits from the app are not counted there; place pages also record views and clicks in Abonten's own `place_analytics_event`, which owners see.
 
 ## Expected outcome
 
