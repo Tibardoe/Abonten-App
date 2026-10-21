@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-10-18
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,13 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-10-21 — App Store: version 1.0.0 approved
+
+- Updated `deployment/store-listings.md` (1.2).
+- Apple approved version 1.0.0 with build 20; it waits in "Pending Developer Release". Neither store has released the app; the steps in "Before the app is public" still come first.
+- The doc now says that a fresh install runs the build's own JavaScript until its second launch, and names the one known first-launch crash and the update that fixes it.
+- Migrations, permissions, jobs, env vars: none.
 
 ## 2026-10-18 — Event and place page views, from the website and the app
 

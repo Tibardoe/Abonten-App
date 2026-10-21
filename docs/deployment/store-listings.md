@@ -4,8 +4,8 @@ purpose: What Abonten's App Store and Google Play listings say, where each word,
 audience: Engineers, founder, compliance
 scope: App Store Connect app 6812440895 (com.abonten.app); Google Play app com.abonten.app (developer account "Abonten Hub"); apps/mobile/store; the store images outside the repository
 status: Approved
-version: 1.1
-lastReviewed: 2026-10-09
+version: 1.2
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -14,14 +14,16 @@ complianceReviewRequired: yes
 
 # Store listings and review submissions
 
-## State on 2026-10-09
+## State on 2026-10-21
 
 | Store | Version | State | When it goes public |
 |---|---|---|---|
-| App Store (iPhone) | 1.0.0 (build 20), main `0bc2b149` | Submitted to App Review on 2026-10-04 at 19:06 UTC. Still "Waiting for Review" five days later: no reviewer has picked it up, and it has not been rejected. A status question was sent to Apple on 2026-10-09 (see "If a store says no") | **Manual release**: after approval it waits in "Pending Developer Release" until someone presses Release |
+| App Store (iPhone) | 1.0.0 (build 20), main `0bc2b149` | Submitted to App Review on 2026-10-04 at 19:06 UTC; a status question was sent to Apple on 2026-10-09. **Approved**: on 2026-10-21 the version is "Pending Developer Release" with build 20 | **Manual release**: after approval it waits in "Pending Developer Release" until someone presses Release |
 | Google Play (Android) | 1.0.0 (version code 6), same commit | Sent for review on 2026-10-04. **Approved**: on 2026-10-09 the submission shows "Ready to publish" and Publishing overview holds 11 changes behind the Publish button. The public Play page does not exist yet | **Managed publishing is on**: the app stays unpublished until someone presses Publish |
 
 Neither store publishes the app by itself. That is deliberate: see "Before the app is public" below.
+
+Both approved builds carry the JavaScript of 2026-10-04. Fixes since then reach a phone as an update (`mobile-eas.md`), which a freshly installed app downloads on its first launch and runs from its second. Until then the first launch has one known crash: Account setup › Add your phone number (fixed by update `0c52388b` on 2026-10-18).
 
 The test builds are a separate matter (`../operations/pilot-testing.md`): Apple approved build 20 for outside TestFlight testers, and the same Android bundle is on Google Play's internal testing track since 2026-10-09.
 
