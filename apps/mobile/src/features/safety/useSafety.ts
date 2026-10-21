@@ -19,7 +19,11 @@ import {
   scheduleCheckInReminders,
 } from "./checkInReminders";
 import { deviceSosText, openDeviceSms } from "./deviceSms";
-import { quickSafetyFix } from "./safetyLocation";
+import {
+  freshSafetyFix,
+  lastKnownSafetyFix,
+  quickSafetyFix,
+} from "./safetyLocation";
 import {
   clearPendingSos,
   readSafetySnapshot,
@@ -126,14 +130,20 @@ export function useStartSafety() {
       },
     ): Promise<StartOutcome> => {
       const clientRequestId = uuidv4();
+      const isSos = body.kind === "sos";
+      // An SOS never waits for the GPS: the last known position goes with
+      // it (or none), and a fresh fix follows the moment there is one.
       const location =
-        body.location !== undefined ? body.location : await quickSafetyFix();
+        body.location !== undefined
+          ? body.location
+          : isSos
+            ? await lastKnownSafetyFix()
+            : await quickSafetyFix();
       const request = {
         ...body,
         clientRequestId,
         location,
       } as StartSafetySessionBody;
-      const isSos = body.kind === "sos";
       if (isSos && userId) {
         await savePendingSos(userId, {
           clientRequestId,
@@ -145,9 +155,12 @@ export function useStartSafety() {
       }
       const fallBack = async (): Promise<StartOutcome> => {
         const snapshot = userId ? await readSafetySnapshot(userId) : null;
+        // The GPS works without a connection: worth a few seconds here,
+        // since this text is all the contacts will get.
+        const where = location ?? (await freshSafetyFix(4000));
         const opened = await openDeviceSms(
           (snapshot?.contacts ?? []).map((c) => c.phoneE164),
-          deviceSosText(location ?? null),
+          deviceSosText(where),
         );
         return { kind: "offline", openedMessages: opened };
       };
@@ -161,6 +174,10 @@ export function useStartSafety() {
       if ((res.status === 200 || res.status === 201) && res.data) {
         if (userId) await clearPendingSos(userId);
         apply(res.data.session);
+        const sessionId = res.data.session.id;
+        void freshSafetyFix().then((fix) => {
+          if (fix) api.safety.recordLocation(sessionId, [fix]).catch(() => {});
+        });
         return {
           kind: "started",
           session: res.data.session,

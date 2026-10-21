@@ -77,6 +77,19 @@ export async function freshSafetyFix(
   }
 }
 
+/** The last known position when it is recent; never waits for the GPS. */
+export async function lastKnownSafetyFix(): Promise<SafetyLocationBody | null> {
+  if ((await readSafetyLocationPermission()) !== "granted") return null;
+  try {
+    const last = await Location.getLastKnownPositionAsync({
+      maxAge: LAST_KNOWN_MAX_AGE_MS,
+    });
+    return last ? toSafetyPoint(last, "last_known") : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * The quickest usable position: the last known one when it is recent, else a
  * fresh fix within `timeoutMs`. Never prompts.
