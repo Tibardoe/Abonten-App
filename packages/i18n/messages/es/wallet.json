@@ -97,5 +97,13 @@
   "yourListingIsNowFeatured": "Tu ficha ya está destacada.",
   "yourPaymentMethods": "tus métodos de pago",
   "yourPromotionIsWaitingForReview": "Tu promoción está pendiente de revisión. Si no se aprueba, se te reembolsa íntegramente.",
-  "yourTicketIsConfirmedAndReady": "Tu entrada está confirmada y lista en Entradas."
+  "yourTicketIsConfirmedAndReady": "Tu entrada está confirmada y lista en Entradas.",
+  "continueText": "Continuar",
+  "sending": "Enviando…",
+  "resendCode": "Reenviar código",
+  "changeNumber": "Cambiar número",
+  "aNewCodeIsOnItsWay": "Un nuevo código va de camino.",
+  "weLlTextACodeToThis": "Enviaremos un código por SMS a este número para comprobar que es correcto. El número verificado de tu cuenta no lo necesita.",
+  "thisChecksTheNumberIsRight": "Así comprobamos que el número es correcto antes de guardarlo.",
+  "enterTheCodeWeSentTo": "Introduce el código enviado a {phone}"
 }

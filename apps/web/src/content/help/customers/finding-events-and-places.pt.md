@@ -2,7 +2,7 @@
 title: Encontrar eventos e locais
 summary: Descubra o que acontece perto de si, pesquise, filtre, use o mapa e guarde o que lhe agrada.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -52,6 +52,10 @@ Os eventos com várias datas mostram cada uma; escolhe a data quando compra.
 ## Páginas de locais
 
 A página de um local mostra fotografias, os distintivos de verificado e reivindicado, o horário de funcionamento, os serviços, as formas de contacto (chamada, WhatsApp, website, direções), as avaliações e os próximos eventos nesse local. Pode **guardar** o local, **partilhá-lo**, **pedir uma reserva**, **enviar mensagem ao local** e **denunciá-lo**. Se o negócio for seu mas o anúncio não for gerido por si, use **Reivindicar este local**: consulte [Reivindicar e verificar um local](/help/place-owners/claiming-and-verifying-a-place).
+
+## Como chegar
+
+Na aplicação, **Obter direções** num evento, num local ou num bilhete deixa-o escolher o Google Maps, os Mapas da Apple (iPhone) ou o Waze; a aplicação que usou da última vez aparece primeiro. Para pedir uma viagem ou encontrar-se com um amigo, **Partilhar localização** envia o nome, a morada e um pin no mapa por WhatsApp, SMS ou qualquer outra aplicação, e **Copiar morada** permite colá-la no Bolt, na Uber ou na Yango. No website, o percurso abre no Google Maps.
 
 ## Guardar e partilhar
 

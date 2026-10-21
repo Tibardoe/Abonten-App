@@ -2,7 +2,7 @@
 title: Finance, payouts and settlement
 summary: Pending vs available balances, the 48-hour settlement rule, adding a payout account, requesting a payout, and reading your ledger.
 order: 5
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -30,7 +30,7 @@ An event **settles 48 hours after it ends** (after its last date for multi-date 
 
 ## Payout accounts
 
-Add one or more destinations under **Payout accounts**: **mobile money** (network and number) or **bank** (bank and account number), with the account holder's name. Mark one as default. Payout accounts are separate from the wallet you use to buy tickets.
+Add one or more destinations under **Payout accounts**: **mobile money** (network and number) or **bank** (bank and account number), with the account holder's name. Mark one as default. Your earnings are sent to a mobile money number, so unless it is the verified phone number on your account, a code is texted to it first and the account is saved once you enter it. Payout accounts are separate from the wallet you use to buy tickets.
 
 ## Requesting a payout
 

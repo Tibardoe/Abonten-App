@@ -17,6 +17,7 @@ import { ReviewsPreviewSection } from "@/components/reviews/ReviewsPreviewSectio
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
 import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
+import { useDirections } from "@/features/directions/DirectionsSheet";
 import { useMarket } from "@/features/markets/MarketProvider";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useLogPlaceView } from "@/features/places/placeEngagement";
@@ -31,7 +32,6 @@ import { PlaceCheckInSheet } from "@/features/rewards/PlaceCheckInSheet";
 import { useCheckIn } from "@/features/rewards/usePlaceVisits";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { setPendingRedirect } from "@/lib/authRedirect";
-import { openDirections as openMapsDirections } from "@/lib/directions";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { placeShareUrl } from "@/lib/share";
 import { useQueryView } from "@/lib/useQueryView";
@@ -224,6 +224,12 @@ export default function PlaceDetailScreen() {
     }
   }, [place?.location]);
 
+  const directions = useDirections({
+    label: place?.name ?? "",
+    address: place?.address?.full_address,
+    coords,
+  });
+
   const { data: claim } = usePlaceClaimState(place?.id, place?.owner_id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
   const similarPlaces: PlaceType[] =
@@ -287,16 +293,6 @@ export default function PlaceDetailScreen() {
   };
   const upcomingEvents = upcoming.data ?? [];
 
-  const openDirections = () => {
-    void openMapsDirections({ label: place.name, address, coords }).then(
-      (opened) => {
-        if (!opened)
-          toast.error(t("couldnTOpenMaps"), {
-            description: t("noMapsAppIsAvailableOn"),
-          });
-      },
-    );
-  };
   const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
   // "Book" is offered on any place to anyone who isn't the owner — same
   // gating as web's RequestBookingButton; signed out, it signs in first and
@@ -538,7 +534,7 @@ export default function PlaceDetailScreen() {
               <StaticMapPreview
                 coords={coords}
                 label={address ?? place.name}
-                onPress={openDirections}
+                onPress={directions.show}
               />
             ) : null}
 
@@ -549,7 +545,7 @@ export default function PlaceDetailScreen() {
                 size="sm"
                 leftIcon="navigate-outline"
                 className="flex-1"
-                onPress={openDirections}
+                onPress={directions.show}
               />
               {session && isVisitor && visitsOn ? (
                 <Button
@@ -770,6 +766,7 @@ export default function PlaceDetailScreen() {
           placeName={place.name}
         />
 
+        {directions.sheet}
         <ReportSheet
           open={reportTarget != null}
           onClose={() => setReportTarget(null)}

@@ -44,5 +44,6 @@
   "ticketCancelled": "Bilhete cancelado",
   "ticketReference": "Referência do bilhete",
   "viewEvent": "Ver evento",
-  "yourTickets": "os seus bilhetes"
+  "yourTickets": "os seus bilhetes",
+  "getDirections": "Obter direções"
 }

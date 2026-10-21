@@ -124,5 +124,8 @@
   "yourWithdrawalHistoryAndStatus": "Dein Auszahlungsverlauf und der Status.",
   "yourWithdrawalWillMoveToProcessing": "Deine Auszahlung wechselt während der Prüfung zu „In Bearbeitung“ — sie gilt erst als abgeschlossen, wenn sie tatsächlich ausgezahlt wurde.",
   "couldnTLoadYourBalance": "Dein Guthaben konnte nicht geladen werden.",
-  "couldnTLoadYourPayouts": "Deine Auszahlungen konnten nicht geladen werden."
+  "couldnTLoadYourPayouts": "Deine Auszahlungen konnten nicht geladen werden.",
+  "sending": "Wird gesendet…",
+  "aNewCodeIsOnItsWay": "Ein neuer Code ist unterwegs.",
+  "weLlTextACodeToThis": "Wir schicken einen Code per SMS an diese Nummer, um zu prüfen, ob sie stimmt. Für die bestätigte Telefonnummer deines Kontos ist keiner nötig."
 }

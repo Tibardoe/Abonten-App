@@ -594,5 +594,8 @@
   "theReviews": "as avaliações",
   "theBookings": "as reservas",
   "theCheckInCode": "o código de check-in",
-  "theUpcomingEvents": "os próximos eventos"
+  "theUpcomingEvents": "os próximos eventos",
+  "continueText": "Continuar",
+  "aNewCodeIsOnItsWay": "Um novo código está a caminho.",
+  "weLlTextACodeToThis": "Vamos enviar um código por SMS para este número para confirmar que está correto. O número verificado da sua conta não precisa de código."
 }

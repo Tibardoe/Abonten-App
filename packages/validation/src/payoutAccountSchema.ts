@@ -31,6 +31,14 @@ const detailsSchema = z
   .record(z.string(), z.string().trim().max(120))
   .optional();
 
+// The code texted to the number to confirm it (payments/mobileMoneyNumberCheck).
+// Not needed when the number is the person's own verified phone; never stored.
+const confirmationCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[0-9]{4,8}$/, "Enter the code we sent")
+  .optional();
+
 export const addMobileMoneyPayoutAccountSchema = z.object({
   accountType: z.literal("mobile_money"),
   /** The market the account belongs to; defaults to the organizer's home market. */
@@ -41,6 +49,7 @@ export const addMobileMoneyPayoutAccountSchema = z.object({
   networkName: z.string().trim().min(1, "Select a mobile money network"),
   /** As typed; normalised to E.164 for the market's country by the service. */
   phone: z.string().trim().min(6, "Enter the mobile money number"),
+  code: confirmationCodeSchema,
   details: detailsSchema,
 });
 

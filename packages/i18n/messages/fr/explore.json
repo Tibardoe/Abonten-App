@@ -152,5 +152,19 @@
   "youReSomewhereNew": "Vous êtes dans un nouvel endroit",
   "yourArea": "votre zone",
   "yourLocation": "Votre position",
-  "picksPaidPlacement": "{count, plural, one {# suggestion} other {# suggestions}} · Emplacement payant"
+  "picksPaidPlacement": "{count, plural, one {# suggestion} other {# suggestions}} · Emplacement payant",
+  "getThere": "S'y rendre",
+  "openIn": "Ouvrir l'itinéraire dans",
+  "googleMaps": "Google Maps",
+  "appleMaps": "Plans",
+  "waze": "Waze",
+  "lastUsed": "Utilisée la dernière fois",
+  "bookingARide": "Vous réservez une course ?",
+  "shareLocation": "Partager le lieu",
+  "sendItToYourDriverOr": "Envoyez-le à votre chauffeur ou à un ami",
+  "copyAddress": "Copier l'adresse",
+  "pasteItIntoYourRideApp": "Collez-la dans votre application de transport",
+  "addressCopied": "Adresse copiée",
+  "couldnTOpenMaps": "Impossible d'ouvrir les cartes",
+  "noMapsAppIsAvailableOn": "Aucune application de cartes n'est disponible sur cet appareil."
 }

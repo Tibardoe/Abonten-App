@@ -97,5 +97,13 @@
   "yourListingIsNowFeatured": "Votre fiche est maintenant mise en avant.",
   "yourPaymentMethods": "vos moyens de paiement",
   "yourPromotionIsWaitingForReview": "Votre promotion est en attente d'examen. Si elle n'est pas approuvée, vous êtes remboursé intégralement.",
-  "yourTicketIsConfirmedAndReady": "Votre billet est confirmé et disponible dans Billets."
+  "yourTicketIsConfirmedAndReady": "Votre billet est confirmé et disponible dans Billets.",
+  "continueText": "Continuer",
+  "sending": "Envoi…",
+  "resendCode": "Renvoyer le code",
+  "changeNumber": "Changer de numéro",
+  "aNewCodeIsOnItsWay": "Un nouveau code est en route.",
+  "weLlTextACodeToThis": "Nous enverrons un code par SMS à ce numéro pour vérifier qu'il est correct. Le numéro vérifié de votre compte n'en a pas besoin.",
+  "thisChecksTheNumberIsRight": "Cela permet de vérifier que le numéro est correct avant de l'enregistrer.",
+  "enterTheCodeWeSentTo": "Saisissez le code envoyé au {phone}"
 }

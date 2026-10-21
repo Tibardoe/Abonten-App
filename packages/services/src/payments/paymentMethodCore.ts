@@ -11,6 +11,7 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
 import { getDefaultMarket, getMarketOrDefault } from "../markets/marketConfig";
+import { confirmMobileMoneyNumber } from "./mobileMoneyNumberCheck";
 
 // Post-auth bodies of the four payment-method Server Actions, lifted so the
 // `/api/mobile/payment-methods/*` routes run the exact same logic. Each
@@ -22,6 +23,8 @@ export type MomoPaymentMethodDetails = {
   networkName: string;
   phone: string;
   label?: string;
+  /** When the number was confirmed (absent on wallets saved before 2026-10-21). */
+  verifiedAt?: string;
 };
 
 export type CardPaymentMethodDetails = {
@@ -98,7 +101,7 @@ function momoKey(details: MomoPaymentMethodDetails): string {
 }
 
 export type AddPaymentMethodResult =
-  | { status: 400 | 500; message: string }
+  | { status: 400 | 429 | 500; message: string }
   | { status: 200; data: PaymentMethodRow };
 
 export async function addPaymentMethodCore(
@@ -153,7 +156,7 @@ export async function addPaymentMethodCore(
   const active = (existingMethods ?? []) as unknown as PaymentMethodRow[];
 
   if (parsedInput.type === "momo") {
-    const { type: _momo, ...momo } = parsedInput;
+    const { type: _momo, code, ...momo } = parsedInput;
     // Store one canonical E.164 form, validated for the person's home
     // market (a Ghanaian wallet is a Ghanaian number, a Kenyan one Kenyan).
     // The web PhoneInput already composes E.164; the mobile wallet form
@@ -196,7 +199,22 @@ export async function addPaymentMethodCore(
     );
     if (duplicate) return { status: 200, data: duplicate };
 
-    details = { ...momo, phone: normalized.e164 };
+    // The number is the person's own verified phone, or they typed the code
+    // texted to it (mobileMoneyNumberCheck).
+    const confirmed = await confirmMobileMoneyNumber(
+      userId,
+      normalized.e164,
+      code,
+    );
+    if (!confirmed.ok) {
+      return { status: confirmed.status, message: confirmed.message };
+    }
+
+    details = {
+      ...momo,
+      phone: normalized.e164,
+      verifiedAt: new Date().toISOString(),
+    };
   } else {
     const { type: _card, ...card } = parsedInput;
     // A card is added by re-running the provider's small verification charge, and a

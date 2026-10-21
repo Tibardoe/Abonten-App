@@ -2,9 +2,11 @@ import { RefundStatusPanel } from "@/components/RefundStatusPanel";
 import { AppHeader } from "@/components/app/AppHeader";
 import { QueryUnavailable } from "@/components/app/QueryUnavailable";
 import { TicketDetailSkeleton } from "@/components/skeletons";
+import { useDirections } from "@/features/directions/DirectionsSheet";
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
+import { coordsFromLocation } from "@/lib/directions";
 import { useQueryView } from "@/lib/useQueryView";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
@@ -23,6 +25,7 @@ import {
 import { useLocale, useTranslations } from "@abonten/ui-native/i18n";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMemo } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 
 function Row({
@@ -62,6 +65,17 @@ export default function TicketDetailScreen() {
   // Tickets are never cached on disk (a QR code is money), so offline with
   // nothing loaded this session says so rather than "could not be loaded".
   const view = useQueryView(query);
+  // On the day, the ticket is where people look for the way there.
+  const eventLocation = ticket?.event.location;
+  const coords = useMemo(
+    () => coordsFromLocation(eventLocation),
+    [eventLocation],
+  );
+  const directions = useDirections({
+    label: ticket?.event.title ?? "",
+    address: ticket?.event.address?.full_address,
+    coords,
+  });
 
   // A content-shaped skeleton, not a centred spinner: the QR block and the
   // detail rows land in the same places they will occupy, so nothing jumps
@@ -189,6 +203,15 @@ export default function TicketDetailScreen() {
                 {ticket.event.address?.full_address ?? t("locationUnavailable")}
               </AppText>
             </View>
+            {!eventEnded && !cancelledByOrganizer ? (
+              <Button
+                title={t("getDirections")}
+                variant="outline"
+                size="sm"
+                leftIcon="navigate-outline"
+                onPress={directions.show}
+              />
+            ) : null}
             <View className="mt-1">
               <TicketStatusBadge
                 status={ticket.status}
@@ -305,6 +328,7 @@ export default function TicketDetailScreen() {
           ) : null}
         </View>
       </ScrollView>
+      {directions.sheet}
     </View>
   );
 }

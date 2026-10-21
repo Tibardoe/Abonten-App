@@ -2,7 +2,7 @@
 title: Encontrar eventos y lugares
 summary: Descubre qué hay cerca de ti, busca, filtra, usa el mapa y guarda lo que te guste.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -52,6 +52,10 @@ Los eventos con varias fechas muestran cada una; eliges la fecha al comprar.
 ## Páginas de lugares
 
 La página de un lugar muestra fotos, las insignias de verificado y reclamado, el horario de apertura, los servicios, las formas de contacto (llamada, WhatsApp, sitio web, cómo llegar), las reseñas y los próximos eventos en ese lugar. Puedes **guardar** el lugar, **compartirlo**, **solicitar una reserva**, **escribir al lugar** y **denunciarlo**. Si el negocio es tuyo y el anuncio no lo gestionas tú, usa **Reclamar este lugar**: consulta [Reclamar y verificar un lugar](/help/place-owners/claiming-and-verifying-a-place).
+
+## Cómo llegar
+
+En la app, **Cómo llegar** en un evento, un lugar o una entrada te deja elegir Google Maps, Mapas de Apple (iPhone) o Waze; la app que usaste la última vez aparece primero. Para pedir un viaje o quedar con alguien, **Compartir ubicación** envía el nombre, la dirección y un pin del mapa por WhatsApp, SMS o cualquier otra app, y **Copiar dirección** te permite pegarla en Bolt, Uber o Yango. En la web, la ruta se abre en Google Maps.
 
 ## Guardar y compartir
 

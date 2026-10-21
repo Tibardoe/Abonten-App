@@ -44,5 +44,6 @@
   "ticketCancelled": "Ticket storniert",
   "ticketReference": "Ticketreferenz",
   "viewEvent": "Event ansehen",
-  "yourTickets": "deine Tickets"
+  "yourTickets": "deine Tickets",
+  "getDirections": "Route anzeigen"
 }

@@ -2,7 +2,7 @@
 title: Payments and payment methods
 summary: Cards and mobile money, saving a payment method in your wallet, and your transaction history.
 order: 4
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -22,7 +22,7 @@ Payments on Abonten are processed by **Paystack**. Prices are in Ghana cedis.
 **Web:** side menu › Wallet. **App:** Account › Wallet.
 
 - **Add a card.** Paystack verifies the card with a **GHS 1.00 charge that is refunded immediately** and gives Abonten a reusable reference. Abonten stores only that reference plus the brand, last four digits and expiry so you can recognise the card.
-- **Add a mobile-money wallet.** Saved as display details (network, number, label). You still confirm each payment on your phone.
+- **Add a mobile-money wallet.** Saved as display details (network, number, label). Unless it is the verified phone number on your account, a code is texted to the number first to check it is right; enter it to save the wallet. You still confirm each payment on your phone.
 - Set one method as **default**, or **remove** a method at any time. Removing a method does not affect past payments or refunds.
 
 Your wallet is separate from checkout: you can manage methods without having anything in your basket.

@@ -97,5 +97,13 @@
   "yourListingIsNowFeatured": "Your listing is now featured.",
   "yourPaymentMethods": "your payment methods",
   "yourPromotionIsWaitingForReview": "Your promotion is waiting for review. If it isn't approved, you're refunded in full.",
-  "yourTicketIsConfirmedAndReady": "Your ticket is confirmed and ready in Tickets."
+  "yourTicketIsConfirmedAndReady": "Your ticket is confirmed and ready in Tickets.",
+  "continueText": "Continue",
+  "sending": "Sending…",
+  "resendCode": "Resend code",
+  "changeNumber": "Change number",
+  "aNewCodeIsOnItsWay": "A new code is on its way.",
+  "weLlTextACodeToThis": "We'll text a code to this number to check it's right. The verified phone number on your account doesn't need one.",
+  "thisChecksTheNumberIsRight": "This makes sure the number is right before it's saved.",
+  "enterTheCodeWeSentTo": "Enter the code we sent to {phone}"
 }

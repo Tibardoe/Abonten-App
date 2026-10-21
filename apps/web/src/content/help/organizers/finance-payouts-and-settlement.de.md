@@ -2,7 +2,7 @@
 title: Finanzen, Auszahlungen und Abrechnung
 summary: Ausstehendes und verfügbares Guthaben, die 48-Stunden-Abrechnungsregel, ein Auszahlungskonto hinzufügen, eine Auszahlung anfordern und dein Kontobuch lesen.
 order: 5
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -30,7 +30,7 @@ Ein Event wird **48 Stunden nach seinem Ende abgerechnet** (bei mehreren Termine
 
 ## Auszahlungskonten
 
-Füge unter **Auszahlungskonten** ein oder mehrere Ziele hinzu: **Mobile Money** (Netz und Nummer) oder **Bank** (Bank und Kontonummer), jeweils mit dem Namen des Kontoinhabers. Lege eines als Standard fest. Auszahlungskonten sind unabhängig vom Wallet, mit dem du Tickets kaufst.
+Füge unter **Auszahlungskonten** ein oder mehrere Ziele hinzu: **Mobile Money** (Netz und Nummer) oder **Bank** (Bank und Kontonummer), jeweils mit dem Namen des Kontoinhabers. Lege eines als Standard fest. Deine Einnahmen gehen an eine Mobile-Money-Nummer. Außer bei der bestätigten Telefonnummer deines Kontos geht deshalb zuerst ein Code per SMS an sie, und das Konto wird gespeichert, sobald du ihn eingibst. Auszahlungskonten sind unabhängig vom Wallet, mit dem du Tickets kaufst.
 
 ## Eine Auszahlung anfordern
 

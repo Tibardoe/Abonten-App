@@ -14,6 +14,7 @@ import {
   showsOrganizerBadge,
 } from "@/components/verification/VerifiedPill";
 import { useFreeRsvpFlow } from "@/features/checkout/useFreeRsvpFlow";
+import { useDirections } from "@/features/directions/DirectionsSheet";
 import { useLogEventView } from "@/features/discovery/eventEngagement";
 import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
@@ -27,7 +28,7 @@ import {
   logEventShare,
   useReferralCode,
 } from "@/features/rewards/useReferralCode";
-import { openDirections as openMapsDirections } from "@/lib/directions";
+import { coordsFromLocation } from "@/lib/directions";
 import { isNotFoundError } from "@/lib/queryErrors";
 import { eventShareUrl } from "@/lib/share";
 import { useNowTick } from "@/lib/useNowTick";
@@ -69,7 +70,7 @@ import {
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   Linking,
@@ -141,7 +142,18 @@ export default function EventDetailScreen() {
   } | null>(null);
 
   const address = data?.event.address?.full_address;
-  const { data: coords } = useGeocode(address);
+  // The venue's stored pin. The address is geocoded on the phone only for an
+  // event saved without one: it finds the area ("East Legon"), not the
+  // venue, and Apple's geocoder knows little of Ghana.
+  const location = data?.event.location;
+  const storedCoords = useMemo(() => coordsFromLocation(location), [location]);
+  const { data: geocoded } = useGeocode(storedCoords ? null : address);
+  const coords = storedCoords ?? geocoded ?? null;
+  const directions = useDirections({
+    label: data?.event.title ?? "",
+    address,
+    coords,
+  });
   const similar = useSimilarEvents(
     data?.event.id,
     data?.event.event_category,
@@ -315,17 +327,6 @@ export default function EventDetailScreen() {
   const chosenDate = multiDateRsvp
     ? rsvpFlow.occurrences.find((o) => o.id === rsvpFlow.occurrenceId)
     : undefined;
-
-  const openDirections = () => {
-    void openMapsDirections({ label: event.title, address, coords }).then(
-      (opened) => {
-        if (!opened)
-          toast.error(t("couldnTOpenMaps"), {
-            description: t("noMapsAppIsAvailableOn"),
-          });
-      },
-    );
-  };
 
   return (
     <View className="flex-1 bg-background">
@@ -560,7 +561,7 @@ export default function EventDetailScreen() {
               <StaticMapPreview
                 coords={coords}
                 label={address ?? event.title}
-                onPress={openDirections}
+                onPress={directions.show}
               />
             ) : null}
 
@@ -571,7 +572,7 @@ export default function EventDetailScreen() {
                 size="sm"
                 leftIcon="navigate-outline"
                 className="flex-1"
-                onPress={openDirections}
+                onPress={directions.show}
               />
               {event.place ? (
                 <Button
@@ -747,6 +748,7 @@ export default function EventDetailScreen() {
           targetId={reportTarget?.targetId ?? event.id}
           label={reportTarget?.label ?? event.title}
         />
+        {directions.sheet}
       </ScrollView>
 
       {/* Sticky primary action. In the flex column under the ScrollView (not

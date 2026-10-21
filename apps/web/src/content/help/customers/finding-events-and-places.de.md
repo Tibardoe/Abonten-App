@@ -2,7 +2,7 @@
 title: Events und Orte finden
 summary: Entdecke, was in deiner Nähe los ist, suche, filtere, nutze die Karte und speichere, was dir gefällt.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -52,6 +52,10 @@ Events mit mehreren Terminen zeigen jeden Termin; du wählst den Termin beim Kau
 ## Ortsseiten
 
 Die Seite eines Orts zeigt Fotos, die Abzeichen „verifiziert“ und „beansprucht“, Öffnungszeiten, Leistungen, Kontaktmöglichkeiten (Anruf, WhatsApp, Website, Route), Bewertungen und kommende Events dort. Du kannst den Ort **speichern**, ihn **teilen**, **eine Buchung anfragen**, **dem Ort schreiben** und ihn **melden**. Gehört dir das Geschäft, der Eintrag aber nicht, nutze **Diesen Ort beanspruchen** – siehe [Einen Ort beanspruchen und verifizieren](/help/place-owners/claiming-and-verifying-a-place).
+
+## Hinkommen
+
+In der App lässt dich **Route anzeigen** bei einem Event, einem Ort oder einem Ticket zwischen Google Maps, Apple Karten (iPhone) und Waze wählen; die zuletzt verwendete App steht oben. Um eine Fahrt zu bestellen oder Freunde zu treffen, schickt **Standort teilen** den Namen, die Adresse und einen Kartenpin per WhatsApp, SMS oder jede andere App, und mit **Adresse kopieren** fügst du sie in Bolt, Uber oder Yango ein. Auf der Website öffnet sich die Route in Google Maps.
 
 ## Speichern und teilen
 

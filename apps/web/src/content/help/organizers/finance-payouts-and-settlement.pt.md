@@ -2,7 +2,7 @@
 title: Finanças, levantamentos e liquidação
 summary: Saldos pendente e disponível, a regra de liquidação de 48 horas, adicionar uma conta de recebimento, pedir um levantamento e ler o seu registo.
 order: 5
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -30,7 +30,7 @@ Um evento **é liquidado 48 horas depois de terminar** (depois da última data, 
 
 ## Contas de recebimento
 
-Adicione um ou mais destinos em **Contas de recebimento**: **mobile money** (rede e número) ou **banco** (banco e número de conta), com o nome do titular. Marque um como predefinido. As contas de recebimento são independentes da carteira que usa para comprar bilhetes.
+Adicione um ou mais destinos em **Contas de recebimento**: **mobile money** (rede e número) ou **banco** (banco e número de conta), com o nome do titular. Marque um como predefinido. Os seus ganhos são enviados para um número de mobile money, por isso, exceto se for o número verificado da sua conta, é primeiro enviado um código por SMS para esse número e a conta é guardada quando o introduzir. As contas de recebimento são independentes da carteira que usa para comprar bilhetes.
 
 ## Pedir um levantamento
 

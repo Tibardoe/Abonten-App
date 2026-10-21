@@ -1235,5 +1235,6 @@
     "claimFiledFor": "Claim filed for {name}",
     "eventListedFor": "Event listed for {date}"
   },
-  "thatPlaceCouldNotBeFound": "That place could not be found. Pick another suggestion."
+  "thatPlaceCouldNotBeFound": "That place could not be found. Pick another suggestion.",
+  "confirmThisNumberWithA": "Confirm this number with the code we text to it. If you don't see where to enter a code, close the app and open it again to update it."
 }

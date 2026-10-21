@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { confirmMobileMoneyNumber } from "./mobileMoneyNumberCheck";
 import { addPaymentMethodCore } from "./paymentMethodCore";
 
 // The market lookup is configuration, not what this test is about: a Ghana
@@ -13,6 +14,16 @@ vi.mock("../markets/marketConfig", () => ({
     paymentMethods: [{ enabled: true, method: "mobile_money" }],
   }),
 }));
+
+// The number check has its own tests (mobileMoneyNumberCheck.test.ts); here
+// it passes unless a test says otherwise.
+vi.mock("./mobileMoneyNumberCheck", () => ({
+  confirmMobileMoneyNumber: vi.fn(async () => ({ ok: true })),
+}));
+
+beforeEach(() => {
+  vi.mocked(confirmMobileMoneyNumber).mockClear();
+});
 
 // A stub for the three payment_method queries addPaymentMethodCore makes:
 // the active-count head query, the existing-methods lookup, and the insert.
@@ -246,5 +257,69 @@ describe("addPaymentMethodCore", () => {
       phone: "0241234567",
     });
     expect(insert).toHaveBeenCalledTimes(1);
+  });
+
+  it("saves a wallet only once its number is confirmed, and never stores the code", async () => {
+    const { client, insert } = fakeClient({});
+    const res = await addPaymentMethodCore(client, "u1", {
+      type: "momo",
+      networkCode: "MTN",
+      networkName: "MTN",
+      phone: "0241234567",
+      code: "123456",
+    });
+    expect(res.status).toBe(200);
+    expect(confirmMobileMoneyNumber).toHaveBeenCalledWith(
+      "u1",
+      "+233241234567",
+      "123456",
+    );
+    const row = insert.mock.calls[0][0] as {
+      details: Record<string, unknown>;
+    };
+    expect(row.details.code).toBeUndefined();
+    expect(typeof row.details.verifiedAt).toBe("string");
+  });
+
+  it("refuses a wallet whose number was not confirmed", async () => {
+    vi.mocked(confirmMobileMoneyNumber).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      message: "Confirm this number",
+    });
+    const { client, insert } = fakeClient({});
+    const res = await addPaymentMethodCore(client, "u1", {
+      type: "momo",
+      networkCode: "MTN",
+      networkName: "MTN",
+      phone: "0241234567",
+    });
+    expect(res).toEqual({ status: 400, message: "Confirm this number" });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("asks for no code to hand back a wallet that is already saved", async () => {
+    const { client } = fakeClient({
+      existing: [
+        {
+          id: "momo-1",
+          method_type: "momo",
+          details: {
+            networkCode: "MTN",
+            networkName: "MTN",
+            phone: "+233241234567",
+          },
+          is_default: true,
+          created_at: "2026-08-18T00:00:00Z",
+        },
+      ],
+    });
+    await addPaymentMethodCore(client, "u1", {
+      type: "momo",
+      networkCode: "MTN",
+      networkName: "MTN",
+      phone: "0241234567",
+    });
+    expect(confirmMobileMoneyNumber).not.toHaveBeenCalled();
   });
 });

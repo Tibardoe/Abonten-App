@@ -2,7 +2,7 @@
 title: Trouver des événements et des lieux
 summary: Découvrez ce qui se passe près de chez vous, cherchez, filtrez, utilisez la carte et enregistrez ce qui vous plaît.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -52,6 +52,10 @@ Les événements à plusieurs dates affichent chaque date ; vous choisissez la v
 ## Pages de lieu
 
 La page d'un lieu affiche les photos, les badges « vérifié » et « revendiqué », les horaires d'ouverture, les services, les moyens de contact (appel, WhatsApp, site web, itinéraire), les avis et les prochains événements dans ce lieu. Vous pouvez **enregistrer** le lieu, le **partager**, **demander une réservation**, **écrire au lieu** et le **signaler**. Si l'établissement vous appartient mais que l'annonce n'est pas à vous, utilisez **Revendiquer ce lieu** : voir [Revendiquer et faire vérifier un lieu](/help/place-owners/claiming-and-verifying-a-place).
+
+## Se rendre sur place
+
+Dans l'application, **Itinéraire** sur un événement, un lieu ou un billet vous laisse choisir Google Maps, Plans (iPhone) ou Waze ; l'application utilisée la dernière fois est en tête de liste. Pour réserver une course ou retrouver un ami, **Partager le lieu** envoie le nom, l'adresse et un repère sur la carte par WhatsApp, SMS ou toute autre application, et **Copier l'adresse** vous permet de la coller dans Bolt, Uber ou Yango. Sur le site web, l'itinéraire s'ouvre dans Google Maps.
 
 ## Enregistrer et partager
 

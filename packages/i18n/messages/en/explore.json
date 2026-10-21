@@ -152,5 +152,19 @@
   "youReSomewhereNew": "You're somewhere new",
   "yourArea": "your area",
   "yourLocation": "Your location",
-  "picksPaidPlacement": "{count, plural, one {# pick} other {# picks}} · Paid placement"
+  "picksPaidPlacement": "{count, plural, one {# pick} other {# picks}} · Paid placement",
+  "getThere": "Get there",
+  "openIn": "Open directions in",
+  "googleMaps": "Google Maps",
+  "appleMaps": "Apple Maps",
+  "waze": "Waze",
+  "lastUsed": "Last used",
+  "bookingARide": "Booking a ride?",
+  "shareLocation": "Share location",
+  "sendItToYourDriverOr": "Send it to your driver or a friend",
+  "copyAddress": "Copy address",
+  "pasteItIntoYourRideApp": "Paste it into your ride app",
+  "addressCopied": "Address copied",
+  "couldnTOpenMaps": "Couldn't open maps",
+  "noMapsAppIsAvailableOn": "No maps app is available on this device."
 }

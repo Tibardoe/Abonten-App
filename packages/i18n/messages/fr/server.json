@@ -1235,5 +1235,6 @@
   "yourRefundWasStartedButWe": "Votre remboursement a été lancé, mais nous n'avons pas encore pu vous restituer votre crédit. Veuillez réessayer ou contacter l'assistance.",
   "yourRoleCanTDoThis": "Votre rôle ne permet pas de faire cela",
   "yourSpotlight": "Votre Spotlight",
-  "thatPlaceCouldNotBeFound": "Ce lieu est introuvable. Choisissez une autre suggestion."
+  "thatPlaceCouldNotBeFound": "Ce lieu est introuvable. Choisissez une autre suggestion.",
+  "confirmThisNumberWithA": "Confirmez ce numéro avec le code que nous y envoyons par SMS. Si vous ne voyez pas où saisir le code, fermez l'application puis rouvrez-la pour la mettre à jour."
 }

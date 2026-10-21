@@ -152,5 +152,19 @@
   "youReSomewhereNew": "Du bist an einem neuen Ort",
   "yourArea": "deine Gegend",
   "yourLocation": "Dein Standort",
-  "picksPaidPlacement": "{count, plural, one {# Tipp} other {# Tipps}} · Bezahlte Platzierung"
+  "picksPaidPlacement": "{count, plural, one {# Tipp} other {# Tipps}} · Bezahlte Platzierung",
+  "getThere": "Hinkommen",
+  "openIn": "Route öffnen in",
+  "googleMaps": "Google Maps",
+  "appleMaps": "Apple Karten",
+  "waze": "Waze",
+  "lastUsed": "Zuletzt verwendet",
+  "bookingARide": "Bestellst du eine Fahrt?",
+  "shareLocation": "Standort teilen",
+  "sendItToYourDriverOr": "Schick ihn an deinen Fahrer oder an Freunde",
+  "copyAddress": "Adresse kopieren",
+  "pasteItIntoYourRideApp": "Füge sie in deine Fahrdienst-App ein",
+  "addressCopied": "Adresse kopiert",
+  "couldnTOpenMaps": "Karten-App konnte nicht geöffnet werden",
+  "noMapsAppIsAvailableOn": "Auf diesem Gerät ist keine Karten-App verfügbar."
 }

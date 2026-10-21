@@ -3,6 +3,7 @@
 import addPaymentMethod from "@/actions/addPaymentMethod";
 import getPaystackMobileMoneyNetworks from "@/actions/getPaystackMobileMoneyNetworks";
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
+import requestMobileMoneyNumberCode from "@/actions/requestMobileMoneyNumberCode";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,15 +24,27 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import MomoCodeStep from "../molecules/MomoCodeStep";
 
 type PopupCloseProp = {
   onSaved: (method: PaymentMethodRow) => void;
 };
 
+// The number is confirmed before it is saved: a code is texted to it,
+// unless it is the person's own verified phone
+// (payments/mobileMoneyNumberCheck).
 export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
   const t = useTranslations("wallet");
 
   const [serverError, setServerError] = useState<string | null>(null);
+  // Set once a code has been texted: the code step replaces the form.
+  const [pending, setPending] = useState<{
+    values: AddMomoWalletInput;
+    phoneE164: string;
+    codeLength: number;
+  } | null>(null);
+  const [codeNote, setCodeNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const {
     data: networksResponse,
@@ -65,22 +78,77 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
     formState: { isSubmitting },
   } = form;
 
-  const onSubmit = async (values: AddMomoWalletInput) => {
+  const save = async (values: AddMomoWalletInput, code?: string) => {
     setServerError(null);
-    const response = await addPaymentMethod({
-      ...values,
-      // Sent as typed: the service parses it for the person's market
-      // (a Ghanaian 024…, a Kenyan 0712…) and stores E.164.
-      phone: values.phone.trim(),
-    }).catch(actionUnreachable);
+    setBusy(true);
+    try {
+      const response = await addPaymentMethod({
+        ...values,
+        // Sent as typed: the service parses it for the person's market
+        // (a Ghanaian 024…, a Kenyan 0712…) and stores E.164.
+        phone: values.phone.trim(),
+        code,
+      }).catch(actionUnreachable);
 
-    if (response.status !== 200) {
-      setServerError(response.message);
-      return;
+      if (response.status !== 200) {
+        setServerError(response.message);
+        return;
+      }
+
+      onSaved(response.data);
+    } finally {
+      setBusy(false);
     }
-
-    onSaved(response.data);
   };
+
+  const requestCode = async (values: AddMomoWalletInput, resend: boolean) => {
+    setServerError(null);
+    setBusy(true);
+    try {
+      const response = await requestMobileMoneyNumberCode({
+        phone: values.phone.trim(),
+        use: "wallet",
+      }).catch(actionUnreachable);
+
+      if (response.status !== 200) {
+        setServerError(response.message);
+        return;
+      }
+      if (!response.data.needsCode) {
+        await save(values);
+        return;
+      }
+      setCodeNote(resend ? t("aNewCodeIsOnItsWay") : null);
+      setPending({
+        values,
+        phoneE164: response.data.phoneE164,
+        codeLength: response.data.codeLength,
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onSubmit = (values: AddMomoWalletInput) => requestCode(values, false);
+
+  if (pending) {
+    return (
+      <MomoCodeStep
+        phoneE164={pending.phoneE164}
+        codeLength={pending.codeLength}
+        submitLabel={t("saveThisWallet")}
+        busy={busy}
+        error={serverError}
+        note={codeNote}
+        onSubmit={(code) => void save(pending.values, code)}
+        onResend={() => void requestCode(pending.values, true)}
+        onChangeNumber={() => {
+          setServerError(null);
+          setPending(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -165,16 +233,22 @@ export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
             />
           </div>
 
+          <p className="text-sm text-muted-foreground">
+            {t("weLlTextACodeToThis")}
+          </p>
+
           {serverError && (
             <p className="text-sm text-destructive">{serverError}</p>
           )}
 
           <Button
             type="submit"
-            disabled={isSubmitting || isNetworksPending || isNetworksError}
+            disabled={
+              isSubmitting || busy || isNetworksPending || isNetworksError
+            }
             className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
           >
-            {isSubmitting ? t("saving") : t("saveThisWallet")}
+            {isSubmitting || busy ? t("sending") : t("continueText")}
           </Button>
         </form>
       </Form>

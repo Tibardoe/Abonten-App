@@ -164,6 +164,7 @@ import type {
   MarkConversationReadBody,
   MarkConversationUnreadBody,
   MessagingActionResult,
+  MomoCodeData,
   MomoNetwork,
   MutatePayoutAccountResult,
   NotificationType,
@@ -215,6 +216,7 @@ import type {
   ReferralTouchResult,
   RequestEmailOtpBody,
   RequestEmailOtpData,
+  RequestMomoCodeBody,
   RequestPayoutBody,
   RequestPayoutResult,
   RequestPhoneOtpBody,
@@ -1017,7 +1019,17 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "GET", auth: true },
         );
       },
-      /** Add a mobile money wallet (network + phone). */
+      /** Text a code to a mobile money number before it is saved (a wallet
+       *  or a payout account); `needsCode: false` for the caller's own
+       *  verified phone. */
+      momoCode(body: RequestMomoCodeBody) {
+        return request<ApiEnvelope<MomoCodeData>>(
+          "/api/mobile/payment-methods/momo-code",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Add a mobile money wallet (network + phone, and the code momoCode
+       *  texted unless the number is the caller's own verified phone). */
       addMomo(body: AddMomoWalletBody) {
         return request<ApiEnvelope<PaymentMethodRow>>(
           "/api/mobile/payment-methods",

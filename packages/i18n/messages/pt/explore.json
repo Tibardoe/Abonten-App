@@ -152,5 +152,19 @@
   "youReSomewhereNew": "Está num sítio novo",
   "yourArea": "a sua zona",
   "yourLocation": "A sua localização",
-  "picksPaidPlacement": "{count, plural, one {# sugestão} other {# sugestões}} · Posicionamento pago"
+  "picksPaidPlacement": "{count, plural, one {# sugestão} other {# sugestões}} · Posicionamento pago",
+  "getThere": "Como chegar",
+  "openIn": "Abrir o percurso em",
+  "googleMaps": "Google Maps",
+  "appleMaps": "Mapas da Apple",
+  "waze": "Waze",
+  "lastUsed": "Usada da última vez",
+  "bookingARide": "Vai pedir uma viagem?",
+  "shareLocation": "Partilhar localização",
+  "sendItToYourDriverOr": "Envie-a ao seu motorista ou a um amigo",
+  "copyAddress": "Copiar morada",
+  "pasteItIntoYourRideApp": "Cole-a na sua aplicação de transporte",
+  "addressCopied": "Morada copiada",
+  "couldnTOpenMaps": "Não foi possível abrir os mapas",
+  "noMapsAppIsAvailableOn": "Não há nenhuma aplicação de mapas disponível neste dispositivo."
 }
