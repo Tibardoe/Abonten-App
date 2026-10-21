@@ -57,5 +57,47 @@
     "time": "Uhrzeit",
     "venue": "Location",
     "viewMyTickets": "Meine Tickets ansehen"
+  },
+  "safety": {
+    "callPerson": "{person} anrufen: {phone}",
+    "emergencyNote": "Abonten verständigt keine Notdienste. Wenn du glaubst, dass {person} in Gefahr ist, ruf {emergency} an.",
+    "emergencyNoteNoNumber": "Abonten verständigt keine Notdienste. Wenn du glaubst, dass {person} in Gefahr ist, ruf die örtliche Notrufnummer an.",
+    "footer": "Du erhältst diese E-Mail, weil {person} dich bei Abonten als Vertrauensperson hinzugefügt hat.",
+    "invite": {
+      "subject": "{person} hat dich als Notfallkontakt hinzugefügt",
+      "heading": "{person} vertraut dir",
+      "intro": "{person} hat dich bei Abonten als Notfallkontakt hinzugefügt. Falls {person} einmal Hilfe braucht, zum Beispiel beim Ausgehen, bekommst du eine SMS oder E-Mail, die zeigt, wo {person} ist. Du kannst annehmen oder ablehnen.",
+      "button": "Annehmen oder ablehnen"
+    },
+    "share": {
+      "subject": "{person} teilt den Live-Standort mit dir",
+      "heading": "{hasTime, select, yes {Sieh bis {time}, wo {person} ist} other {Sieh, wo {person} ist}}",
+      "intro": "{hasEvent, select, yes {{person} ist bei {event} und teilt auf Abonten den Live-Standort mit dir.} other {{person} teilt auf Abonten den Live-Standort mit dir.}} Es ist nichts passiert: So kannst du sehen, dass {person} sicher nach Hause kommt.",
+      "button": "Sehen, wo {person} ist"
+    },
+    "alert": {
+      "subject": "SOS von {person}",
+      "heading": "{person} braucht vielleicht deine Hilfe",
+      "intro": "{hasEvent, select, yes {{person} hat bei {event} auf Abonten den Hilfe-Knopf gedrückt.} other {{person} hat auf Abonten den Hilfe-Knopf gedrückt.}} Sieh nach, wo {person} ist, und antworte, damit {person} weiß, dass du es gesehen hast.",
+      "button": "Sehen, wo {person} ist"
+    },
+    "checkInMissed": {
+      "subject": "{person} hat sich nicht gemeldet",
+      "heading": "{person} hat sich nicht gemeldet",
+      "intro": "{person} wollte sich bis {time} auf Abonten melden und hat das nicht getan. Sieh dir den letzten bekannten Standort an und antworte, damit {person} weiß, dass du es gesehen hast.",
+      "button": "Letzten bekannten Standort ansehen"
+    },
+    "safe": {
+      "subject": "{person} ist in Sicherheit",
+      "heading": "{person} ist in Sicherheit",
+      "intro": "{person} hat den Alarm auf Abonten beendet. Danke, dass du da warst.",
+      "button": "Seite öffnen"
+    },
+    "falseAlarm": {
+      "subject": "Der Alarm von {person} war ein Versehen",
+      "heading": "{person} geht es gut",
+      "intro": "Der Alarm von {person} auf Abonten wurde aus Versehen gesendet. Es ist nichts passiert.",
+      "button": "Seite öffnen"
+    }
   }
 }

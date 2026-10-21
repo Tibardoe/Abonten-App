@@ -9,6 +9,7 @@ import { unregisterPushToken } from "@/features/notifications/usePushRegistratio
 import { useProfile } from "@/features/profile/useProfile";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { useIsOrganizer } from "@/features/roles/useRoles";
+import { useSafetyProgram } from "@/features/safety/useSafety";
 import {
   AppText,
   Avatar,
@@ -60,6 +61,7 @@ export default function Account() {
   const rewards = useRewardsProgram({ enabled: !!session });
   // Fails closed (hidden) until known; restored from the offline cache.
   const content = useContentProgram();
+  const { program: safety } = useSafetyProgram();
 
   async function onSignOut() {
     await unregisterPushToken();
@@ -151,6 +153,13 @@ export default function Account() {
             label={t("myEvents")}
             onPress={() => router.push("/(app)/tickets")}
           />
+          {safety.enabled ? (
+            <NavRow
+              icon="shield-checkmark-outline"
+              label={t("safety")}
+              onPress={() => router.push("/(app)/safety")}
+            />
+          ) : null}
           {/* Spotlight & Stories: your creator hub when you can post, and
               the Spotlights you saved (your profile's Saved segment). The
               feed itself is the Spotlight tab, so it is not repeated here. */}

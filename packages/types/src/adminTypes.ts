@@ -96,7 +96,9 @@ export type AdminPermissionKey =
   | "weekly.configure"
   | "spotlight.view"
   | "spotlight.campaigns.review"
-  | "spotlight.configure";
+  | "spotlight.configure"
+  | "safety.view"
+  | "safety.configure";
 
 export type AdminUserStatus = "active" | "disabled";
 

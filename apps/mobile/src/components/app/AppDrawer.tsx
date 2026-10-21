@@ -3,6 +3,7 @@ import { useContentProgram } from "@/features/content/useContentProgram";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
 import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
+import { useSafetyProgram } from "@/features/safety/useSafety";
 import { useWeeklyProgram } from "@/features/weekly/useWeekly";
 import {
   HELP_URL,
@@ -134,6 +135,7 @@ export function AppDrawer() {
   const isOrganizer = useIsOrganizer();
   const isPlaceOwner = useIsPlaceOwner();
   const { program: weekly } = useWeeklyProgram();
+  const { program: safety } = useSafetyProgram();
   const { program: content } = useContentProgram();
   const router = useRouter();
   const t = useTranslations("navigation");
@@ -500,6 +502,13 @@ export function AppDrawer() {
                   label={t("myBookings")}
                   onPress={() => go("/(app)/bookings")}
                 />
+                {safety.enabled ? (
+                  <Row
+                    icon="shield-checkmark-outline"
+                    label={t("safety")}
+                    onPress={() => go("/(app)/safety")}
+                  />
+                ) : null}
                 <Row
                   icon="notifications-outline"
                   label={t("notifications")}

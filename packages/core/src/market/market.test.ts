@@ -30,6 +30,7 @@ const ghana: MarketConfig = {
   launchedAt: "2026-01-01T00:00:00Z",
   coverageMode: "everywhere",
   browseFallback: { strategy: "choose", regionId: null, limit: 3 },
+  emergencyNumbers: [],
   version: 1,
   paymentProviders: [
     {

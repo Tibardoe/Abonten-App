@@ -4,8 +4,8 @@ purpose: Orientation to the ~175 tables — grouped by domain with the key relat
 audience: Engineering
 scope: supabase/migrations (source of truth: the baseline 20260810084821_remote_schema.sql plus dated migrations)
 status: Approved
-version: 1.2
-lastReviewed: 2026-10-18
+version: 1.3
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -58,6 +58,10 @@ Search reads generated `search_tsv` columns on `event`, `place`, `user_info`, `p
 ## Spotlight and Stories
 
 `content_program_setting` (one row); `follow` (organizer or place targets); `content_post` (one table for Spotlights and Stories: `kind`, `publisher_kind`, status, `moderation_state`, `expires_at`, counters, `search_tsv`) with `content_media` per item; engagement `content_like`, `content_reaction`, `content_save`, `content_share`, `content_comment`, `content_comment_like`, `content_not_interested`, `content_mute`, `content_story_seen`; telemetry `content_view`, `content_click` (hashed viewer key, `valid` flag) rolled up into `content_post_daily_stat`; promotions `content_promotion_pricing` and `content_audience_snapshot` (budget pricing and measured audience), `content_campaign`, `content_campaign_checkout`, `content_campaign_ledger` (append-only), `content_campaign_event`, `content_campaign_conversion`. `payment_attempt.content_campaign_checkout_id` is the fifth payment target. No client writes. See [spotlight-and-stories.md](spotlight-and-stories.md).
+
+## Abonten Safety
+
+`safety_program_setting` (one row, ships off); `safety_contact` (a person's trusted contacts, pending/accepted/declined, invite token hash) and `safety_contact_optout` (numbers that asked not to be texted, about one person or anyone); `safety_session` (SOS / check-in / share; one open per person; idempotent `client_request_id`; last position), `safety_location` (positions, deleted 7 days after the session closes), `safety_recipient` (who was told, view token hash, views, answer), `safety_message` (outbox of texts, emails and pushes, unique per recipient, purpose and channel), `safety_session_event` (timeline). `market.safety_config` holds each market's emergency numbers. All service-role only. See [safety.md](safety.md).
 
 ## Where to look
 

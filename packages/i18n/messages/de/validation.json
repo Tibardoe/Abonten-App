@@ -93,5 +93,15 @@
   "usernameMustBe30CharactersOr": "Der Nutzername darf höchstens 30 Zeichen lang sein.",
   "usernameMustBeAtLeast3": "Der Nutzername muss mindestens 3 Zeichen lang sein.",
   "writeAReplyFirst": "Schreibe zuerst eine Antwort.",
-  "writeSomethingFirst": "Schreibe zuerst etwas"
+  "writeSomethingFirst": "Schreibe zuerst etwas",
+  "chooseACountryCode": "Wähle eine Ländervorwahl",
+  "chooseAtLeast10Minutes": "Wähle mindestens 10 Minuten",
+  "chooseAtLeastOneContact": "Wähle mindestens eine Person",
+  "chooseAtMost12Hours": "Wähle höchstens 12 Stunden",
+  "enterYourContactSName": "Gib den Namen deiner Vertrauensperson ein",
+  "enterYourContactSPhoneNumber": "Gib die Telefonnummer deiner Vertrauensperson ein",
+  "invalidTime": "Ungültige Uhrzeit",
+  "keepTheNameUnder60Characters": "Der Name darf höchstens 60 Zeichen lang sein",
+  "keepTheNoteUnder280Characters": "Die Notiz darf höchstens 280 Zeichen lang sein",
+  "thisLinkIsNotValid": "Dieser Link ist ungültig"
 }

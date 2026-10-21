@@ -4,8 +4,8 @@ purpose: The complete list of environment variables by app (names only), where e
 audience: Engineering, founder
 scope: apps/web, apps/admin, apps/mobile, packages/services, CI, Supabase-side secrets
 status: Approved
-version: 1.12
-lastReviewed: 2026-10-18
+version: 1.13
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -59,6 +59,7 @@ complianceReviewRequired: no
 | `STORIES_KILL_SWITCH` | flag | Stories emergency stop: the Stories row, viewer and posting report it off | Stories follow `content_program_setting` |
 | `SPOTLIGHT_PROMOTIONS_KILL_SWITCH` | flag | Paid promotions emergency stop: no new promotions sold and no sponsored posts shown; organic Spotlight keeps working | follows `content_program_setting.spotlight_promotions_enabled` / `sponsored_delivery_enabled` |
 | `WEEKLY_KILL_SWITCH` | flag | Abonten Weekly emergency stop: pages show the fallback, teaser and links hidden, mobile API reports it off | Abonten Weekly follows `weekly_program_setting` |
+| `SAFETY_KILL_SWITCH` | flag | Abonten Safety emergency stop: no new SOS, check-in, share or contact on web or app (entry points hidden). Sessions already open keep working, contacts can still open their links, the dispatcher still escalates missed check-ins | Abonten Safety follows `safety_program_setting` |
 | `EXPO_ACCESS_TOKEN` | secret | Expo push API auth (optional) | pushes may be rate-limited |
 | `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_VERCEL_ENV`, `VERCEL*`, `NODE_ENV`, `CI` | platform | Tagging | — |
 | `TWILIO_*` (history) | — | The unused `twilio` SDK was removed 2026-09-19; since 2026-09-24 Twilio Verify is called over plain HTTPS with the three variables above (no SDK dependency) | — |

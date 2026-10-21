@@ -32,6 +32,7 @@ import {
   dialCodeFor,
   phoneCountry,
 } from "@abonten/core/phone/phone";
+import { parseEmergencyNumbers } from "@abonten/core/safety/emergencyNumbers";
 import type { DistanceUnit } from "@abonten/core/units/distance";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -155,6 +156,7 @@ function buildMarket(
       regionId: m.browse_fallback_region_id,
       limit: m.browse_fallback_limit,
     }),
+    emergencyNumbers: parseEmergencyNumbers(m.safety_config),
     version: m.version,
     paymentProviders: providers
       .filter((p) => p.country_code === m.country_code)

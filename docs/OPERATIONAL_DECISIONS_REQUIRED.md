@@ -4,8 +4,8 @@ purpose: The authoritative list of every business or policy question the code do
 audience: Founder, operations lead, finance, engineering
 scope: Product, operations, finance, support, security-operations and field-programme policy
 status: Approved
-version: 1.10
-lastReviewed: 2026-10-09
+version: 1.11
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -147,6 +147,19 @@ Built 2026-09-16, switched **off**. Design: [architecture/spotlight-and-stories.
 | S2 | Promotion pricing and reach-estimate assumptions | `content_promotion_pricing` (Admin › Spotlight & Stories › Settings) | Budget-based since 2026-09-16: GH₵ 20–5,000 (steps of GH₵ 5; suggested 20 / 50 / 100); runs of up to 3, 7 or 14 days; GH₵ 11 per 1,000 sponsored impressions; 1.5 impressions per person; ±20 % range; **no planning floor**, so nothing can be sold until real audience data exists or a floor is set; 30 % daily fill; 60 % max reach share; audience within 5 / 10 / 25 / 50 km assumed at 10 / 18 / 30 / 45 %; refuse under 50 % deliverable; pacing ×2; cash only. All are uncalibrated assumptions. A simulated week (`scripts/perf/promotion-delivery-simulation.sql`) showed estimates are conservative on reach but do not allow for other promotions running at the same time (a short run delivered 72 % against a forecast of 89 %). | Set a conservative planning floor for the staff/beta phase; after the first month compare estimated reach with delivered reach and impressions per cedi with event and place featuring, then adjust the cost per 1,000 and the floors. | Open |
 | S3 | Unused promotion budget: cancellations and under-delivery | Admin › Spotlight & Stories › promotion page; `content_campaign_refundable_minor`; incident `content_campaign.unspent_unrefunded`; advertiser copy `PROMOTION_BILLING_NOTE` | Rejected promotions refund in full automatically. Spend is recognised only per delivered impression. A cancelled promotion, or one whose run ended before its budget was delivered, shows the unused amount; it is refunded only when staff choose to; a completed one unrefunded after 7 days opens a medium incident. Advertisers are told only that the unused amount is shown on the promotion page — no refund or credit is promised. | Refund unused budget automatically when a run ends under-delivered, and for every cancellation except one for a content-policy breach; then state that in the promotion terms (legal G4) and the advertiser copy. | Open |
 | S4 | Limits, ranking weights and retention | `spotlight_posts_per_day` (20), `stories_per_day` (30), `comments_per_hour` (60), `follows_per_hour` (100), ranking weights, sponsored share 20 % and gap 4, `expired_story_retention_days` (30), `deleted_post_retention_days` (30), `raw_view_retention_days` (90) | Working defaults from the settings row. | Keep until staff use shows a reason to change; review retention with the privacy register. | Open |
+
+## Abonten Safety
+
+Built 2026-10-21, switched **off**. Design: [architecture/safety.md](architecture/safety.md). Operator handbook: [admin/safety.md](admin/safety.md). Legal items I1–I5.
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| J1 | When to open Safety, and to whom | `safety_program_setting.enabled` / `audience` / `beta_user_ids`; `SAFETY_KILL_SWITCH` | Off, audience `staff`. | Staff first (one SOS, one lapsed check-in, one share, read on a contact's phone in Ghana), then the pilot testers as beta, then Everyone once I1–I3 are Decided, the privacy policy and store answers are updated and the help page is published. | Open |
+| J2 | How long positions and sessions are kept | `location_retention_days`, `session_retention_days`; `safety-housekeeping` | Positions 7 days after a session closes; sessions, who was told, the outbox and the timeline 180 days. | Keep until counsel answers I3. | Open |
+| J3 | The emergency numbers shown for Ghana | `market.safety_config` (Admin › Markets) | 112 (all emergencies), police 191, ambulance 193, fire 192, from the Government of Canada's travel advice for Ghana (March 2026). | Confirm with the Ghana Police Service, National Ambulance Service and Ghana National Fire Service before Everyone; keep 112 first whatever else changes. | Open |
+| J4 | Safety's limits | `max_contacts`, `alerts_with_sms_per_day`, `invites_per_day`, `check_in_grace_minutes`, `alert_hours`, `share_max_hours` | 5 contacts; texts for 6 alerts a day (an alert is never refused, only its texts); 10 invites a day; 5-minute grace; alerts open 24 hours; shares at most 12 hours. | Keep for the pilot; look at Admin › Safety (failed texts, mistakes) before Everyone. | Open |
+| J5 | Telling the event team | `event_team_alerts_enabled` | Off. | Only after I4, and after the organizers of the first events agree to receive alerts and say who on their team will act on them. | Open |
+| J6 | Background location and the next native build | `apps/mobile/app.json` (expo-location plugin), a future expo-task-manager task | Foreground only: the app sends positions while it is open. The iOS location sentence does not name Safety yet. | In the next native build (1.1): add "Always" location for an open session only, a foreground service on Android, and a location sentence that names Safety; tell App Review why (guideline 2.5.4). | Open |
 
 ## Product
 

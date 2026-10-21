@@ -18,6 +18,7 @@ import {
   userPlaceRoleQuery,
 } from "@abonten/services/profile/userRolesQuery";
 import { getRewardsProgramCore } from "@abonten/services/rewards/rewardsProgramQuery";
+import { getSafetyProgramCore } from "@abonten/services/safety/safetyProgram";
 import { getDiscoveryProgramCore } from "@abonten/services/search/discoveryProgram";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { getWeeklyProgramCore } from "@abonten/services/weekly/weeklyProgram";
@@ -32,6 +33,10 @@ import {
 } from "@abonten/types/discoveryType";
 import type { FieldOpsMe } from "@abonten/types/fieldOps";
 import type { RewardsProgram } from "@abonten/types/rewards";
+import {
+  DISABLED_SAFETY_PROGRAM,
+  type SafetyProgram,
+} from "@abonten/types/safetyType";
 import {
   DISABLED_WEEKLY_PROGRAM,
   type WeeklyProgram,
@@ -54,6 +59,7 @@ export type ShellBootstrap = {
   contentProgram: ContentProgram | null;
   discoveryProgram: DiscoveryProgram;
   rewardsProgram: RewardsProgram | undefined;
+  safetyProgram: SafetyProgram;
   /** Undefined when it could not be worked out: the hook asks again itself. */
   marketContext: MarketContextResult | undefined;
   fieldOps: FieldOpsMe | null;
@@ -147,6 +153,7 @@ export default withActionLocale(async function getShellBootstrap(
     contentProgram,
     discoveryProgram,
     rewardsProgram,
+    safetyProgram,
     marketContext,
     fieldOps,
     unreadMessages,
@@ -179,6 +186,14 @@ export default withActionLocale(async function getShellBootstrap(
       async () => (await getRewardsProgramCore(supabase)).data,
       undefined,
     ),
+    userId
+      ? part(
+          "safetyProgram",
+          degraded,
+          async () => (await getSafetyProgramCore(svc, userId)).data,
+          DISABLED_SAFETY_PROGRAM,
+        )
+      : DISABLED_SAFETY_PROGRAM,
     part<MarketContextResult | undefined>(
       "marketContext",
       degraded,
@@ -268,6 +283,7 @@ export default withActionLocale(async function getShellBootstrap(
       contentProgram,
       discoveryProgram,
       rewardsProgram,
+      safetyProgram,
       marketContext,
       fieldOps,
       unreadMessages,

@@ -26,7 +26,8 @@ export type NotificationEntityKind =
   | "story"
   | "follow"
   | "content_campaign"
-  | "area";
+  | "area"
+  | "safety";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -58,6 +59,14 @@ export type NotificationData = {
   lat?: number;
   lng?: number;
   radiusKm?: number;
+  /**
+   * With kind "safety": "person" opens the reader's own Safety screen,
+   * "watcher" opens the alert they were told about (safetyToken is the
+   * reader's own link to it).
+   */
+  safetyRole?: "person" | "watcher";
+  safetyToken?: string;
+  sessionId?: string;
 };
 
 export type NotificationType = {
@@ -85,4 +94,6 @@ export type CreateNotificationInput = {
   data?: NotificationData;
   imagePublicId?: string | null;
   imageVersion?: string | null;
+  /** The push goes out at high priority (Abonten Safety alerts). */
+  urgent?: boolean;
 };

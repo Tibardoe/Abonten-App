@@ -135,6 +135,12 @@ const ITEMS: Item[] = [
     permission: "weekly.view",
   },
   {
+    href: "/safety",
+    label: "Safety",
+    icon: ShieldAlert,
+    permission: "safety.view",
+  },
+  {
     href: "/markets",
     label: "Markets",
     icon: Globe,

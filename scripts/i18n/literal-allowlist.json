@@ -376,6 +376,61 @@
       "file": "packages/services/src/fieldOps/shared/timelineNotes.ts",
       "text": "Started",
       "reason": "The fixed form a system timeline entry is stored in; wordTimelineNote says it in the reader's language."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "person not found",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "recipient no longer exists",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "no phone",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "not a text",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "no email",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "no email sender in this request",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "not an email",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/safety/safetyNotifyCore.ts",
+      "text": "no account to notify",
+      "reason": "An outbox status note for engineers (safety_message.last_error, Admin › Safety), never shown to a person."
+    },
+    {
+      "file": "packages/services/src/sms/hubtelSms.ts",
+      "text": "Hubtel SMS credentials or sender ID are not configured.",
+      "reason": "A provider error for logs and the Safety outbox, never shown to a person."
+    },
+    {
+      "file": "packages/services/src/sms/hubtelSms.ts",
+      "text": "Hubtel SMS send did not complete: {}",
+      "reason": "A provider error for logs and the Safety outbox, never shown to a person."
+    },
+    {
+      "file": "packages/services/src/sms/hubtelSms.ts",
+      "text": "no readable body",
+      "reason": "A provider error for logs and the Safety outbox, never shown to a person."
     }
   ]
 }

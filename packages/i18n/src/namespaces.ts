@@ -28,6 +28,7 @@ export const I18N_NAMESPACES = [
   "profile",
   "reviews",
   "rewards",
+  "safety",
   "search",
   "settings",
   "spotlight",
