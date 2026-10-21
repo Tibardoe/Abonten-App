@@ -4,8 +4,8 @@ purpose: One row per feature — application, role, entry point, preconditions, 
 audience: Engineering, product, QA, documentation maintainers
 scope: All shipped functionality as of 2026-09-12 (web, mobile, admin, backend)
 status: Approved
-version: 1.5
-lastReviewed: 2026-10-18
+version: 1.6
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -53,7 +53,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Paid checkout | W A | Cu | Buy tickets | validate → `create_ticket_checkout` (30-min hold, limits 50/100, promo, event capacity shared by types without a quantity) | `ticket_checkout`, `ticket_type`, `promo_code_usage` | `checkout/validateCheckoutCore`, `promoUsage`, `ticketInventory`; action `validateCheckout`; API `checkout/validate` | — | sold out, existing checkout, rate limit 30/min | Finance › Transactions | finance runbook |
 | Payment (card/MoMo/saved) | W A | Cu | Pay | attempt → Paystack → finalize (client + webhook) → `issue_tickets_for_checkout` → fee | `payment_attempt`, `transaction`, `ticket`, `organizer_ledger_entry`, `platform_fee_entry` | `payments/*`, `apps/web/src/utils/generateTicket.ts`; actions `createMultiCheckoutPaymentAttempt`, `verifyPaystackPayment`, `submitPaystackChargeOtp`, `retryPaymentFulfillment`; API `checkout/attempt`, `payments/*` | Paystack; email w/ PDF; notification + push | declined; stuck → reaper/retry | refund (step-up) | finance runbook |
 | Credit tender | W A | Cu | checkout (when live) | reserve → capture / release | `credit_reservation` | `rewards/ticketCreditCore`, `promotionCreditCore`; API `checkout/promotion-credit-quote` | — | stale reservations | Rewards module | finance credit-tender |
-| Wallet (saved methods) | W A | Cu | Wallet | card: GHS 1 verification → authorization code; MoMo display | `payment_method` | `payments/paymentMethodCore`, `cardVerificationCore`; API `payment-methods/*` | Paystack | — | — | help payments |
+| Wallet (saved methods) | W A | Cu | Wallet | card: GHS 1 verification → authorization code; MoMo: the number is confirmed by a texted code (purpose `wallet`) unless it is the account's verified phone | `payment_method`, `phone_otp_state` | `payments/paymentMethodCore`, `cardVerificationCore`, `mobileMoneyNumberCheck`; action `requestMobileMoneyNumberCode`; API `payment-methods/*` (`momo-code`) | Paystack; SMS | SMS limits (60 s, 5 an hour, 10 a day per number) | — | help payments |
 | Tickets, QR, PDF | W A | Cu | My Tickets | — | `ticket` | actions `getTickets`, `getTicketsByIds`; `TicketModal`, `ticketReceiptHtml` | email | — | tickets.view | help your-tickets |
 | Cancel ticket / refund | W A | Cu | ticket | `cancelUserTicketCore` → `issueRefundCore` (fee retained) | `ticket`, `transaction`, `organizer_ledger_entry`, `platform_fee_entry` | actions `cancelUserTicket`, `issueRefund`, `getUserTicketRefunds`; API `tickets/cancel` | Paystack refund; webhook | refund failed → retry | Finance › Refunds | finance refunds |
 | Transactions history | W A | Cu | Transactions | RPCs `get_user_transaction_summary/history` | `ticket_checkout`, `subscription_checkout` | actions `getUserTransaction*` | — | — | — | help payments |
@@ -69,7 +69,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Promotion (featuring) | W A | Promote | tier → checkout → Paystack → activate | `event_promotion_tier/checkout`, `event_promotion` | `promotions/*`, `utils/activateEventPromotion.ts`; API `checkout/promotion-attempt` | — | Finance | help promoting |
 | Attendees + check-in | W A | Insights / Attendees | list; QR scan (A) | `ticket`, `attendance`; `get_event_attendee_contacts` | `tickets/checkInTicketCore`; action `checkInTicket`; API `organizer/tickets/[id]/check-in` | — | — | help event-day |
 | Insights / dashboard | W A | Dashboard | RPCs `get_organizer_*`, event analytics | many | actions `getOrganizer*`, `getEvent*Analytics`; API `organizer/dashboard`, `events/[id]/analytics` | — | Analytics | help selling |
-| Finance, payout accounts, payouts | W A | Finances | ledger RPCs; `request_organizer_payout` | `organizer_ledger_entry`, `payout`, `payout_account` | `organizer/*`; actions `requestOrganizerPayout`, `addPayoutAccount`…; API `organizer/payout*` | payout completed notice | Finance › Payouts (step-up) | finance settlement |
+| Finance, payout accounts, payouts | W A | Finances | ledger RPCs; `request_organizer_payout`; a mobile money payout number is confirmed like a wallet's | `organizer_ledger_entry`, `payout`, `payout_account` | `organizer/*`; actions `requestOrganizerPayout`, `addPayoutAccount`, `requestMobileMoneyNumberCode`…; API `organizer/payout*`, `payment-methods/momo-code` | payout completed notice | Finance › Payouts (step-up) | finance settlement |
 | Review replies | W A | event › Reviews | one response | `event_review.organizer_response` | `reviews/reviewResponseCore` | — | Content › clear response | help |
 
 ## Places

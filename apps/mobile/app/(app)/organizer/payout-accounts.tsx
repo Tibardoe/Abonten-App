@@ -6,7 +6,9 @@ import {
   useRemovePayoutAccount,
   useSetDefaultPayoutAccount,
 } from "@/features/organizer/usePayouts";
+import { MomoCodeStep } from "@/features/wallet/MomoCodeStep";
 import { useMomoNetworks } from "@/features/wallet/usePaymentMethods";
+import { api } from "@/lib/api";
 import { useQueryView } from "@/lib/useQueryView";
 import type {
   AddPayoutAccountBody,
@@ -40,6 +42,8 @@ function walletPhoneLooksValid(raw: string, dialCode: string | null): boolean {
 // Same "choose type -> form -> success" bottom-sheet shell as the Wallet
 // screen (and the web AddPayoutAccountPopup), applied to organizer payout
 // destinations. Reuses the existing useAddPayoutAccount API + validation.
+// A mobile money number gets the code step first (earnings are sent to it),
+// unless it is the organizer's own verified phone.
 type SheetStep = "closed" | "choose" | "mobile_money" | "bank";
 
 function accountTitle(
@@ -78,6 +82,14 @@ export default function PayoutAccountsScreen() {
   const [phone, setPhone] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  // The mobile money account waiting for the code texted to its number.
+  const [pending, setPending] = useState<{
+    body: AddPayoutAccountBody;
+    phoneE164: string;
+    codeLength: number;
+  } | null>(null);
+  const [codeNote, setCodeNote] = useState<string | null>(null);
+  const [requesting, setRequesting] = useState(false);
 
   const accounts = data?.status === 200 ? (data.data ?? []) : [];
   const networkList =
@@ -92,6 +104,61 @@ export default function PayoutAccountsScreen() {
     setPhone("");
     setBankName("");
     setAccountNumber("");
+    setPending(null);
+    setCodeNote(null);
+  }
+
+  async function save(body: AddPayoutAccountBody, code?: string) {
+    setFormError(null);
+    try {
+      const res = await add.mutateAsync(
+        code && body.accountType === "mobile_money" ? { ...body, code } : body,
+      );
+      if (res.status === 200) {
+        setPending(null);
+        setSuccess(
+          body.accountType === "mobile_money"
+            ? t("mobileMoneyPayoutAccountAdded")
+            : t("bankPayoutAccountAdded"),
+        );
+        return;
+      }
+      setFormError(res.message ?? t("weCouldnTAddThatAccount"));
+    } catch {
+      setFormError(t("weCouldnTAddThatAccount"));
+    }
+  }
+
+  // Texts a code to the payout number; the organizer's own verified phone
+  // needs none and is saved at once (payments/mobileMoneyNumberCheck).
+  async function requestCode(body: AddPayoutAccountBody, resend: boolean) {
+    if (body.accountType !== "mobile_money") return;
+    setFormError(null);
+    setRequesting(true);
+    try {
+      const res = await api.paymentMethods.momoCode({
+        phone: body.phone,
+        use: "payout",
+      });
+      if (res.status !== 200 || !res.data) {
+        setFormError(res.message ?? t("weCouldnTAddThatAccount"));
+        return;
+      }
+      if (!res.data.needsCode) {
+        await save(body);
+        return;
+      }
+      setCodeNote(resend ? t("aNewCodeIsOnItsWay") : null);
+      setPending({
+        body,
+        phoneE164: res.data.phoneE164,
+        codeLength: res.data.codeLength,
+      });
+    } catch {
+      setFormError(t("weCouldnTAddThatAccount"));
+    } finally {
+      setRequesting(false);
+    }
   }
 
   async function onAdd() {
@@ -138,16 +205,8 @@ export default function PayoutAccountsScreen() {
       return;
     }
 
-    const res = await add.mutateAsync(body);
-    if (res.status === 200) {
-      setSuccess(
-        step === "mobile_money"
-          ? t("mobileMoneyPayoutAccountAdded")
-          : t("bankPayoutAccountAdded"),
-      );
-      return;
-    }
-    setFormError(res.message ?? t("weCouldnTAddThatAccount"));
+    if (body.accountType === "mobile_money") await requestCode(body, false);
+    else await save(body);
   }
 
   function confirmRemove(id: string) {
@@ -277,7 +336,9 @@ export default function PayoutAccountsScreen() {
           !success && (step === "mobile_money" || step === "bank")
             ? () => {
                 setFormError(null);
-                setStep("choose");
+                // From the code, back to the number.
+                if (pending) setPending(null);
+                else setStep("choose");
               }
             : undefined
         }
@@ -308,6 +369,21 @@ export default function PayoutAccountsScreen() {
               onPress={() => setStep("bank")}
             />
           </View>
+        ) : step === "mobile_money" && pending ? (
+          <MomoCodeStep
+            phoneE164={pending.phoneE164}
+            codeLength={pending.codeLength}
+            submitTitle={t("saveAccount")}
+            busy={add.isPending || requesting}
+            error={formError}
+            note={codeNote}
+            onSubmit={(code) => void save(pending.body, code)}
+            onResend={() => void requestCode(pending.body, true)}
+            onChangeNumber={() => {
+              setFormError(null);
+              setPending(null);
+            }}
+          />
         ) : (
           <View className="gap-3">
             <AppText variant="label">{t("accountHolderName")}</AppText>
@@ -356,6 +432,9 @@ export default function PayoutAccountsScreen() {
                   keyboardType="phone-pad"
                   autoCapitalize="none"
                 />
+                <AppText variant="small" tone="muted">
+                  {t("weLlTextACodeToThis")}
+                </AppText>
               </>
             ) : (
               <>
@@ -383,9 +462,12 @@ export default function PayoutAccountsScreen() {
             ) : null}
 
             <Button
-              title={t("saveAccount")}
+              title={
+                step === "mobile_money" ? t("continueText") : t("saveAccount")
+              }
               fullWidth
-              loading={add.isPending}
+              loading={add.isPending || requesting}
+              disabled={add.isPending || requesting}
               onPress={onAdd}
             />
           </View>

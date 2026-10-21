@@ -2,7 +2,7 @@
 title: Finances, versements et règlement
 summary: Soldes en attente et disponibles, la règle de règlement à 48 heures, ajouter un compte de versement, demander un versement et lire votre registre.
 order: 5
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -30,7 +30,7 @@ Un événement est **réglé 48 heures après sa fin** (après sa dernière date
 
 ## Comptes de versement
 
-Ajoutez une ou plusieurs destinations dans **Comptes de versement** : **mobile money** (réseau et numéro) ou **banque** (banque et numéro de compte), avec le nom du titulaire. Définissez-en une par défaut. Les comptes de versement sont distincts du portefeuille qui vous sert à acheter des billets.
+Ajoutez une ou plusieurs destinations dans **Comptes de versement** : **mobile money** (réseau et numéro) ou **banque** (banque et numéro de compte), avec le nom du titulaire. Définissez-en une par défaut. Vos gains sont envoyés à un numéro mobile money : sauf s'il s'agit du numéro vérifié de votre compte, un code y est d'abord envoyé par SMS et le compte est enregistré une fois le code saisi. Les comptes de versement sont distincts du portefeuille qui vous sert à acheter des billets.
 
 ## Demander un versement
 

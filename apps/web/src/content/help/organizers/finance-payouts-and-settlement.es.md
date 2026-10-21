@@ -2,7 +2,7 @@
 title: Finanzas, retiros y liquidación
 summary: Saldo pendiente y disponible, la regla de liquidación de 48 horas, añadir una cuenta de cobro, pedir un retiro y leer tu registro.
 order: 5
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -30,7 +30,7 @@ Un evento **se liquida 48 horas después de terminar** (después de su última f
 
 ## Cuentas de cobro
 
-Añade uno o varios destinos en **Cuentas de cobro**: **dinero móvil** (operador y número) o **banco** (banco y número de cuenta), con el nombre del titular. Marca uno como predeterminado. Las cuentas de cobro son independientes del monedero que usas para comprar entradas.
+Añade uno o varios destinos en **Cuentas de cobro**: **dinero móvil** (operador y número) o **banco** (banco y número de cuenta), con el nombre del titular. Marca uno como predeterminado. Tus ganancias se envían a un número de dinero móvil, así que, salvo que sea el número verificado de tu cuenta, primero se le envía un código por SMS y la cuenta se guarda cuando lo introduces. Las cuentas de cobro son independientes del monedero que usas para comprar entradas.
 
 ## Pedir un retiro
 

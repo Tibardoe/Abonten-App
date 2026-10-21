@@ -124,5 +124,8 @@
   "yourWithdrawalHistoryAndStatus": "Tu historial de retiros y su estado.",
   "yourWithdrawalWillMoveToProcessing": "Tu retiro pasará a «Procesando» mientras se revisa — no se marcará como completado hasta que se pague realmente.",
   "couldnTLoadYourBalance": "No se pudo cargar tu saldo.",
-  "couldnTLoadYourPayouts": "No se pudieron cargar tus retiros."
+  "couldnTLoadYourPayouts": "No se pudieron cargar tus retiros.",
+  "sending": "Enviando…",
+  "aNewCodeIsOnItsWay": "Un nuevo código va de camino.",
+  "weLlTextACodeToThis": "Enviaremos un código por SMS a este número para comprobar que es correcto. El número verificado de tu cuenta no lo necesita."
 }

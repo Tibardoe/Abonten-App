@@ -568,6 +568,24 @@ export type AddMomoWalletBody = {
   networkName: string;
   phone: string;
   label?: string;
+  /** The code texted by momoCode(); not needed for the caller's own verified phone. */
+  code?: string;
+};
+
+// First step of saving a mobile money wallet or payout account.
+export type RequestMomoCodeBody = {
+  phone: string;
+  use: "wallet" | "payout";
+  /** A payout account's market; a wallet is always the home market's. */
+  countryCode?: string;
+};
+
+export type MomoCodeData = {
+  phoneE164: string;
+  /** False when the number is the caller's own verified phone: save at once. */
+  needsCode: boolean;
+  /** Digits in the texted code (0 when none was sent). */
+  codeLength: number;
 };
 
 // initCardVerificationCore result data. Open `authorizationUrl` in a
@@ -1519,6 +1537,8 @@ export type AddMobileMoneyPayoutBody = {
   networkCode: string;
   networkName: string;
   phone: string;
+  /** The code texted by paymentMethods.momoCode({ use: "payout" }). */
+  code?: string;
 };
 
 export type AddBankPayoutBody = {
@@ -1534,7 +1554,7 @@ export type AddPayoutAccountBody = AddMobileMoneyPayoutBody | AddBankPayoutBody;
 
 export type AddPayoutAccountResult =
   | { status: 200; data: PayoutAccountRow }
-  | { status: 400 | 401 | 500; message: string };
+  | { status: 400 | 401 | 403 | 429 | 500; message: string };
 
 export type MutatePayoutAccountResult = {
   status: 200 | 400 | 401 | 404 | 500;

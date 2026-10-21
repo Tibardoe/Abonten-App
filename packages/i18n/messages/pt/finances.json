@@ -124,5 +124,8 @@
   "yourWithdrawalHistoryAndStatus": "O seu histórico de levantamentos e o respetivo estado.",
   "yourWithdrawalWillMoveToProcessing": "O seu levantamento passa a «Em processamento» enquanto é revisto — só é marcado como concluído quando for efetivamente pago.",
   "couldnTLoadYourBalance": "Não foi possível carregar o seu saldo.",
-  "couldnTLoadYourPayouts": "Não foi possível carregar os seus levantamentos."
+  "couldnTLoadYourPayouts": "Não foi possível carregar os seus levantamentos.",
+  "sending": "A enviar…",
+  "aNewCodeIsOnItsWay": "Um novo código está a caminho.",
+  "weLlTextACodeToThis": "Vamos enviar um código por SMS para este número para confirmar que está correto. O número verificado da sua conta não precisa de código."
 }

@@ -19,8 +19,14 @@ import { tr } from "../i18n/requestLocale";
 import type { OtpSenderCode } from "./otpProviders/types";
 
 // "fieldops-owner": the business owner's consent code in a Field Ops
-// onboarding (migration fieldops_onboarding widened the CHECK).
-export type PhoneOtpPurpose = "sign-in" | "phone-update" | "fieldops-owner";
+// onboarding (migration fieldops_onboarding widened the CHECK). "wallet":
+// confirming a mobile money number before it is saved
+// (payments/mobileMoneyNumberCheck, migration mobile_money_number_confirmation).
+export type PhoneOtpPurpose =
+  | "sign-in"
+  | "phone-update"
+  | "fieldops-owner"
+  | "wallet";
 
 export type PendingOtp = {
   provider: OtpSenderCode;

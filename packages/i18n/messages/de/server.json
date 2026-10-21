@@ -1235,5 +1235,6 @@
   "yourRefundWasStartedButWe": "Deine Erstattung wurde gestartet, aber wir konnten dein Guthaben noch nicht zurückbuchen. Bitte versuche es erneut oder wende dich an den Support.",
   "yourRoleCanTDoThis": "Deine Rolle darf das nicht",
   "yourSpotlight": "Dein Spotlight",
-  "thatPlaceCouldNotBeFound": "Dieser Ort wurde nicht gefunden. Wähle einen anderen Vorschlag."
+  "thatPlaceCouldNotBeFound": "Dieser Ort wurde nicht gefunden. Wähle einen anderen Vorschlag.",
+  "confirmThisNumberWithA": "Bestätige diese Nummer mit dem Code, den wir per SMS an sie senden. Wenn du nicht siehst, wo du den Code eingeben kannst, schließe die App und öffne sie erneut, um sie zu aktualisieren."
 }

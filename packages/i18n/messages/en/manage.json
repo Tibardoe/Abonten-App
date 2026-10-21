@@ -594,5 +594,8 @@
   "theReviews": "the reviews",
   "theBookings": "the bookings",
   "theCheckInCode": "the check-in code",
-  "theUpcomingEvents": "the upcoming events"
+  "theUpcomingEvents": "the upcoming events",
+  "continueText": "Continue",
+  "aNewCodeIsOnItsWay": "A new code is on its way.",
+  "weLlTextACodeToThis": "We'll text a code to this number to check it's right. The verified phone number on your account doesn't need one."
 }

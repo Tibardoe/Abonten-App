@@ -906,5 +906,6 @@
   },
   "featured": "Featured",
   "paidPlacement": "Paid placement",
-  "changeLocationNow": "Change location (now {location})"
+  "changeLocationNow": "Change location (now {location})",
+  "couldNotGetDirections": "Could not get directions."
 }

@@ -4,8 +4,8 @@ purpose: How organizer earnings are recorded, when they become available, how pa
 audience: Finance admins, operations
 scope: organizer_ledger_entry, payout, payout_account, admin_settle_payout, admin_create_payout, Paystack Transfers (flag off)
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-25
+version: 1.2
+lastReviewed: 2026-10-21
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -23,7 +23,7 @@ complianceReviewRequired: yes
 
 ## Payout accounts
 
-`payout_account` (`account_type` mobile_money | bank, `account_holder_name`, `provider`, `account_number`, one default active per organizer). Separate from `receiving_account` (legacy per-event field) and from the buyer's `payment_method` wallet. Full account numbers are visible in the admin console only with `users.view_pii`; elsewhere masked (`maskAccountNumber`).
+`payout_account` (`account_type` mobile_money | bank, `account_holder_name`, `provider`, `account_number`, one default active per organizer). Separate from `receiving_account` (legacy per-event field) and from the buyer's `payment_method` wallet. Since 2026-10-21 a mobile money number is saved only once it is confirmed: the organizer's own verified phone, or the code texted to the number (`payments/mobileMoneyNumberCheck`, the same check as a buyer's wallet), so a mistyped number cannot receive an organizer's earnings. Full account numbers are visible in the admin console only with `users.view_pii`; elsewhere masked (`maskAccountNumber`).
 
 ## Payout request (organizer)
 

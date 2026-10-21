@@ -2,7 +2,7 @@
 title: Finding events and places
 summary: Explore what's on near you, search, filter, use the map, and save the things you like.
 order: 2
-lastUpdated: 2026-10-04
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -52,6 +52,10 @@ Multi-date events show each occurrence; you choose the date when you buy.
 ## Place pages
 
 A place page shows photos, verified/claimed badges, opening hours, services, contact options (call, WhatsApp, website, directions), reviews and upcoming events at that place. You can **save** the place, **share** it, **request a booking**, **message the place**, and **report** it. If you own the business and the listing is not yours, use **claim this place** — see [Claiming and verifying a place](/help/place-owners/claiming-and-verifying-a-place).
+
+## Getting there
+
+In the app, **Directions** on an event, a place or a ticket lets you choose Google Maps, Apple Maps (iPhone) or Waze; the app you used last is listed first. To book a ride or meet a friend, **Share location** sends the name, address and a map pin through WhatsApp, SMS or any other app, and **Copy address** lets you paste it into Bolt, Uber or Yango. On the website, directions open in Google Maps.
 
 ## Saving and sharing
 

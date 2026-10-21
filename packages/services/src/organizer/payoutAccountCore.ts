@@ -12,6 +12,7 @@ import { addPayoutAccountSchema } from "@abonten/validation/payoutAccountSchema"
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
 import { getMarketOrDefault } from "../markets/marketConfig";
+import { confirmMobileMoneyNumber } from "../payments/mobileMoneyNumberCheck";
 import {
   isAccountRestricted,
   restrictedAccountMessage,
@@ -33,7 +34,7 @@ export type ListPayoutAccountsResult =
   | { status: 200; data: PayoutAccountRow[] };
 
 export type AddPayoutAccountResult =
-  | { status: 400 | 401 | 403 | 500; message: string }
+  | { status: 400 | 401 | 403 | 429 | 500; message: string }
   | { status: 200; data: PayoutAccountRow };
 
 export type MutatePayoutAccountResult = {
@@ -181,6 +182,16 @@ export async function addPayoutAccountCore(
     const phone = parsePhoneWithDialCode(market.dialCode, data.phone);
     if (!phone.ok) {
       return { status: 400, message: phoneErrorMessage(coreT(), phone.error) };
+    }
+    // Earnings are sent to this number: it is the organizer's own verified
+    // phone, or they typed the code texted to it (mobileMoneyNumberCheck).
+    const confirmed = await confirmMobileMoneyNumber(
+      userId,
+      phone.e164,
+      data.code,
+    );
+    if (!confirmed.ok) {
+      return { status: confirmed.status, message: confirmed.message };
     }
     accountNumber = phone.e164;
   } else {

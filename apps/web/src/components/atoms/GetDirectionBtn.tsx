@@ -1,7 +1,6 @@
 "use client";
 
 import { useToast } from "@/hooks/useToast";
-import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { logger } from "@abonten/core/logger";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import { useTranslations } from "next-intl";
@@ -11,25 +10,24 @@ type EventDetailsType = {
   location: string;
 };
 
+// Google Maps starts the route from where the visitor is. Asking the
+// browser for that position first only made directions fail for anyone who
+// had refused location, so the destination alone is sent.
 export default function GetDirectionBtn({ location }: EventDetailsType) {
   const t = useTranslations("common");
   const toast = useToast();
 
-  const handleGetDirection = async () => {
+  const handleGetDirection = () => {
     try {
-      const { coords } = await getCurrentPosition();
-
-      const { latitude, longitude } = coords;
-
       const { eventLat, eventLng } = parseWKBHex(location);
 
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${eventLat},${eventLng}&travelmode=driving`;
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${eventLat},${eventLng}`;
 
-      window.open(url, "_blank");
+      window.open(url, "_blank", "noopener");
     } catch (error) {
       logger.error("Failed to get directions:", error);
 
-      toast.error(t("couldNotGetDirectionsPleaseEnable"));
+      toast.error(t("couldNotGetDirections"));
     }
   };
 

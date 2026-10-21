@@ -124,5 +124,8 @@
   "yourWithdrawalHistoryAndStatus": "Your withdrawal history and status.",
   "yourWithdrawalWillMoveToProcessing": "Your withdrawal will move to \"Processing\" while it's reviewed — it won't be marked complete until it's actually paid out.",
   "couldnTLoadYourBalance": "Couldn't load your balance.",
-  "couldnTLoadYourPayouts": "Couldn't load your payouts."
+  "couldnTLoadYourPayouts": "Couldn't load your payouts.",
+  "sending": "Sending…",
+  "aNewCodeIsOnItsWay": "A new code is on its way.",
+  "weLlTextACodeToThis": "We'll text a code to this number to check it's right. The verified phone number on your account doesn't need one."
 }

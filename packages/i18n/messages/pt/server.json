@@ -1235,5 +1235,6 @@
   "yourRefundWasStartedButWe": "O seu reembolso foi iniciado, mas ainda não conseguimos devolver o seu crédito. Tente novamente ou contacte o apoio.",
   "yourRoleCanTDoThis": "A sua função não pode fazer isto",
   "yourSpotlight": "O seu Spotlight",
-  "thatPlaceCouldNotBeFound": "Não foi possível encontrar esse local. Escolha outra sugestão."
+  "thatPlaceCouldNotBeFound": "Não foi possível encontrar esse local. Escolha outra sugestão.",
+  "confirmThisNumberWithA": "Confirme este número com o código que lhe enviamos por SMS. Se não vir onde introduzir o código, feche a aplicação e volte a abri-la para a atualizar."
 }

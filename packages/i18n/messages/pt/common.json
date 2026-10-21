@@ -906,5 +906,6 @@
   },
   "featured": "Em destaque",
   "paidPlacement": "Posicionamento pago",
-  "changeLocationNow": "Mudar localização (atualmente {location})"
+  "changeLocationNow": "Mudar localização (atualmente {location})",
+  "couldNotGetDirections": "Não foi possível obter o percurso."
 }

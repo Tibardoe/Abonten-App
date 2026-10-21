@@ -2,7 +2,7 @@
 title: Pagamentos e métodos de pagamento
 summary: Cartões e mobile money, guardar um método de pagamento na sua carteira e o seu histórico de transações.
 order: 4
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -22,7 +22,7 @@ Os pagamentos no Abonten são processados pela **Paystack**. Os preços estão e
 **Website:** menu lateral › Carteira. **Aplicação:** Conta › Carteira.
 
 - **Adicionar um cartão.** A Paystack verifica o cartão com uma **cobrança de 1,00 GHS que é reembolsada de imediato** e dá ao Abonten uma referência reutilizável. O Abonten guarda apenas essa referência, mais a marca, os quatro últimos dígitos e a validade, para que reconheça o cartão.
-- **Adicionar uma carteira de mobile money.** Fica guardada com os dados de apresentação (rede, número, nome). Continua a confirmar cada pagamento no telemóvel.
+- **Adicionar uma carteira de mobile money.** Fica guardada com os dados de apresentação (rede, número, nome). Exceto se for o número verificado da sua conta, é primeiro enviado um código por SMS para esse número para confirmar que está correto; introduza-o para guardar a carteira. Continua a confirmar cada pagamento no telemóvel.
 - Defina um método como **predefinido**, ou **remova** um método quando quiser. Remover um método não afeta pagamentos nem reembolsos anteriores.
 
 A carteira é independente do pagamento: pode gerir os seus métodos sem ter nada no cesto.

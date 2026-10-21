@@ -906,5 +906,6 @@
   },
   "featured": "À la une",
   "paidPlacement": "Emplacement payant",
-  "changeLocationNow": "Changer de lieu (actuellement {location})"
+  "changeLocationNow": "Changer de lieu (actuellement {location})",
+  "couldNotGetDirections": "Impossible d'obtenir l'itinéraire."
 }

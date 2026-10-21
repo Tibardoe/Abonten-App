@@ -2,7 +2,7 @@
 title: Zahlungen und Zahlungsmethoden
 summary: Karten und Mobile Money, eine Zahlungsmethode in deinem Wallet speichern und dein Transaktionsverlauf.
 order: 4
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -22,7 +22,7 @@ Zahlungen auf Abonten wickelt **Paystack** ab. Die Preise sind in ghanaischen Ce
 **Website:** Seitenmenü › Wallet. **App:** Konto › Wallet.
 
 - **Karte hinzufügen.** Paystack prüft die Karte mit einer **Belastung von 1,00 GHS, die sofort erstattet wird**, und gibt Abonten eine wiederverwendbare Referenz. Abonten speichert nur diese Referenz sowie Kartenmarke, die letzten vier Ziffern und das Ablaufdatum, damit du die Karte wiedererkennst.
-- **Mobile-Money-Wallet hinzufügen.** Gespeichert werden nur Anzeigedaten (Netz, Nummer, Bezeichnung). Jede Zahlung bestätigst du trotzdem auf deinem Handy.
+- **Mobile-Money-Wallet hinzufügen.** Gespeichert werden nur Anzeigedaten (Netz, Nummer, Bezeichnung). Außer bei der bestätigten Telefonnummer deines Kontos geht zuerst ein Code per SMS an die Nummer, um zu prüfen, ob sie stimmt; gib ihn ein, um das Wallet zu speichern. Jede Zahlung bestätigst du trotzdem auf deinem Handy.
 - Lege eine Methode als **Standard** fest oder **entferne** eine Methode jederzeit. Das Entfernen wirkt sich nicht auf frühere Zahlungen oder Erstattungen aus.
 
 Dein Wallet ist von der Kasse getrennt: Du kannst deine Methoden verwalten, ohne etwas im Warenkorb zu haben.

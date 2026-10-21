@@ -1,10 +1,12 @@
 import { useMarket } from "@/features/markets/MarketProvider";
+import { MomoCodeStep } from "@/features/wallet/MomoCodeStep";
 import {
   useAddCard,
   useAddMomoWallet,
   useMomoNetworks,
 } from "@/features/wallet/usePaymentMethods";
-import type { PaymentMethodRow } from "@abonten/api-client";
+import { api } from "@/lib/api";
+import type { MomoNetwork, PaymentMethodRow } from "@abonten/api-client";
 import { parsePhone, parsePhoneWithDialCode } from "@abonten/core/phone/phone";
 import {
   AppText,
@@ -29,8 +31,9 @@ function walletPhoneLooksValid(raw: string, dialCode: string | null): boolean {
 }
 
 // The one "add a wallet" flow: a bottom sheet that steps choose type ->
-// fill form -> success, the native echo of the web AddPaymentMethodPopup
-// two-step shell. Used by the Wallets screen and by the payment picker at
+// fill form -> (mobile money: the code texted to the number, unless it is
+// the person's own verified phone) -> success, the native echo of the web
+// AddPaymentMethodPopup two-step shell. Used by the Wallets screen and by the payment picker at
 // checkout, which passes `onAdded` to select the new wallet and
 // `showConfirmation={false}` to close straight back to the order.
 type Step = "choose" | "momo" | "card";
@@ -63,6 +66,13 @@ export function AddWalletSheet({
   const [success, setSuccess] = useState<string | null>(null);
   const [networkCode, setNetworkCode] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
+  // Set once a code has been texted to the number: the code step shows.
+  const [codeFor, setCodeFor] = useState<{
+    phoneE164: string;
+    codeLength: number;
+  } | null>(null);
+  const [codeNote, setCodeNote] = useState<string | null>(null);
+  const [requesting, setRequesting] = useState(false);
   // Covers the caller's onAdded (e.g. re-checking the payment options).
   const [finishing, setFinishing] = useState(false);
 
@@ -80,6 +90,8 @@ export function AddWalletSheet({
     setSuccess(null);
     setNetworkCode(null);
     setPhone("");
+    setCodeFor(null);
+    setCodeNote(null);
   }
 
   async function added(method: PaymentMethodRow | undefined, text: string) {
@@ -95,6 +107,57 @@ export function AddWalletSheet({
     else close();
   }
 
+  async function saveMomo(net: MomoNetwork, code?: string) {
+    setFormError(null);
+    try {
+      const res = await addMomo.mutateAsync({
+        networkCode: net.code,
+        networkName: net.name,
+        phone: phone.trim(),
+        ...(code ? { code } : {}),
+      });
+      if (res.status === 200) {
+        await added(res.data, t("mobileMoneyWalletAdded"));
+        return;
+      }
+      // Covers a wrong or expired code, a duplicate wallet and any
+      // server-side validation failure.
+      setFormError(res.message ?? t("weCouldnTAddThatWallet"));
+    } catch {
+      setFormError(t("weCouldnTAddThatWallet"));
+    }
+  }
+
+  // Texts a code to the number; the person's own verified phone needs none
+  // and is saved at once (payments/mobileMoneyNumberCheck).
+  async function requestCode(net: MomoNetwork, resend: boolean) {
+    setFormError(null);
+    setRequesting(true);
+    try {
+      const res = await api.paymentMethods.momoCode({
+        phone: phone.trim(),
+        use: "wallet",
+      });
+      if (res.status !== 200 || !res.data) {
+        setFormError(res.message ?? t("weCouldnTAddThatWallet"));
+        return;
+      }
+      if (!res.data.needsCode) {
+        await saveMomo(net);
+        return;
+      }
+      setCodeNote(resend ? t("aNewCodeIsOnItsWay") : null);
+      setCodeFor({
+        phoneE164: res.data.phoneE164,
+        codeLength: res.data.codeLength,
+      });
+    } catch {
+      setFormError(t("weCouldnTAddThatWallet"));
+    } finally {
+      setRequesting(false);
+    }
+  }
+
   async function submitMomo() {
     setFormError(null);
     const net = networkList.find((n) => n.code === networkCode);
@@ -106,18 +169,10 @@ export function AddWalletSheet({
       setFormError(t("enterAValidMobileMoneyNumber"));
       return;
     }
-    const res = await addMomo.mutateAsync({
-      networkCode: net.code,
-      networkName: net.name,
-      phone: phone.trim(),
-    });
-    if (res.status === 200) {
-      await added(res.data, t("mobileMoneyWalletAdded"));
-      return;
-    }
-    // Covers duplicate-wallet and any server-side validation failure.
-    setFormError(res.message ?? t("weCouldnTAddThatWallet"));
+    await requestCode(net, false);
   }
+
+  const chosenNetwork = networkList.find((n) => n.code === networkCode);
 
   async function startCardVerification() {
     setFormError(null);
@@ -146,7 +201,10 @@ export function AddWalletSheet({
         !success && (step === "momo" || step === "card")
           ? () => {
               setFormError(null);
-              setStep("choose");
+              // From the code, back to the number; from a form, back to
+              // the choice of wallet.
+              if (codeFor) setCodeFor(null);
+              else setStep("choose");
             }
           : undefined
       }
@@ -177,6 +235,21 @@ export function AddWalletSheet({
             onPress={() => setStep("card")}
           />
         </View>
+      ) : step === "momo" && codeFor && chosenNetwork ? (
+        <MomoCodeStep
+          phoneE164={codeFor.phoneE164}
+          codeLength={codeFor.codeLength}
+          submitTitle={t("saveWallet")}
+          busy={addMomo.isPending || requesting || finishing}
+          error={formError}
+          note={codeNote}
+          onSubmit={(code) => void saveMomo(chosenNetwork, code)}
+          onResend={() => void requestCode(chosenNetwork, true)}
+          onChangeNumber={() => {
+            setFormError(null);
+            setCodeFor(null);
+          }}
+        />
       ) : step === "momo" ? (
         <View className="gap-3">
           <AppText variant="label">{t("network")}</AppText>
@@ -229,6 +302,9 @@ export function AddWalletSheet({
             autoCapitalize="none"
             invalid={!!formError}
           />
+          <AppText variant="small" tone="muted">
+            {t("weLlTextACodeToThis")}
+          </AppText>
 
           {formError ? (
             <AppText variant="small" tone="error">
@@ -237,11 +313,14 @@ export function AddWalletSheet({
           ) : null}
 
           <Button
-            title={t("saveWallet")}
+            title={t("continueText")}
             fullWidth
-            loading={addMomo.isPending || finishing}
+            loading={addMomo.isPending || requesting || finishing}
             disabled={
-              addMomo.isPending || finishing || networkList.length === 0
+              addMomo.isPending ||
+              requesting ||
+              finishing ||
+              networkList.length === 0
             }
             onPress={submitMomo}
           />

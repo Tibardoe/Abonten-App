@@ -906,5 +906,6 @@
   },
   "featured": "Destacado",
   "paidPlacement": "Espacio de pago",
-  "changeLocationNow": "Cambiar ubicación (ahora {location})"
+  "changeLocationNow": "Cambiar ubicación (ahora {location})",
+  "couldNotGetDirections": "No se pudo obtener la ruta."
 }

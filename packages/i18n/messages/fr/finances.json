@@ -124,5 +124,8 @@
   "yourWithdrawalHistoryAndStatus": "L'historique et le statut de vos retraits.",
   "yourWithdrawalWillMoveToProcessing": "Votre retrait passera à « En cours de traitement » pendant son examen — il ne sera marqué comme terminé qu'une fois réellement versé.",
   "couldnTLoadYourBalance": "Impossible de charger votre solde.",
-  "couldnTLoadYourPayouts": "Impossible de charger vos versements."
+  "couldnTLoadYourPayouts": "Impossible de charger vos versements.",
+  "sending": "Envoi…",
+  "aNewCodeIsOnItsWay": "Un nouveau code est en route.",
+  "weLlTextACodeToThis": "Nous enverrons un code par SMS à ce numéro pour vérifier qu'il est correct. Le numéro vérifié de votre compte n'en a pas besoin."
 }

@@ -2,7 +2,7 @@
 title: Pagos y métodos de pago
 summary: Tarjetas y dinero móvil, guardar un método de pago en tu monedero y tu historial de transacciones.
 order: 4
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -22,7 +22,7 @@ Los pagos en Abonten los procesa **Paystack**. Los precios están en cedis ghane
 **Web:** menú lateral › Monedero. **Aplicación:** Cuenta › Monedero.
 
 - **Añadir una tarjeta.** Paystack verifica la tarjeta con un **cargo de 1,00 GHS que se devuelve al momento** y le da a Abonten una referencia reutilizable. Abonten solo guarda esa referencia, además de la marca, los cuatro últimos dígitos y la fecha de caducidad para que reconozcas la tarjeta.
-- **Añadir un monedero de dinero móvil.** Se guarda con los datos que se muestran (operador, número, nombre). Aun así, confirmas cada pago en tu teléfono.
+- **Añadir un monedero de dinero móvil.** Se guarda con los datos que se muestran (operador, número, nombre). Salvo que sea el número verificado de tu cuenta, primero se envía un código por SMS a ese número para comprobar que es correcto; introdúcelo para guardar el monedero. Aun así, confirmas cada pago en tu teléfono.
 - Elige un método **predeterminado** o **quita** un método cuando quieras. Quitar un método no afecta a pagos ni reembolsos anteriores.
 
 Tu monedero es independiente del pago: puedes gestionar tus métodos sin tener nada en la cesta.

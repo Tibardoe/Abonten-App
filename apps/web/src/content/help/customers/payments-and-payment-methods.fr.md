@@ -2,7 +2,7 @@
 title: Paiements et moyens de paiement
 summary: Cartes et mobile money, enregistrer un moyen de paiement dans votre portefeuille, et votre historique de transactions.
 order: 4
-lastUpdated: 2026-09-12
+lastUpdated: 2026-10-21
 status: Draft
 owner: Abonten Hub
 ---
@@ -22,7 +22,7 @@ Les paiements sur Abonten sont traités par **Paystack**. Les prix sont en cedis
 **Site web :** menu latéral › Portefeuille. **Application :** Compte › Portefeuille.
 
 - **Ajouter une carte.** Paystack vérifie la carte avec un **débit de 1,00 GHS remboursé immédiatement** et donne à Abonten une référence réutilisable. Abonten ne conserve que cette référence, ainsi que la marque, les quatre derniers chiffres et la date d'expiration pour que vous reconnaissiez la carte.
-- **Ajouter un portefeuille mobile money.** Il est enregistré sous forme d'informations d'affichage (réseau, numéro, libellé). Vous confirmez toujours chaque paiement sur votre téléphone.
+- **Ajouter un portefeuille mobile money.** Il est enregistré sous forme d'informations d'affichage (réseau, numéro, libellé). Sauf s'il s'agit du numéro vérifié de votre compte, un code est d'abord envoyé par SMS à ce numéro pour vérifier qu'il est correct ; saisissez-le pour enregistrer le portefeuille. Vous confirmez toujours chaque paiement sur votre téléphone.
 - Définissez un moyen **par défaut**, ou **retirez** un moyen à tout moment. Retirer un moyen n'a aucun effet sur les paiements ni les remboursements passés.
 
 Votre portefeuille est distinct du paiement : vous pouvez gérer vos moyens de paiement sans rien avoir dans votre panier.

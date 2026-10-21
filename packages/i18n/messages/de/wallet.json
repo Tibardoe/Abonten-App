@@ -97,5 +97,13 @@
   "yourListingIsNowFeatured": "Dein Eintrag wird jetzt hervorgehoben.",
   "yourPaymentMethods": "deine Zahlungsmethoden",
   "yourPromotionIsWaitingForReview": "Deine Promotion wartet auf Prüfung. Wird sie nicht genehmigt, erhältst du den vollen Betrag zurück.",
-  "yourTicketIsConfirmedAndReady": "Dein Ticket ist bestätigt und liegt unter Tickets bereit."
+  "yourTicketIsConfirmedAndReady": "Dein Ticket ist bestätigt und liegt unter Tickets bereit.",
+  "continueText": "Weiter",
+  "sending": "Wird gesendet…",
+  "resendCode": "Code erneut senden",
+  "changeNumber": "Nummer ändern",
+  "aNewCodeIsOnItsWay": "Ein neuer Code ist unterwegs.",
+  "weLlTextACodeToThis": "Wir schicken einen Code per SMS an diese Nummer, um zu prüfen, ob sie stimmt. Für die bestätigte Telefonnummer deines Kontos ist keiner nötig.",
+  "thisChecksTheNumberIsRight": "So prüfen wir, ob die Nummer stimmt, bevor sie gespeichert wird.",
+  "enterTheCodeWeSentTo": "Gib den Code ein, der an {phone} gesendet wurde"
 }

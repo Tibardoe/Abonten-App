@@ -1226,7 +1226,8 @@
     "abontenOnNetwork.tiktok": "e7f0a610",
     "featured": "ae31ad5d",
     "paidPlacement": "b0b68f68",
-    "changeLocationNow": "cef8e096"
+    "changeLocationNow": "cef8e096",
+    "couldNotGetDirections": "6d7207c7"
   },
   "core": {
     "content.spotlightTagline": "18cf31e2",
@@ -2732,7 +2733,21 @@
     "youReSomewhereNew": "78c3bed4",
     "yourArea": "59f92c95",
     "yourLocation": "37e3a3f3",
-    "picksPaidPlacement": "ac88ee7e"
+    "picksPaidPlacement": "ac88ee7e",
+    "getThere": "ecc6809c",
+    "openIn": "d8a4bb5d",
+    "googleMaps": "40cd7fa7",
+    "appleMaps": "204a9876",
+    "waze": "e8fdcb08",
+    "lastUsed": "f1109d3d",
+    "bookingARide": "ac3fcd30",
+    "shareLocation": "4c2bf537",
+    "sendItToYourDriverOr": "150ae60c",
+    "copyAddress": "4eaae53e",
+    "pasteItIntoYourRideApp": "cc782df5",
+    "addressCopied": "b8793196",
+    "couldnTOpenMaps": "11da2750",
+    "noMapsAppIsAvailableOn": "721bb5c2"
   },
   "fatal": {
     "title": "8d886c0b",
@@ -3402,7 +3417,10 @@
     "yourWithdrawalHistoryAndStatus": "dca61d9a",
     "yourWithdrawalWillMoveToProcessing": "851c7f81",
     "couldnTLoadYourBalance": "809ef8c0",
-    "couldnTLoadYourPayouts": "fbfac07d"
+    "couldnTLoadYourPayouts": "fbfac07d",
+    "sending": "cf765512",
+    "aNewCodeIsOnItsWay": "4bc55ca8",
+    "weLlTextACodeToThis": "18a5deca"
   },
   "help": {
     "help": "c47ae153",
@@ -4033,7 +4051,10 @@
     "theReviews": "80206269",
     "theBookings": "4d63b828",
     "theCheckInCode": "8bcc7758",
-    "theUpcomingEvents": "2724d9f2"
+    "theUpcomingEvents": "2724d9f2",
+    "continueText": "2e026239",
+    "aNewCodeIsOnItsWay": "4bc55ca8",
+    "weLlTextACodeToThis": "18a5deca"
   },
   "messaging": {
     "a11y.messageActions": "949184b0",
@@ -6610,7 +6631,8 @@
     "fieldOpsTimeline.ownerVerified": "fe3bd036",
     "fieldOpsTimeline.claimFiledFor": "e081bcd8",
     "fieldOpsTimeline.eventListedFor": "2f9f58e8",
-    "thatPlaceCouldNotBeFound": "601d120a"
+    "thatPlaceCouldNotBeFound": "601d120a",
+    "confirmThisNumberWithA": "dcb94182"
   },
   "settings": {
     "aPushWhenSomeoneYouTapped": "ad478d7a",
@@ -7330,7 +7352,8 @@
     "ticketReference": "1c3f76be",
     "viewEvent": "7c273268",
     "yourTickets": "7e061fbc",
-    "shareReceiptTitle": "91e9ca8d"
+    "shareReceiptTitle": "91e9ca8d",
+    "getDirections": "648d8058"
   },
   "transactions": {
     "amount": "43dc8532",
@@ -7666,7 +7689,15 @@
     "yourListingIsNowFeatured": "f4433abf",
     "yourPaymentMethods": "ccb879c4",
     "yourPromotionIsWaitingForReview": "1ebaa023",
-    "yourTicketIsConfirmedAndReady": "40615eff"
+    "yourTicketIsConfirmedAndReady": "40615eff",
+    "continueText": "2e026239",
+    "sending": "cf765512",
+    "resendCode": "1d3cb8a9",
+    "changeNumber": "6c3b4080",
+    "aNewCodeIsOnItsWay": "4bc55ca8",
+    "weLlTextACodeToThis": "18a5deca",
+    "thisChecksTheNumberIsRight": "e1ae6e71",
+    "enterTheCodeWeSentTo": "14ee73a7"
   },
   "weekly": {
     "aPastEditionSomeEventsHave": "4dc15f6a",

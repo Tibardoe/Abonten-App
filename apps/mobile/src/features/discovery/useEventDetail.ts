@@ -28,6 +28,8 @@ export type EventDetail = {
   event_category: string;
   event_type: string;
   address: { full_address?: string } | null;
+  /** The venue's point, PostGIS geography as WKB hex (`*` selects it). */
+  location: string | null;
   website_url: string | null;
   capacity: number | null;
   flyer_public_id: string;

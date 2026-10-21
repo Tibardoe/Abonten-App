@@ -16,6 +16,13 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-21 — Directions you can choose; mobile money numbers confirmed by code
+
+- Updated `architecture/feature-inventory.md` (1.6), `finance/settlement-ledger-and-payouts.md` (1.2), `mobile/guide/ios-vs-android.md` (1.1); help `customers/finding-events-and-places`, `customers/payments-and-payment-methods`, `organizers/finance-payouts-and-settlement` (all five languages).
+- App: Directions on an event, a place and now a ticket opens a "Get there" sheet: Google Maps (first), Apple Maps on iPhone, Waze, Share location (name, address, map pin) and Copy address for ride apps. Until now iPhone opened Apple Maps only, which gives poor directions in Ghana. The event screen now uses the event's stored pin instead of geocoding its address on the phone (that found the area, not the venue). Website: Get directions no longer needs location permission.
+- A mobile money number is saved as a wallet or a payout account only once it is confirmed: the account's own verified phone, or a code texted to the number (`payments/mobileMoneyNumberCheck`, purpose `wallet`). Web action `requestMobileMoneyNumberCode`, mobile route `POST /api/mobile/payment-methods/momo-code`.
+- Migration `20261021120000_mobile_money_number_confirmation`: `phone_otp_state.purpose` accepts `wallet`. Permissions, jobs, env vars: none.
+
 ## 2026-10-21 — App Store: version 1.0.0 approved
 
 - Updated `deployment/store-listings.md` (1.2).

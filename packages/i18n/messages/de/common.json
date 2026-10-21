@@ -906,5 +906,6 @@
   },
   "featured": "Hervorgehoben",
   "paidPlacement": "Bezahlte Platzierung",
-  "changeLocationNow": "Ort ändern (derzeit {location})"
+  "changeLocationNow": "Ort ändern (derzeit {location})",
+  "couldNotGetDirections": "Die Route konnte nicht geladen werden."
 }

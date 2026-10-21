@@ -18,6 +18,14 @@ const walletPhoneSchema = z
   .trim()
   .regex(/^\+?[0-9][0-9 ()-]{5,19}$/, "Enter a valid mobile money number");
 
+// The code texted to the number to confirm it (payments/mobileMoneyNumberCheck).
+// Not needed when the number is the person's own verified phone; never stored.
+const confirmationCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[0-9]{4,8}$/, "Enter the code we sent")
+  .optional();
+
 // User-submitted form: real phone number + a network chosen from the
 // provider's live-fetched mobile money list for the person's market
 // (mobileMoneyNetworksCore) rather than a hardcoded guess.
@@ -27,6 +35,7 @@ export const addMomoWalletSchema = z.object({
   networkName: z.string().min(1),
   phone: walletPhoneSchema,
   label: labelSchema,
+  code: confirmationCodeSchema,
 });
 
 // NOT a user-submitted form: a card is never typed in directly (no PAN/CVV
