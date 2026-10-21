@@ -11,11 +11,16 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { coreT, tr } from "../i18n/requestLocale";
 import { getDefaultMarket, getMarketOrDefault } from "../markets/marketConfig";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { confirmMobileMoneyNumber } from "./mobileMoneyNumberCheck";
 
 // Post-auth bodies of the four payment-method Server Actions, lifted so the
 // `/api/mobile/payment-methods/*` routes run the exact same logic. Each
 // takes an already-authenticated Supabase client + the resolved userId.
+// Reads go through that client (the owner-select policy); every write goes
+// through the service role, scoped by user_id, because clients cannot write
+// payment_method (migration payment_method_server_writes_only): a direct
+// write would skip the card verification and the mobile money number check.
 // Deliberately NOT a "use server" file (see ticketInventory.ts).
 
 export type MomoPaymentMethodDetails = {
@@ -236,7 +241,7 @@ export async function addPaymentMethodCore(
     details = normalizedCard;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseServiceClient()
     .from("payment_method")
     .insert({
       user_id: userId,
@@ -283,7 +288,8 @@ export async function removePaymentMethodCore(
     return { status: 404, message: tr("paymentMethodNotFound") };
   }
 
-  const { error: removeError } = await supabase
+  const service = getSupabaseServiceClient();
+  const { error: removeError } = await service
     .from("payment_method")
     .update({
       status: "removed",
@@ -309,7 +315,7 @@ export async function removePaymentMethodCore(
       .maybeSingle();
 
     if (nextDefault) {
-      await supabase
+      await service
         .from("payment_method")
         .update({ is_default: true, updated_at: new Date().toISOString() })
         .eq("id", nextDefault.id)
@@ -342,7 +348,8 @@ export async function setDefaultPaymentMethodCore(
     return { status: 404, message: tr("paymentMethodNotFound") };
   }
 
-  const { error: unsetError } = await supabase
+  const service = getSupabaseServiceClient();
+  const { error: unsetError } = await service
     .from("payment_method")
     .update({ is_default: false, updated_at: new Date().toISOString() })
     .eq("user_id", userId)
@@ -354,7 +361,7 @@ export async function setDefaultPaymentMethodCore(
     return { status: 500, message: tr("somethingWentWrong") };
   }
 
-  const { error: setError } = await supabase
+  const { error: setError } = await service
     .from("payment_method")
     .update({ is_default: true, updated_at: new Date().toISOString() })
     .eq("id", paymentMethodId)

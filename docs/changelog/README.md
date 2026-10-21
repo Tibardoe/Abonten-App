@@ -16,6 +16,13 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-10-21 — Saved payment methods: written by the service only
+
+- Updated `finance/README.md` (1.1); `CLAUDE.md` money-path note.
+- Migration `20261021150000_payment_method_server_writes_only`: signed-in clients can no longer insert, change or delete `payment_method` rows through the Data API (owner insert/update policies dropped, grants revoked on the table and its partitions p0–p3). Owners still read their own rows. A direct write skipped the card verification and the mobile money number check added earlier the same day.
+- `payments/paymentMethodCore` writes (save, remove, default) go through the service role, scoped by `user_id`; reads stay on the caller's client.
+- Permissions, jobs, env vars: none.
+
 ## 2026-10-21 — Directions you can choose; mobile money numbers confirmed by code
 
 - Updated `architecture/feature-inventory.md` (1.6), `finance/settlement-ledger-and-payouts.md` (1.2), `mobile/guide/ios-vs-android.md` (1.1); help `customers/finding-events-and-places`, `customers/payments-and-payment-methods`, `organizers/finance-payouts-and-settlement` (all five languages).
